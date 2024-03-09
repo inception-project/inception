@@ -21,18 +21,14 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.LinkMode.WITH_ROLE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode.ARRAY;
 import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectFsByAddr;
 import static java.util.Collections.emptyList;
-import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.abbreviate;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.TypeSystem;
 import org.apache.uima.cas.text.AnnotationFS;
@@ -54,9 +50,6 @@ import de.tudarmstadt.ukp.inception.schema.api.feature.LinkWithRoleModel;
 import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
 
-/**
- * Render spans.
- */
 public class SpanRenderer
     extends Renderer_ImplBase<SpanAdapter>
 {
@@ -102,12 +95,11 @@ public class SpanRenderer
         return aCas.select(type).coveredBy(0, aWindowEnd).includeAnnotationsWithEndBeyondBounds()
                 .map(fs -> (AnnotationFS) fs)
                 .filter(ann -> AnnotationPredicates.overlapping(ann, aWindowBegin, aWindowEnd))
-                .collect(toList());
+                .toList();
     }
 
     @Override
-    public List<VLazyDetailGroup> lookupLazyDetails(CAS aCas, VID aVid, int aWindowBeginOffset,
-            int aWindowEndOffset)
+    public List<VLazyDetailGroup> lookupLazyDetails(CAS aCas, VID aVid)
     {
         if (!checkTypeSystem(aCas)) {
             return Collections.emptyList();
@@ -119,7 +111,7 @@ public class SpanRenderer
         group.addDetail(
                 new VLazyDetail("Text", abbreviate(fs.getCoveredText(), MAX_HOVER_TEXT_LENGTH)));
 
-        var details = super.lookupLazyDetails(aCas, aVid, aWindowBeginOffset, aWindowEndOffset);
+        var details = super.lookupLazyDetails(aCas, aVid);
         if (!group.getDetails().isEmpty()) {
             details.add(0, group);
         }
@@ -134,20 +126,20 @@ public class SpanRenderer
             return;
         }
 
-        SpanAdapter typeAdapter = getTypeAdapter();
+        var typeAdapter = getTypeAdapter();
 
         // Index mapping annotations to the corresponding rendered spans
-        Map<AnnotationFS, VSpan> annoToSpanIdx = new HashMap<>();
+        var annoToSpanIdx = new HashMap<AnnotationFS, VSpan>();
 
-        List<AnnotationFS> annotations = selectAnnotationsInWindow(aCas, aWindowBegin, aWindowEnd);
+        var annotations = selectAnnotationsInWindow(aCas, aWindowBegin, aWindowEnd);
 
         // List<AnnotationFS> annotations = selectCovered(aCas, type, aWindowBegin, aWindowEnd);
-        for (AnnotationFS fs : annotations) {
-            for (VObject vobj : render(aResponse, fs, aFeatures, aWindowBegin, aWindowEnd)) {
+        for (var fs : annotations) {
+            for (var vobj : render(aResponse, fs, aFeatures, aWindowBegin, aWindowEnd)) {
                 aResponse.add(vobj);
 
-                if (vobj instanceof VSpan) {
-                    annoToSpanIdx.put(fs, (VSpan) vobj);
+                if (vobj instanceof VSpan vspan) {
+                    annoToSpanIdx.put(fs, vspan);
 
                     renderRequiredFeatureErrors(aFeatures, fs, aResponse);
                 }
@@ -167,19 +159,17 @@ public class SpanRenderer
             return emptyList();
         }
 
-        Optional<VRange> range = VRange.clippedRange(aVDocument, aFS);
+        var range = VRange.clippedRange(aVDocument, aFS);
 
         if (!range.isPresent()) {
             return emptyList();
         }
 
-        List<VObject> spansAndSlots = new ArrayList<>();
+        var typeAdapter = getTypeAdapter();
+        var labelFeatures = renderLabelFeatureValues(typeAdapter, aFS, aFeatures);
 
-        SpanAdapter typeAdapter = getTypeAdapter();
-        Map<String, String> labelFeatures = renderLabelFeatureValues(typeAdapter, aFS, aFeatures);
-
-        VSpan span = new VSpan(typeAdapter.getLayer(), aFS, range.get(), labelFeatures);
-        spansAndSlots.add(span);
+        var spansAndSlots = new ArrayList<VObject>();
+        spansAndSlots.add(new VSpan(typeAdapter.getLayer(), aFS, range.get(), labelFeatures));
 
         renderSlots(aFS, spansAndSlots);
 
@@ -200,8 +190,8 @@ public class SpanRenderer
             if (ARRAY.equals(feat.getMultiValueMode()) && WITH_ROLE.equals(feat.getLinkMode())) {
                 List<LinkWithRoleModel> links = typeAdapter.getFeatureValue(feat, aFS);
                 for (int li = 0; li < links.size(); li++) {
-                    LinkWithRoleModel link = links.get(li);
-                    FeatureStructure targetFS = selectFsByAddr(aFS.getCAS(), link.targetAddr);
+                    var link = links.get(li);
+                    var targetFS = selectFsByAddr(aFS.getCAS(), link.targetAddr);
 
                     var vid = VID.builder().forAnnotation(aFS) //
                             .withAttribute(fi) //

@@ -56,7 +56,7 @@ public class AfterCasWrittenEventAdapter
     @Override
     public String getDetails(AfterCasWrittenEvent aEvent) throws IOException
     {
-        CasDetails details = new CasDetails(aEvent.getCas());
+        var details = new CasDetails(aEvent.getCas());
         return JSONUtil.toJsonString(details);
     }
 }

@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSentences;
+import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.selectSentences;
 
 import java.util.ArrayList;
 import java.util.List;

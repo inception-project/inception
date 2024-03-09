@@ -21,6 +21,8 @@ import java.io.Serializable;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+
 public class SpanSuggestion
     extends AnnotationSuggestion
     implements Serializable
@@ -39,22 +41,6 @@ public class SpanSuggestion
 
         position = builder.position;
         coveredText = builder.coveredText;
-    }
-
-    /**
-     * @deprecated Use builder instead.
-     */
-    @Deprecated
-    public SpanSuggestion(int aId, long aRecommenderId, String aRecommenderName, long aLayerId,
-            String aFeature, String aDocumentName, int aBegin, int aEnd, String aCoveredText,
-            String aLabel, String aUiLabel, double aScore, String aScoreExplanation,
-            AutoAcceptMode aAutoAcceptMode)
-    {
-        super(aId, 0, 0, aRecommenderId, aRecommenderName, aLayerId, aFeature, aDocumentName,
-                aLabel, aUiLabel, aScore, aScoreExplanation, aAutoAcceptMode, 0);
-
-        position = new Offset(aBegin, aEnd);
-        coveredText = aCoveredText;
     }
 
     // Getter and setter
@@ -164,7 +150,7 @@ public class SpanSuggestion
         private String scoreExplanation;
         private Offset position;
         private String coveredText;
-        private AutoAcceptMode autoAcceptMode;
+        private AutoAcceptMode autoAcceptMode = AutoAcceptMode.NEVER;
         private int hidingFlags;
 
         private Builder()
@@ -198,31 +184,42 @@ public class SpanSuggestion
             return this;
         }
 
-        public Builder withRecommenderId(long aRecommenderId)
+        @Deprecated
+        Builder withRecommenderId(long aRecommenderId)
         {
             this.recommenderId = aRecommenderId;
             return this;
         }
 
-        public Builder withRecommenderName(String aRecommenderName)
+        @Deprecated
+        Builder withRecommenderName(String aRecommenderName)
         {
             this.recommenderName = aRecommenderName;
             return this;
         }
 
-        public Builder withLayerId(long aLayerId)
+        @Deprecated
+        Builder withLayerId(long aLayerId)
         {
             this.layerId = aLayerId;
             return this;
         }
 
-        public Builder withFeature(String aFeature)
+        @Deprecated
+        Builder withFeature(String aFeature)
         {
             this.feature = aFeature;
             return this;
         }
 
-        public Builder withDocumentName(String aDocumentName)
+        public Builder withDocument(SourceDocument aDocument)
+        {
+            this.documentName = aDocument.getName();
+            return this;
+        }
+
+        @Deprecated
+        Builder withDocumentName(String aDocumentName)
         {
             this.documentName = aDocumentName;
             return this;
@@ -249,6 +246,12 @@ public class SpanSuggestion
         public Builder withScoreExplanation(String aScoreExplanation)
         {
             this.scoreExplanation = aScoreExplanation;
+            return this;
+        }
+
+        public Builder withPosition(int aBegin, int aEnd)
+        {
+            this.position = new Offset(aBegin, aEnd);
             return this;
         }
 

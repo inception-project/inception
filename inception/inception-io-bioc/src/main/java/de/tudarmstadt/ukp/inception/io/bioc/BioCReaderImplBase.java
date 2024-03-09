@@ -18,9 +18,11 @@
 package de.tudarmstadt.ukp.inception.io.bioc;
 
 import static de.tudarmstadt.ukp.inception.support.xml.XmlParserUtils.isStartElement;
+import static java.util.Arrays.asList;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Optional;
 
 import javax.xml.stream.XMLEventReader;
 import javax.xml.stream.XMLInputFactory;
@@ -147,24 +149,40 @@ public abstract class BioCReaderImplBase
             while ((collectionSource == null || collectionDate == null || collectionKey == null)
                     && xmlEventReader.hasNext()) {
                 var event = xmlEventReader.nextEvent();
-                if (event.isStartElement()) {
-                    if (event.asStartElement().getName().getLocalPart().equals(E_KEY)) {
-                        event = xmlEventReader.nextEvent();
-                        collectionKey = event.asCharacters().getData();
-                        xmlEventReader.nextEvent(); // Reader closing element
-                    }
-                    else if (event.asStartElement().getName().getLocalPart().equals(E_SOURCE)) {
-                        event = xmlEventReader.nextEvent();
-                        collectionSource = event.asCharacters().getData();
-                        xmlEventReader.nextEvent(); // Reader closing element
-                    }
-                    else if (event.asStartElement().getName().getLocalPart().equals(E_DATE)) {
-                        event = xmlEventReader.nextEvent();
-                        collectionDate = event.asCharacters().getData();
-                        xmlEventReader.nextEvent(); // Reader closing element
+
+                tryReadingMetadata(event, E_SOURCE).ifPresent($ -> collectionSource = $);
+                tryReadingMetadata(event, E_DATE).ifPresent($ -> collectionDate = $);
+                tryReadingMetadata(event, E_KEY).ifPresent($ -> collectionKey = $);
+
+                if (xmlEventReader.hasNext()) {
+                    var nextEvent = xmlEventReader.peek();
+                    if (nextEvent.isStartElement() && asList(E_DOCUMENT, E_INFON)
+                            .contains(nextEvent.asStartElement().getName().getLocalPart())) {
+                        // Make sure we do not consume the documents while looking for collection
+                        // metadata. While all metadata fields are mandatory in BioC, it does not
+                        // mean that some of them may not be missing anyway...
+                        break;
                     }
                 }
             }
         }
+    }
+
+    private Optional<String> tryReadingMetadata(XMLEvent event, String element)
+        throws XMLStreamException
+    {
+        if (event.isStartElement()) {
+            if (event.asStartElement().getName().getLocalPart().equals(element)) {
+                event = xmlEventReader.nextEvent();
+                if (event.isCharacters()) {
+                    return Optional.of(event.asCharacters().getData());
+                }
+                else if (!event.isEndElement()) {
+                    xmlEventReader.next(); // Reader closing element
+                }
+            }
+        }
+
+        return Optional.empty();
     }
 }

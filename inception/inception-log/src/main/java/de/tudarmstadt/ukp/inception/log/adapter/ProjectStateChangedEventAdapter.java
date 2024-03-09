@@ -45,7 +45,7 @@ public class ProjectStateChangedEventAdapter
     @Override
     public String getDetails(ProjectStateChangedEvent aEvent) throws IOException
     {
-        StateChangeDetails details = new StateChangeDetails();
+        var details = new StateChangeDetails();
         details.setState(Objects.toString(aEvent.getNewState(), null));
         details.setPreviousState(Objects.toString(aEvent.getPreviousState(), null));
         return JSONUtil.toJsonString(details);

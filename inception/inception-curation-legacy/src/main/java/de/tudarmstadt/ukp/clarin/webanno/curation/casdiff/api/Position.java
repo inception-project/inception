@@ -30,11 +30,6 @@ public interface Position
     extends Comparable<Position>, Serializable
 {
     /**
-     * @return the CAS id.
-     */
-    int getCasId();
-
-    /**
      * @return the type.
      */
     String getType();

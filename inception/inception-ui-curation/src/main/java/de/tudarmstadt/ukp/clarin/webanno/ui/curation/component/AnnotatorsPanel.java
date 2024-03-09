@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.curation.component;
 
-import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiffSingle;
+import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.getDiffAdapters;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior.LINK_ROLE_AS_LABEL;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
@@ -68,8 +68,6 @@ import com.googlecode.wicket.jquery.ui.widget.menu.IMenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.brat.schema.BratSchemaGenerator;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.Configuration;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.ConfigurationSet;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.DiffResult;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.DiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -457,9 +455,9 @@ public class AnnotatorsPanel
     private Map<String, Map<VID, AnnotationState>> calculateAnnotationStates(AnnotatorState aState,
             Map<String, CAS> aCasses)
     {
-        List<DiffAdapter> adapters = getDiffAdapters(schemaService, aState.getAnnotationLayers());
-        DiffResult diff = doDiffSingle(adapters, LINK_ROLE_AS_LABEL, aCasses,
-                aState.getWindowBeginOffset(), aState.getWindowEndOffset()).toResult();
+        var adapters = getDiffAdapters(schemaService, aState.getAnnotationLayers());
+        var diff = doDiff(adapters, LINK_ROLE_AS_LABEL, aCasses, aState.getWindowBeginOffset(),
+                aState.getWindowEndOffset()).toResult();
 
         var differingSets = diff.getDifferingConfigurationSetsWithExceptions(CURATION_USER)
                 .values();
@@ -467,12 +465,12 @@ public class AnnotatorsPanel
                 .values();
         differingSets.removeAll(incompleteSets);
 
-        List<ConfigurationSet> completeAgreementSets = new ArrayList<>();
+        var completeAgreementSets = new ArrayList<ConfigurationSet>();
         completeAgreementSets.addAll(diff.getConfigurationSets());
         completeAgreementSets.removeAll(differingSets);
         completeAgreementSets.removeAll(incompleteSets);
 
-        Map<String, Map<VID, AnnotationState>> annoStates = new HashMap<>();
+        var annoStates = new HashMap<String, Map<VID, AnnotationState>>();
         for (String casGroupId : aCasses.keySet()) {
             annoStates.put(casGroupId, new HashMap<>());
         }

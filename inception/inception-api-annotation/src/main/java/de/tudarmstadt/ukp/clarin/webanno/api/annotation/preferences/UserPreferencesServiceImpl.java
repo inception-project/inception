@@ -19,9 +19,12 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences;
 
 import static de.tudarmstadt.ukp.inception.project.api.ProjectService.PROJECT_FOLDER;
 import static de.tudarmstadt.ukp.inception.project.api.ProjectService.SETTINGS_FOLDER;
-import static java.util.stream.Collectors.toList;
+import static de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationLayerVisibilityState.KEY_LAYERS_STATE;
+import static de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationPageLayoutState.KEY_LAYOUT_STATE;
+import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toMap;
+import static org.apache.commons.lang3.StringUtils.replaceChars;
 
-import java.beans.PropertyDescriptor;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -31,17 +34,10 @@ import java.lang.reflect.ParameterizedType;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Properties;
-import java.util.stream.Collectors;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.PropertyAccessorFactory;
@@ -49,14 +45,14 @@ import org.springframework.beans.PropertyAccessorFactory;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.AnnotationAutoConfiguration;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
 import de.tudarmstadt.ukp.inception.preferences.Key;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.rendering.coloring.ColoringService;
-import de.tudarmstadt.ukp.inception.rendering.coloring.ColoringStrategyType;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationPreference;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
@@ -83,13 +79,14 @@ public class UserPreferencesServiceImpl
     private final ColoringService coloringService;
     private final AnnotationSchemaProperties annotationEditorProperties;
     private final PreferencesService preferencesService;
+    private final UserDao userService;
 
     public UserPreferencesServiceImpl(
             AnnotationEditorDefaultPreferencesProperties aDefaultPreferences,
             AnnotationSchemaService aAnnotationService, RepositoryProperties aRepositoryProperties,
             ColoringService aColoringService,
             AnnotationSchemaProperties aAnnotationEditorProperties,
-            PreferencesService aPreferencesService)
+            PreferencesService aPreferencesService, UserDao aUserService)
     {
         defaultPreferences = aDefaultPreferences;
         annotationService = aAnnotationService;
@@ -97,29 +94,28 @@ public class UserPreferencesServiceImpl
         coloringService = aColoringService;
         annotationEditorProperties = aAnnotationEditorProperties;
         preferencesService = aPreferencesService;
+        userService = aUserService;
     }
 
     @Override
     public void loadPreferences(AnnotatorState aState, String aUsername)
         throws BeansException, IOException
     {
-        AnnotationPreference preference = loadPreferences(aState.getProject(), aUsername,
-                aState.getMode());
+        var preference = loadPreferences(aState.getProject(), aUsername, aState.getMode());
 
         aState.setPreferences(preference);
 
         // set layers according to preferences
-        List<AnnotationLayer> allLayers = annotationService
-                .listAnnotationLayer(aState.getProject());
+        var allLayers = annotationService.listAnnotationLayer(aState.getProject());
         aState.setAllAnnotationLayers(allLayers);
         aState.setAnnotationLayers(allLayers.stream() //
                 .filter(l -> !annotationEditorProperties.isLayerBlocked(l)) //
                 .filter(l -> l.isEnabled()) //
                 .filter(l -> !preference.getHiddenAnnotationLayerIds().contains(l.getId()))
-                .collect(toList()));
+                .toList());
 
         // set default layer according to preferences
-        Optional<AnnotationLayer> defaultLayer = aState.getAnnotationLayers().stream()
+        var defaultLayer = aState.getAnnotationLayers().stream()
                 .filter(layer -> Objects.equals(layer.getId(), preference.getDefaultLayer()))
                 .findFirst();
 
@@ -133,32 +129,99 @@ public class UserPreferencesServiceImpl
     }
 
     @Override
-    public void savePreference(AnnotatorState aState, String aUsername) throws IOException
+    public void savePreferences(AnnotatorState aState, String aSessionOwnerName) throws IOException
     {
-        savePreferences(aState.getProject(), aUsername, aState.getMode(), aState.getPreferences());
+        savePreferences(aState.getProject(), aSessionOwnerName, aState.getMode(),
+                aState.getPreferences());
     }
 
     @Override
-    public synchronized AnnotationPreference loadPreferences(Project aProject, String aUsername,
-            Mode aMode)
+    public synchronized AnnotationPreference loadPreferences(Project aProject,
+            String aSessionOwnerName, Mode aMode)
         throws IOException
     {
         // TODO Use modular preference loading once it is available and if there is a corresponding
         // data file. Otherwise, fall back to loading the legacy preferences
 
-        AnnotationPreference pref = loadLegacyPreferences(aProject, aUsername, aMode);
+        var preferences = loadLegacyPreferences(aProject, aSessionOwnerName, aMode);
 
-        return pref;
+        var sessionOwner = userService.get(aSessionOwnerName);
+
+        upgradeLayerVisibilityPreferences(aProject, sessionOwner, preferences);
+        upgradeLayoutStatePreferences(aProject, sessionOwner, preferences);
+
+        return preferences;
+    }
+
+    private void upgradeLayerVisibilityPreferences(Project aProject, User aSessionOwner,
+            AnnotationPreference preferences)
+    {
+        var maybeLayersState = preferencesService
+                .loadOptionalTraitsForUserAndProject(KEY_LAYERS_STATE, aSessionOwner, aProject);
+        if (maybeLayersState.isPresent()) {
+            var layersState = maybeLayersState.get();
+            preferences.setColorPerLayer(layersState.getLayerColoringStrategy());
+            preferences.setReadonlyLayerColoringBehaviour(
+                    layersState.getReadonlyLayerColoringStrategy());
+            preferences.setHiddenAnnotationLayerIds(layersState.getHiddenLayers());
+            return;
+        }
+
+        saveLayerVisibilityPreferences(aProject, aSessionOwner, preferences);
+    }
+
+    private void saveLayerVisibilityPreferences(Project aProject, User aSessionOwner,
+            AnnotationPreference preferences)
+    {
+        var layersState = preferencesService.loadTraitsForUserAndProject(KEY_LAYERS_STATE,
+                aSessionOwner, aProject);
+        layersState.setLayerColoringStrategy(preferences.getColorPerLayer());
+        layersState
+                .setReadonlyLayerColoringStrategy(preferences.getReadonlyLayerColoringBehaviour());
+        layersState.setHiddenLayers(preferences.getHiddenAnnotationLayerIds());
+        preferencesService.saveTraitsForUserAndProject(KEY_LAYERS_STATE, aSessionOwner, aProject,
+                layersState);
+    }
+
+    private void upgradeLayoutStatePreferences(Project aProject, User aSessionOwner,
+            AnnotationPreference preferences)
+    {
+        var maybeLayoutState = preferencesService
+                .loadOptionalTraitsForUserAndProject(KEY_LAYOUT_STATE, aSessionOwner, aProject);
+        if (maybeLayoutState.isPresent()) {
+            var layoutState = maybeLayoutState.get();
+            preferences.setSidebarSizeLeft(layoutState.getSidebarSizeLeft());
+            preferences.setSidebarSizeRight(layoutState.getSidebarSizeRight());
+            return;
+        }
+
+        saveLayoutStatePreferences(aProject, aSessionOwner, preferences);
+    }
+
+    private void saveLayoutStatePreferences(Project aProject, User aSessionOwner,
+            AnnotationPreference preferences)
+    {
+        var layoutState = preferencesService.loadTraitsForUserAndProject(KEY_LAYOUT_STATE,
+                aSessionOwner, aProject);
+        layoutState.setSidebarSizeLeft(preferences.getSidebarSizeLeft());
+        layoutState.setSidebarSizeRight(preferences.getSidebarSizeRight());
+        preferencesService.saveTraitsForUserAndProject(KEY_LAYOUT_STATE, aSessionOwner, aProject,
+                layoutState);
     }
 
     @Override
-    public synchronized void savePreferences(Project aProject, String aUsername, Mode aMode,
+    public synchronized void savePreferences(Project aProject, String aSessionOwnerName, Mode aMode,
             AnnotationPreference aPref)
         throws IOException
     {
         // TODO Switch to a new and modular way of writing preferences
 
-        saveLegacyPreferences(aProject, aUsername, aMode, aPref);
+        var sessionOwner = userService.get(aSessionOwnerName);
+
+        saveLayerVisibilityPreferences(aProject, sessionOwner, aPref);
+        saveLayoutStatePreferences(aProject, sessionOwner, aPref);
+
+        saveLegacyPreferences(aProject, aSessionOwnerName, aMode, aPref);
     }
 
     /**
@@ -177,26 +240,27 @@ public class UserPreferencesServiceImpl
      * @throws IOException
      *             if an I/O error occurs.
      */
+    @Deprecated
     private void saveLegacyPreferences(Project aProject, String aUsername, Mode aMode,
             AnnotationPreference aPref)
         throws IOException
     {
-        BeanWrapper wrapper = PropertyAccessorFactory.forBeanPropertyAccess(aPref);
-        Properties props = new Properties();
-        for (PropertyDescriptor value : wrapper.getPropertyDescriptors()) {
+        var wrapper = PropertyAccessorFactory.forBeanPropertyAccess(aPref);
+        var props = new Properties();
+        for (var value : wrapper.getPropertyDescriptors()) {
             if (wrapper.getPropertyValue(value.getName()) == null) {
                 continue;
             }
             props.setProperty(aMode + "." + value.getName(),
                     wrapper.getPropertyValue(value.getName()).toString());
         }
-        String propertiesPath = repositoryProperties.getPath().getAbsolutePath() + "/"
-                + PROJECT_FOLDER + "/" + aProject.getId() + "/" + SETTINGS_FOLDER + "/" + aUsername;
+        var propertiesPath = repositoryProperties.getPath().getAbsolutePath() + "/" + PROJECT_FOLDER
+                + "/" + aProject.getId() + "/" + SETTINGS_FOLDER + "/" + aUsername;
         // append existing preferences for the other mode
         if (new File(propertiesPath, ANNOTATION_PREFERENCE_PROPERTIES_FILE).exists()) {
-            Properties properties = loadLegacyPreferencesFile(aUsername, aProject);
-            for (Entry<Object, Object> entry : properties.entrySet()) {
-                String key = entry.getKey().toString();
+            var properties = loadLegacyPreferencesFile(aUsername, aProject);
+            for (var entry : properties.entrySet()) {
+                var key = entry.getKey().toString();
                 // Maintain other Modes of annotations confs than this one
                 if (!key.substring(0, key.indexOf(".")).equals(aMode.toString())) {
                     props.put(entry.getKey(), entry.getValue());
@@ -219,38 +283,36 @@ public class UserPreferencesServiceImpl
         // }
     }
 
+    @Deprecated
     private AnnotationPreference loadLegacyPreferences(Project aProject, String aUsername,
             Mode aMode)
     {
-        AnnotationPreference preference = new AnnotationPreference();
+        var preference = new AnnotationPreference();
 
-        BeanWrapper wrapper = new BeanWrapperImpl(preference);
+        var wrapper = new BeanWrapperImpl(preference);
 
         // get annotation preference from file system
         try {
-            Properties props = loadLegacyPreferencesFile(aUsername, aProject);
-            for (Entry<Object, Object> entry : props.entrySet()) {
-                String property = entry.getKey().toString();
-                int index = property.indexOf(".");
-                String propertyName = property.substring(index + 1);
-                String mode = property.substring(0, index);
+            var props = loadLegacyPreferencesFile(aUsername, aProject);
+            for (var entry : props.entrySet()) {
+                var property = entry.getKey().toString();
+                var index = property.indexOf(".");
+                var propertyName = property.substring(index + 1);
+                var mode = property.substring(0, index);
                 if (wrapper.isWritableProperty(propertyName) && mode.equals(aMode.getName())) {
                     if (AnnotationPreference.class.getDeclaredField(propertyName)
                             .getGenericType() instanceof ParameterizedType) {
                         if (entry.getValue().toString().startsWith("[")) { // its a list
-                            List<String> value = Arrays.asList(
-                                    StringUtils.replaceChars(entry.getValue().toString(), "[]", "")
-                                            .split(","));
+                            var value = asList(
+                                    replaceChars(entry.getValue().toString(), "[]", "").split(","));
                             if (!value.get(0).equals("")) {
                                 wrapper.setPropertyValue(propertyName, value);
                             }
                         }
                         else if (entry.getValue().toString().startsWith("{")) { // its a map
-                            String s = StringUtils.replaceChars(entry.getValue().toString(), "{}",
-                                    "");
-                            Map<String, String> value = Arrays.stream(s.split(","))
-                                    .map(x -> x.split("="))
-                                    .collect(Collectors.toMap(x -> x[0], x -> x[1]));
+                            var s = replaceChars(entry.getValue().toString(), "{}", "");
+                            var value = Arrays.stream(s.split(",")).map(x -> x.split("="))
+                                    .collect(toMap(x -> x[0], x -> x[1]));
                             wrapper.setPropertyValue(propertyName, value);
                         }
                     }
@@ -270,12 +332,13 @@ public class UserPreferencesServiceImpl
         }
 
         // Get color preferences for each layer, init with default if not found
-        Map<Long, ColoringStrategyType> colorPerLayer = preference.getColorPerLayer();
+        var colorPerLayer = preference.getColorPerLayer();
         if (colorPerLayer == null) {
             colorPerLayer = new HashMap<>();
             preference.setColorPerLayer(colorPerLayer);
         }
-        for (AnnotationLayer layer : annotationService.listAnnotationLayer(aProject)) {
+
+        for (var layer : annotationService.listAnnotationLayer(aProject)) {
             if (!colorPerLayer.containsKey(layer.getId())) {
                 colorPerLayer.put(layer.getId(), coloringService.getBestInitialStrategy(layer));
             }
@@ -304,11 +367,12 @@ public class UserPreferencesServiceImpl
     private Properties loadLegacyPreferencesFile(String aUsername, Project aProject)
         throws IOException
     {
-        Properties property = new Properties();
-        property.load(new FileInputStream(new File(repositoryProperties.getPath().getAbsolutePath()
-                + "/" + PROJECT_FOLDER + "/" + aProject.getId() + "/" + SETTINGS_FOLDER + "/"
-                + aUsername + "/" + ANNOTATION_PREFERENCE_PROPERTIES_FILE)));
-        return property;
+        var properties = new Properties();
+        properties
+                .load(new FileInputStream(new File(repositoryProperties.getPath().getAbsolutePath()
+                        + "/" + PROJECT_FOLDER + "/" + aProject.getId() + "/" + SETTINGS_FOLDER
+                        + "/" + aUsername + "/" + ANNOTATION_PREFERENCE_PROPERTIES_FILE)));
+        return properties;
     }
 
     /**
@@ -332,8 +396,7 @@ public class UserPreferencesServiceImpl
 
         public BratAnnotationEditorManagerPrefs()
         {
-            AnnotationEditorDefaultPreferencesProperties defaults = ApplicationContextProvider
-                    .getApplicationContext()
+            var defaults = ApplicationContextProvider.getApplicationContext()
                     .getBean(AnnotationEditorDefaultPreferencesProperties.class);
             defaultPageSize = defaults.getPageSize();
         }

@@ -20,6 +20,9 @@ package de.tudarmstadt.ukp.inception.schema.api.validation;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.uima.cas.CAS.TYPE_NAME_STRING;
 
+import java.util.List;
+
+import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.fit.util.FSUtil;
 
@@ -33,9 +36,14 @@ public class ValidationUtils
             return false;
         }
 
-        if (TYPE_NAME_STRING.equals(aFeature.getType())) {
+        if (TYPE_NAME_STRING.equals(aFeature.getType()) || aFeature.isVirtualFeature()) {
             // Only string features can have null values and be required
             return isBlank(FSUtil.getFeature(aFS, aFeature.getName(), String.class));
+        }
+
+        if (CAS.TYPE_NAME_STRING_ARRAY.equals(aFeature.getType())) {
+            var value = FSUtil.getFeature(aFS, aFeature.getName(), List.class);
+            return value == null || value.isEmpty();
         }
 
         return false;

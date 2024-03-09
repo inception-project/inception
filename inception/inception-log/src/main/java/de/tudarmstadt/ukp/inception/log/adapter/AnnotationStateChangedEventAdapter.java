@@ -25,7 +25,6 @@ import java.util.Objects;
 
 import org.springframework.stereotype.Component;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.inception.documents.event.AnnotationStateChangeEvent;
 import de.tudarmstadt.ukp.inception.log.model.StateChangeDetails;
 import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
@@ -67,11 +66,11 @@ public class AnnotationStateChangedEventAdapter
     @Override
     public String getDetails(AnnotationStateChangeEvent aEvent) throws IOException
     {
-        StateChangeDetails details = new StateChangeDetails();
+        var details = new StateChangeDetails();
         details.setState(Objects.toString(aEvent.getNewState(), null));
         details.setPreviousState(Objects.toString(aEvent.getPreviousState(), null));
 
-        AnnotationDocumentState annotatorState = aEvent.getAnnotationDocument().getAnnotatorState();
+        var annotatorState = aEvent.getAnnotationDocument().getAnnotatorState();
         details.setAnnotatorState(Objects.toString(annotatorState, null));
         if (annotatorState == FINISHED || annotatorState == IGNORE) {
             details.setAnnotatorComment(aEvent.getAnnotationDocument().getAnnotatorComment());

@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.ui.core.docanno.config;
 
+import org.springframework.boot.autoconfigure.AutoConfigureAfter;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationEventPublisher;
@@ -24,6 +26,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
+import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
+import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
+import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistry;
@@ -31,12 +36,14 @@ import de.tudarmstadt.ukp.inception.schema.api.layer.LayerType;
 import de.tudarmstadt.ukp.inception.ui.core.docanno.event.DocumentMetadataAnnotationActionUndoSupport;
 import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerSingletonCreatingWatcher;
 import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerSupport;
+import de.tudarmstadt.ukp.inception.ui.core.docanno.recommendation.MetadataSuggestionSupport;
 import de.tudarmstadt.ukp.inception.ui.core.docanno.sidebar.DocumentMetadataSidebarFactory;
 
 /**
  * Provides support for document-level annotations.
  */
 @Configuration
+@AutoConfigureAfter(RecommenderServiceAutoConfiguration.class)
 @EnableConfigurationProperties(DocumentMetadataLayerSupportPropertiesImpl.class)
 public class DocumentMetadataLayerSupportAutoConfiguration
 {
@@ -78,5 +85,18 @@ public class DocumentMetadataLayerSupportAutoConfiguration
     public DocumentMetadataAnnotationActionUndoSupport documentMetadataAnnotationActionUndoSupport()
     {
         return new DocumentMetadataAnnotationActionUndoSupport();
+    }
+
+    @Bean
+    @ConditionalOnProperty(prefix = "documentmetadata", name = "enabled", havingValue = "true", matchIfMissing = true)
+    @ConditionalOnBean(RecommendationService.class)
+    public MetadataSuggestionSupport metadataSuggestionSupport(
+            RecommendationService aRecommendationService,
+            LearningRecordService aLearningRecordService,
+            ApplicationEventPublisher aApplicationEventPublisher,
+            AnnotationSchemaService aSchemaService)
+    {
+        return new MetadataSuggestionSupport(aRecommendationService, aLearningRecordService,
+                aApplicationEventPublisher, aSchemaService);
     }
 }

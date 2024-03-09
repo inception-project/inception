@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.annotation;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationEditorState.KEY_EDITOR_STATE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase.PAGE_PARAM_DOCUMENT;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.FORCE_CAS_UPGRADE;
+import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.NO_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IGNORE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateChangeFlag.EXPLICIT_ANNOTATOR_USER_ACTION;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
@@ -29,7 +30,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAGE_PARAM_PROJECT;
 import static de.tudarmstadt.ukp.inception.rendering.selection.FocusPosition.TOP;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 
 import java.io.IOException;
@@ -81,7 +81,8 @@ import de.tudarmstadt.ukp.inception.annotation.events.BeforeDocumentOpenedEvent;
 import de.tudarmstadt.ukp.inception.annotation.events.DocumentOpenedEvent;
 import de.tudarmstadt.ukp.inception.annotation.events.FeatureValueUpdatedEvent;
 import de.tudarmstadt.ukp.inception.annotation.events.PreparingToOpenDocumentEvent;
-import de.tudarmstadt.ukp.inception.documents.DocumentAccess;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentAccess;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorBase;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorExtensionRegistry;
@@ -353,7 +354,7 @@ public class AnnotationPage
 
     private WebMarkupContainer createRightSidebar()
     {
-        WebMarkupContainer rightSidebar = new WebMarkupContainer("rightSidebar");
+        var rightSidebar = new WebMarkupContainer("rightSidebar");
         rightSidebar.setOutputMarkupPlaceholderTag(true);
         // Override sidebar width from preferences
         rightSidebar.add(new AttributeModifier("style",
@@ -363,14 +364,15 @@ public class AnnotationPage
         rightSidebar.add(detailEditor);
         rightSidebar.add(visibleWhen(getModel() //
                 .map(AnnotatorState::getAnnotationLayers) //
-                .map(layers -> layers.stream().anyMatch(l -> SPAN_TYPE.equals(l.getType())))));
+                .map(layers -> layers.stream()
+                        .anyMatch(l -> SpanLayerSupport.TYPE.equals(l.getType())))));
         return rightSidebar;
     }
 
     @Override
     public List<SourceDocument> getListOfDocs()
     {
-        AnnotatorState state = getModelObject();
+        var state = getModelObject();
         return new ArrayList<>(documentService
                 .listAnnotatableDocuments(state.getProject(), state.getUser()).keySet());
     }
@@ -389,7 +391,7 @@ public class AnnotationPage
             documentService
                     .verifyAnnotationCasTimestamp(state.getDocument(),
                             state.getUser().getUsername(),
-                            state.getAnnotationDocumentTimestamp().get(), "reading")
+                            state.getAnnotationDocumentTimestamp().get(), "reading the editor CAS")
                     .ifPresent(state::setAnnotationDocumentTimestamp);
         }
 
@@ -401,7 +403,7 @@ public class AnnotationPage
     public void writeEditorCas(CAS aCas) throws IOException, AnnotationException
     {
         ensureIsEditable();
-        AnnotatorState state = getModelObject();
+        var state = getModelObject();
         documentService.writeAnnotationCas(aCas, state.getDocument(), state.getUser(), true);
 
         bumpAnnotationCasTimestamp(state);
@@ -456,12 +458,13 @@ public class AnnotationPage
                     .createOrGetAnnotationDocument(state.getDocument(), state.getUser());
             var stateBeforeOpening = annotationDocument.getState();
 
+            var editable = isEditable();
+
             // Read the CAS
             // Update the annotation document CAS
             var editorCas = documentService.readAnnotationCas(annotationDocument,
-                    FORCE_CAS_UPGRADE);
+                    editable ? FORCE_CAS_UPGRADE : NO_CAS_UPGRADE);
 
-            var editable = isEditable();
             applicationEventPublisherHolder.get()
                     .publishEvent(new BeforeDocumentOpenedEvent(this, editorCas,
                             getModelObject().getDocument(),

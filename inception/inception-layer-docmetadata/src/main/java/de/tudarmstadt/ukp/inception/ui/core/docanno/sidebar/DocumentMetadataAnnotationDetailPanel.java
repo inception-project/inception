@@ -29,7 +29,6 @@ import java.util.Optional;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.wicket.Component;
 import org.apache.wicket.MetaDataKey;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.AttributeAppender;
@@ -50,6 +49,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureDeletedEvent;
 import de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureEditor;
@@ -62,7 +62,6 @@ import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureEditor;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureEditorValueChangedEvent;
-import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupport;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
 import de.tudarmstadt.ukp.inception.support.wicket.DescriptionTooltipBehavior;
@@ -88,25 +87,24 @@ public class DocumentMetadataAnnotationDetailPanel
     private final CasProvider jcasProvider;
     private final IModel<Project> project;
     private final IModel<SourceDocument> sourceDocument;
-    private final IModel<String> username;
+    private final IModel<User> user;
     private final ListView<FeatureState> featureList;
     private final AnnotationActionHandler actionHandler;
-    private final AnnotatorState state;
+    private final IModel<AnnotatorState> state;
 
     public DocumentMetadataAnnotationDetailPanel(String aId, IModel<VID> aModel,
-            IModel<SourceDocument> aDocument, IModel<String> aUsername, CasProvider aCasProvider,
-            IModel<Project> aProject, AnnotationPage aAnnotationPage,
-            AnnotationActionHandler aActionHandler, AnnotatorState aState)
+            CasProvider aCasProvider, AnnotationPage aAnnotationPage,
+            AnnotationActionHandler aActionHandler, IModel<AnnotatorState> aState)
     {
         super(aId, aModel);
 
         setOutputMarkupPlaceholderTag(true);
 
-        sourceDocument = aDocument;
-        username = aUsername;
+        sourceDocument = aState.map(AnnotatorState::getDocument);
+        user = aState.map(AnnotatorState::getUser);
         annotationPage = aAnnotationPage;
         jcasProvider = aCasProvider;
-        project = aProject;
+        project = aState.map(AnnotatorState::getProject);
         actionHandler = aActionHandler;
         state = aState;
 
@@ -142,8 +140,8 @@ public class DocumentMetadataAnnotationDetailPanel
                 final FeatureEditor editor;
 
                 // Look up a suitable editor and instantiate it
-                FeatureSupport<?> featureSupport = featureSupportRegistry
-                        .findExtension(featureState.feature).orElseThrow();
+                var featureSupport = featureSupportRegistry.findExtension(featureState.feature)
+                        .orElseThrow();
                 editor = featureSupport.createEditor(CID_EDITOR,
                         DocumentMetadataAnnotationDetailPanel.this, actionHandler,
                         annotationPage.getModel(), item.getModel());
@@ -158,7 +156,7 @@ public class DocumentMetadataAnnotationDetailPanel
                     }
 
                     // Add tooltip on label
-                    StringBuilder tooltipTitle = new StringBuilder();
+                    var tooltipTitle = new StringBuilder();
                     tooltipTitle.append(featureState.feature.getUiName());
                     if (featureState.feature.getTagset() != null) {
                         tooltipTitle.append(" (");
@@ -166,7 +164,7 @@ public class DocumentMetadataAnnotationDetailPanel
                         tooltipTitle.append(')');
                     }
 
-                    Component labelComponent = editor.getLabelComponent();
+                    var labelComponent = editor.getLabelComponent();
                     labelComponent.add(new AttributeAppender("style", "cursor: help", ";"));
                     labelComponent.add(new DescriptionTooltipBehavior(tooltipTitle.toString(),
                             featureState.feature.getDescription()));
@@ -194,8 +192,11 @@ public class DocumentMetadataAnnotationDetailPanel
 
     private Optional<AnnotationLayer> getLayer()
     {
-        VID vid = getModelObject();
-        Project proj = project.getObject();
+        var vid = getModelObject();
+        var proj = project.getObject();
+        if (proj == null || vid == null || vid.isNotSet() || vid.isSynthetic()) {
+            return Optional.empty();
+        }
 
         CAS cas;
         try {
@@ -220,10 +221,10 @@ public class DocumentMetadataAnnotationDetailPanel
 
     private List<FeatureState> listFeatures()
     {
-        VID vid = getModelObject();
-        Project proj = project.getObject();
+        var vid = getModelObject();
+        var proj = project.getObject();
 
-        if (proj == null || vid == null || vid.isNotSet()) {
+        if (proj == null || vid == null || vid.isNotSet() || vid.isSynthetic()) {
             return emptyList();
         }
 
@@ -244,12 +245,13 @@ public class DocumentMetadataAnnotationDetailPanel
             LOG.error("Unable to locate annotation with ID {}", vid);
             return emptyList();
         }
-        AnnotationLayer layer = annotationService.findLayer(proj, fs);
-        TypeAdapter adapter = annotationService.getAdapter(layer);
+
+        var layer = annotationService.findLayer(proj, fs);
+        var adapter = annotationService.getAdapter(layer);
 
         // Populate from feature structure
-        List<FeatureState> featureStates = new ArrayList<>();
-        for (AnnotationFeature feature : annotationService.listSupportedFeatures(layer)) {
+        var featureStates = new ArrayList<FeatureState>();
+        for (var feature : annotationService.listSupportedFeatures(layer)) {
             if (!feature.isEnabled()) {
                 continue;
             }
@@ -259,7 +261,7 @@ public class DocumentMetadataAnnotationDetailPanel
                 value = adapter.getFeatureValue(feature, fs);
             }
 
-            FeatureState featureState = new FeatureState(vid, feature, value);
+            var featureState = new FeatureState(vid, feature, value);
             featureStates.add(featureState);
             featureState.tagset = annotationService
                     .listTagsReorderable(featureState.feature.getTagset());
@@ -324,8 +326,8 @@ public class DocumentMetadataAnnotationDetailPanel
 
             LOG.trace("writeFeatureEditorModelsToCas() " + featureState.feature.getUiName() + " = "
                     + featureState.value);
-            aAdapter.setFeatureValue(sourceDocument.getObject(), username.getObject(), aCas,
-                    getModelObject().getId(), featureState.feature, featureState.value);
+            aAdapter.setFeatureValue(sourceDocument.getObject(), user.getObject().getUsername(),
+                    aCas, getModelObject().getId(), featureState.feature, featureState.value);
         }
     }
 
@@ -339,7 +341,7 @@ public class DocumentMetadataAnnotationDetailPanel
 
     public void toggleVisibility()
     {
-        state.clearArmedSlot();
+        state.getObject().clearArmedSlot();
         setVisible(!isVisible());
     }
 
@@ -351,8 +353,8 @@ public class DocumentMetadataAnnotationDetailPanel
             CAS cas = jcasProvider.get();
             AnnotationFS fs = ICasUtil.selectAnnotationByAddr(cas,
                     aEvent.getLinkWithRoleModel().targetAddr);
-            state.getSelection().selectSpan(fs);
-            if (state.getSelection().getAnnotation().isSet()) {
+            state.getObject().getSelection().selectSpan(fs);
+            if (state.getObject().getSelection().getAnnotation().isSet()) {
                 actionHandler.actionDelete(target);
 
                 findParent(AnnotationPageBase.class).actionRefreshDocument(aEvent.getTarget());

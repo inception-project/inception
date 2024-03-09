@@ -31,6 +31,7 @@ public class SecurityPropertiesImpl
     private String defaultAdminUsername;
     private String defaultAdminPassword;
     private boolean defaultAdminRemoteAccess = false;
+    private boolean spaceAllowedInUsername = false;
 
     public static final int HARD_MINIMUM_PASSWORD_LENGTH = 0;
     public static final int DEFAULT_MINIMUM_PASSWORD_LENGTH = 8;
@@ -151,5 +152,16 @@ public class SecurityPropertiesImpl
     public void setPasswordPattern(Pattern aPasswordPattern)
     {
         passwordPattern = aPasswordPattern;
+    }
+
+    @Override
+    public boolean isSpaceAllowedInUsername()
+    {
+        return spaceAllowedInUsername;
+    }
+
+    public void setSpaceAllowedInUsername(boolean aSpaceInUsernameAllowed)
+    {
+        spaceAllowedInUsername = aSpaceInUsernameAllowed;
     }
 }

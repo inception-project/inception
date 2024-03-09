@@ -19,29 +19,26 @@ package de.tudarmstadt.ukp.inception.documents.exporters;
 
 import static de.tudarmstadt.ukp.inception.project.api.ProjectService.DOCUMENT_FOLDER;
 import static de.tudarmstadt.ukp.inception.project.api.ProjectService.PROJECT_FOLDER;
+import static de.tudarmstadt.ukp.inception.project.api.ProjectService.SOURCE_FOLDER;
 import static de.tudarmstadt.ukp.inception.support.io.FastIOUtils.copy;
 import static java.lang.System.currentTimeMillis;
-import static java.nio.file.Files.createDirectory;
+import static java.nio.file.Files.createDirectories;
 import static java.util.function.Function.identity;
+import static java.util.stream.Collectors.toMap;
+import static org.apache.commons.io.FileUtils.copyFileToDirectory;
+import static org.apache.commons.io.FileUtils.forceMkdir;
+import static org.apache.commons.lang3.time.DurationFormatUtils.formatDurationWords;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.lang.invoke.MethodHandles;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,6 +54,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
 import de.tudarmstadt.ukp.inception.documents.config.DocumentServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 
 /**
@@ -68,9 +66,7 @@ import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 public class SourceDocumentExporter
     implements ProjectExporter
 {
-    private static final String SOURCE_FOLDER = "source";
-
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private final DocumentService documentService;
     private final RepositoryProperties repositoryProperties;
@@ -93,11 +89,11 @@ public class SourceDocumentExporter
 
     private void exportSourceDocuments(Project aProject, ExportedProject exProject)
     {
-        List<ExportedSourceDocument> sourceDocuments = new ArrayList<>();
+        var sourceDocuments = new ArrayList<ExportedSourceDocument>();
 
         // add source documents to a project
-        List<SourceDocument> documents = documentService.listSourceDocuments(aProject);
-        for (SourceDocument sourceDocument : documents) {
+        var documents = documentService.listSourceDocuments(aProject);
+        for (var sourceDocument : documents) {
             ExportedSourceDocument exDocument = new ExportedSourceDocument();
             exDocument.setFormat(sourceDocument.getFormat());
             exDocument.setName(sourceDocument.getName());
@@ -116,28 +112,28 @@ public class SourceDocumentExporter
             ProjectExportTaskMonitor aMonitor, ExportedProject aExProject, File aStage)
         throws IOException, ProjectExportException, InterruptedException
     {
-        Project project = aRequest.getProject();
-        File sourceDocumentDir = new File(aStage, SOURCE_FOLDER);
-        FileUtils.forceMkdir(sourceDocumentDir);
+        var project = aRequest.getProject();
+        var sourceDocumentDir = new File(aStage, SOURCE_FOLDER);
+        forceMkdir(sourceDocumentDir);
         // Get all the source documents from the project
-        List<SourceDocument> documents = documentService.listSourceDocuments(project);
+        var documents = documentService.listSourceDocuments(project);
         int i = 1;
-        for (SourceDocument sourceDocument : documents) {
+        for (var sourceDocument : documents) {
             // check if the export has been cancelled
             if (Thread.interrupted()) {
                 throw new InterruptedException();
             }
 
             try {
-                FileUtils.copyFileToDirectory(documentService.getSourceDocumentFile(sourceDocument),
-                        sourceDocumentDir);
+                var documentFile = documentService.getSourceDocumentFile(sourceDocument);
+                copyFileToDirectory(documentFile, sourceDocumentDir);
                 aMonitor.setProgress((int) Math.ceil(((double) i) / documents.size() * 10.0));
-                log.info("Exported content for source document {}/{}: {} in {}", i,
+                LOG.info("Exported content for source document {}/{}: {} in {}", i,
                         documents.size(), sourceDocument, project);
                 i++;
             }
             catch (FileNotFoundException e) {
-                log.error("Source file [{}] related to project couldn't be located in repository",
+                LOG.error("Source file [{}] related to project couldn't be located in repository",
                         sourceDocument.getName(), ExceptionUtils.getRootCause(e));
                 aMonitor.addMessage(LogMessage.error(this,
                         "Source file [%s] related to project couldn't be located in repository",
@@ -153,14 +149,14 @@ public class SourceDocumentExporter
             ExportedProject aExProject, ZipFile aZip)
         throws Exception
     {
-        long start = currentTimeMillis();
+        var start = currentTimeMillis();
 
         importSourceDocuments(aExProject, aProject);
         importSourceDocumentContents(aZip, aProject);
 
-        log.info("Imported [{}] source documents into aProject ({})",
+        LOG.info("Imported [{}] source documents into aProject ({})",
                 aExProject.getSourceDocuments().size(), aProject,
-                DurationFormatUtils.formatDurationWords(currentTimeMillis() - start, true, true));
+                formatDurationWords(currentTimeMillis() - start, true, true));
     }
 
     /**
@@ -177,9 +173,8 @@ public class SourceDocumentExporter
             Project aImportedProject)
         throws IOException
     {
-        for (ExportedSourceDocument importedSourceDocument : aImportedProjectSetting
-                .getSourceDocuments()) {
-            SourceDocument sourceDocument = new SourceDocument();
+        for (var importedSourceDocument : aImportedProjectSetting.getSourceDocuments()) {
+            var sourceDocument = new SourceDocument();
             sourceDocument.setFormat(importedSourceDocument.getFormat());
             sourceDocument.setName(importedSourceDocument.getName());
             sourceDocument.setState(importedSourceDocument.getState());
@@ -202,44 +197,46 @@ public class SourceDocumentExporter
      * @throws IOException
      *             if an I/O error occurs.
      */
-    @SuppressWarnings("rawtypes")
     private void importSourceDocumentContents(ZipFile zip, Project aProject) throws IOException
     {
         // Query once for all the documents to avoid hitting the DB in the loop below
-        Map<String, SourceDocument> docs = documentService.listSourceDocuments(aProject).stream()
-                .collect(Collectors.toMap(SourceDocument::getName, identity()));
+        var docs = documentService.listSourceDocuments(aProject).stream()
+                .collect(toMap(SourceDocument::getName, identity()));
 
         // Create the folder structure for the project. This saves time over waiting for the
         // mkdirs in FastIOUtils.copy to kick in.
-        Path docRoot = Paths.get(repositoryProperties.getPath().getAbsolutePath(), PROJECT_FOLDER,
+        var docRoot = Paths.get(repositoryProperties.getPath().getAbsolutePath(), PROJECT_FOLDER,
                 aProject.getId().toString(), DOCUMENT_FOLDER);
-        Files.createDirectories(docRoot);
-        for (SourceDocument doc : docs.values()) {
-            Path docFolder = docRoot.resolve(doc.getId().toString());
-            createDirectory(docFolder);
-            Path sourceDocFolder = docFolder.resolve(SOURCE_FOLDER);
-            createDirectory(sourceDocFolder);
+        createDirectories(docRoot);
+
+        for (var doc : docs.values()) {
+            createDirectories(
+                    docRoot.resolve(doc.getId().toString()).resolve(ProjectService.SOURCE_FOLDER));
         }
 
         int n = 0;
-        for (Enumeration zipEnumerate = zip.entries(); zipEnumerate.hasMoreElements();) {
-            ZipEntry entry = (ZipEntry) zipEnumerate.nextElement();
+        for (var entries = zip.entries(); entries.hasMoreElements();) {
+            var entry = entries.nextElement();
+
+            if (entry.isDirectory()) {
+                continue;
+            }
 
             // Strip leading "/" that we had in ZIP files prior to 2.0.8 (bug #985)
-            String entryName = ProjectExporter.normalizeEntryName(entry);
+            var entryName = ProjectExporter.normalizeEntryName(entry);
 
-            if (entryName.startsWith(SOURCE_FOLDER)) {
-                String fileName = FilenameUtils.getName(entryName);
+            if (entryName.startsWith(ProjectService.SOURCE_FOLDER)) {
+                var fileName = FilenameUtils.getName(entryName);
                 if (fileName.trim().isEmpty()) {
                     continue;
                 }
 
-                SourceDocument sourceDocument = docs.get(fileName);
-                File sourceFilePath = documentService.getSourceDocumentFile(sourceDocument);
+                var sourceDocument = docs.get(fileName);
+                var sourceFilePath = documentService.getSourceDocumentFile(sourceDocument);
                 copy(zip.getInputStream(entry), sourceFilePath);
 
                 n++;
-                log.info("Imported content for source document {}/{}: {} in {}", n, docs.size(),
+                LOG.info("Imported content for source document {}/{}: {} in {}", n, docs.size(),
                         sourceDocument, aProject);
             }
         }

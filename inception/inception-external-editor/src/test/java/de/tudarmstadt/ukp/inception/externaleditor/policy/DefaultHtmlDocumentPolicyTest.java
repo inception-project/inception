@@ -41,7 +41,7 @@ class DefaultHtmlDocumentPolicyTest
 
         var sut = new DefaultHtmlDocumentPolicy();
 
-        assertThat(sut.getPolicy().getElementPolicies()).hasSize(74);
+        assertThat(sut.getPolicy().getElementPolicies()).hasSize(152);
 
         write(policyFile.toFile(), "policies: []", UTF_8);
         assertThat(policyFile).exists();
@@ -54,6 +54,6 @@ class DefaultHtmlDocumentPolicyTest
 
         Files.delete(policyFile);
         assertThat(policyFile).doesNotExist();
-        assertThat(sut.getPolicy().getElementPolicies()).hasSize(74);
+        assertThat(sut.getPolicy().getElementPolicies()).hasSize(152);
     }
 }

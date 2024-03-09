@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.annotation.layer.span;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectOverlapping;
+import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.selectOverlapping;
 import static org.apache.uima.fit.util.CasUtil.getType;
 
 import java.util.Arrays;

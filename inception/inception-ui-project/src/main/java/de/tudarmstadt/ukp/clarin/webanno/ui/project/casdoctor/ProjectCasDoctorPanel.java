@@ -159,7 +159,8 @@ public class ProjectCasDoctorPanel
 
                 try {
                     casStorageService.forceActionOnCas(sd, INITIAL_CAS_PSEUDO_USER,
-                            (doc, user) -> createOrReadInitialCasWithoutSaving(doc, messageSet),
+                            (doc, user) -> createOrReadInitialCasWithoutSavingOrChecks(doc,
+                                    messageSet),
                             (cas) -> casDoctor.repair(project, cas, messageSet.messages), //
                             true);
                 }
@@ -257,7 +258,8 @@ public class ProjectCasDoctorPanel
                 try {
                     objectCount++;
                     casStorageService.forceActionOnCas(sd, INITIAL_CAS_PSEUDO_USER,
-                            (doc, user) -> createOrReadInitialCasWithoutSaving(doc, messageSet),
+                            (doc, user) -> createOrReadInitialCasWithoutSavingOrChecks(doc,
+                                    messageSet),
                             (cas) -> casDoctor.analyze(project, cas, messageSet.messages), //
                             false);
                 }
@@ -341,7 +343,7 @@ public class ProjectCasDoctorPanel
         aTarget.add(this);
     }
 
-    private CAS createOrReadInitialCasWithoutSaving(SourceDocument aDocument,
+    private CAS createOrReadInitialCasWithoutSavingOrChecks(SourceDocument aDocument,
             LogMessageSet aMessageSet)
         throws IOException, UIMAException
     {
@@ -350,8 +352,8 @@ public class ProjectCasDoctorPanel
                     UNMANAGED_NON_INITIALIZING_ACCESS);
         }
 
-        CAS cas = importExportService
-                .importCasFromFile(documentService.getSourceDocumentFile(aDocument), aDocument);
+        var cas = importExportService.importCasFromFileNoChecks(
+                documentService.getSourceDocumentFile(aDocument), aDocument);
         aMessageSet.messages.add(
                 LogMessage.info(getClass(), "Created initial CAS for [%s]", aDocument.getName()));
         return cas;

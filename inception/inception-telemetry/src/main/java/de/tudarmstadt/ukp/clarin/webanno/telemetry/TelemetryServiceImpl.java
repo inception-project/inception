@@ -22,6 +22,7 @@ import static de.tudarmstadt.ukp.inception.support.deployment.DeploymentMode.SER
 import static de.tudarmstadt.ukp.inception.support.deployment.DeploymentMode.SERVER_JAR_DOCKER;
 import static de.tudarmstadt.ukp.inception.support.deployment.DeploymentMode.SERVER_WAR;
 import static de.tudarmstadt.ukp.inception.support.deployment.DeploymentMode.SERVER_WAR_DOCKER;
+import static de.tudarmstadt.ukp.inception.support.logging.BaseLoggers.BOOT_LOG;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Objects.isNull;
@@ -123,7 +124,7 @@ public class TelemetryServiceImpl
             }
         }
 
-        log.info("Found [{}] telemetry supports", tsp.size());
+        BOOT_LOG.info("Found [{}] telemetry supports", tsp.size());
 
         telemetrySupports = unmodifiableList(tsp);
 

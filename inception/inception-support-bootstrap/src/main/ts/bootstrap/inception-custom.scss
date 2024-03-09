@@ -267,7 +267,10 @@ a.disabled {
  */
 
 label.required {
-    color: red;
+  &:after {
+    color: var(--bs-secondary-color) !important;
+    content: "*" !important;
+  }
 }
 
 /* -------------------------------------------------------------------------------------------------

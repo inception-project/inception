@@ -154,6 +154,28 @@ public interface TypeAdapter
             AnnotationFeature aFeature, Object aValue)
         throws AnnotationException;
 
+    default void setFeatureValue(SourceDocument aDocument, String aDocumentOwner,
+            FeatureStructure aFs, AnnotationFeature aFeature, Object aValue)
+        throws AnnotationException
+
+    {
+        setFeatureValue(aDocument, aDocumentOwner, aFs.getCAS(), aFs.getAddress(), aFeature,
+                aValue);
+    }
+
+    void pushFeatureValue(SourceDocument aDocument, String aUsername, CAS aCas, int aAddress,
+            AnnotationFeature aFeature, Object aValue)
+        throws AnnotationException;
+
+    default void pushFeatureValue(SourceDocument aDocument, String aDocumentOwner,
+            FeatureStructure aFs, AnnotationFeature aFeature, Object aValue)
+        throws AnnotationException
+
+    {
+        pushFeatureValue(aDocument, aDocumentOwner, aFs.getCAS(), aFs.getAddress(), aFeature,
+                aValue);
+    }
+
     /**
      * Get the value of the given feature.
      * 

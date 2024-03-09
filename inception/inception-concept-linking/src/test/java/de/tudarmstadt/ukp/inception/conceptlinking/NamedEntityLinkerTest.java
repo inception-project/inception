@@ -65,6 +65,7 @@ import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.PredictionContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupport;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
@@ -111,14 +112,23 @@ public class NamedEntityLinkerTest
     @Test
     public void thatPredictionWorks() throws Exception
     {
-        List<KBHandle> mockResult = asList(
-                new KBHandle("https://www.wikidata.org/wiki/Q76", "Barack Obama",
-                        "44th President of the United States of America"),
-                new KBHandle("https://www.wikidata.org/wiki/Q26446735", "Obama",
-                        "Japanese Family Name"),
-                new KBHandle("https://www.wikidata.org/wiki/Q18355807", "Obama", "genus of worms"),
-                new KBHandle("https://www.wikidata.org/wiki/Q41773", "Obama",
-                        "city in Fukui prefecture, Japan"));
+        var mockResult = asList(
+                KBHandle.builder().withIdentifier("https://www.wikidata.org/wiki/Q76") //
+                        .withName("Barack Obama") //
+                        .withDescription("44th President of the United States of America") //
+                        .build(),
+                KBHandle.builder().withIdentifier("https://www.wikidata.org/wiki/Q26446735") //
+                        .withName("Obama") //
+                        .withDescription("Japanese Family Name") //
+                        .build(),
+                KBHandle.builder().withIdentifier("https://www.wikidata.org/wiki/Q18355807") //
+                        .withName("Obama") //
+                        .withDescription("genus of worms") //
+                        .build(),
+                KBHandle.builder().withIdentifier("https://www.wikidata.org/wiki/Q41773") //
+                        .withName("Obama") //
+                        .withDescription("city in Fukui prefecture, Japan") //
+                        .build());
 
         KnowledgeBaseService kbService = mock(KnowledgeBaseService.class);
         KnowledgeBase kb = new KnowledgeBase();
@@ -144,9 +154,9 @@ public class NamedEntityLinkerTest
         casStorageSession.add("cas", EXCLUSIVE_WRITE_ACCESS, cas);
 
         sut.train(context, Collections.singletonList(cas));
-        RecommenderTestHelper.addScoreFeature(cas, NamedEntity.class, "value");
+        RecommenderTestHelper.addPredictionFeatures(cas, NamedEntity.class, "value");
 
-        sut.predict(context, cas);
+        sut.predict(new PredictionContext(context), cas);
 
         List<NamedEntity> predictions = getPredictions(cas, NamedEntity.class);
 

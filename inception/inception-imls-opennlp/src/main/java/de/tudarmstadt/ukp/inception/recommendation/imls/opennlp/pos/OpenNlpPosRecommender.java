@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.pos;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectOverlapping;
 import static de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult.toEvaluationResult;
+import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.selectOverlapping;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNoneBlank;
 import static org.apache.uima.fit.util.CasUtil.getType;
@@ -48,12 +48,14 @@ import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.LabelPair;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.PredictionContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext.Key;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapability;
 import de.tudarmstadt.ukp.inception.rendering.model.Range;
+import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 import opennlp.tools.ml.BeamSearch;
 import opennlp.tools.postag.POSModel;
 import opennlp.tools.postag.POSSample;
@@ -96,7 +98,8 @@ public class OpenNlpPosRecommender
         var posSamples = extractPosSamples(aCasses);
 
         if (posSamples.size() < 2) {
-            aContext.warn("Not enough training data: [%d] items", posSamples.size());
+            aContext.log(LogMessage.warn(getRecommender().getName(),
+                    "Not enough training data: [%d] items", posSamples.size()));
             return;
         }
 
@@ -119,7 +122,7 @@ public class OpenNlpPosRecommender
     }
 
     @Override
-    public Range predict(RecommenderContext aContext, CAS aCas, int aBegin, int aEnd)
+    public Range predict(PredictionContext aContext, CAS aCas, int aBegin, int aEnd)
         throws RecommendationException
     {
         var model = aContext.get(KEY_MODEL).orElseThrow(

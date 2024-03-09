@@ -19,7 +19,6 @@
 package de.tudarmstadt.ukp.clarin.webanno.curation.casdiff;
 
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.RELATION_TYPE;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.SPAN_TYPE;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
 
@@ -51,6 +50,7 @@ import org.dkpro.core.io.xmi.XmiReader;
 import de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoTsv2Reader;
 import de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoTsv3XReader;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.support.WebAnnoConst;
 
 public class CurationTestUtils
@@ -77,13 +77,13 @@ public class CurationTestUtils
         return jcas;
     }
 
-    public static Map<String, List<CAS>> load(String... aPaths) throws UIMAException, IOException
+    public static Map<String, CAS> load(String... aPaths) throws UIMAException, IOException
     {
-        Map<String, List<CAS>> casByUser = new LinkedHashMap<>();
+        var casByUser = new LinkedHashMap<String, CAS>();
         int n = 1;
-        for (String path : aPaths) {
-            CAS cas = readConll2006(path);
-            casByUser.put("user" + n, asList(cas));
+        for (var path : aPaths) {
+            var cas = readConll2006(path);
+            casByUser.put("user" + n, cas);
             n++;
         }
         return casByUser;
@@ -225,7 +225,7 @@ public class CurationTestUtils
         throws Exception
     {
         TypeSystemDescription type = new TypeSystemDescription_impl();
-        if (aType.equals(SPAN_TYPE)) {
+        if (SpanLayerSupport.TYPE.equals(aType)) {
             TypeDescription td = type.addType(aTypeName, "", CAS.TYPE_NAME_ANNOTATION);
             for (String feature : aFeatures) {
                 td.addFeature(feature, "", CAS.TYPE_NAME_STRING);

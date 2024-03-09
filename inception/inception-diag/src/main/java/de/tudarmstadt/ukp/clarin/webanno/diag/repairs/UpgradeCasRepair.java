@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.diag.repairs;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getRealCas;
 import static de.tudarmstadt.ukp.clarin.webanno.diag.checks.UnreachableAnnotationsCheck.countFeatureStructures;
+import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.getRealCas;
 import static org.apache.uima.cas.impl.Serialization.serializeCASComplete;
 
 import java.io.IOException;
@@ -32,11 +32,11 @@ import org.apache.uima.cas.impl.CASImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.Repair.Safe;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
+import de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil;
 
 /**
  * Ensures that the CAS is up-to-date with the project type system. It performs the same operation

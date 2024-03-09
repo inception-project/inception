@@ -24,7 +24,6 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.uima.cas.ArrayFS;
-import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.FSUtil;
@@ -76,32 +75,32 @@ public abstract class DiffAdapter_ImplBase
     }
 
     @Override
-    public Position getPosition(int aCasId, FeatureStructure aFS)
+    public Position getPosition(FeatureStructure aFS)
     {
-        return getPosition(aCasId, aFS, null, null, -1, -1, null);
+        return getPosition(aFS, null, null, -1, -1, null);
     }
 
     @Override
-    public List<? extends Position> generateSubPositions(int aCasId, AnnotationFS aFs,
+    public List<? extends Position> generateSubPositions(AnnotationFS aFs,
             LinkCompareBehavior aLinkCompareBehavior)
     {
-        List<Position> subPositions = new ArrayList<>();
+        var subPositions = new ArrayList<Position>();
 
-        for (LinkFeatureDecl decl : linkFeatures) {
-            Feature linkFeature = aFs.getType().getFeatureByBaseName(decl.getName());
+        for (var decl : linkFeatures) {
+            var linkFeature = aFs.getType().getFeatureByBaseName(decl.getName());
             var array = FSUtil.getFeature(aFs, linkFeature, ArrayFS.class);
 
             if (array == null) {
                 continue;
             }
 
-            for (FeatureStructure linkFS : array.toArray()) {
-                String role = linkFS.getStringValue(
+            for (var linkFS : array.toArray()) {
+                var role = linkFS.getStringValue(
                         linkFS.getType().getFeatureByBaseName(decl.getRoleFeature()));
-                AnnotationFS target = (AnnotationFS) linkFS.getFeatureValue(
+                var target = (AnnotationFS) linkFS.getFeatureValue(
                         linkFS.getType().getFeatureByBaseName(decl.getTargetFeature()));
-                Position pos = getPosition(aCasId, aFs, decl.getName(), role, target.getBegin(),
-                        target.getEnd(), aLinkCompareBehavior);
+                var pos = getPosition(aFs, decl.getName(), role, target.getBegin(), target.getEnd(),
+                        aLinkCompareBehavior);
                 subPositions.add(pos);
             }
         }

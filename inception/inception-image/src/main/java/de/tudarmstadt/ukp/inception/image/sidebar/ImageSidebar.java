@@ -156,7 +156,7 @@ public class ImageSidebar
                 String url = anno.getFeatureValueAsString(f);
 
                 if (isNotBlank(url)) {
-                    images.add(new ImageHandle(url, state.getDocument(), new VID(anno),
+                    images.add(new ImageHandle(url, state.getDocument(), VID.of(anno),
                             anno.getBegin(), anno.getEnd()));
                 }
             }

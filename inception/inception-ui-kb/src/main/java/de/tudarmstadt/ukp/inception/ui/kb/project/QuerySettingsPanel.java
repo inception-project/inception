@@ -17,12 +17,14 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.project;
 
-import static java.util.stream.Collectors.toList;
+import static de.tudarmstadt.ukp.inception.kb.IriConstants.getFtsBackendName;
+import static java.util.Comparator.comparing;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.form.AjaxCheckBox;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.DropDownChoice;
+import org.apache.wicket.markup.html.form.LambdaChoiceRenderer;
 import org.apache.wicket.markup.html.form.NumberTextField;
 import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.panel.Panel;
@@ -91,7 +93,7 @@ public class QuerySettingsPanel
 
     private NumberTextField<Integer> queryLimitField(String id, IModel<Integer> aModel)
     {
-        NumberTextField<Integer> queryLimit = new NumberTextField<>(id, aModel, Integer.class);
+        var queryLimit = new NumberTextField<Integer>(id, aModel, Integer.class);
         queryLimit.setOutputMarkupId(true);
         queryLimit.setRequired(true);
         queryLimit.setMinimum(KnowledgeBasePropertiesImpl.HARD_MIN_RESULTS);
@@ -115,8 +117,13 @@ public class QuerySettingsPanel
 
     private DropDownChoice<String> ftsField(String aId, String aProperty)
     {
-        DropDownChoice<String> ftsField = new DropDownChoice<>(aId, kbModel.bind(aProperty),
-                IriConstants.FTS_IRIS.stream().map(IRI::stringValue).collect(toList()));
+        var choices = IriConstants.FTS_IRIS.stream() //
+                .sorted(comparing(i -> getFtsBackendName(i.stringValue()))) //
+                .map(IRI::stringValue) //
+                .toList();
+
+        var ftsField = new DropDownChoice<String>(aId, kbModel.bind(aProperty), choices);
+        ftsField.setChoiceRenderer(new LambdaChoiceRenderer<>(IriConstants::getFtsBackendName));
         ftsField.setOutputMarkupId(true);
         ftsField.setNullValid(true);
         return ftsField;

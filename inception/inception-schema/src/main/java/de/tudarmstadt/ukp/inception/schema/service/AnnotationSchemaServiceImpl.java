@@ -17,9 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.schema.service;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getRealCas;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.isNativeUimaType;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.isSame;
 import static de.tudarmstadt.ukp.clarin.webanno.model.LinkMode.WITH_ROLE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode.ARRAY;
 import static de.tudarmstadt.ukp.inception.project.api.ProjectService.withProjectLogger;
@@ -27,12 +24,19 @@ import static de.tudarmstadt.ukp.inception.schema.api.AttachedAnnotation.Directi
 import static de.tudarmstadt.ukp.inception.schema.api.AttachedAnnotation.Direction.LOOP;
 import static de.tudarmstadt.ukp.inception.schema.api.AttachedAnnotation.Direction.OUTGOING;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.RELATION_TYPE;
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.RESTRICTED_FEATURE_NAMES;
 import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectByAddr;
+import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.getRealCas;
+import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.isNativeUimaType;
+import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.isSame;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Objects.isNull;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.isAlphanumeric;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNumeric;
 import static org.apache.uima.cas.impl.Serialization.deserializeCASComplete;
 import static org.apache.uima.cas.impl.Serialization.serializeCASComplete;
 import static org.apache.uima.cas.impl.Serialization.serializeWithCompression;
@@ -71,6 +75,7 @@ import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.uima.resource.metadata.impl.TypeSystemDescription_impl;
 import org.apache.uima.util.CasCreationUtils;
 import org.apache.uima.util.CasIOUtils;
+import org.apache.wicket.validation.ValidationError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -398,13 +403,26 @@ public class AnnotationSchemaServiceImpl
 
     @Override
     @Transactional(noRollbackFor = NoResultException.class)
+    public boolean existsLayer(Project aProject)
+    {
+        return entityManager.createQuery(
+                "SELECT COUNT(*) FROM AnnotationLayer WHERE project = :project AND name NOT IN (:excluded)",
+                Long.class) //
+                .setParameter("project", aProject) //
+                .setParameter("excluded", asList(Token._TypeName, Sentence._TypeName)) //
+                .getSingleResult() > 0;
+    }
+
+    @Override
+    @Transactional(noRollbackFor = NoResultException.class)
     public boolean existsLayer(String aName, Project aProject)
     {
         try {
             entityManager
                     .createQuery("FROM AnnotationLayer WHERE name = :name AND project = :project",
                             AnnotationLayer.class)
-                    .setParameter("name", aName).setParameter("project", aProject)
+                    .setParameter("name", aName) //
+                    .setParameter("project", aProject) //
                     .getSingleResult();
             return true;
         }
@@ -420,13 +438,15 @@ public class AnnotationSchemaServiceImpl
         try {
             entityManager.createQuery(
                     "FROM AnnotationLayer WHERE name = :name AND type = :type AND project = :project",
-                    AnnotationLayer.class).setParameter("name", aName).setParameter("type", aType)
-                    .setParameter("project", aProject).getSingleResult();
+                    AnnotationLayer.class) //
+                    .setParameter("name", aName) //
+                    .setParameter("type", aType) //
+                    .setParameter("project", aProject) //
+                    .getSingleResult();
             return true;
         }
         catch (NoResultException e) {
             return false;
-
         }
     }
 
@@ -1068,17 +1088,17 @@ public class AnnotationSchemaServiceImpl
     public TypeSystemDescription getAllProjectTypes(Project aProject)
         throws ResourceInitializationException
     {
-        List<AnnotationLayer> allLayersInProject = listSupportedLayers(aProject);
-        List<AnnotationFeature> allFeaturesInProject = listSupportedFeatures(aProject);
+        var allLayersInProject = listSupportedLayers(aProject);
+        var allFeaturesInProject = listSupportedFeatures(aProject);
 
-        List<TypeSystemDescription> allTsds = new ArrayList<>();
-        for (AnnotationLayer layer : allLayersInProject) {
+        var allTsds = new ArrayList<TypeSystemDescription>();
+        for (var layer : allLayersInProject) {
             LayerSupport<?, ?> layerSupport = layerSupportRegistry.getLayerSupport(layer);
 
             // for built-in layers, we clone the information from the built-in type descriptors
-            TypeSystemDescription tsd = new TypeSystemDescription_impl();
+            var tsd = new TypeSystemDescription_impl();
             if (layer.isBuiltIn()) {
-                for (String typeName : layerSupport.getGeneratedTypeNames(layer)) {
+                for (var typeName : layerSupport.getGeneratedTypeNames(layer)) {
                     exportBuiltInTypeDescription(builtInTypes, tsd, typeName);
                 }
             }
@@ -1091,14 +1111,14 @@ public class AnnotationSchemaServiceImpl
 
         {
             // Explicitly add Token because the layer may not be declared in the project
-            TypeSystemDescription tsd = new TypeSystemDescription_impl();
+            var tsd = new TypeSystemDescription_impl();
             exportBuiltInTypeDescription(builtInTypes, tsd, Token.class.getName());
             allTsds.add(tsd);
         }
 
         {
             // Explicitly add Sentence because the layer may not be declared in the project
-            TypeSystemDescription tsd = new TypeSystemDescription_impl();
+            var tsd = new TypeSystemDescription_impl();
             exportBuiltInTypeDescription(builtInTypes, tsd, Sentence.class.getName());
             allTsds.add(tsd);
         }
@@ -1111,18 +1131,18 @@ public class AnnotationSchemaServiceImpl
     private void exportBuiltInTypeDescription(TypeSystemDescription aSource,
             TypeSystemDescription aTarget, String aType)
     {
-        TypeDescription builtInType = aSource.getType(aType);
+        var builtInType = aSource.getType(aType);
 
         if (builtInType == null) {
             throw new IllegalArgumentException(
                     "No type description found for type [" + aType + "]");
         }
 
-        TypeDescription clonedType = aTarget.addType(builtInType.getName(),
-                builtInType.getDescription(), builtInType.getSupertypeName());
+        var clonedType = aTarget.addType(builtInType.getName(), builtInType.getDescription(),
+                builtInType.getSupertypeName());
 
         if (builtInType.getFeatures() != null) {
-            for (FeatureDescription feature : builtInType.getFeatures()) {
+            for (var feature : builtInType.getFeatures()) {
                 clonedType.addFeature(feature.getName(), feature.getDescription(),
                         feature.getRangeTypeName(), feature.getElementType(),
                         feature.getMultipleReferencesAllowed());
@@ -1640,5 +1660,54 @@ public class AnnotationSchemaServiceImpl
         selectedTag.setName(aValue);
         selectedTag.setTagSet(aFeature.getTagset());
         createTag(selectedTag);
+    }
+
+    @Override
+    public boolean hasValidFeatureName(AnnotationFeature aFeature)
+    {
+        return validateFeatureName(aFeature).isEmpty();
+    }
+
+    @Override
+    public List<ValidationError> validateFeatureName(AnnotationFeature aFeature)
+    {
+        String name = aFeature.getName();
+
+        var errors = new ArrayList<ValidationError>();
+
+        if (isBlank(name)) {
+            errors.add(new ValidationError("Feature name cannot be empty."));
+            return errors;
+        }
+
+        // Check if feature name is not from the restricted names list
+        if (RESTRICTED_FEATURE_NAMES.contains(name)) {
+            errors.add(new ValidationError("[" + name + "] is a reserved feature name. Please "
+                    + "use a different name for the feature."));
+            return errors;
+        }
+
+        var layerSupport = layerSupportRegistry.getLayerSupport(aFeature.getLayer());
+        errors.addAll(layerSupport.validateFeatureName(aFeature));
+        if (!errors.isEmpty()) {
+            return errors;
+        }
+
+        // Checking if feature name doesn't start with a number or underscore
+        // And only uses alphanumeric characters
+        if (isNumeric(name.substring(0, 1)) || name.substring(0, 1).equals("_")
+                || !isAlphanumeric(name.replace("_", ""))) {
+            errors.add(new ValidationError("Feature names must start with a letter and consist "
+                    + "only of letters, digits, or underscores."));
+            return errors;
+        }
+
+        if (existsFeature(name, aFeature.getLayer())) {
+            errors.add(new ValidationError(
+                    "A feature with the name [" + name + "] already exists on this layer!"));
+            return errors;
+        }
+
+        return errors;
     }
 }

@@ -188,16 +188,14 @@ public class RelationAdapter
 
     public AnnotationFS getSourceAnnotation(AnnotationFS aTargetFs)
     {
-        Feature sourceFeature = aTargetFs.getType().getFeatureByBaseName(sourceFeatureName);
-        AnnotationFS sourceToken = (AnnotationFS) aTargetFs.getFeatureValue(sourceFeature);
-        return sourceToken;
+        var sourceFeature = aTargetFs.getType().getFeatureByBaseName(sourceFeatureName);
+        return (AnnotationFS) aTargetFs.getFeatureValue(sourceFeature);
     }
 
     public AnnotationFS getTargetAnnotation(AnnotationFS aTargetFs)
     {
-        Feature targetFeature = aTargetFs.getType().getFeatureByBaseName(targetFeatureName);
-        AnnotationFS targetToken = (AnnotationFS) aTargetFs.getFeatureValue(targetFeature);
-        return targetToken;
+        var targetFeature = aTargetFs.getType().getFeatureByBaseName(targetFeatureName);
+        return (AnnotationFS) aTargetFs.getFeatureValue(targetFeature);
     }
 
     public String getSourceFeatureName()
@@ -205,9 +203,19 @@ public class RelationAdapter
         return sourceFeatureName;
     }
 
+    public Feature getSourceFeature(CAS aCas)
+    {
+        return getAnnotationType(aCas).getFeatureByBaseName(getSourceFeatureName());
+    }
+
     public String getTargetFeatureName()
     {
         return targetFeatureName;
+    }
+
+    public Feature getTargetFeature(CAS aCas)
+    {
+        return getAnnotationType(aCas).getFeatureByBaseName(getTargetFeatureName());
     }
 
     @Override

@@ -64,6 +64,7 @@ installPrefs inception-imls-opennlp
 installPrefs inception-imls-stringmatch
 installPrefs inception-imls-weblicht
 installPrefs inception-io-bioc
+installPrefs inception-io-brat
 installPrefs inception-io-conll
 installPrefs inception-io-html
 installPrefs inception-io-imscwb

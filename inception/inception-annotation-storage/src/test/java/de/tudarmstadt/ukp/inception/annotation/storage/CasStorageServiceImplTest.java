@@ -59,7 +59,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSessionException;
 import de.tudarmstadt.ukp.clarin.webanno.api.type.CASMetadata;
@@ -70,8 +69,10 @@ import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageCachePro
 import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStoragePropertiesImpl;
 import de.tudarmstadt.ukp.inception.annotation.storage.driver.filesystem.FileSystemCasStorageDriver;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
+import de.tudarmstadt.ukp.inception.documents.api.RepositoryPropertiesImpl;
 import de.tudarmstadt.ukp.inception.schema.api.event.LayerConfigurationChangedEvent;
 import de.tudarmstadt.ukp.inception.support.logging.Logging;
+import de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil;
 
 public class CasStorageServiceImplTest
 {
@@ -105,7 +106,7 @@ public class CasStorageServiceImplTest
         deleteCounter.set(0);
         deleteInitialCounter.set(0);
 
-        repositoryProperties = new RepositoryProperties();
+        repositoryProperties = new RepositoryPropertiesImpl();
         repositoryProperties.setPath(testFolder);
 
         MDC.put(Logging.KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());

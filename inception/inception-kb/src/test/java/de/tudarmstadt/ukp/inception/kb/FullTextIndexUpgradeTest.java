@@ -47,6 +47,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
+import de.tudarmstadt.ukp.inception.documents.api.RepositoryPropertiesImpl;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBasePropertiesImpl;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
@@ -93,7 +94,7 @@ public class FullTextIndexUpgradeTest
         kb.setLabelIri(RDFS.LABEL.stringValue());
         kb.setPropertyTypeIri(RDF.PROPERTY.stringValue());
         kb.setDescriptionIri(RDFS.COMMENT.stringValue());
-        kb.setFullTextSearchIri(IriConstants.FTS_LUCENE.stringValue());
+        kb.setFullTextSearchIri(IriConstants.FTS_RDF4J_LUCENE.stringValue());
         kb.setPropertyLabelIri(RDFS.LABEL.stringValue());
         kb.setPropertyDescriptionIri(RDFS.COMMENT.stringValue());
         kb.setSubPropertyIri(RDFS.SUBPROPERTYOF.stringValue());
@@ -104,7 +105,7 @@ public class FullTextIndexUpgradeTest
         project = new Project("test");
         entityManager.persist(project);
 
-        repoProperties = new RepositoryProperties();
+        repoProperties = new RepositoryPropertiesImpl();
         kbProperties = new KnowledgeBasePropertiesImpl();
         repoProperties.setPath(new File(WORK_DIR));
     }

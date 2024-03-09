@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>31.0-SNAPSHOT</version>
+    <version>32.0-SNAPSHOT</version>
   </parent>
   <artifactId>inception-ui-tagsets</artifactId>
   <name>INCEpTION - UI - Tagsets</name>
@@ -101,8 +101,8 @@
       <artifactId>commons-io</artifactId>
     </dependency>
     <dependency>
-      <groupId>commons-collections</groupId>
-      <artifactId>commons-collections</artifactId>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-collections4</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.commons</groupId>

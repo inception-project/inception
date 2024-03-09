@@ -28,6 +28,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VAnnotationMarker;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VArc;
@@ -47,7 +48,7 @@ import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 public class CompactSerializerV2ImplTest
 {
     private @Mock AnnotationSchemaProperties annotationSchemaProperties;
-    
+
     @Test
     void thatSerializationWorks() throws Exception
     {
@@ -55,7 +56,7 @@ public class CompactSerializerV2ImplTest
                 .withId(1l) //
                 .withUiName("Span") //
                 .withName("custom.Span") //
-                .withType(WebAnnoConst.SPAN_TYPE) //
+                .withType(SpanLayerSupport.TYPE) //
                 .build();
         var relationLayer = AnnotationLayer.builder() //
                 .withId(2l) //

@@ -82,7 +82,7 @@ public class LayerExporterTest
     public void thatExportingWorks() throws Exception
     {
         // Export the project and import it again
-        ArgumentCaptor<AnnotationLayer> captor = runExportImportAndFetchLayers();
+        var captor = runExportImportAndFetchLayers();
 
         // Check that after re-importing the exported projects, they are identical to the original
         assertThat(captor.getAllValues()) //
@@ -92,16 +92,16 @@ public class LayerExporterTest
 
     private List<AnnotationLayer> layers()
     {
-        AnnotationLayer layer1 = new AnnotationLayer("webanno.custom.Span", "Span", SPAN_TYPE,
-                project, false, SINGLE_TOKEN, NO_OVERLAP);
+        var layer1 = new AnnotationLayer("webanno.custom.Span", "Span", SPAN_TYPE, project, false,
+                SINGLE_TOKEN, NO_OVERLAP);
         layer1.setValidationMode(ValidationMode.ALWAYS);
 
-        AnnotationLayer layer2 = new AnnotationLayer("webanno.custom.Span2", "Span2", SPAN_TYPE,
-                project, false, SENTENCES, NO_OVERLAP);
+        var layer2 = new AnnotationLayer("webanno.custom.Span2", "Span2", SPAN_TYPE, project, false,
+                SENTENCES, NO_OVERLAP);
         layer2.setValidationMode(ValidationMode.NEVER);
 
-        AnnotationLayer layer3 = new AnnotationLayer("webanno.custom.Relation", "Relation",
-                RELATION_TYPE, project, true, TOKENS, ANY_OVERLAP);
+        var layer3 = new AnnotationLayer("webanno.custom.Relation", "Relation", RELATION_TYPE,
+                project, true, TOKENS, ANY_OVERLAP);
 
         return asList(layer1, layer2, layer3);
     }
@@ -109,18 +109,18 @@ public class LayerExporterTest
     private ArgumentCaptor<AnnotationLayer> runExportImportAndFetchLayers() throws Exception
     {
         // Export the project
-        FullProjectExportRequest exportRequest = new FullProjectExportRequest(project, null, false);
-        ProjectExportTaskMonitor monitor = new ProjectExportTaskMonitor(project, null, "test");
-        ExportedProject exportedProject = new ExportedProject();
+        var exportRequest = new FullProjectExportRequest(project, null, false);
+        var monitor = new ProjectExportTaskMonitor(project, null, "test");
+        var exportedProject = new ExportedProject();
 
         sut.exportData(exportRequest, monitor, exportedProject, workFolder);
 
         // Import the project again
-        ArgumentCaptor<AnnotationLayer> captor = ArgumentCaptor.forClass(AnnotationLayer.class);
+        var captor = ArgumentCaptor.forClass(AnnotationLayer.class);
         doNothing().when(annotationService).createOrUpdateLayer(captor.capture());
 
-        ProjectImportRequest importRequest = new ProjectImportRequest(true);
-        ZipFile zipFile = mock(ZipFile.class);
+        var importRequest = new ProjectImportRequest(true);
+        var zipFile = mock(ZipFile.class);
         sut.importData(importRequest, project, exportedProject, zipFile);
 
         return captor;

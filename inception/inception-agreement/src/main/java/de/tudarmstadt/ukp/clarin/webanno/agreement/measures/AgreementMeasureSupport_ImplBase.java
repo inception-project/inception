@@ -17,17 +17,16 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.agreement.measures;
 
-import java.io.Serializable;
-
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.dkpro.statistics.agreement.IAnnotationStudy;
 
+import de.tudarmstadt.ukp.clarin.webanno.agreement.FullAgreementResult_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 
 public abstract class AgreementMeasureSupport_ImplBase<//
         T extends DefaultAgreementTraits, //
-        R extends Serializable, //
+        R extends FullAgreementResult_ImplBase<S>, //
         S extends IAnnotationStudy>
     implements AgreementMeasureSupport<T, R, S>
 {

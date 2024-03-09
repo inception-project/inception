@@ -56,6 +56,7 @@ import de.tudarmstadt.ukp.inception.annotation.storage.driver.CasStorageDriver;
 import de.tudarmstadt.ukp.inception.annotation.storage.driver.filesystem.FileSystemCasStorageDriver;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
+import de.tudarmstadt.ukp.inception.documents.api.RepositoryPropertiesImpl;
 import de.tudarmstadt.ukp.inception.export.DocumentImportExportServiceImpl;
 import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceProperties;
 import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServicePropertiesImpl;
@@ -95,7 +96,7 @@ public class CuratedDocumentsExporterTest
 
         DocumentImportExportServiceProperties properties = new DocumentImportExportServicePropertiesImpl();
 
-        repositoryProperties = new RepositoryProperties();
+        repositoryProperties = new RepositoryPropertiesImpl();
         repositoryProperties.setPath(workFolder);
 
         CasStorageDriver driver = new FileSystemCasStorageDriver(repositoryProperties,
@@ -105,9 +106,9 @@ public class CuratedDocumentsExporterTest
                 new CasStorageCachePropertiesImpl(), null, schemaService));
 
         var xmiFormatSupport = new XmiFormatSupport(new XmiFormatProperties());
-        importExportSerivce = new DocumentImportExportServiceImpl(repositoryProperties,
-                asList(xmiFormatSupport), casStorageService, schemaService, properties,
-                checksRegistry, repairsRegistry, xmiFormatSupport);
+        importExportSerivce = new DocumentImportExportServiceImpl(asList(xmiFormatSupport),
+                casStorageService, schemaService, properties, checksRegistry, repairsRegistry,
+                xmiFormatSupport);
 
         // Dynamically generate a SourceDocument with an incrementing ID when asked for one
         when(documentService.getSourceDocument(any(), any())).then(invocation -> {

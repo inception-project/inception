@@ -26,6 +26,7 @@ import static java.util.Arrays.asList;
 import java.util.Deque;
 import java.util.concurrent.ConcurrentLinkedDeque;
 
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 
 public class TaskMonitor
@@ -35,22 +36,29 @@ public class TaskMonitor
     private final TaskHandle handle;
     private final String user;
     private final String title;
+    private final String type;
 
-    private long createTime;
+    private final long createTime;
     private long startTime = -1;
     private long endTime = -1;
+
     private int progress = 0;
     private int maxProgress = 0;
+
     private TaskState state = NOT_STARTED;
 
+    private final boolean cancellable;
+    private boolean cancelled = false;
     private boolean destroyed = false;
 
-    public TaskMonitor(TaskHandle aHandle, String aUser, String aTitle)
+    public TaskMonitor(TaskHandle aHandle, Task aTask)
     {
         handle = aHandle;
-        user = aUser;
-        title = aTitle;
+        type = aTask.getType();
+        user = aTask.getUser().map(User::getUsername).orElse(null);
+        title = aTask.getTitle();
         createTime = System.currentTimeMillis();
+        cancellable = aTask.isCancellable();
     }
 
     public TaskHandle getHandle()
@@ -73,6 +81,11 @@ public class TaskMonitor
         return title;
     }
 
+    public String getType()
+    {
+        return type;
+    }
+
     public synchronized void setState(TaskState aState)
     {
         state = aState;
@@ -89,11 +102,6 @@ public class TaskMonitor
     public synchronized long getCreateTime()
     {
         return createTime;
-    }
-
-    public synchronized void setCreateTime(long aCreateTime)
-    {
-        createTime = aCreateTime;
     }
 
     public synchronized long getStartTime()
@@ -152,6 +160,14 @@ public class TaskMonitor
         }
     }
 
+    public synchronized void setProgressWithMessage(int aProgress, int aMaxProgress,
+            LogMessage aMessage)
+    {
+        setProgress(aProgress);
+        setMaxProgress(aMaxProgress);
+        addMessage(aMessage);
+    }
+
     public Deque<LogMessage> getMessages()
     {
         return messages;
@@ -170,8 +186,23 @@ public class TaskMonitor
         // By default do nothing
     }
 
-    protected boolean isDestroyed()
+    public boolean isDestroyed()
     {
         return destroyed;
+    }
+
+    public boolean isCancellable()
+    {
+        return cancellable;
+    }
+
+    public void cancel()
+    {
+        cancelled = true;
+    }
+
+    public boolean isCancelled()
+    {
+        return cancelled;
     }
 }

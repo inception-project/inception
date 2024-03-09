@@ -100,6 +100,8 @@ export class ApacheAnnotatorEditor implements AnnotationEditor {
     const toolbarContainer = this.root.ownerDocument.createElement('div')
     toolbarContainer.style.position = 'sticky'
     toolbarContainer.style.top = '0px'
+    toolbarContainer.style.zIndex = '10000'
+    toolbarContainer.style.backgroundColor = '#fff'
     this.root.ownerDocument.body.insertBefore(toolbarContainer, this.root.ownerDocument.body.firstChild)
 
     // @ts-ignore - VSCode does not seem to understand the Svelte component

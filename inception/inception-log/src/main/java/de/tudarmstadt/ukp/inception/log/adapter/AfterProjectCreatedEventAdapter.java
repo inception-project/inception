@@ -43,7 +43,7 @@ public class AfterProjectCreatedEventAdapter
     @Override
     public String getDetails(AfterProjectCreatedEvent aEvent) throws IOException
     {
-        Details details = new Details();
+        var details = new Details();
         details.projectName = aEvent.getProject().getName();
         return JSONUtil.toJsonString(details);
     }

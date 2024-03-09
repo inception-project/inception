@@ -54,12 +54,11 @@ public interface EventLoggingAdapter<T>
 
     default Date getCreated(T aEvent)
     {
-        if (aEvent instanceof ApplicationEvent) {
-            return new Date(((ApplicationEvent) aEvent).getTimestamp());
+        if (aEvent instanceof ApplicationEvent event) {
+            return new Date(event.getTimestamp());
         }
-        else {
-            return new Date();
-        }
+
+        return new Date();
     }
 
     default String getEvent(T aEvent)

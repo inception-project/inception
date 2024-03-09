@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.clarin.webanno.diag.repairs;
 
 import static de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctorUtils.getNonIndexedFSesWithOwner;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.SPAN_TYPE;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
 import static org.apache.uima.fit.util.FSUtil.getFeature;
@@ -35,6 +34,7 @@ import org.apache.uima.cas.text.AnnotationFS;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.Repair.Safe;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 
@@ -58,7 +58,8 @@ public class RemoveDanglingFeatureAttachedSpanAnnotationsRepair
         for (AnnotationLayer layer : annotationService.listAnnotationLayer(aProject)) {
             int count = 0;
 
-            if (!(SPAN_TYPE.equals(layer.getType()) && layer.getAttachFeature() != null)) {
+            if (!(SpanLayerSupport.TYPE.equals(layer.getType())
+                    && layer.getAttachFeature() != null)) {
                 continue;
             }
 

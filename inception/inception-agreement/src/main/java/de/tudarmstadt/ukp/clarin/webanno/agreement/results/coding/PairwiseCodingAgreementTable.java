@@ -17,36 +17,21 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding;
 
-import static de.tudarmstadt.ukp.clarin.webanno.agreement.AgreementReportExportFormat.CSV;
-import static de.tudarmstadt.ukp.clarin.webanno.agreement.AgreementUtils.makeCodingStudy;
-import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
-import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.enabledWhen;
+import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CLICK;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
-import static java.util.Arrays.asList;
-import static java.util.stream.Collectors.toCollection;
+import static org.apache.wicket.event.Broadcast.BUBBLE;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.PrintStream;
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
-import org.apache.uima.cas.CAS;
 import org.apache.wicket.ajax.AjaxEventBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.AttributeAppender;
-import org.apache.wicket.behavior.Behavior;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
-import org.apache.wicket.markup.html.form.DropDownChoice;
-import org.apache.wicket.markup.html.form.EnumChoiceRenderer;
 import org.apache.wicket.markup.html.panel.Fragment;
-import org.apache.wicket.markup.html.panel.Panel;
+import org.apache.wicket.markup.html.panel.GenericPanel;
 import org.apache.wicket.markup.repeater.Item;
 import org.apache.wicket.markup.repeater.RefreshingView;
 import org.apache.wicket.model.IModel;
@@ -55,107 +40,78 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.apache.wicket.util.resource.AbstractResourceStream;
-import org.apache.wicket.util.resource.IResourceStream;
-import org.apache.wicket.util.resource.ResourceStreamNotFoundException;
-import org.danekja.java.util.function.serializable.SerializableSupplier;
-import org.dkpro.statistics.agreement.coding.ICodingAnnotationItem;
-import org.dkpro.statistics.agreement.coding.ICodingAnnotationStudy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.components.PopoverConfig;
 import de.agilecoders.wicket.core.markup.html.bootstrap.components.TooltipConfig.Placement;
-import de.tudarmstadt.ukp.clarin.webanno.agreement.AgreementReportExportFormat;
-import de.tudarmstadt.ukp.clarin.webanno.agreement.AgreementResult;
-import de.tudarmstadt.ukp.clarin.webanno.agreement.AgreementUtils;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.PairwiseAnnotationResult;
-import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.DefaultAgreementTraits;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.DiffAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.event.PairwiseAgreementScoreClickedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.bootstrap.PopoverBehavior;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
-import de.tudarmstadt.ukp.inception.support.wicket.AjaxDownloadBehavior;
-import de.tudarmstadt.ukp.inception.support.wicket.AjaxDownloadLink;
 import de.tudarmstadt.ukp.inception.support.wicket.DefaultRefreshingView;
 import de.tudarmstadt.ukp.inception.support.wicket.DescriptionTooltipBehavior;
 
 public class PairwiseCodingAgreementTable
-    extends Panel
+    extends GenericPanel<PairwiseAnnotationResult>
 {
     private static final long serialVersionUID = 571396822546125376L;
 
-    private final static Logger LOG = LoggerFactory.getLogger(PairwiseCodingAgreementTable.class);
+    private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean DocumentService documentService;
     private @SpringBean ProjectService projectService;
     private @SpringBean UserDao userRepository;
 
-    private final RefreshingView<String> rows;
-    private final AjaxDownloadLink exportAllButton;
-    private final DropDownChoice<AgreementReportExportFormat> formatField;
+    private final RefreshingView<User> rows;
 
-    private final SerializableSupplier<Map<String, List<CAS>>> casMapSupplier;
-
-    public PairwiseCodingAgreementTable(String aId,
-            IModel<PairwiseAnnotationResult<CodingAgreementResult>> aModel,
-            SerializableSupplier<Map<String, List<CAS>>> aCasMapSupplier)
+    public PairwiseCodingAgreementTable(String aId, IModel<PairwiseAnnotationResult> aModel)
     {
         super(aId, aModel);
 
-        casMapSupplier = aCasMapSupplier;
-
         setOutputMarkupId(true);
 
-        PopoverConfig config = new PopoverConfig().withPlacement(Placement.left).withHtml(true);
-        WebMarkupContainer legend = new WebMarkupContainer("legend");
+        var config = new PopoverConfig().withPlacement(Placement.left).withHtml(true);
+        var legend = new WebMarkupContainer("legend");
         legend.add(new PopoverBehavior(new ResourceModel("legend"),
                 new StringResourceModel("legend.content", legend), config));
         add(legend);
 
         // This model makes sure we add a "null" dummy rater which accounts for the header columns
         // of the table.
-        final IModel<List<String>> ratersAdapter = LoadableDetachableModel.of(() -> {
-            List<String> raters = new ArrayList<>();
+        final IModel<List<User>> ratersAdapter = LoadableDetachableModel.of(() -> {
+            var raters = new ArrayList<User>();
             if (getModelObject() != null) {
                 raters.add(null);
-                raters.addAll(getModelObject().getRaters());
+                for (var rater : getModelObject().getRaters()) {
+                    var user = userRepository.get(rater);
+                    if (user != null) {
+                        raters.add(user);
+                    }
+                }
             }
             return raters;
         });
 
-        add(formatField = new DropDownChoice<AgreementReportExportFormat>("exportFormat",
-                Model.of(CSV), asList(AgreementReportExportFormat.values()),
-                new EnumChoiceRenderer<>(this)));
-        formatField.add(new LambdaAjaxFormComponentUpdatingBehavior("change"));
-
-        exportAllButton = new AjaxDownloadLink("exportAll",
-                () -> "agreement" + formatField.getModelObject().getExtension(),
-                this::exportAllAgreements);
-        exportAllButton.add(enabledWhen(() -> formatField.getModelObject() != null));
-        add(exportAllButton);
-
-        rows = new DefaultRefreshingView<String>("rows", ratersAdapter)
+        rows = new DefaultRefreshingView<User>("rows", ratersAdapter)
         {
             private static final long serialVersionUID = 1L;
 
             @Override
-            protected void populateItem(final Item<String> aRowItem)
+            protected void populateItem(final Item<User> aRowItem)
             {
                 // Render regular row
-                aRowItem.add(new DefaultRefreshingView<String>("cells", ratersAdapter)
+                aRowItem.add(new DefaultRefreshingView<User>("cells", ratersAdapter)
                 {
                     private static final long serialVersionUID = 1L;
 
                     @Override
-                    protected void populateItem(Item<String> aCellItem)
+                    protected void populateItem(Item<User> aCellItem)
                     {
                         aCellItem.setRenderBodyOnly(true);
 
@@ -180,13 +136,11 @@ public class PairwiseCodingAgreementTable
                         }
                         // Raters header horizontally
                         else if (aRowItem.getIndex() == 0 && aCellItem.getIndex() != 0) {
-                            cell.add(new Label("label",
-                                    userRepository.get(aCellItem.getModelObject()).getUiName()));
+                            cell.add(new Label("label", aCellItem.getModelObject().getUiName()));
                         }
                         // Raters header vertically
                         else if (aRowItem.getIndex() != 0 && aCellItem.getIndex() == 0) {
-                            cell.add(new Label("label",
-                                    userRepository.get(aRowItem.getModelObject()).getUiName()));
+                            cell.add(new Label("label", aRowItem.getModelObject().getUiName()));
                         }
                         // Upper diagonal
                         else if (aCellItem.getIndex() > aRowItem.getIndex()) {
@@ -211,59 +165,69 @@ public class PairwiseCodingAgreementTable
                         (aRowItem.getIndex() % 2 == 0) ? "odd" : "even"));
             }
         };
+
         this.add(visibleWhen(
                 () -> (getModelObject() != null && !getModelObject().getRaters().isEmpty())));
         add(rows);
     }
 
-    private Label makeLowerDiagonalCellLabel(String aRater1, String aRater2)
+    private Label makeLowerDiagonalCellLabel(User aRater1, User aRater2)
     {
-        CodingAgreementResult result = getModelObject().getStudy(aRater1, aRater2);
+        var result = getModelObject().getResult(aRater1.getUsername(), aRater2.getUsername());
 
-        String label = String.format("%d/%d", result.getCompleteSetCount(),
+        if (result == null) {
+            return new Label("label", "-");
+        }
+
+        var label = String.format("%d/%d", result.getCompleteSetCount(),
                 result.getRelevantSetCount());
 
-        String tooltipTitle = "Details about annotations excluded from agreement calculation";
+        var tooltipTitle = "Details about annotations excluded from agreement calculation";
 
-        StringBuilder tooltipContent = new StringBuilder();
+        var tooltipContent = new StringBuilder();
         if (result.isExcludeIncomplete()) {
             tooltipContent.append(String.format("- Incomplete (missing): %d%n",
-                    result.getIncompleteSetsByPosition().size()));
+                    result.getIncompleteSetsByPosition()));
             tooltipContent.append(String.format("- Incomplete (not labeled): %d%n",
-                    result.getIncompleteSetsByLabel().size()));
+                    result.getIncompleteSetsByLabel()));
         }
-        tooltipContent.append(String.format("- Plurality: %d", result.getPluralitySets().size()));
+        tooltipContent.append(String.format("- Plurality: %d", result.getPluralitySets()));
 
-        Label l = new Label("label", Model.of(label));
-        DescriptionTooltipBehavior tooltip = new DescriptionTooltipBehavior(tooltipTitle,
-                tooltipContent.toString());
+        var l = new Label("label", Model.of(label));
+        var tooltip = new DescriptionTooltipBehavior(tooltipTitle, tooltipContent.toString());
         tooltip.setOption("position", (Object) null);
         l.add(tooltip);
         l.add(new AttributeAppender("style", "cursor: help", ";"));
         return l;
     }
 
-    private Label makeUpperDiagonalCellLabel(String aRater1, String aRater2)
+    private Label makeUpperDiagonalCellLabel(User aRater1, User aRater2)
     {
-        CodingAgreementResult result = getModelObject().getStudy(aRater1, aRater2);
+        var result = getModelObject().getResult(aRater1.getUsername(), aRater2.getUsername());
 
-        boolean noDataRater0 = isAllNull(result, result.getCasGroupIds().get(0));
-        boolean noDataRater1 = isAllNull(result, result.getCasGroupIds().get(1));
-        int incPos = result.getIncompleteSetsByPosition().size();
-        int incLabel = result.getIncompleteSetsByLabel().size();
+        if (result == null) {
+            return new Label("label", "no data");
+        }
+
+        var casGroupId1 = result.getCasGroupIds().get(0);
+        var casGroupId2 = result.getCasGroupIds().get(1);
+        var noDataRater1 = result.isAllNull(casGroupId1);
+        var noDataRater2 = result.isAllNull(casGroupId2);
+        var incPos = result.getIncompleteSetsByPosition();
+        var incLabel = result.getIncompleteSetsByLabel();
 
         String label;
-        if (result.getStudy().getItemCount() == 0) {
+        if (result.isEmpty()) {
             label = "no positions";
         }
-        else if (noDataRater0 && noDataRater1) {
+        else if (noDataRater1 && noDataRater2) {
             label = "no labels";
         }
-        else if (noDataRater0) {
-            label = "no labels from " + result.getCasGroupIds().get(0);
-        }
         else if (noDataRater1) {
-            label = "no labels from " + result.getCasGroupIds().get(1);
+            label = "no labels from " + aRater1.getUiName();
+        }
+        else if (noDataRater2) {
+            label = "no labels from " + aRater2.getUiName();
         }
         else if (incPos == result.getRelevantSetCount()) {
             label = "positions disjunct";
@@ -278,173 +242,32 @@ public class PairwiseCodingAgreementTable
             label = String.format("%.2f", result.getAgreement());
         }
 
-        String tooltipTitle = result.getCasGroupIds().get(0) + '/' + result.getCasGroupIds().get(1);
+        var tooltipTitle = aRater1.getUiName() + " ↔ " + aRater2.getUiName();
 
-        String tooltipContent = "Positions annotated:\n"
-                + String.format("- %s: %d/%d%n", result.getCasGroupIds().get(0),
-                        getNonNullCount(result, result.getCasGroupIds().get(0)),
-                        result.getStudy().getItemCount())
-                + String.format("- %s: %d/%d%n", result.getCasGroupIds().get(1),
-                        getNonNullCount(result, result.getCasGroupIds().get(1)),
-                        result.getStudy().getItemCount())
-                + String.format("Distinct labels: %d%n", result.getStudy().getCategoryCount());
+        var tooltipContent = String.format("Documents counted: %d/%d%n",
+                result.getUsableAgreementsCount(), result.getTotalAgreementsCount())
+                + "Positions annotated:\n"
+                + String.format("- %s: %d/%d%n", aRater1.getUiName(),
+                        result.getNonNullCount(casGroupId1), result.getItemCount(casGroupId1))
+                + String.format("- %s: %d/%d%n", aRater2.getUiName(),
+                        result.getNonNullCount(casGroupId2), result.getItemCount(casGroupId2))
+                + String.format("Distinct labels: %d%n", result.getCategoryCount());
 
-        Label l = new Label("label", Model.of(label));
-        l.add(makeDownloadBehavior(aRater1, aRater2));
-        DescriptionTooltipBehavior tooltip = new DescriptionTooltipBehavior(tooltipTitle,
-                tooltipContent);
+        var l = new Label("label", Model.of(label));
+        var tooltip = new DescriptionTooltipBehavior(tooltipTitle, tooltipContent);
         tooltip.setOption("position", (Object) null);
         l.add(tooltip);
         l.add(new AttributeAppender("style", "cursor: pointer", ";"));
 
+        l.add(AjaxEventBehavior.onEvent(CLICK,
+                _target -> actionScoreClicked(_target, aRater1, aRater2)));
+
         return l;
     }
 
-    public boolean isAllNull(AgreementResult<ICodingAnnotationStudy> aResult, String aCasGroupId)
+    private void actionScoreClicked(AjaxRequestTarget aTarget, User aRater1, User aRater2)
     {
-        for (ICodingAnnotationItem item : aResult.getStudy().getItems()) {
-            if (item.getUnit(aResult.getCasGroupIds().indexOf(aCasGroupId)).getCategory() != null) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    public int getNonNullCount(AgreementResult<ICodingAnnotationStudy> aResult, String aCasGroupId)
-    {
-        int i = 0;
-        for (ICodingAnnotationItem item : aResult.getStudy().getItems()) {
-            if (item.getUnit(aResult.getCasGroupIds().indexOf(aCasGroupId)).getCategory() != null) {
-                i++;
-            }
-        }
-        return i;
-    }
-
-    private Behavior makeDownloadBehavior(final String aKey1, final String aKey2)
-    {
-        return new AjaxEventBehavior("click")
-        {
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            protected void onEvent(AjaxRequestTarget aTarget)
-            {
-                AjaxDownloadBehavior download = new AjaxDownloadBehavior(
-                        LoadableDetachableModel.of(PairwiseCodingAgreementTable.this::getFilename),
-                        LoadableDetachableModel.of(() -> getAgreementTableData(aKey1, aKey2)));
-                getComponent().add(download);
-                download.initiate(aTarget);
-            }
-        };
-    }
-
-    private AbstractResourceStream getAgreementTableData(final String aKey1, final String aKey2)
-    {
-        return new AbstractResourceStream()
-        {
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            public InputStream getInputStream() throws ResourceStreamNotFoundException
-            {
-                try {
-                    CodingAgreementResult result = PairwiseCodingAgreementTable.this
-                            .getModelObject().getStudy(aKey1, aKey2);
-
-                    switch (formatField.getModelObject()) {
-                    case CSV:
-                        return AgreementUtils.generateCsvReport(result);
-                    case DEBUG:
-                        return generateDebugReport(result);
-                    default:
-                        throw new IllegalStateException(
-                                "Unknown export format [" + formatField.getModelObject() + "]");
-                    }
-                }
-                catch (Exception e) {
-                    // FIXME Is there some better error handling here?
-                    LOG.error("Unable to generate agreement report", e);
-                    throw new ResourceStreamNotFoundException(e);
-                }
-            }
-
-            @Override
-            public void close() throws IOException
-            {
-                // Nothing to do
-            }
-        };
-    }
-
-    private String getFilename()
-    {
-        return "agreement" + formatField.getModelObject().getExtension();
-    }
-
-    private InputStream generateDebugReport(CodingAgreementResult aResult)
-    {
-        ByteArrayOutputStream buf = new ByteArrayOutputStream();
-        AgreementUtils.dumpAgreementStudy(new PrintStream(buf), aResult);
-        return new ByteArrayInputStream(buf.toByteArray());
-    }
-
-    @SuppressWarnings("unchecked")
-    public PairwiseAnnotationResult<CodingAgreementResult> getModelObject()
-    {
-        return (PairwiseAnnotationResult<CodingAgreementResult>) getDefaultModelObject();
-    }
-
-    public void setModelObject(PairwiseAnnotationResult<ICodingAnnotationStudy> aAgreements2)
-    {
-        setDefaultModelObject(aAgreements2);
-    }
-
-    private IResourceStream exportAllAgreements()
-    {
-        return new AbstractResourceStream()
-        {
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            public InputStream getInputStream() throws ResourceStreamNotFoundException
-            {
-                AnnotationFeature feature = getModelObject().getFeature();
-                DefaultAgreementTraits traits = getModelObject().getTraits();
-
-                Map<String, List<CAS>> casMap = casMapSupplier.get();
-
-                List<DiffAdapter> adapters = CasDiff.getDiffAdapters(annotationService,
-                        asList(feature.getLayer()));
-
-                CasDiff diff = doDiff(adapters, traits.getLinkCompareBehavior(), casMap);
-
-                Set<String> tagset = annotationService.listTags(feature.getTagset()).stream()
-                        .map(Tag::getName).collect(toCollection(LinkedHashSet::new));
-
-                // AgreementResult agreementResult = AgreementUtils.makeStudy(diff,
-                // feature.getLayer().getName(), feature.getName(),
-                // pref.excludeIncomplete, casMap);
-                // TODO: for the moment, we always include incomplete annotations during this
-                // export.
-                CodingAgreementResult agreementResult = makeCodingStudy(diff,
-                        feature.getLayer().getName(), feature.getName(), tagset, false, casMap);
-
-                try {
-                    return AgreementUtils.generateCsvReport(agreementResult);
-                }
-                catch (Exception e) {
-                    // FIXME Is there some better error handling here?
-                    LOG.error("Unable to generate report", e);
-                    throw new ResourceStreamNotFoundException(e);
-                }
-            }
-
-            @Override
-            public void close() throws IOException
-            {
-                // Nothing to do
-            }
-        };
+        send(this, BUBBLE, new PairwiseAgreementScoreClickedEvent(aTarget, aRater1.getUsername(),
+                aRater2.getUsername()));
     }
 }

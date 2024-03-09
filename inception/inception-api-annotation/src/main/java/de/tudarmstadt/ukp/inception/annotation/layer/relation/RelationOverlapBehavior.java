@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.annotation.layer.relation;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.isSame;
 import static de.tudarmstadt.ukp.inception.rendering.vmodel.VCommentType.ERROR;
+import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.isSame;
 import static java.util.Collections.emptyList;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
@@ -48,11 +48,10 @@ import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationComparator;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
-import de.tudarmstadt.ukp.inception.support.WebAnnoConst;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 
 /**
- * Handles the {@link OverlapMode} setting for {@link WebAnnoConst#RELATION_TYPE relation layers}.
+ * Handles the {@link OverlapMode} setting for {@link RelationLayerSupport relation layers}.
  * <p>
  * This class is exposed as a Spring Component via
  * {@code AnnotationServiceAutoConfiguration#relationOverlapBehavior}.
@@ -151,17 +150,17 @@ public class RelationOverlapBehavior
                     overlapping);
 
             overlapping.forEach(fs -> aResponse
-                    .add(new VComment(new VID(fs), ERROR, "Overlap is not permitted.")));
+                    .add(new VComment(VID.of(fs), ERROR, "Overlap is not permitted.")));
 
             stacking.forEach(fs -> aResponse
-                    .add(new VComment(new VID(fs), ERROR, "Stacking is not permitted.")));
+                    .add(new VComment(VID.of(fs), ERROR, "Stacking is not permitted.")));
             break;
         }
         case STACKING_ONLY: {
             // Here, we must find all overlapping relations because they are not permitted
             overlappingNonStackingRelations(sortedRelations, sourceFeature, targetFeature)
                     .forEach(fs -> aResponse
-                            .add(new VComment(new VID(fs), ERROR, "Only stacking is permitted.")));
+                            .add(new VComment(VID.of(fs), ERROR, "Only stacking is permitted.")));
             break;
         }
         case OVERLAP_ONLY:
@@ -172,7 +171,7 @@ public class RelationOverlapBehavior
             // can be multiple relations going out from the same sourceFS, we need to consider all
             // of them for potential stacking.
             stackingRelations(sortedRelations, sourceFeature, targetFeature).forEach(fs -> aResponse
-                    .add(new VComment(new VID(fs), ERROR, "Stacking is not permitted.")));
+                    .add(new VComment(VID.of(fs), ERROR, "Stacking is not permitted.")));
             break;
         }
     }
@@ -180,29 +179,29 @@ public class RelationOverlapBehavior
     @Override
     public List<Pair<LogMessage, AnnotationFS>> onValidate(TypeAdapter aAdapter, CAS aCas)
     {
-        final AnnotationLayer layer = aAdapter.getLayer();
-        final RelationAdapter adapter = (RelationAdapter) aAdapter;
-        final Type type = getType(aCas, adapter.getAnnotationTypeName());
-        final Feature sourceFeature = type.getFeatureByBaseName(adapter.getSourceFeatureName());
-        final Feature targetFeature = type.getFeatureByBaseName(adapter.getTargetFeatureName());
+        final var layer = aAdapter.getLayer();
+        final var adapter = (RelationAdapter) aAdapter;
+        final var type = getType(aCas, adapter.getAnnotationTypeName());
+        final var sourceFeature = type.getFeatureByBaseName(adapter.getSourceFeatureName());
+        final var targetFeature = type.getFeatureByBaseName(adapter.getTargetFeatureName());
 
-        List<Pair<LogMessage, AnnotationFS>> messages = new ArrayList<>();
+        var messages = new ArrayList<Pair<LogMessage, AnnotationFS>>();
 
         switch (layer.getOverlapMode()) {
         case ANY_OVERLAP:
             return emptyList();
         case NO_OVERLAP: {
-            Set<AnnotationFS> overlapping = new HashSet<>();
-            Set<AnnotationFS> stacking = new HashSet<>();
+            var overlapping = new HashSet<AnnotationFS>();
+            var stacking = new HashSet<AnnotationFS>();
 
             overlappingOrStackingRelations(select(aCas, type), sourceFeature, targetFeature,
                     stacking, overlapping);
 
-            for (AnnotationFS fs : overlapping) {
+            for (var fs : overlapping) {
                 messages.add(Pair.of(LogMessage.error(this, "Overlapping relation at [%d-%d]",
                         fs.getBegin(), fs.getEnd()), fs));
             }
-            for (AnnotationFS fs : stacking) {
+            for (var fs : stacking) {
                 messages.add(Pair.of(LogMessage.error(this, "Stacked relation at [%d-%d]",
                         fs.getBegin(), fs.getEnd()), fs));
             }
@@ -234,8 +233,8 @@ public class RelationOverlapBehavior
             Feature sourceFeature, Feature targetFeature, Collection<AnnotationFS> aStacking,
             Collection<AnnotationFS> aOverlapping)
     {
-        for (AnnotationFS rel1 : aRelations) {
-            for (AnnotationFS rel2 : aRelations) {
+        for (var rel1 : aRelations) {
+            for (var rel2 : aRelations) {
                 if (rel1.equals(rel2)) {
                     continue;
                 }
@@ -255,9 +254,9 @@ public class RelationOverlapBehavior
     private Set<AnnotationFS> overlappingNonStackingRelations(Collection<AnnotationFS> aRelations,
             Feature sourceFeature, Feature targetFeature)
     {
-        Set<AnnotationFS> overlapping = new HashSet<>();
-        for (AnnotationFS rel1 : aRelations) {
-            for (AnnotationFS rel2 : aRelations) {
+        var overlapping = new HashSet<AnnotationFS>();
+        for (var rel1 : aRelations) {
+            for (var rel2 : aRelations) {
                 if (rel1.equals(rel2)) {
                     continue;
                 }
@@ -281,11 +280,11 @@ public class RelationOverlapBehavior
         // that a relation A->B does not count as stacked on a relation B->A). But since there
         // can be multiple relations going out from the same sourceFS, we need to consider all
         // of them for potential stacking.
-        Set<AnnotationFS> stacking = new HashSet<>();
-        List<AnnotationFS> candidates = new ArrayList<>();
-        for (AnnotationFS fs : aRelations) {
-            AnnotationFS sourceFs = (AnnotationFS) fs.getFeatureValue(sourceFeature);
-            AnnotationFS targetFs = (AnnotationFS) fs.getFeatureValue(targetFeature);
+        var stacking = new HashSet<AnnotationFS>();
+        var candidates = new ArrayList<AnnotationFS>();
+        for (var fs : aRelations) {
+            var sourceFs = (AnnotationFS) fs.getFeatureValue(sourceFeature);
+            var targetFs = (AnnotationFS) fs.getFeatureValue(targetFeature);
 
             // If there are no stacking candidates at the current position yet, collect the
             // first
@@ -302,9 +301,9 @@ public class RelationOverlapBehavior
             // If there are already stacking candidates, check if the current FS is stacking on
             // any of them. If yes, generate an error message
             else {
-                for (AnnotationFS cand : candidates) {
-                    FeatureStructure candidateOriginFS = cand.getFeatureValue(sourceFeature);
-                    FeatureStructure candidateTargetFS = cand.getFeatureValue(targetFeature);
+                for (var cand : candidates) {
+                    var candidateOriginFS = cand.getFeatureValue(sourceFeature);
+                    var candidateTargetFS = cand.getFeatureValue(targetFeature);
 
                     if (stacking(candidateOriginFS, candidateTargetFS, sourceFs, targetFs)) {
                         stacking.add(fs);

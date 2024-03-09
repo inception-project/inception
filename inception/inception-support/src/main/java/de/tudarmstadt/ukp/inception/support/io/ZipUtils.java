@@ -19,11 +19,14 @@ package de.tudarmstadt.ukp.inception.support.io;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 
 import org.apache.commons.io.IOUtils;
@@ -116,5 +119,41 @@ public class ZipUtils
         }
 
         return entryName;
+    }
+
+    public static InputStream openResourceStream(File aZipFile, String aEntryName)
+        throws IOException
+    {
+        if (aEntryName.contains("..") || aEntryName.contains("//")) {
+            throw new FileNotFoundException("Resource not found [" + aEntryName + "]");
+        }
+
+        ZipFile zipFile = null;
+        var success = false;
+        try {
+            zipFile = new ZipFile(aZipFile);
+            var entry = zipFile.getEntry(aEntryName);
+            if (entry == null) {
+                throw new FileNotFoundException("Resource not found [" + aEntryName + "]");
+            }
+
+            var finalZipFile = zipFile;
+            var is = new FilterInputStream(zipFile.getInputStream(entry))
+            {
+                @Override
+                public void close() throws IOException
+                {
+                    super.close();
+                    finalZipFile.close();
+                }
+            };
+            success = true;
+            return is;
+        }
+        finally {
+            if (!success && zipFile != null) {
+                zipFile.close();
+            }
+        }
     }
 }

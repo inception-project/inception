@@ -17,12 +17,9 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.export;
 
-import static java.util.stream.Collectors.toList;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.Serializable;
-import java.util.List;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -73,19 +70,19 @@ public class ExportDocumentDialogContent
         super(aId);
         state = aModel;
 
-        List<String> writeableFormats = importExportService.getWritableFormats().stream()
+        var writeableFormats = importExportService.getWritableFormats().stream()
                 .map(FormatSupport::getName) //
-                .sorted() //
-                .collect(toList());
+                .sorted(String.CASE_INSENSITIVE_ORDER) //
+                .toList();
 
-        Preferences prefs = new Preferences();
+        var prefs = new Preferences();
         prefs.format = writeableFormats.get(0);
 
         preferences = Model.of(prefs);
 
         queue(new Form<>("form", CompoundPropertyModel.of(preferences)));
 
-        DropDownChoice<String> format = new DropDownChoice<>("format", writeableFormats);
+        var format = new DropDownChoice<String>("format", writeableFormats);
         format.add(new LambdaAjaxFormComponentUpdatingBehavior("change"));
         queue(format);
 

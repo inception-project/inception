@@ -257,8 +257,18 @@ public class DiamWebsocketController_ViewportRoutingTest
             assertThat(sessionHandler2.getRecieved()).containsExactly("31-33", "15-35");
         }
         finally {
-            session2.disconnect();
-            session1.disconnect();
+            try {
+                session1.disconnect();
+            }
+            catch (Exception e) {
+                // Ignore exceptions during disconnect
+            }
+            try {
+                session2.disconnect();
+            }
+            catch (Exception e) {
+                // Ignore exceptions during disconnect
+            }
         }
     }
 
@@ -365,9 +375,9 @@ public class DiamWebsocketController_ViewportRoutingTest
         @Bean
         public SecurityFilterChain wsFilterChain(HttpSecurity aHttp) throws Exception
         {
-            aHttp.antMatcher(WebsocketConfig.WS_ENDPOINT);
-            aHttp.authorizeRequests() //
-                    .antMatchers("/**").authenticated() //
+            aHttp.securityMatcher(WebsocketConfig.WS_ENDPOINT);
+            aHttp.authorizeHttpRequests() //
+                    .requestMatchers("/**").authenticated() //
                     .anyRequest().denyAll();
             aHttp.sessionManagement() //
                     .sessionCreationPolicy(STATELESS);

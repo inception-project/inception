@@ -19,8 +19,10 @@ package de.tudarmstadt.ukp.inception.annotation.layer;
 
 import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectFsByAddr;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
@@ -142,17 +144,38 @@ public abstract class TypeAdapter_ImplBase
     }
 
     @Override
-    public void setFeatureValue(SourceDocument aDocument, String aUsername, CAS aCas, int aAddress,
-            AnnotationFeature aFeature, Object aValue)
+    public final void setFeatureValue(SourceDocument aDocument, String aUsername, CAS aCas,
+            int aAddress, AnnotationFeature aFeature, Object aValue)
         throws AnnotationException
     {
         var featureSupport = featureSupportRegistry.findExtension(aFeature).orElseThrow();
 
-        FeatureStructure fs = selectFsByAddr(aCas, aAddress);
+        var fs = selectFsByAddr(aCas, aAddress);
 
         var oldValue = featureSupport.getFeatureValue(aFeature, fs);
 
         featureSupport.setFeatureValue(aCas, aFeature, aAddress, aValue);
+
+        var newValue = featureSupport.getFeatureValue(aFeature, fs);
+
+        if (!Objects.equals(oldValue, newValue)) {
+            publishEvent(() -> new FeatureValueUpdatedEvent(this, aDocument, aUsername, getLayer(),
+                    fs, aFeature, newValue, oldValue));
+        }
+    }
+
+    @Override
+    public final void pushFeatureValue(SourceDocument aDocument, String aUsername, CAS aCas,
+            int aAddress, AnnotationFeature aFeature, Object aValue)
+        throws AnnotationException
+    {
+        var featureSupport = featureSupportRegistry.findExtension(aFeature).orElseThrow();
+
+        var fs = selectFsByAddr(aCas, aAddress);
+
+        var oldValue = featureSupport.getFeatureValue(aFeature, fs);
+
+        featureSupport.pushFeatureValue(aCas, aFeature, aAddress, aValue);
 
         var newValue = featureSupport.getFeatureValue(aFeature, fs);
 
@@ -224,6 +247,11 @@ public abstract class TypeAdapter_ImplBase
         return applicationEventPublisher == null;
     }
 
+    public EventCollector batchEvents()
+    {
+        return new EventCollector();
+    }
+
     /**
      * Decodes the traits for the current layer and returns them if they implement the requested
      * interface. This method internally caches the decoded traits, so it can be called often.
@@ -244,5 +272,43 @@ public abstract class TypeAdapter_ImplBase
         }
 
         return Optional.empty();
+    }
+
+    public class EventCollector
+        implements ApplicationEventPublisher, AutoCloseable
+    {
+        private final ApplicationEventPublisher delegate;
+        private List<Object> events = new ArrayList<>();
+        private boolean committed = false;
+
+        public EventCollector()
+        {
+            delegate = TypeAdapter_ImplBase.this.applicationEventPublisher;
+            TypeAdapter_ImplBase.this.applicationEventPublisher = this;
+        }
+
+        @Override
+        public void publishEvent(Object aEvent)
+        {
+            events.add(aEvent);
+        }
+
+        public void commit()
+        {
+            committed = true;
+        }
+
+        @Override
+        public void close()
+        {
+            try {
+                if (committed && delegate != null) {
+                    events.forEach(delegate::publishEvent);
+                }
+            }
+            finally {
+                TypeAdapter_ImplBase.this.applicationEventPublisher = delegate;
+            }
+        }
     }
 }

@@ -30,6 +30,7 @@
     "fs-extra": "${fs-extra.version}",
     "svelte": "${svelte.version}",
     "svelte-preprocess": "${svelte-preprocess.version}",
+    "temp-write": "${temp-write.version}",
     "typescript": "${typescript.version}",
     "@typescript-eslint/eslint-plugin": "${typescript-eslint-eslint-plugin.version}",
     "@typescript-eslint/parser": "${typescript-eslint-parser.version}",

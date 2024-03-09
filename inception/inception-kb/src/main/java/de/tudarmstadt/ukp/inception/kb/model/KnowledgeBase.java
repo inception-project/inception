@@ -151,6 +151,12 @@ public class KnowledgeBase
     private String propertyDescriptionIri;
 
     /**
+     * The IRI for a property marking a resources as deprecated
+     */
+    @Column(nullable = false)
+    private String deprecationPropertyIri;
+
+    /**
      * The IRI of the default dataset
      */
     @Column(nullable = true)
@@ -363,6 +369,16 @@ public class KnowledgeBase
         return propertyDescriptionIri;
     }
 
+    public void setDeprecationPropertyIri(String aDeprecationPropertyIri)
+    {
+        deprecationPropertyIri = aDeprecationPropertyIri;
+    }
+
+    public String getDeprecationPropertyIri()
+    {
+        return deprecationPropertyIri;
+    }
+
     public boolean isReadOnly()
     {
         return readOnly;
@@ -448,6 +464,7 @@ public class KnowledgeBase
         setPropertyTypeIri(aMapping.getPropertyTypeIri());
         setPropertyLabelIri(aMapping.getPropertyLabelIri());
         setPropertyDescriptionIri(aMapping.getPropertyDescriptionIri());
+        setDeprecationPropertyIri(aMapping.getDeprecationPropertyIri());
     }
 
     public void applyRootConcepts(KnowledgeBaseProfile aProfile)
@@ -524,19 +541,7 @@ public class KnowledgeBase
     @Override
     public String toString()
     {
-        StringBuilder builder = new StringBuilder();
-        builder.append("KnowledgeBase [");
-        if (isManagedRepository()) {
-            builder.append("id=");
-            builder.append(repositoryId);
-        }
-        else {
-            builder.append(project);
-            builder.append(", name=");
-            builder.append(name);
-        }
-        builder.append("]");
-        return builder.toString();
+        return "[" + name + "](" + repositoryId + ")";
     }
 
     @Override

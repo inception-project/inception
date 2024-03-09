@@ -41,6 +41,10 @@ import org.dkpro.core.testing.IOTestRunner;
 import org.dkpro.core.testing.TestOptions;
 import org.junit.jupiter.api.Test;
 
+/**
+ * @deprecated Experimental code that was deprecated.
+ */
+@Deprecated
 public class BioCXmlDocumentReaderWriterTest
 {
     @Test

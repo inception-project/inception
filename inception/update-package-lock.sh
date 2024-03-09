@@ -7,6 +7,7 @@ TS_MODULES="
 ./inception-support-bootstrap/src/main/ts
 ./inception-js-api/src/main/ts
 ./inception-diam/src/main/ts
+./inception-io-tei/src/main/ts
 ./inception-brat-editor/src/main/ts
 ./inception-diam-editor/src/main/ts
 ./inception-external-editor/src/main/ts

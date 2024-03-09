@@ -17,119 +17,25 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.api.model;
 
-import java.io.Serializable;
-import java.util.Objects;
-
-import org.apache.commons.lang3.builder.CompareToBuilder;
 import org.apache.uima.cas.text.AnnotationFS;
 
 public class RelationPosition
-    implements Serializable, Position, Comparable<RelationPosition>
+    extends ArcPosition_ImplBase<RelationPosition>
 {
     private static final long serialVersionUID = -3084534351646334021L;
 
-    private final int sourceBegin;
-    private final int sourceEnd;
-    private final int targetBegin;
-    private final int targetEnd;
-
     public RelationPosition(AnnotationFS aSource, AnnotationFS aTarget)
     {
-        sourceBegin = aSource.getBegin();
-        sourceEnd = aSource.getEnd();
-        targetBegin = aTarget.getBegin();
-        targetEnd = aTarget.getEnd();
+        super(aSource, aTarget);
     }
 
     public RelationPosition(int aSourceBegin, int aSourceEnd, int aTargetBegin, int aTargetEnd)
     {
-        sourceBegin = aSourceBegin;
-        sourceEnd = aSourceEnd;
-        targetBegin = aTargetBegin;
-        targetEnd = aTargetEnd;
+        super(aSourceBegin, aSourceEnd, aTargetBegin, aTargetEnd);
     }
 
     public RelationPosition(RelationPosition aOther)
     {
-        sourceBegin = aOther.sourceBegin;
-        sourceEnd = aOther.sourceEnd;
-        targetBegin = aOther.targetBegin;
-        targetEnd = aOther.targetEnd;
-    }
-
-    @Override
-    public String toString()
-    {
-
-        return String.format("RelationPosition{(%d, %d) -> (%d, %d)}", sourceBegin, sourceEnd,
-                targetBegin, targetEnd);
-    }
-
-    public int getSourceBegin()
-    {
-        return sourceBegin;
-    }
-
-    public int getSourceEnd()
-    {
-        return sourceEnd;
-    }
-
-    public int getTargetBegin()
-    {
-        return targetBegin;
-    }
-
-    public int getTargetEnd()
-    {
-        return targetEnd;
-    }
-
-    public boolean overlaps(final RelationPosition i)
-    {
-        throw new UnsupportedOperationException("Not implemented yet");
-        // // Cases:
-        // //
-        // // start end
-        // // | |
-        // // 1 ####### |
-        // // 2 | #######
-        // // 3 ####################################
-        // // 4 | ####### |
-        // // | |
-        //
-        // return (((i.getStart() <= getStart()) && (getStart() < i.getEnd())) || // Case 1-3
-        // ((i.getStart() < getEnd()) && (getEnd() <= i.getEnd())) || // Case 1-3
-        // ((getStart() <= i.getStart()) && (i.getEnd() <= getEnd()))); // Case 4
-    }
-
-    @Override
-    public boolean equals(Object o)
-    {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-        RelationPosition that = (RelationPosition) o;
-        return sourceBegin == that.sourceBegin && sourceEnd == that.sourceEnd
-                && targetBegin == that.targetBegin && targetEnd == that.targetEnd;
-    }
-
-    @Override
-    public int hashCode()
-    {
-        return Objects.hash(sourceBegin, sourceEnd, targetBegin, targetEnd);
-    }
-
-    @Override
-    public int compareTo(RelationPosition o)
-    {
-        return new CompareToBuilder() //
-                .append(getSourceBegin(), o.getSourceBegin()) //
-                .append(getSourceEnd(), o.getSourceEnd()) //
-                .append(getTargetBegin(), o.getTargetBegin()) //
-                .append(getTargetEnd(), o.getTargetEnd()).toComparison();
+        super(aOther);
     }
 }

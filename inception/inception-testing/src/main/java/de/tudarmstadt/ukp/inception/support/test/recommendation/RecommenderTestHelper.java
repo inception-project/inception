@@ -32,6 +32,7 @@ import java.util.stream.Collectors;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
+import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
@@ -46,7 +47,7 @@ import de.tudarmstadt.ukp.inception.schema.service.AnnotationSchemaServiceImpl;
 public class RecommenderTestHelper
 {
 
-    public static void addScoreFeature(CAS aCas, String aTypeName, String aFeatureName)
+    public static void addPredictionFeatures(CAS aCas, String aTypeName, String aFeatureName)
         throws IOException, UIMAException
     {
         String scoreFeatureName = aFeatureName + FEATURE_NAME_SCORE_SUFFIX;
@@ -63,11 +64,11 @@ public class RecommenderTestHelper
         schemaService.upgradeCas(aCas, tsd);
     }
 
-    public static <T extends Annotation> void addScoreFeature(CAS aCas, Class<T> aClass,
+    public static <T extends Annotation> void addPredictionFeatures(CAS aCas, Class<T> aClass,
             String aFeatureName)
         throws IOException, UIMAException
     {
-        addScoreFeature(aCas, aClass.getName(), aFeatureName);
+        addPredictionFeatures(aCas, aClass.getName(), aFeatureName);
     }
 
     public static double getScore(AnnotationFS aAnnotationFS, String aFeatureName)
@@ -103,4 +104,13 @@ public class RecommenderTestHelper
                 .collect(Collectors.toList());
     }
 
+    public static List<FeatureStructure> getPredictionFSes(CAS aCas, String aTypeName)
+        throws Exception
+    {
+        Type type = CasUtil.getType(aCas, aTypeName);
+        Feature feature = type.getFeatureByBaseName(FEATURE_NAME_IS_PREDICTION);
+
+        return aCas.select(type).filter(fs -> fs.getBooleanValue(feature))
+                .collect(Collectors.toList());
+    }
 }

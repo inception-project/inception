@@ -45,6 +45,9 @@ import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
@@ -54,7 +57,6 @@ import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureEditor;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupport;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureType;
 import de.tudarmstadt.ukp.inception.schema.api.feature.LinkWithRoleModel;
-import de.tudarmstadt.ukp.inception.support.WebAnnoConst;
 import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
 
@@ -92,23 +94,22 @@ public class LinkFeatureSupport
     }
 
     @Override
-    public List<FeatureType> getSupportedFeatureTypes(AnnotationLayer aAnnotationLayer)
+    public List<FeatureType> getSupportedFeatureTypes(AnnotationLayer aLayer)
     {
-        List<FeatureType> types = new ArrayList<>();
+        var types = new ArrayList<FeatureType>();
 
         // Slot features are only supported on span layers
-        if (!WebAnnoConst.CHAIN_TYPE.equals(aAnnotationLayer.getType())
-                && !WebAnnoConst.RELATION_TYPE.equals(aAnnotationLayer.getType())) {
+        if (!ChainLayerSupport.TYPE.equals(aLayer.getType())
+                && !RelationLayerSupport.TYPE.equals(aLayer.getType())) {
             // Add layers of type SPAN available in the project
-            for (AnnotationLayer spanLayer : annotationService
-                    .listAnnotationLayer(aAnnotationLayer.getProject())) {
+            for (var spanLayer : annotationService.listAnnotationLayer(aLayer.getProject())) {
 
                 if (Token.class.getName().equals(spanLayer.getName())
                         || Sentence.class.getName().equals(spanLayer.getName())) {
                     continue;
                 }
 
-                if (WebAnnoConst.SPAN_TYPE.equals(spanLayer.getType())) {
+                if (SpanLayerSupport.TYPE.equals(spanLayer.getType())) {
                     types.add(new FeatureType(spanLayer.getName(), "Link: " + spanLayer.getUiName(),
                             featureSupportId));
                 }
@@ -189,7 +190,7 @@ public class LinkFeatureSupport
             AnnotationFeature aFeature)
     {
         // Link type
-        TypeDescription linkTD = aTSD.addType(aFeature.getLinkTypeName(), "", CAS.TYPE_NAME_TOP);
+        var linkTD = aTSD.addType(aFeature.getLinkTypeName(), "", CAS.TYPE_NAME_TOP);
         linkTD.addFeature(aFeature.getLinkTypeRoleFeatureName(), "", CAS.TYPE_NAME_STRING);
         linkTD.addFeature(aFeature.getLinkTypeTargetFeatureName(), "", aFeature.getType());
 
@@ -201,7 +202,7 @@ public class LinkFeatureSupport
     @Override
     public List<LinkWithRoleModel> getFeatureValue(AnnotationFeature aFeature, FeatureStructure aFS)
     {
-        Feature linkFeature = aFS.getType().getFeatureByBaseName(aFeature.getName());
+        var linkFeature = aFS.getType().getFeatureByBaseName(aFeature.getName());
 
         if (linkFeature == null) {
             wrapFeatureValue(aFeature, aFS.getCAS(), null);
@@ -215,7 +216,7 @@ public class LinkFeatureSupport
         throws AnnotationException
     {
         if (aValue instanceof List && aFeature.getTagset() != null) {
-            for (LinkWithRoleModel link : (List<LinkWithRoleModel>) aValue) {
+            for (var link : (List<LinkWithRoleModel>) aValue) {
                 if (!annotationService.existsTag(link.role, aFeature.getTagset())) {
                     if (!aFeature.getTagset().isCreateTag()) {
                         throw new IllegalArgumentException("[" + link.role
@@ -262,8 +263,8 @@ public class LinkFeatureSupport
         }
 
         FeatureStructure[] values = null;
-        if (aValue instanceof ArrayFS) {
-            values = ((ArrayFS<?>) aValue).toArray();
+        if (aValue instanceof ArrayFS array) {
+            values = array.toArray();
         }
 
         if (aValue instanceof Collection) {

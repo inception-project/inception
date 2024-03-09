@@ -22,10 +22,9 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.AU
 import static de.tudarmstadt.ukp.inception.active.learning.sidebar.ActiveLearningUserStateMetaData.CURRENT_AL_USER_STATE;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_REJECTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_SKIPPED;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType.ACCEPTED;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType.CORRECTED;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType.REJECTED;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.SPAN_TYPE;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.ACCEPTED;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.CORRECTED;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.REJECTED;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
@@ -89,11 +88,15 @@ import de.tudarmstadt.ukp.inception.annotation.events.FeatureValueUpdatedEvent;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationCreatedEvent;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanCreatedEvent;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanDeletedEvent;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.bootstrap.BootstrapModalDialog;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
+import de.tudarmstadt.ukp.inception.recommendation.api.event.AjaxRecommendationAcceptedEvent;
+import de.tudarmstadt.ukp.inception.recommendation.api.event.AjaxRecommendationRejectedEvent;
+import de.tudarmstadt.ukp.inception.recommendation.api.event.PredictionsSwitchedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Offset;
@@ -102,9 +105,6 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionDocumentGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup.Delta;
-import de.tudarmstadt.ukp.inception.recommendation.event.AjaxRecommendationAcceptedEvent;
-import de.tudarmstadt.ukp.inception.recommendation.event.AjaxRecommendationRejectedEvent;
-import de.tudarmstadt.ukp.inception.recommendation.event.PredictionsSwitchedEvent;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
 import de.tudarmstadt.ukp.inception.rendering.pipeline.RenderAnnotationsEvent;
@@ -295,7 +295,7 @@ public class ActiveLearningSidebar
         return recommendationService.listLayersWithEnabledRecommenders(getModelObject() //
                 .getProject()) //
                 .stream() //
-                .filter(layer -> layer.getType().equals(SPAN_TYPE)) //
+                .filter(layer -> layer.getType().equals(SpanLayerSupport.TYPE)) //
                 .collect(toList());
     }
 
@@ -564,7 +564,6 @@ public class ActiveLearningSidebar
 
     private FeatureEditor createFeatureEditor(SpanSuggestion aSuggestion)
     {
-        var state = ActiveLearningSidebar.this.getModelObject();
         var alState = alStateModel.getObject();
 
         // Obtain the feature state which serves as a model to the editor
@@ -702,12 +701,15 @@ public class ActiveLearningSidebar
 
         var sessionOwner = userService.getCurrentUsername();
 
-        alStateModel.getObject().getSuggestion().ifPresent(suggestion -> {
-            requestClearningSelectionAndJumpingToSuggestion();
-            activeLearningService.skipSpanSuggestion(sessionOwner, getModelObject().getUser(),
-                    alStateModel.getObject().getLayer(), suggestion);
-            moveToNextSuggestion(aTarget);
-        });
+        var maybeSuggestion = alStateModel.getObject().getSuggestion();
+        if (!maybeSuggestion.isPresent()) {
+            return;
+        }
+
+        requestClearningSelectionAndJumpingToSuggestion();
+        activeLearningService.skipSpanSuggestion(sessionOwner, getModelObject().getUser(),
+                alStateModel.getObject().getLayer(), maybeSuggestion.get());
+        moveToNextSuggestion(aTarget);
     }
 
     private void actionReject(AjaxRequestTarget aTarget) throws AnnotationException
@@ -716,12 +718,16 @@ public class ActiveLearningSidebar
 
         getAnnotationPage().ensureIsEditable();
 
-        alStateModel.getObject().getSuggestion().ifPresent(suggestion -> {
-            requestClearningSelectionAndJumpingToSuggestion();
-            activeLearningService.rejectSpanSuggestion(userService.getCurrentUsername(),
-                    getModelObject().getUser(), alStateModel.getObject().getLayer(), suggestion);
-            moveToNextSuggestion(aTarget);
-        });
+        var maybeSuggestion = alStateModel.getObject().getSuggestion();
+        if (!maybeSuggestion.isPresent()) {
+            return;
+        }
+
+        requestClearningSelectionAndJumpingToSuggestion();
+        activeLearningService.rejectSpanSuggestion(userService.getCurrentUsername(),
+                getModelObject().getUser(), alStateModel.getObject().getLayer(),
+                maybeSuggestion.get());
+        moveToNextSuggestion(aTarget);
     }
 
     private void moveToNextSuggestion(AjaxRequestTarget aTarget)
@@ -857,10 +863,7 @@ public class ActiveLearningSidebar
 
     private Form<?> createLearningHistory()
     {
-        Form<?> learningHistoryForm = new Form<Void>(CID_LEARNING_HISTORY_FORM)
-        {
-            private static final long serialVersionUID = -961690443085882064L;
-        };
+        var learningHistoryForm = new Form<Void>(CID_LEARNING_HISTORY_FORM);
         learningHistoryForm.add(LambdaBehavior.onConfigure(
                 component -> component.setVisible(alStateModel.getObject().isSessionActive())));
         learningHistoryForm.setOutputMarkupPlaceholderTag(true);
@@ -872,8 +875,7 @@ public class ActiveLearningSidebar
 
     private ListView<LearningRecord> createLearningHistoryListView()
     {
-        ListView<LearningRecord> learningHistory = new ListView<LearningRecord>(
-                CID_HISTORY_LISTVIEW)
+        var learningHistory = new ListView<LearningRecord>(CID_HISTORY_LISTVIEW)
         {
             private static final long serialVersionUID = 5594228545985423567L;
 
@@ -1082,7 +1084,7 @@ public class ActiveLearningSidebar
         CAS cas = this.getCasProvider().get();
         Optional<AnnotationFS> anno = getMatchingAnnotation(cas, aRecord);
         if (anno.isPresent()) {
-            state.getSelection().selectSpan(new VID(anno.get()), cas, aRecord.getOffsetBegin(),
+            state.getSelection().selectSpan(VID.of(anno.get()), cas, aRecord.getOffsetBegin(),
                     aRecord.getOffsetEnd());
             getActionHandler().actionDelete(aTarget);
         }
@@ -1206,7 +1208,7 @@ public class ActiveLearningSidebar
             var cas = documentService.readAnnotationCas(aDocument, dataOwner.getUsername());
             var group = SuggestionDocumentGroup.groupsOfType(SpanSuggestion.class,
                     predictions.getPredictionsByDocument(aDocument.getName()));
-            recommendationService.calculateSpanSuggestionVisibility(sessionOwner, aDocument, cas,
+            recommendationService.calculateSuggestionVisibility(sessionOwner, aDocument, cas,
                     dataOwner.getUsername(), aLayer, group, 0, cas.getDocumentText().length());
 
             moveToNextSuggestion(aTarget);
@@ -1379,7 +1381,7 @@ public class ActiveLearningSidebar
     public void onDocumentOpenedEvent(DocumentOpenedEvent aEvent)
     {
         // If active learning is not active, update the sidebar in case the session auto-terminated
-        ActiveLearningUserState alState = alStateModel.getObject();
+        var alState = alStateModel.getObject();
         if (!alState.isSessionActive()) {
             aEvent.getRequestTarget().ifPresent(target -> target.add(alMainContainer));
             return;

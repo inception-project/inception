@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail;
 
 import static de.tudarmstadt.ukp.inception.rendering.vmodel.VID.NONE;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
@@ -53,6 +52,7 @@ import org.slf4j.LoggerFactory;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.rendering.Renderer;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
@@ -99,7 +99,8 @@ public class AttachedAnnotationListPanel
         noAttachedAnnotationsInfo.add(visibleWhen(
                 () -> getModelObject() != null && getModelObject().getSelection().isSet()
                         && getModelObject().getSelection().getAnnotation().getId() != NONE
-                        && SPAN_TYPE.equals(getModelObject().getSelectedAnnotationLayer().getType())
+                        && SpanLayerSupport.TYPE
+                                .equals(getModelObject().getSelectedAnnotationLayer().getType())
                         && annotations.getObject().isEmpty()));
         add(noAttachedAnnotationsInfo);
 
@@ -150,7 +151,7 @@ public class AttachedAnnotationListPanel
             return Collections.emptyList();
         }
 
-        VID localVid = new VID(annoFs);
+        VID localVid = VID.of(annoFs);
 
         List<AttachedAnnotation> attachedAnnotations = new ArrayList<>();
         attachedAnnotations.addAll(schemaService
@@ -204,8 +205,8 @@ public class AttachedAnnotationListPanel
             }
 
             AttachedAnnotationInfo i = new AttachedAnnotationInfo(layer, localVid,
-                    rel.getRelation() != null ? new VID(rel.getRelation()) : null,
-                    new VID(rel.getEndpoint()), labelText, rel.getEndpoint().getCoveredText(),
+                    rel.getRelation() != null ? VID.of(rel.getRelation()) : null,
+                    VID.of(rel.getEndpoint()), labelText, rel.getEndpoint().getCoveredText(),
                     rel.getDirection());
             result.add(i);
         }

@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.curation.merge.strategy;
 
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.apache.commons.lang3.builder.ToStringStyle.SHORT_PREFIX_STYLE;
@@ -53,7 +54,7 @@ public class MergeIncompleteStrategy
             return emptyList();
         }
 
-        if (!aDiff.isAgreement(aCfgs)) {
+        if (!aDiff.isAgreementWithExceptions(aCfgs, CURATION_USER)) {
             LOG.trace(" `-> Not merging annotation with disagreement");
             return emptyList();
         }

@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.curation.service;
 
-import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiffSingle;
+import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.getDiffAdapters;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior.LINK_ROLE_AS_LABEL;
 import static java.lang.Integer.MAX_VALUE;
@@ -103,8 +103,7 @@ public class CurationMergeServiceImpl
 
         DiffResult diff;
         try (StopWatch watch = new StopWatch(LOG, "CasDiff")) {
-            diff = doDiffSingle(adapters, LINK_ROLE_AS_LABEL, aCassesToMerge, 0, MAX_VALUE)
-                    .toResult();
+            diff = doDiff(adapters, LINK_ROLE_AS_LABEL, aCassesToMerge, 0, MAX_VALUE).toResult();
         }
 
         try (StopWatch watch = new StopWatch(LOG, "CasMerge")) {

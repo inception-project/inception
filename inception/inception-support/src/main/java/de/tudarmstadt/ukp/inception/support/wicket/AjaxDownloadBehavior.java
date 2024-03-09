@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.support.wicket;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.AbstractAjaxBehavior;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.Model;
 import org.apache.wicket.request.handler.resource.ResourceStreamRequestHandler;
 import org.apache.wicket.request.resource.ContentDisposition;
 import org.apache.wicket.util.resource.FileResourceStream;
@@ -42,6 +43,11 @@ public class AjaxDownloadBehavior
     private IModel<IResourceStream> data;
 
     private boolean addAntiCache = true;
+
+    public AjaxDownloadBehavior()
+    {
+        this(null, Model.of());
+    }
 
     public AjaxDownloadBehavior(IModel<IResourceStream> aData)
     {
@@ -71,6 +77,13 @@ public class AjaxDownloadBehavior
 
         // the timeout is needed to let Wicket release the channel
         aTarget.appendJavaScript("setTimeout(\"window.location.href='" + url + "'\", 100);");
+    }
+
+    public void initiate(AjaxRequestTarget aTarget, String aFilename, IResourceStream aStream)
+    {
+        filename = Model.of(aFilename);
+        data = Model.of(aStream);
+        initiate(aTarget);
     }
 
     @Override

@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.log.config;
 
+import java.util.Collections;
 import java.util.Set;
 
 import org.springframework.boot.availability.AvailabilityChangeEvent;
@@ -32,8 +33,9 @@ public class EventLoggingPropertiesImpl
 {
     private boolean enabled;
 
-    private Set<String> excludeEvents = Set.of( //
-            // Do not log this by default - hardly any information value
+    private Set<String> includePatterns = Collections.emptySet(); // Default include everything
+
+    private Set<String> excludePatterns = Set.of( //
             AfterCasWrittenEvent.class.getSimpleName(), //
             AvailabilityChangeEvent.class.getSimpleName(), //
             "RecommenderTaskNotificationEvent", //
@@ -55,14 +57,26 @@ public class EventLoggingPropertiesImpl
     }
 
     @Override
-    public Set<String> getExcludeEvents()
+    public Set<String> getIncludePatterns()
     {
-        return excludeEvents;
+        return includePatterns;
     }
 
     @Override
-    public void setExcludeEvents(Set<String> aExcludeEvents)
+    public void setIncludePatterns(Set<String> aIncludePatterns)
     {
-        excludeEvents = aExcludeEvents;
+        this.includePatterns = aIncludePatterns;
+    }
+
+    @Override
+    public Set<String> getExcludePatterns()
+    {
+        return excludePatterns;
+    }
+
+    @Override
+    public void setExcludePatterns(Set<String> aExcludePatterns)
+    {
+        this.excludePatterns = aExcludePatterns;
     }
 }

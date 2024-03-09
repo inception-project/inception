@@ -23,7 +23,10 @@ import static java.lang.String.format;
 import java.util.Map;
 
 import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.wicket.authorization.Action;
 import org.apache.wicket.authroles.authorization.strategies.role.annotations.AuthorizeAction;
 import org.apache.wicket.markup.html.WebMarkupContainer;
@@ -31,8 +34,10 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.request.Url;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.springframework.security.web.csrf.HttpSessionCsrfTokenRepository;
 
 import de.tudarmstadt.ukp.inception.scheduling.controller.SchedulerController;
+import de.tudarmstadt.ukp.inception.scheduling.controller.SchedulerWebsocketController;
 import de.tudarmstadt.ukp.inception.support.svelte.SvelteBehavior;
 
 @AuthorizeAction(action = Action.RENDER, roles = "ROLE_USER")
@@ -43,10 +48,38 @@ public class TaskMonitorPanel
 
     private @SpringBean ServletContext servletContext;
 
+    private boolean popupMode = true;
+    private boolean showFinishedTasks = true;
+    private String typePattern = "";
+
     public TaskMonitorPanel(String aId)
     {
         super(aId);
         setOutputMarkupPlaceholderTag(true);
+    }
+
+    public TaskMonitorPanel setPopupMode(boolean aPopupMode)
+    {
+        popupMode = aPopupMode;
+        return this;
+    }
+
+    public TaskMonitorPanel setShowFinishedTasks(boolean aKeepRemovedTasks)
+    {
+        showFinishedTasks = aKeepRemovedTasks;
+        return this;
+    }
+
+    public TaskMonitorPanel setTypePattern(String aTypePattern)
+    {
+        if (StringUtils.isBlank(aTypePattern)) {
+            typePattern = "";
+        }
+        else {
+            typePattern = aTypePattern;
+        }
+
+        return this;
     }
 
     @Override
@@ -55,17 +88,46 @@ public class TaskMonitorPanel
         super.onConfigure();
 
         setDefaultModel(Model.ofMap(Map.of( //
-                "wsEndpointUrl", constructEndpointUrl(), //
-                "topicChannel", SchedulerController.BASE_TOPIC)));
+                "csrfToken", getCsrfTokenFromSession(), //
+                "popupMode", popupMode, //
+                "showFinishedTasks", showFinishedTasks, //
+                "typePattern", typePattern, //
+                "endpointUrl", constructEndpointUrl(), //
+                "wsEndpointUrl", constructWsEndpointUrl(), //
+                "topicChannel", SchedulerWebsocketController.BASE_TOPIC)));
 
         add(new SvelteBehavior());
     }
 
     private String constructEndpointUrl()
     {
+        Url endPointUrl = Url.parse(
+                format("%s%s", servletContext.getContextPath(), SchedulerController.BASE_URL));
+        return RequestCycle.get().getUrlRenderer().renderFullUrl(endPointUrl);
+    }
+
+    private String constructWsEndpointUrl()
+    {
         Url endPointUrl = Url.parse(format("%s%s", servletContext.getContextPath(), WS_ENDPOINT));
         endPointUrl.setProtocol("ws");
-        String fullUrl = RequestCycle.get().getUrlRenderer().renderFullUrl(endPointUrl);
-        return fullUrl;
+        return RequestCycle.get().getUrlRenderer().renderFullUrl(endPointUrl);
+    }
+
+    public String getCsrfTokenFromSession()
+    {
+        var httpRequest = (HttpServletRequest) RequestCycle.get().getRequest()
+                .getContainerRequest();
+        var httpResponse = (HttpServletResponse) RequestCycle.get().getResponse()
+                .getContainerResponse();
+
+        var csrfTokenRepository = new HttpSessionCsrfTokenRepository();
+        var csrfToken = csrfTokenRepository.loadDeferredToken(httpRequest, httpResponse);
+
+        if (csrfToken != null) {
+            return csrfToken.get().getToken();
+        }
+        else {
+            return "";
+        }
     }
 }

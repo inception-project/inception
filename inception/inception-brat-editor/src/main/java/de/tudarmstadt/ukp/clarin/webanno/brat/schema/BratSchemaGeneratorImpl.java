@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.brat.schema;
 
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CHAIN_TYPE;
 import static java.util.Collections.emptyList;
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.groupingBy;
@@ -39,6 +38,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
+import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainLayerSupport;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
 /**
@@ -122,7 +122,7 @@ public class BratSchemaGeneratorImpl
         List<AnnotationLayer> attachingLayers = new ArrayList<>();
 
         // Chains always attach to themselves
-        if (CHAIN_TYPE.equals(aTarget.getType())) {
+        if (ChainLayerSupport.TYPE.equals(aTarget.getType())) {
             attachingLayers.add(aTarget);
         }
 
@@ -170,7 +170,7 @@ public class BratSchemaGeneratorImpl
 
         // Handle arrow-head styles depending on linkedListBehavior
         String arrowHead;
-        if (aLayer.getType().equals(CHAIN_TYPE) && !aLayer.isLinkedListBehavior()) {
+        if (aLayer.getType().equals(ChainLayerSupport.TYPE) && !aLayer.isLinkedListBehavior()) {
             arrowHead = "none";
         }
         else {
@@ -179,7 +179,7 @@ public class BratSchemaGeneratorImpl
 
         String dashArray;
         switch (aLayer.getType()) {
-        case CHAIN_TYPE:
+        case ChainLayerSupport.TYPE:
             dashArray = "5,1";
             break;
         default:

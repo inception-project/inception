@@ -51,10 +51,8 @@ public class AuthenticationSuccessEventAdapter
     @Override
     public String getDetails(AuthenticationSuccessEvent aEvent) throws IOException
     {
-        String sessionId;
-
         try {
-            sessionId = RequestContextHolder.currentRequestAttributes().getSessionId();
+            var sessionId = RequestContextHolder.currentRequestAttributes().getSessionId();
 
             SessionDetails details = new SessionDetails(sessionId);
 

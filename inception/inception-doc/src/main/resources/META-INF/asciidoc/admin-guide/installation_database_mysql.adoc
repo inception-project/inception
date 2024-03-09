@@ -1,0 +1,50 @@
+// Licensed to the Technische Universität Darmstadt under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The Technische Universität Darmstadt 
+// licenses this file to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.
+//  
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+[[sect_mysql]]
+= MySQL
+
+The preferred database for use with {product-name} is MariaDB. However, MariaDB and MySQL are largely compatible and in some environments, MariaDB may not be readily available. Thus, here you can find some additonal information specific to deploying {product-name} using a MySQL database. Note that this section does not repeat all the setup instructions from the MariaDB section - the setup please refer to the MariaDB section first. This section only describes additional items specific to MySQL.
+
+== Using the MySQL JDBC driver
+
+{product-name} only includes the MariaDB JDBC driver. According to the MariaDB documentation, this driver is also compatible with MySQL servers. However, additional settings may be necessary when connecting to a MySQL server.
+
+If you want to use {product-name} with MySQL instead of MariaDB, you may also have to explicitly define the database driver. The MariaDB driver should also work for MySQL databases, but if you use a `mysql` JDBC URL (like e.g. `jdbc:mysql://localhost:3306/inception`), you need to explicitly define the driver in the `settings.properties` file:
+
+----
+database.driver=org.mariadb.jdbc.Driver
+----
+
+In most cases, {product-name} can auto-configure the database dialect to use. However, in some cases, this auto-detection may fail - in particular when using MySQL. For example, when using INCEpTION with MySQL 8, it may be necessary to explicitly add a database dialect configuration to the `settings.properties` file:
+
+----
+database.dialect=org.hibernate.dialect.MySQL8Dialect
+----
+
+Finally, recent versions of MySQL may need this setting to avoid schema validation to fail during startup:
+
+----
+spring.jpa.properties.hibernate.globally_quoted_identifiers=true
+----
+
+== JDBC driver options
+
+Depending yon your environment, you might have to add additional options to the JDBC URL, e.g.
+
+----
+sslMode=REQUIRED
+----

@@ -22,8 +22,6 @@ import static java.util.Collections.unmodifiableList;
 import java.util.ArrayList;
 import java.util.List;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.scheduling.Task;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 
@@ -32,14 +30,9 @@ public abstract class RecommendationTask_ImplBase
 {
     private final List<LogMessage> logMessages = new ArrayList<>();
 
-    public RecommendationTask_ImplBase(Project aProject, String aTrigger)
+    protected RecommendationTask_ImplBase(Builder<? extends Builder<?>> aBuilder)
     {
-        super(aProject, aTrigger);
-    }
-
-    public RecommendationTask_ImplBase(User aUser, Project aProject, String aTrigger)
-    {
-        super(aUser, aProject, aTrigger);
+        super(aBuilder);
     }
 
     public void inheritLog(List<LogMessage> aLogMessages)
@@ -70,5 +63,16 @@ public abstract class RecommendationTask_ImplBase
     public void error(String aFormat, Object... aValues)
     {
         logMessages.add(LogMessage.error(this, aFormat, aValues));
+    }
+
+    public void log(LogMessage aMessage)
+    {
+        logMessages.add(aMessage);
+    }
+
+    public static abstract class Builder<T extends Builder<?>>
+        extends Task.Builder<T>
+    {
+        // No changes
     }
 }

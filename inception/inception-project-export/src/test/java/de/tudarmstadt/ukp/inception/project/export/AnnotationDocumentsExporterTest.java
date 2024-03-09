@@ -51,9 +51,8 @@ import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageCachePro
 import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStoragePropertiesImpl;
 import de.tudarmstadt.ukp.inception.annotation.storage.driver.filesystem.FileSystemCasStorageDriver;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
-import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
+import de.tudarmstadt.ukp.inception.documents.api.RepositoryPropertiesImpl;
 import de.tudarmstadt.ukp.inception.export.DocumentImportExportServiceImpl;
-import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceProperties;
 import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServicePropertiesImpl;
 import de.tudarmstadt.ukp.inception.io.xmi.XmiFormatSupport;
 import de.tudarmstadt.ukp.inception.io.xmi.config.UimaFormatsPropertiesImpl.XmiFormatProperties;
@@ -65,7 +64,7 @@ public class AnnotationDocumentsExporterTest
 {
     public @TempDir File tempFolder;
 
-    private RepositoryProperties repositoryProperties;
+    private RepositoryPropertiesImpl repositoryProperties;
     private DocumentImportExportService importExportSerivce;
     private FileSystemCasStorageDriver driver;
     private CasStorageServiceImpl casStorageService;
@@ -89,9 +88,9 @@ public class AnnotationDocumentsExporterTest
         project.setId(1l);
         project.setName("Test Project");
 
-        DocumentImportExportServiceProperties properties = new DocumentImportExportServicePropertiesImpl();
+        var properties = new DocumentImportExportServicePropertiesImpl();
 
-        repositoryProperties = new RepositoryProperties();
+        repositoryProperties = new RepositoryPropertiesImpl();
         repositoryProperties.setPath(workFolder);
 
         driver = new FileSystemCasStorageDriver(repositoryProperties,
@@ -101,9 +100,9 @@ public class AnnotationDocumentsExporterTest
                 null, schemaService);
 
         var xmiFormatSupport = new XmiFormatSupport(new XmiFormatProperties());
-        importExportSerivce = new DocumentImportExportServiceImpl(repositoryProperties,
-                asList(xmiFormatSupport), casStorageService, schemaService, properties,
-                checksRegistry, repairsRegistry, xmiFormatSupport);
+        importExportSerivce = new DocumentImportExportServiceImpl(asList(xmiFormatSupport),
+                casStorageService, schemaService, properties, checksRegistry, repairsRegistry,
+                xmiFormatSupport);
 
         sut = new AnnotationDocumentExporter(documentService, null, importExportSerivce,
                 repositoryProperties);

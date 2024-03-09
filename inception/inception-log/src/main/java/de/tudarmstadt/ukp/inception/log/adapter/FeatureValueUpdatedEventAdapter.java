@@ -57,7 +57,7 @@ public class FeatureValueUpdatedEventAdapter
     public String getDetails(FeatureValueUpdatedEvent aEvent) throws IOException
     {
         // FIXME This may fail for slot features... let's see.
-        FeatureChangeDetails details = new FeatureChangeDetails(aEvent.getFS(), aEvent.getFeature(),
+        var details = new FeatureChangeDetails(aEvent.getFS(), aEvent.getFeature(),
                 aEvent.getNewValue(), aEvent.getOldValue());
         return JSONUtil.toJsonString(details);
     }

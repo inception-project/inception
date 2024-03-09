@@ -22,8 +22,11 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.uima.cas.CAS.TYPE_NAME_STRING_ARRAY;
 
 import java.io.IOException;
+import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -32,6 +35,7 @@ import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.StringArrayFS;
 import org.apache.uima.fit.util.FSUtil;
+import org.apache.uima.jcas.cas.StringArray;
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
@@ -50,6 +54,7 @@ import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetail;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetailGroup;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.IllegalFeatureValueException;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureEditor;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureType;
@@ -128,6 +133,29 @@ public class MultiValueStringFeatureSupport
     }
 
     @Override
+    public Serializable wrapFeatureValue(AnnotationFeature aFeature, CAS aCAS, Object aValue)
+    {
+        if (aValue == null) {
+            return null;
+        }
+
+        if (aValue instanceof StringArray value) {
+            return new ArrayList<>(asList(value.toArray()));
+        }
+
+        if (aValue instanceof String value) {
+            return new ArrayList<>(asList(value));
+        }
+
+        if (aValue instanceof Collection) {
+            return (Serializable) aValue;
+        }
+
+        throw new IllegalArgumentException(
+                "Unable to handle value [" + aValue + "] of type [" + aValue.getClass() + "]");
+    }
+
+    @Override
     public void setFeatureValue(CAS aCas, AnnotationFeature aFeature, int aAddress, Object aValue)
         throws IllegalFeatureValueException
     {
@@ -135,8 +163,8 @@ public class MultiValueStringFeatureSupport
             throw unsupportedFeatureTypeException(aFeature);
         }
 
-        FeatureStructure fs = getFS(aCas, aFeature, aAddress);
-        List<String> values = unwrapFeatureValue(aFeature, fs.getCAS(), aValue);
+        var fs = getFS(aCas, aFeature, aAddress);
+        var values = unwrapFeatureValue(aFeature, fs.getCAS(), aValue);
         if (values == null || values.isEmpty()) {
             FSUtil.setFeature(fs, aFeature.getName(), (Collection<String>) null);
             return;
@@ -147,7 +175,7 @@ public class MultiValueStringFeatureSupport
         }
 
         // Create a new array if size differs otherwise re-use existing one
-        StringArrayFS array = FSUtil.getFeature(fs, aFeature.getName(), StringArrayFS.class);
+        var array = FSUtil.getFeature(fs, aFeature.getName(), StringArrayFS.class);
         if (array == null || (array.size() != values.size())) {
             array = fs.getCAS().createStringArrayFS(values.size());
         }
@@ -156,6 +184,46 @@ public class MultiValueStringFeatureSupport
         array.copyFromArray(values.toArray(new String[values.size()]), 0, 0, values.size());
 
         fs.setFeatureValue(fs.getType().getFeatureByBaseName(aFeature.getName()), array);
+    }
+
+    @Override
+    public void pushFeatureValue(CAS aCas, AnnotationFeature aFeature, int aAddress, Object aValue)
+        throws AnnotationException
+    {
+        if (!accepts(aFeature)) {
+            throw unsupportedFeatureTypeException(aFeature);
+        }
+
+        var fs = getFS(aCas, aFeature, aAddress);
+        var newValues = unwrapFeatureValue(aFeature, fs.getCAS(), aValue);
+        if (newValues == null || newValues.isEmpty()) {
+            return;
+        }
+
+        for (String value : newValues) {
+            schemaService.createMissingTag(aFeature, value);
+        }
+
+        var feature = fs.getType().getFeatureByBaseName(aFeature.getName());
+        var oldValues = (Collection<String>) wrapFeatureValue(aFeature, fs.getCAS(),
+                fs.getFeatureValue(feature));
+
+        var mergedValues = new LinkedHashSet<String>();
+        if (oldValues != null) {
+            mergedValues.addAll(oldValues);
+        }
+        mergedValues.addAll(newValues);
+
+        // Create a new array if size differs otherwise re-use existing one
+        var array = FSUtil.getFeature(fs, aFeature.getName(), StringArrayFS.class);
+        if (array == null || (array.size() != mergedValues.size())) {
+            array = fs.getCAS().createStringArrayFS(mergedValues.size());
+        }
+
+        array.copyFromArray(mergedValues.toArray(new String[mergedValues.size()]), 0, 0,
+                mergedValues.size());
+
+        fs.setFeatureValue(feature, array);
     }
 
     @Override
@@ -238,11 +306,10 @@ public class MultiValueStringFeatureSupport
         if (aValue instanceof Iterable) {
             var values = (Iterable<?>) aValue;
             for (var v : values) {
-                if (v instanceof String) {
-                    var value = (String) v;
+                if (v instanceof String value) {
                     var tag = schemaService.getTag(value, aFeature.getTagset());
 
-                    if (aFeature.getTagset() != null && tag.isEmpty()) {
+                    if (isNotBlank(value) && aFeature.getTagset() != null && tag.isEmpty()) {
                         results.addDetail(new VLazyDetail(value, "Tag not in tagset"));
                     }
 

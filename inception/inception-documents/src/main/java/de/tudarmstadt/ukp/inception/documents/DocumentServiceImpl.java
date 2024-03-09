@@ -194,8 +194,7 @@ public class DocumentServiceImpl
 
     // NO TRANSACTION REQUIRED - This does not do any should not do a database access, so we do not
     // need to be in a transaction here. Avoiding the transaction speeds up the call.
-    @Override
-    public File getSourceDocumentFolder(SourceDocument aDocument)
+    private File getSourceDocumentFolder(SourceDocument aDocument)
     {
         Validate.notNull(aDocument, "Source document must be specified");
         Validate.notNull(aDocument.getProject().getId(),
@@ -867,7 +866,7 @@ public class DocumentServiceImpl
                     // adding this feature, the existing projects do not yet have initial CASes, so
                     // we create them here lazily
                     try {
-                        return importExportService.importCasFromFile(
+                        return importExportService.importCasFromFileNoChecks(
                                 getSourceDocumentFile(aDocument), aDocument,
                                 aFullProjectTypeSystem);
                     }
@@ -885,6 +884,14 @@ public class DocumentServiceImpl
         Validate.notNull(aDocument, "Source document must be specified");
 
         return casStorageService.existsCas(aDocument, INITIAL_CAS_PSEUDO_USER);
+    }
+
+    @Override
+    public Optional<Long> getInitialCasFileSize(SourceDocument aDocument) throws IOException
+    {
+        Validate.notNull(aDocument, "Source document must be specified");
+
+        return casStorageService.getCasFileSize(aDocument, INITIAL_CAS_PSEUDO_USER);
     }
 
     // NO TRANSACTION REQUIRED - This does not do any should not do a database access, so we do not

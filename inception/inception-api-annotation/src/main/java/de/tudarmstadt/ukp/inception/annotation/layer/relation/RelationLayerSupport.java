@@ -17,14 +17,12 @@
  */
 package de.tudarmstadt.ukp.inception.annotation.layer.relation;
 
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.FEAT_REL_SOURCE;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.FEAT_REL_TARGET;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.RELATION_TYPE;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.uima.cas.CAS.TYPE_NAME_ANNOTATION;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -32,6 +30,7 @@ import org.apache.uima.resource.metadata.TypeDescription;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.validation.ValidationError;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
@@ -43,6 +42,7 @@ import de.tudarmstadt.ukp.inception.rendering.Renderer;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupport_ImplBase;
 import de.tudarmstadt.ukp.inception.schema.api.layer.LayerType;
+import de.tudarmstadt.ukp.inception.support.WebAnnoConst;
 
 /**
  * <p>
@@ -54,6 +54,15 @@ public class RelationLayerSupport
     extends LayerSupport_ImplBase<RelationAdapter, RelationLayerTraits>
     implements InitializingBean
 {
+    @SuppressWarnings("deprecation")
+    public static final String FEAT_REL_TARGET = WebAnnoConst.FEAT_REL_TARGET;
+
+    @SuppressWarnings("deprecation")
+    public static final String FEAT_REL_SOURCE = WebAnnoConst.FEAT_REL_SOURCE;
+
+    @SuppressWarnings("deprecation")
+    public static final String TYPE = WebAnnoConst.RELATION_TYPE;
+
     private final ApplicationEventPublisher eventPublisher;
     private final LayerBehaviorRegistry layerBehaviorsRegistry;
 
@@ -85,7 +94,7 @@ public class RelationLayerSupport
     @Override
     public void afterPropertiesSet() throws Exception
     {
-        types = asList(new LayerType(RELATION_TYPE, "Relation", layerSupportId));
+        types = asList(new LayerType(TYPE, "Relation", layerSupportId));
     }
 
     @Override
@@ -97,7 +106,7 @@ public class RelationLayerSupport
     @Override
     public boolean accepts(AnnotationLayer aLayer)
     {
-        return RELATION_TYPE.equals(aLayer.getType());
+        return TYPE.equals(aLayer.getType());
     }
 
     @Override
@@ -153,5 +162,17 @@ public class RelationLayerSupport
     public RelationLayerTraits createTraits()
     {
         return new RelationLayerTraits();
+    }
+
+    @Override
+    public List<ValidationError> validateFeatureName(AnnotationFeature aFeature)
+    {
+        var name = aFeature.getName();
+        if (name.equals(FEAT_REL_SOURCE) || name.equals(FEAT_REL_TARGET)) {
+            return asList(new ValidationError("[" + name + "] is a reserved feature name on "
+                    + "relation layers. Please use a different name for the feature."));
+        }
+
+        return Collections.emptyList();
     }
 }

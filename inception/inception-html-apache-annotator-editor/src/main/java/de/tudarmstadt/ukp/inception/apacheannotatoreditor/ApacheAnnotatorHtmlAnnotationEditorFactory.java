@@ -33,6 +33,7 @@ import de.tudarmstadt.ukp.inception.editor.AnnotationEditorBase;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorFactoryImplBase;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.io.html.HtmlFormatSupport;
+import de.tudarmstadt.ukp.inception.io.html.MHtmlFormatSupport;
 import de.tudarmstadt.ukp.inception.io.xml.CustomXmlFormatLoader;
 import de.tudarmstadt.ukp.inception.io.xml.XmlFormatSupport;
 import de.tudarmstadt.ukp.inception.preferences.ClientSidePreferencesKey;
@@ -77,9 +78,10 @@ public class ApacheAnnotatorHtmlAnnotationEditorFactory
         if (aFormat.startsWith(CustomXmlFormatLoader.CUSTOM_XML_FORMAT_PREFIX)) {
             return PREFERRED;
         }
-        
+
         switch (aFormat) {
         case HtmlFormatSupport.ID: // fall-through
+        case MHtmlFormatSupport.ID: // fall-through
         case XmlFormatSupport.ID:
             return PREFERRED;
         default:
@@ -105,8 +107,8 @@ public class ApacheAnnotatorHtmlAnnotationEditorFactory
     @Override
     public Optional<ClientSidePreferencesKey<Map>> getUserPreferencesKey()
     {
-        return Optional
-                .of(new ClientSidePreferencesKey<>(Map.class, "annotation/apache-annotator-editor"));
+        return Optional.of(
+                new ClientSidePreferencesKey<>(Map.class, "annotation/apache-annotator-editor"));
     }
 
     @Override

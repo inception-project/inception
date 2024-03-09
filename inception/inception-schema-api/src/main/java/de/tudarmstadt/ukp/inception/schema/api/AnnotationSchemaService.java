@@ -27,6 +27,7 @@ import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
+import org.apache.wicket.validation.ValidationError;
 import org.springframework.security.access.prepost.PreAuthorize;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode;
@@ -155,6 +156,15 @@ public interface AnnotationSchemaService
     boolean existsTagSet(Project project);
 
     /**
+     * Check if any {@link AnnotationLayer} exists with this name in the given {@link Project}.
+     * 
+     * @param project
+     *            the project.
+     * @return if a layer exists.
+     */
+    boolean existsLayer(Project project);
+
+    /**
      * Check if an {@link AnnotationLayer} exists with this name in the given {@link Project}.
      * 
      * @param name
@@ -178,7 +188,7 @@ public interface AnnotationSchemaService
      */
     boolean existsLayer(String name, String type, Project project);
 
-    boolean existsEnabledLayerOfType(Project aProject, String aType);
+    boolean existsEnabledLayerOfType(Project project, String type);
 
     /**
      * Check if this {@link AnnotationFeature} already exists
@@ -661,4 +671,8 @@ public interface AnnotationSchemaService
 
     void createMissingTag(AnnotationFeature aFeature, String aValue)
         throws IllegalFeatureValueException;
+
+    List<ValidationError> validateFeatureName(AnnotationFeature aFeature);
+
+    boolean hasValidFeatureName(AnnotationFeature aFeature);
 }

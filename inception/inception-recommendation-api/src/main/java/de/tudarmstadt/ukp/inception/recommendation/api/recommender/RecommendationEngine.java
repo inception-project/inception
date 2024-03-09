@@ -38,6 +38,8 @@ import de.tudarmstadt.ukp.inception.rendering.model.Range;
 
 public abstract class RecommendationEngine
 {
+    protected static final String BLANK_LABEL = "__NO_LABEL__";
+
     protected final Recommender recommender;
     protected final String layerName;
     protected final String featureName;
@@ -84,7 +86,7 @@ public abstract class RecommendationEngine
      * @throws RecommendationException
      *             if there was a problem during prediction
      */
-    public void predict(RecommenderContext aContext, CAS aCas) throws RecommendationException
+    public void predict(PredictionContext aContext, CAS aCas) throws RecommendationException
     {
         predict(aContext, aCas, 0, aCas.getDocumentText().length());
     }
@@ -111,7 +113,7 @@ public abstract class RecommendationEngine
      * @throws RecommendationException
      *             if there was a problem during prediction
      */
-    public abstract Range predict(RecommenderContext aContext, CAS aCas, int aBegin, int aEnd)
+    public abstract Range predict(PredictionContext aContext, CAS aCas, int aBegin, int aEnd)
         throws RecommendationException;
 
     /**
@@ -191,12 +193,12 @@ public abstract class RecommendationEngine
      */
     public abstract int estimateSampleCount(List<CAS> aCasses);
 
-    protected Type getPredictedType(CAS aCas)
+    public Type getPredictedType(CAS aCas)
     {
         return getType(aCas, layerName);
     }
 
-    protected Feature getPredictedFeature(CAS aCas)
+    public Feature getPredictedFeature(CAS aCas)
     {
         return getPredictedType(aCas).getFeatureByBaseName(featureName);
     }
@@ -219,9 +221,16 @@ public abstract class RecommendationEngine
         return getPredictedType(aCas).getFeatureByBaseName(scoreExplanationFeature);
     }
 
-    protected Feature getIsPredictionFeature(CAS aCas)
+    public Feature getIsPredictionFeature(CAS aCas)
     {
-        return getPredictedType(aCas).getFeatureByBaseName(FEATURE_NAME_IS_PREDICTION);
+        var type = getPredictedType(aCas);
+        var feature = type.getFeatureByBaseName(FEATURE_NAME_IS_PREDICTION);
+        if (feature == null) {
+            throw new IllegalArgumentException(
+                    "CAS has not been prepared for prediction. Type [" + type.getName()
+                            + "] does not have the feature [" + FEATURE_NAME_IS_PREDICTION + "]");
+        }
+        return feature;
     }
 
     public void exportModel(RecommenderContext aContext, OutputStream aOutput) throws IOException

@@ -17,53 +17,82 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.api.model;
 
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.AutoAcceptMode.NEVER;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
 public class PredictionGroupTest
 {
+    private SourceDocument doc;
+    private AnnotationLayer layer;
+    private AnnotationFeature feature;
+    private Recommender rec1;
+    private Recommender rec2;
+
+    @BeforeEach
+    void setup()
+    {
+        doc = SourceDocument.builder().withId(123l).withName("doc1").build();
+        layer = AnnotationLayer.builder().withId(1337l).withName("layer").build();
+        feature = AnnotationFeature.builder().withId(1338l).withName("value").withLayer(layer)
+                .build();
+        rec1 = Recommender.builder().withId(1l).withName("rec1").withLayer(layer)
+                .withFeature(feature).build();
+        rec2 = Recommender.builder().withId(2l).withName("rec2").withLayer(layer)
+                .withFeature(feature).build();
+    }
+
     @Test
     public void thatAddingElementsToGroupWorks()
     {
-        var rec1Sug1 = new SpanSuggestion(1, 1, "rec1", 1, "value", "doc1", 0, 1, "a", "A", "#A",
-                0.1, "E1", NEVER);
-        var rec1Sug2 = new SpanSuggestion(2, 1, "rec1", 1, "value", "doc1", 0, 1, "b", "B", "#B",
-                0.2, "E2", NEVER);
-        var rec2Sug1 = new SpanSuggestion(3, 2, "rec2", 1, "value", "doc1", 0, 1, "c", "C", "#C",
-                0.1, "E1", NEVER);
-        var rec2Sug2 = new SpanSuggestion(4, 2, "rec2", 1, "value", "doc1", 0, 1, "d", "D", "#D",
-                0.3, "E3", NEVER);
+        var builder = SpanSuggestion.builder().withDocument(doc).withPosition(0, 1);
+
+        builder.withRecommender(rec1);
+        var rec1Sug1 = builder.withId(1).withCoveredText("a").withLabel("A").withUiLabel("#A")
+                .withScore(0.1).withScoreExplanation("E1").build();
+        var rec1Sug2 = builder.withId(2).withCoveredText("b").withLabel("B").withUiLabel("#B")
+                .withScore(0.2).withScoreExplanation("E2").build();
+
+        builder.withRecommender(rec2);
+        var rec2Sug1 = builder.withId(3).withCoveredText("c").withLabel("C").withUiLabel("#C")
+                .withScore(0.1).withScoreExplanation("E1").build();
+        var rec2Sug2 = builder.withId(4).withCoveredText("d").withLabel("D").withUiLabel("#D")
+                .withScore(0.3).withScoreExplanation("E3").build();
 
         // Ensure that group grows and that all elements are added properly
         var sut = new SuggestionGroup<>();
         sut.add(rec1Sug1);
-        assertThat(sut).hasSize(1);
-        assertThat(sut).contains(rec1Sug1);
+        assertThat(sut).hasSize(1).contains(rec1Sug1);
         sut.add(rec1Sug2);
-        assertThat(sut).hasSize(2);
-        assertThat(sut).contains(rec1Sug2);
+        assertThat(sut).hasSize(2).contains(rec1Sug2);
         sut.add(rec2Sug1);
-        assertThat(sut).hasSize(3);
-        assertThat(sut).contains(rec2Sug1);
+        assertThat(sut).hasSize(3).contains(rec2Sug1);
         sut.add(rec2Sug2);
-        assertThat(sut).hasSize(4);
-        assertThat(sut).contains(rec2Sug2);
+        assertThat(sut).hasSize(4).contains(rec2Sug2);
     }
 
     @Test
     public void thatSortingWorks()
     {
-        var rec1Sug1 = new SpanSuggestion(1, 1, "rec1", 1, "value", "doc1", 0, 1, "a", "A", "#A",
-                0.1, "E1", NEVER);
-        var rec1Sug2 = new SpanSuggestion(2, 1, "rec1", 1, "value", "doc1", 0, 1, "b", "B", "#B",
-                0.2, "E2", NEVER);
-        var rec2Sug1 = new SpanSuggestion(3, 2, "rec2", 1, "value", "doc1", 0, 1, "c", "C", "#C",
-                0.1, "E1", NEVER);
-        var rec2Sug2 = new SpanSuggestion(4, 2, "rec2", 1, "value", "doc1", 0, 1, "d", "D", "#D",
-                0.3, "E3", NEVER);
+        var builder = SpanSuggestion.builder().withDocument(doc).withPosition(0, 1);
+
+        builder.withRecommender(rec1);
+        var rec1Sug1 = builder.withId(1).withCoveredText("a").withLabel("A").withUiLabel("#A")
+                .withScore(0.1).withScoreExplanation("E1").build();
+        var rec1Sug2 = builder.withId(2).withCoveredText("b").withLabel("B").withUiLabel("#B")
+                .withScore(0.2).withScoreExplanation("E2").build();
+
+        builder.withRecommender(rec2);
+        var rec2Sug1 = builder.withId(3).withCoveredText("c").withLabel("C").withUiLabel("#C")
+                .withScore(0.1).withScoreExplanation("E1").build();
+        var rec2Sug2 = builder.withId(4).withCoveredText("d").withLabel("D").withUiLabel("#D")
+                .withScore(0.3).withScoreExplanation("E3").build();
 
         var sut = new SuggestionGroup<>(rec1Sug1, rec1Sug2, rec2Sug1, rec2Sug2);
 
@@ -83,14 +112,19 @@ public class PredictionGroupTest
     @Test
     public void thatTopDeltasAreCorrect()
     {
-        var rec1Sug1 = new SpanSuggestion(1, 1, "rec1", 1, "value", "doc1", 0, 1, "a", "A", "#A",
-                0.1, "E1", NEVER);
-        var rec1Sug2 = new SpanSuggestion(2, 1, "rec1", 1, "value", "doc1", 0, 1, "b", "B", "#B",
-                0.2, "E2", NEVER);
-        var rec2Sug1 = new SpanSuggestion(3, 2, "rec2", 1, "value", "doc1", 0, 1, "c", "C", "#C",
-                0.1, "E1", NEVER);
-        var rec2Sug2 = new SpanSuggestion(4, 2, "rec2", 1, "value", "doc1", 0, 1, "d", "D", "#D",
-                0.3, "E3", NEVER);
+        var builder = SpanSuggestion.builder().withDocument(doc).withPosition(0, 1);
+
+        builder.withRecommender(rec1);
+        var rec1Sug1 = builder.withId(1).withCoveredText("a").withLabel("A").withUiLabel("#A")
+                .withScore(0.1).withScoreExplanation("E1").build();
+        var rec1Sug2 = builder.withId(2).withCoveredText("b").withLabel("B").withUiLabel("#B")
+                .withScore(0.2).withScoreExplanation("E2").build();
+
+        builder.withRecommender(rec2);
+        var rec2Sug1 = builder.withId(3).withCoveredText("c").withLabel("C").withUiLabel("#C")
+                .withScore(0.1).withScoreExplanation("E1").build();
+        var rec2Sug2 = builder.withId(4).withCoveredText("d").withLabel("D").withUiLabel("#D")
+                .withScore(0.3).withScoreExplanation("E3").build();
 
         var sut = new SuggestionGroup<>(rec1Sug1, rec1Sug2, rec2Sug1, rec2Sug2);
 

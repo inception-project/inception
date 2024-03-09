@@ -17,7 +17,7 @@
 [[sect_monitoring_agreement]]
 = Agreement
 
-NOTE: This functionality is only available to *curators* and *managers*.
+NOTE: This functionality is only available to *curators* and *managers*. Agreement can only be calculated for span and relation layers. The set of available agreement measures depends on the layer configuration.
 
 This page allows you to calculate inter-annotator agreement between users. Agreement can be inspected on a per-feature basis and is calculated pair-wise between all 
 annotators across all documents. 
@@ -62,11 +62,12 @@ Several agreement measures are supported.
 units coded with the same categories by a single annotator may not overlap with each other.
 |====
 
+
 == Coding vs. Unitizing
 
 Coding measures are based on positions. I.e. two annotations are either at the same position or not.
 If they are, they can be compared - otherwise they cannot be compared. This makes coding measures
-unsuitable in cases where partital overlap of annotations needs to be considered, e.g. in the case
+unsuitable in cases where partial overlap of annotations needs to be considered, e.g. in the case
 of named entity annotations where it is common that annotators do not agree on the boundaries of the
 entity. In order to calculate the positions, all documents are scanned for annotations and  annotations located at the same positions are collected in configuration sets. To determine if two annotations are at the same position, different approaches are used depending on the layer type. For a span layer, the begin and end offsets are used. For a relation layer, the begin and end offsets of the source and target annotation are used. Chains are currently not supported. 
 
@@ -102,27 +103,27 @@ labels) or even a unitizing measure which is able to produce partial agreement s
 |====
 | Feature value annotator 1 | Feature value annotator 2 | Agreement | Complete
 
-| `X`           
+| `X`
 | `X`
 | yes
 | yes
 
-| `X`           
+| `X`
 | `Y`
 | no
 | yes
 
-| *no annotation*           
+| *no annotation*
 | `Y`
 | no
 | no
 
-| *empty*           
+| *empty*
 | `Y`
 | no
 | yes
 
-| *empty*           
+| *empty*
 | *empty*
 | yes
 | yes
@@ -132,7 +133,7 @@ labels) or even a unitizing measure which is able to produce partial agreement s
 | yes
 | yes
 
-| *empty*           
+| *empty*
 | *no annotation*
 | no
 | no
@@ -147,6 +148,11 @@ calculation! This also includes relations for which source or targets spans are 
 
 [[sect_agreement_matrix]]
 == Pairwise agreement matrix
+
+To calculate the pairwise agreement, the measure is applied pairs of documents, each document containing annotations from
+one annotator. If an annotator has not yet annotated a document, the original state of the document after the import
+is considered. To calculate the overall agreement between two annotators over all documents, the average of the
+per-document agreements is used. 
 
 The lower part of the agreement matrix displays how many configuration sets were used to calculate
 agreement and how many were found in total. The upper part of the agreement matrix displays the

@@ -18,10 +18,10 @@
 package de.tudarmstadt.ukp.inception.ui.kb.feature;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -96,8 +96,15 @@ public class ConceptFeatureSupport
             return Optional.empty();
         }
 
-        return Optional.of(new FeatureType(aFeature.getType(),
-                aFeature.getType().substring(PREFIX.length()), featureSupportId));
+        var traits = readTraits(aFeature);
+        traits.getAllowedValueType();
+
+        var uiName = "KB: " + traits.getAllowedValueType();
+        if (!TYPE_ANY_OBJECT.equals(aFeature.getType())) {
+            uiName += " (" + aFeature.getType().substring(PREFIX.length()) + ")";
+        }
+
+        return Optional.of(new FeatureType(aFeature.getType(), uiName, featureSupportId));
     }
 
     @Override
@@ -128,7 +135,7 @@ public class ConceptFeatureSupport
             return null;
         }
 
-        ConceptFeatureTraits traits = readTraits(aFeature);
+        var traits = readTraits(aFeature);
         return getConceptHandle(aFeature, aIdentifier, traits).getUiLabel();
     }
 
@@ -165,10 +172,11 @@ public class ConceptFeatureSupport
         }
 
         if (aValue instanceof String) {
-            String identifier = (String) aValue;
-            ConceptFeatureTraits traits = readTraits(aFeature);
-            KBHandle chbk = getConceptHandle(aFeature, identifier, traits);
-            var clone = new KBHandle(identifier, chbk.getUiLabel(), chbk.getDescription());
+            var identifier = (String) aValue;
+            var traits = readTraits(aFeature);
+            var chbk = getConceptHandle(aFeature, identifier, traits);
+            // Clone the cached original so we can override the KB
+            var clone = new KBHandle(chbk);
             clone.setKB(chbk.getKB());
             return clone;
         }
@@ -188,25 +196,21 @@ public class ConceptFeatureSupport
             AnnotationActionHandler aHandler, IModel<AnnotatorState> aStateModel,
             IModel<FeatureState> aFeatureStateModel)
     {
-        AnnotationFeature feature = aFeatureStateModel.getObject().feature;
-        FeatureEditor editor;
+        var feature = aFeatureStateModel.getObject().feature;
 
         switch (feature.getMultiValueMode()) {
         case NONE:
             if (feature.getType().startsWith(PREFIX)) {
-                editor = new ConceptFeatureEditor(aId, aOwner, aFeatureStateModel, aStateModel,
+                return new ConceptFeatureEditor(aId, aOwner, aFeatureStateModel, aStateModel,
                         aHandler);
             }
             else {
                 throw unsupportedMultiValueModeException(feature);
             }
-            break;
         case ARRAY: // fall-through
         default:
             throw unsupportedMultiValueModeException(feature);
         }
-
-        return editor;
     }
 
     @Override
@@ -262,8 +266,7 @@ public class ConceptFeatureSupport
     @Override
     public List<VLazyDetailGroup> lookupLazyDetails(AnnotationFeature aFeature, Object aValue)
     {
-        if (aValue instanceof KBHandle) {
-            var handle = (KBHandle) aValue;
+        if (aValue instanceof KBHandle handle) {
             var result = new VLazyDetailGroup(handle.getIdentifier());
             result.addDetail(new VLazyDetail("Label", handle.getUiLabel()));
 
@@ -274,13 +277,13 @@ public class ConceptFeatureSupport
             return asList(result);
         }
 
-        return Collections.emptyList();
+        return emptyList();
     }
 
     @Override
     public boolean suppressAutoFocus(AnnotationFeature aFeature)
     {
-        ConceptFeatureTraits traits = readTraits(aFeature);
+        var traits = readTraits(aFeature);
         return !traits.getKeyBindings().isEmpty();
     }
 }

@@ -62,7 +62,7 @@ public class BasicRelationRecommenderInitializer
     @Override
     public String getName()
     {
-        return "Basic relation recommender";
+        return "Generic relation recommender";
     }
 
     @Override

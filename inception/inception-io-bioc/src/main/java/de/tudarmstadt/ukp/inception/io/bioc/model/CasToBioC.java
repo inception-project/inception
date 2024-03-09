@@ -38,6 +38,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.FSUtil;
 import org.apache.uima.jcas.JCas;
@@ -197,6 +198,17 @@ public class CasToBioC
                 var value = aAnnotation.getFeatureValueAsString(feature);
                 if (value != null) {
                     aBioCAnnotation.addInfon(feature.getShortName(), value);
+                }
+            }
+
+            if (CAS.TYPE_NAME_STRING_ARRAY.equals(feature.getRange().getName())) {
+                var values = FSUtil.getFeature(aAnnotation, feature, String[].class);
+                if (values != null) {
+                    for (var value : values) {
+                        if (value != null) {
+                            aBioCAnnotation.addInfon(feature.getShortName(), value);
+                        }
+                    }
                 }
             }
         }

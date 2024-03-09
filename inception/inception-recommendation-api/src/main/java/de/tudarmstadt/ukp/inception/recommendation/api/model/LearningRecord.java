@@ -50,6 +50,7 @@ public class LearningRecord
 {
     private static final long serialVersionUID = -8487663728083806672L;
     private static final int TOKEN_TEXT_LENGTH = 255;
+    private static final int LABEL_LENGTH = 255;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -86,15 +87,14 @@ public class LearningRecord
     private String annotation;
 
     @Type(type = "de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserActionType")
-    private LearningRecordType userAction;
+    private LearningRecordUserAction userAction;
 
     private String user;
 
     @Type(type = "de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocationType")
     private LearningRecordChangeLocation changeLocation;
 
-    @Type(type = "de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionTypeWrapper")
-    private SuggestionType suggestionType;
+    private String suggestionType;
 
     @Temporal(TemporalType.TIMESTAMP)
     @Column(nullable = false)
@@ -239,21 +239,26 @@ public class LearningRecord
         return tokenText;
     }
 
-    public SuggestionType getSuggestionType()
+    public String getSuggestionType()
     {
         return suggestionType;
     }
 
-    public void setSuggestionType(SuggestionType aSuggestionType)
+    public void setSuggestionType(String aSuggestionType)
     {
         suggestionType = aSuggestionType;
     }
 
-    public void setTokenText(String tokenText)
+    public void setTokenText(String aTokenText)
     {
+        if (aTokenText == null) {
+            tokenText = null;
+            return;
+        }
+
         // Truncate the token text if it is too long
-        int targetLength = Math.min(tokenText.length(), TOKEN_TEXT_LENGTH);
-        this.tokenText = tokenText.substring(0, targetLength);
+        int targetLength = Math.min(aTokenText.length(), TOKEN_TEXT_LENGTH);
+        tokenText = aTokenText.substring(0, targetLength);
     }
 
     /**
@@ -268,15 +273,22 @@ public class LearningRecord
 
     public void setAnnotation(String aAnnotation)
     {
-        annotation = aAnnotation;
+        if (aAnnotation == null) {
+            annotation = null;
+            return;
+        }
+
+        // Truncate the label if it is too long
+        int targetLength = Math.min(aAnnotation.length(), LABEL_LENGTH);
+        annotation = aAnnotation.substring(0, targetLength);
     }
 
-    public LearningRecordType getUserAction()
+    public LearningRecordUserAction getUserAction()
     {
         return userAction;
     }
 
-    public void setUserAction(LearningRecordType aUserAction)
+    public void setUserAction(LearningRecordUserAction aUserAction)
     {
         userAction = aUserAction;
     }
@@ -344,13 +356,11 @@ public class LearningRecord
             return false;
         }
 
-        if (SuggestionType.RELATION.equals(suggestionType)) {
-            if (offsetBegin2 != that.offsetBegin2) {
-                return false;
-            }
-            if (offsetEnd2 != that.offsetEnd2) {
-                return false;
-            }
+        if (offsetBegin2 != that.offsetBegin2) {
+            return false;
+        }
+        if (offsetEnd2 != that.offsetEnd2) {
+            return false;
         }
 
         if (!Objects.equals(sourceDocument, that.sourceDocument)) {
@@ -374,7 +384,7 @@ public class LearningRecord
         int result = sourceDocument != null ? sourceDocument.hashCode() : 0;
         result = 31 * result + (layer != null ? layer.hashCode() : 0);
         result = 31 * result + (annotationFeature != null ? annotationFeature.hashCode() : 0);
-        result = 31 * result + (suggestionType != null ? suggestionType.getId().hashCode() : 0);
+        result = 31 * result + (suggestionType != null ? suggestionType.hashCode() : 0);
         result = 31 * result + offsetBegin;
         result = 31 * result + offsetEnd;
         result = 31 * result + offsetBegin2;
@@ -401,10 +411,10 @@ public class LearningRecord
         private int offsetEnd2 = -1;
         private String tokenText;
         private String annotation;
-        private LearningRecordType userAction;
+        private LearningRecordUserAction userAction;
         private String user;
         private LearningRecordChangeLocation changeLocation;
-        private SuggestionType suggestionType;
+        private String suggestionType;
         private Date actionDate = new Date();
 
         private Builder()
@@ -472,7 +482,7 @@ public class LearningRecord
             return this;
         }
 
-        public Builder withUserAction(LearningRecordType aUserAction)
+        public Builder withUserAction(LearningRecordUserAction aUserAction)
         {
             userAction = aUserAction;
             return this;
@@ -490,7 +500,7 @@ public class LearningRecord
             return this;
         }
 
-        public Builder withSuggestionType(SuggestionType aSuggestionType)
+        public Builder withSuggestionType(String aSuggestionType)
         {
             suggestionType = aSuggestionType;
             return this;

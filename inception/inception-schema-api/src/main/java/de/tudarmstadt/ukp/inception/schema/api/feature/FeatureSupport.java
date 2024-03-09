@@ -212,7 +212,7 @@ public interface FeatureSupport<T>
      */
     default String renderFeatureValue(AnnotationFeature aFeature, FeatureStructure aFs)
     {
-        Feature labelFeature = aFs.getType().getFeatureByBaseName(aFeature.getName());
+        var labelFeature = aFs.getType().getFeatureByBaseName(aFeature.getName());
         if (labelFeature == null) {
             return null;
         }
@@ -272,6 +272,12 @@ public interface FeatureSupport<T>
 
         Object value = unwrapFeatureValue(aFeature, fs.getCAS(), aValue);
         setFeature(fs, aFeature, value);
+    }
+
+    default void pushFeatureValue(CAS aCas, AnnotationFeature aFeature, int aAddress, Object aValue)
+        throws AnnotationException
+    {
+        setFeatureValue(aCas, aFeature, aAddress, aValue);
     }
 
     @SuppressWarnings("unchecked")

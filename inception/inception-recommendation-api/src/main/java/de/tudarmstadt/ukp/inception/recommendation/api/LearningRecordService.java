@@ -27,7 +27,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
 
 public interface LearningRecordService
 {
@@ -42,8 +42,10 @@ public interface LearningRecordService
     /**
      * @return the learning records for the given document, user and layer. An optional limit can be
      *         used, e.g. for loading only a reduced part of the history in the active learning
-     *         sidebar. Learning records with the action {@link LearningRecordType#SHOWN} are
+     *         sidebar. Learning records with the action {@link LearningRecordUserAction#SHOWN} are
      *         <b>not</b> returned by this method.
+     * @param aSessionOwner
+     *            the user performing the action
      * @param aDataOwner
      *            the annotator user
      * @param aLayer
@@ -61,6 +63,8 @@ public interface LearningRecordService
      * duplicates of the new action are removed as part of this action. Note that the actual action
      * the user performed is not taken into account to determine duplicateness.
      * 
+     * @param aSessionOwner
+     *            the user performing the action
      * @param aDocument
      *            the document
      * @param aDataOwner
@@ -73,26 +77,44 @@ public interface LearningRecordService
      *            the annotators reaction to the suggestion
      * @param aLocation
      *            where the action on the suggestion was triggered
+     * @deprecated Use {@link #logRecord(String, LearningRecord)} instead.
      */
+    @Deprecated
     void logRecord(String aSessionOwner, SourceDocument aDocument, String aDataOwner,
             AnnotationSuggestion aSuggestion, AnnotationFeature aFeature,
-            LearningRecordType aUserAction, LearningRecordChangeLocation aLocation);
+            LearningRecordUserAction aUserAction, LearningRecordChangeLocation aLocation);
 
     /**
+     * Updates the learning log with an entry for the given suggestion. Any entries which are
+     * duplicates of the new action are removed as part of this action. Note that the actual action
+     * the user performed is not taken into account to determine redundance.
+     * 
+     * @param aSessionOwner
+     *            the user performing the action
+     * @param aRecord
+     *            the record
+     */
+    void logRecord(String aSessionOwner, LearningRecord aRecord);
+
+    /**
+     * @param aSessionOwner
+     *            the user performing the action
      * @param aDataOwner
      *            the annotator user
      * @param aLayer
      *            the layer
-     * @return if the are any records of type {@link LearningRecordType#SKIPPED} in the history of
-     *         the given layer for the given user.
+     * @return if the are any records of type {@link LearningRecordUserAction#SKIPPED} in the
+     *         history of the given layer for the given user.
      * 
      */
     boolean hasSkippedSuggestions(String aSessionOwner, User aDataOwner, AnnotationLayer aLayer);
 
     /**
-     * Removes all records of type {@link LearningRecordType#SKIPPED} in the history of the given
-     * layer for the given user.
+     * Removes all records of type {@link LearningRecordUserAction#SKIPPED} in the history of the
+     * given layer for the given user.
      * 
+     * @param aSessionOwner
+     *            the user performing the action
      * @param aDataOwner
      *            the annotator user
      * @param aLayer

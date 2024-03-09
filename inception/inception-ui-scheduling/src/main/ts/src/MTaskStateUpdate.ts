@@ -21,10 +21,12 @@ import { RLogMessage } from './RLogMessage'
 export interface MTaskStateUpdate {
   timestamp: number
   id: string
+  type: string
   progress: number
   maxProgress: number
   state: 'NOT_STARTED' | 'RUNNING' | 'COMPLETED' | 'CANCELLED' | 'FAILED'
   title: string
   removed?: boolean
+  cancellable?: boolean
   latestMessage?: RLogMessage
 }

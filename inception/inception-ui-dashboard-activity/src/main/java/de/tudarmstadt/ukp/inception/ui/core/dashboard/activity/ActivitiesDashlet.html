@@ -19,7 +19,19 @@
   xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
 <body>
   <wicket:panel>
-    <div wicket:id="content" class="d-flex flex-grow-1"/>
+  <div class="card border-start-0 border-end-0 border-bottom-0 rounded-0 flex-content flex-v-container">
+      <div class="card-header rounded-0">
+        Recent activity
+        <div class="actions">
+          <button wicket:id="showActivity" class="btn btn-secondary btn-action">
+            <i class="fas fa-scroll"></i>
+            Show all
+          </button>
+        </div>
+      </div>
+      <div wicket:id="content" class="d-flex flex-grow-1"/>
+      <div wicket:id="dialog"/>
+  </div>
   </wicket:panel>
 </body>
 </html>

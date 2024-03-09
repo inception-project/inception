@@ -34,11 +34,34 @@ public class WebAnnoConst
     public static final String COREFRELTYPE = "coreference type";
     public static final String LEMMA = "lemma";
 
+    /**
+     * @deprecated Use {@code RelationLayerSupport.FEAT_REL_TARGET}
+     */
+    @Deprecated
     public static final String FEAT_REL_TARGET = "Dependent";
+
+    /**
+     * @deprecated Use {@code RelationLayerSupport.FEAT_REL_SOURCE}
+     */
+    @Deprecated
     public static final String FEAT_REL_SOURCE = "Governor";
 
+    /**
+     * @deprecated Use {@code SpanLayerSupport.TYPE}
+     */
+    @Deprecated
     public static final String SPAN_TYPE = "span";
+
+    /**
+     * @deprecated Use {@code RelationLayerSupport.TYPE}
+     */
+    @Deprecated
     public static final String RELATION_TYPE = "relation";
+
+    /**
+     * @deprecated Use {@code ChainLayerSupport.TYPE}
+     */
+    @Deprecated
     public static final String CHAIN_TYPE = "chain";
 
     public static final String COREFERENCE_RELATION_FEATURE = "referenceRelation";

@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.diag.checks;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSentences;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectTokens;
+import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.selectSentences;
+import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.selectTokens;
 
 import java.util.List;
 

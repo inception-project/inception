@@ -18,14 +18,13 @@
 package de.tudarmstadt.ukp.inception.ui.core.docanno.sidebar;
 
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.model.LoadableDetachableModel;
+import org.wicketstuff.event.annotation.OnEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
+import de.tudarmstadt.ukp.inception.recommendation.api.event.PredictionsSwitchedEvent;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 
 public class DocumentMetadataSidebar
@@ -39,13 +38,13 @@ public class DocumentMetadataSidebar
     {
         super(aId, aModel, aActionHandler, aCasProvider, aAnnotationPage);
 
-        IModel<Project> project = LoadableDetachableModel.of(() -> aModel.getObject().getProject());
-        IModel<SourceDocument> sourceDocument = LoadableDetachableModel
-                .of(() -> aModel.getObject().getDocument());
-        IModel<String> username = LoadableDetachableModel
-                .of(() -> aModel.getObject().getUser().getUsername());
+        add(new DocumentMetadataAnnotationSelectionPanel("annotations", aCasProvider,
+                aAnnotationPage, aActionHandler, aModel));
+    }
 
-        add(new DocumentMetadataAnnotationSelectionPanel("annotations", project, sourceDocument,
-                username, aCasProvider, aAnnotationPage, aActionHandler, getModelObject()));
+    @OnEvent
+    public void onPredictionsSwitched(PredictionsSwitchedEvent aEvent)
+    {
+        aEvent.getRequestTarget().ifPresent(target -> target.add(this));
     }
 }

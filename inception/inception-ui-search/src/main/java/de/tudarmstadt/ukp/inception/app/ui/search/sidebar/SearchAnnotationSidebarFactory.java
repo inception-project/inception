@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.app.ui.search.sidebar;
 
 import org.apache.wicket.Component;
 import org.apache.wicket.model.IModel;
+import org.springframework.core.annotation.Order;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.Icon;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
@@ -36,6 +37,7 @@ import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
  * {@link SearchServiceUIAutoConfiguration#searchAnnotationSidebarFactory}.
  * </p>
  */
+@Order(3500)
 public class SearchAnnotationSidebarFactory
     extends AnnotationSidebarFactory_ImplBase
 {

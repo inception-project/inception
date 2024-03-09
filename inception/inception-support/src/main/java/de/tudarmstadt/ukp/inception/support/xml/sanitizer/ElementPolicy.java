@@ -65,6 +65,16 @@ public class ElementPolicy
         return new ElementPolicy(ElementAction.DROP);
     }
 
+    public static ElementPolicy skip()
+    {
+        return new ElementPolicy(ElementAction.SKIP);
+    }
+
+    public static ElementPolicy prune()
+    {
+        return new ElementPolicy(ElementAction.PRUNE);
+    }
+
     public static ElementPolicy pass()
     {
         return new ElementPolicy(ElementAction.PASS);

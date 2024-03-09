@@ -28,6 +28,6 @@ The remote recommender service can be accessed via an encrypted HTTPS connection
 NOTE: For testing purposes, the validation of the SSL certificate can be disabled in the 
       external recommender settings. However, the SSL certificate will still need to contain a host 
       name that matches the URL of the external recommender. If you also need to disable host name 
-      verification, you need to start {application-name} with the system property 
+      verification, you need to start {product-name} with the system property 
       `jdk.internal.httpclient.disableHostnameVerification`. Note this needs to be specified **on the 
       command line** and not in the `settings.properties` file.

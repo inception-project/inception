@@ -115,4 +115,19 @@ public class BioCReaderTest
         assertThat(texts) //
                 .containsExactly("Document 1 text.", "Document 2 text.", "Document 3 text.");
     }
+
+    @Test
+    void testReadFileWithIncompleteMetadata() throws Exception
+    {
+        var reader = createReaderDescription( //
+                BioCReader.class, //
+                BioCReader.PARAM_SOURCE_LOCATION,
+                "src/test/resources/bioc/example-with-incomplete-metadata.xml");
+
+        var texts = new ArrayList<String>();
+        iteratePipeline(reader).forEach(cas -> texts.add(cas.getDocumentText().trim()));
+
+        assertThat(texts) //
+                .containsExactly("Document 1 text.", "Document 2 text.", "Document 3 text.");
+    }
 }

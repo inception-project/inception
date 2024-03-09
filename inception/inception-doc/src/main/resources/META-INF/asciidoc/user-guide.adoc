@@ -145,6 +145,8 @@ include::{include-dir}projects_recommendation_string_relation.adoc[leveloffset=+
 
 include::{include-dir}projects_recommendation_opennlp.adoc[leveloffset=+2]
 
+include::{include-dir}projects_recommendation_ollama.adoc[leveloffset=+2]
+
 include::{include-dir}projects_recommendation_conceptlinker.adoc[leveloffset=+2]
 
 include::{include-dir}projects_recommendation_external.adoc[leveloffset=+2]
@@ -254,6 +256,8 @@ include::{include-dir}formats-html.adoc[leveloffset=+2]
 
 include::{include-dir}formats-htmldoc.adoc[leveloffset=+2]
 
+include::{include-dir}formats-mhtml.adoc[leveloffset=+2]
+
 include::{include-dir}formats-imscwb.adoc[leveloffset=+2]
 
 // include::{include-dir}formats-lif.adoc[leveloffset=+2]
@@ -280,6 +284,8 @@ include::{include-dir}formats-uimajson.adoc[leveloffset=+2]
 
 include::{include-dir}formats-uimajson-legacy.adoc[leveloffset=+2]
 
+include::{include-dir}formats-rdfcas.adoc.adoc[leveloffset=+2]
+
 include::{include-dir}formats-uimaxmi.adoc[leveloffset=+2]
 
 include::{include-dir}formats-webannotsv1.adoc[leveloffset=+2]
@@ -290,7 +296,7 @@ include::{include-dir}formats-webannotsv3.adoc[leveloffset=+2]
 
 include::{include-dir}formats-xml.adoc[leveloffset=+2]
 
-include::{include-dir}formats-xml-custom.adoc.adoc[leveloffset=+2]
+include::{include-dir}formats-xml-custom.adoc[leveloffset=+2]
 
 <<<
 

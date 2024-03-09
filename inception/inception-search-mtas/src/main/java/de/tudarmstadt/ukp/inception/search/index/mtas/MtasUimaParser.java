@@ -17,12 +17,12 @@
  */
 package de.tudarmstadt.ukp.inception.search.index.mtas;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getRealCas;
 import static de.tudarmstadt.ukp.inception.search.FeatureIndexingSupport.SPECIAL_SEP;
 import static de.tudarmstadt.ukp.inception.search.index.mtas.MtasUtils.charsToBytes;
 import static de.tudarmstadt.ukp.inception.search.index.mtas.MtasUtils.encodeFSAddress;
 import static de.tudarmstadt.ukp.inception.search.model.AnnotationSearchState.KEY_SEARCH_STATE;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.RELATION_TYPE;
+import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.getRealCas;
 import static java.lang.invoke.MethodHandles.lookup;
 import static mtas.analysis.util.MtasTokenizerFactory.ARGUMENT_PARSER_ARGS;
 import static org.apache.commons.io.IOUtils.toCharArray;
@@ -56,7 +56,6 @@ import org.xml.sax.SAXException;
 
 import com.github.openjson.JSONObject;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -72,6 +71,7 @@ import de.tudarmstadt.ukp.inception.search.model.AnnotationSearchState;
 import de.tudarmstadt.ukp.inception.search.model.BulkIndexingContext;
 import de.tudarmstadt.ukp.inception.support.spring.ApplicationContextProvider;
 import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
+import de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil;
 import mtas.analysis.parser.MtasParser;
 import mtas.analysis.token.MtasToken;
 import mtas.analysis.token.MtasTokenCollection;

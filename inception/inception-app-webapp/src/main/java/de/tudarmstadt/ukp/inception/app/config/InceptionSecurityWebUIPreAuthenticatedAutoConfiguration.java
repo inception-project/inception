@@ -56,7 +56,7 @@ public class InceptionSecurityWebUIPreAuthenticatedAutoConfiguration
             .csrf().disable()
             .addFilterBefore(aFilter, RequestHeaderAuthenticationFilter.class);
         
-        var authorizations = aHttp.authorizeRequests();
+        var authorizations = aHttp.authorizeHttpRequests();
         accessToStaticResources(authorizations);
         accessToRemoteApiAndSwagger(authorizations);
         accessToApplication(authorizations);

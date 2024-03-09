@@ -34,8 +34,8 @@ import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.NonTrainableRecommenderEngineImplBase;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.PredictionContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
-import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.imls.elg.model.ElgAnnotation;
 import de.tudarmstadt.ukp.inception.recommendation.imls.elg.model.ElgAnnotationsResponse;
 import de.tudarmstadt.ukp.inception.recommendation.imls.elg.model.ElgServiceResponse;
@@ -67,7 +67,7 @@ public class ElgRecommender
     }
 
     @Override
-    public Range predict(RecommenderContext aContext, CAS aCas, int aBegin, int aEnd)
+    public Range predict(PredictionContext aContext, CAS aCas, int aBegin, int aEnd)
         throws RecommendationException
     {
         ElgServiceResponse response;

@@ -240,7 +240,7 @@ public class DynamicWorkloadExtensionImplTest
         {
             var tsd = createTypeSystemDescription();
             var importService = mock(DocumentImportExportService.class);
-            when(importService.importCasFromFile(any(), any(), any()))
+            when(importService.importCasFromFileNoChecks(any(), any(), any()))
                     .thenReturn(CasCreationUtils.createCas(tsd, null, null, null));
             return importService;
         }

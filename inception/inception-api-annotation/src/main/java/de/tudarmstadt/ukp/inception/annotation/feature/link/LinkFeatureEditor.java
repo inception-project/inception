@@ -563,13 +563,12 @@ public class LinkFeatureEditor
         }
 
         @SuppressWarnings("unchecked")
-        List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) LinkFeatureEditor.this
-                .getModelObject().value;
-        AnnotatorState state = LinkFeatureEditor.this.stateModel.getObject();
+        var links = (List<LinkWithRoleModel>) LinkFeatureEditor.this.getModelObject().value;
+        var state = LinkFeatureEditor.this.stateModel.getObject();
 
-        LinkWithRoleModel m = new LinkWithRoleModel();
+        var m = new LinkWithRoleModel();
         m.role = (String) field.getModelObject();
-        int insertionPoint = findInsertionPoint(links);
+        var insertionPoint = findInsertionPoint(links);
         links.add(insertionPoint, m);
         state.setArmedSlot(getModelObject(), insertionPoint);
 
@@ -600,12 +599,11 @@ public class LinkFeatureEditor
         }
 
         @SuppressWarnings("unchecked")
-        List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) LinkFeatureEditor.this
-                .getModelObject().value;
-        AnnotatorState state = LinkFeatureEditor.this.stateModel.getObject();
+        var links = (List<LinkWithRoleModel>) LinkFeatureEditor.this.getModelObject().value;
+        var state = LinkFeatureEditor.this.stateModel.getObject();
 
         // Update the slot
-        LinkWithRoleModel m = links.get(state.getArmedSlot());
+        var m = links.get(state.getArmedSlot());
         m.role = (String) field.getModelObject();
         links.set(state.getArmedSlot(), m); // avoid reordering
 
@@ -623,11 +621,10 @@ public class LinkFeatureEditor
     private void actionDel(AjaxRequestTarget aTarget)
     {
         @SuppressWarnings("unchecked")
-        List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) LinkFeatureEditor.this
-                .getModelObject().value;
-        AnnotatorState state = LinkFeatureEditor.this.stateModel.getObject();
+        var links = (List<LinkWithRoleModel>) LinkFeatureEditor.this.getModelObject().value;
+        var state = LinkFeatureEditor.this.stateModel.getObject();
 
-        LinkWithRoleModel linkWithRoleModel = links.get(state.getArmedSlot());
+        var linkWithRoleModel = links.get(state.getArmedSlot());
         links.remove(state.getArmedSlot());
         state.clearArmedSlot();
 
@@ -638,7 +635,7 @@ public class LinkFeatureEditor
 
     private void actionToggleArmedState(AjaxRequestTarget aTarget, Item<LinkWithRoleModel> aItem)
     {
-        AnnotatorState state = LinkFeatureEditor.this.stateModel.getObject();
+        var state = LinkFeatureEditor.this.stateModel.getObject();
 
         if (state.isArmedSlot(getModelObject(), aItem.getIndex())) {
             state.clearArmedSlot();

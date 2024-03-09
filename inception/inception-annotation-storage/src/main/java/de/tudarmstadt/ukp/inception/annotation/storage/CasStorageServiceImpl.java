@@ -17,8 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.annotation.storage;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getRealCas;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.transferCasOwnershipToCurrentThread;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXCLUSIVE_WRITE_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.UNMANAGED_ACCESS;
@@ -27,6 +25,8 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.AU
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.NO_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.inception.annotation.storage.CasStorageServiceImpl.RepairAndUpgradeFlags.ISOLATED_SESSION;
 import static de.tudarmstadt.ukp.inception.project.api.ProjectService.withProjectLogger;
+import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.getRealCas;
+import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.transferCasOwnershipToCurrentThread;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Collections.newSetFromMap;
 import static java.util.Collections.synchronizedSet;
@@ -155,7 +155,7 @@ public class CasStorageServiceImpl
         config.setTimeBetweenEvictionRuns(casStorageProperties.getIdleCasEvictionDelay());
         // Allow the evictor to drop idle CASes from pool after a short time. This should avoid that
         // CASes that are used regularly are dropped from the pool too quickly.
-        config.setMinEvictableIdleTime(casStorageProperties.getMinIdleCasTime());
+        config.setMinEvictableIdleDuration(casStorageProperties.getMinIdleCasTime());
         // Allow the evictor to drop all idle CASes on every eviction run
         config.setNumTestsPerEvictionRun(-1);
         // Allow viewing the pool in JMX
@@ -867,6 +867,25 @@ public class CasStorageServiceImpl
         // for its existence
         try (var access = new WithExclusiveAccess(aDocument, aUser)) {
             return driver.existsCas(aDocument, aUser);
+        }
+        catch (IOException e) {
+            throw e;
+        }
+        catch (Exception e) {
+            throw new IOException(e);
+        }
+    }
+
+    @Override
+    public Optional<Long> getCasFileSize(SourceDocument aDocument, String aUser) throws IOException
+    {
+        Validate.notNull(aDocument, "Source document must be specified");
+        Validate.notBlank(aUser, "User must be specified");
+
+        // Ensure that the CAS is not being re-written and temporarily unavailable while we check
+        // for its existence
+        try (var access = new WithExclusiveAccess(aDocument, aUser)) {
+            return driver.getCasFileSize(aDocument, aUser);
         }
         catch (IOException e) {
             throw e;

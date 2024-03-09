@@ -16,30 +16,39 @@ export function mapToDocumentCoordinates (aRectangles: Rectangle[]): Rectangle[]
     return undefined
   }
 
+  const firstPageLeft = firstPageElement.getBoundingClientRect().left
+
   const paddingTop = 9
   const pageView = globalThis.PDFViewerApplication.pdfViewer.getPageView(0)
   const scale = pageView.viewport.scale
   const marginBetweenPages = 1 // TODO Where does this 1 come from?!
 
+  // Build a cache of all the pages we need and their positions
+  const pageMap = new Map();
+  aRectangles.forEach((r) => {
+    if (pageMap.has(r.p)) return
+    const pageContainer = document.querySelector(`.page[data-page-number="${r.p}"]`) as HTMLElement
+    const rect = pageContainer.getBoundingClientRect()
+    pageMap.set(r.p, { container: pageContainer, left: rect.left })
+  })
+
   const rectangles : Rectangle[] = []
   for (let r of aRectangles) {
-    const pageContainer = document.querySelector(`.page[data-page-number="${r.p}"]`) as HTMLElement
-    if (!pageContainer) {
+    const pageInfo = pageMap.get(r.p);
+    if (!pageInfo) {
       console.warn(`No page element found for page ${r.p}`)
       return undefined
     }
 
+    const pageContainer = pageInfo.container
     const pageTopY = pageContainer.offsetTop / scale + paddingTop + marginBetweenPages
     let leftOffset = 0
 
-    if (firstPageElement.clientWidth > pageContainer.clientWidth) {
-      const firstContainerStyle = getComputedStyle(firstPageElement)
-      const firstPageLeft = parseInt(firstContainerStyle.marginLeft) + parseInt(firstContainerStyle.borderLeftWidth)
-      const currentPageStyle = getComputedStyle(pageContainer)
-      const currentPageLeft = parseInt(currentPageStyle.marginLeft) + parseInt(currentPageStyle.borderLeftWidth)
-      leftOffset = (currentPageLeft - firstPageLeft) / scale
-    }
+    // If the pages are not rendered left-aligned because one is wider than the other, we need
+    // to adjust the position of the rectangle on the X-axis
+    leftOffset = (pageInfo.left - firstPageLeft) / scale
 
+    console.log(leftOffset, r.x + leftOffset, r.y + pageTopY, r.w, r.h)
     r = new Rectangle({ p: r.p, x: r.x + leftOffset, y: r.y + pageTopY, w: r.w, h: r.h })
     if (r.w > 0 && r.h > 0 /* && r.x > -1 && r.y > -1 */) {
       rectangles.push(r)
@@ -99,14 +108,28 @@ export function createRect (r: Rectangle, a?: SpanAnnotation, color?: string, re
 
   a?.classList.forEach(c => rect.classList.add(c))
 
-  rect.style.top = r.y + 'px'
-  rect.style.left = r.x + 'px'
-  rect.style.width = r.w + 'px'
-  rect.style.height = r.h + 'px'
+  const defaultBorderWidth = 2 // px
+  const clippedScale = Math.max(scale(), 0.25)
+  const scaledBorderWidth = defaultBorderWidth / Math.max(0.5 * clippedScale, 1.0)
+  const borderHeightAdjustment = defaultBorderWidth - scaledBorderWidth;
+
+  // As the scaling factor increases, we can gradually reduce the height of the highlight in order
+  // for it to overlap less with the next line. Empirically, log10 seems to work better than log
+  // for this.
+  const scaleHeightAdjustment = Math.log10(Math.max(1.0, scale()))
+
+  rect.style.top = `${r.y}px`
+  rect.style.left = `${r.x}px`
+  rect.style.width = `${r.w}px`
+  rect.style.height = `${r.h - borderHeightAdjustment - scaleHeightAdjustment}px`
+  rect.style.setProperty('--marker-focus-width', `${scaledBorderWidth}px`);
+
   if (color) {
     rect.style.backgroundColor = hex2rgba(color, 0.4)
-    rect.style.borderColor = color
+    rect.style.borderColor = hex2rgba(color, 0.8)
+    rect.style.borderWidth = `${scaledBorderWidth}px`
   }
+
   rect.style.pointerEvents = 'none'
   return rect
 }
@@ -120,29 +143,27 @@ export function mergeRects (glyphs: VGlyph[]): Rectangle[] {
   }
 
   // a vertical margin of error.
-  const error = 5 * scale()
+  const baseError = 2.5 // px
 
-  let tmp = new Rectangle(glyphs[0].bbox)
-  const newRects = [tmp]
+  let aggregateRect = new Rectangle(glyphs[0].bbox)
+
+  const newRects = [aggregateRect]
   for (let i = 1; i < glyphs.length; i++) {
-    const rect = glyphs[i].bbox
+    const glyphBox = glyphs[i].bbox
+    const error = Math.min(baseError, glyphBox.h)
 
-    // if (tmp.p !== rect.p) {
-    //   console.log('Page switch')
-    // }
-
-    if (tmp.p === rect.p && withinMargin(rect.top, tmp.top, error)) {
+    if (aggregateRect.p === glyphBox.p && withinMargin(glyphBox.top, aggregateRect.top, error)) {
       // Same line/same page -> Merge rects.
-      tmp.setPosition({
-        top: Math.min(tmp.top, rect.top),
-        left: Math.min(tmp.left, rect.left),
-        right: Math.max(tmp.right, rect.right),
-        bottom: Math.max(tmp.bottom, rect.bottom)
+      aggregateRect.setPosition({
+        top: Math.min(aggregateRect.top, glyphBox.top),
+        left: Math.min(aggregateRect.left, glyphBox.left),
+        right: Math.max(aggregateRect.right, glyphBox.right),
+        bottom: Math.max(aggregateRect.bottom, glyphBox.bottom)
       })
     } else {
       // New line/new page -> Create a new rect.
-      tmp = new Rectangle(rect)
-      newRects.push(tmp)
+      aggregateRect = new Rectangle(glyphBox)
+      newRects.push(aggregateRect)
     }
   }
 

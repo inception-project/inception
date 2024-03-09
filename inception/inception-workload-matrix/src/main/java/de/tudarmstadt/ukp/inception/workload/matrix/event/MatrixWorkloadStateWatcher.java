@@ -44,14 +44,19 @@ public class MatrixWorkloadStateWatcher
     @EventListener
     public void onProjectPermissionsChangedEvent(ProjectPermissionsChangedEvent aEvent)
     {
-        schedulingService.enqueue(new RecalculateProjectStateTask(aEvent.getProject(),
-                "onProjectPermissionsChangedEvent"));
+        schedulingService.enqueue(RecalculateProjectStateTask.builder() //
+                .withProject(aEvent.getProject()) //
+                .withTrigger("onProjectPermissionsChangedEvent") //
+                .build());
     }
 
     @EventListener
     public void onAnnotationStateChangeEvent(AnnotationStateChangeEvent aEvent)
     {
-        schedulingService.enqueue(new MatrixWorkloadUpdateDocumentStateTask(aEvent.getDocument(),
-                getClass().getSimpleName()));
+        var task = MatrixWorkloadUpdateDocumentStateTask.builder() //
+                .withDocument(aEvent.getDocument()) //
+                .withTrigger(getClass().getSimpleName()) //
+                .build();
+        schedulingService.enqueue(task);
     }
 }
