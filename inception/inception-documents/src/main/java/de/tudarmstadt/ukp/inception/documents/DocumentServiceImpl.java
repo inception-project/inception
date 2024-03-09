@@ -220,7 +220,7 @@ public class DocumentServiceImpl
     {
         try (var zos = new ZipOutputStream(os)) {
             for (var doc : selectedDocuments) {
-                try (InputStream dis = new FileInputStream(getSourceDocumentFile(doc))) {
+                try (var dis = new FileInputStream(getSourceDocumentFile(doc))) {
                     zos.putNextEntry(new ZipEntry(doc.getName()));
                     IOUtils.copyLarge(dis, zos);
                 }
@@ -274,8 +274,9 @@ public class DocumentServiceImpl
                             "FROM AnnotationDocument WHERE project = :project "
                                     + " AND document = :document AND user = :user",
                             AnnotationDocument.class)
-                    .setParameter("project", aDocument.getProject())
-                    .setParameter("document", aDocument).setParameter("user", aUsername)
+                    .setParameter("project", aDocument.getProject()) //
+                    .setParameter("document", aDocument) //
+                    .setParameter("user", aUsername) //
                     .getSingleResult();
             return true;
         }
@@ -300,9 +301,8 @@ public class DocumentServiceImpl
 
             return aAnnotationDocument;
         }
-        else {
-            return entityManager.merge(aAnnotationDocument);
-        }
+
+        return entityManager.merge(aAnnotationDocument);
     }
 
     // NO TRANSACTION REQUIRED - This does not do any should not do a database access, so we do not
@@ -333,7 +333,8 @@ public class DocumentServiceImpl
         var query = cb.createQuery(Long.class);
         var doc = query.from(SourceDocument.class);
 
-        query.select(cb.count(doc)).where(cb.equal(doc.get(SourceDocument_.project), aProject));
+        query.select(cb.count(doc)) //
+                .where(cb.equal(doc.get(SourceDocument_.project), aProject));
 
         return entityManager.createQuery(query).getSingleResult() > 0;
     }
@@ -345,12 +346,12 @@ public class DocumentServiceImpl
         Validate.notNull(aProject, "Project must be specified");
         Validate.notBlank(aFileName, "File name must be specified");
 
-        String query = String.join("\n", //
+        var query = String.join("\n", //
                 "SELECT COUNT(*)", //
                 "FROM SourceDocument", //
                 "WHERE project = :project AND name =:name ");
 
-        long count = entityManager.createQuery(query, Long.class) //
+        var count = entityManager.createQuery(query, Long.class) //
                 .setParameter("project", aProject) //
                 .setParameter("name", aFileName) //
                 .getSingleResult();
@@ -384,10 +385,10 @@ public class DocumentServiceImpl
             return emptyList();
         }
 
-        Set<String> usersWithoutAnnotationDocument = new HashSet<>();
+        var usersWithoutAnnotationDocument = new HashSet<String>();
         aUsers.forEach(user -> usersWithoutAnnotationDocument.add(user.getUsername()));
 
-        List<AnnotationDocument> annDocs = listAnnotationDocuments(aDocument);
+        var annDocs = listAnnotationDocuments(aDocument);
         annDocs.stream().forEach(annDoc -> usersWithoutAnnotationDocument.remove(annDoc.getUser()));
 
         for (var user : usersWithoutAnnotationDocument) {
@@ -411,11 +412,11 @@ public class DocumentServiceImpl
             return emptyList();
         }
 
-        Project project = aDocuments.iterator().next().getProject();
-        Set<SourceDocument> sourceDocsWithoutAnnotationDocument = new HashSet<>();
+        var project = aDocuments.iterator().next().getProject();
+        var sourceDocsWithoutAnnotationDocument = new HashSet<SourceDocument>();
         aDocuments.forEach(srcDoc -> sourceDocsWithoutAnnotationDocument.add(srcDoc));
 
-        List<AnnotationDocument> annDocs = listAnnotationDocuments(project, aUser);
+        var annDocs = listAnnotationDocuments(project, aUser);
         annDocs.stream().forEach(
                 annDoc -> sourceDocsWithoutAnnotationDocument.remove(annDoc.getDocument()));
 
@@ -542,13 +543,13 @@ public class DocumentServiceImpl
     {
         Validate.notNull(aDocument, "Source document must be specified");
 
-        String query = join("\n", //
+        var query = join("\n", //
                 "SELECT COUNT(*) ", //
                 "FROM AnnotationDocument ", //
                 "WHERE document = :document AND state = :state");
 
-        long count = entityManager.createQuery(query, Long.class)
-                .setParameter("document", aDocument)
+        var count = entityManager.createQuery(query, Long.class) //
+                .setParameter("document", aDocument) //
                 .setParameter("state", AnnotationDocumentState.FINISHED) //
                 .getSingleResult();
 
@@ -561,12 +562,12 @@ public class DocumentServiceImpl
     {
         Validate.notNull(aProject, "Project must be specified");
 
-        String query = join("\n", //
+        var query = join("\n", //
                 "SELECT COUNT(*) ", //
                 "FROM AnnotationDocument ", //
                 "WHERE document.project = :project AND state = :state");
 
-        long count = entityManager.createQuery(query, Long.class) //
+        var count = entityManager.createQuery(query, Long.class) //
                 .setParameter("project", aProject) //
                 .setParameter("state", AnnotationDocumentState.FINISHED) //
                 .getSingleResult();
@@ -580,7 +581,7 @@ public class DocumentServiceImpl
         Validate.notNull(aProject, "Project must be specified");
 
         // Get all annotators in the project
-        List<String> users = getAllAnnotators(aProject);
+        var users = getAllAnnotators(aProject);
 
         // Bail out already. HQL doesn't seem to like queries with an empty
         // parameter right of "in"
@@ -607,7 +608,7 @@ public class DocumentServiceImpl
         Validate.notNull(aDocument, "Source document must be specified");
 
         // Get all annotators in the project
-        List<String> users = getAllAnnotators(aDocument.getProject());
+        var users = getAllAnnotators(aDocument.getProject());
         // Bail out already. HQL doesn't seem to like queries with an empty parameter right of "in"
         if (users.isEmpty()) {
             return new ArrayList<>();
@@ -648,7 +649,7 @@ public class DocumentServiceImpl
         Validate.notNull(aStates, "States must be specified");
         Validate.notEmpty(aStates, "States must not be an empty list");
 
-        String query = String.join("\n", //
+        var query = String.join("\n", //
                 "FROM SourceDocument", //
                 "WHERE project =:project", //
                 "AND state IN (:states)", //

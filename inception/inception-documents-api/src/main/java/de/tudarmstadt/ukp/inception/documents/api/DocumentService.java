@@ -32,7 +32,6 @@ import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.wicket.validation.ValidationError;
-import org.springframework.security.access.prepost.PreAuthorize;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode;
@@ -71,7 +70,6 @@ public interface DocumentService
      *            {@link SourceDocument} to be created
      * @return the source document
      */
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER','ROLE_REMOTE')")
     SourceDocument createSourceDocument(SourceDocument document);
 
     /**
@@ -152,7 +150,6 @@ public interface DocumentService
      * @throws IOException
      *             If the source document searched for deletion is not available
      */
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER', 'ROLE_REMOTE')")
     void removeSourceDocument(SourceDocument document) throws IOException;
 
     /**
@@ -168,7 +165,6 @@ public interface DocumentService
      * @throws UIMAException
      *             if a conversion error occurs.
      */
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER','ROLE_REMOTE')")
     void uploadSourceDocument(InputStream file, SourceDocument document)
         throws IOException, UIMAException;
 
@@ -188,7 +184,6 @@ public interface DocumentService
      * @throws UIMAException
      *             if a conversion error occurs.
      */
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER','ROLE_REMOTE')")
     void uploadSourceDocument(InputStream file, SourceDocument document,
             TypeSystemDescription aFullProjectTypeSystem)
         throws IOException, UIMAException;
@@ -221,7 +216,6 @@ public interface DocumentService
      *            and id of {@link User}
      * @return the annotation document.
      */
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
     AnnotationDocument createAnnotationDocument(AnnotationDocument annotationDocument);
 
     /**
@@ -237,7 +231,6 @@ public interface DocumentService
      * @throws IOException
      *             if an I/O error occurs.
      */
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
     void writeAnnotationCas(CAS aCas, AnnotationDocument aAnnotationDocument,
             boolean aExplicitAnnotatorUserAction)
         throws IOException;
@@ -257,7 +250,6 @@ public interface DocumentService
      * @throws IOException
      *             if an I/O error occurs.
      */
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
     void writeAnnotationCas(CAS aCas, SourceDocument aDocument, User aUser,
             boolean aExplicitAnnotatorUserAction)
         throws IOException;
@@ -295,7 +287,6 @@ public interface DocumentService
      * @throws IOException
      *             if an I/O error occurs.
      */
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
     void resetAnnotationCas(SourceDocument aDocument, User aUser,
             AnnotationDocumentStateChangeFlag... aFlags)
         throws UIMAException, IOException;
