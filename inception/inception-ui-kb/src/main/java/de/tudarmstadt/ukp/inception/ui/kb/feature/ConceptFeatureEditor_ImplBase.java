@@ -115,19 +115,19 @@ public abstract class ConceptFeatureEditor_ImplBase
         }
 
         // Extract exact match filter on the query
-        boolean labelFilter = false;
-        String trimmedInput = input.trim();
+        var labelFilter = false;
+        var trimmedInput = input.trim();
         if (trimmedInput.length() > 2 && trimmedInput.startsWith("\"")
                 && trimmedInput.endsWith("\"")) {
             input = StringUtils.substring(trimmedInput, 1, -1).trim();
             labelFilter = true;
         }
 
-        final String finalInput = input;
+        final var finalInput = input;
 
         List<KBHandle> choices;
         try {
-            AnnotationFeature feat = getModelObject().feature;
+            var feat = getModelObject().feature;
 
             var traits = readFeatureTraits(feat);
             var repoId = traits.getRepositoryId();
@@ -181,8 +181,7 @@ public abstract class ConceptFeatureEditor_ImplBase
         }
 
         var result = choices.stream()//
-                .limit(entityLinkingProperties.getCandidateDisplayLimit())
-                .collect(Collectors.toList());
+                .limit(entityLinkingProperties.getCandidateDisplayLimit()).toList();
 
         WicketUtil.serverTiming("getCandidates", currentTimeMillis() - startTime);
 
