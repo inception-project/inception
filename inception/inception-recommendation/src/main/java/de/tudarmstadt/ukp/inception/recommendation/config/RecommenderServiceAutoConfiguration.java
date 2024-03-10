@@ -145,7 +145,8 @@ public class RecommenderServiceAutoConfiguration
             havingValue = "true", matchIfMissing = true)
     @Bean
     public RecommendationSidebarFactory recommendationSidebarFactory(
-            RecommendationService aRecommendationService)
+            RecommendationService aRecommendationService, PreferencesService aPreferencesService,
+            UserDao aUserService)
     {
         return new RecommendationSidebarFactory(aRecommendationService);
     }
@@ -188,12 +189,13 @@ public class RecommenderServiceAutoConfiguration
     }
 
     @Bean
-    public RecommendationRenderer recommendationRenderer(AnnotationSchemaService aAnnotationService,
+    public RecommendationRenderer recommendationRenderer(
             RecommendationService aRecommendationService,
-            SuggestionSupportRegistry aSuggestionSupportRegistry)
+            SuggestionSupportRegistry aSuggestionSupportRegistry,
+            PreferencesService aPreferencesService, UserDao aUserService)
     {
-        return new RecommendationRenderer(aAnnotationService, aRecommendationService,
-                aSuggestionSupportRegistry);
+        return new RecommendationRenderer(aRecommendationService, aSuggestionSupportRegistry,
+                aPreferencesService, aUserService);
     }
 
     @Bean

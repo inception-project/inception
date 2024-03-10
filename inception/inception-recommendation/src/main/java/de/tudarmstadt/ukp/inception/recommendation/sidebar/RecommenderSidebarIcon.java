@@ -15,9 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.active.learning.sidebar;
-
-import static de.tudarmstadt.ukp.inception.active.learning.sidebar.ActiveLearningUserStateMetaData.CURRENT_AL_USER_STATE;
+package de.tudarmstadt.ukp.inception.recommendation.sidebar;
 
 import java.util.Set;
 
@@ -32,26 +30,26 @@ import de.agilecoders.wicket.core.markup.html.bootstrap.image.Icon;
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.inception.active.learning.ActiveLearningService;
-import de.tudarmstadt.ukp.inception.active.learning.event.ActiveLearningSessionCompletedEvent;
-import de.tudarmstadt.ukp.inception.active.learning.event.ActiveLearningSessionStartedEvent;
+import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
+import de.tudarmstadt.ukp.inception.recommendation.event.RecommendersResumedEvent;
+import de.tudarmstadt.ukp.inception.recommendation.event.RecommendersSuspendedEvent;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 
-public class ActiveLearningSidebarIcon
+public class RecommenderSidebarIcon
     extends Panel
 {
     private static final long serialVersionUID = -1870047500327624860L;
 
-    private @SpringBean ActiveLearningService activeLearningService;
+    private @SpringBean RecommendationService recommendationService;
     private @SpringBean UserDao userService;
 
-    public ActiveLearningSidebarIcon(String aId, IModel<AnnotatorState> aState)
+    public RecommenderSidebarIcon(String aId, IModel<AnnotatorState> aState)
     {
         super(aId, aState);
 
         setOutputMarkupId(true);
 
-        queue(new Icon("icon", FontAwesome5IconType.font_s));
+        queue(new Icon("icon", FontAwesome5IconType.robot_s));
         queue(new Icon("badge", LoadableDetachableModel.of(this::getStateIcon))
                 .add(new ClassAttributeModifier()
                 {
@@ -87,8 +85,8 @@ public class ActiveLearningSidebarIcon
 
     private boolean isSessionActive()
     {
-        var alState = getPage().getMetaData(CURRENT_AL_USER_STATE);
-        return alState != null && alState.isSessionActive();
+        return !recommendationService.isSuspended(userService.getCurrentUsername(),
+                getModelObject().getProject());
     }
 
     private IconType getStateIcon()
@@ -101,13 +99,13 @@ public class ActiveLearningSidebarIcon
     }
 
     @OnEvent
-    public void sessionStarted(ActiveLearningSessionStartedEvent aEvent)
+    public void sessionStarted(RecommendersSuspendedEvent aEvent)
     {
         aEvent.getRequestTarget().ifPresent(target -> target.add(this));
     }
 
     @OnEvent
-    public void sessionStarted(ActiveLearningSessionCompletedEvent aEvent)
+    public void sessionStarted(RecommendersResumedEvent aEvent)
     {
         aEvent.getRequestTarget().ifPresent(target -> target.add(this));
     }

@@ -26,6 +26,10 @@ public class RecommenderGeneralSettings
 
     private boolean waitForRecommendersOnOpenDocument = false;
 
+    private boolean showRecommendationsWhenViewingOtherUser = true;
+
+    private boolean showRecommendationsWhenViewingCurationUser = true;
+
     public boolean isWaitForRecommendersOnOpenDocument()
     {
         return waitForRecommendersOnOpenDocument;
@@ -34,5 +38,27 @@ public class RecommenderGeneralSettings
     public void setWaitForRecommendersOnOpenDocument(boolean aWaitForRecommendersOnOpenDocument)
     {
         waitForRecommendersOnOpenDocument = aWaitForRecommendersOnOpenDocument;
+    }
+
+    public boolean isShowRecommendationsWhenViewingOtherUser()
+    {
+        return showRecommendationsWhenViewingOtherUser;
+    }
+
+    public void setShowRecommendationsWhenViewingOtherUser(
+            boolean aShowRecommendationsWhenViewingOtherUser)
+    {
+        showRecommendationsWhenViewingOtherUser = aShowRecommendationsWhenViewingOtherUser;
+    }
+
+    public boolean isShowRecommendationsWhenViewingCurationUser()
+    {
+        return showRecommendationsWhenViewingCurationUser;
+    }
+
+    public void setShowRecommendationsWhenViewingCurationUser(
+            boolean aShowRecommendationsWhenViewingCurationUser)
+    {
+        showRecommendationsWhenViewingCurationUser = aShowRecommendationsWhenViewingCurationUser;
     }
 }

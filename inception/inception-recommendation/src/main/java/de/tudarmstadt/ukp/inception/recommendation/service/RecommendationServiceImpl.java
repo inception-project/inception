@@ -64,6 +64,7 @@ import org.apache.wicket.request.cycle.RequestCycle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.Ordered;
@@ -116,6 +117,8 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderCo
 import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderDeletedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderUpdatedEvent;
+import de.tudarmstadt.ukp.inception.recommendation.event.RecommendersResumedEvent;
+import de.tudarmstadt.ukp.inception.recommendation.event.RecommendersSuspendedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.model.DirtySpot;
 import de.tudarmstadt.ukp.inception.recommendation.tasks.NonTrainableRecommenderActivationTask;
 import de.tudarmstadt.ukp.inception.recommendation.tasks.PredictionTask;
@@ -176,6 +179,9 @@ public class RecommendationServiceImpl
     {
     };
 
+    @Value("${curation.sidebar.enabled:false}")
+    private boolean curationSidebarEnabled;
+
     @Autowired
     public RecommendationServiceImpl(PreferencesService aPreferencesService,
             SessionRegistry aSessionRegistry, UserDao aUserRepository,
@@ -210,6 +216,13 @@ public class RecommendationServiceImpl
         this(aPreferencesService, aSessionRegistry, aUserRepository, aRecommenderFactoryRegistry,
                 aSchedulingService, aAnnoService, (ProjectService) null, aEntityManager, null,
                 aLayerRecommendtionSupportRegistry);
+    }
+
+    @Deprecated
+    @Override
+    public boolean isCurationSidebarEnabled()
+    {
+        return curationSidebarEnabled;
     }
 
     @Override
@@ -953,7 +966,22 @@ public class RecommendationServiceImpl
     @Override
     public void setSuspended(String aSessionOwner, Project aProject, boolean aState)
     {
+        var suspended = isSuspended(aSessionOwner, aProject);
+        if (suspended == aState) {
+            return;
+        }
+
         getState(aSessionOwner, aProject).setSuspended(aState);
+        if (aState) {
+            applicationEventPublisher
+                    .publishEvent(new RecommendersSuspendedEvent(this, aProject, aSessionOwner));
+            ;
+        }
+        else {
+            applicationEventPublisher
+                    .publishEvent(new RecommendersResumedEvent(this, aProject, aSessionOwner));
+            ;
+        }
     }
 
     @EventListener

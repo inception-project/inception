@@ -31,6 +31,7 @@ import de.tudarmstadt.ukp.inception.active.learning.log.ActiveLearningRecommenda
 import de.tudarmstadt.ukp.inception.active.learning.log.ActiveLearningSuggestionOfferedAdapter;
 import de.tudarmstadt.ukp.inception.active.learning.sidebar.ActiveLearningSidebarFactory;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
+import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAutoConfiguration;
@@ -73,7 +74,8 @@ public class ActiveLearningAutoConfiguration
 
     @Bean
     public ActiveLearningSidebarFactory activeLearningSidebarFactory(
-            RecommendationService aRecommendationService)
+            RecommendationService aRecommendationService, PreferencesService aPreferencesService,
+            UserDao aUserService)
     {
         return new ActiveLearningSidebarFactory(aRecommendationService);
     }

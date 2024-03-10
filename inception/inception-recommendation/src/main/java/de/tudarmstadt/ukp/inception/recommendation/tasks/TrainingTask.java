@@ -245,10 +245,10 @@ public class TrainingTask
         schedulingService.enqueue(predictionTask);
     }
 
-    private void commitContext(User user, Recommender recommender, RecommenderContext ctx)
+    private void commitContext(User aSessionOwner, Recommender recommender, RecommenderContext ctx)
     {
         ctx.close();
-        recommenderService.putContext(user, recommender, ctx);
+        recommenderService.putContext(aSessionOwner, recommender, ctx);
     }
 
     private void logTrainingOverallEnd(long overallStartTime)
@@ -372,9 +372,10 @@ public class TrainingTask
 
     private void logTrainingOverallStart()
     {
-        LOG.debug("[{}][{}]: Starting training for project {} triggered by [{}]...", getId(),
-                getSessionOwner().getUsername(), getProject(), getTrigger());
-        info("Starting training triggered by [%s]...", getTrigger());
+        LOG.debug(
+                "[{}][{}]: Starting training for project {} on data from [{}] triggered by [{}]...",
+                getId(), getSessionOwner().getUsername(), getProject(), dataOwner, getTrigger());
+        info("Starting training on data from [%s] triggered by [%s]...", dataOwner, getTrigger());
     }
 
     private void logTrainingRecommenderStart(LazyCasLoader aLoader, Recommender recommender,

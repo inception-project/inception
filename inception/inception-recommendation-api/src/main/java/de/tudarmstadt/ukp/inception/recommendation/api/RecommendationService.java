@@ -320,4 +320,13 @@ public interface RecommendationService
     boolean isSuspended(String aUser, Project aProject);
 
     void setSuspended(String aUser, Project aProject, boolean aState);
+
+    /**
+     * @return if the curation sidebar mode is available.
+     * @deprecated This obviously shouldn't be here, but this is the easiest way to access this
+     *             information from the recommender settings. Should be removed when the curation
+     *             sidebar leaves experimental mode.
+     */
+    @Deprecated
+    boolean isCurationSidebarEnabled();
 }
