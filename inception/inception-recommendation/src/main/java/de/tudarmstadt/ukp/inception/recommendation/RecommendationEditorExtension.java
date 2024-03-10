@@ -321,14 +321,14 @@ public class RecommendationEditorExtension
         var detailGroups = new ArrayList<VLazyDetailGroup>();
         for (var aFeature : annotationService.listAnnotationFeature(aLayer)) {
             if (aFeature.getLinkMode() == LinkMode.WITH_ROLE) {
-                return emptyList();
+                continue;
             }
 
             var vid = VID.parse(aVid.getExtensionPayload());
             var representative = predictions.getPredictionByVID(aDocument, vid);
             if (representative.isEmpty()
                     || !representative.get().getFeature().equals(aFeature.getName())) {
-                return emptyList();
+                continue;
             }
 
             var sao = representative.get();
@@ -340,7 +340,7 @@ public class RecommendationEditorExtension
                     .findFirst();
 
             if (group.isEmpty()) {
-                return emptyList();
+                continue;
             }
 
             var pref = recommendationService.getPreferences(aUser, aDocument.getProject());
