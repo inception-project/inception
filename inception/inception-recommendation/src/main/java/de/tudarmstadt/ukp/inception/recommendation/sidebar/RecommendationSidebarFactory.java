@@ -22,8 +22,6 @@ import org.apache.wicket.model.IModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
 
-import de.agilecoders.wicket.core.markup.html.bootstrap.image.Icon;
-import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
@@ -68,7 +66,7 @@ public class RecommendationSidebarFactory
     @Override
     public Component createIcon(String aId, IModel<AnnotatorState> aState)
     {
-        return new Icon(aId, FontAwesome5IconType.chart_line_s);
+        return new RecommenderSidebarIcon(aId, aState);
     }
 
     @Override

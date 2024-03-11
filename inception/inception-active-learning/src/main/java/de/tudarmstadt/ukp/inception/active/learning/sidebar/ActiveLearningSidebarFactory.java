@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.inception.active.learning.sidebar;
 
 import org.apache.wicket.Component;
 import org.apache.wicket.model.IModel;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
@@ -44,7 +43,6 @@ public class ActiveLearningSidebarFactory
 {
     private final RecommendationService recommendationService;
 
-    @Autowired
     public ActiveLearningSidebarFactory(RecommendationService aRecommendationService)
     {
         recommendationService = aRecommendationService;
