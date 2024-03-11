@@ -35,6 +35,7 @@ import java.time.Instant;
 import java.util.Map;
 import java.util.UUID;
 
+import org.apache.logging.log4j.LogManager;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
@@ -77,6 +78,7 @@ public class InceptionRemoteApiJwtIntegrationTest
         var issuerUrl = oauth2Server.url(ISSUER_ID).toString();
 
         setProperty("java.awt.headless", "true");
+        setProperty("database.url", "jdbc:hsqldb:mem:testdb");
         setProperty("inception.home", appHome.toString());
         setProperty("remote-api.enabled", "true");
         setProperty("remote-api.oauth2.enabled", "true");
@@ -110,6 +112,7 @@ public class InceptionRemoteApiJwtIntegrationTest
         }
         context.close();
         oauth2Server.shutdown();
+        LogManager.shutdown();
     }
 
     @Test

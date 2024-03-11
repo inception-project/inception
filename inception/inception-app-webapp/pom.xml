@@ -883,6 +883,7 @@
                uber-JAR and we get ClassNotFoundExceptions at runtime.
                -->
               <ignoredDependency>com.nimbusds:nimbus-jose-jwt</ignoredDependency>
+              <ignoredDependency>org.apache.logging.log4j:log4j-api</ignoredDependency>
               <!-- 
                 - Detection of this dependency is flickering. We need it for a menu-item. So
                 - for the moment, completely ignore it in the dependency checking.
