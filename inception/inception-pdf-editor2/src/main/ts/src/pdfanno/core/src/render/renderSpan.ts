@@ -16,30 +16,39 @@ export function mapToDocumentCoordinates (aRectangles: Rectangle[]): Rectangle[]
     return undefined
   }
 
+  const firstPageLeft = firstPageElement.getBoundingClientRect().left
+
   const paddingTop = 9
   const pageView = globalThis.PDFViewerApplication.pdfViewer.getPageView(0)
   const scale = pageView.viewport.scale
   const marginBetweenPages = 1 // TODO Where does this 1 come from?!
 
+  // Build a cache of all the pages we need and their positions
+  const pageMap = new Map();
+  aRectangles.forEach((r) => {
+    if (pageMap.has(r.p)) return
+    const pageContainer = document.querySelector(`.page[data-page-number="${r.p}"]`) as HTMLElement
+    const rect = pageContainer.getBoundingClientRect()
+    pageMap.set(r.p, { container: pageContainer, left: rect.left })
+  })
+
   const rectangles : Rectangle[] = []
   for (let r of aRectangles) {
-    const pageContainer = document.querySelector(`.page[data-page-number="${r.p}"]`) as HTMLElement
-    if (!pageContainer) {
+    const pageInfo = pageMap.get(r.p);
+    if (!pageInfo) {
       console.warn(`No page element found for page ${r.p}`)
       return undefined
     }
 
+    const pageContainer = pageInfo.container
     const pageTopY = pageContainer.offsetTop / scale + paddingTop + marginBetweenPages
     let leftOffset = 0
 
-    if (firstPageElement.clientWidth > pageContainer.clientWidth) {
-      const firstContainerStyle = getComputedStyle(firstPageElement)
-      const firstPageLeft = parseInt(firstContainerStyle.marginLeft) + parseInt(firstContainerStyle.borderLeftWidth)
-      const currentPageStyle = getComputedStyle(pageContainer)
-      const currentPageLeft = parseInt(currentPageStyle.marginLeft) + parseInt(currentPageStyle.borderLeftWidth)
-      leftOffset = (currentPageLeft - firstPageLeft) / scale
-    }
+    // If the pages are not rendered left-aligned because one is wider than the other, we need
+    // to adjust the position of the rectangle on the X-axis
+    leftOffset = (pageInfo.left - firstPageLeft) / scale
 
+    console.log(leftOffset, r.x + leftOffset, r.y + pageTopY, r.w, r.h)
     r = new Rectangle({ p: r.p, x: r.x + leftOffset, y: r.y + pageTopY, w: r.w, h: r.h })
     if (r.w > 0 && r.h > 0 /* && r.x > -1 && r.y > -1 */) {
       rectangles.push(r)

@@ -42,7 +42,7 @@ public interface UserPreferencesService
     AnnotationPreference loadPreferences(Project aProject, String aUsername, Mode aMode)
         throws IOException;
 
-    void savePreference(AnnotatorState aState, String aUsername) throws IOException;
+    void savePreferences(AnnotatorState aState, String aUsername) throws IOException;
 
     void savePreferences(Project aProject, String aUsername, Mode aMode, AnnotationPreference aPref)
         throws IOException;

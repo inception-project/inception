@@ -17,9 +17,6 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.page;
 
-import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.CURATION;
-import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
-import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 import static de.tudarmstadt.ukp.inception.rendering.selection.FocusPosition.CENTERED;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
 import static java.lang.String.format;
@@ -47,6 +44,7 @@ import org.apache.wicket.util.string.StringValue;
 import org.apache.wicket.util.string.StringValueConversionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.access.AccessDeniedException;
 import org.wicketstuff.urlfragment.UrlFragment;
 import org.wicketstuff.urlfragment.UrlParametersReceivingBehavior;
 
@@ -60,6 +58,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.ValidationMode;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentAccess;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
@@ -87,6 +86,7 @@ public abstract class AnnotationPageBase
 
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean DocumentService documentService;
+    private @SpringBean DocumentAccess documentAccess;
     private @SpringBean UserPreferencesService userPreferenceService;
     private @SpringBean UserDao userRepository;
     private @SpringBean ProjectService projectService;
@@ -445,36 +445,20 @@ public abstract class AnnotationPageBase
 
     public void ensureIsEditable() throws NotEditableException
     {
-        AnnotatorState state = getModelObject();
+        var state = getModelObject();
 
         if (state.getDocument() == null) {
             throw new NotEditableException("No document selected");
         }
 
-        // If curating (check mode for curation page and user for curation sidebar),
-        // then it is editable unless the curation is finished
-        if (state.getMode() == CURATION || CURATION_USER.equals(state.getUser().getUsername())) {
-            if (state.getDocument().getState().equals(CURATION_FINISHED)) {
-                throw new NotEditableException("Curation is already finished. You can put it back "
-                        + "into progress via the monitoring page.");
-            }
+        var sessionOwner = userRepository.getCurrentUser();
 
-            return;
+        try {
+            documentAccess.assertCanEditAnnotationDocument(sessionOwner, state.getDocument(),
+                    state.getUser().getUsername());
         }
-
-        if (getModelObject().isUserViewingOthersWork(userRepository.getCurrentUsername())) {
-            throw new NotEditableException(
-                    "Viewing another users annotations - document is read-only!");
-        }
-
-        if (isAnnotationFinished()) {
-            throw new NotEditableException("This document is already closed for user ["
-                    + state.getUser().getUsername() + "]. Please ask your "
-                    + "project manager to re-open it via the monitoring page.");
-        }
-
-        if (!projectService.hasRole(userRepository.getCurrentUsername(), getProject(), ANNOTATOR)) {
-            throw new NotEditableException("You are not an annotator in this project.");
+        catch (AccessDeniedException e) {
+            throw new NotEditableException(e.getMessage());
         }
     }
 

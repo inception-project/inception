@@ -26,8 +26,12 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import de.tudarmstadt.ukp.clarin.webanno.project.ProjectAccess;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.scheduling.ProjectTask;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
+import de.tudarmstadt.ukp.inception.scheduling.Task;
 import de.tudarmstadt.ukp.inception.scheduling.controller.SchedulerController;
 
 @ConditionalOnWebApplication
@@ -38,11 +42,14 @@ public class SchedulerControllerImpl
 {
     private final SchedulingService schedulingService;
     private final UserDao userService;
+    private final ProjectAccess projectAccess;
 
-    public SchedulerControllerImpl(SchedulingService aSchedulingService, UserDao aUserDao)
+    public SchedulerControllerImpl(SchedulingService aSchedulingService, UserDao aUserDao,
+            ProjectAccess aProjectAccess)
     {
         schedulingService = aSchedulingService;
         userService = aUserDao;
+        projectAccess = aProjectAccess;
     }
 
     @PostMapping(//
@@ -51,10 +58,10 @@ public class SchedulerControllerImpl
             produces = APPLICATION_JSON_VALUE)
     public void cancelTask(@PathVariable(PARAM_TASK_ID) int aTaskId)
     {
-        var user = userService.getCurrentUser();
+        var sessionOwner = userService.getCurrentUser();
 
         schedulingService.stopAllTasksMatching(
-                t -> t.getId() == aTaskId && t.getUser().filter(user::equals).isPresent());
+                t -> t.getId() == aTaskId && canPerformActionOnTask(t, sessionOwner));
     }
 
     @PostMapping(//
@@ -63,9 +70,18 @@ public class SchedulerControllerImpl
             produces = APPLICATION_JSON_VALUE)
     public void acknowledgeResult(@PathVariable(PARAM_TASK_ID) int aTaskId)
     {
-        var user = userService.getCurrentUser();
+        var sessionOwner = userService.getCurrentUser();
 
         schedulingService.stopAllTasksMatching(
-                t -> t.getId() == aTaskId && t.getUser().filter(user::equals).isPresent());
+                t -> t.getId() == aTaskId && canPerformActionOnTask(t, sessionOwner));
+    }
+
+    private boolean canPerformActionOnTask(Task aTask, User aUser)
+    {
+        if (aTask instanceof ProjectTask) {
+            return projectAccess.canManageProject(String.valueOf(aTask.getProject().getId()));
+        }
+
+        return aTask.getUser().filter(aUser::equals).isPresent();
     }
 }

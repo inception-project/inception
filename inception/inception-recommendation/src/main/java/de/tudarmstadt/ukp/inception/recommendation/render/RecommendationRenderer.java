@@ -18,27 +18,29 @@
 package de.tudarmstadt.ukp.inception.recommendation.render;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.ANNOTATION;
+import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.KEY_RECOMMENDER_GENERAL_SETTINGS;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionDocumentGroup.groupByType;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.groupingBy;
 
 import java.util.HashMap;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.core.annotation.Order;
 
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.SuggestionSupport;
 import de.tudarmstadt.ukp.inception.recommendation.api.SuggestionSupportRegistry;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAutoConfiguration;
-import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.pipeline.RenderStep;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
-import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
 /**
  * <p>
@@ -52,17 +54,19 @@ public class RecommendationRenderer
 {
     public static final String ID = "RecommendationRenderer";
 
-    private final AnnotationSchemaService annotationService;
     private final RecommendationService recommendationService;
     private final SuggestionSupportRegistry suggestionSupportRegistry;
+    private final PreferencesService preferencesService;
+    private final UserDao userService;
 
-    public RecommendationRenderer(AnnotationSchemaService aAnnotationService,
-            RecommendationService aRecommendationService,
-            SuggestionSupportRegistry aSuggestionSupportRegistry)
+    public RecommendationRenderer(RecommendationService aRecommendationService,
+            SuggestionSupportRegistry aSuggestionSupportRegistry,
+            PreferencesService aPreferencesService, UserDao aUserService)
     {
-        annotationService = aAnnotationService;
         recommendationService = aRecommendationService;
         suggestionSupportRegistry = aSuggestionSupportRegistry;
+        preferencesService = aPreferencesService;
+        userService = aUserService;
     }
 
     @Override
@@ -74,7 +78,7 @@ public class RecommendationRenderer
     @Override
     public boolean accepts(RenderRequest aRequest)
     {
-        AnnotatorState state = aRequest.getState();
+        var state = aRequest.getState();
 
         if (aRequest.getCas() == null) {
             return false;
@@ -82,6 +86,21 @@ public class RecommendationRenderer
 
         // Do not show predictions on curation page
         if (state != null && state.getMode() != ANNOTATION) {
+            return false;
+        }
+
+        var prefs = preferencesService.loadDefaultTraitsForProject(KEY_RECOMMENDER_GENERAL_SETTINGS,
+                aRequest.getProject());
+
+        // Do not show predictions when viewing annotations of another user
+        if (!prefs.isShowRecommendationsWhenViewingOtherUser()
+                && !Objects.equals(aRequest.getAnnotationUser(), aRequest.getSessionOwner())) {
+            return false;
+        }
+
+        // Do not show predictions when viewing annotations of curation user
+        if (!prefs.isShowRecommendationsWhenViewingCurationUser()
+                && Objects.equals(aRequest.getAnnotationUser(), userService.getCurationUser())) {
             return false;
         }
 

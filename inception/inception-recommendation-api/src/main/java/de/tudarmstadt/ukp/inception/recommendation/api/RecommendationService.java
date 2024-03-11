@@ -127,6 +127,15 @@ public interface RecommendationService
 
     void putIncomingPredictions(User aSessionOwner, Project aProject, Predictions aPredictions);
 
+    /**
+     * Replace the current predictions with the pending predictions if any are available.
+     * 
+     * @param aSessionOwner
+     *            the owner of the session.
+     * @param aProject
+     *            the project.
+     * @return whether the current predictions where replaced or not.
+     */
     boolean switchPredictions(String aSessionOwner, Project aProject);
 
     /**
@@ -277,7 +286,13 @@ public interface RecommendationService
             SourceDocument aDocument, CAS aCas, String aDataOwner, AnnotationLayer aLayer,
             Collection<SuggestionGroup<T>> aRecommendations, int aWindowBegin, int aWindowEnd);
 
-    void clearState(String aSessionOwner);
+    /**
+     * Discards all predictions in all states belonging to the owner. Flags are retained.
+     * 
+     * @param aSessionOwner
+     *            the user owning the session.
+     */
+    void resetState(String aSessionOwner);
 
     void triggerPrediction(String aSessionOwner, String aEventName, SourceDocument aDocument,
             String aDocumentOwner);
@@ -301,4 +316,17 @@ public interface RecommendationService
     long countEnabledRecommenders();
 
     Progress getProgressTowardsNextEvaluation(User aSessionOwner, Project aProject);
+
+    boolean isSuspended(String aUser, Project aProject);
+
+    void setSuspended(String aUser, Project aProject, boolean aState);
+
+    /**
+     * @return if the curation sidebar mode is available.
+     * @deprecated This obviously shouldn't be here, but this is the easiest way to access this
+     *             information from the recommender settings. Should be removed when the curation
+     *             sidebar leaves experimental mode.
+     */
+    @Deprecated
+    boolean isCurationSidebarEnabled();
 }

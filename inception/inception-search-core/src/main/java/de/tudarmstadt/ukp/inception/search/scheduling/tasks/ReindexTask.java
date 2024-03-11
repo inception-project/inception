@@ -33,6 +33,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import de.tudarmstadt.ukp.inception.scheduling.MatchResult;
+import de.tudarmstadt.ukp.inception.scheduling.ProjectTask;
 import de.tudarmstadt.ukp.inception.scheduling.Task;
 import de.tudarmstadt.ukp.inception.search.SearchService;
 import de.tudarmstadt.ukp.inception.search.model.Monitor;
@@ -43,6 +44,7 @@ import de.tudarmstadt.ukp.inception.search.model.Progress;
  */
 public class ReindexTask
     extends IndexingTask_ImplBase
+    implements ProjectTask
 {
     public static final String TYPE = "ReindexTask";
 

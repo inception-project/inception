@@ -101,16 +101,15 @@ public class SidebarPanel
 
     private List<SidebarTab> makeTabs()
     {
-        List<SidebarTab> tabs = new ArrayList<>();
-        for (AnnotationSidebarFactory factory : sidebarRegistry.getSidebarFactories()) {
+        var tabs = new ArrayList<SidebarTab>();
+        for (var factory : sidebarRegistry.getSidebarFactories()) {
 
             if (!factory.applies(stateModel.getObject())) {
                 continue;
             }
 
-            String factoryId = factory.getBeanName();
-            SidebarTab tab = new SidebarTab(Model.of(factory.getDisplayName()),
-                    factory.getBeanName())
+            var factoryId = factory.getBeanName();
+            var tab = new SidebarTab(Model.of(factory.getDisplayName()), factory.getBeanName())
             {
                 private static final long serialVersionUID = 2144644282070158783L;
 

@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.core.logout;
 
+import static de.tudarmstadt.ukp.clarin.webanno.security.WicketSecurityUtils.getAutoLogoutTime;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.enabledWhen;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -31,9 +32,6 @@ import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.link.BookmarkablePageLink;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.protocol.http.servlet.ServletWebRequest;
-import org.apache.wicket.request.Request;
-import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.request.flow.RedirectToUrlException;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
@@ -46,7 +44,6 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.core.ApplicationSession;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.login.LoginPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.users.ManageUsersPage;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaStatelessLink;
-import jakarta.servlet.http.HttpSession;
 
 @StatelessComponent
 public class LogoutPanel
@@ -130,29 +127,12 @@ public class LogoutPanel
         }
 
         if (isNotBlank(aSecProperties.getAutoLogin())) {
-            PageParameters parameters = new PageParameters();
+            var parameters = new PageParameters();
             parameters.set(LoginPage.PARAM_SKIP_AUTO_LOGIN, true);
             aOwner.setResponsePage(LoginPage.class, parameters);
             return;
         }
 
         aOwner.setResponsePage(aOwner.getApplication().getHomePage());
-    }
-
-    /**
-     * Checks if auto-logout is enabled. For Winstone, we get a max session length of 0, so here it
-     * is disabled.
-     */
-    private int getAutoLogoutTime()
-    {
-        int duration = 0;
-        Request request = RequestCycle.get().getRequest();
-        if (request instanceof ServletWebRequest) {
-            HttpSession session = ((ServletWebRequest) request).getContainerRequest().getSession();
-            if (session != null) {
-                duration = session.getMaxInactiveInterval();
-            }
-        }
-        return duration;
     }
 }

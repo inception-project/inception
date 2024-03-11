@@ -166,7 +166,7 @@ public class KnowledgeBaseExporterTest
                 .createFeature(any());
 
         // Check that IDs have been remapped
-        List<AnnotationFeature> importedFeatures = importedAnnotationFeatureCaptor.getAllValues();
+        var importedFeatures = importedAnnotationFeatureCaptor.getAllValues();
         assertThat(importedFeatures).extracting(feature -> {
             ConceptFeatureTraits traits = JSONUtil.fromJsonString(ConceptFeatureTraits.class,
                     feature.getTraits());

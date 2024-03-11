@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.inception.recommendation.config;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -51,7 +50,6 @@ import de.tudarmstadt.ukp.inception.recommendation.log.RecommendationRejectedEve
 import de.tudarmstadt.ukp.inception.recommendation.log.RecommenderDeletedEventAdapter;
 import de.tudarmstadt.ukp.inception.recommendation.log.RecommenderEvaluationResultEventAdapter;
 import de.tudarmstadt.ukp.inception.recommendation.metrics.RecommendationMetricsImpl;
-import de.tudarmstadt.ukp.inception.recommendation.processor.BulkProcessingPageMenuItem;
 import de.tudarmstadt.ukp.inception.recommendation.project.ProjectRecommendersMenuItem;
 import de.tudarmstadt.ukp.inception.recommendation.project.RecommenderProjectSettingsPanelFactory;
 import de.tudarmstadt.ukp.inception.recommendation.relation.RelationSuggestionSupport;
@@ -66,7 +64,6 @@ import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
-import jakarta.servlet.ServletContext;
 
 /**
  * Provides all back-end Spring beans for the recommendation functionality.
@@ -147,7 +144,8 @@ public class RecommenderServiceAutoConfiguration
             havingValue = "true", matchIfMissing = true)
     @Bean
     public RecommendationSidebarFactory recommendationSidebarFactory(
-            RecommendationService aRecommendationService)
+            RecommendationService aRecommendationService, PreferencesService aPreferencesService,
+            UserDao aUserService)
     {
         return new RecommendationSidebarFactory(aRecommendationService);
     }
@@ -190,12 +188,13 @@ public class RecommenderServiceAutoConfiguration
     }
 
     @Bean
-    public RecommendationRenderer recommendationRenderer(AnnotationSchemaService aAnnotationService,
+    public RecommendationRenderer recommendationRenderer(
             RecommendationService aRecommendationService,
-            SuggestionSupportRegistry aSuggestionSupportRegistry)
+            SuggestionSupportRegistry aSuggestionSupportRegistry,
+            PreferencesService aPreferencesService, UserDao aUserService)
     {
-        return new RecommendationRenderer(aAnnotationService, aRecommendationService,
-                aSuggestionSupportRegistry);
+        return new RecommendationRenderer(aRecommendationService, aSuggestionSupportRegistry,
+                aPreferencesService, aUserService);
     }
 
     @Bean
@@ -243,14 +242,5 @@ public class RecommenderServiceAutoConfiguration
             @Lazy @Autowired(required = false) List<SuggestionSupport> aExtensions)
     {
         return new SuggestionSupportRegistryImpl(aExtensions);
-    }
-
-    @ConditionalOnWebApplication
-    @Bean
-    @ConditionalOnExpression("${websocket.enabled:true} and ${bulk-processing.enabled:false}")
-    public BulkProcessingPageMenuItem bulkProcessingPageMenuItem(UserDao aUserRepo,
-            ProjectService aProjectService, ServletContext aServletContext)
-    {
-        return new BulkProcessingPageMenuItem(aUserRepo, aProjectService, aServletContext);
     }
 }

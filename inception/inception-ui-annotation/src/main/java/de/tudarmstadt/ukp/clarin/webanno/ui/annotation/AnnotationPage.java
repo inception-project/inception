@@ -82,7 +82,7 @@ import de.tudarmstadt.ukp.inception.annotation.events.DocumentOpenedEvent;
 import de.tudarmstadt.ukp.inception.annotation.events.FeatureValueUpdatedEvent;
 import de.tudarmstadt.ukp.inception.annotation.events.PreparingToOpenDocumentEvent;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
-import de.tudarmstadt.ukp.inception.documents.DocumentAccess;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentAccess;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorBase;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorExtensionRegistry;
@@ -354,7 +354,7 @@ public class AnnotationPage
 
     private WebMarkupContainer createRightSidebar()
     {
-        WebMarkupContainer rightSidebar = new WebMarkupContainer("rightSidebar");
+        var rightSidebar = new WebMarkupContainer("rightSidebar");
         rightSidebar.setOutputMarkupPlaceholderTag(true);
         // Override sidebar width from preferences
         rightSidebar.add(new AttributeModifier("style",
@@ -372,7 +372,7 @@ public class AnnotationPage
     @Override
     public List<SourceDocument> getListOfDocs()
     {
-        AnnotatorState state = getModelObject();
+        var state = getModelObject();
         return new ArrayList<>(documentService
                 .listAnnotatableDocuments(state.getProject(), state.getUser()).keySet());
     }
@@ -403,7 +403,7 @@ public class AnnotationPage
     public void writeEditorCas(CAS aCas) throws IOException, AnnotationException
     {
         ensureIsEditable();
-        AnnotatorState state = getModelObject();
+        var state = getModelObject();
         documentService.writeAnnotationCas(aCas, state.getDocument(), state.getUser(), true);
 
         bumpAnnotationCasTimestamp(state);

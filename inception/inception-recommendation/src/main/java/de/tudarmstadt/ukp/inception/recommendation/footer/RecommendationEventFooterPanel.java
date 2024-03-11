@@ -42,7 +42,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
 import de.tudarmstadt.ukp.inception.support.svelte.SvelteBehavior;
-import de.tudarmstadt.ukp.inception.websocket.feedback.FeedbackPanelExtensionBehavior;
+import de.tudarmstadt.ukp.inception.ui.core.feedback.FeedbackPanelExtensionBehavior;
 import jakarta.servlet.ServletContext;
 
 public class RecommendationEventFooterPanel

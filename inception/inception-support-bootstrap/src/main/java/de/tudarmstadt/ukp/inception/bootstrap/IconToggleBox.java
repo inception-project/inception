@@ -24,7 +24,7 @@ import org.apache.wicket.behavior.AttributeAppender;
 import org.apache.wicket.behavior.Behavior;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.FormComponentUpdatingBehavior;
-import org.apache.wicket.markup.html.panel.Panel;
+import org.apache.wicket.markup.html.panel.GenericPanel;
 import org.apache.wicket.model.IModel;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
@@ -33,7 +33,7 @@ import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.checkboxx.Che
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
 
 public class IconToggleBox
-    extends Panel
+    extends GenericPanel<Boolean>
 {
     private static final long serialVersionUID = 4721646397508723919L;
 
@@ -75,12 +75,14 @@ public class IconToggleBox
         return super.setDefaultModel(aModel);
     }
 
+    @Override
     public IconToggleBox setModel(IModel<Boolean> aModel)
     {
         this.setDefaultModel(aModel);
         return this;
     }
 
+    @Override
     @SuppressWarnings("unchecked")
     public IModel<Boolean> getModel()
     {

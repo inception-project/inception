@@ -53,17 +53,17 @@ tt|p {
   border-radius: 0.5em;
   margin-top: 0.25em;
   margin-bottom: 0.25em;
+}
 
-  &::before {
-    border-radius: 0.5em 0em 0em 0.5em;
-    display: inline-block;
-    padding-left: 0.5em;
-    padding-right: 0.5em;
-    margin-right: 0.5em;
-    background-color: lightgray;
-    min-width: 10em;
-    content: attr(agent) '\a0';
-  }
+tt|p::before {
+  border-radius: 0.5em 0em 0em 0.5em;
+  display: inline-block;
+  padding-left: 0.5em;
+  padding-right: 0.5em;
+  margin-right: 0.5em;
+  background-color: lightgray;
+  min-width: 10em;
+  content: attr(agent) '\a0';
 }
 ----
 

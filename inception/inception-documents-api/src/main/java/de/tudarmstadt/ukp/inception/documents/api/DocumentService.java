@@ -30,7 +30,6 @@ import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.wicket.validation.ValidationError;
-import org.springframework.security.access.prepost.PreAuthorize;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode;
@@ -70,7 +69,6 @@ public interface DocumentService
      *            {@link SourceDocument} to be created
      * @return the source document
      */
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER','ROLE_REMOTE')")
     SourceDocument createSourceDocument(SourceDocument document);
 
     /**
@@ -119,13 +117,9 @@ public interface DocumentService
     SourceDocument getSourceDocument(long projectId, long documentId);
 
     /**
-     * Return the Master TCF file Directory path. For the first time, all available TCF layers will
-     * be read and converted to CAS object. subsequent accesses will be to the annotated document
-     * unless and otherwise the document is removed from the project.
-     *
      * @param document
      *            The {@link SourceDocument} to be examined
-     * @return the Directory path of the source document
+     * @return the originally imported source document file.
      */
     File getSourceDocumentFile(SourceDocument document);
 
@@ -151,7 +145,6 @@ public interface DocumentService
      * @throws IOException
      *             If the source document searched for deletion is not available
      */
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER', 'ROLE_REMOTE')")
     void removeSourceDocument(SourceDocument document) throws IOException;
 
     /**
@@ -167,7 +160,6 @@ public interface DocumentService
      * @throws UIMAException
      *             if a conversion error occurs.
      */
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER','ROLE_REMOTE')")
     void uploadSourceDocument(InputStream file, SourceDocument document)
         throws IOException, UIMAException;
 
@@ -187,19 +179,9 @@ public interface DocumentService
      * @throws UIMAException
      *             if a conversion error occurs.
      */
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER','ROLE_REMOTE')")
     void uploadSourceDocument(InputStream file, SourceDocument document,
             TypeSystemDescription aFullProjectTypeSystem)
         throws IOException, UIMAException;
-
-    /**
-     * Get the directory of this {@link SourceDocument} usually to read the content of the document
-     *
-     * @param aDocument
-     *            the source document.
-     * @return the source document folder.
-     */
-    File getSourceDocumentFolder(SourceDocument aDocument);
 
     SourceDocumentState transitionSourceDocumentState(SourceDocument aDocument,
             SourceDocumentStateTransition aTransition);
@@ -220,7 +202,6 @@ public interface DocumentService
      *            and id of {@link User}
      * @return the annotation document.
      */
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
     AnnotationDocument createAnnotationDocument(AnnotationDocument annotationDocument);
 
     /**
@@ -236,7 +217,6 @@ public interface DocumentService
      * @throws IOException
      *             if an I/O error occurs.
      */
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
     void writeAnnotationCas(CAS aCas, AnnotationDocument aAnnotationDocument,
             boolean aExplicitAnnotatorUserAction)
         throws IOException;
@@ -256,7 +236,6 @@ public interface DocumentService
      * @throws IOException
      *             if an I/O error occurs.
      */
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
     void writeAnnotationCas(CAS aCas, SourceDocument aDocument, User aUser,
             boolean aExplicitAnnotatorUserAction)
         throws IOException;
@@ -294,7 +273,6 @@ public interface DocumentService
      * @throws IOException
      *             if an I/O error occurs.
      */
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
     void resetAnnotationCas(SourceDocument aDocument, User aUser,
             AnnotationDocumentStateChangeFlag... aFlags)
         throws UIMAException, IOException;
@@ -535,6 +513,15 @@ public interface DocumentService
     CAS createOrReadInitialCas(SourceDocument aDocument, CasUpgradeMode aUpgradeMode,
             CasAccessMode aAccessMode, TypeSystemDescription aFullProjectTypeSystem)
         throws IOException;
+
+    /**
+     * @param document
+     *            The {@link SourceDocument} to be examined
+     * @return the file size of the initial CAS for the given source document.
+     * @throws IOException
+     *             accessing the file.
+     */
+    Optional<Long> getInitialCasFileSize(SourceDocument document) throws IOException;
 
     /**
      * List all the {@link AnnotationDocument annotation documents} in a given project.
