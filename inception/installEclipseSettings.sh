@@ -60,6 +60,7 @@ installPrefs inception-imls-elg
 installPrefs inception-imls-external
 installPrefs inception-imls-hf
 installPrefs inception-imls-lapps
+installPrefs inception-imls-openai
 installPrefs inception-imls-opennlp
 installPrefs inception-imls-stringmatch
 installPrefs inception-imls-weblicht
