@@ -18,16 +18,19 @@
 package de.tudarmstadt.ukp.inception.io.brat;
 
 import static org.apache.uima.fit.factory.AnalysisEngineFactory.createEngineDescription;
+import static org.apache.uima.fit.factory.CollectionReaderFactory.createReaderDescription;
 
 import org.apache.uima.analysis_engine.AnalysisEngineDescription;
 import org.apache.uima.cas.CAS;
+import org.apache.uima.collection.CollectionReaderDescription;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
-import org.dkpro.core.io.brat.BratWriter;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.io.brat.config.BratAutoConfiguration;
+import de.tudarmstadt.ukp.inception.io.brat.dkprocore.BratReader;
+import de.tudarmstadt.ukp.inception.io.brat.dkprocore.BratWriter;
 
 /**
  * Support for BioC format.
@@ -56,13 +59,60 @@ public class BratFormatSupport
     @Override
     public boolean isReadable()
     {
-        return false;
+        return true;
     }
 
     @Override
     public boolean isWritable()
     {
         return true;
+    }
+
+    @Override
+    public CollectionReaderDescription getReaderDescription(Project aProject,
+            TypeSystemDescription aTSD)
+        throws ResourceInitializationException
+    {
+        var mapping = """
+                {
+                  'textTypeMapppings': [
+                    {
+                      'from': '.*',
+                      'to': 'custom.Span',
+                      'defaultFeatureValues': { }
+                    }
+                  ],
+                  'relationTypeMapppings': [
+                    {
+                      'from': '.*',
+                      'to': 'custom.Relation',
+                      'defaultFeatureValues': { }
+                    }
+                  ],
+                  'spans': [
+                    {
+                      'type': 'custom.Span',
+                      'subCatFeature': 'label',
+                      'defaultFeatureValues': { }
+                    }
+                  ],
+                  'relations': [
+                    {
+                      'type': 'custom.Relation',
+                      'arg1': 'Governor',
+                      'arg2': 'Dependent',
+                      'flags2': 'A',
+                      'subCatFeature': 'label',
+                      'defaultFeatureValues': { }
+                    }
+                  ],
+                  'comments': [ ]
+                }
+                """;
+
+        return createReaderDescription(BratReader.class, aTSD, //
+                BratReader.PARAM_MAPPING, mapping, //
+                BratReader.PARAM_LENIENT, true);
     }
 
     @Override
