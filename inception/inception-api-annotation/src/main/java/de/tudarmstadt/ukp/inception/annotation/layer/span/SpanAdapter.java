@@ -30,8 +30,6 @@ import java.util.function.Supplier;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.Feature;
-import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
 import org.slf4j.Logger;
@@ -99,8 +97,7 @@ public class SpanAdapter
             int aEnd)
         throws AnnotationException
     {
-        return handle(
-                new CreateSpanAnnotationRequest(aDocument, aDataOwner, aCas, aBegin, aEnd));
+        return handle(new CreateSpanAnnotationRequest(aDocument, aDataOwner, aCas, aBegin, aEnd));
     }
 
     public AnnotationFS handle(CreateSpanAnnotationRequest aRequest) throws AnnotationException
@@ -152,16 +149,16 @@ public class SpanAdapter
 
     public AnnotationFS handle(MoveSpanAnnotationRequest aRequest) throws AnnotationException
     {
-        MoveSpanAnnotationRequest request = aRequest;
+        var request = aRequest;
 
         // Adjust the move request (e.g. adjust offsets to the configured granularity) or
         // reject the request (e.g. reject cross-sentence annotations)
-        for (SpanLayerBehavior behavior : behaviors) {
+        for (var behavior : behaviors) {
             request = behavior.onMove(this, request);
         }
 
-        int oldBegin = request.getAnnotation().getBegin();
-        int oldEnd = request.getAnnotation().getEnd();
+        var oldBegin = request.getAnnotation().getBegin();
+        var oldEnd = request.getAnnotation().getEnd();
         moveSpanAnnotation(request.getCas(), request.getAnnotation(), request.getBegin(),
                 request.getEnd());
 
@@ -176,8 +173,8 @@ public class SpanAdapter
     private AnnotationFS createSpanAnnotation(CAS aCas, int aBegin, int aEnd)
         throws AnnotationException
     {
-        Type type = CasUtil.getType(aCas, getAnnotationTypeName());
-        AnnotationFS newAnnotation = aCas.createAnnotation(type, aBegin, aEnd);
+        var type = CasUtil.getType(aCas, getAnnotationTypeName());
+        var newAnnotation = aCas.createAnnotation(type, aBegin, aEnd);
 
         log.trace("Created span annotation {}-{} [{}]", newAnnotation.getBegin(),
                 newAnnotation.getEnd(), newAnnotation.getCoveredText());
@@ -216,7 +213,7 @@ public class SpanAdapter
     @Override
     public void delete(SourceDocument aDocument, String aDocumentOwner, CAS aCas, VID aVid)
     {
-        AnnotationFS fs = selectByAddr(aCas, AnnotationFS.class, aVid.getId());
+        var fs = selectByAddr(aCas, AnnotationFS.class, aVid.getId());
         aCas.removeFsFromIndexes(fs);
 
         // delete associated attachFeature
@@ -230,7 +227,7 @@ public class SpanAdapter
     public AnnotationFS restore(SourceDocument aDocument, String aDocumentOwner, CAS aCas, VID aVid)
         throws AnnotationException
     {
-        AnnotationFS fs = selectByAddr(aCas, AnnotationFS.class, aVid.getId());
+        var fs = selectByAddr(aCas, AnnotationFS.class, aVid.getId());
 
         if (getAttachFeatureName() != null) {
             attach(aCas, fs.getBegin(), fs.getEnd(), fs);
@@ -246,8 +243,8 @@ public class SpanAdapter
     private void attach(CAS aCas, int aBegin, int aEnd, AnnotationFS newAnnotation)
         throws IllegalPlacementException
     {
-        Type theType = getType(aCas, getAttachTypeName());
-        Feature attachFeature = theType.getFeatureByBaseName(getAttachFeatureName());
+        var theType = getType(aCas, getAttachTypeName());
+        var attachFeature = theType.getFeatureByBaseName(getAttachFeatureName());
         if (selectCovered(aCas, theType, aBegin, aEnd).isEmpty()) {
             throw new IllegalPlacementException("No annotation of type [" + getAttachTypeName()
                     + "] to attach to at location [" + aBegin + "-" + aEnd + "].");
@@ -258,8 +255,8 @@ public class SpanAdapter
 
     private void detatch(CAS aCas, AnnotationFS fs)
     {
-        Type theType = getType(aCas, getAttachTypeName());
-        Feature attachFeature = theType.getFeatureByBaseName(getAttachFeatureName());
+        var theType = getType(aCas, getAttachTypeName());
+        var attachFeature = theType.getFeatureByBaseName(getAttachFeatureName());
         if (attachFeature != null) {
             selectCovered(aCas, theType, fs.getBegin(), fs.getEnd()).get(0)
                     .setFeatureValue(attachFeature, null);
@@ -269,20 +266,22 @@ public class SpanAdapter
     @Override
     public List<Pair<LogMessage, AnnotationFS>> validate(CAS aCas)
     {
-        List<Pair<LogMessage, AnnotationFS>> messages = new ArrayList<>();
-        for (SpanLayerBehavior behavior : behaviors) {
-            long startTime = currentTimeMillis();
+        var messages = new ArrayList<Pair<LogMessage, AnnotationFS>>();
+
+        for (var behavior : behaviors) {
+            var startTime = currentTimeMillis();
             messages.addAll(behavior.onValidate(this, aCas));
             log.trace("Validation for [{}] on [{}] took {}ms", behavior.getClass().getSimpleName(),
                     getLayer().getUiName(), currentTimeMillis() - startTime);
         }
+
         return messages;
     }
 
     @Override
     public Selection select(VID aVid, AnnotationFS aAnno)
     {
-        Selection selection = new Selection();
+        var selection = new Selection();
         selection.selectSpan(aAnno);
         return selection;
     }
