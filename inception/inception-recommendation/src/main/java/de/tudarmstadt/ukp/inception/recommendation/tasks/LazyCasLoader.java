@@ -28,6 +28,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
 import org.apache.commons.lang3.concurrent.ConcurrentException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Type;
@@ -61,11 +63,20 @@ public class LazyCasLoader
     public List<CAS> getRelevantCasses(Recommender aRecommender) throws ConcurrentException
     {
         return get().stream() //
-                .filter(e -> !aRecommender.getStatesIgnoredForTraining().contains(e.state)) //
+                .filter(e -> isStateAllowingForTraining(aRecommender, e)) //
                 .map(e -> e.getCas()) //
                 .filter(Objects::nonNull) //
                 .filter(cas -> containsTargetTypeAndFeature(aRecommender, cas)) //
                 .toList();
+    }
+
+    private boolean isStateAllowingForTraining(Recommender aRecommender, TrainingDocument e)
+    {
+        var result = !aRecommender.getStatesIgnoredForTraining().contains(e.state);
+        LOG.trace("{} -> {} ({})", e,
+                result ? "state acceptabled for training" : "state not acceptable for training",
+                e.state);
+        return result;
     }
 
     private Collection<TrainingDocument> get()
@@ -106,16 +117,20 @@ public class LazyCasLoader
         catch (IllegalArgumentException e) {
             // If the CAS does not contain the target type at all, then it cannot contain any
             // annotations of that type.
+            LOG.trace("CAS does not contain target type yet");
             return false;
         }
 
         if (type.getFeatureByBaseName(aRecommender.getFeature().getName()) == null) {
             // If the CAS does not contain the target feature, then there won't be any training
             // data.
+            LOG.trace("CAS does not contain target feature yet");
             return false;
         }
 
-        return !aCas.select(type).isEmpty();
+        var result = !aCas.select(type).isEmpty();
+        LOG.trace("CAS contains no annotations of type {}", type.getName());
+        return result;
     }
 
     private class TrainingDocument
@@ -153,6 +168,14 @@ public class LazyCasLoader
             }
 
             return _cas;
+        }
+
+        @Override
+        public String toString()
+        {
+            return new ToStringBuilder(this, ToStringStyle.SIMPLE_STYLE)
+                    .append("document", document).append("user", user).append("state", state)
+                    .toString();
         }
     }
 }
