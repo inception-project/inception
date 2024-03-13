@@ -89,7 +89,7 @@ public class BulkRecommenderPanel
                 .setRequired(true));
 
         processingMetadata = new FeatureEditorPanel("processingMetadata");
-                processingMetadata.setOutputMarkupPlaceholderTag(true);
+        processingMetadata.setOutputMarkupPlaceholderTag(true);
         queue(processingMetadata);
 
         var docMetaLayers = LoadableDetachableModel.of(this::listDocumentMetadataLayers);
@@ -112,7 +112,7 @@ public class BulkRecommenderPanel
         for (var state : processingMetadata.getModelObject()) {
             metadata.put(state.getFeature(), state.getValue());
         }
-        
+
         var formData = aForm.getModelObject();
         schedulingService.enqueue(BulkPredictionTask.builder() //
                 .withSessionOwner(userService.getCurrentUser()) //

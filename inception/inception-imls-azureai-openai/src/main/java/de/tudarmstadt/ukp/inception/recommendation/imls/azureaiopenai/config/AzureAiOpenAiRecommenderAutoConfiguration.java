@@ -27,7 +27,7 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.azureaiopenai.client.Azu
 
 @Configuration
 @ConditionalOnProperty(prefix = "recommender.azureai-openai", name = "enabled", //
-    havingValue = "true", matchIfMissing = false)
+        havingValue = "true", matchIfMissing = false)
 public class AzureAiOpenAiRecommenderAutoConfiguration
 {
     @Bean

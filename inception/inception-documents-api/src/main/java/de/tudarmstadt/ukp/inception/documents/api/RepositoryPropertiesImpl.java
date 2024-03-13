@@ -33,7 +33,8 @@ import de.tudarmstadt.ukp.inception.support.logging.Logging;
  */
 @ConfigurationProperties("repository")
 @ManagedResource
-public class RepositoryPropertiesImpl implements RepositoryProperties
+public class RepositoryPropertiesImpl
+    implements RepositoryProperties
 {
     private File path;
 
