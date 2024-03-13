@@ -1,0 +1,108 @@
+<!--
+  Licensed to the Technische Universität Darmstadt under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The Technische Universität Darmstadt 
+  licenses this file to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.
+   
+  http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<html xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
+<wicket:head>
+  <style>
+    .small p {
+      margin-bottom: 0.25em;
+    }
+  </style>
+</wicket:head>
+<wicket:panel>
+  <form wicket:id="form">
+    <div class="row form-row" wicket:enclosure="url">
+      <label class="col-sm-3 col-form-label" wicket:for="url">
+        <wicket:message key="url"/>
+      </label>
+      <div class="col-sm-9">
+        <input wicket:id="url" type="text" class="form-control"/>
+      </div>
+    </div>
+    <div class="row form-row" wicket:enclosure="authentication">
+      <label class="col-sm-3 col-form-label">
+        <wicket:message key="authentication"/>
+      </label>
+      <div class="col-sm-9">
+        <div wicket:id="authentication"/>
+      </div>
+    </div>
+    <div class="row form-row" wicket:enclosure="preset">
+      <div class="offset-sm-3 col-sm-9">
+        <select wicket:id="preset" class="form-select"/>
+      </div>
+    </div>
+    <div class="row form-row" wicket:enclosure="promptingMode">
+      <label wicket:for="promptingMode" class="col-sm-3 control-label">
+        <wicket:label key="promptingMode" />
+      </label>
+      <div class="col-sm-9">
+        <select wicket:id="promptingMode" class="form-select"/>
+      </div>
+    </div>
+    <div class="row form-row" wicket:enclosure="format">
+      <label wicket:for="format" class="col-sm-3 control-label">
+        <wicket:label key="format" />
+      </label>
+      <div class="col-sm-9">
+        <select wicket:id="format" class="form-select"/>
+      </div>
+    </div>
+    <div class="row form-row" wicket:enclosure="extractionMode">
+      <label wicket:for="extractionMode" class="col-sm-3 control-label">
+        <wicket:label key="extractionMode" />
+      </label>
+      <div class="col-sm-9">
+        <select wicket:id="extractionMode" class="form-select"/>
+      </div>
+    </div>
+    <div class="row form-row" wicket:enclosure="prompt">
+      <label class="col-sm-3 col-form-label" wicket:for="prompt">
+        <wicket:message key="prompt"/>
+        <div class="small text-muted mb-2">
+          <i class="fas fa-torii-gate"></i> Jinja supported
+        </div>
+        <div wicket:id="promptHints" class="small text-muted"/>
+      </label>
+      <div class="col-sm-9">
+        <textarea wicket:id="prompt" class="form-control" rows="10"/>
+      </div>
+    </div>
+    <form wicket:id="optionSettingsForm">
+      <div class="row form-row">
+        <label class="col-sm-3 col-form-label">
+          <wicket:message key="options"/>
+        </label>
+        <div class="col-sm-9">
+          <div class="input-group">
+            <select wicket:id="option" class="form-select"/>
+            <button wicket:id="addOption" class="btn btn-outline-secondary" type="button">Add</button>
+          </div>
+          <div wicket:id="optionSettingsContainer">
+            <div wicket:id="optionSettings">
+              <span wicket:id="option"/>
+              <input wicket:id="value" type="text" class="form-control"/>
+            <button wicket:id="removeOption" class="btn btn-outline-secondary" type="button">Remove</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </form>
+  </form>
+</wicket:panel>
+</html>
