@@ -17,14 +17,20 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.ollama.response;
 
+import static java.util.Collections.reverse;
+import static java.util.Collections.sort;
+import static java.util.Comparator.comparing;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
@@ -57,37 +63,56 @@ public class MentionsFromJsonExtractor
         var predictedFeature = aEngine.getPredictedFeature(aCas);
 
         var examples = new LinkedHashMap<String, MentionsSample>();
-        for (var candidate : aCas.<Annotation> select(predictedType)) {
-            var sentence = aCas.select(Sentence.class).covering(candidate) //
-                    .map(Sentence::getCoveredText) //
-                    .findFirst().orElse("");
 
-            // Skip mentions for which we did not find a sentence
-            if (StringUtils.isBlank(sentence)) {
+        var sentencesAndLabels = new ArrayList<Pair<Sentence, Set<String>>>();
+        for (var sentence : aCas.select(Sentence.class)) {
+            if (isBlank(sentence.getCoveredText())) {
                 continue;
             }
 
+            var labels = new HashSet<String>();
+            var mentions = aCas.<Annotation> select(predictedType).coveredBy(sentence);
+            if (mentions.isEmpty()) {
+                continue;
+            }
+
+            for (var mention : mentions) {
+                labels.add(FSUtil.getFeature(mention, predictedFeature, String.class));
+            }
+
+            sentencesAndLabels.add(Pair.of(sentence, labels));
+        }
+
+        sort(sentencesAndLabels, comparing(e -> e.getValue().size()));
+        reverse(sentencesAndLabels);
+
+        var labelsSeen = new HashSet<String>();
+        for (var sentenceAndLabels : sentencesAndLabels) {
             // Stop once we have sufficient samples
-            if (!examples.containsKey(sentence) && examples.size() > aNum) {
+            if (examples.size() >= aNum) {
                 break;
             }
 
-            var example = examples.computeIfAbsent(sentence, MentionsSample::new);
-            var text = candidate.getCoveredText();
-            var label = FSUtil.getFeature(candidate, predictedFeature, String.class);
-            example.addMention(text, label);
-        }
-        return examples;
-    }
+            // Skip if we already have examples for all the labels - except if there are null
+            // labels, then we go on because we might otherwise end up only with a single
+            // example
+            if (!sentenceAndLabels.getValue().contains(null)
+                    && labelsSeen.containsAll(sentenceAndLabels.getValue())) {
+                continue;
+            }
 
-    private String toJson(Object aObject)
-    {
-        try {
-            return JSONUtil.toJsonString(aObject);
+            var sentence = sentenceAndLabels.getKey();
+            var sample = new MentionsSample(sentence.getCoveredText());
+            for (var mention : aCas.<Annotation> select(predictedType).coveredBy(sentence)) {
+                var label = FSUtil.getFeature(mention, predictedFeature, String.class);
+                sample.addMention(mention.getCoveredText(), label);
+            }
+
+            examples.put(sentence.getCoveredText(), sample);
+            labelsSeen.addAll(sentenceAndLabels.getValue());
         }
-        catch (IOException e) {
-            return null;
-        }
+
+        return examples;
     }
 
     @Override
@@ -136,6 +161,14 @@ public class MentionsFromJsonExtractor
                             }
                         }
                     }
+                }
+
+                // Looks like this - typically generated from unlabelled few-shot examples
+                // "John": null,
+                // "diner": null,
+                // "Starbucks": null
+                if (fieldEntry.getValue().isNull()) {
+                    mentions.add(Pair.of(fieldEntry.getKey(), null));
                 }
 
                 // Looks like this

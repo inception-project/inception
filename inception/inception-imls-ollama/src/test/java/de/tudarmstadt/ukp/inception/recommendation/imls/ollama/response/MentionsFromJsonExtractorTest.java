@@ -43,6 +43,23 @@ class MentionsFromJsonExtractorTest
     }
 
     @Test
+    void testExtractMentionFromJson_nullLabels()
+    {
+        var json = """
+                {
+                    "Honolulu": null,
+                    "Columbia University": null,
+                    "Harvard Law Review": null
+                }
+                """;
+        assertThat(sut.extractMentionFromJson(json)) //
+                .containsExactly( //
+                        Pair.of("Honolulu", null), //
+                        Pair.of("Columbia University", null), //
+                        Pair.of("Harvard Law Review", null));
+    }
+
+    @Test
     void testExtractMentionFromJson_categorizedStrings()
     {
         var json = """
