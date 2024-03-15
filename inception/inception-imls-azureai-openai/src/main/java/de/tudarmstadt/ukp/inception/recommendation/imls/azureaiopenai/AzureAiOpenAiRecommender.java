@@ -17,22 +17,18 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.azureaiopenai;
 
-import static de.tudarmstadt.ukp.inception.recommendation.imls.ollama.prompt.PromptContextGenerator.VAR_EXAMPLES;
+import static de.tudarmstadt.ukp.inception.recommendation.imls.support.llm.prompt.PromptContextGenerator.VAR_EXAMPLES;
+import static de.tudarmstadt.ukp.inception.recommendation.imls.support.llm.prompt.PromptContextGenerator.getPromptContextGenerator;
+import static de.tudarmstadt.ukp.inception.recommendation.imls.support.llm.response.ResponseExtractor.getResponseExtractor;
 
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
-import java.nio.charset.Charset;
+import java.util.Map;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.cas.CAS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.hubspot.jinjava.Jinjava;
-import com.hubspot.jinjava.JinjavaConfig;
-import com.hubspot.jinjava.interpret.JinjavaInterpreter;
-import com.hubspot.jinjava.loader.ResourceLocator;
-import com.hubspot.jinjava.loader.ResourceNotFoundException;
 
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.NonTrainableRecommenderEngineImplBase;
@@ -40,14 +36,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.PredictionCon
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import de.tudarmstadt.ukp.inception.recommendation.imls.azureaiopenai.client.AzureAiOpenAiClient;
 import de.tudarmstadt.ukp.inception.recommendation.imls.azureaiopenai.client.ChatCompletionRequest;
-import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.prompt.PerAnnotationContextGenerator;
-import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.prompt.PerDocumentContextGenerator;
-import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.prompt.PerSentenceContextGenerator;
-import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.prompt.PromptContext;
-import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.prompt.PromptContextGenerator;
-import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.response.MentionsFromJsonExtractor;
-import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.response.ResponseAsLabelExtractor;
-import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.response.ResponseExtractor;
+import de.tudarmstadt.ukp.inception.recommendation.imls.support.llm.prompt.JinjaPromptRenderer;
 import de.tudarmstadt.ukp.inception.rendering.model.Range;
 import de.tudarmstadt.ukp.inception.security.client.auth.apikey.ApiKeyAuthenticationTraits;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
@@ -62,7 +51,7 @@ public class AzureAiOpenAiRecommender
     private final AzureAiOpenAiRecommenderTraits traits;
 
     private final AzureAiOpenAiClient client;
-    private final Jinjava jinjava;
+    private final JinjaPromptRenderer promptRenderer;
 
     public AzureAiOpenAiRecommender(Recommender aRecommender,
             AzureAiOpenAiRecommenderTraits aTraits, AzureAiOpenAiClient aClient)
@@ -70,92 +59,47 @@ public class AzureAiOpenAiRecommender
         super(aRecommender);
 
         traits = aTraits;
-
-        var config = new JinjavaConfig();
-        jinjava = new Jinjava(config);
-        jinjava.setResourceLocator(new ResourceLocator()
-        {
-            @Override
-            public String getString(String aFullName, Charset aEncoding,
-                    JinjavaInterpreter aInterpreter)
-                throws IOException
-            {
-                throw new ResourceNotFoundException("Couldn't find resource: " + aFullName);
-            }
-        });
-
         client = aClient;
+        promptRenderer = new JinjaPromptRenderer();
     }
 
     @Override
     public Range predict(PredictionContext aContext, CAS aCas, int aBegin, int aEnd)
         throws RecommendationException
     {
-        var responseExtractor = getResponseExtractor();
+        var responseExtractor = getResponseExtractor(traits.getExtractionMode());
         var examples = responseExtractor.generate(this, aCas, MAX_FEW_SHOT_EXAMPLES);
+        var globalBindings = Map.of(VAR_EXAMPLES, examples);
 
-        getPromptContextGenerator().generate(this, aCas, aBegin, aEnd).forEach(promptContext -> {
-            try {
-                var bindings = promptContext.getBindings();
-
-                bindings.put(VAR_EXAMPLES, examples);
-
-                var response = query(promptContext);
-
-                responseExtractor.extract(this, aCas, promptContext, response);
-            }
-            catch (IOException e) {
-                aContext.log(LogMessage.warn(getRecommender().getName(),
-                        "Azure AI OpenAI failed to respond: %s",
-                        ExceptionUtils.getRootCauseMessage(e)));
-                LOG.error("Azure AI OpenAI failed to respond: {}",
-                        ExceptionUtils.getRootCauseMessage(e));
-            }
-        });
+        getPromptContextGenerator(traits.getPromptingMode())
+                .generate(this, aCas, aBegin, aEnd, globalBindings).forEach(promptContext -> {
+                    try {
+                        var prompt = promptRenderer.render(traits.getPrompt(), promptContext);
+                        var response = query(prompt);
+                        responseExtractor.extract(this, aCas, promptContext, response);
+                    }
+                    catch (IOException e) {
+                        aContext.log(LogMessage.warn(getRecommender().getName(),
+                                "Azure AI OpenAI failed to respond: %s",
+                                ExceptionUtils.getRootCauseMessage(e)));
+                        LOG.error("Azure AI OpenAI failed to respond: {}",
+                                ExceptionUtils.getRootCauseMessage(e));
+                    }
+                });
 
         return new Range(aBegin, aEnd);
     }
 
-    private String query(PromptContext aContext) throws IOException
+    private String query(String aPrompt) throws IOException
     {
-        var prompt = jinjava.render(traits.getPrompt(), aContext.getBindings());
-
-        LOG.trace("Querying Azure AI OpenAI: [{}]", prompt);
+        LOG.trace("Querying Azure AI OpenAI: [{}]", aPrompt);
         var request = ChatCompletionRequest.builder() //
                 .withApiKey(((ApiKeyAuthenticationTraits) traits.getAuthentication()).getApiKey()) //
-                .withPrompt(prompt) //
+                .withPrompt(aPrompt) //
                 .withFormat(traits.getFormat()) //
                 .build();
         var response = client.generate(traits.getUrl(), request).trim();
         LOG.trace("Azure AI OpenAI responds: [{}]", response);
         return response;
-    }
-
-    private PromptContextGenerator getPromptContextGenerator()
-    {
-        switch (traits.getPromptingMode()) {
-        case PER_ANNOTATION:
-            return new PerAnnotationContextGenerator();
-        case PER_SENTENCE:
-            return new PerSentenceContextGenerator();
-        case PER_DOCUMENT:
-            return new PerDocumentContextGenerator();
-        default:
-            throw new IllegalArgumentException(
-                    "Unsupported mode [" + traits.getPromptingMode() + "]");
-        }
-    }
-
-    private ResponseExtractor getResponseExtractor()
-    {
-        switch (traits.getExtractionMode()) {
-        case RESPONSE_AS_LABEL:
-            return new ResponseAsLabelExtractor();
-        case MENTIONS_FROM_JSON:
-            return new MentionsFromJsonExtractor();
-        default:
-            throw new IllegalArgumentException(
-                    "Unsupported extraction mode [" + traits.getExtractionMode() + "]");
-        }
     }
 }
