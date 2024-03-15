@@ -28,8 +28,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 import de.tudarmstadt.ukp.inception.recommendation.imls.azureaiopenai.client.GenerateResponseFormat;
-import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.ExtractionMode;
-import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.prompt.PromptingMode;
+import de.tudarmstadt.ukp.inception.recommendation.imls.support.llm.prompt.PromptingMode;
+import de.tudarmstadt.ukp.inception.recommendation.imls.support.llm.response.ExtractionMode;
 import de.tudarmstadt.ukp.inception.security.client.auth.AuthenticationTraits;
 
 @JsonIgnoreProperties(ignoreUnknown = true)

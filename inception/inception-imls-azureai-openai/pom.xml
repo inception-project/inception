@@ -28,13 +28,8 @@
 
   <dependencies>
     <dependency>
-      <groupId>com.hubspot.jinjava</groupId>
-      <artifactId>jinjava</artifactId>
-    </dependency>
-
-    <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-imls-ollama</artifactId>
+      <artifactId>inception-imls-support-llm</artifactId>
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>

@@ -19,43 +19,29 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.azureaiopenai;
 
 import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CHANGE_EVENT;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.feedback.IFeedback;
-import org.apache.wicket.markup.html.WebMarkupContainer;
-import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.TextArea;
 import org.apache.wicket.markup.html.form.TextField;
-import org.apache.wicket.markup.html.list.ListItem;
-import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
-import org.apache.wicket.model.PropertyModel;
-import org.apache.wicket.model.util.ListModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.AbstractTraitsEditor;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
-import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.ExtractionModeSelect;
-import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.OptionSetting;
-import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.PromptingModeSelect;
-import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.client.OllamaGenerateRequest;
-import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.client.Option;
+import de.tudarmstadt.ukp.inception.recommendation.imls.support.llm.prompt.PromptingModeSelect;
+import de.tudarmstadt.ukp.inception.recommendation.imls.support.llm.response.ExtractionModeSelect;
 import de.tudarmstadt.ukp.inception.security.client.auth.apikey.ApiKeyAuthenticationTraits;
 import de.tudarmstadt.ukp.inception.security.client.auth.apikey.ApiKeyAuthenticationTraitsEditor;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
-import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
-import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxSubmitLink;
 import de.tudarmstadt.ukp.inception.support.markdown.MarkdownLabel;
 
 public class AzureAiOpenAiRecommenderTraitsEditor
@@ -70,8 +56,6 @@ public class AzureAiOpenAiRecommenderTraitsEditor
 
     private final CompoundPropertyModel<AzureAiOpenAiRecommenderTraits> traits;
 
-    private final WebMarkupContainer optionSettingsContainer;
-    private final IModel<List<OptionSetting>> optionSettings;
     private final ApiKeyAuthenticationTraitsEditor authenticationTraitsEditor;
 
     public AzureAiOpenAiRecommenderTraitsEditor(String aId, IModel<Recommender> aRecommender,
@@ -125,26 +109,6 @@ public class AzureAiOpenAiRecommenderTraitsEditor
                 getModel()));
         form.add(new AzureAiOpenAiResponseFormatSelect("format"));
         add(form);
-
-        var optionSettingsForm = new Form<>("optionSettingsForm",
-                CompoundPropertyModel.of(new OptionSetting()));
-        optionSettingsForm.setVisibilityAllowed(false); // FIXME Not quite ready yet
-        form.add(optionSettingsForm);
-
-        optionSettingsForm.add(
-                new DropDownChoice<Option<?>>("option", OllamaGenerateRequest.getAllOptions()));
-        optionSettingsForm
-                .add(new LambdaAjaxSubmitLink<OptionSetting>("addOption", this::addOptionSetting));
-
-        optionSettingsContainer = new WebMarkupContainer("optionSettingsContainer");
-        optionSettingsContainer.setOutputMarkupPlaceholderTag(true);
-        optionSettingsForm.add(optionSettingsContainer);
-
-        optionSettings = new ListModel<>(traits.getObject().getOptions().entrySet().stream()
-                .map(e -> new OptionSetting(e.getKey(), String.valueOf(e.getValue())))
-                .collect(Collectors.toCollection(ArrayList::new)));
-
-        optionSettingsContainer.add(createOptionSettingsList("optionSettings", optionSettings));
     }
 
     private void applyPreset(Form<AzureAiOpenAiRecommenderTraits> aForm, Preset aPreset,
@@ -158,41 +122,6 @@ public class AzureAiOpenAiRecommenderTraitsEditor
             settings.setPromptingMode(aPreset.getPromptingMode());
         }
         aTarget.add(aForm);
-    }
-
-    private ListView<OptionSetting> createOptionSettingsList(String aId,
-            IModel<List<OptionSetting>> aOptionSettings)
-    {
-        return new ListView<OptionSetting>(aId, aOptionSettings)
-        {
-            private static final long serialVersionUID = 244305980337592760L;
-
-            @Override
-            protected void populateItem(ListItem<OptionSetting> aItem)
-            {
-                var optionSetting = aItem.getModelObject();
-
-                aItem.add(new Label("option", optionSetting.getOption()));
-                aItem.add(new TextField<>("value", PropertyModel.of(optionSetting, "value")));
-                aItem.add(new LambdaAjaxLink("removeOption",
-                        _target -> removeOptionSetting(_target, aItem.getModelObject())));
-            }
-        };
-    }
-
-    private void addOptionSetting(AjaxRequestTarget aTarget, Form<OptionSetting> aForm)
-    {
-        optionSettings.getObject()
-                .add(new OptionSetting(aForm.getModel().getObject().getOption(), ""));
-
-        aTarget.addChildren(getPage(), IFeedback.class);
-        aTarget.add(optionSettingsContainer);
-    }
-
-    private void removeOptionSetting(AjaxRequestTarget aTarget, OptionSetting aBinding)
-    {
-        optionSettings.getObject().remove(aBinding);
-        aTarget.add(optionSettingsContainer);
     }
 
     private String getPromptHints()

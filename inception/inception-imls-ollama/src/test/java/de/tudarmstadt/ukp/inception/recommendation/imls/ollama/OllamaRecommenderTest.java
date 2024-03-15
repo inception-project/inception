@@ -18,11 +18,11 @@
 package de.tudarmstadt.ukp.inception.recommendation.imls.ollama;
 
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_IS_PREDICTION;
-import static de.tudarmstadt.ukp.inception.recommendation.imls.ollama.ExtractionMode.MENTIONS_FROM_JSON;
 import static de.tudarmstadt.ukp.inception.recommendation.imls.ollama.OllamaRecommenderTraits.DEFAULT_OLLAMA_URL;
 import static de.tudarmstadt.ukp.inception.recommendation.imls.ollama.client.OllamaGenerateResponseFormat.JSON;
-import static de.tudarmstadt.ukp.inception.recommendation.imls.ollama.prompt.PromptingMode.PER_DOCUMENT;
-import static de.tudarmstadt.ukp.inception.recommendation.imls.ollama.prompt.PromptingMode.PER_SENTENCE;
+import static de.tudarmstadt.ukp.inception.recommendation.imls.support.llm.prompt.PromptingMode.PER_DOCUMENT;
+import static de.tudarmstadt.ukp.inception.recommendation.imls.support.llm.prompt.PromptingMode.PER_SENTENCE;
+import static de.tudarmstadt.ukp.inception.recommendation.imls.support.llm.response.ExtractionMode.MENTIONS_FROM_JSON;
 import static de.tudarmstadt.ukp.inception.support.uima.AnnotationBuilder.buildAnnotation;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.util.FSUtil.getFeature;
@@ -51,6 +51,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.PredictionContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.client.OllamaClientImpl;
+import de.tudarmstadt.ukp.inception.recommendation.imls.support.llm.response.ExtractionMode;
 import de.tudarmstadt.ukp.inception.support.test.http.HttpTestUtils;
 
 class OllamaRecommenderTest
