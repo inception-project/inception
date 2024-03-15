@@ -229,7 +229,8 @@ public class DiamWebsocketController
             vps.addSubscription(aHeaderAccessor.getSessionId(),
                     aHeaderAccessor.getSubscriptionId());
 
-            var json = render(project, aDocumentId, aDataOwner, aViewportBegin, aViewportEnd, aFormat);
+            var json = render(project, aDocumentId, aDataOwner, aViewportBegin, aViewportEnd,
+                    aFormat);
             vps.setJson(json);
             return json;
         }
@@ -270,8 +271,8 @@ public class DiamWebsocketController
     // }
     // }
 
-    private JsonNode render(Project aProject, long aDocumentId, String aDataOwner, int aViewportBegin,
-            int aViewportEnd, String aFormat)
+    private JsonNode render(Project aProject, long aDocumentId, String aDataOwner,
+            int aViewportBegin, int aViewportEnd, String aFormat)
         throws IOException
     {
         var doc = documentService.getSourceDocument(aProject.getId(), aDocumentId);

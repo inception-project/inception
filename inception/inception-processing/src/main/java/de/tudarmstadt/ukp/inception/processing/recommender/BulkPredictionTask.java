@@ -167,7 +167,8 @@ public class BulkPredictionTask
         }
     }
 
-    private void addProcessingMetadataAnnotation(SourceDocument doc, CAS cas) throws AnnotationException
+    private void addProcessingMetadataAnnotation(SourceDocument doc, CAS cas)
+        throws AnnotationException
     {
         var metadataAnnotationCache = new HashMap<AnnotationLayer, AnnotationBaseFS>();
         for (var metadataEntry : processingMetadata.entrySet()) {

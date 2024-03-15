@@ -15,6 +15,7 @@ function installPrefs {
 installPrefs inception-active-learning
 installPrefs inception-agreement
 installPrefs inception-annotation-storage
+installPrefs inception-annotation-storage-api
 installPrefs inception-api-annotation
 installPrefs inception-api-dao
 installPrefs inception-api-editor
@@ -22,7 +23,6 @@ installPrefs inception-api-formats
 installPrefs inception-api-render
 installPrefs inception-api-schema
 installPrefs inception-app-webapp
-installPrefs inception-app.iml
 installPrefs inception-boot-loader
 installPrefs inception-bootstrap
 installPrefs inception-brat-editor
@@ -33,6 +33,7 @@ installPrefs inception-curation
 installPrefs inception-curation-legacy
 installPrefs inception-diag
 installPrefs inception-diam
+installPrefs inception-diam-compactv2
 installPrefs inception-diam-editor
 installPrefs inception-diam-word-alignment-editor
 installPrefs inception-doc
@@ -43,10 +44,12 @@ installPrefs inception-editor-api
 installPrefs inception-example-imls-data-majority
 installPrefs inception-experimental-editor
 installPrefs inception-export
+installPrefs inception-export-api
 installPrefs inception-external-editor
 installPrefs inception-external-search-core
 installPrefs inception-external-search-elastic
 installPrefs inception-external-search-mtas-embedded
+installPrefs inception-external-search-opensearch
 installPrefs inception-external-search-pubannotation
 installPrefs inception-external-search-pubmed
 installPrefs inception-external-search-solr
@@ -55,12 +58,13 @@ installPrefs inception-html-apache-annotator-editor
 installPrefs inception-html-editor
 installPrefs inception-html-recogito-editor
 installPrefs inception-image
+installPrefs inception-imls-azureai-openai
 installPrefs inception-imls-dl4j
 installPrefs inception-imls-elg
 installPrefs inception-imls-external
 installPrefs inception-imls-hf
 installPrefs inception-imls-lapps
-installPrefs inception-imls-openai
+installPrefs inception-imls-ollama
 installPrefs inception-imls-opennlp
 installPrefs inception-imls-stringmatch
 installPrefs inception-imls-weblicht
@@ -74,6 +78,7 @@ installPrefs inception-io-json
 installPrefs inception-io-lif
 installPrefs inception-io-nif
 installPrefs inception-io-perseus
+installPrefs inception-io-rdf
 installPrefs inception-io-tcf
 installPrefs inception-io-tei
 installPrefs inception-io-text
@@ -88,6 +93,7 @@ installPrefs inception-log
 installPrefs inception-log-ui
 installPrefs inception-model
 installPrefs inception-model-export
+installPrefs inception-model-vdoc
 installPrefs inception-pdf-editor
 installPrefs inception-pdf-editor2
 installPrefs inception-plugin-api
@@ -100,6 +106,7 @@ installPrefs inception-project-initializers
 installPrefs inception-project-initializers-basic
 installPrefs inception-project-initializers-doclabeling
 installPrefs inception-project-initializers-sentencelabeling
+installPrefs inception-project-initializers-ud
 installPrefs inception-project-initializers-wikidatalinking
 installPrefs inception-recommendation
 installPrefs inception-recommendation-api
@@ -107,6 +114,7 @@ installPrefs inception-remote
 installPrefs inception-review-editor
 installPrefs inception-scheduling
 installPrefs inception-schema
+installPrefs inception-schema-api
 installPrefs inception-search-core
 installPrefs inception-search-mtas
 installPrefs inception-security
@@ -126,8 +134,8 @@ installPrefs inception-ui-external-search
 installPrefs inception-ui-kb
 installPrefs inception-ui-monitoring
 installPrefs inception-ui-project
-installPrefs inception-ui-search
 installPrefs inception-ui-scheduling
+installPrefs inception-ui-search
 installPrefs inception-ui-tagsets
 installPrefs inception-versioning
 installPrefs inception-websocket
