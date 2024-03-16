@@ -122,6 +122,7 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RResponse;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.config.RemoteApiAutoConfiguration;
 import de.tudarmstadt.ukp.inception.curation.service.CurationDocumentService;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentStorageService;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.project.export.ProjectExportService;
 import de.tudarmstadt.ukp.inception.project.export.ProjectImportExportUtils;
@@ -180,6 +181,7 @@ public class AeroRemoteApiController
     private final Logger LOG = LoggerFactory.getLogger(getClass());
 
     private @Autowired DocumentService documentService;
+    private @Autowired DocumentStorageService documentStorageService;
     private @Autowired CurationDocumentService curationService;
     private @Autowired ProjectService projectService;
     private @Autowired DocumentImportExportService importExportService;
@@ -611,9 +613,9 @@ public class AeroRemoteApiController
         if (originalFile) {
             // Export the original file - no temporary file created here, we export directly from
             // the file system
-            File docFile = documentService.getSourceDocumentFile(doc);
-            FileSystemResource resource = new FileSystemResource(docFile);
-            HttpHeaders httpHeaders = new HttpHeaders();
+            var docFile = documentStorageService.getSourceDocumentFile(doc);
+            var resource = new FileSystemResource(docFile);
+            var httpHeaders = new HttpHeaders();
             httpHeaders.setContentLength(resource.contentLength());
             httpHeaders.set("Content-Disposition",
                     "attachment; filename=\"" + doc.getName() + "\"");

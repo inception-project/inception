@@ -58,6 +58,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentStorageService;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 
@@ -69,6 +70,7 @@ public class ProjectCasDoctorPanel
     private static final long serialVersionUID = 2116717853865353733L;
 
     private @SpringBean DocumentService documentService;
+    private @SpringBean DocumentStorageService documentStorageService;
     private @SpringBean CasStorageService casStorageService;
     private @SpringBean DocumentImportExportService importExportService;
     private @SpringBean RepairsRegistry repairsRegistry;
@@ -353,7 +355,7 @@ public class ProjectCasDoctorPanel
         }
 
         var cas = importExportService.importCasFromFileNoChecks(
-                documentService.getSourceDocumentFile(aDocument), aDocument);
+                documentStorageService.getSourceDocumentFile(aDocument), aDocument);
         aMessageSet.messages.add(
                 LogMessage.info(getClass(), "Created initial CAS for [%s]", aDocument.getName()));
         return cas;

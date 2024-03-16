@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.documents.api;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -47,15 +46,6 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
 public interface DocumentService
 {
-    /**
-     * The Directory where the {@link SourceDocument}s and {@link AnnotationDocument}s stored
-     *
-     * @return the directory.
-     * @deprecated Use {@link RepositoryProperties#getPath()} instead.
-     */
-    @Deprecated
-    File getDir();
-
     // --------------------------------------------------------------------------------------------
     // Methods related to SourceDocuments
     // --------------------------------------------------------------------------------------------
@@ -116,13 +106,6 @@ public interface DocumentService
      * @return the source document
      */
     SourceDocument getSourceDocument(long projectId, long documentId);
-
-    /**
-     * @param document
-     *            The {@link SourceDocument} to be examined
-     * @return the originally imported source document file.
-     */
-    File getSourceDocumentFile(SourceDocument document);
 
     /**
      * List all source documents in a project. The source documents are the original TCF documents
@@ -661,8 +644,10 @@ public interface DocumentService
      *
      * @param annotationDocument
      *            the {@link AnnotationDocument} to be removed
+     * @throws IOException
+     *             if there was a problem deleting
      */
-    void removeAnnotationDocument(AnnotationDocument annotationDocument);
+    void removeAnnotationDocument(AnnotationDocument annotationDocument) throws IOException;
 
     AnnotationDocument createOrGetAnnotationDocument(SourceDocument aDocument, User aUser);
 

@@ -55,6 +55,7 @@ import org.xml.sax.helpers.AttributesImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentStorageService;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorRegistry;
 import de.tudarmstadt.ukp.inception.externaleditor.XmlDocumentViewControllerImplBase;
 import de.tudarmstadt.ukp.inception.externaleditor.policy.DefaultHtmlDocumentPolicy;
@@ -82,11 +83,13 @@ public class XHtmlXmlDocumentViewControllerImpl
     private static final String P = "p";
 
     private final DocumentService documentService;
+    private final DocumentStorageService documentStorageService;
     private final DocumentImportExportService formatRegistry;
     private final ServletContext servletContext;
 
     @Autowired
     public XHtmlXmlDocumentViewControllerImpl(DocumentService aDocumentService,
+            DocumentStorageService aDocumentStorageService,
             AnnotationEditorRegistry aAnnotationEditorRegistry, ServletContext aServletContext,
             DocumentImportExportService aFormatRegistry, DefaultHtmlDocumentPolicy aDefaultPolicy,
             SafetyNetDocumentPolicy aSafetyNetPolicy)
@@ -94,6 +97,7 @@ public class XHtmlXmlDocumentViewControllerImpl
         super(aDefaultPolicy, aSafetyNetPolicy, aFormatRegistry, aAnnotationEditorRegistry);
 
         documentService = aDocumentService;
+        documentStorageService = aDocumentStorageService;
         servletContext = aServletContext;
         formatRegistry = aFormatRegistry;
     }
@@ -267,7 +271,7 @@ public class XHtmlXmlDocumentViewControllerImpl
             return ResponseEntity.notFound().build();
         }
 
-        var srcDocFile = documentService.getSourceDocumentFile(srcDoc);
+        var srcDocFile = documentStorageService.getSourceDocumentFile(srcDoc);
 
         var formatSupport = maybeFormatSupport.get();
 
