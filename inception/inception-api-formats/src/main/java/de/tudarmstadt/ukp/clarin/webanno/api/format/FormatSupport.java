@@ -169,7 +169,7 @@ public interface FormatSupport
     default void read(Project aProject, CAS cas, File aFile)
         throws ResourceInitializationException, IOException, CollectionException
     {
-        CollectionReaderDescription readerDescription = getReaderDescription(aProject, null);
+        var readerDescription = getReaderDescription(aProject, null);
         addConfigurationParameters(readerDescription,
                 ResourceCollectionReaderBase.PARAM_SOURCE_LOCATION,
                 aFile.getParentFile().getAbsolutePath(),

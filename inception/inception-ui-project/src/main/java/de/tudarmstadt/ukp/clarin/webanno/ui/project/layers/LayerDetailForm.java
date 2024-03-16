@@ -396,7 +396,7 @@ public class LayerDetailForm
 
     private IResourceStream exportFullTypeSystemAsUimaXml()
     {
-        try (ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
+        try (var bos = new ByteArrayOutputStream()) {
             var tsd = annotationService.getFullProjectTypeSystem(getModelObject().getProject(),
                     false);
             tsd.toXML(bos);
