@@ -67,6 +67,7 @@ import de.tudarmstadt.ukp.inception.annotation.filters.SourceDocumentFilterState
 import de.tudarmstadt.ukp.inception.annotation.filters.SourceDocumentStateFilterPanel;
 import de.tudarmstadt.ukp.inception.bootstrap.BootstrapModalDialog;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentStorageService;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.support.wicket.AjaxDownloadLink;
@@ -90,6 +91,7 @@ public class SourceDocumentTable
     private static final String CID_TOGGLE_BULK_CHANGE = "toggleBulkChange";
 
     private @SpringBean DocumentService documentService;
+    private @SpringBean DocumentStorageService documentStorageService;
     private @SpringBean DocumentImportExportService importExportService;
 
     private SourceDocumentTableDataProvider dataProvider;
@@ -202,7 +204,7 @@ public class SourceDocumentTable
     private String renderDocumentSize(SourceDocument aDocumnent)
     {
         return FileUtils.byteCountToDisplaySize(
-                FileUtils.sizeOf(documentService.getSourceDocumentFile(aDocumnent)));
+                documentStorageService.getSourceDocumentFileSize(aDocumnent));
     }
 
     private String renderInitialCasSize(SourceDocument aDocument)
@@ -371,5 +373,10 @@ public class SourceDocumentTable
     DocumentService getDocumentService()
     {
         return documentService;
+    }
+
+    DocumentStorageService getDocumentStorageService()
+    {
+        return documentStorageService;
     }
 }

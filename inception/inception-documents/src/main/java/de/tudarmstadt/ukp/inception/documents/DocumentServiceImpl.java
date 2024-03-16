@@ -35,9 +35,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.security.ValidationUtils.FILESYS
 import static de.tudarmstadt.ukp.clarin.webanno.security.ValidationUtils.FILESYSTEM_RESERVED_CHARACTERS;
 import static de.tudarmstadt.ukp.clarin.webanno.security.ValidationUtils.RELAXED_SHELL_SPECIAL_CHARACTERS;
 import static de.tudarmstadt.ukp.inception.annotation.storage.CasMetadataUtils.addOrUpdateCasMetadata;
-import static de.tudarmstadt.ukp.inception.project.api.ProjectService.DOCUMENT_FOLDER;
-import static de.tudarmstadt.ukp.inception.project.api.ProjectService.PROJECT_FOLDER;
-import static de.tudarmstadt.ukp.inception.project.api.ProjectService.SOURCE_FOLDER;
 import static de.tudarmstadt.ukp.inception.project.api.ProjectService.withProjectLogger;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
@@ -51,19 +48,16 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Objects.isNull;
 import static java.util.stream.Collectors.toSet;
-import static org.apache.commons.io.IOUtils.copyLarge;
 import static org.apache.commons.lang3.ArrayUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.contains;
 import static org.apache.commons.lang3.StringUtils.containsAny;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.invoke.MethodHandles;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -87,7 +81,6 @@ import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.Validate;
@@ -118,6 +111,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument_;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentStorageService;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
 import de.tudarmstadt.ukp.inception.documents.api.SourceDocumentStateStats;
 import de.tudarmstadt.ukp.inception.documents.config.DocumentServiceAutoConfiguration;
@@ -141,7 +135,7 @@ import de.tudarmstadt.ukp.inception.support.text.TextUtils;
 public class DocumentServiceImpl
     implements DocumentService
 {
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private static final String MSG_DOCUMENT_NAME_TOO_LONG = "document.name.error.too-long";
     private static final String MSG_DOCUMENT_NAME_EMPTY = "document.name.error.empty";
@@ -163,12 +157,13 @@ public class DocumentServiceImpl
     private final ProjectService projectService;
     private final ApplicationEventPublisher applicationEventPublisher;
     private final RepositoryProperties repositoryProperties;
+    private final DocumentStorageService documentStorageService;
 
     @Autowired
     public DocumentServiceImpl(RepositoryProperties aRepositoryProperties,
             CasStorageService aCasStorageService, DocumentImportExportService aImportExportService,
             ProjectService aProjectService, ApplicationEventPublisher aApplicationEventPublisher,
-            EntityManager aEntityManager)
+            EntityManager aEntityManager, DocumentStorageService aDocumentStorageService)
     {
         repositoryProperties = aRepositoryProperties;
         casStorageService = aCasStorageService;
@@ -176,39 +171,12 @@ public class DocumentServiceImpl
         projectService = aProjectService;
         applicationEventPublisher = aApplicationEventPublisher;
         entityManager = aEntityManager;
+        documentStorageService = aDocumentStorageService;
 
         if (repositoryProperties != null) {
             BaseLoggers.BOOT_LOG.info("Document repository path: {}",
                     repositoryProperties.getPath());
         }
-    }
-
-    // NO TRANSACTION REQUIRED - This does not do any should not do a database access, so we do not
-    // need to be in a transaction here. Avoiding the transaction speeds up the call.
-    @Deprecated
-    @Override
-    public File getDir()
-    {
-        return repositoryProperties.getPath();
-    }
-
-    // NO TRANSACTION REQUIRED - This does not do any should not do a database access, so we do not
-    // need to be in a transaction here. Avoiding the transaction speeds up the call.
-    private File getSourceDocumentFolder(SourceDocument aDocument)
-    {
-        Validate.notNull(aDocument, "Source document must be specified");
-        Validate.notNull(aDocument.getProject().getId(),
-                "Source document's project must have an ID");
-        Validate.notNull(aDocument.getId(), "Source document must have an ID");
-
-        return repositoryProperties.getPath().toPath() //
-                .toAbsolutePath() //
-                .resolve(PROJECT_FOLDER) //
-                .resolve(Long.toString(aDocument.getProject().getId())) //
-                .resolve(DOCUMENT_FOLDER)//
-                .resolve(Long.toString(aDocument.getId())) //
-                .resolve(SOURCE_FOLDER) //
-                .toFile();
     }
 
     // NO TRANSACTION REQUIRED - This does not do any should not do a database access, so we do not
@@ -219,22 +187,12 @@ public class DocumentServiceImpl
     {
         try (var zos = new ZipOutputStream(os)) {
             for (var doc : selectedDocuments) {
-                try (var dis = new FileInputStream(getSourceDocumentFile(doc))) {
+                try (var dis = documentStorageService.openSourceDocumentFile(doc)) {
                     zos.putNextEntry(new ZipEntry(doc.getName()));
                     IOUtils.copyLarge(dis, zos);
                 }
             }
         }
-    }
-
-    // NO TRANSACTION REQUIRED - This does not do any should not do a database access, so we do not
-    // need to be in a transaction here. Avoiding the transaction speeds up the call.
-    @Override
-    public File getSourceDocumentFile(SourceDocument aDocument)
-    {
-        Validate.notNull(aDocument, "Source document must be specified");
-
-        return getSourceDocumentFolder(aDocument).toPath().resolve(aDocument.getName()).toFile();
     }
 
     @Override
@@ -294,7 +252,7 @@ public class DocumentServiceImpl
             entityManager.persist(aAnnotationDocument);
 
             try (var logCtx = withProjectLogger(aAnnotationDocument.getProject())) {
-                log.info("Created annotation document {} in project {}", aAnnotationDocument,
+                LOG.info("Created annotation document {} in project {}", aAnnotationDocument,
                         aAnnotationDocument.getProject());
             }
 
@@ -726,33 +684,27 @@ public class DocumentServiceImpl
         // on it might need to have access to the associated annotation documents
         applicationEventPublisher.publishEvent(new BeforeDocumentRemovedEvent(this, aDocument));
 
-        for (AnnotationDocument annotationDocument : listAllAnnotationDocuments(aDocument)) {
+        for (var annotationDocument : listAllAnnotationDocuments(aDocument)) {
             removeAnnotationDocument(annotationDocument);
         }
 
         entityManager.remove(
                 entityManager.contains(aDocument) ? aDocument : entityManager.merge(aDocument));
+        documentStorageService.removeSourceDocumentFile(aDocument);
 
-        String path = repositoryProperties.getPath().getAbsolutePath() + "/" + PROJECT_FOLDER + "/"
-                + aDocument.getProject().getId() + "/" + DOCUMENT_FOLDER + "/" + aDocument.getId();
-
-        // remove from file both source and related annotation file
-        if (new File(path).exists()) {
-            FileUtils.forceDelete(new File(path));
-        }
-
-        Project project = aDocument.getProject();
+        var project = aDocument.getProject();
         try (var logCtx = withProjectLogger(project)) {
-            log.info("Removed source document {} from project {}", aDocument, project);
+            LOG.info("Removed source document {} from project {}", aDocument, project);
         }
     }
 
     @Override
     @Transactional
-    public void removeAnnotationDocument(AnnotationDocument aAnnotationDocument)
+    public void removeAnnotationDocument(AnnotationDocument aAnnotationDocument) throws IOException
     {
         Validate.notNull(aAnnotationDocument, "Annotation document must be specified");
-
+        casStorageService.deleteCas(aAnnotationDocument.getDocument(),
+                aAnnotationDocument.getUser());
         entityManager.remove(aAnnotationDocument);
     }
 
@@ -778,34 +730,27 @@ public class DocumentServiceImpl
         createSourceDocument(aDocument);
 
         // Import the actual content
-        File targetFile = getSourceDocumentFile(aDocument);
         try (var session = CasStorageSession.openNested()) {
-            FileUtils.forceMkdir(targetFile.getParentFile());
-
-            try (var os = new FileOutputStream(targetFile)) {
-                copyLarge(aIs, os);
-            }
+            documentStorageService.writeSourceDocumentFile(aDocument, aIs);
 
             // Check if the file has a valid format / can be converted without error
             // This requires that the document ID has already been assigned
-            CAS cas = createOrReadInitialCas(aDocument, NO_CAS_UPGRADE, aFullProjectTypeSystem);
+            var cas = createOrReadInitialCas(aDocument, NO_CAS_UPGRADE, aFullProjectTypeSystem);
 
-            log.trace("Sending AfterDocumentCreatedEvent for {}", aDocument);
+            LOG.trace("Sending AfterDocumentCreatedEvent for {}", aDocument);
             applicationEventPublisher
                     .publishEvent(new AfterDocumentCreatedEvent(this, aDocument, cas));
 
             Project project = aDocument.getProject();
             try (var logCtx = withProjectLogger(project)) {
-                log.info("Imported source document {} to project {}", aDocument, project);
+                LOG.info("Imported source document {} to project {}", aDocument, project);
             }
         }
         catch (IOException e) {
-            FileUtils.forceDelete(targetFile);
             removeSourceDocument(aDocument);
             throw e;
         }
         catch (Exception e) {
-            FileUtils.forceDelete(targetFile);
             removeSourceDocument(aDocument);
             throw new IOException(e.getMessage(), e);
         }
@@ -858,7 +803,7 @@ public class DocumentServiceImpl
     {
         Validate.notNull(aDocument, "Source document must be specified");
 
-        log.debug("Loading initial CAS for source document {} in project {}", aDocument,
+        LOG.debug("Loading initial CAS for source document {} in project {}", aDocument,
                 aDocument.getProject());
 
         return casStorageService.readOrCreateCas(aDocument, INITIAL_CAS_PSEUDO_USER, aUpgradeMode,
@@ -868,7 +813,7 @@ public class DocumentServiceImpl
                     // we create them here lazily
                     try {
                         return importExportService.importCasFromFileNoChecks(
-                                getSourceDocumentFile(aDocument), aDocument,
+                                documentStorageService.getSourceDocumentFile(aDocument), aDocument,
                                 aFullProjectTypeSystem);
                     }
                     catch (UIMAException e) {
@@ -1527,7 +1472,7 @@ public class DocumentServiceImpl
         // }
 
         try (var logCtx = withProjectLogger(project)) {
-            log.info("Removed all documents from project {} being deleted", project);
+            LOG.info("Removed all documents from project {} being deleted", project);
         }
     }
 
