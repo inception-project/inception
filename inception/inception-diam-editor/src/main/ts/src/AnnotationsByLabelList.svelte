@@ -29,7 +29,7 @@
     import { compareOffsets } from "@inception-project/inception-js-api/src/model/Offsets";
     import LabelBadge from "./LabelBadge.svelte";
     import SpanText from "./SpanText.svelte";
-    import { compareSpanText, groupBy, renderLabel, uniqueLabels } from "./Utils";
+    import { compareSpanText, debounce, filterAnnotations, groupBy, renderLabel, uniqueLabels } from "./Utils";
     import { sortByScore, recommendationsFirst } from "./AnnotationBrowserState"
 
     export let ajaxClient: DiamAjax
@@ -39,6 +39,7 @@
     let groupedAnnotations: Record<string, Annotation[]>
     let groups: { label: string, collapsed: boolean }[]
     let collapsedGroups = new Set<string>()
+    let filter = '';
 
     $: {
         const sortedLabels = [...pinnedGroups, ...uniqueLabels(data).filter(v => !pinnedGroups.includes(v))]
@@ -54,7 +55,8 @@
             (s) => renderLabel(s)
         )
 
-        for (const items of Object.values(groupedAnnotations)) {
+        for (let [key, items] of Object.entries(groupedAnnotations)) {
+            items = filterAnnotations(data, items, filter)
             items.sort((a, b) => {
                 if (a instanceof Span && !(b instanceof Span)) {
                     return -1;
@@ -92,6 +94,7 @@
 
                 console.error("Unexpected annotation type combination", a, b);
             });
+            groupedAnnotations[key] = items
         }
     }
 
@@ -128,6 +131,13 @@
         collapsedGroups.clear()
         data = data // Trigger reactive update
     }
+
+    const updateFilter = debounce(newFilter => { filter = newFilter }, 300);
+
+    // Function to handle input changes
+    function handleFilterChange(event) {
+        updateFilter(event.target.value)
+    }
 </script>
 
 {#if !data}
@@ -139,6 +149,9 @@
         </div>
     </div>
 {:else}
+    <div class="d-flex flex-row flex-wrap">
+        <input type="text" class="form-control rounded-0" on:input={handleFilterChange} placeholder="Filter"/>
+    </div>
     <div class="d-flex flex-row flex-wrap">
         <div class="form-check form-switch mx-2">
             <input
