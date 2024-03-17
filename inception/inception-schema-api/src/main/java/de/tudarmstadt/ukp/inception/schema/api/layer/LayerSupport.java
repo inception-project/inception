@@ -181,4 +181,9 @@ public interface LayerSupport<A extends TypeAdapter, T>
     {
         return Collections.emptyList();
     }
+
+    default boolean isDeletable(AnnotationFeature aFeature)
+    {
+        return true;
+    }
 }

@@ -151,8 +151,12 @@ public class DocumentAnnotationPanel
 
         // Populate from feature structure
         List<FeatureState> featureStates = new ArrayList<>();
-        for (AnnotationFeature feature : annotationService.listAnnotationFeature(layer)) {
+        for (AnnotationFeature feature : annotationService.listSupportedFeatures(layer)) {
             if (!feature.isEnabled()) {
+                continue;
+            }
+
+            if (!featureSupportRegistry.findExtension(feature).get().isAccessible(feature)) {
                 continue;
             }
 

@@ -35,7 +35,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.config.ProjectInitializersAutoConfiguration;
 import de.tudarmstadt.ukp.inception.project.api.ProjectInitializer;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
@@ -100,15 +99,19 @@ public class CoreferenceLayerInitializer
     @Override
     public void configure(Project aProject) throws IOException
     {
-        TagSet corefTypeTagSet = annotationSchemaService
+        var corefTypeTagSet = annotationSchemaService
                 .getTagSet(CoreferenceTypeTagSetInitializer.TAG_SET_NAME, aProject);
-        TagSet corefRelTagSet = annotationSchemaService
+        var corefRelTagSet = annotationSchemaService
                 .getTagSet(CoreferenceRelationTagSetInitializer.TAG_SET_NAME, aProject);
 
-        AnnotationLayer base = new AnnotationLayer(COREFERENCE_LAYER_NAME, "Coreference",
-                CHAIN_TYPE, aProject, true, AnchoringMode.TOKENS, OverlapMode.ANY_OVERLAP);
+        var base = new AnnotationLayer(COREFERENCE_LAYER_NAME, "Coreference", CHAIN_TYPE, aProject,
+                true, AnchoringMode.TOKENS, OverlapMode.ANY_OVERLAP);
         base.setCrossSentence(true);
         annotationSchemaService.createOrUpdateLayer(base);
+
+        // FIXME: should probably be replaced by calling
+        // annotationSchemaService.getAdapter(base)
+        // .initializeLayerConfiguration(annotationSchemaService);
 
         annotationSchemaService.createFeature(new AnnotationFeature(aProject, base, "referenceType",
                 "referenceType", CAS.TYPE_NAME_STRING, "Coreference type", corefTypeTagSet));

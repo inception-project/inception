@@ -65,7 +65,6 @@ import de.tudarmstadt.ukp.inception.bootstrap.BootstrapModalDialog;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.export.LayerImportExportUtils;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.inception.schema.api.event.LayerConfigurationChangedEvent;
 import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupport;
 import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistry;
@@ -325,16 +324,16 @@ public class LayerDetailForm
         aTarget.add(getParent());
         aTarget.addChildren(getPage(), IFeedback.class);
 
-        AnnotationLayer layer = aForm.getModelObject();
+        var layer = aForm.getModelObject();
 
-        final Project project = layer.getProject();
+        final var project = layer.getProject();
 
         // Set type name only when the layer is initially created. After that, only the UI
         // name may be updated. Also any validation related to the type name only needs to
         // happen on the initial creation.
-        boolean isNewLayer = isNull(layer.getId());
+        var isNewLayer = isNull(layer.getId());
         if (isNewLayer) {
-            String layerName = StringUtils.capitalize(layer.getUiName());
+            var layerName = StringUtils.capitalize(layer.getUiName());
             layerName = layerName.replaceAll("\\W", "");
 
             if (layerName.isEmpty()) {
@@ -370,7 +369,7 @@ public class LayerDetailForm
         // Initialize default features if necessary but only after the layer has actually been
         // persisted in the database.
         if (isNewLayer) {
-            TypeAdapter adapter = annotationService.getAdapter(layer);
+            var adapter = annotationService.getAdapter(layer);
             adapter.initializeLayerConfiguration(annotationService);
         }
 

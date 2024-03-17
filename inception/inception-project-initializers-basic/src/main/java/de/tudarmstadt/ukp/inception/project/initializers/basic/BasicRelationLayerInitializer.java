@@ -38,7 +38,6 @@ import org.springframework.core.annotation.Order;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.LayerInitializer;
 import de.tudarmstadt.ukp.inception.project.api.ProjectInitializer;
 import de.tudarmstadt.ukp.inception.project.initializers.basic.config.InceptionBasicProjectInitializersAutoConfiguration;
@@ -111,16 +110,18 @@ public class BasicRelationLayerInitializer
     @Override
     public void configure(Project aProject) throws IOException
     {
-        AnnotationLayer spanLayer = annotationSchemaService.findLayer(aProject,
-                BASIC_SPAN_LAYER_NAME);
+        var spanLayer = annotationSchemaService.findLayer(aProject, BASIC_SPAN_LAYER_NAME);
 
-        AnnotationLayer relationLayer = new AnnotationLayer(BASIC_RELATION_LAYER_NAME, "Relation",
+        var relationLayer = new AnnotationLayer(BASIC_RELATION_LAYER_NAME, "Relation",
                 RELATION_TYPE, aProject, false, TOKENS, OVERLAP_ONLY);
         relationLayer.setCrossSentence(false);
         relationLayer.setAttachType(spanLayer);
         annotationSchemaService.createOrUpdateLayer(relationLayer);
 
-        TagSet relationTagSet = annotationSchemaService.getTagSet(BASIC_RELATION_TAG_SET_NAME,
+        annotationSchemaService.getAdapter(relationLayer)
+                .initializeLayerConfiguration(annotationSchemaService);
+
+        var relationTagSet = annotationSchemaService.getTagSet(BASIC_RELATION_TAG_SET_NAME,
                 aProject);
 
         annotationSchemaService.createFeature(

@@ -120,7 +120,7 @@ public class LazyDetailsLookupServiceImpl
                     .forEach(detailGroups::add);
         }
         else {
-            for (var feature : annotationService.listAnnotationFeature(aLayer)) {
+            for (var feature : annotationService.listSupportedFeatures(aLayer)) {
                 lookupFeatureLevelDetails(aVid, aCas, feature).forEach(detailGroups::add);
             }
         }
@@ -185,6 +185,10 @@ public class LazyDetailsLookupServiceImpl
 
         var fs = selectFsByAddr(aCas, aVid.getId());
         var ext = featureSupportRegistry.findExtension(aFeature).orElseThrow();
+        if (!ext.isAccessible(aFeature)) {
+            return emptyList();
+        }
+
         return ext.lookupLazyDetails(aFeature, ext.getFeatureValue(aFeature, fs));
     }
 

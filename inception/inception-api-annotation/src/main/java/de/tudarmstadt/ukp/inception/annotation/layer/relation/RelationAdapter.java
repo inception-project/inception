@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.annotation.layer.relation;
 
+import static de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationEndpointFeatureSupport.PREFIX_SOURCE;
+import static de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationEndpointFeatureSupport.PREFIX_TARGET;
 import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectByAddr;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Collections.emptyList;
@@ -46,6 +48,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.annotation.layer.TypeAdapter_ImplBase;
 import de.tudarmstadt.ukp.inception.rendering.selection.Selection;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.FeatureFilter;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
@@ -234,9 +237,9 @@ public class RelationAdapter
     @Override
     public Selection select(VID aVid, AnnotationFS aAnno)
     {
-        Selection selection = new Selection();
-        AnnotationFS src = getSourceAnnotation(aAnno);
-        AnnotationFS tgt = getTargetAnnotation(aAnno);
+        var selection = new Selection();
+        var src = getSourceAnnotation(aAnno);
+        var tgt = getTargetAnnotation(aAnno);
 
         if (getLayer().getAttachFeature() != null) {
             src = FSUtil.getFeature(src, getLayer().getAttachFeature().getName(),
@@ -259,10 +262,10 @@ public class RelationAdapter
         // So if the basic span-oriented comparison returned true, we still must ensure that the
         // relation endpoints are also equivalent. Here, we only consider the endpoint type and
         // position but not any other features.
-        AnnotationFS fs1Source = getSourceAnnotation(aFs1);
-        AnnotationFS fs1Target = getTargetAnnotation(aFs1);
-        AnnotationFS fs2Source = getSourceAnnotation(aFs2);
-        AnnotationFS fs2Target = getTargetAnnotation(aFs2);
+        var fs1Source = getSourceAnnotation(aFs1);
+        var fs1Target = getTargetAnnotation(aFs1);
+        var fs2Source = getSourceAnnotation(aFs2);
+        var fs2Target = getTargetAnnotation(aFs2);
 
         return sameBeginEndAndType(fs1Source, fs2Source)
                 && sameBeginEndAndType(fs1Target, fs2Target);
@@ -273,5 +276,29 @@ public class RelationAdapter
         return aFs1.getBegin() == aFs2.getBegin() && //
                 aFs1.getEnd() == aFs2.getEnd() && //
                 Objects.equals(aFs1.getType().getName(), aFs2.getType().getName());
+    }
+
+    @Override
+    public void initializeLayerConfiguration(AnnotationSchemaService aSchemaService)
+    {
+        var sourceFeature = AnnotationFeature.builder() //
+                .withLayer(getLayer()) //
+                .withType(PREFIX_SOURCE + getAttachTypeName()) //
+                .withName(getSourceFeatureName()) //
+                .withUiName("Source") //
+                .withEnabled(true) //
+                .build();
+
+        aSchemaService.createFeature(sourceFeature);
+
+        var targetFeature = AnnotationFeature.builder() //
+                .withLayer(getLayer()) //
+                .withType(PREFIX_TARGET + getAttachTypeName()) //
+                .withName(getTargetFeatureName()) //
+                .withUiName("Target") //
+                .withEnabled(true) //
+                .build();
+
+        aSchemaService.createFeature(targetFeature);
     }
 }
