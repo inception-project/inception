@@ -400,13 +400,30 @@ public interface FeatureSupport<T>
 
     default FeatureStructure getFS(CAS aCas, AnnotationFeature aFeature, int aAddress)
     {
-        FeatureStructure fs = selectFsByAddr(aCas, aAddress);
-        Feature feature = fs.getType().getFeatureByBaseName(aFeature.getName());
+        var fs = selectFsByAddr(aCas, aAddress);
+        var feature = fs.getType().getFeatureByBaseName(aFeature.getName());
 
         if (feature == null) {
             throw new IllegalArgumentException("On [" + fs.getType().getName() + "] the feature ["
                     + aFeature.getName() + "] does not exist.");
         }
         return fs;
+    }
+
+    default boolean isUsingDefaultOptions(AnnotationFeature aFeature)
+    {
+        return true;
+    }
+
+    /**
+     * @return Whether the given feature is accessible. Non-accessible feature do not need to
+     *         support {@link #getFeatureValue}, {@link #setFeatureValue}, {@link #wrapFeatureValue}
+     *         and {@link #unwrapFeatureValue}.
+     * @param aFeature
+     *            the feature
+     */
+    default boolean isAccessible(AnnotationFeature aFeature)
+    {
+        return true;
     }
 }

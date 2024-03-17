@@ -188,4 +188,15 @@ public class ChainLayerSupport
 
         return Collections.emptyList();
     }
+
+    @Override
+    public boolean isDeletable(AnnotationFeature aFeature)
+    {
+        if (Set.of(FEATURE_NAME_FIRST, FEATURE_NAME_NEXT, FEATURE_NAME_REFERENCE,
+                FEATURE_NAME_REFERENCE_RELATION).contains(aFeature.getName())) {
+            return false;
+        }
+
+        return true;
+    }
 }

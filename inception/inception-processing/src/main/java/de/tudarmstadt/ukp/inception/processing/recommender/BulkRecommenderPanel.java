@@ -53,6 +53,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapab
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerSupport;
@@ -67,6 +68,7 @@ public class BulkRecommenderPanel
     private @SpringBean SchedulingService schedulingService;
     private @SpringBean UserDao userService;
     private @SpringBean AnnotationSchemaService annotationSchemaService;
+    private @SpringBean FeatureSupportRegistry featureSupportRegistry;
 
     private CompoundPropertyModel<FormData> formModel;
     private FeatureEditorPanel processingMetadata;
@@ -175,6 +177,10 @@ public class BulkRecommenderPanel
         var featureStates = new ArrayList<FeatureState>();
         for (var feature : annotationSchemaService.listSupportedFeatures(layer)) {
             if (!feature.isEnabled()) {
+                continue;
+            }
+
+            if (!featureSupportRegistry.findExtension(feature).get().isAccessible(feature)) {
                 continue;
             }
 

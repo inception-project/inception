@@ -60,6 +60,7 @@ import de.tudarmstadt.ukp.inception.schema.api.event.LayerConfigurationChangedEv
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupport;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureType;
+import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaButton;
@@ -76,6 +77,7 @@ public class FeatureDetailForm
 
     private static final long serialVersionUID = -1L;
 
+    private @SpringBean LayerSupportRegistry layerSupportRegistry;
     private @SpringBean FeatureSupportRegistry featureSupportRegistry;
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean DocumentService documentService;
@@ -85,6 +87,7 @@ public class FeatureDetailForm
     private final DropDownChoice<FeatureType> featureType;
     private final CheckBox required;
     private final WebMarkupContainer traitsContainer;
+    private WebMarkupContainer defaultOptionsContainer;
     private final ChallengeResponseDialog confirmationDialog;
     private final TextField<String> uiName;
 
@@ -103,18 +106,13 @@ public class FeatureDetailForm
         uiName.setOutputMarkupId(true);
         add(uiName);
         add(new TextArea<String>("description"));
-        add(new CheckBox("enabled").setOutputMarkupPlaceholderTag(true));
-        add(new CheckBox("visible").setOutputMarkupPlaceholderTag(true));
-        add(new CheckBox("curatable").setOutputMarkupPlaceholderTag(true));
-        add(new CheckBox("hideUnconstraintFeature").setOutputMarkupPlaceholderTag(true));
-        add(new CheckBox("remember").setOutputMarkupPlaceholderTag(true));
-        add(new CheckBox("includeInHover").setOutputMarkupPlaceholderTag(true)
-                .add(LambdaBehavior.visibleWhen(() -> {
-                    String layertype = FeatureDetailForm.this.getModelObject().getLayer().getType();
-                    // Currently not configurable for chains or relations
-                    // TODO: technically it is possible
-                    return !CHAIN_TYPE.equals(layertype) && !RELATION_TYPE.equals(layertype);
-                })));
+
+        defaultOptionsContainer = new WebMarkupContainer("defaultOptionsContainer");
+        defaultOptionsContainer.add(LambdaBehavior.visibleWhen(this::isUsingDefaultOptions));
+        add(defaultOptionsContainer);
+        defaultOptionsContainer.add(new CheckBox("enabled").setOutputMarkupPlaceholderTag(true));
+        defaultOptionsContainer.add(new CheckBox("curatable").setOutputMarkupPlaceholderTag(true));
+        defaultOptionsContainer.add(new CheckBox("remember").setOutputMarkupPlaceholderTag(true));
         required = new CheckBox("required");
         required.setOutputMarkupPlaceholderTag(true);
         required.add(LambdaBehavior.onConfigure(_this -> {
@@ -129,7 +127,18 @@ public class FeatureDetailForm
                 required.setModel(PropertyModel.of(FeatureDetailForm.this.getModel(), "required"));
             }
         }));
-        add(required);
+        defaultOptionsContainer.add(required);
+
+        defaultOptionsContainer.add(new CheckBox("visible").setOutputMarkupPlaceholderTag(true));
+        defaultOptionsContainer
+                .add(new CheckBox("hideUnconstraintFeature").setOutputMarkupPlaceholderTag(true));
+        defaultOptionsContainer.add(new CheckBox("includeInHover")
+                .setOutputMarkupPlaceholderTag(true).add(LambdaBehavior.visibleWhen(() -> {
+                    var layertype = FeatureDetailForm.this.getModelObject().getLayer().getType();
+                    // Currently not configurable for chains or relations
+                    // TODO: technically it is possible
+                    return !CHAIN_TYPE.equals(layertype) && !RELATION_TYPE.equals(layertype);
+                })));
 
         add(featureType = new DropDownChoice<FeatureType>("type")
         {
@@ -188,14 +197,39 @@ public class FeatureDetailForm
         // we clear the currently selected feature.
         add(new LambdaAjaxButton<>("save", this::actionSave).triggerAfterSubmit());
         add(new LambdaAjaxButton<>("delete", this::actionDelete)
-                .add(enabledWhen(() -> !isNull(getModelObject().getId())
-                        && !getModelObject().getLayer().isBuiltIn())));
+                .add(enabledWhen(() -> isDeletable())));
         // Set default form processing to false to avoid saving data
         add(new LambdaButton("cancel", this::actionCancel).setDefaultFormProcessing(false));
 
         confirmationDialog = new ChallengeResponseDialog("confirmationDialog");
         confirmationDialog.setTitleModel(new ResourceModel("DeleteFeatureDialog.title"));
         add(confirmationDialog);
+    }
+
+    private boolean isUsingDefaultOptions()
+    {
+        var feature = getModelObject();
+        if (isNull(feature.getId())) {
+            return false;
+        }
+
+        return featureSupportRegistry.findExtension(feature) //
+                .map(ext -> ext.isUsingDefaultOptions(feature)) //
+                .orElse(false);
+    }
+
+    private boolean isDeletable()
+    {
+        var feature = getModelObject();
+        if (isNull(feature.getId())) {
+            return false;
+        }
+
+        if (feature.getLayer().isBuiltIn()) {
+            return false;
+        }
+
+        return layerSupportRegistry.getLayerSupport(feature.getLayer()).isDeletable(feature);
     }
 
     public Component getInitialFocusComponent()

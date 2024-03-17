@@ -24,9 +24,9 @@ import static org.apache.uima.cas.CAS.TYPE_NAME_ANNOTATION;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Supplier;
 
-import org.apache.uima.resource.metadata.TypeDescription;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
@@ -113,9 +113,8 @@ public class RelationLayerSupport
     public RelationAdapter createAdapter(AnnotationLayer aLayer,
             Supplier<Collection<AnnotationFeature>> aFeatures)
     {
-        RelationAdapter adapter = new RelationAdapter(getLayerSupportRegistry(),
-                featureSupportRegistry, eventPublisher, aLayer, FEAT_REL_TARGET, FEAT_REL_SOURCE,
-                aFeatures,
+        var adapter = new RelationAdapter(getLayerSupportRegistry(), featureSupportRegistry,
+                eventPublisher, aLayer, FEAT_REL_TARGET, FEAT_REL_SOURCE, aFeatures,
                 layerBehaviorsRegistry.getLayerBehaviors(this, RelationLayerBehavior.class));
 
         return adapter;
@@ -125,9 +124,8 @@ public class RelationLayerSupport
     public void generateTypes(TypeSystemDescription aTsd, AnnotationLayer aLayer,
             List<AnnotationFeature> aAllFeaturesInProject)
     {
-        TypeDescription td = aTsd.addType(aLayer.getName(), aLayer.getDescription(),
-                TYPE_NAME_ANNOTATION);
-        AnnotationLayer attachType = aLayer.getAttachType();
+        var td = aTsd.addType(aLayer.getName(), aLayer.getDescription(), TYPE_NAME_ANNOTATION);
+        var attachType = aLayer.getAttachType();
 
         td.addFeature(FEAT_REL_TARGET, "", attachType.getName());
         td.addFeature(FEAT_REL_SOURCE, "", attachType.getName());
@@ -149,7 +147,7 @@ public class RelationLayerSupport
     @Override
     public Panel createTraitsEditor(String aId, IModel<AnnotationLayer> aLayerModel)
     {
-        AnnotationLayer layer = aLayerModel.getObject();
+        var layer = aLayerModel.getObject();
 
         if (!accepts(layer)) {
             throw unsupportedLayerTypeException(layer);
@@ -174,5 +172,15 @@ public class RelationLayerSupport
         }
 
         return Collections.emptyList();
+    }
+
+    @Override
+    public boolean isDeletable(AnnotationFeature aFeature)
+    {
+        if (Set.of(FEAT_REL_SOURCE, FEAT_REL_TARGET).contains(aFeature.getName())) {
+            return false;
+        }
+
+        return true;
     }
 }

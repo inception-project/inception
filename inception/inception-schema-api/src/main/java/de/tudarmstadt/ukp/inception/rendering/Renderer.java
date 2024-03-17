@@ -25,7 +25,6 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.NoSuchElementException;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.uima.cas.CAS;
@@ -84,10 +83,16 @@ public interface Renderer
                 continue;
             }
 
-            var label = defaultString(fsr.findExtension(feature)
-                    .orElseThrow(() -> new NoSuchElementException(
-                            "No feature support found for feature " + feature))
-                    .renderFeatureValue(feature, aFs));
+            var maybeFeatureSupport = fsr.findExtension(feature);
+            if (maybeFeatureSupport.isEmpty()) {
+                continue;
+            }
+
+            if (!maybeFeatureSupport.get().isAccessible(feature)) {
+                continue;
+            }
+
+            var label = defaultString(maybeFeatureSupport.get().renderFeatureValue(feature, aFs));
 
             features.put(feature.getName(), label);
         }
