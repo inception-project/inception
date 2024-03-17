@@ -60,7 +60,8 @@ public class FeatureEditorPanel
         queue(createFeaturesList(CID_FEATURE_EDITORS, aFeatureStates));
     }
 
-    private ListView<FeatureState> createFeaturesList(String aId, IModel<List<FeatureState>> aFeatureStates)
+    private ListView<FeatureState> createFeaturesList(String aId,
+            IModel<List<FeatureState>> aFeatureStates)
     {
         return new ListView<FeatureState>(aId, aFeatureStates)
         {

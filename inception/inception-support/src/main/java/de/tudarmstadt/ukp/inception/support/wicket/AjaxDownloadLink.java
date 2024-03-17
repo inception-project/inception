@@ -83,11 +83,11 @@ public class AjaxDownloadLink
             @Override
             public void onRequest()
             {
-                IResourceStream is = AjaxDownloadLink.this.getModelObject();
+                var is = AjaxDownloadLink.this.getModelObject();
 
                 if (is != null) {
                     // If no filename has been set explicitly, try to get it from the resource
-                    String name = filename != null ? filename.getObject() : null;
+                    var name = filename != null ? filename.getObject() : null;
                     if (name == null) {
                         if (is instanceof FileResourceStream) {
                             name = ((FileResourceStream) is).getFile().getName();
@@ -101,7 +101,7 @@ public class AjaxDownloadLink
                         }
                     }
 
-                    ResourceStreamRequestHandler handler = new ResourceStreamRequestHandler(
+                    var handler = new ResourceStreamRequestHandler(
                             AjaxDownloadLink.this.getModelObject(), name);
                     handler.setContentDisposition(ContentDisposition.ATTACHMENT);
                     getComponent().getRequestCycle().scheduleRequestHandlerAfterCurrent(handler);

@@ -26,6 +26,8 @@ import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
+import de.tudarmstadt.ukp.inception.recommendation.imls.support.llm.option.Option;
+
 public class OllamaGenerateRequest
 {
     // See https://github.com/ggerganov/llama.cpp/blob/master/examples/main/README.md

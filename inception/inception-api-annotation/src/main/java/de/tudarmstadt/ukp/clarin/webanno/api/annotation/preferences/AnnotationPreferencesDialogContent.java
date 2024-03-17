@@ -105,7 +105,8 @@ public class AnnotationPreferencesDialogContent
         editorChoices = getEditorChoices();
         onChangeAction = aOnChangeAction;
 
-        form = new Form<>("form", new CompoundPropertyModel<>(loadPreferences(stateModel.getObject())));
+        form = new Form<>("form",
+                new CompoundPropertyModel<>(loadPreferences(stateModel.getObject())));
 
         var windowSizeField = new NumberTextField<Integer>("windowSize");
         windowSizeField.setType(Integer.class);

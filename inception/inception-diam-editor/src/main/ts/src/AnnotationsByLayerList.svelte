@@ -30,17 +30,23 @@
     import { compareOffsets } from "@inception-project/inception-js-api/src/model/Offsets";
     import LabelBadge from "./LabelBadge.svelte";
     import SpanText from "./SpanText.svelte";
-    import { compareSpanText, groupBy, uniqueLayers } from "./Utils";
+    import { compareSpanText, debounce, filterAnnotations, getCoveredText, groupBy, uniqueLayers } from "./Utils";
     import { sortByScore, recommendationsFirst } from "./AnnotationBrowserState"
 
     export let ajaxClient: DiamAjax;
     export let data: AnnotatedText;
 
     let groupedAnnotations: Record<string, Annotation[]>;
-    let sortedLayers: Layer[];
+    let groups: { layer: Layer, collapsed: boolean }[]
+    let collapsedGroups = new Set<number>()
+    let filter = '';
 
     $: {
-        sortedLayers = uniqueLayers(data)
+        const sortedLayers = uniqueLayers(data)
+
+        groups = sortedLayers.map(layer => {
+            return { layer: layer, collapsed: collapsedGroups.has(layer.id) };
+        });
 
         const relations = data?.relations.values() || []
         const spans = data?.spans.values() || []
@@ -49,7 +55,8 @@
             (s) => s.layer.name
         )
 
-        for (const items of Object.values(groupedAnnotations)) {
+        for (let [key, items] of Object.entries(groupedAnnotations)) {
+            items = filterAnnotations(data, items, filter)
             items.sort((a, b) => {
                 if (a instanceof Span && !(b instanceof Span)) {
                     return -1;
@@ -87,6 +94,7 @@
 
                 console.error("Unexpected annotation type combination", a, b);
             });
+            groupedAnnotations[key] = items
         }
     }
 
@@ -97,8 +105,38 @@
     function mouseOverAnnotation(event: MouseEvent, annotation: Annotation) {
       event.target.dispatchEvent(new AnnotationOverEvent(annotation, event))
     }
+
     function mouseOutAnnotation(event: MouseEvent, annotation: Annotation) {
       event.target.dispatchEvent(new AnnotationOutEvent(annotation, event))
+    }
+
+    function toggleCollapsed(group) {
+        if (!collapsedGroups.has(group.layer.id)) {
+            collapsedGroups.add(group.layer.id)
+        }
+        else {
+            collapsedGroups.delete(group.layer.id)
+        }
+        data = data // Trigger reactive update
+    }
+
+    function collapseAll() {
+        for (const group of groups) {
+            collapsedGroups.add(group.layer.id)
+        }
+        data = data // Trigger reactive update
+    }
+
+    function expandAll() {
+        collapsedGroups.clear()
+        data = data // Trigger reactive update
+    }
+
+    const updateFilter = debounce(newFilter => { filter = newFilter }, 300);
+
+    // Function to handle input changes
+    function handleFilterChange(event) {
+        updateFilter(event.target.value)
     }
 </script>
 
@@ -111,7 +149,10 @@
         </div>
     </div>
 {:else}
-    <div class="d-flex flex-column">
+    <div class="d-flex flex-row flex-wrap">
+        <input type="text" class="form-control rounded-0" on:input={handleFilterChange} placeholder="Filter"/>
+    </div>
+    <div class="d-flex flex-row flex-wrap">
         <div class="form-check form-switch mx-2">
             <input
                 class="form-check-input"
@@ -133,23 +174,36 @@
                 bind:checked={$recommendationsFirst}
             />
             <label class="form-check-label" for="recommendationsFirst"
-                >Recommendations first</label
+                >Suggestions first</label
             >
         </div>
     </div>
+    <div class="d-flex flex-row flex-wrap">
+        <button class="btn btn-outline-secondary btn-sm p-0 m-1" style="width: 2em;" on:click={expandAll}>
+            <i class="fas fa-caret-down"/>
+        </button>
+        <button class="btn btn-outline-secondary btn-sm p-0 m-1" style="width: 2em;" on:click={collapseAll}>
+            <i class="fas fa-caret-down group-collapsed"/>
+        </button>
+    </div>
     <div class="flex-content fit-child-snug">
-        {#if sortedLayers || sortedLayers?.length}
+        {#if groups || groups?.length}
             <ul class="scrolling flex-content list-group list-group-flush">
-                {#each sortedLayers as layer}
+                {#each groups as group}
                     <li class="list-group-item py-0 px-0 border-0">
+                        <!-- svelte-ignore a11y-click-events-have-key-events -->
                         <div
                             class="px-2 py-1 bg-light-subtle fw-bold sticky-top border-top border-bottom"
+                            on:click={() => toggleCollapsed(group)}
                         >
-                            {layer.name}
+                            <button class="btn btn-link p-0" style="color: var(--bs-body-color)">
+                                <i class="fas fa-caret-down d-inline-block" class:group-collapsed={group.collapsed}/>
+                            </button>
+                            <span>{group.layer.name}</span>
                         </div>
-                        <ul class="px-0 list-group list-group-flush">
-                            {#if groupedAnnotations[layer.name]}
-                            {#each groupedAnnotations[layer.name] as ann}
+                        <ul class="px-0 list-group list-group-flush" class:d-none={group.collapsed}>
+                            {#if groupedAnnotations[group.layer.name]}
+                            {#each groupedAnnotations[group.layer.name] as ann}
                                 <!-- svelte-ignore a11y-mouse-events-have-key-events -->
                                 <li
                                     class="list-group-item list-group-item-action p-0 d-flex"
@@ -217,5 +271,9 @@
 
     .list-group-flush > .list-group-item:last-child {
         border-bottom-width: 1px;
+    }
+
+    .group-collapsed {
+        transform: rotate(-90deg);
     }
 </style>

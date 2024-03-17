@@ -60,7 +60,10 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.Recommendatio
 import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.client.OllamaClientImpl;
 import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.client.OllamaGenerateRequest;
 import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.client.OllamaModel;
-import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.client.Option;
+import de.tudarmstadt.ukp.inception.recommendation.imls.support.llm.option.Option;
+import de.tudarmstadt.ukp.inception.recommendation.imls.support.llm.option.OptionSetting;
+import de.tudarmstadt.ukp.inception.recommendation.imls.support.llm.prompt.PromptingModeSelect;
+import de.tudarmstadt.ukp.inception.recommendation.imls.support.llm.response.ExtractionModeSelect;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxSubmitLink;

@@ -49,8 +49,8 @@ public class SpanDiffAdapter
     public static final SpanDiffAdapter SENTENCE_DIFF_ADAPTER = new SpanDiffAdapter(
             Sentence.class.getName());
 
-    public static final SpanDiffAdapter POS_DIFF_ADAPTER = new SpanDiffAdapter(
-            POS.class.getName(), "PosValue", "coarseValue");
+    public static final SpanDiffAdapter POS_DIFF_ADAPTER = new SpanDiffAdapter(POS.class.getName(),
+            "PosValue", "coarseValue");
 
     public static final SpanDiffAdapter NER_DIFF_ADAPTER = new SpanDiffAdapter(
             NamedEntity.class.getName(), "value", "identifier");

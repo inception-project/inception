@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.inception.pdfeditor.pdfanno;
 
 import static de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.PdfExtractFile.getSubstitutionTable;
 
-import java.io.File;
 import java.io.IOException;
 import java.time.Duration;
 
@@ -39,7 +38,6 @@ import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.request.handler.resource.ResourceStreamRequestHandler;
 import org.apache.wicket.request.resource.ContentDisposition;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.apache.wicket.util.resource.FileResourceStream;
 import org.apache.wicket.util.resource.StringResourceStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,6 +45,7 @@ import org.xml.sax.SAXException;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentStorageService;
 import de.tudarmstadt.ukp.inception.pdfeditor.PdfAnnotationEditor;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.PdfExtractFile;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfextract.PDFExtractor;
@@ -64,6 +63,7 @@ public class PdfDocumentIFrameView
     private static final long serialVersionUID = 4202869513273132875L;
 
     private @SpringBean DocumentService documentService;
+    private @SpringBean DocumentStorageService documentStorageService;
 
     private AbstractAjaxBehavior pdfProvider;
     private AbstractAjaxBehavior pdftxtProvider;
@@ -85,22 +85,12 @@ public class PdfDocumentIFrameView
             @Override
             public void onRequest()
             {
-                SourceDocument doc = aDoc.getObject();
+                var doc = aDoc.getObject();
 
-                File pdfFile = documentService.getSourceDocumentFile(doc);
+                var resource = documentStorageService.getSourceDocumentResourceStream(doc,
+                        "application/pdf");
 
-                FileResourceStream resource = new FileResourceStream(pdfFile)
-                {
-                    private static final long serialVersionUID = 5985138568430773008L;
-
-                    @Override
-                    public String getContentType()
-                    {
-                        return "application/pdf";
-                    }
-                };
-
-                ResourceStreamRequestHandler handler = new ResourceStreamRequestHandler(resource);
+                var handler = new ResourceStreamRequestHandler(resource);
                 handler.setFileName(doc.getName());
                 handler.setCacheDuration(Duration.ZERO);
                 handler.setContentDisposition(ContentDisposition.INLINE);
@@ -182,10 +172,10 @@ public class PdfDocumentIFrameView
 
     private void initialize(AjaxRequestTarget aTarget)
     {
-        File pdfFile = documentService.getSourceDocumentFile(getModel().getObject());
+        var pdfFile = documentStorageService.getSourceDocumentFile(getModel().getObject());
 
         try {
-            String pdfText = PDFExtractor.processFileToString(pdfFile);
+            var pdfText = PDFExtractor.processFileToString(pdfFile);
             pdfExtractFile = new PdfExtractFile(pdfText, getSubstitutionTable());
         }
         catch (IOException | SAXException | ParserConfigurationException e) {
