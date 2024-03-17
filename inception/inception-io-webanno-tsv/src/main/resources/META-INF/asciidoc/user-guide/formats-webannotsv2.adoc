@@ -15,9 +15,9 @@
 // limitations under the License.
 
 [[sect_formats_webannotsv2]]
-= WebAnno TSV 2 (legacy)
+= 🪦 WebAnno TSV 2
 
-The file format used by WebAnno version 2.
+Allows importing files produced using WebAnno version 2.
 
 [cols="2,1,1,1,3"]
 |====

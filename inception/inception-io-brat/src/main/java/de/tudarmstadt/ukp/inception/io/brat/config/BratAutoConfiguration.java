@@ -21,15 +21,25 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import de.tudarmstadt.ukp.inception.io.brat.BratFormatSupport;
+import de.tudarmstadt.ukp.inception.io.brat.BratBasicFormatSupport;
+import de.tudarmstadt.ukp.inception.io.brat.BratCustomFormatSupport;
 
 @Configuration
 public class BratAutoConfiguration
 {
     @Bean
-    @ConditionalOnProperty(prefix = "format.brat", name = "enabled", havingValue = "true", matchIfMissing = false)
-    public BratFormatSupport bratFormatSupport()
+    @ConditionalOnProperty(prefix = "format.brat-basic", name = "enabled", //
+            havingValue = "true", matchIfMissing = false)
+    public BratBasicFormatSupport bratBasicFormatSupport()
     {
-        return new BratFormatSupport();
+        return new BratBasicFormatSupport();
+    }
+
+    @Bean
+    @ConditionalOnProperty(prefix = "format.brat-custom", name = "enabled", //
+            havingValue = "true", matchIfMissing = false)
+    public BratCustomFormatSupport bratCustomFormatSupport()
+    {
+        return new BratCustomFormatSupport();
     }
 }

@@ -15,7 +15,7 @@
 // limitations under the License.
 
 [[sect_formats_xml]]
-= XML (generic)
+= 🧪 XML (generic)
 
 ====
 CAUTION: Experimental feature. To use this functionality, you need to enable it first by adding `format.generic-xml.enabled` to the `settings.properties` file.

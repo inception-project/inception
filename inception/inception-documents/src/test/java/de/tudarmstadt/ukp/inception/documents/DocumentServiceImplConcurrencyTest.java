@@ -71,6 +71,7 @@ import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageProperti
 import de.tudarmstadt.ukp.inception.annotation.storage.driver.CasStorageDriver;
 import de.tudarmstadt.ukp.inception.annotation.storage.driver.filesystem.FileSystemCasStorageDriver;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentStorageService;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryPropertiesImpl;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
@@ -102,7 +103,8 @@ public class DocumentServiceImplConcurrencyTest
     private DocumentService sut;
 
     private RepositoryProperties repositoryProperties;
-    private CasStorageService storageService;
+    private CasStorageService casStorageService;
+    private DocumentStorageService docStorageService;
 
     @BeforeEach
     public void setup() throws Exception
@@ -122,11 +124,13 @@ public class DocumentServiceImplConcurrencyTest
         CasStorageDriver driver = new FileSystemCasStorageDriver(repositoryProperties,
                 new CasStorageBackupProperties(), new CasStoragePropertiesImpl());
 
-        storageService = new CasStorageServiceImpl(driver, new CasStorageCachePropertiesImpl(),
+        casStorageService = new CasStorageServiceImpl(driver, new CasStorageCachePropertiesImpl(),
                 null, null);
+        docStorageService = new DocumentStorageServiceImpl(repositoryProperties);
 
-        var realSut = new DocumentServiceImpl(repositoryProperties, storageService,
-                importExportService, projectService, applicationEventPublisher, entityManager);
+        var realSut = new DocumentServiceImpl(repositoryProperties, casStorageService,
+                importExportService, projectService, applicationEventPublisher, entityManager,
+                docStorageService);
         sut = Mockito.mock(DocumentServiceImpl.class, Mockito.withSettings().spiedInstance(realSut)
                 .stubOnly().defaultAnswer(Answers.CALLS_REAL_METHODS));
 
@@ -152,7 +156,7 @@ public class DocumentServiceImplConcurrencyTest
 
             assertThat(cas).isNotNull();
             assertThat(cas.getDocumentText()).isEqualTo("Test");
-            assertThat(storageService.existsCas(doc, INITIAL_CAS_PSEUDO_USER)).isTrue();
+            assertThat(casStorageService.existsCas(doc, INITIAL_CAS_PSEUDO_USER)).isTrue();
         }
     }
 
@@ -167,7 +171,7 @@ public class DocumentServiceImplConcurrencyTest
 
             assertThat(cas).isNotNull();
             assertThat(cas.getDocumentText()).isEqualTo("Test");
-            assertThat(storageService.existsCas(sourceDocument, user.getUsername())).isTrue();
+            assertThat(casStorageService.existsCas(sourceDocument, user.getUsername())).isTrue();
         }
     }
 

@@ -144,7 +144,7 @@
 </script>
 
 <div class="flex-content flex-v-container" bind:this={element}>
-    <select bind:value={$groupingMode} class="form-select">
+    <select bind:value={$groupingMode} class="form-select rounded-0">
         {#each Object.keys(modes) as value}<option {value}
                 >{modes[value]}</option
             >{/each}

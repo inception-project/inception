@@ -15,7 +15,11 @@
 // limitations under the License.
 
 [[sect_formats_rdfcas]]
-= UIMA CAS RDF
+= 🧪 UIMA CAS RDF
+
+====
+CAUTION: Experimental feature. To use this functionality, you need to enable it first by adding `format.rdf-cas.enabled=true` to the `settings.properties` file (see the <<admin-guide.adoc#sect_settings, Admin Guide>>).
+====
 
 This format provides a representation of the annotated document in RDF using the design model of the UIMA CAS. This format is not an official Apache UIMA file format but rather a facility provided by {product-name} for the benefit of users who want to interact with thier annotated data using Semantic Web technology.
 

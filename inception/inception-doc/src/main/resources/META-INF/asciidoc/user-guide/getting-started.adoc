@@ -412,7 +412,8 @@ For details on _how to create and adjust_ them, see xref:sect_projects_recommend
 Or check the https://www.youtube.com/watch?v=Xz3Hs8Lyoeg&list=PL5Hz5pttaj96SlXHGRZf8KzlYvpVHIoL-&index=3/[tutorial video “Recommender Basics”^].
 
 image::getting_started_recommenders.png[align="center"]
-==== Guidelines
+
+=== Guidelines
 In this section, you may import files with annotation guidelines.
 There is no automatic correction or warning from {product-name} if guidelines are violated but it is a short way for every user in the project to read and check the team guidelines while working.
 On the annotation page (→ _Dashboard_ → _Annotation_ → open any document), annotators can quickly look them up by clicking on the guidelines button on the top which looks like a book (this button only appears if at least one guideline was imported).

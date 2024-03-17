@@ -275,10 +275,11 @@
     <module>inception-layer-docmetadata</module>
     <module>inception-feature-lookup</module>
     <module>inception-image</module>
-    <!-- Recommendation system -->
+    <!-- Recommender system -->
     <module>inception-recommendation-api</module>
     <module>inception-recommendation</module>
     <module>inception-active-learning</module>
+    <module>inception-imls-azureai-openai</module>
     <module>inception-imls-opennlp</module>
     <module>inception-imls-stringmatch</module>
     <module>inception-imls-elg</module>
@@ -286,6 +287,7 @@
     <module>inception-imls-external</module>
     <module>inception-imls-lapps</module>
     <module>inception-imls-ollama</module>
+    <module>inception-imls-support-llm</module>
     <module>inception-imls-weblicht</module>
     <!-- Documentation -->
     <module>inception-doc</module>

@@ -26,6 +26,8 @@ import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
+import de.tudarmstadt.ukp.inception.recommendation.imls.support.llm.option.Option;
+
 public class OllamaGenerateRequest
 {
     // See https://github.com/ggerganov/llama.cpp/blob/master/examples/main/README.md
@@ -148,41 +150,41 @@ public class OllamaGenerateRequest
 
         public Builder withModel(String aModel)
         {
-            this.model = aModel;
+            model = aModel;
             return this;
         }
 
         public Builder withPrompt(String aPrompt)
         {
-            this.prompt = aPrompt;
+            prompt = aPrompt;
             return this;
         }
 
         public Builder withFormat(OllamaGenerateResponseFormat aFormat)
         {
-            this.format = aFormat;
+            format = aFormat;
             return this;
         }
 
         public Builder withStream(boolean aStream)
         {
-            this.stream = aStream;
+            stream = aStream;
             return this;
         }
 
         public Builder withRaw(boolean aRaw)
         {
-            this.raw = aRaw;
+            raw = aRaw;
             return this;
         }
 
         public <T> Builder withOption(Option<T> aOption, T aValue)
         {
             if (aValue != null) {
-                this.options.put(aOption.getName(), aValue);
+                options.put(aOption.getName(), aValue);
             }
             else {
-                this.options.remove(aOption.getName());
+                options.remove(aOption.getName());
             }
             return this;
         }

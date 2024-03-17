@@ -242,6 +242,11 @@
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-imls-azureai-openai</artifactId>
+        <version>32.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-imls-opennlp</artifactId>
         <version>32.0-SNAPSHOT</version>
       </dependency>
@@ -280,6 +285,11 @@
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-imls-ollama</artifactId>
+        <version>32.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-imls-support-llm</artifactId>
         <version>32.0-SNAPSHOT</version>
       </dependency>
       <dependency>

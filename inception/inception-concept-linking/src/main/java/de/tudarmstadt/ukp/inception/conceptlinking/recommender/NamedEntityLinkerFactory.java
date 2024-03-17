@@ -73,6 +73,12 @@ public class NamedEntityLinkerFactory
     }
 
     @Override
+    public boolean isSynchronous()
+    {
+        return true;
+    }
+
+    @Override
     public RecommendationEngine build(Recommender aRecommender)
     {
         NamedEntityLinkerTraits linkerTraits = readTraits(aRecommender);

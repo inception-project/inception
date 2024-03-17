@@ -109,7 +109,8 @@ public class MHtmlFormatSupport
         }
     }
 
-    private static SingleBody getResourcePartBody(Message message, String aResourcePath) throws IOException
+    private static SingleBody getResourcePartBody(Message message, String aResourcePath)
+        throws IOException
     {
         if (message.getBody() instanceof Multipart body) {
             var documentPart = body.getBodyParts().stream() //

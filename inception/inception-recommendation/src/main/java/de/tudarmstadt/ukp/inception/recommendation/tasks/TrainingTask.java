@@ -257,6 +257,8 @@ public class TrainingTask
 
     private void logUnsupportedRecommenderType(Recommender aRecommender)
     {
+        warn("Recommender [%s] uses unsupported tool [%s] - skipping", aRecommender.getName(),
+                aRecommender.getTool());
         LOG.warn("[{}][{}]: No factory found - skipping recommender",
                 getSessionOwner().getUsername(), aRecommender.getName());
     }
@@ -269,18 +271,22 @@ public class TrainingTask
 
     private void logRecommenderDisabled(Recommender aRecommender)
     {
-        LOG.debug("[{}][{}][{}]: Recommenderdisabled - skipping", getSessionOwner().getUsername(),
+        LOG.debug("[{}][{}][{}]: Recommender disabled - skipping", getSessionOwner().getUsername(),
                 getId(), aRecommender.getName());
     }
 
     private void logLayerDisabled(Recommender aRecommender)
     {
+        warn("Recommender [%s] uses disabled layer [%s] disabled - skipping recommender.",
+                aRecommender.getName(), aRecommender.getLayer().getUiName());
         LOG.debug("[{}][{}][{}]: Layer disabled - skipping", getSessionOwner().getUsername(),
                 getId(), aRecommender.getLayer().getUiName());
     }
 
     private void logFeatureDisabled(Recommender aRecommender)
     {
+        warn("Recommender [%s] uses disabled feature [%s] - skipping recommender.",
+                aRecommender.getName(), aRecommender.getFeature().getUiName());
         LOG.debug("[{}][{}][{}]: Feature disabled - skipping", getSessionOwner().getUsername(),
                 getId(), aRecommender.getFeature().getUiName());
     }

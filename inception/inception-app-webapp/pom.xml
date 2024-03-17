@@ -251,6 +251,10 @@
     -->
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-imls-azureai-openai</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-imls-opennlp</artifactId>
     </dependency>
     <dependency>
@@ -910,6 +914,7 @@
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-elg</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-hf</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-ollama</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-azureai-openai</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-opennlp</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-stringmatch</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-weblicht</usedDependency>
