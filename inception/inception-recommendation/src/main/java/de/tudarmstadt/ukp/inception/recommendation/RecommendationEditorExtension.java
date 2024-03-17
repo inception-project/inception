@@ -263,7 +263,7 @@ public class RecommendationEditorExtension
 
         // do not show predictions during curation or when viewing others' work
         var sessionOwner = userService.getCurrentUsername();
-        if (!aState.getMode().equals(ANNOTATION)) {
+        if (aState.getMode() != ANNOTATION) {
             return;
         }
 
@@ -280,8 +280,8 @@ public class RecommendationEditorExtension
 
         // Notify other UI components on the page about the prediction switch such that they can
         // also update their state to remain in sync with the new predictions
-        applicationEventPublisher
-                .publishEvent(new PredictionsSwitchedEvent(this, sessionOwner, aState));
+        applicationEventPublisher.publishEvent(
+                new PredictionsSwitchedEvent(this, sessionOwner, aState.getDocument()));
 
         aTarget.appendJavaScript("document.body.classList.remove('"
                 + RecommenderActionBarPanel.STATE_PREDICTIONS_AVAILABLE + "')");

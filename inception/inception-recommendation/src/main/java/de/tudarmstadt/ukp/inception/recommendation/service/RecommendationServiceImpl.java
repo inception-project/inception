@@ -99,6 +99,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommenderFactoryRegistry;
 import de.tudarmstadt.ukp.inception.recommendation.api.SuggestionSupport;
 import de.tudarmstadt.ukp.inception.recommendation.api.SuggestionSupportRegistry;
+import de.tudarmstadt.ukp.inception.recommendation.api.event.PredictionsSwitchedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AutoAcceptMode;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.EvaluatedRecommender;
@@ -723,9 +724,12 @@ public class RecommendationServiceImpl
             return;
         }
 
-        if (!existsEnabledRecommender(aEvent.getDocument().getProject())) {
+        var recommenders = listEnabledRecommenders(aEvent.getDocument().getProject());
+        if (recommenders.isEmpty()) {
             return;
         }
+
+        runSynchronousRecommenders(aEvent, recommenders);
 
         var committed = requestCycle.getMetaData(COMMITTED);
         if (committed == null) {
@@ -764,6 +768,37 @@ public class RecommendationServiceImpl
                 // which the user is currently viewing.
                 requestCycle.getListeners().add(
                         new TriggerTrainingTaskListener(annDoc.getDocument(), annDoc.getUser()));
+            }
+        }
+    }
+
+    private void runSynchronousRecommenders(AfterCasWrittenEvent aEvent,
+            List<Recommender> recommenders)
+    {
+        var sessionOwner = userRepository.getCurrentUser();
+        var anySyncRan = false;
+        for (var recommender : recommenders) {
+            var factory = getRecommenderFactory(recommender);
+            if (factory.map(RecommendationEngineFactory::isSynchronous).orElse(false)) {
+                var predictionTask = PredictionTask.builder() //
+                        .withSessionOwner(sessionOwner) //
+                        .withTrigger("Synchronous prediction") //
+                        .withCurrentDocument(aEvent.getDocument().getDocument()) //
+                        .withDataOwner(aEvent.getDocument().getUser()) //
+                        .withRecommender(recommender) //
+                        .build();
+                schedulingService.executeSync(predictionTask);
+                anySyncRan = true;
+            }
+        }
+        if (anySyncRan) {
+            var switched = forceSwitchPredictions(sessionOwner.getUsername(),
+                    aEvent.getDocument().getProject());
+            if (switched) {
+                // Notify other UI components on the page about the prediction switch such that they
+                // can also update their state to remain in sync with the new predictions
+                applicationEventPublisher.publishEvent(new PredictionsSwitchedEvent(this,
+                        sessionOwner.getUsername(), aEvent.getDocument().getDocument()));
             }
         }
     }
@@ -1115,6 +1150,15 @@ public class RecommendationServiceImpl
     }
 
     @Override
+    public boolean forceSwitchPredictions(String aSessionOwner, Project aProject)
+    {
+        var state = getState(aSessionOwner, aProject);
+        synchronized (state) {
+            return state.forceSwitchPredictions();
+        }
+    }
+
+    @Override
     public Optional<RecommenderContext> getContext(String aSessionOwner, Recommender aRecommender)
     {
         var state = getState(aSessionOwner, aRecommender.getProject());
@@ -1406,10 +1450,20 @@ public class RecommendationServiceImpl
 
         public boolean switchPredictions()
         {
+            return switchPredictions(false);
+        }
+
+        public boolean forceSwitchPredictions()
+        {
+            return switchPredictions(true);
+        }
+
+        private boolean switchPredictions(boolean aForce)
+        {
             // If the predictions have already been switched, do not switch again
-            RequestCycle requestCycle = RequestCycle.get();
-            if (requestCycle != null) {
-                Boolean switched = requestCycle.getMetaData(PredictionSwitchPerformedKey.INSTANCE);
+            var requestCycle = RequestCycle.get();
+            if (!aForce && requestCycle != null) {
+                var switched = requestCycle.getMetaData(PredictionSwitchPerformedKey.INSTANCE);
                 if (switched != null && switched) {
                     return false;
                 }

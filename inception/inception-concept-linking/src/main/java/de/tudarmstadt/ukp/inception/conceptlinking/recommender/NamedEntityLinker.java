@@ -24,7 +24,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.uima.cas.CAS;
@@ -139,9 +138,9 @@ public class NamedEntityLinker
         Feature predictedFeature = getPredictedFeature(aCas);
         Feature isPredictionFeature = getIsPredictionFeature(aCas);
 
-        for (KBHandle prediction : handles.stream().limit(recommender.getMaxRecommendations())
-                .collect(Collectors.toList())) {
-            AnnotationFS annotation = aCas.createAnnotation(predictedType, aBegin, aEnd);
+        for (var prediction : handles.stream().limit(recommender.getMaxRecommendations())
+                .toList()) {
+            var annotation = aCas.createAnnotation(predictedType, aBegin, aEnd);
             annotation.setStringValue(predictedFeature, prediction.getIdentifier());
             annotation.setBooleanValue(isPredictionFeature, true);
             aCas.addFsToIndexes(annotation);
@@ -164,7 +163,7 @@ public class NamedEntityLinker
     @Override
     public EvaluationResult evaluate(List<CAS> aCasses, DataSplitter aDataSplitter)
     {
-        EvaluationResult result = new EvaluationResult();
+        var result = new EvaluationResult();
         result.setEvaluationSkipped(true);
         result.setErrorMsg("NamedEntityLinker does not support evaluation.");
         return result;
