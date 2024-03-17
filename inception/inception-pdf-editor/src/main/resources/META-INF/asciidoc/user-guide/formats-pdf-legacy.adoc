@@ -15,7 +15,7 @@
 // limitations under the License.
 
 [[sect_formats_pdf_legacy]]
-= PDF Format (legacy)
+= 🪦 PDF Format (old)
 
 ====
 CAUTION: Legacy feature. To use this functionality, you need to enable it first by adding `ui.pdf-legacy.enabled=true` to the `settings.properties` file. 

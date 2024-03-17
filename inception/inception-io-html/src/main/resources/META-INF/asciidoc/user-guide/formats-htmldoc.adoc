@@ -15,7 +15,7 @@
 // limitations under the License.
 
 [[sect_formats_htmldoc]]
-= HTML
+= 🧪 HTML
 
 ====
 CAUTION: Experimental feature. To use this functionality, you need to enable it first by adding `format.html.enabled` to the `settings.properties` file.

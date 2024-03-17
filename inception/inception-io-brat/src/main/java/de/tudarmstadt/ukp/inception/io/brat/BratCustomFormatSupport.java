@@ -33,16 +33,17 @@ import de.tudarmstadt.ukp.inception.io.brat.dkprocore.BratReader;
 import de.tudarmstadt.ukp.inception.io.brat.dkprocore.BratWriter;
 
 /**
- * Support for BioC format.
+ * Support for brat format.
  * <p>
- * This class is exposed as a Spring Component via {@link BratAutoConfiguration#bratFormatSupport}.
+ * This class is exposed as a Spring Component via
+ * {@link BratAutoConfiguration#bratCustomFormatSupport}.
  * </p>
  */
-public class BratFormatSupport
+public class BratCustomFormatSupport
     implements FormatSupport
 {
-    public static final String ID = "brat";
-    public static final String NAME = "brat (experimental)";
+    public static final String ID = "bratCustom";
+    public static final String NAME = "brat custom (experimental)";
 
     @Override
     public String getId()
@@ -65,7 +66,7 @@ public class BratFormatSupport
     @Override
     public boolean isWritable()
     {
-        return true;
+        return false;
     }
 
     @Override
@@ -73,45 +74,7 @@ public class BratFormatSupport
             TypeSystemDescription aTSD)
         throws ResourceInitializationException
     {
-        var mapping = """
-                {
-                  'textTypeMapppings': [
-                    {
-                      'from': '.*',
-                      'to': 'custom.Span',
-                      'defaultFeatureValues': { }
-                    }
-                  ],
-                  'relationTypeMapppings': [
-                    {
-                      'from': '.*',
-                      'to': 'custom.Relation',
-                      'defaultFeatureValues': { }
-                    }
-                  ],
-                  'spans': [
-                    {
-                      'type': 'custom.Span',
-                      'subCatFeature': 'label',
-                      'defaultFeatureValues': { }
-                    }
-                  ],
-                  'relations': [
-                    {
-                      'type': 'custom.Relation',
-                      'arg1': 'Governor',
-                      'arg2': 'Dependent',
-                      'flags2': 'A',
-                      'subCatFeature': 'label',
-                      'defaultFeatureValues': { }
-                    }
-                  ],
-                  'comments': [ ]
-                }
-                """;
-
         return createReaderDescription(BratReader.class, aTSD, //
-                BratReader.PARAM_MAPPING, mapping, //
                 BratReader.PARAM_LENIENT, true);
     }
 

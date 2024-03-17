@@ -14,18 +14,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-[[sect_formats_webannotsv1]]
-= 🪦 WebAnno TSV 1
+[[sect_imls_azureai_openai]]
+== 🧪 AzureAI OpenAI
 
-TAllows importing files produced using WebAnno version 1 and earlier.
+====
+CAUTION: Experimental feature. To use this functionality, you need to enable it first by adding `recommender.azureai-openai.enabled=true` to the `settings.properties` file (see the <<admin-guide.adoc#sect_settings, Admin Guide>>).
+====
 
-[cols="2,1,1,1,3"]
-|====
-| Format | Read | Write | Custom Layers | Description
+This recommender allows to obtain annotation suggestions using large language models (LLMs) supported by link:https://learn.microsoft.com/en-us/azure/ai-services/openai/overview[Azure AI OpenAI]. In order to use it, you need an Azure AI account, deploy an OpenAI model there and obtain an API key for accessing that deployment. 
 
-| WebAnno TSV 1 (`tsv`)
-| yes
-| no
-| no
-| 
-|====
+For further information on how to configure the modes of the recommender, please refer to <<sect_imls_ollama>>.
+

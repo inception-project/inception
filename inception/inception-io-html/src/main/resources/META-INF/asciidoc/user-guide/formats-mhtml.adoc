@@ -15,7 +15,7 @@
 // limitations under the License.
 
 [[sect_formats_mhtml]]
-= MHTML (Web archive)
+= 🧪 MHTML (Web archive)
 
 ====
 CAUTION: Experimental feature. To use this functionality, you need to enable it first by adding `format.mhtml.enabled=true` to the `settings.properties` file. In order to load images from MHTML files, it is currently also necessary to disable image blocking in the safety net using `ui.external.block-img=false` and set `ui.external.allow-img-source=LOCAL` - this will allow loading images
