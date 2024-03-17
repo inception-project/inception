@@ -14,7 +14,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-== Ollama
+[[sect_imls_ollama]]
+== 🧪 Ollama
 
 ====
 CAUTION: Experimental feature. To use this functionality, you need to enable it first by adding `recommender.ollama.enabled=true` to the `settings.properties` file (see the <<admin-guide.adoc#sect_settings, Admin Guide>>).

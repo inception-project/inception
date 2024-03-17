@@ -1,4 +1,4 @@
-= Document metadata
+= 🧪 Document metadata
 
 ====
 CAUTION: Experimental feature. To use this functionality, you need to enable it first by adding `documentmetadata.enabled=true` to the `settings.properties` file (see the <<admin-guide.adoc#sect_settings_documentmetadata, Admin Guide>>).

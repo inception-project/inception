@@ -15,7 +15,7 @@
 // limitations under the License.
 
 [[sect_external-search-repos-pmc]]
-= PubMed Central
+= 🧪 PubMed Central
 
 ====
 CAUTION: Experimental feature. To use this functionality, you need to enable it first by adding `external-search.pmc.enabled=true` to the `settings.properties` file (see the <<admin-guide.adoc#sect_settings, Admin Guide>>). You should also add `format.bioc.enabled=true` to enable

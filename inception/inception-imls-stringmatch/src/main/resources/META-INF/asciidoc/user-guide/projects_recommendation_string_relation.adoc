@@ -14,7 +14,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-== String Matcher for Relations
+== 🧪 String Matcher for Relations
+
+====
+CAUTION: Experimental feature. To use this functionality, you need to enable it first by adding `recommender.string-matching.relation.enabled=true` to the `settings.properties` file (see the <<admin-guide.adoc#sect_settings, Admin Guide>>).
+====
 
 The string matching relation recommender can be used to predict relations, i.e. it predicts if there is a connection between
 two annotations and what the relation's feature value might be. You need a base layer with a feature on it in addition

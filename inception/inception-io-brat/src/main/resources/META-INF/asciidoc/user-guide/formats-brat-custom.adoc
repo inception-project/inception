@@ -14,20 +14,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-[[sect_formats_brat]]
-= brat (experimental)
+[[sect_formats_brat_custom]]
+= 🧪 brat custom
 
 ====
-CAUTION: Experimental feature. To use this functionality, you need to enable it first by adding `format.brat.enabled=true` to the `settings.properties` file (see the <<admin-guide.adoc#sect_settings, Admin Guide>>).
+CAUTION: Experimental feature. To use this functionality, you need to enable it first by adding `format.brat-custom.enabled=true` to the `settings.properties` file (see the <<admin-guide.adoc#sect_settings, Admin Guide>>).
 ====
 
 This format is the native format of the link:https://brat.nlplab.org[brat rapid annotation tool]. 
 Its official documentation can be found link:https://brat.nlplab.org/standoff.html[here].
 
-This format is mainly directed towards users who have existing tooling compatible with the brat format and want to use
+The **brat custom** format is mainly directed towards users who have existing tooling compatible with the brat format and want to use
 that tooling with texts annotated in {product-name}. The brat format is less expressive than the {product-name} data
-model, so the export process may not be loss-less. Also, for this reason, importing brat data into {product-name} is not
-trivial and therefore currently not supported.
+model, so the export process may not be loss-less. In contrast to the **brat basic** format, this format will export annotations on custom layers.
+
+
 
 NOTE: {product-name} supports attributes (features) on relations, but the original brat does not. For this reason, the
       files produced by this format may not import into or display properly in the original brat tool.
@@ -38,7 +39,7 @@ NOTE: {product-name} supports attributes (features) on relations, but the origin
 
 | brat (experimental) (`brat`)
 | false
-| yes
+| no
 | yes
 | brat format
 
