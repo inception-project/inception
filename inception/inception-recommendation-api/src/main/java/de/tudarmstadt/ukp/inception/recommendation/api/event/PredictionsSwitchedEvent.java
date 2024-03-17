@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.inception.recommendation.api.event;
 import org.springframework.context.ApplicationEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.support.wicket.event.HybridApplicationUIEvent;
 
 public class PredictionsSwitchedEvent
@@ -29,25 +28,20 @@ public class PredictionsSwitchedEvent
 {
     private static final long serialVersionUID = 3072280760236986642L;
 
-    private final AnnotatorState state;
     private final String sessionOwner;
+    private final SourceDocument document;
 
-    public PredictionsSwitchedEvent(Object aSource, String aSessionOwner, AnnotatorState aState)
+    public PredictionsSwitchedEvent(Object aSource, String aSessionOwner, SourceDocument aDocument)
     {
         super(aSource);
-        state = aState;
         sessionOwner = aSessionOwner;
-    }
-
-    public AnnotatorState getState()
-    {
-        return state;
+        document = aDocument;
     }
 
     @Override
     public SourceDocument getDocument()
     {
-        return state.getDocument();
+        return document;
     }
 
     @Override

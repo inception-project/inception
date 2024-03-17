@@ -95,6 +95,8 @@ public class PredictionTask
     private final String dataOwner;
     private final boolean isolated;
     private final Recommender recommender;
+    private final boolean synchronousRecommenders;
+    private final boolean asynchronousRecommenders;
 
     private Predictions predictions;
 
@@ -108,6 +110,8 @@ public class PredictionTask
         predictionEnd = aBuilder.predictionEnd;
         isolated = aBuilder.isolated;
         recommender = aBuilder.recommender;
+        synchronousRecommenders = aBuilder.synchronousRecommenders;
+        asynchronousRecommenders = aBuilder.asynchronousRecommenders;
     }
 
     /**
@@ -404,6 +408,16 @@ public class PredictionTask
             return;
         }
         var factory = maybeFactory.get();
+
+        if (factory.isSynchronous() && !synchronousRecommenders) {
+            logSkippingSynchronous(aPredictions, aRecommender);
+            return;
+        }
+
+        if (!factory.isSynchronous() && !asynchronousRecommenders) {
+            logSkippingAsynchronous(aPredictions, aRecommender);
+            return;
+        }
 
         // Check that configured layer and feature are accepted by this type of recommender
         if (!factory.accepts(aRecommender.getLayer(), aRecommender.getFeature())) {
@@ -820,6 +834,26 @@ public class PredictionTask
                 aDocument.getProject());
     }
 
+    private void logSkippingSynchronous(Predictions aPredictions, Recommender aRecommender)
+    {
+        aPredictions.log(LogMessage.info(aRecommender.getName(),
+                "Synchronous recommenders disabled in this run... skipping"));
+        LOG.info(
+                "[{}][{}]: Synchronous recommenders disabled in this run "
+                        + "- skipping recommender",
+                getSessionOwner().getUsername(), aRecommender.getName());
+    }
+
+    private void logSkippingAsynchronous(Predictions aPredictions, Recommender aRecommender)
+    {
+        aPredictions.log(LogMessage.info(aRecommender.getName(),
+                "Asynchronous recommenders disabled in this run... skipping"));
+        LOG.info(
+                "[{}][{}]: Asynchronous recommenders disabled in this run "
+                        + "- skipping recommender",
+                getSessionOwner().getUsername(), aRecommender.getName());
+    }
+
     private void logInvalidRecommenderConfiguration(Predictions aPredictions,
             Recommender aRecommender)
     {
@@ -951,6 +985,8 @@ public class PredictionTask
         private int predictionBegin = -1;
         private int predictionEnd = -1;
         private boolean isolated = false;
+        private boolean asynchronousRecommenders = true;
+        private boolean synchronousRecommenders = true;
 
         /**
          * Generate predictions only for the specified recommender. If this is not set, then
@@ -1013,6 +1049,20 @@ public class PredictionTask
         public T withIsolated(boolean aIsolated)
         {
             isolated = aIsolated;
+            return (T) this;
+        }
+
+        @SuppressWarnings("unchecked")
+        public T withAsynchronousRecommenders(boolean aFlag)
+        {
+            asynchronousRecommenders = aFlag;
+            return (T) this;
+        }
+
+        @SuppressWarnings("unchecked")
+        public T withSynchronousRecommenders(boolean aFlag)
+        {
+            synchronousRecommenders = aFlag;
             return (T) this;
         }
 

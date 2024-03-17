@@ -138,6 +138,8 @@ public interface RecommendationService
      */
     boolean switchPredictions(String aSessionOwner, Project aProject);
 
+    boolean forceSwitchPredictions(String aSessionOwner, Project aProject);
+
     /**
      * Returns the {@code RecommenderContext} for the given recommender if it exists.
      *
