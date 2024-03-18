@@ -670,7 +670,9 @@ public class AnnotationSchemaServiceImpl
         return entityManager
                 .createQuery("From AnnotationFeature where name = :name AND layer = :layer",
                         AnnotationFeature.class)
-                .setParameter("name", aName).setParameter("layer", aLayer).getSingleResult();
+                .setParameter("name", aName) //
+                .setParameter("layer", aLayer) //
+                .getSingleResult();
     }
 
     @Override
@@ -748,7 +750,9 @@ public class AnnotationSchemaServiceImpl
     @Transactional
     public List<AnnotationLayer> listAttachedRelationLayers(AnnotationLayer aLayer)
     {
-        String query = String.join("\n",
+        Objects.requireNonNull(aLayer, "Parameter [layer] must be specified");
+
+        var query = String.join("\n",
                 "SELECT l FROM AnnotationLayer l LEFT JOIN l.attachFeature f ", //
                 "WHERE l.type        = :type AND ", //
                 "      l.project     = :project AND ", //

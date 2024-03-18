@@ -140,8 +140,12 @@ public class SpanAnnotationPanel
 
         // Populate from feature structure
         List<FeatureState> featureStates = new ArrayList<>();
-        for (AnnotationFeature feature : annotationService.listAnnotationFeature(aLayer)) {
+        for (AnnotationFeature feature : annotationService.listSupportedFeatures(aLayer)) {
             if (!feature.isEnabled()) {
+                continue;
+            }
+
+            if (!featureSupportRegistry.findExtension(feature).get().isAccessible(feature)) {
                 continue;
             }
 

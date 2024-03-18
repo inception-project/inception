@@ -256,6 +256,10 @@ public class DocumentMetadataAnnotationDetailPanel
                 continue;
             }
 
+            if (!featureSupportRegistry.findExtension(feature).get().isAccessible(feature)) {
+                continue;
+            }
+
             Serializable value = null;
             if (fs != null) {
                 value = adapter.getFeatureValue(feature, fs);

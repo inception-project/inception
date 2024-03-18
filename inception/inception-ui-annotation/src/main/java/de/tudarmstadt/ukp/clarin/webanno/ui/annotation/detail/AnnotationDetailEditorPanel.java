@@ -104,6 +104,7 @@ import de.tudarmstadt.ukp.inception.schema.api.AttachedAnnotation;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.inception.schema.api.config.AnnotationSchemaProperties;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.inception.schema.api.feature.LinkWithRoleModel;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior;
@@ -125,6 +126,7 @@ public abstract class AnnotationDetailEditorPanel
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private @SpringBean AnnotationSchemaService annotationService;
+    private @SpringBean FeatureSupportRegistry featureSupportRegistry;
     private @SpringBean AnnotationSchemaProperties annotationEditorProperties;
 
     // Top-level containers
@@ -1116,10 +1118,14 @@ public abstract class AnnotationDetailEditorPanel
     {
         getModelObject().getFeatureStates().clear();
 
-        AnnotatorState state = AnnotationDetailEditorPanel.this.getModelObject();
+        var state = AnnotationDetailEditorPanel.this.getModelObject();
 
         // Populate from feature structure
-        for (AnnotationFeature feature : annotationService.listSupportedFeatures(aLayer)) {
+        for (var feature : annotationService.listSupportedFeatures(aLayer)) {
+            if (!featureSupportRegistry.findExtension(feature).get().isAccessible(feature)) {
+                continue;
+            }
+
             if (!feature.isEnabled()) {
                 continue;
             }
