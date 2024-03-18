@@ -67,14 +67,17 @@
   </distributionManagement>
 
   <properties>
+    <build-ant-version>1.10.14</build-ant-version>
+    <build-groovy-version>4.0.20</build-groovy-version>
+  
     <junit-jupiter.version>5.10.2</junit-jupiter.version>
     <junit-platform.version>1.10.2</junit-platform.version>
-    <mockito.version>5.10.0</mockito.version>
-    <assertj.version>3.24.2</assertj.version>
+    <mockito.version>5.11.0</mockito.version>
+    <assertj.version>3.25.2</assertj.version>
     <xmlunit.version>2.9.1</xmlunit.version>
-    <testcontainers.version>1.19.5</testcontainers.version>
+    <testcontainers.version>1.19.7</testcontainers.version>
 
-    <awaitility.version>4.2.0</awaitility.version>
+    <awaitility.version>4.2.1</awaitility.version>
 
     <dkpro.version>2.4.0</dkpro.version>
     <uima.version>3.5.0</uima.version>
@@ -83,7 +86,7 @@
 
     <pdfbox.version>2.0.30</pdfbox.version>
 
-    <spring.version>5.3.32</spring.version>
+    <spring.version>5.3.33</spring.version>
     <spring.boot.version>2.7.18</spring.boot.version>
     <spring.data.version>2.7.18</spring.data.version>
     <spring.security.version>5.8.10</spring.security.version>
@@ -92,15 +95,15 @@
     <jjwt.version>0.12.5</jjwt.version>
 
     <slf4j.version>2.0.12</slf4j.version>
-    <log4j2.version>2.23.0</log4j2.version>
+    <log4j2.version>2.23.1</log4j2.version>
     <jboss.logging.version>3.5.3.Final</jboss.logging.version>
     <sentry.version>6.34.0</sentry.version>
 
-    <tomcat.version>9.0.86</tomcat.version>
+    <tomcat.version>9.0.87</tomcat.version>
     <servlet-api.version>4.0.1</servlet-api.version>
 
     <mariadb.driver.version>2.7.12</mariadb.driver.version>
-    <postgres.driver.version>42.7.2</postgres.driver.version>
+    <postgres.driver.version>42.7.3</postgres.driver.version>
     <hibernate.version>5.6.15.Final</hibernate.version>
     <hibernate.validator.version>6.2.5.Final</hibernate.validator.version>
 
@@ -131,8 +134,9 @@
     <!-- * 1.3.5    depends on Lucene 8.10.1 -->
     <!--   2.x      depends on Lucene 9.x -->
 
-    <rdf4j.version>4.3.9</rdf4j.version> 
+    <rdf4j.version>4.3.10</rdf4j.version> 
     <!-- * 4.3.x depends on Lucene 8.9.x -->
+    <!-- * 5.x.x depends on Lucene 9.x.x -->
 
     <jena.version>4.6.1</jena.version>
     <!-- * 4.6.1    depends on Lucene 8.11.1 -->
@@ -141,15 +145,16 @@
     <owlapi-version>5.5.0</owlapi-version>
 
     <asciidoctor.plugin.version>2.2.3</asciidoctor.plugin.version>
-    <asciidoctor.version>2.5.10</asciidoctor.version>
-    <asciidoctor-diagram.version>2.2.9</asciidoctor-diagram.version>
+    <asciidoctor.version>2.5.12</asciidoctor.version>
+    <asciidoctor-diagram.version>2.3.0</asciidoctor-diagram.version>
+    <build-asciidoctorj-pdf-version>2.3.15</build-asciidoctorj-pdf-version>
 
     <json.version>20230227</json.version>
     <pf4j.version>2.6.0</pf4j.version>
-    <jackson.version>2.16.1</jackson.version>
+    <jackson.version>2.17.0</jackson.version>
     <snakeyaml.version>1.33</snakeyaml.version>
     <okhttp.version>4.12.0</okhttp.version>
-    <okio.version>3.8.0</okio.version>
+    <okio.version>3.9.0</okio.version>
 
     <node.version>18.18.0</node.version>
     <apache-annotator.version>0.2.0</apache-annotator.version>

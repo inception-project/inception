@@ -620,7 +620,7 @@
       <dependency>
         <groupId>com.fasterxml.woodstox</groupId>
         <artifactId>woodstox-core</artifactId>
-        <version>6.5.1</version>
+        <version>6.6.1</version>
       </dependency>
       <dependency>
         <groupId>org.codehaus.woodstox</groupId>
@@ -740,7 +740,7 @@
       <dependency>
         <groupId>com.networknt</groupId>
         <artifactId>json-schema-validator</artifactId>
-        <version>1.0.88</version>
+        <version>1.4.0</version>
       </dependency>
       
       <!-- SPRING SECURITY -->
@@ -754,7 +754,7 @@
       <dependency>
         <groupId>com.nimbusds</groupId>
         <artifactId>oauth2-oidc-sdk</artifactId>
-        <version>9.43.3</version>
+        <version>9.43.4</version>
       </dependency>
       <dependency>
         <groupId>io.jsonwebtoken</groupId>
@@ -1002,7 +1002,7 @@
       <dependency>
         <groupId>org.apache.commons</groupId>
         <artifactId>commons-compress</artifactId>
-        <version>1.26.0</version>
+        <version>1.26.1</version>
       </dependency>
       <dependency>
         <groupId>commons-codec</groupId>
