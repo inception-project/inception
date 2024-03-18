@@ -1,0 +1,3 @@
+de.tudarmstadt.ukp.inception.app.config.LiquibaseLockCheckAutoConfiguration
+de.tudarmstadt.ukp.inception.app.config.InceptionSecurityWebUIBuiltInAutoConfiguration
+de.tudarmstadt.ukp.inception.app.config.InceptionSecurityWebUIPreAuthenticatedAutoConfiguration

@@ -24,8 +24,6 @@ import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 
 import java.util.Map;
 
-import javax.servlet.ServletContext;
-
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.model.Model;
@@ -40,6 +38,7 @@ import de.tudarmstadt.ukp.inception.diam.model.compactv2.CompactSerializerV2Impl
 import de.tudarmstadt.ukp.inception.diam.model.websocket.ViewportDefinition;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.support.svelte.SvelteBehavior;
+import jakarta.servlet.ServletContext;
 
 public class DiamAnnotationBrowser
     extends WebMarkupContainer

@@ -19,12 +19,11 @@ package de.tudarmstadt.ukp.inception.security.saml;
 
 import java.util.Map;
 
-import org.springframework.security.saml2.provider.service.authentication.OpenSamlAuthenticationProvider.ResponseToken;
+import org.springframework.security.saml2.provider.service.authentication.OpenSaml4AuthenticationProvider.ResponseToken;
 import org.springframework.security.saml2.provider.service.authentication.Saml2Authentication;
 
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
-@SuppressWarnings("deprecation")
 public interface Saml2Adapter
 {
     /**
@@ -34,10 +33,6 @@ public interface Saml2Adapter
     Map<String, String> getSamlRelyingPartyRegistrations();
 
     Saml2Authentication process(ResponseToken aToken, Saml2Authentication aAuthentication);
-
-    Saml2Authentication process(org.springframework.security.saml2.provider.service. //
-            authentication.OpenSaml4AuthenticationProvider.ResponseToken aToken,
-            Saml2Authentication aAuthentication);
 
     User loadSamlUser(String aUsername, String aRegistrationId);
 }

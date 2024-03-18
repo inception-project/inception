@@ -22,8 +22,6 @@ import static de.tudarmstadt.ukp.inception.workload.matrix.MatrixWorkloadExtensi
 
 import java.io.Serializable;
 
-import javax.persistence.EntityManager;
-
 import org.apache.wicket.markup.html.panel.EmptyPanel;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
@@ -38,6 +36,7 @@ import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.workload.matrix.MatrixWorkloadExtension;
 import de.tudarmstadt.ukp.inception.workload.matrix.config.MatrixWorkloadManagerAutoConfiguration;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
+import jakarta.persistence.EntityManager;
 
 /**
  * <p>

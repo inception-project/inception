@@ -378,29 +378,6 @@ public interface ProjectService
     List<Project> listManageableProjects(User aUser);
 
     /**
-     * List projects in which the given user is curator or manager
-     *
-     * @return list of projects manageable by the user.
-     * @deprecated Use
-     *             {{@link #listProjectsWithUserHavingRole(User, PermissionLevel, PermissionLevel...)}}
-     *             instead.
-     */
-    @SuppressWarnings("javadoc")
-    @Deprecated
-    List<Project> listManageableCuratableProjects(User aUser);
-
-    /**
-     * @return list of projects that allow calculation of pairwise agreement. That means it lists
-     *         all projects where there are at least two annotators.
-     * 
-     * @deprecated To be removed without replacement
-     */
-    @Deprecated
-    List<Project> listProjectsForAgreement();
-
-    File getProjectFolder(Project aProject);
-
-    /**
      * Export the associated project log for this {@link Project} while copying a project
      *
      * @param aProject
@@ -439,45 +416,6 @@ public interface ProjectService
      *         user would then manage.
      */
     public boolean managesAnyProject(User aUser);
-
-    /**
-     * Determine if the user is allowed to update a project.
-     *
-     * @param aProject
-     *            the project
-     * @param aUser
-     *            the user.
-     * @return if the user may update a project.
-     * @deprecated Use {@link #hasRole(User, Project, PermissionLevel, PermissionLevel...)}
-     */
-    @Deprecated
-    boolean isManager(Project aProject, User aUser);
-
-    /**
-     * Determine if the user is a curator or not.
-     *
-     * @param aProject
-     *            the project.
-     * @param aUser
-     *            the user.
-     * @return if the user is a curator.
-     * @deprecated Use {@link #hasRole(User, Project, PermissionLevel, PermissionLevel...)}
-     */
-    @Deprecated
-    boolean isCurator(Project aProject, User aUser);
-
-    /**
-     * Determine if the User is member of a project
-     *
-     * @param aProject
-     *            the project.
-     * @param aUser
-     *            the user.
-     * @return if the user is a member.
-     * @deprecated Use {@link #hasRole(User, Project, PermissionLevel, PermissionLevel...)}
-     */
-    @Deprecated
-    boolean isAnnotator(Project aProject, User aUser);
 
     /**
      * Check whether the given user has any role at all in the given project.

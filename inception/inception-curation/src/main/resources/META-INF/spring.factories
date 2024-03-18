@@ -1,3 +1,0 @@
-org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-de.tudarmstadt.ukp.inception.curation.config.CurationServiceAutoConfiguration,\
-de.tudarmstadt.ukp.inception.curation.config.CurationDocumentServiceAutoConfiguration

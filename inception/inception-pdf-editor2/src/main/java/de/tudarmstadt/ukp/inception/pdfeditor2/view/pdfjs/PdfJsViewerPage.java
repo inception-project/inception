@@ -22,8 +22,6 @@ import static org.apache.wicket.core.util.string.CssUtils.ATTR_LINK_HREF;
 import static org.apache.wicket.core.util.string.CssUtils.ATTR_LINK_REL;
 import static org.apache.wicket.core.util.string.CssUtils.ATTR_TYPE;
 
-import javax.servlet.ServletContext;
-
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.markup.IMarkupCacheKeyProvider;
 import org.apache.wicket.markup.IMarkupResourceStreamProvider;
@@ -41,6 +39,7 @@ import org.wicketstuff.annotation.mount.MountPath;
 import de.tudarmstadt.ukp.inception.pdfeditor2.config.PdfAnnotationEditor2WebMvcConfiguration;
 import de.tudarmstadt.ukp.inception.pdfeditor2.resources.PdfJsViewerJavaScriptReference;
 import de.tudarmstadt.ukp.inception.support.wicket.InputStreamResourceStream;
+import jakarta.servlet.ServletContext;
 
 @MountPath(PdfAnnotationEditor2WebMvcConfiguration.BASE_URL + "/viewer.html")
 public class PdfJsViewerPage

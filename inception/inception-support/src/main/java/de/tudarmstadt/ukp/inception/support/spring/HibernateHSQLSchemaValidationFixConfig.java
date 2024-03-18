@@ -17,14 +17,14 @@
  */
 package de.tudarmstadt.ukp.inception.support.spring;
 
-import javax.persistence.EntityManagerFactory;
-
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
 import org.springframework.boot.autoconfigure.orm.jpa.EntityManagerFactoryDependsOnPostProcessor;
 import org.springframework.boot.autoconfigure.orm.jpa.JpaProperties;
 import org.springframework.context.annotation.Configuration;
+
+import jakarta.persistence.EntityManagerFactory;
 
 @Configuration("HibernateHSQLSchemaValidationFixConfig")
 public class HibernateHSQLSchemaValidationFixConfig

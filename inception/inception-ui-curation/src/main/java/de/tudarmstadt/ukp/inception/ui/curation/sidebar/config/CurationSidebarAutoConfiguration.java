@@ -17,9 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.ui.curation.sidebar.config;
 
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.context.ApplicationEventPublisher;
@@ -41,6 +38,8 @@ import de.tudarmstadt.ukp.inception.ui.curation.sidebar.CurationSidebarFactory;
 import de.tudarmstadt.ukp.inception.ui.curation.sidebar.CurationSidebarService;
 import de.tudarmstadt.ukp.inception.ui.curation.sidebar.CurationSidebarServiceImpl;
 import de.tudarmstadt.ukp.inception.ui.curation.sidebar.render.CurationSidebarRenderer;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 
 @ConditionalOnWebApplication
 @Configuration

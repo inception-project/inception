@@ -22,8 +22,6 @@ import static de.tudarmstadt.ukp.inception.support.json.JSONUtil.toInterpretable
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 
-import javax.servlet.ServletContext;
-
 import org.apache.wicket.Component;
 import org.apache.wicket.behavior.Behavior;
 import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
@@ -40,6 +38,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.inception.support.wicket.WicketUtil;
+import jakarta.servlet.ServletContext;
 
 public class SvelteBehavior
     extends Behavior

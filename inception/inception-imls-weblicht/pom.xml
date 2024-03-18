@@ -27,10 +27,6 @@
   <name>INCEpTION - ML - WebLicht</name>
   <dependencies>
     <dependency>
-      <groupId>javax.persistence</groupId>
-      <artifactId>javax.persistence-api</artifactId>
-    </dependency>
-    <dependency>
       <groupId>eu.clarin.weblicht</groupId>
       <artifactId>wlfxb</artifactId>
     </dependency>
@@ -170,8 +166,12 @@
     </dependency>
     
     <dependency>
-      <groupId>org.hibernate</groupId>
+      <groupId>org.hibernate.orm</groupId>
       <artifactId>hibernate-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>jakarta.persistence</groupId>
+      <artifactId>jakarta.persistence-api</artifactId>
     </dependency>
     
     <dependency>

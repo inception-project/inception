@@ -20,10 +20,9 @@ package de.tudarmstadt.ukp.inception.support.db;
 /**
  * An interface used to decouple enums from the data. Implementation based on ideas from
  * http://www.gabiaxel.com/2011/01/better-enum-mapping-with-hibernate.html
- *
- *
  */
 public interface PersistentEnum
 {
     String getId();
+
 }

@@ -46,7 +46,8 @@ public class InceptionSecurityWebUIShared
         aCfg //
                 .requestMatchers("/swagger-ui/**").hasAnyRole("REMOTE") //
                 .requestMatchers("/swagger-ui.html").hasAnyRole("REMOTE") //
-                .requestMatchers("/v3/**").hasAnyRole("REMOTE");
+                .requestMatchers("/v3/**") //
+                .hasAnyRole("REMOTE");
     }
 
     public static void accessToApplication(

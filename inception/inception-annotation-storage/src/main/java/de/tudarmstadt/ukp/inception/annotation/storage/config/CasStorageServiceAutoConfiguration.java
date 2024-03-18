@@ -17,8 +17,11 @@
  */
 package de.tudarmstadt.ukp.inception.annotation.storage.config;
 
+import static java.util.Arrays.asList;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -26,6 +29,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageServiceImpl;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageServiceSharedAccessCacheAdapter;
+import de.tudarmstadt.ukp.inception.annotation.storage.OpenCasStorageSessionForRequestFilter;
 import de.tudarmstadt.ukp.inception.annotation.storage.driver.CasStorageDriver;
 import de.tudarmstadt.ukp.inception.annotation.storage.driver.filesystem.FileSystemCasStorageDriver;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
@@ -62,5 +66,16 @@ public class CasStorageServiceAutoConfiguration
     {
         return new CasStorageServiceSharedAccessCacheAdapter(aCasStorageService,
                 aCasStorageProperties);
+    }
+
+    @Bean
+    public FilterRegistrationBean<OpenCasStorageSessionForRequestFilter> openCasStorageSessionForRequestFilter()
+    {
+        var registration = new FilterRegistrationBean<>(
+                new OpenCasStorageSessionForRequestFilter());
+        registration.setName("openCasStorageSessionForRequestFilter");
+        registration.setUrlPatterns(asList("/*"));
+        registration.setOrder(0);
+        return registration;
     }
 }

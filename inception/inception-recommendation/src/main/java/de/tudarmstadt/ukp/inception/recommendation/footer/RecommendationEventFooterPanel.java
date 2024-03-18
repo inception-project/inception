@@ -28,8 +28,6 @@ import java.lang.invoke.MethodHandles;
 import java.util.Map;
 import java.util.Optional;
 
-import javax.servlet.ServletContext;
-
 import org.apache.wicket.Page;
 import org.apache.wicket.WicketRuntimeException;
 import org.apache.wicket.markup.html.WebMarkupContainer;
@@ -45,6 +43,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
 import de.tudarmstadt.ukp.inception.support.svelte.SvelteBehavior;
 import de.tudarmstadt.ukp.inception.ui.core.feedback.FeedbackPanelExtensionBehavior;
+import jakarta.servlet.ServletContext;
 
 public class RecommendationEventFooterPanel
     extends WebMarkupContainer

@@ -17,19 +17,42 @@
  */
 package de.tudarmstadt.ukp.inception.kb.reification;
 
+import de.tudarmstadt.ukp.inception.support.db.PersistentEnum;
+
 public enum Reification
+    implements PersistentEnum
 {
-    NONE(false), WIKIDATA(true);
+    NONE("NONE", false), WIKIDATA("WIKIDATA", true);
 
     private final boolean supportsQualifier;
 
-    Reification(boolean supportsQualifier)
+    private final String id;
+
+    Reification(String aId, boolean supportsQualifier)
     {
+        this.id = aId;
         this.supportsQualifier = supportsQualifier;
     }
 
     public boolean supportsQualifier()
     {
         return supportsQualifier;
+    }
+
+    @Override
+    public String getId()
+    {
+        return id;
+    }
+
+    public String getName()
+    {
+        return getId();
+    }
+
+    @Override
+    public String toString()
+    {
+        return getId();
     }
 }

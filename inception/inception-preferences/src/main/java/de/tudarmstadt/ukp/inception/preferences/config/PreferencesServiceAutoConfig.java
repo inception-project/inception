@@ -19,9 +19,6 @@ package de.tudarmstadt.ukp.inception.preferences.config;
 
 import java.util.List;
 
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -34,6 +31,8 @@ import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesServiceImpl;
 import de.tudarmstadt.ukp.inception.preferences.exporter.DefaultProjectPreferencesExporter;
 import de.tudarmstadt.ukp.inception.preferences.exporter.UserProjectPreferencesExporter;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 
 @Configuration
 public class PreferencesServiceAutoConfig

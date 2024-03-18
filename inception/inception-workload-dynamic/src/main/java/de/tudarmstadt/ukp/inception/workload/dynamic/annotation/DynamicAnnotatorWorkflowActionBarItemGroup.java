@@ -28,8 +28,6 @@ import static wicket.contrib.input.events.key.KeyType.End;
 
 import java.io.IOException;
 
-import javax.persistence.EntityManager;
-
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalDialog;
@@ -62,6 +60,7 @@ import de.tudarmstadt.ukp.inception.workload.dynamic.trait.DynamicWorkloadTraits
 import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.WorkflowExtensionPoint;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 import de.tudarmstadt.ukp.inception.workload.ui.ResetAnnotationDocumentConfirmationDialogContentPanel;
+import jakarta.persistence.EntityManager;
 import wicket.contrib.input.events.key.KeyType;
 
 /**

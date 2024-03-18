@@ -24,8 +24,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 
-import javax.persistence.NoResultException;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.context.ApplicationEvent;
@@ -41,6 +39,7 @@ import de.tudarmstadt.ukp.inception.log.EventRepository;
 import de.tudarmstadt.ukp.inception.log.adapter.EventLoggingAdapterRegistry;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.websocket.model.LoggedEventMessage;
+import jakarta.persistence.NoResultException;
 
 @Controller
 @ConditionalOnExpression("${websocket.enabled:true} and ${websocket.logged-events.enabled:false}")

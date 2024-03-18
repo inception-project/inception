@@ -20,12 +20,12 @@ package de.tudarmstadt.ukp.inception.app.startup;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
-import javax.servlet.ServletException;
-
 import org.apache.catalina.connector.Request;
 import org.apache.catalina.connector.Response;
 import org.apache.catalina.valves.ValveBase;
 import org.springframework.http.MediaType;
+
+import jakarta.servlet.ServletException;
 
 public class StartupNoticeValve
     extends ValveBase

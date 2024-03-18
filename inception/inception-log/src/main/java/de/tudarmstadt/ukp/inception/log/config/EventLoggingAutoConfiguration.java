@@ -19,8 +19,6 @@ package de.tudarmstadt.ukp.inception.log.config;
 
 import java.util.List;
 
-import javax.persistence.EntityManager;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
@@ -37,6 +35,7 @@ import de.tudarmstadt.ukp.inception.log.adapter.EventLoggingAdapter;
 import de.tudarmstadt.ukp.inception.log.adapter.EventLoggingAdapterRegistry;
 import de.tudarmstadt.ukp.inception.log.adapter.EventLoggingAdapterRegistryImpl;
 import de.tudarmstadt.ukp.inception.log.exporter.LoggedEventExporter;
+import jakarta.persistence.EntityManager;
 
 /**
  * Provides support event logging.

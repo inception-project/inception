@@ -139,29 +139,6 @@ public class ProjectServiceImplTest
         testEntityManager.clear();
     }
 
-    @Deprecated
-    @Test
-    public void listProjectsForAgreement_ShouldReturnOneProject()
-    {
-        List<Project> foundProjects = sut.listProjectsForAgreement();
-
-        assertThat(foundProjects).containsExactly(testProject);
-    }
-
-    @Deprecated
-    @Test
-    public void thatListManageableCuratableProjectsReturnsOnlyProjectsWhereUserIsCuratorOrManager()
-    {
-        assertThat(sut.listManageableCuratableProjects(beate)) //
-                .containsExactlyInAnyOrder(testProject, testProject2, testProjectManagedByBeate);
-
-        assertThat(sut.listManageableCuratableProjects(kevin)) //
-                .containsExactlyInAnyOrder(testProjectManagedByKevin);
-
-        assertThat(sut.listManageableCuratableProjects(noPermissionUser)) //
-                .isEmpty();
-    }
-
     @Test
     public void thatListAccessibleProjectsWorks()
     {

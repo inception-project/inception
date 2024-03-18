@@ -33,13 +33,12 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.saml2.provider.service.authentication.OpenSaml4AuthenticationProvider;
-import org.springframework.security.saml2.provider.service.authentication.OpenSamlAuthenticationProvider;
 import org.springframework.security.saml2.provider.service.metadata.OpenSamlMetadataResolver;
 import org.springframework.security.saml2.provider.service.registration.RelyingPartyRegistrationRepository;
-import org.springframework.security.saml2.provider.service.servlet.filter.Saml2WebSsoAuthenticationFilter;
 import org.springframework.security.saml2.provider.service.web.DefaultRelyingPartyRegistrationResolver;
 import org.springframework.security.saml2.provider.service.web.RelyingPartyRegistrationResolver;
 import org.springframework.security.saml2.provider.service.web.Saml2MetadataFilter;
+import org.springframework.security.saml2.provider.service.web.authentication.Saml2WebSsoAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
@@ -103,17 +102,6 @@ public class InceptionSecurityWebUIBuiltInAutoConfiguration
                     @Override
                     public <O> O postProcess(O aObject)
                     {
-                        if (aObject instanceof OpenSamlAuthenticationProvider) {
-                            var provider = (OpenSamlAuthenticationProvider) aObject;
-                            var converter = OpenSamlAuthenticationProvider
-                                    .createDefaultResponseAuthenticationConverter();
-                            provider.setResponseAuthenticationConverter(token -> {
-                                var authentication = converter.convert(token);
-                                authentication = aSaml2Handling.process(token, authentication);
-                                return authentication;
-                            });
-                        }
-
                         if (aObject instanceof OpenSaml4AuthenticationProvider) {
                             var provider = (OpenSaml4AuthenticationProvider) aObject;
                             var converter = OpenSaml4AuthenticationProvider

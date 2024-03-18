@@ -35,36 +35,36 @@ import org.hibernate.usertype.UserType;
  *
  */
 public abstract class PersistentEnumUserType<T extends PersistentEnum>
-    implements UserType, Serializable
+    implements UserType<T>, Serializable
 {
     private static final long serialVersionUID = -3080625439869047088L;
 
     @Override
-    public Object assemble(Serializable cached, Object owner) throws HibernateException
+    public T assemble(Serializable cached, Object owner) throws HibernateException
     {
-        return cached;
+        return (T) cached;
     }
 
     @Override
-    public Object deepCopy(Object value) throws HibernateException
+    public T deepCopy(T value) throws HibernateException
     {
         return value;
     }
 
     @Override
-    public Serializable disassemble(Object value) throws HibernateException
+    public Serializable disassemble(T value) throws HibernateException
     {
         return (Serializable) value;
     }
 
     @Override
-    public boolean equals(Object x, Object y) throws HibernateException
+    public boolean equals(T x, T y) throws HibernateException
     {
         return x == y;
     }
 
     @Override
-    public int hashCode(Object x) throws HibernateException
+    public int hashCode(T x) throws HibernateException
     {
         return x == null ? 0 : x.hashCode();
     }
@@ -76,17 +76,18 @@ public abstract class PersistentEnumUserType<T extends PersistentEnum>
     }
 
     @Override
-    public Object nullSafeGet(ResultSet rs, String[] names,
-            SharedSessionContractImplementor session, Object owner)
+    public T nullSafeGet(ResultSet rs, int aPosition, SharedSessionContractImplementor session,
+            Object owner)
         throws HibernateException, SQLException
     {
-        String name = rs.getString(names[0]);
+        String name = rs.getString(aPosition);
         if (rs.wasNull()) {
             return null;
         }
+
         for (PersistentEnum value : returnedClass().getEnumConstants()) {
             if (name.equals(value.getId())) {
-                return value;
+                return (T) value;
             }
         }
         throw new IllegalStateException(
@@ -94,7 +95,7 @@ public abstract class PersistentEnumUserType<T extends PersistentEnum>
     }
 
     @Override
-    public void nullSafeSet(PreparedStatement st, Object value, int index,
+    public void nullSafeSet(PreparedStatement st, T value, int index,
             SharedSessionContractImplementor session)
         throws HibernateException, SQLException
     {
@@ -107,7 +108,7 @@ public abstract class PersistentEnumUserType<T extends PersistentEnum>
     }
 
     @Override
-    public Object replace(Object original, Object target, Object owner) throws HibernateException
+    public T replace(T original, T target, Object owner) throws HibernateException
     {
         return original;
     }
@@ -116,9 +117,8 @@ public abstract class PersistentEnumUserType<T extends PersistentEnum>
     public abstract Class<T> returnedClass();
 
     @Override
-    public int[] sqlTypes()
+    public int getSqlType()
     {
-        return new int[] { Types.VARCHAR };
+        return Types.VARCHAR;
     }
-
 }

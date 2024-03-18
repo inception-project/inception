@@ -30,8 +30,8 @@
   <packaging>war</packaging>
   <dependencies>
     <dependency>
-      <groupId>javax.servlet</groupId>
-      <artifactId>javax.servlet-api</artifactId>
+      <groupId>jakarta.servlet</groupId>
+      <artifactId>jakarta.servlet-api</artifactId>
       <scope>provided</scope>
     </dependency>
   
@@ -529,10 +529,6 @@
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
-      <artifactId>jcl-over-slf4j</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.slf4j</groupId>
       <artifactId>log4j-over-slf4j</artifactId>
     </dependency>
 
@@ -550,13 +546,6 @@
       <artifactId>log4j-layout-template-json</artifactId>
     </dependency>
 
-    <!-- LOGGING DEPENDENCIES - Avoid Commons Logging -->
-    <dependency>
-      <groupId>commons-logging</groupId>
-      <artifactId>commons-logging</artifactId>
-      <scope>provided</scope>
-    </dependency>
-    
     <!-- SENTRY DEPENDENCIES -->
     <dependency>
       <groupId>io.sentry</groupId>
@@ -575,8 +564,8 @@
     </dependency>
 
     <dependency>
-      <groupId>org.hibernate</groupId>
-      <artifactId>hibernate-entitymanager</artifactId>
+      <groupId>org.hibernate.orm</groupId>
+      <artifactId>hibernate-core</artifactId>
     </dependency>
 
     <dependency>
@@ -995,17 +984,15 @@
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-remote</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-telemetry</usedDependency>
               <!-- JDBC drivers and database stuff - used via reflection -->
-              <usedDependency>org.hibernate:hibernate-entitymanager</usedDependency>
+              <usedDependency>org.hibernate.orm:hibernate-core</usedDependency>
               <usedDependency>org.mariadb.jdbc:mariadb-java-client</usedDependency>
               <usedDependency>org.postgresql:postgresql</usedDependency>
               <usedDependency>org.hsqldb:hsqldb</usedDependency>
               <!-- Logging - used via reflection / optional -->
               <usedDependency>org.slf4j:log4j-over-slf4j</usedDependency>
-              <usedDependency>org.slf4j:jcl-over-slf4j</usedDependency>
               <usedDependency>org.apache.logging.log4j:log4j-slf4j2-impl</usedDependency>
               <usedDependency>org.apache.logging.log4j:log4j-core</usedDependency>
               <usedDependency>org.apache.logging.log4j:log4j-layout-template-json</usedDependency>
-              <usedDependency>commons-logging:commons-logging</usedDependency>
               <!-- Monitoring - used via reflection / optional -->
               <usedDependency>io.sentry:sentry-spring-boot-starter</usedDependency>
               <usedDependency>io.sentry:sentry-log4j2</usedDependency>
@@ -1141,13 +1128,24 @@
                 </goals>
                 <configuration>
                   <executable>true</executable>
-                  <layoutFactory implementation="de.tudarmstadt.ukp.inception.bootloader.ExtensibleClasspathEnabledWarLayoutFactory" />
+                  <layoutFactory
+                    implementation="de.tudarmstadt.ukp.inception.bootloader.ExtensibleClasspathEnabledWarLayoutFactory" />
                   <!--
                     We want the original file to be the WAR and the repackaged all-inclusive runnable
                     thing with the embedded Tomcat to be the JAR.
                   -->
                   <attach>false</attach>
                   <classifier>standalone</classifier>
+                  <excludes>
+                    <exclude>
+                      <groupId>org.slf4j</groupId>
+                      <artifactId>jcl-over-slf4j</artifactId>
+                    </exclude>
+                    <exclude>
+                      <groupId>commons-logging</groupId>
+                      <artifactId>commons-logging</artifactId>
+                    </exclude>
+                  </excludes>
                 </configuration>
               </execution>
             </executions>

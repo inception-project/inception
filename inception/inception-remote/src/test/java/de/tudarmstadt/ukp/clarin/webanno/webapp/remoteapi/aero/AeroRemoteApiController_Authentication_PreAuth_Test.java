@@ -182,5 +182,11 @@ class AeroRemoteApiController_Authentication_PreAuth_Test
         {
             return new ApplicationContextProvider();
         }
+
+        @Bean
+        public AeroRemoteApiController aeroRemoteApiController()
+        {
+            return new AeroRemoteApiController();
+        }
     }
 }
