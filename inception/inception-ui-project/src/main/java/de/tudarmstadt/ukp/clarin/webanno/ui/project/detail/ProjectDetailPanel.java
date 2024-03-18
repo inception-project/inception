@@ -26,13 +26,13 @@ import static java.util.Objects.isNull;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMessage;
+import static org.apache.wicket.RuntimeConfigurationType.DEVELOPMENT;
 
 import java.io.IOException;
 import java.util.Optional;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.wicket.AttributeModifier;
-import org.apache.wicket.RuntimeConfigurationType;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.basic.Label;
@@ -123,8 +123,7 @@ public class ProjectDetailPanel
 
         // If we run in development mode, then also show the ID of the project
         form.add(idLabel = new Label("id"));
-        idLabel.setVisible(RuntimeConfigurationType.DEVELOPMENT
-                .equals(getApplication().getConfigurationType()));
+        idLabel.setVisible(getApplication().getConfigurationType() == DEVELOPMENT);
 
         form.add(new TextArea<String>("description").setOutputMarkupId(true));
 

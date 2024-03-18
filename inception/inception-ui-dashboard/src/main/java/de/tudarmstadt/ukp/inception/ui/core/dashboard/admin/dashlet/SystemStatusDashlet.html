@@ -1,0 +1,78 @@
+<!--
+  Licensed to the Technische Universität Darmstadt under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The Technische Universität Darmstadt 
+  licenses this file to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.
+   
+  http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<html xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
+<body>
+  <wicket:panel>
+    <h1>System Status</h1>
+  
+    <div class="card m-2">
+      <div class="card-header">
+        Active Users 
+        (<wicket:container wicket:id="activeUsers" />)
+      </div>
+      <div class="card-body">
+        <wicket:container wicket:id="activeUsersDetail" />
+      </div>
+    </div>
+    
+    <div class="card m-2">
+      <div class="card-header">
+        Server Status
+      </div>
+      <div class="card-body">
+        <div class="row form-row" wicket:enclosure="serverUrl">
+          <label class="col-sm-4 col-form-label">
+            Server URL
+          </label>
+          <div class="col-sm-8">
+            <div wicket:id="serverUrl" class="form-control"/>
+          </div>
+        </div>
+
+        <div class="row form-row" wicket:enclosure="reverseProxyInfo">
+          <label class="col-sm-4 col-form-label">
+            Reverse Proxy
+          </label>
+          <div class="col-sm-8">
+            <pre wicket:id="reverseProxyInfo" class="form-control"/>
+          </div>
+        </div>
+
+        <div class="row form-row" wicket:enclosure="csrfInfo">
+          <label class="col-sm-4 col-form-label">
+            CSRF
+          </label>
+          <div class="col-sm-8">
+            <pre wicket:id="csrfInfo" class="form-control"/>
+          </div>
+        </div>
+
+        <div class="row form-row" wicket:enclosure="headers">
+          <label class="col-sm-4 col-form-label">
+            All headers
+          </label>
+          <div class="col-sm-8">
+            <pre wicket:id="headers" class="form-control"/>
+          </div>
+        </div>
+      </div>
+    </div>
+  </wicket:panel>
+</body>
+</html>
