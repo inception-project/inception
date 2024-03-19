@@ -32,7 +32,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.DashboardMenu;
-import de.tudarmstadt.ukp.inception.ui.core.dashboard.dashlet.SystemStatusDashlet;
+import de.tudarmstadt.ukp.inception.ui.core.dashboard.admin.dashlet.SystemStatusDashlet;
 
 /**
  * Admin menu page.
