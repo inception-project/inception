@@ -198,5 +198,16 @@
       <groupId>org.danekja</groupId>
       <artifactId>jdk-serializable-functional</artifactId>
     </dependency>
+    
+    <dependency>
+      <groupId>javax.servlet</groupId>
+      <artifactId>javax.servlet-api</artifactId>
+      <scope>provided</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>com.giffing.wicket.spring.boot.starter</groupId>
+      <artifactId>wicket-spring-boot-starter</artifactId>
+    </dependency>
   </dependencies>
 </project>
