@@ -170,7 +170,7 @@ public class StatisticsAnnotationSidebar
          * (!hiddenLayerIds.contains(feature.getLayer().getId())) { features.add(feature); } }
          */
 
-        features = annotationService.listAnnotationFeature(projectModel.getObject());
+        features = annotationService.listSupportedFeatures(projectModel.getObject());
 
         Form<StatisticsOptions> statisticsForm = new Form<>("settings", statisticsOptions);
 

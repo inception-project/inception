@@ -36,7 +36,6 @@ import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
@@ -140,7 +139,7 @@ public class SpanAnnotationPanel
 
         // Populate from feature structure
         List<FeatureState> featureStates = new ArrayList<>();
-        for (AnnotationFeature feature : annotationService.listAnnotationFeature(aLayer)) {
+        for (var feature : annotationService.listSupportedFeatures(aLayer)) {
             if (!feature.isEnabled()) {
                 continue;
             }

@@ -350,7 +350,7 @@ public class AgreementPage
 
         private List<AnnotationFeature> getEligibleFeatures()
         {
-            var features = annotationService.listAnnotationFeature(getProject());
+            var features = annotationService.listSupportedFeatures(getProject());
             var unusedFeatures = new ArrayList<AnnotationFeature>();
             for (var feature : features) {
                 if (feature.getLayer().getName().equals(Token.class.getName())
