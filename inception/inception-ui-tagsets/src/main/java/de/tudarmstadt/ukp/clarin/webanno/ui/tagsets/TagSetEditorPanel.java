@@ -47,7 +47,6 @@ import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedTag;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedTagSet;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
@@ -136,7 +135,7 @@ public class TagSetEditorPanel
         dialogContent.setConfirmAction((_target) -> {
             // If the tagset is used in any features, clear the tagset on these features when
             // the tagset is deleted!
-            for (AnnotationFeature ft : annotationSchemaService
+            for (var ft : annotationSchemaService
                     .listAnnotationFeature(selectedProject.getObject())) {
                 if (ft.getTagset() != null && ft.getTagset().equals(selectedTagSet.getObject())) {
                     ft.setTagset(null);

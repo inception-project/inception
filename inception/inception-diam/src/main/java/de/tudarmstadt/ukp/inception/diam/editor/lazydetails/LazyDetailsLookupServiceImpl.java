@@ -104,7 +104,7 @@ public class LazyDetailsLookupServiceImpl
             lookupLayerLevelDetails(aVid, cas, windowBeginOffset, windowEndOffset, layer)
                     .forEach(detailGroups::add);
 
-            for (var feature : annotationService.listAnnotationFeature(layer)) {
+            for (var feature : annotationService.listSupportedFeatures(layer)) {
                 lookupExtensionLevelDetails(aVid, aDocument, cas, aUser, feature)
                         .forEach(detailGroups::add);
 
@@ -162,8 +162,9 @@ public class LazyDetailsLookupServiceImpl
         }
 
         var fs = selectFsByAddr(aCas, aVid.getId());
-        var ext = featureSupportRegistry.findExtension(aFeature).orElseThrow();
-        return ext.lookupLazyDetails(aFeature, ext.getFeatureValue(aFeature, fs));
+        return featureSupportRegistry.findExtension(aFeature) //
+                .map(ext -> ext.lookupLazyDetails(aFeature, ext.getFeatureValue(aFeature, fs)))
+                .orElse(emptyList());
     }
 
     private List<VLazyDetailGroup> lookupLayerLevelDetails(VID aVid, CAS aCas,
