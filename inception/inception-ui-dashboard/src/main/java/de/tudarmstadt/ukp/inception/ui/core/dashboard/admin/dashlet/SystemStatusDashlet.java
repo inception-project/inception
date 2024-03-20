@@ -19,13 +19,13 @@ package de.tudarmstadt.ukp.inception.ui.core.dashboard.admin.dashlet;
 
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 import static java.util.Collections.list;
+import static java.util.Locale.ROOT;
 import static java.util.stream.Collectors.joining;
 import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 import static org.apache.wicket.RuntimeConfigurationType.DEVELOPMENT;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.Objects;
 
 import org.apache.commons.collections4.CollectionUtils;
@@ -53,6 +53,7 @@ public class SystemStatusDashlet
     {
         super(aId);
 
+        queue(new Label("clientUrl").add(new ClientUrlAjaxBehavior()));
         queue(new Label("activeUsers",
                 LoadableDetachableModel.of(() -> sessionRegistry.getAllPrincipals().size())));
         queue(new Label("activeUsersDetail", LoadableDetachableModel.of(() -> sessionRegistry
@@ -93,48 +94,48 @@ public class SystemStatusDashlet
 
     private String detectReverseProxy()
     {
-        var buf = new StringBuilder();
         if (getRequest() instanceof ServletWebRequest request) {
-            for (var headerName : list(request.getContainerRequest().getHeaderNames()).stream()
-                    .sorted().toList()) {
-                if (!headerName.toLowerCase(Locale.ROOT).startsWith("x-forwarded-")) {
-                    continue;
-                }
-
-                renderHeader(buf, request, headerName);
-            }
-        }
-        return buf.toString();
-    }
-
-    private void renderHeader(StringBuilder aBuf, ServletWebRequest request, String header)
-    {
-        var values = request.getHeaders(header);
-        if (isNotEmpty(values)) {
-            aBuf.append(header);
-            aBuf.append(": ");
-            aBuf.append(String.join(", ", values));
-            aBuf.append("\n");
-        }
-    }
-
-    private String getHeaders()
-    {
-        if (getRequest() instanceof ServletWebRequest request) {
-            var headerNames = list(request.getContainerRequest().getHeaderNames());
-            if (headerNames.stream().noneMatch(h -> h.startsWith("x-forwarded-"))) {
+            var xForwardHeaders = list(request.getContainerRequest().getHeaderNames()).stream() //
+                    .filter(h -> StringUtils.startsWithAny(h.toLowerCase(ROOT), "x-forwarded-",
+                            "forwarded")) //
+                    .toList();
+            if (xForwardHeaders.isEmpty()) {
                 return null;
             }
 
+            // https://docs.spring.io/spring-boot/docs/current/reference/htmlsingle/#howto.webserver.use-behind-a-proxy-server
+            // If you are using Tomcat and terminating SSL at the proxy,
+            // server.tomcat.redirect-context-root should be
+            // set to false. This allows the X-Forwarded-Proto header to be honored before any
+            // redirects are performed.
+
+            // server.tomcat.remoteip.remote-ip-header=x-your-remote-ip-header
+            // server.tomcat.remoteip.protocol-header=x-your-protocol-header
+            // server.tomcat.remoteip.internal-proxies=192\\.168\\.\\d{1,3}\\.\\d{1,3}
+
             var buf = new StringBuilder();
             List<String> displayHeaderNames = new ArrayList<>();
-            displayHeaderNames.addAll(headerNames);
+            displayHeaderNames.addAll(xForwardHeaders);
+            // The X-Forwarded-For (XFF) HTTP header field is a common method for identifying the
+            // originating IP address of a client connecting to a web server through an HTTP proxy
+            // or load balancer.
             displayHeaderNames.add("x-forwarded-for");
+            // The X-Forwarded-Proto (XFP) header is a de-facto standard header for identifying the
+            // protocol (HTTP or HTTPS) that a client used to connect to your proxy or load
+            // balancer.
             displayHeaderNames.add("x-forwarded-proto");
+            // X-Forwarded-Host The original host requested by the client in the Host HTTP request
+            // header.
             displayHeaderNames.add("x-forwarded-host");
+            // The X-Forwarded-Port request header helps you identify the destination port that the
+            // client used to connect to the load balancer.
             displayHeaderNames.add("x-forwarded-port");
+            // X-Forwarded-Server is the hostname of the proxy server. It gets overwritten by each
+            // proxy, which is involved in the communication, with the current proxy's hostname.
             displayHeaderNames.add("x-forwarded-server");
+            // X-Forwarded-By is the proxy IP address)
             displayHeaderNames.add("x-forwarded-by");
+            // Alternative to x-forwarded-proto with the same function
             displayHeaderNames.add("x-forwarded-scheme");
             displayHeaderNames = displayHeaderNames.stream().distinct().sorted().toList();
 
@@ -156,9 +157,18 @@ public class SystemStatusDashlet
         return null;
     }
 
-    private String getOriginalUrl()
+    private String getHeaders()
     {
-        return getRequest().getOriginalUrl().toString();
+        var buf = new StringBuilder();
+        if (getRequest() instanceof ServletWebRequest request) {
+            for (var headerName : list(request.getContainerRequest().getHeaderNames())) {
+                buf.append(headerName);
+                buf.append(": ");
+                buf.append(String.join(", ", request.getHeaders(headerName)));
+                buf.append("\n");
+            }
+        }
+        return buf.toString();
     }
 
     private String getServerUrl()
