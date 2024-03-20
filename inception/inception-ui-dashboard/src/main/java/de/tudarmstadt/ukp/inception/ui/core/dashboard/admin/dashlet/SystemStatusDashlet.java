@@ -23,8 +23,12 @@ import static java.util.stream.Collectors.joining;
 import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 import static org.apache.wicket.RuntimeConfigurationType.DEVELOPMENT;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.model.LoadableDetachableModel;
@@ -91,11 +95,14 @@ public class SystemStatusDashlet
     {
         var buf = new StringBuilder();
         if (getRequest() instanceof ServletWebRequest request) {
-            renderHeader(buf, request, "x-forwarded-scheme");
-            renderHeader(buf, request, "x-forwarded-proto");
-            renderHeader(buf, request, "x-forwarded-port");
-            renderHeader(buf, request, "x-forwarded-host");
-            renderHeader(buf, request, "x-forwarded-server");
+            for (var headerName : list(request.getContainerRequest().getHeaderNames()).stream()
+                    .sorted().toList()) {
+                if (!headerName.toLowerCase(Locale.ROOT).startsWith("x-forwarded-")) {
+                    continue;
+                }
+
+                renderHeader(buf, request, headerName);
+            }
         }
         return buf.toString();
     }
@@ -113,16 +120,40 @@ public class SystemStatusDashlet
 
     private String getHeaders()
     {
-        var buf = new StringBuilder();
         if (getRequest() instanceof ServletWebRequest request) {
-            for (var headerName : list(request.getContainerRequest().getHeaderNames())) {
+            var headerNames = list(request.getContainerRequest().getHeaderNames());
+            if (headerNames.stream().noneMatch(h -> h.startsWith("x-forwarded-"))) {
+                return null;
+            }
+
+            var buf = new StringBuilder();
+            List<String> displayHeaderNames = new ArrayList<>();
+            displayHeaderNames.addAll(headerNames);
+            displayHeaderNames.add("x-forwarded-for");
+            displayHeaderNames.add("x-forwarded-proto");
+            displayHeaderNames.add("x-forwarded-host");
+            displayHeaderNames.add("x-forwarded-port");
+            displayHeaderNames.add("x-forwarded-server");
+            displayHeaderNames.add("x-forwarded-by");
+            displayHeaderNames.add("x-forwarded-scheme");
+            displayHeaderNames = displayHeaderNames.stream().distinct().sorted().toList();
+
+            for (var headerName : displayHeaderNames) {
                 buf.append(headerName);
                 buf.append(": ");
-                buf.append(String.join(", ", request.getHeaders(headerName)));
+                var values = request.getHeaders(headerName);
+                if (CollectionUtils.isEmpty(values)) {
+                    buf.append("-- not set --");
+                }
+                else {
+                    buf.append(String.join(", ", request.getHeaders(headerName)));
+                }
                 buf.append("\n");
             }
+            return buf.toString();
         }
-        return buf.toString();
+
+        return null;
     }
 
     private String getOriginalUrl()
