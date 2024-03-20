@@ -161,7 +161,7 @@ public class MtasUimaParser
                             layerFeatures.put(layer.getName(), new ArrayList<>());
                         });
 
-                annotationSchemaService.listAnnotationFeature(project).stream()
+                annotationSchemaService.listSupportedFeatures(project).stream()
                         .filter(feature -> feature.isEnabled() && feature.getLayer().isEnabled())
                         .forEach(feature -> {
                             layerFeatures.computeIfAbsent(feature.getLayer().getName(),

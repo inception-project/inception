@@ -42,7 +42,6 @@ import org.slf4j.LoggerFactory;
 import org.wicketstuff.event.annotation.OnEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
@@ -151,7 +150,7 @@ public class DocumentAnnotationPanel
 
         // Populate from feature structure
         List<FeatureState> featureStates = new ArrayList<>();
-        for (AnnotationFeature feature : annotationService.listSupportedFeatures(layer)) {
+        for (var feature : annotationService.listSupportedFeatures(layer)) {
             if (!feature.isEnabled()) {
                 continue;
             }
