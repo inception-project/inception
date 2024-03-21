@@ -106,8 +106,7 @@ public class NamedEntityIdentifierFeatureInitializer
     @Override
     public void configure(Project aProject) throws IOException
     {
-        AnnotationLayer neLayer = annotationSchemaService.findLayer(aProject,
-                NamedEntity.class.getName());
+        var neLayer = annotationSchemaService.findLayer(aProject, NamedEntity.class.getName());
 
         annotationSchemaService.createFeature(new AnnotationFeature(aProject, neLayer, "identifier",
                 "identifier", TYPE_ANY_OBJECT, "Linked entity", null));

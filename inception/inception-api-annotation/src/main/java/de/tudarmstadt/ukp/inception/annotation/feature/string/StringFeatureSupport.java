@@ -24,7 +24,6 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
@@ -49,7 +48,6 @@ import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureEditor;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureType;
-import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 
 /**
  * <p>
@@ -195,32 +193,9 @@ public class StringFeatureSupport
     }
 
     @Override
-    public StringFeatureTraits readTraits(AnnotationFeature aFeature)
+    public StringFeatureTraits createDefaultTraits()
     {
-        StringFeatureTraits traits = null;
-        try {
-            traits = JSONUtil.fromJsonString(StringFeatureTraits.class, aFeature.getTraits());
-        }
-        catch (IOException e) {
-            log.error("Unable to read traits", e);
-        }
-
-        if (traits == null) {
-            traits = new StringFeatureTraits();
-        }
-
-        return traits;
-    }
-
-    @Override
-    public void writeTraits(AnnotationFeature aFeature, StringFeatureTraits aTraits)
-    {
-        try {
-            aFeature.setTraits(JSONUtil.toJsonString(aTraits));
-        }
-        catch (IOException e) {
-            log.error("Unable to write traits", e);
-        }
+        return new StringFeatureTraits();
     }
 
     @Override

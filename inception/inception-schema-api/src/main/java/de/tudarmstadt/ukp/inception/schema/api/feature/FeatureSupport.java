@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.schema.api.feature;
 import static de.tudarmstadt.ukp.inception.schema.api.feature.FeatureUtil.setFeature;
 import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectFsByAddr;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
@@ -35,6 +36,7 @@ import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.markup.html.panel.EmptyPanel;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.BeanNameAware;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -46,6 +48,7 @@ import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetailGroup;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.inception.support.extensionpoint.Extension;
+import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 
 /**
  * Extension point for new types of annotation features.
@@ -145,25 +148,52 @@ public interface FeatureSupport<T>
     }
 
     /**
-     * Read the traits for the given {@link AnnotationFeature}. If traits are supported, then this
-     * method must be overwritten. A typical implementation would read the traits from a JSON string
-     * stored in {@link AnnotationFeature#getTraits}, but it would also possible to load the traits
-     * from a database table.
-     * 
-     * @param aFeature
-     *            the feature whose traits should be obtained.
-     * @return the traits.
+     * @return a traits object with default values. If traits are supported, then this method must
+     *         be overwritten.
      */
-    default T readTraits(AnnotationFeature aFeature)
+    default T createDefaultTraits()
     {
         return null;
     }
 
     /**
-     * Write the traits for the given {@link AnnotationFeature}. If traits are supported, then this
-     * method must be overwritten. A typical implementation would write the traits from to JSON
-     * string stored in {@link AnnotationFeature#setTraits}, but it would also possible to store the
-     * traits from a database table.
+     * Read the traits for the given {@link AnnotationFeature}. The default implementation reads the
+     * traits from a JSON string stored in {@link AnnotationFeature#getTraits}, but it would also
+     * possible to load the traits from a database table.
+     * 
+     * @param aFeature
+     *            the feature whose traits should be obtained.
+     * @return the traits.
+     */
+    @SuppressWarnings("unchecked")
+    default T readTraits(AnnotationFeature aFeature)
+    {
+        // Obtain a template traits object from which we can obtain the class
+        var traits = createDefaultTraits();
+        if (traits == null) {
+            return null;
+        }
+
+        // Try loading the traits from the feature
+        try {
+            traits = (T) JSONUtil.fromJsonString(traits.getClass(), aFeature.getTraits());
+        }
+        catch (IOException e) {
+            LoggerFactory.getLogger(getClass()).error("Unable to read traits", e);
+        }
+
+        // If there were no traits or there was an error loading them, use the default traits
+        if (traits == null) {
+            traits = createDefaultTraits();
+        }
+
+        return traits;
+    }
+
+    /**
+     * Write the traits for the given {@link AnnotationFeature}. The default implementation writes
+     * the traits from to JSON string stored in {@link AnnotationFeature#setTraits}, but it would
+     * also possible to store the traits from a database table.
      * 
      * @param aFeature
      *            the feature whose traits should be written.
@@ -172,7 +202,17 @@ public interface FeatureSupport<T>
      */
     default void writeTraits(AnnotationFeature aFeature, T aTraits)
     {
-        aFeature.setTraits(null);
+        var traitsTemplate = createDefaultTraits();
+        if (traitsTemplate == null) {
+            return;
+        }
+
+        try {
+            aFeature.setTraits(JSONUtil.toJsonString(aTraits));
+        }
+        catch (IOException e) {
+            LoggerFactory.getLogger(getClass()).error("Unable to write traits", e);
+        }
     }
 
     /**

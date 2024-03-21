@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.annotation.feature.link;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -57,7 +56,6 @@ import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureEditor;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupport;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureType;
 import de.tudarmstadt.ukp.inception.schema.api.feature.LinkWithRoleModel;
-import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
 
 /**
@@ -294,32 +292,9 @@ public class LinkFeatureSupport
     }
 
     @Override
-    public LinkFeatureTraits readTraits(AnnotationFeature aFeature)
+    public LinkFeatureTraits createDefaultTraits()
     {
-        LinkFeatureTraits traits = null;
-        try {
-            traits = JSONUtil.fromJsonString(LinkFeatureTraits.class, aFeature.getTraits());
-        }
-        catch (IOException e) {
-            log.error("Unable to read traits", e);
-        }
-
-        if (traits == null) {
-            traits = new LinkFeatureTraits();
-        }
-
-        return traits;
-    }
-
-    @Override
-    public void writeTraits(AnnotationFeature aFeature, LinkFeatureTraits aTraits)
-    {
-        try {
-            aFeature.setTraits(JSONUtil.toJsonString(aTraits));
-        }
-        catch (IOException e) {
-            log.error("Unable to write traits", e);
-        }
+        return new LinkFeatureTraits();
     }
 
     @Override
