@@ -276,11 +276,12 @@ public class DiamWebsocketController
         throws IOException
     {
         var doc = documentService.getSourceDocument(aProject.getId(), aDocumentId);
-        var user = userRepository.getUserOrCurationUser(aDataOwner);
+        var sessionOwner = userRepository.getCurrentUsername();
+        var dataOwner = userRepository.getUserOrCurationUser(aDataOwner);
 
         var cas = documentService.readAnnotationCas(doc, aDataOwner);
 
-        var prefs = userPreferencesService.loadPreferences(doc.getProject(), user.getUsername(),
+        var prefs = userPreferencesService.loadPreferences(doc.getProject(), sessionOwner,
                 Mode.ANNOTATION);
 
         var layers = schemaService.listSupportedLayers(aProject).stream()
@@ -290,7 +291,7 @@ public class DiamWebsocketController
 
         var request = RenderRequest.builder() //
                 .withSessionOwner(userRepository.getCurrentUser()) //
-                .withDocument(doc, user) //
+                .withDocument(doc, dataOwner) //
                 .withWindow(aViewportBegin, aViewportEnd) //
                 .withCas(cas) //
                 .withVisibleLayers(layers) //
