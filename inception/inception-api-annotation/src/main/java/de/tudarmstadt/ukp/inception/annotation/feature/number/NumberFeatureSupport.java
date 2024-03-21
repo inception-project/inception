@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.inception.annotation.feature.number;
 
 import static java.util.Arrays.asList;
 
-import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -41,7 +40,6 @@ import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureEditor;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureType;
-import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 
 /**
  * <p>
@@ -134,33 +132,9 @@ public class NumberFeatureSupport
         aFeature.setRequired(true);
     }
 
-    // TODO: trait reading/writing needs to be handled in another way to avoid duplicate code
     @Override
-    public NumberFeatureTraits readTraits(AnnotationFeature aFeature)
+    public NumberFeatureTraits createDefaultTraits()
     {
-        NumberFeatureTraits traits = null;
-        try {
-            traits = JSONUtil.fromJsonString(NumberFeatureTraits.class, aFeature.getTraits());
-        }
-        catch (IOException e) {
-            log.error("Unable to read traits", e);
-        }
-
-        if (traits == null) {
-            traits = new NumberFeatureTraits();
-        }
-
-        return traits;
-    }
-
-    @Override
-    public void writeTraits(AnnotationFeature aFeature, NumberFeatureTraits aTraits)
-    {
-        try {
-            aFeature.setTraits(JSONUtil.toJsonString(aTraits));
-        }
-        catch (IOException e) {
-            log.error("Unable to write traits", e);
-        }
+        return new NumberFeatureTraits();
     }
 }

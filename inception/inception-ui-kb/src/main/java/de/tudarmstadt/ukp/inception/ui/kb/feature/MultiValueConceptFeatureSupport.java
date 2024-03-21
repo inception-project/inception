@@ -141,20 +141,15 @@ public class MultiValueConceptFeatureSupport
     }
 
     @Override
+    public MultiValueConceptFeatureTraits createDefaultTraits()
+    {
+        return new MultiValueConceptFeatureTraits();
+    }
+
+    @Override
     public MultiValueConceptFeatureTraits readTraits(AnnotationFeature aFeature)
     {
-        MultiValueConceptFeatureTraits traits = null;
-        try {
-            traits = JSONUtil.fromJsonString(MultiValueConceptFeatureTraits.class,
-                    aFeature.getTraits());
-        }
-        catch (IOException e) {
-            LOG.error("Unable to read traits", e);
-        }
-
-        if (traits == null) {
-            traits = new MultiValueConceptFeatureTraits();
-        }
+        var traits = FeatureSupport.super.readTraits(aFeature);
 
         // If there is no scope set in the trait, see if once can be extracted from the legacy
         // location which is the feature type.

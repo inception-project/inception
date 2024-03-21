@@ -23,7 +23,6 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.apache.commons.lang3.StringUtils.substringAfter;
 
-import java.io.IOException;
 import java.io.Serializable;
 import java.lang.invoke.MethodHandles;
 import java.util.List;
@@ -52,7 +51,6 @@ import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureEditor;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupport;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureType;
-import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 
 /**
  * Extension providing image-related features for annotations.
@@ -146,33 +144,9 @@ public class RelationEndpointFeatureSupport
     }
 
     @Override
-    public RelationEndpointFeatureTraits readTraits(AnnotationFeature aFeature)
+    public RelationEndpointFeatureTraits createDefaultTraits()
     {
-        RelationEndpointFeatureTraits traits = null;
-        try {
-            traits = JSONUtil.fromJsonString(RelationEndpointFeatureTraits.class,
-                    aFeature.getTraits());
-        }
-        catch (IOException e) {
-            LOG.error("Unable to read traits", e);
-        }
-
-        if (traits == null) {
-            traits = new RelationEndpointFeatureTraits();
-        }
-
-        return traits;
-    }
-
-    @Override
-    public void writeTraits(AnnotationFeature aFeature, RelationEndpointFeatureTraits aTraits)
-    {
-        try {
-            aFeature.setTraits(JSONUtil.toJsonString(aTraits));
-        }
-        catch (IOException e) {
-            LOG.error("Unable to write traits", e);
-        }
+        return new RelationEndpointFeatureTraits();
     }
 
     @Override

@@ -26,7 +26,6 @@ import static de.tudarmstadt.ukp.inception.websocket.config.WebSocketConstants.T
 import static de.tudarmstadt.ukp.inception.websocket.config.WebSocketConstants.TOPIC_ELEMENT_PROJECT;
 import static de.tudarmstadt.ukp.inception.websocket.config.WebSocketConstants.TOPIC_ELEMENT_USER;
 import static java.lang.Integer.MAX_VALUE;
-import static java.util.stream.Collectors.toList;
 
 import java.io.IOException;
 import java.security.Principal;
@@ -286,8 +285,8 @@ public class DiamWebsocketController
 
         var layers = schemaService.listSupportedLayers(aProject).stream()
                 .filter(AnnotationLayer::isEnabled) //
-                .filter(l -> !prefs.getHiddenAnnotationLayerIds().contains(l.getId()))
-                .collect(toList());
+                .filter(l -> !prefs.getHiddenAnnotationLayerIds().contains(l.getId())) //
+                .toList();
 
         var request = RenderRequest.builder() //
                 .withSessionOwner(userRepository.getCurrentUser()) //
