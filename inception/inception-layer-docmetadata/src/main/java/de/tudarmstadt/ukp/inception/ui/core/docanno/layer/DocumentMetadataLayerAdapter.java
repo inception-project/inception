@@ -17,6 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.ui.core.docanno.layer;
 
+import static de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerSupport.FEATURE_NAME_ORDER;
+import static org.apache.uima.fit.util.FSUtil.setFeature;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -28,6 +31,7 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
+import org.apache.uima.fit.util.FSUtil;
 import org.springframework.context.ApplicationEventPublisher;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -101,9 +105,14 @@ public class DocumentMetadataLayerAdapter
     public AnnotationBaseFS add(SourceDocument aDocument, String aUsername, CAS aCas)
         throws AnnotationException
     {
-        Type type = CasUtil.getType(aCas, getAnnotationTypeName());
+        var type = CasUtil.getType(aCas, getAnnotationTypeName());
 
         AnnotationBaseFS newAnnotation = aCas.createFS(type);
+        var maxOrder = aCas.select(type) //
+                .mapToInt(fs -> FSUtil.getFeature(fs, FEATURE_NAME_ORDER, Integer.class)) //
+                .max() //
+                .orElse(0);
+        setFeature(newAnnotation, FEATURE_NAME_ORDER, (int) maxOrder + 1);
         aCas.addFsToIndexes(newAnnotation);
 
         publishEvent(() -> new DocumentMetadataCreatedEvent(this, aDocument, aUsername, getLayer(),
@@ -115,7 +124,7 @@ public class DocumentMetadataLayerAdapter
     @Override
     public void delete(SourceDocument aDocument, String aUsername, CAS aCas, VID aVid)
     {
-        AnnotationBaseFS fs = (AnnotationBaseFS) ICasUtil.selectFsByAddr(aCas, aVid.getId());
+        var fs = (AnnotationBaseFS) ICasUtil.selectFsByAddr(aCas, aVid.getId());
         aCas.removeFsFromIndexes(fs);
 
         publishEvent(
@@ -148,7 +157,7 @@ public class DocumentMetadataLayerAdapter
     @Override
     public Selection select(VID aVid, AnnotationFS aAnno)
     {
-        Selection selection = new Selection();
+        var selection = new Selection();
         selection.selectSpan(aAnno);
         return selection;
     }

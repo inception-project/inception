@@ -34,9 +34,7 @@ import static java.util.Collections.emptyList;
 import static java.util.Objects.isNull;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.stream.Collectors.toList;
-import static org.apache.commons.lang3.StringUtils.isAlphanumeric;
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.apache.commons.lang3.StringUtils.isNumeric;
 import static org.apache.uima.cas.impl.Serialization.deserializeCASComplete;
 import static org.apache.uima.cas.impl.Serialization.serializeCASComplete;
 import static org.apache.uima.cas.impl.Serialization.serializeWithCompression;
@@ -65,6 +63,7 @@ import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.TypeSystem;
 import org.apache.uima.cas.impl.CASImpl;
+import org.apache.uima.cas.impl.TypeSystemUtils;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.factory.CasFactory;
 import org.apache.uima.fit.util.CasUtil;
@@ -1699,10 +1698,9 @@ public class AnnotationSchemaServiceImpl
 
         // Checking if feature name doesn't start with a number or underscore
         // And only uses alphanumeric characters
-        if (isNumeric(name.substring(0, 1)) || name.substring(0, 1).equals("_")
-                || !isAlphanumeric(name.replace("_", ""))) {
-            errors.add(new ValidationError("Feature names must start with a letter and consist "
-                    + "only of letters, digits, or underscores."));
+        if (!TypeSystemUtils.isIdentifier(name)) {
+            errors.add(new ValidationError("Invalid feature name [" + name
+                    + "].  Feature names must start with a letter and consist only of letters, digits, or underscores."));
             return errors;
         }
 
