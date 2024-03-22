@@ -18,9 +18,9 @@
 package de.tudarmstadt.ukp.inception.ui.core.docanno.layer;
 
 import static java.util.Arrays.asList;
-import static java.util.stream.Collectors.toList;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -28,6 +28,7 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.validation.ValidationError;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
@@ -53,6 +54,8 @@ public class DocumentMetadataLayerSupport
     extends LayerSupport_ImplBase<DocumentMetadataLayerAdapter, DocumentMetadataLayerTraits>
     implements InitializingBean
 {
+    public static final String FEATURE_NAME_ORDER = "uiOrder";
+
     public static final String TYPE = "document-metadata";
 
     private final ApplicationEventPublisher eventPublisher;
@@ -116,9 +119,13 @@ public class DocumentMetadataLayerSupport
     {
         var td = aTsd.addType(aLayer.getName(), "", CAS.TYPE_NAME_ANNOTATION_BASE);
 
-        var featureForLayer = aAllFeaturesInProject.stream()
-                .filter(feature -> aLayer.equals(feature.getLayer())).collect(toList());
-        generateFeatures(aTsd, td, featureForLayer);
+        td.addFeature(FEATURE_NAME_ORDER, "", CAS.TYPE_NAME_INTEGER);
+
+        var featuresForLayer = aAllFeaturesInProject.stream() //
+                .filter(feature -> aLayer.equals(feature.getLayer())) //
+                .toList();
+
+        generateFeatures(aTsd, td, featuresForLayer);
     }
 
     @Override
@@ -145,5 +152,17 @@ public class DocumentMetadataLayerSupport
     public DocumentMetadataLayerTraits createTraits()
     {
         return new DocumentMetadataLayerTraits();
+    }
+
+    @Override
+    public List<ValidationError> validateFeatureName(AnnotationFeature aFeature)
+    {
+        var name = aFeature.getName();
+        if (name.equals(FEATURE_NAME_ORDER)) {
+            return asList(new ValidationError("[" + name + "] is a reserved feature name on "
+                    + "document metadata layers. Please use a different name for the feature."));
+        }
+
+        return Collections.emptyList();
     }
 }
