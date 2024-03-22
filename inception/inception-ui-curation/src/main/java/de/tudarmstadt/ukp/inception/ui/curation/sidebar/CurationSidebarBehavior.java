@@ -17,9 +17,11 @@
  */
 package de.tudarmstadt.ukp.inception.ui.curation.sidebar;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.FORCE_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.setProjectPageParameter;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
+import static de.tudarmstadt.ukp.inception.support.wicket.WicketExceptionUtil.handleException;
 import static java.lang.invoke.MethodHandles.lookup;
 import static java.util.Arrays.asList;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -28,6 +30,7 @@ import org.apache.wicket.Component;
 import org.apache.wicket.RestartResponseException;
 import org.apache.wicket.behavior.Behavior;
 import org.apache.wicket.event.IEvent;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
@@ -38,6 +41,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.inception.annotation.events.PreparingToOpenDocumentEvent;
+import de.tudarmstadt.ukp.inception.curation.service.CurationDocumentService;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 
 public class CurationSidebarBehavior
@@ -54,6 +59,8 @@ public class CurationSidebarBehavior
     private static final String PARAM_CURATION_SESSION = "curationSession";
     private static final String PARAM_CURATION_TARGET_OWN = "curationTargetOwn";
 
+    private @SpringBean DocumentService documentService;
+    private @SpringBean CurationDocumentService curationDocumentService;
     private @SpringBean CurationSidebarService curationSidebarService;
     private @SpringBean UserDao userService;
     private @SpringBean ProjectService projectService;
@@ -73,23 +80,28 @@ public class CurationSidebarBehavior
         }
 
         var event = (PreparingToOpenDocumentEvent) aEvent.getPayload();
+        onPreparingToOpenDocumentEvent(event);
 
-        var page = event.getSource();
+    }
+
+    private void onPreparingToOpenDocumentEvent(PreparingToOpenDocumentEvent aEvent)
+    {
+        var page = aEvent.getSource();
 
         if (!(page instanceof AnnotationPage)) {
             // Only applies to the AnnotationPage - not to the CurationPage!
             LOG.trace(
                     "Curation sidebar is not deployed on AnnotationPage but rather [{}] - ignoring event [{}]",
-                    page.getClass(), event.getClass());
+                    page.getClass(), aEvent.getClass());
             return;
         }
 
         var params = page.getPageParameters();
 
         var sessionOwner = userService.getCurrentUsername();
-        var doc = event.getDocument();
+        var doc = aEvent.getDocument();
         var project = doc.getProject();
-        var dataOwner = event.getDocumentOwner();
+        var dataOwner = aEvent.getDocumentOwner();
 
         if (!projectService.hasRole(sessionOwner, project, CURATOR)) {
             LOG.trace(
@@ -101,9 +113,43 @@ public class CurationSidebarBehavior
         LOG.trace("Curation sidebar reacting to [{}]@{} being opened by [{}]", dataOwner, doc,
                 sessionOwner);
 
-        handleSessionActivation(page, params, doc, sessionOwner);
+        handleSessionActivationPageParameters(page, params, doc, sessionOwner);
 
         ensureDataOwnerMatchesCurationTarget(page, project, sessionOwner, dataOwner);
+
+        if (userService.getCurationUser().getUsername().equals(aEvent.getDocumentOwner())) {
+            autoMerge(aEvent, page);
+        }
+    }
+
+    private void autoMerge(PreparingToOpenDocumentEvent aEvent, AnnotationPageBase page)
+    {
+        var sessionOwner = userService.getCurrentUsername();
+        var doc = aEvent.getDocument();
+        var project = doc.getProject();
+
+        try {
+            var editable = page.isEditable();
+            if (!curationDocumentService.existsCurationCas(doc) && editable) {
+                var state = page.getModelObject();
+                // We need to force upgrade the editor CAS here already so the merge can succeed
+                // The annotation page will do this again in the actionLoadDocument, but I don't
+                // currently see a good way to avoid this duplication. At least we only do it twice
+                // if an initial merge is required.
+                documentService.readAnnotationCas(state.getDocument(),
+                        state.getUser().getUsername(), FORCE_CAS_UPGRADE);
+                var selectedUsers = curationSidebarService.getSelectedUsers(sessionOwner,
+                        project.getId());
+                var mergeStrategyFactory = curationSidebarService.merge(state,
+                        state.getUser().getUsername(), selectedUsers);
+                page.success(
+                        "Performed initial merge using [" + mergeStrategyFactory.getLabel() + "].");
+                aEvent.getRequestTarget().ifPresent($ -> $.addChildren(page, IFeedback.class));
+            }
+        }
+        catch (Exception e) {
+            handleException(LOG, page, e);
+        }
     }
 
     private void ensureDataOwnerMatchesCurationTarget(AnnotationPageBase aPage, Project aProject,
@@ -135,8 +181,8 @@ public class CurationSidebarBehavior
         }
     }
 
-    private void handleSessionActivation(AnnotationPageBase aPage, PageParameters aParams,
-            SourceDocument aDoc, String aSessionOwner)
+    private void handleSessionActivationPageParameters(AnnotationPageBase aPage,
+            PageParameters aParams, SourceDocument aDoc, String aSessionOwner)
     {
         var project = aDoc.getProject();
 

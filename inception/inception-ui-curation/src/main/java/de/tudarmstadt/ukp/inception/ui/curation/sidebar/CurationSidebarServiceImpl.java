@@ -30,6 +30,7 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -45,7 +46,10 @@ import javax.persistence.EntityManager;
 import org.apache.commons.lang3.Validate;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.event.EventListener;
 import org.springframework.security.core.session.SessionDestroyedEvent;
 import org.springframework.security.core.session.SessionRegistry;
@@ -59,8 +63,11 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.annotation.events.DocumentOpenedEvent;
 import de.tudarmstadt.ukp.inception.curation.config.CurationServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.curation.merge.MergeStrategyFactory;
 import de.tudarmstadt.ukp.inception.curation.model.CurationSettings;
 import de.tudarmstadt.ukp.inception.curation.model.CurationSettingsId;
+import de.tudarmstadt.ukp.inception.curation.service.CurationMergeService;
+import de.tudarmstadt.ukp.inception.curation.service.CurationService;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
@@ -74,6 +81,8 @@ import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 public class CurationSidebarServiceImpl
     implements CurationSidebarService
 {
+    private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
     // stores info on which users are selected and which doc is the curation-doc
     private ConcurrentMap<CurationSessionKey, CurationSession> sessions;
 
@@ -83,11 +92,14 @@ public class CurationSidebarServiceImpl
     private final ProjectService projectService;
     private final UserDao userRegistry;
     private final CasStorageService casStorageService;
+    private final CurationService curationService;
+    private final CurationMergeService curationMergeService;
 
     public CurationSidebarServiceImpl(EntityManager aEntityManager,
             DocumentService aDocumentService, SessionRegistry aSessionRegistry,
             ProjectService aProjectService, UserDao aUserRegistry,
-            CasStorageService aCasStorageService)
+            CasStorageService aCasStorageService, CurationService aCurationService,
+            CurationMergeService aCurationMergeService)
     {
         sessions = new ConcurrentHashMap<>();
         entityManager = aEntityManager;
@@ -96,6 +108,8 @@ public class CurationSidebarServiceImpl
         projectService = aProjectService;
         userRegistry = aUserRegistry;
         casStorageService = aCasStorageService;
+        curationService = aCurationService;
+        curationMergeService = aCurationMergeService;
     }
 
     /**
@@ -512,6 +526,34 @@ public class CurationSidebarServiceImpl
                 && documentService.isAnnotationFinished(sourceDoc, aState.getUser()))
                 || (username.equals(CURATION_USER)
                         && sourceDoc.getState().equals(CURATION_FINISHED));
+    }
+
+    @Override
+    public MergeStrategyFactory<?> merge(AnnotatorState aState, String aCurator,
+            Collection<User> aUsers)
+        throws IOException, UIMAException
+    {
+        var doc = aState.getDocument();
+        var aTargetCas = retrieveCurationCAS(aCurator, doc.getProject().getId(), doc).orElseThrow(
+                () -> new IllegalArgumentException("No target CAS configured in curation state"));
+
+        var userCases = documentService.readAllCasesSharedNoUpgrade(doc, aUsers);
+
+        // FIXME: should merging not overwrite the current users annos? (can result in
+        // deleting the users annotations!!!), currently fixed by warn message to user
+        // prepare merged CAS
+        var workflow = curationService.readOrCreateCurationWorkflow(aState.getProject());
+        MergeStrategyFactory factory = curationService.getMergeStrategyFactory(workflow);
+        var mergeStrategy = factory.makeStrategy(factory.readTraits(workflow));
+        curationMergeService.mergeCasses(doc, aState.getUser().getUsername(), aTargetCas, userCases,
+                mergeStrategy, aState.getAnnotationLayers());
+
+        // write back and update timestamp
+        writeCurationCas(aTargetCas, aState, doc.getProject().getId());
+
+        LOG.debug("Merge done");
+
+        return factory;
     }
 
     private class CurationSession

@@ -107,7 +107,7 @@ public class CurationMergeServiceImpl
         }
 
         try (StopWatch watch = new StopWatch(LOG, "CasMerge")) {
-            CasMerge casMerge = new CasMerge(annotationService, applicationEventPublisher);
+            var casMerge = new CasMerge(annotationService, applicationEventPublisher);
             casMerge.setMergeStrategy(aMergeStrategy);
             return casMerge.reMergeCas(diff, aDocument, aTargetCasUserName, aTargetCas,
                     aCassesToMerge);

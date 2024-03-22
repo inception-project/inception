@@ -39,6 +39,7 @@ import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.List;
@@ -48,7 +49,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.CASException;
-import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
@@ -76,7 +76,7 @@ import de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil;
 
 public class CasStorageServiceImplTest
 {
-    private Logger log = LoggerFactory.getLogger(getClass());
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private AtomicBoolean exception = new AtomicBoolean(false);
     private AtomicBoolean rwTasksCompleted = new AtomicBoolean(false);
@@ -122,17 +122,17 @@ public class CasStorageServiceImplTest
     {
         try (CasStorageSession casStorageSession = openNested(true)) {
             // Setup fixture
-            SourceDocument doc = makeSourceDocument(1l, 1l, "test");
-            JCas templateCas = WebAnnoCasUtil.createCas(createTypeSystemDescription()).getJCas();
+            var doc = makeSourceDocument(1l, 1l, "test");
+            var templateCas = WebAnnoCasUtil.createCas(createTypeSystemDescription()).getJCas();
             templateCas.setDocumentText("This is a test");
             casStorageSession.add("cas", EXCLUSIVE_WRITE_ACCESS, templateCas.getCas());
-            String user = "test";
+            var user = "test";
 
             sut.writeCas(doc, templateCas.getCas(), user);
             assertThat(sut.existsCas(doc, user)).isTrue();
 
             // Actual test
-            CAS cas = sut.readCas(doc, user);
+            var cas = sut.readCas(doc, user);
             assertThat(cas.getDocumentText()).isEqualTo(templateCas.getDocumentText());
 
             sut.deleteCas(doc, user);
@@ -149,17 +149,17 @@ public class CasStorageServiceImplTest
             typeSystems.add(createTypeSystemDescription());
             typeSystems.add(CasMetadataUtils.getInternalTypeSystem());
 
-            JCas cas = WebAnnoCasUtil.createCas(mergeTypeSystems(typeSystems)).getJCas();
+            var cas = WebAnnoCasUtil.createCas(mergeTypeSystems(typeSystems)).getJCas();
             casStorageSession.add("cas", EXCLUSIVE_WRITE_ACCESS, cas.getCas());
 
-            SourceDocument doc = makeSourceDocument(2l, 2l, "test");
-            String user = "test";
+            var doc = makeSourceDocument(2l, 2l, "test");
+            var user = "test";
 
             sut.writeCas(doc, cas.getCas(), user);
 
-            JCas cas2 = sut.readCas(doc, user).getJCas();
+            var cas2 = sut.readCas(doc, user).getJCas();
 
-            List<CASMetadata> cmds = new ArrayList<>(select(cas2, CASMetadata.class));
+            var cmds = new ArrayList<>(select(cas2, CASMetadata.class));
             assertThat(cmds).hasSize(1);
             assertThat(cmds.get(0).getProjectId()).isEqualTo(doc.getProject().getId());
             assertThat(cmds.get(0).getSourceDocumentId()).isEqualTo(doc.getId());
@@ -171,15 +171,15 @@ public class CasStorageServiceImplTest
     @Test
     public void testReadOrCreateCas() throws Exception
     {
-        try (CasStorageSession casStorageSession = openNested(true)) {
+        try (var casStorageSession = openNested(true)) {
             // Setup fixture
-            SourceDocument doc = makeSourceDocument(3l, 3l, "test");
+            var doc = makeSourceDocument(3l, 3l, "test");
             String user = "test";
             String text = "This is a test";
             createCasFile(doc, user, text);
 
             // Actual test
-            JCas cas = sut.readCas(doc, user).getJCas();
+            var cas = sut.readCas(doc, user).getJCas();
             assertThat(cas.getDocumentText()).isEqualTo(text);
 
             sut.deleteCas(doc, user);
@@ -191,23 +191,23 @@ public class CasStorageServiceImplTest
     public void testThatLayerChangeEventInvalidatesCachedCas() throws Exception
     {
         // Setup fixture
-        SourceDocument doc = makeSourceDocument(4l, 4l, "test");
-        String user = "test";
-        try (CasStorageSession session = openNested(true)) {
-            String text = "This is a test";
+        var doc = makeSourceDocument(4l, 4l, "test");
+        var user = "test";
+        try (var session = openNested(true)) {
+            var text = "This is a test";
             createCasFile(doc, user, text);
         }
 
         // Actual test
         int casIdentity1;
-        try (CasStorageSession session = openNested(true)) {
-            JCas cas = sut.readCas(doc, user).getJCas();
+        try (var session = openNested(true)) {
+            var cas = sut.readCas(doc, user).getJCas();
             casIdentity1 = System.identityHashCode(cas);
         }
 
         int casIdentity2;
-        try (CasStorageSession session = openNested(true)) {
-            JCas cas = sut.readCas(doc, user).getJCas();
+        try (var session = openNested(true)) {
+            var cas = sut.readCas(doc, user).getJCas();
             casIdentity2 = System.identityHashCode(cas);
         }
 
@@ -215,8 +215,8 @@ public class CasStorageServiceImplTest
                 new LayerConfigurationChangedEvent(this, doc.getProject()));
 
         int casIdentity3;
-        try (CasStorageSession session = openNested(true)) {
-            JCas cas = sut.readCas(doc, user).getJCas();
+        try (var session = openNested(true)) {
+            var cas = sut.readCas(doc, user).getJCas();
             casIdentity3 = System.identityHashCode(cas);
         }
 
@@ -232,21 +232,21 @@ public class CasStorageServiceImplTest
     public void testConcurrentAccess() throws Exception
     {
         // Setup fixture
-        SourceDocument doc = makeSourceDocument(5l, 5l, "test");
-        String user = "test";
+        var doc = makeSourceDocument(5l, 5l, "test");
+        var user = "test";
 
-        try (CasStorageSession session = openNested(true)) {
+        try (var session = openNested(true)) {
             createCasFile(doc, user, "This is a test");
             assertThat(sut.existsCas(doc, user)).isTrue();
         }
 
-        try (CasStorageSession casStorageSession = openNested(true)) {
-            CAS mainCas = sut.readCas(doc, user, EXCLUSIVE_WRITE_ACCESS);
+        try (var casStorageSession = openNested(true)) {
+            var mainCas = sut.readCas(doc, user, EXCLUSIVE_WRITE_ACCESS);
 
-            File casFile = driver.getCasFile(doc, user);
+            var casFile = driver.getCasFile(doc, user);
             casFile.setLastModified(casFile.lastModified() + 10_000);
 
-            long timestamp = sut.getCasTimestamp(doc, user).get();
+            var timestamp = sut.getCasTimestamp(doc, user).get();
 
             assertThatExceptionOfType(IOException.class)
                     .isThrownBy(() -> sut.writeCas(doc, mainCas, user))
@@ -262,24 +262,24 @@ public class CasStorageServiceImplTest
     {
         try (CasStorageSession casStorageSession = openNested(true)) {
             // Setup fixture
-            SourceDocument doc = makeSourceDocument(6l, 6l, "test");
-            String user = "test";
-            File casFile = driver.getCasFile(doc, user);
+            var doc = makeSourceDocument(6l, 6l, "test");
+            var user = "test";
+            var casFile = driver.getCasFile(doc, user);
 
             long casFileSize;
             long casFileLastModified;
 
-            try (CasStorageSession session = openNested(true)) {
+            try (var session = openNested(true)) {
                 createCasFile(doc, user, "This is a test");
                 assertThat(sut.existsCas(doc, user)).isTrue();
                 casFileSize = casFile.length();
                 casFileLastModified = casFile.lastModified();
             }
 
-            CAS mainCas = sut.readCas(doc, user, EXCLUSIVE_WRITE_ACCESS);
+            var mainCas = sut.readCas(doc, user, EXCLUSIVE_WRITE_ACCESS);
 
             // Wrap the CAS in a proxy so that UIMA cannot serialize it
-            CAS guardedCas = (CAS) Proxy.newProxyInstance(getClass().getClassLoader(),
+            var guardedCas = (CAS) Proxy.newProxyInstance(getClass().getClassLoader(),
                     new Class[] { CAS.class },
                     (proxy, method, args) -> method.invoke(mainCas, args));
 
@@ -309,8 +309,8 @@ public class CasStorageServiceImplTest
             }
         };
 
-        SourceDocument doc = makeSourceDocument(7l, 7l, "doc");
-        String user = "annotator";
+        var doc = makeSourceDocument(7l, 7l, "doc");
+        var user = "annotator";
 
         // We interleave all the primary and secondary tasks into the main tasks list
         // Primary tasks run for a certain number of iterations
@@ -343,28 +343,28 @@ public class CasStorageServiceImplTest
             tasks.add(xx);
         }
 
-        log.info("---- Starting all threads ----");
+        LOG.info("---- Starting all threads ----");
         tasks.forEach(Thread::start);
 
-        log.info("---- Waiting for primary threads to complete ----");
-        boolean done = false;
+        LOG.info("---- Waiting for primary threads to complete ----");
+        var done = false;
         while (!done) {
-            long running = primaryTasks.stream().filter(Thread::isAlive).count();
+            var running = primaryTasks.stream().filter(Thread::isAlive).count();
             done = running == 0l;
             sleep(1000);
-            log.info("running {}  complete {}%  rw {}  ro {}  un {}  uni {}  xx {} XX {}", running,
+            LOG.info("running {}  complete {}%  rw {}  ro {}  un {}  uni {}  xx {} XX {}", running,
                     (writeCounter.get() * 100) / (threadGroupCount * iterations), writeCounter,
                     managedReadCounter, unmanagedReadCounter, unmanagedNonInitializingReadCounter,
                     deleteCounter, deleteInitialCounter);
         }
 
-        log.info("---- Waiting for secondary threads to wrap up ----");
+        LOG.info("---- Waiting for secondary threads to wrap up ----");
         rwTasksCompleted.set(true);
-        for (Thread thread : secondaryTasks) {
+        for (var thread : secondaryTasks) {
             thread.join();
         }
 
-        log.info("---- Test is done ----");
+        LOG.info("---- Test is done ----");
 
         assertThat(exception).isFalse();
     }
@@ -388,9 +388,9 @@ public class CasStorageServiceImplTest
             throw new IOException("This initializer should never be called!");
         };
 
-        SourceDocument doc = makeSourceDocument(8l, 8l, "doc");
-        String user = "annotator";
-        try (CasStorageSession session = openNested()) {
+        var doc = makeSourceDocument(8l, 8l, "doc");
+        var user = "annotator";
+        try (var session = openNested()) {
             // Make sure the CAS exists so that the threads should never be forced to call the
             // the initializer
             sut.readOrCreateCas(doc, user, FORCE_CAS_UPGRADE, initializer, EXCLUSIVE_WRITE_ACCESS);
@@ -405,46 +405,45 @@ public class CasStorageServiceImplTest
 
         int threadGroupCount = 4;
         int iterations = 100;
-        for (int n = 0; n < threadGroupCount; n++) {
-            ExclusiveReadWriteTask rw = new ExclusiveReadWriteTask(n, doc, user, badSeed,
-                    iterations);
+        for (var n = 0; n < threadGroupCount; n++) {
+            var rw = new ExclusiveReadWriteTask(n, doc, user, badSeed, iterations);
             primaryTasks.add(rw);
             tasks.add(rw);
 
-            Thread ro = new SharedReadOnlyTask(n, doc, user, badSeed);
+            var ro = new SharedReadOnlyTask(n, doc, user, badSeed);
             secondaryTasks.add(ro);
             tasks.add(ro);
 
-            Thread un = new UnmanagedTask(n, doc, user, badSeed);
+            var un = new UnmanagedTask(n, doc, user, badSeed);
             secondaryTasks.add(un);
             tasks.add(un);
 
-            Thread uni = new UnmanagedNonInitializingTask(n, doc, user);
+            var uni = new UnmanagedNonInitializingTask(n, doc, user);
             secondaryTasks.add(uni);
             tasks.add(uni);
         }
 
-        log.info("---- Starting all threads ----");
+        LOG.info("---- Starting all threads ----");
         tasks.forEach(Thread::start);
 
-        log.info("---- Wait for primary threads to complete ----");
+        LOG.info("---- Wait for primary threads to complete ----");
         boolean done = false;
         while (!done) {
-            long running = primaryTasks.stream().filter(Thread::isAlive).count();
+            var running = primaryTasks.stream().filter(Thread::isAlive).count();
             done = running == 0l;
             sleep(1000);
-            log.info("running {}  complete {}%  rw {}  ro {}  un {}  uni {}", running,
+            LOG.info("running {}  complete {}%  rw {}  ro {}  un {}  uni {}", running,
                     (writeCounter.get() * 100) / (threadGroupCount * iterations), writeCounter,
                     managedReadCounter, unmanagedReadCounter, unmanagedNonInitializingReadCounter);
         }
 
-        log.info("---- Wait for threads secondary threads to wrap up ----");
+        LOG.info("---- Wait for threads secondary threads to wrap up ----");
         rwTasksCompleted.set(true);
-        for (Thread thread : secondaryTasks) {
+        for (var thread : secondaryTasks) {
             thread.join();
         }
 
-        log.info("---- Test is done ----");
+        LOG.info("---- Test is done ----");
 
         assertThat(exception).isFalse();
     }
@@ -477,13 +476,13 @@ public class CasStorageServiceImplTest
                     return;
                 }
 
-                try (CasStorageSession session = openNested()) {
-                    CAS cas = sut.readOrCreateCas(doc, user, FORCE_CAS_UPGRADE, initializer,
+                try (var session = openNested()) {
+                    var cas = sut.readOrCreateCas(doc, user, FORCE_CAS_UPGRADE, initializer,
                             EXCLUSIVE_WRITE_ACCESS);
                     Thread.sleep(50);
-                    AnnotationFS fs = cas.createAnnotation(cas.getAnnotationType(), 0, 10);
+                    var fs = cas.createAnnotation(cas.getAnnotationType(), 0, 10);
                     cas.addFsToIndexes(fs);
-                    log.debug("CAS size: {}", cas.getAnnotationIndex().size());
+                    LOG.debug("CAS size: {}", cas.getAnnotationIndex().size());
                     sut.writeCas(doc, cas, user);
                     writeCounter.incrementAndGet();
                 }
@@ -517,7 +516,7 @@ public class CasStorageServiceImplTest
             MDC.put(Logging.KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
 
             while (!(exception.get() || rwTasksCompleted.get())) {
-                try (CasStorageSession session = openNested()) {
+                try (var session = openNested()) {
                     sut.readOrCreateCas(doc, user, AUTO_CAS_UPGRADE, initializer,
                             SHARED_READ_ONLY_ACCESS);
                     managedReadCounter.incrementAndGet();
@@ -552,7 +551,7 @@ public class CasStorageServiceImplTest
             MDC.put(Logging.KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
 
             while (!(exception.get() || rwTasksCompleted.get())) {
-                try (CasStorageSession session = openNested()) {
+                try (var session = openNested()) {
                     Thread.sleep(2500 + rnd.nextInt(2500));
                     if (rnd.nextInt(100) >= 75) {
                         sut.deleteCas(doc, INITIAL_CAS_PSEUDO_USER);
@@ -590,7 +589,7 @@ public class CasStorageServiceImplTest
             MDC.put(Logging.KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
 
             while (!(exception.get() || rwTasksCompleted.get())) {
-                try (CasStorageSession session = openNested()) {
+                try (var session = openNested()) {
                     sut.readOrCreateCas(doc, user, AUTO_CAS_UPGRADE, initializer, UNMANAGED_ACCESS);
                     unmanagedReadCounter.incrementAndGet();
                     Thread.sleep(50);
@@ -655,7 +654,7 @@ public class CasStorageServiceImplTest
     private JCas createCasFile(SourceDocument doc, String user, String text)
         throws CASException, CasSessionException, IOException
     {
-        JCas casTemplate = sut.readOrCreateCas(doc, user, NO_CAS_UPGRADE, () -> makeCas(text),
+        var casTemplate = sut.readOrCreateCas(doc, user, NO_CAS_UPGRADE, () -> makeCas(text),
                 EXCLUSIVE_WRITE_ACCESS).getJCas();
         assertThat(sut.existsCas(doc, user)).isTrue();
 
@@ -664,10 +663,10 @@ public class CasStorageServiceImplTest
 
     private SourceDocument makeSourceDocument(long aProjectId, long aDocumentId, String aDocName)
     {
-        Project project = new Project();
+        var project = new Project();
         project.setId(aProjectId);
 
-        SourceDocument doc = new SourceDocument();
+        var doc = new SourceDocument();
         doc.setProject(project);
         doc.setId(aDocumentId);
         doc.setName(aDocName);
