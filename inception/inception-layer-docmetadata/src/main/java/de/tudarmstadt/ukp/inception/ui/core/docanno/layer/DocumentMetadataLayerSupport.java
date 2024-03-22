@@ -54,7 +54,7 @@ public class DocumentMetadataLayerSupport
     extends LayerSupport_ImplBase<DocumentMetadataLayerAdapter, DocumentMetadataLayerTraits>
     implements InitializingBean
 {
-    public static final String FEATURE_NAME_ORDER = "uiOrder";
+    public static final String FEATURE_NAME_ORDER = "i7n_uiOrder";
 
     public static final String TYPE = "document-metadata";
 
