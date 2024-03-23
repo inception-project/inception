@@ -48,6 +48,14 @@
     function handleDelete(ev: MouseEvent) {
         ajaxClient.deleteAnnotation(annotation.vid);
     }
+
+    function handleContextMenu(ev: MouseEvent) {
+        if (ev.shiftKey) return
+
+        ev.preventDefault()
+
+        ajaxClient.openContextMenu(annotation.vid, ev);
+    }
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -111,6 +119,7 @@
             class="btn-select btn btn-colored btn-sm py-0 px-1 border-dark"
             style="color: {textColor}; background-color: {backgroundColor}"
             on:click={handleSelect}
+            on:contextmenu={handleContextMenu}
             title="Select"
         >
             {#if showText}
@@ -124,6 +133,7 @@
             class="btn-delete btn btn-colored btn-sm py-0 px-1 border-dark"
             style="color: {textColor}; background-color: {backgroundColor}"
             on:click={handleDelete}
+            on:contextmenu={handleContextMenu}
             title="Delete"
         >
             <i class="far fa-times-circle" />

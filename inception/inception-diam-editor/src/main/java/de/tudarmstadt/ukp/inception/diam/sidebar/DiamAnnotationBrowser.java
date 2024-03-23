@@ -34,12 +34,16 @@ import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.inception.diam.editor.DiamAjaxBehavior;
 import de.tudarmstadt.ukp.inception.diam.editor.DiamJavaScriptReference;
+import de.tudarmstadt.ukp.inception.diam.editor.actions.ShowContextMenuHandler;
 import de.tudarmstadt.ukp.inception.diam.model.compactv2.CompactSerializerV2Impl;
 import de.tudarmstadt.ukp.inception.diam.model.websocket.ViewportDefinition;
+import de.tudarmstadt.ukp.inception.editor.AnnotationEditorExtensionRegistry;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.support.svelte.SvelteBehavior;
+import de.tudarmstadt.ukp.inception.support.wicket.ContextMenu;
 
 public class DiamAnnotationBrowser
     extends WebMarkupContainer
@@ -48,15 +52,18 @@ public class DiamAnnotationBrowser
 
     private @SpringBean ServletContext servletContext;
     private @SpringBean PreferencesService userPrefService;
+    private @SpringBean AnnotationEditorExtensionRegistry extensionRegistry;
 
     private final String userPreferencesKey;
+    private final ContextMenu contextMenu;
 
     private DiamAjaxBehavior diamBehavior;
 
-    public DiamAnnotationBrowser(String aId, String aUserPreferencesKey)
+    public DiamAnnotationBrowser(String aId, String aUserPreferencesKey, ContextMenu aContextMenu)
     {
         super(aId);
         userPreferencesKey = aUserPreferencesKey;
+        contextMenu = aContextMenu;
     }
 
     @Override
@@ -64,7 +71,11 @@ public class DiamAnnotationBrowser
     {
         super.onInitialize();
 
+        var page = findParent(AnnotationPage.class);
+
         add(diamBehavior = createDiamBehavior());
+        diamBehavior.addPriorityHandler(new ShowContextMenuHandler(extensionRegistry, contextMenu,
+                page.getModel(), page.getAnnotationActionHandler(), page::getEditorCas));
         add(new SvelteBehavior());
     }
 
@@ -99,9 +110,9 @@ public class DiamAnnotationBrowser
 
     private String constructEndpointUrl()
     {
-        Url endPointUrl = Url.parse(format("%s%s", servletContext.getContextPath(), WS_ENDPOINT));
+        var endPointUrl = Url.parse(format("%s%s", servletContext.getContextPath(), WS_ENDPOINT));
         endPointUrl.setProtocol("ws");
-        String fullUrl = RequestCycle.get().getUrlRenderer().renderFullUrl(endPointUrl);
+        var fullUrl = RequestCycle.get().getUrlRenderer().renderFullUrl(endPointUrl);
         return fullUrl;
     }
 
