@@ -17,13 +17,17 @@
  */
 package de.tudarmstadt.ukp.inception.ui.core.dashboard.admin.dashlet;
 
+import java.util.Objects;
+
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AbstractDefaultAjaxBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.OnDomReadyHeaderItem;
 import org.apache.wicket.markup.html.basic.Label;
-import org.apache.wicket.request.cycle.RequestCycle;
+import org.apache.wicket.protocol.http.servlet.ServletWebRequest;
+
+import de.tudarmstadt.ukp.inception.support.wicket.WicketUtil;
 
 public class ClientUrlAjaxBehavior
     extends AbstractDefaultAjaxBehavior
@@ -53,7 +57,13 @@ public class ClientUrlAjaxBehavior
     @Override
     protected void respond(AjaxRequestTarget target)
     {
-        clientUrl = RequestCycle.get().getRequest().getUrl().toString();
+        if (getComponent().getRequest() instanceof ServletWebRequest request) {
+            var oldClientUrl = clientUrl;
+            clientUrl = request.getPostParameters().getParameterValue("url").toString();
+            if (!Objects.equals(oldClientUrl, clientUrl)) {
+                WicketUtil.refreshPage(target, getComponent().getPage());
+            }
+        }
     }
 
     public String getClientUrl()
@@ -63,13 +73,16 @@ public class ClientUrlAjaxBehavior
 
     private CharSequence getJsScript()
     {
-        return "let currentUrl = window.location.origin + window.location.pathname;" //
-                + "let xhr = new XMLHttpRequest();" //
-                + "xhr.open('POST', '" + getCallbackUrl() + "', true);" //
-                + "xhr.setRequestHeader('Content-Type', 'application/json');" //
-                + "let data = JSON.stringify({ url: currentUrl });" //
-                + "xhr.send(data);" //
+        return "let currentUrl = window.location.origin + window.location.pathname;\n" //
+                + "Wicket.Ajax.ajax({\n" //
+                + "    m: 'post',\n" //
+                + "    c: '" + getComponent().getMarkupId() + "',\n" //
+                + "    u: '" + getCallbackUrl() + "',\n" //
+                + "    ep: { url: currentUrl },\n" //
+                + "    sh: [],\n" //
+                + "    fh: []\n" //
+                + "});\n" //
                 + "document.getElementById('" + getComponent().getMarkupId()
-                + "').innerText = currentUrl;";
+                + "').innerText = currentUrl;\n";
     }
 }

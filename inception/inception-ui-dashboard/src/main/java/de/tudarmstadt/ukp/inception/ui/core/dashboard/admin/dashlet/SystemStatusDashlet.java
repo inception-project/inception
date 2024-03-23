@@ -22,52 +22,195 @@ import static java.util.Collections.list;
 import static java.util.Locale.ROOT;
 import static java.util.stream.Collectors.joining;
 import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.apache.commons.lang3.StringUtils.startsWith;
 import static org.apache.wicket.RuntimeConfigurationType.DEVELOPMENT;
 
+import java.lang.invoke.MethodHandles;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.regex.Pattern;
 
+import org.apache.catalina.valves.RemoteIpValve;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.markup.html.panel.Fragment;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.protocol.http.servlet.ServletWebRequest;
 import org.apache.wicket.request.Url;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory;
 import org.springframework.security.core.session.SessionRegistry;
 
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.inception.support.markdown.MarkdownLabel;
+import de.tudarmstadt.ukp.inception.support.spring.ApplicationContextProvider;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.dashlet.Dashlet_ImplBase;
 
 public class SystemStatusDashlet
     extends Dashlet_ImplBase
 {
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
     private static final long serialVersionUID = 1276835215161570732L;
 
     private @SpringBean SessionRegistry sessionRegistry;
     private @SpringBean UserDao userRepository;
     private @SpringBean SystemStatusService systemStatusService;
 
+    private final ClientUrlAjaxBehavior clientUrlAjaxBehavior;
+
     public SystemStatusDashlet(String aId)
     {
         super(aId);
+        setOutputMarkupId(true);
 
-        queue(new Label("clientUrl").add(new ClientUrlAjaxBehavior()));
-        queue(new Label("activeUsers",
-                LoadableDetachableModel.of(() -> sessionRegistry.getAllPrincipals().size())));
-        queue(new Label("activeUsersDetail", LoadableDetachableModel.of(() -> sessionRegistry
-                .getAllPrincipals().stream().map(Objects::toString).collect(joining(", ")))));
+        queue(new Label("activeUsers", LoadableDetachableModel.of(() -> getActiveUsers().size())));
+        queue(new Label("activeUsersDetail", LoadableDetachableModel.of(
+                () -> getActiveUsers().stream().map(Objects::toString).collect(joining(", ")))));
+
+        clientUrlAjaxBehavior = new ClientUrlAjaxBehavior();
+
+        queue(new WebMarkupContainer("reverseProxyInfo")
+                .add(visibleWhen(LoadableDetachableModel.of(this::isRunningBehindReverseProxy))));
+
+        queue(new Fragment("isProxyTrusted", isProxyTrusted() ? "proxyTrusted" : "proxyNotTrusted",
+                this));
+
+        queue(new MarkdownLabel("isProtocolOk", LoadableDetachableModel
+                .of(() -> getString(isProtocolOk() ? "protocolOk" : "protocolNotOk"))));
+
+        queue(new MarkdownLabel("hasCsrfWithProtocol", LoadableDetachableModel.of(() -> getString(
+                hasCsrfWithProtocol() ? "csrfWithProtocolOk" : "csrfWithProtocolNotOk"))));
+
+        queue(new MarkdownLabel("hasCsrfWithoutProtocol",
+                LoadableDetachableModel
+                        .of(() -> getString(hasCsrfWithoutProtocol() ? "csrfWithoutProtocolOk"
+                                : "csrfWithoutProtocolNotOk"))));
+
+        queue(new WebMarkupContainer("requestDetails")
+                .add(visibleWhen(() -> getApplication().getConfigurationType() == DEVELOPMENT)));
+
+        queue(new Label("clientUrl").add(clientUrlAjaxBehavior));
 
         queue(new Label("serverUrl", LoadableDetachableModel.of(this::getServerUrl)));
-        queue(new Label("headers", LoadableDetachableModel.of(this::getHeaders))
-                .add(visibleWhen(() -> getApplication().getConfigurationType() == DEVELOPMENT)));
-        var reverseProxyInfo = LoadableDetachableModel.of(this::detectReverseProxy);
-        queue(new Label("reverseProxyInfo", reverseProxyInfo)
-                .add(visibleWhen(reverseProxyInfo.map(StringUtils::isNotBlank))));
+        queue(new Label("remoteIp", LoadableDetachableModel.of(this::getRemoteIp)));
+        queue(new Label("headers", LoadableDetachableModel.of(this::getHeaders)));
+        var reverseProxyHeaders = LoadableDetachableModel.of(this::getReverseProxyHeaders);
+        queue(new Label("reverseProxyHeaders", reverseProxyHeaders)
+                .add(visibleWhen(reverseProxyHeaders.map(StringUtils::isNotBlank))));
         var csrfInfo = LoadableDetachableModel.of(this::getCsrfAcceptedOrigins);
         queue(new Label("csrfInfo", csrfInfo)
-                .add(visibleWhen(reverseProxyInfo.map(StringUtils::isNotBlank))));
+                .add(visibleWhen(reverseProxyHeaders.map(StringUtils::isNotBlank))));
+    }
+
+    private List<Object> getActiveUsers()
+    {
+        return sessionRegistry.getAllPrincipals().stream() //
+                .filter($ -> !"anonymousUser".equals($.toString())) //
+                .toList();
+    }
+
+    private boolean hasCsrfWithProtocol()
+    {
+        try {
+            var acceptedOrigins = systemStatusService.getCsrfAttacksPreventionProperties()
+                    .getAcceptedOrigins();
+
+            var clientUrl = clientUrlAjaxBehavior.getClientUrl();
+            if (clientUrl == null) {
+                return false;
+            }
+
+            var url = new URL(clientUrl);
+
+            return acceptedOrigins.contains(url.getProtocol() + "://" + url.getHost());
+        }
+        catch (Exception e) {
+            LOG.error("Cannot parse client URL", e);
+        }
+
+        return false;
+    }
+
+    private boolean hasCsrfWithoutProtocol()
+    {
+        try {
+            var acceptedOrigins = systemStatusService.getCsrfAttacksPreventionProperties()
+                    .getAcceptedOrigins();
+
+            var clientUrl = clientUrlAjaxBehavior.getClientUrl();
+            if (clientUrl == null) {
+                return false;
+            }
+
+            var url = new URL(clientUrl);
+
+            return acceptedOrigins.contains(url.getHost());
+        }
+        catch (Exception e) {
+            LOG.error("Cannot parse client URL", e);
+        }
+
+        return false;
+    }
+
+    private boolean isProtocolOk()
+    {
+        try {
+            var clientUrl = clientUrlAjaxBehavior.getClientUrl();
+            var serverUrl = getServerUrl();
+
+            var clientProtocol = StringUtils.substringBefore(clientUrl, "://");
+            var serverProtocol = StringUtils.substringBefore(serverUrl, "://");
+
+            return Objects.equals(clientProtocol, serverProtocol);
+        }
+        catch (Exception e) {
+            LOG.error("Cannot compare protocols", e);
+        }
+
+        return false;
+    }
+
+    private boolean isProxyTrusted()
+    {
+        if (startsWith(clientUrlAjaxBehavior.getClientUrl(), getServerUrl())) {
+            // It seems that the URL the client requested is known to us, so we seem to have
+            // trusted the proxy
+            return true;
+        }
+
+        // If the server and client URLs mismatch, then let's look at the remote IP - maybe that
+        // is not trusted or internal.
+        var trustedProxies = getTrustedProxies();
+        if (isNotBlank(trustedProxies)) {
+            try {
+                return Pattern.matches(trustedProxies, getRemoteIp());
+            }
+            catch (Exception e) {
+                LOG.error("Cannot check trusted proxies expression [" + trustedProxies + "]", e);
+            }
+        }
+
+        var internalProxies = getInternalProxies();
+        if (isNotBlank(internalProxies)) {
+            try {
+                return Pattern.matches(internalProxies, getRemoteIp());
+            }
+            catch (Exception e) {
+                LOG.error("Cannot check internal proxies expression [" + internalProxies + "]", e);
+            }
+        }
+
+        return false;
     }
 
     @Override
@@ -92,7 +235,31 @@ public class SystemStatusDashlet
         return buf.toString();
     }
 
-    private String detectReverseProxy()
+    private boolean isRunningBehindReverseProxy()
+    {
+        if (getRequest() instanceof ServletWebRequest request) {
+            var xForwardHeaders = list(request.getContainerRequest().getHeaderNames()).stream() //
+                    .filter(h -> StringUtils.startsWithAny(h.toLowerCase(ROOT), "x-forwarded-",
+                            "forwarded")) //
+                    .toList();
+
+            if (!xForwardHeaders.isEmpty()) {
+                // Found headers related to the present of a reverse proxy
+                return true;
+            }
+        }
+
+        var clientUrl = clientUrlAjaxBehavior.getClientUrl();
+        if (clientUrl != null && !startsWith(clientUrl, getServerUrl())) {
+            // Probably running behind a reverse proxy, but the URL the server sees from the client
+            // does not match the URL that the client actually tried to access
+            return true;
+        }
+
+        return false;
+    }
+
+    private String getReverseProxyHeaders()
     {
         if (getRequest() instanceof ServletWebRequest request) {
             var xForwardHeaders = list(request.getContainerRequest().getHeaderNames()).stream() //
@@ -176,5 +343,36 @@ public class SystemStatusDashlet
         var urlRenderer = getRequestCycle().getUrlRenderer();
         var homePageUrl = urlFor(getApplication().getHomePage(), null);
         return urlRenderer.renderFullUrl(Url.parse(homePageUrl));
+    }
+
+    private String getRemoteIp()
+    {
+        if (getRequest() instanceof ServletWebRequest request) {
+            return request.getContainerRequest().getRemoteAddr();
+        }
+
+        return null;
+    }
+
+    private String getInternalProxies()
+    {
+        var maybeValve = getRemoteIpValve();
+        return maybeValve.map(RemoteIpValve::getInternalProxies).orElse(null);
+    }
+
+    private String getTrustedProxies()
+    {
+        var maybeValve = getRemoteIpValve();
+        return maybeValve.map(RemoteIpValve::getTrustedProxies).orElse(null);
+    }
+
+    private Optional<RemoteIpValve> getRemoteIpValve()
+    {
+        var context = ApplicationContextProvider.getApplicationContext();
+        var factory = context.getBean(TomcatServletWebServerFactory.class);
+        var maybeValve = factory.getEngineValves().stream() //
+                .filter(RemoteIpValve.class::isInstance) //
+                .map(v -> (RemoteIpValve) v).findFirst();
+        return maybeValve;
     }
 }
