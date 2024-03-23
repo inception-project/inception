@@ -107,7 +107,7 @@ public class UserDaoImpl
             "^/\\&*?+$![]", FILESYSTEM_RESERVED_CHARACTERS);
 
     public static final Set<String> RESERVED_USERNAMES = Set.of(INITIAL_CAS_PSEUDO_USER,
-            CURATION_USER);
+            CURATION_USER, "anonymousUser");
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
