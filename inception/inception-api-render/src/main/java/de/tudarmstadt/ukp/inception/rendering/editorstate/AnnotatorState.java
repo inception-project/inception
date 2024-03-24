@@ -79,8 +79,6 @@ public interface AnnotatorState
 
     AnnotationLayer getRememberedSpanLayer();
 
-    AnnotationLayer getRememberedArcLayer();
-
     Map<AnnotationFeature, Serializable> getRememberedSpanFeatures();
 
     Map<AnnotationFeature, Serializable> getRememberedArcFeatures();

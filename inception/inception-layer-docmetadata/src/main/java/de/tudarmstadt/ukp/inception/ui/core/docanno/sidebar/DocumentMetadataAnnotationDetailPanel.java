@@ -251,15 +251,7 @@ public class DocumentMetadataAnnotationDetailPanel
 
         // Populate from feature structure
         var featureStates = new ArrayList<FeatureState>();
-        for (var feature : annotationService.listSupportedFeatures(layer)) {
-            if (!feature.isEnabled()) {
-                continue;
-            }
-
-            if (!featureSupportRegistry.findExtension(feature).get().isAccessible(feature)) {
-                continue;
-            }
-
+        for (var feature : annotationService.listEnabledFeatures(layer)) {
             Serializable value = null;
             if (fs != null) {
                 value = adapter.getFeatureValue(feature, fs);

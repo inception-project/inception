@@ -681,8 +681,7 @@ export class AnnotatorUI {
           this.ajax.createRelationAnnotation(originSpan.id, targetSpan.id)
         }
       }
-    }
-    finally {
+    } finally {
       this.stopArcDrag(evt.target)
     }
   }

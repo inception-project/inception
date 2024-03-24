@@ -848,22 +848,10 @@ public class AnnotationSchemaServiceImpl
     @Transactional
     public List<AnnotationFeature> listEnabledFeatures(AnnotationLayer aLayer)
     {
-        if (isNull(aLayer) || isNull(aLayer.getId())) {
-            return new ArrayList<>();
-        }
-
-        var cb = entityManager.getCriteriaBuilder();
-        var query = cb.createQuery(AnnotationFeature.class);
-        var root = query.from(AnnotationFeature.class);
-
-        query //
-                .where(cb.and( //
-                        cb.equal(root.get(AnnotationFeature_.layer), aLayer),
-                        cb.isTrue(root.get(AnnotationFeature_.enabled))))
-                .orderBy(cb.asc(root.get(AnnotationFeature_.rank)),
-                        cb.asc(root.get(AnnotationFeature_.uiName)));
-
-        return entityManager.createQuery(query).setHint(CACHEABLE, true).getResultList();
+        return listAnnotationFeature(aLayer).stream() //
+                .filter(AnnotationFeature::isEnabled) //
+                .filter(featureSupportRegistry::isAccessible) //
+                .toList();
     }
 
     @Override
@@ -1061,7 +1049,7 @@ public class AnnotationSchemaServiceImpl
     {
         return listAnnotationFeature(aProject).stream() //
                 .filter($ -> featureSupportRegistry.findExtension($).isPresent()) //
-                .collect(toList());
+                .toList();
     }
 
     @Override
@@ -1069,8 +1057,8 @@ public class AnnotationSchemaServiceImpl
     public List<AnnotationFeature> listSupportedFeatures(AnnotationLayer aLayer)
     {
         return listAnnotationFeature(aLayer).stream() //
-                .filter($ -> featureSupportRegistry.findExtension($).isPresent()) //
-                .collect(toList());
+                .filter(featureSupportRegistry::isSupported) //
+                .toList();
     }
 
     @Override

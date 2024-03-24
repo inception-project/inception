@@ -288,14 +288,18 @@ public class CurationEditorExtension
                     .forEach(detailGroups::add);
 
             // The curatable features need to be all the same across the users for the position
-            var curatableFeatures = features.stream().filter(f -> f.isCuratable()).toList();
+            var curatableFeatures = features.stream() //
+                    .filter(f -> f.isCuratable()) //
+                    .toList();
             for (var feature : curatableFeatures) {
                 detailsLookupService.lookupFeatureLevelDetails(aVid, aCas, feature)
                         .forEach(detailGroups::add);
             }
 
             // The non-curatable features (e.g. comments) may differ, so we need to collect them
-            var nonCuratableFeatures = features.stream().filter(f -> !f.isCuratable()).toList();
+            var nonCuratableFeatures = features.stream() //
+                    .filter(f -> !f.isCuratable()) //
+                    .toList();
             lookupFeaturesAcrossAnnotators(aDocument, aUser, aCas, aLayer, vid, srcUser, srcCas,
                     nonCuratableFeatures).forEach(detailGroups::add);
         }
