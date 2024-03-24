@@ -52,7 +52,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
@@ -605,18 +604,18 @@ public abstract class AnnotationDetailEditorPanel
 
     private Optional<AnnotationLayer> getRelationLayerFor(AnnotationLayer aSpanLayer)
     {
-        for (AnnotationLayer l : annotationService.listAnnotationLayer(aSpanLayer.getProject())) {
-            if (!RelationLayerSupport.TYPE.equals(l.getType())) {
+        for (var layer : annotationService.listAnnotationLayer(aSpanLayer.getProject())) {
+            if (!RelationLayerSupport.TYPE.equals(layer.getType())) {
                 continue;
             }
 
-            if (aSpanLayer.equals(l.getAttachType())) {
-                return Optional.of(l);
+            if (aSpanLayer.equals(layer.getAttachType())) {
+                return Optional.of(layer);
             }
 
-            if (l.getAttachFeature() != null
-                    && l.getAttachFeature().getType().equals(aSpanLayer.getName())) {
-                return Optional.of(l);
+            if (layer.getAttachFeature() != null
+                    && layer.getAttachFeature().getType().equals(aSpanLayer.getName())) {
+                return Optional.of(layer);
             }
         }
 
@@ -1400,16 +1399,15 @@ public abstract class AnnotationDetailEditorPanel
     private static Set<AnnotationFS> getAttachedSpans(AnnotationSchemaService aAS, AnnotationFS aFs,
             AnnotationLayer aLayer)
     {
-        CAS cas = aFs.getCAS();
-        Set<AnnotationFS> attachedSpans = new HashSet<>();
-        TypeAdapter adapter = aAS.getAdapter(aLayer);
+        var cas = aFs.getCAS();
+        var attachedSpans = new HashSet<AnnotationFS>();
+        var adapter = aAS.getAdapter(aLayer);
         if (adapter instanceof SpanAdapter && aLayer.getAttachType() != null) {
-            Type spanType = CasUtil.getType(cas, aLayer.getAttachType().getName());
-            Feature attachFeature = spanType
-                    .getFeatureByBaseName(aLayer.getAttachFeature().getName());
-            final Type type = spanType;
+            var spanType = CasUtil.getType(cas, aLayer.getAttachType().getName());
+            var attachFeature = spanType.getFeatureByBaseName(aLayer.getAttachFeature().getName());
+            var type = spanType;
 
-            for (AnnotationFS attachedFs : selectAt(cas, type, aFs.getBegin(), aFs.getEnd())) {
+            for (var attachedFs : selectAt(cas, type, aFs.getBegin(), aFs.getEnd())) {
                 if (isSame(attachedFs.getFeatureValue(attachFeature), aFs)) {
                     attachedSpans.add(attachedFs);
                 }

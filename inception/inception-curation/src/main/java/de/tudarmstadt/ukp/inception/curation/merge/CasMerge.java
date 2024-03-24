@@ -106,6 +106,7 @@ public class CasMerge
     private MergeStrategy mergeStrategy = new DefaultMergeStrategy();
     private boolean silenceEvents = false;
     private Map<AnnotationLayer, List<AnnotationFeature>> featureCache = new HashMap<>();
+    private Map<String, AnnotationLayer> layerCache;
     private LoadingCache<AnnotationLayer, TypeAdapter> adapterCache;
     private LoadingCache<AnnotationFeature, LinkFeatureTraits> linkTraitsCache;
 
@@ -115,6 +116,7 @@ public class CasMerge
         schemaService = aSchemaService;
         eventPublisher = aEventPublisher;
 
+        layerCache = new HashMap<String, AnnotationLayer>();
         adapterCache = Caffeine.newBuilder() //
                 .maximumSize(100) //
                 .build(schemaService::getAdapter);
@@ -593,13 +595,19 @@ public class CasMerge
 
         var originFsClicked = getFeature(aSourceFs, relationAdapter.getSourceFeatureName(),
                 AnnotationFS.class);
+        var sourceSpanLayer = layerCache.computeIfAbsent(originFsClicked.getType().getName(),
+                typeName -> schemaService.findLayer(aDocument.getProject(), typeName));
+        var sourceSpanAdapter = (SpanAdapter) adapterCache.get(sourceSpanLayer);
+        var candidateOrigins = getCandidateAnnotations(aTargetCas, sourceSpanAdapter,
+                originFsClicked);
+
         var targetFsClicked = getFeature(aSourceFs, relationAdapter.getTargetFeatureName(),
                 AnnotationFS.class);
-
-        var spanAdapter = (SpanAdapter) adapterCache.get(aAnnotationLayer.getAttachType());
-
-        var candidateOrigins = getCandidateAnnotations(aTargetCas, spanAdapter, originFsClicked);
-        var candidateTargets = getCandidateAnnotations(aTargetCas, spanAdapter, targetFsClicked);
+        var targetSpanLayer = layerCache.computeIfAbsent(targetFsClicked.getType().getName(),
+                typeName -> schemaService.findLayer(aDocument.getProject(), typeName));
+        var targetSpanAdapter = (SpanAdapter) adapterCache.get(targetSpanLayer);
+        var candidateTargets = getCandidateAnnotations(aTargetCas, targetSpanAdapter,
+                targetFsClicked);
 
         // check if target/source exists in the mergeview
         if (candidateOrigins.isEmpty() || candidateTargets.isEmpty()) {

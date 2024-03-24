@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.inception.annotation.layer.relation;
 
 import static java.util.Arrays.asList;
-import static java.util.stream.Collectors.toList;
 import static org.apache.uima.cas.CAS.TYPE_NAME_ANNOTATION;
 
 import java.util.Collection;
@@ -27,6 +26,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
 
+import org.apache.uima.cas.CAS;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
@@ -127,11 +127,18 @@ public class RelationLayerSupport
         var td = aTsd.addType(aLayer.getName(), aLayer.getDescription(), TYPE_NAME_ANNOTATION);
         var attachType = aLayer.getAttachType();
 
-        td.addFeature(FEAT_REL_TARGET, "", attachType.getName());
-        td.addFeature(FEAT_REL_SOURCE, "", attachType.getName());
+        if (attachType != null) {
+            td.addFeature(FEAT_REL_TARGET, "", attachType.getName());
+            td.addFeature(FEAT_REL_SOURCE, "", attachType.getName());
+        }
+        else {
+            td.addFeature(FEAT_REL_TARGET, "", CAS.TYPE_NAME_ANNOTATION);
+            td.addFeature(FEAT_REL_SOURCE, "", CAS.TYPE_NAME_ANNOTATION);
+        }
 
-        List<AnnotationFeature> featureForLayer = aAllFeaturesInProject.stream()
-                .filter(feature -> aLayer.equals(feature.getLayer())).collect(toList());
+        var featureForLayer = aAllFeaturesInProject.stream() //
+                .filter(feature -> aLayer.equals(feature.getLayer())) //
+                .toList();
         generateFeatures(aTsd, td, featureForLayer);
     }
 

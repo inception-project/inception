@@ -35,6 +35,7 @@ public class AnnotationSchemaPropertiesImpl
 {
     private boolean tokenLayerEditable;
     private boolean sentenceLayerEditable;
+    private boolean crossLayerRelationEnabled;
 
     @ManagedAttribute
     @Override
@@ -60,5 +61,18 @@ public class AnnotationSchemaPropertiesImpl
     public void setSentenceLayerEditable(boolean aSentenceLayerEditable)
     {
         sentenceLayerEditable = aSentenceLayerEditable;
+    }
+
+    @ManagedAttribute
+    @Override
+    public boolean isCrossLayerRelationEnabled()
+    {
+        return crossLayerRelationEnabled;
+    }
+
+    @ManagedAttribute
+    public void setCrossLayerRelationEnabled(boolean aCrossLayerRelationEnabled)
+    {
+        crossLayerRelationEnabled = aCrossLayerRelationEnabled;
     }
 }

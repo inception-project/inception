@@ -25,14 +25,11 @@ import java.lang.invoke.MethodHandles;
 import java.util.List;
 import java.util.Optional;
 
-import javax.persistence.NoResultException;
-
 import org.apache.wicket.request.resource.PackageResourceReference;
 import org.apache.wicket.request.resource.ResourceReference;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.LayerInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.NamedEntityLayerInitializer;
@@ -92,14 +89,11 @@ public class NamedEntityIdentifierFeatureInitializer
     @Override
     public boolean alreadyApplied(Project aProject)
     {
-        AnnotationLayer neLayer;
-        try {
-            neLayer = annotationSchemaService.findLayer(aProject, NamedEntity.class.getName());
-        }
-        catch (NoResultException e) {
+        if (!annotationSchemaService.existsLayer(NamedEntity._TypeName, aProject)) {
             return false;
         }
 
+        var neLayer = annotationSchemaService.findLayer(aProject, NamedEntity.class.getName());
         return annotationSchemaService.existsFeature("identifier", neLayer);
     }
 

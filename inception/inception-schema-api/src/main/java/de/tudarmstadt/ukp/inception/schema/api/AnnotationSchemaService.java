@@ -669,4 +669,8 @@ public interface AnnotationSchemaService
     List<ValidationError> validateFeatureName(AnnotationFeature aFeature);
 
     boolean hasValidFeatureName(AnnotationFeature aFeature);
+
+    boolean hasValidLayerName(AnnotationLayer aLayer);
+
+    List<ValidationError> validateLayerName(AnnotationLayer aLayer);
 }

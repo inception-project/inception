@@ -114,11 +114,19 @@ public class RelationEndpointFeatureSupport
             return emptyList();
         }
 
-        var attachType = aAnnotationLayer.getAttachType().getName();
+        var attachType = aAnnotationLayer.getAttachType();
+        String attachTypeName;
+        if (attachType == null) {
+            attachTypeName = CAS.TYPE_NAME_ANNOTATION;
+        }
+        else {
+            attachTypeName = attachType.getName();
+        }
+
         return asList( //
-                new FeatureType(PREFIX_SOURCE + attachType, "Relation source", featureSupportId,
+                new FeatureType(PREFIX_SOURCE + attachTypeName, "Relation source", featureSupportId,
                         true), //
-                new FeatureType(PREFIX_TARGET + attachType, "Relation target", featureSupportId,
+                new FeatureType(PREFIX_TARGET + attachTypeName, "Relation target", featureSupportId,
                         true));
     }
 
