@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.io.brat;
 
+import static de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport.FEAT_REL_SOURCE;
+import static de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport.FEAT_REL_TARGET;
 import static org.apache.uima.fit.factory.AnalysisEngineFactory.createEngineDescription;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReaderDescription;
 
@@ -28,9 +30,11 @@ import org.apache.uima.resource.metadata.TypeSystemDescription;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport;
 import de.tudarmstadt.ukp.inception.io.brat.config.BratAutoConfiguration;
 import de.tudarmstadt.ukp.inception.io.brat.dkprocore.BratReader;
 import de.tudarmstadt.ukp.inception.io.brat.dkprocore.BratWriter;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
 /**
  * Support for brat format.
@@ -44,6 +48,13 @@ public class BratCustomFormatSupport
 {
     public static final String ID = "bratCustom";
     public static final String NAME = "brat custom (experimental)";
+
+    private final AnnotationSchemaService schemaService;
+
+    public BratCustomFormatSupport(AnnotationSchemaService aSchemaService)
+    {
+        schemaService = aSchemaService;
+    }
 
     @Override
     public String getId()
@@ -66,7 +77,7 @@ public class BratCustomFormatSupport
     @Override
     public boolean isWritable()
     {
-        return false;
+        return true;
     }
 
     @Override
@@ -74,7 +85,8 @@ public class BratCustomFormatSupport
             TypeSystemDescription aTSD)
         throws ResourceInitializationException
     {
-        return createReaderDescription(BratReader.class, aTSD, //
+        return createReaderDescription( //
+                BratReader.class, aTSD, //
                 BratReader.PARAM_LENIENT, true);
     }
 
@@ -83,6 +95,17 @@ public class BratCustomFormatSupport
             TypeSystemDescription aTSD, CAS aCAS)
         throws ResourceInitializationException
     {
-        return createEngineDescription(BratWriter.class, aTSD);
+        var layers = schemaService.listAnnotationLayer(aProject);
+
+        var relationLayerMappings = layers.stream() //
+                .filter(layer -> RelationLayerSupport.TYPE.equals(layer.getType()))
+                .map(layer -> layer.getName() + ":" + FEAT_REL_SOURCE + ":" + FEAT_REL_TARGET)
+                .toList();
+
+        return createEngineDescription( //
+                BratWriter.class, aTSD, //
+                BratWriter.PARAM_SHORT_TYPE_NAMES, true, //
+                BratWriter.PARAM_SHORT_ATTRIBUTE_NAMES, true, //
+                BratWriter.PARAM_RELATION_TYPES, relationLayerMappings);
     }
 }

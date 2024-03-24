@@ -28,7 +28,9 @@ The **brat custom** format is mainly directed towards users who have existing to
 that tooling with texts annotated in {product-name}. The brat format is less expressive than the {product-name} data
 model, so the export process may not be loss-less. In contrast to the **brat basic** format, this format will export annotations on custom layers.
 
+When writing, the format uses the **short type names** (i.e. the part of the technical name after the last dot (`.`)) of layers as labels for the brat span and relation annotations. This means it is important that you do not have multiple types with the same short names.
 
+When reading, the format will try to match the labels of brat span and relation annotations to the **short type names** as well and will try to map attributes to the corresponding features of these types.
 
 NOTE: {product-name} supports attributes (features) on relations, but the original brat does not. For this reason, the
       files produced by this format may not import into or display properly in the original brat tool.
@@ -39,7 +41,7 @@ NOTE: {product-name} supports attributes (features) on relations, but the origin
 
 | brat (experimental) (`brat`)
 | false
-| no
+| yes
 | yes
 | brat format
 
