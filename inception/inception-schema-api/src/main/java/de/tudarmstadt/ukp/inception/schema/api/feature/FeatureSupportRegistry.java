@@ -52,4 +52,18 @@ public interface FeatureSupportRegistry
     <T> T readTraits(AnnotationFeature aFeature, SerializableSupplier<T> aIfMissing);
 
     <T> Optional<FeatureSupport<T>> findExtension(AnnotationFeature aKey);
+
+    /**
+     * @return whether the given feature is accessible (that implies that it is supported).
+     * @param aFeature
+     *            the feature to check.
+     */
+    boolean isAccessible(AnnotationFeature aFeature);
+
+    /**
+     * @return whether the given feature is supported (that does not imply that it is supported).
+     * @param aFeature
+     *            the feature to check.
+     */
+    boolean isSupported(AnnotationFeature aFeature);
 }

@@ -23,6 +23,7 @@ import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.isSame;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Collections.emptyList;
 
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -43,6 +44,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.annotation.layer.TypeAdapter_ImplBase;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.CreateRelationAnnotationRequest;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.CreateSpanAnnotationRequest;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerBehavior;
 import de.tudarmstadt.ukp.inception.rendering.selection.Selection;
@@ -62,7 +64,7 @@ import de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil;
 public class ChainAdapter
     extends TypeAdapter_ImplBase
 {
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     public static final String CHAIN = "Chain";
     public static final String LINK = "Link";
@@ -97,13 +99,13 @@ public class ChainAdapter
 
     public AnnotationFS handle(CreateSpanAnnotationRequest aRequest) throws AnnotationException
     {
-        CreateSpanAnnotationRequest request = aRequest;
+        var request = aRequest;
 
-        for (SpanLayerBehavior behavior : behaviors) {
+        for (var behavior : behaviors) {
             request = behavior.onCreate(this, request);
         }
 
-        AnnotationFS newSpan = createChainElementAnnotation(request);
+        var newSpan = createChainElementAnnotation(request);
 
         publishEvent(() -> new ChainSpanCreatedEvent(this, aRequest.getDocument(),
                 aRequest.getDocumentOwner(), getLayer(), newSpan));
@@ -114,7 +116,7 @@ public class ChainAdapter
     private AnnotationFS createChainElementAnnotation(CreateSpanAnnotationRequest aRequest)
     {
         // Add the link annotation on the span
-        AnnotationFS newLink = newLink(aRequest.getCas(), aRequest.getBegin(), aRequest.getEnd());
+        var newLink = newLink(aRequest.getCas(), aRequest.getBegin(), aRequest.getEnd());
 
         // The added link is a new chain on its own - add the chain head FS
         newChain(aRequest.getCas(), newLink);
@@ -122,19 +124,29 @@ public class ChainAdapter
         return newLink;
     }
 
-    public int addArc(SourceDocument aDocument, String aUsername, CAS aCas, AnnotationFS aOriginFs,
-            AnnotationFS aTargetFs)
+    public AnnotationFS addArc(SourceDocument aDocument, String aUsername, CAS aCas,
+            AnnotationFS aOriginFs, AnnotationFS aTargetFs)
     {
+        return handle(new CreateRelationAnnotationRequest(aDocument, aUsername, aCas, aOriginFs,
+                aTargetFs));
+    }
+
+    public AnnotationFS handle(CreateRelationAnnotationRequest aRequest)
+    {
+        var cas = aRequest.getCas();
+        var originFs = aRequest.getOriginFs();
+        var targetFs = aRequest.getTargetFs();
+
         // Determine if the links are adjacent. If so, just update the arc label
-        AnnotationFS originNext = getNextLink(aOriginFs);
-        AnnotationFS targetNext = getNextLink(aTargetFs);
+        var originNext = getNextLink(originFs);
+        var targetNext = getNextLink(targetFs);
 
         // adjacent - origin links to target
-        if (isSame(originNext, aTargetFs)) {
+        if (isSame(originNext, targetFs)) {
             // Nothing to do
         }
         // adjacent - target links to origin
-        else if (isSame(targetNext, aOriginFs)) {
+        else if (isSame(targetNext, originFs)) {
             if (isLinkedListBehavior()) {
                 throw new IllegalStateException("Cannot change direction of a link within a chain");
             }
@@ -144,10 +156,10 @@ public class ChainAdapter
         }
         // if origin and target are not adjacent
         else {
-            FeatureStructure originChain = getChainForLink(aCas, aOriginFs);
-            FeatureStructure targetChain = getChainForLink(aCas, aTargetFs);
+            var originChain = getChainForLink(cas, originFs);
+            var targetChain = getChainForLink(cas, targetFs);
 
-            AnnotationFS targetPrev = getPrevLink(targetChain, aTargetFs);
+            var targetPrev = getPrevLink(targetChain, targetFs);
 
             if (!isSame(originChain, targetChain)) {
                 if (isLinkedListBehavior()) {
@@ -158,7 +170,7 @@ public class ChainAdapter
                     // if originFs has a next, then split of the origin chain up
                     // the rest becomes its own chain
                     if (originNext != null) {
-                        newChain(aCas, originNext);
+                        newChain(cas, originNext);
                         // we set originNext below
                         // we set the arc label below
                     }
@@ -170,11 +182,11 @@ public class ChainAdapter
                     // if it has no prev then we fully append the target chain to the origin chain
                     // and we can remove the target chain head
                     else {
-                        aCas.removeFsFromIndexes(targetChain);
+                        cas.removeFsFromIndexes(targetChain);
                     }
 
                     // connect the rest of the target chain to the origin chain
-                    setNextLink(aOriginFs, aTargetFs);
+                    setNextLink(originFs, targetFs);
                 }
                 else {
                     // collect all the links
@@ -204,7 +216,7 @@ public class ChainAdapter
                     setFirstLink(originChain, links.get(0));
 
                     // we don't need the second chain head anymore
-                    aCas.removeFsFromIndexes(targetChain);
+                    cas.removeFsFromIndexes(targetChain);
                 }
             }
             else {
@@ -216,12 +228,12 @@ public class ChainAdapter
             }
         }
 
-        AnnotationFS nextLink = getNextLink(aOriginFs);
-        publishEvent(() -> new ChainLinkCreatedEvent(this, aDocument, aUsername, getLayer(),
-                aOriginFs, nextLink));
+        var nextLink = getNextLink(originFs);
+        publishEvent(() -> new ChainLinkCreatedEvent(this, aRequest.getDocument(),
+                aRequest.getUsername(), getLayer(), originFs, nextLink));
 
         // We do not actually create a new FS for the arc. Features are set on the originFS.
-        return ICasUtil.getAddr(aOriginFs);
+        return originFs;
     }
 
     @Override
@@ -391,8 +403,8 @@ public class ChainAdapter
      */
     private FeatureStructure newChain(CAS aCas, AnnotationFS aFirstLink)
     {
-        Type chainType = CasUtil.getType(aCas, getChainTypeName());
-        FeatureStructure newChain = aCas.createFS(chainType);
+        var chainType = CasUtil.getType(aCas, getChainTypeName());
+        var newChain = aCas.createFS(chainType);
         newChain.setFeatureValue(chainType.getFeatureByBaseName(getChainFirstFeatureName()),
                 aFirstLink);
         aCas.addFsToIndexes(newChain);
@@ -404,8 +416,8 @@ public class ChainAdapter
      */
     private AnnotationFS newLink(CAS aCas, int aBegin, int aEnd)
     {
-        Type linkType = CasUtil.getType(aCas, getAnnotationTypeName());
-        AnnotationFS newLink = aCas.createAnnotation(linkType, aBegin, aEnd);
+        var linkType = CasUtil.getType(aCas, getAnnotationTypeName());
+        var newLink = aCas.createAnnotation(linkType, aBegin, aEnd);
         aCas.addFsToIndexes(newLink);
         return newLink;
     }
@@ -489,7 +501,7 @@ public class ChainAdapter
     @Override
     public void initializeLayerConfiguration(AnnotationSchemaService aSchemaService)
     {
-        AnnotationFeature relationFeature = new AnnotationFeature();
+        var relationFeature = new AnnotationFeature();
         relationFeature.setType(CAS.TYPE_NAME_STRING);
         relationFeature.setName(COREFERENCE_RELATION_FEATURE);
         relationFeature.setLayer(getLayer());
@@ -499,7 +511,7 @@ public class ChainAdapter
 
         aSchemaService.createFeature(relationFeature);
 
-        AnnotationFeature typeFeature = new AnnotationFeature();
+        var typeFeature = new AnnotationFeature();
         typeFeature.setType(CAS.TYPE_NAME_STRING);
         typeFeature.setName(COREFERENCE_TYPE_FEATURE);
         typeFeature.setLayer(getLayer());
@@ -513,11 +525,11 @@ public class ChainAdapter
     @Override
     public List<Pair<LogMessage, AnnotationFS>> validate(CAS aCas)
     {
-        List<Pair<LogMessage, AnnotationFS>> messages = new ArrayList<>();
-        for (SpanLayerBehavior behavior : behaviors) {
-            long startTime = currentTimeMillis();
+        var messages = new ArrayList<Pair<LogMessage, AnnotationFS>>();
+        for (var behavior : behaviors) {
+            var startTime = currentTimeMillis();
             messages.addAll(behavior.onValidate(this, aCas));
-            log.trace("Validation for [{}] on [{}] took {}ms", behavior.getClass().getSimpleName(),
+            LOG.trace("Validation for [{}] on [{}] took {}ms", behavior.getClass().getSimpleName(),
                     getLayer().getUiName(), currentTimeMillis() - startTime);
         }
         return messages;
@@ -526,7 +538,7 @@ public class ChainAdapter
     @Override
     public Selection select(VID aVid, AnnotationFS aAnno)
     {
-        Selection selection = new Selection();
+        var selection = new Selection();
 
         if (aVid.getSubId() == 1) {
             selection.selectArc(aVid, aAnno, getNextLink(aAnno));
@@ -535,6 +547,20 @@ public class ChainAdapter
             selection.selectSpan(aAnno);
         }
 
+        return selection;
+    }
+
+    public Selection selectSpan(AnnotationFS aAnno)
+    {
+        var selection = new Selection();
+        selection.selectSpan(aAnno);
+        return selection;
+    }
+
+    public Selection selectLink(AnnotationFS aAnno)
+    {
+        var selection = new Selection();
+        selection.selectArc(new VID(aAnno, 1, VID.NONE, VID.NONE), aAnno, getNextLink(aAnno));
         return selection;
     }
 }

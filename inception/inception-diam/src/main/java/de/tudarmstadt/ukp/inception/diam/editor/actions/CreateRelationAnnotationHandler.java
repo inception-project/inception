@@ -17,24 +17,20 @@
  */
 package de.tudarmstadt.ukp.inception.diam.editor.actions;
 
+import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectAnnotationByAddr;
+
 import java.io.IOException;
 
-import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.request.IRequestParameters;
 import org.apache.wicket.request.Request;
 import org.springframework.core.annotation.Order;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.inception.diam.editor.config.DiamAutoConfig;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.DefaultAjaxResponse;
-import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
-import de.tudarmstadt.ukp.inception.rendering.selection.Selection;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
-import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
 
 /**
  * <p>
@@ -58,9 +54,7 @@ public class CreateRelationAnnotationHandler
     public DefaultAjaxResponse handle(AjaxRequestTarget aTarget, Request aRequest)
     {
         try {
-            AnnotationPageBase page = getPage();
-            CAS cas = page.getEditorCas();
-            actionArc(aTarget, aRequest.getRequestParameters(), cas);
+            actionArc(aTarget, aRequest.getRequestParameters());
             return new DefaultAjaxResponse(getAction(aRequest));
         }
         catch (Exception e) {
@@ -68,13 +62,13 @@ public class CreateRelationAnnotationHandler
         }
     }
 
-    private void actionArc(AjaxRequestTarget aTarget, IRequestParameters request, CAS aCas)
+    private void actionArc(AjaxRequestTarget aTarget, IRequestParameters aParams)
         throws IOException, AnnotationException
     {
-        AnnotationPageBase page = getPage();
+        var page = getPage();
 
-        VID origin = VID.parse(request.getParameterValue(PARAM_ORIGIN_SPAN_ID).toString());
-        VID target = VID.parse(request.getParameterValue(PARAM_TARGET_SPAN_ID).toString());
+        var origin = VID.parse(aParams.getParameterValue(PARAM_ORIGIN_SPAN_ID).toString());
+        var target = VID.parse(aParams.getParameterValue(PARAM_TARGET_SPAN_ID).toString());
 
         if (origin.isSynthetic() || target.isSynthetic()) {
             page.error("Relations cannot be created from/to synthetic annotations");
@@ -82,13 +76,14 @@ public class CreateRelationAnnotationHandler
             return;
         }
 
-        AnnotationFS originFs = ICasUtil.selectAnnotationByAddr(aCas, origin.getId());
-        AnnotationFS targetFs = ICasUtil.selectAnnotationByAddr(aCas, target.getId());
+        var cas = page.getEditorCas();
+        var originFs = selectAnnotationByAddr(cas, origin.getId());
+        var targetFs = selectAnnotationByAddr(cas, target.getId());
 
-        AnnotatorState state = page.getModelObject();
-        Selection selection = state.getSelection();
+        var state = page.getModelObject();
+        var selection = state.getSelection();
         selection.selectArc(originFs, targetFs);
 
-        page.getAnnotationActionHandler().actionCreateOrUpdate(aTarget, aCas);
+        page.getAnnotationActionHandler().actionCreateOrUpdate(aTarget, cas);
     }
 }

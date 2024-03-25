@@ -27,8 +27,6 @@ import java.io.Serializable;
 import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.Feature;
-import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.wicket.Page;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -76,11 +74,11 @@ public class Selection
 
     public void selectArc(AnnotationFS aFS)
     {
-        Type depType = aFS.getType();
-        Feature originFeat = depType.getFeatureByBaseName(FEAT_REL_SOURCE);
-        Feature targetFeat = depType.getFeatureByBaseName(FEAT_REL_TARGET);
-        AnnotationFS originFS = (AnnotationFS) aFS.getFeatureValue(originFeat);
-        AnnotationFS targetFS = (AnnotationFS) aFS.getFeatureValue(targetFeat);
+        var depType = aFS.getType();
+        var originFeat = depType.getFeatureByBaseName(FEAT_REL_SOURCE);
+        var targetFeat = depType.getFeatureByBaseName(FEAT_REL_TARGET);
+        var originFS = (AnnotationFS) aFS.getFeatureValue(originFeat);
+        var targetFS = (AnnotationFS) aFS.getFeatureValue(targetFeat);
         selectArc(VID.builder().forAnnotation(aFS).build(), originFS, targetFS);
     }
 

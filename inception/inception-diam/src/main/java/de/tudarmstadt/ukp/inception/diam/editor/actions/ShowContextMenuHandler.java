@@ -85,8 +85,7 @@ public class ShowContextMenuHandler
 
             if (model.getObject().getSelection().isSpan()) {
                 var vid = getVid(aRequest);
-                items.add(new LambdaMenuItem("Link to ...",
-                        _target -> actionArcRightClick(_target, vid)));
+                items.add(new LambdaMenuItem("Link to ...", $ -> actionLinkTo($, vid)));
             }
 
             extensionRegistry.generateContextMenuItems(items);
@@ -102,7 +101,7 @@ public class ShowContextMenuHandler
         return new DefaultAjaxResponse(getAction(aRequest));
     }
 
-    private void actionArcRightClick(AjaxRequestTarget aTarget, VID paramId)
+    private void actionLinkTo(AjaxRequestTarget aTarget, VID paramId)
         throws IOException, AnnotationException
     {
         var state = model.getObject();

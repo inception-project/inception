@@ -38,6 +38,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.uima.cas.impl.Serialization.deserializeCASComplete;
 import static org.apache.uima.cas.impl.Serialization.serializeCASComplete;
 import static org.apache.uima.cas.impl.Serialization.serializeWithCompression;
+import static org.apache.uima.cas.impl.TypeSystemUtils.isIdentifier;
 import static org.apache.uima.fit.factory.TypeSystemDescriptionFactory.createTypeSystemDescription;
 import static org.apache.uima.util.CasCreationUtils.mergeTypeSystems;
 import static org.hibernate.annotations.QueryHints.CACHEABLE;
@@ -52,6 +53,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.StringTokenizer;
 
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
@@ -846,22 +848,10 @@ public class AnnotationSchemaServiceImpl
     @Transactional
     public List<AnnotationFeature> listEnabledFeatures(AnnotationLayer aLayer)
     {
-        if (isNull(aLayer) || isNull(aLayer.getId())) {
-            return new ArrayList<>();
-        }
-
-        var cb = entityManager.getCriteriaBuilder();
-        var query = cb.createQuery(AnnotationFeature.class);
-        var root = query.from(AnnotationFeature.class);
-
-        query //
-                .where(cb.and( //
-                        cb.equal(root.get(AnnotationFeature_.layer), aLayer),
-                        cb.isTrue(root.get(AnnotationFeature_.enabled))))
-                .orderBy(cb.asc(root.get(AnnotationFeature_.rank)),
-                        cb.asc(root.get(AnnotationFeature_.uiName)));
-
-        return entityManager.createQuery(query).setHint(CACHEABLE, true).getResultList();
+        return listAnnotationFeature(aLayer).stream() //
+                .filter(AnnotationFeature::isEnabled) //
+                .filter(featureSupportRegistry::isAccessible) //
+                .toList();
     }
 
     @Override
@@ -1034,9 +1024,9 @@ public class AnnotationSchemaServiceImpl
     @Transactional
     public List<AnnotationLayer> listSupportedLayers(Project aProject)
     {
-        List<AnnotationLayer> supportedLayers = new ArrayList<>();
+        var supportedLayers = new ArrayList<AnnotationLayer>();
 
-        for (AnnotationLayer l : listAnnotationLayer(aProject)) {
+        for (var l : listAnnotationLayer(aProject)) {
             try {
                 layerSupportRegistry.getLayerSupport(l);
             }
@@ -1059,7 +1049,7 @@ public class AnnotationSchemaServiceImpl
     {
         return listAnnotationFeature(aProject).stream() //
                 .filter($ -> featureSupportRegistry.findExtension($).isPresent()) //
-                .collect(toList());
+                .toList();
     }
 
     @Override
@@ -1067,17 +1057,17 @@ public class AnnotationSchemaServiceImpl
     public List<AnnotationFeature> listSupportedFeatures(AnnotationLayer aLayer)
     {
         return listAnnotationFeature(aLayer).stream() //
-                .filter($ -> featureSupportRegistry.findExtension($).isPresent()) //
-                .collect(toList());
+                .filter(featureSupportRegistry::isSupported) //
+                .toList();
     }
 
     @Override
     public TypeSystemDescription getCustomProjectTypes(Project aProject)
     {
         // Create a new type system from scratch
-        TypeSystemDescription tsd = new TypeSystemDescription_impl();
+        var tsd = new TypeSystemDescription_impl();
 
-        List<AnnotationFeature> allFeaturesInProject = listSupportedFeatures(aProject);
+        var allFeaturesInProject = listSupportedFeatures(aProject);
 
         listSupportedLayers(aProject).stream() //
                 .filter(layer -> !layer.isBuiltIn()) //
@@ -1178,7 +1168,7 @@ public class AnnotationSchemaServiceImpl
             boolean aIncludeInternalTypes)
         throws ResourceInitializationException
     {
-        List<TypeSystemDescription> typeSystems = new ArrayList<>();
+        var typeSystems = new ArrayList<TypeSystemDescription>();
 
         // Types detected by uimaFIT
         typeSystems.add(builtInTypes);
@@ -1666,6 +1656,35 @@ public class AnnotationSchemaServiceImpl
     }
 
     @Override
+    public boolean hasValidLayerName(AnnotationLayer aLayer)
+    {
+        return validateLayerName(aLayer).isEmpty();
+    }
+
+    @Override
+    public List<ValidationError> validateLayerName(AnnotationLayer aLayer)
+    {
+        var name = aLayer.getName();
+
+        var errors = new ArrayList<ValidationError>();
+
+        if (isTypeName(name)) {
+            errors.add(new ValidationError(
+                    "Invalid technical name [" + name + "]. Try using a simpler name when "
+                            + "creating the layer and rename the layer after it has been created"));
+            return errors;
+        }
+
+        if (existsLayer(name, aLayer.getProject())) {
+            errors.add(new ValidationError(
+                    "A layer with the name [" + name + "] already exists in this project."));
+            return errors;
+        }
+
+        return errors;
+    }
+
+    @Override
     public boolean hasValidFeatureName(AnnotationFeature aFeature)
     {
         return validateFeatureName(aFeature).isEmpty();
@@ -1674,7 +1693,7 @@ public class AnnotationSchemaServiceImpl
     @Override
     public List<ValidationError> validateFeatureName(AnnotationFeature aFeature)
     {
-        String name = aFeature.getName();
+        var name = aFeature.getName();
 
         var errors = new ArrayList<ValidationError>();
 
@@ -1711,5 +1730,27 @@ public class AnnotationSchemaServiceImpl
         }
 
         return errors;
+    }
+
+    private static final String NAMESPACE_SEPARATOR_AS_STRING = "" + TypeSystem.NAMESPACE_SEPARATOR;
+
+    // Remove method when upgrading to UIMA 3.6.0
+    // See https://github.com/apache/uima-uimaj/issues/369
+    // return TypeSystemUtil.isTypeName(name);
+    public static boolean isTypeName(String name)
+    {
+        var tok = new StringTokenizer(name, NAMESPACE_SEPARATOR_AS_STRING, true);
+        while (tok.hasMoreTokens()) {
+            if (!isIdentifier(tok.nextToken())) {
+                return false;
+            }
+            if (tok.hasMoreTokens()) {
+                if (!tok.nextToken().equals(NAMESPACE_SEPARATOR_AS_STRING)
+                        || !tok.hasMoreTokens()) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 }

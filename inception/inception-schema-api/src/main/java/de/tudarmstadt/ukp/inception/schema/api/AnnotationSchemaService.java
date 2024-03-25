@@ -373,9 +373,9 @@ public interface AnnotationSchemaService
     List<AnnotationFeature> listAnnotationFeature(Project project);
 
     /**
-     * List all supported features in the project. This includes disabled features. Supported
-     * features are features for which a {@link FeatureSupport} is available in the
-     * {@link FeatureSupportRegistry}.
+     * List all supported features in the project. This includes disabled and non-accessible
+     * features. Supported features are features for which a {@link FeatureSupport} is available in
+     * the {@link FeatureSupportRegistry}.
      * 
      * @param aProject
      *            the project.
@@ -384,8 +384,8 @@ public interface AnnotationSchemaService
     List<AnnotationFeature> listSupportedFeatures(Project aProject);
 
     /**
-     * List all supported features in the layer. This includes disabled features. Supported features
-     * are features for which a {@link FeatureSupport} is available in the
+     * List all supported features in the layer. This includes disabled and non-accessible features.
+     * Supported features are features for which a {@link FeatureSupport} is available in the
      * {@link FeatureSupportRegistry}.
      * 
      * @param aLayer
@@ -395,7 +395,8 @@ public interface AnnotationSchemaService
     List<AnnotationFeature> listSupportedFeatures(AnnotationLayer aLayer);
 
     /**
-     * List enabled features in a {@link AnnotationLayer} for this {@link Project}.
+     * List enabled features in a {@link AnnotationLayer} for this {@link Project}. Enabled features
+     * are also supported and accessible.
      * 
      * @param aLayer
      *            the layer.
@@ -669,4 +670,8 @@ public interface AnnotationSchemaService
     List<ValidationError> validateFeatureName(AnnotationFeature aFeature);
 
     boolean hasValidFeatureName(AnnotationFeature aFeature);
+
+    boolean hasValidLayerName(AnnotationLayer aLayer);
+
+    List<ValidationError> validateLayerName(AnnotationLayer aLayer);
 }

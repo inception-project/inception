@@ -461,6 +461,7 @@ public interface FeatureSupport<T>
      *         and {@link #unwrapFeatureValue}.
      * @param aFeature
      *            the feature
+     * @see FeatureSupportRegistry#isAccessible(AnnotationFeature)
      */
     default boolean isAccessible(AnnotationFeature aFeature)
     {

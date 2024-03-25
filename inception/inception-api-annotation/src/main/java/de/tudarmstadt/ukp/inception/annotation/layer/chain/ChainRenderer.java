@@ -22,7 +22,6 @@ import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.COREFERENCE_RELA
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.COREFERENCE_TYPE_FEATURE;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
-import static java.util.stream.Collectors.toList;
 import static org.apache.uima.cas.text.AnnotationPredicates.overlapping;
 
 import java.util.ArrayList;
@@ -78,7 +77,7 @@ public class ChainRenderer
     @Override
     protected boolean typeSystemInit(TypeSystem aTypeSystem)
     {
-        ChainAdapter typeAdapter = getTypeAdapter();
+        var typeAdapter = getTypeAdapter();
         chainType = aTypeSystem.getType(typeAdapter.getChainTypeName());
 
         if (chainType == null) {
@@ -95,10 +94,10 @@ public class ChainRenderer
     @Override
     public List<AnnotationFS> selectAnnotationsInWindow(CAS aCas, int aWindowBegin, int aWindowEnd)
     {
-        ChainAdapter typeAdapter = getTypeAdapter();
+        var typeAdapter = getTypeAdapter();
         return aCas.select(typeAdapter.getAnnotationTypeName()) //
                 .map(a -> (AnnotationFS) a) //
-                .collect(toList());
+                .toList();
     }
 
     @Override
@@ -109,7 +108,7 @@ public class ChainRenderer
             return;
         }
 
-        ChainAdapter typeAdapter = getTypeAdapter();
+        var typeAdapter = getTypeAdapter();
 
         // Find the features for the arc and span labels - it is possible that we do not find a
         // feature for arc/span labels because they may have been disabled.
