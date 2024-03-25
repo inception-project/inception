@@ -33,7 +33,6 @@ import java.util.List;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
-import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.Check;
 import org.apache.wicket.markup.html.form.CheckBox;
@@ -120,11 +119,6 @@ public class CurationSidebar
 
         var state = aModel.getObject();
 
-        var notCuratableNotice = new WebMarkupContainer("notCuratableNotice");
-        notCuratableNotice.setOutputMarkupId(true);
-        notCuratableNotice.add(visibleWhen(() -> !isViewingPotentialCurationTarget()));
-        add(notCuratableNotice);
-
         queue(createSessionControlForm(CID_SESSION_CONTROL_FORM));
 
         var isTargetFinished = LambdaModel.of(() -> curationSidebarService.isCurationFinished(state,
@@ -163,20 +157,6 @@ public class CurationSidebar
         queue(mergeConfirm = new MergeDialog("mergeConfirmDialog",
                 new ResourceModel("mergeConfirmTitle"), new ResourceModel("mergeConfirmText"),
                 documentNameModel, curationWorkflowModel));
-    }
-
-    private boolean isViewingPotentialCurationTarget()
-    {
-        var state = getModelObject();
-
-        if (curationSidebarProperties.isOwnUserCurationTargetEnabled()) {
-            var currentUsername = userRepository.getCurrentUsername();
-            if (currentUsername.equals(state.getUser().getUsername())) {
-                return true;
-            }
-        }
-
-        return CURATION_USER.equals(state.getUser().getUsername());
     }
 
     private void actionToggleShowMerged(AjaxRequestTarget aTarget)
