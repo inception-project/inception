@@ -232,7 +232,9 @@ public abstract class TypeAdapter_ImplBase
     @Override
     public String getAttachTypeName()
     {
-        return getLayer().getAttachType() == null ? null : getLayer().getAttachType().getName();
+        return getLayer().getAttachType() == null //
+                ? CAS.TYPE_NAME_ANNOTATION //
+                : getLayer().getAttachType().getName();
     }
 
     @Override

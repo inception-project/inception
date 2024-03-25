@@ -141,9 +141,20 @@
     });
 
     onDestroy(async () => disconnect());
-</script>
 
-<div class="flex-content flex-v-container" bind:this={element}>
+    function cancelRightClick (e: Event): void {
+    if (e instanceof MouseEvent) {
+      if (e.button === 2) {
+        e.preventDefault()
+        e.stopPropagation()
+      }
+    }
+  }</script>
+
+<!-- svelte-ignore a11y-click-events-have-key-events -->
+<div class="flex-content flex-v-container" bind:this={element} 
+    on:click|capture={cancelRightClick} on:mousedown|capture={cancelRightClick} 
+    on:mouseup|capture={cancelRightClick}>
     <select bind:value={$groupingMode} class="form-select rounded-0">
         {#each Object.keys(modes) as value}<option {value}
                 >{modes[value]}</option

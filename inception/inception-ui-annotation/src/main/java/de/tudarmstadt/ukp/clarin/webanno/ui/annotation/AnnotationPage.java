@@ -60,7 +60,6 @@ import org.wicketstuff.annotation.mount.MountPath;
 import org.wicketstuff.event.annotation.OnEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBar;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationEditorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.NoPagingStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.UserPreferencesService;
@@ -86,7 +85,6 @@ import de.tudarmstadt.ukp.inception.documents.api.DocumentAccess;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorBase;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorExtensionRegistry;
-import de.tudarmstadt.ukp.inception.editor.AnnotationEditorFactory;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorRegistry;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.editor.state.AnnotatorStateImpl;
@@ -211,6 +209,12 @@ public class AnnotationPage
             {
                 return AnnotationPage.this.getEditorCas();
             }
+
+            @Override
+            public void writeEditorCas() throws IOException, AnnotationException
+            {
+                AnnotationPage.this.writeEditorCas(getEditorCas());
+            }
         };
     }
 
@@ -298,7 +302,7 @@ public class AnnotationPage
 
     private void createAnnotationEditor()
     {
-        AnnotatorState state = getModelObject();
+        var state = getModelObject();
 
         if (state.getDocument() == null) {
             centerArea.addOrReplace(new EmptyPanel(MID_EDITOR).setOutputMarkupId(true));
@@ -308,16 +312,16 @@ public class AnnotationPage
             return;
         }
 
-        AnnotationEditorState editorState = preferencesService
-                .loadDefaultTraitsForProject(KEY_EDITOR_STATE, getProject());
+        var editorState = preferencesService.loadDefaultTraitsForProject(KEY_EDITOR_STATE,
+                getProject());
 
-        String editorId = editorState.getDefaultEditor();
+        var editorId = editorState.getDefaultEditor();
 
         if (editorId == null) {
             editorId = getModelObject().getPreferences().getEditor();
         }
 
-        AnnotationEditorFactory factory = editorRegistry.getEditorFactory(editorId);
+        var factory = editorRegistry.getEditorFactory(editorId);
         if (factory == null) {
             if (state.getDocument() != null) {
                 factory = editorRegistry.getPreferredEditorFactory(state.getProject(),

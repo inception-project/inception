@@ -23,6 +23,7 @@ import static java.util.Collections.unmodifiableList;
 import static org.apache.wicket.event.Broadcast.BREADTH;
 
 import java.io.Serializable;
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -38,6 +39,8 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.core.request.handler.IPageRequestHandler;
 import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
 import org.apache.wicket.request.cycle.RequestCycle;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.constraints.model.ParsedConstraints;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -70,6 +73,8 @@ import de.tudarmstadt.ukp.inception.rendering.selection.Selection;
 public class AnnotatorStateImpl
     implements Serializable, AnnotatorState
 {
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
     private static final long serialVersionUID = 1078613192789450714L;
 
     /**
@@ -161,7 +166,7 @@ public class AnnotatorStateImpl
     private Mode mode;
 
     /**
-     * The previously selected {@link TagSet} and {@link Tag} for a span/Arc annotation so as toz
+     * The previously selected {@link TagSet} and {@link Tag} for a span/Arc annotation so as to
      * pre-fill the type in the span/arc annotation dialog (only for new span/arc annotations)
      */
     private AnnotationLayer rememberedSpanLayer;
@@ -480,6 +485,7 @@ public class AnnotatorStateImpl
         preferences = aPreferences;
     }
 
+    @Deprecated
     @Override
     public Mode getMode()
     {
@@ -490,12 +496,6 @@ public class AnnotatorStateImpl
     public AnnotationLayer getRememberedSpanLayer()
     {
         return rememberedSpanLayer;
-    }
-
-    @Override
-    public AnnotationLayer getRememberedArcLayer()
-    {
-        return rememberedArcLayer;
     }
 
     @Override
@@ -605,12 +605,13 @@ public class AnnotatorStateImpl
     @Override
     public void rememberFeatures()
     {
+        LOG.trace("Remembering feature editor values");
         if (getSelection().isArc()) {
-            this.rememberedArcLayer = getSelectedAnnotationLayer();
+            rememberedArcLayer = getSelectedAnnotationLayer();
             setRememberedArcFeatures(featureModels);
         }
         else {
-            this.rememberedSpanLayer = getSelectedAnnotationLayer();
+            rememberedSpanLayer = getSelectedAnnotationLayer();
             setRememberedSpanFeatures(featureModels);
         }
     }
@@ -619,9 +620,9 @@ public class AnnotatorStateImpl
     public void clearRememberedFeatures()
     {
         setRememberedArcFeatures(null);
-        this.rememberedArcLayer = null;
+        rememberedArcLayer = null;
         setRememberedSpanFeatures(null);
-        this.rememberedSpanLayer = null;
+        rememberedSpanLayer = null;
     }
 
     @Override

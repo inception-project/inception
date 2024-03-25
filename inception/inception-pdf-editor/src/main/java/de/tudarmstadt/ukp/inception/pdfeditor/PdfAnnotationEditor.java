@@ -219,10 +219,10 @@ public class PdfAnnotationEditor
         }
 
         try {
-            Offset offset = new Offset(aParams);
-            Offset docOffset = convertToDocumentOffset(offset, documentModel,
+            var offset = new Offset(aParams);
+            var docOffset = convertToDocumentOffset(offset, documentModel,
                     view.getPdfExtractFile());
-            AnnotatorState state = getModelObject();
+            var state = getModelObject();
             if (docOffset.getBegin() > -1 && docOffset.getEnd() > -1) {
                 if (state.isSlotArmed()) {
                     // When filling a slot, the current selection is *NOT* changed. The

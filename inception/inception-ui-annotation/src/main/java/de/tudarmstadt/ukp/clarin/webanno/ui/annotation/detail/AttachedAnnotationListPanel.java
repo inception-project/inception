@@ -151,22 +151,22 @@ public class AttachedAnnotationListPanel
             return Collections.emptyList();
         }
 
-        VID localVid = VID.of(annoFs);
+        var localVid = VID.of(annoFs);
 
-        List<AttachedAnnotation> attachedAnnotations = new ArrayList<>();
+        var attachedAnnotations = new ArrayList<AttachedAnnotation>();
         attachedAnnotations.addAll(schemaService
                 .getAttachedRels(getModelObject().getSelectedAnnotationLayer(), annoFs));
         attachedAnnotations.addAll(schemaService
                 .getAttachedLinks(getModelObject().getSelectedAnnotationLayer(), annoFs));
 
-        Map<AnnotationLayer, List<AnnotationFeature>> featureCache = new HashMap<>();
-        Map<AnnotationLayer, Renderer> rendererCache = new HashMap<>();
-        Map<AnnotationLayer, TypeAdapter> adapterCache = new HashMap<>();
+        var featureCache = new HashMap<AnnotationLayer, List<AnnotationFeature>>();
+        var rendererCache = new HashMap<AnnotationLayer, Renderer>();
+        var adapterCache = new HashMap<AnnotationLayer, TypeAdapter>();
 
-        List<AttachedAnnotationInfo> result = new ArrayList<>();
-        for (AttachedAnnotation rel : attachedAnnotations) {
-            AnnotationLayer layer = rel.getLayer();
-            List<AnnotationFeature> features = featureCache.get(layer);
+        var result = new ArrayList<AttachedAnnotationInfo>();
+        for (var rel : attachedAnnotations) {
+            var layer = rel.getLayer();
+            var features = featureCache.get(layer);
             TypeAdapter adapter;
             Renderer renderer;
             if (features == null) {
@@ -195,20 +195,16 @@ public class AttachedAnnotationListPanel
                         features);
             }
 
-            String labelText = TypeUtil.getUiLabelText(renderedFeatures);
+            var labelText = TypeUtil.getUiLabelText(renderedFeatures);
 
-            if (isEmpty(labelText)) {
-                labelText = rel.getLayer().getUiName();
-            }
-            else {
-                labelText = rel.getLayer().getUiName() + ": " + labelText;
-            }
+            labelText = isEmpty(labelText) //
+                    ? rel.getLayer().getUiName() //
+                    : rel.getLayer().getUiName() + ": " + labelText;
 
-            AttachedAnnotationInfo i = new AttachedAnnotationInfo(layer, localVid,
+            result.add(new AttachedAnnotationInfo(layer, localVid,
                     rel.getRelation() != null ? VID.of(rel.getRelation()) : null,
                     VID.of(rel.getEndpoint()), labelText, rel.getEndpoint().getCoveredText(),
-                    rel.getDirection());
-            result.add(i);
+                    rel.getDirection()));
         }
 
         return result;

@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.keybindings;
 
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
+import static org.apache.wicket.event.Broadcast.BUBBLE;
 
 import java.io.IOException;
 import java.util.List;
@@ -35,7 +36,10 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureEditor;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureEditorValueChangedEvent;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior;
@@ -53,6 +57,7 @@ public class KeyBindingsPanel
     private final AnnotationActionHandler actionHandler;
 
     private @SpringBean FeatureSupportRegistry featureSupportRegistry;
+    private @SpringBean AnnotationSchemaService schemaService;
 
     private boolean keyBindingsVisible = false;
     private boolean toggleVisibile = true;
@@ -150,6 +155,9 @@ public class KeyBindingsPanel
         var feature = getModelObject().feature;
         var fs = featureSupportRegistry.findExtension(feature).orElseThrow();
         getModelObject().value = fs.wrapFeatureValue(feature, cas, aKeyBinding.getValue());
-        actionHandler.actionCreateOrUpdate(aTarget, actionHandler.getEditorCas());
+        var featureEditor = findParent(FeatureEditor.class);
+        send(featureEditor.getFocusComponent(), BUBBLE,
+                new FeatureEditorValueChangedEvent(featureEditor, aTarget));
+        aTarget.add(featureEditor);
     }
 }
