@@ -30,6 +30,7 @@ import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.exists;
 import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.isPrimitiveType;
 import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.selectSentences;
 import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.selectTokens;
+import static java.util.Collections.emptyList;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.uima.fit.util.CasUtil.getType;
@@ -459,7 +460,11 @@ public class CasMerge
 
     private static boolean existsEquivalentAt(CAS aCas, TypeAdapter aAdapter, AnnotationFS aFs)
     {
-        var targetType = CasUtil.getType(aCas, aFs.getType().getName());
+        var targetType = aCas.getTypeSystem().getType(aFs.getType().getName());
+        if (targetType == null) {
+            return false;
+        }
+
         return selectAt(aCas, targetType, aFs.getBegin(), aFs.getEnd()).stream() //
                 .filter(cand -> aAdapter.equivalents(aFs, cand,
                         (_fs, _f) -> !shouldIgnoreFeatureOnMerge(_f))) //
@@ -471,7 +476,11 @@ public class CasMerge
             AnnotationFS aSourceFs, AnnotationFS aSourceOriginFs, AnnotationFS aSourceTargetFs)
     {
         var type = aSourceFs.getType();
-        var targetType = CasUtil.getType(aTargetCas, aSourceFs.getType().getName());
+        var targetType = aTargetCas.getTypeSystem().getType(aSourceFs.getType().getName());
+        if (targetType == null) {
+            return emptyList();
+        }
+
         var sourceFeat = type.getFeatureByBaseName(FEAT_REL_SOURCE);
         var targetFeat = type.getFeatureByBaseName(FEAT_REL_TARGET);
         return selectCovered(aTargetCas, targetType, aSourceFs.getBegin(), aSourceFs.getEnd())
@@ -522,7 +531,11 @@ public class CasMerge
     private static List<AnnotationFS> getCandidateAnnotations(CAS aTargetCas, TypeAdapter aAdapter,
             AnnotationFS aSource)
     {
-        var targetType = CasUtil.getType(aTargetCas, aSource.getType().getName());
+        var targetType = aTargetCas.getTypeSystem().getType(aSource.getType().getName());
+        if (targetType == null) {
+            return emptyList();
+        }
+
         return selectCovered(aTargetCas, targetType, aSource.getBegin(), aSource.getEnd()).stream()
                 .filter(fs -> aAdapter.equivalents(fs, aSource,
                         (_fs, _f) -> !shouldIgnoreFeatureOnMerge(_f)))
@@ -544,7 +557,7 @@ public class CasMerge
                     "The annotation already exists in the target document.");
         }
 
-        // a) if stacking allowed add this new annotation to the mergeview
+        // a) if stacking allowed add this new annotation to the merge view
         var targetType = CasUtil.getType(aTargetCas, adapter.getAnnotationTypeName());
         var existingAnnos = selectAt(aTargetCas, targetType, aSourceFs.getBegin(),
                 aSourceFs.getEnd());

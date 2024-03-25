@@ -27,14 +27,11 @@ import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visible
 import static de.tudarmstadt.ukp.inception.support.wicket.WicketUtil.refreshPage;
 import static java.util.Arrays.asList;
 
-import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.uima.UIMAException;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
@@ -65,7 +62,6 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.MergeDialog;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.MergeDialog.State;
-import de.tudarmstadt.ukp.inception.curation.merge.MergeStrategyFactory;
 import de.tudarmstadt.ukp.inception.curation.model.CurationWorkflow;
 import de.tudarmstadt.ukp.inception.curation.service.CurationMergeService;
 import de.tudarmstadt.ukp.inception.curation.service.CurationService;
@@ -193,6 +189,7 @@ public class CurationSidebar
     private void actionMerge(AjaxRequestTarget aTarget, Form<State> aForm)
     {
         var state = getModelObject();
+        var dataOwner = state.getUser();
 
         if (aForm.getModelObject().isSaveSettingsAsDefault()) {
             curationService.createOrUpdateCurationWorkflow(curationWorkflowModel.getObject());
@@ -200,45 +197,19 @@ public class CurationSidebar
         }
 
         try {
-            doMerge(state, state.getUser().getUsername(), selectedUsers.getModelObject());
+            var mergeStrategyFactory = curationSidebarService.merge(state, dataOwner.getUsername(),
+                    selectedUsers.getModelObject());
+            success("Re-merge using [" + mergeStrategyFactory.getLabel() + "] finished!");
+            aTarget.addChildren(getPage(), IFeedback.class);
         }
         catch (Exception e) {
             error("Unable to merge: " + e.getMessage());
-            LOG.error("Unable to merge document {} to user {}", state.getUser(),
-                    state.getDocument(), e);
+            LOG.error("Unable to merge document {} to user {}", dataOwner, state.getDocument(), e);
             aTarget.addChildren(getPage(), IFeedback.class);
             return;
         }
 
-        MergeStrategyFactory<?> mergeStrategyFactory = curationService
-                .getMergeStrategyFactory(curationWorkflowModel.getObject());
-        success("Re-merge using [" + mergeStrategyFactory.getLabel() + "] finished!");
         refreshPage(aTarget, getPage());
-    }
-
-    private void doMerge(AnnotatorState aState, String aCurator, Collection<User> aUsers)
-        throws IOException, UIMAException
-    {
-        var doc = aState.getDocument();
-        var aTargetCas = curationSidebarService
-                .retrieveCurationCAS(aCurator, aState.getProject().getId(), doc)
-                .orElseThrow(() -> new IllegalArgumentException(
-                        "No target CAS configured in curation state"));
-
-        var userCases = documentService.readAllCasesSharedNoUpgrade(doc, aUsers);
-
-        // FIXME: should merging not overwrite the current users annos? (can result in
-        // deleting the users annotations!!!), currently fixed by warn message to user
-        // prepare merged CAS
-        curationMergeService.mergeCasses(aState.getDocument(), aState.getUser().getUsername(),
-                aTargetCas, userCases,
-                curationService.getMergeStrategy(curationWorkflowModel.getObject()),
-                aState.getAnnotationLayers());
-
-        // write back and update timestamp
-        curationSidebarService.writeCurationCas(aTargetCas, aState, aState.getProject().getId());
-
-        LOG.debug("Merge done");
     }
 
     private Form<Void> createSessionControlForm(String aId)

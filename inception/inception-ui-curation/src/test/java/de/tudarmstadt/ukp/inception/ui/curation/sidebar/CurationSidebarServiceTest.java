@@ -68,7 +68,7 @@ public class CurationSidebarServiceTest
     public void setUp() throws Exception
     {
         sut = new CurationSidebarServiceImpl(testEntityManager.getEntityManager(), null, null, null,
-                null, null);
+                null, null, null, null);
 
         // create users
         User current = new User("current", Role.ROLE_USER);

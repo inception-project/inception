@@ -502,6 +502,10 @@ public class CurationPage
 
         try {
             var state = getModelObject();
+            state.refreshProject(projectService);
+            state.refreshDocument(documentService);
+
+            var project = state.getProject();
             state.setUser(userRepository.getCurationUser());
             state.reset();
 
@@ -512,19 +516,19 @@ public class CurationPage
             }
 
             // Load constraints
-            state.setConstraints(constraintsService.loadConstraints(state.getProject()));
+            state.setConstraints(constraintsService.loadConstraints(project));
 
             // Load user preferences
             loadPreferences();
 
             // if project is changed, reset some project specific settings
-            if (currentprojectId != state.getProject().getId()) {
+            if (currentprojectId != project.getId()) {
                 state.clearRememberedFeatures();
-                currentprojectId = state.getProject().getId();
+                currentprojectId = project.getId();
             }
 
-            var mergeCas = readOrCreateCurationCas(
-                    curationService.getDefaultMergeStrategy(getProject()), false);
+            var mergeCas = readOrCreateCurationCas(curationService.getDefaultMergeStrategy(project),
+                    false);
 
             // Initialize timestamp in state
             curationDocumentService.getCurationCasTimestamp(state.getDocument())
@@ -532,8 +536,6 @@ public class CurationPage
 
             // Initialize the visible content
             state.moveToUnit(mergeCas, aFocus + 1, TOP);
-
-            currentprojectId = state.getProject().getId();
 
             curationUnits.setObject(buildUnitOverview(state));
             detailEditor.reset(aTarget);
