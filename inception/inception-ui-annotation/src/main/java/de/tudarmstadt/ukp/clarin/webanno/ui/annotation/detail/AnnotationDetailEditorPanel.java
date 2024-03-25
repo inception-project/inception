@@ -622,6 +622,8 @@ public abstract class AnnotationDetailEditorPanel
         loadFeatureEditorModels(aTarget);
 
         autoScroll(aCas);
+
+        state.clearArmedSlot();
     }
 
     /**
@@ -1102,7 +1104,13 @@ public abstract class AnnotationDetailEditorPanel
     public void onSelectionChangedEvent(SelectionChangedEvent aEvent)
     {
         if (aEvent.getRequestHandler() != null) {
-            refresh(aEvent.getRequestHandler());
+            try {
+                loadFeatureEditorModels(aEvent.getRequestHandler());
+                refresh(aEvent.getRequestHandler());
+            }
+            catch (Exception e) {
+                handleException(this, aEvent.getRequestHandler(), e);
+            }
         }
     }
 
@@ -1411,15 +1419,20 @@ public abstract class AnnotationDetailEditorPanel
     @OnEvent(stop = true)
     public void onLinkFeatureDeletedEvent(LinkFeatureDeletedEvent aEvent)
     {
-        AjaxRequestTarget target = aEvent.getTarget();
+        if (getModelObject().getSelection().getAnnotation().isNotSet()) {
+            return;
+        }
+
         // Auto-commit if working on existing annotation
-        if (getModelObject().getSelection().getAnnotation().isSet()) {
-            try {
-                actionCreateOrUpdate(target, getEditorCas());
-            }
-            catch (Exception e) {
-                handleException(this, target, e);
-            }
+        var target = aEvent.getTarget();
+        try {
+            var cas = getEditorCas();
+            internalCommitAnnotation(target, cas);
+            internalCompleteAnnotation(target, cas);
+            refresh(target);
+        }
+        catch (Exception e) {
+            handleException(this, target, e);
         }
     }
 

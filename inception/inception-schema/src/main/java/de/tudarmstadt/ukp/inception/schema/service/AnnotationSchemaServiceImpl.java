@@ -1024,9 +1024,9 @@ public class AnnotationSchemaServiceImpl
     @Transactional
     public List<AnnotationLayer> listSupportedLayers(Project aProject)
     {
-        List<AnnotationLayer> supportedLayers = new ArrayList<>();
+        var supportedLayers = new ArrayList<AnnotationLayer>();
 
-        for (AnnotationLayer l : listAnnotationLayer(aProject)) {
+        for (var l : listAnnotationLayer(aProject)) {
             try {
                 layerSupportRegistry.getLayerSupport(l);
             }

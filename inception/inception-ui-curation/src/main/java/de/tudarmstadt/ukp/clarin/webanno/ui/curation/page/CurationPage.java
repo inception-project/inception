@@ -317,6 +317,12 @@ public class CurationPage
             {
                 return CurationPage.this.getEditorCas();
             }
+
+            @Override
+            public void writeEditorCas() throws IOException, AnnotationException
+            {
+                CurationPage.this.writeEditorCas(getEditorCas());
+            }
         };
         panel.add(enabledWhen(() -> getModelObject() != null //
                 && getModelObject().getDocument() != null

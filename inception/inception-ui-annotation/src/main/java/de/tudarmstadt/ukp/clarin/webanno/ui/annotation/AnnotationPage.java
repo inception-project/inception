@@ -209,6 +209,12 @@ public class AnnotationPage
             {
                 return AnnotationPage.this.getEditorCas();
             }
+
+            @Override
+            public void writeEditorCas() throws IOException, AnnotationException
+            {
+                AnnotationPage.this.writeEditorCas(getEditorCas());
+            }
         };
     }
 

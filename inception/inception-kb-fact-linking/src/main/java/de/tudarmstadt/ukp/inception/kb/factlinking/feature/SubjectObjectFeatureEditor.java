@@ -183,9 +183,9 @@ public class SubjectObjectFeatureEditor
     {
         @SuppressWarnings("unchecked")
         var links = (List<LinkWithRoleModel>) this.getModelObject().value;
-        AnnotatorState state = this.stateModel.getObject();
+        var state = this.stateModel.getObject();
 
-        String role = roleModel.role;
+        var role = roleModel.role;
         roleModel = new LinkWithRoleModel();
         roleModel.role = role;
         links.set(0, roleModel);
