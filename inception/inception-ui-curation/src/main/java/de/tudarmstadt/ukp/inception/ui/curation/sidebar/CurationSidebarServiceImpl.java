@@ -68,6 +68,7 @@ import de.tudarmstadt.ukp.inception.curation.model.CurationSettings;
 import de.tudarmstadt.ukp.inception.curation.model.CurationSettingsId;
 import de.tudarmstadt.ukp.inception.curation.service.CurationMergeService;
 import de.tudarmstadt.ukp.inception.curation.service.CurationService;
+import de.tudarmstadt.ukp.inception.curation.sidebar.CurationSidebarProperties;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
@@ -94,12 +95,14 @@ public class CurationSidebarServiceImpl
     private final CasStorageService casStorageService;
     private final CurationService curationService;
     private final CurationMergeService curationMergeService;
+    private final CurationSidebarProperties curationSidebarProperties;
 
     public CurationSidebarServiceImpl(EntityManager aEntityManager,
             DocumentService aDocumentService, SessionRegistry aSessionRegistry,
             ProjectService aProjectService, UserDao aUserRegistry,
             CasStorageService aCasStorageService, CurationService aCurationService,
-            CurationMergeService aCurationMergeService)
+            CurationMergeService aCurationMergeService,
+            CurationSidebarProperties aCurationSidebarProperties)
     {
         sessions = new ConcurrentHashMap<>();
         entityManager = aEntityManager;
@@ -110,6 +113,7 @@ public class CurationSidebarServiceImpl
         casStorageService = aCasStorageService;
         curationService = aCurationService;
         curationMergeService = aCurationMergeService;
+        curationSidebarProperties = aCurationSidebarProperties;
     }
 
     /**
@@ -328,10 +332,13 @@ public class CurationSidebarServiceImpl
                 return;
             }
 
-            session.curationTarget = aOwnDocument
-                    && projectService.hasRole(aSessionOwner, aProject, ANNOTATOR) ? aSessionOwner
-                            : CURATION_USER;
-
+            if (curationSidebarProperties.isOwnUserCurationTargetEnabled() && aOwnDocument
+                    && projectService.hasRole(aSessionOwner, aProject, ANNOTATOR)) {
+                session.setCurationTarget(aSessionOwner);
+            }
+            else {
+                session.setCurationTarget(CURATION_USER);
+            }
         }
     }
 

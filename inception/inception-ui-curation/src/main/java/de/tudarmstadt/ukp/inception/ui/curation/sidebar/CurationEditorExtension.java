@@ -141,6 +141,9 @@ public class CurationEditorExtension
                         + "into progress via the monitoring page.");
             }
 
+            var page = (AnnotationPageBase) aTarget.getPage();
+            page.ensureIsEditable();
+
             mergeAnnotation(aAction, aPanel, aState, aTarget, aCas, curationVid);
         }
         else if (ScrollToHandler.COMMAND.equals(aAction)) {
@@ -193,6 +196,7 @@ public class CurationEditorExtension
             CurationVID aCurationVid)
         throws IOException, AnnotationException
     {
+
         // get user CAS and annotation (to be merged into curator's)
         var doc = aState.getDocument();
         var srcUser = aCurationVid.getUsername();
@@ -213,6 +217,7 @@ public class CurationEditorExtension
             mergeSpan(aState, aTargetCas, vid, srcUser, sourceAnnotation, layer);
         }
 
+        aActionHandler.actionSelect(aTarget);
         aActionHandler.writeEditorCas();
     }
 

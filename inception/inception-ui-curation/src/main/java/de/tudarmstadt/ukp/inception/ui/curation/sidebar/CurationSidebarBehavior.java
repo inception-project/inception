@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.ui.curation.sidebar;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.FORCE_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.setProjectPageParameter;
+import static de.tudarmstadt.ukp.inception.curation.sidebar.CurationSidebarManagerPrefs.KEY_CURATION_SIDEBAR_MANAGER_PREFS;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.inception.support.wicket.WicketExceptionUtil.handleException;
 import static java.lang.invoke.MethodHandles.lookup;
@@ -43,6 +44,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.inception.annotation.events.PreparingToOpenDocumentEvent;
 import de.tudarmstadt.ukp.inception.curation.service.CurationDocumentService;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
+import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 
 public class CurationSidebarBehavior
@@ -64,6 +66,7 @@ public class CurationSidebarBehavior
     private @SpringBean CurationSidebarService curationSidebarService;
     private @SpringBean UserDao userService;
     private @SpringBean ProjectService projectService;
+    private @SpringBean PreferencesService preferencesService;
 
     @Override
     public void onEvent(Component aComponent, IEvent<?> aEvent)
@@ -117,8 +120,12 @@ public class CurationSidebarBehavior
 
         ensureDataOwnerMatchesCurationTarget(page, project, sessionOwner, dataOwner);
 
-        if (userService.getCurationUser().getUsername().equals(aEvent.getDocumentOwner())) {
-            autoMerge(aEvent, page);
+        var prefs = preferencesService
+                .loadDefaultTraitsForProject(KEY_CURATION_SIDEBAR_MANAGER_PREFS, project);
+        if (prefs.isAutoMergeCurationSidebar()) {
+            if (userService.getCurationUser().getUsername().equals(aEvent.getDocumentOwner())) {
+                autoMerge(aEvent, page);
+            }
         }
     }
 

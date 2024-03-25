@@ -25,7 +25,6 @@ import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.enabled
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhenNot;
 import static de.tudarmstadt.ukp.inception.support.wicket.WicketUtil.refreshPage;
-import static java.util.Arrays.asList;
 
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
@@ -34,7 +33,6 @@ import java.util.List;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
-import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.Check;
 import org.apache.wicket.markup.html.form.CheckBox;
@@ -65,6 +63,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.MergeDialog.State;
 import de.tudarmstadt.ukp.inception.curation.model.CurationWorkflow;
 import de.tudarmstadt.ukp.inception.curation.service.CurationMergeService;
 import de.tudarmstadt.ukp.inception.curation.service.CurationService;
+import de.tudarmstadt.ukp.inception.curation.sidebar.CurationSidebarProperties;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorExtensionRegistry;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
@@ -98,6 +97,7 @@ public class CurationSidebar
     private @SpringBean CurationMergeService curationMergeService;
     private @SpringBean DocumentService documentService;
     private @SpringBean AnnotationSchemaService annotationService;
+    private @SpringBean CurationSidebarProperties curationSidebarProperties;
 
     private CheckGroup<User> selectedUsers;
     private DropDownChoice<String> curationTargetChoice;
@@ -118,11 +118,6 @@ public class CurationSidebar
         super(aId, aModel, aActionHandler, aCasProvider, aAnnotationPage);
 
         var state = aModel.getObject();
-
-        var notCuratableNotice = new WebMarkupContainer("notCuratableNotice");
-        notCuratableNotice.setOutputMarkupId(true);
-        notCuratableNotice.add(visibleWhen(() -> !isViewingPotentialCurationTarget()));
-        add(notCuratableNotice);
 
         queue(createSessionControlForm(CID_SESSION_CONTROL_FORM));
 
@@ -162,14 +157,6 @@ public class CurationSidebar
         queue(mergeConfirm = new MergeDialog("mergeConfirmDialog",
                 new ResourceModel("mergeConfirmTitle"), new ResourceModel("mergeConfirmText"),
                 documentNameModel, curationWorkflowModel));
-    }
-
-    private boolean isViewingPotentialCurationTarget()
-    {
-        // Curation sidebar is not allowed when viewing another users annotations
-        var currentUsername = userRepository.getCurrentUsername();
-        var state = getModelObject();
-        return asList(CURATION_USER, currentUsername).contains(state.getUser().getUsername());
     }
 
     private void actionToggleShowMerged(AjaxRequestTarget aTarget)
@@ -223,8 +210,8 @@ public class CurationSidebar
 
         var curationTargets = new ArrayList<String>();
         curationTargets.add(CURATION_USER);
-        if (projectService.hasRole(userRepository.getCurrentUsername(),
-                getModelObject().getProject(), ANNOTATOR)) {
+        if (curationSidebarProperties.isOwnUserCurationTargetEnabled() && projectService.hasRole(
+                userRepository.getCurrentUsername(), getModelObject().getProject(), ANNOTATOR)) {
             curationTargets.add(userRepository.getCurrentUsername());
         }
 
@@ -239,6 +226,7 @@ public class CurationSidebar
         curationTargetChoice.setChoices(curationTargets);
         curationTargetChoice.setChoiceRenderer(targetChoiceRenderer);
         curationTargetChoice.add(enabledWhenNot(this::isSessionActive));
+        curationTargetChoice.add(visibleWhen(() -> curationTargets.size() > 1));
         curationTargetChoice.setOutputMarkupId(true);
         curationTargetChoice.setRequired(true);
         form.add(curationTargetChoice);

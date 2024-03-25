@@ -15,29 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.ui.core.dashboard.projectlist;
+package de.tudarmstadt.ukp.inception.curation.sidebar;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-
-@JsonIgnoreProperties(ignoreUnknown = true)
-public class ProjectListSortState
+public interface CurationSidebarProperties
 {
-    public final ProjectListSortStrategy strategy;
+    boolean isEnabled();
 
-    public ProjectListSortState()
-    {
-        // Used for default constructing this preference
-        strategy = ProjectListSortStrategy.RECENTLY_UPDATED;
-    }
-
-    public ProjectListSortState(ProjectListSortStrategy aKey)
-    {
-        strategy = aKey;
-    }
-
-    @Override
-    public String toString()
-    {
-        return "ProjectListSortState{" + "strategy=" + strategy + '}';
-    }
+    boolean isOwnUserCurationTargetEnabled();
 }

@@ -15,37 +15,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.diam.sidebar.preferences;
+package de.tudarmstadt.ukp.inception.curation.sidebar;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import de.tudarmstadt.ukp.inception.preferences.Key;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class DiamSidebarManagerPrefs
+public class CurationSidebarManagerPrefs
     implements Serializable
 {
-    private static final long serialVersionUID = 8420554954400084375L;
+    private static final long serialVersionUID = -7731274322176414665L;
 
-    public static final Key<DiamSidebarManagerPrefs> KEY_DIAM_SIDEBAR_MANAGER_PREFS = new Key<>(
-            DiamSidebarManagerPrefs.class, "annotation/editor/annotation-sidebar/manager");
+    public static final Key<CurationSidebarManagerPrefs> KEY_CURATION_SIDEBAR_MANAGER_PREFS = new Key<>(
+            CurationSidebarManagerPrefs.class, "annotation/editor/curation-sidebar/manager");
 
-    private final List<String> pinnedGroups = new ArrayList<>();
+    private boolean autoMergeCurationSidebar = true;
 
-    public List<String> getPinnedGroups()
+    public boolean isAutoMergeCurationSidebar()
     {
-        return pinnedGroups;
+        return autoMergeCurationSidebar;
     }
 
-    public void setPinnedGroups(List<String> aPinnedGroups)
+    public void setAutoMergeCurationSidebar(boolean aAutoMergeCurationSidebar)
     {
-        pinnedGroups.clear();
-        if (aPinnedGroups != null) {
-            pinnedGroups.addAll(aPinnedGroups);
-        }
+        autoMergeCurationSidebar = aAutoMergeCurationSidebar;
     }
+
 }

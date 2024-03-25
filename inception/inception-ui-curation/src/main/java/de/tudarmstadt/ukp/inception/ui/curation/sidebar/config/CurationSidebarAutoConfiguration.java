@@ -31,6 +31,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.curation.service.CurationMergeService;
 import de.tudarmstadt.ukp.inception.curation.service.CurationService;
+import de.tudarmstadt.ukp.inception.curation.sidebar.CurationSidebarProperties;
 import de.tudarmstadt.ukp.inception.diam.editor.lazydetails.LazyDetailsLookupService;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
@@ -56,11 +57,12 @@ public class CurationSidebarAutoConfiguration
             DocumentService aDocumentService, SessionRegistry aSessionRegistry,
             ProjectService aProjectService, UserDao aUserRegistry,
             CasStorageService aCasStorageService, CurationService aCurationService,
-            CurationMergeService aCurationMergeService)
+            CurationMergeService aCurationMergeService,
+            CurationSidebarProperties aCurationSidebarProperties)
     {
         return new CurationSidebarServiceImpl(aEntityManager, aDocumentService, aSessionRegistry,
                 aProjectService, aUserRegistry, aCasStorageService, aCurationService,
-                aCurationMergeService);
+                aCurationMergeService, aCurationSidebarProperties);
     }
 
     @Bean(CurationEditorExtension.EXTENSION_ID)

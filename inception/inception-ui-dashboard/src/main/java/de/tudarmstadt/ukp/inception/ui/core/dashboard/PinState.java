@@ -17,6 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.ui.core.dashboard;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class PinState
 {
     public final boolean isPinned;

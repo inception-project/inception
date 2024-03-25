@@ -19,8 +19,11 @@ package de.tudarmstadt.ukp.inception.search.model;
 
 import java.io.Serializable;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import de.tudarmstadt.ukp.inception.preferences.Key;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class AnnotationSearchState
     implements Serializable
 {
