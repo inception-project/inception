@@ -63,4 +63,16 @@ public class CasDoctorException
     {
         return details;
     }
+
+    @Override
+    public String getMessage()
+    {
+        var buffer = new StringBuffer();
+        buffer.append("CasDoctor found " + details.size() + " issues:\n");
+        for (var msg : details) {
+            buffer.append(msg.getMessage());
+            buffer.append("\n");
+        }
+        return buffer.toString();
+    }
 }
