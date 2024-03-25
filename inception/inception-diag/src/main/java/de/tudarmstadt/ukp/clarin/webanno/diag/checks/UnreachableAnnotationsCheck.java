@@ -47,6 +47,7 @@ public class UnreachableAnnotationsCheck
         var casImpl = (CASImpl) getRealCas(aCas);
 
         var annotationCountsBefore = countFeatureStructures(casImpl);
+        annotationCountsBefore.remove(CAS.TYPE_NAME_DOCUMENT_ANNOTATION);
 
         // Disable forced retaining of all assigned annotations so that during serialization,
         // any temporary annotations that got potentially stuck in the CAS can be released.
@@ -58,6 +59,7 @@ public class UnreachableAnnotationsCheck
         }
 
         var annotationCountsAfter = countFeatureStructures(dummy);
+        annotationCountsAfter.remove(CAS.TYPE_NAME_DOCUMENT_ANNOTATION);
 
         var diffTypes = 0;
         var totalDiff = 0;
