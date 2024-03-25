@@ -56,8 +56,7 @@ public class CurationSidebarServiceTest
 {
     private CurationSidebarService sut;
 
-    @Autowired
-    private TestEntityManager testEntityManager;
+    private @Autowired TestEntityManager testEntityManager;
 
     private Project testProject;
     private SourceDocument testDocument;
@@ -68,10 +67,10 @@ public class CurationSidebarServiceTest
     public void setUp() throws Exception
     {
         sut = new CurationSidebarServiceImpl(testEntityManager.getEntityManager(), null, null, null,
-                null, null, null, null);
+                null, null, null, null, null);
 
         // create users
-        User current = new User("current", Role.ROLE_USER);
+        var current = new User("current", Role.ROLE_USER);
         beate = new User("beate", Role.ROLE_USER);
         kevin = new User("kevin", Role.ROLE_USER);
         testEntityManager.persist(current);
@@ -90,7 +89,7 @@ public class CurationSidebarServiceTest
         testEntityManager.persist(testDocument);
 
         // add selected users to sut
-        List<User> selectedUsers = new ArrayList<>();
+        var selectedUsers = new ArrayList<User>();
         selectedUsers.add(kevin);
         selectedUsers.add(beate);
         sut.setSelectedUsers("current", testProject.getId(), selectedUsers);
@@ -106,14 +105,15 @@ public class CurationSidebarServiceTest
     public void listCuratableUsers_ShouldReturnFinishedUsers()
     {
         // create finished annotation documents
-        AnnotationDocument annoDoc1 = new AnnotationDocument("beate", testDocument);
+        var annoDoc1 = new AnnotationDocument("beate", testDocument);
         annoDoc1.setState(AnnotationDocumentState.FINISHED);
-        AnnotationDocument annoDoc2 = new AnnotationDocument("kevin", testDocument);
-        annoDoc2.setAnnotatorState(AnnotationDocumentState.IGNORE);
         testEntityManager.persist(annoDoc1);
+
+        var annoDoc2 = new AnnotationDocument("kevin", testDocument);
+        annoDoc2.setAnnotatorState(AnnotationDocumentState.IGNORE);
         testEntityManager.persist(annoDoc2);
 
-        List<User> finishedUsers = sut.listCuratableUsers(testDocument);
+        var finishedUsers = sut.listCuratableUsers(testDocument);
 
         assertThat(finishedUsers).containsExactly(beate, kevin);
     }
@@ -122,14 +122,15 @@ public class CurationSidebarServiceTest
     public void listFinishedUsers_ShouldReturnFinishedUsers()
     {
         // create finished annotation documents
-        AnnotationDocument annoDoc1 = new AnnotationDocument("beate", testDocument);
+        var annoDoc1 = new AnnotationDocument("beate", testDocument);
         annoDoc1.setState(AnnotationDocumentState.FINISHED);
-        AnnotationDocument annoDoc2 = new AnnotationDocument("kevin", testDocument);
-        annoDoc2.setState(AnnotationDocumentState.FINISHED);
         testEntityManager.persist(annoDoc1);
+
+        var annoDoc2 = new AnnotationDocument("kevin", testDocument);
+        annoDoc2.setState(AnnotationDocumentState.FINISHED);
         testEntityManager.persist(annoDoc2);
 
-        List<User> finishedUsers = sut.listCuratableUsers(testDocument);
+        var finishedUsers = sut.listCuratableUsers(testDocument);
 
         assertThat(finishedUsers).containsExactly(beate, kevin);
     }

@@ -213,6 +213,7 @@ public class CurationEditorExtension
             mergeSpan(aState, aTargetCas, vid, srcUser, sourceAnnotation, layer);
         }
 
+        aActionHandler.actionSelect(aTarget);
         aActionHandler.writeEditorCas();
     }
 

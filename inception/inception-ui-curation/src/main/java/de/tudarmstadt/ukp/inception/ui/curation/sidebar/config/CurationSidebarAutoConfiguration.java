@@ -22,6 +22,7 @@ import javax.persistence.PersistenceContext;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -47,6 +48,7 @@ import de.tudarmstadt.ukp.inception.ui.curation.sidebar.render.CurationSidebarRe
 @ConditionalOnWebApplication
 @Configuration
 @ConditionalOnProperty(prefix = "curation.sidebar", name = "enabled", havingValue = "true")
+@EnableConfigurationProperties(CurationSidebarPropertiesImpl.class)
 public class CurationSidebarAutoConfiguration
 {
     private @PersistenceContext EntityManager entityManager;
@@ -56,11 +58,12 @@ public class CurationSidebarAutoConfiguration
             DocumentService aDocumentService, SessionRegistry aSessionRegistry,
             ProjectService aProjectService, UserDao aUserRegistry,
             CasStorageService aCasStorageService, CurationService aCurationService,
-            CurationMergeService aCurationMergeService)
+            CurationMergeService aCurationMergeService,
+            CurationSidebarProperties aCurationSidebarProperties)
     {
         return new CurationSidebarServiceImpl(aEntityManager, aDocumentService, aSessionRegistry,
                 aProjectService, aUserRegistry, aCasStorageService, aCurationService,
-                aCurationMergeService);
+                aCurationMergeService, aCurationSidebarProperties);
     }
 
     @Bean(CurationEditorExtension.EXTENSION_ID)

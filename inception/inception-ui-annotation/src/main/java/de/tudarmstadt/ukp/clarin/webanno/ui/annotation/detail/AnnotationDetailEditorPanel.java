@@ -647,6 +647,7 @@ public abstract class AnnotationDetailEditorPanel
             loadFeatureEditorModels(aTarget);
             var selection = createNewAnnotation(aTarget, adapter, aCas);
             state.getSelection().set(selection);
+            loadFeatureEditorModels(aTarget);
         }
 
         // Update the features of the selected annotation from the values presently in the
@@ -1105,7 +1106,6 @@ public abstract class AnnotationDetailEditorPanel
     {
         if (aEvent.getRequestHandler() != null) {
             try {
-                loadFeatureEditorModels(aEvent.getRequestHandler());
                 refresh(aEvent.getRequestHandler());
             }
             catch (Exception e) {
