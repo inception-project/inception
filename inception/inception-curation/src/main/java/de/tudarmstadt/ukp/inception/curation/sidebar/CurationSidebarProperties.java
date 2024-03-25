@@ -15,9 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.ui.curation.sidebar.config;
+package de.tudarmstadt.ukp.inception.curation.sidebar;
 
 public interface CurationSidebarProperties
 {
+    boolean isEnabled();
+
     boolean isOwnUserCurationTargetEnabled();
 }

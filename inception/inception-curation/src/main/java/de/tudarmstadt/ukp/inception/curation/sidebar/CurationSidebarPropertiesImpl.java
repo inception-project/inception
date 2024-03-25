@@ -15,20 +15,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.ui.curation.sidebar.config;
+package de.tudarmstadt.ukp.inception.curation.sidebar;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
+import de.tudarmstadt.ukp.inception.curation.config.CurationServiceAutoConfiguration;
+
 /**
  * <p>
- * This class is exposed as a Spring Component via {@link CurationSidebarAutoConfiguration}.
+ * This class is exposed as a Spring Component via {@link CurationServiceAutoConfiguration}.
  * </p>
  */
 @ConfigurationProperties("curation.sidebar")
 public class CurationSidebarPropertiesImpl
     implements CurationSidebarProperties
 {
-    private boolean ownUserCurationTargetEnabled = false;
+    private boolean enabled;
+
+    private boolean ownUserCurationTargetEnabled;
+
+    @Override
+    public boolean isEnabled()
+    {
+        return enabled;
+    }
+
+    public void setEnabled(boolean aEnabled)
+    {
+        enabled = aEnabled;
+    }
 
     @Override
     public boolean isOwnUserCurationTargetEnabled()

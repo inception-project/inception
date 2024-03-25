@@ -23,6 +23,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -44,11 +45,13 @@ import de.tudarmstadt.ukp.inception.curation.service.CurationService;
 import de.tudarmstadt.ukp.inception.curation.service.CurationServiceImpl;
 import de.tudarmstadt.ukp.inception.curation.settings.CurationProjectSettingsMenuItem;
 import de.tudarmstadt.ukp.inception.curation.settings.CurationProjectSettingsPanelFactory;
+import de.tudarmstadt.ukp.inception.curation.sidebar.CurationSidebarPropertiesImpl;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.config.AnnotationSchemaProperties;
 
 @Configuration
+@EnableConfigurationProperties(CurationSidebarPropertiesImpl.class)
 public class CurationServiceAutoConfiguration
 {
     private @PersistenceContext EntityManager entityManager;

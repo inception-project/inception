@@ -23,8 +23,11 @@ import static de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationPrefe
 
 import java.io.Serializable;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import de.tudarmstadt.ukp.inception.preferences.Key;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class AnnotationPageLayoutState
     implements Serializable
 {

@@ -23,10 +23,13 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import de.tudarmstadt.ukp.inception.preferences.Key;
 import de.tudarmstadt.ukp.inception.rendering.coloring.ColoringStrategyType;
 import de.tudarmstadt.ukp.inception.rendering.coloring.ReadonlyColoringStrategy;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class AnnotationLayerVisibilityState
     implements Serializable
 {

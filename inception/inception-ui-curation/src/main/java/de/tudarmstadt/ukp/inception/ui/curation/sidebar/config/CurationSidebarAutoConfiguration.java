@@ -22,7 +22,6 @@ import javax.persistence.PersistenceContext;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -32,6 +31,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.curation.service.CurationMergeService;
 import de.tudarmstadt.ukp.inception.curation.service.CurationService;
+import de.tudarmstadt.ukp.inception.curation.sidebar.CurationSidebarProperties;
 import de.tudarmstadt.ukp.inception.diam.editor.lazydetails.LazyDetailsLookupService;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
@@ -48,7 +48,6 @@ import de.tudarmstadt.ukp.inception.ui.curation.sidebar.render.CurationSidebarRe
 @ConditionalOnWebApplication
 @Configuration
 @ConditionalOnProperty(prefix = "curation.sidebar", name = "enabled", havingValue = "true")
-@EnableConfigurationProperties(CurationSidebarPropertiesImpl.class)
 public class CurationSidebarAutoConfiguration
 {
     private @PersistenceContext EntityManager entityManager;
