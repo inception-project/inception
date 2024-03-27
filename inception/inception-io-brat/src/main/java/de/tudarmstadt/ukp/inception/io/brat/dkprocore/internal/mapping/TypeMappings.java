@@ -17,10 +17,14 @@
  */
 package de.tudarmstadt.ukp.inception.io.brat.dkprocore.internal.mapping;
 
+import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toList;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.StreamSupport;
 
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.TypeSystem;
@@ -34,6 +38,13 @@ public class TypeMappings
     private final List<TypeMapping> parsedMappings;
     private final Map<String, Type> brat2UimaMappingCache;
     private final Map<String, String> uima2BratMappingCache;
+
+    public TypeMappings()
+    {
+        parsedMappings = new ArrayList<>();
+        brat2UimaMappingCache = new HashMap<>();
+        uima2BratMappingCache = new HashMap<>();
+    }
 
     @JsonCreator
     public TypeMappings(List<TypeMapping> aMappings)
@@ -77,30 +88,46 @@ public class TypeMappings
 
     public Type getUimaType(TypeSystem aTs, BratAnnotation aAnno)
     {
-        Type t = brat2UimaMappingCache.get(aAnno.getType());
+        var t = brat2UimaMappingCache.get(aAnno.getType());
+        if (t != null) {
+            return t;
+        }
 
+        // brat doesn't like dots in name names, so we had replaced them with dashes.
+        // Now revert.
+        var type = apply(aAnno.getType().replace("-", "."));
+        t = aTs.getType(type);
+
+        // if the lookup didn't work with replacing the dashes, try without, e.g. because the
+        // brat name *really* contains dashes and we only resolve them through mapping
         if (t == null) {
-            // brat doesn't like dots in name names, so we had replaced them with dashes.
-            // Now revert.
-            String type = apply(aAnno.getType().replace("-", "."));
+            type = apply(aAnno.getType());
             t = aTs.getType(type);
+        }
 
-            // if the lookup didn't work with replacing the dashes, try without, e.g. because the
-            // brat name *really* contains dashes and we only resolve them through mapping
-            if (t == null) {
-                type = apply(aAnno.getType());
-                t = aTs.getType(type);
-            }
-
+        if (t != null) {
             brat2UimaMappingCache.put(aAnno.getType(), t);
+            return t;
         }
 
-        if (t == null) {
-            throw new IllegalStateException(
-                    "Unable to find appropriate UIMA type for brat type [" + aAnno.getType() + "]");
+        var shortNameCandidates = StreamSupport.stream(aTs.spliterator(), false) //
+                .filter($ -> $.getShortName().equals(aAnno.getType())) //
+                .collect(toList());
+
+        if (shortNameCandidates.size() == 1) {
+            t = shortNameCandidates.get(0);
+            brat2UimaMappingCache.put(aAnno.getType(), t);
+            return t;
         }
 
-        return t;
+        if (shortNameCandidates.size() > 1) {
+            throw new IllegalStateException("Multiple possible  UIMA types for brat type ["
+                    + aAnno.getType() + "]: ["
+                    + shortNameCandidates.stream().map(Type::getName).collect(joining(", ")) + "]");
+        }
+
+        throw new IllegalStateException(
+                "Unable to find appropriate UIMA type for brat type [" + aAnno.getType() + "]");
     }
 
     public String getBratType(Type aType)

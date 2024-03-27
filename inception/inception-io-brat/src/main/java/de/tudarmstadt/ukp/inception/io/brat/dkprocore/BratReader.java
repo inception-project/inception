@@ -59,10 +59,8 @@ import com.fasterxml.jackson.annotation.Nulls;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import de.tudarmstadt.ukp.inception.io.brat.dkprocore.internal.mapping.CommentMapping;
 import de.tudarmstadt.ukp.inception.io.brat.dkprocore.internal.mapping.Mapping;
 import de.tudarmstadt.ukp.inception.io.brat.dkprocore.internal.mapping.RelationMapping;
-import de.tudarmstadt.ukp.inception.io.brat.dkprocore.internal.mapping.SpanMapping;
 import de.tudarmstadt.ukp.inception.io.brat.dkprocore.internal.mapping.TypeMapping;
 import de.tudarmstadt.ukp.inception.io.brat.dkprocore.internal.model.BratAnnotation;
 import de.tudarmstadt.ukp.inception.io.brat.dkprocore.internal.model.BratAnnotationDocument;
@@ -72,7 +70,6 @@ import de.tudarmstadt.ukp.inception.io.brat.dkprocore.internal.model.BratEventAr
 import de.tudarmstadt.ukp.inception.io.brat.dkprocore.internal.model.BratNoteAnnotation;
 import de.tudarmstadt.ukp.inception.io.brat.dkprocore.internal.model.BratRelationAnnotation;
 import de.tudarmstadt.ukp.inception.io.brat.dkprocore.internal.model.BratTextAnnotation;
-import de.tudarmstadt.ukp.inception.io.brat.dkprocore.internal.model.Offsets;
 
 /**
  * Reader for the brat format.
@@ -118,14 +115,19 @@ public class BratReader
     {
         super.initialize(aContext);
 
-        var mapper = new ObjectMapper();
-        mapper.setDefaultSetterInfo(JsonSetter.Value.forContentNulls(Nulls.AS_EMPTY));
-        mapper.configure(JsonParser.Feature.ALLOW_SINGLE_QUOTES, true);
-        try {
-            mapping = mapper.readValue(mappingJson, Mapping.class);
+        if (mappingJson != null) {
+            var mapper = new ObjectMapper();
+            mapper.setDefaultSetterInfo(JsonSetter.Value.forContentNulls(Nulls.AS_EMPTY));
+            mapper.configure(JsonParser.Feature.ALLOW_SINGLE_QUOTES, true);
+            try {
+                mapping = mapper.readValue(mappingJson, Mapping.class);
+            }
+            catch (IOException e) {
+                throw new ResourceInitializationException(e);
+            }
         }
-        catch (IOException e) {
-            throw new ResourceInitializationException(e);
+        else {
+            mapping = new Mapping();
         }
 
         warnings = new LinkedHashSet<String>();
@@ -203,15 +205,15 @@ public class BratReader
             doc = BratAnnotationDocument.read(r);
         }
 
-        CAS cas = aJCas.getCas();
-        TypeSystem ts = aJCas.getTypeSystem();
+        var cas = aJCas.getCas();
+        var ts = aJCas.getTypeSystem();
 
-        List<BratRelationAnnotation> relations = new ArrayList<>();
-        List<BratEventAnnotation> events = new ArrayList<>();
-        List<BratNoteAnnotation> notes = new ArrayList<>();
-        for (BratAnnotation anno : doc.getAnnotations()) {
+        var relations = new ArrayList<BratRelationAnnotation>();
+        var events = new ArrayList<BratEventAnnotation>();
+        var notes = new ArrayList<BratNoteAnnotation>();
+        for (var anno : doc.getAnnotations()) {
             if (anno instanceof BratTextAnnotation) {
-                Type type = mapping.getTextTypeMapppings().getUimaType(ts, anno);
+                var type = mapping.getTextTypeMapppings().getUimaType(ts, anno);
                 create(cas, type, (BratTextAnnotation) anno);
             }
             else if (anno instanceof BratRelationAnnotation) {
@@ -221,7 +223,7 @@ public class BratReader
                 notes.add((BratNoteAnnotation) anno);
             }
             else if (anno instanceof BratEventAnnotation) {
-                Type type = mapping.getTextTypeMapppings().getUimaType(ts, anno);
+                var type = mapping.getTextTypeMapppings().getUimaType(ts, anno);
                 create(cas, type, (BratEventAnnotation) anno);
                 events.add((BratEventAnnotation) anno);
             }
@@ -232,23 +234,23 @@ public class BratReader
         }
 
         // Go through the relations now
-        for (BratRelationAnnotation rel : relations) {
-            Type type = mapping.getRelationTypeMapppings().getUimaType(ts, rel);
+        for (var rel : relations) {
+            var type = mapping.getRelationTypeMapppings().getUimaType(ts, rel);
             create(cas, type, rel);
         }
 
         // Go through the events again and handle the slots
-        for (BratEventAnnotation e : events) {
-            Type type = mapping.getTextTypeMapppings().getUimaType(ts, e);
-            fillSlots(cas, type, doc, e);
+        for (var event : events) {
+            var type = mapping.getTextTypeMapppings().getUimaType(ts, event);
+            fillSlots(cas, type, doc, event);
         }
 
         // Finally go through the notes and map them to features (if configured to do so)
-        for (BratNoteAnnotation n : notes) {
-            FeatureStructure anno = idMap.get(n.getTarget());
+        for (var n : notes) {
+            var anno = idMap.get(n.getTarget());
 
-            Type type = anno.getType();
-            Collection<CommentMapping> mappings = mapping.getCommentMapping(type.getName());
+            var type = anno.getType();
+            var mappings = mapping.getCommentMapping(type.getName());
 
             if (mappings.isEmpty()) {
                 warnings.add("No comment mappings defined for note type [" + n.getType()
@@ -256,8 +258,8 @@ public class BratReader
                 continue;
             }
 
-            List<BratAttribute> attrs = new ArrayList<>();
-            for (CommentMapping m : mappings) {
+            var attrs = new ArrayList<BratAttribute>();
+            for (var m : mappings) {
                 if (m.matches(n.getNote())) {
                     attrs.add(new BratAttribute(-1, m.getFeature(), n.getTarget(), m.apply()));
                 }
@@ -275,11 +277,11 @@ public class BratReader
 
     private void create(CAS aCAS, Type aType, BratTextAnnotation aAnno)
     {
-        SpanMapping param = mapping.getSpanMapping(aType.getName());
-        TypeMapping tmap = mapping.getTextTypeMapppings().getMappingByBratType(aAnno.getType());
+        var param = mapping.getSpanMapping(aType.getName());
+        var tmap = mapping.getTextTypeMapppings().getMappingByBratType(aAnno.getType());
 
-        for (Offsets offset : aAnno.getOffsets()) {
-            AnnotationFS anno = aCAS.createAnnotation(aType, offset.getBegin(), offset.getEnd());
+        for (var offset : aAnno.getOffsets()) {
+            var anno = aCAS.createAnnotation(aType, offset.getBegin(), offset.getEnd());
 
             if (tmap != null) {
                 fillDefaultAttributes(anno, tmap.getDefaultFeatureValues());
@@ -302,11 +304,11 @@ public class BratReader
 
     private void create(CAS aCAS, Type aType, BratEventAnnotation aAnno)
     {
-        SpanMapping param = mapping.getSpanMapping(aType.getName());
-        TypeMapping tmap = mapping.getTextTypeMapppings().getMappingByBratType(aAnno.getType());
+        var param = mapping.getSpanMapping(aType.getName());
+        var tmap = mapping.getTextTypeMapppings().getMappingByBratType(aAnno.getType());
 
-        for (Offsets offset : aAnno.getTriggerAnnotation().getOffsets()) {
-            AnnotationFS anno = aCAS.createAnnotation(aType, offset.getBegin(), offset.getEnd());
+        for (var offset : aAnno.getTriggerAnnotation().getOffsets()) {
+            var anno = aCAS.createAnnotation(aType, offset.getBegin(), offset.getEnd());
 
             if (tmap != null) {
                 fillDefaultAttributes(anno, tmap.getDefaultFeatureValues());
