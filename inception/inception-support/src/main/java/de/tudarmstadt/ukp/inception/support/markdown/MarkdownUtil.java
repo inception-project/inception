@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.support.markdown;
 
 import static java.util.Arrays.asList;
+import static java.util.regex.Pattern.compile;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -44,6 +45,8 @@ public class MarkdownUtil
             .and(Sanitizers.LINKS) //
             .and(STYLED_EXTERNAL_LINKS);
 
+    private static final String FONT_AWESOME_CLASS = "fa[\\w-]*";
+    private static final String BOOTSTRAP_COLOR_CLASS = "text-(?:success|warning|danger)";
     public static final PolicyFactory DEFAULT_POLICY = new HtmlPolicyBuilder() //
             // Allow title="..." on any element.
             .allowAttributes("title").globally() //
@@ -56,6 +59,11 @@ public class MarkdownUtil
             .matching(true, "center", "left", "right", "justify", "char") //
             .onElements("caption", "col", "colgroup", "hr", "img", "table", "tbody", "td", "tfoot",
                     "th", "thead", "tr") //
+            // Allow a bit of font-awesome
+            .allowAttributes("class") //
+            .matching(compile(
+                    "(?:\\b(?:" + FONT_AWESOME_CLASS + "|" + BOOTSTRAP_COLOR_CLASS + ")\\b\\s*)+")) //
+            .onElements("i")
             // These elements are allowed.
             .allowCommonBlockElements() //
             .allowCommonInlineFormattingElements() //
