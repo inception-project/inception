@@ -1211,7 +1211,8 @@ public class DocumentServiceImpl
         // documents which are IGNOREed for given users.
         var annDocsQuery = "FROM AnnotationDocument WHERE user = (:username) AND project = (:project)";
         List<AnnotationDocument> annotationDocuments = entityManager
-                .createQuery(annDocsQuery, AnnotationDocument.class).setParameter("username", aUser) //
+                .createQuery(annDocsQuery, AnnotationDocument.class) //
+                .setParameter("username", aUser) //
                 .setParameter("project", aProject) //
                 .getResultList();
 
