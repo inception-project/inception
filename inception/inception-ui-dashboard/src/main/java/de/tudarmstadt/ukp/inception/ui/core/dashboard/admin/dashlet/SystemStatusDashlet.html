@@ -20,59 +20,75 @@
 <body>
   <wicket:panel>
     <h1>System Status</h1>
-  
+
     <div class="card m-2">
       <div class="card-header">
         Active Users 
-        (<wicket:container wicket:id="activeUsers" />)
+        <span class="badge rounded-pill text-bg-secondary float-end">
+          <wicket:container wicket:id="activeUsers" />
+        </span>
       </div>
       <div class="card-body">
         <wicket:container wicket:id="activeUsersDetail" />
       </div>
     </div>
-    
-    <div class="card m-2">
-      <div class="card-header">
-        Server Status
-      </div>
-      <div class="card-body">
-        <div class="row form-row" wicket:enclosure="serverUrl">
-          <label class="col-sm-4 col-form-label">
-            Server URL
-          </label>
-          <div class="col-sm-8">
-            <div wicket:id="serverUrl" class="form-control"/>
-          </div>
-        </div>
 
-        <div class="row form-row" wicket:enclosure="reverseProxyInfo">
-          <label class="col-sm-4 col-form-label">
-            Reverse Proxy
-          </label>
+    <div wicket:id="reverseProxyInfo" class="card m-2">
+      <div class="card-header">Reverse Proxy Status</div>
+      <div class="card-body">
+        <div class="row form-row">
+          <p><wicket:message key="proxyDetected"/></p>
+
+          <p wicket:id="isProxyTrusted"></p>
+          <p wicket:enclosure="remoteIp">
+            Remote IP: <span wicket:id="remoteIp"/>
+          </p>
+          
+          <div wicket:id="isProtocolOk"></div>
+          <p wicket:enclosure="clientUrl">
+            Client URL: <span wicket:id="clientUrl"/>
+          </p>
+          <p wicket:enclosure="serverUrl">
+            Server URL: <span wicket:id="serverUrl"/>
+          </p>
+          
+          <div wicket:id="hasCsrfWithProtocol"></div>
+          <div wicket:id="hasCsrfWithoutProtocol"></div>
+        </div>
+      </div>
+    </div>
+
+    <div wicket:id="requestDetails" class="card m-2">
+      <div class="card-header">Request Details</div>
+      <div class="card-body">
+        <div class="row form-row" wicket:enclosure="reverseProxyHeaders">
+          <label class="col-sm-4 col-form-label"> Reverse Proxy Headers </label>
           <div class="col-sm-8">
-            <pre wicket:id="reverseProxyInfo" class="form-control"/>
+            <pre wicket:id="reverseProxyHeaders" class="form-control" />
           </div>
         </div>
 
         <div class="row form-row" wicket:enclosure="csrfInfo">
-          <label class="col-sm-4 col-form-label">
-            CSRF
-          </label>
+          <label class="col-sm-4 col-form-label"> CSRF </label>
           <div class="col-sm-8">
-            <pre wicket:id="csrfInfo" class="form-control"/>
+            <pre wicket:id="csrfInfo" class="form-control" />
           </div>
         </div>
 
         <div class="row form-row" wicket:enclosure="headers">
-          <label class="col-sm-4 col-form-label">
-            All headers
-          </label>
+          <label class="col-sm-4 col-form-label"> All Headers </label>
           <div class="col-sm-8">
-            <pre wicket:id="headers" class="form-control"/>
+            <pre wicket:id="headers" class="form-control" />
           </div>
         </div>
       </div>
     </div>
   </wicket:panel>
+  <wicket:fragment wicket:id="proxyTrusted">
+    <wicket:message key="proxyTrusted"/>
+  </wicket:fragment>
+  <wicket:fragment wicket:id="proxyNotTrusted">
+    <wicket:message key="proxyNotTrusted"/>
+  </wicket:fragment>
 </body>
 </html>
