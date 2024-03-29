@@ -486,7 +486,7 @@ public class FileSystemCasStorageDriver
                     lastWriteMsg.append("\n");
                     lastWriteMsg.append("Last known successful write was at ");
                     lastWriteMsg.append(formatTimestamp(meta.lastWriteSuccessTimestamp));
-                    lastWriteMsg.append("by:\n");
+                    lastWriteMsg.append(" by:\n");
                     for (StackTraceElement e : meta.lastWriteSuccessTrace) {
                         lastWriteMsg.append("    ");
                         lastWriteMsg.append(e);
