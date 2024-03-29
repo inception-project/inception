@@ -38,8 +38,20 @@
       <div class="card-body">
         <div class="row form-row">
           <p><wicket:message key="proxyDetected"/></p>
+
           <p wicket:id="isProxyTrusted"></p>
+          <p wicket:enclosure="remoteIp">
+            Remote IP: <span wicket:id="remoteIp"/>
+          </p>
+          
           <div wicket:id="isProtocolOk"></div>
+          <p wicket:enclosure="clientUrl">
+            Client URL: <span wicket:id="clientUrl"/>
+          </p>
+          <p wicket:enclosure="serverUrl">
+            Server URL: <span wicket:id="serverUrl"/>
+          </p>
+          
           <div wicket:id="hasCsrfWithProtocol"></div>
           <div wicket:id="hasCsrfWithoutProtocol"></div>
         </div>
@@ -49,27 +61,6 @@
     <div wicket:id="requestDetails" class="card m-2">
       <div class="card-header">Request Details</div>
       <div class="card-body">
-        <div class="row form-row" wicket:enclosure="clientUrl">
-          <label class="col-sm-4 col-form-label"> Client URL </label>
-          <div class="col-sm-8">
-            <div wicket:id="clientUrl" class="form-control" />
-          </div>
-        </div>
-
-        <div class="row form-row" wicket:enclosure="serverUrl">
-          <label class="col-sm-4 col-form-label"> Server URL </label>
-          <div class="col-sm-8">
-            <div wicket:id="serverUrl" class="form-control" />
-          </div>
-        </div>
-
-        <div class="row form-row" wicket:enclosure="remoteIp">
-          <label class="col-sm-4 col-form-label"> Remote IP </label>
-          <div class="col-sm-8">
-            <div wicket:id="remoteIp" class="form-control" />
-          </div>
-        </div>
-
         <div class="row form-row" wicket:enclosure="reverseProxyHeaders">
           <label class="col-sm-4 col-form-label"> Reverse Proxy Headers </label>
           <div class="col-sm-8">

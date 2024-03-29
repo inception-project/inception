@@ -18,12 +18,15 @@
 package de.tudarmstadt.ukp.inception.ui.core.dashboard.admin.dashlet;
 
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
+import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhenNot;
+import static java.util.Arrays.asList;
 import static java.util.Collections.list;
 import static java.util.Locale.ROOT;
 import static java.util.stream.Collectors.joining;
 import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.startsWith;
+import static org.apache.commons.lang3.StringUtils.substringBefore;
 import static org.apache.wicket.RuntimeConfigurationType.DEVELOPMENT;
 
 import java.lang.invoke.MethodHandles;
@@ -48,10 +51,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory;
 import org.springframework.security.core.session.SessionRegistry;
+import org.wicketstuff.event.annotation.OnEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.support.markdown.MarkdownLabel;
 import de.tudarmstadt.ukp.inception.support.spring.ApplicationContextProvider;
+import de.tudarmstadt.ukp.inception.ui.core.dashboard.admin.dashlet.ClientUrlAjaxBehavior.ClientUrlChangedEvent;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.dashlet.Dashlet_ImplBase;
 
 public class SystemStatusDashlet
@@ -65,27 +70,33 @@ public class SystemStatusDashlet
     private @SpringBean UserDao userRepository;
     private @SpringBean SystemStatusService systemStatusService;
 
-    private final ClientUrlAjaxBehavior clientUrlAjaxBehavior;
+    private String clientUrl;
 
     public SystemStatusDashlet(String aId)
     {
         super(aId);
         setOutputMarkupId(true);
 
+        add(new ClientUrlAjaxBehavior());
+
         queue(new Label("activeUsers", LoadableDetachableModel.of(() -> getActiveUsers().size())));
         queue(new Label("activeUsersDetail", LoadableDetachableModel.of(
                 () -> getActiveUsers().stream().map(Objects::toString).collect(joining(", ")))));
 
-        clientUrlAjaxBehavior = new ClientUrlAjaxBehavior();
-
         queue(new WebMarkupContainer("reverseProxyInfo")
                 .add(visibleWhen(LoadableDetachableModel.of(this::isRunningBehindReverseProxy))));
 
-        queue(new Fragment("isProxyTrusted", isProxyTrusted() ? "proxyTrusted" : "proxyNotTrusted",
-                this));
+        var isProxyOk = isRemoteIpCoveredByProxyHeader() || isProxyTrusted();
+        queue(new Fragment("isProxyTrusted", isProxyOk ? "proxyTrusted" : "proxyNotTrusted", this));
+        queue(new Label("remoteIp", LoadableDetachableModel.of(this::getRemoteIp))
+                .setVisible(!isProxyOk));
 
         queue(new MarkdownLabel("isProtocolOk", LoadableDetachableModel
                 .of(() -> getString(isProtocolOk() ? "protocolOk" : "protocolNotOk"))));
+        queue(new Label("clientUrl", LoadableDetachableModel.of(() -> clientUrl))
+                .add(visibleWhenNot(this::isProtocolOk)));
+        queue(new Label("serverUrl", LoadableDetachableModel.of(this::getServerUrl))
+                .add(visibleWhenNot(this::isProtocolOk)));
 
         queue(new MarkdownLabel("hasCsrfWithProtocol", LoadableDetachableModel.of(() -> getString(
                 hasCsrfWithProtocol() ? "csrfWithProtocolOk" : "csrfWithProtocolNotOk"))));
@@ -98,10 +109,6 @@ public class SystemStatusDashlet
         queue(new WebMarkupContainer("requestDetails")
                 .add(visibleWhen(() -> getApplication().getConfigurationType() == DEVELOPMENT)));
 
-        queue(new Label("clientUrl").add(clientUrlAjaxBehavior));
-
-        queue(new Label("serverUrl", LoadableDetachableModel.of(this::getServerUrl)));
-        queue(new Label("remoteIp", LoadableDetachableModel.of(this::getRemoteIp)));
         queue(new Label("headers", LoadableDetachableModel.of(this::getHeaders)));
         var reverseProxyHeaders = LoadableDetachableModel.of(this::getReverseProxyHeaders);
         queue(new Label("reverseProxyHeaders", reverseProxyHeaders)
@@ -109,6 +116,13 @@ public class SystemStatusDashlet
         var csrfInfo = LoadableDetachableModel.of(this::getCsrfAcceptedOrigins);
         queue(new Label("csrfInfo", csrfInfo)
                 .add(visibleWhen(reverseProxyHeaders.map(StringUtils::isNotBlank))));
+    }
+
+    @OnEvent
+    public void onClientUrlChangedEvent(ClientUrlChangedEvent aEvent)
+    {
+        clientUrl = aEvent.getUrl();
+        aEvent.getTarget().add(this);
     }
 
     private List<Object> getActiveUsers()
@@ -124,7 +138,6 @@ public class SystemStatusDashlet
             var acceptedOrigins = systemStatusService.getCsrfAttacksPreventionProperties()
                     .getAcceptedOrigins();
 
-            var clientUrl = clientUrlAjaxBehavior.getClientUrl();
             if (clientUrl == null) {
                 return false;
             }
@@ -146,7 +159,6 @@ public class SystemStatusDashlet
             var acceptedOrigins = systemStatusService.getCsrfAttacksPreventionProperties()
                     .getAcceptedOrigins();
 
-            var clientUrl = clientUrlAjaxBehavior.getClientUrl();
             if (clientUrl == null) {
                 return false;
             }
@@ -165,11 +177,8 @@ public class SystemStatusDashlet
     private boolean isProtocolOk()
     {
         try {
-            var clientUrl = clientUrlAjaxBehavior.getClientUrl();
-            var serverUrl = getServerUrl();
-
-            var clientProtocol = StringUtils.substringBefore(clientUrl, "://");
-            var serverProtocol = StringUtils.substringBefore(serverUrl, "://");
+            var clientProtocol = getClientUrlProtocol();
+            var serverProtocol = getServerUrlProtocol();
 
             return Objects.equals(clientProtocol, serverProtocol);
         }
@@ -180,9 +189,20 @@ public class SystemStatusDashlet
         return false;
     }
 
+    private String getServerUrlProtocol()
+    {
+        var serverUrl = getServerUrl();
+        return substringBefore(serverUrl, "://");
+    }
+
+    private String getClientUrlProtocol()
+    {
+        return substringBefore(clientUrl, "://");
+    }
+
     private boolean isProxyTrusted()
     {
-        if (startsWith(clientUrlAjaxBehavior.getClientUrl(), getServerUrl())) {
+        if (startsWith(clientUrl, getServerUrl())) {
             // It seems that the URL the client requested is known to us, so we seem to have
             // trusted the proxy
             return true;
@@ -249,7 +269,6 @@ public class SystemStatusDashlet
             }
         }
 
-        var clientUrl = clientUrlAjaxBehavior.getClientUrl();
         if (clientUrl != null && !startsWith(clientUrl, getServerUrl())) {
             // Probably running behind a reverse proxy, but the URL the server sees from the client
             // does not match the URL that the client actually tried to access
@@ -264,7 +283,7 @@ public class SystemStatusDashlet
         if (getRequest() instanceof ServletWebRequest request) {
             var xForwardHeaders = list(request.getContainerRequest().getHeaderNames()).stream() //
                     .filter(h -> StringUtils.startsWithAny(h.toLowerCase(ROOT), "x-forwarded-",
-                            "forwarded")) //
+                            "forwarded", "x-real-ip")) //
                     .toList();
             if (xForwardHeaders.isEmpty()) {
                 return null;
@@ -343,6 +362,15 @@ public class SystemStatusDashlet
         var urlRenderer = getRequestCycle().getUrlRenderer();
         var homePageUrl = urlFor(getApplication().getHomePage(), null);
         return urlRenderer.renderFullUrl(Url.parse(homePageUrl));
+    }
+
+    private boolean isRemoteIpCoveredByProxyHeader()
+    {
+        if (getRequest() instanceof ServletWebRequest request) {
+            return asList(request.getHeader("x-forwarded-for"), request.getHeader("x-real-ip"))
+                    .contains(getRemoteIp());
+        }
+        return false;
     }
 
     private String getRemoteIp()
