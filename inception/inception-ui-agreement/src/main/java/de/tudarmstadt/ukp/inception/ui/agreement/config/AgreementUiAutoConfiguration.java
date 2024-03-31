@@ -15,22 +15,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.agreement.measures;
+package de.tudarmstadt.ukp.inception.ui.agreement.config;
 
-import java.util.List;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasureSupportRegistry;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
+import de.tudarmstadt.ukp.inception.ui.agreement.page.AgreementService;
+import de.tudarmstadt.ukp.inception.ui.agreement.page.AgreementServiceImpl;
 
-public interface AgreementMeasureSupportRegistry
+@Configuration
+public class AgreementUiAutoConfiguration
 {
-
-    List<AgreementMeasureSupport<?, ?, ?>> getAgreementMeasureSupports();
-
-    AgreementMeasureSupport<?, ?, ?> getAgreementMeasureSupport(String aId);
-
-    List<AgreementMeasureSupport<?, ?, ?>> getAgreementMeasureSupports(AnnotationFeature aFeature);
-
-    AgreementMeasure<?> getMeasure(AnnotationFeature aFeature, String aMeasure,
-            DefaultAgreementTraits aTraits);
-
+    @Bean
+    public AgreementService agreementService(DocumentService aDocumentService,
+            AgreementMeasureSupportRegistry aAgreementRegistry)
+    {
+        return new AgreementServiceImpl(aDocumentService, aAgreementRegistry);
+    }
 }

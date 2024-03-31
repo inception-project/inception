@@ -15,22 +15,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.agreement.measures;
+package de.tudarmstadt.ukp.inception.ui.agreement.page;
 
-import java.util.List;
+import java.io.OutputStream;
 
+import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.DefaultAgreementTraits;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
-public interface AgreementMeasureSupportRegistry
+public interface AgreementService
 {
-
-    List<AgreementMeasureSupport<?, ?, ?>> getAgreementMeasureSupports();
-
-    AgreementMeasureSupport<?, ?, ?> getAgreementMeasureSupport(String aId);
-
-    List<AgreementMeasureSupport<?, ?, ?>> getAgreementMeasureSupports(AnnotationFeature aFeature);
-
-    AgreementMeasure<?> getMeasure(AnnotationFeature aFeature, String aMeasure,
-            DefaultAgreementTraits aTraits);
-
+    void exportAgreement(AnnotationFeature aFeature, OutputStream aOut, String aAnnotator1,
+            String aAnnotator2, User aCurrentUser, String aMeasure, DefaultAgreementTraits aTraits);
 }
