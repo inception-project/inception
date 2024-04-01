@@ -94,15 +94,6 @@
       <artifactId>dkpro-statistics-agreement</artifactId>
     </dependency>
 
-    <dependency>
-      <groupId>org.apache.commons</groupId>
-      <artifactId>commons-csv</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>commons-io</groupId>
-      <artifactId>commons-io</artifactId>
-    </dependency>
-
     <!-- Spring dependencies -->
     <dependency>
       <groupId>org.springframework</groupId>

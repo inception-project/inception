@@ -23,9 +23,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAGE_PARAM_PROJECT;
 import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CHANGE_EVENT;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.enabledWhen;
-import static java.util.stream.Collectors.groupingBy;
 import static org.apache.commons.collections4.CollectionUtils.isEmpty;
-import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -55,11 +53,8 @@ import org.wicketstuff.event.annotation.OnEvent;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.DefaultAgreementTraits;
-import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.CodingAgreementMeasure_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.event.PairwiseAgreementScoreClickedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.task.CalculatePairwiseAgreementTask;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectUserPermissions;
@@ -109,6 +104,7 @@ public class AgreementPage
     private DropDownChoice<AnnotationFeature> featureList;
     private DropDownChoice<Pair<String, String>> measureDropDown;
     private LambdaAjaxButton<AgreementFormModel> runCalculationsButton;
+    private LambdaAjaxButton<AgreementFormModel> exportAgreementButton;
     private WebMarkupContainer traitsContainer;
 
     public AgreementPage(final PageParameters aPageParameters)
@@ -157,10 +153,10 @@ public class AgreementPage
         queue(featureList = makeFeatureChoice("feature"));
         queue(measureDropDown = makeMeasuresDropdown("measure"));
 
-        var userList = new ListMultipleChoice<ProjectUserPermissions>("users");
-        userList.setChoiceRenderer(new ProjectUserPermissionChoiceRenderer());
-        userList.setChoices(listUsersWithPermissions());
-        queue(userList);
+        var annotatorList = new ListMultipleChoice<ProjectUserPermissions>("annotators");
+        annotatorList.setChoiceRenderer(new ProjectUserPermissionChoiceRenderer());
+        annotatorList.setChoices(listUsersWithPermissions());
+        queue(annotatorList);
 
         var documentList = new ListMultipleChoice<SourceDocument>("documents");
         documentList.setChoiceRenderer(new ChoiceRenderer<>("name"));
@@ -169,9 +165,14 @@ public class AgreementPage
 
         runCalculationsButton = new LambdaAjaxButton<>("run", this::actionRunCalculations);
         runCalculationsButton.triggerAfterSubmit();
+        runCalculationsButton.add(enabledWhen(() -> measureDropDown.getModelObject() != null));
         queue(runCalculationsButton);
 
-        runCalculationsButton.add(enabledWhen(() -> measureDropDown.getModelObject() != null));
+        exportAgreementButton = new LambdaAjaxButton<>("export", this::actionExportDiff);
+        exportAgreementButton.triggerAfterSubmit();
+        exportAgreementButton.add(enabledWhen(() -> measureDropDown.getModelObject() != null));
+        queue(exportAgreementButton);
+
     }
 
     private List<ProjectUserPermissions> listUsersWithPermissions()
@@ -227,8 +228,8 @@ public class AgreementPage
             }
         };
         dropdown.setChoiceRenderer(new ChoiceRenderer<>("value"));
-        dropdown.add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT,
-                _target -> _target.add(runCalculationsButton, traitsContainer)));
+        dropdown.add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT, _target -> _target
+                .add(runCalculationsButton, exportAgreementButton, traitsContainer)));
         return dropdown;
     }
 
@@ -281,39 +282,44 @@ public class AgreementPage
         aTarget.add(measureDropDown, runCalculationsButton, traitsContainer);
     }
 
+    private void actionExportDiff(AjaxRequestTarget aTarget, Form<AgreementFormModel> aForm)
+    {
+        var filename = getProject().getSlug() + "-diff.csv";
+        downloadBehavior.initiate(aTarget, filename, new PipedStreamResource((os) -> {
+            var sessionOwner = userRepository.getCurrentUser();
+            var model = aForm.getModelObject();
+            var project = getProject();
+            var annotators = getAnnotators(aForm.getModelObject());
+            var traits = getTraits();
+            var documents = agreementService
+                    .getDocumentsToEvaluate(project, model.documents, traits).keySet().stream()
+                    .toList();
+
+            // PipedStreamResource runs the lambda in a separate thread, so we need to make
+            // sure the MDC is correctly set up here.
+            try (var ctx = new DefaultMdcSetup(repositoryProperties, getProject(), sessionOwner)) {
+                agreementService.exportDiff(os, model.feature, model.measure.getKey(), getTraits(),
+                        sessionOwner, documents, annotators);
+            }
+        }));
+
+    }
+
     private void actionRunCalculations(AjaxRequestTarget aTarget, Form<AgreementFormModel> aForm)
     {
         var model = aForm.getModelObject();
+        var project = getProject();
 
         // Do not do any agreement if no feature or measure has been selected yet.
         if (model.feature == null || model.measure == null) {
             return;
         }
 
-        var traits = (DefaultAgreementTraits) traitsContainer.get(MID_TRAITS)
-                .getDefaultModelObject();
+        var traits = getTraits();
 
         var measure = agreementRegistry.getMeasure(model.feature, model.measure.getKey(), traits);
 
-        var states = new ArrayList<AnnotationDocumentState>();
-        states.add(AnnotationDocumentState.FINISHED);
-        if (!traits.isLimitToFinishedDocuments()) {
-            states.add(AnnotationDocumentState.IN_PROGRESS);
-        }
-
-        var allAnnDocs = documentService.listAnnotationDocumentsInState(getProject(), //
-                states.toArray(AnnotationDocumentState[]::new)).stream() //
-                .collect(groupingBy(AnnotationDocument::getDocument));
-
-        if (allAnnDocs.isEmpty()) {
-            error("No documents with annotations were found.");
-            aTarget.addChildren(getPage(), IFeedback.class);
-            return;
-        }
-
-        if (isNotEmpty(model.documents)) {
-            allAnnDocs.keySet().retainAll(model.documents);
-        }
+        var allAnnDocs = agreementService.getDocumentsToEvaluate(project, model.documents, traits);
 
         if (allAnnDocs.isEmpty()) {
             error("At least one document needs to be selected.");
@@ -321,13 +327,7 @@ public class AgreementPage
             return;
         }
 
-        List<String> annotators;
-        if (isEmpty(model.users)) {
-            annotators = listUsersWithPermissions().stream().map(t -> t.getUsername()).toList();
-        }
-        else {
-            annotators = model.users.stream().map(t -> t.getUsername()).toList();
-        }
+        var annotators = getAnnotators(model);
 
         if (annotators.size() < 2) {
             error("At least two annotators need to be selected.");
@@ -337,7 +337,7 @@ public class AgreementPage
 
         var task = CalculatePairwiseAgreementTask.builder() //
                 .withSessionOwner(userRepository.getCurrentUser()) //
-                .withProject(getProject()) //
+                .withProject(project) //
                 .withTrigger("Agreement page") //
                 .withAnnotators(annotators) //
                 .withTraits(traits) //
@@ -354,6 +354,18 @@ public class AgreementPage
 
         schedulingService.executeSync(task);
         actionRefreshResults(aTarget, task);
+    }
+
+    private List<String> getAnnotators(AgreementFormModel model)
+    {
+        List<String> annotators;
+        if (isEmpty(model.annotators)) {
+            annotators = listUsersWithPermissions().stream().map(t -> t.getUsername()).toList();
+        }
+        else {
+            annotators = model.annotators.stream().map(t -> t.getUsername()).toList();
+        }
+        return annotators;
     }
 
     List<Pair<String, String>> listMeasures()
@@ -382,27 +394,19 @@ public class AgreementPage
         // lambda which would cause problems here since the event is not serializable
         var annotator1 = aEvent.getAnnotator1();
         var annotator2 = aEvent.getAnnotator2();
-        var currentUser = userRepository.getCurrentUser();
 
-        var measure = agreementRegistry.getMeasure(featureList.getModelObject(),
-                measureDropDown.getModelObject().getKey(), getTraits());
-        if (!(measure instanceof CodingAgreementMeasure_ImplBase)) {
-            aEvent.getTarget().addChildren(getPage(), IFeedback.class);
-            warn("Aggreement report currently only supported for coding measures.");
-            return;
-        }
+        var filename = getProject().getSlug() + "-diff.csv";
+        downloadBehavior.initiate(aEvent.getTarget(), filename, new PipedStreamResource((os) -> {
+            var sessionOwner = userRepository.getCurrentUser();
+            var model = form.getModelObject();
 
-        downloadBehavior.initiate(aEvent.getTarget(), "agreement.csv",
-                new PipedStreamResource((os) -> {
-                    // PipedStreamResource runs the lambda in a separate thread, so we need to make
-                    // sure the MDC is correctly set up here.
-                    try (var ctx = new DefaultMdcSetup(repositoryProperties, getProject(),
-                            currentUser)) {
-                        agreementService.exportAgreement(featureList.getModelObject(), os,
-                                annotator1, annotator2, currentUser,
-                                measureDropDown.getModelObject().getKey(), getTraits());
-                    }
-                }));
+            // PipedStreamResource runs the lambda in a separate thread, so we need to make
+            // sure the MDC is correctly set up here.
+            try (var ctx = new DefaultMdcSetup(repositoryProperties, getProject(), sessionOwner)) {
+                agreementService.exportPairwiseDiff(os, model.feature, model.measure.getKey(),
+                        getTraits(), sessionOwner, model.documents, annotator1, annotator2);
+            }
+        }));
     }
 
     private DefaultAgreementTraits getTraits()
@@ -419,7 +423,7 @@ public class AgreementPage
 
         Pair<String, String> measure;
 
-        List<ProjectUserPermissions> users = new ArrayList<>();
+        List<ProjectUserPermissions> annotators = new ArrayList<>();
 
         List<SourceDocument> documents = new ArrayList<>();
     }

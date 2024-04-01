@@ -46,8 +46,8 @@
               </div>
               <div class="flex-fill d-flex flex-column">
                 <div class="d-flex flex-column flex-grow-1 form-row form-floating">
-                  <select wicket:id="users" class="form-select flex-grow-1" style="min-height: 10em;"/>
-                  <label wicket:for="users"><wicket:label key="users"/></label>
+                  <select wicket:id="annotators" class="form-select flex-grow-1" style="min-height: 10em;"/>
+                  <label wicket:for="annotators"><wicket:label key="annotators"/></label>
                 </div>
                 <div class="d-flex flex-column flex-grow-1 form-row form-floating">
                   <select wicket:id="documents" class="form-select flex-grow-1" style="min-height: 10em;"/>
@@ -57,7 +57,8 @@
             </div>
             <div class="card-footer flex-h-container">
               <div class="flex-content text-end">
-                <input type="submit" wicket:id="run" class="btn btn-primary" wicket:message="value:run"></input>
+                <button wicket:id="export" class="btn btn-secondary"><i class="fas fa-file-download me-2"/><wicket:message key="export"/></button>
+                <button wicket:id="run" class="btn btn-primary"><i class="fas fa-play me-2"/><wicket:message key="run"/></button>
               </div>
             </div>
           </div>
