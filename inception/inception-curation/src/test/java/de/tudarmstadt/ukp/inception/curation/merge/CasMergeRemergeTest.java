@@ -51,7 +51,7 @@ import org.apache.uima.fit.factory.CasFactory;
 import org.apache.uima.jcas.JCas;
 import org.junit.jupiter.api.Test;
 
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.DiffResult;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.DiffResult;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span.SpanDiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span.SpanPosition;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;

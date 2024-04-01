@@ -23,22 +23,17 @@
   xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
 <wicket:panel>
   <form wicket:id="form" class="col-sm-12">
-    <div class="row form-row" wicket:enclosure="limitToFinishedDocuments">
-      <div class="offset-sm-4 col-sm-8">
-        <div class="form-check">
-          <input wicket:id="limitToFinishedDocuments" class="form-check-input" type="checkbox"/>
-          <label wicket:for="limitToFinishedDocuments" class="form-check-label">
-            <wicket:label key="limitToFinishedDocuments"/>
-          </label>
-        </div>
+    <div class="form-row" wicket:enclosure="limitToFinishedDocuments">
+      <div class="form-check form-switch">
+        <input wicket:id="limitToFinishedDocuments" class="form-check-input" type="checkbox"/>
+        <label wicket:for="limitToFinishedDocuments" class="form-check-label">
+          <wicket:label key="limitToFinishedDocuments"/>
+        </label>
       </div>
     </div>
-    <div class="row form-row" wicket:enclosure="linkCompareBehavior">
-      <label wicket:for="linkCompareBehavior" class="col-sm-4 col-form-label">
-        <wicket:label key="linkCompareBehavior"/></label>
-      <div class="col-sm-8">
-        <select wicket:id="linkCompareBehavior" class="form-select" data-container="body"/>
-      </div>
+    <div class="form-row form-floating" wicket:enclosure="linkCompareBehavior">
+      <select wicket:id="linkCompareBehavior" class="form-select"/>
+      <label wicket:for="linkCompareBehavior"><wicket:label key="linkCompareBehavior"/></label>
     </div>
     <wicket:child/>
   </form>

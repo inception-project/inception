@@ -15,17 +15,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.curation.merge.strategy;
+package de.tudarmstadt.ukp.inception.ui.agreement.config;
 
-import java.util.List;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.Configuration;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.ConfigurationSet;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.DiffResult;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.ui.agreement.page.AgreementService;
+import de.tudarmstadt.ukp.inception.ui.agreement.page.AgreementServiceImpl;
 
-public interface MergeStrategy
+@Configuration
+public class AgreementUiAutoConfiguration
 {
-    List<Configuration> chooseConfigurationsToMerge(DiffResult aDiff,
-            ConfigurationSet aConfigurationSet, AnnotationLayer aLayer);
+    @Bean
+    public AgreementService agreementService(DocumentService aDocumentService,
+            AnnotationSchemaService aSchemaService)
+    {
+        return new AgreementServiceImpl(aDocumentService, aSchemaService);
+    }
 }

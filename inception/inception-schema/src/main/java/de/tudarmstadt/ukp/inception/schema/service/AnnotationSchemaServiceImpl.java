@@ -875,6 +875,17 @@ public class AnnotationSchemaServiceImpl
 
     @Override
     @Transactional
+    public List<AnnotationFeature> listEnabledFeatures(Project aProject)
+    {
+        return listAnnotationFeature(aProject).stream() //
+                .filter(f -> f.getLayer().isEnabled()) //
+                .filter(AnnotationFeature::isEnabled) //
+                .filter(featureSupportRegistry::isAccessible) //
+                .toList();
+    }
+
+    @Override
+    @Transactional
     public List<Tag> listTags(TagSet aTagSet)
     {
         if (aTagSet == null) {

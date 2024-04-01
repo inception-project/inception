@@ -34,6 +34,7 @@ public class FullUnitizingAgreementResult
         super(aType, aFeature, aStudy, aCasGroupIds, aExcludeIncomplete);
     }
 
+    @Override
     public boolean isAllNull(String aRater)
     {
         var raterIdx = getCasGroupIds().indexOf(aRater);
@@ -42,6 +43,7 @@ public class FullUnitizingAgreementResult
                 .noneMatch(u -> u.getRaterIdx() == raterIdx && u.getCategory() != null);
     }
 
+    @Override
     public long getNonNullCount(String aRater)
     {
         var raterIdx = getCasGroupIds().indexOf(aRater);

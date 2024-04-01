@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding;
 
 import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CLICK;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
+import static java.lang.String.format;
 import static org.apache.wicket.event.Broadcast.BUBBLE;
 
 import java.lang.invoke.MethodHandles;
@@ -179,19 +180,18 @@ public class PairwiseCodingAgreementTable
             return new Label("label", "-");
         }
 
-        var label = String.format("%d/%d", result.getCompleteSetCount(),
-                result.getRelevantSetCount());
+        var label = format("%d/%d", result.getCompleteSetCount(), result.getRelevantSetCount());
 
         var tooltipTitle = "Details about annotations excluded from agreement calculation";
 
         var tooltipContent = new StringBuilder();
         if (result.isExcludeIncomplete()) {
-            tooltipContent.append(String.format("- Incomplete (missing): %d%n",
-                    result.getIncompleteSetsByPosition()));
-            tooltipContent.append(String.format("- Incomplete (not labeled): %d%n",
-                    result.getIncompleteSetsByLabel()));
+            tooltipContent.append(
+                    format("- Incomplete (missing): %d%n", result.getIncompleteSetsByPosition()));
+            tooltipContent.append(
+                    format("- Incomplete (not labeled): %d%n", result.getIncompleteSetsByLabel()));
         }
-        tooltipContent.append(String.format("- Plurality: %d", result.getPluralitySets()));
+        tooltipContent.append(format("- Plurality: %d", result.getPluralitySets()));
 
         var l = new Label("label", Model.of(label));
         var tooltip = new DescriptionTooltipBehavior(tooltipTitle, tooltipContent.toString());
@@ -239,19 +239,20 @@ public class PairwiseCodingAgreementTable
             label = "labels/positions disjunct";
         }
         else {
-            label = String.format("%.2f", result.getAgreement());
+            label = format("%.2f", result.getAgreement());
         }
 
         var tooltipTitle = aRater1.getUiName() + " ↔ " + aRater2.getUiName();
 
-        var tooltipContent = String.format("Documents counted: %d/%d%n",
-                result.getUsableAgreementsCount(), result.getTotalAgreementsCount())
+        var tooltipContent = format("Documents counted: %d/%d%n", result.getUsableAgreementsCount(),
+                result.getTotalAgreementsCount())
                 + "Positions annotated:\n"
-                + String.format("- %s: %d/%d%n", aRater1.getUiName(),
-                        result.getNonNullCount(casGroupId1), result.getItemCount(casGroupId1))
-                + String.format("- %s: %d/%d%n", aRater2.getUiName(),
-                        result.getNonNullCount(casGroupId2), result.getItemCount(casGroupId2))
-                + String.format("Distinct labels: %d%n", result.getCategoryCount());
+                + format("- %s: %d/%d%n", aRater1.getUiName(), result.getNonNullCount(casGroupId1),
+                        result.getItemCount(casGroupId1))
+                + format("- %s: %d/%d%n", aRater2.getUiName(), result.getNonNullCount(casGroupId2),
+                        result.getItemCount(casGroupId2))
+                + format("Distinct labels: %d%n", result.getCategoryCount())
+                + "Click to download pairwise diff as CSV file.";
 
         var l = new Label("label", Model.of(label));
         var tooltip = new DescriptionTooltipBehavior(tooltipTitle, tooltipContent);

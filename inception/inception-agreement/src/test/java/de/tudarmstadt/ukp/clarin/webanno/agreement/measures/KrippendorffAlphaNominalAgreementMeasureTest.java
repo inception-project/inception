@@ -31,7 +31,7 @@ import org.junit.jupiter.api.Test;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.krippendorffalpha.KrippendorffAlphaAgreementMeasureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.krippendorffalpha.KrippendorffAlphaAgreementTraits;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.FullCodingAgreementResult;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.DiffResult;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.DiffResult;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;

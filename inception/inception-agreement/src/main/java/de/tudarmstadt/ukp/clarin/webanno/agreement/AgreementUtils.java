@@ -18,22 +18,14 @@
 package de.tudarmstadt.ukp.clarin.webanno.agreement;
 
 import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.getFeature;
-import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.util.Arrays.asList;
-import static org.apache.commons.csv.CSVFormat.RFC4180;
+import static org.apache.uima.fit.util.FSUtil.getFeature;
 
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.io.PrintStream;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.csv.CSVPrinter;
-import org.apache.commons.io.output.CloseShieldOutputStream;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.cas.ArrayFS;
@@ -41,15 +33,15 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
-import org.apache.uima.fit.util.FSUtil;
 import org.dkpro.statistics.agreement.coding.CodingAnnotationStudy;
 import org.dkpro.statistics.agreement.coding.ICodingAnnotationStudy;
 
 import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.FullCodingAgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.Configuration;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.ConfigurationSet;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.Configuration;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.ConfigurationSet;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.relation.RelationDiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.relation.RelationPosition;
 
@@ -80,12 +72,6 @@ public class AgreementUtils
     {
         var users = aUsers.stream().sorted().toList();
 
-        var completeSets = new ArrayList<ConfigurationSet>();
-        var setsWithDifferences = new ArrayList<ConfigurationSet>();
-        var incompleteSetsByPosition = new ArrayList<ConfigurationSet>();
-        var incompleteSetsByLabel = new ArrayList<ConfigurationSet>();
-        var pluralitySets = new ArrayList<ConfigurationSet>();
-        var irrelevantSets = new ArrayList<ConfigurationSet>();
         var study = new CodingAnnotationStudy(users.size());
 
         if (aTagSet != null) {
@@ -99,11 +85,13 @@ public class AgreementUtils
         if (someCas == null) {
             // Well... there is NOTHING here!
             // All positions are irrelevant
-            aDiff.getPositions().forEach(p -> irrelevantSets.add(aDiff.getConfigurationSet(p)));
+            var irrelevantSets = aDiff.getPositions().stream() //
+                    .map(aDiff::getConfigurationSet) //
+                    .map(s -> s.addTags(Tag.IRRELEVANT)) //
+                    .toList();
 
             return new FullCodingAgreementResult(aType, aFeature, aDiff.toResult(), study, users,
-                    completeSets, irrelevantSets, setsWithDifferences, incompleteSetsByPosition,
-                    incompleteSetsByLabel, pluralitySets, aExcludeIncomplete);
+                    irrelevantSets, aExcludeIncomplete);
         }
 
         var ts = someCas.getTypeSystem();
@@ -112,11 +100,13 @@ public class AgreementUtils
         // We should just do the right thing here which is: do nothing
         if (ts.getType(aType) == null) {
             // All positions are irrelevant
-            aDiff.getPositions().forEach(p -> irrelevantSets.add(aDiff.getConfigurationSet(p)));
+            var irrelevantSets = aDiff.getPositions().stream() //
+                    .map(aDiff::getConfigurationSet) //
+                    .map(s -> s.addTags(Tag.IRRELEVANT)) //
+                    .toList();
 
             return new FullCodingAgreementResult(aType, aFeature, aDiff.toResult(), study, users,
-                    completeSets, irrelevantSets, setsWithDifferences, incompleteSetsByPosition,
-                    incompleteSetsByLabel, pluralitySets, aExcludeIncomplete);
+                    irrelevantSets, aExcludeIncomplete);
         }
 
         // Check that the feature really exists instead of just getting a NPE later
@@ -145,20 +135,20 @@ public class AgreementUtils
             // - if we are looking for a non-primitive type and encounter a primary position
             // this is an inverted XOR!
             if (!(isPrimitiveFeature ^ isSubPosition)) {
-                irrelevantSets.add(cfgSet);
+                cfgSet.addTags(Tag.IRRELEVANT);
                 continue;
             }
 
             // Check if subposition is for the feature we are looking for or for a different
             // feature
             if (isSubPosition && !aFeature.equals(cfgSet.getPosition().getFeature())) {
-                irrelevantSets.add(cfgSet);
+                cfgSet.addTags(Tag.IRRELEVANT);
                 continue nextPosition;
             }
 
-            // If non of the current users has made any annotation at this position, then skip it
+            // If none of the current users has made any annotation at this position, then skip it
             if (users.stream().filter(u -> cfgSet.getCasGroupIds().contains(u)).count() == 0) {
-                irrelevantSets.add(cfgSet);
+                cfgSet.addTags(Tag.IRRELEVANT);
                 continue nextPosition;
             }
 
@@ -168,7 +158,7 @@ public class AgreementUtils
                 // Set has to include all users, otherwise we cannot calculate the agreement for
                 // this configuration set.
                 if (!cfgSet.getCasGroupIds().contains(user)) {
-                    incompleteSetsByPosition.add(cfgSet);
+                    cfgSet.addTags(Tag.INCOMPLETE_POSITION);
                     if (aExcludeIncomplete) {
                         // Record as incomplete
                         continue nextPosition;
@@ -184,9 +174,9 @@ public class AgreementUtils
                 // Make sure a single user didn't do multiple alternative annotations at a single
                 // position. So there is currently no support for calculating agreement on stacking
                 // annotations.
-                List<Configuration> cfgs = cfgSet.getConfigurations(user);
+                var cfgs = cfgSet.getConfigurations(user);
                 if (cfgs.size() > 1) {
-                    pluralitySets.add(cfgSet);
+                    cfgSet.addTags(Tag.STACKED);
                     continue nextPosition;
                 }
 
@@ -199,22 +189,20 @@ public class AgreementUtils
                     var adapter = (RelationDiffAdapter) aDiff.getTypeAdapters().get(pos.getType());
 
                     // Check if the source of the relation is stacked
-                    var source = FSUtil.getFeature(arc, adapter.getSourceFeature(),
-                            AnnotationFS.class);
+                    var source = getFeature(arc, adapter.getSourceFeature(), AnnotationFS.class);
                     List<AnnotationFS> sourceCandidates = CasUtil.selectAt(arc.getCAS(),
                             source.getType(), source.getBegin(), source.getEnd());
                     if (sourceCandidates.size() > 1) {
-                        pluralitySets.add(cfgSet);
+                        cfgSet.addTags(Tag.STACKED);
                         continue nextPosition;
                     }
 
                     // Check if the target of the relation is stacked
-                    var target = FSUtil.getFeature(arc, adapter.getTargetFeature(),
-                            AnnotationFS.class);
+                    var target = getFeature(arc, adapter.getTargetFeature(), AnnotationFS.class);
                     List<AnnotationFS> targetCandidates = CasUtil.selectAt(arc.getCAS(),
                             target.getType(), target.getBegin(), target.getEnd());
                     if (targetCandidates.size() > 1) {
-                        pluralitySets.add(cfgSet);
+                        cfgSet.addTags(Tag.STACKED);
                         continue nextPosition;
                     }
                 }
@@ -233,7 +221,7 @@ public class AgreementUtils
 
                 // "null" cannot be used in agreement calculations. We treat these as incomplete
                 if (values[i] == null) {
-                    incompleteSetsByLabel.add(cfgSet);
+                    cfgSet.addTags(Tag.INCOMPLETE_LABEL);
                     if (aExcludeIncomplete) {
                         continue nextPosition;
                     }
@@ -243,7 +231,7 @@ public class AgreementUtils
             }
 
             if (ObjectUtils.notEqual(values[0], values[1])) {
-                setsWithDifferences.add(cfgSet);
+                cfgSet.addTags(Tag.DIFFERENCE);
             }
 
             // If the position feature is set (subposition), then it must match the feature we
@@ -251,13 +239,16 @@ public class AgreementUtils
             assert cfgSet.getPosition().getFeature() == null
                     || cfgSet.getPosition().getFeature().equals(aFeature);
 
-            completeSets.add(cfgSet);
+            cfgSet.addTags(Tag.COMPLETE);
             study.addItemAsArray(values);
         }
 
+        var taggedSets = aDiff.getPositions().stream() //
+                .map(aDiff::getConfigurationSet) //
+                .toList();
+
         return new FullCodingAgreementResult(aType, aFeature, aDiff.toResult(), study, users,
-                completeSets, irrelevantSets, setsWithDifferences, incompleteSetsByPosition,
-                incompleteSetsByLabel, pluralitySets, aExcludeIncomplete);
+                taggedSets, aExcludeIncomplete);
     }
 
     private static Object extractValueForAgreement(FeatureStructure aFs, String aFeature,
@@ -315,45 +306,6 @@ public class AgreementUtils
         }
     }
 
-    private static void toCSV(CSVPrinter aOut, FullCodingAgreementResult aAgreement,
-            boolean aAddHeader)
-        throws IOException
-    {
-        try {
-            aOut.printComment(String.format("Category count: %d%n", aAgreement.getCategoryCount()));
-        }
-        catch (Throwable e) {
-            aOut.printComment(
-                    String.format("Category count: %s%n", ExceptionUtils.getRootCauseMessage(e)));
-        }
-        try {
-            aOut.printComment(
-                    String.format("Item count: %d%n", aAgreement.getStudy().getItemCount()));
-        }
-        catch (Throwable e) {
-            aOut.printComment(
-                    String.format("Item count: %s%n", ExceptionUtils.getRootCauseMessage(e)));
-        }
-
-        aOut.printComment(
-                String.format("Relevant position count: %d%n", aAgreement.getRelevantSetCount()));
-
-        // aOut.printf("%n== Complete sets: %d ==%n", aAgreement.getCompleteSets().size());
-        configurationSetsWithItemsToCsv(aOut, aAgreement, aAgreement.getCompleteSets(), aAddHeader);
-        //
-        // aOut.printf("%n== Incomplete sets (by position): %d == %n",
-        // aAgreement.getIncompleteSetsByPosition().size());
-        // dumpAgreementConfigurationSets(aOut, aAgreement,
-        // aAgreement.getIncompleteSetsByPosition());
-        //
-        // aOut.printf("%n== Incomplete sets (by label): %d ==%n",
-        // aAgreement.getIncompleteSetsByLabel().size());
-        // dumpAgreementConfigurationSets(aOut, aAgreement, aAgreement.getIncompleteSetsByLabel());
-        //
-        // aOut.printf("%n== Plurality sets: %d ==%n", aAgreement.getPluralitySets().size());
-        // dumpAgreementConfigurationSets(aOut, aAgreement, aAgreement.getPluralitySets());
-    }
-
     public static void dumpAgreementStudy(PrintStream aOut, FullCodingAgreementResult aAgreement)
     {
         try {
@@ -384,36 +336,6 @@ public class AgreementUtils
 
         aOut.printf("%n== Plurality sets: %d ==%n", aAgreement.getPluralitySets().size());
         dumpAgreementConfigurationSets(aOut, aAgreement, aAgreement.getPluralitySets());
-    }
-
-    private static void configurationSetsWithItemsToCsv(CSVPrinter aOut,
-            FullAgreementResult_ImplBase<ICodingAnnotationStudy> aAgreement,
-            List<ConfigurationSet> aSets, boolean aIncludeHeader)
-        throws IOException
-    {
-        if (aIncludeHeader) {
-            var headers = new ArrayList<>(
-                    asList("Type", "Collection", "Document", "Layer", "Feature", "Position"));
-            headers.addAll(aAgreement.getCasGroupIds());
-            aOut.printRecord(headers);
-        }
-
-        int i = 0;
-        for (var item : aAgreement.getStudy().getItems()) {
-            var pos = aSets.get(i).getPosition();
-            var values = new ArrayList<String>();
-            values.add(pos.getClass().getSimpleName());
-            values.add(pos.getCollectionId());
-            values.add(pos.getDocumentId());
-            values.add(pos.getType());
-            values.add(aAgreement.getFeature());
-            values.add(aSets.get(i).getPosition().toMinimalString());
-            for (var unit : item.getUnits()) {
-                values.add(String.valueOf(unit.getCategory()));
-            }
-            aOut.printRecord(values);
-            i++;
-        }
     }
 
     private static void dumpAgreementConfigurationSetsWithItems(PrintStream aOut,
@@ -449,16 +371,6 @@ public class AgreementUtils
                 sb.append(cfg.toString());
             }
             aOut.println(sb);
-        }
-    }
-
-    public static void generateCsvReport(OutputStream aOut, FullCodingAgreementResult aResult,
-            boolean aIncludeHeader)
-        throws IOException
-    {
-        try (var printer = new CSVPrinter(
-                new OutputStreamWriter(CloseShieldOutputStream.wrap(aOut), UTF_8), RFC4180)) {
-            toCSV(printer, aResult, aIncludeHeader);
         }
     }
 }

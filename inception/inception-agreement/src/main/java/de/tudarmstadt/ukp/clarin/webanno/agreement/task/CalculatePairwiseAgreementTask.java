@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import org.apache.commons.lang3.concurrent.LazyInitializer;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.fit.util.FSUtil;
 import org.slf4j.Logger;
@@ -41,7 +42,6 @@ import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.DefaultAgreementTrai
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.scheduling.Task;
@@ -57,7 +57,7 @@ public class CalculatePairwiseAgreementTask
 
     private @Autowired DocumentService documentService;
 
-    private final List<User> annotators;
+    private final List<String> annotators;
     private final DefaultAgreementTraits traits;
     private final AnnotationFeature feature;
     private final AgreementMeasure<?> measure;
@@ -101,19 +101,21 @@ public class CalculatePairwiseAgreementTask
                 AgreementSummary initialAgreementResult = null;
 
                 for (int m = 0; m < annotators.size(); m++) {
-                    var annotator1 = annotators.get(m).getUsername();
-                    var maybeCas1 = loadCas(doc, annotator1, allAnnDocs);
+                    var annotator1 = annotators.get(m);
+                    var maybeCas1 = LazyInitializer.<Optional<CAS>> builder()
+                            .setInitializer(() -> loadCas(doc, annotator1, allAnnDocs)).get();
 
                     for (int n = 0; n < annotators.size(); n++) {
-                        var annotator2 = annotators.get(n).getUsername();
-                        var maybeCas2 = loadCas(doc, annotator2, allAnnDocs);
+                        var annotator2 = annotators.get(n);
+                        var maybeCas2 = LazyInitializer.<Optional<CAS>> builder()
+                                .setInitializer(() -> loadCas(doc, annotator2, allAnnDocs)).get();
 
                         // Triangle matrix mirrored
                         if (n < m) {
                             // So, theoretically, if cas1 and cas2 are both empty, then both are
                             // the initial CAS - so there must be full agreement. However, we
                             // would still need to count the units, categories, etc.
-                            if (maybeCas1.isEmpty() && maybeCas2.isEmpty()) {
+                            if (maybeCas1.get().isEmpty() && maybeCas2.get().isEmpty()) {
                                 if (initialAgreementResult == null) {
                                     var casMap = new LinkedHashMap<String, CAS>();
                                     casMap.put("INITIAL1", loadInitialCas(doc));
@@ -126,9 +128,9 @@ public class CalculatePairwiseAgreementTask
                                 summary.mergeResult(annotator1, annotator2, res);
                             }
                             else {
-                                var cas1 = maybeCas1.isPresent() ? maybeCas1.get()
+                                var cas1 = maybeCas1.get().isPresent() ? maybeCas1.get().get()
                                         : loadInitialCas(doc);
-                                var cas2 = maybeCas2.isPresent() ? maybeCas2.get()
+                                var cas2 = maybeCas2.get().isPresent() ? maybeCas2.get().get()
                                         : loadInitialCas(doc);
 
                                 var casMap = new LinkedHashMap<String, CAS>();
@@ -202,7 +204,7 @@ public class CalculatePairwiseAgreementTask
     public static class Builder<T extends Builder<?>>
         extends Task.Builder<T>
     {
-        private List<User> annotators;
+        private List<String> annotators;
         private DefaultAgreementTraits traits;
         private AnnotationFeature feature;
         private AgreementMeasure<?> measure;
@@ -214,7 +216,7 @@ public class CalculatePairwiseAgreementTask
         }
 
         @SuppressWarnings("unchecked")
-        public T withAnnotators(List<User> aAnnotators)
+        public T withAnnotators(List<String> aAnnotators)
         {
             annotators = aAnnotators;
             return (T) this;

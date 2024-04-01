@@ -30,4 +30,7 @@ public interface AgreementMeasureSupportRegistry
 
     List<AgreementMeasureSupport<?, ?, ?>> getAgreementMeasureSupports(AnnotationFeature aFeature);
 
+    AgreementMeasure<?> getMeasure(AnnotationFeature aFeature, String aMeasure,
+            DefaultAgreementTraits aTraits);
+
 }

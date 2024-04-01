@@ -21,6 +21,9 @@ import java.io.Serializable;
 import java.util.Optional;
 import java.util.Set;
 
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
 public class ProjectUserPermissions
@@ -60,5 +63,22 @@ public class ProjectUserPermissions
     public String getUsername()
     {
         return username;
+    }
+
+    @Override
+    public boolean equals(final Object other)
+    {
+        if (!(other instanceof ProjectUserPermissions)) {
+            return false;
+        }
+        ProjectUserPermissions castOther = (ProjectUserPermissions) other;
+        return new EqualsBuilder().append(project, castOther.project)
+                .append(username, castOther.username).isEquals();
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return new HashCodeBuilder().append(project).append(username).toHashCode();
     }
 }

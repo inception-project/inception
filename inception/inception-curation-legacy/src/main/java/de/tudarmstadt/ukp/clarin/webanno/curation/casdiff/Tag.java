@@ -15,17 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.curation.merge.strategy;
+package de.tudarmstadt.ukp.clarin.webanno.curation.casdiff;
 
-import java.util.List;
-
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.Configuration;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.ConfigurationSet;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.DiffResult;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-
-public interface MergeStrategy
+public enum Tag
 {
-    List<Configuration> chooseConfigurationsToMerge(DiffResult aDiff,
-            ConfigurationSet aConfigurationSet, AnnotationLayer aLayer);
+    INCOMPLETE_LABEL, INCOMPLETE_POSITION, STACKED, IRRELEVANT, DIFFERENCE, COMPLETE;
 }
