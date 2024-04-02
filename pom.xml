@@ -62,7 +62,7 @@
   <distributionManagement>
     <repository>
       <id>ukp-oss</id>
-      <url>https://zoidberg.ukp.informatik.tu-darmstadt.de/artifactory/public-ukp-releases-local</url>
+      <url>https://maven.ukp.informatik.tu-darmstadt.de/artifactory/public-ukp-releases-local</url>
     </repository>
   </distributionManagement>
 
