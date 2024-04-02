@@ -337,17 +337,17 @@ public abstract class AnnotationDetailEditorPanel
         var slotFillerAddr = aExistingSlotFillerId.getId();
 
         // Inject the slot filler into the respective slot
-        var slotHostFS = selectFsByAddr(aCas, state.getArmedFeature().vid.getId());
+        var armedFeature = state.getArmedFeature();
+        var slotHostFS = selectFsByAddr(aCas, armedFeature.vid.getId());
         var slotHostLayer = annotationService.findLayer(state.getProject(), slotHostFS);
         var slotHostAdapter = annotationService.getAdapter(slotHostLayer);
         @SuppressWarnings("unchecked")
-        var links = (List<LinkWithRoleModel>) state.getArmedFeature().value;
+        var links = (List<LinkWithRoleModel>) armedFeature.value;
         var link = links.get(state.getArmedSlot());
         link.targetAddr = slotFillerAddr;
         link.label = selectAnnotationByAddr(aCas, slotFillerAddr).getCoveredText();
         commitFeatureStates(aTarget, state.getDocument(), state.getUser().getUsername(), aCas,
-                state.getArmedFeature().vid.getId(), slotHostAdapter,
-                asList(state.getArmedFeature()));
+                armedFeature.vid.getId(), slotHostAdapter, asList(armedFeature));
 
         // NOTE: we do NOT delegate to actionCreateOrUpdate here because most of the things
         // that actionCreateOrUpdate does are not required for slot filling and we also because
@@ -359,7 +359,7 @@ public abstract class AnnotationDetailEditorPanel
 
         // If the armed slot is located in the annotation detail editor panel (right side) update
         // the annotator state with the changes that we made to the CAS
-        if (state.getSelection().getAnnotation().equals(state.getArmedFeature().vid)) {
+        if (state.getSelection().getAnnotation().equals(armedFeature.vid)) {
             // Loading feature editor values from CAS
             loadFeatureEditorModels(aTarget);
         }
