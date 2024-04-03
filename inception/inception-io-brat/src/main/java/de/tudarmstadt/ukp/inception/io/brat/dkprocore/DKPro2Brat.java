@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.io.brat.dkprocore;
 
+import static de.tudarmstadt.ukp.inception.io.brat.dkprocore.internal.model.BratConstants.CARD_ZERO_OR_MORE;
 import static org.apache.uima.cas.CAS.TYPE_NAME_BYTE;
 import static org.apache.uima.cas.CAS.TYPE_NAME_DOUBLE;
 import static org.apache.uima.cas.CAS.TYPE_NAME_FLOAT;
@@ -56,7 +57,6 @@ import de.tudarmstadt.ukp.inception.io.brat.dkprocore.internal.mapping.RelationM
 import de.tudarmstadt.ukp.inception.io.brat.dkprocore.internal.mapping.TypeMappings;
 import de.tudarmstadt.ukp.inception.io.brat.dkprocore.internal.model.BratAnnotation;
 import de.tudarmstadt.ukp.inception.io.brat.dkprocore.internal.model.BratAnnotationDocument;
-import de.tudarmstadt.ukp.inception.io.brat.dkprocore.internal.model.BratAttributeDecl;
 import de.tudarmstadt.ukp.inception.io.brat.dkprocore.internal.model.BratConfiguration;
 import de.tudarmstadt.ukp.inception.io.brat.dkprocore.internal.model.BratConstants;
 import de.tudarmstadt.ukp.inception.io.brat.dkprocore.internal.model.BratEventAnnotation;
@@ -96,6 +96,7 @@ public class DKPro2Brat
     private boolean writeRelationAttributes;
     private boolean writeNullAttributes;
     private boolean shortAttributeNames;
+    private boolean shortTypeNames;
 
     public DKPro2Brat(BratConfiguration aConf)
     {
@@ -126,6 +127,16 @@ public class DKPro2Brat
     public boolean isShortAttributeNames()
     {
         return shortAttributeNames;
+    }
+
+    public boolean isShortTypeNames()
+    {
+        return shortTypeNames;
+    }
+
+    public void setShortTypeNames(boolean aShortTypeNames)
+    {
+        shortTypeNames = aShortTypeNames;
     }
 
     public void setShortAttributeNames(boolean aShortAttributeNames)
@@ -446,8 +457,7 @@ public class DKPro2Brat
                 // is the name of the link feature and what is the name of the role feature...
                 // but right now we just keep it hard-coded to the values that are used
                 // in the DKPro Core SemArgLink and that are also hard-coded in WebAnno
-                BratEventArgumentDecl slotDecl = new BratEventArgumentDecl(slot,
-                        BratConstants.CARD_ZERO_OR_MORE);
+                var slotDecl = new BratEventArgumentDecl(slot, CARD_ZERO_OR_MORE);
                 decl.addSlot(slotDecl);
 
                 FeatureStructure[] links = FSUtil.getFeature(aFS, feat, FeatureStructure[].class);
@@ -468,8 +478,7 @@ public class DKPro2Brat
             }
             else if (FSUtil.isMultiValuedFeature(aFS, feat)) {
                 // Handle normal multi-valued features
-                BratEventArgumentDecl slotDecl = new BratEventArgumentDecl(slot,
-                        BratConstants.CARD_ZERO_OR_MORE);
+                var slotDecl = new BratEventArgumentDecl(slot, CARD_ZERO_OR_MORE);
                 decl.addSlot(slotDecl);
 
                 FeatureStructure[] targets = FSUtil.getFeature(aFS, feat, FeatureStructure[].class);
@@ -483,14 +492,12 @@ public class DKPro2Brat
             }
             else {
                 // Handle normal single-valued features
-                BratEventArgumentDecl slotDecl = new BratEventArgumentDecl(slot,
-                        BratConstants.CARD_OPTIONAL);
+                var slotDecl = new BratEventArgumentDecl(slot, BratConstants.CARD_OPTIONAL);
                 decl.addSlot(slotDecl);
 
                 FeatureStructure target = FSUtil.getFeature(aFS, feat, FeatureStructure.class);
                 if (target != null) {
-                    BratEventArgument arg = new BratEventArgument(slot, args.size(),
-                            spanIdMap.get(target));
+                    var arg = new BratEventArgument(slot, args.size(), spanIdMap.get(target));
                     args.add(arg);
                 }
             }
@@ -508,15 +515,13 @@ public class DKPro2Brat
 
     private boolean isInternalFeature(Feature aFeature)
     {
-        // https://issues.apache.org/jira/browse/UIMA-4565
-        return "uima.cas.AnnotationBase:sofa".equals(aFeature.getName());
-        // return CAS.FEATURE_FULL_NAME_SOFA.equals(aFeature.getName());
+        return CAS.FEATURE_FULL_NAME_SOFA.equals(aFeature.getName());
     }
 
     private void writePrimitiveAttribute(BratAnnotation aAnno, FeatureStructure aFS, Feature feat)
     {
-        String featureValue = aFS.getFeatureValueAsString(feat);
-        String rangeType = feat.getRange().getName();
+        var featureValue = aFS.getFeatureValueAsString(feat);
+        var rangeType = feat.getRange().getName();
 
         // Do not write attributes with null values unless this is explicitly enabled
         if (!writeNullAttributes && (
@@ -532,7 +537,8 @@ public class DKPro2Brat
             return;
         }
 
-        String attributeName = shortAttributeNames ? feat.getShortName()
+        var attributeName = shortAttributeNames //
+                ? feat.getShortName() //
                 : aAnno.getType() + '_' + feat.getShortName();
 
         aAnno.addAttribute(nextAttributeId, attributeName, featureValue);
@@ -546,7 +552,7 @@ public class DKPro2Brat
             // the name of the type that declares the feature (domain) instead of the name
             // of the actual instance we are processing, we make sure not to maintain
             // multiple value sets for the same feature.
-            BratAttributeDecl attrDecl = conf.addAttributeDecl(aAnno.getType(),
+            var attrDecl = conf.addAttributeDecl(aAnno.getType(),
                     getAllSubtypes(aFS.getCAS().getTypeSystem(), feat.getDomain()), attributeName,
                     featureValue);
             conf.addDrawingDecl(attrDecl);
@@ -593,8 +599,11 @@ public class DKPro2Brat
         if (typeMapping != null) {
             return typeMapping.getBratType(aType);
         }
-        else {
-            return aType.getName().replace('.', '-');
+
+        if (shortTypeNames) {
+            return aType.getShortName().replace('.', '-');
         }
+
+        return aType.getName().replace('.', '-');
     }
 }
