@@ -89,9 +89,9 @@
     <spring.version>5.3.33</spring.version>
     <spring.boot.version>2.7.18</spring.boot.version>
     <spring.data.version>2.7.18</spring.data.version>
-    <spring.security.version>5.8.10</spring.security.version>
-    <springdoc.version>1.7.0</springdoc.version>
-    <swagger.version>2.2.20</swagger.version>
+    <spring.security.version>5.8.11</spring.security.version>
+    <springdoc.version>1.8.0</springdoc.version>
+    <swagger.version>2.2.21</swagger.version>
     <jjwt.version>0.12.5</jjwt.version>
 
     <slf4j.version>2.0.12</slf4j.version>
@@ -107,8 +107,8 @@
     <hibernate.version>5.6.15.Final</hibernate.version>
     <hibernate.validator.version>6.2.5.Final</hibernate.validator.version>
 
-    <wicket.version>9.16.0</wicket.version>
-    <wicketstuff.version>9.16.0</wicketstuff.version>
+    <wicket.version>9.17.0</wicket.version>
+    <wicketstuff.version>9.17.0</wicketstuff.version>
     <wicket-jquery-ui.version>9.12.0</wicket-jquery-ui.version>
     <wicket-bootstrap.version>6.0.5</wicket-bootstrap.version>
     <wicket-jquery-selectors.version>3.0.6</wicket-jquery-selectors.version>
@@ -125,7 +125,7 @@
     <!-- * 8.11.1.0 depends on Lucene 8.11.1 -->
     <!--   no mtas  depends on Lucene 9.x -->
 
-    <elasticsearch.version>7.17.18</elasticsearch.version> 
+    <elasticsearch.version>7.17.19</elasticsearch.version> 
     <!--   7.10.x   depends on Lucene 8.7.0 - last ASL 2.0 version! -->
     <!-- * 7.17.x   depends on Lucene 8.11.1 -->
     <!--   8.1.x    depends on Lucene 9.0.0 -->
@@ -134,7 +134,7 @@
     <!-- * 1.3.5    depends on Lucene 8.10.1 -->
     <!--   2.x      depends on Lucene 9.x -->
 
-    <rdf4j.version>4.3.10</rdf4j.version> 
+    <rdf4j.version>4.3.11</rdf4j.version> 
     <!-- * 4.3.x depends on Lucene 8.9.x -->
     <!-- * 5.x.x depends on Lucene 9.x.x -->
 
