@@ -187,7 +187,7 @@ public class OpenNlpNerRecommender
                 var end = tokens.get(prediction.getEnd() - 1).getEnd();
                 var annotation = aCas.createAnnotation(predictedType, begin, end);
 
-                annotation.setStringValue(predictedFeature, label);
+                annotation.setFeatureValueFromString(predictedFeature, label);
                 if (scoreFeature != null) {
                     annotation.setDoubleValue(scoreFeature, prediction.getProb());
                 }
