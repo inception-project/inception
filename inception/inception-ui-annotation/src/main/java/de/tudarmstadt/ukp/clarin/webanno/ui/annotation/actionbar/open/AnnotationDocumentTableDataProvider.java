@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.open;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.open.AnnotationDocumentTableSortKeys.NAME;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
+import static org.apache.commons.lang3.ObjectUtils.compare;
 import static org.apache.commons.lang3.StringUtils.containsIgnoreCase;
 import static org.apache.wicket.extensions.markup.html.repeater.data.sort.SortOrder.ASCENDING;
 
@@ -74,9 +75,9 @@ public class AnnotationDocumentTableDataProvider
         case STATE:
             return dir * (o1.getState().getName().compareTo(o2.getState().getName()));
         case CREATED:
-            return dir * (o1.getCreated().compareTo(o2.getCreated()));
+            return dir * compare(o1.getDocument().getCreated(), o2.getDocument().getCreated());
         case UPDATED:
-            return dir * (o1.getUpdated().compareTo(o2.getUpdated()));
+            return dir * compare(o1.getUpdated(), o2.getUpdated());
         default:
             return 0;
         }
