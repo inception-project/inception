@@ -1438,4 +1438,16 @@
       </column>
     </addColumn>
   </changeSet>
+  
+  <changeSet author="INCEpTION Team" id="20240404-01">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <indexExists tableName="annotation_document" indexName="idx_user_project"/>
+      </not>
+    </preConditions>
+    <createIndex indexName="idx_user_project" tableName="annotation_document">
+      <column name="user"/>
+      <column name="project"/>
+    </createIndex>
+  </changeSet>
 </databaseChangeLog>

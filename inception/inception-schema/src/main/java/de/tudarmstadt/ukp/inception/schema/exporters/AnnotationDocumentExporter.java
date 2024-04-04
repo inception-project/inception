@@ -147,8 +147,7 @@ public class AnnotationDocumentExporter
     {
         List<ExportedAnnotationDocument> annotationDocuments = new ArrayList<>();
 
-        for (AnnotationDocument annotationDocument : documentService
-                .listAnnotationDocuments(aProject)) {
+        for (var annotationDocument : documentService.listAnnotationDocuments(aProject)) {
             ExportedAnnotationDocument exAnnotationDocument = new ExportedAnnotationDocument();
             exAnnotationDocument.setName(annotationDocument.getName());
             exAnnotationDocument.setState(annotationDocument.getState());
