@@ -25,12 +25,10 @@ import com.fasterxml.jackson.core.JsonGenerator;
 
 public class BratAttribute
 {
-    private static final Pattern PATTERN = Pattern.compile(
-            "(?<ID>[AM][0-9]+)" + 
-            "[\\t](?<TYPE>[a-zA-Z_][a-zA-Z0-9_\\-:]+)" +
-            " (?<TARGET>[TREN][0-9]+)" +
-            "(?: (?<VALUES>.*))?");
-    
+    private static final Pattern PATTERN = Pattern
+            .compile("(?<ID>[AM][0-9]+)" + "[\\t](?<TYPE>[a-zA-Z_][a-zA-Z0-9_\\-:]+)"
+                    + " (?<TARGET>[TREN][0-9]+)" + "(?: (?<VALUES>.*))?");
+
     private static final String ID = "ID";
     private static final String TYPE = "TYPE";
     private static final String TARGET = "TARGET";
@@ -40,12 +38,12 @@ public class BratAttribute
     private String target;
     private final String name;
     private final String[] values;
-    
+
     public BratAttribute(int aId, String aName, String aTarget, String... aValues)
     {
         this("A" + aId, aName, aTarget, aValues);
     }
-    
+
     public BratAttribute(String aId, String aName, String aTarget, String... aValues)
     {
         id = aId;
@@ -63,7 +61,7 @@ public class BratAttribute
     {
         target = aTarget;
     }
-    
+
     public String getTarget()
     {
         return target;
@@ -78,21 +76,19 @@ public class BratAttribute
     {
         return values;
     }
-    
-    
-    public void write(JsonGenerator aJG)
-        throws IOException
+
+    public void write(JsonGenerator aJG) throws IOException
     {
         // Format: [${ID}, ${TYPE}, ${TARGET}]
         // ['A1', 'Notorious', 'T4']
-        
+
         aJG.writeStartArray();
         aJG.writeString(id);
         aJG.writeString(name);
         aJG.writeString(target);
         aJG.writeEndArray();
     }
-    
+
     @Override
     public String toString()
     {
@@ -108,14 +104,14 @@ public class BratAttribute
                 sb.append(value);
             }
         }
-        
+
         return sb.toString();
     }
 
     public static BratAttribute parse(String aLine)
     {
         Matcher m = PATTERN.matcher(aLine);
-        
+
         if (!m.matches()) {
             throw new IllegalArgumentException("Illegal attribute format [" + aLine + "]");
         }
@@ -125,8 +121,9 @@ public class BratAttribute
             return new BratAttribute(m.group(ID), m.group(TYPE), m.group(TARGET), new String[0]);
         }
         else {
-            return new BratAttribute(m.group(ID), m.group(TYPE), m.group(TARGET), values.split(" "));
+            return new BratAttribute(m.group(ID), m.group(TYPE), m.group(TARGET),
+                    values.split(" "));
         }
-        
+
     }
 }

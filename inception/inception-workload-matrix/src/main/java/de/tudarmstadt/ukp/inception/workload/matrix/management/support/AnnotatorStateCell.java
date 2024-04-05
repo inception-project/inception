@@ -71,9 +71,8 @@ public class AnnotatorStateCell
         var stateLabel = new SymbolLabel("stateSymbol",
                 columnModel.map(AnnotationDocument::getState).orElse(NEW));
 
-        state.add(
-                new LambdaAjaxEventBehavior(CLICK_EVENT, _t -> actionClickCell(rowModel, stateLabel, _t))
-                        .setPreventDefault(true));
+        state.add(new LambdaAjaxEventBehavior(CLICK_EVENT,
+                _t -> actionClickCell(rowModel, stateLabel, _t)).setPreventDefault(true));
         state.add(new LambdaAjaxEventBehavior(CONTEXTMENU_EVENT,
                 _t -> actionContextMenu(rowModel, columnModel, _t)).setPreventDefault(true));
         state.add(new AttributeAppender("class", CSS_CLASS_STATE_TOGGLE, " "));

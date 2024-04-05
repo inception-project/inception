@@ -26,21 +26,18 @@ import com.fasterxml.jackson.core.JsonGenerator;
 public class BratRelationAnnotation
     extends BratAnnotation
 {
-    private static final Pattern PATTERN = Pattern.compile(
-            "(?<ID>R[0-9]+)[\\t]" + 
-            "(?<TYPE>[a-zA-Z0-9_][a-zA-Z0-9_-]+) " +
-            "(?<ARG1LABEL>[a-zA-Z][a-zA-Z0-9]+):" +
-            "(?<ARG1TARGET>[ET][0-9]+) " +
-            "(?<ARG2LABEL>[a-zA-Z][a-zA-Z0-9]+):" +
-            "(?<ARG2TARGET>[ET][0-9]+)\\s*");
-    
+    private static final Pattern PATTERN = Pattern
+            .compile("(?<ID>R[0-9]+)[\\t]" + "(?<TYPE>[a-zA-Z0-9_][a-zA-Z0-9_-]+) "
+                    + "(?<ARG1LABEL>[a-zA-Z][a-zA-Z0-9]+):" + "(?<ARG1TARGET>[ET][0-9]+) "
+                    + "(?<ARG2LABEL>[a-zA-Z][a-zA-Z0-9]+):" + "(?<ARG2TARGET>[ET][0-9]+)\\s*");
+
     private static final String ID = "ID";
     private static final String TYPE = "TYPE";
     private static final String ARG1_LABEL = "ARG1LABEL";
     private static final String ARG1_TARGET = "ARG1TARGET";
     private static final String ARG2_LABEL = "ARG2LABEL";
     private static final String ARG2_TARGET = "ARG2TARGET";
-    
+
     private final String arg1Label;
     private final String arg1Target;
     private final String arg2Label;
@@ -51,7 +48,7 @@ public class BratRelationAnnotation
     {
         this("R" + aId, aType, aArg1Label, aArg1Target, aArg2Label, aArg2Target);
     }
-    
+
     public BratRelationAnnotation(String aId, String aType, String aArg1Label, String aArg1Target,
             String aArg2Label, String aArg2Target)
     {
@@ -83,12 +80,11 @@ public class BratRelationAnnotation
     }
 
     @Override
-    public void write(JsonGenerator aJG)
-        throws IOException
+    public void write(JsonGenerator aJG) throws IOException
     {
         // Format: [${ID}, ${TYPE}, [[${ARGNAME}, ${TARGET}], [${ARGNAME}, ${TARGET}]]]
         // ['R1', 'Anaphora', [['Anaphor', 'T2'], ['Entity', 'T1']]]
-        
+
         aJG.writeStartArray();
         aJG.writeString(getId());
         aJG.writeString(getType());
@@ -104,7 +100,7 @@ public class BratRelationAnnotation
         aJG.writeEndArray();
         aJG.writeEndArray();
     }
-    
+
     @Override
     public String toString()
     {
@@ -115,7 +111,7 @@ public class BratRelationAnnotation
     public static BratRelationAnnotation parse(String aLine)
     {
         Matcher m = PATTERN.matcher(aLine);
-        
+
         if (!m.matches()) {
             throw new IllegalArgumentException(
                     "Illegal relation annotation format [" + aLine + "]");

@@ -46,7 +46,7 @@ public abstract class BratAnnotation
     {
         return type;
     }
-    
+
     public Collection<BratAttribute> getAttributes()
     {
         return attributes.values();
@@ -58,30 +58,29 @@ public abstract class BratAnnotation
         addAttribute(attr);
         return attr;
     }
-    
+
     public BratAttribute getAttribute(String aAttribute)
     {
         return attributes.get(aAttribute);
     }
-    
+
     public void addAttribute(BratAttribute aAttribute)
     {
         String target = aAttribute.getTarget();
-        
+
         // Check if attribute is already attached
         if (target != null && !target.equals(id)) {
-            throw new IllegalArgumentException("Attribute already attached to annotation ["
-                    + target + "]");
+            throw new IllegalArgumentException(
+                    "Attribute already attached to annotation [" + target + "]");
         }
 
         // Attach to current annotation
         if (aAttribute.getId() == null) {
             aAttribute.setTarget(id);
         }
-        
+
         attributes.put(aAttribute.getName(), aAttribute);
     }
-    
-    public abstract void write(JsonGenerator aJG)
-        throws IOException;
+
+    public abstract void write(JsonGenerator aJG) throws IOException;
 }
