@@ -25,10 +25,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class CommentMapping
 {
-    private static final Pattern PATTERN = Pattern.compile(
-            "(?<TYPE>[a-zA-Z_][a-zA-Z0-9_\\-.]+)" +
-            "[:](?<FEAT>[a-zA-Z][a-zA-Z0-9]+)");
-    
+    private static final Pattern PATTERN = Pattern
+            .compile("(?<TYPE>[a-zA-Z_][a-zA-Z0-9_\\-.]+)" + "[:](?<FEAT>[a-zA-Z][a-zA-Z0-9]+)");
+
     private static final String TYPE = "TYPE";
     private static final String FEAT = "FEAT";
 
@@ -36,7 +35,7 @@ public class CommentMapping
     private final String feature;
     private final Pattern pattern;
     private final String replacement;
-    
+
     private Matcher matcher;
     private String value;
 
@@ -50,10 +49,8 @@ public class CommentMapping
     }
 
     @JsonCreator
-    public CommentMapping(
-            @JsonProperty("type") String aType, 
-            @JsonProperty("feature") String aFeature,
-            @JsonProperty("match") String aMatch,
+    public CommentMapping(@JsonProperty("type") String aType,
+            @JsonProperty("feature") String aFeature, @JsonProperty("match") String aMatch,
             @JsonProperty("replace") String aReplace)
     {
         type = aType;
@@ -62,9 +59,8 @@ public class CommentMapping
         replacement = aReplace;
     }
 
-    public CommentMapping(
-            @JsonProperty("type") String aType, 
-            @JsonProperty("feature")String aFeature)
+    public CommentMapping(@JsonProperty("type") String aType,
+            @JsonProperty("feature") String aFeature)
     {
         this(aType, aFeature, null, null);
     }
@@ -78,14 +74,14 @@ public class CommentMapping
     {
         return feature;
     }
-    
+
     public boolean matches(String aValue)
     {
         value = aValue;
         matcher = pattern.matcher(aValue);
         return matcher.matches();
     }
-    
+
     public String apply()
     {
         return replacement != null ? matcher.replaceFirst(replacement) : value;
@@ -94,9 +90,10 @@ public class CommentMapping
     public static CommentMapping parse(String aValue)
     {
         Matcher m = PATTERN.matcher(aValue);
-        
+
         if (!m.matches()) {
-            throw new IllegalArgumentException("Illegal note mapping parameter format [" + aValue + "]");
+            throw new IllegalArgumentException(
+                    "Illegal note mapping parameter format [" + aValue + "]");
         }
 
         return new CommentMapping(m.group(TYPE), m.group(FEAT));

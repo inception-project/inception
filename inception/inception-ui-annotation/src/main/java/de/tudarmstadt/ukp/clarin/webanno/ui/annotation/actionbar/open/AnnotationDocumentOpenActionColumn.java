@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.open;
 
-import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CLICK;
+import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CLICK_EVENT;
 import static org.apache.wicket.event.Broadcast.BUBBLE;
 
 import org.apache.wicket.AttributeModifier;
@@ -59,7 +59,7 @@ public class AnnotationDocumentOpenActionColumn
         var fragment = new Fragment(aComponentId, FID_OPEN_DOCUMENT_COLUMN, fragmentProvider);
         fragment.queue(new Label("name", aRowModel.map(AnnotationDocument::getName)));
         aItem.add(AttributeModifier.replace("role", "button"));
-        aItem.add(AjaxEventBehavior.onEvent(CLICK,
+        aItem.add(AjaxEventBehavior.onEvent(CLICK_EVENT,
                 _target -> actionOpenDocument(_target, aItem, aRowModel.getObject())));
         aItem.add(fragment);
     }

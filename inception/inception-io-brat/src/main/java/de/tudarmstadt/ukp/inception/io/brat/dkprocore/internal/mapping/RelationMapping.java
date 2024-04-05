@@ -28,13 +28,12 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class RelationMapping
 {
     public static final String FLAG_ANCHOR = "A";
-    
-    private static final Pattern PATTERN = Pattern.compile(
-            "(?<TYPE>[a-zA-Z_][a-zA-Z0-9_\\-.]+):" +
-            "(?<ARG1>[a-zA-Z][a-zA-Z0-9]+)(?<FLAGS1>\\{A?\\})?:" +
-            "(?<ARG2>[a-zA-Z][a-zA-Z0-9]+)(?<FLAGS2>\\{A?\\})?" + 
-            "(?:[:](?<SUBCAT>[a-zA-Z][a-zA-Z0-9]+))?");
-    
+
+    private static final Pattern PATTERN = Pattern.compile("(?<TYPE>[a-zA-Z_][a-zA-Z0-9_\\-.]+):"
+            + "(?<ARG1>[a-zA-Z][a-zA-Z0-9]+)(?<FLAGS1>\\{A?\\})?:"
+            + "(?<ARG2>[a-zA-Z][a-zA-Z0-9]+)(?<FLAGS2>\\{A?\\})?"
+            + "(?:[:](?<SUBCAT>[a-zA-Z][a-zA-Z0-9]+))?");
+
     private static final String TYPE = "TYPE";
     private static final String ARG1 = "ARG1";
     private static final String FLAGS1 = "FLAGS1";
@@ -49,7 +48,7 @@ public class RelationMapping
     private final String flags2;
     private final String subcat;
     private final Map<String, String> defaultFeatureValues;
-    
+
     /**
      * Jackson requires this constructor - even if it is private - do not use!
      */
@@ -58,13 +57,12 @@ public class RelationMapping
     {
         this(null, null, null, null, null, null);
     }
-    
+
     @JsonCreator
-    public RelationMapping(
-            @JsonProperty(value = "type", required = true) String aType, 
+    public RelationMapping(@JsonProperty(value = "type", required = true) String aType,
             @JsonProperty(value = "arg1", required = true) String aArg1,
-            @JsonProperty(value = "flags1") String aFlags1, 
-            @JsonProperty(value = "arg2", required = true) String aArg2, 
+            @JsonProperty(value = "flags1") String aFlags1,
+            @JsonProperty(value = "arg2", required = true) String aArg2,
             @JsonProperty(value = "flags2") String aFlags2,
             @JsonProperty(value = "subCatFeature") String aSubCat,
             @JsonProperty(value = "defaultFeatureValues") Map<String, String> aDefaults)
@@ -77,19 +75,17 @@ public class RelationMapping
         subcat = aSubCat;
         defaultFeatureValues = aDefaults != null ? aDefaults : Collections.emptyMap();
     }
-    
-    public RelationMapping(
-            @JsonProperty(value = "type", required = true) String aType, 
+
+    public RelationMapping(@JsonProperty(value = "type", required = true) String aType,
             @JsonProperty(value = "arg1", required = true) String aArg1,
-            @JsonProperty(value = "flags1") String aFlags1, 
-            @JsonProperty(value = "arg2", required = true) String aArg2, 
+            @JsonProperty(value = "flags1") String aFlags1,
+            @JsonProperty(value = "arg2", required = true) String aArg2,
             @JsonProperty(value = "flags2") String aFlags2,
             @JsonProperty(value = "subCatFeature") String aSubCat)
     {
         this(aType, aArg1, aFlags1, aArg2, aFlags2, aSubCat, Collections.emptyMap());
     }
 
-    
     public String getType()
     {
         return type;
@@ -99,7 +95,7 @@ public class RelationMapping
     {
         return arg1;
     }
-    
+
     public String getFlags1()
     {
         return flags1 != null ? flags1 : "";
@@ -109,7 +105,7 @@ public class RelationMapping
     {
         return arg2;
     }
-    
+
     public String getFlags2()
     {
         return flags2 != null ? flags2 : "";
@@ -119,7 +115,7 @@ public class RelationMapping
     {
         return subcat;
     }
-    
+
     public Map<String, String> getDefaultFeatureValues()
     {
         return defaultFeatureValues;
@@ -128,9 +124,10 @@ public class RelationMapping
     public static RelationMapping parse(String aValue)
     {
         Matcher m = PATTERN.matcher(aValue);
-        
+
         if (!m.matches()) {
-            throw new IllegalArgumentException("Illegal relation parameter format [" + aValue + "]");
+            throw new IllegalArgumentException(
+                    "Illegal relation parameter format [" + aValue + "]");
         }
 
         return new RelationMapping(m.group(TYPE), m.group(ARG1), m.group(FLAGS1), m.group(ARG2),

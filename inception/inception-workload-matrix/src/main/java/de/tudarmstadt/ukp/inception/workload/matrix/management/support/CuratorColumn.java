@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.workload.matrix.management.support;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.NEW;
+import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CLICK_EVENT;
 import static de.tudarmstadt.ukp.inception.workload.matrix.management.MatrixWorkloadManagementPage.CSS_CLASS_STATE_TOGGLE;
 import static de.tudarmstadt.ukp.inception.workload.matrix.management.support.DocumentMatrixSortKey.CURATION_STATE;
 import static org.apache.wicket.ajax.AjaxEventBehavior.onEvent;
@@ -29,13 +30,11 @@ import org.apache.wicket.ajax.attributes.AjaxRequestAttributes;
 import org.apache.wicket.behavior.AttributeAppender;
 import org.apache.wicket.extensions.markup.html.repeater.data.grid.ICellPopulator;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.LambdaColumn;
-import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.repeater.Item;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.inception.workload.matrix.management.event.CuratorColumnCellClickEvent;
 import de.tudarmstadt.ukp.inception.workload.matrix.management.event.CuratorColumnCellOpenContextMenuEvent;
 
@@ -54,16 +53,15 @@ public class CuratorColumn
             IModel<DocumentMatrixRow> aRowModel)
     {
         @SuppressWarnings("unchecked")
-        IModel<SourceDocument> srcDocument = (IModel<SourceDocument>) getDataModel(aRowModel);
+        var srcDocument = (IModel<SourceDocument>) getDataModel(aRowModel);
 
-        DocumentMatrixRow row = aRowModel.getObject();
+        var row = aRowModel.getObject();
 
-        SourceDocumentState state = srcDocument.map(SourceDocument::getState).orElse(NEW)
-                .getObject();
+        var state = srcDocument.map(SourceDocument::getState).orElse(NEW).getObject();
 
-        Label stateLabel = new CurationStateSymbolLabel(aComponentId, state);
+        var stateLabel = new CurationStateSymbolLabel(aComponentId, state);
         stateLabel.add(new AttributeAppender("class", CSS_CLASS_STATE_TOGGLE, " "));
-        stateLabel.add(onEvent("click", //
+        stateLabel.add(onEvent(CLICK_EVENT, //
                 _target -> stateLabel.send(stateLabel, BUBBLE,
                         new CuratorColumnCellClickEvent(_target, row.getSourceDocument()))));
         stateLabel.add(new AjaxEventBehavior("contextmenu")

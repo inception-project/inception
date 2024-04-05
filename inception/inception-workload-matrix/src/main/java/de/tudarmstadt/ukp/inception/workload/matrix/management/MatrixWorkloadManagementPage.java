@@ -32,8 +32,10 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransit
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.CURATION_IN_PROGRESS_TO_CURATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_PROJECT;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAGE_PARAM_PROJECT;
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 import static java.lang.String.format;
+import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.apache.wicket.RuntimeConfigurationType.DEVELOPMENT;
@@ -46,9 +48,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Predicate;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -116,6 +116,7 @@ import de.tudarmstadt.ukp.inception.workload.matrix.management.support.UserSelec
 import de.tudarmstadt.ukp.inception.workload.matrix.trait.MatrixWorkloadTraits;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 import de.tudarmstadt.ukp.inception.workload.ui.ResetAnnotationDocumentConfirmationDialogContentPanel;
+import de.tudarmstadt.ukp.inception.workload.ui.ResetCurationConfirmationDialogContentPanel;
 
 @MountPath(NS_PROJECT + "/${" + PAGE_PARAM_PROJECT + "}/monitoring")
 public class MatrixWorkloadManagementPage
@@ -190,6 +191,17 @@ public class MatrixWorkloadManagementPage
 
         bulkActionDropdown = new WebMarkupContainer("bulkActionDropdown");
         bulkActionDropdown.add(LambdaBehavior.visibleWhen(() -> bulkChangeMode));
+        bulkActionDropdown.add(new LambdaAjaxLink("bulkStartProgress", this::actionBulkStart) //
+                .add(visibleWhen(() -> DEVELOPMENT == getApplication().getConfigurationType())));
+        bulkActionDropdown.add(new LambdaAjaxLink("bulkLock", this::actionBulkLock));
+        bulkActionDropdown.add(new LambdaAjaxLink("bulkUnlock", this::actionBulkUnlock));
+        bulkActionDropdown.add(new LambdaAjaxLink("bulkFinish", this::actionBulkFinish));
+        bulkActionDropdown.add(new LambdaAjaxLink("bulkResume", this::actionBulkResume));
+        bulkActionDropdown.add(new LambdaAjaxLink("bulkOpen", this::actionBulkOpen));
+        bulkActionDropdown.add(new LambdaAjaxLink("bulkClose", this::actionBulkClose));
+        bulkActionDropdown.add(new LambdaAjaxLink("bulkReset", this::actionBulkResetDocument));
+        bulkActionDropdown
+                .add(new LambdaAjaxLink("bulkResetCuration", this::actionBulkResetCuration));
         actionContainer.add(bulkActionDropdown);
 
         bulkActionDropdownButton = new WebMarkupContainer("bulkActionDropdownButton");
@@ -201,16 +213,6 @@ public class MatrixWorkloadManagementPage
         toggleBulkChange.add(new CssClassNameAppender(LoadableDetachableModel
                 .of(() -> bulkChangeMode ? "btn-primary active" : "btn-outline-primary")));
         actionContainer.add(toggleBulkChange);
-
-        bulkActionDropdown.add(new LambdaAjaxLink("bulkStartProgress", this::actionBulkStart)
-                .add(visibleWhen(() -> DEVELOPMENT == getApplication().getConfigurationType())));
-        bulkActionDropdown.add(new LambdaAjaxLink("bulkLock", this::actionBulkLock));
-        bulkActionDropdown.add(new LambdaAjaxLink("bulkUnlock", this::actionBulkUnlock));
-        bulkActionDropdown.add(new LambdaAjaxLink("bulkFinish", this::actionBulkFinish));
-        bulkActionDropdown.add(new LambdaAjaxLink("bulkResume", this::actionBulkResume));
-        bulkActionDropdown.add(new LambdaAjaxLink("bulkOpen", this::actionBulkOpen));
-        bulkActionDropdown.add(new LambdaAjaxLink("bulkClose", this::actionBulkClose));
-        bulkActionDropdown.add(new LambdaAjaxLink("bulkReset", this::actionBulkResetDocument));
 
         add(confirmationDialog = new BootstrapModalDialog("resetDocumentDialog").trapFocus());
         add(contextMenu = new ContextMenu("contextMenu"));
@@ -247,31 +249,28 @@ public class MatrixWorkloadManagementPage
     private DataTable<DocumentMatrixRow, DocumentMatrixSortKey> createDocumentMatrix(
             String aComponentId, boolean aBulkChangeMode)
     {
-        DocumentMatrixDataProvider dataProvider = new DocumentMatrixDataProvider(getMatrixData());
+        var dataProvider = new DocumentMatrixDataProvider(getMatrixData());
 
         // Copy sorting state from previous matrix
         if (documentMatrix != null) {
-            DocumentMatrixDataProvider oldDataProvider = ((DocumentMatrixDataProvider) documentMatrix
-                    .getDataProvider());
+            var oldDataProvider = ((DocumentMatrixDataProvider) documentMatrix.getDataProvider());
             dataProvider.setSort(oldDataProvider.getSort());
         }
         dataProvider.setFilterState(filter.getObject());
 
-        List<IColumn<DocumentMatrixRow, DocumentMatrixSortKey>> columns = new ArrayList<>();
-        SourceDocumentSelectColumn sourceDocumentSelectColumn = new SourceDocumentSelectColumn();
+        var columns = new ArrayList<IColumn<DocumentMatrixRow, DocumentMatrixSortKey>>();
+        var sourceDocumentSelectColumn = new SourceDocumentSelectColumn();
         sourceDocumentSelectColumn.setVisible(bulkChangeMode);
         columns.add(sourceDocumentSelectColumn);
         columns.add(new SourceDocumentStateColumn());
         columns.add(new SourceDocumentNameColumn());
         columns.add(new CuratorColumn());
 
-        List<User> annotators = projectService.listProjectUsersWithPermissions(getProject(),
-                ANNOTATOR);
+        var annotators = projectService.listProjectUsersWithPermissions(getProject(), ANNOTATOR);
 
         if (StringUtils.isNotBlank(filter.getObject().getUserName())) {
             if (filter.getObject().isMatchUserNameAsRegex()) {
-                Predicate<String> p = Pattern
-                        .compile(".*(" + filter.getObject().getUserName() + ").*")
+                var p = Pattern.compile(".*(" + filter.getObject().getUserName() + ").*")
                         .asMatchPredicate().negate();
                 annotators.removeIf(u -> p.test(u.getUiName()));
             }
@@ -280,12 +279,12 @@ public class MatrixWorkloadManagementPage
             }
         }
 
-        for (User annotator : annotators) {
+        for (var annotator : annotators) {
             columns.add(new AnnotatorColumn(annotator, selectedUsers));
         }
 
-        DataTable<DocumentMatrixRow, DocumentMatrixSortKey> table = new DefaultDataTable<>(
-                aComponentId, columns, dataProvider, 50);
+        var table = new DefaultDataTable<DocumentMatrixRow, DocumentMatrixSortKey>(aComponentId,
+                columns, dataProvider, 50);
         table.setOutputMarkupId(true);
 
         if (aBulkChangeMode) {
@@ -305,7 +304,7 @@ public class MatrixWorkloadManagementPage
     {
         var selectedDocuments = selectedAnnotationDocuments().stream()
                 .filter(annDoc -> annDoc.getState() == IN_PROGRESS || annDoc.getState() == FINISHED)
-                .collect(Collectors.toList());
+                .toList();
 
         if (selectedDocuments.isEmpty()) {
             info("No documents have been selected.");
@@ -335,6 +334,46 @@ public class MatrixWorkloadManagementPage
             }
 
             success(format("The %s document(s) have been set reset.", selectedDocuments.size()));
+            _target.addChildren(getPage(), IFeedback.class);
+
+            reloadMatrixData();
+            _target.add(documentMatrix);
+        });
+
+        confirmationDialog.open(dialogContent, aTarget);
+    }
+
+    private void actionBulkResetCuration(AjaxRequestTarget aTarget)
+    {
+        var selectedDocuments = new ArrayList<>(selectedSourceDocuments());
+
+        if (selectedDocuments.isEmpty()) {
+            info("No documents have been selected.");
+            aTarget.addChildren(getPage(), IFeedback.class);
+            return;
+        }
+
+        var dialogContent = new ResetCurationConfirmationDialogContentPanel(ModalDialog.CONTENT_ID,
+                Model.ofList(selectedDocuments));
+
+        if (selectedDocuments.size() == 1) {
+            var doc = selectedDocuments.get(0);
+            dialogContent.setExpectedResponseModel(Model.of(doc.getName()));
+        }
+        else {
+            dialogContent.setExpectedResponseModel(Model.of(getProject().getName()));
+        }
+
+        dialogContent.setConfirmAction(_target -> {
+            for (var document : selectedDocuments) {
+                curationService.deleteCurationCas(document);
+                if (asList(CURATION_IN_PROGRESS, CURATION_FINISHED).contains(document.getState())) {
+                    documentService.setSourceDocumentState(document, ANNOTATION_IN_PROGRESS);
+                }
+            }
+
+            success(format("The curation state of %s document(s) has been set reset.",
+                    selectedDocuments.size()));
             _target.addChildren(getPage(), IFeedback.class);
 
             reloadMatrixData();
@@ -415,7 +454,7 @@ public class MatrixWorkloadManagementPage
 
     private void actionBulkClose(AjaxRequestTarget aTarget)
     {
-        Collection<AnnotationDocument> selectedDocuments = selectedAnnotationDocuments();
+        var selectedDocuments = selectedAnnotationDocuments();
 
         var newDocuments = selectedDocuments.stream().filter(annDoc -> annDoc.getState() == NEW) //
                 .collect(toList());
@@ -541,37 +580,40 @@ public class MatrixWorkloadManagementPage
 
     private Collection<AnnotationDocument> selectedAnnotationDocuments()
     {
-        List<User> annotators = documentMatrix.getColumns().stream() //
+        var annotators = documentMatrix.getColumns().stream() //
                 .filter(col -> col instanceof AnnotatorColumn) //
                 .map(col -> (AnnotatorColumn) col) //
                 .map(AnnotatorColumn::getUser) //
-                .collect(toList());
+                .toList();
 
-        Map<String, User> annotatorIndex = new HashMap<>();
+        var annotatorIndex = new HashMap<String, User>();
         annotators.forEach(annotator -> annotatorIndex.put(annotator.getUiName(), annotator));
 
-        Set<User> selectedUserObjects = new HashSet<>();
+        var selectedUserObjects = new HashSet<User>();
         selectedUsers.getObject().forEach(username -> {
-            User u = annotatorIndex.get(username);
+            if (CURATION_USER.equals(username)) {
+                return;
+            }
+
+            var u = annotatorIndex.get(username);
             if (u != null) {
                 selectedUserObjects.add(u);
             }
         });
 
-        Set<AnnotationDocument> annotationDocumentsToChange = new HashSet<>();
+        var annotationDocumentsToChange = new HashSet<AnnotationDocument>();
 
-        List<DocumentMatrixRow> rows = ((DocumentMatrixDataProvider) documentMatrix
-                .getDataProvider()).getMatrixData();
+        var rows = ((DocumentMatrixDataProvider) documentMatrix.getDataProvider()).getMatrixData();
 
         // Collect annotation documents by row
-        for (DocumentMatrixRow row : rows) {
+        for (var row : rows) {
             if (!row.isSelected()) {
                 continue;
             }
 
-            List<User> usersWithoutAnnDocs = new ArrayList<>();
-            for (User annotator : annotators) {
-                AnnotationDocument annDoc = row.getAnnotationDocument(annotator.getUsername());
+            var usersWithoutAnnDocs = new ArrayList<User>();
+            for (var annotator : annotators) {
+                var annDoc = row.getAnnotationDocument(annotator.getUsername());
                 if (annDoc == null) {
                     usersWithoutAnnDocs.add(annotator);
                 }
@@ -585,10 +627,10 @@ public class MatrixWorkloadManagementPage
         }
 
         // Collect annotation documents by column
-        for (User anotator : selectedUserObjects) {
-            List<SourceDocument> sourceDocsWithoutAnnDocs = new ArrayList<>();
-            for (DocumentMatrixRow row : rows) {
-                AnnotationDocument annDoc = row.getAnnotationDocument(anotator.getUsername());
+        for (var anotator : selectedUserObjects) {
+            var sourceDocsWithoutAnnDocs = new ArrayList<SourceDocument>();
+            for (var row : rows) {
+                var annDoc = row.getAnnotationDocument(anotator.getUsername());
                 if (annDoc == null) {
                     sourceDocsWithoutAnnDocs.add(row.getSourceDocument());
                 }
@@ -602,6 +644,31 @@ public class MatrixWorkloadManagementPage
         }
 
         return annotationDocumentsToChange;
+    }
+
+    private Collection<SourceDocument> selectedSourceDocuments()
+    {
+        var sourceDocumentsToChange = new HashSet<SourceDocument>();
+
+        var rows = ((DocumentMatrixDataProvider) documentMatrix.getDataProvider()).getMatrixData();
+
+        // Collect annotation documents by row
+        for (var row : rows) {
+            if (!row.isSelected()) {
+                continue;
+            }
+
+            sourceDocumentsToChange.add(row.getSourceDocument());
+        }
+
+        // Collect annotation documents by column
+        if (selectedUsers.map(users -> users.contains(CURATION_USER)).getObject()) {
+            for (var row : rows) {
+                sourceDocumentsToChange.add(row.getSourceDocument());
+            }
+        }
+
+        return sourceDocumentsToChange;
     }
 
     @OnEvent

@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.agreement.results.unitizing;
 
-import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CLICK;
+import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CLICK_EVENT;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 import static java.lang.String.format;
 import static org.apache.wicket.event.Broadcast.BUBBLE;
@@ -225,7 +225,7 @@ public class PairwiseUnitizingAgreementTable
         l.add(tooltip);
         l.add(new AttributeAppender("style", "cursor: pointer", ";"));
 
-        l.add(AjaxEventBehavior.onEvent(CLICK,
+        l.add(AjaxEventBehavior.onEvent(CLICK_EVENT,
                 _target -> actionScoreClicked(_target, aRater1, aRater2)));
 
         return l;

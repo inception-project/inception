@@ -20,7 +20,7 @@ package de.tudarmstadt.ukp.inception.ui.core.docanno.sidebar;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.EXTENSION_ID;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation.MAIN_EDITOR;
 import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CHANGE_EVENT;
-import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CLICK;
+import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CLICK_EVENT;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.enabledWhen;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhenNot;
@@ -365,7 +365,7 @@ public class DocumentMetadataAnnotationSelectionPanel
                 var isSuggestion = EXTENSION_ID.equals(aItem.getModelObject().vid.getExtensionId());
 
                 if (!isSuggestion) {
-                    container.add(new LambdaAjaxEventBehavior(CLICK,
+                    container.add(new LambdaAjaxEventBehavior(CLICK_EVENT,
                             $ -> actionSelect($, container, detailPanel)));
                 }
 

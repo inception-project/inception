@@ -23,7 +23,7 @@ public class BratConstants
     public static final String CARD_OPTIONAL = "?";
     public static final String CARD_ZERO_OR_MORE = "+";
     public static final String CARD_ONE_OR_MORE = "*";
-    
+
     public static final String RANGE_ANY = "<ANY>";
 
 }

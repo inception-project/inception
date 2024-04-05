@@ -28,18 +28,17 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class SpanMapping
 {
     public static final String FLAG_ANCHOR = "A";
-    
+
     private static final Pattern PATTERN = Pattern.compile(
-            "(?<TYPE>[a-zA-Z_][a-zA-Z0-9_\\-.]+)" +
-            "(?:[:](?<SUBCAT>[a-zA-Z][a-zA-Z0-9]+))?");
-    
+            "(?<TYPE>[a-zA-Z_][a-zA-Z0-9_\\-.]+)" + "(?:[:](?<SUBCAT>[a-zA-Z][a-zA-Z0-9]+))?");
+
     private static final String TYPE = "TYPE";
     private static final String SUBCAT = "SUBCAT";
 
     private final String type;
     private final String subcat;
     private final Map<String, String> defaultFeatureValues;
-    
+
     /**
      * Jackson requires this constructor - even if it is private - do not use!
      */
@@ -48,10 +47,9 @@ public class SpanMapping
     {
         this(null, null);
     }
-    
+
     @JsonCreator
-    public SpanMapping(
-            @JsonProperty(value = "type", required = true) String aType, 
+    public SpanMapping(@JsonProperty(value = "type", required = true) String aType,
             @JsonProperty(value = "subCatFeature") String aSubCat,
             @JsonProperty(value = "defaultFeatureValues") Map<String, String> aDefaults)
     {
@@ -60,8 +58,7 @@ public class SpanMapping
         defaultFeatureValues = aDefaults != null ? aDefaults : Collections.emptyMap();
     }
 
-    public SpanMapping(
-            @JsonProperty(value = "type", required = true) String aType, 
+    public SpanMapping(@JsonProperty(value = "type", required = true) String aType,
             @JsonProperty(value = "subCatFeature") String aSubCat)
     {
         this(aType, aSubCat, Collections.emptyMap());
@@ -76,7 +73,7 @@ public class SpanMapping
     {
         return subcat;
     }
-    
+
     public Map<String, String> getDefaultFeatureValues()
     {
         return defaultFeatureValues;
@@ -85,7 +82,7 @@ public class SpanMapping
     public static SpanMapping parse(String aValue)
     {
         Matcher m = PATTERN.matcher(aValue);
-        
+
         if (!m.matches()) {
             throw new IllegalArgumentException(
                     "Illegal text annotation parameter format [" + aValue + "]");

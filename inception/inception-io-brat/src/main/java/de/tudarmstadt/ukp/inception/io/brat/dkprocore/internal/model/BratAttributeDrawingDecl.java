@@ -40,8 +40,7 @@ public class BratAttributeDrawingDecl
     }
 
     @Override
-    public void write(JsonGenerator aJG)
-        throws IOException
+    public void write(JsonGenerator aJG) throws IOException
     {
         aJG.writeFieldName("values");
         aJG.writeStartObject();
@@ -53,7 +52,7 @@ public class BratAttributeDrawingDecl
         }
         aJG.writeEndObject();
     }
-    
+
     @Override
     public String getSpec()
     {
