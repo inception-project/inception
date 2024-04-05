@@ -17,11 +17,12 @@
  */
 package de.tudarmstadt.ukp.inception.workload.matrix.management.support;
 
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
+import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CHANGE_EVENT;
 import static org.apache.wicket.event.Broadcast.BUBBLE;
 
 import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Set;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -47,17 +48,17 @@ public class UserSelectToolbar
     {
         super(aSelection, aTable);
 
-        RefreshingView<IColumn<DocumentMatrixRow, Void>> headers = new RefreshingView<IColumn<DocumentMatrixRow, Void>>(
-                "headers", Model.of(aTable.getColumns()))
+        var headers = new RefreshingView<IColumn<DocumentMatrixRow, Void>>("headers",
+                Model.of(aTable.getColumns()))
         {
             private static final long serialVersionUID = 1L;
 
             @Override
             protected Iterator<IModel<IColumn<DocumentMatrixRow, Void>>> getItemModels()
             {
-                List<IModel<IColumn<DocumentMatrixRow, Void>>> columnsModels = new LinkedList<>();
+                var columnsModels = new LinkedList<IModel<IColumn<DocumentMatrixRow, Void>>>();
 
-                for (IColumn<DocumentMatrixRow, Void> column : getTable().getColumns()) {
+                for (var column : getTable().getColumns()) {
                     columnsModels.add(Model.of(column));
                 }
 
@@ -69,42 +70,25 @@ public class UserSelectToolbar
             {
                 final IColumn<DocumentMatrixRow, ?> column = item.getModelObject();
 
-                // if (column instanceof IStyledColumn) {
-                // CssAttributeBehavior cssAttributeBehavior = new DataTable.CssAttributeBehavior()
-                // {
-                // private static final long serialVersionUID = 1L;
-                //
-                // @Override
-                // protected String getCssClass()
-                // {
-                // return ((IStyledColumn<?, S>) column).getCssClass();
-                // }
-                // };
-                //
-                // header.add(cssAttributeBehavior);
-                // }
-                //
-                // if (column.getHeaderColspan() > 1) {
-                // header.add(AttributeModifier.replace("colspan", column.getHeaderColspan()));
-                // }
-                //
-                // if (column.getHeaderRowspan() > 1) {
-                // header.add(AttributeModifier.replace("rowspan", column.getHeaderRowspan()));
-                // }
-
-                WebMarkupContainer header = new WebMarkupContainer("header");
+                var header = new WebMarkupContainer("header");
                 item.add(header);
                 item.setRenderBodyOnly(true);
 
-                CheckBox selected = new CheckBox("selected");
-                selected.setVisible(column instanceof AnnotatorColumn);
+                var selected = new CheckBox("selected");
 
-                if (column instanceof AnnotatorColumn) {
-                    AnnotatorColumn annotatorColumn = (AnnotatorColumn) column;
-                    String username = annotatorColumn.getDisplayModel().getObject();
-                    selected.add(new LambdaAjaxFormComponentUpdatingBehavior("change",
-                            _target -> actionSelect(_target, username, selected)));
+                if (column instanceof AnnotatorColumn annotatorColumn) {
+                    var username = annotatorColumn.getDisplayModel().getObject();
+                    selected.add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT,
+                            _target -> actionSelectAnnotator(_target, username, selected)));
                     selected.setModel(Model.of(getSelection().contains(username)));
+                }
+                else if (column instanceof CuratorColumn curatorColumn) {
+                    selected.add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT,
+                            _target -> actionSelectCurator(_target, selected)));
+                    selected.setModel(Model.of(getSelection().contains(CURATION_USER)));
+                }
+                else {
+                    selected.setVisible(false);
                 }
 
                 header.add(selected);
@@ -113,8 +97,10 @@ public class UserSelectToolbar
         add(headers);
     }
 
-    private void actionSelect(AjaxRequestTarget aTarget, String aUsername, CheckBox aCheckbox)
+    private void actionSelectAnnotator(AjaxRequestTarget aTarget, String aUsername,
+            CheckBox aCheckbox)
     {
+        getSelection().remove(CURATION_USER);
         if (aCheckbox.getModelObject()) {
             getSelection().add(aUsername);
         }
@@ -124,6 +110,20 @@ public class UserSelectToolbar
 
         send(this, BUBBLE,
                 new AnnotatorColumnSelectionChangedEvent(aTarget, aUsername, aCheckbox.getModel()));
+    }
+
+    private void actionSelectCurator(AjaxRequestTarget aTarget, CheckBox aCheckbox)
+    {
+        getSelection().clear();
+        if (aCheckbox.getModelObject()) {
+            getSelection().add(CURATION_USER);
+        }
+        else {
+            getSelection().remove(CURATION_USER);
+        }
+
+        send(this, BUBBLE, new AnnotatorColumnSelectionChangedEvent(aTarget, CURATION_USER,
+                aCheckbox.getModel()));
     }
 
     @SuppressWarnings("unchecked")

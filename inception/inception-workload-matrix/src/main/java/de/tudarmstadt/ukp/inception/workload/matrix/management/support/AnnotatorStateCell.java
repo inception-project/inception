@@ -18,6 +18,8 @@
 package de.tudarmstadt.ukp.inception.workload.matrix.management.support;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.NEW;
+import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CLICK_EVENT;
+import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CONTEXTMENU_EVENT;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 import static de.tudarmstadt.ukp.inception.workload.matrix.management.MatrixWorkloadManagementPage.CSS_CLASS_STATE_TOGGLE;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -66,12 +68,13 @@ public class AnnotatorStateCell
 
         var state = new WebMarkupContainer("state");
 
-        Label stateLabel = new SymbolLabel("stateSymbol",
+        var stateLabel = new SymbolLabel("stateSymbol",
                 columnModel.map(AnnotationDocument::getState).orElse(NEW));
 
-        state.add(new LambdaAjaxEventBehavior("click",
-                _t -> actionClickCell(rowModel, stateLabel, _t)).setPreventDefault(true));
-        state.add(new LambdaAjaxEventBehavior("contextmenu",
+        state.add(
+                new LambdaAjaxEventBehavior(CLICK_EVENT, _t -> actionClickCell(rowModel, stateLabel, _t))
+                        .setPreventDefault(true));
+        state.add(new LambdaAjaxEventBehavior(CONTEXTMENU_EVENT,
                 _t -> actionContextMenu(rowModel, columnModel, _t)).setPreventDefault(true));
         state.add(new AttributeAppender("class", CSS_CLASS_STATE_TOGGLE, " "));
         state.add(new CssClassNameAppender(rowModel.map(this::isSelected).orElse(false).getObject()
