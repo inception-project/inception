@@ -197,6 +197,8 @@ public class MatrixWorkloadManagementPage
         bulkActionDropdown.add(new LambdaAjaxLink("bulkUnlock", this::actionBulkUnlock));
         bulkActionDropdown.add(new LambdaAjaxLink("bulkFinish", this::actionBulkFinish));
         bulkActionDropdown.add(new LambdaAjaxLink("bulkResume", this::actionBulkResume));
+        bulkActionDropdown
+                .add(new LambdaAjaxLink("bulkResumeCuration", this::actionBulkResumeCuration));
         bulkActionDropdown.add(new LambdaAjaxLink("bulkOpen", this::actionBulkOpen));
         bulkActionDropdown.add(new LambdaAjaxLink("bulkClose", this::actionBulkClose));
         bulkActionDropdown.add(new LambdaAjaxLink("bulkReset", this::actionBulkResetDocument));
@@ -326,15 +328,17 @@ public class MatrixWorkloadManagementPage
         }
 
         dialogContent.setConfirmAction(_target -> {
-            Map<String, User> userCache = new HashMap<>();
-            for (AnnotationDocument document : selectedDocuments) {
-                User user = userCache.computeIfAbsent(document.getUser(),
+            var userCache = new HashMap<String, User>();
+            for (var document : selectedDocuments) {
+                var user = userCache.computeIfAbsent(document.getUser(),
                         username -> userRepository.get(username));
                 documentService.resetAnnotationCas(document.getDocument(), user);
             }
 
             success(format("The %s document(s) have been set reset.", selectedDocuments.size()));
             _target.addChildren(getPage(), IFeedback.class);
+
+            matrixWorkloadExtension.recalculate(getProject());
 
             reloadMatrixData();
             _target.add(documentMatrix);
@@ -364,17 +368,19 @@ public class MatrixWorkloadManagementPage
             dialogContent.setExpectedResponseModel(Model.of(getProject().getName()));
         }
 
+        var statesToReset = asList(CURATION_IN_PROGRESS, CURATION_FINISHED);
         dialogContent.setConfirmAction(_target -> {
-            for (var document : selectedDocuments) {
-                curationService.deleteCurationCas(document);
-                if (asList(CURATION_IN_PROGRESS, CURATION_FINISHED).contains(document.getState())) {
-                    documentService.setSourceDocumentState(document, ANNOTATION_IN_PROGRESS);
-                }
-            }
+            var documentsToReset = selectedDocuments.stream() //
+                    .filter(d -> statesToReset.contains(d.getState())) //
+                    .toList();
+
+            documentService.bulkSetSourceDocumentState(documentsToReset, ANNOTATION_IN_PROGRESS);
 
             success(format("The curation state of %s document(s) has been set reset.",
-                    selectedDocuments.size()));
+                    documentsToReset.size()));
             _target.addChildren(getPage(), IFeedback.class);
+
+            matrixWorkloadExtension.recalculate(getProject());
 
             reloadMatrixData();
             _target.add(documentMatrix);
@@ -428,7 +434,7 @@ public class MatrixWorkloadManagementPage
 
     private void actionBulkOpen(AjaxRequestTarget aTarget)
     {
-        Collection<AnnotationDocument> selectedDocuments = selectedAnnotationDocuments();
+        var selectedDocuments = selectedAnnotationDocuments();
 
         var lockedDocuments = selectedDocuments.stream()
                 .filter(annDoc -> annDoc.getState() == IGNORE) //
@@ -561,6 +567,24 @@ public class MatrixWorkloadManagementPage
 
         success(format("The state of %d document(s) has been set to [%s]", finishedDocuments.size(),
                 IN_PROGRESS));
+        aTarget.addChildren(getPage(), IFeedback.class);
+
+        reloadMatrixData();
+        aTarget.add(documentMatrix);
+    }
+
+    private void actionBulkResumeCuration(AjaxRequestTarget aTarget)
+    {
+        var finishedDocuments = selectedSourceDocuments().stream()
+                .filter(doc -> doc.getState() == CURATION_FINISHED) //
+                .toList();
+
+        documentService.bulkSetSourceDocumentState(finishedDocuments, CURATION_IN_PROGRESS);
+
+        matrixWorkloadExtension.recalculate(getProject());
+
+        success(format("The curation state of %d document(s) has been set to [%s]",
+                finishedDocuments.size(), CURATION_IN_PROGRESS));
         aTarget.addChildren(getPage(), IFeedback.class);
 
         reloadMatrixData();

@@ -464,14 +464,7 @@ public class DocumentServiceImpl
     public SourceDocumentState setSourceDocumentState(SourceDocument aDocument,
             SourceDocumentState aState)
     {
-        Validate.notNull(aDocument, "Source document must be specified");
-        Validate.notNull(aState, "State must be specified");
-
-        var oldState = aDocument.getState();
-
-        aDocument.setState(aState);
-
-        createSourceDocument(aDocument);
+        var oldState = setSourceDocumentStateNoEvent(aDocument, aState);
 
         // Notify about change in document state
         if (!Objects.equals(oldState, aDocument.getState())) {
@@ -480,6 +473,30 @@ public class DocumentServiceImpl
         }
 
         return oldState;
+    }
+
+    private SourceDocumentState setSourceDocumentStateNoEvent(SourceDocument aDocument,
+            SourceDocumentState aState)
+    {
+        Validate.notNull(aDocument, "Source document must be specified");
+        Validate.notNull(aState, "State must be specified");
+
+        var oldState = aDocument.getState();
+
+        aDocument.setState(aState);
+
+        createSourceDocument(aDocument);
+        return oldState;
+    }
+
+    @Override
+    @Transactional
+    public void bulkSetSourceDocumentState(Iterable<SourceDocument> aDocuments,
+            SourceDocumentState aState)
+    {
+        for (var doc : aDocuments) {
+            setSourceDocumentStateNoEvent(doc, aState);
+        }
     }
 
     @Override
@@ -1383,8 +1400,7 @@ public class DocumentServiceImpl
     public AnnotationDocumentState setAnnotationDocumentState(AnnotationDocument aDocument,
             AnnotationDocumentState aState, AnnotationDocumentStateChangeFlag... aFlags)
     {
-        AnnotationDocumentState oldState = setAnnotationDocumentStateNoEvent(aDocument, aState,
-                aFlags);
+        var oldState = setAnnotationDocumentStateNoEvent(aDocument, aState, aFlags);
 
         if (!Objects.equals(oldState, aDocument.getState())) {
             applicationEventPublisher
@@ -1397,7 +1413,7 @@ public class DocumentServiceImpl
     private AnnotationDocumentState setAnnotationDocumentStateNoEvent(AnnotationDocument aDocument,
             AnnotationDocumentState aState, AnnotationDocumentStateChangeFlag... aFlags)
     {
-        AnnotationDocumentState oldState = aDocument.getState();
+        var oldState = aDocument.getState();
 
         aDocument.setState(aState);
 
@@ -1424,7 +1440,7 @@ public class DocumentServiceImpl
     public void bulkSetAnnotationDocumentState(Iterable<AnnotationDocument> aDocuments,
             AnnotationDocumentState aState)
     {
-        for (AnnotationDocument doc : aDocuments) {
+        for (var doc : aDocuments) {
             setAnnotationDocumentStateNoEvent(doc, aState);
         }
     }
