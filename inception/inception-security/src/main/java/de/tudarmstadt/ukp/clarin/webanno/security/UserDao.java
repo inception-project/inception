@@ -32,7 +32,6 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 public interface UserDao
 {
     static final String ADMIN_DEFAULT_USERNAME = "admin";
-    static final String ADMIN_DEFAULT_PASSWORD = "admin";
 
     static final String EMPTY_PASSWORD = "";
 
@@ -204,4 +203,8 @@ public interface UserDao
     boolean canChangePassword(User aUser);
 
     boolean isProfileSelfServiceAllowed(User aUser);
+
+    boolean isEmpty();
+
+    boolean isAdminAccountRecoveryMode();
 }
