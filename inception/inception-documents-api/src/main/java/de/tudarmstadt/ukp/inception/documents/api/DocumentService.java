@@ -173,6 +173,20 @@ public interface DocumentService
     SourceDocumentState setSourceDocumentState(SourceDocument aDocument,
             SourceDocumentState aState);
 
+    /**
+     * Sets the state of multiple source documents at once. This method does not generate
+     * {@code DocumentStateChangeEvent} events. This means in particular that webhooks for
+     * annotation document changes will not fire and that workload managers will not know that they
+     * need to recalculate the document and project states.
+     * 
+     * @param aDocuments
+     *            the documents to update
+     * @param aState
+     *            the state to update the documents to
+     */
+    void bulkSetSourceDocumentState(Iterable<SourceDocument> aDocuments,
+            SourceDocumentState aState);
+
     // --------------------------------------------------------------------------------------------
     // Methods related to AnnotationDocuments
     // --------------------------------------------------------------------------------------------

@@ -141,52 +141,58 @@
                     </button>
                     <button wicket:id="bulkActionDropdownButton" class="btn btn-primary btn-action dropdown-toggle flex-content border-start" type="button" data-bs-toggle="dropdown"></button>
                     <div wicket:id="bulkActionDropdown" class="dropdown-menu shadow-lg" role="menu" style="min-width: 20em;">
-                      <a wicket:id="bulkClose" class="dropdown-item">
-                        Close selected
-                        <span class="float-end text-muted">
-                          <i class="far fa-play-circle"></i>&nbsp;<i class="fas fa-long-arrow-alt-right"></i>&nbsp;<i class="far fa-check-circle"></i>
-                          &nbsp;&nbsp;
-                          <i class="far fa-circle"></i>&nbsp;<i class="fas fa-long-arrow-alt-right"></i>&nbsp;<i class="fas fa-lock"></i>
-                        </span>
-                      </a>
                       <a wicket:id="bulkOpen" class="dropdown-item">
-                        Open selected
+                        Open annotation
                         <span class="float-end text-muted">
                           <i class="far fa-check-circle"></i>&nbsp;<i class="fas fa-long-arrow-alt-right"></i>&nbsp;<i class="far fa-play-circle"></i>
                           &nbsp;&nbsp;
                           <i class="fas fa-lock"></i>&nbsp;<i class="fas fa-long-arrow-alt-right"></i>&nbsp;<i class="far fa-circle"></i>
                         </span>
                       </a>
+                      <a wicket:id="bulkClose" class="dropdown-item">
+                        Close annotation
+                        <span class="float-end text-muted">
+                          <i class="far fa-play-circle"></i>&nbsp;<i class="fas fa-long-arrow-alt-right"></i>&nbsp;<i class="far fa-check-circle"></i>
+                          &nbsp;&nbsp;
+                          <i class="far fa-circle"></i>&nbsp;<i class="fas fa-long-arrow-alt-right"></i>&nbsp;<i class="fas fa-lock"></i>
+                        </span>
+                      </a>
                       <hr class="dropdown-divider"/>
                       <a wicket:id="bulkStartProgress" class="dropdown-item">
-                        Start progress (dev-only) 
+                        Start annotation (dev-only) 
                         <span class="float-end text-muted">
                           <i class="far fa-circle"></i>&nbsp;<i class="fas fa-long-arrow-alt-right"></i>&nbsp;<i class="far fa-play-circle"></i>
                         </span>
                       </a>
                       <a wicket:id="bulkLock" class="dropdown-item">
-                        Lock selected 
+                        Lock annotation 
                         <span class="float-end text-muted">
                           <i class="far fa-circle"></i>&nbsp;<i class="fas fa-long-arrow-alt-right"></i>&nbsp;<i class="fas fa-lock"></i>
                         </span>
                       </a>
                       <a wicket:id="bulkUnlock" class="dropdown-item">
-                        Unlock selected
+                        Unlock annotation
                         <span class="float-end text-muted">
                           <i class="fas fa-lock"></i>&nbsp;<i class="fas fa-long-arrow-alt-right"></i>&nbsp;<i class="far fa-circle"></i>
                         </span>
                       </a>
                       <hr class="dropdown-divider"/>
                       <a wicket:id="bulkFinish" class="dropdown-item">
-                        Finish selected
+                        Finish annotation
                         <span class="float-end text-muted">
                           <i class="far fa-play-circle"></i>&nbsp;<i class="fas fa-long-arrow-alt-right"></i>&nbsp;<i class="far fa-check-circle"></i>
                         </span>
                       </a>
                       <a wicket:id="bulkResume" class="dropdown-item">
-                        Resume selected
+                        Resume annotation
                         <span class="float-end text-muted">
                           <i class="far fa-check-circle"></i>&nbsp;<i class="fas fa-long-arrow-alt-right"></i>&nbsp;<i class="far fa-play-circle"></i>
+                        </span>
+                      </a>
+                      <a wicket:id="bulkResumeCuration" class="dropdown-item">
+                        Resume curation
+                        <span class="float-end text-muted">
+                          <i class="fas fa-clipboard-check"></i>&nbsp;<i class="fas fa-long-arrow-alt-right"></i>&nbsp;<i class="fas fa-clipboard"></i>
                         </span>
                       </a>
                       <hr class="dropdown-divider"/>
