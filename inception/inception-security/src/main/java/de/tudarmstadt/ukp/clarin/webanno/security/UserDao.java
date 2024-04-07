@@ -31,6 +31,11 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
  */
 public interface UserDao
 {
+    static final String PROP_RESTORE_DEFAULT_ADMIN_ACCOUNT = "restoreDefaultAdminAccount";
+
+    static final String SPEL_IS_ADMIN_ACCOUNT_RECOVERY_MODE = "('${"
+            + PROP_RESTORE_DEFAULT_ADMIN_ACCOUNT + ":false}' != 'false')";
+
     static final String ADMIN_DEFAULT_USERNAME = "admin";
 
     static final String EMPTY_PASSWORD = "";

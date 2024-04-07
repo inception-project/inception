@@ -109,8 +109,6 @@ public class UserDaoImpl
     public static final Set<String> RESERVED_USERNAMES = Set.of(INITIAL_CAS_PSEUDO_USER,
             CURATION_USER, "anonymousUser");
 
-    private static final String PROP_RESTORE_DEFAULT_ADMIN_ACCOUNT = "restoreDefaultAdminAccount";
-
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private final EntityManager entityManager;
