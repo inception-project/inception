@@ -195,7 +195,7 @@ public abstract class ExternalAnnotationEditorBase
 
     private String getPropertiesAsJson()
     {
-        AnnotationEditorProperties props = getProperties();
+        var props = getProperties();
         try {
             return JSONUtil.toInterpretableJsonString(props);
         }

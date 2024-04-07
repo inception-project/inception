@@ -20,9 +20,21 @@
 @import 'tables';
 @import 'notes';
 
+:root {
+  --section-padding: 8px;
+  --section-margin: 1em;
+}
+
 TEI {
   teiHeader {
     display: none;
+  }
+
+  body, front, back {
+    display: block;
+    font-family: sans-serif;
+    padding-bottom: var(--section-padding);
+    margin-bottom: var(--section-margin);
   }
 
   body {
@@ -112,7 +124,6 @@ TEI {
   head {
     display: block; 
     font-size: 180%; 
-    margin-top: 0.67em; 
     margin-bottom: 0.67em; 
     margin-left: 0; 
     margin-right: 0; 

@@ -33,6 +33,7 @@ public class CustomXmlFormatPluginDescripion
     private String name;
 
     private List<String> stylesheets = Collections.emptyList();
+    private List<String> sectionElements;
 
     private @JsonIgnore Path basePath;
 
@@ -74,5 +75,15 @@ public class CustomXmlFormatPluginDescripion
     public void setStylesheets(List<String> aStylesheets)
     {
         stylesheets = aStylesheets;
+    }
+
+    public List<String> getSectionElements()
+    {
+        return sectionElements;
+    }
+
+    public void setSectionElements(List<String> aSectionElements)
+    {
+        sectionElements = aSectionElements;
     }
 }
