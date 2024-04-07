@@ -75,16 +75,16 @@ public class AnnotationStateList
             @Override
             protected void populateItem(ListItem<AnnotationDocument> aItem)
             {
-                AnnotationDocument row = aItem.getModelObject();
-                User user = userRepository.get(aItem.getModelObject().getUser());
+                var row = aItem.getModelObject();
+                var user = userRepository.get(aItem.getModelObject().getUser());
 
                 var state = new WebMarkupContainer("state");
                 aItem.queue(state);
 
-                IModel<String> labelModel = aItem.getModel() //
+                var labelModel = aItem.getModel() //
                         .map(AnnotationDocumentState::symbol) //
                         .orElse(NEW.symbol());
-                Label stateLabel = new Label("stateSymbol");
+                var stateLabel = new Label("stateSymbol");
 
                 if (isAbandoned(row)) {
                     labelModel = labelModel
