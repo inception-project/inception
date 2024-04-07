@@ -127,6 +127,14 @@ public interface FormatSupport
         return Collections.emptyList();
     }
 
+    /**
+     * @return format-specific section elements
+     */
+    default List<String> getSectionElements()
+    {
+        return Collections.emptyList();
+    }
+
     default Optional<PolicyCollection> getPolicy() throws IOException
     {
         return Optional.empty();

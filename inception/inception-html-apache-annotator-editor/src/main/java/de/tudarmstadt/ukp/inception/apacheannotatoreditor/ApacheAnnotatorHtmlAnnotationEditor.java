@@ -28,6 +28,7 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
 import de.tudarmstadt.ukp.inception.apacheannotatoreditor.resources.ApacheAnnotatorJsCssResourceReference;
 import de.tudarmstadt.ukp.inception.apacheannotatoreditor.resources.ApacheAnnotatorJsJavascriptResourceReference;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
@@ -48,6 +49,7 @@ public class ApacheAnnotatorHtmlAnnotationEditor
     private @SpringBean(name = "xHtmlXmlDocumentIFrameViewFactory") DocumentViewFactory viewFactory;
     private @SpringBean DocumentService documentService;
     private @SpringBean ServletContext servletContext;
+    private @SpringBean DocumentImportExportService documentImportExportService;
 
     public ApacheAnnotatorHtmlAnnotationEditor(String aId, IModel<AnnotatorState> aModel,
             AnnotationActionHandler aActionHandler, CasProvider aCasProvider,
@@ -59,7 +61,7 @@ public class ApacheAnnotatorHtmlAnnotationEditor
     @Override
     protected Component makeView()
     {
-        AnnotatorState state = getModelObject();
+        var state = getModelObject();
 
         return viewFactory.createView(CID_VIS, Model.of(state.getDocument()),
                 editorFactory.getBeanName());
@@ -68,13 +70,13 @@ public class ApacheAnnotatorHtmlAnnotationEditor
     @Override
     protected AnnotationEditorProperties getProperties()
     {
-        AnnotationEditorProperties props = new AnnotationEditorProperties();
+        var props = new AnnotationEditorProperties();
         // The factory is the JS call. Cf. the "globalName" in build.js and the factory method
         // defined in main.ts
         props.setEditorFactory("ApacheAnnotatorEditor.factory()");
         props.setEditorFactoryId(getFactory().getBeanName());
-        if (getFactory() instanceof ClientSideUserPreferencesProvider) {
-            ((ClientSideUserPreferencesProvider) getFactory()).getUserPreferencesKey()
+        if (getFactory() instanceof ClientSideUserPreferencesProvider factory) {
+            factory.getUserPreferencesKey()
                     .ifPresent(key -> props.setUserPreferencesKey(key.getClientSideKey()));
         }
         props.setDiamAjaxCallbackUrl(getDiamBehavior().getCallbackUrl().toString());
@@ -82,6 +84,8 @@ public class ApacheAnnotatorHtmlAnnotationEditor
                 referenceToUrl(servletContext, ApacheAnnotatorJsCssResourceReference.get())));
         props.setScriptSources(asList(referenceToUrl(servletContext,
                 ApacheAnnotatorJsJavascriptResourceReference.get())));
+        props.setSectionElements(
+                documentImportExportService.getSectionElements(getModelObject().getDocument()));
         return props;
     }
 }

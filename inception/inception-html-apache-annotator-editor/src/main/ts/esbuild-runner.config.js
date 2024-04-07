@@ -19,7 +19,7 @@ const esbuildSvelte = require('esbuild-svelte')
 const sveltePreprocess = require('svelte-preprocess')
 
 module.exports = {
-  type: 'bundle', // bundle or transform (see description above)
+  type: 'bundle',
   esbuild: {
     target: 'es2018',
     plugins: [

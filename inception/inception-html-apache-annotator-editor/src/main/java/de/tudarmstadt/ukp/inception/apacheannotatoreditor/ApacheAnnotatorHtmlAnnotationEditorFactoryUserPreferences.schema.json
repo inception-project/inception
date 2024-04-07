@@ -5,8 +5,17 @@
     "showLabels": {
       "type": "boolean"
     },
+    "showAggregatedLabels": {
+      "type": "boolean"
+    },
     "showEmptyHighlights": {
       "type": "boolean"
+    },
+    "showDocumentStructure": {
+      "type": "boolean"
+    },
+    "documentStructureWidth": {
+      "type": "number"
     }
   },
   "additionalProperties": false
