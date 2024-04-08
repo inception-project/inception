@@ -141,7 +141,6 @@ public class LayerExporter
         exLayer.setValidationMode(aLayer.getValidationMode());
         exLayer.setLinkedListBehavior(aLayer.isLinkedListBehavior());
         exLayer.setName(aLayer.getName());
-        exLayer.setProjectName(aLayer.getProject().getName());
         exLayer.setType(aLayer.getType());
         exLayer.setUiName(aLayer.getUiName());
         exLayer.setTraits(aLayer.getTraits());
@@ -151,9 +150,9 @@ public class LayerExporter
         }
 
         // Export features
-        List<ExportedAnnotationFeature> exFeatures = new ArrayList<>();
-        for (AnnotationFeature feature : annotationService.listAnnotationFeature(aLayer)) {
-            ExportedAnnotationFeature exFeature = exportFeatureDetails(feature);
+        var exFeatures = new ArrayList<ExportedAnnotationFeature>();
+        for (var feature : annotationService.listAnnotationFeature(aLayer)) {
+            var exFeature = exportFeatureDetails(feature);
             exFeatures.add(exFeature);
 
             if (aFeatureToExFeature != null) {
@@ -167,7 +166,7 @@ public class LayerExporter
 
     private ExportedAnnotationFeature exportFeatureDetails(AnnotationFeature feature)
     {
-        ExportedAnnotationFeature exFeature = new ExportedAnnotationFeature();
+        var exFeature = new ExportedAnnotationFeature();
         exFeature.setDescription(feature.getDescription());
         exFeature.setEnabled(feature.isEnabled());
         exFeature.setRemember(feature.isRemember());
@@ -189,10 +188,10 @@ public class LayerExporter
         exFeature.setRank(feature.getRank());
 
         if (feature.getTagset() != null) {
-            TagSet tagSet = feature.getTagset();
+            var tagSet = feature.getTagset();
             // We export only the name here as a stub. The actual tag set is exported by
             // the TagSetExporter.
-            ExportedTagSet exTagSet = new ExportedTagSet();
+            var exTagSet = new ExportedTagSet();
             exTagSet.setName(tagSet.getName());
             exFeature.setTagSet(exTagSet);
         }

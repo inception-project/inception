@@ -28,7 +28,6 @@ import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static org.apache.commons.collections4.CollectionUtils.isEmpty;
 
-import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -44,7 +43,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.UIMAFramework;
 import org.apache.uima.resource.ResourceInitializationException;
-import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.uima.util.InvalidXMLException;
 import org.apache.uima.util.XMLInputSource;
 import org.apache.wicket.AttributeModifier;
@@ -59,7 +57,6 @@ import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.ListChoice;
-import org.apache.wicket.markup.html.form.upload.FileUpload;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.model.IModel;
@@ -79,19 +76,18 @@ import de.tudarmstadt.ukp.clarin.webanno.project.initializers.LayerInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.SentenceLayerInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.TokenLayerInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.bootstrap.BootstrapFileInputField;
 import de.tudarmstadt.ukp.inception.bootstrap.BootstrapModalDialog;
-import de.tudarmstadt.ukp.inception.export.LayerImportExportUtils;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.config.AnnotationSchemaProperties;
 import de.tudarmstadt.ukp.inception.schema.api.event.LayerConfigurationChangedEvent;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistry;
+import de.tudarmstadt.ukp.inception.schema.exporters.LayerImportExportUtils;
 import de.tudarmstadt.ukp.inception.support.help.DocLink;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
@@ -121,9 +117,9 @@ public class ProjectLayersPanel
     private @SpringBean ApplicationEventPublisherHolder applicationEventPublisherHolder;
     private @SpringBean AnnotationSchemaProperties annotationEditorProperties;
 
-    private LayerSelectionPane layerSelectionPane;
-    private FeatureSelectionForm featureSelectionForm;
-    private LayerDetailForm layerDetailForm;
+    private final LayerSelectionPane layerSelectionPane;
+    private final FeatureSelectionForm featureSelectionForm;
+    private final LayerDetailForm layerDetailForm;
     private final FeatureDetailForm featureDetailForm;
     private final ImportLayerForm importLayerForm;
 
@@ -378,8 +374,8 @@ public class ProjectLayersPanel
 
         private void actionImport(AjaxRequestTarget aTarget, Form<String> aForm)
         {
-            List<FileUpload> uploadedFiles = fileUpload.getFileUploads();
-            Project project = ProjectLayersPanel.this.getModelObject();
+            var uploadedFiles = fileUpload.getFileUploads();
+            var project = ProjectLayersPanel.this.getModelObject();
 
             if (isEmpty(uploadedFiles)) {
                 error("Please choose file with layer details before uploading");
@@ -389,9 +385,10 @@ public class ProjectLayersPanel
                 error("Project not yet created, please save project details!");
                 return;
             }
-            for (FileUpload uploadedFile : uploadedFiles) {
-                try (BufferedInputStream bis = IOUtils.buffer(uploadedFile.getInputStream())) {
-                    byte[] buf = new byte[5];
+
+            for (var uploadedFile : uploadedFiles) {
+                try (var bis = IOUtils.buffer(uploadedFile.getInputStream())) {
+                    var buf = new byte[5];
                     bis.mark(buf.length + 1);
                     bis.read(buf, 0, buf.length);
                     bis.reset();
@@ -402,7 +399,7 @@ public class ProjectLayersPanel
                         importUimaTypeSystemFile(bis);
                     }
                     else {
-                        User user = userRepository.getCurrentUser();
+                        var user = userRepository.getCurrentUser();
                         var layer = LayerImportExportUtils.importLayerFile(annotationService, user,
                                 project, bis);
                         layerDetailForm.setModelObject(layer);
@@ -421,8 +418,8 @@ public class ProjectLayersPanel
         private void importUimaTypeSystemFile(InputStream aIS)
             throws IOException, InvalidXMLException, ResourceInitializationException
         {
-            Project project = ProjectLayersPanel.this.getModelObject();
-            TypeSystemDescription tsd = UIMAFramework.getXMLParser()
+            var project = ProjectLayersPanel.this.getModelObject();
+            var tsd = UIMAFramework.getXMLParser()
                     .parseTypeSystemDescription(new XMLInputSource(aIS, null));
 
             annotationService.importUimaTypeSystem(project, tsd);
@@ -496,11 +493,10 @@ public class ProjectLayersPanel
             btnMoveDown.add(visibleWhenModelIsNotNull(overviewList));
             add(btnMoveDown);
 
-            LambdaAjaxLink createButton = new LambdaAjaxLink(CID_CREATE_FEATURE,
-                    this::actionCreateFeature);
+            var createButton = new LambdaAjaxLink(CID_CREATE_FEATURE, this::actionCreateFeature);
             createButton.add(enabledWhen(() -> layerDetailForm.getModelObject() != null
                     && !layerDetailForm.getModelObject().isBuiltIn()
-                    && !layerDetailForm.getModelObject().getType().equals(CHAIN_TYPE)
+                    && !CHAIN_TYPE.equals(layerDetailForm.getModelObject().getType())
 
             ));
             add(createButton);
@@ -558,7 +554,7 @@ public class ProjectLayersPanel
             // cancel selection of feature list
             selectedFeature.setObject(null);
 
-            AnnotationFeature newFeature = new AnnotationFeature();
+            var newFeature = new AnnotationFeature();
             newFeature.setLayer(layerDetailForm.getModelObject());
             newFeature.setProject(ProjectLayersPanel.this.getModelObject());
             featureDetailForm.setDefaultModelObject(newFeature);
@@ -573,21 +569,17 @@ public class ProjectLayersPanel
 
         private List<AnnotationFeature> listFeatures()
         {
-            List<AnnotationFeature> features = annotationService
+            var features = annotationService
                     .listAnnotationFeature(layerDetailForm.getModelObject());
+
             if (CHAIN_TYPE.equals(layerDetailForm.getModelObject().getType())
                     && !layerDetailForm.getModelObject().isLinkedListBehavior()) {
-                List<AnnotationFeature> filtered = new ArrayList<>();
-                for (AnnotationFeature f : features) {
-                    if (!COREFERENCE_RELATION_FEATURE.equals(f.getName())) {
-                        filtered.add(f);
-                    }
-                }
-                return filtered;
+                return features.stream() //
+                        .filter(f -> !COREFERENCE_RELATION_FEATURE.equals(f.getName())) //
+                        .toList();
             }
-            else {
-                return features;
-            }
+
+            return features;
         }
 
         @Override

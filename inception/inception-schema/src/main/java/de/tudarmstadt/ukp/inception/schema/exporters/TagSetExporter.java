@@ -21,7 +21,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.zip.ZipFile;
 
@@ -64,17 +63,17 @@ public class TagSetExporter
     public void exportData(FullProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
             ExportedProject aExProject, File aStage)
     {
-        List<ExportedTagSet> extTagSets = new ArrayList<>();
-        for (TagSet tagSet : annotationService.listTagSets(aRequest.getProject())) {
-            ExportedTagSet exTagSet = new ExportedTagSet();
+        var extTagSets = new ArrayList<ExportedTagSet>();
+        for (var tagSet : annotationService.listTagSets(aRequest.getProject())) {
+            var exTagSet = new ExportedTagSet();
             exTagSet.setCreateTag(tagSet.isCreateTag());
             exTagSet.setDescription(tagSet.getDescription());
             exTagSet.setLanguage(tagSet.getLanguage());
             exTagSet.setName(tagSet.getName());
 
-            List<ExportedTag> exTags = new ArrayList<>();
-            for (Tag tag : annotationService.listTags(tagSet)) {
-                ExportedTag exTag = new ExportedTag();
+            var exTags = new ArrayList<ExportedTag>();
+            for (var tag : annotationService.listTags(tagSet)) {
+                var exTag = new ExportedTag();
                 exTag.setDescription(tag.getDescription());
                 exTag.setName(tag.getName());
                 exTags.add(exTag);
@@ -100,7 +99,7 @@ public class TagSetExporter
             return;
         }
 
-        for (ExportedTagSet exTagSet : aExProject.getTagSets()) {
+        for (var exTagSet : aExProject.getTagSets()) {
             importTagSet(new TagSet(), exTagSet, aProject);
         }
     }
@@ -173,18 +172,18 @@ public class TagSetExporter
         aTagSet.setProject(aProject);
         annotationService.createTagSet(aTagSet);
 
-        Set<String> existingTags = annotationService.listTags(aTagSet).stream() //
+        var existingTags = annotationService.listTags(aTagSet).stream() //
                 .map(Tag::getName) //
                 .collect(Collectors.toSet());
 
-        List<Tag> tags = new ArrayList<>();
-        for (ExportedTag exTag : aExTagSet.getTags()) {
+        var tags = new ArrayList<Tag>();
+        for (var exTag : aExTagSet.getTags()) {
             // do not duplicate tag
             if (existingTags.contains(exTag.getName())) {
                 continue;
             }
 
-            Tag tag = new Tag();
+            var tag = new Tag();
             tag.setTagSet(aTagSet);
             tag.setName(exTag.getName());
             tag.setDescription(exTag.getDescription());
