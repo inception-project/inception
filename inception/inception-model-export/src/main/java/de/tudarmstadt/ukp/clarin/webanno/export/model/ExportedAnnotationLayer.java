@@ -91,14 +91,8 @@ public class ExportedAnnotationLayer
     @JsonProperty("multiple_tokens")
     private boolean multipleTokens;
 
-    @JsonProperty("project_name")
-    private String projectName;
-
     @JsonProperty("linked_list_behavior")
     private boolean linkedListBehavior;
-
-    @JsonProperty("on_click_javascript_action")
-    private String onClickJavascriptAction;
 
     @JsonProperty("traits")
     private String traits;
@@ -315,16 +309,6 @@ public class ExportedAnnotationLayer
         this.attachFeature = attachFeature;
     }
 
-    public String isProjectName()
-    {
-        return projectName;
-    }
-
-    public void setProjectName(String projectName)
-    {
-        this.projectName = projectName;
-    }
-
     public boolean isLinkedListBehavior()
     {
         return linkedListBehavior;
@@ -345,16 +329,6 @@ public class ExportedAnnotationLayer
         readonly = aReadonly;
     }
 
-    public String getOnClickJavascriptAction()
-    {
-        return onClickJavascriptAction;
-    }
-
-    public void setOnClickJavascriptAction(String onClickAction)
-    {
-        this.onClickJavascriptAction = onClickAction;
-    }
-
     public String getTraits()
     {
         return traits;
@@ -371,14 +345,15 @@ public class ExportedAnnotationLayer
         if (!(other instanceof ExportedAnnotationLayer)) {
             return false;
         }
-        ExportedAnnotationLayer castOther = (ExportedAnnotationLayer) other;
+
+        var castOther = (ExportedAnnotationLayer) other;
         return new EqualsBuilder().append(name, castOther.name).append(type, castOther.type)
-                .append(projectName, castOther.projectName).isEquals();
+                .isEquals();
     }
 
     @Override
     public int hashCode()
     {
-        return new HashCodeBuilder().append(name).append(type).append(projectName).toHashCode();
+        return new HashCodeBuilder().append(name).append(type).toHashCode();
     }
 }
