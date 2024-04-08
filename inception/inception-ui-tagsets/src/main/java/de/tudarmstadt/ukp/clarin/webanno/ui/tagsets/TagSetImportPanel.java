@@ -42,8 +42,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
 import de.tudarmstadt.ukp.inception.bootstrap.BootstrapFileInputField;
-import de.tudarmstadt.ukp.inception.export.TagsetImportExportUtils;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.exporters.TagsetImportExportUtils;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.inception.support.wicket.WicketExceptionUtil;
 
@@ -101,8 +101,14 @@ public class TagSetImportPanel
                 is.reset();
                 TagSet tagset;
                 if (firstChar == '{') {
-                    tagset = TagsetImportExportUtils.importTagsetFromJson(annotationService,
-                            selectedProject.getObject(), is, aForm.getModelObject().overwrite);
+                    if (aForm.getModelObject().overwrite) {
+                        tagset = TagsetImportExportUtils.importTagSetFromJsonWithOverwrite(
+                                selectedProject.getObject(), is, annotationService);
+                    }
+                    else {
+                        tagset = TagsetImportExportUtils.importTagSetFromJson(
+                                selectedProject.getObject(), is, annotationService);
+                    }
                 }
                 else {
                     tagset = TagsetImportExportUtils.importTagsetFromTabSeparated(annotationService,
