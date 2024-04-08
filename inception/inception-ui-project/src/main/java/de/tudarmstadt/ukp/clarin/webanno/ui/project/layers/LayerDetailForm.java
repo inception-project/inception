@@ -64,13 +64,13 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport;
 import de.tudarmstadt.ukp.inception.bootstrap.BootstrapModalDialog;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
-import de.tudarmstadt.ukp.inception.export.LayerImportExportUtils;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.config.AnnotationSchemaProperties;
 import de.tudarmstadt.ukp.inception.schema.api.event.LayerConfigurationChangedEvent;
 import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupport;
 import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.inception.schema.api.layer.LayerType;
+import de.tudarmstadt.ukp.inception.schema.exporters.LayerImportExportUtils;
 import de.tudarmstadt.ukp.inception.support.help.DocLink;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
@@ -97,16 +97,16 @@ public class LayerDetailForm
     private @SpringBean CasStorageService casStorageService;
     private @SpringBean ApplicationEventPublisherHolder applicationEventPublisherHolder;
 
-    private DropDownChoice<LayerType> layerTypeSelect;
-    private DropDownChoice<AnnotationLayer> attachTypeSelect;
-    private Label effectiveAttachType;
-    private TextField<String> uiName;
+    private final DropDownChoice<LayerType> layerTypeSelect;
+    private final DropDownChoice<AnnotationLayer> attachTypeSelect;
+    private final Label effectiveAttachType;
+    private final TextField<String> uiName;
 
-    private FeatureSelectionForm featureSelectionForm;
-    private FeatureDetailForm featureDetailForm;
+    private final FeatureSelectionForm featureSelectionForm;
+    private final FeatureDetailForm featureDetailForm;
 
-    private WebMarkupContainer traitsContainer;
-    private ModalDialog confirmationDialog;
+    private final WebMarkupContainer traitsContainer;
+    private final ModalDialog confirmationDialog;
 
     public LayerDetailForm(String id, IModel<AnnotationLayer> aSelectedLayer,
             FeatureSelectionForm aFeatureSelectionForm, FeatureDetailForm aFeatureDetailForm)
@@ -428,7 +428,7 @@ public class LayerDetailForm
 
     private IResourceStream exportAllLayersAsUimaXml()
     {
-        try (ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
+        try (var bos = new ByteArrayOutputStream()) {
             var tsd = annotationService.getAllProjectTypes(getModelObject().getProject());
             tsd.toXML(bos);
             return new InputStreamResourceStream(new ByteArrayInputStream(bos.toByteArray()),
@@ -443,7 +443,7 @@ public class LayerDetailForm
     private IResourceStream exportLayerAsJson()
     {
         try {
-            String json = LayerImportExportUtils.exportLayerToJson(annotationService,
+            var json = LayerImportExportUtils.exportLayerToJson(annotationService,
                     getModelObject());
             return new InputStreamResourceStream(new ByteArrayInputStream(json.getBytes(UTF_8)),
                     "layer.json");
