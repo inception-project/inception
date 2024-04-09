@@ -195,13 +195,13 @@ public class AnnotationSchemaServiceImpl
             return;
         }
 
-        TagSet tagset = aTags[0].getTagSet();
-        Project project = tagset.getProject();
+        var tagset = aTags[0].getTagSet();
+        var project = tagset.getProject();
 
-        int createdCount = 0;
-        int updatedCount = 0;
-        for (Tag tag : aTags) {
-            boolean created = createTagNoLog(tag);
+        var createdCount = 0;
+        var updatedCount = 0;
+        for (var tag : aTags) {
+            var created = createTagNoLog(tag);
             if (created) {
                 createdCount++;
             }
@@ -214,6 +214,8 @@ public class AnnotationSchemaServiceImpl
             log.info("Created {} tags and updated {} tags in tagset {} in project {}", createdCount,
                     updatedCount, tagset, project);
         }
+
+        flushImmutableTagCache(tagset);
     }
 
     private boolean createTagNoLog(Tag aTag)
