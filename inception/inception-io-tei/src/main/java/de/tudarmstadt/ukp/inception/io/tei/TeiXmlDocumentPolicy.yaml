@@ -84,7 +84,30 @@ policies:
       "add",
       "del",
       "metamark",
-      "unclear"
+      "unclear",
+      "addrLine",
+      "address",
+      "analytic",
+      "author",
+      "biblScope",
+      "biblStruct",
+      "date",
+      "figDesc",
+      "forename",
+      "graphic",
+      "idno",
+      "imprint",
+      "label",
+      "listBibl",
+      "listOrg",
+      "meeting",
+      "monogr",
+      "org",
+      "orgName",
+      "persName",
+      "rs",
+      "surname",
+      "title"
     ]
     action: PASS
   - { attributes: ["class", "type"], action: "PASS" }
