@@ -50,4 +50,10 @@ public class FleissKappaAgreementMeasureSupport
     {
         return new FleissKappaAgreementMeasure(aFeature, aTraits, annotationService);
     }
+
+    @Override
+    public boolean isSupportingMoreThanTwoRaters()
+    {
+        return true;
+    }
 }

@@ -23,13 +23,17 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.LinkMode.NONE;
 import static java.util.Arrays.asList;
 
+import org.apache.wicket.markup.html.panel.EmptyPanel;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.dkpro.statistics.agreement.coding.ICodingAnnotationStudy;
 
-import de.tudarmstadt.ukp.clarin.webanno.agreement.PairwiseAnnotationResult;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.AgreementResult_ImplBase;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.PairwiseAgreementResult;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.PerDocumentAgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasureSupport_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.DefaultAgreementTraits;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.results.perdoc.PerDocumentAgreementTable;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
@@ -53,8 +57,16 @@ public abstract class AbstractCodingAgreementMeasureSupport<T extends DefaultAgr
     }
 
     @Override
-    public Panel createResultsPanel(String aId, IModel<PairwiseAnnotationResult> aResults)
+    public Panel createResultsPanel(String aId, IModel<? extends AgreementResult_ImplBase> aResults)
     {
-        return new PairwiseCodingAgreementTable(aId, aResults);
+        if (aResults.getObject() instanceof PairwiseAgreementResult) {
+            return new PairwiseCodingAgreementTable(aId, (IModel) aResults);
+        }
+
+        if (aResults.getObject() instanceof PerDocumentAgreementResult) {
+            return new PerDocumentAgreementTable(aId, (IModel) aResults);
+        }
+
+        return new EmptyPanel(aId);
     }
 }

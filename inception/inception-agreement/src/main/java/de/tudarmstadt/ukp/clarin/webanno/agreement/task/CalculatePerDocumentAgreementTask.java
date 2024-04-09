@@ -28,7 +28,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import org.apache.commons.lang3.concurrent.LazyInitializer;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.fit.util.FSUtil;
 import org.slf4j.Logger;
@@ -36,7 +35,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import de.tudarmstadt.ukp.clarin.webanno.agreement.AgreementSummary;
-import de.tudarmstadt.ukp.clarin.webanno.agreement.PairwiseAgreementResult;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.PerDocumentAgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasure;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.DefaultAgreementTraits;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
@@ -48,10 +47,10 @@ import de.tudarmstadt.ukp.inception.scheduling.Task;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 import de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil;
 
-public class CalculatePairwiseAgreementTask
+public class CalculatePerDocumentAgreementTask
     extends Task
 {
-    public static final String TYPE = "CalculatePairwiseAgreementTask";
+    public static final String TYPE = "CalculatePerDocumentAgreementTask";
 
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
@@ -63,9 +62,9 @@ public class CalculatePairwiseAgreementTask
     private final AgreementMeasure<?> measure;
     private final Map<SourceDocument, List<AnnotationDocument>> allAnnDocs;
 
-    private PairwiseAgreementResult summary;
+    private PerDocumentAgreementResult summary;
 
-    public CalculatePairwiseAgreementTask(Builder<? extends Builder<?>> aBuilder)
+    public CalculatePerDocumentAgreementTask(Builder<? extends Builder<?>> aBuilder)
     {
         super(aBuilder.withType(TYPE));
 
@@ -79,7 +78,7 @@ public class CalculatePairwiseAgreementTask
     @Override
     public void execute()
     {
-        summary = new PairwiseAgreementResult(feature, traits);
+        summary = new PerDocumentAgreementResult(feature, traits);
 
         var maxProgress = allAnnDocs.size();
         var progress = 0;
@@ -98,50 +97,17 @@ public class CalculatePairwiseAgreementTask
                     LogMessage.info(this, doc.getName()));
 
             try (var session = CasStorageSession.openNested()) {
-                AgreementSummary initialAgreementResult = null;
-
-                for (int m = 0; m < annotators.size(); m++) {
-                    var annotator1 = annotators.get(m);
-                    var maybeCas1 = LazyInitializer.<Optional<CAS>> builder()
-                            .setInitializer(() -> loadCas(doc, annotator1, allAnnDocs)).get();
-
-                    for (int n = 0; n < annotators.size(); n++) {
-                        var annotator2 = annotators.get(n);
-                        var maybeCas2 = LazyInitializer.<Optional<CAS>> builder()
-                                .setInitializer(() -> loadCas(doc, annotator2, allAnnDocs)).get();
-
-                        // Triangle matrix mirrored
-                        if (n < m) {
-                            // So, theoretically, if cas1 and cas2 are both empty, then both are
-                            // the initial CAS - so there must be full agreement. However, we
-                            // would still need to count the units, categories, etc.
-                            if (maybeCas1.get().isEmpty() && maybeCas2.get().isEmpty()) {
-                                if (initialAgreementResult == null) {
-                                    var casMap = new LinkedHashMap<String, CAS>();
-                                    casMap.put("INITIAL1", loadInitialCas(doc));
-                                    casMap.put("INITIAL2", loadInitialCas(doc));
-                                    initialAgreementResult = AgreementSummary
-                                            .of(measure.getAgreement(casMap));
-                                }
-                                var res = initialAgreementResult.remap(
-                                        Map.of("INITIAL1", annotator1, "INITIAL2", annotator2));
-                                summary.mergeResult(annotator1, annotator2, res);
-                            }
-                            else {
-                                var cas1 = maybeCas1.get().isPresent() ? maybeCas1.get().get()
-                                        : loadInitialCas(doc);
-                                var cas2 = maybeCas2.get().isPresent() ? maybeCas2.get().get()
-                                        : loadInitialCas(doc);
-
-                                var casMap = new LinkedHashMap<String, CAS>();
-                                casMap.put(annotator1, cas1);
-                                casMap.put(annotator2, cas2);
-                                var res = AgreementSummary.of(measure.getAgreement(casMap));
-                                summary.mergeResult(annotator1, annotator2, res);
-                            }
-                        }
+                var casMap = new LinkedHashMap<String, CAS>();
+                for (var annotator : annotators) {
+                    var maybeCas = loadCas(doc, annotator, allAnnDocs);
+                    if (maybeCas.isEmpty()) {
+                        maybeCas = Optional.of(loadInitialCas(doc));
                     }
+                    casMap.put(annotator, maybeCas.get());
                 }
+
+                var agreementResult = AgreementSummary.of(measure.getAgreement(casMap));
+                summary.mergeResult(doc, agreementResult);
 
                 progress++;
             }
@@ -191,7 +157,7 @@ public class CalculatePairwiseAgreementTask
         return Optional.of(cas);
     }
 
-    public PairwiseAgreementResult getResult()
+    public PerDocumentAgreementResult getResult()
     {
         return summary;
     }
@@ -250,9 +216,9 @@ public class CalculatePairwiseAgreementTask
             return (T) this;
         }
 
-        public CalculatePairwiseAgreementTask build()
+        public CalculatePerDocumentAgreementTask build()
         {
-            return new CalculatePairwiseAgreementTask(this);
+            return new CalculatePerDocumentAgreementTask(this);
         }
     }
 }

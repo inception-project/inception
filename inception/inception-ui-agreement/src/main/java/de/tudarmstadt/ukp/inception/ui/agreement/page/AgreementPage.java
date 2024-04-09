@@ -50,11 +50,13 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.wicketstuff.annotation.mount.MountPath;
 import org.wicketstuff.event.annotation.OnEvent;
 
+import de.tudarmstadt.ukp.clarin.webanno.agreement.AgreementResult_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.DefaultAgreementTraits;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.event.PairwiseAgreementScoreClickedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.task.CalculatePairwiseAgreementTask;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.task.CalculatePerDocumentAgreementTask;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectUserPermissions;
@@ -103,7 +105,8 @@ public class AgreementPage
     private AjaxDownloadBehavior downloadBehavior;
     private DropDownChoice<AnnotationFeature> featureList;
     private DropDownChoice<Pair<String, String>> measureDropDown;
-    private LambdaAjaxButton<AgreementFormModel> runCalculationsButton;
+    private LambdaAjaxButton<AgreementFormModel> calculatePairwiseAgreementButton;
+    private LambdaAjaxButton<AgreementFormModel> calculatePerDocumentAgreement;
     private LambdaAjaxButton<AgreementFormModel> exportAgreementButton;
     private WebMarkupContainer traitsContainer;
 
@@ -163,16 +166,36 @@ public class AgreementPage
         documentList.setChoices(listDocuments());
         queue(documentList);
 
-        runCalculationsButton = new LambdaAjaxButton<>("run", this::actionRunCalculations);
-        runCalculationsButton.triggerAfterSubmit();
-        runCalculationsButton.add(enabledWhen(() -> measureDropDown.getModelObject() != null));
-        queue(runCalculationsButton);
+        calculatePairwiseAgreementButton = new LambdaAjaxButton<>("calculatePairwiseAgreement",
+                this::actionCalculatePairwiseAgreement);
+        calculatePairwiseAgreementButton.triggerAfterSubmit();
+        calculatePairwiseAgreementButton
+                .add(enabledWhen(() -> measureDropDown.getModelObject() != null));
+        queue(calculatePairwiseAgreementButton);
+
+        calculatePerDocumentAgreement = new LambdaAjaxButton<>("calculatePerDocumentAgreement",
+                this::actionCalculatePerDocumentAgreement);
+        calculatePerDocumentAgreement.triggerAfterSubmit();
+        calculatePerDocumentAgreement.add(enabledWhen(this::isMeasureSupportingMoreThanTwoRaters));
+        queue(calculatePerDocumentAgreement);
 
         exportAgreementButton = new LambdaAjaxButton<>("export", this::actionExportDiff);
         exportAgreementButton.triggerAfterSubmit();
         exportAgreementButton.add(enabledWhen(() -> measureDropDown.getModelObject() != null));
         queue(exportAgreementButton);
 
+    }
+
+    private boolean isMeasureSupportingMoreThanTwoRaters()
+    {
+        var measure = measureDropDown.getModelObject();
+        if (measure == null) {
+            return false;
+        }
+
+        AgreementMeasureSupport ams = agreementRegistry
+                .getAgreementMeasureSupport(measure.getKey());
+        return ams.isSupportingMoreThanTwoRaters();
     }
 
     private List<ProjectUserPermissions> listUsersWithPermissions()
@@ -228,8 +251,9 @@ public class AgreementPage
             }
         };
         dropdown.setChoiceRenderer(new ChoiceRenderer<>("value"));
-        dropdown.add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT, _target -> _target
-                .add(runCalculationsButton, exportAgreementButton, traitsContainer)));
+        dropdown.add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT,
+                _target -> _target.add(calculatePairwiseAgreementButton,
+                        calculatePerDocumentAgreement, exportAgreementButton, traitsContainer)));
         return dropdown;
     }
 
@@ -247,7 +271,7 @@ public class AgreementPage
     //
     // }
 
-    private void actionRefreshResults(AjaxRequestTarget aTarget,
+    private void refreshResultsWhenFinished(AjaxRequestTarget aTarget,
             CalculatePairwiseAgreementTask aTask)
     {
         // var task = getCurrentTask();
@@ -257,9 +281,14 @@ public class AgreementPage
             return;
         }
 
+        refreshResults(aTarget, task.getResult());
+    }
+
+    private void refreshResults(AjaxRequestTarget aTarget, AgreementResult_ImplBase aResult)
+    {
         var ams = agreementRegistry
                 .getAgreementMeasureSupport(measureDropDown.getModelObject().getKey());
-        var resultsPanel = ams.createResultsPanel(MID_RESULTS, Model.of(task.getResult()));
+        var resultsPanel = ams.createResultsPanel(MID_RESULTS, Model.of(aResult));
         resultsContainer.addOrReplace(resultsPanel);
         aTarget.add(resultsContainer);
     }
@@ -279,7 +308,8 @@ public class AgreementPage
             measureDropDown.setModelObject(null);
         }
 
-        aTarget.add(measureDropDown, runCalculationsButton, traitsContainer);
+        aTarget.add(measureDropDown, calculatePerDocumentAgreement,
+                calculatePairwiseAgreementButton, traitsContainer);
     }
 
     private void actionExportDiff(AjaxRequestTarget aTarget, Form<AgreementFormModel> aForm)
@@ -305,7 +335,8 @@ public class AgreementPage
 
     }
 
-    private void actionRunCalculations(AjaxRequestTarget aTarget, Form<AgreementFormModel> aForm)
+    private void actionCalculatePairwiseAgreement(AjaxRequestTarget aTarget,
+            Form<AgreementFormModel> aForm)
     {
         var model = aForm.getModelObject();
         var project = getProject();
@@ -353,7 +384,61 @@ public class AgreementPage
                 .build();
 
         schedulingService.executeSync(task);
-        actionRefreshResults(aTarget, task);
+
+        refreshResults(aTarget, task.getResult());
+    }
+
+    private void actionCalculatePerDocumentAgreement(AjaxRequestTarget aTarget,
+            Form<AgreementFormModel> aForm)
+    {
+        var model = aForm.getModelObject();
+        var project = getProject();
+
+        // Do not do any agreement if no feature or measure has been selected yet.
+        if (model.feature == null || model.measure == null) {
+            return;
+        }
+
+        var traits = getTraits();
+
+        var measure = agreementRegistry.getMeasure(model.feature, model.measure.getKey(), traits);
+
+        var allAnnDocs = agreementService.getDocumentsToEvaluate(project, model.documents, traits);
+
+        if (allAnnDocs.isEmpty()) {
+            error("At least one document needs to be selected.");
+            aTarget.addChildren(getPage(), IFeedback.class);
+            return;
+        }
+
+        var annotators = getAnnotators(model);
+
+        if (annotators.size() < 2) {
+            error("At least two annotators need to be selected.");
+            aTarget.addChildren(getPage(), IFeedback.class);
+            return;
+        }
+
+        var task = CalculatePerDocumentAgreementTask.builder() //
+                .withSessionOwner(userRepository.getCurrentUser()) //
+                .withProject(project) //
+                .withTrigger("Agreement page") //
+                .withAnnotators(annotators) //
+                .withTraits(traits) //
+                .withFeature(model.feature) //
+                .withMeasure(measure) //
+                .withDocuments(allAnnDocs) //
+                .withScope(TaskScope.LAST_USER_SESSION) //
+                // When running sync, we cannot cancel because the browser will still be in an
+                // AJAX request when we try to fire a second one and that second one will fail
+                // then. This would only work if the cancel action would be sent through
+                // WebSocket
+                .withCancellable(false) //
+                .build();
+
+        schedulingService.executeSync(task);
+
+        refreshResults(aTarget, task.getResult());
     }
 
     private List<String> getAnnotators(AgreementFormModel model)

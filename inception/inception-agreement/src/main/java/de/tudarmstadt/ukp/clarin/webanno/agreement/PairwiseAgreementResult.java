@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.agreement;
 
-import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -26,31 +25,17 @@ import java.util.TreeSet;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.DefaultAgreementTraits;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 
-public class PairwiseAnnotationResult
-    implements Serializable
+public class PairwiseAgreementResult
+    extends AgreementResult_ImplBase
 {
     private static final long serialVersionUID = -6943850667308982795L;
 
     private final Set<String> raters = new TreeSet<>();
     private final Map<String, AgreementSummary> results = new HashMap<>();
 
-    private final AnnotationFeature feature;
-    private final DefaultAgreementTraits traits;
-
-    public PairwiseAnnotationResult(AnnotationFeature aFeature, DefaultAgreementTraits aTraits)
+    public PairwiseAgreementResult(AnnotationFeature aFeature, DefaultAgreementTraits aTraits)
     {
-        feature = aFeature;
-        traits = aTraits;
-    }
-
-    public AnnotationFeature getFeature()
-    {
-        return feature;
-    }
-
-    public DefaultAgreementTraits getTraits()
-    {
-        return traits;
+        super(aFeature, aTraits);
     }
 
     public Set<String> getRaters()
