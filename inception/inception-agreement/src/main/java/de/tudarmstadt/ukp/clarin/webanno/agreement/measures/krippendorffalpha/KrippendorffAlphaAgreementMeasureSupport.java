@@ -64,4 +64,10 @@ public class KrippendorffAlphaAgreementMeasureSupport
     {
         return new KrippendorffAlphaAgreementTraits();
     }
+
+    @Override
+    public boolean isSupportingMoreThanTwoRaters()
+    {
+        return true;
+    }
 }

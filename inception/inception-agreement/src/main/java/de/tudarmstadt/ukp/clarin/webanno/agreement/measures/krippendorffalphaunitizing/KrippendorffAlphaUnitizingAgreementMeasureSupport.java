@@ -17,14 +17,18 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.agreement.measures.krippendorffalphaunitizing;
 
+import org.apache.wicket.markup.html.panel.EmptyPanel;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.dkpro.statistics.agreement.unitizing.IUnitizingAnnotationStudy;
 import org.springframework.stereotype.Component;
 
-import de.tudarmstadt.ukp.clarin.webanno.agreement.PairwiseAnnotationResult;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.AgreementResult_ImplBase;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.PairwiseAgreementResult;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.PerDocumentAgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasure;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasureSupport_ImplBase;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.results.perdoc.PerDocumentAgreementTable;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.results.unitizing.FullUnitizingAgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.results.unitizing.PairwiseUnitizingAgreementTable;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -83,8 +87,22 @@ public class KrippendorffAlphaUnitizingAgreementMeasureSupport
     }
 
     @Override
-    public Panel createResultsPanel(String aId, IModel<PairwiseAnnotationResult> aResults)
+    public Panel createResultsPanel(String aId, IModel<? extends AgreementResult_ImplBase> aResults)
     {
-        return new PairwiseUnitizingAgreementTable(aId, aResults);
+        if (aResults.getObject() instanceof PairwiseAgreementResult) {
+            return new PairwiseUnitizingAgreementTable(aId, (IModel) aResults);
+        }
+
+        if (aResults.getObject() instanceof PerDocumentAgreementResult) {
+            return new PerDocumentAgreementTable(aId, (IModel) aResults);
+        }
+
+        return new EmptyPanel(aId);
+    }
+
+    @Override
+    public boolean isSupportingMoreThanTwoRaters()
+    {
+        return true;
     }
 }

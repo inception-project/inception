@@ -46,7 +46,7 @@ import org.slf4j.LoggerFactory;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.components.PopoverConfig;
 import de.agilecoders.wicket.core.markup.html.bootstrap.components.TooltipConfig.Placement;
-import de.tudarmstadt.ukp.clarin.webanno.agreement.PairwiseAnnotationResult;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.PairwiseAgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.event.PairwiseAgreementScoreClickedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
@@ -58,7 +58,7 @@ import de.tudarmstadt.ukp.inception.support.wicket.DefaultRefreshingView;
 import de.tudarmstadt.ukp.inception.support.wicket.DescriptionTooltipBehavior;
 
 public class PairwiseCodingAgreementTable
-    extends GenericPanel<PairwiseAnnotationResult>
+    extends GenericPanel<PairwiseAgreementResult>
 {
     private static final long serialVersionUID = 571396822546125376L;
 
@@ -71,7 +71,7 @@ public class PairwiseCodingAgreementTable
 
     private final RefreshingView<User> rows;
 
-    public PairwiseCodingAgreementTable(String aId, IModel<PairwiseAnnotationResult> aModel)
+    public PairwiseCodingAgreementTable(String aId, IModel<PairwiseAgreementResult> aModel)
     {
         super(aId, aModel);
 

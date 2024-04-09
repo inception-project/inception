@@ -49,4 +49,10 @@ public class CohenKappaAgreementMeasureSupport
     {
         return new CohenKappaAgreementMeasure(aFeature, aTraits, annotationService);
     }
+
+    @Override
+    public boolean isSupportingMoreThanTwoRaters()
+    {
+        return false;
+    }
 }

@@ -15,23 +15,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.agreement.results.unitizing;
+package de.tudarmstadt.ukp.clarin.webanno.agreement;
 
-import org.apache.wicket.markup.html.panel.Panel;
-import org.apache.wicket.model.IModel;
-import org.dkpro.statistics.agreement.unitizing.IUnitizingAnnotationStudy;
+import java.io.Serializable;
 
-import de.tudarmstadt.ukp.clarin.webanno.agreement.PairwiseAnnotationResult;
-import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasureSupport_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.DefaultAgreementTraits;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 
-public abstract class AbstractUnitizingAgreementMeasureSupport<T extends DefaultAgreementTraits>
-    extends
-    AgreementMeasureSupport_ImplBase<T, FullUnitizingAgreementResult, IUnitizingAnnotationStudy>
+public class AgreementResult_ImplBase
+    implements Serializable
 {
-    @Override
-    public Panel createResultsPanel(String aId, IModel<PairwiseAnnotationResult> aResults)
+    private static final long serialVersionUID = -342895455350245379L;
+
+    private final AnnotationFeature feature;
+    private final DefaultAgreementTraits traits;
+
+    public AgreementResult_ImplBase(AnnotationFeature aFeature, DefaultAgreementTraits aTraits)
     {
-        return new PairwiseUnitizingAgreementTable(aId, aResults);
+        feature = aFeature;
+        traits = aTraits;
+    }
+
+    public AnnotationFeature getFeature()
+    {
+        return feature;
+    }
+
+    public DefaultAgreementTraits getTraits()
+    {
+        return traits;
     }
 }
