@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
@@ -67,9 +68,10 @@ public class TagSetExtractionPanel
         queue(new Form<FormData>("form", formModel));
 
         queue(new DropDownChoice<>("tagSet") //
+                .setNullValid(true) //
                 .setChoices(LoadableDetachableModel.of(this::listTagSets)) //
                 .setChoiceRenderer(new ChoiceRenderer<>(TagSet_.NAME)) //
-                .setRequired(true));
+                .setRequired(false));
 
         var featureChoice = new DropDownChoice<>("feature") //
                 .setChoices(LoadableDetachableModel.of(this::listFeatures)) //
@@ -84,6 +86,8 @@ public class TagSetExtractionPanel
                 .add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT,
                         $ -> $.add(featureChoice))));
 
+        queue(new CheckBox("addTagsetToFeature").setOutputMarkupId(true));
+
         queue(new LambdaAjaxButton<>("startProcessing", this::actionStartProcessing));
     }
 
@@ -94,6 +98,7 @@ public class TagSetExtractionPanel
                 .withSessionOwner(userService.getCurrentUser()) //
                 .withProject(getModelObject()) //
                 .withAnnotationFeature(formData.feature) //
+                .withAddTagsetToFeature(formData.addTagsetToFeature) //
                 .withTagSet(formData.tagSet) //
                 .withTrigger("User request") //
                 .build());
@@ -126,5 +131,6 @@ public class TagSetExtractionPanel
         private TagSet tagSet;
         private AnnotationLayer layer;
         private AnnotationFeature feature;
+        private boolean addTagsetToFeature = true;
     }
 }

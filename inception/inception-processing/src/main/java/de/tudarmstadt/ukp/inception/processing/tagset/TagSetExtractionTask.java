@@ -59,8 +59,9 @@ public class TagSetExtractionTask
     private @Autowired DocumentService documentService;
     private @Autowired AnnotationSchemaService schemaService;
 
-    private final AnnotationFeature feature;
-    private final TagSet tagSet;
+    private final boolean addTagsetToFeature;
+    private AnnotationFeature feature;
+    private TagSet tagSet;
 
     public TagSetExtractionTask(Builder<? extends Builder<?>> aBuilder)
     {
@@ -68,6 +69,7 @@ public class TagSetExtractionTask
 
         feature = aBuilder.feature;
         tagSet = aBuilder.tagSet;
+        addTagsetToFeature = aBuilder.addTagsetToFeature;
     }
 
     @Override
@@ -86,6 +88,12 @@ public class TagSetExtractionTask
 
     private void updateTagset(Set<String> discoveredTags)
     {
+        if (tagSet == null) {
+            tagSet = new TagSet(getProject(),
+                    feature.getLayer().getUiName() + " - " + feature.getUiName());
+            schemaService.createTagSet(tagSet);
+        }
+
         var existingTags = schemaService.listTags(tagSet);
         int nextRank = 0;
         for (var tag : existingTags) {
@@ -102,6 +110,12 @@ public class TagSetExtractionTask
         }
 
         schemaService.createTags(newTags.toArray(Tag[]::new));
+
+        if (addTagsetToFeature) {
+            feature = schemaService.getFeature(feature.getName(), feature.getLayer());
+            feature.setTagset(tagSet);
+            schemaService.createFeature(feature);
+        }
     }
 
     private Set<String> extractTags()
@@ -191,6 +205,7 @@ public class TagSetExtractionTask
     {
         private TagSet tagSet;
         private AnnotationFeature feature;
+        private boolean addTagsetToFeature;
 
         @SuppressWarnings("unchecked")
         public T withAnnotationFeature(AnnotationFeature aFeature)
@@ -206,12 +221,18 @@ public class TagSetExtractionTask
             return (T) this;
         }
 
+        @SuppressWarnings("unchecked")
+        public T withAddTagsetToFeature(boolean aAddTagsetToFeature)
+        {
+            addTagsetToFeature = aAddTagsetToFeature;
+            return (T) this;
+        }
+
         public TagSetExtractionTask build()
         {
             Validate.notNull(sessionOwner, "TagsetExtractionTask requires a session owner");
             Validate.notNull(project, "TagsetExtractionTask requires a project");
             Validate.notNull(feature, "TagsetExtractionTask requires a feature");
-            Validate.notNull(feature, "TagsetExtractionTask requires a tagSet");
 
             return new TagSetExtractionTask(this);
         }
