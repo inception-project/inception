@@ -22,10 +22,13 @@ import static de.tudarmstadt.ukp.inception.support.logging.Logging.KEY_REPOSITOR
 import static de.tudarmstadt.ukp.inception.support.logging.Logging.KEY_USERNAME;
 import static org.apache.commons.lang3.Validate.notNull;
 
+import java.lang.invoke.MethodHandles;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,10 +37,13 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
 import de.tudarmstadt.ukp.inception.scheduling.controller.SchedulerWebsocketController;
+import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 
 public abstract class Task
     implements Runnable, InitializingBean
 {
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
     private final static AtomicInteger nextId = new AtomicInteger(1);
 
     private @Autowired RepositoryProperties repositoryProperties;
@@ -181,10 +187,17 @@ public abstract class Task
 
     public void runSync()
     {
-        monitor.setState(TaskState.RUNNING);
-        execute();
-        if (monitor.getState() == TaskState.RUNNING) {
-            monitor.setState(TaskState.COMPLETED);
+        try {
+            monitor.setState(TaskState.RUNNING);
+            execute();
+            if (monitor.getState() == TaskState.RUNNING) {
+                monitor.setState(TaskState.COMPLETED);
+            }
+        }
+        catch (Exception e) {
+            monitor.addMessage(LogMessage.error(this, "Task failed."));
+            monitor.setState(TaskState.FAILED);
+            LOG.error("Task failed", e);
         }
     }
 
