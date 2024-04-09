@@ -71,6 +71,10 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-io-tei</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-io-xml</artifactId>
     </dependency>
     <dependency>
@@ -127,6 +131,7 @@
               <!-- Inlined constants are required for building but cannot be detected afterwards  -->
               <ignoredDependency>de.tudarmstadt.ukp.inception.app:inception-io-html</ignoredDependency>
               <ignoredDependency>de.tudarmstadt.ukp.inception.app:inception-io-xml</ignoredDependency>
+              <ignoredDependency>de.tudarmstadt.ukp.inception.app:inception-io-tei</ignoredDependency>
             </ignoredDependencies>
           </configuration>
         </plugin>

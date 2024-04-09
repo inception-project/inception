@@ -68,7 +68,7 @@ public class TeiXmlDocumentFormatSupport
     @Override
     public List<String> getSectionElements()
     {
-        return asList("p", "lg");
+        return asList("p", "lg", "biblStruct");
     }
 
     @Override
