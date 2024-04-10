@@ -200,6 +200,8 @@ public class DocumentServiceImpl
     public SourceDocument createSourceDocument(SourceDocument aDocument)
     {
         Validate.notNull(aDocument, "Source document must be specified");
+        Validate.notNull(aDocument.getProject(),
+                "Source document must be associated with a project");
 
         if (isNull(aDocument.getId())) {
             entityManager.persist(aDocument);
@@ -395,16 +397,13 @@ public class DocumentServiceImpl
 
         // Check if there is an annotation document entry in the database. If there is none,
         // create one.
-        AnnotationDocument annotationDocument = null;
         if (!existsAnnotationDocument(aDocument, aUser)) {
-            annotationDocument = new AnnotationDocument(aUser.getUsername(), aDocument);
+            var annotationDocument = new AnnotationDocument(aUser.getUsername(), aDocument);
             createAnnotationDocument(annotationDocument);
-        }
-        else {
-            annotationDocument = getAnnotationDocument(aDocument, aUser);
+            return annotationDocument;
         }
 
-        return annotationDocument;
+        return getAnnotationDocument(aDocument, aUser);
     }
 
     @Override
@@ -1364,17 +1363,16 @@ public class DocumentServiceImpl
     {
         Validate.notNull(aProject, "Project must be specified");
 
-        boolean curationDocumentExist = false;
-        List<SourceDocument> documents = listSourceDocuments(aProject);
+        var criteriaBuilder = entityManager.getCriteriaBuilder();
+        var query = criteriaBuilder.createQuery(Long.class);
+        var root = query.from(SourceDocument.class);
 
-        for (SourceDocument sourceDocument : documents) {
-            // If the curation document is finished
-            if (SourceDocumentState.CURATION_FINISHED.equals(sourceDocument.getState())) {
-                curationDocumentExist = true;
-                break;
-            }
-        }
-        return curationDocumentExist;
+        query.select(criteriaBuilder.count(root))
+                .where(criteriaBuilder.and(
+                        criteriaBuilder.equal(root.get(SourceDocument_.project), aProject),
+                        criteriaBuilder.equal(root.get(SourceDocument_.state), CURATION_FINISHED)));
+
+        return entityManager.createQuery(query).getSingleResult() > 0;
     }
 
     private List<String> getAllAnnotators(Project aProject)
