@@ -68,7 +68,7 @@ import de.tudarmstadt.ukp.inception.workload.model.WorkloadManager;
 @DataJpaTest(excludeAutoConfiguration = LiquibaseAutoConfiguration.class, showSql = false, //
         properties = { //
                 "spring.main.banner-mode=off", //
-                "workload.dynamic.enabled=true", //
+                "workload.matrix.enabled=true", //
                 "repository.path=" + MatrixWorkloadExtensionImplTest.TEST_OUTPUT_FOLDER })
 @EntityScan({ //
         "de.tudarmstadt.ukp.inception", //
