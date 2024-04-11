@@ -192,12 +192,18 @@ public class RelationAdapter
     public AnnotationFS getSourceAnnotation(AnnotationFS aTargetFs)
     {
         var sourceFeature = aTargetFs.getType().getFeatureByBaseName(sourceFeatureName);
+        if (sourceFeature == null) {
+            return null;
+        }
         return (AnnotationFS) aTargetFs.getFeatureValue(sourceFeature);
     }
 
     public AnnotationFS getTargetAnnotation(AnnotationFS aTargetFs)
     {
         var targetFeature = aTargetFs.getType().getFeatureByBaseName(targetFeatureName);
+        if (targetFeature == null) {
+            return null;
+        }
         return (AnnotationFS) aTargetFs.getFeatureValue(targetFeature);
     }
 
