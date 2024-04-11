@@ -36,11 +36,8 @@
     <div class="flex-content flex-h-container flex-gutter overflow-hidden">
       <div class="flex-content flex-v-container flex-gutter">
         <div class="flex-content flex-v-container flex-gutter flex-only-internal-gutter">
-          <div class="page-header">
-            <h1><wicket:container wicket:id="name"/></h1>
-          </div>
+          <h1><wicket:container wicket:id="name"/></h1>
           <div wicket:id="modalDialog"/>
-          <div wicket:id="resetDocumentDialog"/>
           <div wicket:id="contextMenu" style="width: 250px;"></div>
           
           <div class="flex-h-container flex-gutter flex-only-internal-gutter">
@@ -92,11 +89,13 @@
                   </form>
                 </div>
               </span>
+              <button wicket:id="assignWork" class="btn btn-action btn-secondary">
+                <i class="fas fa-users me-2"></i>
+                <span class="d-none d-lg-inline"><wicket:message key="assignWork" /></span>
+              </button>
               <button wicket:id="refresh" class="btn btn-action btn-secondary">
-                <i class="fas fa-redo"></i>
-                <span class="d-none d-lg-inline">
-                  &nbsp;<wicket:message key="refresh" />
-                </span>
+                <i class="fas fa-redo me-2"></i>
+                <span class="d-none d-lg-inline"><wicket:message key="refresh" /></span>
               </button>
             </div>
             <div class="flex-content flex-h-container flex-gutter flex-only-internal-gutter justify-content-end">

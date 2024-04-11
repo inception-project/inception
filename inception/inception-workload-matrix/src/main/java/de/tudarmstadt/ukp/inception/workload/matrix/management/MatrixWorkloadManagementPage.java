@@ -46,7 +46,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -71,15 +70,10 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.wicketstuff.annotation.mount.MountPath;
 import org.wicketstuff.event.annotation.OnEvent;
 
-import com.googlecode.wicket.jquery.ui.widget.menu.IMenuItem;
-
 import de.agilecoders.wicket.core.markup.html.bootstrap.behavior.CssClassNameAppender;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.comment.AnnotatorCommentDialogPanel;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.ProjectMenuItem;
@@ -113,6 +107,7 @@ import de.tudarmstadt.ukp.inception.workload.matrix.management.support.SourceDoc
 import de.tudarmstadt.ukp.inception.workload.matrix.management.support.SourceDocumentSelectColumn;
 import de.tudarmstadt.ukp.inception.workload.matrix.management.support.SourceDocumentStateColumn;
 import de.tudarmstadt.ukp.inception.workload.matrix.management.support.UserSelectToolbar;
+import de.tudarmstadt.ukp.inception.workload.matrix.service.MatrixWorkloadService;
 import de.tudarmstadt.ukp.inception.workload.matrix.trait.MatrixWorkloadTraits;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 import de.tudarmstadt.ukp.inception.workload.ui.ResetAnnotationDocumentConfirmationDialogContentPanel;
@@ -134,13 +129,13 @@ public class MatrixWorkloadManagementPage
     private @SpringBean WorkloadManagementService workloadManagementService;
     private @SpringBean MatrixWorkloadExtension matrixWorkloadExtension;
     private @SpringBean(name = "matrixWorkloadManagementPageMenuItem") ProjectMenuItem pageMenuItem;
+    private @SpringBean MatrixWorkloadService matrixWorkloadService;
 
     private DataTable<DocumentMatrixRow, DocumentMatrixSortKey> documentMatrix;
     private LambdaAjaxLink toggleBulkChange;
     private WebMarkupContainer actionContainer;
     private WebMarkupContainer bulkActionDropdown;
     private WebMarkupContainer bulkActionDropdownButton;
-    private ModalDialog confirmationDialog;
     private ModalDialog modalDialog;
     private ContextMenu contextMenu;
 
@@ -158,9 +153,9 @@ public class MatrixWorkloadManagementPage
     {
         super.onInitialize();
 
-        User user = userRepository.getCurrentUser();
+        var user = userRepository.getCurrentUser();
 
-        Project project = getProject();
+        var project = getProject();
 
         requireProjectRole(user, CURATOR, MANAGER);
 
@@ -184,6 +179,8 @@ public class MatrixWorkloadManagementPage
         add(createSettingsForm());
 
         add(new LambdaAjaxLink("refresh", this::actionRefresh));
+
+        add(new LambdaAjaxLink("assignWork", this::actionAssignWork));
 
         actionContainer = new WebMarkupContainer("actionContainer");
         actionContainer.setOutputMarkupPlaceholderTag(true);
@@ -216,7 +213,6 @@ public class MatrixWorkloadManagementPage
                 .of(() -> bulkChangeMode ? "btn-primary active" : "btn-outline-primary")));
         actionContainer.add(toggleBulkChange);
 
-        add(confirmationDialog = new BootstrapModalDialog("resetDocumentDialog").trapFocus());
         add(contextMenu = new ContextMenu("contextMenu"));
     }
 
@@ -225,11 +221,10 @@ public class MatrixWorkloadManagementPage
      */
     public Form<MatrixWorkloadTraits> createSettingsForm()
     {
-        MatrixWorkloadTraits traits = matrixWorkloadExtension.readTraits(
+        var traits = matrixWorkloadExtension.readTraits(
                 workloadManagementService.loadOrCreateWorkloadManagerConfiguration(getProject()));
 
-        Form<MatrixWorkloadTraits> settingsForm = new Form<>("settingsForm",
-                new CompoundPropertyModel<>(traits));
+        var settingsForm = new Form<>("settingsForm", new CompoundPropertyModel<>(traits));
         settingsForm.setOutputMarkupId(true);
 
         settingsForm.add(new CheckBox("reopenableByAnnotator"));
@@ -344,7 +339,7 @@ public class MatrixWorkloadManagementPage
             _target.add(documentMatrix);
         });
 
-        confirmationDialog.open(dialogContent, aTarget);
+        modalDialog.open(dialogContent, aTarget);
     }
 
     private void actionBulkResetCuration(AjaxRequestTarget aTarget)
@@ -386,7 +381,7 @@ public class MatrixWorkloadManagementPage
             _target.add(documentMatrix);
         });
 
-        confirmationDialog.open(dialogContent, aTarget);
+        modalDialog.open(dialogContent, aTarget);
     }
 
     private void actionResetAnnotationDocument(AjaxRequestTarget aTarget, SourceDocument aDocument,
@@ -408,7 +403,7 @@ public class MatrixWorkloadManagementPage
             _target.add(documentMatrix);
         });
 
-        confirmationDialog.open(dialogContent, aTarget);
+        modalDialog.open(dialogContent, aTarget);
     }
 
     private void actionResetCurationDocument(AjaxRequestTarget aTarget, SourceDocument aDocument)
@@ -429,7 +424,7 @@ public class MatrixWorkloadManagementPage
             _target.add(documentMatrix);
         });
 
-        confirmationDialog.open(dialogContent, aTarget);
+        modalDialog.open(dialogContent, aTarget);
     }
 
     private void actionBulkOpen(AjaxRequestTarget aTarget)
@@ -602,6 +597,26 @@ public class MatrixWorkloadManagementPage
         aTarget.add(documentMatrix, toggleBulkChange, actionContainer);
     }
 
+    private void actionAssignWork(AjaxRequestTarget aTarget)
+    {
+        var dialogContent = new AssignWorkDialogContentPanel(ModalDialog.CONTENT_ID,
+                this::actionAssign);
+        modalDialog.open(dialogContent, aTarget);
+    }
+
+    private void actionAssign(AjaxRequestTarget aTarget,
+            Form<AssignWorkDialogContentPanel.AssignWorkRequest> aForm)
+    {
+        var request = aForm.getModelObject();
+
+        matrixWorkloadService.assignWorkload(getProject(), request.getAnnotatorsPerDocument(),
+                request.isOverride());
+        modalDialog.close(aTarget);
+
+        reloadMatrixData();
+        aTarget.add(documentMatrix);
+    }
+
     private Collection<AnnotationDocument> selectedAnnotationDocuments()
     {
         var annotators = documentMatrix.getColumns().stream() //
@@ -717,8 +732,8 @@ public class MatrixWorkloadManagementPage
     @OnEvent
     public void onAnnotatorColumnCellClickEvent(AnnotatorColumnCellShowAnnotatorCommentEvent aEvent)
     {
-        AnnotationDocument annDoc = documentService
-                .getAnnotationDocument(aEvent.getSourceDocument(), aEvent.getUser());
+        var annDoc = documentService.getAnnotationDocument(aEvent.getSourceDocument(),
+                aEvent.getUser());
         modalDialog.open(new AnnotatorCommentDialogPanel(ModalDialog.CONTENT_ID, Model.of(annDoc)),
                 aEvent.getTarget());
     }
@@ -726,10 +741,10 @@ public class MatrixWorkloadManagementPage
     @OnEvent
     public void onAnnotatorColumnCellClickEvent(AnnotatorColumnCellClickEvent aEvent)
     {
-        AnnotationDocument annotationDocument = documentService
+        var annotationDocument = documentService
                 .createOrGetAnnotationDocument(aEvent.getSourceDocument(), aEvent.getUser());
 
-        AnnotationDocumentState targetState = oneClickTransition(annotationDocument);
+        var targetState = oneClickTransition(annotationDocument);
 
         documentService.setAnnotationDocumentState(annotationDocument, targetState);
         success(format("The state of document [%s] for user [%s] has been set to [%s]",
@@ -778,13 +793,13 @@ public class MatrixWorkloadManagementPage
             return;
         }
 
-        List<IMenuItem> items = contextMenu.getItemList();
+        var items = contextMenu.getItemList();
         items.clear();
 
         // The AnnotatorColumnCellOpenContextMenuEvent is not serializable, so we need to extract
         // the information we need in the menu item here
-        SourceDocument document = aEvent.getSourceDocument();
-        User user = aEvent.getUser();
+        var document = aEvent.getSourceDocument();
+        var user = aEvent.getUser();
         items.add(new LambdaMenuItem("Reset",
                 _target -> actionResetAnnotationDocument(_target, document, user)));
 
@@ -795,7 +810,7 @@ public class MatrixWorkloadManagementPage
     public void onCuratorColumnCellOpenContextMenuEvent(
             CuratorColumnCellOpenContextMenuEvent aEvent)
     {
-        SourceDocumentState state = aEvent.getSourceDocument().getState();
+        var state = aEvent.getSourceDocument().getState();
 
         if (state != CURATION_IN_PROGRESS && state != CURATION_FINISHED) {
             info("Documents on which curation has not yet been started cannot be reset.");
@@ -803,12 +818,12 @@ public class MatrixWorkloadManagementPage
             return;
         }
 
-        List<IMenuItem> items = contextMenu.getItemList();
+        var items = contextMenu.getItemList();
         items.clear();
 
         // The CuratorColumnCellOpenContextMenuEvent is not serializable, so we need to extract
         // the information we need in the menu item here
-        SourceDocument document = aEvent.getSourceDocument();
+        var document = aEvent.getSourceDocument();
         items.add(new LambdaMenuItem("Reset",
                 _target -> actionResetCurationDocument(_target, document)));
 
@@ -823,17 +838,16 @@ public class MatrixWorkloadManagementPage
 
     private List<DocumentMatrixRow> getMatrixData()
     {
-        Set<String> annotators = projectService
-                .listProjectUsersWithPermissions(getProject(), ANNOTATOR).stream()
-                .map(User::getUsername) //
+        var annotators = projectService.listProjectUsersWithPermissions(getProject(), ANNOTATOR)
+                .stream().map(User::getUsername) //
                 .collect(toSet());
 
-        Map<SourceDocument, DocumentMatrixRow> documentMatrixRows = new LinkedHashMap<>();
-        for (SourceDocument srcDoc : documentService.listSourceDocuments(getProject())) {
+        var documentMatrixRows = new LinkedHashMap<SourceDocument, DocumentMatrixRow>();
+        for (var srcDoc : documentService.listSourceDocuments(getProject())) {
             documentMatrixRows.put(srcDoc, new DocumentMatrixRow(srcDoc, annotators));
         }
 
-        for (AnnotationDocument annDoc : documentService.listAnnotationDocuments(getProject())) {
+        for (var annDoc : documentService.listAnnotationDocuments(getProject())) {
             documentMatrixRows.get(annDoc.getDocument()).add(annDoc);
         }
 

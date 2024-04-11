@@ -30,6 +30,8 @@ import de.tudarmstadt.ukp.inception.workload.matrix.MatrixWorkloadExtensionImpl;
 import de.tudarmstadt.ukp.inception.workload.matrix.annotation.MatrixWorkflowActionBarExtension;
 import de.tudarmstadt.ukp.inception.workload.matrix.annotation.MatrixWorkflowDocumentNavigationActionBarExtension;
 import de.tudarmstadt.ukp.inception.workload.matrix.event.MatrixWorkloadStateWatcher;
+import de.tudarmstadt.ukp.inception.workload.matrix.service.MatrixWorkloadService;
+import de.tudarmstadt.ukp.inception.workload.matrix.service.MatrixWorkloadServiceImpl;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 
 @Configuration
@@ -67,5 +69,12 @@ public class MatrixWorkloadManagerAutoConfiguration
         return new MatrixWorkflowDocumentNavigationActionBarExtension(aDocumentService,
                 aWorkloadManagementService, aMatrixWorkloadExtension, aProjectService,
                 aUserService);
+    }
+
+    @Bean
+    public MatrixWorkloadService matrixWorkloadService(DocumentService aDocumentService,
+            ProjectService aProjectService)
+    {
+        return new MatrixWorkloadServiceImpl(aDocumentService, aProjectService);
     }
 }
