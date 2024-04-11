@@ -64,6 +64,15 @@ public class PerDocumentAgreementTable
         var documents = getModelObject().getDocuments().stream()
                 .sorted(Comparator.comparing(SourceDocument::getName)).toList();
 
+        queue(new Label("meanScore",
+                aModel.map($ -> format("%.4f", $.getAgreementScoreStats().getMean()))));
+        queue(new Label("minScore",
+                aModel.map($ -> format("%.4f", $.getAgreementScoreStats().getMin()))));
+        queue(new Label("maxScore",
+                aModel.map($ -> format("%.4f", $.getAgreementScoreStats().getMax()))));
+        queue(new Label("varianceScore",
+                aModel.map($ -> format("%.4f", $.getAgreementScoreStats().getVariance()))));
+
         rows = new DefaultRefreshingView<SourceDocument>("rows", Model.ofList(documents))
         {
             private static final long serialVersionUID = 1L;

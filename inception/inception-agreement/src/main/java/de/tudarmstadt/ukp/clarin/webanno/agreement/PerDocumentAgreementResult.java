@@ -22,6 +22,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
+
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.DefaultAgreementTraits;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -34,9 +36,16 @@ public class PerDocumentAgreementResult
     private final Set<SourceDocument> documents = new HashSet<>();
     private final Map<SourceDocument, AgreementSummary> results = new HashMap<>();
 
+    private SummaryStatistics agreementScoreStats = new SummaryStatistics();
+
     public PerDocumentAgreementResult(AnnotationFeature aFeature, DefaultAgreementTraits aTraits)
     {
         super(aFeature, aTraits);
+    }
+
+    public SummaryStatistics getAgreementScoreStats()
+    {
+        return agreementScoreStats;
     }
 
     public Set<SourceDocument> getDocuments()
@@ -51,6 +60,7 @@ public class PerDocumentAgreementResult
 
     public void mergeResult(SourceDocument aDocument, AgreementSummary aRes)
     {
+        agreementScoreStats.addValue(aRes.getAgreement());
         documents.add(aDocument);
 
         var existingRes = getResult(aDocument);

@@ -17,17 +17,37 @@
   limitations under the License.
 -->
 <wicket:panel xmlns:wicket="http://wicket.apache.org">
-  <div class="flex-content card">
-    <div class="card-header">
-      <wicket:message key="agreement" />
+  <div class="d-flex flex-column flex-fill">
+    <div class="d-flex flex-row justify-content-around">
+      <div class="form-floating mb-3">
+        <span wicket:id="meanScore" class="form-control-plaintext"/>
+        <label><wicket:message key="meanScore" /></label>
+      </div>
+      <div class="form-floating mb-3">
+        <span wicket:id="minScore" class="form-control-plaintext"/>
+        <label><wicket:message key="minScore" /></label>
+      </div>
+      <div class="form-floating mb-3">
+        <span wicket:id="maxScore" class="form-control-plaintext"/>
+        <label><wicket:message key="maxScore" /></label>
+      </div>
+      <div class="form-floating mb-3">
+        <span wicket:id="varianceScore" class="form-control-plaintext"/>
+        <label><wicket:message key="varianceScore" /></label>
+      </div>
     </div>
-    <div class="scrolling card-body fit-child-snug" style="padding: 0px;">
-      <table style="width: 100%;">
-        <tr wicket:id="rows">
-          <td wicket:id="documentName"/>
-          <td wicket:id="score"/>
-        </tr>
-      </table>
+    <div class="flex-content card">
+      <div class="card-header">
+        <wicket:message key="agreement" />
+      </div>
+      <div class="scrolling card-body fit-child-snug" style="padding: 0px;">
+        <table style="width: 100%;">
+          <tr wicket:id="rows">
+            <td wicket:id="documentName"/>
+            <td wicket:id="score"/>
+          </tr>
+        </table>
+      </div>
     </div>
   </div>
 </wicket:panel>
