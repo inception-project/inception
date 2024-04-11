@@ -86,7 +86,7 @@ public class NamedEntityLinker
     @Override
     public void train(RecommenderContext aContext, List<CAS> aCasList)
     {
-        // Training not supported
+        // Training not required
     }
 
     @Override
@@ -157,6 +157,8 @@ public class NamedEntityLinker
     @Override
     public TrainingCapability getTrainingCapability()
     {
+        // We want the predict method to be called repeatedly, so we say training is supported even
+        // though we do not react at all to the training process.
         return TrainingCapability.TRAINING_SUPPORTED;
     }
 

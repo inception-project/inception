@@ -79,7 +79,7 @@ public class TrainingStatesChoice
         };
         setModel((IModel) model);
         setChoices(asList(AnnotationDocumentState.values()));
-        setPrefix("<div class=\"form-check\">");
+        setPrefix("<div class=\"form-check form-switch\">");
         setSuffix("</div>");
         setLabelPosition(AbstractChoice.LabelPosition.AFTER);
         setChoiceRenderer(new EnumChoiceRenderer<>(this));
