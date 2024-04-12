@@ -24,16 +24,17 @@ policies:
   - elements: [ "teiHeader" ]
     action: PRUNE
   - elements: [
+      "TEI",
       "head",
+      "front",
+      "back",
       "body",
       "div",
-      "TEI",
       "text",
-      "pb",
-      "hi",
-      "fw",
-      "quote",
-      "sic",
+      "titlePage"
+      ]
+    action: PASS
+  - elements: [
       "l",
       "lb",
       "lg",
@@ -41,13 +42,32 @@ policies:
       "p",
       "sp",
       "speaker",
-      "note",
       "stage",
       "castList",
-      "castItem",
+      "castItem"
+    ]
+    action: PASS
+  - elements: [
+      "row",
+      "cell",
+      "table",
+    ]
+    action: PASS
+  - elements: [
+      "b",
+      "i",
+      "ex"
+    ]
+    action: PASS
+  - elements: [
+      "pb",
+      "hi",
+      "fw",
+      "quote",
+      "sic",
+      "note",
       "role",
       "roleDesc",
-      "titlePage",
       "docTitle",
       "titlePart",
       "docImprint",
@@ -72,11 +92,6 @@ policies:
       "cb",
       "ref",
       "milestone",
-      "front",
-      "back",
-      "row",
-      "cell",
-      "table",
       "formula",
       "trailer",
       "reg",
@@ -87,32 +102,37 @@ policies:
       "unclear",
       "addrLine",
       "address",
-      "analytic",
-      "author",
-      "biblScope",
-      "biblStruct",
       "date",
       "figDesc",
-      "forename",
       "graphic",
       "idno",
-      "imprint",
       "label",
-      "listBibl",
-      "listOrg",
-      "meeting",
-      "monogr",
       "org",
-      "orgName",
-      "persName",
       "rs",
-      "surname",
-      "title"
+      "title",
+      "tok"
     ]
     action: PASS
+  - elements: [
+      "analytic",
+      "author",
+      "listBibl",
+      "listOrg",
+      "biblScope",
+      "biblStruct",
+      "forename",
+      "surname",
+      "orgName",
+      "persName",
+      "meeting",
+      "monogr",
+      "imprint"
+    ]
+    action: PASS
+  - { attributes: ["fform", "nform"],  on_elements: ["tok"], action: "PASS" }
   - { attributes: ["class", "type"], action: "PASS" }
   - { attributes: ["place", "n"], on_elements: ["note"], action: "PASS" }
   - { attributes: ["n"], on_elements: ["pb"], action: "PASS" }
   - { attributes: ["type", "place"], on_elements: ["fw"], action: "PASS" }
   - { attributes: ["rendition", "unit"], on_elements: ["milestone"], action: "PASS" }
-  - { attributes: ["rendition"], on_elements: ["hi"], action: "PASS" }
+  - { attributes: ["rendition", "rend"], on_elements: ["hi"], action: "PASS" }

@@ -16,44 +16,37 @@
  * limitations under the License.
  */
 TEI {
-  note {
-    position: relative;
-    color: #999;
-    font-size: small;
-    font-weight: lighter;
-    width: 0px;
+  tok[fform] {
+    // background-color: #00000004;
+    display: inline-flex;
+    text-align: center;
+    flex-direction: column;
+    text-wrap: nowrap;
 
-    &::before {
-      vertical-align: super;
-      font-size: smaller;
-      content: attr(n);
+    &::after {
+      opacity: 0.6;
+      text-align: center;
+      font-size: x-small;
+      content: attr(fform);
+      margin-top: -0.4em;
+      margin-bottom: 0.4em;
     }
+  }
 
-    &[place="left"] {
-      clear: both;
-      float: left;
-      margin-left: calc(0em - var(--page-margin));
-    }
+  tok[nform] {
+    // background-color: #00000004;
+    display: inline-flex;
+    text-align: center;
+    flex-direction: column;
+    text-wrap: nowrap;
 
-    &[place="right"] {
-      clear: both;
-      float: right;
-      margin-right: calc(0em - var(--page-margin));
-    }
-
-    &[place="foot"] {
-      clear: both;
-      display: block;
-    }
-
-    &:not([place]) {
-      &::before {
-        content: " ( " attr(n) " ";
-      }
-    
-      &::after {
-        content: ") ";
-      }
+    &::after {
+      opacity: 0.6;
+      text-align: center;
+      font-size: x-small;
+      content: attr(nform);
+      margin-top: -0.4em;
+      margin-bottom: 0.4em;
     }
   }
 }
