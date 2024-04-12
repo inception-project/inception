@@ -18,8 +18,12 @@
 package de.tudarmstadt.ukp.inception.workload.matrix.management.support;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
-public class Filter
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
+
+public class DocumentMatrixFilterState
     implements Serializable
 {
     private static final long serialVersionUID = -8778279692135238878L;
@@ -28,6 +32,7 @@ public class Filter
     private boolean matchDocumentNameAsRegex;
     private String userName;
     private boolean matchUserNameAsRegex;
+    private final List<SourceDocumentState> states = new ArrayList<>();
 
     public String getDocumentName()
     {
@@ -73,5 +78,18 @@ public class Filter
     {
         documentName = null;
         userName = null;
+    }
+
+    public List<SourceDocumentState> getStates()
+    {
+        return states;
+    }
+
+    public void setState(List<SourceDocumentState> states)
+    {
+        states.clear();
+        if (states != null) {
+            states.addAll(states);
+        }
     }
 }

@@ -32,7 +32,6 @@ import org.apache.commons.lang3.Validate;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
@@ -55,8 +54,7 @@ public class MatrixWorkloadServiceImpl
     {
         Validate.validState(aAnnotatorsPerDocument > 0, "Annotators per document must be positive");
 
-        var documents = documentService.listSourceDocumentsInState(aProject,
-                SourceDocumentState.NEW);
+        var documents = documentService.listSourceDocuments(aProject);
 
         var documentsPerUser = new LinkedHashMap<String, AtomicInteger>();
 

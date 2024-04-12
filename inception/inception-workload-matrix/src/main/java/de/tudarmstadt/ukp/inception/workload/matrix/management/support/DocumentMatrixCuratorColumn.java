@@ -38,12 +38,12 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.workload.matrix.management.event.CuratorColumnCellClickEvent;
 import de.tudarmstadt.ukp.inception.workload.matrix.management.event.CuratorColumnCellOpenContextMenuEvent;
 
-public class CuratorColumn
+public class DocumentMatrixCuratorColumn
     extends LambdaColumn<DocumentMatrixRow, DocumentMatrixSortKey>
 {
     private static final long serialVersionUID = 8324173231787296215L;
 
-    public CuratorColumn()
+    public DocumentMatrixCuratorColumn()
     {
         super(Model.of("Curation"), CURATION_STATE, row -> row.getSourceDocument());
     }

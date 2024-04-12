@@ -45,7 +45,7 @@ import de.tudarmstadt.ukp.inception.workload.matrix.management.event.AnnotatorCo
 import de.tudarmstadt.ukp.inception.workload.matrix.management.event.AnnotatorColumnCellOpenContextMenuEvent;
 import de.tudarmstadt.ukp.inception.workload.matrix.management.event.AnnotatorColumnCellShowAnnotatorCommentEvent;
 
-public class AnnotatorStateCell
+public class DocumentMatrixAnnotatorStateCell
     extends Panel
 {
     private static final long serialVersionUID = 8669237603186001024L;
@@ -55,7 +55,7 @@ public class AnnotatorStateCell
     private final IModel<DocumentMatrixRow> rowModel;
     private final IModel<AnnotationDocument> columnModel;
 
-    public AnnotatorStateCell(String aId, IModel<DocumentMatrixRow> aRowModel,
+    public DocumentMatrixAnnotatorStateCell(String aId, IModel<DocumentMatrixRow> aRowModel,
             IModel<AnnotationDocument> aColumnModel, IModel<Set<String>> aSelectedUsers, User aUser)
     {
         super(aId);
