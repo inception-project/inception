@@ -18,14 +18,16 @@
 package de.tudarmstadt.ukp.inception.workload.matrix.management.support;
 
 import static de.tudarmstadt.ukp.inception.workload.matrix.management.support.DocumentMatrixSortKey.DOCUMENT_NAME;
+import static java.util.Collections.emptyList;
+import static java.util.regex.Pattern.CASE_INSENSITIVE;
 import static java.util.stream.Collectors.toCollection;
 import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
+import static org.apache.commons.lang3.StringUtils.containsIgnoreCase;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.wicket.extensions.markup.html.repeater.data.sort.SortOrder.ASCENDING;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -91,20 +93,22 @@ public class DocumentMatrixDataProvider
     {
         var rowStream = matrixData.stream();
 
-        if (isNotBlank(filter.getDocumentName())) {
+        String documentNameFilter = filter.getDocumentName();
+        if (isNotBlank(documentNameFilter)) {
             if (filter.isMatchDocumentNameAsRegex()) {
                 try {
-                    var p = Pattern.compile(".*(" + filter.getDocumentName() + ").*")
+                    var p = Pattern.compile(".*(" + documentNameFilter + ").*", CASE_INSENSITIVE)
                             .asMatchPredicate();
                     rowStream = rowStream.filter(row -> p.test(row.getSourceDocument().getName()));
                 }
                 catch (PatternSyntaxException e) {
-                    return Collections.emptyList();
+                    return emptyList();
                 }
             }
             else {
-                rowStream = rowStream.filter(row -> row.getSourceDocument().getName()
-                        .contains(filter.getDocumentName()));
+                rowStream = rowStream
+                        .filter(row -> containsIgnoreCase(row.getSourceDocument().getName(),
+                                documentNameFilter));
             }
         }
 
