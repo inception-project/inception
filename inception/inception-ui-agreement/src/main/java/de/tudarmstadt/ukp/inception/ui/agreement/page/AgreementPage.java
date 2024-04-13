@@ -23,6 +23,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAGE_PARAM_PROJECT;
 import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CHANGE_EVENT;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.enabledWhen;
+import static java.util.Comparator.comparing;
 import static org.apache.commons.collections4.CollectionUtils.isEmpty;
 
 import java.io.Serializable;
@@ -62,6 +63,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectUserPermissions;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.project.users.ProjectUserPermissionChoiceRenderer;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
@@ -205,6 +207,7 @@ public class AgreementPage
     {
         return projectService.listProjectUserPermissions(getProject()).stream() //
                 .filter(p -> p.getRoles().contains(PermissionLevel.ANNOTATOR)) //
+                .sorted(comparing(p -> p.getUser().map(User::getUiName).orElse(p.getUsername()))) //
                 .toList();
     }
 

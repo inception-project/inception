@@ -38,8 +38,10 @@ import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visible
 import static java.lang.String.format;
 import static java.time.Duration.ofMillis;
 import static java.util.Arrays.asList;
+import static java.util.regex.Pattern.CASE_INSENSITIVE;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
+import static org.apache.commons.lang3.StringUtils.containsIgnoreCase;
 import static org.apache.wicket.RuntimeConfigurationType.DEVELOPMENT;
 
 import java.util.ArrayList;
@@ -332,12 +334,15 @@ public class MatrixWorkloadManagementPage
 
         if (StringUtils.isNotBlank(filter.getObject().getUserName())) {
             if (filter.getObject().isMatchUserNameAsRegex()) {
-                var p = Pattern.compile(".*(" + filter.getObject().getUserName() + ").*")
+                var p = Pattern
+                        .compile(".*(" + filter.getObject().getUserName() + ").*", CASE_INSENSITIVE)
                         .asMatchPredicate().negate();
                 annotators.removeIf(u -> p.test(u.getUiName()));
             }
             else {
-                annotators.removeIf(u -> !u.getUiName().contains(filter.getObject().getUserName()));
+
+                annotators.removeIf(
+                        u -> !containsIgnoreCase(u.getUiName(), filter.getObject().getUserName()));
             }
         }
 
