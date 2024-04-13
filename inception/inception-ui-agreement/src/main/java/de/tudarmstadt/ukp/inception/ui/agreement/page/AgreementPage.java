@@ -184,6 +184,9 @@ public class AgreementPage
         exportAgreementButton.add(enabledWhen(() -> measureDropDown.getModelObject() != null));
         queue(exportAgreementButton);
 
+        if (featureList.getChoices().size() == 1) {
+            featureList.setModelObject(featureList.getChoices().get(0));
+        }
     }
 
     private boolean isMeasureSupportingMoreThanTwoRaters()
@@ -288,7 +291,7 @@ public class AgreementPage
     {
         var ams = agreementRegistry
                 .getAgreementMeasureSupport(measureDropDown.getModelObject().getKey());
-        var resultsPanel = ams.createResultsPanel(MID_RESULTS, Model.of(aResult));
+        var resultsPanel = ams.createResultsPanel(MID_RESULTS, Model.of(aResult), getTraits());
         resultsContainer.addOrReplace(resultsPanel);
         aTarget.add(resultsContainer);
     }

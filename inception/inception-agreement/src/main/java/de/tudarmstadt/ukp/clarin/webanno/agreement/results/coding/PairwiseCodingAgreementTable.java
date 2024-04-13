@@ -47,6 +47,7 @@ import org.slf4j.LoggerFactory;
 import de.agilecoders.wicket.core.markup.html.bootstrap.components.PopoverConfig;
 import de.agilecoders.wicket.core.markup.html.bootstrap.components.TooltipConfig.Placement;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.PairwiseAgreementResult;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.DefaultAgreementTraits;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.event.PairwiseAgreementScoreClickedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
@@ -70,10 +71,14 @@ public class PairwiseCodingAgreementTable
     private @SpringBean UserDao userRepository;
 
     private final RefreshingView<User> rows;
+    private final DefaultAgreementTraits traits;
 
-    public PairwiseCodingAgreementTable(String aId, IModel<PairwiseAgreementResult> aModel)
+    public PairwiseCodingAgreementTable(String aId, IModel<PairwiseAgreementResult> aModel,
+            DefaultAgreementTraits aTraits)
     {
         super(aId, aModel);
+
+        traits = aTraits;
 
         setOutputMarkupId(true);
 
@@ -117,45 +122,36 @@ public class PairwiseCodingAgreementTable
                         aCellItem.setRenderBodyOnly(true);
 
                         Fragment cell;
-                        // Header cell
-                        if (aRowItem.getIndex() == 0) {
-                            cell = new Fragment("cell", "th-centered",
-                                    PairwiseCodingAgreementTable.this);
-                        }
-                        else if (aCellItem.getIndex() == 0) {
-                            cell = new Fragment("cell", "th-right",
-                                    PairwiseCodingAgreementTable.this);
-                        }
-                        // Content cell
-                        else {
-                            cell = new Fragment("cell", "td", PairwiseCodingAgreementTable.this);
-                        }
 
                         // Top-left cell
                         if (aRowItem.getIndex() == 0 && aCellItem.getIndex() == 0) {
+                            cell = new Fragment("cell", "th-centered",
+                                    PairwiseCodingAgreementTable.this);
                             cell.add(new Label("label", Model.of("")));
                         }
                         // Raters header horizontally
                         else if (aRowItem.getIndex() == 0 && aCellItem.getIndex() != 0) {
+                            cell = new Fragment("cell", "th-centered",
+                                    PairwiseCodingAgreementTable.this);
                             cell.add(new Label("label", aCellItem.getModelObject().getUiName()));
                         }
                         // Raters header vertically
                         else if (aRowItem.getIndex() != 0 && aCellItem.getIndex() == 0) {
+                            cell = new Fragment("cell", "th-right",
+                                    PairwiseCodingAgreementTable.this);
                             cell.add(new Label("label", aRowItem.getModelObject().getUiName()));
                         }
                         // Upper diagonal
                         else if (aCellItem.getIndex() > aRowItem.getIndex()) {
+                            cell = new Fragment("cell", "td-upper",
+                                    PairwiseCodingAgreementTable.this);
                             cell.add(makeUpperDiagonalCellLabel(aRowItem.getModelObject(),
                                     aCellItem.getModelObject()));
                         }
                         // Lower diagonal
-                        else if (aCellItem.getIndex() < aRowItem.getIndex()) {
-                            cell.add(makeLowerDiagonalCellLabel(aRowItem.getModelObject(),
-                                    aCellItem.getModelObject()));
-                        }
-                        // Rest
                         else {
-                            cell.add(new Label("label", Model.of("-")));
+                            cell = makeLowerDiagonalCell(aRowItem.getModelObject(),
+                                    aCellItem.getModelObject());
                         }
 
                         aCellItem.add(cell);
@@ -172,41 +168,59 @@ public class PairwiseCodingAgreementTable
         add(rows);
     }
 
-    private Label makeLowerDiagonalCellLabel(User aRater1, User aRater2)
+    private Fragment makeLowerDiagonalCell(User aRater1, User aRater2)
     {
         var result = getModelObject().getResult(aRater1.getUsername(), aRater2.getUsername());
 
-        if (result == null) {
-            return new Label("label", "-");
+        if (result == null || result.getCasGroupIds().isEmpty()) {
+            var cell = new Fragment("cell", "td-lower-ok", PairwiseCodingAgreementTable.this);
+            cell.add(new Label("label", "-"));
+            return cell;
         }
 
-        var label = format("%d/%d", result.getCompleteSetCount(), result.getRelevantSetCount());
+        if (result.getRelevantSetCount() == result.getCompleteSetCount()) {
+            var cell = new Fragment("cell", "td-lower-ok", PairwiseCodingAgreementTable.this);
+            cell.add(new Label("label", "-"));
+            return cell;
+        }
 
         var tooltipTitle = "Details about annotations excluded from agreement calculation";
 
         var tooltipContent = new StringBuilder();
-        if (result.isExcludeIncomplete()) {
+        if (traits.isExcludeIncomplete()) {
             tooltipContent.append(
                     format("- Incomplete (missing): %d%n", result.getIncompleteSetsByPosition()));
             tooltipContent.append(
                     format("- Incomplete (not labeled): %d%n", result.getIncompleteSetsByLabel()));
         }
-        tooltipContent.append(format("- Plurality: %d", result.getPluralitySets()));
+        tooltipContent.append(format("- Stacked: %d\n\n", result.getPluralitySets()));
+        tooltipContent.append(format("Used: %d of %d", result.getCompleteSetCount(),
+                result.getRelevantSetCount()));
 
-        var l = new Label("label", Model.of(label));
+        var l = new Label("label",
+                format("%d", result.getRelevantSetCount() - result.getCompleteSetCount()));
         var tooltip = new DescriptionTooltipBehavior(tooltipTitle, tooltipContent.toString());
         tooltip.setOption("position", (Object) null);
         l.add(tooltip);
         l.add(new AttributeAppender("style", "cursor: help", ";"));
-        return l;
+
+        var cell = new Fragment("cell", "td-lower-warn", PairwiseCodingAgreementTable.this);
+        cell.add(l);
+        return cell;
     }
 
     private Label makeUpperDiagonalCellLabel(User aRater1, User aRater2)
     {
         var result = getModelObject().getResult(aRater1.getUsername(), aRater2.getUsername());
 
-        if (result == null) {
+        if (result == null || result.getCasGroupIds().isEmpty()) {
             return new Label("label", "no data");
+        }
+
+        if (result.getCasGroupIds().size() != 2) {
+            throw new IllegalStateException(
+                    "Pairwise agreeement always requires two annotators, but got: "
+                            + result.getCasGroupIds());
         }
 
         var casGroupId1 = result.getCasGroupIds().get(0);

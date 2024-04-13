@@ -57,14 +57,16 @@ public abstract class AbstractCodingAgreementMeasureSupport<T extends DefaultAgr
     }
 
     @Override
-    public Panel createResultsPanel(String aId, IModel<? extends AgreementResult_ImplBase> aResults)
+    public Panel createResultsPanel(String aId, IModel<? extends AgreementResult_ImplBase> aResults,
+            DefaultAgreementTraits aDefaultAgreementTraits)
     {
         if (aResults.getObject() instanceof PairwiseAgreementResult) {
-            return new PairwiseCodingAgreementTable(aId, (IModel) aResults);
+            return new PairwiseCodingAgreementTable(aId, (IModel) aResults,
+                    aDefaultAgreementTraits);
         }
 
         if (aResults.getObject() instanceof PerDocumentAgreementResult) {
-            return new PerDocumentAgreementTable(aId, (IModel) aResults);
+            return new PerDocumentAgreementTable(aId, (IModel) aResults, aDefaultAgreementTraits);
         }
 
         return new EmptyPanel(aId);

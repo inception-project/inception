@@ -45,14 +45,12 @@ import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.io.output.CloseShieldOutputStream;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.fit.util.FSUtil;
-import org.dkpro.statistics.agreement.coding.ICodingAnnotationStudy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.agreement.AgreementUtils;
-import de.tudarmstadt.ukp.clarin.webanno.agreement.FullAgreementResult_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.DefaultAgreementTraits;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.ConfigurationSet;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.FullCodingAgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -137,8 +135,7 @@ public class AgreementServiceImpl
                         new OutputStreamWriter(CloseShieldOutputStream.wrap(aOut), UTF_8),
                         RFC4180)) {
 
-                    configurationSetsWithItemsToCsv(printer, result, result.getCompleteSets(),
-                            countWritten == 0);
+                    configurationSetsWithItemsToCsv(printer, result, countWritten == 0);
                 }
 
                 countWritten++;
@@ -199,8 +196,7 @@ public class AgreementServiceImpl
     }
 
     public static void configurationSetsWithItemsToCsv(CSVPrinter aOut,
-            FullAgreementResult_ImplBase<ICodingAnnotationStudy> aAgreement,
-            List<ConfigurationSet> aSets, boolean aIncludeHeader)
+            FullCodingAgreementResult aAgreement, boolean aIncludeHeader)
         throws IOException
     {
         if (aIncludeHeader) {
@@ -210,9 +206,14 @@ public class AgreementServiceImpl
             aOut.printRecord(headers);
         }
 
+        // Need to use getCompleteSets() here because only these were used to create
+        // the study items and we get the set by item index... using a different
+        // set would mean we get the wrong set when we look it up by item index
+        var sets = aAgreement.getCompleteSets();
+
         int i = 0;
         for (var item : aAgreement.getStudy().getItems()) {
-            var cfgSet = aSets.get(i);
+            var cfgSet = sets.get(i);
             var pos = cfgSet.getPosition();
 
             var values = new ArrayList<String>();

@@ -47,6 +47,7 @@ import org.slf4j.LoggerFactory;
 import de.agilecoders.wicket.core.markup.html.bootstrap.components.PopoverConfig;
 import de.agilecoders.wicket.core.markup.html.bootstrap.components.TooltipConfig.Placement;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.PairwiseAgreementResult;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.DefaultAgreementTraits;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.event.PairwiseAgreementScoreClickedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
@@ -71,7 +72,8 @@ public class PairwiseUnitizingAgreementTable
 
     private final RefreshingView<User> rows;
 
-    public PairwiseUnitizingAgreementTable(String aId, IModel<PairwiseAgreementResult> aModel)
+    public PairwiseUnitizingAgreementTable(String aId, IModel<PairwiseAgreementResult> aModel,
+            DefaultAgreementTraits aTraits)
     {
         super(aId, aModel);
 
@@ -181,8 +183,14 @@ public class PairwiseUnitizingAgreementTable
     {
         var result = getModelObject().getResult(aRater1.getUsername(), aRater2.getUsername());
 
-        if (result == null) {
+        if (result == null || result.getCasGroupIds().isEmpty()) {
             return new Label("label", "no data");
+        }
+
+        if (result.getCasGroupIds().size() != 2) {
+            throw new IllegalStateException(
+                    "Pairwise agreeement always requires two annotators, but got: "
+                            + result.getCasGroupIds());
         }
 
         var casGroupId1 = result.getCasGroupIds().get(0);
