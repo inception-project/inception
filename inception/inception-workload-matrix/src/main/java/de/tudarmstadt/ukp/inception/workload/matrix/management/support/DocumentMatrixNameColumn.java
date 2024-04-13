@@ -22,12 +22,12 @@ import static de.tudarmstadt.ukp.inception.workload.matrix.management.support.Do
 import org.apache.wicket.extensions.markup.html.repeater.data.table.LambdaColumn;
 import org.apache.wicket.model.Model;
 
-public class SourceDocumentNameColumn
+public class DocumentMatrixNameColumn
     extends LambdaColumn<DocumentMatrixRow, DocumentMatrixSortKey>
 {
     private static final long serialVersionUID = 8324173231787296215L;
 
-    public SourceDocumentNameColumn()
+    public DocumentMatrixNameColumn()
     {
         super(Model.of("Document"), DOCUMENT_NAME, row -> row.getSourceDocument().getName());
     }

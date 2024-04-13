@@ -43,6 +43,7 @@ public class SourceDocumentStateFilterPanel
     public SourceDocumentStateFilterPanel(String aId, IModel<List<SourceDocumentState>> aModel)
     {
         this(aId, aModel, SourceDocumentState.values());
+        setOutputMarkupId(true);
     }
 
     public SourceDocumentStateFilterPanel(String aId, IModel<List<SourceDocumentState>> aModel,
@@ -86,6 +87,8 @@ public class SourceDocumentStateFilterPanel
         else {
             selectedStates.add(aState);
         }
+
+        aTarget.add(this);
 
         send(this, BUBBLE, new SourceDocumentFilterStateChanged(aTarget, selectedStates));
     }

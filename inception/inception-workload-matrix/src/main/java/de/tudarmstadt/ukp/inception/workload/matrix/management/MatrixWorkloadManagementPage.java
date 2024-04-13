@@ -33,8 +33,10 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransit
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_PROJECT;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAGE_PARAM_PROJECT;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
+import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.INPUT_EVENT;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 import static java.lang.String.format;
+import static java.time.Duration.ofMillis;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
@@ -60,10 +62,14 @@ import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.Form;
+import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
+import org.apache.wicket.model.PropertyModel;
+import org.apache.wicket.model.ResourceModel;
+import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.model.util.SetModel;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
@@ -71,6 +77,8 @@ import org.wicketstuff.annotation.mount.MountPath;
 import org.wicketstuff.event.annotation.OnEvent;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.behavior.CssClassNameAppender;
+import de.agilecoders.wicket.core.markup.html.bootstrap.components.PopoverConfig;
+import de.agilecoders.wicket.core.markup.html.bootstrap.components.TooltipConfig.Placement;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.comment.AnnotatorCommentDialogPanel;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -78,12 +86,18 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.ProjectMenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
+import de.tudarmstadt.ukp.inception.annotation.filters.SourceDocumentFilterStateChanged;
+import de.tudarmstadt.ukp.inception.annotation.filters.SourceDocumentStateFilterPanel;
 import de.tudarmstadt.ukp.inception.bootstrap.BootstrapModalDialog;
+import de.tudarmstadt.ukp.inception.bootstrap.IconToggleBox;
+import de.tudarmstadt.ukp.inception.bootstrap.IconToggleBox.IconToggleBoxChangedEvent;
+import de.tudarmstadt.ukp.inception.bootstrap.PopoverBehavior;
 import de.tudarmstadt.ukp.inception.curation.service.CurationDocumentService;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.support.help.DocLink;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxButton;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaMenuItem;
@@ -97,15 +111,15 @@ import de.tudarmstadt.ukp.inception.workload.matrix.management.event.CuratorColu
 import de.tudarmstadt.ukp.inception.workload.matrix.management.event.CuratorColumnCellOpenContextMenuEvent;
 import de.tudarmstadt.ukp.inception.workload.matrix.management.event.DocumentRowSelectionChangedEvent;
 import de.tudarmstadt.ukp.inception.workload.matrix.management.event.FilterStateChangedEvent;
-import de.tudarmstadt.ukp.inception.workload.matrix.management.support.AnnotatorColumn;
-import de.tudarmstadt.ukp.inception.workload.matrix.management.support.CuratorColumn;
+import de.tudarmstadt.ukp.inception.workload.matrix.management.support.DocumentMatrixAnnotatorColumn;
+import de.tudarmstadt.ukp.inception.workload.matrix.management.support.DocumentMatrixCuratorColumn;
 import de.tudarmstadt.ukp.inception.workload.matrix.management.support.DocumentMatrixDataProvider;
+import de.tudarmstadt.ukp.inception.workload.matrix.management.support.DocumentMatrixFilterState;
+import de.tudarmstadt.ukp.inception.workload.matrix.management.support.DocumentMatrixNameColumn;
 import de.tudarmstadt.ukp.inception.workload.matrix.management.support.DocumentMatrixRow;
+import de.tudarmstadt.ukp.inception.workload.matrix.management.support.DocumentMatrixSelectColumn;
 import de.tudarmstadt.ukp.inception.workload.matrix.management.support.DocumentMatrixSortKey;
-import de.tudarmstadt.ukp.inception.workload.matrix.management.support.Filter;
-import de.tudarmstadt.ukp.inception.workload.matrix.management.support.SourceDocumentNameColumn;
-import de.tudarmstadt.ukp.inception.workload.matrix.management.support.SourceDocumentSelectColumn;
-import de.tudarmstadt.ukp.inception.workload.matrix.management.support.SourceDocumentStateColumn;
+import de.tudarmstadt.ukp.inception.workload.matrix.management.support.DocumentMatrixStateColumn;
 import de.tudarmstadt.ukp.inception.workload.matrix.management.support.UserSelectToolbar;
 import de.tudarmstadt.ukp.inception.workload.matrix.service.MatrixWorkloadService;
 import de.tudarmstadt.ukp.inception.workload.matrix.trait.MatrixWorkloadTraits;
@@ -138,10 +152,13 @@ public class MatrixWorkloadManagementPage
     private WebMarkupContainer bulkActionDropdownButton;
     private ModalDialog modalDialog;
     private ContextMenu contextMenu;
+    private DocumentMatrixDataProvider dataProvider;
+    private IconToggleBox matchDocumentNameAsRegex;
+    private IconToggleBox matchUserNameAsRegex;
 
     private boolean bulkChangeMode = false;
     private IModel<Set<String>> selectedUsers = new SetModel<>(new HashSet<>());
-    private IModel<Filter> filter;
+    private IModel<DocumentMatrixFilterState> filter;
 
     public MatrixWorkloadManagementPage(final PageParameters aPageParameters)
     {
@@ -171,12 +188,42 @@ public class MatrixWorkloadManagementPage
 
         add(new DocLink("documentStatusHelpLink", "_annotation_state_management"));
 
-        filter = Model.of(new Filter());
-        add(new MatrixWorkloadFilterPanel("filterPanel", filter));
+        filter = Model.of(new DocumentMatrixFilterState());
 
         add(documentMatrix = createDocumentMatrix("documentMatrix", bulkChangeMode));
 
+        var documentNameFilter = new TextField<>("documentNameFilter",
+                PropertyModel.of(dataProvider.getFilterState(), "documentName"), String.class);
+        documentNameFilter.setOutputMarkupPlaceholderTag(true);
+        documentNameFilter.add(
+                new LambdaAjaxFormComponentUpdatingBehavior(INPUT_EVENT, this::actionApplyFilter)
+                        .withDebounce(ofMillis(200)));
+        queue(documentNameFilter);
+        queue(matchDocumentNameAsRegex = new IconToggleBox("matchDocumentNameAsRegex",
+                PropertyModel.of(dataProvider.getFilterState(), "matchDocumentNameAsRegex"))
+                        .setPostLabelText(Model.of("(.*)")));
+
+        var userNameFilter = new TextField<>("userNameFilter",
+                PropertyModel.of(dataProvider.getFilterState(), "userName"), String.class);
+        userNameFilter.setOutputMarkupPlaceholderTag(true);
+        userNameFilter
+                .add(new LambdaAjaxFormComponentUpdatingBehavior(INPUT_EVENT, this::actionRefresh)
+                        .withDebounce(ofMillis(200)));
+        queue(userNameFilter);
+        queue(matchUserNameAsRegex = new IconToggleBox("matchUserNameAsRegex",
+                PropertyModel.of(dataProvider.getFilterState(), "matchUserNameAsRegex"))
+                        .setPostLabelText(Model.of("(.*)")));
+
+        queue(new SourceDocumentStateFilterPanel("stateFilters",
+                () -> dataProvider.getFilterState().getStates()));
+
         add(createSettingsForm());
+
+        var config = new PopoverConfig().withPlacement(Placement.left).withHtml(true);
+        var legend = new WebMarkupContainer("legend");
+        legend.add(new PopoverBehavior(new ResourceModel("legend"),
+                new StringResourceModel("legend.content", legend), config));
+        queue(legend);
 
         add(new LambdaAjaxLink("refresh", this::actionRefresh));
 
@@ -216,6 +263,24 @@ public class MatrixWorkloadManagementPage
         add(contextMenu = new ContextMenu("contextMenu"));
     }
 
+    @OnEvent
+    public void onSourceDocumentFilterStateChanged(SourceDocumentFilterStateChanged aEvent)
+    {
+        actionApplyFilter(aEvent.getTarget());
+    }
+
+    @OnEvent
+    public void onIconToggleBoxChanged(IconToggleBoxChangedEvent aEvent)
+    {
+        if (aEvent.getSource() == matchUserNameAsRegex) {
+            actionRefresh(aEvent.getTarget());
+        }
+
+        if (aEvent.getSource() == matchDocumentNameAsRegex) {
+            actionApplyFilter(aEvent.getTarget());
+        }
+    }
+
     /**
      * @return the "Settings" dropdown menu form
      */
@@ -246,7 +311,7 @@ public class MatrixWorkloadManagementPage
     private DataTable<DocumentMatrixRow, DocumentMatrixSortKey> createDocumentMatrix(
             String aComponentId, boolean aBulkChangeMode)
     {
-        var dataProvider = new DocumentMatrixDataProvider(getMatrixData());
+        dataProvider = new DocumentMatrixDataProvider(getMatrixData());
 
         // Copy sorting state from previous matrix
         if (documentMatrix != null) {
@@ -256,12 +321,12 @@ public class MatrixWorkloadManagementPage
         dataProvider.setFilterState(filter.getObject());
 
         var columns = new ArrayList<IColumn<DocumentMatrixRow, DocumentMatrixSortKey>>();
-        var sourceDocumentSelectColumn = new SourceDocumentSelectColumn();
+        var sourceDocumentSelectColumn = new DocumentMatrixSelectColumn();
         sourceDocumentSelectColumn.setVisible(bulkChangeMode);
         columns.add(sourceDocumentSelectColumn);
-        columns.add(new SourceDocumentStateColumn());
-        columns.add(new SourceDocumentNameColumn());
-        columns.add(new CuratorColumn());
+        columns.add(new DocumentMatrixStateColumn());
+        columns.add(new DocumentMatrixNameColumn());
+        columns.add(new DocumentMatrixCuratorColumn());
 
         var annotators = projectService.listProjectUsersWithPermissions(getProject(), ANNOTATOR);
 
@@ -277,7 +342,7 @@ public class MatrixWorkloadManagementPage
         }
 
         for (var annotator : annotators) {
-            columns.add(new AnnotatorColumn(annotator, selectedUsers));
+            columns.add(new DocumentMatrixAnnotatorColumn(annotator, selectedUsers));
         }
 
         var table = new DefaultDataTable<DocumentMatrixRow, DocumentMatrixSortKey>(aComponentId,
@@ -586,6 +651,11 @@ public class MatrixWorkloadManagementPage
         aTarget.add(documentMatrix);
     }
 
+    private void actionApplyFilter(AjaxRequestTarget aTarget)
+    {
+        aTarget.add(documentMatrix);
+    }
+
     private void actionRefresh(AjaxRequestTarget aTarget)
     {
         selectedUsers.getObject().clear();
@@ -620,9 +690,9 @@ public class MatrixWorkloadManagementPage
     private Collection<AnnotationDocument> selectedAnnotationDocuments()
     {
         var annotators = documentMatrix.getColumns().stream() //
-                .filter(col -> col instanceof AnnotatorColumn) //
-                .map(col -> (AnnotatorColumn) col) //
-                .map(AnnotatorColumn::getUser) //
+                .filter(col -> col instanceof DocumentMatrixAnnotatorColumn) //
+                .map(col -> (DocumentMatrixAnnotatorColumn) col) //
+                .map(DocumentMatrixAnnotatorColumn::getUser) //
                 .toList();
 
         var annotatorIndex = new HashMap<String, User>();

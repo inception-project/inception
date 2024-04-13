@@ -34,14 +34,14 @@ import org.apache.wicket.request.cycle.RequestCycle;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.inception.workload.matrix.management.event.DocumentRowSelectionChangedEvent;
 
-public class SourceDocumentSelectColumn
+public class DocumentMatrixSelectColumn
     extends LambdaColumn<DocumentMatrixRow, DocumentMatrixSortKey>
 {
     private static final long serialVersionUID = 8324173231787296215L;
 
     private boolean visible;
 
-    public SourceDocumentSelectColumn()
+    public DocumentMatrixSelectColumn()
     {
         super(Model.of(""), row -> row.getSourceDocument().getName());
     }

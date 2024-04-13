@@ -17,9 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.workload.matrix.management.support;
 
-import static de.tudarmstadt.ukp.inception.workload.matrix.management.support.DocumentMatrixSortKey.annotatorSortKey;
-
-import java.util.Set;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.NEW;
+import static de.tudarmstadt.ukp.inception.workload.matrix.management.support.DocumentMatrixSortKey.DOCUMENT_STATE;
 
 import org.apache.wicket.extensions.markup.html.repeater.data.grid.ICellPopulator;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.LambdaColumn;
@@ -27,28 +26,17 @@ import org.apache.wicket.markup.repeater.Item;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
+import de.tudarmstadt.ukp.inception.support.wicket.SymbolLabel;
 
-public class AnnotatorColumn
+public class DocumentMatrixStateColumn
     extends LambdaColumn<DocumentMatrixRow, DocumentMatrixSortKey>
 {
-    private static final long serialVersionUID = 8324173231787296215L;
+    private static final long serialVersionUID = -5675638452449649901L;
 
-    private IModel<Set<String>> selectedUsers;
-    private User user;
-
-    public AnnotatorColumn(User aUser, IModel<Set<String>> aSelectedUsers)
+    public DocumentMatrixStateColumn()
     {
-        super(Model.of(aUser.getUiName()), annotatorSortKey(aUser.getUsername()),
-                row -> row.getAnnotationDocument(aUser.getUsername()));
-        user = aUser;
-        selectedUsers = aSelectedUsers;
-    }
-
-    public User getUser()
-    {
-        return user;
+        super(Model.of("State"), DOCUMENT_STATE, row -> row.getState());
     }
 
     @Override
@@ -56,10 +44,7 @@ public class AnnotatorColumn
             IModel<DocumentMatrixRow> aRowModel)
     {
         @SuppressWarnings("unchecked")
-        IModel<AnnotationDocument> annDocument = (IModel<AnnotationDocument>) getDataModel(
-                aRowModel);
-
-        aItem.add(
-                new AnnotatorStateCell(aComponentId, aRowModel, annDocument, selectedUsers, user));
+        var documentState = (IModel<SourceDocumentState>) getDataModel(aRowModel);
+        aItem.add(new SymbolLabel(aComponentId, documentState.orElse(NEW)));
     }
 }
