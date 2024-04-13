@@ -32,6 +32,7 @@ import org.dkpro.statistics.agreement.InsufficientDataException;
 import org.dkpro.statistics.agreement.coding.KrippendorffAlphaAgreement;
 import org.dkpro.statistics.agreement.distance.NominalDistanceFunction;
 
+import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.DefaultAgreementTraits;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.CodingAgreementMeasure_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.FullCodingAgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -39,12 +40,12 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
 public class KrippendorffAlphaAgreementMeasure
-    extends CodingAgreementMeasure_ImplBase<KrippendorffAlphaAgreementTraits>
+    extends CodingAgreementMeasure_ImplBase<DefaultAgreementTraits>
 {
     private final AnnotationSchemaService annotationService;
 
     public KrippendorffAlphaAgreementMeasure(AnnotationFeature aFeature,
-            KrippendorffAlphaAgreementTraits aTraits, AnnotationSchemaService aAnnotationService)
+            DefaultAgreementTraits aTraits, AnnotationSchemaService aAnnotationService)
     {
         super(aFeature, aTraits);
         annotationService = aAnnotationService;

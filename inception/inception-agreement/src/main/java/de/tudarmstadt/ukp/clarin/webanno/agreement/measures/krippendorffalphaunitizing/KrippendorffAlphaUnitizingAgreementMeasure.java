@@ -30,16 +30,17 @@ import org.dkpro.statistics.agreement.unitizing.KrippendorffAlphaUnitizingAgreem
 import org.dkpro.statistics.agreement.unitizing.UnitizingAnnotationStudy;
 
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasure_ImplBase;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.DefaultAgreementTraits;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.results.unitizing.FullUnitizingAgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 
 public class KrippendorffAlphaUnitizingAgreementMeasure
     extends AgreementMeasure_ImplBase<//
             FullUnitizingAgreementResult, //
-            KrippendorffAlphaUnitizingAgreementTraits>
+            DefaultAgreementTraits>
 {
     public KrippendorffAlphaUnitizingAgreementMeasure(AnnotationFeature aFeature,
-            KrippendorffAlphaUnitizingAgreementTraits aTraits)
+            DefaultAgreementTraits aTraits)
     {
         super(aFeature, aTraits);
     }

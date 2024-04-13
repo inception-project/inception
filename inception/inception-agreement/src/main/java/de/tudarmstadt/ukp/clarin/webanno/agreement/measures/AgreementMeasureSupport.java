@@ -67,7 +67,8 @@ public interface AgreementMeasureSupport<//
 
     T createTraits();
 
-    Panel createResultsPanel(String aId, IModel<? extends AgreementResult_ImplBase> aResults);
+    Panel createResultsPanel(String aId, IModel<? extends AgreementResult_ImplBase> aResults,
+            DefaultAgreementTraits aDefaultAgreementTraits);
 
     boolean isSupportingMoreThanTwoRaters();
 }

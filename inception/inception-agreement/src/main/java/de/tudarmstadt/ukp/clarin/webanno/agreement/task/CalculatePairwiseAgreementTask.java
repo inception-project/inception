@@ -98,48 +98,43 @@ public class CalculatePairwiseAgreementTask
                     LogMessage.info(this, doc.getName()));
 
             try (var session = CasStorageSession.openNested()) {
-                AgreementSummary initialAgreementResult = null;
-
                 for (int m = 0; m < annotators.size(); m++) {
                     var annotator1 = annotators.get(m);
                     var maybeCas1 = LazyInitializer.<Optional<CAS>> builder()
                             .setInitializer(() -> loadCas(doc, annotator1, allAnnDocs)).get();
 
                     for (int n = 0; n < annotators.size(); n++) {
+                        if (!(n < m)) {
+                            // Triangle matrix mirrored
+                            continue;
+                        }
+
                         var annotator2 = annotators.get(n);
+
+                        if (maybeCas1.get().isEmpty()) {
+                            LOG.trace("Skipping combination {}/{}@{}: {} has no data", annotator1,
+                                    annotator2, doc, annotator1);
+                            summary.mergeResult(annotator1, annotator2, AgreementSummary
+                                    .skipped(feature.getLayer().getName(), feature.getName()));
+                            continue;
+                        }
+
                         var maybeCas2 = LazyInitializer.<Optional<CAS>> builder()
                                 .setInitializer(() -> loadCas(doc, annotator2, allAnnDocs)).get();
 
-                        // Triangle matrix mirrored
-                        if (n < m) {
-                            // So, theoretically, if cas1 and cas2 are both empty, then both are
-                            // the initial CAS - so there must be full agreement. However, we
-                            // would still need to count the units, categories, etc.
-                            if (maybeCas1.get().isEmpty() && maybeCas2.get().isEmpty()) {
-                                if (initialAgreementResult == null) {
-                                    var casMap = new LinkedHashMap<String, CAS>();
-                                    casMap.put("INITIAL1", loadInitialCas(doc));
-                                    casMap.put("INITIAL2", loadInitialCas(doc));
-                                    initialAgreementResult = AgreementSummary
-                                            .of(measure.getAgreement(casMap));
-                                }
-                                var res = initialAgreementResult.remap(
-                                        Map.of("INITIAL1", annotator1, "INITIAL2", annotator2));
-                                summary.mergeResult(annotator1, annotator2, res);
-                            }
-                            else {
-                                var cas1 = maybeCas1.get().isPresent() ? maybeCas1.get().get()
-                                        : loadInitialCas(doc);
-                                var cas2 = maybeCas2.get().isPresent() ? maybeCas2.get().get()
-                                        : loadInitialCas(doc);
-
-                                var casMap = new LinkedHashMap<String, CAS>();
-                                casMap.put(annotator1, cas1);
-                                casMap.put(annotator2, cas2);
-                                var res = AgreementSummary.of(measure.getAgreement(casMap));
-                                summary.mergeResult(annotator1, annotator2, res);
-                            }
+                        if (maybeCas2.get().isEmpty()) {
+                            LOG.trace("Skipping combination {}/{}@{}: {} has no data", annotator1,
+                                    annotator2, doc, annotator2);
+                            summary.mergeResult(annotator1, annotator2, AgreementSummary
+                                    .skipped(feature.getLayer().getName(), feature.getName()));
+                            continue;
                         }
+
+                        var casMap = new LinkedHashMap<String, CAS>();
+                        casMap.put(annotator1, maybeCas1.get().get());
+                        casMap.put(annotator2, maybeCas2.get().get());
+                        var res = AgreementSummary.of(measure.getAgreement(casMap));
+                        summary.mergeResult(annotator1, annotator2, res);
                     }
                 }
 
@@ -176,7 +171,7 @@ public class CalculatePairwiseAgreementTask
         }
 
         if (!documentService.existsCas(aDocument, aDataOwner)) {
-            Optional.empty();
+            Optional.of(loadInitialCas(aDocument));
         }
 
         var cas = documentService.readAnnotationCas(aDocument, aDataOwner, AUTO_CAS_UPGRADE,

@@ -51,7 +51,18 @@
   <wicket:fragment wicket:id="th-right">
     <th class="headers text-end"><div wicket:id="label"></div></th>
   </wicket:fragment>
-  <wicket:fragment wicket:id="td">
+  <wicket:fragment wicket:id="td-upper">
     <td class="text-center"><div wicket:id="label"></div></td>
+  </wicket:fragment>
+  <wicket:fragment wicket:id="td-lower-ok">
+    <td class="text-center small">
+      <span wicket:id="label"/>
+    </td>
+  </wicket:fragment>
+  <wicket:fragment wicket:id="td-lower-warn">
+    <td class="text-center small text-nowrap">
+      <i class="fas fa-exclamation-triangle text-warning"></i>
+      <span wicket:id="label" />
+    </td>
   </wicket:fragment>
 </wicket:panel>

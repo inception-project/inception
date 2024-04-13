@@ -22,6 +22,7 @@ import org.apache.wicket.model.IModel;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasure;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.DefaultAgreementTraits;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.AbstractCodingAgreementMeasureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.FullCodingAgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -29,7 +30,7 @@ import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
 @Component
 public class KrippendorffAlphaAgreementMeasureSupport
-    extends AbstractCodingAgreementMeasureSupport<KrippendorffAlphaAgreementTraits>
+    extends AbstractCodingAgreementMeasureSupport<DefaultAgreementTraits>
 {
     private final AnnotationSchemaService annotationService;
 
@@ -47,22 +48,22 @@ public class KrippendorffAlphaAgreementMeasureSupport
 
     @Override
     public AgreementMeasure<FullCodingAgreementResult> createMeasure(AnnotationFeature aFeature,
-            KrippendorffAlphaAgreementTraits aTraits)
+            DefaultAgreementTraits aTraits)
     {
         return new KrippendorffAlphaAgreementMeasure(aFeature, aTraits, annotationService);
     }
 
     @Override
     public Panel createTraitsEditor(String aId, IModel<AnnotationFeature> aFeature,
-            IModel<KrippendorffAlphaAgreementTraits> aModel)
+            IModel<DefaultAgreementTraits> aModel)
     {
         return new KrippendorffAlphaAgreementTraitsEditor(aId, aFeature, aModel);
     }
 
     @Override
-    public KrippendorffAlphaAgreementTraits createTraits()
+    public DefaultAgreementTraits createTraits()
     {
-        return new KrippendorffAlphaAgreementTraits();
+        return new DefaultAgreementTraits();
     }
 
     @Override

@@ -34,6 +34,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.agreement.PerDocumentAgreementResult;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.DefaultAgreementTraits;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
@@ -55,7 +56,8 @@ public class PerDocumentAgreementTable
 
     private final RefreshingView<SourceDocument> rows;
 
-    public PerDocumentAgreementTable(String aId, IModel<PerDocumentAgreementResult> aModel)
+    public PerDocumentAgreementTable(String aId, IModel<PerDocumentAgreementResult> aModel,
+            DefaultAgreementTraits aTraits)
     {
         super(aId, aModel);
 
@@ -85,6 +87,8 @@ public class PerDocumentAgreementTable
 
                 var agreementSummary = aModel.getObject().getResult(doc);
                 aRowItem.add(new Label("score", format("%.2f", agreementSummary.getAgreement())));
+
+                aRowItem.add(new Label("annotatorCount", agreementSummary.getCasGroupIds().size()));
 
                 // Odd/even coloring is reversed here to account for the header row at index 0
                 aRowItem.add(new AttributeAppender("class",

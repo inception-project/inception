@@ -28,6 +28,7 @@ import de.tudarmstadt.ukp.clarin.webanno.agreement.PairwiseAgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.PerDocumentAgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasure;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasureSupport_ImplBase;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.DefaultAgreementTraits;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.results.perdoc.PerDocumentAgreementTable;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.results.unitizing.FullUnitizingAgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.results.unitizing.PairwiseUnitizingAgreementTable;
@@ -38,7 +39,7 @@ import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 @Component
 public class KrippendorffAlphaUnitizingAgreementMeasureSupport
     extends AgreementMeasureSupport_ImplBase<//
-            KrippendorffAlphaUnitizingAgreementTraits, //
+            DefaultAgreementTraits, //
             FullUnitizingAgreementResult, //
             IUnitizingAnnotationStudy>
 {
@@ -68,33 +69,34 @@ public class KrippendorffAlphaUnitizingAgreementMeasureSupport
 
     @Override
     public AgreementMeasure<FullUnitizingAgreementResult> createMeasure(AnnotationFeature aFeature,
-            KrippendorffAlphaUnitizingAgreementTraits aTraits)
+            DefaultAgreementTraits aTraits)
     {
         return new KrippendorffAlphaUnitizingAgreementMeasure(aFeature, aTraits);
     }
 
     @Override
     public Panel createTraitsEditor(String aId, IModel<AnnotationFeature> aFeature,
-            IModel<KrippendorffAlphaUnitizingAgreementTraits> aModel)
+            IModel<DefaultAgreementTraits> aModel)
     {
         return new KrippendorffAlphaUnitizingAgreementTraitsEditor(aId, aFeature, aModel);
     }
 
     @Override
-    public KrippendorffAlphaUnitizingAgreementTraits createTraits()
+    public DefaultAgreementTraits createTraits()
     {
-        return new KrippendorffAlphaUnitizingAgreementTraits();
+        return new DefaultAgreementTraits();
     }
 
     @Override
-    public Panel createResultsPanel(String aId, IModel<? extends AgreementResult_ImplBase> aResults)
+    public Panel createResultsPanel(String aId, IModel<? extends AgreementResult_ImplBase> aResults,
+            DefaultAgreementTraits aTraits)
     {
         if (aResults.getObject() instanceof PairwiseAgreementResult) {
-            return new PairwiseUnitizingAgreementTable(aId, (IModel) aResults);
+            return new PairwiseUnitizingAgreementTable(aId, (IModel) aResults, aTraits);
         }
 
         if (aResults.getObject() instanceof PerDocumentAgreementResult) {
-            return new PerDocumentAgreementTable(aId, (IModel) aResults);
+            return new PerDocumentAgreementTable(aId, (IModel) aResults, aTraits);
         }
 
         return new EmptyPanel(aId);

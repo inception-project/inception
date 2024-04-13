@@ -121,6 +121,14 @@ public class FullCodingAgreementResult
         return irrelevantSets;
     }
 
+    public List<ConfigurationSet> getRelevantSets()
+    {
+        return allSets.stream() //
+                .filter(s -> !s.hasTag(Tag.IRRELEVANT)) //
+                .toList();
+
+    }
+
     public int getDiffSetCount()
     {
         return setsWithDifferences.size();

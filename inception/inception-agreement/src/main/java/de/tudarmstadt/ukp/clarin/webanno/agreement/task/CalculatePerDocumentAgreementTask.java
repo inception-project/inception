@@ -23,10 +23,12 @@ import static java.util.Comparator.comparing;
 
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
+import java.util.Set;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.fit.util.FSUtil;
@@ -39,6 +41,7 @@ import de.tudarmstadt.ukp.clarin.webanno.agreement.PerDocumentAgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasure;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.DefaultAgreementTraits;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
@@ -56,7 +59,7 @@ public class CalculatePerDocumentAgreementTask
 
     private @Autowired DocumentService documentService;
 
-    private final List<String> annotators;
+    private final Set<String> annotators;
     private final DefaultAgreementTraits traits;
     private final AnnotationFeature feature;
     private final AgreementMeasure<?> measure;
@@ -68,7 +71,7 @@ public class CalculatePerDocumentAgreementTask
     {
         super(aBuilder.withType(TYPE));
 
-        annotators = aBuilder.annotators;
+        annotators = new HashSet<>(aBuilder.annotators);
         traits = aBuilder.traits;
         feature = aBuilder.feature;
         measure = aBuilder.measure;
@@ -98,14 +101,15 @@ public class CalculatePerDocumentAgreementTask
 
             try (var session = CasStorageSession.openNested()) {
                 var casMap = new LinkedHashMap<String, CAS>();
-                for (var annotator : annotators) {
-                    var maybeCas = loadCas(doc, annotator, allAnnDocs);
-                    if (maybeCas.isEmpty()) {
-                        maybeCas = Optional.of(loadInitialCas(doc));
+                for (var annDoc : allAnnDocs.get(doc)) {
+                    var dataOwner = annDoc.getUser();
+                    if (!annotators.contains(dataOwner)) {
+                        continue;
                     }
-                    casMap.put(annotator, maybeCas.get());
+                    casMap.put(dataOwner, loadCas(annDoc.getDocument(), dataOwner));
                 }
 
+                LOG.trace("Calculating agreement on {} for [{}] annotators", doc, casMap.size());
                 var agreementResult = AgreementSummary.of(measure.getAgreement(casMap));
                 summary.mergeResult(doc, agreementResult);
 
@@ -131,18 +135,10 @@ public class CalculatePerDocumentAgreementTask
         return cas;
     }
 
-    private Optional<CAS> loadCas(SourceDocument aDocument, String aDataOwner,
-            Map<SourceDocument, List<AnnotationDocument>> aAllAnnDocs)
-        throws IOException
+    private CAS loadCas(SourceDocument aDocument, String aDataOwner) throws IOException
     {
-        var annDocs = aAllAnnDocs.get(aDocument);
-
-        if (annDocs.stream().noneMatch(annDoc -> aDataOwner.equals(annDoc.getUser()))) {
-            return Optional.empty();
-        }
-
         if (!documentService.existsCas(aDocument, aDataOwner)) {
-            Optional.empty();
+            return loadInitialCas(aDocument);
         }
 
         var cas = documentService.readAnnotationCas(aDocument, aDataOwner, AUTO_CAS_UPGRADE,
@@ -154,7 +150,7 @@ public class CalculatePerDocumentAgreementTask
         FSUtil.setFeature(dmd, "documentId", aDocument.getName());
         FSUtil.setFeature(dmd, "collectionId", aDocument.getProject().getName());
 
-        return Optional.of(cas);
+        return cas;
     }
 
     public PerDocumentAgreementResult getResult()
@@ -175,6 +171,7 @@ public class CalculatePerDocumentAgreementTask
         private AnnotationFeature feature;
         private AgreementMeasure<?> measure;
         private Map<SourceDocument, List<AnnotationDocument>> allAnnDocs;
+        private Set<AnnotationDocumentState> states = new HashSet<>();
 
         protected Builder()
         {
@@ -213,6 +210,16 @@ public class CalculatePerDocumentAgreementTask
         public T withDocuments(Map<SourceDocument, List<AnnotationDocument>> aAllAnnDocs)
         {
             allAnnDocs = aAllAnnDocs;
+            return (T) this;
+        }
+
+        @SuppressWarnings("unchecked")
+        public T withStates(Collection<AnnotationDocumentState> aStates)
+        {
+            states.clear();
+            if (aStates != null) {
+                states.addAll(aStates);
+            }
             return (T) this;
         }
 

@@ -29,7 +29,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.krippendorffalpha.KrippendorffAlphaAgreementMeasureSupport;
-import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.krippendorffalpha.KrippendorffAlphaAgreementTraits;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.FullCodingAgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.DiffResult;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -39,9 +38,9 @@ import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 public class KrippendorffAlphaNominalAgreementMeasureTest
     extends AgreementMeasureTestSuite_ImplBase
 {
-    private AgreementMeasureSupport<KrippendorffAlphaAgreementTraits, //
+    private AgreementMeasureSupport<DefaultAgreementTraits, //
             FullCodingAgreementResult, ICodingAnnotationStudy> sut;
-    private KrippendorffAlphaAgreementTraits traits;
+    private DefaultAgreementTraits traits;
 
     @Override
     @BeforeEach
