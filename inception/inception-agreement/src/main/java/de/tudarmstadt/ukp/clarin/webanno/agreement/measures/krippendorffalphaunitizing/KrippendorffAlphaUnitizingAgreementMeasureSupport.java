@@ -21,7 +21,6 @@ import org.apache.wicket.markup.html.panel.EmptyPanel;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.dkpro.statistics.agreement.unitizing.IUnitizingAnnotationStudy;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.agreement.AgreementResult_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.PairwiseAgreementResult;
@@ -34,19 +33,19 @@ import de.tudarmstadt.ukp.clarin.webanno.agreement.results.unitizing.FullUnitizi
 import de.tudarmstadt.ukp.clarin.webanno.agreement.results.unitizing.PairwiseUnitizingAgreementTable;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
-import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
-@Component
 public class KrippendorffAlphaUnitizingAgreementMeasureSupport
     extends AgreementMeasureSupport_ImplBase<//
             DefaultAgreementTraits, //
             FullUnitizingAgreementResult, //
             IUnitizingAnnotationStudy>
 {
-    public KrippendorffAlphaUnitizingAgreementMeasureSupport(
-            AnnotationSchemaService aAnnotationService)
+    public static final String ID = "KrippendorffAlphaUnitizing";
+
+    @Override
+    public String getId()
     {
-        super();
+        return ID;
     }
 
     @Override

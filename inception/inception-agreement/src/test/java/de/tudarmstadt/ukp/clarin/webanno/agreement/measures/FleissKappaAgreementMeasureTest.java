@@ -17,18 +17,28 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.agreement.measures;
 
+import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.Tag.COMPLETE;
+import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.Tag.DIFFERENCE;
+import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.Tag.INCOMPLETE_POSITION;
 import static java.lang.Double.NaN;
+import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
-import org.dkpro.statistics.agreement.coding.ICodingAnnotationItem;
+import java.util.Set;
+import java.util.stream.StreamSupport;
+
+import org.dkpro.statistics.agreement.IAnnotationUnit;
 import org.dkpro.statistics.agreement.coding.ICodingAnnotationStudy;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.fleisskappa.FleissKappaAgreementMeasureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.FullCodingAgreementResult;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.ConfigurationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
 public class FleissKappaAgreementMeasureTest
@@ -108,18 +118,34 @@ public class FleissKappaAgreementMeasureTest
     {
         var result = twoWithoutLabelTest(sut, traits);
 
-        ICodingAnnotationItem item1 = result.getStudy().getItem(0);
-        ICodingAnnotationItem item2 = result.getStudy().getItem(1);
-        assertEquals("", item1.getUnit(0).getCategory());
-        assertEquals("", item1.getUnit(1).getCategory());
-        assertEquals("A", item2.getUnit(0).getCategory());
+        assertThat(result.getStudy().getItems())
+                .extracting(item -> StreamSupport.stream(item.getUnits().spliterator(), false)
+                        .map(IAnnotationUnit::getCategory).toList())
+                .containsExactly( //
+                        asList("", ""), //
+                        asList("A", "B"));
 
         assertEquals(4, result.getTotalSetCount());
-        assertEquals(0, result.getIrrelevantSets().size());
-        assertEquals(2, result.getIncompleteSetsByPosition().size());
-        assertEquals(0, result.getIncompleteSetsByLabel().size());
-        assertEquals(1, result.getSetsWithDifferences().size());
+        assertThat(result.getIrrelevantSets()).isEmpty();
+        assertThat(result.getIncompleteSetsByPosition()) //
+                .extracting(ConfigurationSet::getCasGroupIds, ConfigurationSet::getTags) //
+                .containsExactly( //
+                        tuple(Set.of("user1"), Set.of(INCOMPLETE_POSITION)), //
+                        tuple(Set.of("user2"), Set.of(INCOMPLETE_POSITION)));
+        assertThat(result.getIncompleteSetsByLabel()).isEmpty();
+        assertThat(result.getSetsWithDifferences()) //
+                .extracting(ConfigurationSet::getCasGroupIds, ConfigurationSet::getTags) //
+                .containsExactly( //
+                        tuple(Set.of("user1", "user2"), Set.of(DIFFERENCE, COMPLETE)));
+        assertThat(result.getRelevantSets()) //
+                .extracting(ConfigurationSet::getCasGroupIds, ConfigurationSet::getTags) //
+                .containsExactly( //
+                        tuple(Set.of("user1", "user2"), Set.of(COMPLETE)), //
+                        tuple(Set.of("user1"), Set.of(INCOMPLETE_POSITION)), //
+                        tuple(Set.of("user2"), Set.of(INCOMPLETE_POSITION)), //
+                        tuple(Set.of("user1", "user2"), Set.of(DIFFERENCE, COMPLETE)));
         assertEquals(4, result.getRelevantSetCount());
+
         assertEquals(0.2, result.getAgreement(), 0.01);
     }
 
@@ -128,7 +154,7 @@ public class FleissKappaAgreementMeasureTest
     {
         var result = fullSingleCategoryAgreementWithTagset(sut, traits);
 
-        ICodingAnnotationItem item1 = result.getStudy().getItem(0);
+        var item1 = result.getStudy().getItem(0);
         assertEquals("+", item1.getUnit(0).getCategory());
 
         assertEquals(1, result.getTotalSetCount());

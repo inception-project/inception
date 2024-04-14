@@ -40,7 +40,7 @@ public class KrippendorffAlphaUnitizingAgreementMeasureTest
     {
         super.setup();
 
-        sut = new KrippendorffAlphaUnitizingAgreementMeasureSupport(annotationService);
+        sut = new KrippendorffAlphaUnitizingAgreementMeasureSupport();
         traits = sut.createTraits();
     }
 

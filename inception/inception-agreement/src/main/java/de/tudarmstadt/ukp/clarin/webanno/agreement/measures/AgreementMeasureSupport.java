@@ -21,7 +21,6 @@ import org.apache.wicket.markup.html.panel.EmptyPanel;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.dkpro.statistics.agreement.IAnnotationStudy;
-import org.springframework.beans.factory.BeanNameAware;
 
 import de.tudarmstadt.ukp.clarin.webanno.agreement.AgreementResult_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.FullAgreementResult_ImplBase;
@@ -31,7 +30,6 @@ public interface AgreementMeasureSupport<//
         T extends DefaultAgreementTraits, //
         R extends FullAgreementResult_ImplBase<S>, //
         S extends IAnnotationStudy>
-    extends BeanNameAware
 {
     String getId();
 
