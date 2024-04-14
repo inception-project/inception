@@ -21,6 +21,8 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHA
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.AUTO_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.getDiffAdapters;
+import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.Tag.COMPLETE;
+import static java.lang.String.join;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static java.util.Comparator.comparing;
@@ -38,6 +40,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -99,7 +102,7 @@ public class AgreementServiceImpl
     }
 
     @Override
-    public void exportDiff(OutputStream aOut, AnnotationFeature aFeature, String aMeasure,
+    public void exportDiff(OutputStream aOut, AnnotationFeature aFeature,
             DefaultAgreementTraits traits, User aCurrentUser, List<SourceDocument> aDocuments,
             List<String> aAnnotators)
     {
@@ -151,7 +154,7 @@ public class AgreementServiceImpl
             DefaultAgreementTraits traits, User aCurrentUser, List<SourceDocument> aDocuments,
             String aAnnotator1, String aAnnotator2)
     {
-        exportDiff(aOut, aFeature, aMeasure, traits, aCurrentUser, aDocuments,
+        exportDiff(aOut, aFeature, traits, aCurrentUser, aDocuments,
                 asList(aAnnotator1, aAnnotator2));
     }
 
@@ -206,33 +209,38 @@ public class AgreementServiceImpl
             aOut.printRecord(headers);
         }
 
-        // Need to use getCompleteSets() here because only these were used to create
-        // the study items and we get the set by item index... using a different
-        // set would mean we get the wrong set when we look it up by item index
-        var sets = aAgreement.getCompleteSets();
-
-        int i = 0;
-        for (var item : aAgreement.getStudy().getItems()) {
-            var cfgSet = sets.get(i);
+        var relevantSets = aAgreement.getRelevantSets();
+        var completeItemIterator = aAgreement.getStudy().getItems().iterator();
+        for (var cfgSet : relevantSets) {
+            var row = new ArrayList<String>();
             var pos = cfgSet.getPosition();
 
-            var values = new ArrayList<String>();
-            values.add(pos.getClass().getSimpleName());
-            values.add(pos.getCollectionId());
-            values.add(pos.getDocumentId());
-            values.add(pos.getType());
-            values.add(aAgreement.getFeature());
-            values.add(cfgSet.getPosition().toMinimalString());
-            values.add(cfgSet.getTags().stream().map(s -> s.toString())
+            row.add(pos.getClass().getSimpleName());
+            row.add(pos.getCollectionId());
+            row.add(pos.getDocumentId());
+            row.add(pos.getType());
+            row.add(aAgreement.getFeature());
+            row.add(cfgSet.getPosition().toMinimalString());
+            row.add(cfgSet.getTags().stream().map(s -> s.toString())
                     .collect(Collectors.joining(", ")));
 
-            for (var unit : item.getUnits()) {
-                values.add(String.valueOf(unit.getCategory()));
+            if (cfgSet.getTags().contains(COMPLETE)) {
+                // The study contains only the COMPLETE items
+                var item = completeItemIterator.next();
+
+                for (var unit : item.getUnits()) {
+                    row.add(String.valueOf(unit.getCategory()));
+                }
+            }
+            else {
+                for (var rater : aAgreement.getCasGroupIds()) {
+                    var values = cfgSet.getValues(rater);
+                    row.add(join(", ",
+                            values.stream().map($ -> Objects.toString($, "")).sorted().toList()));
+                }
             }
 
-            aOut.printRecord(values);
-
-            i++;
+            aOut.printRecord(row);
         }
     }
 }

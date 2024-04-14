@@ -248,12 +248,12 @@ public class AgreementMeasureTestSuite_ImplBase
         layer.setId(1l);
         layers.add(layer);
 
-        AnnotationFeature feature = new AnnotationFeature(project, layer, "PosValue", "PosValue",
-                CAS.TYPE_NAME_STRING);
+        var feature = new AnnotationFeature(project, layer, "PosValue", "PosValue",
+                TYPE_NAME_STRING);
         feature.setId(1l);
         features.add(feature);
 
-        JCas user1 = JCasFactory.createText("test");
+        var user1 = JCasFactory.createText("test");
 
         new POS(user1, 0, 1).addToIndexes();
         new POS(user1, 1, 2).addToIndexes();
@@ -261,11 +261,11 @@ public class AgreementMeasureTestSuite_ImplBase
         p1.setPosValue("A");
         p1.addToIndexes();
 
-        JCas user2 = JCasFactory.createText("test");
+        var user2 = JCasFactory.createText("test");
 
         new POS(user2, 0, 1).addToIndexes();
         new POS(user2, 2, 3).addToIndexes();
-        POS p2 = new POS(user2, 3, 4);
+        var p2 = new POS(user2, 3, 4);
         p2.setPosValue("B");
         p2.addToIndexes();
 
@@ -273,7 +273,7 @@ public class AgreementMeasureTestSuite_ImplBase
         casByUser.put("user1", user1.getCas());
         casByUser.put("user2", user2.getCas());
 
-        AgreementMeasure<R> measure = aSupport.createMeasure(feature, aTraits);
+        var measure = aSupport.createMeasure(feature, aTraits);
 
         return measure.getAgreement(casByUser);
     }
@@ -289,8 +289,8 @@ public class AgreementMeasureTestSuite_ImplBase
         layer.setId(1l);
         layers.add(layer);
 
-        AnnotationFeature feature = new AnnotationFeature(project, layer, "PosValue", "PosValue",
-                CAS.TYPE_NAME_STRING);
+        var feature = new AnnotationFeature(project, layer, "PosValue", "PosValue",
+                TYPE_NAME_STRING);
         feature.setId(1l);
         feature.setTagset(tagset);
         features.add(feature);
