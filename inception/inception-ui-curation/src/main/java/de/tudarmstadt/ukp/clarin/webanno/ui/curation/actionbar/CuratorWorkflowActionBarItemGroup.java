@@ -111,10 +111,10 @@ public class CuratorWorkflowActionBarItemGroup
         AnnotatorState state = page.getModelObject();
 
         if (curationDocumentService.isCurationFinished(state.getDocument())) {
-            return FontAwesome5IconType.lock_s.cssClassName();
+            return FontAwesome5IconType.clipboard_s.cssClassName();
         }
         else {
-            return FontAwesome5IconType.lock_open_s.cssClassName();
+            return FontAwesome5IconType.clipboard_check_s.cssClassName();
         }
     }
 
