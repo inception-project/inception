@@ -1907,6 +1907,22 @@ public class RecommendationServiceImpl
         entityManager.flush();
     }
 
+    @Override
+    @Transactional
+    public void createLearningRecords(LearningRecord... aRecords)
+    {
+        var start = System.currentTimeMillis();
+        for (var record : aRecords) {
+            LOG.trace("{}", record);
+            entityManager.persist(record);
+        }
+        var duration = System.currentTimeMillis() - start;
+
+        if (aRecords.length > 0 && !LOG.isTraceEnabled()) {
+            LOG.debug("... {} learning records stored ... ({}ms)", aRecords.length, duration);
+        }
+    }
+
     private void deleteLearningRecords(SourceDocument aDocument, String aDataOwner)
     {
         var state = getState(aDataOwner, aDocument.getProject());
