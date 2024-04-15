@@ -161,7 +161,7 @@ public class CurationSidebar
 
     private void actionToggleShowMerged(AjaxRequestTarget aTarget)
     {
-        String sessionOwner = userRepository.getCurrentUsername();
+        var sessionOwner = userRepository.getCurrentUsername();
         curationSidebarService.setShowAll(sessionOwner, getModelObject().getProject().getId(),
                 showMerged.getModelObject());
         getAnnotationPage().actionRefreshDocument(aTarget);

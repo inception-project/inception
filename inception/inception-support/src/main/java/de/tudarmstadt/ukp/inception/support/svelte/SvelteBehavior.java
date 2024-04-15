@@ -169,8 +169,10 @@ public class SvelteBehavior
         String id = aComponent.getMarkupId();
         return WicketUtil.wrapInTryCatch(String.join("\n", //
                 "let element = document.getElementById('" + id + "');", //
-                "element.$destroy();", //
-                "delete element.$destroy;", //
-                "console.log('Svelte component on element [" + id + "] was destroyed');"));
+                "if (element.$destroy) {", //
+                "  element.$destroy();", //
+                "  delete element.$destroy;", //
+                "  console.log('Svelte component on element [" + id + "] was destroyed');", //
+                "}"));
     }
 }

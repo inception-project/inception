@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.ui.curation.actionbar;
+package de.tudarmstadt.ukp.inception.ui.curation.sidebar;
 
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 import static wicket.contrib.input.events.EventType.click;
@@ -38,7 +38,7 @@ import de.tudarmstadt.ukp.inception.support.wicket.input.InputBehavior;
 import de.tudarmstadt.ukp.inception.ui.curation.actionbar.opendocument.CurationOpenDocumentDialog;
 import wicket.contrib.input.events.key.KeyType;
 
-public class CurationDocumentNavigator
+public class CurationSidebarDocumentNavigator
     extends Panel
 {
     private static final long serialVersionUID = 7061696472939390003L;
@@ -51,7 +51,7 @@ public class CurationDocumentNavigator
 
     private final ExportDocumentDialog exportDialog;
 
-    public CurationDocumentNavigator(String aId, AnnotationPageBase aPage)
+    public CurationSidebarDocumentNavigator(String aId, AnnotationPageBase aPage)
     {
         super(aId);
 
@@ -66,7 +66,6 @@ public class CurationDocumentNavigator
         queue(new LambdaAjaxLink("showOpenDocumentDialog", this::actionShowOpenDocumentDialog));
 
         queue(exportDialog = new ExportDocumentDialog("exportDialog", page.getModel()));
-
         queue(new LambdaAjaxLink("showExportDialog", exportDialog::show) //
                 .add(visibleWhen(this::isExportable)));
     }
@@ -85,7 +84,8 @@ public class CurationDocumentNavigator
      */
     public void actionShowPreviousDocument(AjaxRequestTarget aTarget)
     {
-        var documentChanged = page.getModelObject().moveToPreviousDocument(page.getListOfDocs());
+        boolean documentChanged = page.getModelObject()
+                .moveToPreviousDocument(page.getListOfDocs());
         if (!documentChanged) {
             info("There is no previous document");
             aTarget.addChildren(getPage(), IFeedback.class);
@@ -102,7 +102,7 @@ public class CurationDocumentNavigator
      */
     public void actionShowNextDocument(AjaxRequestTarget aTarget)
     {
-        var documentChanged = page.getModelObject().moveToNextDocument(page.getListOfDocs());
+        boolean documentChanged = page.getModelObject().moveToNextDocument(page.getListOfDocs());
         if (!documentChanged) {
             info("There is no next document");
             aTarget.addChildren(getPage(), IFeedback.class);

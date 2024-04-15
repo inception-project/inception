@@ -272,15 +272,21 @@ public class CurationSidebarServiceImpl
         Validate.notNull(aSourceDocument, "Document must be specified");
 
         var query = String.join("\n", //
-                "SELECT u FROM User u, AnnotationDocument d", //
+                "SELECT u FROM User u", //
+                " JOIN AnnotationDocument as d", //
+                "   ON d.user = u.username", //
+                " JOIN ProjectPermission AS perm", //
+                "   ON d.project = perm.project AND d.user = perm.user", //
                 "WHERE u.username = d.user", //
-                "AND d.document   = :document", //
-                "AND (d.state = :state or d.annotatorState = :ignore)", //
+                "  AND perm.level = :level", //
+                "  AND d.document = :document", //
+                "  AND (d.state = :state or d.annotatorState = :ignore)", //
                 "ORDER BY u.username ASC");
 
         return new ArrayList<>(entityManager //
                 .createQuery(query, User.class) //
                 .setParameter("document", aSourceDocument) //
+                .setParameter("level", ANNOTATOR) //
                 .setParameter("state", AnnotationDocumentState.FINISHED) //
                 .setParameter("ignore", AnnotationDocumentState.IGNORE) //
                 .getResultList());

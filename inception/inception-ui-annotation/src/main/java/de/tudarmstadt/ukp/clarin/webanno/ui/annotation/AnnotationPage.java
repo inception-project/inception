@@ -126,7 +126,7 @@ public class AnnotationPage
     private long currentProjectId;
 
     private WebMarkupContainer centerArea;
-    private WebMarkupContainer actionBar;
+    private ActionBar actionBar;
     private AnnotationEditorBase annotationEditor;
     private AnnotationDetailEditorPanel detailEditor;
     private SidebarPanel leftSidebar;
@@ -508,6 +508,7 @@ public class AnnotationPage
             // scheduled and *after* the preferences have been loaded (because the current editor
             // type is set in the preferences.
             createAnnotationEditor();
+            actionBar.refresh();
 
             // update paging, only do it during document load so we load the CAS after it has been
             // upgraded
