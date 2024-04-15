@@ -15,9 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.ui.curation.actionbar;
-
-import static java.lang.Integer.MAX_VALUE;
+package de.tudarmstadt.ukp.inception.ui.curation.sidebar;
 
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.LoadableDetachableModel;
@@ -25,13 +23,26 @@ import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBarExtension;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
-import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.CurationPage;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
+import de.tudarmstadt.ukp.clarin.webanno.ui.curation.actionbar.CurationDocumentNavigator;
 import de.tudarmstadt.ukp.inception.ui.curation.actionbar.opendocument.CurationOpenDocumentDialog;
 
 @Order(0)
-public class CurationDocumentNavigatorActionBarExtension
+public class CurationSidebarDocumentNavigatorActionBarExtension
     implements ActionBarExtension
 {
+    private final CurationSidebarService curationSidebarService;
+    private final UserDao userRepository;
+
+    public CurationSidebarDocumentNavigatorActionBarExtension(
+            CurationSidebarService aCurationSidebarService, UserDao aUserRepository)
+    {
+        curationSidebarService = aCurationSidebarService;
+        userRepository = aUserRepository;
+    }
+
     @Override
     public String getRole()
     {
@@ -41,13 +52,20 @@ public class CurationDocumentNavigatorActionBarExtension
     @Override
     public int getPriority()
     {
-        return MAX_VALUE;
+        return 1;
     }
 
     @Override
     public boolean accepts(AnnotationPageBase aPage)
     {
-        return aPage instanceof CurationPage;
+        if (!(aPage instanceof AnnotationPage)) {
+            return false;
+        }
+
+        var project = aPage.getProject();
+        var sessionOwner = userRepository.getCurrentUsername();
+
+        return curationSidebarService.existsSession(sessionOwner, project.getId());
     }
 
     @Override
@@ -60,7 +78,7 @@ public class CurationDocumentNavigatorActionBarExtension
     public void onInitialize(AnnotationPageBase aPage)
     {
         // Open the dialog if no document has been selected.
-        aPage.add(new CurationAutoOpenDialogBehavior());
+        aPage.add(new CurationSidebarAutoOpenDialogBehavior());
 
         // We put the dialog into the page footer since this is presently the only place where we
         // can dynamically add stuff to the page. We cannot add simply to the action bar (i.e.
@@ -68,7 +86,17 @@ public class CurationDocumentNavigatorActionBarExtension
         // selected. In order to allow the dialog to be rendered *before* a document has been
         // selected (i.e. when the action bar is still not on screen), we need to attach it to the
         // page. The same for the AutoOpenDialogBehavior we add below.
-        aPage.addToFooter(createOpenDocumentsDialog("item", aPage));
+        aPage.addToFooter(createOpenDocumentsDialog(ApplicationPageBase.CID_FOOTER_ITEM, aPage));
+    }
+
+    @Override
+    public void onRemove(AnnotationPageBase aPage)
+    {
+        aPage.getBehaviors(CurationSidebarAutoOpenDialogBehavior.class).forEach(aPage::remove);
+        aPage.getFooterItems().getObject().stream() //
+                .filter(CurationOpenDocumentDialog.class::isInstance) //
+                .toList() // avoid concurrent modification problems
+                .forEach(aPage::removeFromFooter);
     }
 
     private CurationOpenDocumentDialog createOpenDocumentsDialog(String aId,

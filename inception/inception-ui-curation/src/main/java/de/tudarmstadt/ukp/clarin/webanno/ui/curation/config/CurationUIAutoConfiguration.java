@@ -23,10 +23,18 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplicat
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.ui.curation.actionbar.CurationDocumentNavigatorActionBarExtension;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.actionbar.CurationUndoActionBarExtension;
+import de.tudarmstadt.ukp.clarin.webanno.ui.curation.actionbar.CurationWorkflowActionBarExtension;
+import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.render.CurationRenderer;
+import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.render.CurationRendererImpl;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.CurationPageMenuItem;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
+import de.tudarmstadt.ukp.inception.rendering.coloring.ColoringService;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.config.AnnotationSchemaProperties;
 
 @ConditionalOnWebApplication
 @Configuration
@@ -43,5 +51,26 @@ public class CurationUIAutoConfiguration
     public CurationUndoActionBarExtension curationUndoActionBarExtension()
     {
         return new CurationUndoActionBarExtension();
+    }
+
+    @Bean
+    public CurationDocumentNavigatorActionBarExtension curationDocumentNavigatorActionBarExtension()
+    {
+        return new CurationDocumentNavigatorActionBarExtension();
+    }
+
+    @Bean
+    public CurationWorkflowActionBarExtension curationWorkflowActionBarExtension()
+    {
+        return new CurationWorkflowActionBarExtension();
+    }
+
+    @Bean
+    public CurationRenderer curationRenderer(PreRenderer aPreRenderer,
+            AnnotationSchemaService aSchemaService, ColoringService aColoringService,
+            AnnotationSchemaProperties aAnnotationEditorProperties, UserDao aUserService)
+    {
+        return new CurationRendererImpl(aPreRenderer, aSchemaService, aColoringService,
+                aAnnotationEditorProperties, aUserService);
     }
 }

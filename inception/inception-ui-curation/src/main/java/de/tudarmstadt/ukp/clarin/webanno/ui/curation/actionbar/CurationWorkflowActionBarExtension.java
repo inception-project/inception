@@ -21,7 +21,6 @@ import static java.lang.Integer.MAX_VALUE;
 
 import org.apache.wicket.markup.html.panel.Panel;
 import org.springframework.core.annotation.Order;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBarExtension;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
@@ -29,7 +28,6 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.CurationPage;
 import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtension;
 
 @Order(1000)
-@Component
 public class CurationWorkflowActionBarExtension
     implements ActionBarExtension
 {

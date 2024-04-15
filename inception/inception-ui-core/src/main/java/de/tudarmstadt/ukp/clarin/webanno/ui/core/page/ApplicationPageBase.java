@@ -63,6 +63,8 @@ public abstract class ApplicationPageBase
 {
     private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
+    public static final String CID_FOOTER_ITEM = "item";
+
     private static final long serialVersionUID = -1690130604031181803L;
 
     public static final MetaDataKey<Class<? extends Component>> MENUBAR_CLASS = //
@@ -186,10 +188,6 @@ public abstract class ApplicationPageBase
         {
             private static final long serialVersionUID = 5912513189482015963L;
 
-            {
-                setReuseItems(true);
-            }
-
             @Override
             protected void populateItem(ListItem<Component> aItem)
             {
@@ -231,7 +229,7 @@ public abstract class ApplicationPageBase
 
     public void addToFooter(Component aComponent)
     {
-        List<Component> items = footerItems.getObject();
+        var items = footerItems.getObject();
 
         if (!items.contains(aComponent)) {
             items.add(aComponent);
@@ -244,7 +242,7 @@ public abstract class ApplicationPageBase
 
     public void removeFromFooter(Component aComponent)
     {
-        List<Component> items = footerItems.getObject();
+        var items = footerItems.getObject();
 
         items.remove(aComponent);
 

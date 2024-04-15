@@ -31,7 +31,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBarExtension;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
@@ -40,12 +39,15 @@ import de.tudarmstadt.ukp.inception.workload.matrix.config.MatrixWorkloadManager
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 
 /**
+ * This extension disables random access to documents for non-managers if random access is disabled
+ * in the matrix workload configuration.
+ * 
  * <p>
  * This class is exposed as a Spring Component via
- * {@link MatrixWorkloadManagerAutoConfiguration#matrixWorkflowDocumentNavigationActionBarExtension}
+ * {@link MatrixWorkloadManagerAutoConfiguration#matrixWorkflowNoRandomAccessDocumentNavigationActionBarExtension}
  * </p>
  */
-public class MatrixWorkflowDocumentNavigationActionBarExtension
+public class MatrixWorkflowNoRandomAccessDocumentNavigationActionBarExtension
     implements ActionBarExtension, Serializable
 {
     private static final long serialVersionUID = -8123846972605546654L;
@@ -59,8 +61,8 @@ public class MatrixWorkflowDocumentNavigationActionBarExtension
     private @SpringBean EntityManager entityManager;
 
     @Autowired
-    public MatrixWorkflowDocumentNavigationActionBarExtension(DocumentService aDocumentService,
-            WorkloadManagementService aWorkloadManagementService,
+    public MatrixWorkflowNoRandomAccessDocumentNavigationActionBarExtension(
+            DocumentService aDocumentService, WorkloadManagementService aWorkloadManagementService,
             MatrixWorkloadExtension aMatrixWorkloadExtension, ProjectService aProjectService,
             UserDao aUserService)
     {
@@ -79,13 +81,13 @@ public class MatrixWorkflowDocumentNavigationActionBarExtension
     @Override
     public int getPriority()
     {
-        return 1;
+        return 10;
     }
 
     @Override
     public boolean accepts(AnnotationPageBase aPage)
     {
-        Project project = aPage.getModelObject().getProject();
+        var project = aPage.getModelObject().getProject();
         if (project == null) {
             return false;
         }
