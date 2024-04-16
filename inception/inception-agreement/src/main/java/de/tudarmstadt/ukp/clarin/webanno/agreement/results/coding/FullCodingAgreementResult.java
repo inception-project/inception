@@ -35,12 +35,7 @@ public class FullCodingAgreementResult
 
     protected final DiffResult diff;
     protected final List<ConfigurationSet> allSets;
-    protected final List<ConfigurationSet> setsWithDifferences;
-    protected final List<ConfigurationSet> completeSets;
-    protected final List<ConfigurationSet> irrelevantSets;
-    protected final List<ConfigurationSet> incompleteSetsByPosition;
-    protected final List<ConfigurationSet> incompleteSetsByLabel;
-    protected final List<ConfigurationSet> pluralitySets;
+    protected final boolean excludeIncomplete;
 
     public FullCodingAgreementResult(String aType, String aFeature, DiffResult aDiff,
             ICodingAnnotationStudy aStudy, List<String> aCasGroupIds,
@@ -49,32 +44,8 @@ public class FullCodingAgreementResult
         super(aType, aFeature, aStudy, aCasGroupIds, aExcludeIncomplete);
 
         allSets = aTaggedConfigurations;
-        completeSets = aDiff.getPositions().stream() //
-                .map(aDiff::getConfigurationSet) //
-                .filter(s -> s.hasTag(Tag.COMPLETE)) //
-                .toList();
-        setsWithDifferences = aDiff.getPositions().stream() //
-                .map(aDiff::getConfigurationSet) //
-                .filter(s -> s.hasTag(Tag.DIFFERENCE)) //
-                .toList();
-        incompleteSetsByPosition = aDiff.getPositions().stream() //
-                .map(aDiff::getConfigurationSet) //
-                .filter(s -> s.hasTag(Tag.INCOMPLETE_POSITION)) //
-                .toList();
-        incompleteSetsByLabel = aDiff.getPositions().stream() //
-                .map(aDiff::getConfigurationSet) //
-                .filter(s -> s.hasTag(Tag.INCOMPLETE_LABEL)) //
-                .toList();
-        pluralitySets = aDiff.getPositions().stream() //
-                .map(aDiff::getConfigurationSet) //
-                .filter(s -> s.hasTag(Tag.STACKED)) //
-                .toList();
-        irrelevantSets = aDiff.getPositions().stream() //
-                .map(aDiff::getConfigurationSet) //
-                .filter(s -> s.hasTag(Tag.IRRELEVANT)) //
-                .toList();
-
         diff = aDiff;
+        excludeIncomplete = aExcludeIncomplete;
     }
 
     public boolean noPositions()
@@ -87,7 +58,9 @@ public class FullCodingAgreementResult
      */
     public List<ConfigurationSet> getIncompleteSetsByPosition()
     {
-        return incompleteSetsByPosition;
+        return allSets.stream() //
+                .filter(s -> s.hasTag(Tag.INCOMPLETE_POSITION)) //
+                .toList();
     }
 
     /**
@@ -95,12 +68,16 @@ public class FullCodingAgreementResult
      */
     public List<ConfigurationSet> getIncompleteSetsByLabel()
     {
-        return incompleteSetsByLabel;
+        return allSets.stream() //
+                .filter(s -> s.hasTag(Tag.INCOMPLETE_LABEL)) //
+                .toList();
     }
 
     public List<ConfigurationSet> getPluralitySets()
     {
-        return pluralitySets;
+        return allSets.stream() //
+                .filter(s -> s.hasTag(Tag.STACKED)) //
+                .toList();
     }
 
     /**
@@ -108,17 +85,23 @@ public class FullCodingAgreementResult
      */
     public List<ConfigurationSet> getSetsWithDifferences()
     {
-        return setsWithDifferences;
+        return allSets.stream() //
+                .filter(s -> s.hasTag(Tag.DIFFERENCE)) //
+                .toList();
     }
 
     public List<ConfigurationSet> getCompleteSets()
     {
-        return completeSets;
+        return allSets.stream() //
+                .filter(s -> s.hasTag(Tag.COMPLETE)) //
+                .toList();
     }
 
     public List<ConfigurationSet> getIrrelevantSets()
     {
-        return irrelevantSets;
+        return allSets.stream() //
+                .filter(s -> s.hasTag(Tag.IRRELEVANT)) //
+                .toList();
     }
 
     public List<ConfigurationSet> getRelevantSets()
@@ -129,30 +112,16 @@ public class FullCodingAgreementResult
 
     }
 
-    public int getDiffSetCount()
+    public List<ConfigurationSet> getUsedSets()
     {
-        return setsWithDifferences.size();
+        return allSets.stream() //
+                .filter(s -> !s.hasTag(Tag.USED)) //
+                .toList();
     }
 
-    public int getUnusableSetCount()
+    public List<ConfigurationSet> getAllSets()
     {
-        return incompleteSetsByPosition.size() + incompleteSetsByLabel.size()
-                + pluralitySets.size();
-    }
-
-    public int getCompleteSetCount()
-    {
-        return completeSets.size();
-    }
-
-    public int getTotalSetCount()
-    {
-        return diff.getPositions().size();
-    }
-
-    public int getRelevantSetCount()
-    {
-        return diff.getPositions().size() - irrelevantSets.size();
+        return allSets;
     }
 
     public DiffResult getDiff()
@@ -212,8 +181,7 @@ public class FullCodingAgreementResult
     @Override
     public String toString()
     {
-        return "CodingAgreementResult [type=" + type + ", feature=" + feature + ", diffs="
-                + getDiffSetCount() + ", unusableSets=" + getUnusableSetCount() + ", agreement="
+        return "CodingAgreementResult [type=" + type + ", feature=" + feature + ", agreement="
                 + agreement + "]";
     }
 }

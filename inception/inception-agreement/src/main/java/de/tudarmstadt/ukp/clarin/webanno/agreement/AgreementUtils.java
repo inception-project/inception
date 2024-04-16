@@ -22,6 +22,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.Tag.DIFFERENCE;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.Tag.INCOMPLETE_LABEL;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.Tag.INCOMPLETE_POSITION;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.Tag.STACKED;
+import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.Tag.USED;
 import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.getFeature;
 import static org.apache.commons.collections4.CollectionUtils.containsAny;
 import static org.apache.uima.fit.util.FSUtil.getFeature;
@@ -245,6 +246,7 @@ public class AgreementUtils
             }
 
             if (!aExcludeIncomplete || cfgSet.hasTag(COMPLETE)) {
+                cfgSet.addTags(USED);
                 study.addItemAsArray(values);
             }
         }
@@ -330,7 +332,7 @@ public class AgreementUtils
             aOut.printf("Item count: %s%n", ExceptionUtils.getRootCauseMessage(e));
         }
 
-        aOut.printf("Relevant position count: %d%n", aAgreement.getRelevantSetCount());
+        aOut.printf("Relevant position count: %d%n", aAgreement.getRelevantSets().size());
 
         aOut.printf("%n== Complete sets: %d ==%n", aAgreement.getCompleteSets().size());
         dumpAgreementConfigurationSetsWithItems(aOut, aAgreement, aAgreement.getCompleteSets());
