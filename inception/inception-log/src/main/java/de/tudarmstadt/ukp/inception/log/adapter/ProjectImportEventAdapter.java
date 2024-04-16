@@ -27,9 +27,9 @@ public class ProjectImportEventAdapter
     implements EventLoggingAdapter<ProjectImportEvent>
 {
     @Override
-    public boolean accepts(Object aEvent)
+    public boolean accepts(Class<?> aEvent)
     {
-        return aEvent instanceof ProjectImportEvent;
+        return ProjectImportEvent.class.isAssignableFrom(aEvent);
     }
 
     @Override

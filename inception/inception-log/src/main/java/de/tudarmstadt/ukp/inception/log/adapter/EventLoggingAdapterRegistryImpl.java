@@ -82,22 +82,30 @@ public class EventLoggingAdapterRegistryImpl
     @SuppressWarnings({ "rawtypes", "unchecked" })
     public <T> Optional<EventLoggingAdapter<T>> getAdapter(T aEvent)
     {
+        if (aEvent == null) {
+            return Optional.empty();
+        }
+
+        var eventClass = aEvent.getClass();
+
         // Try to obtain the adapter from the cache
-        EventLoggingAdapter<T> adapter = (EventLoggingAdapter) adapterCache.get(aEvent.getClass());
+        var adapter = (EventLoggingAdapter) adapterCache.get(eventClass);
 
         // This happens for events generated during applications startup.
-        if (adapter == null && adapters != null) {
-            for (EventLoggingAdapter a : adapters) {
-                if (a.accepts(aEvent)) {
-                    adapter = a;
-                    adapterCache.put(aEvent.getClass(), adapter);
-                    break;
+        if (adapter == null) {
+            if (adapters != null) {
+                for (var a : adapters) {
+                    if (a.accepts(eventClass)) {
+                        adapter = a;
+                        adapterCache.put(eventClass, adapter);
+                        break;
+                    }
                 }
             }
         }
 
         // If no adapter could be found, check if the generic adapter applies
-        if (adapter == null && GenericEventAdapter.INSTANCE.accepts(aEvent)) {
+        if (adapter == null && GenericEventAdapter.INSTANCE.accepts(eventClass)) {
             adapter = (EventLoggingAdapter<T>) GenericEventAdapter.INSTANCE;
         }
 
