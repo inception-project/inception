@@ -31,9 +31,9 @@ public class DocumentStateChangedEventAdapter
     implements EventLoggingAdapter<DocumentStateChangedEvent>
 {
     @Override
-    public boolean accepts(Object aEvent)
+    public boolean accepts(Class<?> aEvent)
     {
-        return aEvent instanceof DocumentStateChangedEvent;
+        return DocumentStateChangedEvent.class.isAssignableFrom(aEvent);
     }
 
     @Override

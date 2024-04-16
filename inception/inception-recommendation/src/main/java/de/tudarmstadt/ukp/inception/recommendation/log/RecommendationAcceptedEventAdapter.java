@@ -36,9 +36,9 @@ public class RecommendationAcceptedEventAdapter
     implements EventLoggingAdapter<RecommendationAcceptedEvent>
 {
     @Override
-    public boolean accepts(Object aEvent)
+    public boolean accepts(Class<?> aEvent)
     {
-        return aEvent instanceof RecommendationAcceptedEvent;
+        return RecommendationAcceptedEvent.class.isAssignableFrom(aEvent);
     }
 
     @Override

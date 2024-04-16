@@ -25,11 +25,10 @@ import de.tudarmstadt.ukp.inception.annotation.events.DocumentOpenedEvent;
 public class DocumentOpenedEventAdapter
     implements EventLoggingAdapter<DocumentOpenedEvent>
 {
-
     @Override
-    public boolean accepts(Object aEvent)
+    public boolean accepts(Class<?> aEvent)
     {
-        return aEvent instanceof DocumentOpenedEvent;
+        return DocumentOpenedEvent.class.isAssignableFrom(aEvent);
     }
 
     @Override

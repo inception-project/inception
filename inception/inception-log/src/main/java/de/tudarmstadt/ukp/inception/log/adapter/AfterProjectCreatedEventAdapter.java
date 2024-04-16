@@ -29,9 +29,9 @@ public class AfterProjectCreatedEventAdapter
     implements EventLoggingAdapter<AfterProjectCreatedEvent>
 {
     @Override
-    public boolean accepts(Object aEvent)
+    public boolean accepts(Class<?> aEvent)
     {
-        return aEvent instanceof AfterProjectCreatedEvent;
+        return AfterProjectCreatedEvent.class.isAssignableFrom(aEvent);
     }
 
     @Override

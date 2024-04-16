@@ -109,16 +109,16 @@ public class SpringAuthenticatedWebSession
                 containerRequest.getSession().invalidate();
             }
 
-            Authentication authentication = authenticationConfigurationHolder
-                    .getAuthenticationConfiguration().getAuthenticationManager()
+            var authentication = authenticationConfigurationHolder.getAuthenticationConfiguration()
+                    .getAuthenticationManager()
                     .authenticate(new UsernamePasswordAuthenticationToken(username, password));
 
             springSecuritySignIn(authentication);
 
-            // If this is called, the authentication object has been created artificially and not
-            // via the authenticationManager, so we need to send the login even manually
-            applicationEventPublisherHolder.get()
-                    .publishEvent(new AuthenticationSuccessEvent(authentication));
+            // // If this is called, the authentication object has been created artificially and not
+            // // via the authenticationManager, so we need to send the login even manually
+            // applicationEventPublisherHolder.get()
+            // .publishEvent(new AuthenticationSuccessEvent(authentication));
 
             return true;
         }

@@ -17,23 +17,28 @@
  */
 package de.tudarmstadt.ukp.inception.log.adapter;
 
+import org.springframework.security.authentication.event.AbstractAuthenticationFailureEvent;
 import org.springframework.stereotype.Component;
 
-import de.tudarmstadt.ukp.inception.project.api.event.BeforeProjectRemovedEvent;
-
 @Component
-public class BeforeProjectRemovedEventAdapter
-    implements EventLoggingAdapter<BeforeProjectRemovedEvent>
+public class AuthenticationFailedEventAdapter
+    implements EventLoggingAdapter<AbstractAuthenticationFailureEvent>
 {
     @Override
     public boolean accepts(Class<?> aEvent)
     {
-        return BeforeProjectRemovedEvent.class.isAssignableFrom(aEvent);
+        return AbstractAuthenticationFailureEvent.class.isAssignableFrom(aEvent);
     }
 
     @Override
-    public long getProject(BeforeProjectRemovedEvent aEvent)
+    public String getEvent(AbstractAuthenticationFailureEvent aEvent)
     {
-        return aEvent.getProject().getId();
+        return aEvent.getClass().getSimpleName();
+    }
+
+    @Override
+    public String getUser(AbstractAuthenticationFailureEvent aEvent)
+    {
+        return aEvent.getAuthentication().getName();
     }
 }

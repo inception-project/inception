@@ -33,7 +33,9 @@ import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Bean;
+import org.springframework.security.authentication.AuthenticationEventPublisher;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DefaultAuthenticationEventPublisher;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
@@ -164,6 +166,12 @@ class Saml2AdapterImplTest
         ApplicationContextProvider applicationContextProvider()
         {
             return new ApplicationContextProvider();
+        }
+
+        @Bean
+        AuthenticationEventPublisher authenticationEventPublisher()
+        {
+            return new DefaultAuthenticationEventPublisher();
         }
     }
 }

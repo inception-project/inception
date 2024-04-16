@@ -74,7 +74,7 @@ public class LoggedEventsWebsocketControllerImpl
     @Override
     public void onApplicationEvent(ApplicationEvent aEvent)
     {
-        adapterRegistry.getAdapter(aEvent)
+        adapterRegistry.getAdapter(aEvent).filter(a -> a.isLoggable(aEvent)) //
                 .map(a -> createLoggedEventMessage(a.getUser(aEvent), a.getProject(aEvent),
                         a.getCreated(aEvent), a.getEvent(aEvent), a.getDocument(aEvent)))
                 .ifPresent(eventMsg -> msgTemplate.convertAndSend(LOGGED_EVENTS_TOPIC, eventMsg));
@@ -102,7 +102,8 @@ public class LoggedEventsWebsocketControllerImpl
         return eventRepo.listRecentActivity(aUsername, aMaxEvents).stream()
                 .map(event -> createLoggedEventMessage(event.getUser(), event.getProject(),
                         event.getCreated(), event.getEvent(), event.getDocument()))
-                .filter(Objects::nonNull).collect(toList());
+                .filter(Objects::nonNull) //
+                .collect(toList());
     }
 
     private LoggedEventMessage createLoggedEventMessage(String aUsername, long aProjectId,
