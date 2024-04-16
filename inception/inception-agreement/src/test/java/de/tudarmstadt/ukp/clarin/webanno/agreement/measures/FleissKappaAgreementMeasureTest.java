@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.agreement.measures;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.Tag.COMPLETE;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.Tag.DIFFERENCE;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.Tag.INCOMPLETE_POSITION;
+import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.Tag.USED;
 import static java.lang.Double.NaN;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -125,7 +126,7 @@ public class FleissKappaAgreementMeasureTest
                         asList("", ""), //
                         asList("A", "B"));
 
-        assertEquals(4, result.getTotalSetCount());
+        assertThat(result.getAllSets()).hasSize(4);
         assertThat(result.getIrrelevantSets()).isEmpty();
         assertThat(result.getIncompleteSetsByPosition()) //
                 .extracting(ConfigurationSet::getCasGroupIds, ConfigurationSet::getTags) //
@@ -136,15 +137,14 @@ public class FleissKappaAgreementMeasureTest
         assertThat(result.getSetsWithDifferences()) //
                 .extracting(ConfigurationSet::getCasGroupIds, ConfigurationSet::getTags) //
                 .containsExactly( //
-                        tuple(Set.of("user1", "user2"), Set.of(DIFFERENCE, COMPLETE)));
+                        tuple(Set.of("user1", "user2"), Set.of(DIFFERENCE, COMPLETE, USED)));
         assertThat(result.getRelevantSets()) //
                 .extracting(ConfigurationSet::getCasGroupIds, ConfigurationSet::getTags) //
                 .containsExactly( //
-                        tuple(Set.of("user1", "user2"), Set.of(COMPLETE)), //
+                        tuple(Set.of("user1", "user2"), Set.of(COMPLETE, USED)), //
                         tuple(Set.of("user1"), Set.of(INCOMPLETE_POSITION)), //
                         tuple(Set.of("user2"), Set.of(INCOMPLETE_POSITION)), //
-                        tuple(Set.of("user1", "user2"), Set.of(DIFFERENCE, COMPLETE)));
-        assertEquals(4, result.getRelevantSetCount());
+                        tuple(Set.of("user1", "user2"), Set.of(DIFFERENCE, COMPLETE, USED)));
 
         assertEquals(0.2, result.getAgreement(), 0.01);
     }
@@ -157,12 +157,12 @@ public class FleissKappaAgreementMeasureTest
         var item1 = result.getStudy().getItem(0);
         assertEquals("+", item1.getUnit(0).getCategory());
 
-        assertEquals(1, result.getTotalSetCount());
+        assertThat(result.getAllSets()).hasSize(1);
         assertEquals(0, result.getIrrelevantSets().size());
         assertEquals(0, result.getIncompleteSetsByPosition().size());
         assertEquals(0, result.getIncompleteSetsByLabel().size());
         assertEquals(0, result.getSetsWithDifferences().size());
-        assertEquals(1, result.getRelevantSetCount());
+        assertThat(result.getRelevantSets()).hasSize(1);
         assertEquals(1.0, result.getAgreement(), 0.01);
     }
 }

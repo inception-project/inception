@@ -143,10 +143,8 @@ public class PairwiseCodingAgreementTable
                         }
                         // Upper diagonal
                         else if (aCellItem.getIndex() > aRowItem.getIndex()) {
-                            cell = new Fragment("cell", "td-upper",
-                                    PairwiseCodingAgreementTable.this);
-                            cell.add(makeUpperDiagonalCellLabel(aRowItem.getModelObject(),
-                                    aCellItem.getModelObject()));
+                            cell = makeUpperDiagonalCell(aRowItem.getModelObject(),
+                                    aCellItem.getModelObject());
                         }
                         // Lower diagonal
                         else {
@@ -172,13 +170,8 @@ public class PairwiseCodingAgreementTable
     {
         var result = getModelObject().getResult(aRater1.getUsername(), aRater2.getUsername());
 
-        if (result == null || result.getCasGroupIds().isEmpty()) {
-            var cell = new Fragment("cell", "td-lower-ok", PairwiseCodingAgreementTable.this);
-            cell.add(new Label("label", "-"));
-            return cell;
-        }
-
-        if (result.getRelevantSetCount() == result.getCompleteSetCount()) {
+        if (result == null || result.getCasGroupIds().isEmpty()
+                || result.getRelevantSetCount() == result.getUsedSetCount()) {
             var cell = new Fragment("cell", "td-lower-ok", PairwiseCodingAgreementTable.this);
             cell.add(new Label("label", "-"));
             return cell;
@@ -186,20 +179,20 @@ public class PairwiseCodingAgreementTable
 
         var tooltipTitle = "Details about annotations excluded from agreement calculation";
 
-        var tooltipContent = new StringBuilder();
+        var msg = new StringBuilder();
         if (traits.isExcludeIncomplete()) {
-            tooltipContent.append(
+            msg.append(
                     format("- Incomplete (missing): %d%n", result.getIncompleteSetsByPosition()));
-            tooltipContent.append(
+            msg.append(
                     format("- Incomplete (not labeled): %d%n", result.getIncompleteSetsByLabel()));
         }
-        tooltipContent.append(format("- Stacked: %d\n\n", result.getPluralitySets()));
-        tooltipContent.append(format("Used: %d of %d", result.getCompleteSetCount(),
-                result.getRelevantSetCount()));
+        msg.append(format("- Stacked: %d\n\n", result.getPluralitySets()));
+        msg.append(
+                format("Used: %d of %d", result.getUsedSetCount(), result.getRelevantSetCount()));
 
         var l = new Label("label",
-                format("%d", result.getRelevantSetCount() - result.getCompleteSetCount()));
-        var tooltip = new DescriptionTooltipBehavior(tooltipTitle, tooltipContent.toString());
+                format("%d", result.getRelevantSetCount() - result.getUsedSetCount()));
+        var tooltip = new DescriptionTooltipBehavior(tooltipTitle, msg.toString());
         tooltip.setOption("position", (Object) null);
         l.add(tooltip);
         l.add(new AttributeAppender("style", "cursor: help", ";"));
@@ -209,12 +202,14 @@ public class PairwiseCodingAgreementTable
         return cell;
     }
 
-    private Label makeUpperDiagonalCellLabel(User aRater1, User aRater2)
+    private Fragment makeUpperDiagonalCell(User aRater1, User aRater2)
     {
         var result = getModelObject().getResult(aRater1.getUsername(), aRater2.getUsername());
 
         if (result == null || result.getCasGroupIds().isEmpty()) {
-            return new Label("label", "no data");
+            var cell = new Fragment("cell", "td-upper-warn", PairwiseCodingAgreementTable.this);
+            cell.add(new Label("label", "no data"));
+            return cell;
         }
 
         if (result.getCasGroupIds().size() != 2) {
@@ -223,6 +218,7 @@ public class PairwiseCodingAgreementTable
                             + result.getCasGroupIds());
         }
 
+        var fragmentId = "td-upper-warn";
         var casGroupId1 = result.getCasGroupIds().get(0);
         var casGroupId2 = result.getCasGroupIds().get(1);
         var noDataRater1 = result.isAllNull(casGroupId1);
@@ -254,12 +250,13 @@ public class PairwiseCodingAgreementTable
         }
         else {
             label = format("%.2f", result.getAgreement());
+            fragmentId = "td-upper-ok";
         }
 
         var tooltipTitle = aRater1.getUiName() + " ↔ " + aRater2.getUiName();
 
-        var tooltipContent = format("Documents counted: %d/%d%n", result.getUsableAgreementsCount(),
-                result.getTotalAgreementsCount())
+        var tooltipContent = format("Documents with agreement score: %d/%d%n",
+                result.getUsableAgreementsCount(), result.getTotalAgreementsCount())
                 + "Positions annotated:\n"
                 + format("- %s: %d/%d%n", aRater1.getUiName(), result.getNonNullCount(casGroupId1),
                         result.getItemCount(casGroupId1))
@@ -277,7 +274,9 @@ public class PairwiseCodingAgreementTable
         l.add(AjaxEventBehavior.onEvent(CLICK_EVENT,
                 _target -> actionScoreClicked(_target, aRater1, aRater2)));
 
-        return l;
+        var cell = new Fragment("cell", fragmentId, PairwiseCodingAgreementTable.this);
+        cell.add(l);
+        return cell;
     }
 
     private void actionScoreClicked(AjaxRequestTarget aTarget, User aRater1, User aRater2)

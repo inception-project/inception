@@ -132,7 +132,7 @@ public class AgreementServiceImpl
                 var diff = doDiff(adapters, traits.getLinkCompareBehavior(), casMap);
 
                 var result = AgreementUtils.makeCodingStudy(diff, aFeature.getLayer().getName(),
-                        aFeature.getName(), tagset, true, casMap);
+                        aFeature.getName(), tagset, traits.isExcludeIncomplete(), casMap);
 
                 try (var printer = new CSVPrinter(
                         new OutputStreamWriter(CloseShieldOutputStream.wrap(aOut), UTF_8),
@@ -235,8 +235,13 @@ public class AgreementServiceImpl
             else {
                 for (var rater : aAgreement.getCasGroupIds()) {
                     var values = cfgSet.getValues(rater);
-                    row.add(join(", ",
-                            values.stream().map($ -> Objects.toString($, "")).sorted().toList()));
+                    if (values != null) {
+                        row.add(join(", ", values.stream().map($ -> Objects.toString($, ""))
+                                .sorted().toList()));
+                    }
+                    else {
+                        row.add("");
+                    }
                 }
             }
 
