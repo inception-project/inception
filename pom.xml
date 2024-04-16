@@ -68,7 +68,7 @@
 
   <properties>
     <build-ant-version>1.10.14</build-ant-version>
-    <build-groovy-version>4.0.20</build-groovy-version>
+    <build-groovy-version>4.0.21</build-groovy-version>
   
     <junit-jupiter.version>5.10.2</junit-jupiter.version>
     <junit-platform.version>1.10.2</junit-platform.version>
@@ -86,20 +86,20 @@
 
     <pdfbox.version>2.0.30</pdfbox.version>
 
-    <spring.version>5.3.33</spring.version>
+    <spring.version>5.3.34</spring.version>
     <spring.boot.version>2.7.18</spring.boot.version>
     <spring.data.version>2.7.18</spring.data.version>
-    <spring.security.version>5.8.11</spring.security.version>
+    <spring.security.version>5.8.12</spring.security.version>
     <springdoc.version>1.8.0</springdoc.version>
     <swagger.version>2.2.21</swagger.version>
     <jjwt.version>0.12.5</jjwt.version>
 
-    <slf4j.version>2.0.12</slf4j.version>
+    <slf4j.version>2.0.13</slf4j.version>
     <log4j2.version>2.23.1</log4j2.version>
     <jboss.logging.version>3.5.3.Final</jboss.logging.version>
     <sentry.version>6.34.0</sentry.version>
 
-    <tomcat.version>9.0.87</tomcat.version>
+    <tomcat.version>9.0.88</tomcat.version>
     <servlet-api.version>4.0.1</servlet-api.version>
 
     <mariadb.driver.version>2.7.12</mariadb.driver.version>
@@ -125,7 +125,7 @@
     <!-- * 8.11.1.0 depends on Lucene 8.11.1 -->
     <!--   no mtas  depends on Lucene 9.x -->
 
-    <elasticsearch.version>7.17.19</elasticsearch.version> 
+    <elasticsearch.version>7.17.20</elasticsearch.version> 
     <!--   7.10.x   depends on Lucene 8.7.0 - last ASL 2.0 version! -->
     <!-- * 7.17.x   depends on Lucene 8.11.1 -->
     <!--   8.1.x    depends on Lucene 9.0.0 -->
