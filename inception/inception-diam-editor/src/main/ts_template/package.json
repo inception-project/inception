@@ -19,7 +19,8 @@
   "dependencies": {
     "@inception-project/inception-js-api": "${semver}",
     "@inception-project/inception-diam": "${semver}",
-    "fast-json-patch": "${fast-json-patch.version}"
+    "fast-json-patch": "${fast-json-patch.version}",
+    "bootstrap": "${bootstrap.version}"
   },
   "devDependencies": {
     "chai": "${chai.version}",
