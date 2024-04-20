@@ -17,15 +17,21 @@
  */
 const fs = require('fs')
 
+const target = '../../../target/js/de/tudarmstadt/ukp/inception/bootstrap/'
+
+if (!fs.existsSync(target)){
+  fs.mkdirSync(target, { recursive: true });
+}
+
 fs.copyFileSync(
   'node_modules/bootstrap/dist/js/bootstrap.bundle.js', 
-  '../../../target/js/de/tudarmstadt/ukp/inception/bootstrap/bootstrap.bundle.js')
+  target+'/bootstrap.bundle.js')
 fs.copyFileSync(
   'node_modules/bootstrap/dist/js/bootstrap.bundle.js.map', 
-  '../../../target/js/de/tudarmstadt/ukp/inception/bootstrap/bootstrap.bundle.js.map')
+  target+'/bootstrap.bundle.js.map')
 fs.copyFileSync(
   'node_modules/bootstrap/dist/js/bootstrap.bundle.min.js', 
-  '../../../target/js/de/tudarmstadt/ukp/inception/bootstrap/bootstrap.bundle.min.js')
+  target+'/bootstrap.bundle.min.js')
 fs.copyFileSync(
   'node_modules/bootstrap/dist/js/bootstrap.bundle.min.js.map', 
-  '../../../target/js/de/tudarmstadt/ukp/inception/bootstrap/bootstrap.bundle.min.js.map')
+  target+'/bootstrap.bundle.min.js.map')

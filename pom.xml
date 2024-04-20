@@ -156,7 +156,7 @@
     <okhttp.version>4.12.0</okhttp.version>
     <okio.version>3.9.0</okio.version>
 
-    <node.version>18.18.0</node.version>
+    <node.version>20.12.2</node.version>
     <apache-annotator.version>0.2.0</apache-annotator.version>
     <bootstrap.version>5.3.3</bootstrap.version>
     <chai.version>^4.3.6</chai.version>
