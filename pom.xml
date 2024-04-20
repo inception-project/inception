@@ -163,8 +163,8 @@
     <cross-env.version>^7.0.3</cross-env.version>
     <color-convert.version>^2.0.1</color-convert.version>
     <dayjs.version>^1.11.10</dayjs.version>
-    <esbuild.version>~0.19.5</esbuild.version>
-    <esbuild-sass-plugin.version>~2.16.0</esbuild-sass-plugin.version>
+    <esbuild.version>^0.20.2</esbuild.version>
+    <esbuild-sass-plugin.version>^3.2.0</esbuild-sass-plugin.version>
     <esbuild-svelte.version>^0.8.0</esbuild-svelte.version>
     <esbuild-runner-plugins.version>^2.3.0-plugins.0</esbuild-runner-plugins.version>
     <eslint.version>^8.57.0</eslint.version>

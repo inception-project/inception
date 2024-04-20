@@ -16,12 +16,20 @@
  * limitations under the License.
  */
 const fs = require('fs')
+const sass = require('sass');
 
 const target = '../../../target/js/de/tudarmstadt/ukp/inception/bootstrap/'
 
 if (!fs.existsSync(target)){
   fs.mkdirSync(target, { recursive: true });
 }
+
+const compressedResult = sass.compile('bootstrap/bootstrap.scss', {sourceMap: true, style: "compressed"})
+fs.writeFileSync(target+'/inception-bootstrap.min.css', compressedResult.css)
+fs.writeFileSync(target+'/inception-bootstrap.min.css.map', JSON.stringify(compressedResult.sourceMap))
+
+const result = sass.compile('bootstrap/bootstrap.scss')
+fs.writeFileSync(target+'/inception-bootstrap.css', result.css)
 
 fs.copyFileSync(
   'node_modules/bootstrap/dist/js/bootstrap.bundle.js', 

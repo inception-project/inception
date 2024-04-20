@@ -1089,6 +1089,7 @@
               <artifactId>apache-rat-plugin</artifactId>
               <configuration>
                 <excludes combine.children="append">
+                  <exclude>src/main/ts/.sass-cache/**</exclude>
                   <exclude>src/main/ts/.eslintrc.yml</exclude>
                   <exclude>src/main/ts/*.json</exclude>
                   <exclude>src/main/ts_template/*.json</exclude>
