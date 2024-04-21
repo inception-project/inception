@@ -15,12 +15,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-const yargs = require('yargs/yargs')
-const { hideBin } = require('yargs/helpers')
-const pjson = require('./package.json')
+import esbuild from 'esbuild'
+import yargs from 'yargs/yargs'
+import { hideBin } from 'yargs/helpers'
+import fs from 'fs-extra'
 
-const esbuild = require('esbuild')
+const argv = yargs(hideBin(process.argv)).argv
 
+const packagePath = 'de/tudarmstadt/ukp/inception/annotatorjs/resources'
+
+let outbase = `../../../target/js/${packagePath}`
+if (argv.live) {
+  outbase = `../../../target/classes/${packagePath}`
+}
+
+const pjson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
 const now = new Date()
 
 const banner = `/* 
@@ -54,11 +63,14 @@ const banner = `/*
 `
 
 const defaults = {
+  entryPoints: ['main.ts'],
+  outfile: `${outbase}/AnnotatorJsEditor.min.js`,
+  globalName: 'AnnotatorJsEditor',
   bundle: true,
   banner: { js: banner, css: banner },
   sourcemap: true,
-  minify: false,
-  target: 'es6',
+  minify: !argv.live,
+  target: 'es2018',
   loader: {
     '.ts': 'ts',
     '.png': 'dataurl'
@@ -66,22 +78,12 @@ const defaults = {
   logLevel: 'info'
 }
 
-let outbase = '../../../target/js/de/tudarmstadt/ukp/inception/annotatorjs/resources/'
-
-const argv = yargs(hideBin(process.argv)).argv
+fs.mkdirsSync(`${outbase}`)
+fs.emptyDirSync(outbase)
 
 if (argv.live) {
-  defaults.watch = {
-    onRebuild (error, result) {
-      if (error) console.error('watch build failed:', error)
-      else console.log('watch build succeeded:', result)
-    }
-  }
-  outbase = '../../../target/classes/de/tudarmstadt/ukp/inception/annotatorjs/resources/'
+  const context = await esbuild.context(defaults)
+  await context.watch()
+} else {
+  esbuild.build(defaults)
 }
-
-esbuild.build(Object.assign({
-  entryPoints: ['main.ts'],
-  outfile: `${outbase}/AnnotatorJsEditor.min.js`,
-  globalName: 'AnnotatorJsEditor'
-}, defaults))

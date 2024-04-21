@@ -15,13 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { expect } from 'chai'
+import { it, expect } from 'vitest'
 import ActivitiesDashlet from '../src/ActivitiesDashlet.svelte'
 import { render } from '@testing-library/svelte'
 
 it('Shows the loading indicator', async () => {
   const { getByText } = render(ActivitiesDashlet, {
     props: {
+      dataUrl: '',
       activities: []
     }
   })
@@ -34,6 +35,7 @@ it('Shows the loading indicator', async () => {
 it('Shows the activities', async () => {
   const { queryByText, getByText } = render(ActivitiesDashlet, {
     props: {
+      dataUrl: '',
       loading: false,
       activities: [{
         id: 1,
@@ -50,5 +52,5 @@ it('Shows the activities', async () => {
   })
 
   expect(queryByText('Loading...')).to.be.null
-  expect(getByText('document.txt')).to.have.property('href').equal('/inception/p/2/annotate/3')
+  expect(getByText('document.txt')).to.have.property('href').to.match(/.*\/inception\/p\/2\/annotate\/3$/)
 })

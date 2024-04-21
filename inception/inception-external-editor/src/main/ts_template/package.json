@@ -19,7 +19,6 @@
     "eslint-config-standard": "${eslint-config-standard.version}",
     "eslint-plugin-import": "${eslint-plugin-import.version}",
     "eslint-plugin-n": "${eslint-plugin-n.version}",
-    "eslint-plugin-mocha": "${eslint-plugin-mocha.version}",
     "eslint-plugin-promise": "${eslint-plugin-promise.version}",
     "eslint-plugin-chai-friendly": "${eslint-plugin-chai-friendly.version}",
     "typescript": "${typescript.version}",
