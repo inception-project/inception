@@ -15,18 +15,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-const esbuildSvelte = require('esbuild-svelte')
-const sveltePreprocess = require('svelte-preprocess')
+import { defineConfig } from 'vite'
+import { svelte } from '@sveltejs/vite-plugin-svelte'
 
-module.exports = {
-  type: 'bundle',
-  esbuild: {
-    target: 'es2018',
-    plugins: [
-      esbuildSvelte({
-        compilerOptions: { css: 'injected' },
-        preprocess: sveltePreprocess({ sourceMap: true })
-      })
-    ]
+export default defineConfig({
+  plugins: [
+    svelte()
+  ],
+  test: {
+    globals: true,
+    environment: 'jsdom'
   }
-}
+})

@@ -26,7 +26,7 @@
     dayjs.extend(localizedFormat)
 
     export let dataUrl: string
-    export let activities = [];
+    export let activities: any[] = [];
     export let loading = true;
 
     onMount(async () => {
