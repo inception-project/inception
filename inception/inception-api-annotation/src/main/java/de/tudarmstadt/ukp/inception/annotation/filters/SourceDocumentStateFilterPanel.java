@@ -43,13 +43,14 @@ public class SourceDocumentStateFilterPanel
     public SourceDocumentStateFilterPanel(String aId, IModel<List<SourceDocumentState>> aModel)
     {
         this(aId, aModel, SourceDocumentState.values());
-        setOutputMarkupId(true);
     }
 
     public SourceDocumentStateFilterPanel(String aId, IModel<List<SourceDocumentState>> aModel,
             SourceDocumentState... aStates)
     {
         super(aId, aModel);
+
+        setOutputMarkupId(true);
 
         var listview = new ListView<>("stateFilter", asList(aStates))
         {
