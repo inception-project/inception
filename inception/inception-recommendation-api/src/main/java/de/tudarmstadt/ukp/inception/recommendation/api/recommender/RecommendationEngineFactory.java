@@ -35,7 +35,7 @@ public interface RecommendationEngineFactory<T>
      */
     boolean isDeprecated();
 
-    default boolean isSynchronous()
+    default boolean isSynchronous(Recommender aRecommender)
     {
         return false;
     }

@@ -224,6 +224,23 @@ public interface DocumentService
      *
      * @param aCas
      *            the CAS.
+     * @param aAnnotationDocument
+     *            the annotation document.
+     * @param aExplicitAnnotatorUserAction
+     *            indicate that the CAS is written as the result of an explicit annotator user
+     *            action (i.e. not as a result of a third person or implicitly by the system).
+     * @throws IOException
+     *             if an I/O error occurs.
+     */
+    void writeAnnotationCasSilently(CAS aCas, AnnotationDocument aAnnotationDocument,
+            boolean aExplicitAnnotatorUserAction)
+        throws IOException;
+
+    /**
+     * Saves the annotations from the CAS to the storage.
+     *
+     * @param aCas
+     *            the CAS.
      * @param aDocument
      *            the source document.
      * @param aUser

@@ -405,27 +405,27 @@ public class SearchServiceImpl
 
     @TransactionalEventListener(fallbackExecution = true)
     @Transactional
-    public void afterDocumentCreate(AfterDocumentCreatedEvent aEvent)
+    public void onAfterDocumentCreated(AfterDocumentCreatedEvent aEvent)
     {
         log.trace("Starting afterDocumentCreate");
 
         // Schedule new document index process
-        enqueueIndexDocument(aEvent.getDocument(), "afterDocumentCreate");
+        enqueueIndexDocument(aEvent.getDocument(), "onAfterDocumentCreated");
     }
 
     @TransactionalEventListener(fallbackExecution = true)
     @Transactional
-    public void afterAnnotationUpdate(AfterCasWrittenEvent aEvent)
+    public void onAfterCasWritten(AfterCasWrittenEvent aEvent)
     {
         log.trace("Starting afterAnnotationUpdate");
 
         // Schedule new document index process
-        enqueueIndexDocument(aEvent.getDocument(), "afterAnnotationUpdate");
+        enqueueIndexDocument(aEvent.getDocument(), "onAfterCasWritten");
     }
 
     @TransactionalEventListener(fallbackExecution = true)
     @Transactional
-    public void beforeLayerConfigurationChanged(LayerConfigurationChangedEvent aEvent)
+    public void onLayerConfigurationChanged(LayerConfigurationChangedEvent aEvent)
     {
         log.trace("Starting beforeLayerConfigurationChanged");
 
@@ -439,7 +439,7 @@ public class SearchServiceImpl
         }
 
         // Schedule re-indexing of the physical index
-        enqueueReindexTask(aEvent.getProject(), "beforeLayerConfigurationChanged");
+        enqueueReindexTask(aEvent.getProject(), "onLayerConfigurationChanged");
     }
 
     @Override
