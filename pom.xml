@@ -159,7 +159,6 @@
     <node.version>20.12.2</node.version>
     <apache-annotator.version>0.2.0</apache-annotator.version>
     <bootstrap.version>5.3.3</bootstrap.version>
-    <chai.version>^5.1.0</chai.version>
     <cross-env.version>^7.0.3</cross-env.version>
     <color-convert.version>^2.0.1</color-convert.version>
     <dayjs.version>^1.11.10</dayjs.version>
@@ -167,7 +166,6 @@
     <esbuild-sass-plugin.version>^3.2.0</esbuild-sass-plugin.version>
     <esbuild-svelte.version>^0.8.0</esbuild-svelte.version>
     <eslint.version>^8.57.0</eslint.version>
-    <eslint-plugin-chai-friendly.version>^0.7.4</eslint-plugin-chai-friendly.version>
     <eslint-config-standard.version>^17.1.0</eslint-config-standard.version>
     <eslint-plugin-import.version>^2.29.1</eslint-plugin-import.version>
     <eslint-plugin-n.version>^16.6.2</eslint-plugin-n.version>
@@ -175,7 +173,6 @@
     <eslint-plugin-svelte.version>^2.37.0</eslint-plugin-svelte.version>
     <events.version>^3.3.0</events.version>
     <fast-json-patch.version>^3.1.1</fast-json-patch.version>
-    <types-chai.version>^4.3.14</types-chai.version>
     <fs-extra.version>^11.2.0</fs-extra.version>
     <jsdom.version>^20.0.0</jsdom.version>
     <jsdom-global.version>^3.0.2</jsdom-global.version>
