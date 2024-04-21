@@ -227,7 +227,7 @@
 
 <!-- svelte-ignore css-unused-selector -->
 <style lang="scss">
-    @import "../../node_modules/bootstrap/scss/bootstrap.scss";
+    @import "bootstrap/scss/bootstrap.scss";
     @import "../style/InceptionEditorIcons.scss";
     @import "../style/InceptionEditorColors.scss";
 

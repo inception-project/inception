@@ -18,7 +18,8 @@
     "@inception-project/inception-js-api": "${semver}",
     "events": "${events.version}",
     "urijs": "${urijs.version}",
-    "pdfjs-dist": "${pdfjs.version}"
+    "pdfjs-dist": "${pdfjs.version}",
+    "bootstrap": "${bootstrap.version}"
   },
   "devDependencies": {
     "chai": "${chai.version}",
