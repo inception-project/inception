@@ -156,29 +156,29 @@
     <okhttp.version>4.12.0</okhttp.version>
     <okio.version>3.9.0</okio.version>
 
-    <node.version>18.18.0</node.version>
+    <node.version>20.12.2</node.version>
     <apache-annotator.version>0.2.0</apache-annotator.version>
     <bootstrap.version>5.3.3</bootstrap.version>
     <chai.version>^4.3.6</chai.version>
     <cross-env.version>^7.0.3</cross-env.version>
     <color-convert.version>^2.0.1</color-convert.version>
-    <dayjs.version>^1.11.4</dayjs.version>
-    <esbuild.version>~0.19.5</esbuild.version>
-    <esbuild-sass-plugin.version>~2.16.0</esbuild-sass-plugin.version>
+    <dayjs.version>^1.11.10</dayjs.version>
+    <esbuild.version>^0.20.2</esbuild.version>
+    <esbuild-sass-plugin.version>^3.2.0</esbuild-sass-plugin.version>
     <esbuild-svelte.version>^0.8.0</esbuild-svelte.version>
     <esbuild-runner-plugins.version>^2.3.0-plugins.0</esbuild-runner-plugins.version>
-    <eslint.version>^8.31.0</eslint.version>
-    <eslint-plugin-chai-friendly.version>^0.7.2</eslint-plugin-chai-friendly.version>
-    <eslint-config-standard.version>^17.0.0</eslint-config-standard.version>
-    <eslint-plugin-import.version>^2.26.0</eslint-plugin-import.version>
-    <eslint-plugin-mocha.version>^10.2.0</eslint-plugin-mocha.version>
-    <eslint-plugin-n.version>^15.6.0</eslint-plugin-n.version>
+    <eslint.version>^8.57.0</eslint.version>
+    <eslint-plugin-chai-friendly.version>^0.7.4</eslint-plugin-chai-friendly.version>
+    <eslint-config-standard.version>^17.1.0</eslint-config-standard.version>
+    <eslint-plugin-import.version>^2.29.1</eslint-plugin-import.version>
+    <eslint-plugin-mocha.version>^10.4.3</eslint-plugin-mocha.version>
+    <eslint-plugin-n.version>^16.6.2</eslint-plugin-n.version>
     <eslint-plugin-promise.version>^6.1.1</eslint-plugin-promise.version>
-    <eslint-plugin-svelte.version>^2.33.2</eslint-plugin-svelte.version>
+    <eslint-plugin-svelte.version>^2.37.0</eslint-plugin-svelte.version>
     <events.version>^3.3.0</events.version>
     <fast-json-patch.version>^3.1.1</fast-json-patch.version>
-    <types-chai.version>^4.3.1</types-chai.version>
-    <fs-extra.version>^10.1.0</fs-extra.version>
+    <types-chai.version>^4.3.14</types-chai.version>
+    <fs-extra.version>^11.2.0</fs-extra.version>
     <jsdom.version>^20.0.0</jsdom.version>
     <jsdom-global.version>^3.0.2</jsdom-global.version>
     <jquery.version>3.7.1</jquery.version>
@@ -190,7 +190,7 @@
     <recogitojs.version>1.8.2</recogitojs.version>
     <recogito-connections.version>0.1.11</recogito-connections.version>
     <recogito-client-core.version>1.7.7</recogito-client-core.version>
-    <sass.version>~1.68.0</sass.version>
+    <sass.version>^1.75.0</sass.version>
     <stomp-stompjs.version>^6.1.2</stomp-stompjs.version>
     <svelte.version>^3.59.2</svelte.version>
     <svelte-preprocess.version>^5.0.4</svelte-preprocess.version>
@@ -199,9 +199,9 @@
     <temp-write.version>^5.0.0</temp-write.version>
     <testing-library-svelte.version>^3.2.2</testing-library-svelte.version>
     <ts-mocha.version>^10.0.0</ts-mocha.version>
-    <typescript.version>^5.2.2</typescript.version>
-    <typescript-eslint-eslint-plugin.version>^6.7.4</typescript-eslint-eslint-plugin.version>
-    <typescript-eslint-parser.version>^6.7.4</typescript-eslint-parser.version>
+    <typescript.version>^5.4.5</typescript.version>
+    <typescript-eslint-eslint-plugin.version>^7.7.0</typescript-eslint-eslint-plugin.version>
+    <typescript-eslint-parser.version>^7.7.0</typescript-eslint-parser.version>
     <types-events.version>^3.0.1</types-events.version>
     <types-jquery.version>^3.5.20</types-jquery.version>
     <types-mocha.version>^10.0.2</types-mocha.version>

@@ -544,7 +544,7 @@
         <plugin>
           <groupId>com.github.eirslett</groupId>
           <artifactId>frontend-maven-plugin</artifactId>
-          <version>1.13.4</version>
+          <version>1.15.0</version>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
@@ -1089,6 +1089,7 @@
               <artifactId>apache-rat-plugin</artifactId>
               <configuration>
                 <excludes combine.children="append">
+                  <exclude>src/main/ts/.sass-cache/**</exclude>
                   <exclude>src/main/ts/.eslintrc.yml</exclude>
                   <exclude>src/main/ts/*.json</exclude>
                   <exclude>src/main/ts_template/*.json</exclude>
