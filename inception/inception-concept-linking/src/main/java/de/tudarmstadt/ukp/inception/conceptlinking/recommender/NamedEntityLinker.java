@@ -17,23 +17,18 @@
  */
 package de.tudarmstadt.ukp.inception.conceptlinking.recommender;
 
-import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.selectOverlapping;
-import static org.apache.uima.fit.util.CasUtil.getType;
+import static de.tudarmstadt.ukp.inception.rendering.model.Range.rangeCoveringAnnotations;
+import static org.apache.uima.cas.text.AnnotationPredicates.colocated;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.Feature;
-import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.tcas.Annotation;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService;
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
@@ -54,12 +49,11 @@ import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 public class NamedEntityLinker
     extends RecommendationEngine
 {
-    private NamedEntityLinkerTraits traits;
-
-    private KnowledgeBaseService kbService;
-    private ConceptLinkingService clService;
-    private FeatureSupportRegistry fsRegistry;
-    private ConceptFeatureTraits featureTraits;
+    private final NamedEntityLinkerTraits traits;
+    private final KnowledgeBaseService kbService;
+    private final ConceptLinkingService clService;
+    private final FeatureSupportRegistry fsRegistry;
+    private final ConceptFeatureTraits featureTraits;
 
     public static final Key<Collection<ImmutablePair<String, Collection<AnnotationFS>>>> KEY_MODEL = new Key<>(
             "model");
@@ -93,50 +87,62 @@ public class NamedEntityLinker
     public Range predict(PredictionContext aContext, CAS aCas, int aBegin, int aEnd)
         throws RecommendationException
     {
-        Type predictedType = getPredictedType(aCas);
+        var stackingAllowed = getRecommender().getLayer().isAllowStacking();
+        var predictedType = getPredictedType(aCas);
+        var predictedFeature = getPredictedFeature(aCas);
 
-        var sentences = selectOverlapping(aCas, getType(aCas, Sentence.class), aBegin, aEnd);
-
-        for (AnnotationFS sentence : sentences) {
-
-            for (Annotation annotation : aCas.<Annotation> select(predictedType)
-                    .coveredBy(sentence)) {
-                int begin = annotation.getBegin();
-                int end = annotation.getEnd();
-                predictSingle(annotation.getCoveredText(), begin, end, aCas);
+        var candidates = aCas.<Annotation> select(predictedType).coveredBy(aBegin, aEnd).asList();
+        Annotation prevCandidate = null;
+        for (var candidate : candidates) {
+            if (prevCandidate != null && colocated(candidate, prevCandidate)) {
+                // If we did already do a KB lookup at this position, no need to do one again. Mind
+                // that UIMA provides annotations with the same offsets as a block in iteration
+                // order
+                continue;
             }
+
+            if (candidate.getFeatureValueAsString(predictedFeature) != null
+                    && (!stackingAllowed || traits.isEmptyCandidateFeatureRequired())) {
+                // If the candidate feature is already filled, we can skip prediction if stacking is
+                // not allowed or if an empty candidate feature is required
+                continue;
+            }
+
+            predictSingle(candidate.getCoveredText(), candidate.getBegin(), candidate.getEnd(),
+                    aCas);
+
+            prevCandidate = candidate;
         }
 
-        return new Range(sentences);
+        return rangeCoveringAnnotations(candidates);
     }
 
     private void predictSingle(String aCoveredText, int aBegin, int aEnd, CAS aCas)
     {
-        List<KBHandle> handles = new ArrayList<>();
+        var handles = new ArrayList<KBHandle>();
 
-        AnnotationFeature feat = recommender.getFeature();
-        ConceptFeatureTraits conceptFeatureTraits = fsRegistry.readTraits(feat,
-                ConceptFeatureTraits::new);
+        var feat = recommender.getFeature();
+        var conceptFeatureTraits = fsRegistry.readTraits(feat, ConceptFeatureTraits::new);
 
         if (conceptFeatureTraits.getRepositoryId() != null) {
-            Optional<KnowledgeBase> kb = kbService.getKnowledgeBaseById(recommender.getProject(),
+            var kb = kbService.getKnowledgeBaseById(recommender.getProject(),
                     conceptFeatureTraits.getRepositoryId());
             if (kb.isPresent() && kb.get().isEnabled() && kb.get().isSupportConceptLinking()) {
                 handles.addAll(readCandidates(kb.get(), aCoveredText, aBegin, aCas));
             }
         }
         else {
-            for (KnowledgeBase kb : kbService.getEnabledKnowledgeBases(recommender.getProject())) {
+            for (var kb : kbService.getEnabledKnowledgeBases(recommender.getProject())) {
                 if (kb.isSupportConceptLinking()) {
                     handles.addAll(readCandidates(kb, aCoveredText, aBegin, aCas));
                 }
             }
         }
 
-        Type predictedType = getPredictedType(aCas);
+        var predictedType = getPredictedType(aCas);
         // Feature scoreFeature = getScoreFeature(aCas);
-        Feature predictedFeature = getPredictedFeature(aCas);
-        Feature isPredictionFeature = getIsPredictionFeature(aCas);
+        var predictedFeature = getPredictedFeature(aCas);
+        var isPredictionFeature = getIsPredictionFeature(aCas);
 
         for (var prediction : handles.stream().limit(recommender.getMaxRecommendations())
                 .toList()) {

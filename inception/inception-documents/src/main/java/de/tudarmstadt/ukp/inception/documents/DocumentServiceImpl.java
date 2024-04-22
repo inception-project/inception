@@ -1022,6 +1022,18 @@ public class DocumentServiceImpl
             boolean aExplicitAnnotatorUserAction)
         throws IOException
     {
+        writeAnnotationCasSilently(aCas, aAnnotationDocument, aExplicitAnnotatorUserAction);
+
+        applicationEventPublisher
+                .publishEvent(new AfterCasWrittenEvent(this, aAnnotationDocument, aCas));
+    }
+
+    @Override
+    @Transactional
+    public void writeAnnotationCasSilently(CAS aCas, AnnotationDocument aAnnotationDocument,
+            boolean aExplicitAnnotatorUserAction)
+        throws IOException
+    {
         casStorageService.writeCas(aAnnotationDocument.getDocument(), aCas,
                 aAnnotationDocument.getUser());
 
@@ -1030,9 +1042,6 @@ public class DocumentServiceImpl
             setAnnotationDocumentState(aAnnotationDocument, AnnotationDocumentState.IN_PROGRESS,
                     EXPLICIT_ANNOTATOR_USER_ACTION);
         }
-
-        applicationEventPublisher
-                .publishEvent(new AfterCasWrittenEvent(this, aAnnotationDocument, aCas));
     }
 
     // NO TRANSACTION REQUIRED - This does not do any should not do a database access, so we do not

@@ -409,16 +409,6 @@ public class PredictionTask
         }
         var factory = maybeFactory.get();
 
-        if (factory.isSynchronous() && !synchronousRecommenders) {
-            logSkippingSynchronous(aPredictions, aRecommender);
-            return;
-        }
-
-        if (!factory.isSynchronous() && !asynchronousRecommenders) {
-            logSkippingAsynchronous(aPredictions, aRecommender);
-            return;
-        }
-
         // Check that configured layer and feature are accepted by this type of recommender
         if (!factory.accepts(aRecommender.getLayer(), aRecommender.getFeature())) {
             logInvalidRecommenderConfiguration(aPredictions, aRecommender);
@@ -432,6 +422,33 @@ public class PredictionTask
 
         try {
             var engine = factory.build(aRecommender);
+
+            var isSynchronous = factory.isSynchronous(aRecommender);
+            if (isSynchronous && !synchronousRecommenders) {
+                logSkippingSynchronous(aPredictions, aRecommender);
+
+                // If possible, we inherit recommendations from a previous run while
+                // the recommender is still busy
+                if (activePredictions != null) {
+                    inheritSuggestionsAtRecommenderLevel(aPredictions, originalCas, aRecommender,
+                            activePredictions, aDocument);
+                }
+
+                return;
+            }
+
+            if (!isSynchronous && !asynchronousRecommenders) {
+                logSkippingAsynchronous(aPredictions, aRecommender);
+
+                // If possible, we inherit recommendations from a previous run while
+                // the recommender is still busy
+                if (activePredictions != null) {
+                    inheritSuggestionsAtRecommenderLevel(aPredictions, originalCas, aRecommender,
+                            activePredictions, aDocument);
+                }
+
+                return;
+            }
 
             if (!engine.isReadyForPrediction(context.get())) {
                 logRecommenderContextNoReady(aPredictions, aDocument, aRecommender);

@@ -485,8 +485,10 @@ public class AnnotationPage
                 // IN_PROGRESS, then we use this opportunity also to set the timestamp of the
                 // annotation document - this ensures that e.g. the dynamic workflow considers the
                 // document to be "active" for the given user so that it won't be considered as
-                // abandoned immediately after having been opened for the first time
-                documentService.writeAnnotationCas(editorCas, annotationDocument,
+                // abandoned immediately after having been opened for the first time.
+                // We suppress the AfterCasWrittenEvent here - handlers should react to
+                // DocumentOpenedEvent instead.
+                documentService.writeAnnotationCasSilently(editorCas, annotationDocument,
                         AnnotationDocumentState.NEW.equals(annotationDocument.getState()));
 
                 bumpAnnotationCasTimestamp(state);

@@ -17,13 +17,11 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.tasks;
 
-import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapability.TRAINING_NOT_SUPPORTED;
 import static de.tudarmstadt.ukp.inception.support.logging.LogLevel.ERROR;
 import static java.lang.System.currentTimeMillis;
 
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 
 import javax.persistence.NoResultException;
@@ -34,7 +32,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.EvaluatedRecommender;
@@ -75,32 +72,32 @@ public class NonTrainableRecommenderActivationTask
     @Override
     public void execute()
     {
-        User user = getUser().orElseThrow();
+        var user = getUser().orElseThrow();
 
-        for (AnnotationLayer layer : annoService.listAnnotationLayer(getProject())) {
+        for (var layer : annoService.listAnnotationLayer(getProject())) {
             if (!layer.isEnabled()) {
                 continue;
             }
 
-            List<Recommender> recommenders = recommendationService.listRecommenders(layer);
+            var recommenders = recommendationService.listRecommenders(layer);
             if (recommenders == null || recommenders.isEmpty()) {
                 continue;
             }
 
-            List<EvaluatedRecommender> evaluatedRecommenders = new ArrayList<>();
-            for (Recommender r : recommenders) {
+            var evaluatedRecommenders = new ArrayList<EvaluatedRecommender>();
+            for (var r : recommenders) {
                 // Make sure we have the latest recommender config from the DB - the one from
                 // the active recommenders list may be outdated
-                Optional<Recommender> optRecommender = freshenRecommender(user, r);
+                var optRecommender = freshenRecommender(user, r);
                 if (optRecommender.isEmpty()) {
                     continue;
                 }
 
-                Recommender recommender = optRecommender.get();
-                String recommenderName = recommender.getName();
+                var recommender = optRecommender.get();
+                var recommenderName = recommender.getName();
 
                 try {
-                    long start = System.currentTimeMillis();
+                    long start = currentTimeMillis();
 
                     considerRecommender(user, recommender).ifPresent(evaluatedRecommender -> {
                         var result = evaluatedRecommender.getEvaluationResult();
@@ -148,25 +145,28 @@ public class NonTrainableRecommenderActivationTask
             return Optional.of(skipRecommenderWithInvalidSettings(user, recommender));
         }
 
-        RecommendationEngine engine = factory.build(recommender);
-        if (TRAINING_NOT_SUPPORTED == engine.getTrainingCapability()) {
-            return Optional.of(activateNonTrainableRecommender(user, recommender, engine));
-        }
+        var engine = factory.build(recommender);
 
-        return Optional.of(skipTrainableRecommender(user, recommender));
+        return switch (engine.getTrainingCapability()) {
+        case TRAINING_NOT_SUPPORTED, TRAINING_SUPPORTED -> Optional
+                .of(activateNonTrainableRecommender(user, recommender, engine));
+        case TRAINING_REQUIRED -> Optional.of(skipTrainableRecommender(user, recommender));
+        default -> throw new IllegalStateException(
+                "Unsupported training capability: [" + engine.getTrainingCapability() + "]");
+        };
     }
 
     private EvaluatedRecommender activateNonTrainableRecommender(User user, Recommender recommender,
             RecommendationEngine aEngine)
     {
-        RecommenderContext ctx = aEngine
+        var ctx = aEngine
                 .newContext(recommendationService.getContext(user.getUsername(), recommender)
                         .orElse(RecommenderContext.emptyContext()));
         ctx.setUser(user);
         ctx.close();
         recommendationService.putContext(user, recommender, ctx);
 
-        String recommenderName = recommender.getName();
+        var recommenderName = recommender.getName();
         LOG.debug("[{}][{}]: Activating [{}] non-trainable recommender", user.getUsername(),
                 recommenderName, recommenderName);
         info("Recommender [%s] activated because it is not trainable", recommenderName);
@@ -238,6 +238,8 @@ public class NonTrainableRecommenderActivationTask
     public static class Builder<T extends Builder<?>>
         extends RecommendationTask_ImplBase.Builder<T>
     {
+        private Recommender recommender;
+
         public NonTrainableRecommenderActivationTask build()
         {
             return new NonTrainableRecommenderActivationTask(this);
