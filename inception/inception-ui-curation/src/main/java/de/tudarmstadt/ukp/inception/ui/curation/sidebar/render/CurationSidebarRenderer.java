@@ -30,7 +30,6 @@ import java.lang.invoke.MethodHandles;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
@@ -43,6 +42,7 @@ import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.Configuration;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.DiffResult;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.Position;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.internal.AID;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span.SpanPosition;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
@@ -54,6 +54,7 @@ import de.tudarmstadt.ukp.inception.rendering.vmodel.VComment;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VCommentType;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VSpan;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.inception.ui.curation.sidebar.CurationSidebarService;
@@ -131,6 +132,8 @@ public class CurationSidebarRenderer
             return;
         }
 
+        var targetUser = aRequest.getAnnotationUser().getUsername();
+
         var casDiff = createDiff(aRequest, selectedUsers);
         var diff = casDiff.toResult();
 
@@ -177,6 +180,23 @@ public class CurationSidebarRenderer
                         aRequest.getWindowBeginOffset(), aRequest.getWindowEndOffset());
 
                 for (var object : objects) {
+                    if (cfg.getPosition() instanceof SpanPosition spanPosition) {
+                        if (spanPosition.getFeature() != null && object instanceof VSpan) {
+                            // When processing a slot position, do not render the origin span
+                            // because that should be already rendered by a separate position
+                            continue;
+                        }
+                    }
+
+                    if (!showAll && object instanceof VSpan) {
+                        var sourceConfiguration = diff.findConfiguration(
+                                cfg.getRepresentativeCasGroupId(), new AID(object.getVid()));
+                        if (sourceConfiguration.map($ -> $.getAID(targetUser) != null)
+                                .orElse(false)) {
+                            continue;
+                        }
+                    }
+
                     var curationVid = new CurationVID(user, object.getVid());
                     if (generatedCurationVids.contains(curationVid)) {
                         continue;
@@ -193,10 +213,8 @@ public class CurationSidebarRenderer
 
                     if (object instanceof VArc arc) {
                         // Currently works for relations but not for slots
-                        arc.setSource(getCurationVid(aRequest.getAnnotationUser(), diff, cfg,
-                                arc.getSource()));
-                        arc.setTarget(getCurationVid(aRequest.getAnnotationUser(), diff, cfg,
-                                arc.getTarget()));
+                        arc.setSource(getCurationVid(targetUser, diff, cfg, arc.getSource()));
+                        arc.setTarget(getCurationVid(targetUser, diff, cfg, arc.getTarget()));
                         LOG.trace("Rendering curation vid: {} source: {} target: {}", arc.getVid(),
                                 arc.getSource(), arc.getTarget());
                     }
@@ -238,17 +256,21 @@ public class CurationSidebarRenderer
      * the curation user by searching the diff for configuration set that contains the annotators
      * annotation and then switching over to the configuration containing the curators annotation.
      */
-    private VID getCurationVid(User aAnnotator, DiffResult aDiff, Configuration aCfg, VID aVid)
+    private VID getCurationVid(String aTargetUser, DiffResult aDiff, Configuration aCfg, VID aVid)
     {
-        Optional<Configuration> sourceConfiguration = aDiff
-                .findConfiguration(aCfg.getRepresentativeCasGroupId(), new AID(aVid.getId()));
+        var representativeCasGroupId = aCfg.getRepresentativeCasGroupId();
+        var sourceConfiguration = aDiff.findConfiguration(representativeCasGroupId, new AID(aVid));
+
         if (sourceConfiguration.isPresent()) {
-            AID curatedAID = sourceConfiguration.get().getAID(aAnnotator.getUsername());
+            var curatedAID = sourceConfiguration.get().getAID(aTargetUser);
             if (curatedAID != null) {
                 return new VID(curatedAID.addr);
             }
+
+            return new CurationVID(representativeCasGroupId,
+                    new VID(sourceConfiguration.get().getAID(representativeCasGroupId).addr));
         }
 
-        return new CurationVID(aCfg.getRepresentativeCasGroupId(), aVid);
+        return new CurationVID(representativeCasGroupId, aVid);
     }
 }

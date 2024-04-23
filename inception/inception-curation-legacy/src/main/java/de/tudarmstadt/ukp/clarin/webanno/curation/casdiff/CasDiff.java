@@ -218,14 +218,14 @@ public class CasDiff
             }
         }
 
-        Type type = aCas.getTypeSystem().getType(aType);
+        var type = aCas.getTypeSystem().getType(aType);
         if (type == null) {
             LOG.debug("CAS group [" + aCasGroupId + "] contains no annotations of type [" + aType
                     + "]");
             return;
         }
 
-        DiffAdapter adapter = getAdapter(aType);
+        var adapter = getAdapter(aType);
 
         Collection<AnnotationFS> annotations;
         if (begin == -1 && end == -1) {
@@ -257,7 +257,7 @@ public class CasDiff
             positions.addAll(adapter.generateSubPositions(fs, linkCompareBehavior));
 
             for (var pos : positions) {
-                ConfigurationSet configSet = configSets.get(pos);
+                var configSet = configSets.get(pos);
                 if (configSet == null) {
                     configSet = new ConfigurationSet(pos);
                     configSets.put(pos, configSet);
@@ -286,7 +286,7 @@ public class CasDiff
         if (position.getFeature() == null) {
             // Check if this configuration is already present
             Configuration configuration = null;
-            for (Configuration cfg : aSet.getConfigurations()) {
+            for (var cfg : aSet.getConfigurations()) {
                 // Handle main positions
                 if (equalsFS(cfg.getRepresentative(cases), aFS)) {
                     configuration = cfg;
