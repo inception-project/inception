@@ -63,6 +63,8 @@ public class DeleteAnnotationHandler
         try {
             var page = getPage();
 
+            page.ensureIsEditable();
+
             var vid = VID.parseOptional(
                     aRequest.getRequestParameters().getParameterValue(PARAM_ID).toOptionalString());
 

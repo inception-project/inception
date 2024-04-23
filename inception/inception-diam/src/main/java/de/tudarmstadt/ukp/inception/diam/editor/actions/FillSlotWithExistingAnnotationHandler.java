@@ -47,6 +47,8 @@ public class FillSlotWithExistingAnnotationHandler
     {
         try {
             var page = getPage();
+            page.ensureIsEditable();
+
             var cas = page.getEditorCas();
             var slotFillerId = getVid(aRequest);
             // When filling a slot, the current selection is *NOT* changed. The Span annotation

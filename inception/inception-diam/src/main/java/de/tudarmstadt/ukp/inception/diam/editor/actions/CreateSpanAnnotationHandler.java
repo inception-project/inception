@@ -57,6 +57,9 @@ public class CreateSpanAnnotationHandler
     {
         try {
             var page = getPage();
+
+            page.ensureIsEditable();
+
             var cas = page.getEditorCas();
             var state = getAnnotatorState();
             var range = getRangeFromRequest(state, aRequest.getRequestParameters(), cas);

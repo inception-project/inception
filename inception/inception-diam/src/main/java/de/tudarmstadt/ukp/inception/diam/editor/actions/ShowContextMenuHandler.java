@@ -104,6 +104,9 @@ public class ShowContextMenuHandler
     private void actionLinkTo(AjaxRequestTarget aTarget, VID paramId)
         throws IOException, AnnotationException
     {
+        var page = getPage();
+        page.ensureIsEditable();
+
         var state = model.getObject();
 
         if (!state.getSelection().isSpan()) {

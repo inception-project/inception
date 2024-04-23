@@ -67,6 +67,8 @@ public class CreateRelationAnnotationHandler
     {
         var page = getPage();
 
+        page.ensureIsEditable();
+
         var origin = VID.parse(aParams.getParameterValue(PARAM_ORIGIN_SPAN_ID).toString());
         var target = VID.parse(aParams.getParameterValue(PARAM_TARGET_SPAN_ID).toString());
 
