@@ -99,7 +99,7 @@ public class ConfigurationSet
     {
         int i = 0;
         for (var cfg : configurations) {
-            i += cfg.getAddressByCasId().size();
+            i += cfg.getCasGroupIds().size();
         }
         return i;
     }

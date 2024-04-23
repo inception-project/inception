@@ -24,6 +24,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiffSummaryS
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiffSummaryState.STACKED;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiffSummaryState.calculateState;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CurationTestUtils.HOST_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CurationTestUtils.SLOT_FILLER_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CurationTestUtils.createMultiLinkWithRoleTestTypeSystem;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CurationTestUtils.load;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CurationTestUtils.loadWebAnnoTsv3;
@@ -88,7 +89,7 @@ public class CasDiffTest
     @Test
     public void singleEmptyCasTest() throws Exception
     {
-        String text = "";
+        var text = "";
 
         var user1Cas = createText(text);
 
@@ -109,7 +110,7 @@ public class CasDiffTest
     @Test
     public void multipleEmptyCasWithMissingOnesTest() throws Exception
     {
-        String text = "";
+        var text = "";
 
         var casByUser = new LinkedHashMap<String, CAS>();
         casByUser.put("user1", null);
@@ -273,6 +274,31 @@ public class CasDiffTest
     @Test
     public void singleNoDifferencesTest() throws Exception
     {
+        var cas = JCasFactory.createJCas();
+        var pos1 = new POS(cas, 0, 0);
+        // pos1.setPosValue("1");
+        var pos2 = new POS(cas, 0, 0);
+        // pos1.setPosValue("2");
+        asList(pos1, pos2).forEach(cas::addFsToIndexes);
+
+        var casByUser = Map.of("user1", cas.getCas());
+
+        var diffAdapters = asList(new SpanDiffAdapter(POS.class.getName(), "PosValue"));
+
+        var diff = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser);
+        var result = diff.toResult();
+
+        // result.print(System.out);
+
+        assertThat(result.size()).isEqualTo(1);
+        assertThat(result.getDifferingConfigurationSets()).isEmpty();
+        assertThat(result.getIncompleteConfigurationSets()).isEmpty();
+        assertThat(calculateState(result)).isEqualTo(AGREE);
+    }
+
+    @Test
+    public void singleNoDifferencesTestMoreData() throws Exception
+    {
         var casByUser = load( //
                 "casdiff/singleSpanNoDifference/data.conll", //
                 "casdiff/singleSpanNoDifference/data.conll");
@@ -288,12 +314,6 @@ public class CasDiffTest
         assertThat(result.getDifferingConfigurationSets()).isEmpty();
         assertThat(result.getIncompleteConfigurationSets()).isEmpty();
         assertThat(calculateState(result)).isEqualTo(AGREE);
-
-        // Todo: Agreement has moved to separate project - should create agreement test there
-        // CodingAgreementResult agreement = getCohenKappaAgreement(diff, entryTypes.get(0),
-        // "PosValue", casByUser);
-        // assertEquals(NaN, agreement.getAgreement(), 0.000001d);
-        // assertEquals(0, agreement.getIncompleteSetsByPosition().size());
     }
 
     @Test
@@ -412,7 +432,7 @@ public class CasDiffTest
             casA.addFsToIndexes(fs1A);
         }
 
-        JCas jcasB = JCasFactory.createJCas(merged);
+        var jcasB = JCasFactory.createJCas(merged);
         {
             var casB = jcasB.getCas();
             tb.buildTokens(jcasB, "This is a test .");
@@ -592,10 +612,10 @@ public class CasDiffTest
     @Test
     public void multiLinkWithRoleLabelDifferenceTest2() throws Exception
     {
-        JCas jcasA = createJCas(createMultiLinkWithRoleTestTypeSystem());
+        var jcasA = createJCas(createMultiLinkWithRoleTestTypeSystem());
         makeLinkHostFS(jcasA, 0, 0, makeLinkFS(jcasA, "slot1", 0, 0));
 
-        JCas jcasB = createJCas(createMultiLinkWithRoleTestTypeSystem());
+        var jcasB = createJCas(createMultiLinkWithRoleTestTypeSystem());
         makeLinkHostFS(jcasB, 0, 0, makeLinkFS(jcasB, "slot2", 0, 0));
 
         var casByUser = new LinkedHashMap<String, CAS>();
@@ -628,6 +648,34 @@ public class CasDiffTest
     }
 
     @Test
+    public void singleLinkWithRoleTargetNoDifferenceTest() throws Exception
+    {
+        var jcasA = createJCas(createMultiLinkWithRoleTestTypeSystem());
+        makeLinkHostFS(jcasA, 0, 0, //
+                makeLinkFS(jcasA, "slot1", 0, 0), //
+                makeLinkFS(jcasA, "slot2", 0, 0));
+
+        var casByUser = new LinkedHashMap<String, CAS>();
+        casByUser.put("user1", jcasA.getCas());
+
+        var hostAdapter = new SpanDiffAdapter(HOST_TYPE);
+        hostAdapter.addLinkFeature("links", "role", "target");
+        var fillerAdapter = new SpanDiffAdapter(SLOT_FILLER_TYPE, "value");
+        var diffAdapters = asList(hostAdapter, fillerAdapter);
+
+        var diff = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser);
+        var result = diff.toResult();
+
+        result.print(System.out);
+
+        assertThat(result.size()).isEqualTo(4);
+        assertThat(result.getConfigurationSets()).hasSize(4);
+        assertThat(result.getDifferingConfigurationSets()).isEmpty();
+        assertThat(result.getIncompleteConfigurationSets()).isEmpty();
+        assertThat(calculateState(result)).isEqualTo(AGREE);
+    }
+
+    @Test
     public void multiLinkWithRoleTargetDifferenceTest() throws Exception
     {
         var jcasA = createJCas(createMultiLinkWithRoleTestTypeSystem());
@@ -653,23 +701,14 @@ public class CasDiffTest
         assertThat(result.getDifferingConfigurationSets()).hasSize(1);
         assertThat(result.getIncompleteConfigurationSets()).isEmpty();
         assertThat(calculateState(result)).isEqualTo(DISAGREE);
-
-        // Todo: Agreement has moved to separate project - should create agreement test there
-        // CodingAgreementResult agreement = getCohenKappaAgreement(diff, HOST_TYPE, "links",
-        // casByUser);
-        //
-        // // Asserts
-        // System.out.printf("Agreement: %s%n", agreement.toString());
-        // AgreementUtils.dumpAgreementStudy(System.out, agreement);
-        //
-        // assertEquals(0.0, agreement.getAgreement(), 0.00001d);
     }
 
     @Test
     public void multiLinkWithRoleMultiTargetDifferenceTest() throws Exception
     {
         var jcasA = JCasFactory.createJCas(createMultiLinkWithRoleTestTypeSystem());
-        makeLinkHostFS(jcasA, 0, 0, makeLinkFS(jcasA, "slot1", 0, 0),
+        makeLinkHostFS(jcasA, 0, 0, //
+                makeLinkFS(jcasA, "slot1", 0, 0), //
                 makeLinkFS(jcasA, "slot1", 10, 10));
 
         var jcasB = JCasFactory.createJCas(createMultiLinkWithRoleTestTypeSystem());
