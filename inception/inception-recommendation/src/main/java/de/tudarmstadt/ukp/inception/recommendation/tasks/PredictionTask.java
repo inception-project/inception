@@ -225,8 +225,8 @@ public class PredictionTask
             for (var document : aDocuments) {
                 monitor.setProgressWithMessage(progress, maxProgress,
                         LogMessage.info(this, "%s", document.getName()));
-                applyRecommendersToDocument(activePredictions, incomingPredictions, casHolder.cas,
-                        document, -1, -1);
+                applyAllRecommendersToDocument(activePredictions, incomingPredictions,
+                        casHolder.cas, document, -1, -1);
                 progress++;
             }
 
@@ -283,7 +283,7 @@ public class PredictionTask
         try (var casHolder = new PredictionCasHolder()) {
 
             final CAS predictionCas = casHolder.cas;
-            applyRecommendersToDocument(activePredictions, incomingPredictions, predictionCas,
+            applyAllRecommendersToDocument(activePredictions, incomingPredictions, predictionCas,
                     aCurrentDocument, predictionBegin, predictionEnd);
         }
         catch (ResourceInitializationException e) {
@@ -293,39 +293,6 @@ public class PredictionTask
         aMonitor.setProgress(1);
 
         return incomingPredictions;
-    }
-
-    /**
-     * @param aPredictions
-     *            the predictions to populate
-     * @param aPredictionCas
-     *            the re-usable buffer CAS to use when calling recommenders
-     * @param aDocument
-     *            the current document
-     * @param aPredictionBegin
-     *            begin of the prediction range (negative to predict from 0)
-     * @param aPredictionEnd
-     *            end of the prediction range (negative to predict until the end of the document)
-     */
-    private void applyRecommendersToDocument(Predictions aActivePredictions,
-            Predictions aPredictions, CAS aPredictionCas, SourceDocument aDocument,
-            int aPredictionBegin, int aPredictionEnd)
-    {
-        if (recommender == null) {
-            applyAllRecommendersToDocument(aActivePredictions, aPredictions, aPredictionCas,
-                    aDocument, aPredictionBegin, aPredictionEnd);
-        }
-        else {
-            try {
-                var originalCas = new LazyCas(aDocument);
-                applySingleRecomenderToDocument(originalCas, recommender, aActivePredictions,
-                        aPredictions, aPredictionCas, aDocument, aPredictionBegin, aPredictionEnd);
-            }
-            catch (IOException e) {
-                logUnableToReadAnnotations(aPredictions, aDocument, e);
-                return;
-            }
-        }
     }
 
     /**
@@ -421,6 +388,17 @@ public class PredictionTask
         var originalCas = aOriginalCas.get();
 
         try {
+            if (recommender != null && !recommender.equals(aRecommender)) {
+                logSkippingNotRequestedRecommender(aPredictions, aRecommender);
+
+                if (activePredictions != null) {
+                    inheritSuggestionsAtRecommenderLevel(aPredictions, originalCas, aRecommender,
+                            activePredictions, aDocument);
+                }
+
+                return;
+            }
+
             var engine = factory.build(aRecommender);
 
             var isSynchronous = factory.isSynchronous(aRecommender);
@@ -849,6 +827,15 @@ public class PredictionTask
         LOG.info("Recommender context {} for user {} in project {} is not ready for " //
                 + "prediction - skipping recommender", aRecommender, getSessionOwner(),
                 aDocument.getProject());
+    }
+
+    private void logSkippingNotRequestedRecommender(Predictions aPredictions,
+            Recommender aRecommender)
+    {
+        aPredictions.log(LogMessage.info(aRecommender.getName(),
+                "Recommender not requested for this run... skipping"));
+        LOG.info("[{}][{}]: Recommender not requested for this run " + "- skipping recommender",
+                getSessionOwner().getUsername(), aRecommender.getName());
     }
 
     private void logSkippingSynchronous(Predictions aPredictions, Recommender aRecommender)

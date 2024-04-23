@@ -302,11 +302,8 @@ public class DiffResult
             aOut.printf("=== %s -> %s %s%n", p,
                     isAgreement(configurationSet) ? "AGREE" : "DISAGREE",
                     isComplete(configurationSet) ? "COMPLETE" : "INCOMPLETE");
-            if (!isAgreement(configurationSet) || !isComplete(configurationSet)) {
-                for (Configuration cfg : configurationSet.getConfigurations()) {
-                    aOut.println();
-                    aOut.println(cfg);
-                }
+            for (var cfg : configurationSet.getConfigurations()) {
+                aOut.printf("  %s", cfg);
             }
         }
     }
