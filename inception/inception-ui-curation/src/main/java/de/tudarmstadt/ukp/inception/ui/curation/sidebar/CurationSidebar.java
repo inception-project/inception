@@ -177,15 +177,16 @@ public class CurationSidebar
     {
         var state = getModelObject();
         var dataOwner = state.getUser();
+        var curationWorkflow = curationWorkflowModel.getObject();
 
         if (aForm.getModelObject().isSaveSettingsAsDefault()) {
-            curationService.createOrUpdateCurationWorkflow(curationWorkflowModel.getObject());
+            curationService.createOrUpdateCurationWorkflow(curationWorkflow);
             success("Updated project merge strategy settings");
         }
 
         try {
-            var mergeStrategyFactory = curationSidebarService.merge(state, dataOwner.getUsername(),
-                    selectedUsers.getModelObject());
+            var mergeStrategyFactory = curationSidebarService.merge(state, curationWorkflow,
+                    dataOwner.getUsername(), selectedUsers.getModelObject());
             success("Re-merge using [" + mergeStrategyFactory.getLabel() + "] finished!");
             aTarget.addChildren(getPage(), IFeedback.class);
         }

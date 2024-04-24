@@ -33,6 +33,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.curation.merge.MergeStrategyFactory;
+import de.tudarmstadt.ukp.inception.curation.merge.strategy.MergeStrategy;
+import de.tudarmstadt.ukp.inception.curation.model.CurationWorkflow;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 
 public interface CurationSidebarService
@@ -132,5 +134,13 @@ public interface CurationSidebarService
     void setDefaultSelectedUsersForDocument(String aSessionOwner, SourceDocument aDocument);
 
     MergeStrategyFactory<?> merge(AnnotatorState aState, String aCurator, Collection<User> aUsers)
+        throws IOException, UIMAException;
+
+    void merge(AnnotatorState aState, MergeStrategy aStrategy, String aCurator,
+            Collection<User> aUsers)
+        throws IOException, UIMAException;
+
+    MergeStrategyFactory<?> merge(AnnotatorState aState, CurationWorkflow aWorkflow,
+            String aCurator, Collection<User> aUsers)
         throws IOException, UIMAException;
 }
