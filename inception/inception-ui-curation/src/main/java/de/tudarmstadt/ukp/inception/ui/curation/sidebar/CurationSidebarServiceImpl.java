@@ -64,8 +64,10 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.annotation.events.DocumentOpenedEvent;
 import de.tudarmstadt.ukp.inception.curation.config.CurationServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.curation.merge.MergeStrategyFactory;
+import de.tudarmstadt.ukp.inception.curation.merge.strategy.MergeStrategy;
 import de.tudarmstadt.ukp.inception.curation.model.CurationSettings;
 import de.tudarmstadt.ukp.inception.curation.model.CurationSettingsId;
+import de.tudarmstadt.ukp.inception.curation.model.CurationWorkflow;
 import de.tudarmstadt.ukp.inception.curation.service.CurationMergeService;
 import de.tudarmstadt.ukp.inception.curation.service.CurationService;
 import de.tudarmstadt.ukp.inception.curation.sidebar.CurationSidebarProperties;
@@ -541,8 +543,31 @@ public class CurationSidebarServiceImpl
                         && sourceDoc.getState().equals(CURATION_FINISHED));
     }
 
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
     public MergeStrategyFactory<?> merge(AnnotatorState aState, String aCurator,
+            Collection<User> aUsers)
+        throws IOException, UIMAException
+    {
+        var workflow = curationService.readOrCreateCurationWorkflow(aState.getProject());
+        return merge(aState, workflow, aCurator, aUsers);
+    }
+
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @Override
+    public MergeStrategyFactory<?> merge(AnnotatorState aState, CurationWorkflow aWorkflow,
+            String aCurator, Collection<User> aUsers)
+        throws IOException, UIMAException
+    {
+        MergeStrategyFactory factory = curationService.getMergeStrategyFactory(aWorkflow);
+        var traits = factory.readTraits(aWorkflow);
+        var mergeStrategy = factory.makeStrategy(traits);
+        merge(aState, mergeStrategy, aCurator, aUsers);
+        return factory;
+    }
+
+    @Override
+    public void merge(AnnotatorState aState, MergeStrategy aStrategy, String aCurator,
             Collection<User> aUsers)
         throws IOException, UIMAException
     {
@@ -555,18 +580,13 @@ public class CurationSidebarServiceImpl
         // FIXME: should merging not overwrite the current users annos? (can result in
         // deleting the users annotations!!!), currently fixed by warn message to user
         // prepare merged CAS
-        var workflow = curationService.readOrCreateCurationWorkflow(aState.getProject());
-        MergeStrategyFactory factory = curationService.getMergeStrategyFactory(workflow);
-        var mergeStrategy = factory.makeStrategy(factory.readTraits(workflow));
         curationMergeService.mergeCasses(doc, aState.getUser().getUsername(), aTargetCas, userCases,
-                mergeStrategy, aState.getAnnotationLayers());
+                aStrategy, aState.getAnnotationLayers());
 
         // write back and update timestamp
         writeCurationCas(aTargetCas, aState, doc.getProject().getId());
 
         LOG.debug("Merge done");
-
-        return factory;
     }
 
     private class CurationSession
