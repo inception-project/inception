@@ -201,7 +201,7 @@ public abstract class Task
         }
     }
 
-    public abstract void execute();
+    public abstract void execute() throws Exception;
 
     @Override
     public String toString()

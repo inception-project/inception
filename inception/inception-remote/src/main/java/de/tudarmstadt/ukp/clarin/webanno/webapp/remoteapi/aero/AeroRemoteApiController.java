@@ -722,7 +722,7 @@ public class AeroRemoteApiController
         AnnotationDocument anno = getAnnotation(document, aAnnotatorId, false);
         documentService.setAnnotationDocumentState(anno,
                 parseAnnotationDocumentState(aState.get()));
-        documentService.createAnnotationDocument(anno);
+        documentService.createOrUpdateAnnotationDocument(anno);
 
         RResponse<RAnnotation> response = new RResponse<>(new RAnnotation(anno));
         response.addMessage(INFO,
@@ -756,12 +756,12 @@ public class AeroRemoteApiController
         CAS annotationCas = createCompatibleCas(aProjectId, aDocumentId, aFile, aFormat);
 
         // If they are compatible, then we can store the new annotations
-        documentService.writeAnnotationCas(annotationCas, document, annotator, false);
+        documentService.writeAnnotationCas(annotationCas, document, annotator);
 
         // Set state if one was provided
         if (aState.isPresent()) {
             anno.setState(parseAnnotationDocumentState(aState.get()));
-            documentService.createAnnotationDocument(anno);
+            documentService.createOrUpdateAnnotationDocument(anno);
         }
 
         RResponse<RAnnotation> response = new RResponse<>(new RAnnotation(anno));

@@ -244,7 +244,7 @@ public class MtasDocumentIndexTest
         // Write annotated CAS to annotated document
         try (CasStorageSession casStorageSession = CasStorageSession.open()) {
             log.info("Writing annotated document using documentService.writeAnnotationCas");
-            documentService.writeAnnotationCas(jCas.getCas(), annotationDocument, false);
+            documentService.writeAnnotationCas(jCas.getCas(), annotationDocument);
         }
 
         log.info("Writing for annotated document to be indexed");
@@ -310,7 +310,7 @@ public class MtasDocumentIndexTest
         // Write annotated CAS to annotated document
         try (CasStorageSession casStorageSession = CasStorageSession.open()) {
             log.info("Writing annotated document using documentService.writeAnnotationCas");
-            documentService.writeAnnotationCas(jCas.getCas(), annotationDocument, false);
+            documentService.writeAnnotationCas(jCas.getCas(), annotationDocument);
         }
 
         log.info("Writing for annotated document to be indexed");

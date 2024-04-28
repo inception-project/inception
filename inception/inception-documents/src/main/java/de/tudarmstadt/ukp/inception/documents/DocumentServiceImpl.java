@@ -246,7 +246,8 @@ public class DocumentServiceImpl
 
     @Override
     @Transactional
-    public AnnotationDocument createAnnotationDocument(AnnotationDocument aAnnotationDocument)
+    public AnnotationDocument createOrUpdateAnnotationDocument(
+            AnnotationDocument aAnnotationDocument)
     {
         Validate.notNull(aAnnotationDocument, "Annotation document must be specified");
 
@@ -352,7 +353,7 @@ public class DocumentServiceImpl
 
         for (var user : usersWithoutAnnotationDocument) {
             var annDoc = new AnnotationDocument(user, aDocument);
-            createAnnotationDocument(annDoc);
+            createOrUpdateAnnotationDocument(annDoc);
             annDocs.add(annDoc);
         }
 
@@ -381,7 +382,7 @@ public class DocumentServiceImpl
 
         for (var srcDoc : sourceDocsWithoutAnnotationDocument) {
             var annDoc = new AnnotationDocument(aUser.getUsername(), srcDoc);
-            createAnnotationDocument(annDoc);
+            createOrUpdateAnnotationDocument(annDoc);
             annDocs.add(annDoc);
         }
 
@@ -392,14 +393,21 @@ public class DocumentServiceImpl
     @Transactional(noRollbackFor = NoResultException.class)
     public AnnotationDocument createOrGetAnnotationDocument(SourceDocument aDocument, User aUser)
     {
+        return createOrGetAnnotationDocument(aDocument, aUser.getUsername());
+    }
+
+    @Override
+    @Transactional(noRollbackFor = NoResultException.class)
+    public AnnotationDocument createOrGetAnnotationDocument(SourceDocument aDocument, String aUser)
+    {
         Validate.notNull(aDocument, "Source document must be specified");
         Validate.notNull(aUser, "User must be specified");
 
         // Check if there is an annotation document entry in the database. If there is none,
         // create one.
         if (!existsAnnotationDocument(aDocument, aUser)) {
-            var annotationDocument = new AnnotationDocument(aUser.getUsername(), aDocument);
-            createAnnotationDocument(annotationDocument);
+            var annotationDocument = new AnnotationDocument(aUser, aDocument);
+            createOrUpdateAnnotationDocument(annotationDocument);
             return annotationDocument;
         }
 
@@ -944,9 +952,9 @@ public class DocumentServiceImpl
             return new HashMap<>();
         }
 
-        SourceDocument doc = aDocuments.get(0).getDocument();
-        List<String> usernames = new ArrayList<>();
-        for (AnnotationDocument annDoc : aDocuments) {
+        var doc = aDocuments.get(0).getDocument();
+        var usernames = new ArrayList<String>();
+        for (var annDoc : aDocuments) {
             if (!doc.equals(annDoc.getDocument())) {
                 throw new IllegalArgumentException(format(
                         "Expected all annotation documents to belong to the  same source document "
@@ -1019,10 +1027,10 @@ public class DocumentServiceImpl
     @Override
     @Transactional
     public void writeAnnotationCas(CAS aCas, AnnotationDocument aAnnotationDocument,
-            boolean aExplicitAnnotatorUserAction)
+            AnnotationDocumentStateChangeFlag... aFlags)
         throws IOException
     {
-        writeAnnotationCasSilently(aCas, aAnnotationDocument, aExplicitAnnotatorUserAction);
+        writeAnnotationCasSilently(aCas, aAnnotationDocument, aFlags);
 
         applicationEventPublisher
                 .publishEvent(new AfterCasWrittenEvent(this, aAnnotationDocument, aCas));
@@ -1031,16 +1039,16 @@ public class DocumentServiceImpl
     @Override
     @Transactional
     public void writeAnnotationCasSilently(CAS aCas, AnnotationDocument aAnnotationDocument,
-            boolean aExplicitAnnotatorUserAction)
+            AnnotationDocumentStateChangeFlag... aFlags)
         throws IOException
     {
         casStorageService.writeCas(aAnnotationDocument.getDocument(), aCas,
                 aAnnotationDocument.getUser());
 
-        if (aExplicitAnnotatorUserAction) {
+        if (asList(aFlags).contains(EXPLICIT_ANNOTATOR_USER_ACTION)) {
             aAnnotationDocument.setTimestamp(new Timestamp(new Date().getTime()));
             setAnnotationDocumentState(aAnnotationDocument, AnnotationDocumentState.IN_PROGRESS,
-                    EXPLICIT_ANNOTATOR_USER_ACTION);
+                    aFlags);
         }
     }
 
@@ -1065,21 +1073,21 @@ public class DocumentServiceImpl
     @Override
     @Transactional
     public void writeAnnotationCas(CAS aCas, SourceDocument aDocument, String aUser,
-            boolean aExplicitAnnotatorUserAction)
+            AnnotationDocumentStateChangeFlag... aFlags)
         throws IOException
     {
-        AnnotationDocument annotationDocument = getAnnotationDocument(aDocument, aUser);
-        writeAnnotationCas(aCas, annotationDocument, aExplicitAnnotatorUserAction);
+        var annotationDocument = getAnnotationDocument(aDocument, aUser);
+        writeAnnotationCas(aCas, annotationDocument, aFlags);
     }
 
     @Override
     @Transactional
     public void writeAnnotationCas(CAS aCas, SourceDocument aDocument, User aUser,
-            boolean aExplicitAnnotatorUserAction)
+            AnnotationDocumentStateChangeFlag... aFlags)
         throws IOException
     {
-        AnnotationDocument annotationDocument = getAnnotationDocument(aDocument, aUser);
-        writeAnnotationCas(aCas, annotationDocument, aExplicitAnnotatorUserAction);
+        var annotationDocument = getAnnotationDocument(aDocument, aUser);
+        writeAnnotationCas(aCas, annotationDocument, aFlags);
     }
 
     @Override
@@ -1088,7 +1096,7 @@ public class DocumentServiceImpl
             AnnotationDocumentStateChangeFlag... aFlags)
         throws UIMAException, IOException
     {
-        AnnotationDocument adoc = getAnnotationDocument(aDocument, aUser);
+        var adoc = getAnnotationDocument(aDocument, aUser);
 
         // We read the initial CAS and then use it to override the CAS for the given document/user.
         // In order to do that, we must read the initial CAS unmanaged.
@@ -1101,7 +1109,7 @@ public class DocumentServiceImpl
             addOrUpdateCasMetadata(cas, timestamp.get(), aDocument, aUser.getUsername());
         }
 
-        writeAnnotationCas(cas, aDocument, aUser, false);
+        writeAnnotationCas(cas, aDocument, aUser);
 
         adoc.setTimestamp(null);
         adoc.setAnnotatorComment(null);
@@ -1404,6 +1412,16 @@ public class DocumentServiceImpl
 
     @Override
     @Transactional
+    public AnnotationDocumentState setAnnotationDocumentState(SourceDocument aDocument,
+            String aUser, AnnotationDocumentState aState,
+            AnnotationDocumentStateChangeFlag... aFlags)
+    {
+        var annDoc = createOrGetAnnotationDocument(aDocument, aUser);
+        return setAnnotationDocumentState(annDoc, aState, aFlags);
+    }
+
+    @Override
+    @Transactional
     public AnnotationDocumentState setAnnotationDocumentState(AnnotationDocument aDocument,
             AnnotationDocumentState aState, AnnotationDocumentStateChangeFlag... aFlags)
     {
@@ -1438,7 +1456,7 @@ public class DocumentServiceImpl
             aDocument.setAnnotatorState(aState);
         }
 
-        createAnnotationDocument(aDocument);
+        createOrUpdateAnnotationDocument(aDocument);
         return oldState;
     }
 

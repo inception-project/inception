@@ -20,34 +20,13 @@
 <wicket:panel>
   <form wicket:id="form" class="card">
     <div class="card-header">
-      <wicket:message key="applyRecommender"/>
+      <wicket:message key="extractTagSet"/>
     </div>
     <div class="card-body">
       <p>
-        <wicket:message key="applyRecommenderDescription"/>
+        <wicket:message key="bulkCurationDescription"/>
       </p>
-      <div class="container">
-        <div class="row form-row form-floating" wicket:enclosure="user">
-          <select wicket:id="user" class="form-select" wicket:message="placeholder:user"/>
-          <label wicket:for="user">
-            <wicket:label key="user"/>
-          </label>
-        </div>
-        <div class="row form-row form-floating" wicket:enclosure="recommender">
-          <select wicket:id="recommender" class="form-select" wicket:message="placeholder:recommender"/>
-          <label wicket:for="recommender">
-            <wicket:label key="recommender"/>
-          </label>
-        </div>
-        <div class="row form-row form-floating" wicket:enclosure="processingMetadataLayer">
-          <select wicket:id="processingMetadataLayer" class="form-select" wicket:message="placeholder:processingMetadataLayer"/>
-          <label wicket:for="processingMetadataLayer">
-            <wicket:label key="processingMetadataLayer"/>
-          </label>
-        </div>
-        
-        <div wicket:id="processingMetadata"></div>
-      </div>
+      <div wicket:id="mergeStrategy"/>
     
       <div class="text-end">
         <button wicket:id="startProcessing" type="button" class="btn btn-primary text-nowrap">

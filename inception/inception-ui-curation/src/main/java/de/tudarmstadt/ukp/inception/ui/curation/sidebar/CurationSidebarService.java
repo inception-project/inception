@@ -109,12 +109,6 @@ public interface CurationSidebarService
     List<User> listUsersReadyForCuration(String aUsername, Project aProject,
             SourceDocument aDocument);
 
-    /**
-     * @return list of users that have finished the given document
-     */
-    @SuppressWarnings("javadoc")
-    List<User> listCuratableUsers(SourceDocument aSourceDocument);
-
     List<User> listCuratableUsers(String aSessionOwner, SourceDocument aDocument);
 
     /**

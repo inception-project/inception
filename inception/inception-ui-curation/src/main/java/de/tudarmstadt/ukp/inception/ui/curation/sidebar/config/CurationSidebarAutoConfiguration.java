@@ -28,6 +28,7 @@ import org.springframework.security.core.session.SessionRegistry;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.inception.curation.service.CurationDocumentService;
 import de.tudarmstadt.ukp.inception.curation.service.CurationMergeService;
 import de.tudarmstadt.ukp.inception.curation.service.CurationService;
 import de.tudarmstadt.ukp.inception.curation.sidebar.CurationSidebarProperties;
@@ -56,11 +57,12 @@ public class CurationSidebarAutoConfiguration
             ProjectService aProjectService, UserDao aUserRegistry,
             CasStorageService aCasStorageService, CurationService aCurationService,
             CurationMergeService aCurationMergeService,
-            CurationSidebarProperties aCurationSidebarProperties)
+            CurationSidebarProperties aCurationSidebarProperties,
+            CurationDocumentService aCurationDocumentService)
     {
         return new CurationSidebarServiceImpl(aEntityManager, aDocumentService, aSessionRegistry,
                 aProjectService, aUserRegistry, aCasStorageService, aCurationService,
-                aCurationMergeService, aCurationSidebarProperties);
+                aCurationMergeService, aCurationSidebarProperties, aCurationDocumentService);
     }
 
     @Bean(CurationEditorExtension.EXTENSION_ID)

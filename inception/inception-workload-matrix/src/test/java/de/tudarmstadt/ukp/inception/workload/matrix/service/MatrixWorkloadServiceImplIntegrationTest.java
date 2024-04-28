@@ -197,11 +197,11 @@ class MatrixWorkloadServiceImplIntegrationTest
     {
         var annDoc1 = new AnnotationDocument("user3", doc1);
         annDoc1.setState(IN_PROGRESS);
-        documentService.createAnnotationDocument(annDoc1);
+        documentService.createOrUpdateAnnotationDocument(annDoc1);
 
         var annDoc2 = new AnnotationDocument("user1", doc2);
         annDoc2.setState(FINISHED);
-        documentService.createAnnotationDocument(annDoc2);
+        documentService.createOrUpdateAnnotationDocument(annDoc2);
 
         sut.assignWorkload(project, 2, true);
 

@@ -1037,23 +1037,19 @@ public class AnnotationSchemaServiceImpl
     @Transactional
     public List<AnnotationLayer> listSupportedLayers(Project aProject)
     {
-        var supportedLayers = new ArrayList<AnnotationLayer>();
+        return listAnnotationLayer(aProject).stream() //
+                .filter(layerSupportRegistry::isSupported) //
+                .toList();
+    }
 
-        for (var l : listAnnotationLayer(aProject)) {
-            try {
-                layerSupportRegistry.getLayerSupport(l);
-            }
-            catch (IllegalArgumentException e) {
-                // Skip unsupported layers
-                continue;
-            }
-
-            // Add supported layers to the result
-            supportedLayers.add(l);
-        }
-
-        return supportedLayers;
-
+    @Override
+    @Transactional
+    public List<AnnotationLayer> listEnabledLayers(Project aProject)
+    {
+        return listAnnotationLayer(aProject).stream() //
+                .filter(AnnotationLayer::isEnabled) //
+                .filter(layerSupportRegistry::isSupported) //
+                .toList();
     }
 
     @Override

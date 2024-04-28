@@ -31,6 +31,7 @@ import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.isPrimiti
 import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.selectSentences;
 import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.selectTokens;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.emptySet;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.uima.fit.util.CasUtil.getType;
@@ -40,7 +41,6 @@ import static org.apache.uima.fit.util.FSUtil.getFeature;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -165,8 +165,8 @@ public class CasMerge
         return mergeStrategy;
     }
 
-    private List<Configuration> chooseConfigurationToMerge(AnnotationLayer aLayer, DiffResult aDiff,
-            ConfigurationSet cfgs)
+    private List<Configuration> chooseConfigurationsToMerge(AnnotationLayer aLayer,
+            DiffResult aDiff, ConfigurationSet cfgs)
     {
         return mergeStrategy.chooseConfigurationsToMerge(aDiff, cfgs, aLayer);
     }
@@ -216,7 +216,7 @@ public class CasMerge
 
         // If there is nothing to merge, bail out
         if (aCasMap.isEmpty()) {
-            return Collections.emptySet();
+            return emptySet();
         }
 
         // Set up a cache for resolving type to layer to avoid hammering the DB as we process each
@@ -245,7 +245,7 @@ public class CasMerge
         // We process layer by layer so that we can order the layers (important to process tokens
         // and sentences before the others)
         for (var layerName : layerNames) {
-            var positions = aDiff.getPositions().stream()
+            var spanPositions = aDiff.getPositions().stream()
                     .filter(pos -> layerName.equals(pos.getType()))
                     .filter(pos -> pos instanceof SpanPosition) //
                     .map(pos -> (SpanPosition) pos)
@@ -253,32 +253,25 @@ public class CasMerge
                     .filter(pos -> pos.getFeature() == null) //
                     .toList();
 
-            if (positions.isEmpty()) {
+            if (spanPositions.isEmpty()) {
                 continue;
             }
 
-            LOG.debug("Processing {} span positions on layer {}", positions.size(), layerName);
+            LOG.debug("Processing {} span positions on layer {}", spanPositions.size(), layerName);
 
             // First we merge the spans so that we can attach the relations to something later.
             // Slots are also excluded for the moment
-            for (SpanPosition position : positions) {
-                LOG.trace(" |   processing {}", position);
-                var layer = type2layer.get(position.getType());
-                var cfgs = aDiff.getConfigurationSet(position);
+            for (var spanPosition : spanPositions) {
+                LOG.trace(" |   processing {}", spanPosition);
+                var layer = type2layer.get(spanPosition.getType());
+                var cfgs = aDiff.getConfigurationSet(spanPosition);
 
-                var cfgsToMerge = chooseConfigurationToMerge(layer, aDiff, cfgs);
-
-                if (cfgsToMerge.isEmpty()) {
-                    continue;
-                }
-
-                for (Configuration cfgToMerge : cfgsToMerge) {
+                for (var cfgToMerge : chooseConfigurationsToMerge(layer, aDiff, cfgs)) {
                     try {
-                        AnnotationFS sourceFS = (AnnotationFS) cfgToMerge
-                                .getRepresentative(aCasMap);
-                        CasMergeOperationResult result = mergeSpanAnnotation(aTargetDocument,
-                                aTargetUsername, type2layer.get(position.getType()), aTargetCas,
-                                sourceFS, layer.isAllowStacking());
+                        var sourceFS = (AnnotationFS) cfgToMerge.getRepresentative(aCasMap);
+                        var result = mergeSpanAnnotation(aTargetDocument, aTargetUsername,
+                                type2layer.get(spanPosition.getType()), aTargetCas, sourceFS,
+                                layer.isAllowStacking());
                         LOG.trace(" `-> merged annotation with agreement");
 
                         switch (result.getState()) {
@@ -300,7 +293,7 @@ public class CasMerge
 
         // After the spans are in place, we can merge the slot features
         for (var layerName : layerNames) {
-            var positions = aDiff.getPositions().stream()
+            var slotPositions = aDiff.getPositions().stream()
                     .filter(pos -> layerName.equals(pos.getType()))
                     .filter(pos -> pos instanceof SpanPosition) //
                     .map(pos -> (SpanPosition) pos)
@@ -308,29 +301,24 @@ public class CasMerge
                     .filter(pos -> pos.getFeature() != null) //
                     .toList();
 
-            if (positions.isEmpty()) {
+            if (slotPositions.isEmpty()) {
                 continue;
             }
 
-            LOG.debug("Processing {} slot positions on layer [{}]", positions.size(), layerName);
+            LOG.debug("Processing {} slot positions on layer [{}]", slotPositions.size(),
+                    layerName);
 
-            for (var position : positions) {
-                LOG.trace(" |   processing {}", position);
-                var layer = type2layer.get(position.getType());
-                var cfgs = aDiff.getConfigurationSet(position);
+            for (var slotPosition : slotPositions) {
+                LOG.trace(" |   processing {}", slotPosition);
+                var layer = type2layer.get(slotPosition.getType());
+                var cfgs = aDiff.getConfigurationSet(slotPosition);
 
-                var cfgsToMerge = chooseConfigurationToMerge(layer, aDiff, cfgs);
-
-                if (cfgsToMerge.isEmpty()) {
-                    continue;
-                }
-
-                for (var cfgToMerge : cfgsToMerge) {
+                for (var cfgToMerge : chooseConfigurationsToMerge(layer, aDiff, cfgs)) {
                     try {
                         var sourceFS = (AnnotationFS) cfgToMerge.getRepresentative(aCasMap);
                         var sourceFsAid = cfgs.getConfigurations().get(0).getRepresentativeAID();
                         mergeSlotFeature(aTargetDocument, aTargetUsername,
-                                type2layer.get(position.getType()), aTargetCas, sourceFS,
+                                type2layer.get(slotPosition.getType()), aTargetCas, sourceFS,
                                 sourceFsAid.feature, sourceFsAid.index);
                         LOG.trace(" `-> merged annotation with agreement");
                     }
@@ -344,25 +332,25 @@ public class CasMerge
 
         // Finally, we merge the relations
         for (var layerName : layerNames) {
-            var positions = aDiff.getPositions().stream()
+            var relationPositions = aDiff.getPositions().stream()
                     .filter(pos -> layerName.equals(pos.getType()))
                     .filter(pos -> pos instanceof RelationPosition)
                     .map(pos -> (RelationPosition) pos) //
                     .collect(Collectors.toList());
 
-            if (positions.isEmpty()) {
+            if (relationPositions.isEmpty()) {
                 continue;
             }
 
-            LOG.debug("Processing {} relation positions on layer [{}]", positions.size(),
+            LOG.debug("Processing {} relation positions on layer [{}]", relationPositions.size(),
                     layerName);
 
-            for (RelationPosition position : positions) {
-                LOG.trace(" |   processing {}", position);
-                var layer = type2layer.get(position.getType());
-                var cfgs = aDiff.getConfigurationSet(position);
+            for (var relationPosition : relationPositions) {
+                LOG.trace(" |   processing {}", relationPosition);
+                var layer = type2layer.get(relationPosition.getType());
+                var cfgs = aDiff.getConfigurationSet(relationPosition);
 
-                var cfgsToMerge = chooseConfigurationToMerge(layer, aDiff, cfgs);
+                var cfgsToMerge = chooseConfigurationsToMerge(layer, aDiff, cfgs);
 
                 if (cfgsToMerge.isEmpty()) {
                     continue;
@@ -372,7 +360,7 @@ public class CasMerge
                     try {
                         var sourceFS = (AnnotationFS) cfgToMerge.getRepresentative(aCasMap);
                         var result = mergeRelationAnnotation(aTargetDocument, aTargetUsername,
-                                type2layer.get(position.getType()), aTargetCas, sourceFS,
+                                type2layer.get(relationPosition.getType()), aTargetCas, sourceFS,
                                 layer.isAllowStacking());
                         LOG.trace(" `-> merged annotation with agreement");
 

@@ -17,31 +17,21 @@
  */
 package de.tudarmstadt.ukp.inception.annotation.layer.behaviors;
 
-import static java.util.Collections.unmodifiableList;
-
-import java.time.Duration;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import org.apache.commons.lang3.ClassUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
-import org.springframework.context.event.ContextRefreshedEvent;
-import org.springframework.context.event.EventListener;
-import org.springframework.core.annotation.AnnotationAwareOrderComparator;
-
-import com.github.benmanes.caffeine.cache.Caffeine;
-import com.github.benmanes.caffeine.cache.LoadingCache;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupport;
 import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.inception.schema.api.layer.LayerType;
-import de.tudarmstadt.ukp.inception.support.logging.BaseLoggers;
+import de.tudarmstadt.ukp.inception.support.extensionpoint.CachingContextLookupExtensionPoint_ImplBase;
 
 /**
  * <p>
@@ -50,50 +40,25 @@ import de.tudarmstadt.ukp.inception.support.logging.BaseLoggers;
  * </p>
  */
 public class LayerSupportRegistryImpl
+    extends CachingContextLookupExtensionPoint_ImplBase<AnnotationLayer, LayerSupport<?, ?>>
     implements LayerSupportRegistry
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private final List<LayerSupport<?, ?>> layerSupportsProxy;
-
     private List<LayerSupport<?, ?>> layerSupports;
-
-    private final LoadingCache<AnnotationLayer, LayerSupport<?, ?>> supportCache;
 
     public LayerSupportRegistryImpl(
             @Lazy @Autowired(required = false) List<LayerSupport<?, ?>> aLayerSupports)
     {
-        layerSupportsProxy = aLayerSupports;
-
-        supportCache = Caffeine.newBuilder() //
-                .expireAfterAccess(Duration.ofHours(1)) //
-                .build(this::findLayerSupport);
+        super(aLayerSupports, AnnotationLayer::getId);
     }
 
-    @EventListener
-    public void onContextRefreshedEvent(ContextRefreshedEvent aEvent)
-    {
-        init();
-    }
-
+    @Override
     public void init()
     {
-        List<LayerSupport<?, ?>> lsp = new ArrayList<>();
+        super.init();
 
-        if (layerSupportsProxy != null) {
-            lsp.addAll(layerSupportsProxy);
-            AnnotationAwareOrderComparator.sort(lsp);
-
-            for (LayerSupport<?, ?> fs : lsp) {
-                log.debug("Found layer support: {}",
-                        ClassUtils.getAbbreviatedName(fs.getClass(), 20));
-                fs.setLayerSupportRegistry(this);
-            }
-        }
-
-        BaseLoggers.BOOT_LOG.info("Found [{}] layer supports", lsp.size());
-
-        layerSupports = unmodifiableList(lsp);
+        getExtensions().forEach($ -> $.setLayerSupportRegistry(this));
     }
 
     @Override
@@ -110,43 +75,18 @@ public class LayerSupportRegistryImpl
         return layerSupports;
     }
 
-    private LayerSupport<?, ?> findLayerSupport(AnnotationLayer aLayer)
-    {
-        for (LayerSupport<?, ?> s : getLayerSupports()) {
-            if (s.accepts(aLayer)) {
-                return s;
-            }
-        }
-        return null;
-    }
-
     @Override
     public LayerSupport<?, ?> getLayerSupport(AnnotationLayer aLayer)
     {
-        // This method is called often during rendering, so we try to make it fast by caching
-        // the supports by layer. Since the set of layers is relatively stable, this should not be a
-        // memory leak - even if we don't remove entries if layers would be deleted from the DB.
-        LayerSupport<?, ?> support = null;
-
-        // Look for the layer in cache, but only when it has an ID, i.e. it has actually been saved.
-        if (aLayer.getId() != null) {
-            support = supportCache.get(aLayer);
-        }
-        else {
-            support = findLayerSupport(aLayer);
-        }
-
-        if (support == null) {
-            throw new IllegalArgumentException("Unsupported layer: [" + aLayer.getName() + "]");
-        }
-
-        return support;
+        return findExtension(aLayer).orElseThrow(() -> new IllegalArgumentException(
+                "Unsupported layer: [" + aLayer.getName() + "]"));
     }
 
     @Override
     public LayerSupport<?, ?> getLayerSupport(String aId)
     {
-        return getLayerSupports().stream().filter(fs -> fs.getId().equals(aId)).findFirst()
+        return getLayerSupports().stream() //
+                .filter(fs -> fs.getId().equals(aId)).findFirst() //
                 .orElse(null);
     }
 
@@ -159,14 +99,26 @@ public class LayerSupportRegistryImpl
 
         // Figure out which layer support provides the given type.
         // If we can find a suitable layer support, then use it to resolve the type to a LayerType
-        LayerType featureType = null;
-        for (LayerSupport<?, ?> s : getLayerSupports()) {
-            Optional<LayerType> ft = s.getLayerType(aLayer);
+        for (var s : getLayerSupports()) {
+            var ft = s.getLayerType(aLayer);
             if (ft.isPresent()) {
-                featureType = ft.get();
-                break;
+                return ft.get();
             }
         }
-        return featureType;
+
+        return null;
+    }
+
+    @Override
+    public <T extends TypeAdapter, S> Optional<LayerSupport<T, S>> findExtension(
+            AnnotationLayer aKey)
+    {
+        return super.findGenericExtension(aKey);
+    }
+
+    @Override
+    public boolean isSupported(AnnotationLayer aLayer)
+    {
+        return findExtension(aLayer).isPresent();
     }
 }

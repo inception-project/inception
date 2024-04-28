@@ -372,7 +372,7 @@ public class AnnotationDocumentExporter
             annotationDocument.setSentenceAccessed(exAnnotationDocument.getSentenceAccessed());
             annotationDocument.setCreated(exAnnotationDocument.getCreated());
             annotationDocument.setUpdated(exAnnotationDocument.getUpdated());
-            documentService.createAnnotationDocument(annotationDocument);
+            documentService.createOrUpdateAnnotationDocument(annotationDocument);
         }
     }
 
