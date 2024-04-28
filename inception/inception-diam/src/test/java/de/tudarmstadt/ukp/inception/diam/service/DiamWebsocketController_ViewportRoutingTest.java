@@ -201,7 +201,7 @@ public class DiamWebsocketController_ViewportRoutingTest
         documentService.createSourceDocument(testDocument);
 
         testAnnotationDocument = new AnnotationDocument(USER, testDocument);
-        documentService.createAnnotationDocument(testAnnotationDocument);
+        documentService.createOrUpdateAnnotationDocument(testAnnotationDocument);
 
         try (var session = CasStorageSession.open()) {
             documentService.uploadSourceDocument(

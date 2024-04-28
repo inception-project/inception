@@ -184,20 +184,18 @@ public class CurationSidebar
             success("Updated project merge strategy settings");
         }
 
+        aTarget.addChildren(getPage(), IFeedback.class);
+
         try {
             var mergeStrategyFactory = curationSidebarService.merge(state, curationWorkflow,
                     dataOwner.getUsername(), selectedUsers.getModelObject());
             success("Re-merge using [" + mergeStrategyFactory.getLabel() + "] finished!");
-            aTarget.addChildren(getPage(), IFeedback.class);
+            refreshPage(aTarget, getPage());
         }
         catch (Exception e) {
             error("Unable to merge: " + e.getMessage());
             LOG.error("Unable to merge document {} to user {}", dataOwner, state.getDocument(), e);
-            aTarget.addChildren(getPage(), IFeedback.class);
-            return;
         }
-
-        refreshPage(aTarget, getPage());
     }
 
     private Form<Void> createSessionControlForm(String aId)

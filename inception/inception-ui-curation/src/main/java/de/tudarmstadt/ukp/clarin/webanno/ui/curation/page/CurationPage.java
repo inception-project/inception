@@ -75,7 +75,6 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratLineOrientedAnnotat
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratSentenceOrientedAnnotationEditorFactory;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiffSummaryState;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -559,10 +558,9 @@ public class CurationPage
     {
         var state = getModelObject();
 
-        var curatableAnnotationDocuments = curationDocumentService
-                .listCuratableAnnotationDocuments(state.getDocument());
+        var curatableUsers = curationDocumentService.listCuratableUsers(state.getDocument());
 
-        if (curatableAnnotationDocuments.isEmpty()) {
+        if (curatableUsers.isEmpty()) {
             getSession().error("This document has the state " + state.getDocument().getState()
                     + " but there are no finished annotation documents! This "
                     + "can for example happen when curation on a document has already started "
@@ -579,11 +577,12 @@ public class CurationPage
             throw new RestartResponseException(CurationPage.class, pageParameters);
         }
 
-        var casses = documentService.readAllCasesSharedNoUpgrade(curatableAnnotationDocuments);
+        var casses = documentService.readAllCasesSharedNoUpgrade(state.getDocument(),
+                curatableUsers);
 
-        var randomAnnotationDocument = curatableAnnotationDocuments.get(0);
+        var templateUser = curatableUsers.get(0);
         var curationCas = readCurationCas(state, state.getDocument(), casses,
-                randomAnnotationDocument, true, aMergeStrategy, aForceRecreateCas);
+                templateUser.getUsername(), true, aMergeStrategy, aForceRecreateCas);
 
         return curationCas;
     }
@@ -695,8 +694,10 @@ public class CurationPage
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
         // get annotation documents
-        var casses = documentService.readAllCasesSharedNoUpgrade(
-                curationDocumentService.listCuratableAnnotationDocuments(aState.getDocument()));
+        var document = aState.getDocument();
+        var curatableUsers = curationDocumentService.listCuratableUsers(document);
+        var casses = documentService.readAllCasesSharedNoUpgrade(aState.getDocument(),
+                curatableUsers);
 
         var editorCas = readCurationCas(aState, aState.getDocument(), casses, null, false,
                 curationService.getDefaultMergeStrategy(getProject()), false);
@@ -739,7 +740,7 @@ public class CurationPage
      *            the source document.
      * @param aCasses
      *            the CASes.
-     * @param aTemplate
+     * @param aTemplateUser
      *            an annotation document which is used as a template for the new merge CAS.
      * @return the CAS.
      * @throws UIMAException
@@ -748,7 +749,7 @@ public class CurationPage
      *             if an I/O error occurs.
      */
     private CAS readCurationCas(AnnotatorState aState, SourceDocument aDocument,
-            Map<String, CAS> aCasses, AnnotationDocument aTemplate, boolean aUpgrade,
+            Map<String, CAS> aCasses, String aTemplateUser, boolean aUpgrade,
             MergeStrategy aMergeStrategy, boolean aForceRecreateCas)
         throws UIMAException, IOException
     {
@@ -758,11 +759,11 @@ public class CurationPage
             // We need a modifiable copy of some annotation document which we can use to initialize
             // the curation CAS. This is an exceptional case where UNMANAGED_ACCESS is the correct
             // choice
-            mergeCas = documentService.readAnnotationCas(aTemplate.getDocument(),
-                    aTemplate.getUser(), FORCE_CAS_UPGRADE, UNMANAGED_ACCESS);
+            mergeCas = documentService.readAnnotationCas(aDocument, aTemplateUser,
+                    FORCE_CAS_UPGRADE, UNMANAGED_ACCESS);
             curationMergeService.mergeCasses(aState.getDocument(), aState.getUser().getUsername(),
                     mergeCas, aCasses, aMergeStrategy, aState.getAnnotationLayers());
-            curationDocumentService.writeCurationCas(mergeCas, aTemplate.getDocument(), false);
+            curationDocumentService.writeCurationCas(mergeCas, aDocument, false);
         }
         else {
             mergeCas = curationDocumentService.readCurationCas(aDocument);

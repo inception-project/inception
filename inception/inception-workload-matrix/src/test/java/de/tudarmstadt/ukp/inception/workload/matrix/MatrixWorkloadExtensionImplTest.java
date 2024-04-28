@@ -113,7 +113,7 @@ public class MatrixWorkloadExtensionImplTest
 
         sourceDocument = documentService
                 .createSourceDocument(new SourceDocument("doc.txt", project, TextFormatSupport.ID));
-        annotationDocument = documentService.createAnnotationDocument(
+        annotationDocument = documentService.createOrUpdateAnnotationDocument(
                 new AnnotationDocument(annotator.getUsername(), sourceDocument));
 
         Fixtures.importTestSourceDocumentAndAddNamedEntity(documentService, annotationDocument);

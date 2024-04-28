@@ -734,7 +734,7 @@ public class DynamicWorkloadManagementPage
     {
         var ann = documentService.getAnnotationDocument(aDocument, aUser);
         ann.setTimestamp(new Date());
-        documentService.createAnnotationDocument(ann);
+        documentService.createOrUpdateAnnotationDocument(ann);
 
         success(format("The timestamp of document [%s] for user [%s] has been updated.",
                 aDocument.getName(), aUser.getUiName()));

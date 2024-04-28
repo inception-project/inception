@@ -31,7 +31,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-import org.apache.uima.cas.CAS;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.treewalk.TreeWalk;
@@ -332,8 +331,8 @@ public class VersioningServiceImplTest
         File doc1 = getResource("docs/dinos.txt");
         File doc2 = getResource("docs/lorem.txt");
 
-        try (CasStorageSession session = CasStorageSession.open()) {
-            try (InputStream is = Files.newInputStream(doc1.toPath())) {
+        try (var session = CasStorageSession.open()) {
+            try (var is = Files.newInputStream(doc1.toPath())) {
                 documentService.uploadSourceDocument(is,
                         new SourceDocument(doc1.getName(), testProject, "pretokenized-textlines"));
             }
@@ -347,11 +346,11 @@ public class VersioningServiceImplTest
 
     private void createAnnotationDocuments(User aUser) throws Exception
     {
-        try (CasStorageSession session = CasStorageSession.open()) {
-            for (SourceDocument sourceDocument : documentService.listSourceDocuments(testProject)) {
+        try (var session = CasStorageSession.open()) {
+            for (var sourceDocument : documentService.listSourceDocuments(testProject)) {
                 documentService.createOrGetAnnotationDocument(sourceDocument, aUser);
-                CAS cas = documentService.createOrReadInitialCas(sourceDocument);
-                documentService.writeAnnotationCas(cas, sourceDocument, aUser, false);
+                var cas = documentService.createOrReadInitialCas(sourceDocument);
+                documentService.writeAnnotationCas(cas, sourceDocument, aUser);
             }
         }
     }

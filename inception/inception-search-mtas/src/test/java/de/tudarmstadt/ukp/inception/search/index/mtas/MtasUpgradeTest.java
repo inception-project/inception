@@ -128,7 +128,7 @@ public class MtasUpgradeTest
         srcDoc = new SourceDocument("test.txt", project, TextFormatSupport.ID);
         annDoc = new AnnotationDocument("user", srcDoc);
         documentService.createSourceDocument(srcDoc);
-        documentService.createAnnotationDocument(annDoc);
+        documentService.createOrUpdateAnnotationDocument(annDoc);
 
         index = new MtasDocumentIndex(project, documentService,
                 repositoryProperties.getPath().getAbsolutePath(), featureIndexingSupportRegistry,

@@ -200,7 +200,7 @@ public interface DocumentService
      *            and id of {@link User}
      * @return the annotation document.
      */
-    AnnotationDocument createAnnotationDocument(AnnotationDocument annotationDocument);
+    AnnotationDocument createOrUpdateAnnotationDocument(AnnotationDocument annotationDocument);
 
     /**
      * Saves the annotations from the CAS to the storage.
@@ -209,14 +209,14 @@ public interface DocumentService
      *            the CAS.
      * @param aAnnotationDocument
      *            the annotation document.
-     * @param aExplicitAnnotatorUserAction
+     * @param aFlags
      *            indicate that the CAS is written as the result of an explicit annotator user
      *            action (i.e. not as a result of a third person or implicitly by the system).
      * @throws IOException
      *             if an I/O error occurs.
      */
     void writeAnnotationCas(CAS aCas, AnnotationDocument aAnnotationDocument,
-            boolean aExplicitAnnotatorUserAction)
+            AnnotationDocumentStateChangeFlag... aFlags)
         throws IOException;
 
     /**
@@ -226,14 +226,14 @@ public interface DocumentService
      *            the CAS.
      * @param aAnnotationDocument
      *            the annotation document.
-     * @param aExplicitAnnotatorUserAction
+     * @param aFlags
      *            indicate that the CAS is written as the result of an explicit annotator user
      *            action (i.e. not as a result of a third person or implicitly by the system).
      * @throws IOException
      *             if an I/O error occurs.
      */
     void writeAnnotationCasSilently(CAS aCas, AnnotationDocument aAnnotationDocument,
-            boolean aExplicitAnnotatorUserAction)
+            AnnotationDocumentStateChangeFlag... aFlags)
         throws IOException;
 
     /**
@@ -245,14 +245,14 @@ public interface DocumentService
      *            the source document.
      * @param aUser
      *            The User who perform this operation
-     * @param aExplicitAnnotatorUserAction
+     * @param aFlags
      *            indicate that the CAS is written as the result of an explicit annotator user
      *            action (i.e. not as a result of a third person or implicitly by the system).
      * @throws IOException
      *             if an I/O error occurs.
      */
     void writeAnnotationCas(CAS aCas, SourceDocument aDocument, User aUser,
-            boolean aExplicitAnnotatorUserAction)
+            AnnotationDocumentStateChangeFlag... aFlags)
         throws IOException;
 
     /**
@@ -264,14 +264,14 @@ public interface DocumentService
      *            the source document.
      * @param aUser
      *            The User who perform this operation
-     * @param aExplicitAnnotatorUserAction
+     * @param aFlags
      *            indicate that the CAS is written as the result of an explicit annotator user
      *            action (i.e. not as a result of a third person or implicitly by the system).
      * @throws IOException
      *             if an I/O error occurs.
      */
     void writeAnnotationCas(CAS aCas, SourceDocument aDocument, String aUser,
-            boolean aExplicitAnnotatorUserAction)
+            AnnotationDocumentStateChangeFlag... aFlags)
         throws IOException;
 
     /**
@@ -682,6 +682,8 @@ public interface DocumentService
 
     AnnotationDocument createOrGetAnnotationDocument(SourceDocument aDocument, User aUser);
 
+    AnnotationDocument createOrGetAnnotationDocument(SourceDocument aDocument, String aUser);
+
     List<AnnotationDocument> createOrGetAnnotationDocuments(SourceDocument aDocument,
             Collection<User> aUsers);
 
@@ -724,6 +726,9 @@ public interface DocumentService
     Map<SourceDocument, AnnotationDocument> listAllDocuments(Project aProject, String aUser);
 
     AnnotationDocumentState setAnnotationDocumentState(AnnotationDocument aDocument,
+            AnnotationDocumentState aState, AnnotationDocumentStateChangeFlag... aFlags);
+
+    AnnotationDocumentState setAnnotationDocumentState(SourceDocument aDocument, String aUser,
             AnnotationDocumentState aState, AnnotationDocumentStateChangeFlag... aFlags);
 
     /**

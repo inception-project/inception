@@ -25,9 +25,9 @@ import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.ConcurentCasModificationException;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
 public interface CurationDocumentService
 {
@@ -69,7 +69,11 @@ public interface CurationDocumentService
 
     List<SourceDocument> listCuratableSourceDocuments(Project aProject);
 
-    List<AnnotationDocument> listCuratableAnnotationDocuments(SourceDocument aDocument);
+    /**
+     * @return list of users that have finished the given document
+     */
+    @SuppressWarnings("javadoc")
+    List<User> listCuratableUsers(SourceDocument aSourceDocument);
 
     Optional<Long> getCurationCasTimestamp(SourceDocument aDocument) throws IOException;
 

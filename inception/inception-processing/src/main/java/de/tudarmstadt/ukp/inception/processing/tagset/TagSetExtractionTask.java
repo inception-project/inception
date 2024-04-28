@@ -129,14 +129,15 @@ public class TagSetExtractionTask
         var totalDocumentsCount = documents.size();
 
         for (var srcDoc : documents) {
+            processedDocumentsCount++;
             monitor.setStateAndProgress(RUNNING, processedDocumentsCount, totalDocumentsCount);
 
             extractTagsFromDocument(tags, srcDoc);
 
-            processedDocumentsCount++;
         }
 
-        monitor.setStateAndProgress(RUNNING, processedDocumentsCount, totalDocumentsCount);
+        monitor.setProgressWithMessage(processedDocumentsCount, totalDocumentsCount,
+                LogMessage.info(this, "Tag extraction complete"));
 
         return tags;
     }
