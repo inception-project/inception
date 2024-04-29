@@ -441,6 +441,10 @@ public class MatrixWorkloadManagementPage
 
             documentService.bulkSetSourceDocumentState(documentsToReset, ANNOTATION_IN_PROGRESS);
 
+            for (var doc : documentsToReset) {
+                curationService.deleteCurationCas(doc);
+            }
+
             success(format("The curation state of %s document(s) has been set reset.",
                     documentsToReset.size()));
             _target.addChildren(getPage(), IFeedback.class);
@@ -483,8 +487,9 @@ public class MatrixWorkloadManagementPage
 
         dialogContent.setExpectedResponseModel(Model.of(aDocument.getName()));
         dialogContent.setConfirmAction(_target -> {
-            curationService.deleteCurationCas(aDocument);
             documentService.setSourceDocumentState(aDocument, ANNOTATION_IN_PROGRESS);
+
+            curationService.deleteCurationCas(aDocument);
 
             success(format("The curation of document [%s] has been set reset.",
                     aDocument.getName()));
