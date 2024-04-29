@@ -186,7 +186,8 @@ public class CurationSidebar
 
         try {
             var mergeStrategyFactory = curationSidebarService.merge(state, curationWorkflow,
-                    dataOwner.getUsername(), selectedUsers.getModelObject());
+                    dataOwner.getUsername(), selectedUsers.getModelObject(),
+                    aForm.getModelObject().isClearTargetCas());
             success("Re-merge using [" + mergeStrategyFactory.getLabel() + "] finished!");
             aTarget.addChildren(getPage(), IFeedback.class);
         }

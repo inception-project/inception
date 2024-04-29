@@ -69,7 +69,7 @@ public class CasMergeSuiteTest
 
         var result = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser).toResult();
 
-        sut.reMergeCas(result, document, "dummyTargetUser", curatorCas, casByUser);
+        sut.clearAndMergeCas(result, document, "dummyTargetUser", curatorCas, casByUser);
 
         writeAndAssertEquals(curatorCas, aReferenceFolder);
     }
