@@ -88,7 +88,7 @@ public class CasMergeRemergeTest
 
         DiffResult result = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser).toResult();
 
-        sut.reMergeCas(result, document, DUMMY_USER, curatorCas.getCas(), casByUser);
+        sut.clearAndMergeCas(result, document, DUMMY_USER, curatorCas.getCas(), casByUser);
 
         assertThat(result.getDifferingConfigurationSets()).isEmpty();
         assertThat(result.getIncompleteConfigurationSets().values())
@@ -126,7 +126,7 @@ public class CasMergeRemergeTest
         DiffResult result = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser).toResult();
 
         sut.setMergeStrategy(new MergeIncompleteStrategy());
-        sut.reMergeCas(result, document, DUMMY_USER, curatorCas.getCas(), casByUser);
+        sut.clearAndMergeCas(result, document, DUMMY_USER, curatorCas.getCas(), casByUser);
 
         assertThat(result.getDifferingConfigurationSets()).isEmpty();
         assertThat(result.getIncompleteConfigurationSets().values())
@@ -162,7 +162,7 @@ public class CasMergeRemergeTest
 
         // result.print(System.out);
 
-        sut.reMergeCas(result, document, DUMMY_USER, curatorCas.getCas(), casByUser);
+        sut.clearAndMergeCas(result, document, DUMMY_USER, curatorCas.getCas(), casByUser);
 
         casByUser = new HashMap<String, CAS>();
         casByUser.put("actual", jcasA.getCas());
@@ -195,7 +195,7 @@ public class CasMergeRemergeTest
 
         // result.print(System.out);
 
-        sut.reMergeCas(result, document, DUMMY_USER, curatorCas.getCas(), casByUser);
+        sut.clearAndMergeCas(result, document, DUMMY_USER, curatorCas.getCas(), casByUser);
 
         Type hostType = curatorCas.getCas().getTypeSystem().getType(HOST_TYPE);
         FeatureSupport<?> slotSupport = featureSupportRegistry.findExtension(slotFeature)
@@ -229,7 +229,7 @@ public class CasMergeRemergeTest
 
         // result.print(System.out);
 
-        sut.reMergeCas(result, document, DUMMY_USER, curatorCas.getCas(), casByUser);
+        sut.clearAndMergeCas(result, document, DUMMY_USER, curatorCas.getCas(), casByUser);
 
         var hostType = curatorCas.getCas().getTypeSystem().getType(HOST_TYPE);
         FeatureSupport<?> slotSupport = featureSupportRegistry.findExtension(slotFeature)
@@ -268,7 +268,7 @@ public class CasMergeRemergeTest
 
         // result.print(System.out);
 
-        sut.reMergeCas(result, document, DUMMY_USER, curatorCas, casByUser);
+        sut.clearAndMergeCas(result, document, DUMMY_USER, curatorCas, casByUser);
 
         assertThat(select(curatorCas, getType(curatorCas, HOST_TYPE))).isEmpty();
         assertThat(calculateState(result)).isEqualTo(AGREE);
@@ -297,7 +297,7 @@ public class CasMergeRemergeTest
 
         // result.print(System.out);
 
-        sut.reMergeCas(result, document, DUMMY_USER, curatorCas.getCas(), casByUser);
+        sut.clearAndMergeCas(result, document, DUMMY_USER, curatorCas.getCas(), casByUser);
 
         Type hostType = curatorCas.getTypeSystem().getType(HOST_TYPE);
 

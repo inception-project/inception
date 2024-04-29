@@ -148,7 +148,7 @@ public class CurationSidebarBehavior
                 var selectedUsers = curationSidebarService.getSelectedUsers(sessionOwner,
                         project.getId());
                 var mergeStrategyFactory = curationSidebarService.merge(state,
-                        state.getUser().getUsername(), selectedUsers);
+                        state.getUser().getUsername(), selectedUsers, true);
                 page.success(
                         "Performed initial merge using [" + mergeStrategyFactory.getLabel() + "].");
                 aEvent.getRequestTarget().ifPresent($ -> $.addChildren(page, IFeedback.class));

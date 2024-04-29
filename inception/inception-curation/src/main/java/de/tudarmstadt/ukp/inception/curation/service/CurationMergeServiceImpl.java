@@ -35,7 +35,6 @@ import org.slf4j.Logger;
 import org.springframework.context.ApplicationEventPublisher;
 
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.DiffResult;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.DiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
@@ -79,16 +78,16 @@ public class CurationMergeServiceImpl
                 .collect(toList());
 
         return mergeCasses(aDocument, aTargetCasUserName, aTargetCas, aCassesToMerge,
-                aMergeStrategy, layers);
+                aMergeStrategy, layers, true);
     }
 
     @Override
     public Set<LogMessage> mergeCasses(SourceDocument aDocument, String aTargetCasUserName,
             CAS aTargetCas, Map<String, CAS> aCassesToMerge, MergeStrategy aMergeStrategy,
-            List<AnnotationLayer> aLayers)
+            List<AnnotationLayer> aLayers, boolean aClearTargetCas)
         throws UIMAException
     {
-        List<DiffAdapter> adapters = getDiffAdapters(annotationService, aLayers);
+        var adapters = getDiffAdapters(annotationService, aLayers);
 
         // If the token/sentence layer is not editable, we do not offer curation of the tokens.
         // Instead the tokens are obtained from a random template CAS when initializing the CAS - we
@@ -109,8 +108,14 @@ public class CurationMergeServiceImpl
         try (StopWatch watch = new StopWatch(LOG, "CasMerge")) {
             var casMerge = new CasMerge(annotationService, applicationEventPublisher);
             casMerge.setMergeStrategy(aMergeStrategy);
-            return casMerge.reMergeCas(diff, aDocument, aTargetCasUserName, aTargetCas,
-                    aCassesToMerge);
+            if (aClearTargetCas) {
+                return casMerge.clearAndMergeCas(diff, aDocument, aTargetCasUserName, aTargetCas,
+                        aCassesToMerge);
+            }
+            else {
+                return casMerge.mergeCas(diff, aDocument, aTargetCasUserName, aTargetCas,
+                        aCassesToMerge);
+            }
         }
     }
 }

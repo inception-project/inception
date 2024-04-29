@@ -133,14 +133,15 @@ public interface CurationSidebarService
 
     void setDefaultSelectedUsersForDocument(String aSessionOwner, SourceDocument aDocument);
 
-    MergeStrategyFactory<?> merge(AnnotatorState aState, String aCurator, Collection<User> aUsers)
+    MergeStrategyFactory<?> merge(AnnotatorState aState, String aCurator, Collection<User> aUsers,
+            boolean aClearTargetCas)
         throws IOException, UIMAException;
 
     void merge(AnnotatorState aState, MergeStrategy aStrategy, String aCurator,
-            Collection<User> aUsers)
+            Collection<User> aUsers, boolean aClearTargetCas)
         throws IOException, UIMAException;
 
     MergeStrategyFactory<?> merge(AnnotatorState aState, CurationWorkflow aWorkflow,
-            String aCurator, Collection<User> aUsers)
+            String aCurator, Collection<User> aUsers, boolean aClearTargetCas)
         throws IOException, UIMAException;
 }

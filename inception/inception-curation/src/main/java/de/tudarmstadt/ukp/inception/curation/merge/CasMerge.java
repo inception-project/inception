@@ -201,7 +201,47 @@ public class CasMerge
      * @throws UIMAException
      *             if there was an UIMA-level exception
      */
-    public Set<LogMessage> reMergeCas(DiffResult aDiff, SourceDocument aTargetDocument,
+    public Set<LogMessage> clearAndMergeCas(DiffResult aDiff, SourceDocument aTargetDocument,
+            String aTargetUsername, CAS aTargetCas, Map<String, CAS> aCasMap)
+        throws UIMAException
+    {
+        // Remove any annotations from the target CAS - keep type system, sentences and tokens
+        clearAnnotations(aTargetDocument.getProject(), aTargetCas);
+
+        return mergeCas(aDiff, aTargetDocument, aTargetUsername, aTargetCas, aCasMap);
+    }
+
+    /**
+     * Using {@code DiffResult}, determine the annotations to be deleted from the randomly generated
+     * MergeCase. The initial Merge CAs is stored under a name {@code CurationPanel#CURATION_USER}.
+     * <p>
+     * Any similar annotations stacked in a {@code CasDiff2.Position} will be assumed a difference
+     * <p>
+     * Any two annotation with different value will be assumed a difference
+     * <p>
+     * Any non stacked empty/null annotations are assumed agreement
+     * <p>
+     * Any non stacked annotations with similar values for each of the features are assumed
+     * agreement
+     * <p>
+     * Any two link mode / slotable annotations which agree on the base features are assumed
+     * agreement
+     *
+     * @param aDiff
+     *            the {@link DiffResult}
+     * @param aTargetDocument
+     *            the target document
+     * @param aTargetUsername
+     *            the annotator user owning the target annotation document
+     * @param aTargetCas
+     *            the target CAS for the annotation document
+     * @param aCasMap
+     *            a map of {@code CAS}s for each users and the random merge
+     * @return a list of messages representing the result of the merge operation
+     * @throws UIMAException
+     *             if there was an UIMA-level exception
+     */
+    public Set<LogMessage> mergeCas(DiffResult aDiff, SourceDocument aTargetDocument,
             String aTargetUsername, CAS aTargetCas, Map<String, CAS> aCasMap)
         throws UIMAException
     {
@@ -210,9 +250,6 @@ public class CasMerge
         var updated = 0;
         var created = 0;
         var messages = new LinkedHashSet<LogMessage>();
-
-        // Remove any annotations from the target CAS - keep type system, sentences and tokens
-        clearAnnotations(aTargetDocument.getProject(), aTargetCas);
 
         // If there is nothing to merge, bail out
         if (aCasMap.isEmpty()) {
@@ -357,7 +394,7 @@ public class CasMerge
             LOG.debug("Processing {} relation positions on layer [{}]", positions.size(),
                     layerName);
 
-            for (RelationPosition position : positions) {
+            for (var position : positions) {
                 LOG.trace(" |   processing {}", position);
                 var layer = type2layer.get(position.getType());
                 var cfgs = aDiff.getConfigurationSet(position);
