@@ -160,8 +160,7 @@ public abstract class WicketApplicationBase
     private void installTimingListener()
     {
         var settings = SettingsUtil.getSettings();
-        if (!DEVELOPMENT.equals(getConfigurationType())
-                && !"true".equalsIgnoreCase(settings.getProperty("debug.sendServerSideTimings"))) {
+        if (!"true".equalsIgnoreCase(settings.getProperty("debug.sendServerSideTimings"))) {
             return;
         }
 
