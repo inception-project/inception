@@ -59,6 +59,7 @@ public class PdfJsViewerPage
         aResponse.render(JavaScriptHeaderItem.forReference(PdfJsViewerJavaScriptReference.get()));
         var script = String.join("\n", //
                 "window.addEventListener('DOMContentLoaded', function() {", //
+                "  PDFViewerApplicationOptions.set('annotationMode', 0);", //
                 "  PDFViewerApplicationOptions.set('defaultUrl', null);", //
                 "  PDFViewerApplicationOptions.set('disablePreferences', true);", //
                 "  PDFViewerApplicationOptions.set('workerSrc', 'pdf.worker.min.js');", //
