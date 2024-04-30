@@ -121,7 +121,7 @@ public class BulkCurationTask
                 // deleting the users annotations!!!), currently fixed by warn message to user
                 // prepare merged CAS
                 curationMergeService.mergeCasses(doc, targetUser, targetCas, annotatorCasses,
-                        mergeStrategy, annotationLayers);
+                        mergeStrategy, annotationLayers, true);
 
                 var targetAnnDoc = documentService.createOrGetAnnotationDocument(doc, targetUser);
                 documentService.writeAnnotationCas(targetCas, targetAnnDoc,

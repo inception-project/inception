@@ -23,14 +23,17 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseServiceAutoConfiguration;
-import de.tudarmstadt.ukp.inception.project.initializers.wikidatalinking.EntityAnnotationProjectInitializer;
+import de.tudarmstadt.ukp.inception.project.initializers.neannotation.EntityAnnotationProjectInitializer;
+import de.tudarmstadt.ukp.inception.project.initializers.neannotation.NamedEntitySequenceClassifierRecommenderInitializer;
+import de.tudarmstadt.ukp.inception.project.initializers.neannotation.NamedEntityStringRecommenderInitializer;
 import de.tudarmstadt.ukp.inception.project.initializers.wikidatalinking.EntityLinkingProjectInitializer;
 import de.tudarmstadt.ukp.inception.project.initializers.wikidatalinking.NamedEntityIdentifierStringRecommenderInitializer;
-import de.tudarmstadt.ukp.inception.project.initializers.wikidatalinking.NamedEntitySequenceClassifierRecommenderInitializer;
-import de.tudarmstadt.ukp.inception.project.initializers.wikidatalinking.NamedEntityStringRecommenderInitializer;
 import de.tudarmstadt.ukp.inception.project.initializers.wikidatalinking.WikiDataKnowledgeBaseInitializer;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAutoConfiguration;
@@ -74,9 +77,12 @@ public class WikiDataLinkingProjectInitializersAutoConfiguration
 
     @Bean
     public EntityAnnotationProjectInitializer entityAnnotationProjectInitializer(
-            ApplicationContext aContext, AnnotationSchemaService aAnnotationService)
+            ApplicationContext aContext, AnnotationSchemaService aAnnotationService,
+            DocumentService aDocumentService,
+            DocumentImportExportService aDocumentImportExportService, UserDao aUserService)
     {
-        return new EntityAnnotationProjectInitializer(aContext, aAnnotationService);
+        return new EntityAnnotationProjectInitializer(aContext, aAnnotationService,
+                aDocumentService, aDocumentImportExportService, aUserService);
     }
 
     @ConditionalOnBean(RecommendationService.class)

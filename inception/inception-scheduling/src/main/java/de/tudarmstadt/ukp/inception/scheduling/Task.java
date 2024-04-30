@@ -197,7 +197,7 @@ public abstract class Task
         catch (Exception e) {
             monitor.addMessage(LogMessage.error(this, "Task failed."));
             monitor.setState(TaskState.FAILED);
-            LOG.error("Task failed", e);
+            LOG.error("Task [{}] failed (trigger: [{}])", getTitle(), getTrigger(), e);
         }
     }
 

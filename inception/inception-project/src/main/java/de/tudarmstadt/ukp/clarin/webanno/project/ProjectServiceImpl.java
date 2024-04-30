@@ -93,6 +93,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.Realm;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
+import de.tudarmstadt.ukp.inception.project.api.ProjectInitializationRequest;
 import de.tudarmstadt.ukp.inception.project.api.ProjectInitializer;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.project.api.event.AfterProjectCreatedEvent;
@@ -878,9 +879,9 @@ public class ProjectServiceImpl
 
     @Override
     @Transactional
-    public void initializeProject(Project aProject) throws IOException
+    public void initializeProject(ProjectInitializationRequest aRequest) throws IOException
     {
-        initializeProject(aProject, initializers.stream() //
+        initializeProject(aRequest, initializers.stream() //
                 .filter(ProjectInitializer::applyByDefault) //
                 .collect(Collectors.toList()));
     }
@@ -917,23 +918,24 @@ public class ProjectServiceImpl
 
     @Override
     @Transactional
-    public void initializeProject(Project aProject, List<ProjectInitializer> aInitializers)
+    public void initializeProject(ProjectInitializationRequest aRequest,
+            List<ProjectInitializer> aInitializers)
         throws IOException
     {
-        Set<Class<? extends ProjectInitializer>> allInits = new HashSet<>();
-        Set<Class<? extends ProjectInitializer>> applied = new HashSet<>();
-        for (ProjectInitializer initializer : initializers) {
+        var allInits = new HashSet<Class<? extends ProjectInitializer>>();
+        var applied = new HashSet<Class<? extends ProjectInitializer>>();
+        for (var initializer : initializers) {
             allInits.add(initializer.getClass());
-            if (initializer.alreadyApplied(aProject)) {
+            if (initializer.alreadyApplied(aRequest.getProject())) {
                 applied.add(initializer.getClass());
             }
         }
 
-        Deque<ProjectInitializer> toApply = new LinkedList<>(collectDependencies(aInitializers));
+        var toApply = new LinkedList<ProjectInitializer>(collectDependencies(aInitializers));
         Set<ProjectInitializer> initsDeferred = SetUtils.newIdentityHashSet();
         while (!toApply.isEmpty()) {
-            ProjectInitializer initializer = toApply.pop();
-            String initializerName = initializer.getName();
+            var initializer = toApply.pop();
+            var initializerName = initializer.getName();
 
             if (applied.contains(initializer.getClass())) {
                 log.debug("Skipping project initializer that was already applied: [{}]",
@@ -955,7 +957,7 @@ public class ProjectServiceImpl
 
             if (applied.containsAll(initializer.getDependencies())) {
                 log.debug("Applying project initializer: [{}]", initializerName);
-                initializer.configure(aProject);
+                initializer.configure(aRequest);
                 applied.add(initializer.getClass());
                 initsDeferred.clear();
             }

@@ -41,7 +41,6 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.Icon;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.ProjectMenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
@@ -73,7 +72,7 @@ public class DashboardMenu
     {
         this(aId, aModel, true);
 
-        User user = userRepository.getCurrentUser();
+        var user = userRepository.getCurrentUser();
         pinState = new LambdaModelAdapter.Builder<Boolean>() //
                 .getting(() -> userPrefService.loadTraitsForUser(KEY_PINNED, user).isPinned)
                 .setting(v -> userPrefService.saveTraitsForUser(KEY_PINNED, user, new PinState(v)))
