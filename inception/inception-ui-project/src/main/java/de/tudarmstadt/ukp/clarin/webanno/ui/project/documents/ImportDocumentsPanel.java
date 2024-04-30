@@ -24,7 +24,6 @@ import static org.apache.commons.collections4.CollectionUtils.isEmpty;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMessage;
 import static org.apache.wicket.event.Broadcast.BUBBLE;
 
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -168,13 +167,13 @@ public class ImportDocumentsPanel
             }
 
             try {
-                SourceDocument document = new SourceDocument();
+                var document = new SourceDocument();
                 document.setName(fileName);
                 document.setProject(project);
                 document.setFormat(
                         importExportService.getFormatByName(format.getObject()).get().getId());
 
-                try (InputStream is = documentToUpload.getInputStream()) {
+                try (var is = documentToUpload.getInputStream()) {
                     documentService.uploadSourceDocument(is, document, fullProjectTypeSystem);
                 }
 
