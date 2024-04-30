@@ -520,32 +520,31 @@ public class CurationSidebarServiceImpl
                         && sourceDoc.getState().equals(CURATION_FINISHED));
     }
 
-    @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
     public MergeStrategyFactory<?> merge(AnnotatorState aState, String aCurator,
-            Collection<User> aUsers)
+            Collection<User> aUsers, boolean aClearTargetCas)
         throws IOException, UIMAException
     {
         var workflow = curationService.readOrCreateCurationWorkflow(aState.getProject());
-        return merge(aState, workflow, aCurator, aUsers);
+        return merge(aState, workflow, aCurator, aUsers, aClearTargetCas);
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
     public MergeStrategyFactory<?> merge(AnnotatorState aState, CurationWorkflow aWorkflow,
-            String aCurator, Collection<User> aUsers)
+            String aCurator, Collection<User> aUsers, boolean aClearTargetCas)
         throws IOException, UIMAException
     {
         MergeStrategyFactory factory = curationService.getMergeStrategyFactory(aWorkflow);
         var traits = factory.readTraits(aWorkflow);
         var mergeStrategy = factory.makeStrategy(traits);
-        merge(aState, mergeStrategy, aCurator, aUsers);
+        merge(aState, mergeStrategy, aCurator, aUsers, aClearTargetCas);
         return factory;
     }
 
     @Override
     public void merge(AnnotatorState aState, MergeStrategy aStrategy, String aCurator,
-            Collection<User> aUsers)
+            Collection<User> aUsers, boolean aClearTargetCas)
         throws IOException, UIMAException
     {
         var doc = aState.getDocument();
@@ -558,7 +557,7 @@ public class CurationSidebarServiceImpl
         // deleting the users annotations!!!), currently fixed by warn message to user
         // prepare merged CAS
         curationMergeService.mergeCasses(doc, aState.getUser().getUsername(), aTargetCas, userCases,
-                aStrategy, aState.getAnnotationLayers());
+                aStrategy, aState.getAnnotationLayers(), aClearTargetCas);
 
         // write back and update timestamp
         writeCurationCas(aTargetCas, aState, doc.getProject().getId());

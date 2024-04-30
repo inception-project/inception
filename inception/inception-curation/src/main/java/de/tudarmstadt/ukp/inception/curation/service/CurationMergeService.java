@@ -52,7 +52,7 @@ public interface CurationMergeService
      */
     Set<LogMessage> mergeCasses(SourceDocument aDocument, String aTargetCasUserName, CAS aTargetCas,
             Map<String, CAS> aCassesToMerge, MergeStrategy aMergeStrategy,
-            List<AnnotationLayer> aLayers)
+            List<AnnotationLayer> aLayers, boolean aClearTargetCas)
         throws UIMAException;
 
     /**

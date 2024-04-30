@@ -74,13 +74,13 @@ public class CurationMergeServiceImpl
                 .collect(toList());
 
         return mergeCasses(aDocument, aTargetCasUserName, aTargetCas, aCassesToMerge,
-                aMergeStrategy, layers);
+                aMergeStrategy, layers, true);
     }
 
     @Override
     public Set<LogMessage> mergeCasses(SourceDocument aDocument, String aTargetCasUserName,
             CAS aTargetCas, Map<String, CAS> aCassesToMerge, MergeStrategy aMergeStrategy,
-            List<AnnotationLayer> aLayers)
+            List<AnnotationLayer> aLayers, boolean aClearTargetCas)
         throws UIMAException
     {
         DiffResult diff;
@@ -92,8 +92,14 @@ public class CurationMergeServiceImpl
         try (var watch = new StopWatch(LOG, "CasMerge")) {
             var casMerge = new CasMerge(annotationService, applicationEventPublisher);
             casMerge.setMergeStrategy(aMergeStrategy);
-            return casMerge.reMergeCas(diff, aDocument, aTargetCasUserName, aTargetCas,
-                    aCassesToMerge);
+            if (aClearTargetCas) {
+                return casMerge.clearAndMergeCas(diff, aDocument, aTargetCasUserName, aTargetCas,
+                        aCassesToMerge);
+            }
+            else {
+                return casMerge.mergeCas(diff, aDocument, aTargetCasUserName, aTargetCas,
+                        aCassesToMerge);
+            }
         }
     }
 }
