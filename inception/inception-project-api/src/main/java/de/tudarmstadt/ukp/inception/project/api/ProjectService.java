@@ -568,15 +568,29 @@ public interface ProjectService
      * Initialize the project with default {@link AnnotationLayer}, {@link TagSet}s, and {@link Tag}
      * s. This is done per Project.
      * 
-     * @param aProject
-     *            the project.
+     * @param aRequest
+     *            the project initialization request.
      * @throws IOException
      *             if an I/O error occurs.
      */
-    void initializeProject(Project aProject) throws IOException;
+    void initializeProject(ProjectInitializationRequest aRequest) throws IOException;
 
-    void initializeProject(Project aProject, List<ProjectInitializer> aInitializers)
+    void initializeProject(ProjectInitializationRequest aRequest,
+            List<ProjectInitializer> aInitializers)
         throws IOException;
+
+    default void initializeProject(Project aProject) throws IOException
+    {
+        var request = ProjectInitializationRequest.builder().withProject(aProject).build();
+        initializeProject(request);
+    }
+
+    default void initializeProject(Project aProject, List<ProjectInitializer> aInitializers)
+        throws IOException
+    {
+        var request = ProjectInitializationRequest.builder().withProject(aProject).build();
+        initializeProject(request, aInitializers);
+    }
 
     List<ProjectInitializer> listProjectInitializers();
 
