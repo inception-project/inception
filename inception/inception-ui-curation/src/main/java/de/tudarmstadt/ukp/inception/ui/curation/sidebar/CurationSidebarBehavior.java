@@ -19,6 +19,8 @@ package de.tudarmstadt.ukp.inception.ui.curation.sidebar;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.FORCE_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.setProjectPageParameter;
 import static de.tudarmstadt.ukp.inception.curation.sidebar.CurationSidebarManagerPrefs.KEY_CURATION_SIDEBAR_MANAGER_PREFS;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
@@ -123,7 +125,7 @@ public class CurationSidebarBehavior
         var prefs = preferencesService
                 .loadDefaultTraitsForProject(KEY_CURATION_SIDEBAR_MANAGER_PREFS, project);
         if (prefs.isAutoMergeCurationSidebar()) {
-            if (userService.getCurationUser().getUsername().equals(aEvent.getDocumentOwner())) {
+            if (userService.getCurationUser().equals(page.getModelObject().getUser())) {
                 autoMerge(aEvent, page);
             }
         }
@@ -137,7 +139,8 @@ public class CurationSidebarBehavior
 
         try {
             var editable = page.isEditable();
-            if (!curationDocumentService.existsCurationCas(doc) && editable) {
+            if (!asList(CURATION_IN_PROGRESS, CURATION_FINISHED).contains(doc.getState())
+                    && editable) {
                 var state = page.getModelObject();
                 // We need to force upgrade the editor CAS here already so the merge can succeed
                 // The annotation page will do this again in the actionLoadDocument, but I don't
