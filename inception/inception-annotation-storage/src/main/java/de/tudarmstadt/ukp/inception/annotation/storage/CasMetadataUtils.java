@@ -21,7 +21,6 @@ import static org.apache.uima.fit.factory.TypeSystemDescriptionFactory.createTyp
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.FSUtil.setFeature;
 
-import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.util.Optional;
 
@@ -64,7 +63,6 @@ public class CasMetadataUtils
 
     public static void addOrUpdateCasMetadata(CAS aCas, long aTimeStamp, SourceDocument aDocument,
             String aUsername)
-        throws IOException
     {
         // If the type system of the CAS does not yet support CASMetadata, then we do not add it
         // and wait for the next regular CAS upgrade before we include this data.
@@ -81,7 +79,7 @@ public class CasMetadataUtils
         FeatureStructure cmd;
         var cmds = aCas.select(CASMetadata.class).toList();
         if (cmds.size() > 1) {
-            throw new IOException("CAS contains more than one CASMetadata instance!");
+            throw new IllegalStateException("CAS contains more than one CASMetadata instance!");
         }
 
         if (cmds.size() == 1) {
