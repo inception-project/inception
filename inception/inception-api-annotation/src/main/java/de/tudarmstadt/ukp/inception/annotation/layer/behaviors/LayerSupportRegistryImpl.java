@@ -17,12 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.annotation.layer.behaviors;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 
@@ -43,10 +40,6 @@ public class LayerSupportRegistryImpl
     extends CachingContextLookupExtensionPoint_ImplBase<AnnotationLayer, LayerSupport<?, ?>>
     implements LayerSupportRegistry
 {
-    private final Logger log = LoggerFactory.getLogger(getClass());
-
-    private List<LayerSupport<?, ?>> layerSupports;
-
     public LayerSupportRegistryImpl(
             @Lazy @Autowired(required = false) List<LayerSupport<?, ?>> aLayerSupports)
     {
@@ -64,15 +57,7 @@ public class LayerSupportRegistryImpl
     @Override
     public List<LayerSupport<?, ?>> getLayerSupports()
     {
-        if (layerSupports == null) {
-            log.error(
-                    "List of extensions was accessed on this extension point before the extension "
-                            + "point was initialized!",
-                    new IllegalStateException());
-            return Collections.emptyList();
-        }
-
-        return layerSupports;
+        return getExtensions();
     }
 
     @Override
