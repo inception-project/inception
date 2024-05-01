@@ -35,7 +35,7 @@ public class NegativeSizeAnnotationsCheck
     {
         boolean ok = true;
 
-        for (Annotation ann : aCas.select(Annotation.class)) {
+        for (var ann : aCas.select(Annotation.class)) {
             if (ann.getBegin() > ann.getEnd()) {
                 aMessages.add(error(this, "[%s] at [%d-%d] has negative size (starts after ending)",
                         ann.getType().getName(), ann.getBegin(), ann.getEnd()));
