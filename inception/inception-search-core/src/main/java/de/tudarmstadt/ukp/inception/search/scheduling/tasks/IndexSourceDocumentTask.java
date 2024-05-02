@@ -75,7 +75,7 @@ public class IndexSourceDocumentTask
     @Override
     public void execute()
     {
-        try (CasStorageSession session = CasStorageSession.open()) {
+        try (var session = CasStorageSession.open()) {
             var cas = documentService.createOrReadInitialCas(getSourceDocument(), AUTO_CAS_UPGRADE,
                     SHARED_READ_ONLY_ACCESS);
             searchService.indexDocument(getSourceDocument(), WebAnnoCasUtil.casToByteArray(cas));

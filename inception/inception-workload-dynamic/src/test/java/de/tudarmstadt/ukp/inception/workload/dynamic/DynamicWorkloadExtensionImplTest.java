@@ -187,7 +187,7 @@ public class DynamicWorkloadExtensionImplTest
         ann.setState(AnnotationDocumentState.IN_PROGRESS);
         ann = documentService.getAnnotationDocument(ann.getDocument(), ann.getUser());
         ann.setTimestamp(new Date(Instant.now().plus(1, ChronoUnit.HOURS).toEpochMilli()));
-        documentService.createAnnotationDocument(ann);
+        documentService.createOrUpdateAnnotationDocument(ann);
 
         Optional<SourceDocument> nextDoc = dynamicWorkloadExtension.nextDocumentToAnnotate(project,
                 annotator);
@@ -227,7 +227,7 @@ public class DynamicWorkloadExtensionImplTest
         SourceDocument doc = createSourceDocument(aName);
         AnnotationDocument ann = new AnnotationDocument(annotator.getUsername(), doc);
         ann.setState(aState);
-        return documentService.createAnnotationDocument(ann);
+        return documentService.createOrUpdateAnnotationDocument(ann);
     }
 
     @SpringBootConfiguration

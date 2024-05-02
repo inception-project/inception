@@ -676,4 +676,6 @@ public interface AnnotationSchemaService
     List<ValidationError> validateLayerName(AnnotationLayer aLayer);
 
     List<AnnotationFeature> listEnabledFeatures(Project aProject);
+
+    List<AnnotationLayer> listEnabledLayers(Project aProject);
 }

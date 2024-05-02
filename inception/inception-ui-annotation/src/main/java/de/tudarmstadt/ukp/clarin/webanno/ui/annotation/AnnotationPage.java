@@ -66,6 +66,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.UserPreferen
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateChangeFlag;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -408,7 +409,8 @@ public class AnnotationPage
     {
         ensureIsEditable();
         var state = getModelObject();
-        documentService.writeAnnotationCas(aCas, state.getDocument(), state.getUser(), true);
+        documentService.writeAnnotationCas(aCas, state.getDocument(), state.getUser(),
+                EXPLICIT_ANNOTATOR_USER_ACTION);
 
         bumpAnnotationCasTimestamp(state);
     }
@@ -488,8 +490,10 @@ public class AnnotationPage
                 // abandoned immediately after having been opened for the first time.
                 // We suppress the AfterCasWrittenEvent here - handlers should react to
                 // DocumentOpenedEvent instead.
-                documentService.writeAnnotationCasSilently(editorCas, annotationDocument,
-                        AnnotationDocumentState.NEW.equals(annotationDocument.getState()));
+                var flags = AnnotationDocumentState.NEW == annotationDocument.getState()
+                        ? new AnnotationDocumentStateChangeFlag[] { EXPLICIT_ANNOTATOR_USER_ACTION }
+                        : new AnnotationDocumentStateChangeFlag[] {};
+                documentService.writeAnnotationCasSilently(editorCas, annotationDocument, flags);
 
                 bumpAnnotationCasTimestamp(state);
             }

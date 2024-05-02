@@ -111,7 +111,7 @@ public class DocumentServiceImplDatabaseTest
         var doc = sut.createSourceDocument(new SourceDocument("doc", project, "text"));
 
         var ann = sut
-                .createAnnotationDocument(new AnnotationDocument(annotator1.getUsername(), doc));
+                .createOrUpdateAnnotationDocument(new AnnotationDocument(annotator1.getUsername(), doc));
 
         assertThat(sut.listAnnotationDocuments(doc))
                 .as("As long as the user exists, the annotation document must be found")
@@ -130,7 +130,7 @@ public class DocumentServiceImplDatabaseTest
         var doc = sut.createSourceDocument(new SourceDocument("doc", project, "text"));
 
         var ann = sut
-                .createAnnotationDocument(new AnnotationDocument(annotator1.getUsername(), doc));
+                .createOrUpdateAnnotationDocument(new AnnotationDocument(annotator1.getUsername(), doc));
 
         sut.setAnnotationDocumentState(ann, AnnotationDocumentState.IGNORE);
         assertThat(ann.getState()) //
@@ -195,7 +195,7 @@ public class DocumentServiceImplDatabaseTest
                 .createSourceDocument(new SourceDocument("doc.txt", project, TextFormatSupport.ID));
 
         var ann = sut
-                .createAnnotationDocument(new AnnotationDocument(annotator1.getUsername(), doc));
+                .createOrUpdateAnnotationDocument(new AnnotationDocument(annotator1.getUsername(), doc));
 
         try (var session = CasStorageSession.open()) {
             sut.uploadSourceDocument(toInputStream("This is a test.", UTF_8), doc);

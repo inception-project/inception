@@ -58,6 +58,8 @@ import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.relation.RelationDiffA
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span.SpanDiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationAdapter;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
@@ -710,6 +712,18 @@ public class CasDiff
                 labelFeatures.add(f.getName());
             }
         }
+
+        // If the token/sentence layer is not editable, we do not offer curation of the tokens.
+        // Instead the tokens are obtained from a random template CAS when initializing the CAS - we
+        // assume here that the tokens have never been modified.
+        if (!schemaService.isSentenceLayerEditable(project)) {
+            adapters.removeIf(adapter -> Sentence._TypeName.equals(adapter.getType()));
+        }
+
+        if (!schemaService.isTokenLayerEditable(project)) {
+            adapters.removeIf(adapter -> Token._TypeName.equals(adapter.getType()));
+        }
+
         return adapters;
     }
 

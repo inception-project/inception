@@ -437,15 +437,15 @@ public class AnnotatorsPanel
 
     private Map<String, CAS> getCasses(SourceDocument aDocument) throws IOException
     {
-        Map<String, CAS> casses = new HashMap<>();
+        var casses = new HashMap<String, CAS>();
 
         // This CAS is loaded writable - it is the one the annotations are merged into
         casses.put(CURATION_USER, curationDocumentService.readCurationCas(aDocument));
 
         // The source CASes from the annotators are all ready read-only / shared
-        for (var annDoc : curationDocumentService.listCuratableAnnotationDocuments(aDocument)) {
-            casses.put(annDoc.getUser(),
-                    documentService.readAnnotationCas(annDoc.getDocument(), annDoc.getUser()));
+        for (var user : curationDocumentService.listCuratableUsers(aDocument)) {
+            casses.put(user.getUsername(),
+                    documentService.readAnnotationCas(aDocument, user.getUsername()));
         }
 
         return casses;

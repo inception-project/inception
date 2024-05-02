@@ -348,10 +348,10 @@ public class DocumentServiceImplConcurrencyTest
                     return;
                 }
 
-                try (CasStorageSession session = openNested()) {
-                    CAS cas = sut.readAnnotationCas(doc, user);
+                try (var session = openNested()) {
+                    var cas = sut.readAnnotationCas(doc, user);
                     Thread.sleep(50);
-                    sut.writeAnnotationCas(cas, doc, user, false);
+                    sut.writeAnnotationCas(cas, doc, user);
                     writeCounter.incrementAndGet();
                 }
                 catch (Exception e) {

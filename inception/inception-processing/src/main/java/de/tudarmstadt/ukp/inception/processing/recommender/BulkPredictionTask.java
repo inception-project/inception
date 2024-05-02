@@ -106,6 +106,7 @@ public class BulkPredictionTask
         var processedDocumentsCount = 0;
         var annotationsCount = 0;
         var suggestionsCount = 0;
+        int maxProgress;
 
         while (true) {
             // Find all documents currently in the document (which may have changed since the last
@@ -120,7 +121,7 @@ public class BulkPredictionTask
                     .map(e -> e.getKey()) //
                     .toList();
 
-            var maxProgress = annotatableDocuments.size();
+            maxProgress = annotatableDocuments.size();
             var progress = maxProgress - processableDocuments.size();
             if (processableDocuments.isEmpty() || monitor.isCancelled()) {
                 monitor.setProgressWithMessage(progress, maxProgress,
@@ -152,7 +153,8 @@ public class BulkPredictionTask
 
                 annotationsCount += autoAccept(doc, predictions, cas);
 
-                documentService.writeAnnotationCas(cas, doc, dataOwner, true);
+                documentService.writeAnnotationCas(cas, doc, dataOwner,
+                        EXPLICIT_ANNOTATOR_USER_ACTION);
                 documentService.setAnnotationDocumentState(annDoc, FINISHED,
                         EXPLICIT_ANNOTATOR_USER_ACTION);
 
@@ -165,6 +167,9 @@ public class BulkPredictionTask
                 LOG.error("Error creating processing metadata annotation", e);
             }
         }
+
+        monitor.setProgressWithMessage(processedDocumentsCount, maxProgress,
+                LogMessage.info(this, "Prediction complete"));
     }
 
     private void addProcessingMetadataAnnotation(SourceDocument doc, CAS cas)

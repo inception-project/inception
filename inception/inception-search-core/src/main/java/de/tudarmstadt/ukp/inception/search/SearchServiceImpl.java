@@ -336,7 +336,7 @@ public class SearchServiceImpl
     private PooledIndex acquireIndex(long aProjectId)
     {
         synchronized (indexes) {
-            PooledIndex pooledIndex = indexes.get(aProjectId);
+            var pooledIndex = indexes.get(aProjectId);
 
             if (pooledIndex != null && pooledIndex.isTombstone()) {
                 throw new IllegalStateException("Project [" + aProjectId
@@ -364,7 +364,7 @@ public class SearchServiceImpl
             }
 
             if (pooledIndex == null) {
-                Index index = loadIndex(aProjectId);
+                var index = loadIndex(aProjectId);
                 pooledIndex = new PooledIndex(index);
                 indexes.put(aProjectId, pooledIndex);
             }
@@ -443,9 +443,10 @@ public class SearchServiceImpl
     }
 
     @Override
+    @Transactional
     public void indexDocument(SourceDocument aSourceDocument, byte[] aBinaryCas)
     {
-        try (PooledIndex pooledIndex = acquireIndex(aSourceDocument.getProject().getId())) {
+        try (var pooledIndex = acquireIndex(aSourceDocument.getProject().getId())) {
             indexDocument(pooledIndex, aSourceDocument, aBinaryCas);
         }
     }
@@ -453,11 +454,11 @@ public class SearchServiceImpl
     private void indexDocument(PooledIndex aPooledIndex, SourceDocument aSourceDocument,
             byte[] aBinaryCas)
     {
-        Project project = aSourceDocument.getProject();
+        var project = aSourceDocument.getProject();
 
         log.debug("Request to index source document {} in project {}", aSourceDocument, project);
 
-        Index index = aPooledIndex.get();
+        var index = aPooledIndex.get();
         // Index already initialized? If not, schedule full re-indexing job. This will also
         // index the given document, so we can stop here after scheduling the re-indexing.
         if (!index.getPhysicalIndex().isCreated()) {
@@ -736,7 +737,7 @@ public class SearchServiceImpl
                 return false;
             }
 
-            return !pooledIndex.get().getInvalid();
+            return !pooledIndex.get().isInvalid();
         }
     }
 
@@ -803,7 +804,7 @@ public class SearchServiceImpl
         }
 
         // Is the index valid?
-        if (aIndex.getInvalid()) {
+        if (aIndex.isInvalid()) {
             if (getIndexProgress(aProject).isEmpty()) {
                 // Index is invalid, schedule a new index rebuild
                 enqueueReindexTask(aProject, "ensureIndexIsCreatedAndValid[invalid]");
@@ -830,8 +831,11 @@ public class SearchServiceImpl
 
     private void invalidateIndexAndForceIndexRebuild(Project aProject, Index aIndex, String aReason)
     {
-        aIndex.setInvalid(true);
-        entityManager.merge(aIndex);
+        if (!aIndex.isInvalid()) {
+            // Only update flag and DB if necessary
+            aIndex.setInvalid(true);
+            entityManager.merge(aIndex);
+        }
 
         enqueueReindexTask(aProject, "ensureIndexIsCreatedAndValid[doesNotExist]");
     }
