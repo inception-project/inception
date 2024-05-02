@@ -26,6 +26,7 @@ import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.util.List;
+import java.util.stream.Stream;
 import java.util.zip.ZipFile;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -107,27 +108,27 @@ public class LearningRecordExporterTest
         var captor = runExportImportAndFetchRecommenders();
 
         // Check that after re-importing the exported data is identical to the original
-        assertThat(captor.getAllValues()) //
+        assertThat(captor.getAllValues().stream().flatMap(Stream::of)) //
                 .usingRecursiveFieldByFieldElementComparatorIgnoringFields("id", "actionDate")
                 .containsExactlyInAnyOrderElementsOf(records());
     }
 
-    private ArgumentCaptor<LearningRecord> runExportImportAndFetchRecommenders()
+    private ArgumentCaptor<LearningRecord[]> runExportImportAndFetchRecommenders()
     {
         // Export the project
-        FullProjectExportRequest exportRequest = new FullProjectExportRequest(project, null, false);
-        ProjectExportTaskMonitor monitor = new ProjectExportTaskMonitor(project, null, "test");
-        ExportedProject exportedProject = new ExportedProject();
-        File file = mock(File.class);
+        var exportRequest = new FullProjectExportRequest(project, null, false);
+        var monitor = new ProjectExportTaskMonitor(project, null, "test");
+        var exportedProject = new ExportedProject();
+        var file = mock(File.class);
 
         sut.exportData(exportRequest, monitor, exportedProject, file);
 
         // Import the project again
-        var captor = ArgumentCaptor.forClass(LearningRecord.class);
-        doNothing().when(learningRecordService).createLearningRecord(captor.capture());
+        var captor = ArgumentCaptor.forClass(LearningRecord[].class);
+        doNothing().when(learningRecordService).createLearningRecords(captor.capture());
 
-        ProjectImportRequest importRequest = new ProjectImportRequest(true);
-        ZipFile zipFile = mock(ZipFile.class);
+        var importRequest = new ProjectImportRequest(true);
+        var zipFile = mock(ZipFile.class);
         sut.importData(importRequest, project, exportedProject, zipFile);
 
         return captor;
@@ -135,7 +136,7 @@ public class LearningRecordExporterTest
 
     private List<LearningRecord> records()
     {
-        LearningRecord r1 = LearningRecord.builder() //
+        var r1 = LearningRecord.builder() //
                 .withAnnotation("label") //
                 .withAnnotationFeature(feature) //
                 .withChangeLocation(LearningRecordChangeLocation.MAIN_EDITOR) //

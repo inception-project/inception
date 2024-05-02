@@ -48,7 +48,7 @@ To delete the service again, use
 [source,text]
 .Delete Kubernetes environment
 ----
-$ kubectl delete -f inception.yml
+$ kubectl delete -f inception.yml 
 ----
 
 This can be tested e.g. using the Kubernetes support built into recent Docker Desktop. If you experience problems, make sure you run the latest version of Docker Desktop.

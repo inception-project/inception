@@ -117,6 +117,9 @@ public class EventLoggingListener
         }
 
         var adapter = maybeAdapter.get();
+        if (!adapter.isLoggable(aEvent)) {
+            return;
+        }
 
         if (!shouldLogEvent(adapter.getEvent(aEvent))) {
             return;

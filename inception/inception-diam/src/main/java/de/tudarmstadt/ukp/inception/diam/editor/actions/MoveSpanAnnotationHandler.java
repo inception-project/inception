@@ -64,6 +64,9 @@ public class MoveSpanAnnotationHandler
     {
         try {
             var page = getPage();
+
+            page.ensureIsEditable();
+
             var cas = page.getEditorCas();
             var vid = getVid(aRequest);
             var state = getAnnotatorState();

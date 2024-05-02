@@ -22,12 +22,12 @@ public class BratEventArgumentDecl
     private final String name;
     private final String cardinality;
     private final String range;
-    
+
     public BratEventArgumentDecl(String aName, String aCardinality)
     {
         this(aName, aCardinality, BratConstants.RANGE_ANY);
     }
-    
+
     public BratEventArgumentDecl(String aName, String aCardinality, String aRange)
     {
         name = aName;
@@ -39,36 +39,36 @@ public class BratEventArgumentDecl
     {
         return name;
     }
-    
+
     public String getCardinality()
     {
         return cardinality;
     }
-    
+
     public String getRange()
     {
         return range;
     }
-    
+
     @Override
     public String toString()
     {
         StringBuilder sb = new StringBuilder();
-        
+
         // Slot
         sb.append(name);
-        
+
         // Cardinality: nothing, '?' or '+'
         sb.append(cardinality);
-        
+
         // Separator
         sb.append(':');
-        
+
         // Range
         sb.append(range);
         return sb.toString();
     }
-    
+
     @Override
     public int hashCode()
     {

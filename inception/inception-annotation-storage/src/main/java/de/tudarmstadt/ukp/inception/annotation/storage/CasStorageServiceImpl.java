@@ -357,7 +357,7 @@ public class CasStorageServiceImpl
                             mLoaderCas.setReleaseOnClose(false);
 
                             cas = readOrCreateUnmanagedCas(aDocument, aUsername, aSupplier,
-                                    aUpgradeMode);
+                                    aUpgradeMode, aAccessMode);
                         }
 
                         holder.setCas(cas);
@@ -415,10 +415,12 @@ public class CasStorageServiceImpl
                 try (var access = new WithExclusiveAccess(aDocument, aUsername)) {
                     // Since we promise to only read the CAS, we don't have to worry about it being
                     // locked to a particular thread...
-                    casHolder = sharedAccessCache.get(new CasKey(aDocument, aUsername),
-                            (key) -> CasHolder.of(key,
-                                    () -> getRealCas(readOrCreateUnmanagedCas(aDocument, aUsername,
-                                            aSupplier, aUpgradeMode))));
+                    casHolder = sharedAccessCache
+                            .get(new CasKey(aDocument, aUsername),
+                                    (key) -> CasHolder.of(key,
+                                            () -> getRealCas(readOrCreateUnmanagedCas(aDocument,
+                                                    aUsername, aSupplier, aUpgradeMode,
+                                                    aAccessMode))));
                     var size = getSharedAccessCacheSize();
                     var max = casStorageProperties.getSharedCasCacheSize();
                     if (size > (max * 0.9)) {
@@ -433,7 +435,7 @@ public class CasStorageServiceImpl
                 try (var access = new WithExclusiveAccess(aDocument, aUsername)) {
                     casHolder = CasHolder.of(new CasKey(aDocument, aUsername),
                             () -> readOrCreateUnmanagedCas(aDocument, aUsername, aSupplier,
-                                    aUpgradeMode));
+                                    aUpgradeMode, aAccessMode));
                 }
             }
             // else if the special bypass mode is requested, then we fetch directly from disk
@@ -563,7 +565,7 @@ public class CasStorageServiceImpl
      *             if the CAS could not be obtained.
      */
     private CAS readOrCreateUnmanagedCas(SourceDocument aDocument, String aUsername,
-            CasProvider aSupplier, CasUpgradeMode aUpgradeMode)
+            CasProvider aSupplier, CasUpgradeMode aUpgradeMode, CasAccessMode aAccessMode)
         throws IOException
     {
         var start = currentTimeMillis();
@@ -584,30 +586,30 @@ public class CasStorageServiceImpl
 
         // If the CAS exists on disk already, load it from there
         if (driver.existsCas(aDocument, aUsername)) {
+            source = "disk";
             cas = driver.readCas(aDocument, aUsername);
             repairAndUpgradeCasIfRequired(aDocument, aUsername, cas, aUpgradeMode,
                     ISOLATED_SESSION);
-            source = "disk";
+
+            addOrUpdateCasMetadata(aDocument, aUsername, cas);
         }
         // If the CAS does NOT exist on disk, try obtaining it through the given CAS provider
         else if (aSupplier != null) {
+            source = "importer";
             cas = aSupplier.get();
             repairAndUpgradeCasIfRequired(aDocument, aUsername, cas, aUpgradeMode);
-            realWriteCas(aDocument, aUsername, cas);
-            source = "importer";
+
+            if (aAccessMode == EXCLUSIVE_WRITE_ACCESS) {
+                realWriteCas(aDocument, aUsername, cas);
+
+                addOrUpdateCasMetadata(aDocument, aUsername, cas);
+            }
         }
         // If no CAS provider is given, fail
         else {
             throw new FileNotFoundException("CAS file for [" + aDocument.getId() + "," + aUsername
                     + "] does not exist and no initializer is specified.");
         }
-
-        // Add/update the CAS metadata
-        CasMetadataUtils.addOrUpdateCasMetadata(cas, driver.getCasMetadata(aDocument, aUsername)
-                .orElseThrow(() -> new IOException(
-                        "Unable to obtain last modified data for annotation document [" + aDocument
-                                + "] of user [" + aUsername + "]"))
-                .getTimestamp(), aDocument, aUsername);
 
         var duration = currentTimeMillis() - start;
 
@@ -626,6 +628,16 @@ public class CasStorageServiceImpl
         }
 
         return cas;
+    }
+
+    private void addOrUpdateCasMetadata(SourceDocument aDocument, String aUsername, CAS cas)
+        throws IOException
+    {
+        CasMetadataUtils.addOrUpdateCasMetadata(cas, driver.getCasMetadata(aDocument, aUsername)
+                .orElseThrow(() -> new IOException(
+                        "Unable to obtain last modified data for annotation document [" + aDocument
+                                + "] of user [" + aUsername + "]"))
+                .getTimestamp(), aDocument, aUsername);
     }
 
     @Override

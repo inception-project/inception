@@ -1,6 +1,7 @@
 {
   "name": "@inception-project/${project.artifactId}",
   "version": "${semver}",
+  "type": "module",
   "author": "INCEpTION Team",
   "license": "Apache-2.0",
   "private": true,
@@ -8,9 +9,13 @@
   "bugs": {
     "url": "https://github.com/inception-project/issues"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/inception-project/inception.git"
+  },
   "scripts": {
     "build": "node build.mjs",
-    "test": "mocha -r esbuild-runner-plugins/register \"./test/**/*.test.ts\" --extension ts --reporter mocha-junit-reporter --reporter-options mochaFile=\"../../../target/surefire-reports/mocha-test-report.xml\""
+    "test": "vitest run --reporter=junit --outputFile=\"../../../target/surefire-reports/vitest-test-report.xml\""
   },
   "dependencies": {
     "@inception-project/inception-js-api": "${semver}",
@@ -18,27 +23,36 @@
     "@types/stompjs": "${types-stompjs.version}",
     "fast-json-patch": "${fast-json-patch.version}"
   },
+  "optionalDependencies": {
+      "@rollup/rollup-win32-x64-msvc": "${rollup.version}",
+      "@rollup/rollup-linux-x64-gnu": "${rollup.version}",
+      "@rollup/rollup-darwin-x64": "${rollup.version}",
+      "@rollup/rollup-darwin-arm64": "${rollup.version}"
+  },
   "devDependencies": {
-    "chai": "${chai.version}",
     "cross-env": "${cross-env.version}",
     "esbuild": "${esbuild.version}",
-    "esbuild-runner-plugins": "${esbuild-runner-plugins.version}",
+    "esbuild-svelte": "${esbuild-svelte.version}",
     "esbuild-sass-plugin": "${esbuild-sass-plugin.version}",
     "eslint": "${eslint.version}",
     "eslint-config-standard": "${eslint-config-standard.version}",
     "eslint-plugin-import": "${eslint-plugin-import.version}",
-    "eslint-plugin-mocha": "${eslint-plugin-mocha.version}",
     "eslint-plugin-n": "${eslint-plugin-n.version}",
     "eslint-plugin-promise": "${eslint-plugin-promise.version}",
+    "eslint-plugin-svelte": "${eslint-plugin-svelte.version}",
     "fs-extra": "${fs-extra.version}",
-    "mocha": "${mocha.version}",
-    "mocha-junit-reporter": "${mocha-junit-reporter.version}",
+    "jsdom": "${jsdom.version}",
+    "jsdom-global": "${jsdom-global.version}",
+    "sass": "${sass.version}",
+    "svelte": "${svelte.version}",
+    "svelte-preprocess": "${svelte-preprocess.version}",
+    "@sveltejs/vite-plugin-svelte": "${sveltejs-vite-plugin-svelte.version}",
     "temp-write": "${temp-write.version}",
+    "@testing-library/svelte": "${testing-library-svelte.version}",
     "typescript": "${typescript.version}",
     "@typescript-eslint/eslint-plugin": "${typescript-eslint-eslint-plugin.version}",
     "@typescript-eslint/parser": "${typescript-eslint-parser.version}",
-    "@types/chai": "${types-chai.version}",
-    "@types/mocha": "${types-mocha.version}",
+    "vitest": "${vitest.version}",
     "uuid": "${uuid.version}",
     "yargs": "${yargs.version}"
   }

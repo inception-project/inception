@@ -67,7 +67,7 @@ public class InceptionSecurityWebUIBuiltInAutoConfiguration
         authorizations.requestMatchers("/login.html*").permitAll();
         accessToStaticResources(authorizations);
         accessToRemoteApiAndSwagger(authorizations);
-        authorizations.requestMatchers("/" + NS_PROJECT + "/*/join-project/**").permitAll();
+        authorizations.requestMatchers(NS_PROJECT + "/*/join-project/**").permitAll();
         accessToApplication(authorizations);
         authorizations.anyRequest().denyAll();
 

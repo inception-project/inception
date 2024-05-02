@@ -175,15 +175,7 @@ public class BulkRecommenderPanel
         var layer = formModel.map(d -> d.processingMetadataLayer).getObject();
 
         var featureStates = new ArrayList<FeatureState>();
-        for (var feature : annotationSchemaService.listSupportedFeatures(layer)) {
-            if (!feature.isEnabled()) {
-                continue;
-            }
-
-            if (!featureSupportRegistry.findExtension(feature).get().isAccessible(feature)) {
-                continue;
-            }
-
+        for (var feature : annotationSchemaService.listEnabledFeatures(layer)) {
             if (feature.getLinkMode() != LinkMode.NONE) {
                 continue;
             }

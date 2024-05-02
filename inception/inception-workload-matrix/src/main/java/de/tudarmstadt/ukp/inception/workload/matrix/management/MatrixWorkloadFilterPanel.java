@@ -30,18 +30,18 @@ import org.apache.wicket.model.Model;
 import de.tudarmstadt.ukp.inception.bootstrap.IconToggleBox;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.inception.workload.matrix.management.event.FilterStateChangedEvent;
-import de.tudarmstadt.ukp.inception.workload.matrix.management.support.Filter;
+import de.tudarmstadt.ukp.inception.workload.matrix.management.support.DocumentMatrixFilterState;
 
 public class MatrixWorkloadFilterPanel
     extends Panel
 {
     private static final long serialVersionUID = 7581474359089251264L;
 
-    public MatrixWorkloadFilterPanel(String aId, IModel<Filter> aModel)
+    public MatrixWorkloadFilterPanel(String aId, IModel<DocumentMatrixFilterState> aModel)
     {
         super(aId, aModel);
 
-        Form<Filter> form = new Form<>("form", CompoundPropertyModel.of(aModel));
+        var form = new Form<>("form", CompoundPropertyModel.of(aModel));
         add(form);
 
         form.add(new TextField<>("documentName", String.class));
@@ -53,25 +53,25 @@ public class MatrixWorkloadFilterPanel
         form.add(new LambdaAjaxButton<>("reset", this::onResetFilter).triggerAfterSubmit());
     }
 
-    private void onApplyFilter(AjaxRequestTarget aTarget, Form<Filter> aForm)
+    private void onApplyFilter(AjaxRequestTarget aTarget, Form<DocumentMatrixFilterState> aForm)
     {
         send(this, BUBBLE, new FilterStateChangedEvent(aTarget));
     }
 
-    private void onResetFilter(AjaxRequestTarget aTarget, Form<Filter> aForm)
+    private void onResetFilter(AjaxRequestTarget aTarget, Form<DocumentMatrixFilterState> aForm)
     {
         getModelObject().reset();
         send(this, BUBBLE, new FilterStateChangedEvent(aTarget));
     }
 
-    public Filter getModelObject()
+    public DocumentMatrixFilterState getModelObject()
     {
-        return (Filter) getDefaultModelObject();
+        return (DocumentMatrixFilterState) getDefaultModelObject();
     }
 
     @SuppressWarnings("unchecked")
-    public Model<Filter> getModel()
+    public Model<DocumentMatrixFilterState> getModel()
     {
-        return (Model<Filter>) getDefaultModel();
+        return (Model<DocumentMatrixFilterState>) getDefaultModel();
     }
 }

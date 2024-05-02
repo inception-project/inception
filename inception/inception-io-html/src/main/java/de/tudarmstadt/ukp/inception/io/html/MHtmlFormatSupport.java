@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.io.html;
 
+import static java.util.Arrays.asList;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReaderDescription;
 
 import java.io.File;
@@ -24,6 +25,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 import java.util.Optional;
 
 import org.apache.james.mime4j.dom.Message;
@@ -84,6 +86,12 @@ public class MHtmlFormatSupport
         throws ResourceInitializationException
     {
         return createReaderDescription(MHtmlDocumentReader.class, aTSD);
+    }
+
+    @Override
+    public List<String> getSectionElements()
+    {
+        return asList("p");
     }
 
     @Override

@@ -42,8 +42,6 @@ import org.slf4j.LoggerFactory;
 import org.wicketstuff.event.annotation.OnEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
@@ -51,7 +49,6 @@ import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.revieweditor.event.RefreshEvent;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.inception.schema.api.feature.LinkWithRoleModel;
 import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistry;
@@ -132,7 +129,7 @@ public class DocumentAnnotationPanel
 
     private List<FeatureState> listFeatures()
     {
-        VID vid = model.getObject();
+        var vid = model.getObject();
 
         if (state.getProject() == null || vid == null || vid.isNotSet()) {
             return emptyList();
@@ -146,26 +143,18 @@ public class DocumentAnnotationPanel
             LOG.error("Unable to locate annotation with ID {}", vid);
             return emptyList();
         }
-        AnnotationLayer layer = annotationService.findLayer(state.getProject(), fs);
-        TypeAdapter adapter = annotationService.getAdapter(layer);
+        var layer = annotationService.findLayer(state.getProject(), fs);
+        var adapter = annotationService.getAdapter(layer);
 
         // Populate from feature structure
-        List<FeatureState> featureStates = new ArrayList<>();
-        for (AnnotationFeature feature : annotationService.listSupportedFeatures(layer)) {
-            if (!feature.isEnabled()) {
-                continue;
-            }
-
-            if (!featureSupportRegistry.findExtension(feature).get().isAccessible(feature)) {
-                continue;
-            }
-
+        var featureStates = new ArrayList<FeatureState>();
+        for (var feature : annotationService.listEnabledFeatures(layer)) {
             Serializable value = null;
             if (fs != null) {
                 value = adapter.getFeatureValue(feature, fs);
             }
 
-            FeatureState featureState = new FeatureState(vid, feature, value);
+            var featureState = new FeatureState(vid, feature, value);
             featureStates.add(featureState);
             featureState.tagset = annotationService
                     .listTagsReorderable(featureState.feature.getTagset());

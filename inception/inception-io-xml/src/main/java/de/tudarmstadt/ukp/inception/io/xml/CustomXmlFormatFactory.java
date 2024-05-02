@@ -110,6 +110,12 @@ public class CustomXmlFormatFactory
     }
 
     @Override
+    public List<String> getSectionElements()
+    {
+        return description.getSectionElements();
+    }
+
+    @Override
     public CollectionReaderDescription getReaderDescription(Project aProject,
             TypeSystemDescription aTSD)
         throws ResourceInitializationException

@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
@@ -50,10 +49,9 @@ public class ActionBarExtensionPointImpl
     {
         // Using a LinkedHashMap here because we want to preserve the order in which the extensions
         // are displayed in the action bar.
-        Map<String, ActionBarExtension> byRole = new LinkedHashMap<>();
-        for (ActionBarExtension extension : super.getExtensions(aContext)) {
-            ActionBarExtension existingExtension = byRole.computeIfAbsent(extension.getRole(),
-                    key -> extension);
+        var byRole = new LinkedHashMap<String, ActionBarExtension>();
+        for (var extension : super.getExtensions(aContext)) {
+            var existingExtension = byRole.computeIfAbsent(extension.getRole(), key -> extension);
 
             // If the previously found extension has a lower priority, then we replace it with the
             // current one

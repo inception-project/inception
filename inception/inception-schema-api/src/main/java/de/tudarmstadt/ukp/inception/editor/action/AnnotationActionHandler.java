@@ -171,4 +171,6 @@ public interface AnnotationActionHandler
         throws IOException, AnnotationException;
 
     CAS getEditorCas() throws IOException;
+
+    void writeEditorCas() throws IOException, AnnotationException;
 }

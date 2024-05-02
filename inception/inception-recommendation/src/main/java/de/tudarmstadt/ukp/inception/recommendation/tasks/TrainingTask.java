@@ -237,6 +237,7 @@ public class TrainingTask
                 .withTrigger(String.format("TrainingTask %s complete", getId())) //
                 .withCurrentDocument(currentDocument) //
                 .withDataOwner(dataOwner) //
+                .withSynchronousRecommenders(false) // ;
                 .build();
 
         predictionTask.inheritLog(this);

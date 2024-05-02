@@ -42,22 +42,22 @@ public class BratConfiguration
     {
         events.put(aDecl.getType(), aDecl);
     }
-    
-    public BratEventAnnotationDecl getEventDecl(String aType) 
+
+    public BratEventAnnotationDecl getEventDecl(String aType)
     {
         return events.get(aType);
     }
-    
+
     public void addEntityDecl(String aSuperType, String aType)
     {
         entities.put(aType, new BratTextAnnotationDecl(aSuperType, aType));
     }
-    
+
     public BratAttributeDecl addAttributeDecl(String aOwner, Collection<String> aSubTypes,
             String aAttribute, String aValue)
     {
         String key = aOwner + ":" + aAttribute;
-        
+
         List<String> targets = new ArrayList<String>();
         targets.add(aOwner);
         targets.addAll(aSubTypes);
@@ -71,7 +71,7 @@ public class BratConfiguration
         attr.addValue(aValue);
         return attr;
     }
-    
+
     public void addRelationDecl(String aSuperType, String aType, String aArg1Label,
             String aArg2Label)
     {
@@ -83,7 +83,7 @@ public class BratConfiguration
             relations.put(key, attr);
         }
     }
-    
+
     private void write(Writer aWriter, int aDepth, BratAnnotationDecl aDecl,
             Map<String, ? extends BratAnnotationDecl> aAll,
             Collection<BratAnnotationDecl> aRendered)
@@ -93,27 +93,27 @@ public class BratConfiguration
         if (aRendered.contains(aDecl)) {
             return;
         }
-        
+
         // Do we have a declaration of the supertype? If yes, we have to wait until the supertype
         // has been rendered (and will be rendered as part of the supertypes rendering cycle).
         if (aDepth == 0 && aAll.containsKey(aDecl.getSuperType())) {
             return;
         }
-            
+
         // Render the current declaration
         for (int i = 0; i < aDepth; i++) {
-            aWriter.append('\t');        
+            aWriter.append('\t');
         }
         aWriter.append(aDecl.toString());
-        aWriter.append('\n');        
+        aWriter.append('\n');
         aRendered.add(aDecl);
-        
+
         // Render subtypes
         for (BratAnnotationDecl decl : aDecl.getSubTypes()) {
             write(aWriter, aDepth + 1, decl, aAll, aRendered);
         }
     }
-    
+
     private void fillSubtypes(Map<String, ? extends BratAnnotationDecl> aDecls)
     {
         for (BratAnnotationDecl decl : aDecls.values()) {
@@ -133,12 +133,12 @@ public class BratConfiguration
     {
         drawings.put(aAttribute.getName(), new BratAttributeDrawingDecl(aAttribute));
     }
-    
+
     public BratDrawingDecl getDrawingDecl(String aType)
     {
         return drawings.get(aType);
     }
-    
+
     public void addDrawingDecl(BratDrawingDecl aDecl)
     {
         drawings.put(aDecl.getType(), aDecl);
@@ -149,25 +149,23 @@ public class BratConfiguration
         return drawings.containsKey(aType);
     }
 
-    private void writeLabelAndStyle(JsonGenerator aJG, BratAnnotationDecl aDecl)
-        throws IOException
+    private void writeLabelAndStyle(JsonGenerator aJG, BratAnnotationDecl aDecl) throws IOException
     {
         BratLabelDecl label = labels.get(aDecl.getType());
         if (label != null) {
             label.write(aJG);
         }
-        
+
         BratDrawingDecl draw = drawings.get(aDecl.getType());
         if (draw != null) {
             draw.write(aJG);
         }
     }
-    
-    public void write(JsonGenerator aJG)
-        throws IOException
+
+    public void write(JsonGenerator aJG) throws IOException
     {
         aJG.writeStartObject();
-        
+
         aJG.writeFieldName("entity_types");
         aJG.writeStartArray();
         for (BratTextAnnotationDecl decl : entities.values()) {
@@ -197,8 +195,7 @@ public class BratConfiguration
             aJG.writeEndObject();
         }
         aJG.writeEndArray();
-        
-        
+
         aJG.writeFieldName("relation_types");
         aJG.writeStartArray();
         for (BratRelationAnnotationDecl decl : relations.values()) {
@@ -215,7 +212,7 @@ public class BratConfiguration
             aJG.writeString(decl.getArg1Range());
             aJG.writeEndArray();
             aJG.writeEndObject();
-            
+
             // Arg 2
             aJG.writeStartObject();
             aJG.writeStringField("role", decl.getArg2Label());
@@ -224,7 +221,7 @@ public class BratConfiguration
             aJG.writeString(decl.getArg2Range());
             aJG.writeEndArray();
             aJG.writeEndObject();
-            
+
             aJG.writeEndArray();
             writeLabelAndStyle(aJG, decl);
             aJG.writeEndObject();
@@ -236,7 +233,7 @@ public class BratConfiguration
         for (BratEventAnnotationDecl decl : events.values()) {
             aJG.writeStartObject();
             aJG.writeStringField("type", decl.getType());
-            
+
             aJG.writeFieldName("arcs");
             aJG.writeStartArray();
             for (BratEventArgumentDecl arg : decl.getSlots()) {
@@ -250,12 +247,11 @@ public class BratConfiguration
             aJG.writeEndObject();
         }
         aJG.writeEndArray();
-        
+
         aJG.writeEndObject();
     }
-    
-    public void writeVisualConfiguration(Writer aWriter)
-        throws IOException
+
+    public void writeVisualConfiguration(Writer aWriter) throws IOException
     {
         aWriter.append("[labels]\n");
         for (BratLabelDecl e : labels.values()) {
@@ -271,20 +267,19 @@ public class BratConfiguration
         }
     }
 
-    public void writeAnnotationConfiguration(Writer aWriter)
-        throws IOException
+    public void writeAnnotationConfiguration(Writer aWriter) throws IOException
     {
         Set<BratAnnotationDecl> rendered = new HashSet<>();
-        
+
         fillSubtypes(entities);
         fillSubtypes(relations);
         fillSubtypes(events);
-        
+
         aWriter.append("[entities]\n");
         for (BratTextAnnotationDecl e : entities.values()) {
             write(aWriter, 0, e, entities, rendered);
         }
-        
+
         aWriter.append('\n');
         aWriter.append("[relations]\n");
         for (BratRelationAnnotationDecl e : relations.values()) {
@@ -298,7 +293,7 @@ public class BratConfiguration
         for (BratEventAnnotationDecl e : events.values()) {
             write(aWriter, 0, e, events, rendered);
         }
-        
+
         aWriter.append('\n');
         aWriter.append("[attributes]\n");
         for (BratAttributeDecl e : attributes.values()) {

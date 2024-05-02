@@ -70,7 +70,8 @@ public class OpenNlpNerRecommenderFactory
 
         return (asList(SINGLE_TOKEN, TOKENS, SENTENCES).contains(aLayer.getAnchoringMode()))
                 && SpanLayerSupport.TYPE.equals(aLayer.getType())
-                && (CAS.TYPE_NAME_STRING.equals(aFeature.getType()) || aFeature.isVirtualFeature());
+                && (asList(CAS.TYPE_NAME_STRING, CAS.TYPE_NAME_BOOLEAN).contains(aFeature.getType())
+                        || aFeature.isVirtualFeature());
     }
 
     @Override

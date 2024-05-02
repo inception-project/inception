@@ -35,8 +35,8 @@ import org.springframework.core.annotation.Order;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.LayerInitializer;
+import de.tudarmstadt.ukp.inception.project.api.ProjectInitializationRequest;
 import de.tudarmstadt.ukp.inception.project.api.ProjectInitializer;
 import de.tudarmstadt.ukp.inception.project.initializers.doclabeling.config.InceptionDocumentLabelingProjectInitializersAutoConfiguration;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
@@ -109,21 +109,22 @@ public class BasicDocumentLabelLayerInitializer
     }
 
     @Override
-    public void configure(Project aProject) throws IOException
+    public void configure(ProjectInitializationRequest aRequest) throws IOException
     {
-        AnnotationLayer docTagLayer = new AnnotationLayer(BASIC_DOCUMENT_LABEL_LAYER_NAME,
-                "Document Label", DocumentMetadataLayerSupport.TYPE, aProject, false, TOKENS,
-                ANY_OVERLAP);
+        var project = aRequest.getProject();
+
+        var docTagLayer = new AnnotationLayer(BASIC_DOCUMENT_LABEL_LAYER_NAME, "Document Label",
+                DocumentMetadataLayerSupport.TYPE, project, false, TOKENS, ANY_OVERLAP);
         var traits = docLayerSupport.readTraits(docTagLayer);
         traits.setSingleton(true);
         docLayerSupport.writeTraits(docTagLayer, traits);
         annotationSchemaService.createOrUpdateLayer(docTagLayer);
 
-        TagSet docLabelTagSet = annotationSchemaService.getTagSet(
-                BasicDocumentLabelTagSetInitializer.BASIC_DOCUMENT_LABEL_TAG_SET_NAME, aProject);
+        var docLabelTagSet = annotationSchemaService.getTagSet(
+                BasicDocumentLabelTagSetInitializer.BASIC_DOCUMENT_LABEL_TAG_SET_NAME, project);
 
-        annotationSchemaService.createFeature(new AnnotationFeature(aProject, docTagLayer,
-                BASIC_DOCUMENT_LABEL_LABEL_FEATURE_NAME, "Label", CAS.TYPE_NAME_STRING,
-                "Document label", docLabelTagSet));
+        annotationSchemaService.createFeature(
+                new AnnotationFeature(project, docTagLayer, BASIC_DOCUMENT_LABEL_LABEL_FEATURE_NAME,
+                        "Label", CAS.TYPE_NAME_STRING, "Document label", docLabelTagSet));
     }
 }

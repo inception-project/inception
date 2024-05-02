@@ -91,7 +91,6 @@ public class INCEpTION
         if (Boolean.getBoolean("inception.dev")) {
             System.setProperty("wicket.core.settings.debug.enabled", "true");
             System.setProperty("wicket.core.settings.general.configuration-type", "development");
-            System.setProperty("debug.sendServerSideTimings", "true");
             System.setProperty("webanno.debug.enforce_cas_thread_lock", "true");
             aBuilder.profiles(DeploymentModeService.PROFILE_DEVELOPMENT_MODE);
         }

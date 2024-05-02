@@ -28,7 +28,6 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
@@ -53,7 +52,7 @@ public class FeatureAttachedSpanAnnotationsTrulyAttachedCheck
     {
         boolean ok = true;
         int count = 0;
-        for (AnnotationLayer layer : annotationService.listAnnotationLayer(aProject)) {
+        for (var layer : annotationService.listAnnotationLayer(aProject)) {
             if (!(SpanLayerSupport.TYPE.equals(layer.getType())
                     && layer.getAttachFeature() != null)) {
                 continue;

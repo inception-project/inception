@@ -34,12 +34,11 @@ import static java.util.Collections.emptyList;
 import static java.util.Objects.isNull;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.stream.Collectors.toList;
-import static org.apache.commons.lang3.StringUtils.isAlphanumeric;
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.apache.commons.lang3.StringUtils.isNumeric;
 import static org.apache.uima.cas.impl.Serialization.deserializeCASComplete;
 import static org.apache.uima.cas.impl.Serialization.serializeCASComplete;
 import static org.apache.uima.cas.impl.Serialization.serializeWithCompression;
+import static org.apache.uima.cas.impl.TypeSystemUtils.isIdentifier;
 import static org.apache.uima.fit.factory.TypeSystemDescriptionFactory.createTypeSystemDescription;
 import static org.apache.uima.util.CasCreationUtils.mergeTypeSystems;
 import static org.hibernate.annotations.QueryHints.CACHEABLE;
@@ -54,6 +53,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.StringTokenizer;
 
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
@@ -62,6 +62,7 @@ import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.TypeSystem;
 import org.apache.uima.cas.impl.CASImpl;
+import org.apache.uima.cas.impl.TypeSystemUtils;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.factory.CasFactory;
 import org.apache.uima.fit.util.CasUtil;
@@ -193,13 +194,13 @@ public class AnnotationSchemaServiceImpl
             return;
         }
 
-        TagSet tagset = aTags[0].getTagSet();
-        Project project = tagset.getProject();
+        var tagset = aTags[0].getTagSet();
+        var project = tagset.getProject();
 
-        int createdCount = 0;
-        int updatedCount = 0;
-        for (Tag tag : aTags) {
-            boolean created = createTagNoLog(tag);
+        var createdCount = 0;
+        var updatedCount = 0;
+        for (var tag : aTags) {
+            var created = createTagNoLog(tag);
             if (created) {
                 createdCount++;
             }
@@ -212,6 +213,8 @@ public class AnnotationSchemaServiceImpl
             log.info("Created {} tags and updated {} tags in tagset {} in project {}", createdCount,
                     updatedCount, tagset, project);
         }
+
+        flushImmutableTagCache(tagset);
     }
 
     private boolean createTagNoLog(Tag aTag)
@@ -846,22 +849,10 @@ public class AnnotationSchemaServiceImpl
     @Transactional
     public List<AnnotationFeature> listEnabledFeatures(AnnotationLayer aLayer)
     {
-        if (isNull(aLayer) || isNull(aLayer.getId())) {
-            return new ArrayList<>();
-        }
-
-        var cb = entityManager.getCriteriaBuilder();
-        var query = cb.createQuery(AnnotationFeature.class);
-        var root = query.from(AnnotationFeature.class);
-
-        query //
-                .where(cb.and( //
-                        cb.equal(root.get(AnnotationFeature_.layer), aLayer),
-                        cb.isTrue(root.get(AnnotationFeature_.enabled))))
-                .orderBy(cb.asc(root.get(AnnotationFeature_.rank)),
-                        cb.asc(root.get(AnnotationFeature_.uiName)));
-
-        return entityManager.createQuery(query).setHint(CACHEABLE, true).getResultList();
+        return listAnnotationFeature(aLayer).stream() //
+                .filter(AnnotationFeature::isEnabled) //
+                .filter(featureSupportRegistry::isAccessible) //
+                .toList();
     }
 
     @Override
@@ -881,6 +872,17 @@ public class AnnotationSchemaServiceImpl
         return entityManager.createQuery(query) //
                 .setHint(CACHEABLE, true) //
                 .getResultList();
+    }
+
+    @Override
+    @Transactional
+    public List<AnnotationFeature> listEnabledFeatures(Project aProject)
+    {
+        return listAnnotationFeature(aProject).stream() //
+                .filter(f -> f.getLayer().isEnabled()) //
+                .filter(AnnotationFeature::isEnabled) //
+                .filter(featureSupportRegistry::isAccessible) //
+                .toList();
     }
 
     @Override
@@ -1034,23 +1036,19 @@ public class AnnotationSchemaServiceImpl
     @Transactional
     public List<AnnotationLayer> listSupportedLayers(Project aProject)
     {
-        List<AnnotationLayer> supportedLayers = new ArrayList<>();
+        return listAnnotationLayer(aProject).stream() //
+                .filter(layerSupportRegistry::isSupported) //
+                .toList();
+    }
 
-        for (AnnotationLayer l : listAnnotationLayer(aProject)) {
-            try {
-                layerSupportRegistry.getLayerSupport(l);
-            }
-            catch (IllegalArgumentException e) {
-                // Skip unsupported layers
-                continue;
-            }
-
-            // Add supported layers to the result
-            supportedLayers.add(l);
-        }
-
-        return supportedLayers;
-
+    @Override
+    @Transactional
+    public List<AnnotationLayer> listEnabledLayers(Project aProject)
+    {
+        return listAnnotationLayer(aProject).stream() //
+                .filter(AnnotationLayer::isEnabled) //
+                .filter(layerSupportRegistry::isSupported) //
+                .toList();
     }
 
     @Override
@@ -1059,7 +1057,7 @@ public class AnnotationSchemaServiceImpl
     {
         return listAnnotationFeature(aProject).stream() //
                 .filter($ -> featureSupportRegistry.findExtension($).isPresent()) //
-                .collect(toList());
+                .toList();
     }
 
     @Override
@@ -1067,17 +1065,17 @@ public class AnnotationSchemaServiceImpl
     public List<AnnotationFeature> listSupportedFeatures(AnnotationLayer aLayer)
     {
         return listAnnotationFeature(aLayer).stream() //
-                .filter($ -> featureSupportRegistry.findExtension($).isPresent()) //
-                .collect(toList());
+                .filter(featureSupportRegistry::isSupported) //
+                .toList();
     }
 
     @Override
     public TypeSystemDescription getCustomProjectTypes(Project aProject)
     {
         // Create a new type system from scratch
-        TypeSystemDescription tsd = new TypeSystemDescription_impl();
+        var tsd = new TypeSystemDescription_impl();
 
-        List<AnnotationFeature> allFeaturesInProject = listSupportedFeatures(aProject);
+        var allFeaturesInProject = listSupportedFeatures(aProject);
 
         listSupportedLayers(aProject).stream() //
                 .filter(layer -> !layer.isBuiltIn()) //
@@ -1178,7 +1176,7 @@ public class AnnotationSchemaServiceImpl
             boolean aIncludeInternalTypes)
         throws ResourceInitializationException
     {
-        List<TypeSystemDescription> typeSystems = new ArrayList<>();
+        var typeSystems = new ArrayList<TypeSystemDescription>();
 
         // Types detected by uimaFIT
         typeSystems.add(builtInTypes);
@@ -1666,6 +1664,35 @@ public class AnnotationSchemaServiceImpl
     }
 
     @Override
+    public boolean hasValidLayerName(AnnotationLayer aLayer)
+    {
+        return validateLayerName(aLayer).isEmpty();
+    }
+
+    @Override
+    public List<ValidationError> validateLayerName(AnnotationLayer aLayer)
+    {
+        var name = aLayer.getName();
+
+        var errors = new ArrayList<ValidationError>();
+
+        if (isTypeName(name)) {
+            errors.add(new ValidationError(
+                    "Invalid technical name [" + name + "]. Try using a simpler name when "
+                            + "creating the layer and rename the layer after it has been created"));
+            return errors;
+        }
+
+        if (existsLayer(name, aLayer.getProject())) {
+            errors.add(new ValidationError(
+                    "A layer with the name [" + name + "] already exists in this project."));
+            return errors;
+        }
+
+        return errors;
+    }
+
+    @Override
     public boolean hasValidFeatureName(AnnotationFeature aFeature)
     {
         return validateFeatureName(aFeature).isEmpty();
@@ -1674,7 +1701,7 @@ public class AnnotationSchemaServiceImpl
     @Override
     public List<ValidationError> validateFeatureName(AnnotationFeature aFeature)
     {
-        String name = aFeature.getName();
+        var name = aFeature.getName();
 
         var errors = new ArrayList<ValidationError>();
 
@@ -1698,10 +1725,9 @@ public class AnnotationSchemaServiceImpl
 
         // Checking if feature name doesn't start with a number or underscore
         // And only uses alphanumeric characters
-        if (isNumeric(name.substring(0, 1)) || name.substring(0, 1).equals("_")
-                || !isAlphanumeric(name.replace("_", ""))) {
-            errors.add(new ValidationError("Feature names must start with a letter and consist "
-                    + "only of letters, digits, or underscores."));
+        if (!TypeSystemUtils.isIdentifier(name)) {
+            errors.add(new ValidationError("Invalid feature name [" + name
+                    + "].  Feature names must start with a letter and consist only of letters, digits, or underscores."));
             return errors;
         }
 
@@ -1712,5 +1738,27 @@ public class AnnotationSchemaServiceImpl
         }
 
         return errors;
+    }
+
+    private static final String NAMESPACE_SEPARATOR_AS_STRING = "" + TypeSystem.NAMESPACE_SEPARATOR;
+
+    // Remove method when upgrading to UIMA 3.6.0
+    // See https://github.com/apache/uima-uimaj/issues/369
+    // return TypeSystemUtil.isTypeName(name);
+    public static boolean isTypeName(String name)
+    {
+        var tok = new StringTokenizer(name, NAMESPACE_SEPARATOR_AS_STRING, true);
+        while (tok.hasMoreTokens()) {
+            if (!isIdentifier(tok.nextToken())) {
+                return false;
+            }
+            if (tok.hasMoreTokens()) {
+                if (!tok.nextToken().equals(NAMESPACE_SEPARATOR_AS_STRING)
+                        || !tok.hasMoreTokens()) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 }

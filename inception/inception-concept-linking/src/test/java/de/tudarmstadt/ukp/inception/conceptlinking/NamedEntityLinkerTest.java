@@ -19,47 +19,31 @@ package de.tudarmstadt.ukp.inception.conceptlinking;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXCLUSIVE_WRITE_ACCESS;
 import static de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderTestHelper.getPredictions;
+import static de.tudarmstadt.ukp.inception.support.uima.AnnotationBuilder.buildAnnotation;
 import static java.util.Arrays.asList;
-import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assumptions.assumeThat;
-import static org.dkpro.core.api.datasets.DatasetValidationPolicy.CONTINUE;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.lenient;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-
-import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
-import org.apache.uima.collection.CollectionReader;
-import org.apache.uima.fit.factory.JCasFactory;
-import org.apache.uima.jcas.JCas;
-import org.dkpro.core.api.datasets.Dataset;
-import org.dkpro.core.api.datasets.DatasetFactory;
-import org.dkpro.core.io.conll.Conll2002Reader;
-import org.dkpro.core.io.conll.Conll2002Reader.ColumnSeparators;
+import org.apache.uima.fit.factory.CasFactory;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
 import de.tudarmstadt.ukp.inception.conceptlinking.recommender.NamedEntityLinker;
 import de.tudarmstadt.ukp.inception.conceptlinking.recommender.NamedEntityLinkerTraits;
-import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingServiceImpl;
+import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService;
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
-import de.tudarmstadt.ukp.inception.kb.ConceptFeatureValueType;
 import de.tudarmstadt.ukp.inception.kb.IriConstants;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
@@ -67,51 +51,48 @@ import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.PredictionContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
-import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupport;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
-import de.tudarmstadt.ukp.inception.support.test.recommendation.DkproTestHelper;
 import de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderTestHelper;
+import de.tudarmstadt.ukp.inception.support.uima.SegmentationUtils;
 
+@ExtendWith(MockitoExtension.class)
 public class NamedEntityLinkerTest
 {
-    private static final File cache = DkproTestHelper.getCacheFolder();
-    private static final DatasetFactory loader = new DatasetFactory(cache);
+    private @Mock ConceptLinkingService clService;
+    private @Mock KnowledgeBaseService kbService;
+    private @Mock FeatureSupportRegistry fsRegistry;
 
     private RecommenderContext context;
     private Recommender recommender;
+    private AnnotationLayer layer;
+    private AnnotationFeature feature;
     private CasStorageSession casStorageSession;
+    private CAS cas;
+    private ConceptFeatureTraits conceptFeatureTraits;
+    private NamedEntityLinkerTraits traits;
+    private NamedEntityLinker sut;
 
     @BeforeEach
-    public void setUp()
+    public void setUp() throws Exception
     {
         casStorageSession = CasStorageSession.open();
         context = new RecommenderContext();
-        recommender = buildRecommender();
-    }
 
-    @AfterEach
-    public void tearDown()
-    {
-        CasStorageSession.get().close();
-    }
+        layer = AnnotationLayer.builder() //
+                .forJCasClass(NamedEntity.class) //
+                .build();
 
-    @Test
-    public void thatTrainingWorks() throws Exception
-    {
-        NamedEntityLinker sut = new NamedEntityLinker(recommender, new NamedEntityLinkerTraits(),
-                mock(KnowledgeBaseService.class), mock(ConceptLinkingServiceImpl.class),
-                mock(FeatureSupportRegistry.class), new ConceptFeatureTraits());
+        feature = AnnotationFeature.builder() //
+                .withLayer(layer) //
+                .withName(NamedEntity._FeatName_identifier) //
+                .build();
 
-        List<CAS> casList = loadDevelopmentData();
+        recommender = Recommender.builder() //
+                .withLayer(layer) //
+                .withFeature(feature) //
+                .withMaxRecommendations(3) //
+                .build();
 
-        sut.train(context, casList);
-
-        assertThat(context.get(NamedEntityLinker.KEY_MODEL)).as("Model has been set").isNotNull();
-    }
-
-    @Test
-    public void thatPredictionWorks() throws Exception
-    {
         var mockResult = asList(
                 KBHandle.builder().withIdentifier("https://www.wikidata.org/wiki/Q76") //
                         .withName("Barack Obama") //
@@ -130,88 +111,83 @@ public class NamedEntityLinkerTest
                         .withDescription("city in Fukui prefecture, Japan") //
                         .build());
 
-        KnowledgeBaseService kbService = mock(KnowledgeBaseService.class);
-        KnowledgeBase kb = new KnowledgeBase();
-        kb.setFullTextSearchIri(IriConstants.FTS_VIRTUOSO.stringValue());
-        when(kbService.getKnowledgeBaseById(any(), anyString())).thenReturn(Optional.of(kb));
-        when(kbService.getEnabledKnowledgeBases(any())).thenReturn(Collections.singletonList(kb));
-        when(kbService.read(any(), any())).thenReturn(mockResult);
+        var kb = new KnowledgeBase();
+        kb.setFullTextSearchIri(IriConstants.FTS_RDF4J_LUCENE.stringValue());
+        lenient().when(kbService.getEnabledKnowledgeBases(any())).thenReturn(asList(kb));
+        lenient().when(kbService.read(any(), any())).thenReturn(mockResult);
 
-        ConceptLinkingServiceImpl clService = mock(ConceptLinkingServiceImpl.class);
-        when(clService.disambiguate(any(), anyString(), any(ConceptFeatureValueType.class),
-                anyString(), anyString(), anyInt(), any())).thenReturn(mockResult);
+        conceptFeatureTraits = new ConceptFeatureTraits();
+        lenient().when(fsRegistry.readTraits(any(), any())).thenReturn(conceptFeatureTraits);
 
-        FeatureSupportRegistry fsRegistry = mock(FeatureSupportRegistry.class);
-        FeatureSupport<Object> fs = mock(FeatureSupport.class);
-        when(fsRegistry.findExtension(recommender.getFeature())).thenReturn(Optional.of(fs));
-        when(fsRegistry.readTraits(any(), any())).thenReturn(new ConceptFeatureTraits());
+        traits = new NamedEntityLinkerTraits();
+        sut = new NamedEntityLinker(recommender, traits, kbService, clService, fsRegistry,
+                conceptFeatureTraits);
 
-        NamedEntityLinker sut = new NamedEntityLinker(recommender, new NamedEntityLinkerTraits(),
-                kbService, clService, fsRegistry, new ConceptFeatureTraits());
-
-        List<CAS> casList = loadDevelopmentData();
-        CAS cas = casList.get(0);
+        cas = CasFactory.createCas();
         casStorageSession.add("cas", EXCLUSIVE_WRITE_ACCESS, cas);
-
-        sut.train(context, Collections.singletonList(cas));
+        cas.setDocumentText(
+                "It was Barack Obama who became the 44th President of the United States of America.");
+        buildAnnotation(cas, NamedEntity.class).on("Barack Obama").buildAllAndAddToIndexes();
+        SegmentationUtils.splitSentences(cas);
+        SegmentationUtils.tokenize(cas);
         RecommenderTestHelper.addPredictionFeatures(cas, NamedEntity.class, "value");
+    }
+
+    @AfterEach
+    public void tearDown()
+    {
+        CasStorageSession.get().close();
+    }
+
+    @Test
+    public void thatPredictionWorks() throws Exception
+    {
+        sut.predict(new PredictionContext(context), cas);
+
+        var predictions = getPredictions(cas, NamedEntity.class);
+
+        assertThat(predictions) //
+                .extracting(NamedEntity::getCoveredText, NamedEntity::getIdentifier) //
+                .containsExactlyInAnyOrder( //
+                        tuple("Barack Obama", "https://www.wikidata.org/wiki/Q76"), //
+                        tuple("Barack Obama", "https://www.wikidata.org/wiki/Q26446735"), //
+                        tuple("Barack Obama", "https://www.wikidata.org/wiki/Q18355807"));
+    }
+
+    @Test
+    public void thatPredictionIsSkippedIfThereIsNoEmptyFeature() throws Exception
+    {
+        layer.setOverlapMode(OverlapMode.ANY_OVERLAP);
+        traits.setEmptyCandidateFeatureRequired(true);
+
+        cas.select(NamedEntity.class).forEach(ne -> ne.setIdentifier("non-empty"));
 
         sut.predict(new PredictionContext(context), cas);
 
-        List<NamedEntity> predictions = getPredictions(cas, NamedEntity.class);
+        var predictions = getPredictions(cas, NamedEntity.class);
 
-        assertThat(predictions).as("Predictions have been written to CAS").isNotEmpty();
+        assertThat(predictions) //
+                .extracting(NamedEntity::getCoveredText, NamedEntity::getIdentifier) //
+                .isEmpty();
     }
 
-    private List<CAS> loadDevelopmentData() throws IOException, UIMAException
+    @Test
+    public void thatAdditionalPredictionsOnStackableLayerAreGenerated() throws Exception
     {
-        Dataset ds = null;
+        layer.setOverlapMode(OverlapMode.ANY_OVERLAP);
+        traits.setEmptyCandidateFeatureRequired(false);
 
-        try {
-            ds = loader.load("germeval2014-de", CONTINUE);
-        }
-        catch (Exception e) {
-            // Workaround for https://github.com/dkpro/dkpro-core/issues/1469
-            assumeThat(e).isNotInstanceOf(FileNotFoundException.class);
-            throw e;
-        }
+        cas.select(NamedEntity.class).forEach(ne -> ne.setIdentifier("non-empty"));
 
-        return loadData(ds, ds.getDefaultSplit().getDevelopmentFiles());
-    }
+        sut.predict(new PredictionContext(context), cas);
 
-    private List<CAS> loadData(Dataset ds, File... files) throws UIMAException, IOException
-    {
-        CollectionReader reader = createReader( //
-                Conll2002Reader.class, //
-                Conll2002Reader.PARAM_PATTERNS, files, //
-                Conll2002Reader.PARAM_LANGUAGE, ds.getLanguage(), //
-                Conll2002Reader.PARAM_COLUMN_SEPARATOR, ColumnSeparators.TAB.getName(), //
-                Conll2002Reader.PARAM_HAS_TOKEN_NUMBER, true, //
-                Conll2002Reader.PARAM_HAS_HEADER, true, //
-                Conll2002Reader.PARAM_HAS_EMBEDDED_NAMED_ENTITY, true);
+        var predictions = getPredictions(cas, NamedEntity.class);
 
-        List<CAS> casList = new ArrayList<>();
-        while (reader.hasNext()) {
-            JCas cas = JCasFactory.createJCas();
-            reader.getNext(cas.getCas());
-            casList.add(cas.getCas());
-        }
-        return casList;
-    }
-
-    private static Recommender buildRecommender()
-    {
-        AnnotationLayer layer = new AnnotationLayer();
-        layer.setName(NamedEntity.class.getName());
-
-        AnnotationFeature feature = new AnnotationFeature();
-        feature.setName("identifier");
-
-        Recommender recommender = new Recommender();
-        recommender.setLayer(layer);
-        recommender.setFeature(feature);
-        recommender.setMaxRecommendations(3);
-
-        return recommender;
+        assertThat(predictions) //
+                .extracting(NamedEntity::getCoveredText, NamedEntity::getIdentifier) //
+                .containsExactlyInAnyOrder( //
+                        tuple("Barack Obama", "https://www.wikidata.org/wiki/Q76"), //
+                        tuple("Barack Obama", "https://www.wikidata.org/wiki/Q26446735"), //
+                        tuple("Barack Obama", "https://www.wikidata.org/wiki/Q18355807"));
     }
 }

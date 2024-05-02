@@ -31,9 +31,9 @@ public class ChainLinkEventAdapter
     implements EventLoggingAdapter<ChainLinkEvent>
 {
     @Override
-    public boolean accepts(Object aEvent)
+    public boolean accepts(Class<?> aEvent)
     {
-        return aEvent instanceof ChainLinkEvent;
+        return ChainLinkEvent.class.isAssignableFrom(aEvent);
     }
 
     @Override

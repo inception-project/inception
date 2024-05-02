@@ -53,7 +53,7 @@ public class Index
     @JoinColumn(name = "project")
     private Project project;
 
-    private Boolean invalid;
+    private boolean invalid;
 
     @Temporal(TemporalType.TIMESTAMP)
     @Column(nullable = true)
@@ -84,14 +84,14 @@ public class Index
         this.project = project;
     }
 
-    public Boolean getInvalid()
+    public boolean isInvalid()
     {
         return invalid;
     }
 
-    public void setInvalid(Boolean state)
+    public void setInvalid(Boolean aState)
     {
-        this.invalid = state;
+        invalid = aState;
     }
 
     public Date getCreationDate()

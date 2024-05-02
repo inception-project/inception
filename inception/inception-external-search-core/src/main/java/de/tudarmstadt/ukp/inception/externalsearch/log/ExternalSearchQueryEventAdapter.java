@@ -30,9 +30,9 @@ public class ExternalSearchQueryEventAdapter
     implements EventLoggingAdapter<ExternalSearchQueryEvent>
 {
     @Override
-    public boolean accepts(Object aEvent)
+    public boolean accepts(Class<?> aEvent)
     {
-        return aEvent instanceof ExternalSearchQueryEvent;
+        return ExternalSearchQueryEvent.class.isAssignableFrom(aEvent);
     }
 
     @Override

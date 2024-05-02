@@ -69,7 +69,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
@@ -135,9 +134,14 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.persistence.NoResultException;
 
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link RemoteApiAutoConfiguration#aeroRemoteApiController}.
+ * </p>
+ */
+@ConditionalOnExpression("false") // Auto-configured - avoid package scanning
 @Controller
-@ConditionalOnWebApplication
-@ConditionalOnExpression(RemoteApiAutoConfiguration.REMOTE_API_ENABLED_CONDITION)
 @RequestMapping(AeroRemoteApiController.API_BASE)
 public class AeroRemoteApiController
 {
@@ -719,7 +723,7 @@ public class AeroRemoteApiController
         AnnotationDocument anno = getAnnotation(document, aAnnotatorId, false);
         documentService.setAnnotationDocumentState(anno,
                 parseAnnotationDocumentState(aState.get()));
-        documentService.createAnnotationDocument(anno);
+        documentService.createOrUpdateAnnotationDocument(anno);
 
         RResponse<RAnnotation> response = new RResponse<>(new RAnnotation(anno));
         response.addMessage(INFO,
@@ -753,12 +757,12 @@ public class AeroRemoteApiController
         CAS annotationCas = createCompatibleCas(aProjectId, aDocumentId, aFile, aFormat);
 
         // If they are compatible, then we can store the new annotations
-        documentService.writeAnnotationCas(annotationCas, document, annotator, false);
+        documentService.writeAnnotationCas(annotationCas, document, annotator);
 
         // Set state if one was provided
         if (aState.isPresent()) {
             anno.setState(parseAnnotationDocumentState(aState.get()));
-            documentService.createAnnotationDocument(anno);
+            documentService.createOrUpdateAnnotationDocument(anno);
         }
 
         RResponse<RAnnotation> response = new RResponse<>(new RAnnotation(anno));

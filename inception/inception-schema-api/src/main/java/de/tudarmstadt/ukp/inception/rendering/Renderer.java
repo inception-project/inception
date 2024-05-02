@@ -88,11 +88,12 @@ public interface Renderer
                 continue;
             }
 
-            if (!maybeFeatureSupport.get().isAccessible(feature)) {
+            var featureSupport = maybeFeatureSupport.get();
+            if (!featureSupport.isAccessible(feature)) {
                 continue;
             }
 
-            var label = defaultString(maybeFeatureSupport.get().renderFeatureValue(feature, aFs));
+            var label = defaultString(featureSupport.renderFeatureValue(feature, aFs));
 
             features.put(feature.getName(), label);
         }

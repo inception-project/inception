@@ -24,6 +24,7 @@ import static java.lang.System.currentTimeMillis;
 import static java.util.Collections.emptyList;
 import static org.apache.uima.fit.util.CasUtil.getType;
 
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -33,7 +34,6 @@ import java.util.function.Supplier;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
-import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.FSUtil;
 import org.slf4j.Logger;
@@ -62,7 +62,7 @@ import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
 public class RelationAdapter
     extends TypeAdapter_ImplBase
 {
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     /**
      * The feature of an UIMA annotation containing the label to be used as a governor for arc
@@ -91,7 +91,7 @@ public class RelationAdapter
             behaviors = emptyList();
         }
         else {
-            List<RelationLayerBehavior> temp = new ArrayList<>(aBehaviors);
+            var temp = new ArrayList<RelationLayerBehavior>(aBehaviors);
             AnnotationAwareOrderComparator.sort(temp);
             behaviors = temp;
         }
@@ -157,9 +157,9 @@ public class RelationAdapter
         // If origin and target spans are multiple tokens, dependentFS.getBegin will be the
         // the begin position of the first token and dependentFS.getEnd will be the End
         // position of the last token.
-        final Type type = getType(cas, getLayer().getName());
-        final Feature dependentFeature = type.getFeatureByBaseName(targetFeatureName);
-        final Feature governorFeature = type.getFeatureByBaseName(sourceFeatureName);
+        final var type = getType(cas, getLayer().getName());
+        final var dependentFeature = type.getFeatureByBaseName(targetFeatureName);
+        final var governorFeature = type.getFeatureByBaseName(sourceFeatureName);
 
         var newAnnotation = cas.createAnnotation(type, targetFS.getBegin(), targetFS.getEnd());
         newAnnotation.setFeatureValue(dependentFeature, targetFS);
@@ -171,7 +171,7 @@ public class RelationAdapter
     @Override
     public void delete(SourceDocument aDocument, String aUsername, CAS aCas, VID aVid)
     {
-        AnnotationFS fs = ICasUtil.selectByAddr(aCas, AnnotationFS.class, aVid.getId());
+        var fs = ICasUtil.selectByAddr(aCas, AnnotationFS.class, aVid.getId());
         aCas.removeFsFromIndexes(fs);
         publishEvent(() -> new RelationDeletedEvent(this, aDocument, aUsername, getLayer(), fs,
                 getTargetAnnotation(fs), getSourceAnnotation(fs)));
@@ -180,7 +180,7 @@ public class RelationAdapter
     public AnnotationFS restore(SourceDocument aDocument, String aUsername, CAS aCas, VID aVid)
         throws AnnotationException
     {
-        AnnotationFS fs = selectByAddr(aCas, AnnotationFS.class, aVid.getId());
+        var fs = selectByAddr(aCas, AnnotationFS.class, aVid.getId());
         aCas.addFsToIndexes(fs);
 
         publishEvent(() -> new RelationCreatedEvent(this, aDocument, aUsername, getLayer(), fs,
@@ -192,12 +192,18 @@ public class RelationAdapter
     public AnnotationFS getSourceAnnotation(AnnotationFS aTargetFs)
     {
         var sourceFeature = aTargetFs.getType().getFeatureByBaseName(sourceFeatureName);
+        if (sourceFeature == null) {
+            return null;
+        }
         return (AnnotationFS) aTargetFs.getFeatureValue(sourceFeature);
     }
 
     public AnnotationFS getTargetAnnotation(AnnotationFS aTargetFs)
     {
         var targetFeature = aTargetFs.getType().getFeatureByBaseName(targetFeatureName);
+        if (targetFeature == null) {
+            return null;
+        }
         return (AnnotationFS) aTargetFs.getFeatureValue(targetFeature);
     }
 
@@ -224,11 +230,11 @@ public class RelationAdapter
     @Override
     public List<Pair<LogMessage, AnnotationFS>> validate(CAS aCas)
     {
-        List<Pair<LogMessage, AnnotationFS>> messages = new ArrayList<>();
-        for (RelationLayerBehavior behavior : behaviors) {
+        var messages = new ArrayList<Pair<LogMessage, AnnotationFS>>();
+        for (var behavior : behaviors) {
             long startTime = currentTimeMillis();
             messages.addAll(behavior.onValidate(this, aCas));
-            log.trace("Validation for [{}] on [{}] took {}ms", behavior.getClass().getSimpleName(),
+            LOG.trace("Validation for [{}] on [{}] took {}ms", behavior.getClass().getSimpleName(),
                     getLayer().getUiName(), currentTimeMillis() - startTime);
         }
         return messages;

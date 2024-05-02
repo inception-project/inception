@@ -17,13 +17,18 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar;
 
+import java.lang.invoke.MethodHandles;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 
@@ -32,7 +37,11 @@ public class ActionBar
 {
     private static final long serialVersionUID = -5445521297124750502L;
 
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
     private @SpringBean ActionBarExtensionPoint actionBarExtensionPoint;
+
+    private final Set<String> activeExtensions = new HashSet<>();
 
     public ActionBar(String aId)
     {
@@ -57,8 +66,33 @@ public class ActionBar
     {
         super.onInitialize();
 
-        for (ActionBarExtension ext : getExtensions()) {
+        for (var ext : getExtensions()) {
             ext.onInitialize((AnnotationPageBase) getPage());
+            activeExtensions.add(ext.getId());
+        }
+    }
+
+    public void refresh()
+    {
+        var page = (AnnotationPageBase) getPage();
+
+        // Notify removed extensions
+        var extensions = getExtensions();
+        for (var extId : new HashSet<>(activeExtensions)) {
+            if (extensions.stream().noneMatch(ext -> extId.equals(ext.getId()))) {
+                actionBarExtensionPoint.getExtension(extId).ifPresent($ -> $.onRemove(page));
+                activeExtensions.remove(extId);
+                LOG.debug("Removed footer extension: {}", extId);
+            }
+        }
+
+        // Notify added extensions
+        for (var ext : extensions) {
+            if (!activeExtensions.contains(ext.getId())) {
+                ext.onInitialize(page);
+                activeExtensions.add(ext.getId());
+                LOG.debug("Added footer extension: {}", ext.getId());
+            }
         }
     }
 

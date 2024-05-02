@@ -34,6 +34,7 @@ import de.tudarmstadt.ukp.inception.editor.AnnotationEditorFactoryImplBase;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.io.html.HtmlFormatSupport;
 import de.tudarmstadt.ukp.inception.io.html.MHtmlFormatSupport;
+import de.tudarmstadt.ukp.inception.io.tei.TeiXmlDocumentFormatSupport;
 import de.tudarmstadt.ukp.inception.io.xml.CustomXmlFormatLoader;
 import de.tudarmstadt.ukp.inception.io.xml.XmlFormatSupport;
 import de.tudarmstadt.ukp.inception.preferences.ClientSidePreferencesKey;
@@ -79,14 +80,12 @@ public class ApacheAnnotatorHtmlAnnotationEditorFactory
             return PREFERRED;
         }
 
-        switch (aFormat) {
-        case HtmlFormatSupport.ID: // fall-through
-        case MHtmlFormatSupport.ID: // fall-through
-        case XmlFormatSupport.ID:
-            return PREFERRED;
+        return switch (aFormat) {
+        case HtmlFormatSupport.ID, MHtmlFormatSupport.ID, XmlFormatSupport.ID, TeiXmlDocumentFormatSupport.ID:
+            yield PREFERRED;
         default:
-            return DEFAULT;
-        }
+            yield DEFAULT;
+        };
     }
 
     @Override

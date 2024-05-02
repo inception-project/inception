@@ -17,6 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.ui.core.dashboard.projectlist;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ProjectListSortState
 {
     public final ProjectListSortStrategy strategy;

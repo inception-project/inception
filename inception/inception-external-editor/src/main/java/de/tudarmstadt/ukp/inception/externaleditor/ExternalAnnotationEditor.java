@@ -103,7 +103,7 @@ public class ExternalAnnotationEditor
     protected AnnotationEditorProperties getProperties()
     {
         var props = new AnnotationEditorProperties();
-        ExternalEditorPluginDescripion pluginDesc = getDescription();
+        var pluginDesc = getDescription();
         props.setEditorFactory(pluginDesc.getFactory());
         props.setDiamAjaxCallbackUrl(getDiamBehavior().getCallbackUrl().toString());
         props.setDiamWsUrl(constructWsEndpointUrl());
@@ -113,6 +113,7 @@ public class ExternalAnnotationEditor
         props.setScriptSources(pluginDesc.getScripts().stream() //
                 .map(this::getUrlForPluginAsset) //
                 .collect(toList()));
+        props.setSectionElements(pluginDesc.getSectionElements());
         getFactory().getUserPreferencesKey()
                 .ifPresent(key -> props.setUserPreferencesKey(key.getClientSideKey()));
         props.setEditorFactoryId(getFactory().getBeanName());

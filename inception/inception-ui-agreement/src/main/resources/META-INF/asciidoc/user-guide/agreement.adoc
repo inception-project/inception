@@ -19,20 +19,20 @@
 
 NOTE: This functionality is only available to *curators* and *managers*. Agreement can only be calculated for span and relation layers. The set of available agreement measures depends on the layer configuration.
 
-This page allows you to calculate inter-annotator agreement between users. Agreement can be inspected on a per-feature basis and is calculated pair-wise between all 
-annotators across all documents. 
-
-The *Feature* dropdown allows the selection of layers and features for which an agreement shall be computed. 
-
-image::agreement_feature.png[align="center"]
-
-A measure for the inter-annotator-agreement can be selected by opening the *Measure* dropdown menu. A short description of available measures and their differences follows in the <<sect_agreement_measures, Measures>> section. 
-
-Selecting both *Feature* and *Measure* and clicking *Calculate..* will start the agreement calculation and the results will be shown in a <<sect_agreement_matrix,Pairwise agreement matrix>>:
+This page allows you to calculate inter-annotator agreement between users.
+Agreement can be inspected on a per-feature basis and is calculated pair-wise between all annotators across all documents. 
 
 image::agreement_table.png[align="center"]
 
-Below this matrix, the results of *Coding* measures can be exported. An export format can be chosen. Currently, only link:https://en.wikipedia.org/wiki/Comma-separated_values[CSV] format is possible.
+The *Feature* dropdown allows the selection of layers and features for which an agreement shall be computed. 
+
+A measure for the inter-annotator-agreement can be selected by opening the *Measure* dropdown menu. A short description of available measures and their differences follows in the <<sect_agreement_measures, Measures>> section. 
+
+Optionally, you can choose to limit the process to specific *annotators* or *documents*. If you do not make any selection here, all annotators and documents are considered. If you select annotators, at least two annotators must be selected. To select multiple annotators or documents, hold e.g. the kbd:[Shift] or kbd:[CTRL]/kbd:[CMD] keys while clicking depending on your browser and operating system.
+
+The *Calculate...*  button can be used to start the agreement calculation and the results will be shown in a <<sect_agreement_matrix,Pairwise agreement matrix>>. Mind that the calculation may take a moment. You can inspect the progress of the calculation by clicking on the background tasks indicator in the page footer.
+
+The *Export diff...* button can be used to export a CSV file comparing the annotations across all (selected) annotators and documents in a tabular fashion. Alternatively, a CSV file of the pair-wise comparison between two specific annotators can be exported by clicking on the agreement score in the upper triangle of the pairwise agreement table.
 
 
 [[sect_agreement_measures]]
@@ -103,23 +103,23 @@ labels) or even a unitizing measure which is able to produce partial agreement s
 |====
 | Feature value annotator 1 | Feature value annotator 2 | Agreement | Complete
 
-| `X`
-| `X`
+| `foo`
+| `foo`
 | yes
 | yes
 
-| `X`
-| `Y`
+| `foo`
+| `bar`
 | no
 | yes
 
 | *no annotation*
-| `Y`
+| `bar`
 | no
 | no
 
 | *empty*
-| `Y`
+| `bar`
 | no
 | yes
 

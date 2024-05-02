@@ -38,6 +38,7 @@ import java.util.Objects;
 import java.util.Properties;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.Validate;
 import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.PropertyAccessorFactory;
@@ -98,10 +99,12 @@ public class UserPreferencesServiceImpl
     }
 
     @Override
-    public void loadPreferences(AnnotatorState aState, String aUsername)
+    public void loadPreferences(AnnotatorState aState, String aSessionOwnerName)
         throws BeansException, IOException
     {
-        var preference = loadPreferences(aState.getProject(), aUsername, aState.getMode());
+        Validate.notBlank(aSessionOwnerName, "Parameter [sessionOwner] must be specified");
+
+        var preference = loadPreferences(aState.getProject(), aSessionOwnerName, aState.getMode());
 
         aState.setPreferences(preference);
 
@@ -140,6 +143,8 @@ public class UserPreferencesServiceImpl
             String aSessionOwnerName, Mode aMode)
         throws IOException
     {
+        Validate.notBlank(aSessionOwnerName, "Parameter [sessionOwner] must be specified");
+
         // TODO Use modular preference loading once it is available and if there is a corresponding
         // data file. Otherwise, fall back to loading the legacy preferences
 
@@ -214,10 +219,12 @@ public class UserPreferencesServiceImpl
             AnnotationPreference aPref)
         throws IOException
     {
-        // TODO Switch to a new and modular way of writing preferences
+        Validate.notBlank(aSessionOwnerName, "Parameter [sessionOwner] must be specified");
 
         var sessionOwner = userService.get(aSessionOwnerName);
+        Objects.requireNonNull(sessionOwner, "User [" + aSessionOwnerName + "] not found");
 
+        // TODO Switch to a new and modular way of writing preferences
         saveLayerVisibilityPreferences(aProject, sessionOwner, aPref);
         saveLayoutStatePreferences(aProject, sessionOwner, aPref);
 
@@ -228,7 +235,7 @@ public class UserPreferencesServiceImpl
      * Save annotation references, such as {@code BratAnnotator#windowSize}..., in a properties file
      * so that they are not required to configure every time they open the document.
      *
-     * @param aUsername
+     * @param aSessionOwnerName
      *            the user name
      * @param aMode
      *            differentiate the setting, either it is for {@code AnnotationPage} or
@@ -241,10 +248,12 @@ public class UserPreferencesServiceImpl
      *             if an I/O error occurs.
      */
     @Deprecated
-    private void saveLegacyPreferences(Project aProject, String aUsername, Mode aMode,
+    private void saveLegacyPreferences(Project aProject, String aSessionOwnerName, Mode aMode,
             AnnotationPreference aPref)
         throws IOException
     {
+        Validate.notBlank(aSessionOwnerName, "Parameter [sessionOwner] must be specified");
+
         var wrapper = PropertyAccessorFactory.forBeanPropertyAccess(aPref);
         var props = new Properties();
         for (var value : wrapper.getPropertyDescriptors()) {
@@ -255,10 +264,10 @@ public class UserPreferencesServiceImpl
                     wrapper.getPropertyValue(value.getName()).toString());
         }
         var propertiesPath = repositoryProperties.getPath().getAbsolutePath() + "/" + PROJECT_FOLDER
-                + "/" + aProject.getId() + "/" + SETTINGS_FOLDER + "/" + aUsername;
+                + "/" + aProject.getId() + "/" + SETTINGS_FOLDER + "/" + aSessionOwnerName;
         // append existing preferences for the other mode
         if (new File(propertiesPath, ANNOTATION_PREFERENCE_PROPERTIES_FILE).exists()) {
-            var properties = loadLegacyPreferencesFile(aUsername, aProject);
+            var properties = loadLegacyPreferencesFile(aSessionOwnerName, aProject);
             for (var entry : properties.entrySet()) {
                 var key = entry.getKey().toString();
                 // Maintain other Modes of annotations confs than this one
@@ -284,16 +293,18 @@ public class UserPreferencesServiceImpl
     }
 
     @Deprecated
-    private AnnotationPreference loadLegacyPreferences(Project aProject, String aUsername,
+    private AnnotationPreference loadLegacyPreferences(Project aProject, String aSessionOwnerName,
             Mode aMode)
     {
+        Validate.notBlank(aSessionOwnerName, "Parameter [sessionOwner] must be specified");
+
         var preference = new AnnotationPreference();
 
         var wrapper = new BeanWrapperImpl(preference);
 
         // get annotation preference from file system
         try {
-            var props = loadLegacyPreferencesFile(aUsername, aProject);
+            var props = loadLegacyPreferencesFile(aSessionOwnerName, aProject);
             for (var entry : props.entrySet()) {
                 var property = entry.getKey().toString();
                 var index = property.indexOf(".");
@@ -356,7 +367,7 @@ public class UserPreferencesServiceImpl
     /**
      * Load annotation preferences from a property file.
      *
-     * @param aUsername
+     * @param aSessionOwnerName
      *            the user name.
      * @param aProject
      *            the project where the user is working on.
@@ -364,14 +375,14 @@ public class UserPreferencesServiceImpl
      * @throws IOException
      *             if an I/O error occurs.
      */
-    private Properties loadLegacyPreferencesFile(String aUsername, Project aProject)
+    private Properties loadLegacyPreferencesFile(String aSessionOwnerName, Project aProject)
         throws IOException
     {
         var properties = new Properties();
         properties
                 .load(new FileInputStream(new File(repositoryProperties.getPath().getAbsolutePath()
                         + "/" + PROJECT_FOLDER + "/" + aProject.getId() + "/" + SETTINGS_FOLDER
-                        + "/" + aUsername + "/" + ANNOTATION_PREFERENCE_PROPERTIES_FILE)));
+                        + "/" + aSessionOwnerName + "/" + ANNOTATION_PREFERENCE_PROPERTIES_FILE)));
         return properties;
     }
 

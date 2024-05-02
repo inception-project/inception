@@ -34,9 +34,9 @@ public class TagEventAdapter
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     @Override
-    public boolean accepts(Object aEvent)
+    public boolean accepts(Class<?> aEvent)
     {
-        return aEvent instanceof TagEvent;
+        return TagEvent.class.isAssignableFrom(aEvent);
     }
 
     @Override

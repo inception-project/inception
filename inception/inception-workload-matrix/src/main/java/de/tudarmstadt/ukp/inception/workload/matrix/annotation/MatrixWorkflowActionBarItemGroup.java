@@ -193,11 +193,11 @@ public class MatrixWorkflowActionBarItemGroup
 
         if (documentService.isAnnotationFinished(state.getDocument(), state.getUser())) {
             // AnnotationDocumentState.FINISHED.symbol();
-            return FontAwesome5IconType.lock_s.cssClassName();
+            return FontAwesome5IconType.play_circle_r.cssClassName();
         }
         else {
             // AnnotationDocumentState.IN_PROGRESS.symbol();
-            return FontAwesome5IconType.lock_open_s.cssClassName();
+            return FontAwesome5IconType.check_circle_r.cssClassName();
         }
     }
 

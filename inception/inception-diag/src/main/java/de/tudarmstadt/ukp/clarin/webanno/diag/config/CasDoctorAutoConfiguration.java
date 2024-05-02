@@ -30,6 +30,7 @@ import de.tudarmstadt.ukp.clarin.webanno.diag.ChecksRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.diag.ChecksRegistryImpl;
 import de.tudarmstadt.ukp.clarin.webanno.diag.RepairsRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.diag.RepairsRegistryImpl;
+import de.tudarmstadt.ukp.clarin.webanno.diag.checks.AllAnnotationsStartAndEndWithCharactersCheck;
 import de.tudarmstadt.ukp.clarin.webanno.diag.checks.AllAnnotationsStartAndEndWithinSentencesCheck;
 import de.tudarmstadt.ukp.clarin.webanno.diag.checks.AllFeatureStructuresIndexedCheck;
 import de.tudarmstadt.ukp.clarin.webanno.diag.checks.CASMetadataTypeIsPresentCheck;
@@ -55,6 +56,7 @@ import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.RemoveDanglingRelationsRep
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.RemoveZeroSizeTokensAndSentencesRepair;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.Repair;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.SwitchBeginAndEndOnNegativeSizedAnnotationsRepair;
+import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.TrimAnnotationsRepair;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.UpgradeCasRepair;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
@@ -235,5 +237,18 @@ public class CasDoctorAutoConfiguration
     public UnreachableAnnotationsCheck unreachableAnnotationsCheck()
     {
         return new UnreachableAnnotationsCheck();
+    }
+
+    @Bean
+    public AllAnnotationsStartAndEndWithCharactersCheck allAnnotationsStartAndEndWithCharactersCheck(
+            AnnotationSchemaService aAnnotationService)
+    {
+        return new AllAnnotationsStartAndEndWithCharactersCheck(aAnnotationService);
+    }
+
+    @Bean
+    public TrimAnnotationsRepair trimAnnotationsRepair(AnnotationSchemaService aAnnotationService)
+    {
+        return new TrimAnnotationsRepair(aAnnotationService);
     }
 }

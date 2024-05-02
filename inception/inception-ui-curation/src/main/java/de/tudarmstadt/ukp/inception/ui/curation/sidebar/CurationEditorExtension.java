@@ -21,6 +21,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.getDiffAdapters;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior.LINK_ROLE_AS_LABEL;
 import static de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode.NONE;
+import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectAnnotationByAddr;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 
@@ -64,7 +65,6 @@ import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetailGroup;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
-import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
 import de.tudarmstadt.ukp.inception.ui.curation.sidebar.config.CurationSidebarAutoConfiguration;
 import de.tudarmstadt.ukp.inception.ui.curation.sidebar.render.CurationVID;
 
@@ -141,6 +141,9 @@ public class CurationEditorExtension
                         + "into progress via the monitoring page.");
             }
 
+            var page = (AnnotationPageBase) aTarget.getPage();
+            page.ensureIsEditable();
+
             mergeAnnotation(aAction, aPanel, aState, aTarget, aCas, curationVid);
         }
         else if (ScrollToHandler.COMMAND.equals(aAction)) {
@@ -148,7 +151,7 @@ public class CurationEditorExtension
             var vid = VID.parse(curationVid.getExtensionPayload());
 
             var srcCas = documentService.readAnnotationCas(doc, srcUser);
-            var sourceAnnotation = ICasUtil.selectAnnotationByAddr(srcCas, vid.getId());
+            var sourceAnnotation = selectAnnotationByAddr(srcCas, vid.getId());
 
             var page = (AnnotationPageBase) aTarget.getPage();
             page.getAnnotationActionHandler().actionJump(aTarget, sourceAnnotation.getBegin(),
@@ -180,7 +183,7 @@ public class CurationEditorExtension
 
         var vid = VID.parse(curationVid.getExtensionPayload());
         var cas = documentService.readAnnotationCas(aDocument, srcUser);
-        var fs = ICasUtil.selectAnnotationByAddr(cas, vid.getId());
+        var fs = selectAnnotationByAddr(cas, vid.getId());
         var ext = featureSupportRegistry.findExtension(aFeature).orElseThrow();
         return ext.getFeatureValue(aFeature, fs);
     }
@@ -188,11 +191,12 @@ public class CurationEditorExtension
     /**
      * Save annotation identified by aVID from user CAS to given curator's CAS
      */
-    private void mergeAnnotation(String aAction, AnnotationActionHandler aPanel,
+    private void mergeAnnotation(String aAction, AnnotationActionHandler aActionHandler,
             AnnotatorState aState, AjaxRequestTarget aTarget, CAS aTargetCas,
             CurationVID aCurationVid)
         throws IOException, AnnotationException
     {
+
         // get user CAS and annotation (to be merged into curator's)
         var doc = aState.getDocument();
         var srcUser = aCurationVid.getUsername();
@@ -200,7 +204,7 @@ public class CurationEditorExtension
         var vid = VID.parse(aCurationVid.getExtensionPayload());
 
         var srcCas = documentService.readAnnotationCas(doc, srcUser);
-        var sourceAnnotation = ICasUtil.selectAnnotationByAddr(srcCas, vid.getId());
+        var sourceAnnotation = selectAnnotationByAddr(srcCas, vid.getId());
         var layer = annotationService.findLayer(aState.getProject(), sourceAnnotation);
 
         if (vid.isSlotSet()) {
@@ -213,8 +217,8 @@ public class CurationEditorExtension
             mergeSpan(aState, aTargetCas, vid, srcUser, sourceAnnotation, layer);
         }
 
-        aPanel.actionSelect(aTarget);
-        aPanel.actionCreateOrUpdate(aTarget, aTargetCas); // should also update timestamps
+        aActionHandler.actionSelect(aTarget);
+        aActionHandler.writeEditorCas();
     }
 
     private void mergeSlot(AnnotatorState aState, CAS aTargetCas, VID aVid, String aSrcUser,
@@ -232,8 +236,7 @@ public class CurationEditorExtension
                 sourceAnnotation, feature.getName(), aVid.getSlot());
 
         // open created/updates FS in annotation detail editor panel
-        var mergedAnno = ICasUtil.selectAnnotationByAddr(aTargetCas,
-                mergeResult.getResultFSAddress());
+        var mergedAnno = selectAnnotationByAddr(aTargetCas, mergeResult.getResultFSAddress());
         aState.getSelection().selectSpan(mergedAnno);
     }
 
@@ -247,8 +250,7 @@ public class CurationEditorExtension
                 sourceAnnotation, layer.isAllowStacking());
 
         // open created/updates FS in annotation detail editor panel
-        var mergedAnno = ICasUtil.selectAnnotationByAddr(aTargetCas,
-                mergeResult.getResultFSAddress());
+        var mergedAnno = selectAnnotationByAddr(aTargetCas, mergeResult.getResultFSAddress());
         aState.getSelection().selectArc(mergedAnno);
     }
 
@@ -262,8 +264,7 @@ public class CurationEditorExtension
                 sourceAnnotation, layer.isAllowStacking());
 
         // open created/updates FS in annotation detail editor panel
-        var mergedAnno = ICasUtil.selectAnnotationByAddr(aTargetCas,
-                mergeResult.getResultFSAddress());
+        var mergedAnno = selectAnnotationByAddr(aTargetCas, mergeResult.getResultFSAddress());
         aState.getSelection().selectSpan(mergedAnno);
     }
 
@@ -288,14 +289,18 @@ public class CurationEditorExtension
                     .forEach(detailGroups::add);
 
             // The curatable features need to be all the same across the users for the position
-            var curatableFeatures = features.stream().filter(f -> f.isCuratable()).toList();
+            var curatableFeatures = features.stream() //
+                    .filter(f -> f.isCuratable()) //
+                    .toList();
             for (var feature : curatableFeatures) {
                 detailsLookupService.lookupFeatureLevelDetails(aVid, aCas, feature)
                         .forEach(detailGroups::add);
             }
 
             // The non-curatable features (e.g. comments) may differ, so we need to collect them
-            var nonCuratableFeatures = features.stream().filter(f -> !f.isCuratable()).toList();
+            var nonCuratableFeatures = features.stream() //
+                    .filter(f -> !f.isCuratable()) //
+                    .toList();
             lookupFeaturesAcrossAnnotators(aDocument, aUser, aCas, aLayer, vid, srcUser, srcCas,
                     nonCuratableFeatures).forEach(detailGroups::add);
         }
@@ -323,7 +328,7 @@ public class CurationEditorExtension
 
         var casses = collectCasses(aDocument, aUser, aCas, selectedUsers);
 
-        var srcAnnotation = ICasUtil.selectAnnotationByAddr(srcCas, vid.getId());
+        var srcAnnotation = selectAnnotationByAddr(srcCas, vid.getId());
         var casDiff = createDiff(casses, aLayer, srcAnnotation.getBegin(), srcAnnotation.getEnd());
 
         var maybeConfiguration = casDiff.toResult().findConfiguration(srcUser, srcAnnotation);

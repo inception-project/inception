@@ -84,6 +84,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.bootstrap.BootstrapFileInputField;
 import de.tudarmstadt.ukp.inception.bootstrap.BootstrapModalDialog;
 import de.tudarmstadt.ukp.inception.export.LayerImportExportUtils;
+import de.tudarmstadt.ukp.inception.project.api.ProjectInitializationRequest;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.config.AnnotationSchemaProperties;
@@ -288,7 +289,9 @@ public class ProjectLayersPanel
                 target.add(layerSelection);
                 target.add(addButton);
                 target.addChildren(getPage(), IFeedback.class);
-                projectService.initializeProject(getModelObject(), asList(initializer));
+                var request = ProjectInitializationRequest.builder().withProject(getModelObject())
+                        .build();
+                projectService.initializeProject(request, asList(initializer));
                 info("Applying project initializer [" + initializer.getName() + "]");
             }
             catch (Exception e) {

@@ -490,6 +490,11 @@ public class RecommendationServiceImpl
     {
         var project = aEvent.getDocument().getProject();
         var sessionOwnerName = aEvent.getSessionOwner();
+
+        if (isSuspended(sessionOwnerName, project)) {
+            return;
+        }
+
         var dataOwner = aEvent.getDocumentOwner();
         var doc = aEvent.getDocument();
         var predictions = getState(sessionOwnerName, project).getActivePredictions();
@@ -524,6 +529,13 @@ public class RecommendationServiceImpl
                     .build());
         }
 
+        // Check if there are any synchronous recommenders we need to run
+        var recommenders = listEnabledRecommenders(aEvent.getDocument().getProject());
+        if (!recommenders.isEmpty()) {
+            runSynchronousRecommenders(aEvent.getDocument(), aEvent.getDocumentOwner(),
+                    recommenders, "onDocumentOpened");
+        }
+
         // Check if we need to wait for the initial recommender run before displaying the document
         // to the user
         var predictionTriggered = nonTrainableRecommenderRunSync(doc, predictions, sessionOwner,
@@ -553,7 +565,13 @@ public class RecommendationServiceImpl
         // start the predictions so that the user gets recommendations as quickly as possible
         // without any interaction needed
         if (!predictionTriggered) {
-            triggerPrediction(sessionOwnerName, trigger, doc, dataOwner);
+            schedulingService.enqueue(PredictionTask.builder() //
+                    .withSessionOwner(sessionOwner) //
+                    .withTrigger("onDocumentOpened") //
+                    .withCurrentDocument(doc) //
+                    .withDataOwner(dataOwner) //
+                    .withSynchronousRecommenders(false) //
+                    .build());
         }
     }
 
@@ -584,6 +602,7 @@ public class RecommendationServiceImpl
                 .withTrigger(trigger) //
                 .withCurrentDocument(doc) //
                 .withDataOwner(aDataOwner) //
+                .withSynchronousRecommenders(false) //
                 .build());
         switchPredictions(aSessionOwner.getUsername(), doc.getProject());
 
@@ -728,7 +747,8 @@ public class RecommendationServiceImpl
             return;
         }
 
-        runSynchronousRecommenders(aEvent, recommenders);
+        runSynchronousRecommenders(aEvent.getDocument().getDocument(),
+                aEvent.getDocument().getUser(), recommenders, "onAfterCasWritten");
 
         var committed = requestCycle.getMetaData(COMMITTED);
         if (committed == null) {
@@ -771,33 +791,39 @@ public class RecommendationServiceImpl
         }
     }
 
-    private void runSynchronousRecommenders(AfterCasWrittenEvent aEvent,
-            List<Recommender> recommenders)
+    private void runSynchronousRecommenders(SourceDocument aDocument, String aDataOwner,
+            List<Recommender> recommenders, String aTrigger)
     {
         var sessionOwner = userRepository.getCurrentUser();
+
+        if (isSuspended(sessionOwner.getUsername(), aDocument.getProject())) {
+            return;
+        }
+
         var anySyncRan = false;
         for (var recommender : recommenders) {
             var factory = getRecommenderFactory(recommender);
-            if (factory.map(RecommendationEngineFactory::isSynchronous).orElse(false)) {
-                var predictionTask = PredictionTask.builder() //
+            if (factory.map($ -> $.isSynchronous(recommender)).orElse(false)) {
+                schedulingService.executeSync(PredictionTask.builder() //
                         .withSessionOwner(sessionOwner) //
-                        .withTrigger("Synchronous prediction") //
-                        .withCurrentDocument(aEvent.getDocument().getDocument()) //
-                        .withDataOwner(aEvent.getDocument().getUser()) //
+                        .withTrigger(aTrigger) //
+                        .withCurrentDocument(aDocument) //
+                        .withDataOwner(aDataOwner) //
                         .withRecommender(recommender) //
-                        .build();
-                schedulingService.executeSync(predictionTask);
+                        .build());
+
                 anySyncRan = true;
             }
         }
+
         if (anySyncRan) {
             var switched = forceSwitchPredictions(sessionOwner.getUsername(),
-                    aEvent.getDocument().getProject());
+                    aDocument.getProject());
             if (switched) {
                 // Notify other UI components on the page about the prediction switch such that they
                 // can also update their state to remain in sync with the new predictions
-                applicationEventPublisher.publishEvent(new PredictionsSwitchedEvent(this,
-                        sessionOwner.getUsername(), aEvent.getDocument().getDocument()));
+                applicationEventPublisher.publishEvent(
+                        new PredictionsSwitchedEvent(this, sessionOwner.getUsername(), aDocument));
             }
         }
     }
@@ -1904,6 +1930,22 @@ public class RecommendationServiceImpl
     {
         entityManager.persist(aLearningRecord);
         entityManager.flush();
+    }
+
+    @Override
+    @Transactional
+    public void createLearningRecords(LearningRecord... aRecords)
+    {
+        var start = System.currentTimeMillis();
+        for (var record : aRecords) {
+            LOG.trace("{}", record);
+            entityManager.persist(record);
+        }
+        var duration = System.currentTimeMillis() - start;
+
+        if (aRecords.length > 0 && !LOG.isTraceEnabled()) {
+            LOG.debug("... {} learning records stored ... ({}ms)", aRecords.length, duration);
+        }
     }
 
     private void deleteLearningRecords(SourceDocument aDocument, String aDataOwner)

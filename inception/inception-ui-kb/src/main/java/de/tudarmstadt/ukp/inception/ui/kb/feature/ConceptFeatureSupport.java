@@ -214,19 +214,15 @@ public class ConceptFeatureSupport
     }
 
     @Override
+    public ConceptFeatureTraits createDefaultTraits()
+    {
+        return new ConceptFeatureTraits();
+    }
+
+    @Override
     public ConceptFeatureTraits readTraits(AnnotationFeature aFeature)
     {
-        ConceptFeatureTraits traits = null;
-        try {
-            traits = JSONUtil.fromJsonString(ConceptFeatureTraits.class, aFeature.getTraits());
-        }
-        catch (IOException e) {
-            LOG.error("Unable to read traits", e);
-        }
-
-        if (traits == null) {
-            traits = new ConceptFeatureTraits();
-        }
+        var traits = FeatureSupport.super.readTraits(aFeature);
 
         // If there is no scope set in the trait, see if once can be extracted from the legacy
         // location which is the feature type.

@@ -70,7 +70,9 @@ export class ApacheAnnotatorEditorFactory implements AnnotationEditorFactory {
       body.style.overflow = 'hidden'
     }
 
-    element[PROP_EDITOR] = new ApacheAnnotatorEditor(targetElement, ajax, props.userPreferencesKey)
+    const sectionElementLocalNames = new Set<string>(props.sectionElements || [])
+
+    element[PROP_EDITOR] = new ApacheAnnotatorEditor(targetElement, ajax, props.userPreferencesKey, sectionElementLocalNames)
     return element[PROP_EDITOR]
   }
 

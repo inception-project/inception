@@ -24,7 +24,7 @@ public class BratAnnotationDecl
 {
     private final String superType;
     private final String type;
-    
+
     private final Set<BratAnnotationDecl> subTypes = new LinkedHashSet<>();
 
     public BratAnnotationDecl(String aSuperType, String aType)
@@ -37,17 +37,17 @@ public class BratAnnotationDecl
     {
         return superType;
     }
-    
+
     public String getType()
     {
         return type;
     }
-    
+
     public void addSubType(BratAnnotationDecl aDecl)
     {
         subTypes.add(aDecl);
     }
-    
+
     public Set<BratAnnotationDecl> getSubTypes()
     {
         return subTypes;

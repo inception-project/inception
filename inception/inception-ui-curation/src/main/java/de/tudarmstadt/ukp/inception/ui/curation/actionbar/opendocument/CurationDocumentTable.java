@@ -24,12 +24,16 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATI
 import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.INPUT_EVENT;
 import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.KEYDOWN_EVENT;
 import static de.tudarmstadt.ukp.inception.support.lambda.KeyCodes.ENTER;
+import static de.tudarmstadt.ukp.inception.ui.curation.actionbar.opendocument.CurationDocumentTableSortKeys.CREATED;
 import static de.tudarmstadt.ukp.inception.ui.curation.actionbar.opendocument.CurationDocumentTableSortKeys.NAME;
 import static de.tudarmstadt.ukp.inception.ui.curation.actionbar.opendocument.CurationDocumentTableSortKeys.STATE;
+import static de.tudarmstadt.ukp.inception.ui.curation.actionbar.opendocument.CurationDocumentTableSortKeys.UPDATED;
 import static java.time.Duration.ofMillis;
 import static org.apache.wicket.event.Broadcast.BUBBLE;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -37,6 +41,7 @@ import org.apache.wicket.extensions.ajax.markup.html.repeater.data.table.AjaxFal
 import org.apache.wicket.extensions.ajax.markup.html.repeater.data.table.AjaxNavigationToolbar;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.DataTable;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.IColumn;
+import org.apache.wicket.extensions.markup.html.repeater.data.table.LambdaColumn;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.panel.Panel;
@@ -75,6 +80,10 @@ public class CurationDocumentTable
                 item -> item.getState()));
         columns.add(new CurationDocumentOpenActionColumn(this, new ResourceModel("DocumentName"),
                 NAME));
+        columns.add(new LambdaColumn<>(new ResourceModel("DocumentCreated"), CREATED,
+                $ -> renderDate($.getCreated())));
+        columns.add(new LambdaColumn<>(new ResourceModel("DocumentUpdated"), UPDATED,
+                $ -> renderDate($.getUpdated())));
 
         table = new DataTable<>(CID_DATA_TABLE, columns, dataProvider, 100);
         table.addTopToolbar(new AjaxNavigationToolbar(table));
@@ -121,5 +130,15 @@ public class CurationDocumentTable
     public void onSourceDocumentFilterStateChanged(SourceDocumentFilterStateChanged aEvent)
     {
         aEvent.getTarget().add(this);
+    }
+
+    private String renderDate(Date aDate)
+    {
+        if (aDate == null) {
+            return "";
+        }
+
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        return dateFormat.format(aDate);
     }
 }

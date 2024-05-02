@@ -302,9 +302,9 @@ public abstract class AnnotationPageBase
     {
         boolean switched = actionShowSelectedDocument(aTarget, aDocument);
 
-        AnnotatorState state = getModelObject();
+        var state = getModelObject();
 
-        CAS cas = getEditorCas();
+        var cas = getEditorCas();
         state.getPagingStrategy().moveToOffset(state, cas, aBegin, new VRange(aBegin, aEnd),
                 CENTERED);
 

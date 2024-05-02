@@ -27,6 +27,8 @@ public interface AnnotationSchemaProperties
 
     boolean isSentenceLayerEditable();
 
+    boolean isCrossLayerRelationEnabled();
+
     default boolean isLayerBlocked(AnnotationLayer aLayer)
     {
         if (!isTokenLayerEditable() && Token.class.getName().equals(aLayer.getName())) {

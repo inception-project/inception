@@ -67,6 +67,7 @@ import org.springframework.security.authentication.dao.DaoAuthenticationProvider
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.UserDetailsManager;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.messaging.WebSocketStompClient;
@@ -207,7 +208,7 @@ public class DiamWebsocketController_ViewportRoutingTest
         documentService.createSourceDocument(testDocument);
 
         testAnnotationDocument = new AnnotationDocument(USER, testDocument);
-        documentService.createAnnotationDocument(testAnnotationDocument);
+        documentService.createOrUpdateAnnotationDocument(testAnnotationDocument);
 
         try (var session = CasStorageSession.open()) {
             documentService.uploadSourceDocument(
@@ -222,6 +223,7 @@ public class DiamWebsocketController_ViewportRoutingTest
         entityManager.clear();
     }
 
+    @WithMockUser(username = "user", roles = { "USER" })
     @SuppressFBWarnings("RV_RETURN_VALUE_IGNORED")
     @Test
     public void thatViewportBasedMessageRoutingWorks() throws Exception

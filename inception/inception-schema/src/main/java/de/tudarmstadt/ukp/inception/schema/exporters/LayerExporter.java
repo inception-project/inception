@@ -89,20 +89,20 @@ public class LayerExporter
     public void exportData(FullProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
             ExportedProject aExProject, File aStage)
     {
-        List<ExportedAnnotationLayer> exLayers = new ArrayList<>();
+        var exLayers = new ArrayList<ExportedAnnotationLayer>();
 
         // Store map of layer and its equivalent exLayer so that the attach type is attached later
-        Map<AnnotationLayer, ExportedAnnotationLayer> layerToExLayers = new HashMap<>();
+        var layerToExLayers = new HashMap<AnnotationLayer, ExportedAnnotationLayer>();
 
         // Store map of feature and its equivalent exFeature so that the attach feature is attached
         // later
-        Map<AnnotationFeature, ExportedAnnotationFeature> featureToExFeatures = new HashMap<>();
-        for (AnnotationLayer layer : annotationService.listAnnotationLayer(aRequest.getProject())) {
+        var featureToExFeatures = new HashMap<AnnotationFeature, ExportedAnnotationFeature>();
+        for (var layer : annotationService.listAnnotationLayer(aRequest.getProject())) {
             exLayers.add(exportLayerDetails(layerToExLayers, featureToExFeatures, layer));
         }
 
         // add the attach-type and attach-feature to the exported layers and exported feature
-        for (AnnotationLayer layer : layerToExLayers.keySet()) {
+        for (var layer : layerToExLayers.keySet()) {
             if (layer.getAttachType() != null) {
                 layerToExLayers.get(layer).setAttachType(
                         new ExportedAnnotationLayerReference(layer.getAttachType().getName()));
@@ -126,7 +126,7 @@ public class LayerExporter
             Map<AnnotationFeature, ExportedAnnotationFeature> aFeatureToExFeature,
             AnnotationLayer aLayer)
     {
-        ExportedAnnotationLayer exLayer = new ExportedAnnotationLayer();
+        var exLayer = new ExportedAnnotationLayer();
         // Allow limited backwards compatibility by exporting data that older versions used
         exLayer.setAllowStacking(aLayer.isAllowStacking());
         exLayer.setLockToTokenOffset(AnchoringMode.SINGLE_TOKEN.equals(aLayer.getAnchoringMode()));

@@ -123,4 +123,6 @@ public interface LearningRecordService
     void deleteSkippedSuggestions(String aSessionOwner, User aDataOwner, AnnotationLayer aLayer);
 
     void createLearningRecord(LearningRecord aRecord);
+
+    void createLearningRecords(LearningRecord... aRecords);
 }

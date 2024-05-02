@@ -25,7 +25,6 @@ import org.apache.wicket.request.IRequestParameters;
 import org.apache.wicket.request.Request;
 import org.springframework.core.annotation.Order;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.inception.diam.editor.config.DiamAutoConfig;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.DefaultAjaxResponse;
 import de.tudarmstadt.ukp.inception.diam.model.compact.CompactRange;
@@ -55,8 +54,10 @@ public class FillSlotWithNewAnnotationHandler
     public DefaultAjaxResponse handle(AjaxRequestTarget aTarget, Request aRequest)
     {
         try {
-            AnnotationPageBase page = getPage();
-            CAS cas = page.getEditorCas();
+            var page = getPage();
+            page.ensureIsEditable();
+
+            var cas = page.getEditorCas();
             actionSpan(aTarget, aRequest.getRequestParameters(), cas);
             return new DefaultAjaxResponse(getAction(aRequest));
         }

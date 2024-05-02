@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import org.apache.commons.lang3.concurrent.LazyInitializer;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.fit.util.FSUtil;
 import org.slf4j.Logger;
@@ -35,13 +36,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import de.tudarmstadt.ukp.clarin.webanno.agreement.AgreementSummary;
-import de.tudarmstadt.ukp.clarin.webanno.agreement.PairwiseAnnotationResult;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.PairwiseAgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasure;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.DefaultAgreementTraits;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.scheduling.Task;
@@ -57,13 +57,13 @@ public class CalculatePairwiseAgreementTask
 
     private @Autowired DocumentService documentService;
 
-    private final List<User> annotators;
+    private final List<String> annotators;
     private final DefaultAgreementTraits traits;
     private final AnnotationFeature feature;
     private final AgreementMeasure<?> measure;
     private final Map<SourceDocument, List<AnnotationDocument>> allAnnDocs;
 
-    private PairwiseAnnotationResult summary;
+    private PairwiseAgreementResult summary;
 
     public CalculatePairwiseAgreementTask(Builder<? extends Builder<?>> aBuilder)
     {
@@ -79,7 +79,7 @@ public class CalculatePairwiseAgreementTask
     @Override
     public void execute()
     {
-        summary = new PairwiseAnnotationResult(feature, traits);
+        summary = new PairwiseAgreementResult(feature, traits);
 
         var maxProgress = allAnnDocs.size();
         var progress = 0;
@@ -98,46 +98,43 @@ public class CalculatePairwiseAgreementTask
                     LogMessage.info(this, doc.getName()));
 
             try (var session = CasStorageSession.openNested()) {
-                AgreementSummary initialAgreementResult = null;
-
                 for (int m = 0; m < annotators.size(); m++) {
-                    var annotator1 = annotators.get(m).getUsername();
-                    var maybeCas1 = loadCas(doc, annotator1, allAnnDocs);
+                    var annotator1 = annotators.get(m);
+                    var maybeCas1 = LazyInitializer.<Optional<CAS>> builder()
+                            .setInitializer(() -> loadCas(doc, annotator1, allAnnDocs)).get();
 
                     for (int n = 0; n < annotators.size(); n++) {
-                        var annotator2 = annotators.get(n).getUsername();
-                        var maybeCas2 = loadCas(doc, annotator2, allAnnDocs);
-
-                        // Triangle matrix mirrored
-                        if (n < m) {
-                            // So, theoretically, if cas1 and cas2 are both empty, then both are
-                            // the initial CAS - so there must be full agreement. However, we
-                            // would still need to count the units, categories, etc.
-                            if (maybeCas1.isEmpty() && maybeCas2.isEmpty()) {
-                                if (initialAgreementResult == null) {
-                                    var casMap = new LinkedHashMap<String, CAS>();
-                                    casMap.put("INITIAL1", loadInitialCas(doc));
-                                    casMap.put("INITIAL2", loadInitialCas(doc));
-                                    initialAgreementResult = AgreementSummary
-                                            .of(measure.getAgreement(casMap));
-                                }
-                                var res = initialAgreementResult.remap(
-                                        Map.of("INITIAL1", annotator1, "INITIAL2", annotator2));
-                                summary.mergeResult(annotator1, annotator2, res);
-                            }
-                            else {
-                                var cas1 = maybeCas1.isPresent() ? maybeCas1.get()
-                                        : loadInitialCas(doc);
-                                var cas2 = maybeCas2.isPresent() ? maybeCas2.get()
-                                        : loadInitialCas(doc);
-
-                                var casMap = new LinkedHashMap<String, CAS>();
-                                casMap.put(annotator1, cas1);
-                                casMap.put(annotator2, cas2);
-                                var res = AgreementSummary.of(measure.getAgreement(casMap));
-                                summary.mergeResult(annotator1, annotator2, res);
-                            }
+                        if (!(n < m)) {
+                            // Triangle matrix mirrored
+                            continue;
                         }
+
+                        var annotator2 = annotators.get(n);
+
+                        if (maybeCas1.get().isEmpty()) {
+                            LOG.trace("Skipping combination {}/{}@{}: {} has no data", annotator1,
+                                    annotator2, doc, annotator1);
+                            summary.mergeResult(annotator1, annotator2, AgreementSummary
+                                    .skipped(feature.getLayer().getName(), feature.getName()));
+                            continue;
+                        }
+
+                        var maybeCas2 = LazyInitializer.<Optional<CAS>> builder()
+                                .setInitializer(() -> loadCas(doc, annotator2, allAnnDocs)).get();
+
+                        if (maybeCas2.get().isEmpty()) {
+                            LOG.trace("Skipping combination {}/{}@{}: {} has no data", annotator1,
+                                    annotator2, doc, annotator2);
+                            summary.mergeResult(annotator1, annotator2, AgreementSummary
+                                    .skipped(feature.getLayer().getName(), feature.getName()));
+                            continue;
+                        }
+
+                        var casMap = new LinkedHashMap<String, CAS>();
+                        casMap.put(annotator1, maybeCas1.get().get());
+                        casMap.put(annotator2, maybeCas2.get().get());
+                        var res = AgreementSummary.of(measure.getAgreement(casMap));
+                        summary.mergeResult(annotator1, annotator2, res);
                     }
                 }
 
@@ -174,7 +171,7 @@ public class CalculatePairwiseAgreementTask
         }
 
         if (!documentService.existsCas(aDocument, aDataOwner)) {
-            Optional.empty();
+            Optional.of(loadInitialCas(aDocument));
         }
 
         var cas = documentService.readAnnotationCas(aDocument, aDataOwner, AUTO_CAS_UPGRADE,
@@ -189,7 +186,7 @@ public class CalculatePairwiseAgreementTask
         return Optional.of(cas);
     }
 
-    public PairwiseAnnotationResult getResult()
+    public PairwiseAgreementResult getResult()
     {
         return summary;
     }
@@ -202,7 +199,7 @@ public class CalculatePairwiseAgreementTask
     public static class Builder<T extends Builder<?>>
         extends Task.Builder<T>
     {
-        private List<User> annotators;
+        private List<String> annotators;
         private DefaultAgreementTraits traits;
         private AnnotationFeature feature;
         private AgreementMeasure<?> measure;
@@ -214,7 +211,7 @@ public class CalculatePairwiseAgreementTask
         }
 
         @SuppressWarnings("unchecked")
-        public T withAnnotators(List<User> aAnnotators)
+        public T withAnnotators(List<String> aAnnotators)
         {
             annotators = aAnnotators;
             return (T) this;

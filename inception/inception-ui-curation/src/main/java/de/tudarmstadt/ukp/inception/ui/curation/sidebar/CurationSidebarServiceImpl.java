@@ -21,6 +21,7 @@
  */
 package de.tudarmstadt.ukp.inception.ui.curation.sidebar;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateChangeFlag.EXPLICIT_ANNOTATOR_USER_ACTION;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
@@ -30,6 +31,7 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -43,22 +45,31 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang3.Validate;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.event.EventListener;
 import org.springframework.security.core.session.SessionDestroyedEvent;
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageService;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.annotation.events.DocumentOpenedEvent;
 import de.tudarmstadt.ukp.inception.curation.config.CurationServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.curation.merge.MergeStrategyFactory;
+import de.tudarmstadt.ukp.inception.curation.merge.strategy.MergeStrategy;
 import de.tudarmstadt.ukp.inception.curation.model.CurationSettings;
 import de.tudarmstadt.ukp.inception.curation.model.CurationSettingsId;
+import de.tudarmstadt.ukp.inception.curation.model.CurationWorkflow;
+import de.tudarmstadt.ukp.inception.curation.service.CurationDocumentService;
+import de.tudarmstadt.ukp.inception.curation.service.CurationMergeService;
+import de.tudarmstadt.ukp.inception.curation.service.CurationService;
+import de.tudarmstadt.ukp.inception.curation.sidebar.CurationSidebarProperties;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
@@ -73,6 +84,8 @@ import jakarta.persistence.EntityManager;
 public class CurationSidebarServiceImpl
     implements CurationSidebarService
 {
+    private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
     // stores info on which users are selected and which doc is the curation-doc
     private ConcurrentMap<CurationSessionKey, CurationSession> sessions;
 
@@ -82,11 +95,18 @@ public class CurationSidebarServiceImpl
     private final ProjectService projectService;
     private final UserDao userRegistry;
     private final CasStorageService casStorageService;
+    private final CurationService curationService;
+    private final CurationDocumentService curationDocumentService;
+    private final CurationMergeService curationMergeService;
+    private final CurationSidebarProperties curationSidebarProperties;
 
     public CurationSidebarServiceImpl(EntityManager aEntityManager,
             DocumentService aDocumentService, SessionRegistry aSessionRegistry,
             ProjectService aProjectService, UserDao aUserRegistry,
-            CasStorageService aCasStorageService)
+            CasStorageService aCasStorageService, CurationService aCurationService,
+            CurationMergeService aCurationMergeService,
+            CurationSidebarProperties aCurationSidebarProperties,
+            CurationDocumentService aCurationDocumentService)
     {
         sessions = new ConcurrentHashMap<>();
         entityManager = aEntityManager;
@@ -95,6 +115,10 @@ public class CurationSidebarServiceImpl
         projectService = aProjectService;
         userRegistry = aUserRegistry;
         casStorageService = aCasStorageService;
+        curationService = aCurationService;
+        curationMergeService = aCurationMergeService;
+        curationSidebarProperties = aCurationSidebarProperties;
+        curationDocumentService = aCurationDocumentService;
     }
 
     /**
@@ -229,7 +253,7 @@ public class CurationSidebarServiceImpl
                 return new ArrayList<>();
             }
 
-            var finishedUsers = listCuratableUsers(aDocument);
+            var finishedUsers = curationDocumentService.listCuratableUsers(aDocument);
             finishedUsers.retainAll(selectedUsers);
             return finishedUsers;
         }
@@ -240,31 +264,10 @@ public class CurationSidebarServiceImpl
     public List<User> listCuratableUsers(String aSessionOwner, SourceDocument aDocument)
     {
         var curationTarget = getCurationTarget(aSessionOwner, aDocument.getProject().getId());
-        return listCuratableUsers(aDocument).stream()
+        return curationDocumentService.listCuratableUsers(aDocument).stream()
                 .filter(user -> !user.getUsername().equals(aSessionOwner)
                         || curationTarget.equals(CURATION_USER))
                 .collect(Collectors.toList());
-    }
-
-    @Override
-    @Transactional
-    public List<User> listCuratableUsers(SourceDocument aSourceDocument)
-    {
-        Validate.notNull(aSourceDocument, "Document must be specified");
-
-        var query = String.join("\n", //
-                "SELECT u FROM User u, AnnotationDocument d", //
-                "WHERE u.username = d.user", //
-                "AND d.document   = :document", //
-                "AND (d.state = :state or d.annotatorState = :ignore)", //
-                "ORDER BY u.username ASC");
-
-        return new ArrayList<>(entityManager //
-                .createQuery(query, User.class) //
-                .setParameter("document", aSourceDocument) //
-                .setParameter("state", AnnotationDocumentState.FINISHED) //
-                .setParameter("ignore", AnnotationDocumentState.IGNORE) //
-                .getResultList());
     }
 
     @Transactional
@@ -298,7 +301,7 @@ public class CurationSidebarServiceImpl
 
         var doc = aState.getDocument();
         var annoDoc = documentService.createOrGetAnnotationDocument(doc, curator);
-        documentService.writeAnnotationCas(aTargetCas, annoDoc, true);
+        documentService.writeAnnotationCas(aTargetCas, annoDoc, EXPLICIT_ANNOTATOR_USER_ACTION);
         casStorageService.getCasTimestamp(doc, curator.getUsername())
                 .ifPresent(aState::setAnnotationDocumentTimestamp);
     }
@@ -313,10 +316,13 @@ public class CurationSidebarServiceImpl
                 return;
             }
 
-            session.curationTarget = aOwnDocument
-                    && projectService.hasRole(aSessionOwner, aProject, ANNOTATOR) ? aSessionOwner
-                            : CURATION_USER;
-
+            if (curationSidebarProperties.isOwnUserCurationTargetEnabled() && aOwnDocument
+                    && projectService.hasRole(aSessionOwner, aProject, ANNOTATOR)) {
+                session.setCurationTarget(aSessionOwner);
+            }
+            else {
+                session.setCurationTarget(CURATION_USER);
+            }
         }
     }
 
@@ -511,6 +517,51 @@ public class CurationSidebarServiceImpl
                 && documentService.isAnnotationFinished(sourceDoc, aState.getUser()))
                 || (username.equals(CURATION_USER)
                         && sourceDoc.getState().equals(CURATION_FINISHED));
+    }
+
+    @Override
+    public MergeStrategyFactory<?> merge(AnnotatorState aState, String aCurator,
+            Collection<User> aUsers, boolean aClearTargetCas)
+        throws IOException, UIMAException
+    {
+        var workflow = curationService.readOrCreateCurationWorkflow(aState.getProject());
+        return merge(aState, workflow, aCurator, aUsers, aClearTargetCas);
+    }
+
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @Override
+    public MergeStrategyFactory<?> merge(AnnotatorState aState, CurationWorkflow aWorkflow,
+            String aCurator, Collection<User> aUsers, boolean aClearTargetCas)
+        throws IOException, UIMAException
+    {
+        MergeStrategyFactory factory = curationService.getMergeStrategyFactory(aWorkflow);
+        var traits = factory.readTraits(aWorkflow);
+        var mergeStrategy = factory.makeStrategy(traits);
+        merge(aState, mergeStrategy, aCurator, aUsers, aClearTargetCas);
+        return factory;
+    }
+
+    @Override
+    public void merge(AnnotatorState aState, MergeStrategy aStrategy, String aCurator,
+            Collection<User> aUsers, boolean aClearTargetCas)
+        throws IOException, UIMAException
+    {
+        var doc = aState.getDocument();
+        var aTargetCas = retrieveCurationCAS(aCurator, doc.getProject().getId(), doc).orElseThrow(
+                () -> new IllegalArgumentException("No target CAS configured in curation state"));
+
+        var userCases = documentService.readAllCasesSharedNoUpgrade(doc, aUsers);
+
+        // FIXME: should merging not overwrite the current users annos? (can result in
+        // deleting the users annotations!!!), currently fixed by warn message to user
+        // prepare merged CAS
+        curationMergeService.mergeCasses(doc, aState.getUser().getUsername(), aTargetCas, userCases,
+                aStrategy, aState.getAnnotationLayers(), aClearTargetCas);
+
+        // write back and update timestamp
+        writeCurationCas(aTargetCas, aState, doc.getProject().getId());
+
+        LOG.debug("Merge done");
     }
 
     private class CurationSession

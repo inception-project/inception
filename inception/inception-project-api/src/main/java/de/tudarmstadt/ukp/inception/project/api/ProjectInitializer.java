@@ -35,5 +35,21 @@ public interface ProjectInitializer
 
     List<Class<? extends ProjectInitializer>> getDependencies();
 
-    void configure(Project aProject) throws IOException;
+    default void configure(ProjectInitializationRequest aRequest) throws IOException
+    {
+        configure(aRequest.getProject());
+    }
+
+    /**
+     * @param aProject
+     *            the project to initialize.
+     * @throws IOException
+     *             if there is a problem.
+     * @deprecated Implement {@link #configure(ProjectInitializationRequest)} instead.
+     */
+    @Deprecated
+    default void configure(Project aProject) throws IOException
+    {
+        // Do nothing
+    }
 }

@@ -20,13 +20,16 @@ package de.tudarmstadt.ukp.inception.ui.core.docanno.sidebar;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.EXTENSION_ID;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation.MAIN_EDITOR;
 import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CHANGE_EVENT;
-import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CLICK;
+import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CLICK_EVENT;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.enabledWhen;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhenNot;
+import static de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerSupport.FEATURE_NAME_ORDER;
 import static java.util.Collections.emptyList;
+import static java.util.Comparator.comparing;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
+import static org.apache.uima.fit.util.FSUtil.getFeature;
 import static org.apache.wicket.event.Broadcast.BREADTH;
 
 import java.io.IOException;
@@ -156,7 +159,7 @@ public class DocumentMetadataAnnotationSelectionPanel
         layer.setChoices(availableLayers);
         layer.setChoiceRenderer(new ChoiceRenderer<>("uiName"));
         layer.add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT));
-        layer.add(visibleWhen(() -> !availableLayers.map(List::isEmpty).orElse(true).getObject()));
+        layer.add(visibleWhenNot(availableLayers.map(List::isEmpty).orElse(true)));
         content.add(layer);
 
         content.add(new LambdaAjaxLink(CID_CREATE, this::actionCreate)
@@ -362,7 +365,7 @@ public class DocumentMetadataAnnotationSelectionPanel
                 var isSuggestion = EXTENSION_ID.equals(aItem.getModelObject().vid.getExtensionId());
 
                 if (!isSuggestion) {
-                    container.add(new LambdaAjaxEventBehavior(CLICK,
+                    container.add(new LambdaAjaxEventBehavior(CLICK_EVENT,
                             $ -> actionSelect($, container, detailPanel)));
                 }
 
@@ -488,10 +491,18 @@ public class DocumentMetadataAnnotationSelectionPanel
             return;
         }
 
-        for (var fs : cas.select(type)) {
+        var annotations = cas.select(type).asList();
+        var hasOrderFeature = type.getFeatureByBaseName(FEATURE_NAME_ORDER) != null;
+        if (hasOrderFeature) {
+            annotations.sort(comparing(fs -> getFeature(fs, FEATURE_NAME_ORDER, Integer.class)));
+        }
+
+        for (var fs : annotations) {
             var renderedFeatures = renderer.renderLabelFeatureValues(adapter, fs, features);
             var labelText = TypeUtil.getUiLabelText(renderedFeatures);
-            items.add(new AnnotationListItem(VID.of(fs), labelText, aLayer, singleton, 0.0d));
+            var order = hasOrderFeature ? getFeature(fs, FEATURE_NAME_ORDER, Integer.class) : 0;
+            items.add(
+                    new AnnotationListItem(VID.of(fs), labelText, aLayer, singleton, 0.0d, order));
         }
     }
 
@@ -529,7 +540,7 @@ public class DocumentMetadataAnnotationSelectionPanel
                     var annotation = featureSupport.renderFeatureValue(feature,
                             suggestion.getLabel());
                     items.add(new AnnotationListItem(suggestion.getVID(), annotation, aLayer, false,
-                            suggestion.getScore()));
+                            suggestion.getScore(), items.size()));
                 }
             }
         }
@@ -586,7 +597,7 @@ public class DocumentMetadataAnnotationSelectionPanel
     {}
 
     private record AnnotationListItem(VID vid, String label, AnnotationLayer layer,
-            boolean singleton, double score)
+            boolean singleton, double score, int order)
         implements Serializable
     {}
 }

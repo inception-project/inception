@@ -199,6 +199,8 @@ public class DocumentServiceImpl
     public SourceDocument createSourceDocument(SourceDocument aDocument)
     {
         Validate.notNull(aDocument, "Source document must be specified");
+        Validate.notNull(aDocument.getProject(),
+                "Source document must be associated with a project");
 
         if (isNull(aDocument.getId())) {
             entityManager.persist(aDocument);
@@ -243,7 +245,8 @@ public class DocumentServiceImpl
 
     @Override
     @Transactional
-    public AnnotationDocument createAnnotationDocument(AnnotationDocument aAnnotationDocument)
+    public AnnotationDocument createOrUpdateAnnotationDocument(
+            AnnotationDocument aAnnotationDocument)
     {
         Validate.notNull(aAnnotationDocument, "Annotation document must be specified");
 
@@ -349,7 +352,7 @@ public class DocumentServiceImpl
 
         for (var user : usersWithoutAnnotationDocument) {
             var annDoc = new AnnotationDocument(user, aDocument);
-            createAnnotationDocument(annDoc);
+            createOrUpdateAnnotationDocument(annDoc);
             annDocs.add(annDoc);
         }
 
@@ -378,7 +381,7 @@ public class DocumentServiceImpl
 
         for (var srcDoc : sourceDocsWithoutAnnotationDocument) {
             var annDoc = new AnnotationDocument(aUser.getUsername(), srcDoc);
-            createAnnotationDocument(annDoc);
+            createOrUpdateAnnotationDocument(annDoc);
             annDocs.add(annDoc);
         }
 
@@ -389,21 +392,25 @@ public class DocumentServiceImpl
     @Transactional(noRollbackFor = NoResultException.class)
     public AnnotationDocument createOrGetAnnotationDocument(SourceDocument aDocument, User aUser)
     {
+        return createOrGetAnnotationDocument(aDocument, aUser.getUsername());
+    }
+
+    @Override
+    @Transactional(noRollbackFor = NoResultException.class)
+    public AnnotationDocument createOrGetAnnotationDocument(SourceDocument aDocument, String aUser)
+    {
         Validate.notNull(aDocument, "Source document must be specified");
         Validate.notNull(aUser, "User must be specified");
 
         // Check if there is an annotation document entry in the database. If there is none,
         // create one.
-        AnnotationDocument annotationDocument = null;
         if (!existsAnnotationDocument(aDocument, aUser)) {
-            annotationDocument = new AnnotationDocument(aUser.getUsername(), aDocument);
-            createAnnotationDocument(annotationDocument);
-        }
-        else {
-            annotationDocument = getAnnotationDocument(aDocument, aUser);
+            var annotationDocument = new AnnotationDocument(aUser, aDocument);
+            createOrUpdateAnnotationDocument(annotationDocument);
+            return annotationDocument;
         }
 
-        return annotationDocument;
+        return getAnnotationDocument(aDocument, aUser);
     }
 
     @Override
@@ -463,14 +470,7 @@ public class DocumentServiceImpl
     public SourceDocumentState setSourceDocumentState(SourceDocument aDocument,
             SourceDocumentState aState)
     {
-        Validate.notNull(aDocument, "Source document must be specified");
-        Validate.notNull(aState, "State must be specified");
-
-        var oldState = aDocument.getState();
-
-        aDocument.setState(aState);
-
-        createSourceDocument(aDocument);
+        var oldState = setSourceDocumentStateNoEvent(aDocument, aState);
 
         // Notify about change in document state
         if (!Objects.equals(oldState, aDocument.getState())) {
@@ -479,6 +479,30 @@ public class DocumentServiceImpl
         }
 
         return oldState;
+    }
+
+    private SourceDocumentState setSourceDocumentStateNoEvent(SourceDocument aDocument,
+            SourceDocumentState aState)
+    {
+        Validate.notNull(aDocument, "Source document must be specified");
+        Validate.notNull(aState, "State must be specified");
+
+        var oldState = aDocument.getState();
+
+        aDocument.setState(aState);
+
+        createSourceDocument(aDocument);
+        return oldState;
+    }
+
+    @Override
+    @Transactional
+    public void bulkSetSourceDocumentState(Iterable<SourceDocument> aDocuments,
+            SourceDocumentState aState)
+    {
+        for (var doc : aDocuments) {
+            setSourceDocumentStateNoEvent(doc, aState);
+        }
     }
 
     @Override
@@ -927,9 +951,9 @@ public class DocumentServiceImpl
             return new HashMap<>();
         }
 
-        SourceDocument doc = aDocuments.get(0).getDocument();
-        List<String> usernames = new ArrayList<>();
-        for (AnnotationDocument annDoc : aDocuments) {
+        var doc = aDocuments.get(0).getDocument();
+        var usernames = new ArrayList<String>();
+        for (var annDoc : aDocuments) {
             if (!doc.equals(annDoc.getDocument())) {
                 throw new IllegalArgumentException(format(
                         "Expected all annotation documents to belong to the  same source document "
@@ -1002,20 +1026,29 @@ public class DocumentServiceImpl
     @Override
     @Transactional
     public void writeAnnotationCas(CAS aCas, AnnotationDocument aAnnotationDocument,
-            boolean aExplicitAnnotatorUserAction)
+            AnnotationDocumentStateChangeFlag... aFlags)
+        throws IOException
+    {
+        writeAnnotationCasSilently(aCas, aAnnotationDocument, aFlags);
+
+        applicationEventPublisher
+                .publishEvent(new AfterCasWrittenEvent(this, aAnnotationDocument, aCas));
+    }
+
+    @Override
+    @Transactional
+    public void writeAnnotationCasSilently(CAS aCas, AnnotationDocument aAnnotationDocument,
+            AnnotationDocumentStateChangeFlag... aFlags)
         throws IOException
     {
         casStorageService.writeCas(aAnnotationDocument.getDocument(), aCas,
                 aAnnotationDocument.getUser());
 
-        if (aExplicitAnnotatorUserAction) {
+        if (asList(aFlags).contains(EXPLICIT_ANNOTATOR_USER_ACTION)) {
             aAnnotationDocument.setTimestamp(new Timestamp(new Date().getTime()));
             setAnnotationDocumentState(aAnnotationDocument, AnnotationDocumentState.IN_PROGRESS,
-                    EXPLICIT_ANNOTATOR_USER_ACTION);
+                    aFlags);
         }
-
-        applicationEventPublisher
-                .publishEvent(new AfterCasWrittenEvent(this, aAnnotationDocument, aCas));
     }
 
     // NO TRANSACTION REQUIRED - This does not do any should not do a database access, so we do not
@@ -1039,21 +1072,21 @@ public class DocumentServiceImpl
     @Override
     @Transactional
     public void writeAnnotationCas(CAS aCas, SourceDocument aDocument, String aUser,
-            boolean aExplicitAnnotatorUserAction)
+            AnnotationDocumentStateChangeFlag... aFlags)
         throws IOException
     {
-        AnnotationDocument annotationDocument = getAnnotationDocument(aDocument, aUser);
-        writeAnnotationCas(aCas, annotationDocument, aExplicitAnnotatorUserAction);
+        var annotationDocument = getAnnotationDocument(aDocument, aUser);
+        writeAnnotationCas(aCas, annotationDocument, aFlags);
     }
 
     @Override
     @Transactional
     public void writeAnnotationCas(CAS aCas, SourceDocument aDocument, User aUser,
-            boolean aExplicitAnnotatorUserAction)
+            AnnotationDocumentStateChangeFlag... aFlags)
         throws IOException
     {
-        AnnotationDocument annotationDocument = getAnnotationDocument(aDocument, aUser);
-        writeAnnotationCas(aCas, annotationDocument, aExplicitAnnotatorUserAction);
+        var annotationDocument = getAnnotationDocument(aDocument, aUser);
+        writeAnnotationCas(aCas, annotationDocument, aFlags);
     }
 
     @Override
@@ -1062,7 +1095,7 @@ public class DocumentServiceImpl
             AnnotationDocumentStateChangeFlag... aFlags)
         throws UIMAException, IOException
     {
-        AnnotationDocument adoc = getAnnotationDocument(aDocument, aUser);
+        var adoc = getAnnotationDocument(aDocument, aUser);
 
         // We read the initial CAS and then use it to override the CAS for the given document/user.
         // In order to do that, we must read the initial CAS unmanaged.
@@ -1075,7 +1108,7 @@ public class DocumentServiceImpl
             addOrUpdateCasMetadata(cas, timestamp.get(), aDocument, aUser.getUsername());
         }
 
-        writeAnnotationCas(cas, aDocument, aUser, false);
+        writeAnnotationCas(cas, aDocument, aUser);
 
         adoc.setTimestamp(null);
         adoc.setAnnotatorComment(null);
@@ -1210,7 +1243,8 @@ public class DocumentServiceImpl
         // documents which are IGNOREed for given users.
         var annDocsQuery = "FROM AnnotationDocument WHERE user = (:username) AND project = (:project)";
         List<AnnotationDocument> annotationDocuments = entityManager
-                .createQuery(annDocsQuery, AnnotationDocument.class).setParameter("username", aUser) //
+                .createQuery(annDocsQuery, AnnotationDocument.class) //
+                .setParameter("username", aUser) //
                 .setParameter("project", aProject) //
                 .getResultList();
 
@@ -1345,17 +1379,16 @@ public class DocumentServiceImpl
     {
         Validate.notNull(aProject, "Project must be specified");
 
-        boolean curationDocumentExist = false;
-        List<SourceDocument> documents = listSourceDocuments(aProject);
+        var criteriaBuilder = entityManager.getCriteriaBuilder();
+        var query = criteriaBuilder.createQuery(Long.class);
+        var root = query.from(SourceDocument.class);
 
-        for (SourceDocument sourceDocument : documents) {
-            // If the curation document is finished
-            if (SourceDocumentState.CURATION_FINISHED.equals(sourceDocument.getState())) {
-                curationDocumentExist = true;
-                break;
-            }
-        }
-        return curationDocumentExist;
+        query.select(criteriaBuilder.count(root))
+                .where(criteriaBuilder.and(
+                        criteriaBuilder.equal(root.get(SourceDocument_.project), aProject),
+                        criteriaBuilder.equal(root.get(SourceDocument_.state), CURATION_FINISHED)));
+
+        return entityManager.createQuery(query).getSingleResult() > 0;
     }
 
     private List<String> getAllAnnotators(Project aProject)
@@ -1378,11 +1411,20 @@ public class DocumentServiceImpl
 
     @Override
     @Transactional
+    public AnnotationDocumentState setAnnotationDocumentState(SourceDocument aDocument,
+            String aUser, AnnotationDocumentState aState,
+            AnnotationDocumentStateChangeFlag... aFlags)
+    {
+        var annDoc = createOrGetAnnotationDocument(aDocument, aUser);
+        return setAnnotationDocumentState(annDoc, aState, aFlags);
+    }
+
+    @Override
+    @Transactional
     public AnnotationDocumentState setAnnotationDocumentState(AnnotationDocument aDocument,
             AnnotationDocumentState aState, AnnotationDocumentStateChangeFlag... aFlags)
     {
-        AnnotationDocumentState oldState = setAnnotationDocumentStateNoEvent(aDocument, aState,
-                aFlags);
+        var oldState = setAnnotationDocumentStateNoEvent(aDocument, aState, aFlags);
 
         if (!Objects.equals(oldState, aDocument.getState())) {
             applicationEventPublisher
@@ -1395,7 +1437,7 @@ public class DocumentServiceImpl
     private AnnotationDocumentState setAnnotationDocumentStateNoEvent(AnnotationDocument aDocument,
             AnnotationDocumentState aState, AnnotationDocumentStateChangeFlag... aFlags)
     {
-        AnnotationDocumentState oldState = aDocument.getState();
+        var oldState = aDocument.getState();
 
         aDocument.setState(aState);
 
@@ -1413,7 +1455,7 @@ public class DocumentServiceImpl
             aDocument.setAnnotatorState(aState);
         }
 
-        createAnnotationDocument(aDocument);
+        createOrUpdateAnnotationDocument(aDocument);
         return oldState;
     }
 
@@ -1422,7 +1464,7 @@ public class DocumentServiceImpl
     public void bulkSetAnnotationDocumentState(Iterable<AnnotationDocument> aDocuments,
             AnnotationDocumentState aState)
     {
-        for (AnnotationDocument doc : aDocuments) {
+        for (var doc : aDocuments) {
             setAnnotationDocumentStateNoEvent(doc, aState);
         }
     }

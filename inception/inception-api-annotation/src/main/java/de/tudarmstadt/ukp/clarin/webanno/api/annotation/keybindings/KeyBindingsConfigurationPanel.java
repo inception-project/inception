@@ -84,8 +84,8 @@ public class KeyBindingsConfigurationPanel
         keyBindingsContainer.add(new TextField<String>("keyCombo").add(new KeyComboValidator()));
         keyBindingsContainer.add(new LambdaAjaxSubmitLink<>("addKeyBinding", this::addKeyBinding));
 
-        AnnotationFeature feature = aModel.getObject();
-        FeatureSupport<?> fs = featureSupportRegistry.findExtension(feature).orElseThrow();
+        var feature = aModel.getObject();
+        var fs = featureSupportRegistry.findExtension(feature).orElseThrow();
         featureState = Model.of(new FeatureState(VID.NONE_ID, feature, null));
         if (feature.getTagset() != null) {
             featureState.getObject().tagset = schemaService

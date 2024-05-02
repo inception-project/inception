@@ -49,7 +49,6 @@ import org.apache.wicket.model.ResourceModel;
 import org.wicketstuff.event.annotation.OnEvent;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.behavior.CssClassNameAppender;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.inception.support.wicket.SymbolLambdaColumn;
@@ -124,9 +123,9 @@ public class UserTable
     }
 
     @SuppressWarnings("unchecked")
-    public IModel<List<SourceDocument>> getModel()
+    public IModel<List<User>> getModel()
     {
-        return (IModel<List<SourceDocument>>) getDefaultModel();
+        return (IModel<List<User>>) getDefaultModel();
     }
 
     private String renderDate(Date aDate)

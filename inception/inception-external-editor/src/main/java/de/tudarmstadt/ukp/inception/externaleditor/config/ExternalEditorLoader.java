@@ -75,8 +75,7 @@ public class ExternalEditorLoader
 
         for (Path pluginJsonFile : pluginJsonFiles) {
             try (InputStream is = Files.newInputStream(pluginJsonFile)) {
-                ExternalEditorPluginDescripion desc = fromJsonStream(
-                        ExternalEditorPluginDescripion.class, is);
+                var desc = fromJsonStream(ExternalEditorPluginDescripion.class, is);
                 desc.setId(pluginJsonFile.getParent().getFileName().toString());
                 desc.setBasePath(pluginJsonFile.getParent());
 
@@ -93,7 +92,7 @@ public class ExternalEditorLoader
             ExternalEditorPluginDescripion aDesc)
     {
         BOOT_LOG.info("Loading editor plugin: {}", aDesc.getName());
-        BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition(
+        var builder = BeanDefinitionBuilder.genericBeanDefinition(
                 ExternalAnnotationEditorFactory.class,
                 () -> new ExternalAnnotationEditorFactory(aDesc));
         aRegistry.registerBeanDefinition("external-editor-" + aDesc.getId(),

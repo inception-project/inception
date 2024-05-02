@@ -242,11 +242,5 @@ class AeroRemoteApiController_Authentication_Jwt_Test
                 }
             };
         }
-
-        @Bean
-        public AeroRemoteApiController aeroRemoteApiController()
-        {
-            return new AeroRemoteApiController();
-        }
     }
 }

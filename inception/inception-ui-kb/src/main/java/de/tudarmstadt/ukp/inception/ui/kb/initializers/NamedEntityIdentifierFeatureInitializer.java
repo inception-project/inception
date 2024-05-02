@@ -30,7 +30,6 @@ import org.apache.wicket.request.resource.ResourceReference;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.LayerInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.NamedEntityLayerInitializer;
@@ -40,7 +39,6 @@ import de.tudarmstadt.ukp.inception.project.api.ProjectInitializer;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.wicket.resource.Strings;
 import de.tudarmstadt.ukp.inception.ui.kb.config.KnowledgeBaseServiceUIAutoConfiguration;
-import jakarta.persistence.NoResultException;
 
 /**
  * Adds the {@code identifier} feature provided since DKPro Core 1.9.0 as a concept feature.
@@ -91,22 +89,18 @@ public class NamedEntityIdentifierFeatureInitializer
     @Override
     public boolean alreadyApplied(Project aProject)
     {
-        AnnotationLayer neLayer;
-        try {
-            neLayer = annotationSchemaService.findLayer(aProject, NamedEntity.class.getName());
-        }
-        catch (NoResultException e) {
+        if (!annotationSchemaService.existsLayer(NamedEntity._TypeName, aProject)) {
             return false;
         }
 
+        var neLayer = annotationSchemaService.findLayer(aProject, NamedEntity.class.getName());
         return annotationSchemaService.existsFeature("identifier", neLayer);
     }
 
     @Override
     public void configure(Project aProject) throws IOException
     {
-        AnnotationLayer neLayer = annotationSchemaService.findLayer(aProject,
-                NamedEntity.class.getName());
+        var neLayer = annotationSchemaService.findLayer(aProject, NamedEntity.class.getName());
 
         annotationSchemaService.createFeature(new AnnotationFeature(aProject, neLayer, "identifier",
                 "identifier", TYPE_ANY_OBJECT, "Linked entity", null));

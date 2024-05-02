@@ -53,12 +53,20 @@ public class RelationSuggestionRenderer
     @Override
     protected Type getSourceType(CAS aCas, AnnotationLayer aLayer, AnnotationFeature aFeature)
     {
-        return CasUtil.getType(aCas, aLayer.getAttachType().getName());
+        var attachType = aLayer.getAttachType();
+        if (attachType != null) {
+            return CasUtil.getType(aCas, attachType.getName());
+        }
+        return aCas.getAnnotationType();
     }
 
     @Override
     protected Type getTargetType(CAS aCas, AnnotationLayer aLayer, AnnotationFeature aFeature)
     {
-        return CasUtil.getType(aCas, aLayer.getAttachType().getName());
+        var attachType = aLayer.getAttachType();
+        if (attachType != null) {
+            return CasUtil.getType(aCas, attachType.getName());
+        }
+        return aCas.getAnnotationType();
     }
 }

@@ -31,9 +31,9 @@ public class AuthenticationSuccessEventAdapter
     implements EventLoggingAdapter<AuthenticationSuccessEvent>
 {
     @Override
-    public boolean accepts(Object aEvent)
+    public boolean accepts(Class<?> aEvent)
     {
-        return aEvent instanceof AuthenticationSuccessEvent;
+        return AuthenticationSuccessEvent.class.isAssignableFrom(aEvent);
     }
 
     @Override

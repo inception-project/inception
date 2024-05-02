@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.app.ui.search.sidebar;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.AUTO_CAS_UPGRADE;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateChangeFlag.EXPLICIT_ANNOTATOR_USER_ACTION;
 import static de.tudarmstadt.ukp.inception.rendering.vmodel.VMarker.MATCH_FOCUS;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.enabledWhen;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
@@ -806,7 +807,8 @@ public class SearchAnnotationSidebar
             return;
         }
 
-        documentService.writeAnnotationCas(aCas, aSourceDoc, state.getUser().getUsername(), true);
+        documentService.writeAnnotationCas(aCas, aSourceDoc, state.getUser().getUsername(),
+                EXPLICIT_ANNOTATOR_USER_ACTION);
     }
 
     private boolean featureValuesMatchCurrentState(AnnotationFS aAnnotationFS)

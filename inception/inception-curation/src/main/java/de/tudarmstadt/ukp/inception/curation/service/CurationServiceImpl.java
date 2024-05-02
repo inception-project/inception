@@ -96,9 +96,7 @@ public class CurationServiceImpl
     @Transactional
     public MergeStrategy getMergeStrategy(CurationWorkflow aCurationWorkflow)
     {
-        MergeStrategyFactory factory = mergeStrategyFactoryExtensionPoint
-                .getExtension(aCurationWorkflow.getMergeStrategy())
-                .orElseGet(mergeStrategyFactoryExtensionPoint::getDefault);
+        MergeStrategyFactory factory = getMergeStrategyFactory(aCurationWorkflow);
         return factory.makeStrategy(factory.readTraits(aCurationWorkflow));
     }
 
@@ -107,7 +105,8 @@ public class CurationServiceImpl
     @Transactional
     public MergeStrategyFactory getMergeStrategyFactory(CurationWorkflow aCurationWorkflow)
     {
-        return mergeStrategyFactoryExtensionPoint.getExtension(aCurationWorkflow.getMergeStrategy())
+        return mergeStrategyFactoryExtensionPoint //
+                .getExtension(aCurationWorkflow.getMergeStrategy())
                 .orElseGet(mergeStrategyFactoryExtensionPoint::getDefault);
     }
 }

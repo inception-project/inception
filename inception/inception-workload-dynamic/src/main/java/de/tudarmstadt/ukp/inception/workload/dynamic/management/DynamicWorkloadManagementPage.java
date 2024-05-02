@@ -63,6 +63,7 @@ import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.EnumChoiceRenderer;
 import org.apache.wicket.markup.html.form.Form;
+import org.apache.wicket.markup.html.form.LambdaChoiceRenderer;
 import org.apache.wicket.markup.html.form.NumberTextField;
 import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.model.CompoundPropertyModel;
@@ -103,7 +104,6 @@ import de.tudarmstadt.ukp.inception.support.help.DocLink;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
-import de.tudarmstadt.ukp.inception.support.lambda.LambdaChoiceRenderer;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaMenuItem;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.inception.support.wicket.ContextMenu;
@@ -187,7 +187,7 @@ public class DynamicWorkloadManagementPage
 
         requireProjectRole(userRepository.getCurrentUser(), CURATOR, MANAGER);
 
-        Project project = getProject();
+        var project = getProject();
 
         if (!pageMenuItem.applies(project)) {
             getSession().error("The project is not configured for dynamic workload management");
@@ -278,7 +278,7 @@ public class DynamicWorkloadManagementPage
         searchForm.add(dateTo);
 
         // Date choices of the radio buttons
-        List<DateSelection> dateChoice = Arrays.asList(DateSelection.values());
+        var dateChoice = Arrays.asList(DateSelection.values());
 
         // Create the radio button group
         dateChoices = new BootstrapRadioChoice<>("date", new Model<>(DateSelection.between),
@@ -438,7 +438,7 @@ public class DynamicWorkloadManagementPage
      */
     public Form<Void> createUserForm()
     {
-        Form<Void> userForm = new Form<>("userForm");
+        var userForm = new Form<Void>("userForm");
         userForm.setOutputMarkupId(true);
 
         // This form is split into three other forms, otherwise a
@@ -454,7 +454,7 @@ public class DynamicWorkloadManagementPage
      */
     private Form<User> createUserSelectionForm()
     {
-        Form<User> userSelectionForm = new Form<>("userSelectionForm");
+        var userSelectionForm = new Form<User>("userSelectionForm");
         userSelectionForm.setOutputMarkupId(true);
 
         // Dropdown menu with all available users of the project
@@ -482,8 +482,7 @@ public class DynamicWorkloadManagementPage
     {
         // Show ALL documents in the project (even those for which the user
         // does not have an annotations document created yet)
-        IModel<Collection<SourceDocument>> documentsToAddModel = new CollectionModel<>(
-                new ArrayList<>());
+        var documentsToAddModel = new CollectionModel<>(new ArrayList<SourceDocument>());
         userAssignDocumentForm = new Form<>("userAssignDocumentForm", documentsToAddModel);
 
         // Required. We also want this form only to be visible when a
@@ -517,7 +516,7 @@ public class DynamicWorkloadManagementPage
             @Override
             public List<SourceDocument> getChoices(String aInput)
             {
-                List<SourceDocument> result = new ArrayList<>();
+                var result = new ArrayList<SourceDocument>();
 
                 if (userSelection.getModelObject() != null) {
                     if (aInput != null) {
@@ -597,10 +596,10 @@ public class DynamicWorkloadManagementPage
         aAjaxRequestTarget.addChildren(getPage(), IFeedback.class);
 
         // First check if there are documents to assign
-        Collection<SourceDocument> documentsToAssign = documentsToAdd.getModelObject();
-        for (SourceDocument source : documentsToAssign) {
-            AnnotationDocument annotationDocument = documentService
-                    .createOrGetAnnotationDocument(source, userSelection.getModelObject());
+        var documentsToAssign = documentsToAdd.getModelObject();
+        for (var source : documentsToAssign) {
+            var annotationDocument = documentService.createOrGetAnnotationDocument(source,
+                    userSelection.getModelObject());
 
             // Only if the document is in state NEW we can assign it to INPROGRESS
             if (AnnotationDocumentState.NEW == annotationDocument.getState()) {
@@ -699,8 +698,8 @@ public class DynamicWorkloadManagementPage
 
         // The AnnotatorColumnCellOpenContextMenuEvent is not serializable, so we need to extract
         // the information we need in the menu item here
-        SourceDocument document = aEvent.getSourceDocument();
-        User user = aEvent.getUser();
+        var document = aEvent.getSourceDocument();
+        var user = aEvent.getUser();
         items.add(new LambdaMenuItem("Reset",
                 _target -> actionResetAnnotationDocument(_target, document, user)));
         items.add(new LambdaMenuItem("Touch",
@@ -735,7 +734,7 @@ public class DynamicWorkloadManagementPage
     {
         var ann = documentService.getAnnotationDocument(aDocument, aUser);
         ann.setTimestamp(new Date());
-        documentService.createAnnotationDocument(ann);
+        documentService.createOrUpdateAnnotationDocument(ann);
 
         success(format("The timestamp of document [%s] for user [%s] has been updated.",
                 aDocument.getName(), aUser.getUiName()));

@@ -106,7 +106,7 @@ public class UserDaoImpl
             "^/\\&*?+$![]", FILESYSTEM_RESERVED_CHARACTERS);
 
     public static final Set<String> RESERVED_USERNAMES = Set.of(INITIAL_CAS_PSEUDO_USER,
-            CURATION_USER);
+            CURATION_USER, "anonymousUser");
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -149,9 +149,9 @@ public class UserDaoImpl
 
         new TransactionTemplate(transactionManager).executeWithoutResult(transactionStatus -> {
             if (list().isEmpty()) {
-                User admin = new User();
-                final String str = defaultAdminUsername;
-                admin.setUsername(Objects.toString(str, ADMIN_DEFAULT_PASSWORD));
+                var admin = new User();
+                admin.setUsername(
+                        Objects.toString(defaultAdminUsername, UserDao.ADMIN_DEFAULT_USERNAME));
                 admin.setEncodedPassword(securityProperties.getDefaultAdminPassword());
                 admin.setEnabled(true);
                 if (securityProperties.isDefaultAdminRemoteAccess()) {
@@ -318,6 +318,20 @@ public class UserDaoImpl
             throw new IllegalStateException(
                     "UI name [" + aUiName + "] is not unique within realm [" + aRealm + "]");
         }
+    }
+
+    @Override
+    @Transactional
+    public boolean isEmpty()
+    {
+        var cb = entityManager.getCriteriaBuilder();
+        var query = cb.createQuery(Long.class);
+        var root = query.from(User.class);
+        query.select(cb.count(root));
+
+        var count = entityManager.createQuery(query).getSingleResult();
+
+        return count == 0;
     }
 
     @Override
@@ -736,5 +750,11 @@ public class UserDaoImpl
         }
 
         return true;
+    }
+
+    @Override
+    public boolean isAdminAccountRecoveryMode()
+    {
+        return System.getProperty(PROP_RESTORE_DEFAULT_ADMIN_ACCOUNT) != null;
     }
 }

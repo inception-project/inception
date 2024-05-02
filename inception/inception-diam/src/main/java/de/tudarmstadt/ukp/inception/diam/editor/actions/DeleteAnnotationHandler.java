@@ -17,19 +17,14 @@
  */
 package de.tudarmstadt.ukp.inception.diam.editor.actions;
 
-import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.request.Request;
 import org.springframework.core.annotation.Order;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.inception.diam.editor.config.DiamAutoConfig;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.DefaultAjaxResponse;
-import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
 
 /**
@@ -66,21 +61,23 @@ public class DeleteAnnotationHandler
     public DefaultAjaxResponse handle(AjaxRequestTarget aTarget, Request aRequest)
     {
         try {
-            AnnotationPageBase page = getPage();
+            var page = getPage();
 
-            VID vid = VID.parseOptional(
+            page.ensureIsEditable();
+
+            var vid = VID.parseOptional(
                     aRequest.getRequestParameters().getParameterValue(PARAM_ID).toOptionalString());
 
             if (vid.isNotSet() || vid.isSynthetic()) {
                 return new DefaultAjaxResponse(getAction(aRequest));
             }
 
-            CAS cas = page.getEditorCas();
-            AnnotatorState state = page.getModelObject();
+            var cas = page.getEditorCas();
+            var state = page.getModelObject();
 
-            AnnotationFS fs = ICasUtil.selectAnnotationByAddr(cas, vid.getId());
+            var fs = ICasUtil.selectAnnotationByAddr(cas, vid.getId());
 
-            TypeAdapter adapter = schemaService.findAdapter(state.getProject(), fs);
+            var adapter = schemaService.findAdapter(state.getProject(), fs);
             state.getSelection().set(adapter.select(vid, fs));
 
             page.getAnnotationActionHandler().actionSelect(aTarget);

@@ -21,8 +21,6 @@ import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
 
 import java.util.HashSet;
 
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.DiffResult;
-
 /**
  * An enumeration to differentiate sentences in a document with different colors so as to easily
  * identify

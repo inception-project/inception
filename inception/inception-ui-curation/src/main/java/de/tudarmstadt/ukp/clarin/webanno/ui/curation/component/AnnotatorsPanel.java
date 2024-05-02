@@ -48,7 +48,6 @@ import java.util.Set;
 import org.apache.commons.lang3.Validate;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
@@ -66,8 +65,8 @@ import org.slf4j.LoggerFactory;
 import com.googlecode.wicket.jquery.ui.widget.menu.IMenuItem;
 
 import de.tudarmstadt.ukp.clarin.webanno.brat.schema.BratSchemaGenerator;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.Configuration;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.ConfigurationSet;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.Configuration;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.ConfigurationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -438,15 +437,15 @@ public class AnnotatorsPanel
 
     private Map<String, CAS> getCasses(SourceDocument aDocument) throws IOException
     {
-        Map<String, CAS> casses = new HashMap<>();
+        var casses = new HashMap<String, CAS>();
 
         // This CAS is loaded writable - it is the one the annotations are merged into
         casses.put(CURATION_USER, curationDocumentService.readCurationCas(aDocument));
 
         // The source CASes from the annotators are all ready read-only / shared
-        for (var annDoc : curationDocumentService.listCuratableAnnotationDocuments(aDocument)) {
-            casses.put(annDoc.getUser(),
-                    documentService.readAnnotationCas(annDoc.getDocument(), annDoc.getUser()));
+        for (var user : curationDocumentService.listCuratableUsers(aDocument)) {
+            casses.put(user.getUsername(),
+                    documentService.readAnnotationCas(aDocument, user.getUsername()));
         }
 
         return casses;
@@ -563,53 +562,55 @@ public class AnnotatorsPanel
                 Map<VID, AnnotationState> annotationStates = aAnnotationStatesForAllUsers.get(user);
 
                 for (Configuration configuration : configurationSet.getConfigurations(user)) {
-                    FeatureStructure fs = configuration.getFs(user, aCasMap);
-
-                    VID vid;
-                    // link FS
-                    if (configuration.getPosition().getFeature() != null) {
-                        TypeAdapter typeAdapter = schemaService.findAdapter(aProject, fs);
-                        int fi = 0;
-                        for (AnnotationFeature f : typeAdapter.listFeatures()) {
-                            if (f.getName().equals(configuration.getPosition().getFeature())) {
-                                break;
+                    for (var fs : configuration.getFses(user, aCasMap)) {
+                        VID vid;
+                        // link FS
+                        if (configuration.getPosition().getFeature() != null) {
+                            TypeAdapter typeAdapter = schemaService.findAdapter(aProject, fs);
+                            int fi = 0;
+                            for (AnnotationFeature f : typeAdapter.listFeatures()) {
+                                if (f.getName().equals(configuration.getPosition().getFeature())) {
+                                    break;
+                                }
+                                fi++;
                             }
-                            fi++;
+
+                            vid = new VID(ICasUtil.getAddr(fs), fi,
+                                    configuration.getAID(user).index);
+                        }
+                        else {
+                            vid = new VID(ICasUtil.getAddr(fs));
                         }
 
-                        vid = new VID(ICasUtil.getAddr(fs), fi, configuration.getAID(user).index);
-                    }
-                    else {
-                        vid = new VID(ICasUtil.getAddr(fs));
-                    }
+                        // The curator has accepted this configuration
+                        if (configuration.getCasGroupIds().contains(CURATION_USER)) {
+                            annotationStates.put(vid, ACCEPTED_BY_CURATOR);
+                            continue;
+                        }
 
-                    // The curator has accepted this configuration
-                    if (configuration.getCasGroupIds().contains(CURATION_USER)) {
-                        annotationStates.put(vid, ACCEPTED_BY_CURATOR);
-                        continue;
-                    }
+                        // The curator has accepted *another* configuration in this set
+                        if (configurationSet.getCasGroupIds().contains(CURATION_USER)) {
+                            annotationStates.put(vid, REJECTED_BY_CURATOR);
+                            continue;
+                        }
 
-                    // The curator has accepted *another* configuration in this set
-                    if (configurationSet.getCasGroupIds().contains(CURATION_USER)) {
-                        annotationStates.put(vid, REJECTED_BY_CURATOR);
-                        continue;
-                    }
+                        // All annotators participated and agree but the curator did not make a
+                        // decision
+                        // yet.
+                        if (aSetType == ConfigurationSetType.COMPLETE_AGREEMENT_SET) {
+                            annotationStates.put(vid, ANNOTATORS_AGREE);
+                            continue;
+                        }
 
-                    // All annotators participated and agree but the curator did not make a decision
-                    // yet.
-                    if (aSetType == ConfigurationSetType.COMPLETE_AGREEMENT_SET) {
-                        annotationStates.put(vid, ANNOTATORS_AGREE);
-                        continue;
-                    }
+                        // Annotators disagree and the curator has not made a choice yet
+                        if (aSetType == ConfigurationSetType.DISAGREEMENT_SET) {
+                            annotationStates.put(vid, ANNOTATORS_DISAGREE);
+                            continue;
+                        }
 
-                    // Annotators disagree and the curator has not made a choice yet
-                    if (aSetType == ConfigurationSetType.DISAGREEMENT_SET) {
-                        annotationStates.put(vid, ANNOTATORS_DISAGREE);
-                        continue;
+                        // Annotation is incomplete and the curator has not made a choice yet
+                        annotationStates.put(vid, ANNOTATORS_INCOMPLETE);
                     }
-
-                    // Annotation is incomplete and the curator has not made a choice yet
-                    annotationStates.put(vid, ANNOTATORS_INCOMPLETE);
                 }
             }
         }

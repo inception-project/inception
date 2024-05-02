@@ -27,22 +27,20 @@
       </div>
       
       <div class="scrolling card-body flex-v-container flex-gutter flex-only-internal-gutter">
-        <form wicket:id="sessionControlForm">
-          <div class="small"><wicket:message key="curationTarget"/></div>
-          <div class="input-group">
-            <select class="form-select flex-content" wicket:id="curationTarget"/>
-            <a wicket:id="startSession" class="btn btn-primary">
+        <form wicket:id="sessionControlForm" class="d-flex flex-row mb-2">
+          <div class="form-floating flex-fill me-2" wicket:enclosure="curationTarget">
+            <select class="form-select" wicket:id="curationTarget"/>
+            <label wicket:for="curationTarget"><wicket:label key="curationTarget"/></label>
+          </div>
+          <div class="input-group w-auto">
+            <a wicket:id="startSession" class="btn btn-primary align-content-center">
               <i class="fa fa-play" aria-hidden="true"></i>
             </a>
-            <a wicket:id="stopSession" class="btn btn-secondary">
+            <a wicket:id="stopSession" class="btn btn-secondary align-content-center">
               <i class="fa fa-stop" aria-hidden="true"></i>
             </a>
           </div>
         </form>
-      
-        <div wicket:id="notCuratableNotice" class="no-data-notice flex-content">
-          Curation not possible while viewing another users annotations.
-        </div>
       
         <div class="row form-row" wicket:enclosure="showMerged">
           <div class="col-sm-12">

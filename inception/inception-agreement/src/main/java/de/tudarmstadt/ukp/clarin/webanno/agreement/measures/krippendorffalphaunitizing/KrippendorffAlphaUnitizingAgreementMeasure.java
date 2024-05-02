@@ -20,26 +20,26 @@ package de.tudarmstadt.ukp.clarin.webanno.agreement.measures.krippendorffalphaun
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Objects;
 
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.FSUtil;
+import org.apache.uima.jcas.tcas.Annotation;
 import org.dkpro.statistics.agreement.unitizing.KrippendorffAlphaUnitizingAgreement;
 import org.dkpro.statistics.agreement.unitizing.UnitizingAnnotationStudy;
 
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasure_ImplBase;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.DefaultAgreementTraits;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.results.unitizing.FullUnitizingAgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 
 public class KrippendorffAlphaUnitizingAgreementMeasure
     extends AgreementMeasure_ImplBase<//
             FullUnitizingAgreementResult, //
-            KrippendorffAlphaUnitizingAgreementTraits>
+            DefaultAgreementTraits>
 {
     public KrippendorffAlphaUnitizingAgreementMeasure(AnnotationFeature aFeature,
-            KrippendorffAlphaUnitizingAgreementTraits aTraits)
+            DefaultAgreementTraits aTraits)
     {
         super(aFeature, aTraits);
     }
@@ -59,27 +59,34 @@ public class KrippendorffAlphaUnitizingAgreementMeasure
 
         // For each annotator, extract the feature values from all the annotator's CASses and add
         // them to the unitizing study based on character offsets.
-        for (Entry<String, CAS> set : aCasMap.entrySet()) {
-            int raterIdx = study.addRater(set.getKey());
+        for (var set : aCasMap.entrySet()) {
             var cas = set.getValue();
-            // If a user has never worked on a source document, its CAS is null here - we
-            // skip it.
-            if (cas != null) {
-                var t = cas.getTypeSystem().getType(typeName);
-                var f = t.getFeatureByBaseName(getFeature().getName());
-                cas.select(t).map(fs -> (AnnotationFS) fs).forEach(fs -> {
-                    var featureValue = FSUtil.getFeature(fs, f, Object.class);
-                    if (featureValue instanceof Collection) {
-                        for (var value : (Collection<?>) featureValue) {
-                            study.addUnit(fs.getBegin(), fs.getEnd() - fs.getBegin(), raterIdx,
-                                    value);
-                        }
+            if (cas == null) {
+                // If a user has never worked on a source document, its CAS is null here - we
+                // skip it.
+                continue;
+            }
+
+            var t = cas.getTypeSystem().getType(typeName);
+            if (t == null) {
+                // CAS not upgraded yet
+                continue;
+            }
+
+            var raterIdx = study.addRater(set.getKey());
+            var f = t.getFeatureByBaseName(getFeature().getName());
+            for (var ann : cas.<Annotation> select(t)) {
+                var featureValue = FSUtil.getFeature(ann, f, Object.class);
+                if (featureValue instanceof Collection) {
+                    for (var value : (Collection<?>) featureValue) {
+                        study.addUnit(ann.getBegin(), ann.getEnd() - ann.getBegin(), raterIdx,
+                                value);
                     }
-                    else {
-                        study.addUnit(fs.getBegin(), fs.getEnd() - fs.getBegin(), raterIdx,
-                                featureValue);
-                    }
-                });
+                }
+                else {
+                    study.addUnit(ann.getBegin(), ann.getEnd() - ann.getBegin(), raterIdx,
+                            featureValue);
+                }
             }
         }
 

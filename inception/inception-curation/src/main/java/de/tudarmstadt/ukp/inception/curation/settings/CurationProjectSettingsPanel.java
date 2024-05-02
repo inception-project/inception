@@ -17,6 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.curation.settings;
 
+import static de.tudarmstadt.ukp.inception.curation.sidebar.CurationSidebarManagerPrefs.KEY_CURATION_SIDEBAR_MANAGER_PREFS;
+import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
+
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
@@ -24,15 +27,19 @@ import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.model.LoadableDetachableModel;
+import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
 import de.tudarmstadt.ukp.inception.curation.model.CurationWorkflow;
 import de.tudarmstadt.ukp.inception.curation.service.CurationService;
+import de.tudarmstadt.ukp.inception.curation.sidebar.CurationSidebarManagerPrefs;
+import de.tudarmstadt.ukp.inception.curation.sidebar.CurationSidebarProperties;
+import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxButton;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaForm;
 
 public class CurationProjectSettingsPanel
     extends ProjectSettingsPanelBase
@@ -45,8 +52,11 @@ public class CurationProjectSettingsPanel
 
     private @SpringBean CurationService curationService;
     private @SpringBean ProjectService projectService;
+    private @SpringBean PreferencesService preferencesService;
+    private @SpringBean CurationSidebarProperties curationSidebarProperties;
 
     private IModel<CurationWorkflow> curationWorkflowModel;
+    private CompoundPropertyModel<CurationSidebarManagerPrefs> curationSidebarPrefs;
 
     private MarkupContainer mergeStrategyPanel;
 
@@ -55,15 +65,21 @@ public class CurationProjectSettingsPanel
         super(aId, aProjectModel);
         setOutputMarkupPlaceholderTag(true);
 
-        var form = new Form<Project>(MID_FORM, CompoundPropertyModel.of(aProjectModel));
+        var form = new LambdaForm<Project>(MID_FORM, CompoundPropertyModel.of(aProjectModel));
         add(form);
 
-        curationWorkflowModel = LoadableDetachableModel.of(this::loadCurationWorkflow);
+        curationWorkflowModel = Model.of(loadCurationWorkflow());
+        curationSidebarPrefs = new CompoundPropertyModel<>(Model.of(loadSidebarPrefs()));
 
         mergeStrategyPanel = new MergeStrategyPanel(MID_MERGE_STRATEGY, curationWorkflowModel);
         form.add(mergeStrategyPanel);
 
         form.add(new CheckBox("anonymousCuration").setOutputMarkupPlaceholderTag(true));
+
+        form.add(new CheckBox("autoMergeCurationSidebar") //
+                .setModel(curationSidebarPrefs.bind("autoMergeCurationSidebar")) //
+                .add(visibleWhen(() -> curationSidebarProperties.isEnabled())) //
+                .setOutputMarkupPlaceholderTag(true));
 
         form.add(new LambdaAjaxButton<>(MID_SAVE, this::actionSave).triggerAfterSubmit());
     }
@@ -82,8 +98,17 @@ public class CurationProjectSettingsPanel
         return curationService.readOrCreateCurationWorkflow(getModelObject());
     }
 
+    private CurationSidebarManagerPrefs loadSidebarPrefs()
+    {
+        return preferencesService.loadDefaultTraitsForProject(KEY_CURATION_SIDEBAR_MANAGER_PREFS,
+                getModelObject());
+    }
+
     public void actionSave(AjaxRequestTarget aTarget, Form<Project> aForm)
     {
+        preferencesService.saveDefaultTraitsForProject(KEY_CURATION_SIDEBAR_MANAGER_PREFS,
+                getModelObject(), curationSidebarPrefs.getObject());
+
         curationService.createOrUpdateCurationWorkflow(curationWorkflowModel.getObject());
 
         projectService.updateProject(aForm.getModelObject());

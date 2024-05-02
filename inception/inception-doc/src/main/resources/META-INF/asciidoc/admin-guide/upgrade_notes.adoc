@@ -22,6 +22,12 @@ NOTE: It is a good idea to back up your installation and data before an upgrade.
       you can actually re-create a working installation by restoring your backup. A backup which cannot be
       successfully restored is worthless.
 
+== INCEpTION 32.0
+
+If you are using Docker and override the memory usage of {product-name} via the `JAVA_OPTS` environment
+variable, then you should remove the memory settings from that variable an instead add them to `JAVA_MEM_OPTS`
+to ensure that you actually override the default memory settings provided by {product-name}.
+
 == INCEpTION 25.0
 
 === Manual intervention for external pre-authentication users

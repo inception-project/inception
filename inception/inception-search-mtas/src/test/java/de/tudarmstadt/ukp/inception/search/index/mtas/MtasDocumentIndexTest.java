@@ -24,7 +24,7 @@ import static org.awaitility.Awaitility.await;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.InputStream;
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -135,7 +135,7 @@ public class MtasDocumentIndexTest
 {
     static final String TEST_OUTPUT_FOLDER = "target/test-output/MtasDocumentIndexTest";
 
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private @Autowired UserDao userRepository;
     private @Autowired ProjectService projectService;
@@ -153,7 +153,7 @@ public class MtasDocumentIndexTest
     @BeforeEach
     public void testWatcher(TestInfo aTestInfo)
     {
-        String methodName = aTestInfo.getTestMethod().map(Method::getName).orElse("<unknown>");
+        var methodName = aTestInfo.getTestMethod().map(Method::getName).orElse("<unknown>");
         System.out.printf("\n=== %s === %s=====================\n", methodName,
                 aTestInfo.getDisplayName());
     }
@@ -178,33 +178,32 @@ public class MtasDocumentIndexTest
     private final void uploadDocument(Pair<SourceDocument, String>... aDocuments) throws Exception
     {
         Project project = null;
-        try (CasStorageSession casStorageSession = CasStorageSession.open()) {
+        try (var casStorageSession = CasStorageSession.open()) {
             for (Pair<SourceDocument, String> doc : aDocuments) {
-                log.info("Uploading document via documentService.uploadSourceDocument: {}", doc);
+                LOG.info("Uploading document via documentService.uploadSourceDocument: {}", doc);
                 project = doc.getLeft().getProject();
 
-                try (InputStream fileStream = new ByteArrayInputStream(
-                        doc.getRight().getBytes(UTF_8))) {
+                try (var fileStream = new ByteArrayInputStream(doc.getRight().getBytes(UTF_8))) {
                     documentService.uploadSourceDocument(fileStream, doc.getLeft());
                 }
             }
         }
 
         // Avoid the compiler complaining about project not being an effectively final variable
-        log.info("Waiting for uploaded documents to be indexed...");
+        LOG.info("Waiting for uploaded documents to be indexed...");
         Project p = project;
         await("Waiting for indexing process to complete") //
                 .atMost(60, SECONDS) //
                 .pollInterval(5, SECONDS) //
                 .until(() -> searchService.isIndexValid(p)
                         && searchService.getIndexProgress(p).isEmpty());
-        log.info("Indexing complete!");
+        LOG.info("Indexing complete!");
     }
 
     private void annotateDocument(Project aProject, User aUser, SourceDocument aSourceDocument)
         throws Exception
     {
-        log.info("Preparing annotated document....");
+        LOG.info("Preparing annotated document....");
 
         // Manually build annotated CAS
         JCas jCas = JCasFactory.createJCas();
@@ -243,24 +242,24 @@ public class MtasDocumentIndexTest
 
         // Write annotated CAS to annotated document
         try (CasStorageSession casStorageSession = CasStorageSession.open()) {
-            log.info("Writing annotated document using documentService.writeAnnotationCas");
-            documentService.writeAnnotationCas(jCas.getCas(), annotationDocument, false);
+            LOG.info("Writing annotated document using documentService.writeAnnotationCas");
+            documentService.writeAnnotationCas(jCas.getCas(), annotationDocument);
         }
 
-        log.info("Writing for annotated document to be indexed");
+        LOG.info("Writing for annotated document to be indexed");
         await("Waiting for indexing process to complete") //
                 .atMost(60, SECONDS) //
                 .pollInterval(5, SECONDS) //
                 .until(() -> searchService.isIndexValid(aProject)
                         && searchService.getIndexProgress(aProject).isEmpty());
-        log.info("Indexing complete!");
+        LOG.info("Indexing complete!");
     }
 
     public void annotateDocumentAdvanced(Project aProject, User aUser,
             SourceDocument aSourceDocument)
         throws Exception
     {
-        log.info("Preparing annotated document....");
+        LOG.info("Preparing annotated document....");
 
         // Manually build annotated CAS
         JCas jCas = JCasFactory.createJCas();
@@ -309,17 +308,17 @@ public class MtasDocumentIndexTest
 
         // Write annotated CAS to annotated document
         try (CasStorageSession casStorageSession = CasStorageSession.open()) {
-            log.info("Writing annotated document using documentService.writeAnnotationCas");
-            documentService.writeAnnotationCas(jCas.getCas(), annotationDocument, false);
+            LOG.info("Writing annotated document using documentService.writeAnnotationCas");
+            documentService.writeAnnotationCas(jCas.getCas(), annotationDocument);
         }
 
-        log.info("Writing for annotated document to be indexed");
+        LOG.info("Writing for annotated document to be indexed");
         await("Waiting for indexing process to complete") //
                 .atMost(60, SECONDS) //
                 .pollInterval(5, SECONDS) //
                 .until(() -> searchService.isIndexValid(aProject)
                         && searchService.getIndexProgress(aProject).isEmpty());
-        log.info("Indexing complete!");
+        LOG.info("Indexing complete!");
     }
 
     @Test
@@ -485,23 +484,23 @@ public class MtasDocumentIndexTest
     @Test
     public void testAnnotationQuery() throws Exception
     {
-        Project project = new Project("annotation-query");
+        var project = new Project("annotation-query");
 
         createProject(project);
 
-        SourceDocument sourceDocument = new SourceDocument("Annotation document", project, "text");
+        var sourceDocument = new SourceDocument("Annotation document", project, "text");
 
-        String fileContent = "The capital of Galicia is Santiago de Compostela.";
+        var fileContent = "The capital of Galicia is Santiago de Compostela.";
 
         uploadDocument(Pair.of(sourceDocument, fileContent));
         annotateDocument(project, user, sourceDocument);
 
-        String query = "<Named_entity.value=\"LOC\"/>";
+        var query = "<Named_entity.value=\"LOC\"/>";
 
-        List<SearchResult> results = searchService.query(user, project, query);
+        var results = searchService.query(user, project, query);
 
         // Test results
-        SearchResult expectedResult = new SearchResult();
+        var expectedResult = new SearchResult();
         expectedResult.setDocumentId(sourceDocument.getId());
         expectedResult.setDocumentTitle("Annotation document");
         // When searching for an annotation, we don't get the matching
