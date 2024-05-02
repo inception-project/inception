@@ -63,6 +63,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.type.CASMetadata;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.Configuration;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.ConfigurationSet;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.DiffResult;
@@ -80,6 +81,7 @@ import de.tudarmstadt.ukp.inception.annotation.events.BulkAnnotationEvent;
 import de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureTraits;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationAdapter;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanAdapter;
+import de.tudarmstadt.ukp.inception.annotation.storage.CasMetadataUtils;
 import de.tudarmstadt.ukp.inception.curation.merge.strategy.DefaultMergeStrategy;
 import de.tudarmstadt.ukp.inception.curation.merge.strategy.MergeStrategy;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
@@ -206,7 +208,7 @@ public class CasMerge
         throws UIMAException
     {
         // Remove any annotations from the target CAS - keep type system, sentences and tokens
-        clearAnnotations(aTargetDocument.getProject(), aTargetCas);
+        clearAnnotations(aTargetDocument, aTargetCas);
 
         return mergeCas(aDiff, aTargetDocument, aTargetUsername, aTargetCas, aCasMap);
     }
@@ -432,15 +434,14 @@ public class CasMerge
      * Removes all annotations except {@link Token} and {@link Sentence} annotations - but from
      * these also only the offsets are kept and all other features are cleared.
      * 
-     * @param aProject
-     *            the project to which the CAS belongs.
-     * 
+     * @param aDocument
+     *            the document to which the CAS belongs.
      * @param aCas
      *            the CAS to clear.
      * @throws UIMAException
      *             if there was a problem clearing the CAS.
      */
-    private void clearAnnotations(Project aProject, CAS aCas) throws UIMAException
+    private void clearAnnotations(SourceDocument aDocument, CAS aCas) throws UIMAException
     {
         // Copy the CAS - basically we do this just to keep the full type system information
         var backup = WebAnnoCasUtil.createCasCopy(aCas);
@@ -456,10 +457,18 @@ public class CasMerge
             createDocumentMetadata(aCas);
         }
 
+        var casMetadataType = aCas.getTypeSystem().getType(CASMetadata._TypeName);
+        if (casMetadataType != null && exists(backup, casMetadataType)) {
+            var casMetadata = backup.select(CASMetadata.class).single();
+            var timestamp = casMetadata.getLastChangedOnDisk();
+            var username = casMetadata.getUsername();
+            CasMetadataUtils.addOrUpdateCasMetadata(aCas, timestamp, aDocument, username);
+        }
+
         aCas.setDocumentLanguage(backup.getDocumentLanguage()); // DKPro Core Issue 435
         aCas.setDocumentText(backup.getDocumentText());
 
-        transferSegmentation(aProject, aCas, backup);
+        transferSegmentation(aDocument.getProject(), aCas, backup);
     }
 
     /**
