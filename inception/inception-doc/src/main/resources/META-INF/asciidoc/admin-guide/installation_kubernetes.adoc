@@ -52,3 +52,13 @@ $ kubectl delete -f inception.yml
 ----
 
 This can be tested e.g. using the Kubernetes support built into recent Docker Desktop. If you experience problems, make sure you run the latest version of Docker Desktop.
+
+[[sect_errors]]
+= Common issues and solution
+[source,text]
+.The default Ingress configuration of Kubernetes sets a limit on the file uploads which can cause an error when trying to import a large file.This can be fixed by adding the following annotation to the Ingress configuration to increase the maximum allowed file upload size. In annotations under metadata add the following and change the value according to your preference.
+----
+$ nginx.ingress.kubernetes.io/proxy-body-size: <value>m
+example:
+$ nginx.ingress.kubernetes.io/proxy-body-size: 3m
+----
