@@ -82,7 +82,9 @@ public class TypeMappings
 
     public TypeMapping getMappingByBratType(String aBratType)
     {
-        return parsedMappings.stream().filter(mapping -> mapping.matches(aBratType)).findFirst()
+        return parsedMappings.stream() //
+        		.filter(mapping -> mapping.matches(aBratType)) //
+        		.findFirst() //
                 .orElse(null);
     }
 
