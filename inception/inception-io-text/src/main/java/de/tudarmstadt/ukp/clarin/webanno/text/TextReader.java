@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.text;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.dkpro.core.api.resources.CompressionUtils.getInputStream;
 
 import java.io.IOException;
@@ -29,10 +30,7 @@ import org.apache.uima.fit.descriptor.ConfigurationParameter;
 import org.apache.uima.fit.descriptor.MimeTypeCapability;
 import org.apache.uima.fit.descriptor.TypeCapability;
 import org.dkpro.core.api.io.ResourceCollectionReaderBase;
-import org.dkpro.core.api.parameter.ComponentParameters;
 import org.dkpro.core.api.parameter.MimeTypes;
-
-import com.ibm.icu.text.CharsetDetector;
 
 /**
  * UIMA collection reader for plain text files.
@@ -42,21 +40,6 @@ import com.ibm.icu.text.CharsetDetector;
 public class TextReader
     extends ResourceCollectionReaderBase
 {
-    /**
-     * Automatically detect encoding.
-     *
-     * @see CharsetDetector
-     */
-    public static final String ENCODING_AUTO = "auto";
-
-    /**
-     * Name of configuration parameter that contains the character encoding used by the input files.
-     */
-    public static final String PARAM_SOURCE_ENCODING = ComponentParameters.PARAM_SOURCE_ENCODING;
-    @ConfigurationParameter(name = PARAM_SOURCE_ENCODING, mandatory = true, //
-            defaultValue = ComponentParameters.DEFAULT_ENCODING)
-    private String sourceEncoding;
-
     /**
      * Whether to remove a byte-order mark from the start of the text.
      */
@@ -74,16 +57,7 @@ public class TextReader
                 .setInclude(includeBom) //
                 .setInputStream(getInputStream(res.getLocation(), res.getInputStream())) //
                 .get()) {
-            String text;
-
-            if (ENCODING_AUTO.equals(sourceEncoding)) {
-                var detector = new CharsetDetector();
-                text = IOUtils.toString(detector.getReader(is, null));
-            }
-            else {
-                text = IOUtils.toString(is, sourceEncoding);
-            }
-
+            var text = IOUtils.toString(is, UTF_8);
             aJCas.setDocumentText(text);
         }
     }

@@ -36,6 +36,7 @@ import de.tudarmstadt.ukp.clarin.webanno.diag.checks.AllFeatureStructuresIndexed
 import de.tudarmstadt.ukp.clarin.webanno.diag.checks.CASMetadataTypeIsPresentCheck;
 import de.tudarmstadt.ukp.clarin.webanno.diag.checks.Check;
 import de.tudarmstadt.ukp.clarin.webanno.diag.checks.DanglingRelationsCheck;
+import de.tudarmstadt.ukp.clarin.webanno.diag.checks.DocumentTextStartsWithBomCheck;
 import de.tudarmstadt.ukp.clarin.webanno.diag.checks.FeatureAttachedSpanAnnotationsTrulyAttachedCheck;
 import de.tudarmstadt.ukp.clarin.webanno.diag.checks.LinksReachableThroughChainsCheck;
 import de.tudarmstadt.ukp.clarin.webanno.diag.checks.NegativeSizeAnnotationsCheck;
@@ -50,6 +51,7 @@ import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.ReattachFeatureAttachedSpa
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.ReattachFeatureAttachedSpanAnnotationsRepair;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.ReindexFeatureAttachedSpanAnnotationsRepair;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.RelationOffsetsRepair;
+import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.RemoveBomRepair;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.RemoveDanglingChainLinksRepair;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.RemoveDanglingFeatureAttachedSpanAnnotationsRepair;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.RemoveDanglingRelationsRepair;
@@ -250,5 +252,17 @@ public class CasDoctorAutoConfiguration
     public TrimAnnotationsRepair trimAnnotationsRepair(AnnotationSchemaService aAnnotationService)
     {
         return new TrimAnnotationsRepair(aAnnotationService);
+    }
+
+    @Bean
+    public DocumentTextStartsWithBomCheck documentTextStartsWithBomCheck()
+    {
+        return new DocumentTextStartsWithBomCheck();
+    }
+
+    @Bean
+    public RemoveBomRepair removeBomRepair()
+    {
+        return new RemoveBomRepair();
     }
 }
