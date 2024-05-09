@@ -231,6 +231,14 @@ Checks if all annotations start and end with a character (i.e. not a whitespace)
 whitespace character can cause problems during rendering. Trimming whitespace at the begin and end is typically as 
 harmless procedure.
 
+[[check_DocumentTextStartsWithBomCheck]]
+=== Document text starts with Byte Order Mark
+[horizontal]
+ID:: `check_DocumentTextStartsWithBomCheck`
+Related repairs:: <<repair_RemoveBomRepair>>
+
+Checks if the document text starts with a Byte Order Mark (BOM).
+
 
 [[sect_repairs]]
 == Repairs
@@ -388,3 +396,11 @@ ID:: `TrimAnnotationsRepair`
 
 This repair adjusts annotation boundaries such that they do not include any whitespace at the beginning or end of the 
 annotation.
+
+[[repair_RemoveBomRepair]]
+=== Remove Byte Order Mark
+
+[horizontal]
+ID:: `RemoveBomRepair`
+
+This repair removes the Byte Order Mark at the start of the document and adjusts all annotation offsets accordingly.
