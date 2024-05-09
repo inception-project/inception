@@ -22,6 +22,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RMessageLevel.ERROR;
 import static de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RMessageLevel.INFO;
+import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.forceOverwriteSofa;
 import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.selectSentences;
 import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.selectTokens;
 import static java.io.File.createTempFile;
@@ -43,8 +44,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.lang.invoke.MethodHandle;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -59,12 +58,9 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.reflect.FieldUtils;
-import org.apache.commons.lang3.reflect.MethodUtils;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.jcas.cas.Sofa;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -995,7 +991,7 @@ public class AeroRemoteApiController
         var document = getDocument(project, aDocumentId);
 
         // Check if the format is supported
-        String format = aFormatId.orElse(FORMAT_DEFAULT);
+        var format = aFormatId.orElse(FORMAT_DEFAULT);
         if (!importExportService.getReadableFormatById(format).isPresent()) {
             throw new UnsupportedFormatException(
                     "Format [%s] not supported. Acceptable formats are %s.", format,
@@ -1003,7 +999,7 @@ public class AeroRemoteApiController
                             .sorted().collect(toList()));
         }
 
-        String originalFilename = isNotBlank(aFile.getOriginalFilename())
+        var originalFilename = isNotBlank(aFile.getOriginalFilename()) //
                 ? aFile.getOriginalFilename()
                 : document.getName();
         if (!documentService.isValidDocumentName(originalFilename)) {
@@ -1101,29 +1097,6 @@ public class AeroRemoteApiController
                         as.getBegin(), as.getEnd());
             }
             unitIndex++;
-        }
-    }
-
-    private static void forceOverwriteSofa(CAS aCas, String aValue)
-    {
-        try {
-            Sofa sofa = (Sofa) aCas.getSofa();
-            MethodHandle _FH_sofaString = (MethodHandle) FieldUtils.readField(sofa,
-                    "_FH_sofaString", true);
-            Method method = MethodUtils.getMatchingMethod(Sofa.class, "wrapGetIntCatchException",
-                    MethodHandle.class);
-            int adjOffset;
-            try {
-                method.setAccessible(true);
-                adjOffset = (int) method.invoke(null, _FH_sofaString);
-            }
-            finally {
-                method.setAccessible(false);
-            }
-            sofa._setStringValueNcWj(adjOffset, aValue);
-        }
-        catch (Exception e) {
-            throw new IllegalStateException("Cannot force-update SofA string", e);
         }
     }
 

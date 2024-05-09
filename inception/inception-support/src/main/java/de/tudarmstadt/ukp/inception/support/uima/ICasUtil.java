@@ -20,6 +20,11 @@ package de.tudarmstadt.ukp.inception.support.uima;
 import static org.apache.uima.fit.util.FSCollectionFactory.createStringArrayFS;
 import static org.apache.uima.fit.util.FSCollectionFactory.createStringList;
 
+import java.lang.invoke.MethodHandle;
+import java.lang.reflect.Method;
+
+import org.apache.commons.lang3.reflect.FieldUtils;
+import org.apache.commons.lang3.reflect.MethodUtils;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
@@ -27,6 +32,7 @@ import org.apache.uima.cas.impl.CASImpl;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.fit.util.FSUtil;
+import org.apache.uima.jcas.cas.Sofa;
 import org.apache.uima.jcas.cas.TOP;
 
 public class ICasUtil
@@ -188,5 +194,37 @@ public class ICasUtil
             typeName = CAS.TYPE_NAME_ANNOTATION;
         }
         return typeName;
+    }
+
+    /**
+     * NOT AT HOME THIS YOU SHOULD TRY<br>
+     * SETTING THE SOFA STRING FORCEFULLY FOLLOWING THE DARK SIDE IS!
+     * 
+     * @param aCas
+     *            the CAS to change
+     * @param aValue
+     *            the new sofa string
+     */
+    public static void forceOverwriteSofa(CAS aCas, String aValue)
+    {
+        try {
+            Sofa sofa = (Sofa) aCas.getSofa();
+            MethodHandle _FH_sofaString = (MethodHandle) FieldUtils.readField(sofa,
+                    "_FH_sofaString", true);
+            Method method = MethodUtils.getMatchingMethod(Sofa.class, "wrapGetIntCatchException",
+                    MethodHandle.class);
+            int adjOffset;
+            try {
+                method.setAccessible(true);
+                adjOffset = (int) method.invoke(null, _FH_sofaString);
+            }
+            finally {
+                method.setAccessible(false);
+            }
+            sofa._setStringValueNcWj(adjOffset, aValue);
+        }
+        catch (Exception e) {
+            throw new IllegalStateException("Cannot force-update SofA string", e);
+        }
     }
 }
