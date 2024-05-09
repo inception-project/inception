@@ -17,7 +17,7 @@
  */
 import type { AnnotationEditor, DiamAjax, Offsets } from '@inception-project/inception-js-api'
 import './PdfAnnotationEditor.css'
-import { initPdfAnno, getAnnotations as doLoadAnnotations, scrollTo } from './pdfanno/pdfanno'
+import { initPdfAnno, getAnnotations as doLoadAnnotations, scrollTo, destroy as destroyPdfAnno } from './pdfanno/pdfanno'
 import AbstractAnnotation from './pdfanno/core/src/model/AbstractAnnotation'
 
 export class PdfAnnotationEditor implements AnnotationEditor {
@@ -107,6 +107,6 @@ export class PdfAnnotationEditor implements AnnotationEditor {
   }
 
   destroy (): void {
-    console.log('Destroy not implemented yet')
+    destroyPdfAnno()
   }
 }
