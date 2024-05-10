@@ -40,6 +40,7 @@
     export let pinnedGroups: string[];
     export let userPreferencesKey: string;
 
+    let popover : AnnotationDetailPopOver = null;
     let connected = false;
     let element = null;
     let self = get_current_component();
@@ -131,7 +132,7 @@
 
     onMount(async () => { 
         connect()
-        new AnnotationDetailPopOver({
+        popover = new AnnotationDetailPopOver({
             target: element,
             props: {
                 root: element,
@@ -140,7 +141,10 @@
         })
     });
 
-    onDestroy(async () => disconnect());
+    onDestroy(async () => { 
+        popover?.$destroy()
+        disconnect() 
+    });
 
     function cancelRightClick (e: Event): void {
     if (e instanceof MouseEvent) {
