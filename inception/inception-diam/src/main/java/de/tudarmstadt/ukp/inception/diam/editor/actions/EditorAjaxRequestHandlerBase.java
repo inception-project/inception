@@ -86,11 +86,11 @@ public abstract class EditorAjaxRequestHandlerBase
 
     protected DefaultAjaxResponse handleError(String aMessage, Exception e)
     {
-        AjaxRequestTarget target = getAjaxRequestTarget();
+        var target = getAjaxRequestTarget();
 
         target.addChildren(target.getPage(), IFeedback.class);
 
-        String fullMessage = aMessage + ": " + e.getMessage();
+        var fullMessage = aMessage + ": " + e.getMessage();
 
         if (e instanceof AnnotationException) {
             // These are common exceptions happening as part of the user interaction. We do
