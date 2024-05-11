@@ -78,7 +78,8 @@ export class BratEditor implements AnnotationEditor {
   }
 
   destroy (): void {
-    // Nothing to do
-    console.log('destroy: not implemented')
+    if (this.popover?.$destroy) {
+      this.popover.$destroy()
+    }
   }
 }

@@ -479,6 +479,9 @@ export class RecogitoEditor implements AnnotationEditor {
   }
 
   public destroy (): void {
+    if (this.popover?.$destroy) {
+      this.popover.$destroy()
+    }
     this.connections.destroy()
     this.recogito.destroy()
   }

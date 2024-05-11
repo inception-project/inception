@@ -30,6 +30,7 @@ let currentFocusPage: number
 let pagechangeEventCounter: number
 
 let data: AnnotatedText | undefined
+let popover: AnnotationDetailPopOver
 
 export async function initPdfAnno (ajax: DiamAjax): Promise<void> {
   globalThis.globalEvent = new EventEmitter()
@@ -82,7 +83,7 @@ export async function initPdfAnno (ajax: DiamAjax): Promise<void> {
   installSpanSelection()
   installRelationSelection()
 
-  new AnnotationDetailPopOver({
+  popover = new AnnotationDetailPopOver({
     target: document.body,
     props: {
       root: document.body,
@@ -94,6 +95,12 @@ export async function initPdfAnno (ajax: DiamAjax): Promise<void> {
   displayViewer()
 
   return initPromise
+}
+
+export function destroy() {
+  if (popover?.$destroy) {
+    popover.$destroy()
+  }
 }
 
 function onPageRendered (ev) {
