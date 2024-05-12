@@ -47,7 +47,7 @@ export class BratEditor implements AnnotationEditor {
     // the sidebars are opened or closed.
     if (element.parentElement) {
       new ResizeObserver(() => {
-        console.log(`resize: ${element.id} ${element.clientWidth} ${element.clientHeight}`)
+        // console.log(`resize: ${element.id} ${element.clientWidth} ${element.clientHeight}`)
         this.dispatcher.post('resize')
       }).observe(element.parentElement)
     }

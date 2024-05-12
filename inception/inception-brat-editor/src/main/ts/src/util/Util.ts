@@ -473,6 +473,10 @@ export class Util {
 
   profileEnd (label: string) {
     if (!this.profileOn) return
+    if (!this.profileStarts[label]) {
+      console.log(`profileEnd(${label}) called without profileStart`)
+      return
+    }
     const profileElapsed = new Date().valueOf() - this.profileStarts[label].valueOf()
     if (!this.profiles[label]) this.profiles[label] = 0
     this.profiles[label] += profileElapsed
