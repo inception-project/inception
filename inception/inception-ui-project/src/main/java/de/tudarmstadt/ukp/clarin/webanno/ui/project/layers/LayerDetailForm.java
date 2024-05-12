@@ -61,6 +61,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.ui.project.layers.ProjectLayersPanel.FeatureSelectionForm;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport;
 import de.tudarmstadt.ukp.inception.bootstrap.BootstrapModalDialog;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.export.LayerImportExportUtils;
@@ -358,8 +359,9 @@ public class LayerDetailForm
             layer.setName(layerName);
         }
 
-        if (annotationSchemaProperties.isCrossLayerRelationEnabled()) {
-            if (layer.getType().equals(RELATION_TYPE) && layer.getAttachType() == null) {
+        if (!annotationSchemaProperties.isCrossLayerRelationsEnabled()) {
+            if (RelationLayerSupport.TYPE.equals(layer.getType())
+                    && layer.getAttachType() == null) {
                 error("A relation layer needs to attach to a span layer.");
                 return;
             }
@@ -375,7 +377,6 @@ public class LayerDetailForm
         }
 
         success("Settings for layer [" + layer.getUiName() + "] saved.");
-        aTarget.addChildren(getPage(), IFeedback.class);
         aTarget.add(findParent(ProjectLayersPanel.class));
         aTarget.add(featureDetailForm);
         aTarget.add(featureSelectionForm);

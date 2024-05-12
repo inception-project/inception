@@ -22,6 +22,7 @@ import javax.servlet.http.HttpServletRequest;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.request.Request;
 
+import de.tudarmstadt.ukp.inception.diam.editor.DiamAjaxBehavior;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.AjaxResponse;
 import de.tudarmstadt.ukp.inception.support.extensionpoint.Extension;
 
@@ -51,7 +52,7 @@ public interface EditorAjaxRequestHandler
             throw new IllegalArgumentException("Request is not a HttpServletRequest");
         }
 
-        HttpServletRequest request = (HttpServletRequest) aRequest.getContainerRequest();
+        var request = (HttpServletRequest) aRequest.getContainerRequest();
 
         return request.getMethod();
     }
@@ -65,5 +66,5 @@ public interface EditorAjaxRequestHandler
                 aRequest.getRequestParameters().getParameterValue(PARAM_ACTION).toOptionalString());
     }
 
-    AjaxResponse handle(AjaxRequestTarget aTarget, Request aRequest);
+    AjaxResponse handle(DiamAjaxBehavior aBehavior, AjaxRequestTarget aTarget, Request aRequest);
 }

@@ -26,6 +26,7 @@ import org.apache.wicket.request.Request;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetCollectionInformationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.VisualOptions;
 import de.tudarmstadt.ukp.clarin.webanno.brat.schema.BratSchemaGenerator;
+import de.tudarmstadt.ukp.inception.diam.editor.DiamAjaxBehavior;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.EditorAjaxRequestHandlerBase;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.AjaxResponse;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.DefaultAjaxResponse;
@@ -53,7 +54,8 @@ class GetCollectionInformationHandler
     }
 
     @Override
-    public AjaxResponse handle(AjaxRequestTarget aTarget, Request aRequest)
+    public AjaxResponse handle(DiamAjaxBehavior aBehavior, AjaxRequestTarget aTarget,
+            Request aRequest)
     {
         try {
             var result = getCollectionInformation(getAnnotatorState());
@@ -67,7 +69,7 @@ class GetCollectionInformationHandler
 
     public GetCollectionInformationResponse getCollectionInformation(AnnotatorState aState)
     {
-        GetCollectionInformationResponse info = new GetCollectionInformationResponse();
+        var info = new GetCollectionInformationResponse();
         if (aState.getProject() != null) {
             info.setEntityTypes(bratSchemaGenerator.buildEntityTypes(aState.getProject(),
                     aState.getAnnotationLayers()));

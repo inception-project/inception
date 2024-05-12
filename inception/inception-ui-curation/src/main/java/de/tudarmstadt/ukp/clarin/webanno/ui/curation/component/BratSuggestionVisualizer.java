@@ -176,8 +176,9 @@ public abstract class BratSuggestionVisualizer
                 AjaxEventBehavior.onEvent("click", _t -> actionShowAnnotatorComment(_t, annDoc)));
         queue(commentSymbol);
 
-        controller = new DiamAjaxBehavior().setGlobalHandlersEnabled(false)
-                .addPriorityHandler(new CurationLazyDetailsHandler())
+        controller = new DiamAjaxBehavior() //
+                .setGlobalHandlersEnabled(false) //
+                .addPriorityHandler(new CurationLazyDetailsHandler()) //
                 .addPriorityHandler(new CurationActionAjaxRequestHandler());
         add(controller);
     }
@@ -374,7 +375,8 @@ public abstract class BratSuggestionVisualizer
         }
 
         @Override
-        public AjaxResponse handle(AjaxRequestTarget aTarget, Request aRequest)
+        public AjaxResponse handle(DiamAjaxBehavior aBehavior, AjaxRequestTarget aTarget,
+                Request aRequest)
         {
             try {
                 final IRequestParameters request = getRequest().getPostParameters();
@@ -404,7 +406,8 @@ public abstract class BratSuggestionVisualizer
         private static final long serialVersionUID = 8053988681869772378L;
 
         @Override
-        public AjaxResponse handle(AjaxRequestTarget aTarget, Request aRequest)
+        public AjaxResponse handle(DiamAjaxBehavior aBehavior, AjaxRequestTarget aTarget,
+                Request aRequest)
         {
             try {
                 onClientEvent(aTarget);

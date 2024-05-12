@@ -74,7 +74,7 @@ public class DiamAnnotationBrowser
         var page = findParent(AnnotationPage.class);
 
         add(diamBehavior = createDiamBehavior());
-        diamBehavior.addPriorityHandler(new ShowContextMenuHandler(extensionRegistry, contextMenu,
+        diamBehavior.addPriorityHandler(new ShowContextMenuHandler(extensionRegistry,
                 page.getModel(), page.getAnnotationActionHandler(), page::getEditorCas));
         add(new SvelteBehavior());
     }
@@ -118,8 +118,7 @@ public class DiamAnnotationBrowser
 
     protected DiamAjaxBehavior createDiamBehavior()
     {
-        var diam = new DiamAjaxBehavior();
-        return diam;
+        return new DiamAjaxBehavior(contextMenu);
     }
 
     @Override

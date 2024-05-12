@@ -27,6 +27,7 @@ import org.apache.wicket.request.IRequestParameters;
 import org.apache.wicket.request.Request;
 import org.springframework.core.annotation.Order;
 
+import de.tudarmstadt.ukp.inception.diam.editor.DiamAjaxBehavior;
 import de.tudarmstadt.ukp.inception.diam.editor.config.DiamAutoConfig;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.DefaultAjaxResponse;
 import de.tudarmstadt.ukp.inception.diam.model.compact.CompactRangeList;
@@ -53,7 +54,7 @@ public class CreateSpanAnnotationHandler
     }
 
     @Override
-    public DefaultAjaxResponse handle(AjaxRequestTarget aTarget, Request aRequest)
+    public DefaultAjaxResponse handle(DiamAjaxBehavior aBehavior, AjaxRequestTarget aTarget, Request aRequest)
     {
         try {
             var page = getPage();

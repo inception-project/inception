@@ -28,6 +28,7 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.request.Request;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
+import de.tudarmstadt.ukp.inception.diam.editor.DiamAjaxBehavior;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.AjaxResponse;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.DefaultAjaxResponse;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorExtensionRegistry;
@@ -36,7 +37,6 @@ import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaMenuItem;
-import de.tudarmstadt.ukp.inception.support.wicket.ContextMenu;
 
 public class ShowContextMenuHandler
     extends EditorAjaxRequestHandlerBase
@@ -45,18 +45,16 @@ public class ShowContextMenuHandler
     private static final long serialVersionUID = 2566256640285857435L;
 
     private final AnnotationEditorExtensionRegistry extensionRegistry;
-    private final ContextMenu contextMenu;
     private final IModel<AnnotatorState> model;
     private final AnnotationActionHandler actionHandler;
     private final CasProvider casProvider;
 
     public ShowContextMenuHandler(
             AnnotationEditorExtensionRegistry aAnnotationEditorExtensionRegistry,
-            ContextMenu aContextMenu, IModel<AnnotatorState> aState,
-            AnnotationActionHandler aActionHandler, CasProvider aCasProvider)
+            IModel<AnnotatorState> aState, AnnotationActionHandler aActionHandler,
+            CasProvider aCasProvider)
     {
         extensionRegistry = aAnnotationEditorExtensionRegistry;
-        contextMenu = aContextMenu;
         model = aState;
         actionHandler = aActionHandler;
         casProvider = aCasProvider;
@@ -77,10 +75,17 @@ public class ShowContextMenuHandler
     }
 
     @Override
-    public AjaxResponse handle(AjaxRequestTarget aTarget, Request aRequest)
+    public AjaxResponse handle(DiamAjaxBehavior aBehavior, AjaxRequestTarget aTarget,
+            Request aRequest)
     {
+        var cm = aBehavior.getContextMenu();
+        if (cm == null) {
+            return new DefaultAjaxResponse(getAction(aRequest));
+        }
+
         try {
-            var items = contextMenu.getItemList();
+
+            var items = cm.getItemList();
             items.clear();
 
             if (model.getObject().getSelection().isSpan()) {
@@ -91,7 +96,7 @@ public class ShowContextMenuHandler
             extensionRegistry.generateContextMenuItems(items);
 
             if (!items.isEmpty()) {
-                contextMenu.onOpen(aTarget);
+                cm.onOpen(aTarget);
             }
         }
         catch (Exception e) {

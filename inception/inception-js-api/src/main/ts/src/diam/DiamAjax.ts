@@ -81,8 +81,10 @@ export interface DiamAjax {
    *
    * @param originSpanId the ID of the origin span
    * @param targetSpanId the ID of the target span
+   * @param evt the mouse event that triggered the relation creation. The mouse position from the
+   * event is used by the server to determine where to display the context menu if necessary.
    */
-  createRelationAnnotation(originSpanId: VID, targetSpanId: VID): void;
+  createRelationAnnotation(originSpanId: VID, targetSpanId: VID, evt: MouseEvent): void;
 
   /**
    * Load annotations from the server. In the options, you can specify the format of the annotations.

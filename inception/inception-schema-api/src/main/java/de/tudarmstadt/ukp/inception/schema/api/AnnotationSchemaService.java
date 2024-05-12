@@ -678,4 +678,6 @@ public interface AnnotationSchemaService
     List<AnnotationFeature> listEnabledFeatures(Project aProject);
 
     List<AnnotationLayer> listEnabledLayers(Project aProject);
+
+    List<AnnotationLayer> getRelationLayersFor(AnnotationLayer aSpanLayer);
 }

@@ -106,6 +106,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainAdapter;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationAdapter;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanAdapter;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasMetadataUtils;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
@@ -1739,6 +1740,39 @@ public class AnnotationSchemaServiceImpl
         }
 
         return errors;
+    }
+
+    @Override
+    @Transactional
+    public List<AnnotationLayer> getRelationLayersFor(AnnotationLayer aSpanLayer)
+    {
+        var candidates = new ArrayList<AnnotationLayer>();
+        for (var layer : listAnnotationLayer(aSpanLayer.getProject())) {
+            if (!RelationLayerSupport.TYPE.equals(layer.getType())) {
+                continue;
+            }
+
+            // Layer attaches explicitly to the given layer
+            if (aSpanLayer.equals(layer.getAttachType())) {
+                candidates.add(layer);
+                continue;
+            }
+
+            // Relation layer that attaches to any span layer
+            if (layer.getAttachType() == null) {
+                candidates.add(layer);
+                continue;
+            }
+
+            // Special case for built-in layers such as the Dependency layer
+            if (layer.getAttachFeature() != null
+                    && layer.getAttachFeature().getType().equals(aSpanLayer.getName())) {
+                candidates.add(layer);
+                continue;
+            }
+        }
+
+        return candidates;
     }
 
     private static final String NAMESPACE_SEPARATOR_AS_STRING = "" + TypeSystem.NAMESPACE_SEPARATOR;

@@ -123,9 +123,9 @@ public abstract class ExternalAnnotationEditorBase
 
     protected DiamAjaxBehavior createDiamBehavior()
     {
-        var diam = new DiamAjaxBehavior();
-        diam.addPriorityHandler(new ShowContextMenuHandler(extensionRegistry, contextMenu,
-                getModel(), getActionHandler(), getCasProvider()));
+        var diam = new DiamAjaxBehavior(contextMenu);
+        diam.addPriorityHandler(new ShowContextMenuHandler(extensionRegistry, getModel(),
+                getActionHandler(), getCasProvider()));
         return diam;
     }
 
