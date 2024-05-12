@@ -65,6 +65,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommenderFactoryRegistry;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormSubmittingBehavior;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
@@ -99,6 +100,7 @@ public class RecommenderEditorPanel
     private @SpringBean AnnotationSchemaService annotationSchemaService;
     private @SpringBean RecommenderFactoryRegistry recommenderRegistry;
     private @SpringBean ApplicationEventPublisherHolder appEventPublisherHolder;
+    private @SpringBean FeatureSupportRegistry featureSupportRegistry;
     private @SpringBean UserDao userDao;
 
     private TextField<String> nameField;
@@ -336,7 +338,7 @@ public class RecommenderEditorPanel
             return;
         }
 
-        Recommender recommender = recommenderModel.getObject();
+        var recommender = recommenderModel.getObject();
         // check if recommender and layer still match
         var factory = recommenderRegistry.getFactory(aToolModel.getObject().getKey());
         if (!factory.accepts(recommender.getLayer(), recommender.getFeature())) {
@@ -358,7 +360,7 @@ public class RecommenderEditorPanel
 
         var factory = recommenderRegistry.getFactory(aRecommender.getTool());
 
-        String factoryName = factory != null ? factory.getName() : "NO FACTORY!";
+        var factoryName = factory != null ? factory.getName() : "NO FACTORY!";
 
         return String.format(Locale.US, "[%s@%s] %s", aRecommender.getLayer().getUiName(),
                 aRecommender.getFeature().getUiName(), factoryName);
@@ -425,6 +427,7 @@ public class RecommenderEditorPanel
 
         return annotationSchemaService.listSupportedFeatures(layer).stream()
                 .filter(feat -> feat.getType() != null) //
+                .filter(feat -> featureSupportRegistry.isAccessible(feat)) //
                 .collect(toList());
     }
 
