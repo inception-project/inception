@@ -1747,7 +1747,7 @@ public class AnnotationSchemaServiceImpl
     public List<AnnotationLayer> getRelationLayersFor(AnnotationLayer aSpanLayer)
     {
         var candidates = new ArrayList<AnnotationLayer>();
-        for (var layer : listAnnotationLayer(aSpanLayer.getProject())) {
+        for (var layer : listEnabledLayers(aSpanLayer.getProject())) {
             if (!RelationLayerSupport.TYPE.equals(layer.getType())) {
                 continue;
             }

@@ -216,6 +216,10 @@ public class LayerDetailForm
         var layer = LayerDetailForm.this.getModelObject();
 
         if (layer.getAttachType() == null) {
+            if (RelationLayerSupport.TYPE.equals(layer.getType())) {
+                return "Any span";
+            }
+
             return null;
         }
 

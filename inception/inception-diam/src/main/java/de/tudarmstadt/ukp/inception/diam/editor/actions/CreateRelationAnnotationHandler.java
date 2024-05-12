@@ -43,6 +43,8 @@ import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.api.config.AnnotationSchemaProperties;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaMenuItem;
+import de.tudarmstadt.ukp.inception.support.lambda.MenuCategoryHeader;
+import de.tudarmstadt.ukp.inception.support.spring.ApplicationContextProvider;
 
 /**
  * <p>
@@ -160,9 +162,15 @@ public class CreateRelationAnnotationHandler
         var items = cm.getItemList();
         items.clear();
 
+        items.add(new MenuCategoryHeader("Select layer..."));
         for (var layer : candidateLayers) {
-            items.add(new LambdaMenuItem(layer.getUiName(),
-                    $ -> createRelationAnnotation($, layer, aOriginSpan, aTargetSpan)));
+            items.add(new LambdaMenuItem(layer.getUiName(), $ -> {
+                // We need to fetch the bean here again because it is not serializable and
+                // the AJAX callback here needs to be serializable
+                var handler = ApplicationContextProvider.getApplicationContext()
+                        .getBean(CreateRelationAnnotationHandler.class);
+                handler.createRelationAnnotation($, layer, aOriginSpan, aTargetSpan);
+            }));
         }
 
         cm.onOpen(aTarget);
