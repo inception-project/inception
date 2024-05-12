@@ -3373,7 +3373,7 @@ export class Visualizer {
       this.renderAssignFragmentsToRows(rows, fragmentHeights)
       Util.profileEnd('arcsPrep')
 
-      Util.profileStart('arcsPrep')
+      Util.profileStart('arcs')
       this.renderArcs(this.data, rows, fragmentHeights)
       Util.profileEnd('arcs')
 
@@ -3526,7 +3526,6 @@ export class Visualizer {
     if (span.hidden) { return }
 
     if (evt.target) {
-      console.log(span)
       evt.target.dispatchEvent(new AnnotationOutEvent({ vid: id, layer: { id: span.type, name: Util.spanDisplayForm(this.entityTypes, span.type) } }, evt.originalEvent))
     }
   }
