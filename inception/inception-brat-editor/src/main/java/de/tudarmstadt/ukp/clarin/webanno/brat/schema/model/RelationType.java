@@ -20,7 +20,14 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.schema.model;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratSerializerImpl.abbreviate;
 import static java.util.Arrays.asList;
 
+import java.io.Serializable;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Entity;
 
@@ -30,7 +37,10 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Entity;
  * "targets":["nam"],"dashArray":""}]....
  */
 public class RelationType
+    implements Serializable
 {
+    private static final long serialVersionUID = 4523870233669399336L;
+
     /**
      * The type of the arc annotation
      */
@@ -38,19 +48,21 @@ public class RelationType
 
     private String color;
     private String arrowHead;
+
     /**
      * Possible List of labels to be used on the arc
      */
     private List<String> labels;
+
     /**
      * List of Target Labels, which are a span annotation ({@link Entity}
      */
-    private List<String> targets;
+    private Set<String> targets = new HashSet<>();
     private String dashArray;
 
     public RelationType()
     {
-        // Nothing to do
+        // For serialization
     }
 
     // allow similar colors per layer
@@ -67,7 +79,7 @@ public class RelationType
     // this(aName, aType, aTarget, aColor, "triangle,5");
     // }
 
-    public RelationType(String aName, String aLabel, String aType, String aTarget, String aColor,
+    public RelationType(String aLabel, String aType, String aTarget, String aColor,
             String aArrowHead, String aDashArray)
     {
         this(aColor, aArrowHead, asList(aLabel, abbreviate(aLabel)), aType, asList(aTarget),
@@ -77,13 +89,15 @@ public class RelationType
     private RelationType(String aColor, String aArrowHead, List<String> aLabels, String aType,
             List<String> aTargets, String aDashArray)
     {
-        super();
         color = aColor;
         arrowHead = aArrowHead;
         labels = aLabels;
         type = aType;
-        targets = aTargets;
         dashArray = aDashArray;
+
+        if (aTargets != null) {
+            targets.addAll(aTargets);
+        }
     }
 
     public String getColor()
@@ -126,14 +140,20 @@ public class RelationType
         type = aType;
     }
 
-    public List<String> getTargets()
+    public Set<String> getTargets()
     {
         return targets;
     }
 
-    public void setTargets(List<String> aTargets)
+    public void addTarget(String aTarget)
     {
-        targets = aTargets;
+        targets.add(aTarget);
+    }
+
+    public void setTargets(Collection<String> aTargets)
+    {
+        targets.clear();
+        targets.addAll(aTargets);
     }
 
     public String getDashArray()
@@ -144,5 +164,21 @@ public class RelationType
     public void setDashArray(String aDashArray)
     {
         dashArray = aDashArray;
+    }
+
+    @Override
+    public boolean equals(final Object other)
+    {
+        if (!(other instanceof RelationType)) {
+            return false;
+        }
+        RelationType castOther = (RelationType) other;
+        return new EqualsBuilder().append(type, castOther.type).isEquals();
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return new HashCodeBuilder().append(type).toHashCode();
     }
 }

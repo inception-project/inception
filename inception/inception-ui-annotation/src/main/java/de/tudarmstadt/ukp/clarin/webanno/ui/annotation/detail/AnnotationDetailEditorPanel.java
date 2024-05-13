@@ -532,7 +532,7 @@ public abstract class AnnotationDetailEditorPanel
         var originFS = selectAnnotationByAddr(aCas, state.getSelection().getOrigin());
         var targetFS = selectAnnotationByAddr(aCas, state.getSelection().getTarget());
 
-        if (!schemaProperties.isCrossLayerRelationEnabled()
+        if (!schemaProperties.isCrossLayerRelationsEnabled()
                 && !originFS.getType().equals(targetFS.getType())) {
             reset(aTarget);
             throw new IllegalPlacementException(
@@ -559,7 +559,7 @@ public abstract class AnnotationDetailEditorPanel
         }
         // Otherwise, look up the possible relation layer(s) in the database.
         else {
-            var viableRelationLayers = getRelationLayersFor(originLayer);
+            var viableRelationLayers = annotationService.getRelationLayersFor(originLayer);
             if (viableRelationLayers.isEmpty()) {
                 throw new IllegalPlacementException(
                         "There are no relation layers that can be created between these endpoints");
@@ -578,28 +578,6 @@ public abstract class AnnotationDetailEditorPanel
                     state.getSelectedAnnotationLayer());
             loadFeatureEditorModels(aTarget);
         }
-    }
-
-    private List<AnnotationLayer> getRelationLayersFor(AnnotationLayer aSpanLayer)
-    {
-        var candidates = new ArrayList<AnnotationLayer>();
-        for (var layer : annotationService.listAnnotationLayer(aSpanLayer.getProject())) {
-            if (!RelationLayerSupport.TYPE.equals(layer.getType())) {
-                continue;
-            }
-
-            if (aSpanLayer.equals(layer.getAttachType())) {
-                candidates.add(layer);
-            }
-
-            // Special case for built-in layers such as the Dependency layer
-            if (layer.getAttachFeature() != null
-                    && layer.getAttachFeature().getType().equals(aSpanLayer.getName())) {
-                candidates.add(layer);
-            }
-        }
-
-        return candidates;
     }
 
     /**

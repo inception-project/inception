@@ -681,7 +681,7 @@ export class AnnotatorUI {
             target: targetSpan.id
           }
 
-          this.ajax.createRelationAnnotation(originSpan.id, targetSpan.id)
+          this.ajax.createRelationAnnotation(originSpan.id, targetSpan.id, evt)
         }
       }
     } finally {

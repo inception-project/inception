@@ -15,30 +15,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.schema.api.config;
+package de.tudarmstadt.ukp.inception.support.lambda;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.Model;
 
-public interface AnnotationSchemaProperties
+import com.googlecode.wicket.jquery.ui.JQueryIcon;
+import com.googlecode.wicket.jquery.ui.widget.menu.AbstractMenuItem;
+
+public class MenuCategoryHeader
+    extends AbstractMenuItem
 {
-    boolean isTokenLayerEditable();
+    private static final long serialVersionUID = 4051171004089469088L;
 
-    boolean isSentenceLayerEditable();
-
-    boolean isCrossLayerRelationsEnabled();
-
-    default boolean isLayerBlocked(AnnotationLayer aLayer)
+    public MenuCategoryHeader(String title)
     {
-        if (!isTokenLayerEditable() && Token.class.getName().equals(aLayer.getName())) {
-            return true;
-        }
+        this(Model.of(title), JQueryIcon.NONE);
+    }
 
-        if (!isSentenceLayerEditable() && Sentence.class.getName().equals(aLayer.getName())) {
-            return true;
-        }
+    public MenuCategoryHeader(IModel<String> aTitle, String aIcon)
+    {
+        super(aTitle, aIcon);
+        setEnabled(false);
+    }
 
-        return false;
+    @Override
+    final public void onClick(AjaxRequestTarget aTarget)
+    {
+        // Nothing to do
     }
 }

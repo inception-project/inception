@@ -99,9 +99,11 @@ public class DiamAutoConfig
     }
 
     @Bean
-    public CreateRelationAnnotationHandler createRelationAnnotationHandler()
+    public CreateRelationAnnotationHandler createRelationAnnotationHandler(
+            AnnotationSchemaService aSchemaService,
+            AnnotationSchemaProperties aAnnotationSchemaProperties)
     {
-        return new CreateRelationAnnotationHandler();
+        return new CreateRelationAnnotationHandler(aSchemaService, aAnnotationSchemaProperties);
     }
 
     @Bean
