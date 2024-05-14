@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.ui.core.users;
+package de.tudarmstadt.ukp.inception.ui.core.log;
 
 import org.apache.wicket.Page;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,9 +28,9 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
 import wicket.contrib.input.events.key.KeyType;
 
-@Order(200)
+@Order(300)
 @Component
-public class ManageUsersPageMenuItem
+public class LogPageMenuItem
     implements MenuItem
 {
     private @Autowired UserDao userRepository;
@@ -38,19 +38,19 @@ public class ManageUsersPageMenuItem
     @Override
     public String getPath()
     {
-        return "/admin/users";
+        return "/admin/log";
     }
 
     @Override
     public IconType getIcon()
     {
-        return FontAwesome5IconType.users_cog_s;
+        return FontAwesome5IconType.scroll_s;
     }
 
     @Override
     public String getLabel()
     {
-        return "Users";
+        return "Log";
     }
 
     @Override
@@ -62,12 +62,12 @@ public class ManageUsersPageMenuItem
     @Override
     public Class<? extends Page> getPageClass()
     {
-        return ManageUsersPage.class;
+        return LogPage.class;
     }
 
     @Override
     public KeyType[] shortcut()
     {
-        return new KeyType[] { KeyType.Alt, KeyType.u };
+        return new KeyType[] { KeyType.Alt, KeyType.l };
     }
 }
