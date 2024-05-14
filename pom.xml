@@ -72,10 +72,10 @@
   
     <junit-jupiter.version>5.10.2</junit-jupiter.version>
     <junit-platform.version>1.10.2</junit-platform.version>
-    <mockito.version>5.11.0</mockito.version>
+    <mockito.version>5.12.0</mockito.version>
     <assertj.version>3.25.2</assertj.version>
-    <xmlunit.version>2.9.1</xmlunit.version>
-    <testcontainers.version>1.19.7</testcontainers.version>
+    <xmlunit.version>2.10.0</xmlunit.version>
+    <testcontainers.version>1.19.8</testcontainers.version>
 
     <awaitility.version>4.2.1</awaitility.version>
 
@@ -99,7 +99,7 @@
     <jboss.logging.version>3.5.3.Final</jboss.logging.version>
     <sentry.version>6.34.0</sentry.version>
 
-    <tomcat.version>9.0.88</tomcat.version>
+    <tomcat.version>9.0.89</tomcat.version>
     <servlet-api.version>4.0.1</servlet-api.version>
 
     <mariadb.driver.version>2.7.12</mariadb.driver.version>
@@ -125,7 +125,7 @@
     <!-- * 8.11.1.0 depends on Lucene 8.11.1 -->
     <!--   no mtas  depends on Lucene 9.x -->
 
-    <elasticsearch.version>7.17.20</elasticsearch.version> 
+    <elasticsearch.version>7.17.21</elasticsearch.version> 
     <!--   7.10.x   depends on Lucene 8.7.0 - last ASL 2.0 version! -->
     <!-- * 7.17.x   depends on Lucene 8.11.1 -->
     <!--   8.1.x    depends on Lucene 9.0.0 -->
@@ -151,7 +151,7 @@
 
     <json.version>20230227</json.version>
     <pf4j.version>2.6.0</pf4j.version>
-    <jackson.version>2.17.0</jackson.version>
+    <jackson.version>2.17.1</jackson.version>
     <snakeyaml.version>1.33</snakeyaml.version>
     <okhttp.version>4.12.0</okhttp.version>
     <okio.version>3.9.0</okio.version>
