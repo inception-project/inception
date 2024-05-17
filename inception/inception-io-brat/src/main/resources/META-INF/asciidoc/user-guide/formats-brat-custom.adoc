@@ -39,7 +39,7 @@ NOTE: {product-name} supports attributes (features) on relations, but the origin
 |====
 | Format | Read | Write | Custom Layers | Description
 
-| brat (experimental) (`brat`)
+| brat (experimental) (`bratCustom`)
 | false
 | yes
 | yes
