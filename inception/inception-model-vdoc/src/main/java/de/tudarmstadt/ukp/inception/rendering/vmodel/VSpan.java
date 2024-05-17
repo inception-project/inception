@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.rendering.vmodel;
 import static java.util.Arrays.asList;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -36,6 +37,13 @@ public class VSpan
     private static final long serialVersionUID = -1610831873656531589L;
 
     private final List<VRange> ranges;
+
+    private VSpan(Builder builder)
+    {
+        super(builder.layer, builder.vid, builder.equivalenceSet, builder.features);
+        setLabelHint(builder.label);
+        ranges = builder.ranges;
+    }
 
     public VSpan(AnnotationLayer aLayer, AnnotationFS aFS, VRange aOffsets,
             Map<String, String> aFeatures)
@@ -112,5 +120,71 @@ public class VSpan
     public List<VRange> getRanges()
     {
         return ranges;
+    }
+
+    public static Builder builder()
+    {
+        return new Builder();
+    }
+
+    public static final class Builder
+    {
+        private AnnotationLayer layer;
+        private VID vid;
+        private int equivalenceSet;
+        private Map<String, String> features = Collections.emptyMap();
+        private List<VRange> ranges;
+        private String label;
+
+        private Builder()
+        {
+        }
+
+        public Builder forAnnotation(AnnotationFS aAnnotation)
+        {
+            withVid(VID.of(aAnnotation));
+            return this;
+        }
+
+        public Builder withLayer(AnnotationLayer aLayer)
+        {
+            this.layer = aLayer;
+            return this;
+        }
+
+        public Builder withVid(VID aVid)
+        {
+            this.vid = aVid;
+            return this;
+        }
+
+        public Builder withEquivalenceSet(int aEquivalenceSet)
+        {
+            this.equivalenceSet = aEquivalenceSet;
+            return this;
+        }
+
+        public Builder withFeatures(Map<String, String> aFeatures)
+        {
+            this.features = aFeatures;
+            return this;
+        }
+
+        public Builder withRange(VRange aRange)
+        {
+            this.ranges = asList(aRange);
+            return this;
+        }
+
+        public Builder withLabel(String aLabel)
+        {
+            this.label = aLabel;
+            return this;
+        }
+
+        public VSpan build()
+        {
+            return new VSpan(this);
+        }
     }
 }

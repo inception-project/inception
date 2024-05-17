@@ -50,7 +50,7 @@ import { Row } from './Row'
 import { RectBox } from './RectBox'
 import { AttributeType, ValType } from './AttributeType'
 import { CollectionLoadedResponse } from './CollectionLoadedResponse'
-import { RelationTypeDto, EntityTypeDto, EntityDto, CommentDto, NormalizationDto, SourceData, TriggerDto, AttributeDto, EquivDto, ColorCode, MarkerType, MarkerDto, RelationDto, EDITED, FOCUS, MATCH_FOCUS, MATCH, RoleDto, VID } from '../protocol/Protocol'
+import { RelationTypeDto, EntityTypeDto, EntityDto, CommentDto, SourceData, TriggerDto, AttributeDto, EquivDto, ColorCode, MarkerType, MarkerDto, RelationDto, EDITED, FOCUS, MATCH_FOCUS, MATCH, RoleDto, VID } from '../protocol/Protocol'
 import type { Dispatcher, Message } from '../dispatcher/Dispatcher'
 import * as jsonpatch from 'fast-json-patch'
 import { Operation } from 'fast-json-patch'
@@ -134,7 +134,7 @@ export class Visualizer {
 
   data?: DocumentData
   private sourceData?: SourceData
-  private requestedData: SourceData = null // FIXME Do we really need requestedData AND sourceData?
+  private requestedData: SourceData | null = null // FIXME Do we really need requestedData AND sourceData?
 
   private args: Partial<Record<MarkerType, MarkerDto>> = {}
 

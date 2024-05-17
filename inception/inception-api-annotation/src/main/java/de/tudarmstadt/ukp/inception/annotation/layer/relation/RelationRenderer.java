@@ -17,12 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.annotation.layer.relation;
 
-import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.abbreviate;
-import static org.apache.uima.fit.util.CasUtil.selectCovered;
 
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayDeque;
@@ -56,6 +54,8 @@ import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetail;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetailGroup;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VObject;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VRange;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VSpan;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
@@ -121,7 +121,21 @@ public class RelationRenderer
     @Override
     public List<AnnotationFS> selectAnnotationsInWindow(CAS aCas, int aWindowBegin, int aWindowEnd)
     {
-        return selectCovered(aCas, type, aWindowBegin, aWindowEnd);
+        var result = new ArrayList<AnnotationFS>();
+        for (var rel : aCas.<Annotation> select(type)) {
+            var sourceFs = getSourceFs(rel);
+            var targetFs = getTargetFs(rel);
+
+            if (sourceFs instanceof Annotation source && targetFs instanceof Annotation target) {
+                if (source.overlapping(aWindowBegin, aWindowEnd)
+                        || target.overlapping(aWindowBegin, aWindowEnd)) {
+                    result.add(rel);
+                }
+            }
+        }
+        return result;
+
+        // return selectCovered(aCas, type, aWindowBegin, aWindowEnd);
     }
 
     @Override
@@ -140,13 +154,14 @@ public class RelationRenderer
         var annotations = selectAnnotationsInWindow(aCas, aWindowBegin, aWindowEnd);
 
         for (var fs : annotations) {
-            for (var arc : render(aResponse, fs, aFeatures, aWindowBegin, aWindowEnd)) {
-                if (!(arc instanceof VArc)) {
+            for (var obj : render(aResponse, fs, aFeatures, aWindowBegin, aWindowEnd)) {
+                if (!(obj instanceof VArc)) {
+                    aResponse.add(obj);
                     continue;
                 }
 
-                aResponse.add(arc);
-                annoToArcIdx.put(fs, (VArc) arc);
+                aResponse.add(obj);
+                annoToArcIdx.put(fs, (VArc) obj);
 
                 renderRequiredFeatureErrors(aFeatures, fs, aResponse);
             }
@@ -191,10 +206,10 @@ public class RelationRenderer
         }
 
         var typeAdapter = getTypeAdapter();
-        var dependentFs = getTargetFs(aFS);
-        var governorFs = getSourceFs(aFS);
+        var sourceFs = getSourceFs(aFS);
+        var targetFs = getTargetFs(aFS);
 
-        if (dependentFs == null || governorFs == null) {
+        if (targetFs == null || sourceFs == null) {
             WicketUtil.getPage().ifPresent(page -> {
                 var message = new StringBuilder();
                 message.append("Relation [" + typeAdapter.getLayer().getName() + "] with id ["
@@ -204,8 +219,8 @@ public class RelationRenderer
                             + "] attached to feature [" + typeAdapter.getAttachFeatureName()
                             + "].");
                 }
-                message.append("\nDependent: " + dependentFs);
-                message.append("\nGovernor: " + governorFs);
+                message.append("\nSource: " + sourceFs);
+                message.append("\nTarget: " + targetFs);
                 page.warn(message.toString());
             });
 
@@ -215,39 +230,60 @@ public class RelationRenderer
         var labelFeatures = renderLabelFeatureValues(typeAdapter, aFS, aFeatures);
 
         if (traits.isRenderArcs()) {
+            var objects = new ArrayList<VObject>();
             var arc = VArc.builder().forAnnotation(aFS) //
                     .withLayer(typeAdapter.getLayer()) //
-                    .withSource(governorFs) //
-                    .withTarget(dependentFs) //
+                    .withSource(sourceFs) //
+                    .withTarget(targetFs) //
                     .withFeatures(labelFeatures) //
                     .build();
+            objects.add(arc);
 
-            return asList(arc);
+            createDummyEndpoint(sourceFs, aWindowBegin, aWindowEnd, typeAdapter, objects);
+            createDummyEndpoint(targetFs, aWindowBegin, aWindowEnd, typeAdapter, objects);
+
+            return objects;
         }
-        else {
-            var governor = (AnnotationFS) governorFs;
-            var dependent = (AnnotationFS) dependentFs;
 
-            var noteBuilder = new StringBuilder();
-            noteBuilder.append(typeAdapter.getLayer().getUiName());
+        var governor = (AnnotationFS) sourceFs;
+        var dependent = (AnnotationFS) targetFs;
+
+        var noteBuilder = new StringBuilder();
+        noteBuilder.append(typeAdapter.getLayer().getUiName());
+        noteBuilder.append("\n");
+        noteBuilder.append(governor.getCoveredText());
+        noteBuilder.append(" -> ");
+        noteBuilder.append(dependent.getCoveredText());
+        noteBuilder.append("\n");
+
+        for (Entry<String, String> entry : labelFeatures.entrySet()) {
+            noteBuilder.append(entry.getKey());
+            noteBuilder.append(" = ");
+            noteBuilder.append(entry.getValue());
             noteBuilder.append("\n");
-            noteBuilder.append(governor.getCoveredText());
-            noteBuilder.append(" -> ");
-            noteBuilder.append(dependent.getCoveredText());
-            noteBuilder.append("\n");
+        }
 
-            for (Entry<String, String> entry : labelFeatures.entrySet()) {
-                noteBuilder.append(entry.getKey());
-                noteBuilder.append(" = ");
-                noteBuilder.append(entry.getValue());
-                noteBuilder.append("\n");
-            }
+        String note = noteBuilder.toString().stripTrailing();
+        aVDocument.add(new VComment(sourceFs, VCommentType.INFO, "\n⬆️ " + note));
+        aVDocument.add(new VComment(targetFs, VCommentType.INFO, "\n⬇️ " + note));
 
-            String note = noteBuilder.toString().stripTrailing();
-            aVDocument.add(new VComment(governorFs, VCommentType.INFO, "\n⬆️ " + note));
-            aVDocument.add(new VComment(dependentFs, VCommentType.INFO, "\n⬇️ " + note));
+        return Collections.emptyList();
+    }
 
-            return Collections.emptyList();
+    private void createDummyEndpoint(FeatureStructure aEndpoint, int aWindowBegin, int aWindowEnd,
+            RelationAdapter aTypeAdapter, List<VObject> aObjects)
+    {
+        if (((AnnotationFS) aEndpoint).getEnd() < aWindowBegin) {
+            aObjects.add(VSpan.builder().forAnnotation((AnnotationFS) aEndpoint) //
+                    .withLayer(aTypeAdapter.getLayer()) //
+                    .withRange(new VRange(0, 0)) //
+                    .build());
+        }
+        if (((AnnotationFS) aEndpoint).getBegin() >= aWindowEnd) {
+            aObjects.add(VSpan.builder().forAnnotation((AnnotationFS) aEndpoint) //
+                    .withLayer(aTypeAdapter.getLayer()) //
+                    .withRange(new VRange(aWindowEnd, aWindowEnd)) //
+                    .build());
         }
     }
 
