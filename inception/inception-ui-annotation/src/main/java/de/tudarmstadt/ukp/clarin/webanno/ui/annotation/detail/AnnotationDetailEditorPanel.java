@@ -660,12 +660,12 @@ public abstract class AnnotationDetailEditorPanel
     private AttachStatus checkAttachStatus(AjaxRequestTarget aTarget, Project aProject,
             AnnotationFS aFS)
     {
-        AnnotationLayer layer = annotationService.findLayer(aProject, aFS);
+        var layer = annotationService.findLayer(aProject, aFS);
 
-        AttachStatus attachStatus = new AttachStatus();
+        var attachStatus = new AttachStatus();
 
-        List<AttachedAnnotation> attachedRels = annotationService.getAttachedRels(layer, aFS);
-        boolean attachedToReadOnlyRels = attachedRels.stream()
+        var attachedRels = annotationService.getAttachedRels(layer, aFS);
+        var attachedToReadOnlyRels = attachedRels.stream()
                 .anyMatch(rel -> rel.getLayer().isReadonly());
         if (attachedToReadOnlyRels) {
             attachStatus.readOnlyAttached |= true;
@@ -684,8 +684,8 @@ public abstract class AnnotationDetailEditorPanel
         // }
         // attachStatus.attachCount += attachedSpans.size();
 
-        List<AttachedAnnotation> attachedLinks = annotationService.getAttachedLinks(layer, aFS);
-        boolean attachedToReadOnlyLinks = attachedLinks.stream()
+        var attachedLinks = annotationService.getAttachedLinks(layer, aFS);
+        var attachedToReadOnlyLinks = attachedLinks.stream()
                 .anyMatch(rel -> rel.getLayer().isReadonly());
         if (attachedToReadOnlyLinks) {
             attachStatus.readOnlyAttached |= true;
@@ -698,19 +698,19 @@ public abstract class AnnotationDetailEditorPanel
     @Override
     public void actionDelete(AjaxRequestTarget aTarget) throws IOException, AnnotationException
     {
-        AnnotatorState state = getModelObject();
+        var state = getModelObject();
         if (state.getSelection().getAnnotation().isNotSet()) {
             error("No annotation selected.");
             aTarget.addChildren(getPage(), IFeedback.class);
             return;
         }
 
-        CAS cas = getEditorCas();
+        var cas = getEditorCas();
 
-        VID vid = state.getSelection().getAnnotation();
-        AnnotationFS fs = selectAnnotationByAddr(cas, vid.getId());
-        AnnotationLayer layer = annotationService.findLayer(state.getProject(), fs);
-        TypeAdapter adapter = annotationService.getAdapter(layer);
+        var vid = state.getSelection().getAnnotation();
+        var fs = selectAnnotationByAddr(cas, vid.getId());
+        var layer = annotationService.findLayer(state.getProject(), fs);
+        var adapter = annotationService.getAdapter(layer);
 
         if (layer.isReadonly()) {
             error("Cannot delete an annotation on a read-only layer.");
@@ -718,7 +718,7 @@ public abstract class AnnotationDetailEditorPanel
             return;
         }
 
-        AttachStatus attachStatus = checkAttachStatus(aTarget, state.getProject(), fs);
+        var attachStatus = checkAttachStatus(aTarget, state.getProject(), fs);
         if (attachStatus.readOnlyAttached) {
             error("Cannot delete an annotation to which annotations on read-only layers attach.");
             aTarget.addChildren(getPage(), IFeedback.class);
@@ -1374,7 +1374,7 @@ public abstract class AnnotationDetailEditorPanel
 
     private LambdaAjaxLink createDeleteButton()
     {
-        LambdaAjaxLink link = new LambdaAjaxLink("delete", this::actionDelete);
+        var link = new LambdaAjaxLink("delete", this::actionDelete);
         link.setOutputMarkupPlaceholderTag(true);
         link.add(visibleWhen(() -> getModelObject().getSelection().getAnnotation().isSet()
                 && editorPage.isEditable()));
