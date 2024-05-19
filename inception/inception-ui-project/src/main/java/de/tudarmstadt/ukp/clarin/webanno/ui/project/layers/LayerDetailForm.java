@@ -178,7 +178,20 @@ public class LayerDetailForm
 
         attachTypeSelect = new DropDownChoice<AnnotationLayer>("attachType",
                 LoadableDetachableModel.of(this::getAttachLayerChoices),
-                new ChoiceRenderer<>("uiName"));
+                new ChoiceRenderer<>("uiName"))
+        {
+            private static final long serialVersionUID = -7022036247442205106L;
+
+            @Override
+            protected String getNullValidKey()
+            {
+                if (annotationSchemaProperties.isCrossLayerRelationsEnabled()) {
+                    return getId() + ".any";
+                }
+
+                return super.getNullValidKey();
+            };
+        };
         attachTypeSelect.setNullValid(true);
         attachTypeSelect.add(visibleWhen(() -> isNull(getModelObject().getId())
                 && RELATION_TYPE.equals(getModelObject().getType())));
