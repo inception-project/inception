@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.recommendation.imls.external.v1;
 
 import static de.tudarmstadt.ukp.inception.annotation.storage.CasMetadataUtils.getInternalTypeSystem;
+import static de.tudarmstadt.ukp.inception.support.test.http.HttpTestUtils.assumeEndpointIsAvailable;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.factory.TypeSystemDescriptionFactory.createTypeSystemDescription;
 import static org.apache.uima.util.CasCreationUtils.mergeTypeSystems;
@@ -86,6 +87,8 @@ public class ExternalRecommenderSslTest
     @Test
     void thatDisablingCertificateValidationWorks_expired()
     {
+        assumeEndpointIsAvailable("https://expired.badssl.com/");
+
         traits.setRemoteUrl("https://expired.badssl.com/");
 
         traits.setVerifyCertificates(true);
@@ -105,6 +108,8 @@ public class ExternalRecommenderSslTest
     @Test
     void thatDisablingCertificateValidationWorks_wrongHost()
     {
+        assumeEndpointIsAvailable("https://wrong.host.badssl.com/");
+
         traits.setRemoteUrl("https://wrong.host.badssl.com/");
 
         traits.setVerifyCertificates(true);
@@ -129,6 +134,8 @@ public class ExternalRecommenderSslTest
     @Test
     void thatDisablingCertificateValidationWorks_selfSigned()
     {
+        assumeEndpointIsAvailable("https://self-signed.badssl.com/");
+
         traits.setRemoteUrl("https://self-signed.badssl.com/");
 
         traits.setVerifyCertificates(true);
@@ -148,6 +155,8 @@ public class ExternalRecommenderSslTest
     @Test
     void thatDisablingCertificateValidationWorks_untrusted()
     {
+        assumeEndpointIsAvailable("https://untrusted-root.badssl.com/");
+
         traits.setRemoteUrl("https://untrusted-root.badssl.com/");
 
         traits.setVerifyCertificates(true);
@@ -167,6 +176,8 @@ public class ExternalRecommenderSslTest
     @Test
     void thatDisablingCertificateValidationWorks_revoked()
     {
+        assumeEndpointIsAvailable("https://revoked.badssl.com/");
+
         traits.setRemoteUrl("https://revoked.badssl.com/");
 
         traits.setVerifyCertificates(true);
@@ -186,6 +197,8 @@ public class ExternalRecommenderSslTest
     @Test
     void thatCertificateValidationWorks()
     {
+        assumeEndpointIsAvailable("https://tls-v1-2.badssl.com:1012/");
+
         traits.setRemoteUrl("https://tls-v1-2.badssl.com:1012/");
 
         traits.setVerifyCertificates(true);
@@ -197,15 +210,15 @@ public class ExternalRecommenderSslTest
 
     private static Recommender buildRecommender()
     {
-        AnnotationLayer layer = new AnnotationLayer();
+        var layer = new AnnotationLayer();
         layer.setName(TYPE);
         layer.setCrossSentence(CROSS_SENTENCE);
         layer.setAnchoringMode(ANCHORING_MODE);
 
-        AnnotationFeature feature = new AnnotationFeature();
+        var feature = new AnnotationFeature();
         feature.setName("value");
 
-        Recommender recommender = new Recommender();
+        var recommender = new Recommender();
         recommender.setLayer(layer);
         recommender.setFeature(feature);
         recommender.setMaxRecommendations(3);
@@ -215,7 +228,7 @@ public class ExternalRecommenderSslTest
 
     private void addCasMetadata(JCas aJCas, long aDocumentId)
     {
-        CASMetadata cmd = new CASMetadata(aJCas);
+        var cmd = new CASMetadata(aJCas);
         cmd.setUsername(USER_NAME);
         cmd.setProjectId(PROJECT_ID);
         cmd.setSourceDocumentId(aDocumentId);
