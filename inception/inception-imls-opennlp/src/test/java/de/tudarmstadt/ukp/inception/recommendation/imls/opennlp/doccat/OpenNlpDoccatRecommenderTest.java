@@ -160,8 +160,9 @@ public class OpenNlpDoccatRecommenderTest
     private List<CAS> loadArxivData() throws IOException, UIMAException
     {
         var ds = loader.load("sentence-classification-en");
-        return loadData(ds, Arrays.stream(ds.getDataFiles())
-                .filter(file -> file.getName().contains("arxiv")).toArray(File[]::new));
+        return loadData(ds, Arrays.stream(ds.getDataFiles()) //
+                .filter(file -> file.getName().contains("arxiv")) //
+                .toArray(File[]::new));
     }
 
     private List<CAS> loadData(Dataset ds, File... files) throws UIMAException, IOException

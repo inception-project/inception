@@ -29,6 +29,7 @@ import de.tudarmstadt.ukp.inception.support.extensionpoint.Extension;
 public interface EditorAjaxRequestHandler
     extends Extension<Request>
 {
+    int PRIO_CONTEXT_MENU = -10;
     int PRIO_RENDER_HANDLER = 0;
     int PRIO_SLOT_FILLER_HANDLER = 100;
     int PRIO_UNARM_SLOT_HANDLER = 180;

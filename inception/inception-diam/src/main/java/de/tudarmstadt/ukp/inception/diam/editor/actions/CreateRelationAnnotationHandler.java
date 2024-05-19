@@ -28,6 +28,7 @@ import org.apache.wicket.request.Request;
 import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.IllegalPlacementException;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.NotEditableException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainAdapter;
@@ -91,12 +92,22 @@ public class CreateRelationAnnotationHandler
             IRequestParameters aParams)
         throws IOException, AnnotationException
     {
-        var page = getPage();
-
-        page.ensureIsEditable();
-
         var originSpan = VID.parse(aParams.getParameterValue(PARAM_ORIGIN_SPAN_ID).toString());
         var targetSpan = VID.parse(aParams.getParameterValue(PARAM_TARGET_SPAN_ID).toString());
+
+        var cm = aBehavior.getContextMenu();
+        var clientX = cm.getClientX().getAsInt();
+        var clientY = cm.getClientY().getAsInt();
+
+        actionArc(aBehavior, aTarget, originSpan, targetSpan, clientX, clientY);
+    }
+
+    public void actionArc(DiamAjaxBehavior aBehavior, AjaxRequestTarget aTarget, VID originSpan,
+            VID targetSpan, int aClientX, int aClientY)
+        throws NotEditableException, IOException, AnnotationException, IllegalPlacementException
+    {
+        var page = getPage();
+        page.ensureIsEditable();
 
         if (originSpan.isSynthetic() || targetSpan.isSynthetic()) {
             page.error("Relations cannot be created from/to synthetic annotations");
@@ -114,7 +125,8 @@ public class CreateRelationAnnotationHandler
             createChainLink(chainAdapter, aTarget, originSpan, targetSpan);
         }
         else {
-            createRelationAnnotation(aBehavior, aTarget, originLayer, originSpan, targetSpan);
+            createRelationAnnotation(aBehavior, aTarget, originLayer, originSpan, targetSpan,
+                    aClientX, aClientY);
         }
     }
 
@@ -144,7 +156,8 @@ public class CreateRelationAnnotationHandler
     }
 
     private void createRelationAnnotation(DiamAjaxBehavior aBehavior, AjaxRequestTarget aTarget,
-            AnnotationLayer originLayer, VID aOriginSpan, VID aTargetSpan)
+            AnnotationLayer originLayer, VID aOriginSpan, VID aTargetSpan, int aClientX,
+            int aClientY)
         throws AnnotationException, IllegalPlacementException, IOException
     {
         var candidateLayers = schemaService.getRelationLayersFor(originLayer);
@@ -173,7 +186,7 @@ public class CreateRelationAnnotationHandler
             }));
         }
 
-        cm.onOpen(aTarget);
+        cm.onOpen(aTarget, aClientX, aClientY);
     }
 
     private void createRelationAnnotation(AjaxRequestTarget aTarget, AnnotationLayer relationLayer,

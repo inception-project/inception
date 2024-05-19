@@ -101,8 +101,8 @@ export class PdfAnnotationEditor implements AnnotationEditor {
 
   onCreateRelationAnnotation (ev: Event) {
     if (ev instanceof CustomEvent) {
-      const { origin, target } = ev.detail
-      this.ajax.createRelationAnnotation(origin, target)
+      const { origin, target, originalEvent } = ev.detail
+      this.ajax.createRelationAnnotation(origin, target, originalEvent)
     }
   }
 

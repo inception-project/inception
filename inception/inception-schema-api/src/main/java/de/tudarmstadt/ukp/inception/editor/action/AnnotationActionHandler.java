@@ -29,6 +29,12 @@ import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 
 public interface AnnotationActionHandler
 {
+    /**
+     * @deprecated Replaced by {@code CreateRelationAnnotationHandler} and
+     *             {@code CreateSpanAnnotationHandler}.
+     */
+    @SuppressWarnings("javadoc")
+    @Deprecated
     void actionCreateOrUpdate(AjaxRequestTarget aTarget, CAS aCas)
         throws IOException, AnnotationException;
 
