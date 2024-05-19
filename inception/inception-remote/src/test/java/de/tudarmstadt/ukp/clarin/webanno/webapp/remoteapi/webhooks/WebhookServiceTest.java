@@ -33,6 +33,7 @@ import java.util.List;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -305,6 +306,7 @@ public class WebhookServiceTest
 
     @Tag("slow")
     @Test
+    @Disabled("Currently tends to fail with a 404 error")
     void thatDisablingCertificateValidationWorks_revoked()
     {
         assumeEndpointIsAvailable("https://revoked.badssl.com");

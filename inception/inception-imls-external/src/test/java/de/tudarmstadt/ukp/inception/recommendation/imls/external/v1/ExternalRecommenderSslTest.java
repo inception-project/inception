@@ -32,6 +32,7 @@ import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.jcas.JCas;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
@@ -174,6 +175,7 @@ public class ExternalRecommenderSslTest
 
     @Tag("slow")
     @Test
+    @Disabled("Currently tends to fail with a 404 error")
     void thatDisablingCertificateValidationWorks_revoked()
     {
         assumeEndpointIsAvailable("https://revoked.badssl.com/");
