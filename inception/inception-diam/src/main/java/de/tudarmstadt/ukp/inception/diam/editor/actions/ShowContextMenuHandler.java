@@ -17,48 +17,29 @@
  */
 package de.tudarmstadt.ukp.inception.diam.editor.actions;
 
-import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectAnnotationByAddr;
+import static de.tudarmstadt.ukp.inception.support.spring.ApplicationContextProvider.getApplicationContext;
 
 import java.io.IOException;
 import java.io.Serializable;
 
-import org.apache.uima.cas.CAS;
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.model.IModel;
 import org.apache.wicket.request.Request;
+import org.springframework.core.annotation.Order;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
 import de.tudarmstadt.ukp.inception.diam.editor.DiamAjaxBehavior;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.AjaxResponse;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.DefaultAjaxResponse;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorExtensionRegistry;
-import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
-import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaMenuItem;
 
+@Order(EditorAjaxRequestHandler.PRIO_CONTEXT_MENU)
 public class ShowContextMenuHandler
     extends EditorAjaxRequestHandlerBase
     implements Serializable
 {
     private static final long serialVersionUID = 2566256640285857435L;
-
-    private final AnnotationEditorExtensionRegistry extensionRegistry;
-    private final IModel<AnnotatorState> model;
-    private final AnnotationActionHandler actionHandler;
-    private final CasProvider casProvider;
-
-    public ShowContextMenuHandler(
-            AnnotationEditorExtensionRegistry aAnnotationEditorExtensionRegistry,
-            IModel<AnnotatorState> aState, AnnotationActionHandler aActionHandler,
-            CasProvider aCasProvider)
-    {
-        extensionRegistry = aAnnotationEditorExtensionRegistry;
-        model = aState;
-        actionHandler = aActionHandler;
-        casProvider = aCasProvider;
-    }
 
     @Override
     public String getCommand()
@@ -83,14 +64,24 @@ public class ShowContextMenuHandler
             return new DefaultAjaxResponse(getAction(aRequest));
         }
 
+        var clientX = cm.getClientX().getAsInt();
+        var clientY = cm.getClientY().getAsInt();
+
+        // Need to fetch this here since the handler is not serializable
+        var extensionRegistry = getApplicationContext()
+                .getBean(AnnotationEditorExtensionRegistry.class);
+
         try {
 
             var items = cm.getItemList();
             items.clear();
 
-            if (model.getObject().getSelection().isSpan()) {
+            var state = getAnnotatorState();
+
+            if (state.getSelection().isSpan()) {
                 var vid = getVid(aRequest);
-                items.add(new LambdaMenuItem("Link to ...", $ -> actionLinkTo($, vid)));
+                items.add(new LambdaMenuItem("Link to ...",
+                        $ -> actionLinkTo(aBehavior, $, vid, clientX, clientY)));
             }
 
             extensionRegistry.generateContextMenuItems(items);
@@ -106,37 +97,24 @@ public class ShowContextMenuHandler
         return new DefaultAjaxResponse(getAction(aRequest));
     }
 
-    private void actionLinkTo(AjaxRequestTarget aTarget, VID paramId)
+    private void actionLinkTo(DiamAjaxBehavior aBehavior, AjaxRequestTarget aTarget, VID paramId,
+            int aClientX, int aClientY)
         throws IOException, AnnotationException
     {
         var page = getPage();
         page.ensureIsEditable();
 
-        var state = model.getObject();
+        var state = getAnnotatorState();
 
         if (!state.getSelection().isSpan()) {
             return;
         }
 
-        CAS cas;
-        try {
-            cas = casProvider.get();
-        }
-        catch (Exception e) {
-            handleError("Unable to load data", e);
-            return;
-        }
+        // Need to fetch this here since the handler is not serializable
+        var createRelationAnnotationHandler = getApplicationContext()
+                .getBean(CreateRelationAnnotationHandler.class);
 
-        // Currently selected span
-        var originFs = selectAnnotationByAddr(cas, state.getSelection().getAnnotation().getId());
-
-        // Target span of the relation
-        var targetFs = selectAnnotationByAddr(cas, paramId.getId());
-
-        var selection = state.getSelection();
-        selection.selectArc(VID.NONE_ID, originFs, targetFs);
-
-        // Create new annotation
-        actionHandler.actionCreateOrUpdate(aTarget, cas);
+        createRelationAnnotationHandler.actionArc(aBehavior, aTarget,
+                state.getSelection().getAnnotation(), paramId, aClientX, aClientY);
     }
 }

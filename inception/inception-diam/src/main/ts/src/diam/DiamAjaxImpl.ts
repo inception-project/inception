@@ -387,9 +387,12 @@ export class DiamAjaxImpl implements DiamAjax {
     })
   }
 
-  private calculateClientPosition(evt: MouseEvent) : { clientX: number; clientY: number; overlay?: HTMLElement } {
+  private calculateClientPosition(evt: MouseEvent | null) : { clientX: number; clientY: number; overlay?: HTMLElement } {
     if (!evt) {
-      return { clientX: window.innerWidth / 2, clientY: window.innerHeight / 2, overlay: undefined };
+      return { 
+        clientX: Math.round(window.innerWidth / 2), 
+        clientY: Math.round(window.innerHeight / 2), 
+        overlay: undefined };
     }
 
     let clientX = evt.clientX

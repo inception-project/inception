@@ -42,6 +42,7 @@ import de.tudarmstadt.ukp.inception.diam.editor.actions.MoveSpanAnnotationHandle
 import de.tudarmstadt.ukp.inception.diam.editor.actions.SavePreferences;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.ScrollToHandler;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.SelectAnnotationHandler;
+import de.tudarmstadt.ukp.inception.diam.editor.actions.ShowContextMenuHandler;
 import de.tudarmstadt.ukp.inception.diam.editor.lazydetails.LazyDetailsLookupService;
 import de.tudarmstadt.ukp.inception.diam.editor.lazydetails.LazyDetailsLookupServiceImpl;
 import de.tudarmstadt.ukp.inception.diam.model.compact.CompactSerializer;
@@ -86,9 +87,10 @@ public class DiamAutoConfig
     }
 
     @Bean
-    public CreateSpanAnnotationHandler createSpanAnnotationHandler()
+    public CreateSpanAnnotationHandler createSpanAnnotationHandler(
+            AnnotationSchemaService aSchemaService)
     {
-        return new CreateSpanAnnotationHandler();
+        return new CreateSpanAnnotationHandler(aSchemaService);
     }
 
     @Bean
@@ -104,6 +106,12 @@ public class DiamAutoConfig
             AnnotationSchemaProperties aAnnotationSchemaProperties)
     {
         return new CreateRelationAnnotationHandler(aSchemaService, aAnnotationSchemaProperties);
+    }
+
+    @Bean
+    public ShowContextMenuHandler ShowContextMenuHandler()
+    {
+        return new ShowContextMenuHandler();
     }
 
     @Bean

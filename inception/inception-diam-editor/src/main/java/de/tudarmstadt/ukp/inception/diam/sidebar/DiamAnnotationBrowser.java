@@ -34,10 +34,8 @@ import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.inception.diam.editor.DiamAjaxBehavior;
 import de.tudarmstadt.ukp.inception.diam.editor.DiamJavaScriptReference;
-import de.tudarmstadt.ukp.inception.diam.editor.actions.ShowContextMenuHandler;
 import de.tudarmstadt.ukp.inception.diam.model.compactv2.CompactSerializerV2Impl;
 import de.tudarmstadt.ukp.inception.diam.model.websocket.ViewportDefinition;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorExtensionRegistry;
@@ -71,11 +69,7 @@ public class DiamAnnotationBrowser
     {
         super.onInitialize();
 
-        var page = findParent(AnnotationPage.class);
-
         add(diamBehavior = createDiamBehavior());
-        diamBehavior.addPriorityHandler(new ShowContextMenuHandler(extensionRegistry,
-                page.getModel(), page.getAnnotationActionHandler(), page::getEditorCas));
         add(new SvelteBehavior());
     }
 

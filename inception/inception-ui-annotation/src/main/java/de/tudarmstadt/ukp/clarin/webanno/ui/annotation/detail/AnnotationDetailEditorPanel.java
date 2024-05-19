@@ -451,6 +451,7 @@ public abstract class AnnotationDetailEditorPanel
     }
 
     @Override
+    @Deprecated
     public void actionCreateOrUpdate(AjaxRequestTarget aTarget, CAS aCas)
         throws IOException, AnnotationException
     {
@@ -518,6 +519,10 @@ public abstract class AnnotationDetailEditorPanel
         }
     }
 
+    /**
+     * @deprecated To be removed without replacement.
+     */
+    @Deprecated
     private void prepareCreateOrUpdateRelation(AjaxRequestTarget aTarget, CAS aCas,
             AnnotatorState state)
         throws IllegalPlacementException, IOException, AnnotationException
