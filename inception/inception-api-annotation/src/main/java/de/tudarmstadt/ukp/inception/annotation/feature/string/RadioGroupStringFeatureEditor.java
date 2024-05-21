@@ -167,9 +167,9 @@ public class RadioGroupStringFeatureEditor
                 item.add(button);
 
                 var label = new Label("label", item.getModel().map(ReorderableTag::getName));
-                label.add(AttributeModifier.append("class",
-                        item.getModel().map(ReorderableTag::getReordered)
-                                .map(_flag -> _flag ? "font-weight-bold" : "")));
+                label.add(AttributeModifier.append("class", item.getModel()
+                        .map(ReorderableTag::getReordered).map(_flag -> _flag ? "fw-bold" : "")));
+
                 button.add(label);
 
                 var score = new Label("score", item.getModel().map(ReorderableTag::getScore));
