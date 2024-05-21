@@ -63,6 +63,7 @@ public class PdfJsViewerPage
                 "  PDFViewerApplicationOptions.set('defaultUrl', null);", //
                 "  PDFViewerApplicationOptions.set('disablePreferences', true);", //
                 "  PDFViewerApplicationOptions.set('workerSrc', 'pdf.worker.min.js');", //
+                "  PDFViewerApplicationOptions.set('isEvalSupported', false);", //
                 "  PDFViewerApplicationOptions.set('enableScripting', false);", //
                 "  PDFViewerApplicationOptions.set('viewOnLoad', 1);", //
                 // Because when when we jump to a location in a different document it sucks when
