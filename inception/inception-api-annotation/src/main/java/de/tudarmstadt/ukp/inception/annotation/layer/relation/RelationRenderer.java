@@ -48,6 +48,7 @@ import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.Renderer_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VArc;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VComment;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VCommentType;
@@ -125,10 +126,10 @@ public class RelationRenderer
     }
 
     @Override
-    public void render(final CAS aCas, List<AnnotationFeature> aFeatures, VDocument aResponse,
-            int aWindowBegin, int aWindowEnd)
+    public void render(RenderRequest aRequest, List<AnnotationFeature> aFeatures,
+            VDocument aResponse, int aWindowBegin, int aWindowEnd)
     {
-        if (!checkTypeSystem(aCas)) {
+        if (!checkTypeSystem(aRequest.getCas())) {
             return;
         }
 
@@ -137,7 +138,7 @@ public class RelationRenderer
         // Index mapping annotations to the corresponding rendered arcs
         var annoToArcIdx = new HashMap<AnnotationFS, VArc>();
 
-        var annotations = selectAnnotationsInWindow(aCas, aWindowBegin, aWindowEnd);
+        var annotations = selectAnnotationsInWindow(aRequest.getCas(), aWindowBegin, aWindowEnd);
 
         for (var fs : annotations) {
             for (var arc : render(aResponse, fs, aFeatures, aWindowBegin, aWindowEnd)) {
@@ -148,7 +149,7 @@ public class RelationRenderer
                 aResponse.add(arc);
                 annoToArcIdx.put(fs, (VArc) arc);
 
-                renderRequiredFeatureErrors(aFeatures, fs, aResponse);
+                renderRequiredFeatureErrors(aRequest, aFeatures, fs, aResponse);
             }
         }
 

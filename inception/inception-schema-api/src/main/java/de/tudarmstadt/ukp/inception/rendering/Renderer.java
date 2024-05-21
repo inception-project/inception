@@ -17,24 +17,25 @@
  */
 package de.tudarmstadt.ukp.inception.rendering;
 
-import static de.tudarmstadt.ukp.inception.schema.api.validation.ValidationUtils.isRequiredFeatureMissing;
+import static de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode.NONE;
+import static de.tudarmstadt.ukp.inception.rendering.vmodel.VCommentType.ERROR;
 import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectByAddr;
 import static org.apache.commons.lang3.StringUtils.defaultString;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.text.AnnotationFS;
 
+import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.ConstraintsEvaluator;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
+import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VComment;
-import de.tudarmstadt.ukp.inception.rendering.vmodel.VCommentType;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetail;
@@ -53,8 +54,8 @@ public interface Renderer
     /**
      * Render annotations.
      *
-     * @param aCas
-     *            The CAS containing annotations
+     * @param aRequest
+     *            The render request.
      * @param aFeatures
      *            the features.
      * @param aBuffer
@@ -64,7 +65,7 @@ public interface Renderer
      * @param windowEndOffset
      *            The end position of the window offset.
      */
-    void render(CAS aCas, List<AnnotationFeature> aFeatures, VDocument aBuffer,
+    void render(RenderRequest aRequest, List<AnnotationFeature> aFeatures, VDocument aBuffer,
             int windowBeginOffset, int windowEndOffset);
 
     List<VObject> render(VDocument aVDocument, AnnotationFS aFS, List<AnnotationFeature> aFeatures,
@@ -101,17 +102,25 @@ public interface Renderer
         return features;
     }
 
-    default void renderRequiredFeatureErrors(List<AnnotationFeature> aFeatures,
-            FeatureStructure aFS, VDocument aResponse)
+    default void renderRequiredFeatureErrors(RenderRequest aRequest,
+            List<AnnotationFeature> aFeatures, FeatureStructure aFS, VDocument aResponse)
     {
-        for (var f : aFeatures) {
-            if (!f.isEnabled()) {
+        var evaluator = new ConstraintsEvaluator();
+        var adapter = getTypeAdapter();
+        var constraits = aRequest.getConstraints();
+
+        for (var feature : aFeatures) {
+            if (!feature.isEnabled()) {
                 continue;
             }
 
-            if (isRequiredFeatureMissing(f, aFS)) {
-                aResponse.add(new VComment(VID.of(aFS), VCommentType.ERROR,
-                        "Required feature [" + f.getName() + "] not set."));
+            if (evaluator.isHiddenConditionalFeature(constraits, aFS, feature)) {
+                continue;
+            }
+
+            if (!adapter.isFeatureValueValid(feature, aFS)) {
+                aResponse.add(new VComment(VID.of(aFS), ERROR,
+                        "Required feature [" + feature.getName() + "] not set."));
             }
         }
     }
@@ -132,13 +141,13 @@ public interface Renderer
     {
         for (var feature : getTypeAdapter().listFeatures()) {
             if (!feature.isEnabled() || !feature.isIncludeInHover()
-                    || !MultiValueMode.NONE.equals(feature.getMultiValueMode())) {
+                    || feature.getMultiValueMode() != NONE) {
                 continue;
             }
 
             var label = fsr.findExtension(feature).orElseThrow().renderFeatureValue(feature, aFs);
 
-            if (StringUtils.isNotBlank(label)) {
+            if (isNotBlank(label)) {
                 var group = new VLazyDetailGroup();
                 group.addDetail(new VLazyDetail(feature.getName(), label));
                 details.add(group);

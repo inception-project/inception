@@ -37,6 +37,7 @@ import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.Renderer_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VArc;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
@@ -119,10 +120,10 @@ public class SpanRenderer
     }
 
     @Override
-    public void render(CAS aCas, List<AnnotationFeature> aFeatures, VDocument aResponse,
-            int aWindowBegin, int aWindowEnd)
+    public void render(RenderRequest aRequest, List<AnnotationFeature> aFeatures,
+            VDocument aResponse, int aWindowBegin, int aWindowEnd)
     {
-        if (!checkTypeSystem(aCas)) {
+        if (!checkTypeSystem(aRequest.getCas())) {
             return;
         }
 
@@ -131,7 +132,7 @@ public class SpanRenderer
         // Index mapping annotations to the corresponding rendered spans
         var annoToSpanIdx = new HashMap<AnnotationFS, VSpan>();
 
-        var annotations = selectAnnotationsInWindow(aCas, aWindowBegin, aWindowEnd);
+        var annotations = selectAnnotationsInWindow(aRequest.getCas(), aWindowBegin, aWindowEnd);
 
         // List<AnnotationFS> annotations = selectCovered(aCas, type, aWindowBegin, aWindowEnd);
         for (var fs : annotations) {
@@ -141,12 +142,12 @@ public class SpanRenderer
                 if (vobj instanceof VSpan vspan) {
                     annoToSpanIdx.put(fs, vspan);
 
-                    renderRequiredFeatureErrors(aFeatures, fs, aResponse);
+                    renderRequiredFeatureErrors(aRequest, aFeatures, fs, aResponse);
                 }
             }
         }
 
-        for (SpanLayerBehavior behavior : behaviors) {
+        for (var behavior : behaviors) {
             behavior.onRender(typeAdapter, aResponse, annoToSpanIdx, aWindowBegin, aWindowEnd);
         }
     }
@@ -178,10 +179,10 @@ public class SpanRenderer
 
     private void renderSlots(AnnotationFS aFS, List<VObject> aSpansAndSlots)
     {
-        SpanAdapter typeAdapter = getTypeAdapter();
+        var typeAdapter = getTypeAdapter();
 
         int fi = 0;
-        nextFeature: for (AnnotationFeature feat : typeAdapter.listFeatures()) {
+        nextFeature: for (var feat : typeAdapter.listFeatures()) {
             if (!feat.isEnabled()) {
                 fi++;
                 continue nextFeature;

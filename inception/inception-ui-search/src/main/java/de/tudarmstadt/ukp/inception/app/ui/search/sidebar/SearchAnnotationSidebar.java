@@ -465,7 +465,7 @@ public class SearchAnnotationSidebar
             @Override
             protected void onUpdate(AjaxRequestTarget target)
             {
-                for (ResultsGroup resultsGroup : groupedResults.getObject().allResultsGroups()) {
+                for (var resultsGroup : groupedResults.getObject().allResultsGroups()) {
                     if (resultsGroup.getGroupKey().equals(aGroupKey)) {
                         resultsGroup.getResults().stream() //
                                 .filter(r -> !r.isReadOnly()) //

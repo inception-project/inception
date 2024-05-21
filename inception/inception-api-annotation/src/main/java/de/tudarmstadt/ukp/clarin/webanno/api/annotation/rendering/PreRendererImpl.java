@@ -129,7 +129,7 @@ public class PreRendererImpl
             // the same because otherwise the IDs of armed slots would be inconsistent
             LayerSupport<?, ?> layerSupport = layerSupportRegistry.getLayerSupport(layer);
             var renderer = layerSupport.createRenderer(layer, () -> layerAllFeatures);
-            renderer.render(cas, layerSupportedFeatures, aResponse, renderBegin, renderEnd);
+            renderer.render(aRequest, layerSupportedFeatures, aResponse, renderBegin, renderEnd);
         }
 
         if (log.isTraceEnabled()) {

@@ -39,13 +39,10 @@
       </dependency>
       <dependency>
         <groupId>org.apache.uima</groupId>
-        <artifactId>uimafit-core</artifactId>
+        <artifactId>uimafit-bom</artifactId>
         <version>${uimafit.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.uima</groupId>
-        <artifactId>uimafit-cpe</artifactId>
-        <version>${uimafit.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
       </dependency>
       <dependency>
         <groupId>org.apache.uima</groupId>

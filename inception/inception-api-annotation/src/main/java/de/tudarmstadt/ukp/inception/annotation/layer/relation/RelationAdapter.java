@@ -42,6 +42,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.IllegalPlacementException;
+import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -83,9 +84,10 @@ public class RelationAdapter
             ApplicationEventPublisher aEventPublisher, AnnotationLayer aLayer,
             String aTargetFeatureName, String aSourceFeatureName,
             Supplier<Collection<AnnotationFeature>> aFeatures,
-            List<RelationLayerBehavior> aBehaviors)
+            List<RelationLayerBehavior> aBehaviors, ConstraintsService aConstraintsService)
     {
-        super(aLayerSupportRegistry, aFeatureSupportRegistry, aEventPublisher, aLayer, aFeatures);
+        super(aLayerSupportRegistry, aFeatureSupportRegistry, aConstraintsService, aEventPublisher, aLayer,
+                aFeatures);
 
         if (aBehaviors == null) {
             behaviors = emptyList();

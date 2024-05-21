@@ -15,22 +15,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.constraints;
+package de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator;
 
 import static de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ConstraintsParser.parse;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.List;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.uima.fit.factory.JCasFactory;
-import org.apache.uima.jcas.JCas;
 import org.junit.jupiter.api.Test;
 
-import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.Evaluator;
-import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.PossibleValue;
-import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.ValuesGenerator;
-import de.tudarmstadt.ukp.clarin.webanno.constraints.model.ParsedConstraints;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
 
 public class UnicodeRulesTest
@@ -58,22 +51,21 @@ public class UnicodeRulesTest
     @Test
     public void thatRulesMatchUnicodeCharacters() throws Exception
     {
-        JCas jcas = JCasFactory.createJCas();
+        var jcas = JCasFactory.createJCas();
 
-        for (String text : texts) {
+        for (var text : texts) {
             jcas.reset();
             jcas.setDocumentText(text);
 
-            ParsedConstraints constraints = parse(String.join("\n",
+            var constraints = parse(String.join("\n",
                     "import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma as Lemma;",
                     "Lemma {", "  text() = \"" + text + "\" -> value=\"ok\";", "}"));
 
-            Lemma ann = new Lemma(jcas, 0, jcas.getDocumentText().length());
+            var ann = new Lemma(jcas, 0, jcas.getDocumentText().length());
             ann.addToIndexes();
 
-            Evaluator evaluator = new ValuesGenerator();
-            List<PossibleValue> candidates = evaluator.generatePossibleValues(ann, "value",
-                    constraints);
+            var evaluator = new ConstraintsEvaluator();
+            var candidates = evaluator.generatePossibleValues(constraints, ann, "value");
 
             assertThat(candidates).containsExactly(new PossibleValue("ok", false));
         }
@@ -82,23 +74,22 @@ public class UnicodeRulesTest
     @Test
     public void thatRulesCanAlsoNotMatch() throws Exception
     {
-        JCas jcas = JCasFactory.createJCas();
+        var jcas = JCasFactory.createJCas();
 
-        for (String text : texts) {
+        for (var text : texts) {
             jcas.reset();
             jcas.setDocumentText(text);
 
-            ParsedConstraints constraints = parse(String.join("\n",
+            var constraints = parse(String.join("\n",
                     "import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma as Lemma;",
                     "Lemma {", "  text() = \"" + StringUtils.reverse(text) + "\" -> value=\"ok\";",
                     "}"));
 
-            Lemma ann = new Lemma(jcas, 0, jcas.getDocumentText().length());
+            var ann = new Lemma(jcas, 0, jcas.getDocumentText().length());
             ann.addToIndexes();
 
-            Evaluator evaluator = new ValuesGenerator();
-            List<PossibleValue> candidates = evaluator.generatePossibleValues(ann, "value",
-                    constraints);
+            var evaluator = new ConstraintsEvaluator();
+            var candidates = evaluator.generatePossibleValues(constraints, ann, "value");
 
             assertThat(candidates).isEmpty();
         }

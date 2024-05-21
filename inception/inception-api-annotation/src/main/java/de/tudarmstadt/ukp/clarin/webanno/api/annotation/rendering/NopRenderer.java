@@ -25,6 +25,7 @@ import org.apache.uima.cas.TypeSystem;
 import org.apache.uima.cas.text.AnnotationFS;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VObject;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
@@ -53,8 +54,8 @@ public class NopRenderer
     }
 
     @Override
-    public void render(CAS aCas, List<AnnotationFeature> aFeatures, VDocument aResponse,
-            int windowBeginOffset, int windowEndOffset)
+    public void render(RenderRequest aRequest, List<AnnotationFeature> aFeatures,
+            VDocument aResponse, int windowBeginOffset, int windowEndOffset)
     {
         // Nothing to do
     }

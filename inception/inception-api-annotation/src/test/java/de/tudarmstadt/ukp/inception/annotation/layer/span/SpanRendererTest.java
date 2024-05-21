@@ -32,14 +32,17 @@ import org.apache.uima.jcas.JCas;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.inception.annotation.layer.behaviors.LayerSupportRegistryImpl;
+import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VComment;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VCommentType;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
@@ -49,6 +52,8 @@ import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistry;
 @ExtendWith(MockitoExtension.class)
 public class SpanRendererTest
 {
+    private @Mock ConstraintsService constraintsService;
+
     private FeatureSupportRegistry featureSupportRegistry;
     private LayerSupportRegistry layerSupportRegistry;
     private Project project;
@@ -85,18 +90,19 @@ public class SpanRendererTest
 
         new Sentence(jcas, 0, 10).addToIndexes();
         new Sentence(jcas, 10, 20).addToIndexes();
-        NamedEntity ne = new NamedEntity(jcas, 5, 15);
+        var ne = new NamedEntity(jcas, 5, 15);
         ne.addToIndexes();
 
-        SpanAdapter adapter = new SpanAdapter(layerSupportRegistry, featureSupportRegistry, null,
-                neLayer, () -> asList(), asList(new SpanCrossSentenceBehavior()));
+        var adapter = new SpanAdapter(layerSupportRegistry, featureSupportRegistry, null, neLayer,
+                () -> asList(), asList(new SpanCrossSentenceBehavior()), constraintsService);
 
-        SpanRenderer sut = new SpanRenderer(adapter, layerSupportRegistry, featureSupportRegistry,
+        var sut = new SpanRenderer(adapter, layerSupportRegistry, featureSupportRegistry,
                 asList(new SpanCrossSentenceBehavior()));
 
-        VDocument vdoc = new VDocument();
+        var request = RenderRequest.builder().withCas(jcas.getCas()).build();
+        var vdoc = new VDocument();
         vdoc.setWindowEnd(20);
-        sut.render(jcas.getCas(), asList(), vdoc, 0, jcas.getDocumentText().length());
+        sut.render(request, asList(), vdoc, 0, jcas.getDocumentText().length());
 
         assertThat(vdoc.comments()) //
                 .usingRecursiveFieldByFieldElementComparator() //
@@ -110,22 +116,24 @@ public class SpanRendererTest
         jcas.setDocumentText(StringUtils.repeat("a", 10));
 
         new Sentence(jcas, 0, 10).addToIndexes();
-        NamedEntity ne1 = new NamedEntity(jcas, 3, 8);
+        var ne1 = new NamedEntity(jcas, 3, 8);
         ne1.addToIndexes();
-        NamedEntity ne2 = new NamedEntity(jcas, 3, 8);
+        var ne2 = new NamedEntity(jcas, 3, 8);
         ne2.addToIndexes();
 
-        SpanAdapter adapter = new SpanAdapter(layerSupportRegistry, featureSupportRegistry, null,
-                neLayer, () -> asList(), asList(new SpanOverlapBehavior()));
+        var adapter = new SpanAdapter(layerSupportRegistry, featureSupportRegistry, null, neLayer,
+                () -> asList(), asList(new SpanOverlapBehavior()), constraintsService);
 
-        SpanRenderer sut = new SpanRenderer(adapter, layerSupportRegistry, featureSupportRegistry,
+        var sut = new SpanRenderer(adapter, layerSupportRegistry, featureSupportRegistry,
                 asList(new SpanOverlapBehavior()));
+
+        var request = RenderRequest.builder().withCas(jcas.getCas()).build();
 
         {
             neLayer.setOverlapMode(OverlapMode.NO_OVERLAP);
-            VDocument vdoc = new VDocument();
+            var vdoc = new VDocument();
             vdoc.setWindowEnd(20);
-            sut.render(jcas.getCas(), asList(), vdoc, 0, jcas.getDocumentText().length());
+            sut.render(request, asList(), vdoc, 0, jcas.getDocumentText().length());
             assertThat(vdoc.comments()) //
                     .usingRecursiveFieldByFieldElementComparator() //
                     .containsExactlyInAnyOrder( //
@@ -135,9 +143,9 @@ public class SpanRendererTest
 
         {
             neLayer.setOverlapMode(OVERLAP_ONLY);
-            VDocument vdoc = new VDocument();
+            var vdoc = new VDocument();
             vdoc.setWindowEnd(20);
-            sut.render(jcas.getCas(), asList(), vdoc, 0, jcas.getDocumentText().length());
+            sut.render(request, asList(), vdoc, 0, jcas.getDocumentText().length());
             assertThat(vdoc.comments()).usingRecursiveFieldByFieldElementComparator()
                     .containsExactlyInAnyOrder(
                             new VComment(ne1, VCommentType.ERROR, "Stacking is not permitted."),
@@ -146,17 +154,17 @@ public class SpanRendererTest
 
         {
             neLayer.setOverlapMode(STACKING_ONLY);
-            VDocument vdoc = new VDocument();
+            var vdoc = new VDocument();
             vdoc.setWindowEnd(20);
-            sut.render(jcas.getCas(), asList(), vdoc, 0, jcas.getDocumentText().length());
+            sut.render(request, asList(), vdoc, 0, jcas.getDocumentText().length());
             assertThat(vdoc.comments()).isEmpty();
         }
 
         {
             neLayer.setOverlapMode(ANY_OVERLAP);
-            VDocument vdoc = new VDocument();
+            var vdoc = new VDocument();
             vdoc.setWindowEnd(20);
-            sut.render(jcas.getCas(), asList(), vdoc, 0, jcas.getDocumentText().length());
+            sut.render(request, asList(), vdoc, 0, jcas.getDocumentText().length());
             assertThat(vdoc.comments()).isEmpty();
         }
     }

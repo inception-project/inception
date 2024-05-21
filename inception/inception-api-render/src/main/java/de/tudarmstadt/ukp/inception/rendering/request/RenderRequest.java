@@ -22,6 +22,7 @@ import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
 
+import de.tudarmstadt.ukp.clarin.webanno.constraints.model.ParsedConstraints;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -35,6 +36,7 @@ import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 public class RenderRequest
 {
     private final AnnotatorState state;
+    private final ParsedConstraints constraints;
     private final SourceDocument sourceDocument;
     private final User annotationUser;
     private final User sessionOwner;
@@ -54,6 +56,7 @@ public class RenderRequest
         this.includeText = builder.includeText;
         this.clipSpans = builder.clipSpans;
         this.state = builder.state;
+        this.constraints = builder.constraints;
         this.sourceDocument = builder.sourceDocument;
         this.annotationUser = builder.annotationUser;
         this.cas = builder.cas;
@@ -130,6 +133,11 @@ public class RenderRequest
         return state;
     }
 
+    public ParsedConstraints getConstraints()
+    {
+        return constraints;
+    }
+
     public User getSessionOwner()
     {
         return sessionOwner;
@@ -154,6 +162,7 @@ public class RenderRequest
         private List<AnnotationLayer> allLayers;
         private List<AnnotationLayer> visibleLayers;
         private ColoringStrategy coloringStrategyOverride;
+        private ParsedConstraints constraints;
 
         private Builder()
         {
@@ -184,6 +193,13 @@ public class RenderRequest
             visibleLayers = aState.getAnnotationLayers();
             sourceDocument = state.getDocument();
             annotationUser = state.getUser();
+            constraints = state.getConstraints();
+            return this;
+        }
+
+        public Builder withConstraints(ParsedConstraints aConstraints)
+        {
+            constraints = aConstraints;
             return this;
         }
 

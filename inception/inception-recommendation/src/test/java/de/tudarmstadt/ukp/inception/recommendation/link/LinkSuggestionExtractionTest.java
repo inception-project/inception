@@ -41,6 +41,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
 
+import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -66,6 +67,7 @@ import de.tudarmstadt.ukp.inception.support.uima.SegmentationUtils;
 @ExtendWith(MockitoExtension.class)
 class LinkSuggestionExtractionTest
 {
+    private @Mock ConstraintsService constraintsService;
     private @Mock RecommendationService recommendationService;
     private @Mock LearningRecordService learningRecordService;
     private @Mock ApplicationEventPublisher applicationEventPublisher;
@@ -96,8 +98,8 @@ class LinkSuggestionExtractionTest
         linkFeatureSupport = new LinkFeatureSupport(schemaService);
         featureSupportRegistry = new FeatureSupportRegistryImpl(asList(linkFeatureSupport));
         featureSupportRegistry.init();
-        layerSupportRegistry = new LayerSupportRegistryImpl(
-                asList(new SpanLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry)));
+        layerSupportRegistry = new LayerSupportRegistryImpl(asList(new SpanLayerSupport(
+                featureSupportRegistry, null, layerBehaviorRegistry, constraintsService)));
         layerSupportRegistry.init();
 
         tokenBuilder = new TokenBuilder<>(Token.class, Sentence.class);

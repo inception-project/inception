@@ -169,6 +169,7 @@ public class CreateRelationAnnotationHandler
         if (candidateLayers.size() == 1) {
             var relationLayer = candidateLayers.get(0);
             createRelationAnnotation(aTarget, relationLayer, aOriginSpan, aTargetSpan);
+            return;
         }
 
         var cm = aBehavior.getContextMenu();

@@ -24,10 +24,13 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import java.lang.invoke.MethodHandles;
 import java.util.Collections;
 import java.util.List;
 
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.FeatureStructure;
+import org.apache.uima.fit.util.FSUtil;
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
@@ -58,7 +61,7 @@ import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureType;
 public class StringFeatureSupport
     extends UimaPrimitiveFeatureSupport_ImplBase<StringFeatureTraits>
 {
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private List<FeatureType> primitiveTypes;
 
@@ -113,9 +116,19 @@ public class StringFeatureSupport
     }
 
     @Override
+    public boolean isFeatureValueValid(AnnotationFeature aFeature, FeatureStructure aFS)
+    {
+        if (aFeature.isRequired()) {
+            return isNotBlank(FSUtil.getFeature(aFS, aFeature.getName(), String.class));
+        }
+
+        return true;
+    }
+
+    @Override
     public Panel createTraitsEditor(String aId, IModel<AnnotationFeature> aFeatureModel)
     {
-        AnnotationFeature feature = aFeatureModel.getObject();
+        var feature = aFeatureModel.getObject();
 
         if (!accepts(feature)) {
             throw unsupportedFeatureTypeException(feature);
@@ -129,13 +142,13 @@ public class StringFeatureSupport
             AnnotationActionHandler aHandler, final IModel<AnnotatorState> aStateModel,
             final IModel<FeatureState> aFeatureStateModel)
     {
-        AnnotationFeature feature = aFeatureStateModel.getObject().feature;
+        var feature = aFeatureStateModel.getObject().feature;
 
         if (!accepts(feature)) {
             throw unsupportedFeatureTypeException(feature);
         }
 
-        StringFeatureTraits traits = readTraits(feature);
+        var traits = readTraits(feature);
 
         if (feature.getTagset() == null || traits.isMultipleRows()) {
             if (traits.isMultipleRows()) {
@@ -153,7 +166,7 @@ public class StringFeatureSupport
             }
         }
 
-        EditorType editorType = traits.getEditorType();
+        var editorType = traits.getEditorType();
         if (editorType == EditorType.AUTO) {
             editorType = autoChooseFeatureEditorWithTagset(aFeatureStateModel);
         }
@@ -175,7 +188,7 @@ public class StringFeatureSupport
     private EditorType autoChooseFeatureEditorWithTagset(
             final IModel<FeatureState> aFeatureStateModel)
     {
-        FeatureState featureState = aFeatureStateModel.getObject();
+        var featureState = aFeatureStateModel.getObject();
 
         // For really small tagsets where tag creation is not supported, use a radio group
         if (!featureState.feature.getTagset().isCreateTag()
@@ -201,7 +214,7 @@ public class StringFeatureSupport
     @Override
     public boolean suppressAutoFocus(AnnotationFeature aFeature)
     {
-        StringFeatureTraits traits = readTraits(aFeature);
+        var traits = readTraits(aFeature);
         return !traits.getKeyBindings().isEmpty();
     }
 
