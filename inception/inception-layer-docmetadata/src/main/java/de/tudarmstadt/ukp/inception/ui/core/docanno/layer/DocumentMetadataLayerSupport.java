@@ -34,6 +34,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.NopRenderer;
+import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.rendering.Renderer;
@@ -60,6 +61,7 @@ public class DocumentMetadataLayerSupport
 
     private final ApplicationEventPublisher eventPublisher;
     private final DocumentMetadataLayerSupportProperties properties;
+    private final ConstraintsService constraintsService;
 
     private String layerSupportId;
     private List<LayerType> types;
@@ -67,11 +69,13 @@ public class DocumentMetadataLayerSupport
     @Autowired
     public DocumentMetadataLayerSupport(FeatureSupportRegistry aFeatureSupportRegistry,
             ApplicationEventPublisher aEventPublisher,
-            DocumentMetadataLayerSupportProperties aProperties)
+            DocumentMetadataLayerSupportProperties aProperties,
+            ConstraintsService aConstraintsService)
     {
         super(aFeatureSupportRegistry);
         eventPublisher = aEventPublisher;
         properties = aProperties;
+        constraintsService = aConstraintsService;
     }
 
     @Override
@@ -110,7 +114,7 @@ public class DocumentMetadataLayerSupport
             Supplier<Collection<AnnotationFeature>> aFeatures)
     {
         return new DocumentMetadataLayerAdapter(getLayerSupportRegistry(), featureSupportRegistry,
-                eventPublisher, aLayer, aFeatures);
+                eventPublisher, aLayer, aFeatures, constraintsService);
     }
 
     @Override

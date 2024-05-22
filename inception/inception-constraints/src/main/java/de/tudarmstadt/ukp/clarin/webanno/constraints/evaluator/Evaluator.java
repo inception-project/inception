@@ -24,6 +24,7 @@ import org.apache.uima.UIMAException;
 import org.apache.uima.cas.FeatureStructure;
 
 import de.tudarmstadt.ukp.clarin.webanno.constraints.model.ParsedConstraints;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 
 /***
  * Interface for getting values from rules.
@@ -31,18 +32,18 @@ import de.tudarmstadt.ukp.clarin.webanno.constraints.model.ParsedConstraints;
 public interface Evaluator
 {
     /**
+     * @param aConstraints
+     *            the object containing object generated after parsing rules
      * @param aContext
      *            the context annotation
      * @param aFeature
      *            the target feature
-     * @param parsedConstraints
-     *            the object containing object generated after parsing rules
      * @return list of possible values based on rules
      * @throws UIMAException
      *             if there was an UIMA-level problem
      */
-    List<PossibleValue> generatePossibleValues(FeatureStructure aContext, String aFeature,
-            ParsedConstraints parsedConstraints)
+    List<PossibleValue> generatePossibleValues(ParsedConstraints aConstraints,
+            FeatureStructure aContext, AnnotationFeature aFeature)
         throws UIMAException;
 
     // /**
@@ -54,14 +55,22 @@ public interface Evaluator
     // boolean areThereRulesFor(FeatureStructure aContext, ParsedConstraints parsedConstraints);
 
     /**
+     * Checks if it is necessary to evaluate rules based on 1. whether there are rules for this
+     * FeatureStructure and 2. whether the target is affected by any of the restrictions within
+     * rules
+     * 
+     * @param aConstraints
+     *            Object containing parsed rules
      * @param aContext
      *            The feature structure /Scope in the rules
      * @param aFeature
      *            The affected feature
-     * @param parsedConstraints
-     *            Object containing parsed rules
+     * 
      * @return true if features can be affected by this execution
      */
-    boolean isThisAffectedByConstraintRules(FeatureStructure aContext, String aFeature,
-            ParsedConstraints parsedConstraints);
+    boolean isAffectedByConstraints(ParsedConstraints aConstraints, FeatureStructure aContext,
+            AnnotationFeature aFeature);
+
+    boolean isHiddenConditionalFeature(ParsedConstraints aConstraints, FeatureStructure aContext,
+            AnnotationFeature aFeature);
 }

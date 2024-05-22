@@ -75,9 +75,9 @@ import org.wicketstuff.event.annotation.OnEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.IllegalPlacementException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
+import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.ConstraintsEvaluator;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.PossibleValue;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.RulesIndicator;
-import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.ValuesGenerator;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -1172,40 +1172,23 @@ public abstract class AnnotationDetailEditorPanel
     {
         var state = getModelObject();
 
-        // Add values from rules
-        String restrictionFeaturePath;
-        switch (aModel.feature.getLinkMode()) {
-        case WITH_ROLE:
-            restrictionFeaturePath = aModel.feature.getName() + "."
-                    + aModel.feature.getLinkTypeRoleFeatureName();
-            break;
-        case NONE:
-            restrictionFeaturePath = aModel.feature.getName();
-            break;
-        default:
-            throw new IllegalArgumentException(
-                    "Unsupported link mode [" + aModel.feature.getLinkMode() + "] on feature ["
-                            + aModel.feature.getName() + "]");
-        }
-
         aModel.indicator.reset();
 
         // Fetch possible values from the constraint rules
         List<PossibleValue> possibleValues;
         try {
-            var featureStructure = selectFsByAddr(aCas,
-                    state.getSelection().getAnnotation().getId());
+            var fs = selectFsByAddr(aCas, state.getSelection().getAnnotation().getId());
 
-            var evaluator = new ValuesGenerator();
+            var evaluator = new ConstraintsEvaluator();
             // Only show indicator if this feature can be affected by Constraint rules!
-            aModel.indicator.setAffected(evaluator.isThisAffectedByConstraintRules(featureStructure,
-                    restrictionFeaturePath, state.getConstraints()));
+            aModel.indicator.setAffected(evaluator
+                    .isAffectedByConstraints(state.getConstraints(), fs, aModel.feature));
 
-            possibleValues = evaluator.generatePossibleValues(featureStructure,
-                    restrictionFeaturePath, state.getConstraints());
+            possibleValues = evaluator.generatePossibleValues(state.getConstraints(), fs,
+                    aModel.feature);
 
-            LOG.debug("Possible values for [" + featureStructure.getType().getName() + "] ["
-                    + restrictionFeaturePath + "]: " + possibleValues);
+            LOG.debug("Possible values for [{}] : {}", fs.getType().getName(), aModel.feature,
+                    possibleValues);
         }
         catch (Exception e) {
             error("Unable to evaluate constraints: " + ExceptionUtils.getRootCauseMessage(e));

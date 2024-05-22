@@ -499,7 +499,7 @@ public class AnnotationPage
             }
 
             // Load constraints
-            state.setConstraints(constraintsService.loadConstraints(state.getProject()));
+            state.setConstraints(constraintsService.getMergedConstraints(state.getProject()));
 
             // Load user preferences
             loadPreferences();

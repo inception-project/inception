@@ -43,9 +43,11 @@ import org.apache.uima.jcas.JCas;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.MultipleSentenceCoveredException;
+import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -65,6 +67,8 @@ import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 @ExtendWith(MockitoExtension.class)
 public class RelationAdapterTest
 {
+    private @Mock ConstraintsService constraintsService;
+
     private LayerSupportRegistry layerSupportRegistry;
     private FeatureSupportRegistry featureSupportRegistry;
     private Project project;
@@ -137,7 +141,8 @@ public class RelationAdapterTest
 
         RelationAdapter sut = new RelationAdapter(layerSupportRegistry, featureSupportRegistry,
                 null, depLayer, FEAT_REL_TARGET, FEAT_REL_SOURCE,
-                () -> asList(dependencyLayerGovernor, dependencyLayerDependent), behaviors);
+                () -> asList(dependencyLayerGovernor, dependencyLayerDependent), behaviors,
+                constraintsService);
 
         List<POS> posAnnotations = new ArrayList<>(select(jcas, POS.class));
         List<Token> tokens = new ArrayList<>(select(jcas, Token.class));
@@ -167,7 +172,8 @@ public class RelationAdapterTest
 
         RelationAdapter sut = new RelationAdapter(layerSupportRegistry, featureSupportRegistry,
                 null, depLayer, FEAT_REL_TARGET, FEAT_REL_SOURCE,
-                () -> asList(dependencyLayerGovernor, dependencyLayerDependent), behaviors);
+                () -> asList(dependencyLayerGovernor, dependencyLayerDependent), behaviors,
+                constraintsService);
 
         List<POS> posAnnotations = new ArrayList<>(select(jcas, POS.class));
 
@@ -193,7 +199,8 @@ public class RelationAdapterTest
 
         RelationAdapter sut = new RelationAdapter(layerSupportRegistry, featureSupportRegistry,
                 null, depLayer, FEAT_REL_TARGET, FEAT_REL_SOURCE,
-                () -> asList(dependencyLayerGovernor, dependencyLayerDependent), behaviors);
+                () -> asList(dependencyLayerGovernor, dependencyLayerDependent), behaviors,
+                constraintsService);
 
         List<POS> posAnnotations = new ArrayList<>(select(jcas, POS.class));
 
@@ -223,7 +230,8 @@ public class RelationAdapterTest
 
         RelationAdapter sut = new RelationAdapter(layerSupportRegistry, featureSupportRegistry,
                 null, depLayer, FEAT_REL_TARGET, FEAT_REL_SOURCE,
-                () -> asList(dependencyLayerGovernor, dependencyLayerDependent), behaviors);
+                () -> asList(dependencyLayerGovernor, dependencyLayerDependent), behaviors,
+                constraintsService);
 
         List<POS> posAnnotations = new ArrayList<>(select(jcas, POS.class));
         List<Token> tokens = new ArrayList<>(select(jcas, Token.class));
@@ -251,7 +259,8 @@ public class RelationAdapterTest
 
         RelationAdapter sut = new RelationAdapter(layerSupportRegistry, featureSupportRegistry,
                 null, depLayer, FEAT_REL_TARGET, FEAT_REL_SOURCE,
-                () -> asList(dependencyLayerGovernor, dependencyLayerDependent), behaviors);
+                () -> asList(dependencyLayerGovernor, dependencyLayerDependent), behaviors,
+                constraintsService);
 
         List<POS> posAnnotations = new ArrayList<>(select(jcas, POS.class));
 
@@ -297,7 +306,8 @@ public class RelationAdapterTest
 
         RelationAdapter sut = new RelationAdapter(layerSupportRegistry, featureSupportRegistry,
                 null, depLayer, FEAT_REL_TARGET, FEAT_REL_SOURCE,
-                () -> asList(dependencyLayerGovernor, dependencyLayerDependent), behaviors);
+                () -> asList(dependencyLayerGovernor, dependencyLayerDependent), behaviors,
+                constraintsService);
 
         List<POS> posAnnotations = new ArrayList<>(select(jcas, POS.class));
 

@@ -57,6 +57,7 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.UserPreferencesService;
+import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
@@ -126,6 +127,7 @@ public class DiamWebsocketController
     private final UserDao userRepository;
     private final VDocumentSerializerExtensionPoint vDocumentSerializerExtensionPoint;
     private final UserPreferencesService userPreferencesService;
+    private final ConstraintsService constraintsService;
 
     private final LoadingCache<ViewportDefinition, ViewportState> activeViewports;
 
@@ -134,7 +136,8 @@ public class DiamWebsocketController
             RepositoryProperties aRepositoryProperties, AnnotationSchemaService aSchemaService,
             ProjectService aProjectService, UserDao aUserRepository,
             VDocumentSerializerExtensionPoint aVDocumentSerializerExtensionPoint,
-            UserPreferencesService aUserPreferencesService, ServletContext aServletContext)
+            UserPreferencesService aUserPreferencesService, ServletContext aServletContext,
+            ConstraintsService aConstraintsService)
     {
         msgTemplate = aMsgTemplate;
         renderingPipeline = aRenderingPipeline;
@@ -145,6 +148,7 @@ public class DiamWebsocketController
         userRepository = aUserRepository;
         vDocumentSerializerExtensionPoint = aVDocumentSerializerExtensionPoint;
         userPreferencesService = aUserPreferencesService;
+        constraintsService = aConstraintsService;
 
         activeViewports = Caffeine.newBuilder() //
                 .expireAfterAccess(Duration.ofMinutes(aServletContext.getSessionTimeout())) //
@@ -278,6 +282,8 @@ public class DiamWebsocketController
         var sessionOwner = userRepository.getCurrentUsername();
         var dataOwner = userRepository.getUserOrCurationUser(aDataOwner);
 
+        var constraints = constraintsService.getMergedConstraints(aProject);
+
         var cas = documentService.readAnnotationCas(doc, aDataOwner);
 
         var prefs = userPreferencesService.loadPreferences(doc.getProject(), sessionOwner,
@@ -291,6 +297,7 @@ public class DiamWebsocketController
         var request = RenderRequest.builder() //
                 .withSessionOwner(userRepository.getCurrentUser()) //
                 .withDocument(doc, dataOwner) //
+                .withConstraints(constraints) //
                 .withWindow(aViewportBegin, aViewportEnd) //
                 .withCas(cas) //
                 .withVisibleLayers(layers) //

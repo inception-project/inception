@@ -15,15 +15,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator;
+package de.tudarmstadt.ukp.clarin.webanno.constraints.config;
 
-import org.apache.uima.cas.FeatureStructure;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
-import de.tudarmstadt.ukp.clarin.webanno.constraints.model.ParsedConstraints;
+import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
+import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsServiceImpl;
 
-public interface Verifiable
+@Configuration
+@EnableConfigurationProperties(ConstraintsPropertiesImpl.class)
+public class ConstraintsServiceAutoConfiguration
 {
-
-    boolean verify(FeatureStructure featureStructure, ParsedConstraints parsedConstraints);
-
+    @Bean
+    public ConstraintsService constraintsService(ConstraintsProperties aProperties)
+    {
+        return new ConstraintsServiceImpl(aProperties);
+    }
 }

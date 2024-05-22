@@ -160,7 +160,6 @@ public class RadioGroupStringFeatureEditor
 
                 var radio = new Radio<>("radio", (IModel) tag, aGroup);
                 item.add(radio);
-                item.add(radio);
 
                 var button = new WebMarkupContainer("button", item.getModel());
                 button.add(onTag((c, t) -> t.put("for", radio.getMarkupId())));
@@ -169,7 +168,6 @@ public class RadioGroupStringFeatureEditor
                 var label = new Label("label", item.getModel().map(ReorderableTag::getName));
                 label.add(AttributeModifier.append("class", item.getModel()
                         .map(ReorderableTag::getReordered).map(_flag -> _flag ? "fw-bold" : "")));
-
                 button.add(label);
 
                 var score = new Label("score", item.getModel().map(ReorderableTag::getScore));
