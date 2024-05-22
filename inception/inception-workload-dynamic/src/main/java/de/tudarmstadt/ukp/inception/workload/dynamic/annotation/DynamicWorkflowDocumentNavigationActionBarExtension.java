@@ -114,17 +114,23 @@ public class DynamicWorkflowDocumentNavigationActionBarExtension
         var target = RequestCycle.get().find(AjaxRequestTarget.class);
 
         // Assign a new document with actionLoadDocument
+        var allDocuments = documentService.listSourceDocuments(project);
         var nextDocument = dynamicWorkloadExtension.nextDocumentToAnnotate(project, user);
         if (nextDocument.isPresent()) {
+            var state = aPage.getModelObject();
             // This was the case, so load the document and return
-            aPage.getModelObject().setDocument(nextDocument.get(),
-                    documentService.listSourceDocuments(nextDocument.get().getProject()));
-            aPage.actionLoadDocument(target.orElse(null));
+            if (!nextDocument.get().equals(state.getDocument())) {
+                // If the document is already loaded, do nothing (avoids an endless recursion
+                // triggered by actionLoadDocument refreshing the action bar which then
+                // calls onInitialize).
+                state.setDocument(nextDocument.get(), allDocuments);
+                aPage.actionLoadDocument(target.orElse(null));
+            }
+            return;
         }
-        else {
-            // Nothing left, so returning to home page and showing hint
-            aPage.getSession().info("There are no more documents to annotate available for you.");
-            aPage.setResponsePage(aPage.getApplication().getHomePage());
-        }
+
+        // Nothing left, so returning to home page and showing hint
+        aPage.getSession().info("There are no more documents to annotate available for you.");
+        aPage.setResponsePage(aPage.getApplication().getHomePage());
     }
 }
