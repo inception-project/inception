@@ -17,22 +17,24 @@
  */
 package de.tudarmstadt.ukp.inception.scheduling;
 
-import de.tudarmstadt.ukp.inception.scheduling.controller.SchedulerWebsocketController;
-import de.tudarmstadt.ukp.inception.scheduling.controller.model.MTaskStateUpdate;
+import java.lang.invoke.MethodHandles;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 
-public class NotifyingTaskMonitor
+public class LoggingTaskMonitor
     extends TaskMonitor
 {
-    private final SchedulerWebsocketController schedulerWebsocketController;
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
-    private MTaskStateUpdate lastUpdate;
+    private long lastLog = 0;
+    private TaskState lastState;
 
-    public NotifyingTaskMonitor(Task aTask,
-            SchedulerWebsocketController aSchedulerWebsocketController)
+    public LoggingTaskMonitor(Task aTask)
     {
         super(aTask);
-        schedulerWebsocketController = aSchedulerWebsocketController;
     }
 
     @Override
@@ -81,27 +83,19 @@ public class NotifyingTaskMonitor
         sendNotification();
     }
 
-    @Override
-    protected void onDestroy()
-    {
-        var msg = new MTaskStateUpdate(this, true);
-        if (getUser() != null) {
-            schedulerWebsocketController.dispatch(msg);
-        }
-    }
-
     protected void sendNotification()
     {
         if (isDestroyed()) {
             return;
         }
 
-        var msg = new MTaskStateUpdate(this);
-        if (lastUpdate == null || !lastUpdate.equals(msg)) {
-            if (getUser() != null) {
-                schedulerWebsocketController.dispatch(msg);
-            }
-            lastUpdate = msg;
+        var now = System.currentTimeMillis();
+        var state = getState();
+        if (state != lastState || now - lastLog > 5_000) {
+            LOG.info("{}: Documents processed: {}/{}", getProject(), getProgress(),
+                    getMaxProgress());
+            lastLog = now;
+            lastState = state;
         }
     }
 }
