@@ -20,21 +20,20 @@ package de.tudarmstadt.ukp.inception.annotation.layer.relation;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.groupingBy;
-import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.abbreviate;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
 
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map.Entry;
+import java.util.Map;
 import java.util.Optional;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
@@ -141,7 +140,7 @@ public class RelationRenderer
         var annotations = selectAnnotationsInWindow(aRequest.getCas(), aWindowBegin, aWindowEnd);
 
         for (var fs : annotations) {
-            for (var arc : render(aResponse, fs, aFeatures, aWindowBegin, aWindowEnd)) {
+            for (var arc : render(aRequest, aFeatures, aResponse, aWindowBegin, aWindowEnd, fs)) {
                 if (!(arc instanceof VArc)) {
                     continue;
                 }
@@ -178,24 +177,24 @@ public class RelationRenderer
 
         var sortedYield = yield.stream() //
                 .sorted(Comparator.comparingInt(Annotation::getBegin)) //
-                .collect(toList());
+                .toList();
         var message = getYieldMessage(sortedYield);
         return Optional.of(message);
     }
 
     @Override
-    public List<VObject> render(VDocument aVDocument, AnnotationFS aFS,
-            List<AnnotationFeature> aFeatures, int aWindowBegin, int aWindowEnd)
+    public List<VObject> render(RenderRequest aRequest, List<AnnotationFeature> aFeatures,
+            VDocument aVDocument, int aWindowBegin, int aWindowEnd, AnnotationFS aFS)
     {
         if (!checkTypeSystem(aFS.getCAS())) {
-            return Collections.emptyList();
+            return emptyList();
         }
 
         var typeAdapter = getTypeAdapter();
-        var dependentFs = getTargetFs(aFS);
-        var governorFs = getSourceFs(aFS);
+        var sourceFs = getSourceFs(aFS);
+        var targetFs = getTargetFs(aFS);
 
-        if (dependentFs == null || governorFs == null) {
+        if (targetFs == null || sourceFs == null) {
             WicketUtil.getPage().ifPresent(page -> {
                 var message = new StringBuilder();
                 message.append("Relation [" + typeAdapter.getLayer().getName() + "] with id ["
@@ -205,74 +204,114 @@ public class RelationRenderer
                             + "] attached to feature [" + typeAdapter.getAttachFeatureName()
                             + "].");
                 }
-                message.append("\nDependent: " + dependentFs);
-                message.append("\nGovernor: " + governorFs);
+                message.append("\nSource: " + sourceFs);
+                message.append("\nTarget: " + targetFs);
                 page.warn(message.toString());
             });
 
-            return Collections.emptyList();
+            return emptyList();
         }
 
         var labelFeatures = renderLabelFeatureValues(typeAdapter, aFS, aFeatures);
 
-        if (traits.isRenderArcs()) {
-            var arc = VArc.builder().forAnnotation(aFS) //
-                    .withLayer(typeAdapter.getLayer()) //
-                    .withSource(governorFs) //
-                    .withTarget(dependentFs) //
-                    .withFeatures(labelFeatures) //
-                    .build();
-
-            return asList(arc);
+        switch (traits.getRenderMode()) {
+        case ALWAYS:
+            return renderRelationAsArcs(aFS, typeAdapter, sourceFs, targetFs, labelFeatures);
+        case WHEN_SELECTED:
+            if (aRequest.getState() == null || isSelected(aRequest, aFS, sourceFs, targetFs)) {
+                return renderRelationAsArcs(aFS, typeAdapter, sourceFs, targetFs, labelFeatures);
+            }
+            return renderRelationOnLabel(aVDocument, typeAdapter, sourceFs, targetFs,
+                    labelFeatures);
+        case NEVER:
+            return renderRelationOnLabel(aVDocument, typeAdapter, sourceFs, targetFs,
+                    labelFeatures);
+        default:
+            return renderRelationAsArcs(aFS, typeAdapter, sourceFs, targetFs, labelFeatures);
         }
-        else {
-            var governor = (AnnotationFS) governorFs;
-            var dependent = (AnnotationFS) dependentFs;
+    }
 
-            var noteBuilder = new StringBuilder();
-            noteBuilder.append(typeAdapter.getLayer().getUiName());
-            noteBuilder.append("\n");
-            noteBuilder.append(governor.getCoveredText());
-            noteBuilder.append(" -> ");
-            noteBuilder.append(dependent.getCoveredText());
-            noteBuilder.append("\n");
+    private boolean isSelected(RenderRequest aRequest, FeatureStructure... aFSes)
+    {
+        var selection = aRequest.getState().getSelection();
 
-            for (Entry<String, String> entry : labelFeatures.entrySet()) {
-                noteBuilder.append(entry.getKey());
+        if (!selection.isSet()) {
+            return false;
+        }
+
+        for (var fs : aFSes) {
+            if (VID.of(fs).equals(selection.getAnnotation())) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private List<VObject> renderRelationOnLabel(VDocument aVDocument, RelationAdapter typeAdapter,
+            FeatureStructure sourceFs, FeatureStructure targetFs, Map<String, String> labelFeatures)
+    {
+        var source = (AnnotationFS) sourceFs;
+        var target = (AnnotationFS) targetFs;
+
+        var noteBuilder = new StringBuilder();
+        noteBuilder.append(typeAdapter.getLayer().getUiName());
+        noteBuilder.append("\n");
+        noteBuilder.append(source.getCoveredText());
+        noteBuilder.append(" -> ");
+        noteBuilder.append(target.getCoveredText());
+        noteBuilder.append("\n");
+
+        for (var entry : labelFeatures.entrySet()) {
+            noteBuilder.append(entry.getKey());
+            if (StringUtils.isNotBlank(entry.getValue())) {
                 noteBuilder.append(" = ");
                 noteBuilder.append(entry.getValue());
-                noteBuilder.append("\n");
             }
-
-            String note = noteBuilder.toString().stripTrailing();
-            aVDocument.add(new VComment(governorFs, VCommentType.INFO, "\n⬆️ " + note));
-            aVDocument.add(new VComment(dependentFs, VCommentType.INFO, "\n⬇️ " + note));
-
-            return Collections.emptyList();
+            noteBuilder.append("\n");
         }
+
+        var note = noteBuilder.toString().stripTrailing();
+        aVDocument.add(new VComment(sourceFs, VCommentType.INFO, "\n⏺➡" + note));
+        aVDocument.add(new VComment(targetFs, VCommentType.INFO, "\n➡⏺" + note));
+
+        return emptyList();
+    }
+
+    private List<VObject> renderRelationAsArcs(AnnotationFS aFS, RelationAdapter typeAdapter,
+            FeatureStructure sourceFs, FeatureStructure targetFs, Map<String, String> labelFeatures)
+    {
+        var arc = VArc.builder().forAnnotation(aFS) //
+                .withLayer(typeAdapter.getLayer()) //
+                .withSource(sourceFs) //
+                .withTarget(targetFs) //
+                .withFeatures(labelFeatures) //
+                .build();
+
+        return asList(arc);
     }
 
     @Override
     public List<VLazyDetailGroup> lookupLazyDetails(CAS aCas, VID aVid)
     {
         if (!checkTypeSystem(aCas)) {
-            return Collections.emptyList();
+            return emptyList();
         }
 
         var fs = ICasUtil.selectAnnotationByAddr(aCas, aVid.getId());
 
         var group = new VLazyDetailGroup();
 
-        var dependentFs = getTargetFs(fs);
-        if (dependentFs instanceof AnnotationFS) {
+        var targetFs = getTargetFs(fs);
+        if (targetFs instanceof AnnotationFS) {
             group.addDetail(new VLazyDetail("Target",
-                    abbreviate(((AnnotationFS) dependentFs).getCoveredText(), 300)));
+                    abbreviate(((AnnotationFS) targetFs).getCoveredText(), 300)));
         }
 
-        var governorFs = getSourceFs(fs);
-        if (governorFs instanceof AnnotationFS) {
-            group.addDetail(new VLazyDetail("Origin",
-                    abbreviate(((AnnotationFS) governorFs).getCoveredText(), 300)));
+        var sourceFs = getSourceFs(fs);
+        if (sourceFs instanceof AnnotationFS) {
+            group.addDetail(new VLazyDetail("Source",
+                    abbreviate(((AnnotationFS) sourceFs).getCoveredText(), 300)));
         }
 
         renderYield(fs).ifPresent(

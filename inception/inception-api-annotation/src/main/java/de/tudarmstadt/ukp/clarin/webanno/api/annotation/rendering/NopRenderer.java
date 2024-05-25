@@ -61,8 +61,9 @@ public class NopRenderer
     }
 
     @Override
-    public List<VObject> render(VDocument aVDocument, AnnotationFS aFS,
-            List<AnnotationFeature> aFeatures, int aWindowBegin, int aWindowEnd)
+    public List<VObject> render(RenderRequest aRequest, List<AnnotationFeature> aFeatures,
+            VDocument aResponse, int windowBeginOffset, int windowEndOffset, AnnotationFS aFS)
+
     {
         return Collections.emptyList();
     }
