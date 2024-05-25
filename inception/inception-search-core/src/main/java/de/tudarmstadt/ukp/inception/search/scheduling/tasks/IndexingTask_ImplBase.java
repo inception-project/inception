@@ -22,8 +22,8 @@ import java.util.Objects;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.scheduling.MatchableTask;
+import de.tudarmstadt.ukp.inception.scheduling.Progress;
 import de.tudarmstadt.ukp.inception.scheduling.Task;
-import de.tudarmstadt.ukp.inception.search.model.Progress;
 
 /**
  * Abstract search task
@@ -53,12 +53,13 @@ public abstract class IndexingTask_ImplBase
         return annotationDocument;
     }
 
+    @Deprecated
     public abstract Progress getProgress();
 
     @Override
     public String toString()
     {
-        StringBuilder builder = new StringBuilder();
+        var builder = new StringBuilder();
         builder.append(getClass().getSimpleName());
         builder.append(" [project=");
         builder.append(getProject().getName());

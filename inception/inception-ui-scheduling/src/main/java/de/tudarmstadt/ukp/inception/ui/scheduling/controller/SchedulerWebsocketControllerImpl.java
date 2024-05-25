@@ -28,6 +28,7 @@ import javax.servlet.ServletContext;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageExceptionHandler;
 import org.springframework.messaging.handler.annotation.SendTo;
@@ -46,6 +47,7 @@ import de.tudarmstadt.ukp.inception.scheduling.controller.model.MTaskStateUpdate
 
 @Controller
 @RequestMapping(SchedulerWebsocketController.BASE_URL)
+@ConditionalOnWebApplication
 @ConditionalOnProperty(prefix = "websocket", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class SchedulerWebsocketControllerImpl
     implements SchedulerWebsocketController

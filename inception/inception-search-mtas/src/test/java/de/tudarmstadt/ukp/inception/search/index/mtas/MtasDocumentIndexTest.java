@@ -31,6 +31,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.fit.factory.JCasBuilder;
@@ -196,7 +197,7 @@ public class MtasDocumentIndexTest
         Project p = project;
         await("Waiting for indexing process to complete") //
                 .atMost(60, SECONDS) //
-                .pollInterval(5, SECONDS) //
+                .pollInterval(200, TimeUnit.MILLISECONDS) //
                 .until(() -> searchService.isIndexValid(p)
                         && searchService.getIndexProgress(p).isEmpty());
         LOG.info("Indexing complete!");
@@ -251,7 +252,7 @@ public class MtasDocumentIndexTest
         LOG.info("Writing for annotated document to be indexed");
         await("Waiting for indexing process to complete") //
                 .atMost(60, SECONDS) //
-                .pollInterval(5, SECONDS) //
+                .pollInterval(200, TimeUnit.MILLISECONDS) //
                 .until(() -> searchService.isIndexValid(aProject)
                         && searchService.getIndexProgress(aProject).isEmpty());
         LOG.info("Indexing complete!");
@@ -317,7 +318,7 @@ public class MtasDocumentIndexTest
         LOG.info("Writing for annotated document to be indexed");
         await("Waiting for indexing process to complete") //
                 .atMost(60, SECONDS) //
-                .pollInterval(5, SECONDS) //
+                .pollInterval(200, TimeUnit.MILLISECONDS) //
                 .until(() -> searchService.isIndexValid(aProject)
                         && searchService.getIndexProgress(aProject).isEmpty());
         LOG.info("Indexing complete!");

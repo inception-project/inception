@@ -53,9 +53,9 @@ public class TaskMonitor
     private boolean cancelled = false;
     private boolean destroyed = false;
 
-    public TaskMonitor(TaskHandle aHandle, Task aTask)
+    public TaskMonitor(Task aTask)
     {
-        handle = aHandle;
+        handle = aTask.getHandle();
         type = aTask.getType();
         user = aTask.getUser().map(User::getUsername).orElse(null);
         project = aTask.getProject();
@@ -212,5 +212,11 @@ public class TaskMonitor
     public boolean isCancelled()
     {
         return cancelled;
+    }
+
+    @Deprecated
+    public synchronized Progress toProgress()
+    {
+        return new Progress(maxProgress, progress);
     }
 }
