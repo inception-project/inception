@@ -136,7 +136,7 @@ public class SpanRenderer
 
         // List<AnnotationFS> annotations = selectCovered(aCas, type, aWindowBegin, aWindowEnd);
         for (var fs : annotations) {
-            for (var vobj : render(aResponse, fs, aFeatures, aWindowBegin, aWindowEnd)) {
+            for (var vobj : render(aRequest, aFeatures, aResponse, aWindowBegin, aWindowEnd, fs)) {
                 aResponse.add(vobj);
 
                 if (vobj instanceof VSpan vspan) {
@@ -153,14 +153,14 @@ public class SpanRenderer
     }
 
     @Override
-    public List<VObject> render(VDocument aVDocument, AnnotationFS aFS,
-            List<AnnotationFeature> aFeatures, int aWindowBegin, int aWindowEnd)
+    public List<VObject> render(RenderRequest aRequest, List<AnnotationFeature> aFeatures,
+            VDocument aResponse, int windowBeginOffset, int windowEndOffset, AnnotationFS aFS)
     {
         if (!checkTypeSystem(aFS.getCAS())) {
             return emptyList();
         }
 
-        var range = VRange.clippedRange(aVDocument, aFS);
+        var range = VRange.clippedRange(aResponse, aFS);
 
         if (!range.isPresent()) {
             return emptyList();
