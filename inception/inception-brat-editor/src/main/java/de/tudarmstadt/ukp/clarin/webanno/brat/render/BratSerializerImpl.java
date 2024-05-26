@@ -156,8 +156,10 @@ public class BratSerializerImpl
             }
 
             for (var varc : aVDoc.arcs(layer.getId())) {
+                var labelHint = StringUtils.defaultIfBlank(varc.getLabelHint(),
+                        "(" + layer.getUiName() + ")");
                 var arc = new Relation(varc.getVid(), getBratTypeName(varc.getLayer()),
-                        getArgument(varc.getSource(), varc.getTarget()), varc.getLabelHint(),
+                        getArgument(varc.getSource(), varc.getTarget()), labelHint,
                         varc.getColorHint());
                 aResponse.addRelation(arc);
             }

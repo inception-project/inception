@@ -53,7 +53,8 @@ public class LoadAnnotationsHandler
     public static final String PARAM_BEGIN = "begin";
     public static final String PARAM_END = "end";
     public static final String PARAM_TEXT = "text";
-    public static final String PARAM_CLIP = "clip";
+    public static final String PARAM_CLIP_SPANS = "clip";
+    public static final String PARAM_CLIP_RELATIONS = "clipRelations";
 
     private final RenderingPipeline renderingPipeline;
     private final VDocumentSerializerExtensionPoint vDocumentSerializerExtensionPoint;
@@ -75,7 +76,8 @@ public class LoadAnnotationsHandler
     }
 
     @Override
-    public AjaxResponse handle(DiamAjaxBehavior aBehavior, AjaxRequestTarget aTarget, Request aRequest)
+    public AjaxResponse handle(DiamAjaxBehavior aBehavior, AjaxRequestTarget aTarget,
+            Request aRequest)
     {
         try {
             var request = prepareRenderRequest(aRequest);
@@ -100,8 +102,10 @@ public class LoadAnnotationsHandler
                 .toInt(state.getWindowEndOffset());
         boolean includeText = aRequest.getRequestParameters().getParameterValue(PARAM_TEXT)
                 .toBoolean(true);
-        boolean clipSpans = aRequest.getRequestParameters().getParameterValue(PARAM_CLIP)
+        boolean clipSpans = aRequest.getRequestParameters().getParameterValue(PARAM_CLIP_SPANS)
                 .toBoolean(true);
+        boolean clipRelations = aRequest.getRequestParameters()
+                .getParameterValue(PARAM_CLIP_RELATIONS).toBoolean(true);
 
         RenderRequest request = RenderRequest.builder() //
                 .withState(state) //
@@ -110,6 +114,7 @@ public class LoadAnnotationsHandler
                 .withWindow(begin, end) //
                 .withText(includeText) //
                 .withClipSpans(clipSpans) //
+                .withClipRelations(clipRelations) //
                 .withVisibleLayers(state.getAnnotationLayers()) //
                 .build();
         return request;

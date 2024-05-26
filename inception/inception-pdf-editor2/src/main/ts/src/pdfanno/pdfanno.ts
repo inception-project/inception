@@ -290,6 +290,8 @@ export function getAnnotations () {
   const options : DiamLoadAnnotationsOptions = {
     range: [extendedBegin, extendedEnd],
     includeText: false,
+    clipSpans: true,
+    clipRelations: false,
     format: 'compact_v2'
   }
 

@@ -208,6 +208,10 @@ export class DiamAjaxImpl implements DiamAjax {
         params.clip = options.clipSpans
       }
 
+      if (options.clipRelations === false) {
+        params.clipRelations = options.clipRelations
+      }
+
       if (options.format) {
         params.format = options.format
       }
