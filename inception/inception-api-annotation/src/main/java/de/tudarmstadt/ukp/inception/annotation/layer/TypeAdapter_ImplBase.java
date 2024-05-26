@@ -35,6 +35,8 @@ import org.apache.uima.cas.FeatureStructure;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
 
+import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
+import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.ConstraintsEvaluator;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -50,17 +52,14 @@ public abstract class TypeAdapter_ImplBase
     implements TypeAdapter
 {
     private final LayerSupportRegistry layerSupportRegistry;
-
     private final FeatureSupportRegistry featureSupportRegistry;
+    private final ConstraintsService constraintsService;
 
     private final AnnotationLayer layer;
-
     private final Supplier<Collection<AnnotationFeature>> featureSupplier;
 
     private Map<String, AnnotationFeature> features;
-
     private ApplicationEventPublisher applicationEventPublisher;
-
     private Map<AnnotationLayer, Object> layerTraitsCache;
 
     /**
@@ -83,12 +82,13 @@ public abstract class TypeAdapter_ImplBase
      *            {@link AnnotationSchemaService}.
      */
     public TypeAdapter_ImplBase(LayerSupportRegistry aLayerSupportRegistry,
-            FeatureSupportRegistry aFeatureSupportRegistry,
+            FeatureSupportRegistry aFeatureSupportRegistry, ConstraintsService aConstraintsService,
             ApplicationEventPublisher aEventPublisher, AnnotationLayer aLayer,
             Supplier<Collection<AnnotationFeature>> aFeatures)
     {
         layerSupportRegistry = aLayerSupportRegistry;
         featureSupportRegistry = aFeatureSupportRegistry;
+        constraintsService = aConstraintsService;
         applicationEventPublisher = aEventPublisher;
         layer = aLayer;
         featureSupplier = aFeatures;
@@ -121,8 +121,9 @@ public abstract class TypeAdapter_ImplBase
         if (!feature.isPresent()) {
             return null;
         }
-        return featureSupportRegistry.findExtension(feature.get())
-                .map(fs -> fs.renderFeatureValue(feature.get(), aFS)).orElse(null);
+        return featureSupportRegistry.findExtension(feature.get()) //
+                .map(fs -> fs.renderFeatureValue(feature.get(), aFS)) //
+                .orElse(null);
     }
 
     @Override
@@ -137,10 +138,18 @@ public abstract class TypeAdapter_ImplBase
             // Using a sorted map here so we have reliable positions in the map when iterating. We
             // use these positions to remember the armed slots!
             features = new TreeMap<>();
-            for (AnnotationFeature f : featureSupplier.get()) {
-                features.put(f.getName(), f);
+            for (var feature : featureSupplier.get()) {
+                features.put(feature.getName(), feature);
             }
         }
+    }
+
+    @Override
+    public final boolean isFeatureValueValid(AnnotationFeature aFeature, FeatureStructure aFS)
+    {
+        var featureSupport = featureSupportRegistry.findExtension(aFeature).orElseThrow();
+
+        return featureSupport.isFeatureValueValid(aFeature, aFS);
     }
 
     @Override
@@ -161,6 +170,35 @@ public abstract class TypeAdapter_ImplBase
         if (!Objects.equals(oldValue, newValue)) {
             publishEvent(() -> new FeatureValueUpdatedEvent(this, aDocument, aUsername, getLayer(),
                     fs, aFeature, newValue, oldValue));
+        }
+
+        clearHiddenFeatures(aDocument, aUsername, fs);
+    }
+
+    private void clearHiddenFeatures(SourceDocument aDocument, String aUsername,
+            FeatureStructure aFS)
+    {
+        var constraints = constraintsService.getMergedConstraints(aDocument.getProject());
+        if (constraints == null) {
+            return;
+        }
+
+        var evaluator = new ConstraintsEvaluator();
+        for (var feature : listFeatures()) {
+            if (evaluator.isHiddenConditionalFeature(constraints, aFS, feature)) {
+                var featureSupport = featureSupportRegistry.findExtension(feature).orElseThrow();
+
+                var oldValue = featureSupport.getFeatureValue(feature, aFS);
+
+                featureSupport.clearFeatureValue(feature, aFS);
+
+                var newValue = featureSupport.getFeatureValue(feature, aFS);
+
+                if (!Objects.equals(oldValue, newValue)) {
+                    publishEvent(() -> new FeatureValueUpdatedEvent(this, aDocument, aUsername,
+                            getLayer(), aFS, feature, newValue, oldValue));
+                }
+            }
         }
     }
 

@@ -56,6 +56,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRendererImpl;
 import de.tudarmstadt.ukp.clarin.webanno.brat.config.BratAnnotationEditorPropertiesImpl;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
+import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
@@ -84,6 +85,7 @@ import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 @ExtendWith(MockitoExtension.class)
 public class BratSerializerImplTest
 {
+    private @Mock ConstraintsService constraintsService;
     private @Mock AnnotationSchemaService schemaService;
     private LayerSupportRegistryImpl layerRegistry;
 
@@ -137,18 +139,21 @@ public class BratSerializerImplTest
         posFeature.setProject(project);
         posFeature.setVisible(true);
 
-        FeatureSupportRegistryImpl featureSupportRegistry = new FeatureSupportRegistryImpl(
+        var featureSupportRegistry = new FeatureSupportRegistryImpl(
                 asList(new StringFeatureSupport(), new BooleanFeatureSupport(),
                         new NumberFeatureSupport(), new LinkFeatureSupport(schemaService)));
         featureSupportRegistry.init();
 
-        LayerBehaviorRegistryImpl layerBehaviorRegistry = new LayerBehaviorRegistryImpl(asList());
+        var layerBehaviorRegistry = new LayerBehaviorRegistryImpl(asList());
         layerBehaviorRegistry.init();
 
         layerRegistry = new LayerSupportRegistryImpl(asList(
-                new SpanLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry),
-                new RelationLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry),
-                new ChainLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry)));
+                new SpanLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry,
+                        constraintsService),
+                new RelationLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry,
+                        constraintsService),
+                new ChainLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry,
+                        constraintsService)));
         layerRegistry.init();
 
         when(schemaService.listAnnotationLayer(any())).thenReturn(asList(posLayer));

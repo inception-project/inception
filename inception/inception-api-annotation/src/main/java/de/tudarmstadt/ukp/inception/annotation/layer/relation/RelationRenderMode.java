@@ -15,15 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator;
+package de.tudarmstadt.ukp.inception.annotation.layer.relation;
 
-import org.apache.uima.cas.FeatureStructure;
-
-import de.tudarmstadt.ukp.clarin.webanno.constraints.model.ParsedConstraints;
-
-public interface Verifiable
+public enum RelationRenderMode
 {
-
-    boolean verify(FeatureStructure featureStructure, ParsedConstraints parsedConstraints);
-
+    NEVER, //
+    WHEN_SELECTED, //
+    ALWAYS;
 }

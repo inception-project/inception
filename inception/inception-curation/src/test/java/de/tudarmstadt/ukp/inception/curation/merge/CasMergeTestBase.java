@@ -42,6 +42,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.DiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.relation.RelationDiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span.SpanDiffAdapter;
@@ -71,6 +72,7 @@ import de.tudarmstadt.ukp.inception.schema.service.FeatureSupportRegistryImpl;
 @ExtendWith(MockitoExtension.class)
 public class CasMergeTestBase
 {
+    protected @Mock ConstraintsService constraintsService;
     protected @Mock AnnotationSchemaService schemaService;
 
     protected CasMerge sut;
@@ -110,7 +112,7 @@ public class CasMergeTestBase
     @BeforeEach
     public void setup() throws Exception
     {
-        SpanDiffAdapter slotHostDiffAdapter = new SpanDiffAdapter(HOST_TYPE);
+        var slotHostDiffAdapter = new SpanDiffAdapter(HOST_TYPE);
         slotHostDiffAdapter.addLinkFeature("links", "role", "target");
 
         diffAdapters = new ArrayList<>();
@@ -368,13 +370,16 @@ public class CasMergeTestBase
                         new NumberFeatureSupport(), new LinkFeatureSupport(schemaService)));
         featureSupportRegistry.init();
 
-        LayerBehaviorRegistryImpl layerBehaviorRegistry = new LayerBehaviorRegistryImpl(asList());
+        var layerBehaviorRegistry = new LayerBehaviorRegistryImpl(asList());
         layerBehaviorRegistry.init();
 
         layerSupportRegistry = new LayerSupportRegistryImpl(asList(
-                new SpanLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry),
-                new RelationLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry),
-                new ChainLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry)));
+                new SpanLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry,
+                        constraintsService),
+                new RelationLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry,
+                        constraintsService),
+                new ChainLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry,
+                        constraintsService)));
         layerSupportRegistry.init();
 
         sut = new CasMerge(schemaService, null);

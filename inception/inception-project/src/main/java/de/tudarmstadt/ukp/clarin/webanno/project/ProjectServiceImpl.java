@@ -71,6 +71,7 @@ import org.apache.commons.collections4.SetUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.ClassUtils;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -349,7 +350,25 @@ public class ProjectServiceImpl
                             .collect(toCollection(LinkedHashSet::new));
                     return new ProjectUserPermissions(aProject, username, user, roles);
                 }) //
-                .collect(toList());
+                .sorted(this::compareProjectUserPermissions).collect(toList());
+    }
+
+    private int compareProjectUserPermissions(ProjectUserPermissions a, ProjectUserPermissions b)
+    {
+        if (a.getUser().isPresent() && b.getUser().isPresent()) {
+            return ObjectUtils.compare(a.getUser().get().getUiName(),
+                    b.getUser().get().getUiName());
+        }
+
+        if (a.getUser().isPresent() && !b.getUser().isPresent()) {
+            return -1;
+        }
+
+        if (!a.getUser().isPresent() && b.getUser().isPresent()) {
+            return 1;
+        }
+
+        return ObjectUtils.compare(a.getUsername(), b.getUsername());
     }
 
     @Override

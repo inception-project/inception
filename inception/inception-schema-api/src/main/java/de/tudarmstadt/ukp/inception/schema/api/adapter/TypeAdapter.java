@@ -187,6 +187,8 @@ public interface TypeAdapter
      */
     <T> T getFeatureValue(AnnotationFeature aFeature, FeatureStructure aFs);
 
+    boolean isFeatureValueValid(AnnotationFeature aFeature, FeatureStructure aFS);
+
     /**
      * Initialize the layer when it is created. This can be used e.g. to add default features. This
      * is mainly called when a layer is created through the UI, in other cases (e.g. during import)

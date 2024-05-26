@@ -28,20 +28,18 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.TypeSystem;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.jcas.cas.TOP;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.Renderer_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerBehavior;
+import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VArc;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
@@ -101,10 +99,10 @@ public class ChainRenderer
     }
 
     @Override
-    public void render(CAS aCas, List<AnnotationFeature> aFeatures, VDocument aResponse,
-            int aWindowBegin, int aWindowEnd)
+    public void render(RenderRequest aRequest, List<AnnotationFeature> aFeatures,
+            VDocument aResponse, int aWindowBegin, int aWindowEnd)
     {
-        if (!checkTypeSystem(aCas)) {
+        if (!checkTypeSystem(aRequest.getCas())) {
             return;
         }
 
@@ -114,32 +112,32 @@ public class ChainRenderer
         // feature for arc/span labels because they may have been disabled.
         AnnotationFeature spanLabelFeature = null;
         AnnotationFeature arcLabelFeature = null;
-        for (AnnotationFeature f : aFeatures) {
-            if (COREFERENCE_TYPE_FEATURE.equals(f.getName())) {
-                spanLabelFeature = f;
+        for (var feature : aFeatures) {
+            if (COREFERENCE_TYPE_FEATURE.equals(feature.getName())) {
+                spanLabelFeature = feature;
             }
-            if (COREFERENCE_RELATION_FEATURE.equals(f.getName())) {
-                arcLabelFeature = f;
+            if (COREFERENCE_RELATION_FEATURE.equals(feature.getName())) {
+                arcLabelFeature = feature;
             }
         }
         // At this point arc and span feature labels must have been found! If not, the later code
         // will crash.
 
         // Sorted index mapping annotations to the corresponding rendered spans
-        Map<AnnotationFS, VSpan> annoToSpanIdx = new HashMap<>();
+        var annoToSpanIdx = new HashMap<AnnotationFS, VSpan>();
 
         int colorIndex = 0;
         // Iterate over the chains
-        List<TOP> chains = aCas.select(typeAdapter.getChainTypeName()).asList();
-        for (TOP chainFs : chains) {
-            AnnotationFS linkFs = (AnnotationFS) chainFs.getFeatureValue(chainFirst);
+        var chains = aRequest.getCas().select(typeAdapter.getChainTypeName()).asList();
+        for (var chainFs : chains) {
+            var linkFs = (AnnotationFS) chainFs.getFeatureValue(chainFirst);
             AnnotationFS prevLinkFs = null;
 
             // Iterate over the links of the chain
             while (linkFs != null) {
-                Feature linkNext = linkFs.getType()
+                var linkNext = linkFs.getType()
                         .getFeatureByBaseName(typeAdapter.getLinkNextFeatureName());
-                AnnotationFS nextLinkFs = (AnnotationFS) linkFs.getFeatureValue(linkNext);
+                var nextLinkFs = (AnnotationFS) linkFs.getFeatureValue(linkNext);
 
                 // Is link after window? If yes, we can skip the rest of the chain
                 if (linkFs.getBegin() >= aWindowEnd) {
@@ -156,16 +154,16 @@ public class ChainRenderer
 
                 // Render span
                 {
-                    Optional<VRange> range = VRange.clippedRange(aResponse, linkFs);
+                    var range = VRange.clippedRange(aResponse, linkFs);
 
                     if (!range.isPresent()) {
                         continue;
                     }
 
-                    String label = getUiLabelText(typeAdapter, linkFs,
+                    var label = getUiLabelText(typeAdapter, linkFs,
                             (spanLabelFeature != null) ? asList(spanLabelFeature) : emptyList());
 
-                    VSpan span = new VSpan(typeAdapter.getLayer(), linkFs, range.get(), colorIndex,
+                    var span = new VSpan(typeAdapter.getLayer(), linkFs, range.get(), colorIndex,
                             label);
                     annoToSpanIdx.put(linkFs, span);
                     aResponse.add(span);
@@ -191,7 +189,7 @@ public class ChainRenderer
                 }
 
                 // Render errors if required features are missing
-                renderRequiredFeatureErrors(aFeatures, linkFs, aResponse);
+                renderRequiredFeatureErrors(aRequest, aFeatures, linkFs, aResponse);
 
                 prevLinkFs = linkFs;
                 linkFs = nextLinkFs;
@@ -203,14 +201,14 @@ public class ChainRenderer
             colorIndex++;
         }
 
-        for (SpanLayerBehavior behavior : behaviors) {
+        for (var behavior : behaviors) {
             behavior.onRender(typeAdapter, aResponse, annoToSpanIdx, aWindowBegin, aWindowEnd);
         }
     }
 
     @Override
-    public List<VObject> render(VDocument aVDocument, AnnotationFS aFS,
-            List<AnnotationFeature> aFeatures, int aWindowBegin, int aWindowEnd)
+    public List<VObject> render(RenderRequest aRequest, List<AnnotationFeature> aFeatures,
+            VDocument aResponse, int windowBeginOffset, int windowEndOffset, AnnotationFS aFS)
     {
         return Collections.emptyList();
     }

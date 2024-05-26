@@ -26,6 +26,7 @@ import java.lang.invoke.MethodHandles;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -79,18 +80,23 @@ public abstract class Task
         cancellable = builder.cancellable;
         parentTask = builder.parentTask;
         scope = builder.scope;
+        if (builder.monitor != null) {
+            monitor = builder.monitor.apply(this);
+        }
     }
 
     @Override
     public void afterPropertiesSet()
     {
-        // For tasks that have a parent task, we use a non-notifying monitor. Also, we do not report
-        // such subtasks ia the SchedulerControllerImpl - they are internal.
-        if (schedulerController != null && sessionOwner != null && parentTask == null) {
-            monitor = new NotifyingTaskMonitor(handle, this, schedulerController);
-        }
-        else {
-            monitor = new TaskMonitor(handle, this);
+        if (monitor == null) {
+            // For tasks that have a parent task, we use a non-notifying monitor. Also, we do not
+            // report such subtasks ia the SchedulerControllerImpl - they are internal.
+            if (schedulerController != null && sessionOwner != null && parentTask == null) {
+                monitor = new NotifyingTaskMonitor(this, schedulerController);
+            }
+            else {
+                monitor = new TaskMonitor(this);
+            }
         }
     }
 
@@ -107,6 +113,11 @@ public abstract class Task
     public String getType()
     {
         return type;
+    }
+
+    public TaskHandle getHandle()
+    {
+        return handle;
     }
 
     public String getTitle()
@@ -199,6 +210,12 @@ public abstract class Task
             monitor.setState(TaskState.FAILED);
             LOG.error("Task [{}] failed (trigger: [{}])", getTitle(), getTrigger(), e);
         }
+        catch (Throwable e) {
+            monitor.addMessage(LogMessage.error(this, "Task failed with a serious error."));
+            monitor.setState(TaskState.FAILED);
+            LOG.error("Task [{}] failed with a serious error (trigger: [{}])", getTitle(),
+                    getTrigger(), e);
+        }
     }
 
     public abstract void execute() throws Exception;
@@ -236,6 +253,7 @@ public abstract class Task
 
     public static abstract class Builder<T extends Builder<?>>
     {
+        protected Function<Task, TaskMonitor> monitor;
         protected User sessionOwner;
         protected Project project;
         protected String trigger;
@@ -303,6 +321,17 @@ public abstract class Task
         public T withParentTask(Task aParentTask)
         {
             this.parentTask = aParentTask;
+            return (T) this;
+        }
+
+        /**
+         * @param aMonitorFactory
+         *            function to create monitor for this task.
+         */
+        @SuppressWarnings("unchecked")
+        public T withMonitor(Function<Task, TaskMonitor> aMonitorFactory)
+        {
+            this.monitor = aMonitorFactory;
             return (T) this;
         }
 

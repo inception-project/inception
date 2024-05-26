@@ -20,8 +20,10 @@ package de.tudarmstadt.ukp.inception.search;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.UNMANAGED_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.UNMANAGED_NON_INITIALIZING_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.NO_CAS_UPGRADE;
+import static de.tudarmstadt.ukp.inception.scheduling.TaskState.RUNNING;
 import static de.tudarmstadt.ukp.inception.search.model.AnnotationSearchState.KEY_SEARCH_STATE;
 import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.casToByteArray;
+import static java.lang.Integer.MAX_VALUE;
 import static java.lang.System.currentTimeMillis;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.toList;
@@ -40,7 +42,6 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -69,7 +70,10 @@ import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.project.api.event.AfterProjectRemovedEvent;
 import de.tudarmstadt.ukp.inception.project.api.event.BeforeProjectRemovedEvent;
+import de.tudarmstadt.ukp.inception.scheduling.Progress;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
+import de.tudarmstadt.ukp.inception.scheduling.TaskMonitor;
+import de.tudarmstadt.ukp.inception.scheduling.TaskState;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.event.LayerConfigurationChangedEvent;
 import de.tudarmstadt.ukp.inception.search.config.SearchServiceAutoConfiguration;
@@ -80,12 +84,11 @@ import de.tudarmstadt.ukp.inception.search.index.PhysicalIndexFactory;
 import de.tudarmstadt.ukp.inception.search.index.PhysicalIndexRegistry;
 import de.tudarmstadt.ukp.inception.search.model.BulkIndexingContext;
 import de.tudarmstadt.ukp.inception.search.model.Index;
-import de.tudarmstadt.ukp.inception.search.model.Monitor;
-import de.tudarmstadt.ukp.inception.search.model.Progress;
 import de.tudarmstadt.ukp.inception.search.scheduling.tasks.IndexAnnotationDocumentTask;
 import de.tudarmstadt.ukp.inception.search.scheduling.tasks.IndexSourceDocumentTask;
 import de.tudarmstadt.ukp.inception.search.scheduling.tasks.IndexingTask_ImplBase;
 import de.tudarmstadt.ukp.inception.search.scheduling.tasks.ReindexTask;
+import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 
 /**
  * <p>
@@ -478,9 +481,13 @@ public class SearchServiceImpl
         catch (IndexRebuildRequiredException e) {
             invalidateIndexAndForceIndexRebuild(project, index, "indexDocument[error]");
         }
-        catch (IOException e) {
+        catch (Exception e) {
             log.error("Error indexing source document {} in project {}", aSourceDocument, project,
                     e);
+        }
+        catch (Throwable e) {
+            log.error("Fatal error indexing source document {} in project {}", aSourceDocument,
+                    project, e);
         }
     }
 
@@ -491,6 +498,10 @@ public class SearchServiceImpl
 
         try (PooledIndex pooledIndex = acquireIndex(project.getId())) {
             indexDocument(pooledIndex, aAnnotationDocument, "indexDocument", aBinaryCas);
+        }
+        catch (Exception e) {
+            log.error("Error indexing annotation document {} in project {}", aAnnotationDocument,
+                    project, e);
         }
     }
 
@@ -559,9 +570,8 @@ public class SearchServiceImpl
             SourceDocument aDocument)
         throws IOException, ExecutionException
     {
-        Map<String, List<SearchResult>> groupedResults = query(aUser, aProject, aQuery, aDocument,
-                null, null, 0, Integer.MAX_VALUE);
-        List<SearchResult> resultsAsList = new ArrayList<>();
+        var groupedResults = query(aUser, aProject, aQuery, aDocument, null, null, 0, MAX_VALUE);
+        var resultsAsList = new ArrayList<SearchResult>();
         groupedResults.values().stream()
                 .forEach(resultsGroup -> resultsAsList.addAll(resultsGroup));
         return resultsAsList;
@@ -576,8 +586,8 @@ public class SearchServiceImpl
     {
         log.trace("Query [{}] for user {} in project {}", aQuery, aUser, aProject);
 
-        try (PooledIndex pooledIndex = acquireIndex(aProject.getId())) {
-            Index index = pooledIndex.get();
+        try (var pooledIndex = acquireIndex(aProject.getId())) {
+            var index = pooledIndex.get();
             ensureIndexIsCreatedAndValid(aProject, index);
 
             var prefs = preferencesService.loadDefaultTraitsForProject(KEY_SEARCH_STATE, aProject);
@@ -632,18 +642,16 @@ public class SearchServiceImpl
      */
     @Override
     @Transactional
-    public void reindex(Project aProject, Monitor aMonitor) throws IOException
+    public void reindex(Project aProject, TaskMonitor aMonitor) throws IOException
     {
         log.info("Re-indexing project {}. This may take a while...", aProject);
 
-        Monitor monitor = aMonitor != null ? aMonitor : new Monitor();
-
-        try (PooledIndex pooledIndex = acquireIndex(aProject.getId())) {
+        try (var pooledIndex = acquireIndex(aProject.getId())) {
             if (isPerformNoMoreActions(pooledIndex)) {
                 return;
             }
 
-            Index index = pooledIndex.get();
+            var index = pooledIndex.get();
             index.setInvalid(true);
 
             // Clear the index
@@ -654,17 +662,17 @@ public class SearchServiceImpl
                 // We can ignore this since we are rebuilding the index already anyway
             }
 
-            Set<String> usersWithPermissions = projectService
-                    .listProjectUsersWithPermissions(aProject).stream() //
+            var usersWithPermissions = projectService.listProjectUsersWithPermissions(aProject)
+                    .stream() //
                     .map(User::getUsername) //
                     .collect(toUnmodifiableSet());
-            List<AnnotationDocument> annotationDocuments = documentService
-                    .listAnnotationDocuments(aProject).stream()
+            var annotationDocuments = documentService.listAnnotationDocuments(aProject).stream()
                     .filter(annDoc -> usersWithPermissions.contains(annDoc.getUser())) //
                     .collect(toList());
-            List<SourceDocument> sourceDocuments = documentService.listSourceDocuments(aProject);
+            var sourceDocuments = documentService.listSourceDocuments(aProject);
 
-            monitor.setTodo(annotationDocuments.size() + sourceDocuments.size());
+            var progress = 0;
+            int maxProgress = annotationDocuments.size() + sourceDocuments.size();
 
             // We do not need write access and do not want to add to the exclusive access CAS cache,
             // so we would normally use SHARED_READ_ONLY_ACCESS. However, that mode can only be used
@@ -683,8 +691,24 @@ public class SearchServiceImpl
                     prefs)) {
                 // Index all the source documents
                 for (var doc : sourceDocuments) {
+                    progress++;
+
                     if (isPerformNoMoreActions(pooledIndex)) {
                         return;
+                    }
+
+                    if (aMonitor != null) {
+                        if (aMonitor.isCancelled()) {
+                            aMonitor.setProgressWithMessage(progress, maxProgress, LogMessage
+                                    .info(this, "Indexing aborted. Search cannot be used."));
+                            if (aMonitor.isCancelled()) {
+                                aMonitor.setState(TaskState.CANCELLED);
+                            }
+                            break;
+                        }
+
+                        aMonitor.setProgressWithMessage(progress, maxProgress,
+                                LogMessage.info(this, "Source document: %s", doc.getName()));
                     }
 
                     try (var session = CasStorageSession.openNested()) {
@@ -692,14 +716,28 @@ public class SearchServiceImpl
                                 .createOrReadInitialCas(doc, casUpgradeMode, accessModeInitialCas));
                         indexDocument(pooledIndex, doc, casAsByteArray);
                     }
-
-                    monitor.incDone();
                 }
 
                 // Index all the annotation documents
                 for (var doc : annotationDocuments) {
+                    progress++;
+
                     if (isPerformNoMoreActions(pooledIndex)) {
                         return;
+                    }
+
+                    if (aMonitor != null) {
+                        if (aMonitor.isCancelled()) {
+                            aMonitor.setProgressWithMessage(progress, maxProgress, LogMessage
+                                    .info(this, "Indexing aborted. Search cannot be used."));
+                            if (aMonitor.isCancelled()) {
+                                aMonitor.setState(TaskState.CANCELLED);
+                            }
+                            break;
+                        }
+
+                        aMonitor.setProgressWithMessage(progress, maxProgress, LogMessage.info(this,
+                                "Annotation document: %s @ %s", doc.getUser(), doc.getName()));
                     }
 
                     try (var session = CasStorageSession.openNested()) {
@@ -711,17 +749,23 @@ public class SearchServiceImpl
                     catch (FileNotFoundException e) {
                         // Ignore it if a annotation CAS does not exist yet
                     }
-
-                    monitor.incDone();
                 }
             }
 
             // After re-indexing, reset the invalid flag
-            index.setInvalid(false);
+            if (aMonitor == null || !aMonitor.isCancelled()) {
+                index.setInvalid(false);
+            }
+
             entityManager.merge(index);
         }
 
-        log.info("Re-indexing project {} complete!", aProject);
+        if (aMonitor == null || !aMonitor.isCancelled()) {
+            log.info("Re-indexing project {} complete!", aProject);
+        }
+        else {
+            log.info("Re-indexing project {} aborted!", aProject);
+        }
     }
 
     /**
@@ -731,7 +775,7 @@ public class SearchServiceImpl
     public boolean isIndexValid(Project aProject)
     {
         synchronized (indexes) {
-            PooledIndex pooledIndex = indexes.get(aProject.getId());
+            var pooledIndex = indexes.get(aProject.getId());
 
             if (pooledIndex == null) {
                 return false;
@@ -746,20 +790,21 @@ public class SearchServiceImpl
     {
         Validate.notNull(aProject, "Project cannot be null");
 
-        List<IndexingTask_ImplBase> tasks = schedulingService.getAllTasks().stream() //
+        var tasks = schedulingService.getAllTasks().stream() //
                 .filter(task -> task instanceof IndexingTask_ImplBase)
                 .map(task -> (IndexingTask_ImplBase) task)
                 .filter(task -> aProject.equals(task.getProject())) //
-                .collect(Collectors.toList());
+                .filter(task -> task.getMonitor().getState() == RUNNING) //
+                .toList();
 
         if (tasks.isEmpty()) {
             return Optional.empty();
         }
 
-        int total = 0;
-        int done = 0;
-        for (IndexingTask_ImplBase task : tasks) {
-            Progress p = task.getProgress();
+        var total = 0;
+        var done = 0;
+        for (var task : tasks) {
+            var p = task.getProgress();
             total += p.getTotal();
             done += p.getDone();
         }

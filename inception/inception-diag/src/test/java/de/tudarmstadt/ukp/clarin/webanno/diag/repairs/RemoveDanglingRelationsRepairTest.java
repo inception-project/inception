@@ -32,6 +32,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor;
 import de.tudarmstadt.ukp.clarin.webanno.diag.ChecksRegistryImpl;
 import de.tudarmstadt.ukp.clarin.webanno.diag.RepairsRegistryImpl;
@@ -45,13 +46,15 @@ import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 @ExtendWith(MockitoExtension.class)
 public class RemoveDanglingRelationsRepairTest
 {
+    private @Mock ConstraintsService constraintsService;
     private @Mock AnnotationSchemaService schemaService;
 
     @Test
     public void test() throws Exception
     {
-        when(schemaService.findAdapter(any(), any())).thenReturn(new RelationAdapter(null, null,
-                null, null, FEAT_REL_SOURCE, FEAT_REL_TARGET, () -> asList(), asList()));
+        when(schemaService.findAdapter(any(), any()))
+                .thenReturn(new RelationAdapter(null, null, null, null, FEAT_REL_SOURCE,
+                        FEAT_REL_TARGET, () -> asList(), asList(), constraintsService));
 
         var checksRegistry = new ChecksRegistryImpl(asList(new AllFeatureStructuresIndexedCheck()));
         checksRegistry.init();

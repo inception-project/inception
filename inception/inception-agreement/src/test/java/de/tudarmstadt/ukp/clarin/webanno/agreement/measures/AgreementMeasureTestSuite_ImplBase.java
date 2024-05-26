@@ -52,6 +52,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import de.tudarmstadt.ukp.clarin.webanno.agreement.FullAgreementResult_ImplBase;
+import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -75,6 +76,7 @@ import de.tudarmstadt.ukp.inception.support.uima.AnnotationBuilder;
 @ExtendWith(MockitoExtension.class)
 public class AgreementMeasureTestSuite_ImplBase
 {
+    protected @Mock ConstraintsService constraintsService;
     protected @Mock AnnotationSchemaService annotationService;
 
     protected Project project;
@@ -98,9 +100,12 @@ public class AgreementMeasureTestSuite_ImplBase
         layerBehaviorRegistry.init();
 
         layerRegistry = new LayerSupportRegistryImpl(asList(
-                new SpanLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry),
-                new RelationLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry),
-                new ChainLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry)));
+                new SpanLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry,
+                        constraintsService),
+                new RelationLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry,
+                        constraintsService),
+                new ChainLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry,
+                        constraintsService)));
         layerRegistry.init();
     }
 

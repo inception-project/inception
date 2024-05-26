@@ -19,9 +19,9 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering;
 
 import static java.lang.System.currentTimeMillis;
 import static java.util.concurrent.TimeUnit.MINUTES;
-import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 
+import java.lang.invoke.MethodHandles;
 import java.util.List;
 import java.util.Objects;
 
@@ -57,7 +57,7 @@ public class PreRendererImpl
 {
     public static final String ID = "PreRenderer";
 
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private final AnnotationSchemaService annotationService;
     private final LayerSupportRegistry layerSupportRegistry;
@@ -91,7 +91,7 @@ public class PreRendererImpl
     @Override
     public void render(VDocument aResponse, RenderRequest aRequest)
     {
-        log.trace("Prerenderer.render()");
+        LOG.trace("Prerenderer.render()");
 
         var cas = aRequest.getCas();
         var documentText = cas.getDocumentText();
@@ -120,21 +120,21 @@ public class PreRendererImpl
         for (var layer : aRequest.getVisibleLayers()) {
             var layerSupportedFeatures = supportedFeatures.stream() //
                     .filter(feature -> feature.getLayer().equals(layer)) //
-                    .collect(toList());
+                    .toList();
             var layerAllFeatures = allFeatures.stream() //
                     .filter(feature -> feature.getLayer().equals(layer)) //
-                    .collect(toList());
+                    .toList();
             // We need to pass in *all* the annotation features here because we also to that in
             // other places where we create renderers - and the set of features must always be
             // the same because otherwise the IDs of armed slots would be inconsistent
             LayerSupport<?, ?> layerSupport = layerSupportRegistry.getLayerSupport(layer);
             var renderer = layerSupport.createRenderer(layer, () -> layerAllFeatures);
-            renderer.render(cas, layerSupportedFeatures, aResponse, renderBegin, renderEnd);
+            renderer.render(aRequest, layerSupportedFeatures, aResponse, renderBegin, renderEnd);
         }
 
-        if (log.isTraceEnabled()) {
+        if (LOG.isTraceEnabled()) {
             long duration = currentTimeMillis() - start;
-            log.trace(
+            LOG.trace(
                     "Prerenderer.render() took {}ms to render {} layers [{}-{}] with {} spans and {} arcs",
                     duration, aRequest.getVisibleLayers().size(), renderBegin, renderEnd,
                     aResponse.spans().size(), aResponse.arcs().size());

@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.annotation.feature.multistring;
 
 import static java.util.Arrays.asList;
+import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.uima.cas.CAS.TYPE_NAME_STRING_ARRAY;
 
@@ -222,6 +223,17 @@ public class MultiValueStringFeatureSupport
                 mergedValues.size());
 
         fs.setFeatureValue(feature, array);
+    }
+
+    @Override
+    public boolean isFeatureValueValid(AnnotationFeature aFeature, FeatureStructure aFS)
+    {
+        if (aFeature.isRequired()) {
+            var value = FSUtil.getFeature(aFS, aFeature.getName(), List.class);
+            return isNotEmpty(value);
+        }
+
+        return true;
     }
 
     @Override

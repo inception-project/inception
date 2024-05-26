@@ -93,13 +93,13 @@ public class NumberFeatureSupport
             AnnotationActionHandler aHandler, final IModel<AnnotatorState> aStateModel,
             final IModel<FeatureState> aFeatureStateModel)
     {
-        AnnotationFeature feature = aFeatureStateModel.getObject().feature;
+        var feature = aFeatureStateModel.getObject().feature;
 
         if (!accepts(feature)) {
             throw unsupportedFeatureTypeException(feature);
         }
 
-        NumberFeatureTraits traits = readTraits(feature);
+        var traits = readTraits(feature);
 
         switch (feature.getType()) {
         case CAS.TYPE_NAME_INTEGER: {

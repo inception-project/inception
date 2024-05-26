@@ -31,6 +31,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.fit.factory.JCasBuilder;
@@ -58,6 +59,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.FileSystemUtils;
 
 import de.tudarmstadt.ukp.clarin.webanno.conll.config.ConllFormatsAutoConfiguration;
+import de.tudarmstadt.ukp.clarin.webanno.constraints.config.ConstraintsServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.diag.config.CasDoctorAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -115,6 +117,7 @@ import de.tudarmstadt.ukp.inception.support.spring.ApplicationContextProvider;
 // waits forever for the indexing to complete...
 @Transactional(propagation = Propagation.NEVER)
 @Import({ //
+        ConstraintsServiceAutoConfiguration.class, //
         AnnotationSchemaServiceAutoConfiguration.class, //
         TextFormatsAutoConfiguration.class, //
         ConllFormatsAutoConfiguration.class, //
@@ -194,7 +197,7 @@ public class MtasDocumentIndexTest
         Project p = project;
         await("Waiting for indexing process to complete") //
                 .atMost(60, SECONDS) //
-                .pollInterval(5, SECONDS) //
+                .pollInterval(200, TimeUnit.MILLISECONDS) //
                 .until(() -> searchService.isIndexValid(p)
                         && searchService.getIndexProgress(p).isEmpty());
         LOG.info("Indexing complete!");
@@ -249,7 +252,7 @@ public class MtasDocumentIndexTest
         LOG.info("Writing for annotated document to be indexed");
         await("Waiting for indexing process to complete") //
                 .atMost(60, SECONDS) //
-                .pollInterval(5, SECONDS) //
+                .pollInterval(200, TimeUnit.MILLISECONDS) //
                 .until(() -> searchService.isIndexValid(aProject)
                         && searchService.getIndexProgress(aProject).isEmpty());
         LOG.info("Indexing complete!");
@@ -315,7 +318,7 @@ public class MtasDocumentIndexTest
         LOG.info("Writing for annotated document to be indexed");
         await("Waiting for indexing process to complete") //
                 .atMost(60, SECONDS) //
-                .pollInterval(5, SECONDS) //
+                .pollInterval(200, TimeUnit.MILLISECONDS) //
                 .until(() -> searchService.isIndexValid(aProject)
                         && searchService.getIndexProgress(aProject).isEmpty());
         LOG.info("Indexing complete!");

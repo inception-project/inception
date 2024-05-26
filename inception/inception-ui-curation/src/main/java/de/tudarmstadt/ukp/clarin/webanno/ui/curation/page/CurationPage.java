@@ -515,7 +515,7 @@ public class CurationPage
             }
 
             // Load constraints
-            state.setConstraints(constraintsService.loadConstraints(project));
+            state.setConstraints(constraintsService.getMergedConstraints(project));
 
             // Load user preferences
             loadPreferences();

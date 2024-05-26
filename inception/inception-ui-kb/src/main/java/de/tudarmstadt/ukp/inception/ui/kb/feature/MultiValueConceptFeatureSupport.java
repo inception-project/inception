@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.ui.kb.feature;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import java.io.IOException;
@@ -110,6 +111,17 @@ public class MultiValueConceptFeatureSupport
         default:
             return false;
         }
+    }
+
+    @Override
+    public boolean isFeatureValueValid(AnnotationFeature aFeature, FeatureStructure aFS)
+    {
+        if (aFeature.isRequired()) {
+            var value = FSUtil.getFeature(aFS, aFeature.getName(), List.class);
+            return isNotEmpty(value);
+        }
+
+        return true;
     }
 
     @Override
