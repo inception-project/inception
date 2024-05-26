@@ -69,7 +69,7 @@ public class SpanRenderer
             behaviors = emptyList();
         }
         else {
-            List<SpanLayerBehavior> temp = new ArrayList<>(aBehaviors);
+            var temp = new ArrayList<SpanLayerBehavior>(aBehaviors);
             AnnotationAwareOrderComparator.sort(temp);
             behaviors = temp;
         }
@@ -78,7 +78,7 @@ public class SpanRenderer
     @Override
     protected boolean typeSystemInit(TypeSystem aTypeSystem)
     {
-        SpanAdapter typeAdapter = getTypeAdapter();
+        var typeAdapter = getTypeAdapter();
 
         type = aTypeSystem.getType(typeAdapter.getAnnotationTypeName());
         if (type == null) {
@@ -90,10 +90,10 @@ public class SpanRenderer
         return true;
     }
 
-    @Override
     public List<AnnotationFS> selectAnnotationsInWindow(CAS aCas, int aWindowBegin, int aWindowEnd)
     {
-        return aCas.select(type).coveredBy(0, aWindowEnd).includeAnnotationsWithEndBeyondBounds()
+        return aCas.select(type).coveredBy(0, aWindowEnd) //
+                .includeAnnotationsWithEndBeyondBounds() //
                 .map(fs -> (AnnotationFS) fs)
                 .filter(ann -> AnnotationPredicates.overlapping(ann, aWindowBegin, aWindowEnd))
                 .toList();
@@ -188,9 +188,9 @@ public class SpanRenderer
                 continue nextFeature;
             }
 
-            if (ARRAY.equals(feat.getMultiValueMode()) && WITH_ROLE.equals(feat.getLinkMode())) {
+            if (feat.getMultiValueMode() == ARRAY && feat.getLinkMode() == WITH_ROLE) {
                 List<LinkWithRoleModel> links = typeAdapter.getFeatureValue(feat, aFS);
-                for (int li = 0; li < links.size(); li++) {
+                for (var li = 0; li < links.size(); li++) {
                     var link = links.get(li);
                     var targetFS = selectFsByAddr(aFS.getCAS(), link.targetAddr);
 

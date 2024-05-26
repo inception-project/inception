@@ -23,6 +23,7 @@ export type DiamLoadAnnotationsOptions = {
   includeText?: boolean
   clipSpans?: boolean
   clipRelations?: boolean
+  outOfRangeRelations?: boolean
 }
 
 export type DiamSelectAnnotationOptions = {

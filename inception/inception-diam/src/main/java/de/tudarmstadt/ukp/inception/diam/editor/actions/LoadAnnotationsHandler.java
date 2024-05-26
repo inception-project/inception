@@ -31,7 +31,6 @@ import de.tudarmstadt.ukp.inception.diam.editor.config.DiamAutoConfig;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.AjaxResponse;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.DefaultAjaxResponse;
 import de.tudarmstadt.ukp.inception.diam.model.compact.CompactSerializerImpl;
-import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.pipeline.RenderingPipeline;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
@@ -55,6 +54,7 @@ public class LoadAnnotationsHandler
     public static final String PARAM_TEXT = "text";
     public static final String PARAM_CLIP_SPANS = "clip";
     public static final String PARAM_CLIP_RELATIONS = "clipRelations";
+    public static final String PARAM_OUT_OF_RANGE_RELATIONS = "outOfRangeRelations";
 
     private final RenderingPipeline renderingPipeline;
     private final VDocumentSerializerExtensionPoint vDocumentSerializerExtensionPoint;
@@ -94,20 +94,22 @@ public class LoadAnnotationsHandler
     private RenderRequest prepareRenderRequest(Request aRequest) throws IOException
     {
         var page = getPage();
-        AnnotatorState state = getAnnotatorState();
+        var state = getAnnotatorState();
 
-        int begin = aRequest.getRequestParameters().getParameterValue(PARAM_BEGIN)
+        var begin = aRequest.getRequestParameters().getParameterValue(PARAM_BEGIN)
                 .toInt(state.getWindowBeginOffset());
-        int end = aRequest.getRequestParameters().getParameterValue(PARAM_END)
+        var end = aRequest.getRequestParameters().getParameterValue(PARAM_END)
                 .toInt(state.getWindowEndOffset());
-        boolean includeText = aRequest.getRequestParameters().getParameterValue(PARAM_TEXT)
+        var includeText = aRequest.getRequestParameters().getParameterValue(PARAM_TEXT)
                 .toBoolean(true);
-        boolean clipSpans = aRequest.getRequestParameters().getParameterValue(PARAM_CLIP_SPANS)
+        var clipSpans = aRequest.getRequestParameters().getParameterValue(PARAM_CLIP_SPANS)
                 .toBoolean(true);
-        boolean clipRelations = aRequest.getRequestParameters()
-                .getParameterValue(PARAM_CLIP_RELATIONS).toBoolean(true);
+        var clipRelations = aRequest.getRequestParameters().getParameterValue(PARAM_CLIP_RELATIONS)
+                .toBoolean(true);
+        var outOfRangeRelations = aRequest.getRequestParameters()
+                .getParameterValue(PARAM_OUT_OF_RANGE_RELATIONS).toBoolean(false);
 
-        RenderRequest request = RenderRequest.builder() //
+        return RenderRequest.builder() //
                 .withState(state) //
                 .withSessionOwner(userService.getCurrentUser()) //
                 .withCas(page.getEditorCas()) //
@@ -115,9 +117,9 @@ public class LoadAnnotationsHandler
                 .withText(includeText) //
                 .withClipSpans(clipSpans) //
                 .withClipRelations(clipRelations) //
+                .withOutOfRangeRelations(outOfRangeRelations) //
                 .withVisibleLayers(state.getAnnotationLayers()) //
                 .build();
-        return request;
     }
 
     private String serializeToWireFormat(Request aRequest, RenderRequest request, VDocument vdoc)

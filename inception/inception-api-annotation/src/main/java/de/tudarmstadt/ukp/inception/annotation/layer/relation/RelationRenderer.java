@@ -131,12 +131,17 @@ public class RelationRenderer
         return true;
     }
 
-    @Override
-    public List<AnnotationFS> selectAnnotationsInWindow(CAS aCas, int aWindowBegin, int aWindowEnd)
+    private List<Annotation> selectAnnotationsInWindow(RenderRequest aRequest, int aWindowBegin,
+            int aWindowEnd)
     {
-        var result = new ArrayList<AnnotationFS>();
+        var cas = aRequest.getCas();
 
-        for (var rel : aCas.<Annotation> select(type)) {
+        if (!aRequest.isOutOfRangeRelations()) {
+            return cas.<Annotation> select(type).coveredBy(aWindowBegin, aWindowEnd).toList();
+        }
+
+        var result = new ArrayList<Annotation>();
+        for (var rel : cas.<Annotation> select(type)) {
             var sourceFs = getSourceFs(rel);
             var targetFs = getTargetFs(rel);
 
@@ -166,7 +171,7 @@ public class RelationRenderer
         // Index mapping annotations to the corresponding rendered arcs
         var annoToArcIdx = new HashMap<AnnotationFS, VArc>();
 
-        var annotations = selectAnnotationsInWindow(aRequest.getCas(), aWindowBegin, aWindowEnd);
+        var annotations = selectAnnotationsInWindow(aRequest, aWindowBegin, aWindowEnd);
 
         for (var fs : annotations) {
             for (var obj : render(aRequest, aFeatures, aResponse, aWindowBegin, aWindowEnd, fs)) {

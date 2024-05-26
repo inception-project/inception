@@ -49,6 +49,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorExtensionRegistry;
@@ -65,6 +66,9 @@ import de.tudarmstadt.ukp.inception.pdfeditor.resources.PdfAnnotationEditorCssRe
 import de.tudarmstadt.ukp.inception.pdfeditor.resources.PdfAnnotationEditorJavascriptResourceReference;
 import de.tudarmstadt.ukp.inception.rendering.coloring.ColoringService;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.rendering.pipeline.RenderingPipeline;
+import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.serialization.VDocumentSerializer;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 
@@ -94,6 +98,8 @@ public class PdfAnnotationEditor
     private @SpringBean AnnotationEditorExtensionRegistry extensionRegistry;
     private @SpringBean(name = "pdfDocumentIFrameViewFactory") DocumentViewFactory viewFactory;
     private @SpringBean ServletContext servletContext;
+    private @SpringBean UserDao userService;
+    private @SpringBean RenderingPipeline renderingPipeline;
 
     public PdfAnnotationEditor(String aId, IModel<AnnotatorState> aModel,
             AnnotationActionHandler aActionHandler, CasProvider aCasProvider,
@@ -157,6 +163,23 @@ public class PdfAnnotationEditor
     {
         error(aMessage);
         aTarget.addChildren(getPage(), IFeedback.class);
+    }
+
+    @Override
+    protected <T> T render(CAS aCas, int aWindowBeginOffset, int aWindowEndOffset,
+            VDocumentSerializer<T> aTerminalStep)
+    {
+        var request = RenderRequest.builder() //
+                .withState(getModelObject()) //
+                .withWindow(aWindowBeginOffset, aWindowEndOffset) //
+                .withCas(aCas) //
+                .withSessionOwner(userService.getCurrentUser()) //
+                .withVisibleLayers(getLayersToRender(getModelObject())) //
+                .withOutOfRangeRelations(false) //
+                .build();
+
+        var vdoc = renderingPipeline.render(request);
+        return aTerminalStep.render(vdoc, request);
     }
 
     /**
