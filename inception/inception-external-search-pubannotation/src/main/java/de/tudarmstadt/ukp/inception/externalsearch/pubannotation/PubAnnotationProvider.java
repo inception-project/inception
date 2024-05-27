@@ -40,7 +40,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchHighlight;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchProvider;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchResult;
@@ -51,6 +50,7 @@ import de.tudarmstadt.ukp.inception.externalsearch.pubannotation.model.PubAnnota
 import de.tudarmstadt.ukp.inception.externalsearch.pubannotation.traits.PubAnnotationProviderTraits;
 import de.tudarmstadt.ukp.inception.externalsearch.pubmed.entrez.EntrezClient;
 import de.tudarmstadt.ukp.inception.externalsearch.pubmed.entrez.model.DocSum;
+import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 
 public class PubAnnotationProvider
     implements ExternalSearchProvider<PubAnnotationProviderTraits>
@@ -67,7 +67,7 @@ public class PubAnnotationProvider
     List<PubAnnotationDocumentHandle> query(PubAnnotationProviderTraits aTraits, String aQuery,
             int aPage, int aPageSize)
     {
-        Map<String, String> variables = new HashMap<>();
+        var variables = new HashMap<String, String>();
         variables.put("keywords", aQuery);
         variables.put("page", Integer.toString(aPage));
         variables.put("per", Integer.toString(aPageSize));
@@ -84,12 +84,12 @@ public class PubAnnotationProvider
     public List<ExternalSearchResult> executeQuery(DocumentRepository aDocumentRepository,
             PubAnnotationProviderTraits aTraits, String aQuery)
     {
-        List<PubAnnotationDocumentHandle> response = query(aTraits, aQuery, 1, 100);
+        var response = query(aTraits, aQuery, 1, 100);
 
         var documentSummaries = lookupDocumentSummaries(response);
 
-        List<ExternalSearchResult> results = new ArrayList<>();
-        for (PubAnnotationDocumentHandle handle : response) {
+        var results = new ArrayList<ExternalSearchResult>();
+        for (var handle : response) {
             var summary = documentSummaries
                     .get(Pair.of(handle.getSourceDb(), parseInt(handle.getSourceId())));
             var result = new ExternalSearchResult(aDocumentRepository, handle.getSourceDb(),
@@ -112,7 +112,7 @@ public class PubAnnotationProvider
     private Map<Pair<String, Integer>, DocSum> lookupDocumentSummaries(
             List<PubAnnotationDocumentHandle> response)
     {
-        Map<Pair<String, Integer>, DocSum> documentDetails = new HashMap<>();
+        var documentDetails = new HashMap<Pair<String, Integer>, DocSum>();
         var groupedByDb = response.stream()
                 .collect(groupingBy(PubAnnotationDocumentHandle::getSourceDb));
         for (var group : groupedByDb.entrySet()) {
@@ -133,9 +133,7 @@ public class PubAnnotationProvider
             PubAnnotationProviderTraits aTraits, String aCollectionId, String aDocumentId)
         throws IOException
     {
-        ExternalSearchResult result = new ExternalSearchResult(aRepository, aCollectionId,
-                aDocumentId);
-        return result;
+        return new ExternalSearchResult(aRepository, aCollectionId, aDocumentId);
     }
 
     @Override
@@ -143,7 +141,8 @@ public class PubAnnotationProvider
             PubAnnotationProviderTraits aTraits, String aCollectionId, String aDocumentId)
     {
         return getSections(aDocumentRepository, aTraits, aCollectionId, aDocumentId).stream()
-                .map(PubAnnotationDocumentSection::getText).collect(Collectors.joining("\n\n"));
+                .map(PubAnnotationDocumentSection::getText) //
+                .collect(Collectors.joining("\n\n"));
     }
 
     @Override
@@ -151,7 +150,7 @@ public class PubAnnotationProvider
             PubAnnotationProviderTraits aTraits, String aCollectionId, String aDocumentId)
         throws IOException
     {
-        String json = JSONUtil.toJsonString(
+        var json = JSONUtil.toJsonString(
                 getSections(aDocumentRepository, aTraits, aCollectionId, aDocumentId));
 
         return IOUtils.toInputStream(json, UTF_8);
@@ -160,18 +159,16 @@ public class PubAnnotationProvider
     private List<PubAnnotationDocumentSection> getSections(DocumentRepository aDocumentRepository,
             PubAnnotationProviderTraits aTraits, String aCollectionId, String aDocumentId)
     {
-        Map<String, String> variables = new HashMap<>();
+        var variables = new HashMap<String, String>();
         variables.put("collectionId", aCollectionId);
         variables.put("documentId", aDocumentId);
 
-        RestTemplate restTemplate = new RestTemplate();
+        var restTemplate = new RestTemplate();
 
-        var url = aTraits.getUrl() + "/docs/sourcedb/{collectionId}/sourceid/{documentId}.json";
+        var url = aTraits.getUrl() + "/docs/sourcedb/{collectionId}/sourceid/{documentId}";
         try {
             // If the document has multiple sections, a list is returned...
-            ResponseEntity<List<PubAnnotationDocumentSection>> response = restTemplate.exchange(url,
-                    GET, null, SPRING_LIST_TYPE_REF, variables);
-
+            var response = restTemplate.exchange(url, GET, null, SPRING_LIST_TYPE_REF, variables);
             return response.getBody();
         }
         catch (RestClientException e) {

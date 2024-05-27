@@ -116,8 +116,9 @@ public class VisualPdfReader
         VModel vModel;
         List<VPage> vPages = new ArrayList<>();
         for (PdfPage pdfPage : pdfPages) {
-            List<VChunk> vChunks = new ArrayList<>();
-            for (var pdfChunk : cas.select(PdfChunk.class).coveredBy(pdfPage)) {
+            var vChunks = new ArrayList<VChunk>();
+            var coveredBy = cas.select(PdfChunk.class).coveredBy(pdfPage);
+            for (var pdfChunk : coveredBy) {
                 float d = pdfChunk.getD();
                 List<VGlyph> vGlyphs = new ArrayList<>();
                 IntegerArray charWidths = pdfChunk.getC();

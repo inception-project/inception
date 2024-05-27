@@ -38,11 +38,8 @@ import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
-
-import javax.persistence.EntityManager;
 
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Statement;
@@ -51,6 +48,7 @@ import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -62,9 +60,8 @@ import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfigurati
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
+import de.tudarmstadt.ukp.inception.documents.api.RepositoryPropertiesImpl;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBasePropertiesImpl;
 import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
@@ -77,7 +74,11 @@ import de.tudarmstadt.ukp.inception.kb.reification.Reification;
 import de.tudarmstadt.ukp.inception.kb.util.TestFixtures;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 
-@DataJpaTest(excludeAutoConfiguration = LiquibaseAutoConfiguration.class, showSql = false)
+@DataJpaTest( //
+        showSql = false, //
+        properties = { //
+                "spring.main.banner-mode=off" }, //
+        excludeAutoConfiguration = LiquibaseAutoConfiguration.class)
 @EnableAutoConfiguration
 @EntityScan({ //
         "de.tudarmstadt.ukp.inception.kb.model", //
@@ -87,11 +88,9 @@ public class KnowledgeBaseServiceImplIntegrationTest
     private static final String PROJECT_NAME = "Test project";
     private static final String KB_NAME = "Test knowledge base";
 
-    @TempDir
-    public File temporaryFolder;
+    private @TempDir File temporaryFolder;
 
-    @Autowired
-    private TestEntityManager testEntityManager;
+    private @Autowired TestEntityManager testEntityManager;
 
     private KnowledgeBaseServiceImpl sut;
     private Project project;
@@ -114,10 +113,10 @@ public class KnowledgeBaseServiceImplIntegrationTest
 
     public void setUp(Reification reification) throws Exception
     {
-        RepositoryProperties repoProps = new RepositoryProperties();
+        var repoProps = new RepositoryPropertiesImpl();
         repoProps.setPath(temporaryFolder);
-        KnowledgeBaseProperties kbProperties = new KnowledgeBasePropertiesImpl();
-        EntityManager entityManager = testEntityManager.getEntityManager();
+        var kbProperties = new KnowledgeBasePropertiesImpl();
+        var entityManager = testEntityManager.getEntityManager();
         testFixtures = new TestFixtures(testEntityManager);
         sut = new KnowledgeBaseServiceImpl(repoProps, kbProperties, entityManager);
         project = createProject(PROJECT_NAME);
@@ -141,10 +140,11 @@ public class KnowledgeBaseServiceImplIntegrationTest
 
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
 
-        KnowledgeBase savedKb = testEntityManager.find(KnowledgeBase.class, kb.getRepositoryId());
+        var savedKb = testEntityManager.find(KnowledgeBase.class, kb.getRepositoryId());
         assertThat(savedKb).as("Check that knowledge base was saved correctly")
-                .hasFieldOrPropertyWithValue("name", KB_NAME)
-                .hasFieldOrPropertyWithValue("project", project).extracting("repositoryId")
+                .hasFieldOrPropertyWithValue("name", KB_NAME) //
+                .hasFieldOrPropertyWithValue("project", project) //
+                .extracting("repositoryId") //
                 .isNotNull();
     }
 
@@ -157,7 +157,7 @@ public class KnowledgeBaseServiceImplIntegrationTest
 
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
 
-        Optional<KnowledgeBase> result = sut.getKnowledgeBaseByName(project, kb.getName());
+        var result = sut.getKnowledgeBaseByName(project, kb.getName());
 
         assertThat(result).isEqualTo(result);
     }
@@ -171,7 +171,7 @@ public class KnowledgeBaseServiceImplIntegrationTest
 
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
 
-        Optional<KnowledgeBase> result = sut.getKnowledgeBaseByName(project, "Absent KB");
+        var result = sut.getKnowledgeBaseByName(project, "Absent KB");
 
         assertThat(result).isEmpty();
     }
@@ -186,7 +186,7 @@ public class KnowledgeBaseServiceImplIntegrationTest
 
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
 
-        List<KnowledgeBase> knowledgeBases = sut.getKnowledgeBases(project);
+        var knowledgeBases = sut.getKnowledgeBases(project);
 
         assertThat(knowledgeBases)
                 .as("Check that only the previously created knowledge base is found").hasSize(1)
@@ -201,9 +201,9 @@ public class KnowledgeBaseServiceImplIntegrationTest
     {
         setUp(reification);
 
-        Project proj = createProject("Empty project");
+        var proj = createProject("Empty project");
 
-        List<KnowledgeBase> knowledgeBases = sut.getKnowledgeBases(proj);
+        var knowledgeBases = sut.getKnowledgeBases(proj);
 
         assertThat(knowledgeBases).as("Check that no knowledge base is found").isEmpty();
     }
@@ -254,8 +254,9 @@ public class KnowledgeBaseServiceImplIntegrationTest
         kb.setReadOnly(true);
         kb.setEnabled(false);
         kb.setBasePrefix("MyBasePrefix");
-        String rootConcept1 = "http://www.ics.forth.gr/isl/CRMinf/I1_Argumentation";
-        String rootConcept2 = "file:/data-to-load/07bde589-588c-4f0d-8715-c71c0ba2bfdb/crm-extensions/F10_Person";
+
+        var rootConcept1 = "http://www.ics.forth.gr/isl/CRMinf/I1_Argumentation";
+        var rootConcept2 = "file:/data-to-load/07bde589-588c-4f0d-8715-c71c0ba2bfdb/crm-extensions/F10_Person";
         kb.setRootConcepts(asList(rootConcept1, rootConcept2));
         sut.updateKnowledgeBase(kb, sut.getNativeConfig());
 
@@ -302,7 +303,7 @@ public class KnowledgeBaseServiceImplIntegrationTest
 
         sut.removeKnowledgeBase(kb);
 
-        List<KnowledgeBase> knowledgeBases = sut.getKnowledgeBases(project);
+        var knowledgeBases = sut.getKnowledgeBases(project);
         assertThat(knowledgeBases).as("Check that the knowledge base has been deleted").hasSize(0);
     }
 
@@ -333,7 +334,7 @@ public class KnowledgeBaseServiceImplIntegrationTest
 
         sut.clear(kb);
 
-        List<KBObject> handles = new ArrayList<>();
+        var handles = new ArrayList<KBObject>();
         handles.addAll(sut.listAllConcepts(kb, false));
         handles.addAll(sut.listProperties(kb, false));
         assertThat(handles).as("Check that no custom entities are found after clearing").isEmpty();
@@ -353,7 +354,7 @@ public class KnowledgeBaseServiceImplIntegrationTest
 
         sut.clear(kb);
 
-        List<KBObject> handles = new ArrayList<>();
+        var handles = new ArrayList<KBObject>();
         handles.addAll(sut.listAllConcepts(kb, true));
         handles.addAll(sut.listProperties(kb, true));
         assertThat(handles)
@@ -370,7 +371,7 @@ public class KnowledgeBaseServiceImplIntegrationTest
 
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
 
-        boolean isEmpty = sut.isEmpty(kb);
+        var isEmpty = sut.isEmpty(kb);
 
         assertThat(isEmpty).as("Check that knowledge base is empty").isTrue();
     }
@@ -385,7 +386,7 @@ public class KnowledgeBaseServiceImplIntegrationTest
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         sut.createConcept(kb, buildConcept());
 
-        boolean isEmpty = sut.isEmpty(kb);
+        var isEmpty = sut.isEmpty(kb);
 
         assertThat(isEmpty).as("Check that knowledge base is not empty").isFalse();
     }
@@ -401,13 +402,21 @@ public class KnowledgeBaseServiceImplIntegrationTest
 
         sut.defineBaseProperties(kb);
 
-        List<KBProperty> listProperties = sut.listProperties(kb, true);
-        Stream<String> listIdentifier = listProperties.stream().map(KBObject::getIdentifier);
+        var listProperties = sut.listProperties(kb, true);
+        var listIdentifier = listProperties.stream().map(KBObject::getIdentifier);
         String[] expectedProps = { kb.getSubclassIri(), kb.getLabelIri(), kb.getDescriptionIri(),
                 kb.getTypeIri() };
 
-        assertEquals(listProperties.size(), 5);
-        assertThat(listIdentifier).as("Check that base properties are created")
+        assertThat(listProperties) //
+                .extracting(KBProperty::getIdentifier) //
+                .containsExactly( //
+                        "http://www.w3.org/2000/01/rdf-schema#comment",
+                        "http://www.w3.org/2000/01/rdf-schema#label",
+                        "http://www.w3.org/2000/01/rdf-schema#subClassOf",
+                        "http://www.w3.org/2000/01/rdf-schema#subPropertyOf",
+                        "http://www.w3.org/1999/02/22-rdf-syntax-ns#type");
+        assertThat(listIdentifier) //
+                .as("Check that base properties are created") //
                 .contains(expectedProps);
     }
 
@@ -418,12 +427,12 @@ public class KnowledgeBaseServiceImplIntegrationTest
     {
         setUp(reification);
 
-        KBConcept concept = buildConcept();
+        var concept = buildConcept();
 
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         sut.createConcept(kb, concept);
 
-        KBConcept savedConcept = sut.readConcept(kb, concept.getIdentifier(), true).get();
+        var savedConcept = sut.readConcept(kb, concept.getIdentifier(), true).get();
         assertThat(savedConcept).as("Check that concept was saved correctly")
                 .hasFieldOrPropertyWithValue("description", concept.getDescription())
                 .hasFieldOrPropertyWithValue("name", concept.getName());
@@ -437,20 +446,20 @@ public class KnowledgeBaseServiceImplIntegrationTest
     {
         setUp(reification);
 
-        KBConcept concept = buildConcept();
+        var concept = buildConcept();
 
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         String customPrefix = "http://www.ukp.informatik.tu-darmstadt.de/customPrefix#";
         kb.setBasePrefix(customPrefix);
         sut.createConcept(kb, concept);
 
-        KBConcept savedConcept = sut.readConcept(kb, concept.getIdentifier(), true).get();
+        var savedConcept = sut.readConcept(kb, concept.getIdentifier(), true).get();
         assertThat(savedConcept).as("Check that concept was saved correctly")
                 .hasFieldOrPropertyWithValue("description", concept.getDescription())
                 .hasFieldOrPropertyWithValue("name", concept.getName());
 
-        String id = savedConcept.getIdentifier();
-        String savedConceptPrefix = id.substring(0, id.lastIndexOf("#") + 1);
+        var id = savedConcept.getIdentifier();
+        var savedConceptPrefix = id.substring(0, id.lastIndexOf("#") + 1);
         assertEquals(customPrefix, savedConceptPrefix);
     }
 
@@ -462,7 +471,7 @@ public class KnowledgeBaseServiceImplIntegrationTest
     {
         setUp(reification);
 
-        KBConcept concept = new KBConcept();
+        var concept = new KBConcept();
         concept.setIdentifier("Nonempty Identifier");
 
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
@@ -480,7 +489,7 @@ public class KnowledgeBaseServiceImplIntegrationTest
     {
         setUp(reification);
 
-        KBConcept concept = buildConcept();
+        var concept = buildConcept();
         kb.setReadOnly(true);
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
 
@@ -495,11 +504,11 @@ public class KnowledgeBaseServiceImplIntegrationTest
     {
         setUp(reification);
 
-        KBConcept concept = buildConcept();
+        var concept = buildConcept();
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         sut.createConcept(kb, concept);
 
-        KBConcept savedConcept = sut.readConcept(kb, concept.getIdentifier(), true).get();
+        var savedConcept = sut.readConcept(kb, concept.getIdentifier(), true).get();
 
         assertThat(savedConcept).as("Check that concept was read correctly")
                 .hasFieldOrPropertyWithValue("description", concept.getDescription())
@@ -515,8 +524,7 @@ public class KnowledgeBaseServiceImplIntegrationTest
 
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
 
-        Optional<KBConcept> savedConcept = sut.readConcept(kb,
-                "https://nonexistent.identifier.test", true);
+        var savedConcept = sut.readConcept(kb, "https://nonexistent.identifier.test", true);
 
         assertThat(savedConcept.isPresent()).as("Check that no concept was read").isFalse();
     }
@@ -529,14 +537,14 @@ public class KnowledgeBaseServiceImplIntegrationTest
         setUp(reification);
 
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
-        KBConcept concept = buildConcept();
+        var concept = buildConcept();
         sut.createConcept(kb, concept);
 
         concept.setDescription("New description");
         concept.setName("New name");
         sut.updateConcept(kb, concept);
 
-        KBConcept savedConcept = sut.readConcept(kb, concept.getIdentifier(), true).get();
+        var savedConcept = sut.readConcept(kb, concept.getIdentifier(), true).get();
         assertThat(savedConcept).as("Check that concept was updated correctly")
                 .hasFieldOrPropertyWithValue("description", "New description")
                 .hasFieldOrPropertyWithValue("name", "New name");
@@ -550,14 +558,13 @@ public class KnowledgeBaseServiceImplIntegrationTest
     {
         setUp(reification);
 
-        KBConcept concept = buildConcept();
+        var concept = buildConcept();
         concept.setIdentifier("https://nonexistent.identifier.test");
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
 
         sut.updateConcept(kb, concept);
 
-        KBConcept savedConcept = sut.readConcept(kb, "https://nonexistent.identifier.test", true)
-                .get();
+        var savedConcept = sut.readConcept(kb, "https://nonexistent.identifier.test", true).get();
         assertThat(savedConcept)
                 .hasFieldOrPropertyWithValue("description", concept.getDescription())
                 .hasFieldOrPropertyWithValue("name", concept.getName());
@@ -571,7 +578,7 @@ public class KnowledgeBaseServiceImplIntegrationTest
     {
         setUp(reification);
 
-        KBConcept concept = buildConcept();
+        var concept = buildConcept();
         concept.setIdentifier("");
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
 
@@ -589,7 +596,7 @@ public class KnowledgeBaseServiceImplIntegrationTest
     {
         setUp(reification);
 
-        KBConcept concept = buildConcept();
+        var concept = buildConcept();
         concept.setIdentifier(null);
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
 
@@ -606,7 +613,7 @@ public class KnowledgeBaseServiceImplIntegrationTest
     {
         setUp(reification);
 
-        KBConcept concept = buildConcept();
+        var concept = buildConcept();
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         sut.createConcept(kb, concept);
         setReadOnly(kb);
@@ -617,7 +624,7 @@ public class KnowledgeBaseServiceImplIntegrationTest
         assertThatExceptionOfType(ReadOnlyException.class)
                 .isThrownBy(() -> sut.updateConcept(kb, concept));
 
-        KBConcept savedConcept = sut.readConcept(kb, concept.getIdentifier(), true).get();
+        var savedConcept = sut.readConcept(kb, concept.getIdentifier(), true).get();
         assertThat(savedConcept).as("Check that concept has not been updated")
                 .hasFieldOrPropertyWithValue("description", "Concept description")
                 .hasFieldOrPropertyWithValue("name", "Concept name");
@@ -631,9 +638,9 @@ public class KnowledgeBaseServiceImplIntegrationTest
     {
         setUp(reification);
 
-        KBInstance instance = buildInstance();
-        KBProperty property = buildProperty();
-        KBConcept concept = buildConcept();
+        var instance = buildInstance();
+        var property = buildProperty();
+        var concept = buildConcept();
 
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         sut.createInstance(kb, instance);
@@ -648,7 +655,7 @@ public class KnowledgeBaseServiceImplIntegrationTest
         assertThat(sut.listStatementsWithPredicateOrObjectReference(kb, concept.getIdentifier()))
                 .isEmpty();
 
-        Optional<KBConcept> savedConcept = sut.readConcept(kb, concept.getIdentifier(), true);
+        var savedConcept = sut.readConcept(kb, concept.getIdentifier(), true);
         assertThat(savedConcept.isPresent()).as("Check that concept was not found after delete")
                 .isFalse();
 
@@ -661,13 +668,13 @@ public class KnowledgeBaseServiceImplIntegrationTest
     {
         setUp(reification);
 
-        KBConcept concept = buildConcept();
+        var concept = buildConcept();
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         sut.createConcept(kb, concept);
 
         sut.deleteConcept(kb, concept);
 
-        Optional<KBConcept> savedConcept = sut.readConcept(kb, concept.getIdentifier(), true);
+        var savedConcept = sut.readConcept(kb, concept.getIdentifier(), true);
         assertThat(savedConcept.isPresent()).as("Check that concept was not found after delete")
                 .isFalse();
     }
@@ -679,7 +686,7 @@ public class KnowledgeBaseServiceImplIntegrationTest
     {
         setUp(reification);
 
-        KBConcept concept = buildConcept();
+        var concept = buildConcept();
         concept.setIdentifier("https://nonexistent.identifier.test");
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
 
@@ -695,7 +702,7 @@ public class KnowledgeBaseServiceImplIntegrationTest
     {
         setUp(reification);
 
-        KBConcept concept = buildConcept();
+        var concept = buildConcept();
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         sut.createConcept(kb, concept);
         setReadOnly(kb);
@@ -703,7 +710,7 @@ public class KnowledgeBaseServiceImplIntegrationTest
         assertThatExceptionOfType(ReadOnlyException.class)
                 .isThrownBy(() -> sut.deleteConcept(kb, concept));
 
-        Optional<KBConcept> savedConcept = sut.readConcept(kb, concept.getIdentifier(), true);
+        var savedConcept = sut.readConcept(kb, concept.getIdentifier(), true);
         assertThat(savedConcept.isPresent()).as("Check that concept was not deleted").isTrue();
     }
 
@@ -715,13 +722,14 @@ public class KnowledgeBaseServiceImplIntegrationTest
     {
         setUp(reification);
 
-        KBConcept concept = buildConcept();
+        var concept = buildConcept();
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         sut.createConcept(kb, concept);
 
-        List<KBHandle> concepts = sut.listAllConcepts(kb, false);
+        var concepts = sut.listAllConcepts(kb, false);
 
-        assertThat(concepts).as("Check that concepts contain the one, saved item").hasSize(1)
+        assertThat(concepts).as("Check that concepts contain the one, saved item") //
+                .hasSize(1) //
                 .element(0).hasFieldOrPropertyWithValue("identifier", concept.getIdentifier())
                 .hasFieldOrProperty("name")
                 .matches(h -> h.getIdentifier().startsWith(IriConstants.INCEPTION_NAMESPACE));
@@ -736,7 +744,7 @@ public class KnowledgeBaseServiceImplIntegrationTest
 
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
 
-        List<KBHandle> concepts = sut.listAllConcepts(kb, true);
+        var concepts = sut.listAllConcepts(kb, true);
 
         assertThat(concepts).as("Check that all concepts have implicit namespaces")
                 .allMatch(this::hasImplicitNamespace);
@@ -749,12 +757,12 @@ public class KnowledgeBaseServiceImplIntegrationTest
     {
         setUp(reification);
 
-        KBProperty property = buildProperty();
+        var property = buildProperty();
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
 
         sut.createProperty(kb, property);
 
-        KBProperty savedProperty = sut.readProperty(kb, property.getIdentifier()).get();
+        var savedProperty = sut.readProperty(kb, property.getIdentifier()).get();
         assertThat(savedProperty).as("Check that property was created correctly")
                 .hasNoNullFieldsOrPropertiesExcept("language")
                 .hasFieldOrPropertyWithValue("description", property.getDescription())
@@ -774,20 +782,20 @@ public class KnowledgeBaseServiceImplIntegrationTest
         assumeFalse(WIKIDATA.equals(kb.getReification()),
                 "Wikidata reification has hardcoded property prefix");
 
-        KBProperty property = buildProperty();
+        var property = buildProperty();
 
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
-        String customPrefix = "http://www.ukp.informatik.tu-darmstadt.de/customPrefix#";
+        var customPrefix = "http://www.ukp.informatik.tu-darmstadt.de/customPrefix#";
         kb.setBasePrefix(customPrefix);
         sut.createProperty(kb, property);
 
-        KBProperty savedProperty = sut.readProperty(kb, property.getIdentifier()).get();
+        var savedProperty = sut.readProperty(kb, property.getIdentifier()).get();
         assertThat(savedProperty).as("Check that property was saved correctly")
                 .hasFieldOrPropertyWithValue("description", property.getDescription())
                 .hasFieldOrPropertyWithValue("name", property.getName());
 
-        String id = savedProperty.getIdentifier();
-        String savedPropertyPrefix = id.substring(0, id.lastIndexOf("#") + 1);
+        var id = savedProperty.getIdentifier();
+        var savedPropertyPrefix = id.substring(0, id.lastIndexOf("#") + 1);
         assertEquals(customPrefix, savedPropertyPrefix);
     }
 
@@ -799,7 +807,7 @@ public class KnowledgeBaseServiceImplIntegrationTest
     {
         setUp(reification);
 
-        KBProperty property = buildProperty();
+        var property = buildProperty();
         property.setIdentifier("Nonempty Identifier");
 
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
@@ -817,7 +825,7 @@ public class KnowledgeBaseServiceImplIntegrationTest
     {
         setUp(reification);
 
-        KBProperty property = buildProperty();
+        var property = buildProperty();
         kb.setReadOnly(true);
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
 
@@ -832,11 +840,11 @@ public class KnowledgeBaseServiceImplIntegrationTest
     {
         setUp(reification);
 
-        KBProperty property = buildProperty();
+        var property = buildProperty();
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         sut.createProperty(kb, property);
 
-        KBProperty savedProperty = sut.readProperty(kb, property.getIdentifier()).get();
+        var savedProperty = sut.readProperty(kb, property.getIdentifier()).get();
 
         assertThat(savedProperty).as("Check that property was saved correctly")
                 .hasNoNullFieldsOrPropertiesExcept("language")
@@ -856,8 +864,7 @@ public class KnowledgeBaseServiceImplIntegrationTest
 
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
 
-        Optional<KBProperty> savedProperty = sut.readProperty(kb,
-                "https://nonexistent.identifier.test");
+        var savedProperty = sut.readProperty(kb, "https://nonexistent.identifier.test");
 
         assertThat(savedProperty.isPresent()).as("Check that no property was read").isFalse();
     }
@@ -869,7 +876,7 @@ public class KnowledgeBaseServiceImplIntegrationTest
     {
         setUp(reification);
 
-        KBProperty property = buildProperty();
+        var property = buildProperty();
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         sut.createProperty(kb, property);
 
@@ -879,7 +886,7 @@ public class KnowledgeBaseServiceImplIntegrationTest
         property.setRange("https://new.schema.com/#range");
         sut.updateProperty(kb, property);
 
-        KBProperty savedProperty = sut.readProperty(kb, property.getIdentifier()).get();
+        var savedProperty = sut.readProperty(kb, property.getIdentifier()).get();
         assertThat(savedProperty).as("Check that property was updated correctly")
                 .hasFieldOrPropertyWithValue("description", property.getDescription())
                 .hasFieldOrPropertyWithValue("domain", property.getDomain())
@@ -895,14 +902,13 @@ public class KnowledgeBaseServiceImplIntegrationTest
     {
         setUp(reification);
 
-        KBProperty property = buildProperty();
+        var property = buildProperty();
         property.setIdentifier("https://nonexistent.identifier.test");
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
 
         sut.updateProperty(kb, property);
 
-        KBProperty savedProperty = sut.readProperty(kb, "https://nonexistent.identifier.test")
-                .get();
+        var savedProperty = sut.readProperty(kb, "https://nonexistent.identifier.test").get();
         assertThat(savedProperty).as("Check that property was updated correctly")
                 .hasFieldOrPropertyWithValue("description", property.getDescription())
                 .hasFieldOrPropertyWithValue("domain", property.getDomain())
@@ -918,7 +924,7 @@ public class KnowledgeBaseServiceImplIntegrationTest
     {
         setUp(reification);
 
-        KBProperty property = buildProperty();
+        var property = buildProperty();
         property.setIdentifier("");
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
 
@@ -936,7 +942,7 @@ public class KnowledgeBaseServiceImplIntegrationTest
     {
         setUp(reification);
 
-        KBProperty property = buildProperty();
+        var property = buildProperty();
         property.setIdentifier(null);
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
 
@@ -953,7 +959,7 @@ public class KnowledgeBaseServiceImplIntegrationTest
     {
         setUp(reification);
 
-        KBProperty property = buildProperty();
+        var property = buildProperty();
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         sut.createProperty(kb, property);
         setReadOnly(kb);
@@ -966,7 +972,7 @@ public class KnowledgeBaseServiceImplIntegrationTest
         assertThatExceptionOfType(ReadOnlyException.class)
                 .isThrownBy(() -> sut.updateProperty(kb, property));
 
-        KBProperty savedProperty = sut.readProperty(kb, property.getIdentifier()).get();
+        var savedProperty = sut.readProperty(kb, property.getIdentifier()).get();
         assertThat(savedProperty).as("Check that property has not been updated")
                 .hasFieldOrPropertyWithValue("description", "Property description")
                 .hasFieldOrPropertyWithValue("domain", "https://test.schema.com/#domain")
@@ -981,13 +987,13 @@ public class KnowledgeBaseServiceImplIntegrationTest
     {
         setUp(reification);
 
-        KBProperty property = buildProperty();
+        var property = buildProperty();
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         sut.createProperty(kb, property);
 
         sut.deleteProperty(kb, property);
 
-        Optional<KBProperty> savedProperty = sut.readProperty(kb, property.getIdentifier());
+        var savedProperty = sut.readProperty(kb, property.getIdentifier());
         assertThat(savedProperty.isPresent()).as("Check that property was not found after delete")
                 .isFalse();
     }
@@ -999,7 +1005,7 @@ public class KnowledgeBaseServiceImplIntegrationTest
     {
         setUp(reification);
 
-        KBProperty property = buildProperty();
+        var property = buildProperty();
         property.setIdentifier("https://nonexistent.identifier.test");
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
 
@@ -1015,7 +1021,7 @@ public class KnowledgeBaseServiceImplIntegrationTest
     {
         setUp(reification);
 
-        KBProperty property = buildProperty();
+        var property = buildProperty();
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         sut.createProperty(kb, property);
         setReadOnly(kb);
@@ -1023,7 +1029,7 @@ public class KnowledgeBaseServiceImplIntegrationTest
         assertThatExceptionOfType(ReadOnlyException.class)
                 .isThrownBy(() -> sut.deleteProperty(kb, property));
 
-        Optional<KBProperty> savedProperty = sut.readProperty(kb, property.getIdentifier());
+        var savedProperty = sut.readProperty(kb, property.getIdentifier());
         assertThat(savedProperty.isPresent()).as("Check that property was not deleted").isTrue();
     }
 
@@ -1035,11 +1041,11 @@ public class KnowledgeBaseServiceImplIntegrationTest
     {
         setUp(reification);
 
-        KBProperty property = buildProperty();
+        var property = buildProperty();
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         sut.createProperty(kb, property);
 
-        List<KBProperty> properties = sut.listProperties(kb, false);
+        var properties = sut.listProperties(kb, false);
 
         assertThat(properties).as("Check that properties contain the one, saved item").hasSize(1)
                 .element(0).hasFieldOrPropertyWithValue("identifier", property.getIdentifier())
@@ -1056,7 +1062,7 @@ public class KnowledgeBaseServiceImplIntegrationTest
 
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
 
-        List<KBProperty> properties = sut.listProperties(kb, true);
+        var properties = sut.listProperties(kb, true);
 
         assertThat(properties).as("Check that all properties have implicit namespaces")
                 .allMatch(this::hasImplicitNamespace);
@@ -1069,12 +1075,12 @@ public class KnowledgeBaseServiceImplIntegrationTest
     {
         setUp(reification);
 
-        KBInstance instance = buildInstance();
+        var instance = buildInstance();
 
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         sut.createInstance(kb, instance);
 
-        KBInstance savedInstance = sut.readInstance(kb, instance.getIdentifier()).get();
+        var savedInstance = sut.readInstance(kb, instance.getIdentifier()).get();
         assertThat(savedInstance).as("Check that instance was saved correctly")
                 .hasFieldOrPropertyWithValue("description", instance.getDescription())
                 .hasFieldOrPropertyWithValue("name", instance.getName());
@@ -1088,20 +1094,20 @@ public class KnowledgeBaseServiceImplIntegrationTest
     {
         setUp(reification);
 
-        KBInstance instance = buildInstance();
+        var instance = buildInstance();
 
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
-        String customPrefix = "http://www.ukp.informatik.tu-darmstadt.de/customPrefix#";
+        var customPrefix = "http://www.ukp.informatik.tu-darmstadt.de/customPrefix#";
         kb.setBasePrefix(customPrefix);
         sut.createInstance(kb, instance);
 
-        KBInstance savedInstance = sut.readInstance(kb, instance.getIdentifier()).get();
+        var savedInstance = sut.readInstance(kb, instance.getIdentifier()).get();
         assertThat(savedInstance).as("Check that Instance was saved correctly")
                 .hasFieldOrPropertyWithValue("description", instance.getDescription())
                 .hasFieldOrPropertyWithValue("name", instance.getName());
 
-        String id = savedInstance.getIdentifier();
-        String savedInstancePrefix = id.substring(0, id.lastIndexOf("#") + 1);
+        var id = savedInstance.getIdentifier();
+        var savedInstancePrefix = id.substring(0, id.lastIndexOf("#") + 1);
         assertEquals(customPrefix, savedInstancePrefix);
     }
 
@@ -1113,7 +1119,7 @@ public class KnowledgeBaseServiceImplIntegrationTest
     {
         setUp(reification);
 
-        KBInstance instance = new KBInstance();
+        var instance = new KBInstance();
         instance.setIdentifier("Nonempty Identifier");
 
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
@@ -1131,7 +1137,7 @@ public class KnowledgeBaseServiceImplIntegrationTest
     {
         setUp(reification);
 
-        KBInstance instance = buildInstance();
+        var instance = buildInstance();
         kb.setReadOnly(true);
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
 
@@ -1146,11 +1152,11 @@ public class KnowledgeBaseServiceImplIntegrationTest
     {
         setUp(reification);
 
-        KBInstance instance = buildInstance();
+        var instance = buildInstance();
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         sut.createInstance(kb, instance);
 
-        KBInstance savedInstance = sut.readInstance(kb, instance.getIdentifier()).get();
+        var savedInstance = sut.readInstance(kb, instance.getIdentifier()).get();
 
         assertThat(savedInstance).as("Check that instance was read correctly")
                 .hasFieldOrPropertyWithValue("description", instance.getDescription())
@@ -1167,8 +1173,7 @@ public class KnowledgeBaseServiceImplIntegrationTest
 
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
 
-        Optional<KBInstance> savedInstance = sut.readInstance(kb,
-                "https://nonexistent.identifier.test");
+        var savedInstance = sut.readInstance(kb, "https://nonexistent.identifier.test");
 
         assertThat(savedInstance.isPresent()).as("Check that no instance was read").isFalse();
     }
@@ -1180,7 +1185,7 @@ public class KnowledgeBaseServiceImplIntegrationTest
     {
         setUp(reification);
 
-        KBInstance instance = buildInstance();
+        var instance = buildInstance();
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         sut.createInstance(kb, instance);
 
@@ -1188,7 +1193,7 @@ public class KnowledgeBaseServiceImplIntegrationTest
         instance.setName("New name");
         sut.updateInstance(kb, instance);
 
-        KBInstance savedInstance = sut.readInstance(kb, instance.getIdentifier()).get();
+        var savedInstance = sut.readInstance(kb, instance.getIdentifier()).get();
         assertThat(savedInstance).as("Check that instance was updated correctly")
                 .hasFieldOrPropertyWithValue("description", "New description")
                 .hasFieldOrPropertyWithValue("name", "New name");
@@ -1202,14 +1207,13 @@ public class KnowledgeBaseServiceImplIntegrationTest
     {
         setUp(reification);
 
-        KBInstance instance = buildInstance();
+        var instance = buildInstance();
         instance.setIdentifier("https://nonexistent.identifier.test");
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
 
         sut.updateInstance(kb, instance);
 
-        KBInstance savedInstance = sut.readInstance(kb, "https://nonexistent.identifier.test")
-                .get();
+        var savedInstance = sut.readInstance(kb, "https://nonexistent.identifier.test").get();
         assertThat(savedInstance)
                 .hasFieldOrPropertyWithValue("description", instance.getDescription())
                 .hasFieldOrPropertyWithValue("name", instance.getName());
@@ -1223,7 +1227,7 @@ public class KnowledgeBaseServiceImplIntegrationTest
     {
         setUp(reification);
 
-        KBInstance instance = buildInstance();
+        var instance = buildInstance();
         instance.setIdentifier("");
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
 
@@ -1241,7 +1245,7 @@ public class KnowledgeBaseServiceImplIntegrationTest
     {
         setUp(reification);
 
-        KBInstance instance = buildInstance();
+        var instance = buildInstance();
         instance.setIdentifier(null);
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
 
@@ -1258,7 +1262,7 @@ public class KnowledgeBaseServiceImplIntegrationTest
     {
         setUp(reification);
 
-        KBInstance instance = buildInstance();
+        var instance = buildInstance();
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         sut.createInstance(kb, instance);
         setReadOnly(kb);
@@ -1269,7 +1273,7 @@ public class KnowledgeBaseServiceImplIntegrationTest
         assertThatExceptionOfType(ReadOnlyException.class)
                 .isThrownBy(() -> sut.updateInstance(kb, instance));
 
-        KBInstance savedInstance = sut.readInstance(kb, instance.getIdentifier()).get();
+        var savedInstance = sut.readInstance(kb, instance.getIdentifier()).get();
         assertThat(savedInstance).as("Check that instance has not been updated")
                 .hasFieldOrPropertyWithValue("description", "Instance description")
                 .hasFieldOrPropertyWithValue("name", "Instance name");
@@ -1282,13 +1286,13 @@ public class KnowledgeBaseServiceImplIntegrationTest
     {
         setUp(reification);
 
-        KBInstance instance = buildInstance();
+        var instance = buildInstance();
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         sut.createInstance(kb, instance);
 
         sut.deleteInstance(kb, instance);
 
-        Optional<KBInstance> savedInstance = sut.readInstance(kb, instance.getIdentifier());
+        var savedInstance = sut.readInstance(kb, instance.getIdentifier());
         assertThat(savedInstance.isPresent()).as("Check that instance was not found after delete")
                 .isFalse();
     }
@@ -1301,9 +1305,9 @@ public class KnowledgeBaseServiceImplIntegrationTest
     {
         setUp(reification);
 
-        KBInstance instance = buildInstance();
-        KBProperty property = buildProperty();
-        KBInstance instance2 = buildInstance();
+        var instance = buildInstance();
+        var property = buildProperty();
+        var instance2 = buildInstance();
 
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         sut.createInstance(kb, instance);
@@ -1318,7 +1322,7 @@ public class KnowledgeBaseServiceImplIntegrationTest
         assertThat(sut.listStatementsWithPredicateOrObjectReference(kb, instance2.getIdentifier()))
                 .isEmpty();
 
-        Optional<KBInstance> savedInstance = sut.readInstance(kb, instance2.getIdentifier());
+        var savedInstance = sut.readInstance(kb, instance2.getIdentifier());
         assertThat(savedInstance.isPresent()).as("Check that Instance was not found after delete")
                 .isFalse();
 
@@ -1331,7 +1335,7 @@ public class KnowledgeBaseServiceImplIntegrationTest
     {
         setUp(reification);
 
-        KBInstance instance = buildInstance();
+        var instance = buildInstance();
         instance.setIdentifier("https://nonexistent.identifier.test");
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
 
@@ -1347,7 +1351,7 @@ public class KnowledgeBaseServiceImplIntegrationTest
     {
         setUp(reification);
 
-        KBInstance instance = buildInstance();
+        var instance = buildInstance();
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         sut.createInstance(kb, instance);
         setReadOnly(kb);
@@ -1355,7 +1359,7 @@ public class KnowledgeBaseServiceImplIntegrationTest
         assertThatExceptionOfType(ReadOnlyException.class)
                 .isThrownBy(() -> sut.deleteInstance(kb, instance));
 
-        Optional<KBInstance> savedInstance = sut.readInstance(kb, instance.getIdentifier());
+        var savedInstance = sut.readInstance(kb, instance.getIdentifier());
         assertThat(savedInstance.isPresent()).as("Check that instance was not deleted").isTrue();
     }
 
@@ -1368,13 +1372,13 @@ public class KnowledgeBaseServiceImplIntegrationTest
         setUp(reification);
 
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
-        KBConcept concept = buildConcept();
-        KBInstance instance = buildInstance();
+        var concept = buildConcept();
+        var instance = buildInstance();
         sut.createConcept(kb, concept);
         instance.setType(URI.create(concept.getIdentifier()));
         sut.createInstance(kb, instance);
 
-        List<KBHandle> instances = sut.listInstances(kb, concept.getIdentifier(), false);
+        var instances = sut.listInstances(kb, concept.getIdentifier(), false);
 
         assertThat(instances).as("Check that instances contain the one, saved item").hasSize(1)
                 .element(0).hasFieldOrPropertyWithValue("identifier", instance.getIdentifier())
@@ -1390,16 +1394,15 @@ public class KnowledgeBaseServiceImplIntegrationTest
         setUp(reification);
 
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
-        KBConcept concept = buildConcept();
-        KBProperty property = buildProperty();
+        var concept = buildConcept();
+        var property = buildProperty();
         sut.createConcept(kb, concept);
         sut.createProperty(kb, property);
-        KBStatement statement = buildStatement(kb, concept.toKBHandle(), property,
-                "Test statement");
+        var statement = buildStatement(kb, concept.toKBHandle(), property, "Test statement");
 
         sut.upsertStatement(kb, statement);
 
-        List<KBStatement> statements = sut.listStatements(kb, concept.toKBHandle(), false);
+        var statements = sut.listStatements(kb, concept.toKBHandle(), false);
         assertThat(statements).as("Check that the statement was saved correctly")
                 .filteredOn(this::isNotAbstractNorClosedStatement).hasSize(1).element(0)
                 .hasFieldOrProperty("instance").hasFieldOrProperty("property")
@@ -1415,18 +1418,17 @@ public class KnowledgeBaseServiceImplIntegrationTest
         setUp(reification);
 
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
-        KBConcept concept = buildConcept();
-        KBProperty property = buildProperty();
+        var concept = buildConcept();
+        var property = buildProperty();
         sut.createConcept(kb, concept);
         sut.createProperty(kb, property);
-        KBStatement statement = buildStatement(kb, concept.toKBHandle(), property,
-                "Test statement");
+        var statement = buildStatement(kb, concept.toKBHandle(), property, "Test statement");
         sut.upsertStatement(kb, statement);
 
         statement.setValue("Altered test property");
         sut.upsertStatement(kb, statement);
 
-        List<KBStatement> statements = sut.listStatements(kb, concept.toKBHandle(), false);
+        var statements = sut.listStatements(kb, concept.toKBHandle(), false);
         assertThat(statements).as("Check that the statement was updated correctly")
                 .filteredOn(this::isNotAbstractNorClosedStatement).hasSize(1).element(0)
                 .hasFieldOrProperty("instance").hasFieldOrProperty("property")
@@ -1442,19 +1444,18 @@ public class KnowledgeBaseServiceImplIntegrationTest
         setUp(reification);
 
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
-        KBConcept concept = buildConcept();
-        KBProperty property = buildProperty();
+        var concept = buildConcept();
+        var property = buildProperty();
         sut.createConcept(kb, concept);
         sut.createProperty(kb, property);
-        KBStatement statement = buildStatement(kb, concept.toKBHandle(), property,
-                "Test statement");
+        var statement = buildStatement(kb, concept.toKBHandle(), property, "Test statement");
         setReadOnly(kb);
 
-        int statementCountBeforeUpsert = sut.listStatements(kb, concept.toKBHandle(), false).size();
+        var statementCountBeforeUpsert = sut.listStatements(kb, concept.toKBHandle(), false).size();
         assertThatExceptionOfType(ReadOnlyException.class)
                 .isThrownBy(() -> sut.upsertStatement(kb, statement));
 
-        int statementCountAfterUpsert = sut.listStatements(kb, concept.toKBHandle(), false).size();
+        var statementCountAfterUpsert = sut.listStatements(kb, concept.toKBHandle(), false).size();
         assertThat(statementCountBeforeUpsert).as("Check that statement was not created")
                 .isEqualTo(statementCountAfterUpsert);
     }
@@ -1467,17 +1468,16 @@ public class KnowledgeBaseServiceImplIntegrationTest
         setUp(reification);
 
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
-        KBConcept concept = buildConcept();
-        KBProperty property = buildProperty();
+        var concept = buildConcept();
+        var property = buildProperty();
         sut.createConcept(kb, concept);
         sut.createProperty(kb, property);
-        KBStatement statement = buildStatement(kb, concept.toKBHandle(), property,
-                "Test statement");
+        var statement = buildStatement(kb, concept.toKBHandle(), property, "Test statement");
         sut.upsertStatement(kb, statement);
 
         sut.deleteStatement(kb, statement);
 
-        List<KBStatement> statements = sut.listStatements(kb, concept.toKBHandle(), false);
+        var statements = sut.listStatements(kb, concept.toKBHandle(), false);
         assertThat(statements).as("Check that the statement was deleted correctly")
                 .noneMatch(stmt -> "Test statement".equals(stmt.getValue()));
     }
@@ -1490,12 +1490,11 @@ public class KnowledgeBaseServiceImplIntegrationTest
         setUp(reification);
 
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
-        KBConcept concept = buildConcept();
-        KBProperty property = buildProperty();
+        var concept = buildConcept();
+        var property = buildProperty();
         sut.createConcept(kb, concept);
         sut.createProperty(kb, property);
-        KBStatement statement = buildStatement(kb, concept.toKBHandle(), property,
-                "Test statement");
+        var statement = buildStatement(kb, concept.toKBHandle(), property, "Test statement");
 
         assertThatCode(() -> sut.deleteStatement(kb, statement)).doesNotThrowAnyException();
     }
@@ -1508,22 +1507,21 @@ public class KnowledgeBaseServiceImplIntegrationTest
         setUp(reification);
 
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
-        KBConcept concept = buildConcept();
-        KBProperty property = buildProperty();
+        var concept = buildConcept();
+        var property = buildProperty();
         sut.createConcept(kb, concept);
         sut.createProperty(kb, property);
-        KBStatement statement = buildStatement(kb, concept.toKBHandle(), property,
-                "Test statement");
+        var statement = buildStatement(kb, concept.toKBHandle(), property, "Test statement");
         sut.upsertStatement(kb, statement);
         setReadOnly(kb);
 
-        int statementCountBeforeDeletion = sut.listStatements(kb, concept.toKBHandle(), false)
+        var statementCountBeforeDeletion = sut.listStatements(kb, concept.toKBHandle(), false)
                 .size();
 
         assertThatExceptionOfType(ReadOnlyException.class)
                 .isThrownBy(() -> sut.deleteStatement(kb, statement));
 
-        int statementCountAfterDeletion = sut.listStatements(kb, concept.toKBHandle(), false)
+        var statementCountAfterDeletion = sut.listStatements(kb, concept.toKBHandle(), false)
                 .size();
         assertThat(statementCountAfterDeletion).as("Check that statement was not deleted")
                 .isEqualTo(statementCountBeforeDeletion);
@@ -1538,15 +1536,14 @@ public class KnowledgeBaseServiceImplIntegrationTest
         setUp(reification);
 
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
-        KBConcept concept = buildConcept();
-        KBProperty property = buildProperty();
+        var concept = buildConcept();
+        var property = buildProperty();
         sut.createConcept(kb, concept);
         sut.createProperty(kb, property);
-        KBStatement statement = buildStatement(kb, concept.toKBHandle(), property,
-                "Test statement");
+        var statement = buildStatement(kb, concept.toKBHandle(), property, "Test statement");
         sut.upsertStatement(kb, statement);
 
-        List<KBStatement> statements = sut.listStatements(kb, concept.toKBHandle(), false);
+        var statements = sut.listStatements(kb, concept.toKBHandle(), false);
 
         assertThat(statements).as("Check that saved statement is found")
                 .filteredOn(this::isNotAbstractNorClosedStatement).hasSize(1).element(0)
@@ -1986,6 +1983,24 @@ public class KnowledgeBaseServiceImplIntegrationTest
         assertThat(sut.isKnowledgeBaseEnabled(project, "NonExistingID"))
                 .as("Check that correct accessibility value is returned for non existing id ")
                 .isFalse();
+    }
+
+    @Test
+    public void importKnowledgeBase_OBO() throws Exception
+    {
+        setUp(Reification.NONE);
+        sut.registerKnowledgeBase(kb, sut.getNativeConfig());
+        importKnowledgeBase("data/example1.obo");
+        assertThat(sut.getIndexSize(kb)).isGreaterThan(30000);
+    }
+
+    @Test
+    public void importKnowledgeBase_OBO_gzip() throws Exception
+    {
+        setUp(Reification.NONE);
+        sut.registerKnowledgeBase(kb, sut.getNativeConfig());
+        importKnowledgeBase("data/example1.obo.gz");
+        assertThat(sut.getIndexSize(kb)).isGreaterThan(30000);
     }
 
     // Helper

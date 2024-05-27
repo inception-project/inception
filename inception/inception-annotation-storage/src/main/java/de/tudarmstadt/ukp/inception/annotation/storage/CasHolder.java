@@ -33,8 +33,8 @@ public class CasHolder
 
     private CAS cas;
     private Exception exception;
-    private boolean typeSystemOutdated;
-    private boolean deleted;
+    private boolean typeSystemOutdated = false;
+    private boolean deleted = false;
 
     public CasHolder(CasKey aKey)
     {
@@ -141,7 +141,9 @@ public class CasHolder
     public String toString()
     {
         return new ToStringBuilder(this, SHORT_PREFIX_STYLE).append("key", key)
-                .append("deleted", deleted).append("typeSystemOutdated", typeSystemOutdated)
+                .append("cas", getCasHashCode()) //
+                .append("deleted", deleted) //
+                .append("typeSystemOutdated", typeSystemOutdated) //
                 .toString();
     }
 

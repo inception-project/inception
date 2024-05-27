@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.annotation.layer.span;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectOverlapping;
 import static de.tudarmstadt.ukp.inception.rendering.vmodel.VCommentType.ERROR;
+import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.selectOverlapping;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
 import static org.apache.uima.fit.util.CasUtil.selectAt;
@@ -38,17 +38,17 @@ import org.apache.uima.cas.text.AnnotationFS;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.IllegalPlacementException;
 import de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode;
-import de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst;
-import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainLayerSupport;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VComment;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VSpan;
-import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationComparator;
-import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
-import de.tudarmstadt.ukp.inception.schema.adapter.TypeAdapter;
-import de.tudarmstadt.ukp.inception.schema.layer.LayerSupport;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationComparator;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupport;
+import de.tudarmstadt.ukp.inception.support.WebAnnoConst;
+import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 
 /**
  * Handles the {@link OverlapMode} setting for {@link WebAnnoConst#SPAN_TYPE span layers}.
@@ -157,20 +157,20 @@ public class SpanOverlapBehavior
             overlappingOrStackingSpans(sortedSpans, stacking, overlapping);
 
             overlapping.forEach(fs -> aResponse
-                    .add(new VComment(new VID(fs), ERROR, "Overlap is not permitted.")));
+                    .add(new VComment(VID.of(fs), ERROR, "Overlap is not permitted.")));
 
             stacking.forEach(fs -> aResponse
-                    .add(new VComment(new VID(fs), ERROR, "Stacking is not permitted.")));
+                    .add(new VComment(VID.of(fs), ERROR, "Stacking is not permitted.")));
             break;
         }
         case STACKING_ONLY:
             // Here, we must find all overlapping relations because they are not permitted
             overlappingNonStackingSpans(sortedSpans).forEach(fs -> aResponse
-                    .add(new VComment(new VID(fs), ERROR, "Only stacking is permitted.")));
+                    .add(new VComment(VID.of(fs), ERROR, "Only stacking is permitted.")));
             break;
         case OVERLAP_ONLY:
             stackingSpans(sortedSpans).forEach(fs -> aResponse
-                    .add(new VComment(new VID(fs), ERROR, "Stacking is not permitted.")));
+                    .add(new VComment(VID.of(fs), ERROR, "Stacking is not permitted.")));
             break;
         }
     }

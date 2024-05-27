@@ -20,16 +20,18 @@ package de.tudarmstadt.ukp.inception.log;
 import static java.util.Calendar.HOUR_OF_DAY;
 import static org.apache.uima.fit.factory.TypeSystemDescriptionFactory.createTypeSystemDescription;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.List;
 
 import org.apache.uima.util.CasCreationUtils;
 import org.junit.jupiter.api.AfterEach;
@@ -45,16 +47,17 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
-import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryAutoConfiguration;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.project.config.ProjectServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.documents.api.RepositoryAutoConfiguration;
 import de.tudarmstadt.ukp.inception.documents.config.DocumentServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.log.model.LoggedEvent;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.log.model.SummarizedLoggedEvent;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.config.AnnotationSchemaServiceAutoConfiguration;
 
 @EnableAutoConfiguration
@@ -110,8 +113,8 @@ public class EventRepositoryImplIntegrationTest
     @Test
     public void getLoggedEventsForDoc_WithoutLoggedEvent_ShouldReturnEmptyList()
     {
-        List<LoggedEvent> loggedEvents = sut.listUniqueLoggedEventsForDoc(project,
-                user.getUsername(), new String[] { EVENT_TYPE_AFTER_ANNO_EVENT }, 10);
+        var loggedEvents = sut.listUniqueLoggedEventsForDoc(project, user.getUsername(),
+                new String[] { EVENT_TYPE_AFTER_ANNO_EVENT }, 10);
 
         assertThat(loggedEvents).as("Check that no logged event is found").isEmpty();
     }
@@ -120,17 +123,17 @@ public class EventRepositoryImplIntegrationTest
     public void getLoggedEventsForDoc_WithStoredLoggedEvent_ShouldReturnStoredLoggedEvent()
         throws ParseException
     {
-        DateFormat df = new SimpleDateFormat("yy-MM-dd HH:mm:ss");
+        var df = new SimpleDateFormat("yy-MM-dd HH:mm:ss");
         le = buildLoggedEvent(project, USERNAME, EVENT_TYPE_AFTER_ANNO_EVENT,
                 df.parse("19-04-03 10:00:00"), 1, DETAIL_JSON);
-        LoggedEvent excludeTypeEvent = buildLoggedEvent(project, USERNAME,
+        var excludeTypeEvent = buildLoggedEvent(project, USERNAME,
                 EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT, df.parse("19-04-03 11:00:00"), 1,
                 DETAIL_JSON);
-        LoggedEvent includeTypeEvent = buildLoggedEvent(project, USERNAME, SPAN_CREATED_EVENT,
+        var includeTypeEvent = buildLoggedEvent(project, USERNAME, SPAN_CREATED_EVENT,
                 df.parse("19-04-03 07:00:00"), 1, DETAIL_JSON);
-        LoggedEvent le2 = buildLoggedEvent(project, USERNAME, EVENT_TYPE_AFTER_ANNO_EVENT,
+        var le2 = buildLoggedEvent(project, USERNAME, EVENT_TYPE_AFTER_ANNO_EVENT,
                 df.parse("19-04-03 9:00:00"), 1, DETAIL_JSON);
-        LoggedEvent le3 = buildLoggedEvent(project, USERNAME, EVENT_TYPE_AFTER_ANNO_EVENT,
+        var le3 = buildLoggedEvent(project, USERNAME, EVENT_TYPE_AFTER_ANNO_EVENT,
                 df.parse("19-04-03 8:00:00"), 2, DETAIL_JSON);
 
         sut.create(le);
@@ -138,8 +141,7 @@ public class EventRepositoryImplIntegrationTest
         sut.create(excludeTypeEvent);
         sut.create(le2);
         sut.create(le3);
-        List<LoggedEvent> loggedEvents = sut.listUniqueLoggedEventsForDoc(project,
-                user.getUsername(),
+        var loggedEvents = sut.listUniqueLoggedEventsForDoc(project, user.getUsername(),
                 new String[] { EVENT_TYPE_AFTER_ANNO_EVENT, SPAN_CREATED_EVENT }, 5);
 
         assertThat(loggedEvents).as("Check that last created logged events are found").hasSize(2)
@@ -153,8 +155,8 @@ public class EventRepositoryImplIntegrationTest
                 new Date(), -1, DETAIL_JSON);
 
         sut.create(le);
-        List<LoggedEvent> loggedEvents = sut.listLoggedEventsForRecommender(project,
-                user.getUsername(), EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT, 5, RECOMMENDER_ID);
+        var loggedEvents = sut.listLoggedEventsForRecommender(project, user.getUsername(),
+                EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT, 5, RECOMMENDER_ID);
 
         assertThat(loggedEvents).as("Check that only the previously created logged event is found")
                 .hasSize(1).contains(le);
@@ -163,8 +165,8 @@ public class EventRepositoryImplIntegrationTest
     @Test
     public void getLoggedEvents_WithoutLoggedEvent_ShouldReturnEmptyList()
     {
-        List<LoggedEvent> loggedEvents = sut.listLoggedEventsForRecommender(project,
-                user.getUsername(), EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT, 5, RECOMMENDER_ID);
+        var loggedEvents = sut.listLoggedEventsForRecommender(project, user.getUsername(),
+                EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT, 5, RECOMMENDER_ID);
 
         assertThat(loggedEvents).as("Check that no logged event is found").isEmpty();
     }
@@ -177,8 +179,8 @@ public class EventRepositoryImplIntegrationTest
 
         sut.create(le);
 
-        List<LoggedEvent> loggedEvents = sut.listLoggedEventsForRecommender(project,
-                user.getUsername(), EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT, 5, RECOMMENDER_ID);
+        var loggedEvents = sut.listLoggedEventsForRecommender(project, user.getUsername(),
+                EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT, 5, RECOMMENDER_ID);
 
         assertThat(loggedEvents).as("Check that no logged event is found").isEmpty();
     }
@@ -186,14 +188,14 @@ public class EventRepositoryImplIntegrationTest
     @Test
     public void getLoggedEvents_WithLoggedEventOfOtherProject_ShouldReturnEmptyList()
     {
-        Project otherProject = createProject("otherProject");
+        var otherProject = createProject("otherProject");
         le = buildLoggedEvent(otherProject, user.getUsername(),
                 EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT, new Date(), -1, DETAIL_JSON);
 
         sut.create(le);
 
-        List<LoggedEvent> loggedEvents = sut.listLoggedEventsForRecommender(project,
-                user.getUsername(), EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT, 5, RECOMMENDER_ID);
+        var loggedEvents = sut.listLoggedEventsForRecommender(project, user.getUsername(),
+                EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT, 5, RECOMMENDER_ID);
 
         assertThat(loggedEvents).as("Check that no logged event is found").isEmpty();
     }
@@ -207,8 +209,8 @@ public class EventRepositoryImplIntegrationTest
 
         sut.create(le);
 
-        List<LoggedEvent> loggedEvents = sut.listLoggedEventsForRecommender(project,
-                user.getUsername(), EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT, 5, RECOMMENDER_ID);
+        var loggedEvents = sut.listLoggedEventsForRecommender(project, user.getUsername(),
+                EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT, 5, RECOMMENDER_ID);
 
         assertThat(loggedEvents).as("Check that no logged event is found").isEmpty();
     }
@@ -216,17 +218,17 @@ public class EventRepositoryImplIntegrationTest
     @Test
     public void getLoggedEvents_WithLoggedEventsMoreThanGivenSize_ShouldReturnListOfGivenSize()
     {
-        for (int i = 0; i < 6; i++) {
+        for (var i = 0; i < 6; i++) {
             le = buildLoggedEvent(project, user.getUsername(),
                     EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT, new Date(), -1, DETAIL_JSON);
-            Calendar cal = Calendar.getInstance();
+            var cal = Calendar.getInstance();
             cal.set(HOUR_OF_DAY, i);
             le.setCreated(cal.getTime());
             sut.create(le);
         }
 
-        List<LoggedEvent> loggedEvents = sut.listLoggedEventsForRecommender(project,
-                user.getUsername(), EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT, 5, RECOMMENDER_ID);
+        var loggedEvents = sut.listLoggedEventsForRecommender(project, user.getUsername(),
+                EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT, 5, RECOMMENDER_ID);
 
         assertThat(loggedEvents).as("Check that the number of logged events is 5").hasSize(5);
     }
@@ -234,7 +236,7 @@ public class EventRepositoryImplIntegrationTest
     @Test
     public void getLoggedEvents_WithLoggedEventsCreatedAtDifferentTimes_ShouldReturnSortedList()
     {
-        for (int i = 0; i < 5; i++) {
+        for (var i = 0; i < 5; i++) {
             le = buildLoggedEvent(project, user.getUsername(),
                     EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT, new Date(), -1, DETAIL_JSON);
 
@@ -244,12 +246,12 @@ public class EventRepositoryImplIntegrationTest
             sut.create(le);
         }
 
-        List<LoggedEvent> loggedEvents = sut.listLoggedEventsForRecommender(project,
-                user.getUsername(), EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT, 5, RECOMMENDER_ID);
+        var loggedEvents = sut.listLoggedEventsForRecommender(project, user.getUsername(),
+                EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT, 5, RECOMMENDER_ID);
 
         assertThat(loggedEvents).as("Check that the returned list is not empty").isNotEmpty();
 
-        for (int i = 1; i < 5; i++) {
+        for (var i = 1; i < 5; i++) {
             assertThat(loggedEvents.get(i - 1).getCreated()).as(
                     "Check that the list of logged events is ordered by created time in descending order")
                     .isAfterOrEqualTo(loggedEvents.get(i).getCreated());
@@ -263,10 +265,10 @@ public class EventRepositoryImplIntegrationTest
                 new Date(), -1, DETAIL_JSON);
         sut.create(le);
 
-        int otherRecommenderId = 6;
+        var otherRecommenderId = 6;
 
-        List<LoggedEvent> loggedEvents = sut.listLoggedEventsForRecommender(project,
-                user.getUsername(), EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT, 5, otherRecommenderId);
+        var loggedEvents = sut.listLoggedEventsForRecommender(project, user.getUsername(),
+                EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT, 5, otherRecommenderId);
 
         assertThat(loggedEvents).as("Check that no logged event is found").isEmpty();
     }
@@ -274,17 +276,43 @@ public class EventRepositoryImplIntegrationTest
     @Test
     public void getFilteredRecentLoggedEvents_ShouldReturnEvent()
     {
-        LoggedEvent evalEvent = buildLoggedEvent(project, "!" + user.getUsername(),
+        var evalEvent = buildLoggedEvent(project, "!" + user.getUsername(),
                 EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT, new Date(), -1, DETAIL_JSON);
-        LoggedEvent spanEvent = buildLoggedEvent(project, user.getUsername(), SPAN_CREATED_EVENT,
+        var spanEvent = buildLoggedEvent(project, user.getUsername(), SPAN_CREATED_EVENT,
                 new Date(), -1, "");
         sut.create(evalEvent);
         sut.create(spanEvent);
 
-        List<LoggedEvent> loggedEvents = sut.listRecentActivity(user.getUsername(), 3);
+        var loggedEvents = sut.listRecentActivity(user.getUsername(), 3);
 
         assertThat(loggedEvents).hasSize(1);
         assertThat(loggedEvents).contains(spanEvent);
+    }
+
+    @Test
+    void summarizeEvents()
+    {
+        for (var i = 0; i < 5; i++) {
+            le = buildLoggedEvent(project, user.getUsername(), SPAN_CREATED_EVENT, new Date(), -1,
+                    DETAIL_JSON);
+
+            var cal = Calendar.getInstance();
+            cal.set(Calendar.HOUR_OF_DAY, i + 3);
+            le.setCreated(cal.getTime());
+            sut.create(le);
+        }
+
+        var today = LocalDate.now();
+        var beginOfDay = today.atTime(LocalTime.MIN).atZone(ZoneId.of("UTC")).toInstant();
+        var endOfDay = today.atTime(LocalTime.MAX).atZone(ZoneId.of("UTC")).toInstant();
+
+        var summarizedEvents = sut.summarizeEvents(USERNAME, project, beginOfDay, endOfDay);
+
+        assertThat(summarizedEvents).as("Check that the returned list is not empty").isNotEmpty();
+
+        assertThat(summarizedEvents)
+                .extracting(SummarizedLoggedEvent::getEvent, SummarizedLoggedEvent::getCount)
+                .containsExactly(tuple("SpanCreatedEvent", 5L));
     }
 
     // Helper

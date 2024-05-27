@@ -17,16 +17,17 @@
  */
 package de.tudarmstadt.ukp.inception.workload.matrix;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.uima.FeatureStructureBuilder.buildFS;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateChangeFlag.EXPLICIT_ANNOTATOR_USER_ACTION;
+import static de.tudarmstadt.ukp.inception.support.uima.FeatureStructureBuilder.buildFS;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.commons.io.IOUtils.toInputStream;
 
 import org.apache.uima.cas.CAS;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 
 public class Fixtures
 {
@@ -41,7 +42,8 @@ public class Fixtures
             buildFS(cas, NamedEntity.class.getName()) //
                     .withFeature("value", "test") //
                     .buildAndAddToIndexes();
-            documentService.writeAnnotationCas(cas, annotationDocument, true);
+            documentService.writeAnnotationCas(cas, annotationDocument,
+                    EXPLICIT_ANNOTATOR_USER_ACTION);
         }
     }
 }

@@ -21,17 +21,21 @@ import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.wicket.Component;
+import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.ajax.AbstractDefaultAjaxBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.request.Request;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.apache.wicket.util.visit.IVisit;
+import org.apache.wicket.util.visit.IVisitor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.ServerTimingWatch;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.EditorAjaxRequestHandler;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.EditorAjaxRequestHandlerExtensionPoint;
+import de.tudarmstadt.ukp.inception.support.http.ServerTimingWatch;
+import de.tudarmstadt.ukp.inception.support.wicket.ContextMenu;
 
 public class DiamAjaxBehavior
     extends AbstractDefaultAjaxBehavior
@@ -45,6 +49,18 @@ public class DiamAjaxBehavior
     private List<EditorAjaxRequestHandler> priorityHandlers = new ArrayList<>();
 
     private boolean globalHandlersEnabled = true;
+
+    private final ContextMenu contextMenu;
+
+    public DiamAjaxBehavior()
+    {
+        this(null);
+    }
+
+    public DiamAjaxBehavior(ContextMenu aContextMenu)
+    {
+        contextMenu = aContextMenu;
+    }
 
     public DiamAjaxBehavior addPriorityHandler(EditorAjaxRequestHandler aHandler)
     {
@@ -69,7 +85,7 @@ public class DiamAjaxBehavior
     {
         LOG.trace("AJAX request received");
 
-        Request request = RequestCycle.get().getRequest();
+        var request = RequestCycle.get().getRequest();
 
         var priorityHandler = priorityHandlers.stream() //
                 .filter(handler -> handler.accepts(request)) //
@@ -88,10 +104,34 @@ public class DiamAjaxBehavior
 
     private void call(AjaxRequestTarget aTarget, EditorAjaxRequestHandler aHandler)
     {
-        Request request = RequestCycle.get().getRequest();
+        var request = RequestCycle.get().getRequest();
         try (var watch = new ServerTimingWatch("diam", "diam (" + aHandler.getCommand() + ")")) {
-            aHandler.handle(aTarget, request);
+            aHandler.handle(this, aTarget, request);
             return;
         }
+    }
+
+    public ContextMenu findContextMenu()
+    {
+        var component = getComponent();
+        if (component instanceof MarkupContainer container) {
+            final Component[] result = new Component[1]; // Array to hold the result
+            container.visitChildren(ContextMenu.class, new IVisitor<Component, Void>()
+            {
+                @Override
+                public void component(Component aComponent, IVisit<Void> visit)
+                {
+                    result[0] = aComponent;
+                    visit.stop();
+                }
+            });
+            return (ContextMenu) result[0];
+        }
+        return null;
+    }
+
+    public ContextMenu getContextMenu()
+    {
+        return contextMenu;
     }
 }

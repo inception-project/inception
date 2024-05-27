@@ -17,25 +17,19 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.agreement.measures;
 
-import java.io.Serializable;
-import java.util.List;
-import java.util.Map;
-
-import org.apache.uima.cas.CAS;
 import org.apache.wicket.markup.html.panel.EmptyPanel;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
-import org.danekja.java.util.function.serializable.SerializableSupplier;
 import org.dkpro.statistics.agreement.IAnnotationStudy;
-import org.springframework.beans.factory.BeanNameAware;
 
+import de.tudarmstadt.ukp.clarin.webanno.agreement.AgreementResult_ImplBase;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.FullAgreementResult_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 
 public interface AgreementMeasureSupport<//
         T extends DefaultAgreementTraits, //
-        R extends Serializable, //
+        R extends FullAgreementResult_ImplBase<S>, //
         S extends IAnnotationStudy>
-    extends BeanNameAware
 {
     String getId();
 
@@ -71,6 +65,8 @@ public interface AgreementMeasureSupport<//
 
     T createTraits();
 
-    Panel createResultsPanel(String aId, IModel<R> aResults,
-            SerializableSupplier<Map<String, List<CAS>>> aCasMapSupplier);
+    Panel createResultsPanel(String aId, IModel<? extends AgreementResult_ImplBase> aResults,
+            DefaultAgreementTraits aDefaultAgreementTraits);
+
+    boolean isSupportingMoreThanTwoRaters();
 }

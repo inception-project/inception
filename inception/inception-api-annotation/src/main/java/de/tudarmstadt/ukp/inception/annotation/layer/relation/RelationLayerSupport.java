@@ -17,21 +17,20 @@
  */
 package de.tudarmstadt.ukp.inception.annotation.layer.relation;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.FEAT_REL_SOURCE;
-import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.FEAT_REL_TARGET;
-import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.RELATION_TYPE;
 import static java.util.Arrays.asList;
-import static java.util.stream.Collectors.toList;
 import static org.apache.uima.cas.CAS.TYPE_NAME_ANNOTATION;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Supplier;
 
-import org.apache.uima.resource.metadata.TypeDescription;
+import org.apache.uima.cas.CAS;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.validation.ValidationError;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
@@ -40,9 +39,10 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.annotation.layer.behaviors.LayerBehaviorRegistry;
 import de.tudarmstadt.ukp.inception.rendering.Renderer;
-import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupportRegistry;
-import de.tudarmstadt.ukp.inception.schema.layer.LayerSupport_ImplBase;
-import de.tudarmstadt.ukp.inception.schema.layer.LayerType;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupport_ImplBase;
+import de.tudarmstadt.ukp.inception.schema.api.layer.LayerType;
+import de.tudarmstadt.ukp.inception.support.WebAnnoConst;
 
 /**
  * <p>
@@ -54,6 +54,15 @@ public class RelationLayerSupport
     extends LayerSupport_ImplBase<RelationAdapter, RelationLayerTraits>
     implements InitializingBean
 {
+    @SuppressWarnings("deprecation")
+    public static final String FEAT_REL_TARGET = WebAnnoConst.FEAT_REL_TARGET;
+
+    @SuppressWarnings("deprecation")
+    public static final String FEAT_REL_SOURCE = WebAnnoConst.FEAT_REL_SOURCE;
+
+    @SuppressWarnings("deprecation")
+    public static final String TYPE = WebAnnoConst.RELATION_TYPE;
+
     private final ApplicationEventPublisher eventPublisher;
     private final LayerBehaviorRegistry layerBehaviorsRegistry;
 
@@ -85,7 +94,7 @@ public class RelationLayerSupport
     @Override
     public void afterPropertiesSet() throws Exception
     {
-        types = asList(new LayerType(RELATION_TYPE, "Relation", layerSupportId));
+        types = asList(new LayerType(TYPE, "Relation", layerSupportId));
     }
 
     @Override
@@ -97,16 +106,15 @@ public class RelationLayerSupport
     @Override
     public boolean accepts(AnnotationLayer aLayer)
     {
-        return RELATION_TYPE.equals(aLayer.getType());
+        return TYPE.equals(aLayer.getType());
     }
 
     @Override
     public RelationAdapter createAdapter(AnnotationLayer aLayer,
             Supplier<Collection<AnnotationFeature>> aFeatures)
     {
-        RelationAdapter adapter = new RelationAdapter(getLayerSupportRegistry(),
-                featureSupportRegistry, eventPublisher, aLayer, FEAT_REL_TARGET, FEAT_REL_SOURCE,
-                aFeatures,
+        var adapter = new RelationAdapter(getLayerSupportRegistry(), featureSupportRegistry,
+                eventPublisher, aLayer, FEAT_REL_TARGET, FEAT_REL_SOURCE, aFeatures,
                 layerBehaviorsRegistry.getLayerBehaviors(this, RelationLayerBehavior.class));
 
         return adapter;
@@ -116,15 +124,21 @@ public class RelationLayerSupport
     public void generateTypes(TypeSystemDescription aTsd, AnnotationLayer aLayer,
             List<AnnotationFeature> aAllFeaturesInProject)
     {
-        TypeDescription td = aTsd.addType(aLayer.getName(), aLayer.getDescription(),
-                TYPE_NAME_ANNOTATION);
-        AnnotationLayer attachType = aLayer.getAttachType();
+        var td = aTsd.addType(aLayer.getName(), aLayer.getDescription(), TYPE_NAME_ANNOTATION);
+        var attachType = aLayer.getAttachType();
 
-        td.addFeature(FEAT_REL_TARGET, "", attachType.getName());
-        td.addFeature(FEAT_REL_SOURCE, "", attachType.getName());
+        if (attachType != null) {
+            td.addFeature(FEAT_REL_TARGET, "", attachType.getName());
+            td.addFeature(FEAT_REL_SOURCE, "", attachType.getName());
+        }
+        else {
+            td.addFeature(FEAT_REL_TARGET, "", CAS.TYPE_NAME_ANNOTATION);
+            td.addFeature(FEAT_REL_SOURCE, "", CAS.TYPE_NAME_ANNOTATION);
+        }
 
-        List<AnnotationFeature> featureForLayer = aAllFeaturesInProject.stream()
-                .filter(feature -> aLayer.equals(feature.getLayer())).collect(toList());
+        var featureForLayer = aAllFeaturesInProject.stream() //
+                .filter(feature -> aLayer.equals(feature.getLayer())) //
+                .toList();
         generateFeatures(aTsd, td, featureForLayer);
     }
 
@@ -140,7 +154,7 @@ public class RelationLayerSupport
     @Override
     public Panel createTraitsEditor(String aId, IModel<AnnotationLayer> aLayerModel)
     {
-        AnnotationLayer layer = aLayerModel.getObject();
+        var layer = aLayerModel.getObject();
 
         if (!accepts(layer)) {
             throw unsupportedLayerTypeException(layer);
@@ -153,5 +167,27 @@ public class RelationLayerSupport
     public RelationLayerTraits createTraits()
     {
         return new RelationLayerTraits();
+    }
+
+    @Override
+    public List<ValidationError> validateFeatureName(AnnotationFeature aFeature)
+    {
+        var name = aFeature.getName();
+        if (name.equals(FEAT_REL_SOURCE) || name.equals(FEAT_REL_TARGET)) {
+            return asList(new ValidationError("[" + name + "] is a reserved feature name on "
+                    + "relation layers. Please use a different name for the feature."));
+        }
+
+        return Collections.emptyList();
+    }
+
+    @Override
+    public boolean isDeletable(AnnotationFeature aFeature)
+    {
+        if (Set.of(FEAT_REL_SOURCE, FEAT_REL_TARGET).contains(aFeature.getName())) {
+            return false;
+        }
+
+        return true;
     }
 }

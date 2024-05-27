@@ -17,17 +17,19 @@
  */
 package de.tudarmstadt.ukp.inception.sharing.config;
 
+import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.SPEL_IS_ADMIN_ACCOUNT_RECOVERY_MODE;
+
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.sharing.InviteService;
 import de.tudarmstadt.ukp.inception.sharing.InviteServiceImpl;
 import de.tudarmstadt.ukp.inception.sharing.project.InviteProjectSettingsPanelFactory;
@@ -37,7 +39,8 @@ import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 
 @Configuration
 @EnableConfigurationProperties(InviteServicePropertiesImpl.class)
-@ConditionalOnProperty(prefix = "sharing.invites", name = "enabled", havingValue = "true")
+@ConditionalOnExpression("${sharing.invites.enabled:false} and !"
+        + SPEL_IS_ADMIN_ACCOUNT_RECOVERY_MODE)
 public class InviteServiceAutoConfiguration
 {
     private @PersistenceContext EntityManager entityManager;

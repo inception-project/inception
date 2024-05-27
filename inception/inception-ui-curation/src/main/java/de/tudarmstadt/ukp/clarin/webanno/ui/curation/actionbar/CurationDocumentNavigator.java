@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.curation.actionbar;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 import static wicket.contrib.input.events.EventType.click;
 import static wicket.contrib.input.events.key.KeyType.Page_down;
 import static wicket.contrib.input.events.key.KeyType.Page_up;
@@ -28,13 +28,13 @@ import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.export.ExportDocumentDialog;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.input.InputBehavior;
-import de.tudarmstadt.ukp.inception.documents.DocumentAccess;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentAccess;
+import de.tudarmstadt.ukp.inception.project.api.ProjectService;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.inception.support.wicket.input.InputBehavior;
 import de.tudarmstadt.ukp.inception.ui.curation.actionbar.opendocument.CurationOpenDocumentDialog;
 import wicket.contrib.input.events.key.KeyType;
 
@@ -85,8 +85,7 @@ public class CurationDocumentNavigator
      */
     public void actionShowPreviousDocument(AjaxRequestTarget aTarget)
     {
-        boolean documentChanged = page.getModelObject()
-                .moveToPreviousDocument(page.getListOfDocs());
+        var documentChanged = page.getModelObject().moveToPreviousDocument(page.getListOfDocs());
         if (!documentChanged) {
             info("There is no previous document");
             aTarget.addChildren(getPage(), IFeedback.class);
@@ -103,7 +102,7 @@ public class CurationDocumentNavigator
      */
     public void actionShowNextDocument(AjaxRequestTarget aTarget)
     {
-        boolean documentChanged = page.getModelObject().moveToNextDocument(page.getListOfDocs());
+        var documentChanged = page.getModelObject().moveToNextDocument(page.getListOfDocs());
         if (!documentChanged) {
             info("There is no next document");
             aTarget.addChildren(getPage(), IFeedback.class);

@@ -27,9 +27,8 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SINGLE_TOKEN
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.NO_OVERLAP;
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.OVERLAP_ONLY;
-import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.RELATION_TYPE;
-import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.inception.curation.merge.CurationTestUtils.HOST_TYPE;
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.RELATION_TYPE;
 import static java.util.Arrays.asList;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.lenient;
@@ -66,7 +65,7 @@ import de.tudarmstadt.ukp.inception.annotation.layer.behaviors.LayerSupportRegis
 import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainLayerSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.service.FeatureSupportRegistryImpl;
 
 @ExtendWith(MockitoExtension.class)
@@ -130,11 +129,11 @@ public class CasMergeTestBase
         document.setProject(project);
         document.setName("document");
 
-        sentenceLayer = new AnnotationLayer(Sentence.class.getName(), "Sentence", SPAN_TYPE, null,
-                true, CHARACTERS, NO_OVERLAP);
+        sentenceLayer = new AnnotationLayer(Sentence.class.getName(), "Sentence",
+                SpanLayerSupport.TYPE, null, true, CHARACTERS, NO_OVERLAP);
 
-        tokenLayer = new AnnotationLayer(Token.class.getName(), "Token", SPAN_TYPE, null, true,
-                CHARACTERS, NO_OVERLAP);
+        tokenLayer = new AnnotationLayer(Token.class.getName(), "Token", SpanLayerSupport.TYPE,
+                null, true, CHARACTERS, NO_OVERLAP);
 
         tokenPosFeature = new AnnotationFeature();
         tokenPosFeature.setName("pos");
@@ -146,8 +145,8 @@ public class CasMergeTestBase
         tokenPosFeature.setVisible(true);
         tokenPosFeature.setCuratable(true);
 
-        posLayer = new AnnotationLayer(POS.class.getName(), "POS", SPAN_TYPE, project, true,
-                SINGLE_TOKEN, NO_OVERLAP);
+        posLayer = new AnnotationLayer(POS.class.getName(), "POS", SpanLayerSupport.TYPE, project,
+                true, SINGLE_TOKEN, NO_OVERLAP);
         posLayer.setAttachType(tokenLayer);
         posLayer.setAttachFeature(tokenPosFeature);
 
@@ -171,8 +170,8 @@ public class CasMergeTestBase
         posCoarseFeature.setVisible(true);
         posCoarseFeature.setCuratable(true);
 
-        neLayer = new AnnotationLayer(NamedEntity.class.getName(), "Named Entity", SPAN_TYPE,
-                project, true, TOKENS, OVERLAP_ONLY);
+        neLayer = new AnnotationLayer(NamedEntity.class.getName(), "Named Entity",
+                SpanLayerSupport.TYPE, project, true, TOKENS, OVERLAP_ONLY);
 
         neFeature = new AnnotationFeature();
         neFeature.setName("value");
@@ -219,7 +218,7 @@ public class CasMergeTestBase
         depFlavorFeature.setVisible(true);
         depFlavorFeature.setCuratable(true);
 
-        slotLayer = new AnnotationLayer(HOST_TYPE, HOST_TYPE, SPAN_TYPE, project, false,
+        slotLayer = new AnnotationLayer(HOST_TYPE, HOST_TYPE, SpanLayerSupport.TYPE, project, false,
                 SINGLE_TOKEN, NO_OVERLAP);
 
         slotFeature = new AnnotationFeature();
@@ -247,8 +246,8 @@ public class CasMergeTestBase
         stringFeature.setVisible(true);
         stringFeature.setCuratable(true);
 
-        multiValSpan = new AnnotationLayer("webanno.custom.Multivalspan", "Multivalspan", SPAN_TYPE,
-                project, true, TOKENS, OVERLAP_ONLY);
+        multiValSpan = new AnnotationLayer("webanno.custom.Multivalspan", "Multivalspan",
+                SpanLayerSupport.TYPE, project, true, TOKENS, OVERLAP_ONLY);
 
         multiValSpanF1 = new AnnotationFeature();
         multiValSpanF1.setName("f1");

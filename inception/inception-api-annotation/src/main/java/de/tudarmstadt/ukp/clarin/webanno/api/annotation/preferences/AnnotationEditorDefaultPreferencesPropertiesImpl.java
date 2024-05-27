@@ -24,7 +24,7 @@ public class AnnotationEditorDefaultPreferencesPropertiesImpl
     implements AnnotationEditorDefaultPreferencesProperties
 {
     private int pageSize = 10;
-    private boolean autoScroll = true;
+    private boolean autoScroll = false;
 
     @Override
     public int getPageSize()

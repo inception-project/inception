@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.security;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.ExtensionPoint;
+import de.tudarmstadt.ukp.inception.support.extensionpoint.ExtensionPoint;
 
 public interface PermissionExtensionPoint
     extends ExtensionPoint<Object, PermissionExtension<?, ?>>

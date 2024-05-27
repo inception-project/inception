@@ -19,34 +19,39 @@ package de.tudarmstadt.ukp.inception.scheduling;
 
 import java.time.Duration;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-
 public abstract class DebouncingTask
     extends Task
 {
     private final long runnableAfter;
 
-    public DebouncingTask(Project aProject, String aTrigger, Duration aDebounceDelay)
+    protected DebouncingTask(Builder<? extends Builder<?>> aBuilder)
     {
-        this(null, aProject, aTrigger, aDebounceDelay.toMillis());
-    }
+        super(aBuilder);
 
-    public DebouncingTask(Project aProject, String aTrigger, long aDebounceMillis)
-    {
-        this(null, aProject, aTrigger, aDebounceMillis);
-    }
-
-    public DebouncingTask(User aUser, Project aProject, String aTrigger, long aDebouncePeriod)
-    {
-        super(aUser, aProject, aTrigger);
-
-        runnableAfter = System.currentTimeMillis() + aDebouncePeriod;
+        runnableAfter = System.currentTimeMillis() + aBuilder.debounceMillis;
     }
 
     @Override
     public boolean isReadyToStart()
     {
         return System.currentTimeMillis() > runnableAfter;
+    }
+
+    public static abstract class Builder<T extends Builder<?>>
+        extends Task.Builder<T>
+    {
+        private long debounceMillis;
+
+        public T withDebounceMillis(Duration aDebounceDelay)
+        {
+            debounceMillis = aDebounceDelay.toMillis();
+            return (T) this;
+        }
+
+        public T withDebounceMillis(long aDebounceMillis)
+        {
+            debounceMillis = aDebounceMillis;
+            return (T) this;
+        }
     }
 }

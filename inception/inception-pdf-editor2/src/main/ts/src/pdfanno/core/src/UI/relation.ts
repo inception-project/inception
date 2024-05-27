@@ -1,5 +1,5 @@
-import RelationAnnotation from '../annotation/relation.js'
-import SpanAnnotation from '../annotation/span.js'
+import RelationAnnotation from '../model/RelationAnnotation.js'
+import SpanAnnotation from '../model/SpanAnnotation.js'
 import { getClientXY, scaleDown } from './utils'
 
 let relationAnnotation: RelationAnnotation | null = null
@@ -55,6 +55,7 @@ function handleMouseUp (ev: MouseEvent): void {
     const event = new CustomEvent('createRelationAnnotation', {
       bubbles: true,
       detail: {
+        originalEvent: ev,
         origin: relationAnnotation.rel1Annotation.vid,
         target: hoveredAnnotation.vid
       }

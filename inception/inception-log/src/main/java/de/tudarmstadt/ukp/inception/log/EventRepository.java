@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.log;
 
+import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
 
@@ -24,6 +25,7 @@ import org.apache.commons.lang3.function.FailableConsumer;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.log.model.LoggedEvent;
+import de.tudarmstadt.ukp.inception.log.model.SummarizedLoggedEvent;
 
 public interface EventRepository
 {
@@ -43,7 +45,9 @@ public interface EventRepository
      * @param aRecommenderId
      *            the recommender to which the events relate
      * @return logged events of the given type, user name, project and recommender id from the db.
+     * @deprecated Not used anymore.
      */
+    @Deprecated
     List<LoggedEvent> listLoggedEventsForRecommender(Project aProject, String aUsername,
             String aEventType, int aMaxSize, long aRecommenderId);
 
@@ -61,7 +65,9 @@ public interface EventRepository
      *            the type of event
      * @param aMaxSize
      *            the maximum number of events to return
+     * @deprecated Not used anymore.
      */
+    @Deprecated
     List<LoggedEvent> listUniqueLoggedEventsForDoc(Project aProject, String aUsername,
             String[] aEventType, int aMaxSize);
 
@@ -78,7 +84,9 @@ public interface EventRepository
      * @param aDetail
      *            the detail pattern per SQL LIKE operator, e.g. {@code "%recommender%"} finds all
      *            events containing the string {@code "recommender"} in their detail
+     * @deprecated Not used anymore.
      */
+    @Deprecated
     List<LoggedEvent> listLoggedEventsForDetail(Project aProject, String aUsername,
             String aEventType, int aMaxSize, String aDetail);
 
@@ -94,4 +102,7 @@ public interface EventRepository
      *            return this number of recent events or less
      */
     List<LoggedEvent> listRecentActivity(String aUsername, int aMaxSize);
+
+    List<SummarizedLoggedEvent> summarizeEvents(String aUsername, Project aProject, Instant aNow,
+            Instant aMinus);
 }

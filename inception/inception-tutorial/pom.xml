@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>29.0-SNAPSHOT</version>
+    <version>33.0-SNAPSHOT</version>
   </parent>
   <artifactId>inception-tutorial</artifactId>
   <name>INCEpTION - UI - Tutorial</name>
@@ -62,10 +62,6 @@
     </dependency>
     
     <dependency>
-      <groupId>org.webjars.bower</groupId>
-      <artifactId>hover</artifactId>
-    </dependency>
-    <dependency>
       <groupId>org.webjars.bowergithub.xbsoftware</groupId>
       <artifactId>enjoyhint</artifactId>
       <exclusions>
@@ -101,7 +97,6 @@
                 - Maven doesn't detect the the webjar dependencies because there is
                 - no actual code dependency
               -->
-              <usedDependency>org.webjars.bower:hover</usedDependency>
               <usedDependency>org.webjars.bowergithub.xbsoftware:enjoyhint</usedDependency>
               <usedDependency>org.webjars.npm:kinetic</usedDependency>
               <usedDependency>org.webjars.bower:jquery.scrollTo</usedDependency>

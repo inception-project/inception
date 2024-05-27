@@ -17,11 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.project.export.settings;
 
+import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.toCollection;
 
 import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
 
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
@@ -29,7 +28,7 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.FullProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 
@@ -72,8 +71,8 @@ public class FormatDropdownChoice
         });
 
         setChoices(LoadableDetachableModel.of(() -> {
-            List<String> formats = importExportService.getWritableFormats().stream() //
-                    .sorted(Comparator.comparing(FormatSupport::getName)) //
+            var formats = importExportService.getWritableFormats().stream() //
+                    .sorted(comparing(FormatSupport::getName, String.CASE_INSENSITIVE_ORDER)) //
                     .map(FormatSupport::getId) //
                     .collect(toCollection(ArrayList::new));
             formats.add(0, FullProjectExportRequest.FORMAT_AUTO);

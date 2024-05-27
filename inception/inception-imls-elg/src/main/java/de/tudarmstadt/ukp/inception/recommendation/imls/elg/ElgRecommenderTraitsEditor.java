@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.elg;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 import static java.time.Duration.ofMillis;
 import static org.apache.commons.lang3.StringUtils.isAllBlank;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMessage;
@@ -43,7 +43,6 @@ import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.AbstractTraitsEditor;
@@ -52,6 +51,7 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.elg.client.ElgAuthentica
 import de.tudarmstadt.ukp.inception.recommendation.imls.elg.client.ElgCatalogClient;
 import de.tudarmstadt.ukp.inception.recommendation.imls.elg.model.ElgCatalogEntity;
 import de.tudarmstadt.ukp.inception.recommendation.imls.elg.model.ElgCatalogEntityDetails;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 
 public class ElgRecommenderTraitsEditor
     extends AbstractTraitsEditor

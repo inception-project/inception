@@ -20,12 +20,13 @@ package de.tudarmstadt.ukp.inception.diam.sidebar;
 import org.apache.wicket.model.IModel;
 import org.wicketstuff.event.annotation.OnEvent;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
 import de.tudarmstadt.ukp.inception.annotation.events.DocumentOpenedEvent;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.support.wicket.ContextMenu;
 
 public class DiamSidebar
     extends AnnotationSidebar_ImplBase
@@ -35,6 +36,7 @@ public class DiamSidebar
     private final String userPreferencesKey;
 
     private DiamAnnotationBrowser browser;
+    private ContextMenu contextMenu;
 
     public DiamSidebar(String aId, IModel<AnnotatorState> aModel,
             AnnotationActionHandler aActionHandler, CasProvider aCasProvider,
@@ -43,13 +45,17 @@ public class DiamSidebar
         super(aId, aModel, aActionHandler, aCasProvider, aAnnotationPage);
 
         userPreferencesKey = aUserPreferencesKey;
-        add(browser = new DiamAnnotationBrowser("vis", userPreferencesKey));
+
+        contextMenu = new ContextMenu("contextMenu");
+        add(contextMenu);
+
+        add(browser = new DiamAnnotationBrowser("vis", userPreferencesKey, contextMenu));
     }
 
     @OnEvent
     public void onDocumentOpenedEvent(DocumentOpenedEvent aEvent)
     {
         browser = (DiamAnnotationBrowser) browser
-                .replaceWith(new DiamAnnotationBrowser("vis", userPreferencesKey));
+                .replaceWith(new DiamAnnotationBrowser("vis", userPreferencesKey, contextMenu));
     }
 }

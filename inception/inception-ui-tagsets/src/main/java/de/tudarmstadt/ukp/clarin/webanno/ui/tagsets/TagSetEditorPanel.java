@@ -47,19 +47,18 @@ import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedTag;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedTagSet;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
-import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
-import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapModalDialog;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaPanel;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.AjaxDownloadLink;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.InputStreamResourceStream;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketExceptionUtil;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.bootstrap.BootstrapModalDialog;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxButton;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaPanel;
+import de.tudarmstadt.ukp.inception.support.wicket.AjaxDownloadLink;
+import de.tudarmstadt.ukp.inception.support.wicket.InputStreamResourceStream;
+import de.tudarmstadt.ukp.inception.support.wicket.WicketExceptionUtil;
 
 public class TagSetEditorPanel
     extends LambdaPanel
@@ -136,7 +135,7 @@ public class TagSetEditorPanel
         dialogContent.setConfirmAction((_target) -> {
             // If the tagset is used in any features, clear the tagset on these features when
             // the tagset is deleted!
-            for (AnnotationFeature ft : annotationSchemaService
+            for (var ft : annotationSchemaService
                     .listAnnotationFeature(selectedProject.getObject())) {
                 if (ft.getTagset() != null && ft.getTagset().equals(selectedTagSet.getObject())) {
                     ft.setTagset(null);

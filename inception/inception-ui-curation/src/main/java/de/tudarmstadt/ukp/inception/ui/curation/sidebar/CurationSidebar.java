@@ -19,34 +19,26 @@ package de.tudarmstadt.ukp.inception.ui.curation.sidebar;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
-import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.CURATION_USER;
-import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.HtmlElementEvents.CHANGE_EVENT;
-import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhenNot;
-import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
-import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhenNot;
-import static de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil.refreshPage;
-import static java.util.Arrays.asList;
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
+import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CHANGE_EVENT;
+import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.enabledWhenNot;
+import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
+import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhenNot;
+import static de.tudarmstadt.ukp.inception.support.wicket.WicketUtil.refreshPage;
 
-import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
-import org.apache.uima.UIMAException;
-import org.apache.uima.cas.CAS;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
-import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.Check;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.CheckGroup;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
-import org.apache.wicket.markup.html.form.IChoiceRenderer;
 import org.apache.wicket.markup.html.form.LambdaChoiceRenderer;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
@@ -61,31 +53,29 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormChoiceComponentUpdatingBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxSubmitLink;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.MergeDialog;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.MergeDialog.State;
-import de.tudarmstadt.ukp.inception.curation.merge.MergeStrategyFactory;
 import de.tudarmstadt.ukp.inception.curation.model.CurationWorkflow;
 import de.tudarmstadt.ukp.inception.curation.service.CurationMergeService;
 import de.tudarmstadt.ukp.inception.curation.service.CurationService;
+import de.tudarmstadt.ukp.inception.curation.sidebar.CurationSidebarProperties;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorExtensionRegistry;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
+import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxButton;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormChoiceComponentUpdatingBehavior;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxSubmitLink;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaModelAdapter;
 
 public class CurationSidebar
     extends AnnotationSidebar_ImplBase
@@ -107,6 +97,7 @@ public class CurationSidebar
     private @SpringBean CurationMergeService curationMergeService;
     private @SpringBean DocumentService documentService;
     private @SpringBean AnnotationSchemaService annotationService;
+    private @SpringBean CurationSidebarProperties curationSidebarProperties;
 
     private CheckGroup<User> selectedUsers;
     private DropDownChoice<String> curationTargetChoice;
@@ -126,12 +117,7 @@ public class CurationSidebar
     {
         super(aId, aModel, aActionHandler, aCasProvider, aAnnotationPage);
 
-        AnnotatorState state = aModel.getObject();
-
-        var notCuratableNotice = new WebMarkupContainer("notCuratableNotice");
-        notCuratableNotice.setOutputMarkupId(true);
-        notCuratableNotice.add(visibleWhen(() -> !isViewingPotentialCurationTarget()));
-        add(notCuratableNotice);
+        var state = aModel.getObject();
 
         queue(createSessionControlForm(CID_SESSION_CONTROL_FORM));
 
@@ -173,17 +159,9 @@ public class CurationSidebar
                 documentNameModel, curationWorkflowModel));
     }
 
-    private boolean isViewingPotentialCurationTarget()
-    {
-        // Curation sidebar is not allowed when viewing another users annotations
-        String currentUsername = userRepository.getCurrentUsername();
-        AnnotatorState state = getModelObject();
-        return asList(CURATION_USER, currentUsername).contains(state.getUser().getUsername());
-    }
-
     private void actionToggleShowMerged(AjaxRequestTarget aTarget)
     {
-        String sessionOwner = userRepository.getCurrentUsername();
+        var sessionOwner = userRepository.getCurrentUsername();
         curationSidebarService.setShowAll(sessionOwner, getModelObject().getProject().getId(),
                 showMerged.getModelObject());
         getAnnotationPage().actionRefreshDocument(aTarget);
@@ -197,53 +175,28 @@ public class CurationSidebar
 
     private void actionMerge(AjaxRequestTarget aTarget, Form<State> aForm)
     {
-        AnnotatorState state = getModelObject();
+        var state = getModelObject();
+        var dataOwner = state.getUser();
+        var curationWorkflow = curationWorkflowModel.getObject();
 
         if (aForm.getModelObject().isSaveSettingsAsDefault()) {
-            curationService.createOrUpdateCurationWorkflow(curationWorkflowModel.getObject());
+            curationService.createOrUpdateCurationWorkflow(curationWorkflow);
             success("Updated project merge strategy settings");
         }
 
+        aTarget.addChildren(getPage(), IFeedback.class);
+
         try {
-            doMerge(state, state.getUser().getUsername(), selectedUsers.getModelObject());
+            var mergeStrategyFactory = curationSidebarService.merge(state, curationWorkflow,
+                    dataOwner.getUsername(), selectedUsers.getModelObject(),
+                    aForm.getModelObject().isClearTargetCas());
+            success("Re-merge using [" + mergeStrategyFactory.getLabel() + "] finished!");
+            refreshPage(aTarget, getPage());
         }
         catch (Exception e) {
             error("Unable to merge: " + e.getMessage());
-            LOG.error("Unable to merge document {} to user {}", state.getUser(),
-                    state.getDocument(), e);
-            aTarget.addChildren(getPage(), IFeedback.class);
-            return;
+            LOG.error("Unable to merge document {} to user {}", dataOwner, state.getDocument(), e);
         }
-
-        MergeStrategyFactory<?> mergeStrategyFactory = curationService
-                .getMergeStrategyFactory(curationWorkflowModel.getObject());
-        success("Re-merge using [" + mergeStrategyFactory.getLabel() + "] finished!");
-        refreshPage(aTarget, getPage());
-    }
-
-    private void doMerge(AnnotatorState aState, String aCurator, Collection<User> aUsers)
-        throws IOException, UIMAException
-    {
-        SourceDocument doc = aState.getDocument();
-        CAS aTargetCas = curationSidebarService
-                .retrieveCurationCAS(aCurator, aState.getProject().getId(), doc)
-                .orElseThrow(() -> new IllegalArgumentException(
-                        "No target CAS configured in curation state"));
-
-        Map<String, CAS> userCases = documentService.readAllCasesSharedNoUpgrade(doc, aUsers);
-
-        // FIXME: should merging not overwrite the current users annos? (can result in
-        // deleting the users annotations!!!), currently fixed by warn message to user
-        // prepare merged CAS
-        curationMergeService.mergeCasses(aState.getDocument(), aState.getUser().getUsername(),
-                aTargetCas, userCases,
-                curationService.getMergeStrategy(curationWorkflowModel.getObject()),
-                aState.getAnnotationLayers());
-
-        // write back and update timestamp
-        curationSidebarService.writeCurationCas(aTargetCas, aState, aState.getProject().getId());
-
-        LOG.debug("Merge done");
     }
 
     private Form<Void> createSessionControlForm(String aId)
@@ -252,13 +205,13 @@ public class CurationSidebar
 
         form.setOutputMarkupId(true);
 
-        IChoiceRenderer<String> targetChoiceRenderer = new LambdaChoiceRenderer<>(
+        var targetChoiceRenderer = new LambdaChoiceRenderer<>(
                 aUsername -> CURATION_USER.equals(aUsername) ? "curation document" : "my document");
 
         var curationTargets = new ArrayList<String>();
         curationTargets.add(CURATION_USER);
-        if (projectService.hasRole(userRepository.getCurrentUsername(),
-                getModelObject().getProject(), ANNOTATOR)) {
+        if (curationSidebarProperties.isOwnUserCurationTargetEnabled() && projectService.hasRole(
+                userRepository.getCurrentUsername(), getModelObject().getProject(), ANNOTATOR)) {
             curationTargets.add(userRepository.getCurrentUsername());
         }
 
@@ -273,6 +226,7 @@ public class CurationSidebar
         curationTargetChoice.setChoices(curationTargets);
         curationTargetChoice.setChoiceRenderer(targetChoiceRenderer);
         curationTargetChoice.add(enabledWhenNot(this::isSessionActive));
+        curationTargetChoice.add(visibleWhen(() -> curationTargets.size() > 1));
         curationTargetChoice.setOutputMarkupId(true);
         curationTargetChoice.setRequired(true);
         form.add(curationTargetChoice);
@@ -325,8 +279,8 @@ public class CurationSidebar
 
     private Form<Void> createUserSelection(String aId)
     {
-        String sessionOwner = userRepository.getCurrentUsername();
-        Project project = getModelObject().getProject();
+        var sessionOwner = userRepository.getCurrentUsername();
+        var project = getModelObject().getProject();
 
         var form = new Form<Void>(aId);
         form.setOutputMarkupPlaceholderTag(true);
@@ -363,7 +317,7 @@ public class CurationSidebar
 
     private IModel<String> maybeAnonymizeUsername(ListItem<User> aUserListItem)
     {
-        Project project = getModelObject().getProject();
+        var project = getModelObject().getProject();
         if (project.isAnonymousCuration()
                 && !projectService.hasRole(userRepository.getCurrentUser(), project, MANAGER)) {
             return Model.of("Anonymized annotator " + (aUserListItem.getIndex() + 1));

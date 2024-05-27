@@ -20,13 +20,10 @@ package de.tudarmstadt.ukp.inception.feature.lookup;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.resource.metadata.TypeDescription;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
@@ -38,18 +35,16 @@ import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.feature.lookup.config.LookupServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.feature.lookup.config.LookupServiceProperties;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
-import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
-import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetailQuery;
-import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetailResult;
-import de.tudarmstadt.ukp.inception.schema.feature.FeatureEditor;
-import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupport;
-import de.tudarmstadt.ukp.inception.schema.feature.FeatureType;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetail;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetailGroup;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureEditor;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupport;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureType;
 
 /**
  * <p>
@@ -201,33 +196,11 @@ public class LookupFeatureSupport
     }
 
     @Override
-    public LookupFeatureTraits readTraits(AnnotationFeature aFeature)
+    public LookupFeatureTraits createDefaultTraits()
     {
-        LookupFeatureTraits traits = null;
-        try {
-            traits = JSONUtil.fromJsonString(LookupFeatureTraits.class, aFeature.getTraits());
-        }
-        catch (IOException e) {
-            LOG.error("Unable to read traits", e);
-        }
-
-        if (traits == null) {
-            traits = new LookupFeatureTraits();
-            traits.setLimit(properties.getDefaultMaxResults());
-        }
-
+        var traits = new LookupFeatureTraits();
+        traits.setLimit(properties.getDefaultMaxResults());
         return traits;
-    }
-
-    @Override
-    public void writeTraits(AnnotationFeature aFeature, LookupFeatureTraits aTraits)
-    {
-        try {
-            aFeature.setTraits(JSONUtil.toJsonString(aTraits));
-        }
-        catch (IOException e) {
-            LOG.error("Unable to write traits", e);
-        }
     }
 
     @Override
@@ -238,30 +211,21 @@ public class LookupFeatureSupport
     }
 
     @Override
-    public List<VLazyDetailQuery> getLazyDetails(AnnotationFeature aFeature, String aLabel)
+    public List<VLazyDetailGroup> lookupLazyDetails(AnnotationFeature aFeature, Object aValue)
     {
-        if (StringUtils.isEmpty(aLabel)) {
-            return Collections.emptyList();
+        if (aValue instanceof LookupEntry) {
+            var handle = (LookupEntry) aValue;
+
+            var result = new VLazyDetailGroup();
+            result.addDetail(new VLazyDetail("Label", handle.getUiLabel()));
+
+            if (isNotBlank(handle.getDescription())) {
+                result.addDetail(new VLazyDetail("Description", handle.getDescription()));
+            }
+
+            return asList(result);
         }
 
-        return asList(new VLazyDetailQuery(aFeature.getName(), aLabel));
-    }
-
-    @Override
-    public List<VLazyDetailResult> renderLazyDetails(CAS aCas, AnnotationFeature aFeature,
-            VID aParamId, String aQuery)
-    {
-        List<VLazyDetailResult> result = new ArrayList<>();
-
-        LookupFeatureTraits traits = readTraits(aFeature);
-        LookupEntry handle = labelCache.get(aFeature, traits, aQuery);
-
-        result.add(new VLazyDetailResult("Label", handle.getUiLabel()));
-
-        if (isNotBlank(handle.getDescription())) {
-            result.add(new VLazyDetailResult("Description", handle.getDescription()));
-        }
-
-        return result;
+        return Collections.emptyList();
     }
 }

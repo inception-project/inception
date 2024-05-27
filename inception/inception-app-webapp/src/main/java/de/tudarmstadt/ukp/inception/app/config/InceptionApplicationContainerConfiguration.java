@@ -55,6 +55,9 @@ public class InceptionApplicationContainerConfiguration
 
     private StartupNoticeValve startupNoticeValve;
 
+    @Value("${server.startup-notice.enabled:true}")
+    private boolean statupNoticeEnabled;
+
     @Bean
     @Primary
     public Validator validator()
@@ -80,7 +83,7 @@ public class InceptionApplicationContainerConfiguration
             protected void postProcessContext(Context context)
             {
                 final int maxCacheSize = 40 * 1024;
-                StandardRoot standardRoot = new StandardRoot(context);
+                var standardRoot = new StandardRoot(context);
                 standardRoot.setCacheMaxSize(maxCacheSize);
                 context.setResources(standardRoot);
             }
@@ -88,7 +91,7 @@ public class InceptionApplicationContainerConfiguration
             @Override
             public WebServer getWebServer(ServletContextInitializer... initializers)
             {
-                final WebServer container = super.getWebServer(initializers);
+                final var container = super.getWebServer(initializers);
 
                 // Start server early so we can display the boot-up notice
                 container.start();
@@ -97,8 +100,10 @@ public class InceptionApplicationContainerConfiguration
             }
         };
 
-        startupNoticeValve = new StartupNoticeValve();
-        factory.addContextValves(startupNoticeValve);
+        if (statupNoticeEnabled) {
+            startupNoticeValve = new StartupNoticeValve();
+            factory.addContextValves(startupNoticeValve);
+        }
 
         if (ajpPort > 0) {
             Connector ajpConnector = new Connector(PROTOCOL);

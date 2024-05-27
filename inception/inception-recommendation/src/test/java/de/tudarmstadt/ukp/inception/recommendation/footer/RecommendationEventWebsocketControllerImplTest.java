@@ -62,9 +62,6 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.messaging.WebSocketStompClient;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryAutoConfiguration;
-import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.diag.config.CasDoctorAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -74,15 +71,18 @@ import de.tudarmstadt.ukp.clarin.webanno.security.InceptionDaoAuthenticationProv
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
-import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
-import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.documents.api.RepositoryAutoConfiguration;
+import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
 import de.tudarmstadt.ukp.inception.documents.config.DocumentServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderTaskNotificationEvent;
 import de.tudarmstadt.ukp.inception.schema.config.AnnotationSchemaServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.support.findbugs.SuppressFBWarnings;
+import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
+import de.tudarmstadt.ukp.inception.support.logging.Logging;
+import de.tudarmstadt.ukp.inception.support.spring.ApplicationContextProvider;
 import de.tudarmstadt.ukp.inception.support.test.websocket.WebSocketSessionTestHandler;
 import de.tudarmstadt.ukp.inception.websocket.config.WebsocketAutoConfiguration;
 import de.tudarmstadt.ukp.inception.websocket.config.WebsocketConfig;
@@ -190,16 +190,18 @@ class RecommendationEventWebsocketControllerImplTest
                 .build();
 
         var session = stompClient.connect(websocketUrl, sessionHandler).get(10, SECONDS);
+
         Awaitility.await().atMost(20, SECONDS).until(sessionHandler::messagesProcessed);
+
+        sessionHandler
+                .assertError(msg -> assertThat(msg).containsIgnoringCase("AccessDeniedException"));
+
         try {
             session.disconnect();
         }
         catch (Exception e) {
             // Ignore exceptions during disconnect
         }
-
-        sessionHandler
-                .assertError(msg -> assertThat(msg).containsIgnoringCase("AccessDeniedException"));
     }
 
     @SuppressFBWarnings("RV_RETURN_VALUE_IGNORED")
@@ -217,16 +219,18 @@ class RecommendationEventWebsocketControllerImplTest
                 .build();
 
         var session = stompClient.connect(websocketUrl, sessionHandler).get(10, SECONDS);
+
         Awaitility.await().atMost(20, SECONDS).until(sessionHandler::messagesProcessed);
+
+        sessionHandler
+                .assertError(msg -> assertThat(msg).containsIgnoringCase("AccessDeniedException"));
+
         try {
             session.disconnect();
         }
         catch (Exception e) {
             // Ignore exceptions during disconnect
         }
-
-        sessionHandler
-                .assertError(msg -> assertThat(msg).containsIgnoringCase("AccessDeniedException"));
     }
 
     @SuppressFBWarnings("RV_RETURN_VALUE_IGNORED")
@@ -247,9 +251,15 @@ class RecommendationEventWebsocketControllerImplTest
 
         var session = stompClient.connect(websocketUrl, sessionHandler).get(10, SECONDS);
         Awaitility.await().atMost(20, SECONDS).until(sessionHandler::messagesProcessed);
-        session.disconnect();
 
         sessionHandler.assertSuccess();
+
+        try {
+            session.disconnect();
+        }
+        catch (Exception e) {
+            // Ignore exceptions during disconnect
+        }
     }
 
     private void sendTestMessage()

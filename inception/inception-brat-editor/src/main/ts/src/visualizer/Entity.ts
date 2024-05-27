@@ -74,7 +74,6 @@ export class Entity {
   annotatorNotes? : string
   attributeMerge: Record<string, unknown> = {} // for box, cross, etc. that are span-global
   fragments: Fragment[] = []
-  normalizations: Array<[string?, string?, string?]> = []
   wholeFrom: number
   wholeTo: number
   comment: Comment
@@ -119,7 +118,6 @@ export class Entity {
     this.attributeCueFor = {}
     this.attributeMerge = {}
     this.fragments = []
-    this.normalizations = []
   }
 
   /**

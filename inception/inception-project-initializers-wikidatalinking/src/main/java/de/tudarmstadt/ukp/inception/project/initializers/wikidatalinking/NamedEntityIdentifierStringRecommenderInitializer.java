@@ -22,16 +22,14 @@ import static java.util.Arrays.asList;
 import java.io.IOException;
 import java.util.List;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.project.ProjectInitializer;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
+import de.tudarmstadt.ukp.inception.project.api.ProjectInitializer;
 import de.tudarmstadt.ukp.inception.project.initializers.wikidatalinking.config.WikiDataLinkingProjectInitializersAutoConfiguration;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.StringMatchingRecommenderFactory;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.ui.kb.initializers.NamedEntityIdentifierFeatureInitializer;
 
 /**
@@ -83,12 +81,11 @@ public class NamedEntityIdentifierStringRecommenderInitializer
     @Override
     public void configure(Project aProject) throws IOException
     {
-        AnnotationLayer spanLayer = annotationService.findLayer(aProject,
-                NamedEntity.class.getName());
-        AnnotationFeature labelFeature = annotationService
-                .getFeature(NamedEntity._FeatName_identifier, spanLayer);
+        var spanLayer = annotationService.findLayer(aProject, NamedEntity.class.getName());
+        var labelFeature = annotationService.getFeature(NamedEntity._FeatName_identifier,
+                spanLayer);
 
-        Recommender recommender = new Recommender(getName(), spanLayer);
+        var recommender = new Recommender(getName(), spanLayer);
         recommender.setFeature(labelFeature);
         recommender.setMaxRecommendations(3);
         recommender.setThreshold(0.0d);

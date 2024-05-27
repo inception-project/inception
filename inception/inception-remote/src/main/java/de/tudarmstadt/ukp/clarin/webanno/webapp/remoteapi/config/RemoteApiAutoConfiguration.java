@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.config;
 
+import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.SPEL_IS_ADMIN_ACCOUNT_RECOVERY_MODE;
+
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
@@ -41,16 +43,18 @@ import io.swagger.v3.oas.models.info.Info;
 @EnableConfigurationProperties({ RemoteApiProperties.class, WebhooksConfiguration.class })
 public class RemoteApiAutoConfiguration
 {
-    static final String REMOTE_API_ENABLED_CONDITION = "${remote-api.enabled:false} || ${webanno.remote-api.enable:false}";
+    static final String REMOTE_API_ENABLED_CONDITION = //
+            "(${remote-api.enabled:false} || ${webanno.remote-api.enable:false}) && !"
+                    + SPEL_IS_ADMIN_ACCOUNT_RECOVERY_MODE;
 
-    @ConditionalOnExpression(RemoteApiAutoConfiguration.REMOTE_API_ENABLED_CONDITION)
+    @ConditionalOnExpression(REMOTE_API_ENABLED_CONDITION)
     @Bean
     public AeroRemoteApiController aeroRemoteApiController()
     {
         return new AeroRemoteApiController();
     }
 
-    @ConditionalOnExpression(RemoteApiAutoConfiguration.REMOTE_API_ENABLED_CONDITION)
+    @ConditionalOnExpression(REMOTE_API_ENABLED_CONDITION)
     @Bean
     public LegacyRemoteApiController legacyRemoteApiController()
     {

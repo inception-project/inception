@@ -18,9 +18,9 @@
 package de.tudarmstadt.ukp.inception.search.index.mtas;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SINGLE_TOKEN;
-import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.FEAT_REL_SOURCE;
-import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.FEAT_REL_TARGET;
-import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.RELATION_TYPE;
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.FEAT_REL_SOURCE;
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.FEAT_REL_TARGET;
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.RELATION_TYPE;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.apache.uima.cas.CAS.TYPE_NAME_BOOLEAN;
@@ -58,7 +58,7 @@ import de.tudarmstadt.ukp.inception.annotation.feature.string.StringFeatureSuppo
 import de.tudarmstadt.ukp.inception.annotation.feature.string.StringFeatureSupportPropertiesImpl;
 import de.tudarmstadt.ukp.inception.annotation.layer.behaviors.LayerSupportRegistryImpl;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationAdapter;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.service.FeatureSupportRegistryImpl;
 import de.tudarmstadt.ukp.inception.search.FeatureIndexingSupportRegistryImpl;
 import de.tudarmstadt.ukp.inception.search.PrimitiveUimaIndexingSupport;
@@ -234,7 +234,7 @@ public class MtasUimaParserTest
                 featureIndexingSupportRegistry, prefs);
         MtasTokenCollection tc = sut.createTokenCollection(jcas.getCas());
 
-        MtasUtils.print(tc);
+        // MtasUtils.print(tc);
 
         List<MtasToken> tokens = toList(tc);
 
@@ -273,7 +273,7 @@ public class MtasUimaParserTest
                 annotationSchemaService, featureIndexingSupportRegistry, prefs);
 
         MtasTokenCollection tc = sut.createTokenCollection(jcas.getCas());
-        MtasUtils.print(tc);
+        // MtasUtils.print(tc);
 
         List<MtasToken> tokens = new ArrayList<>();
         tc.iterator().forEachRemaining(tokens::add);
@@ -300,7 +300,7 @@ public class MtasUimaParserTest
                 annotationSchemaService, featureIndexingSupportRegistry, prefs);
         MtasTokenCollection result = sut.createTokenCollection(jcas.getCas());
 
-        MtasUtils.print(result);
+        // MtasUtils.print(result);
 
         List<MtasToken> tokens = toList(result);
 
@@ -331,7 +331,7 @@ public class MtasUimaParserTest
                 annotationSchemaService, featureIndexingSupportRegistry, prefs);
         MtasTokenCollection result = sut.createTokenCollection(jcas.getCas());
 
-        MtasUtils.print(result);
+        // MtasUtils.print(result);
 
         List<MtasToken> tokens = toList(result);
 
@@ -360,7 +360,7 @@ public class MtasUimaParserTest
                 annotationSchemaService, featureIndexingSupportRegistry, prefs);
         MtasTokenCollection result = sut.createTokenCollection(jcas.getCas());
 
-        MtasUtils.print(result);
+        // MtasUtils.print(result);
 
         List<MtasToken> tokens = new ArrayList<>();
         result.iterator().forEachRemaining(tokens::add);
@@ -408,7 +408,7 @@ public class MtasUimaParserTest
                 annotationSchemaService, featureIndexingSupportRegistry, prefs);
         MtasTokenCollection tc = sut.createTokenCollection(jcas.getCas());
 
-        MtasUtils.print(tc);
+        // MtasUtils.print(tc);
 
         List<MtasToken> tokens = new ArrayList<>();
         tc.iterator().forEachRemaining(tokens::add);

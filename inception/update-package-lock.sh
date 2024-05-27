@@ -2,21 +2,27 @@
 set -e
 
 MVN=${MVN:-'mvn'}
-TS_MODULES="./inception-js-api/src/main/ts
+# Do not change the order without a good reason - modules that imported by other modules must come before them!
+TS_MODULES="
+./inception-support-bootstrap/src/main/ts
+./inception-js-api/src/main/ts
 ./inception-diam/src/main/ts
+./inception-io-tei/src/main/ts
+./inception-brat-editor/src/main/ts
 ./inception-diam-editor/src/main/ts
-./inception-ui-kb/src/main/ts
-./inception-html-recogito-editor/src/main/ts
-./inception-bootstrap/src/main/ts
 ./inception-external-editor/src/main/ts
+./inception-html-apache-annotator-editor/src/main/ts
 ./inception-html-editor/src/main/ts
+./inception-html-recogito-editor/src/main/ts
 ./inception-pdf-editor/src/main/ts
 ./inception-pdf-editor2/src/main/ts
-./inception-ui-dashboard-activity/src/main/ts
-./inception-brat-editor/src/main/ts
-./inception-ui-search/src/main/ts
+./inception-project-export/src/main/ts
 ./inception-recommendation/src/main/ts
-./inception-project-export/src/main/ts"
+./inception-ui-dashboard-activity/src/main/ts
+./inception-ui-kb/src/main/ts
+./inception-ui-search/src/main/ts
+./inception-ui-scheduling/src/main/ts
+"
 
 for module in $TS_MODULES ; do
   pushd "$module"
@@ -25,6 +31,8 @@ for module in $TS_MODULES ; do
   rm -f package-lock.json
   rm -f package.json
   rm -Rf node_modules
+
+  cp ../../../../inception-build/src/main/resources/inception/eslintrc.yml .eslintrc.yml 
   popd
 
   pushd "$module/../../.."

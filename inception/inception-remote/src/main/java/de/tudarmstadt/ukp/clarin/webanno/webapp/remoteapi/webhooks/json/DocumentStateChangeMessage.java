@@ -20,8 +20,8 @@ package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.json;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.event.DocumentStateChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.AeroRemoteApiController;
+import de.tudarmstadt.ukp.inception.documents.event.DocumentStateChangedEvent;
 
 public class DocumentStateChangeMessage
 {

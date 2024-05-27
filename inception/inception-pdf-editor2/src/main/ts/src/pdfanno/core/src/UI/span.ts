@@ -1,5 +1,5 @@
 import { scaleDown } from './utils'
-import SpanAnnotation from '../annotation/span'
+import SpanAnnotation from '../model/SpanAnnotation'
 import { getGlyphsInRange, findGlyphAtPointWithinPage } from '../../../page/textLayer'
 import { mergeRects } from '../render/renderSpan'
 

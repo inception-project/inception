@@ -19,19 +19,18 @@ package de.tudarmstadt.ukp.inception.ui.core.docanno.layer;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.apache.uima.cas.CAS;
 import org.springframework.context.event.EventListener;
 import org.springframework.transaction.annotation.Transactional;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.annotation.events.BeforeDocumentOpenedEvent;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
-import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
-import de.tudarmstadt.ukp.inception.schema.layer.LayerSupportRegistry;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
+import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.inception.ui.core.docanno.config.DocumentMetadataLayerSupportAutoConfiguration;
 
 /**
@@ -59,7 +58,7 @@ public class DocumentMetadataLayerSingletonCreatingWatcher
         return annotationService.listAnnotationLayer(aProject).stream()
                 .filter(layer -> DocumentMetadataLayerSupport.TYPE.equals(layer.getType())
                         && layer.isEnabled())
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @EventListener
@@ -72,13 +71,12 @@ public class DocumentMetadataLayerSingletonCreatingWatcher
         }
 
         CAS cas = aEvent.getCas();
-        for (AnnotationLayer layer : listMetadataLayers(aEvent.getDocument().getProject())) {
+        for (var layer : listMetadataLayers(aEvent.getDocument().getProject())) {
             if (!getLayerSupport(layer).readTraits(layer).isSingleton()) {
                 continue;
             }
 
-            DocumentMetadataLayerAdapter adapter = (DocumentMetadataLayerAdapter) annotationService
-                    .getAdapter(layer);
+            var adapter = (DocumentMetadataLayerAdapter) annotationService.getAdapter(layer);
             if (cas.select(adapter.getAnnotationType(cas)).isEmpty()) {
                 adapter.add(aEvent.getDocument(), aEvent.getSessionOwner(), cas);
             }

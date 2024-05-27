@@ -26,9 +26,9 @@ import org.apache.wicket.extensions.ajax.markup.html.modal.ModalDialog;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.util.ListModel;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapModalDialog;
-import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
-import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessageGroup;
+import de.tudarmstadt.ukp.inception.bootstrap.BootstrapModalDialog;
+import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
+import de.tudarmstadt.ukp.inception.support.logging.LogMessageGroup;
 
 public class LogDialog
     extends BootstrapModalDialog
@@ -66,7 +66,7 @@ public class LogDialog
             model = new ListModel<>(asList(group));
         }
 
-        LogDialogContent content = new LogDialogContent(ModalDialog.CONTENT_ID, model);
+        var content = new LogDialogContent(ModalDialog.CONTENT_ID, model);
         open(content, aTarget);
         aTarget.focusComponent(content.getFocusComponent());
     }

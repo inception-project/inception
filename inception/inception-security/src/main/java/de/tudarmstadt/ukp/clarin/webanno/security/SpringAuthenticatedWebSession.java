@@ -17,6 +17,12 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.security;
 
+import java.lang.invoke.MethodHandles;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.apache.wicket.Session;
 import org.apache.wicket.authroles.authentication.AuthenticatedWebSession;
 import org.apache.wicket.authroles.authorization.strategies.role.Roles;
@@ -37,12 +43,16 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.saml2.provider.service.authentication.Saml2Authentication;
+import org.springframework.security.web.FilterChainProxy;
+import org.springframework.security.web.authentication.logout.LogoutFilter;
+import org.springframework.security.web.authentication.logout.LogoutHandler;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 
 import de.tudarmstadt.ukp.clarin.webanno.security.config.AuthenticationConfigurationHolder;
-import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
-import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
+import de.tudarmstadt.ukp.inception.support.logging.Logging;
+import de.tudarmstadt.ukp.inception.support.spring.ApplicationContextProvider;
+import de.tudarmstadt.ukp.inception.support.spring.ApplicationEventPublisherHolder;
 
 /**
  * An {@link AuthenticatedWebSession} based on {@link Authentication}
@@ -52,7 +62,7 @@ public class SpringAuthenticatedWebSession
 {
     private static final long serialVersionUID = 1L;
 
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private @SpringBean AuthenticationConfigurationHolder authenticationConfigurationHolder;
     private @SpringBean ApplicationEventPublisherHolder applicationEventPublisherHolder;
@@ -99,25 +109,25 @@ public class SpringAuthenticatedWebSession
                 containerRequest.getSession().invalidate();
             }
 
-            Authentication authentication = authenticationConfigurationHolder
-                    .getAuthenticationConfiguration().getAuthenticationManager()
+            var authentication = authenticationConfigurationHolder.getAuthenticationConfiguration()
+                    .getAuthenticationManager()
                     .authenticate(new UsernamePasswordAuthenticationToken(username, password));
 
             springSecuritySignIn(authentication);
 
-            // If this is called, the authentication object has been created artificially and not
-            // via the authenticationManager, so we need to send the login even manually
-            applicationEventPublisherHolder.get()
-                    .publishEvent(new AuthenticationSuccessEvent(authentication));
+            // // If this is called, the authentication object has been created artificially and not
+            // // via the authenticationManager, so we need to send the login even manually
+            // applicationEventPublisherHolder.get()
+            // .publishEvent(new AuthenticationSuccessEvent(authentication));
 
             return true;
         }
         catch (AuthenticationException e) {
-            log.warn("User [{}] failed to login. Reason: {}", username, e.getMessage());
+            LOG.warn("User [{}] failed to login. Reason: {}", username, e.getMessage());
             return false;
         }
         catch (Exception e) {
-            log.error("Unexpected error during authentication: ", e.getMessage(), e);
+            LOG.error("Unexpected error during authentication: ", e.getMessage(), e);
             return false;
         }
     }
@@ -146,12 +156,12 @@ public class SpringAuthenticatedWebSession
         MDC.put(Logging.KEY_USERNAME, aAuthentication.getName());
 
         SecurityContextHolder.getContext().setAuthentication(aAuthentication);
-        log.debug("Stored authentication for user [{}] in security context",
+        LOG.debug("Stored authentication for user [{}] in security context",
                 aAuthentication.getName());
 
         setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY,
                 SecurityContextHolder.getContext());
-        log.debug("Stored security context in session");
+        LOG.debug("Stored security context in session");
 
         bind();
 
@@ -184,9 +194,30 @@ public class SpringAuthenticatedWebSession
     @Override
     public void signOut()
     {
-        log.debug("Logging out");
+        LOG.debug("Logging out");
+
         super.signOut();
-        SecurityContextHolder.clearContext();
+
+        var request = RequestCycle.get().getRequest();
+        var httpRequest = (HttpServletRequest) request.getContainerRequest();
+        var httpResponse = (HttpServletResponse) RequestCycle.get().getResponse()
+                .getContainerResponse();
+
+        var filterChainProxy = ApplicationContextProvider.getApplicationContext()
+                .getBean(FilterChainProxy.class);
+        var chain = filterChainProxy.getFilters(request.getFilterPath());
+        var logoutFilter = chain.stream().filter(f -> f instanceof LogoutFilter).findFirst().get();
+        try {
+            // We cannot simply call doFilter because the LogoutFilter is configured
+            // to operate only on a certain URL... so we need to emulate it the hard
+            // way
+            var handler = (LogoutHandler) FieldUtils.readField(logoutFilter, "handler", true);
+            var auth = SecurityContextHolder.getContext().getAuthentication();
+            handler.logout(httpRequest, httpResponse, auth);
+        }
+        catch (IllegalAccessException e) {
+            LOG.error("Error trying to log out via Spring Security LogoutHandler", e);
+        }
     }
 
     @Override

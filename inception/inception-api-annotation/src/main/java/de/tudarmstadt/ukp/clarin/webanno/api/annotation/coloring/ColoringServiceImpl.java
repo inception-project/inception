@@ -23,11 +23,11 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.Palette.
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.Palette.PALETTE_NORMAL;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.Palette.PALETTE_NORMAL_FILTERED;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.Palette.PALETTE_PASTEL;
-import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.inception.rendering.coloring.ColoringStrategyType.GRAY;
 import static de.tudarmstadt.ukp.inception.rendering.coloring.ColoringStrategyType.LEGACY;
 import static de.tudarmstadt.ukp.inception.rendering.coloring.ColoringStrategyType.STATIC_PASTELLE;
-import static de.tudarmstadt.ukp.inception.rendering.coloring.ReadonlyColoringBehaviour.NORMAL;
+import static de.tudarmstadt.ukp.inception.rendering.coloring.ReadonlyColoringStrategy.NORMAL;
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.SPAN_TYPE;
 import static java.lang.Integer.MAX_VALUE;
 import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.MINUTES;
@@ -44,16 +44,16 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.AnnotationAutoConfiguration;
-import de.tudarmstadt.ukp.clarin.webanno.api.event.LayerConfigurationChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
 import de.tudarmstadt.ukp.inception.rendering.coloring.ColoringService;
 import de.tudarmstadt.ukp.inception.rendering.coloring.ColoringStrategy;
 import de.tudarmstadt.ukp.inception.rendering.coloring.ColoringStrategyType;
-import de.tudarmstadt.ukp.inception.rendering.coloring.ReadonlyColoringBehaviour;
+import de.tudarmstadt.ukp.inception.rendering.coloring.ReadonlyColoringStrategy;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.ColoringPreferences;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.event.LayerConfigurationChangedEvent;
 import de.tudarmstadt.ukp.inception.support.findbugs.SuppressFBWarnings;
 
 /**
@@ -85,7 +85,7 @@ public class ColoringServiceImpl
             Map<String[], Queue<String>> aColorQueues)
     {
         ColoringStrategyType t = aPreferences.getColorPerLayer().get(aLayer.getId());
-        ReadonlyColoringBehaviour rt = aPreferences.getReadonlyLayerColoringBehaviour();
+        ReadonlyColoringStrategy rt = aPreferences.getReadonlyLayerColoringBehaviour();
 
         if (aLayer.isReadonly() && rt != NORMAL) {
             t = rt.getColoringStrategy();

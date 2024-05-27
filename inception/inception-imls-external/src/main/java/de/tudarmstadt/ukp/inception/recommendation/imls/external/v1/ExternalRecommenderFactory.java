@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.external.v1;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.RELATION_TYPE;
-import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.SPAN_TYPE;
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.RELATION_TYPE;
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.SPAN_TYPE;
 
 import org.apache.wicket.model.IModel;
 
@@ -96,5 +96,12 @@ public class ExternalRecommenderFactory
     public boolean isEvaluable()
     {
         return false;
+    }
+
+    @Override
+    public boolean isRanker(Recommender aRecommender)
+    {
+        var traits = readTraits(aRecommender);
+        return traits.isRanker();
     }
 }

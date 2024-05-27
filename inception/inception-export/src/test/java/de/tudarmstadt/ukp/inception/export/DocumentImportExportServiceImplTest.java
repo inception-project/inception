@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.inception.export;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXCLUSIVE_WRITE_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.NO_OVERLAP;
-import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.inception.annotation.storage.CasMetadataUtils.getInternalTypeSystem;
 import static de.tudarmstadt.ukp.inception.export.DocumentImportExportServiceImpl.FEATURE_BASE_NAME_LAYER;
 import static de.tudarmstadt.ukp.inception.export.DocumentImportExportServiceImpl.FEATURE_BASE_NAME_NAME;
@@ -67,7 +66,6 @@ import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.slf4j.MDC;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.type.CASMetadata;
 import de.tudarmstadt.ukp.clarin.webanno.diag.ChecksRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.diag.RepairsRegistry;
@@ -75,20 +73,21 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageServiceImpl;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
 import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageBackupProperties;
 import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageCachePropertiesImpl;
 import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStoragePropertiesImpl;
 import de.tudarmstadt.ukp.inception.annotation.storage.driver.filesystem.FileSystemCasStorageDriver;
-import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceProperties;
+import de.tudarmstadt.ukp.inception.documents.api.RepositoryPropertiesImpl;
 import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServicePropertiesImpl;
 import de.tudarmstadt.ukp.inception.io.xmi.XmiFormatSupport;
 import de.tudarmstadt.ukp.inception.io.xmi.config.UimaFormatsPropertiesImpl.XmiFormatProperties;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.service.AnnotationSchemaServiceImpl;
+import de.tudarmstadt.ukp.inception.support.logging.Logging;
 
 @ExtendWith(MockitoExtension.class)
 public class DocumentImportExportServiceImplTest
@@ -112,9 +111,9 @@ public class DocumentImportExportServiceImplTest
         // schemaService = mock(AnnotationSchemaServiceImpl.class);
         schemaService = Mockito.spy(new AnnotationSchemaServiceImpl());
 
-        DocumentImportExportServiceProperties properties = new DocumentImportExportServicePropertiesImpl();
+        var properties = new DocumentImportExportServicePropertiesImpl();
 
-        var repositoryProperties = new RepositoryProperties();
+        var repositoryProperties = new RepositoryPropertiesImpl();
         repositoryProperties.setPath(testFolder);
 
         MDC.put(Logging.KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
@@ -126,12 +125,11 @@ public class DocumentImportExportServiceImplTest
                 null, null);
 
         var xmiFormatSupport = new XmiFormatSupport(new XmiFormatProperties());
-        sut = new DocumentImportExportServiceImpl(repositoryProperties, List.of(xmiFormatSupport),
-                storageService, schemaService, properties, checksRegistry, repairsRegistry,
-                xmiFormatSupport);
+        sut = new DocumentImportExportServiceImpl(List.of(xmiFormatSupport), storageService,
+                schemaService, properties, checksRegistry, repairsRegistry, xmiFormatSupport);
         sut.onContextRefreshedEvent();
 
-        doReturn(emptyList()).when(schemaService).listAnnotationLayer(any());
+        doReturn(emptyList()).when(schemaService).listSupportedLayers(any());
         doReturn(emptyList()).when(schemaService).listSupportedFeatures((Project) any());
 
         // The prepareCasForExport method internally calls getFullProjectTypeSystem, so we need to
@@ -165,15 +163,15 @@ public class DocumentImportExportServiceImplTest
     @Test
     public void thatExportContainsNoCasMetadata() throws Exception
     {
-        JCas jcas = makeJCas();
+        var jcas = makeJCas();
 
         // Pass the CAS through the export mechanism. Write as XMI because that is one of the
         // formats which best retains the information from the CAS and is nicely human-readable
         // if the test needs to be debugged.
-        File exportedXmi = sut.exportCasToFile(jcas.getCas(), sourceDocument, "testfile",
+        var exportedXmi = sut.exportCasToFile(jcas.getCas(), sourceDocument, "testfile",
                 sut.getFormatById(XmiFormatSupport.ID).get());
 
-        JCas jcas2 = loadJCasFromZippedXmi(exportedXmi);
+        var jcas2 = loadJCasFromZippedXmi(exportedXmi);
 
         assertThat(select(jcas2, CASMetadata.class)).hasSize(0);
     }
@@ -181,25 +179,27 @@ public class DocumentImportExportServiceImplTest
     @Test
     public void thatExportedCasContainsLayerAndFeatureDefinitions() throws Exception
     {
-        var l1 = new AnnotationLayer("my.A", "A", SPAN_TYPE, project, false, TOKENS, NO_OVERLAP);
-        var l2 = new AnnotationLayer("my.B", "B", SPAN_TYPE, project, false, TOKENS, NO_OVERLAP);
+        var l1 = new AnnotationLayer("my.A", "A", SpanLayerSupport.TYPE, project, false, TOKENS,
+                NO_OVERLAP);
+        var l2 = new AnnotationLayer("my.B", "B", SpanLayerSupport.TYPE, project, false, TOKENS,
+                NO_OVERLAP);
         var f1 = new AnnotationFeature(project, l1, "f1", "feature1", TYPE_NAME_STRING);
         var f2 = new AnnotationFeature(project, l2, "f2", "feature2", TYPE_NAME_STRING);
 
-        List<AnnotationFeature> features = asList(f1, f2);
+        var features = asList(f1, f2);
 
         doReturn(features).when(schemaService).listSupportedFeatures((Project) any());
 
-        JCas jcas = makeJCas();
+        var jcas = makeJCas();
 
         File exportedXmi = sut.exportCasToFile(jcas.getCas(), sourceDocument, "testfile",
                 sut.getFormatById(XmiFormatSupport.ID).get());
 
-        JCas jcas2 = loadJCasFromZippedXmi(exportedXmi);
-        List<TOP> layerDefs = jcas2.select(TYPE_NAME_LAYER_DEFINITION).asList().stream()
+        var jcas2 = loadJCasFromZippedXmi(exportedXmi);
+        var layerDefs = jcas2.select(TYPE_NAME_LAYER_DEFINITION).asList().stream()
                 .sorted(comparing(fs -> getFeature(fs, FEATURE_BASE_NAME_NAME, String.class)))
                 .collect(Collectors.toList());
-        List<TOP> featureDefs = jcas2.select(TYPE_NAME_FEATURE_DEFINITION).asList().stream()
+        var featureDefs = jcas2.select(TYPE_NAME_FEATURE_DEFINITION).asList().stream()
                 .sorted(comparing(fs -> getFeature(fs, FEATURE_BASE_NAME_NAME, String.class)))
                 .collect(Collectors.toList());
 
@@ -224,29 +224,28 @@ public class DocumentImportExportServiceImplTest
     {
         // Prepare a test CAS with a CASMetadata annotation (DocumentMetaData is added as well
         // because the DKPro Core writers used by the ImportExportService expect it.
-        JCas jcas = createJCas(typesystem);
+        var jcas = createJCas(typesystem);
         casStorageSession.add("jcas", EXCLUSIVE_WRITE_ACCESS, jcas.getCas());
         jcas.setDocumentText("This is a test .");
         DocumentMetaData.create(jcas);
-        CASMetadata cmd = new CASMetadata(jcas);
+        var cmd = new CASMetadata(jcas);
         cmd.addToIndexes(jcas);
         return jcas;
     }
 
     private JCas loadJCasFromZippedXmi(File exportedXmi) throws Exception
     {
-        TypeSystemDescription tsd = mergeTypeSystems(asList( //
+        var tsd = mergeTypeSystems(asList( //
                 sut.getTypeSystemForExport(project),
                 schemaService.getFullProjectTypeSystem(project)));
 
         // Read the XMI back from the ZIP that was created by the exporter. This is because XMI
         // files are always serialized as XMI file + type system file.
-        JCas jcas = JCasFactory.createJCas(tsd);
+        var jcas = JCasFactory.createJCas(tsd);
         casStorageSession.add("jcas2", EXCLUSIVE_WRITE_ACCESS, jcas.getCas());
-        try (ZipArchiveInputStream zipInput = new ZipArchiveInputStream(
-                new FileInputStream(exportedXmi))) {
+        try (var zipInput = new ZipArchiveInputStream(new FileInputStream(exportedXmi))) {
             ZipArchiveEntry entry;
-            while ((entry = zipInput.getNextZipEntry()) != null) {
+            while ((entry = zipInput.getNextEntry()) != null) {
                 if (entry.getName().endsWith(".xmi")) {
                     XmiCasDeserializer.deserialize(zipInput, jcas.getCas());
                     break;

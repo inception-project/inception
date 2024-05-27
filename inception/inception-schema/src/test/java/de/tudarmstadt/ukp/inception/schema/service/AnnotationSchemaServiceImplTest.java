@@ -18,19 +18,19 @@
 package de.tudarmstadt.ukp.inception.schema.service;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
+import static de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainLayerSupport.FEATURE_NAME_FIRST;
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.FEAT_REL_SOURCE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 import java.io.File;
 import java.util.LinkedHashSet;
-import java.util.Set;
 
 import org.apache.uima.UIMAFramework;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.impl.CASImpl;
-import org.apache.uima.jcas.tcas.Annotation;
-import org.apache.uima.util.AutoCloseableNoException;
 import org.apache.uima.util.CasCreationUtils;
+import org.apache.wicket.validation.ValidationError;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -44,19 +44,23 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.util.FileSystemUtils;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryAutoConfiguration;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.project.config.ProjectServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
-import de.tudarmstadt.ukp.inception.schema.adapter.IllegalFeatureValueException;
+import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
+import de.tudarmstadt.ukp.inception.documents.api.RepositoryAutoConfiguration;
+import de.tudarmstadt.ukp.inception.project.api.ProjectService;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.IllegalFeatureValueException;
 import de.tudarmstadt.ukp.inception.schema.config.AnnotationSchemaServiceAutoConfiguration;
 
 @EnableAutoConfiguration
@@ -141,13 +145,13 @@ class AnnotationSchemaServiceImplTest
     @Test
     void testCasUpgradePerformsGarbageCollection() throws Exception
     {
-        CASImpl cas = (CASImpl) CasCreationUtils.createCas();
-        try (AutoCloseableNoException a = cas.ll_enableV2IdRefs(true)) {
-            Annotation ann = cas.createAnnotation(cas.getAnnotationType(), 0, 1);
+        var cas = (CASImpl) CasCreationUtils.createCas();
+        try (var a = cas.ll_enableV2IdRefs(true)) {
+            var ann = cas.createAnnotation(cas.getAnnotationType(), 0, 1);
             ann.addToIndexes();
             ann.removeFromIndexes();
 
-            Set<FeatureStructure> allFSesBefore = new LinkedHashSet<>();
+            var allFSesBefore = new LinkedHashSet<FeatureStructure>();
             cas.walkReachablePlusFSsSorted(allFSesBefore::add, null, null, null);
 
             assertThat(allFSesBefore) //
@@ -157,13 +161,45 @@ class AnnotationSchemaServiceImplTest
             AnnotationSchemaServiceImpl._upgradeCas(cas, cas,
                     UIMAFramework.getResourceSpecifierFactory().createTypeSystemDescription());
 
-            Set<FeatureStructure> allFSesAfter = new LinkedHashSet<>();
+            var allFSesAfter = new LinkedHashSet<FeatureStructure>();
             cas.walkReachablePlusFSsSorted(allFSesAfter::add, null, null, null);
 
             assertThat(allFSesAfter) //
                     .as("The annotation that was added and then removed before serialization should not be found") //
                     .containsExactly(cas.getSofa());
         }
+    }
+
+    @Test
+    void testDocumentNameValidationErrorMessages()
+    {
+        var spanLayer = AnnotationLayer.builder().withType(SpanLayerSupport.TYPE).build();
+        var relationLayer = AnnotationLayer.builder().withType(RelationLayerSupport.TYPE).build();
+        var chainLayer = AnnotationLayer.builder().withType(ChainLayerSupport.TYPE).build();
+
+        assertThat(sut.validateFeatureName(
+                AnnotationFeature.builder().withName("").withLayer(spanLayer).build())) //
+                        .hasSize(1) //
+                        .extracting(ValidationError::getMessage).first().asString() //
+                        .contains("empty");
+
+        assertThat(sut.validateFeatureName(
+                AnnotationFeature.builder().withName(" ").withLayer(spanLayer).build())) //
+                        .hasSize(1) //
+                        .extracting(ValidationError::getMessage).first().asString() //
+                        .contains("empty");
+
+        assertThat(sut.validateFeatureName(AnnotationFeature.builder().withName(FEAT_REL_SOURCE)
+                .withLayer(relationLayer).build())) //
+                        .hasSize(1) //
+                        .extracting(ValidationError::getMessage).first().asString() //
+                        .contains("reserved feature name");
+
+        assertThat(sut.validateFeatureName(AnnotationFeature.builder().withName(FEATURE_NAME_FIRST)
+                .withLayer(chainLayer).build())) //
+                        .hasSize(1) //
+                        .extracting(ValidationError::getMessage).first().asString() //
+                        .contains("reserved feature name");
     }
 
     @SpringBootConfiguration

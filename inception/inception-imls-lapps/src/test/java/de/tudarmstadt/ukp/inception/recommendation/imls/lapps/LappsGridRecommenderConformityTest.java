@@ -18,7 +18,7 @@
 package de.tudarmstadt.ukp.inception.recommendation.imls.lapps;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXCLUSIVE_WRITE_ACCESS;
-import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.getObjectMapper;
+import static de.tudarmstadt.ukp.inception.support.json.JSONUtil.getObjectMapper;
 import static java.net.HttpURLConnection.HTTP_MOVED_PERM;
 import static java.net.HttpURLConnection.HTTP_MOVED_TEMP;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
@@ -134,7 +134,7 @@ public class LappsGridRecommenderConformityTest
         CAS cas = loadData(path.toFile());
         casStorageSession.add("test", EXCLUSIVE_WRITE_ACCESS, cas);
 
-        RecommenderTestHelper.addScoreFeature(cas, NamedEntity.class, "value");
+        RecommenderTestHelper.addPredictionFeatures(cas, NamedEntity.class, "value");
 
         return cas;
     }

@@ -27,22 +27,30 @@ import javax.persistence.PersistenceContext;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.SourceDocumentStateStats;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
+import de.tudarmstadt.ukp.inception.documents.api.SourceDocumentStateStats;
+import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.scheduling.DebouncingTask;
 
 public class UpdateProjectStateTask
     extends DebouncingTask
 {
+    public static final String TYPE = "UpdateProjectStateTask";
+
     private @PersistenceContext EntityManager entityManager;
     private @Autowired ProjectService projectService;
     private @Autowired DocumentService documentService;
 
-    public UpdateProjectStateTask(Project aProject, String aTrigger)
+    public UpdateProjectStateTask(Builder<? extends Builder<?>> aBuilder)
     {
-        super(aProject, aTrigger, ofSeconds(3));
+        super(aBuilder.withType(TYPE));
+    }
+
+    @Override
+    public String getTitle()
+    {
+        return "Updating project state...";
     }
 
     @Override
@@ -81,5 +89,24 @@ public class UpdateProjectStateTask
     public int hashCode()
     {
         return Objects.hash(getProject());
+    }
+
+    public static Builder<Builder<?>> builder()
+    {
+        return new Builder<>();
+    }
+
+    public static class Builder<T extends Builder<?>>
+        extends DebouncingTask.Builder<T>
+    {
+        protected Builder()
+        {
+            withDebounceMillis(ofSeconds(3));
+        }
+
+        public UpdateProjectStateTask build()
+        {
+            return new UpdateProjectStateTask(this);
+        }
     }
 }

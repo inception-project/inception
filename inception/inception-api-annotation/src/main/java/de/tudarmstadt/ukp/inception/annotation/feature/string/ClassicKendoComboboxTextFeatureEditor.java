@@ -32,10 +32,10 @@ import com.googlecode.wicket.kendo.ui.KendoUIBehavior;
 import com.googlecode.wicket.kendo.ui.form.combobox.ComboBoxBehavior;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
-import de.tudarmstadt.ukp.clarin.webanno.support.DescriptionTooltipBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.support.StyledComboBox;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
+import de.tudarmstadt.ukp.inception.support.wicket.DescriptionTooltipBehavior;
+import de.tudarmstadt.ukp.inception.support.wicket.StyledComboBox;
+import de.tudarmstadt.ukp.inception.support.wicket.WicketUtil;
 
 public class ClassicKendoComboboxTextFeatureEditor
     extends TextFeatureEditorBase

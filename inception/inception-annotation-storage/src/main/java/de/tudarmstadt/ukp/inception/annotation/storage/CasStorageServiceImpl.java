@@ -17,26 +17,26 @@
  */
 package de.tudarmstadt.ukp.inception.annotation.storage;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode.AUTO_CAS_UPGRADE;
-import static de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode.NO_CAS_UPGRADE;
-import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.withProjectLogger;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getRealCas;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.transferCasOwnershipToCurrentThread;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXCLUSIVE_WRITE_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.UNMANAGED_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.UNMANAGED_NON_INITIALIZING_ACCESS;
+import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.AUTO_CAS_UPGRADE;
+import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.NO_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.inception.annotation.storage.CasStorageServiceImpl.RepairAndUpgradeFlags.ISOLATED_SESSION;
+import static de.tudarmstadt.ukp.inception.project.api.ProjectService.withProjectLogger;
+import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.getRealCas;
+import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.transferCasOwnershipToCurrentThread;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Collections.newSetFromMap;
 import static java.util.Collections.synchronizedSet;
 import static org.apache.commons.lang3.ArrayUtils.contains;
 
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.invoke.MethodHandles;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -45,6 +45,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.commons.lang3.Validate;
+import org.apache.commons.pool2.PooledObject;
+import org.apache.commons.pool2.impl.DefaultEvictionPolicy;
+import org.apache.commons.pool2.impl.EvictionConfig;
 import org.apache.commons.pool2.impl.GenericKeyedObjectPool;
 import org.apache.commons.pool2.impl.GenericKeyedObjectPoolConfig;
 import org.apache.uima.UIMAException;
@@ -61,27 +64,27 @@ import org.springframework.util.ConcurrentReferenceHashMap;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.Scheduler;
 import com.github.benmanes.caffeine.cache.stats.CacheStats;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
-import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
-import de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode;
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSessionException;
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageServiceAction;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageServiceLoader;
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.ConcurentCasModificationException;
-import de.tudarmstadt.ukp.clarin.webanno.api.event.LayerConfigurationChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor;
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctorException;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.support.logging.BaseLoggers;
 import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageCacheProperties;
 import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.annotation.storage.driver.CasStorageDriver;
-import de.tudarmstadt.ukp.inception.annotation.storage.driver.filesystem.CasPersistenceUtils;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.event.LayerConfigurationChangedEvent;
+import de.tudarmstadt.ukp.inception.support.logging.BaseLoggers;
 
 /**
  * <p>
@@ -92,7 +95,7 @@ import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 public class CasStorageServiceImpl
     implements CasStorageService
 {
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private final CasDoctor casDoctor;
     private final AnnotationSchemaService schemaService;
@@ -140,17 +143,19 @@ public class CasStorageServiceImpl
         schemaService = aSchemaService;
         casStorageProperties = aCasStorageProperties;
 
-        GenericKeyedObjectPoolConfig<CasHolder> config = new GenericKeyedObjectPoolConfig<>();
+        var config = new GenericKeyedObjectPoolConfig<CasHolder>();
+        config.setEvictionPolicy(new LoggingDefaultEvictionPolicy());
         // Since we want the pool to control exclusive access to a particular CAS, we only ever
         // must have one instance per key (the key uniquely identifies the CAS)
         config.setMaxTotalPerKey(1);
         config.setMaxIdlePerKey(1);
         // Setting this to 0 because we do not want any CAS to stick around in memory indefinitely
         config.setMinIdlePerKey(0);
-        // Run an evictor thread every 5 minutes
+        // Run an evictor thread periodically
         config.setTimeBetweenEvictionRuns(casStorageProperties.getIdleCasEvictionDelay());
-        // Allow the evictor to drop idle CASes from the pool after 5 minutes (i.e. on each run)
-        config.setMinEvictableIdleTime(casStorageProperties.getIdleCasEvictionDelay());
+        // Allow the evictor to drop idle CASes from pool after a short time. This should avoid that
+        // CASes that are used regularly are dropped from the pool too quickly.
+        config.setMinEvictableIdleDuration(casStorageProperties.getMinIdleCasTime());
         // Allow the evictor to drop all idle CASes on every eviction run
         config.setNumTestsPerEvictionRun(-1);
         // Allow viewing the pool in JMX
@@ -158,22 +163,28 @@ public class CasStorageServiceImpl
         config.setJmxNameBase(getClass().getPackage().getName() + ":type="
                 + getClass().getSimpleName() + ",name=");
         config.setJmxNamePrefix("exclusiveCasAccessPool");
-        // Check if the CAS is still valid or needs to be replaced when it is borrowed and when it
-        // is returned
+        // Check if the CAS needs to be replaced every time we do a significant action
         config.setTestOnReturn(true);
         config.setTestOnBorrow(true);
+        config.setTestWhileIdle(true);
+        // Max. time we wait for a CAS to become available before giving up with an error
         config.setMaxWait(casStorageProperties.getCasBorrowWaitTimeout());
         // We do not have to set maxTotal because the default is already to have no limit (-1)
         exclusiveAccessPool = new GenericKeyedObjectPool<>(new PooledCasHolderFactory(), config);
 
         sharedAccessCache = Caffeine.newBuilder() //
+                .scheduler(Scheduler.systemScheduler()) //
                 .expireAfterAccess(casStorageProperties.getIdleCasEvictionDelay()) //
                 .maximumSize(casStorageProperties.getSharedCasCacheSize()) //
                 .recordStats() //
+                .evictionListener((key, value, cause) -> {
+                    LOG.debug("Marked CAS for eviction from shared-access pool: {} [{}]", value,
+                            cause);
+                }) //
                 .build();
 
         if (casDoctor == null) {
-            log.info("CAS doctor not available - unable to check/repair CASes");
+            LOG.info("CAS doctor not available - unable to check/repair CASes");
         }
 
         BaseLoggers.BOOT_LOG.info("CAS cache size: {} instances",
@@ -195,7 +206,7 @@ public class CasStorageServiceImpl
         throws IOException, CasSessionException
     {
         try (var logCtx = withProjectLogger(aDocument.getProject())) {
-            CasStorageSession session = CasStorageSession.get();
+            var session = CasStorageSession.get();
 
             // If the CAS is in the session, then it must be there in a mode where writing is
             // permitted
@@ -231,7 +242,7 @@ public class CasStorageServiceImpl
                 realWriteCas(aDocument, aUserName, aCas);
             }
             else {
-                try (WithExclusiveAccess access = new WithExclusiveAccess(aDocument, aUserName)) {
+                try (var access = new WithExclusiveAccess(aDocument, aUserName)) {
                     realWriteCas(aDocument, aUserName, aCas);
 
                     // If the CAS which was written does not match the CAS in the session for the
@@ -263,14 +274,6 @@ public class CasStorageServiceImpl
         }
     }
 
-    /*
-     * For testing
-     */
-    void writeSerializedCas(CAS aCas, File aFile) throws IOException
-    {
-        CasPersistenceUtils.writeSerializedCas(aCas, aFile);
-    }
-
     @Override
     public CAS readCas(SourceDocument aDocument, String aUsername)
         throws IOException, CasSessionException
@@ -292,13 +295,18 @@ public class CasStorageServiceImpl
             CasUpgradeMode aUpgradeMode, CasProvider aSupplier, CasAccessMode aAccessMode)
         throws IOException, CasSessionException
     {
+
         try (var logCtx = withProjectLogger(aDocument.getProject())) {
             CasStorageSession session = CasStorageSession.get();
 
+            LOG.debug(
+                    "CAS storage session [{}]: reading annotations for [{}]@{} in {} with {} using {}",
+                    session.hashCode(), aUsername, aDocument, aDocument.getProject(), aAccessMode,
+                    aUpgradeMode);
+
             // If the CAS is already present in the current session and the access mode is
-            // compatible
-            // with the requested access mode, then we can return it immediately
-            // THOUGHT: As it is written now - if the access more already recorded in the session
+            // compatible with the requested access mode, then we can return it immediately
+            // THOUGHT: As it is written now - if the access mode already recorded in the session
             // is insufficient, the access mode is upgraded because we simply continue after this
             // IF-clause. I am not entirely sure this is valid.
             // Case 1) CAS was added during the current session - the holder in the session is
@@ -310,6 +318,10 @@ public class CasStorageServiceImpl
             Optional<SessionManagedCas> mCas = session.getManagedState(aDocument.getId(),
                     aUsername);
             if (mCas.isPresent() && mCas.get().getMode().alsoPermits(aAccessMode)) {
+                LOG.debug(
+                        "CAS storage session [{}]: session already contains CAS [{}] for [{}]@{} with mode {}",
+                        session.hashCode(), mCas.get().getCas().hashCode(), aUsername, aDocument,
+                        mCas.get().getMode());
                 return mCas.get().getCas();
             }
 
@@ -322,7 +334,7 @@ public class CasStorageServiceImpl
                 CasKey key = null;
                 CasHolder holder = null;
                 try {
-                    log.trace("CAS storage session [{}]: trying to borrow CAS [{}]@{}",
+                    LOG.trace("CAS storage session [{}]: trying to borrow CAS [{}]@{}",
                             session.hashCode(), aUsername, aDocument);
 
                     key = new CasKey(aDocument, aUsername);
@@ -346,7 +358,7 @@ public class CasStorageServiceImpl
                             mLoaderCas.setReleaseOnClose(false);
 
                             cas = readOrCreateUnmanagedCas(aDocument, aUsername, aSupplier,
-                                    aUpgradeMode);
+                                    aUpgradeMode, aAccessMode);
                         }
 
                         holder.setCas(cas);
@@ -356,12 +368,12 @@ public class CasStorageServiceImpl
                         ((CASImpl) getRealCas(cas))
                                 .setOwner(_cas -> returnBorrowedCas(_cas, finalKey, finalHolder));
 
-                        log.trace(
+                        LOG.debug(
                                 "CAS storage session [{}]: borrowed CAS [{}] for [{}]@{} loaded from storage",
                                 session.hashCode(), holder.getCasHashCode(), aUsername, aDocument);
                     }
                     else {
-                        log.trace(
+                        LOG.debug(
                                 "CAS storage session [{}]: borrowed CAS [{}] for [{}]@{} was already in memory",
                                 session.hashCode(), holder.getCasHashCode(), aUsername, aDocument);
 
@@ -376,7 +388,7 @@ public class CasStorageServiceImpl
                 catch (Exception e) {
                     // If there was an exception, we need to return the CAS to the pool
                     if (key != null && holder != null) {
-                        log.trace(
+                        LOG.trace(
                                 "CAS storage session [{}]: returning borrowed CAS [{}] for [{}]@{} after failure to load CAS",
                                 session.hashCode(), holder.getCasHashCode(), aUsername, aDocument);
                         try {
@@ -384,7 +396,7 @@ public class CasStorageServiceImpl
                             logExclusiveAccessHolders();
                         }
                         catch (Exception e1) {
-                            log.error("Unable to return CAS to exclusive access pool", e1);
+                            LOG.error("Unable to return CAS to exclusive access pool", e1);
                         }
                     }
                     casHolder = new CasHolder(key, e);
@@ -401,17 +413,19 @@ public class CasStorageServiceImpl
 
                 // Ensure that the CAS is not being re-written and temporarily unavailable while we
                 // check for its existence
-                try (WithExclusiveAccess access = new WithExclusiveAccess(aDocument, aUsername)) {
+                try (var access = new WithExclusiveAccess(aDocument, aUsername)) {
                     // Since we promise to only read the CAS, we don't have to worry about it being
                     // locked to a particular thread...
-                    casHolder = sharedAccessCache.get(new CasKey(aDocument, aUsername),
-                            (key) -> CasHolder.of(key,
-                                    () -> getRealCas(readOrCreateUnmanagedCas(aDocument, aUsername,
-                                            aSupplier, aUpgradeMode))));
+                    casHolder = sharedAccessCache
+                            .get(new CasKey(aDocument, aUsername),
+                                    (key) -> CasHolder.of(key,
+                                            () -> getRealCas(readOrCreateUnmanagedCas(aDocument,
+                                                    aUsername, aSupplier, aUpgradeMode,
+                                                    aAccessMode))));
                     var size = getSharedAccessCacheSize();
                     var max = casStorageProperties.getSharedCasCacheSize();
                     if (size > (max * 0.9)) {
-                        log.warn("Shared access CAS cache is >= 90% full: {} / {}", size, max);
+                        LOG.warn("Shared access CAS cache is >= 90% full: {} / {}", size, max);
                     }
                 }
             }
@@ -419,17 +433,17 @@ public class CasStorageServiceImpl
             else if (UNMANAGED_ACCESS.equals(aAccessMode)) {
                 // Ensure that the CAS is not being re-written and temporarily unavailable while we
                 // check for its existence
-                try (WithExclusiveAccess access = new WithExclusiveAccess(aDocument, aUsername)) {
+                try (var access = new WithExclusiveAccess(aDocument, aUsername)) {
                     casHolder = CasHolder.of(new CasKey(aDocument, aUsername),
                             () -> readOrCreateUnmanagedCas(aDocument, aUsername, aSupplier,
-                                    aUpgradeMode));
+                                    aUpgradeMode, aAccessMode));
                 }
             }
             // else if the special bypass mode is requested, then we fetch directly from disk
             else if (UNMANAGED_NON_INITIALIZING_ACCESS.equals(aAccessMode)) {
                 // Ensure that the CAS is not being re-written and temporarily unavailable while we
                 // check for its existence
-                try (WithExclusiveAccess access = new WithExclusiveAccess(aDocument, aUsername)) {
+                try (var access = new WithExclusiveAccess(aDocument, aUsername)) {
                     casHolder = CasHolder.of(new CasKey(aDocument, aUsername),
                             () -> driver.readCas(aDocument, aUsername));
                 }
@@ -447,7 +461,7 @@ public class CasStorageServiceImpl
                 throw new IOException(casHolder.getException());
             }
 
-            CAS cas = casHolder.getCas();
+            var cas = casHolder.getCas();
 
             if (aAccessMode.isSessionManaged()) {
                 session.add(aDocument.getId(), aUsername, aAccessMode, cas).incrementReadCount();
@@ -460,12 +474,12 @@ public class CasStorageServiceImpl
     private CasHolder borrowCas(CasKey aKey)
     {
         try {
-            CasHolder holder = exclusiveAccessPool.borrowObject(aKey);
+            var holder = exclusiveAccessPool.borrowObject(aKey);
             // Add the holder to the set of known holder. Because this set it using weak
             // references, and because we use the set only to inform holders when they become
             // invalid we do never have to explicitly remove the holder from the set
             exclusiveAccessHolders.add(holder);
-            log.trace("Added to exclusiveAccessHolders: {}", holder);
+            LOG.trace("Added to exclusiveAccessHolders: {}", holder);
 
             if (currentTimeMillis()
                     - lastExclusiveAccessPoolSnapshotUpdate.get() > snapshotInterval) {
@@ -475,7 +489,7 @@ public class CasStorageServiceImpl
                 var lastSize = lastExclusiveAccessPoolSnapshotSize.getAndSet(currentSize);
 
                 if (currentSize > (lastSize + warningThreshold)) {
-                    log.warn(
+                    LOG.warn(
                             "Exclusive CAS access pool sizes increased strongly in the last {}ms: {} -> {}",
                             snapshotInterval, lastSize, currentSize);
                 }
@@ -497,13 +511,13 @@ public class CasStorageServiceImpl
     private void returnBorrowedCas(AbstractCas cas, CasKey aKey, CasHolder aHolder)
     {
         try {
-            log.trace("Returning borrowed CAS [{}] for [{}]@[{}]({})", cas.hashCode(),
+            LOG.trace("Returning borrowed CAS [{}] for [{}]@[{}]({})", cas.hashCode(),
                     aKey.getUserId(), aKey.getDocumentName(), aKey.getDocumentId());
             exclusiveAccessPool.returnObject(aKey, aHolder);
             logExclusiveAccessHolders();
         }
         catch (Exception e) {
-            log.error("Unable to return CAS [{}] for [{}]@[{}]({}) to exclusive access pool",
+            LOG.error("Unable to return CAS [{}] for [{}]@[{}]({}) to exclusive access pool",
                     cas.hashCode(), aKey.getUserId(), aKey.getDocumentName(), aKey.getDocumentId(),
                     e);
         }
@@ -513,8 +527,7 @@ public class CasStorageServiceImpl
             CasUpgradeMode aUpgradeMode, RepairAndUpgradeFlags... aFlags)
         throws IOException
     {
-        try (CasStorageSession session = CasStorageSession
-                .openNested(contains(aFlags, ISOLATED_SESSION))) {
+        try (var session = CasStorageSession.openNested(contains(aFlags, ISOLATED_SESSION))) {
             session.add(aDocument.getId(), aUsername, EXCLUSIVE_WRITE_ACCESS, aCas);
 
             try {
@@ -553,31 +566,45 @@ public class CasStorageServiceImpl
      *             if the CAS could not be obtained.
      */
     private CAS readOrCreateUnmanagedCas(SourceDocument aDocument, String aUsername,
-            CasProvider aSupplier, CasUpgradeMode aUpgradeMode)
+            CasProvider aSupplier, CasUpgradeMode aUpgradeMode, CasAccessMode aAccessMode)
         throws IOException
     {
-        long start = currentTimeMillis();
+        var start = currentTimeMillis();
 
         CAS cas;
         String source;
 
+        if (LOG.isTraceEnabled()) {
+            if (CasStorageSession.exists()) {
+                var session = CasStorageSession.get();
+                LOG.trace("CAS storage session [{}]: loading CAS [{}]@{} [{}]", session.hashCode(),
+                        aUsername, aDocument, aUpgradeMode);
+            }
+            else {
+                LOG.trace("Loading CAS [{}]@{} [{}]", aUsername, aDocument, aUpgradeMode);
+            }
+        }
+
         // If the CAS exists on disk already, load it from there
         if (driver.existsCas(aDocument, aUsername)) {
-            log.debug("Reading annotation document [{}] ({}) for user [{}] in project [{}] ({})",
-                    aDocument.getName(), aDocument.getId(), aUsername,
-                    aDocument.getProject().getName(), aDocument.getProject().getId());
-
+            source = "disk";
             cas = driver.readCas(aDocument, aUsername);
             repairAndUpgradeCasIfRequired(aDocument, aUsername, cas, aUpgradeMode,
                     ISOLATED_SESSION);
-            source = "disk";
+
+            addOrUpdateCasMetadata(aDocument, aUsername, cas);
         }
         // If the CAS does NOT exist on disk, try obtaining it through the given CAS provider
         else if (aSupplier != null) {
+            source = "importer";
             cas = aSupplier.get();
             repairAndUpgradeCasIfRequired(aDocument, aUsername, cas, aUpgradeMode);
-            realWriteCas(aDocument, aUsername, cas);
-            source = "importer";
+
+            if (aAccessMode == EXCLUSIVE_WRITE_ACCESS) {
+                realWriteCas(aDocument, aUsername, cas);
+
+                addOrUpdateCasMetadata(aDocument, aUsername, cas);
+            }
         }
         // If no CAS provider is given, fail
         else {
@@ -585,18 +612,33 @@ public class CasStorageServiceImpl
                     + "] does not exist and no initializer is specified.");
         }
 
-        // Add/update the CAS metadata
+        var duration = currentTimeMillis() - start;
+
+        if (LOG.isDebugEnabled()) {
+            if (CasStorageSession.exists()) {
+                var session = CasStorageSession.get();
+                LOG.debug(
+                        "CAS storage session [{}]: loaded CAS [{}] for [{}]@{} from {} in {}ms [{}]",
+                        session.hashCode(), cas.hashCode(), aUsername, aDocument, source, duration,
+                        aUpgradeMode);
+            }
+            else {
+                LOG.debug("Loaded CAS [{}] for [{}]@{} from {} in {}ms [{}]", cas.hashCode(),
+                        aUsername, aDocument, source, duration, aUpgradeMode);
+            }
+        }
+
+        return cas;
+    }
+
+    private void addOrUpdateCasMetadata(SourceDocument aDocument, String aUsername, CAS cas)
+        throws IOException
+    {
         CasMetadataUtils.addOrUpdateCasMetadata(cas, driver.getCasMetadata(aDocument, aUsername)
                 .orElseThrow(() -> new IOException(
                         "Unable to obtain last modified data for annotation document [" + aDocument
                                 + "] of user [" + aUsername + "]"))
                 .getTimestamp(), aDocument, aUsername);
-
-        long duration = currentTimeMillis() - start;
-        log.debug("Loaded CAS [{}] [{},{}] from {} in {}ms", cas.hashCode(), aDocument.getId(),
-                aUsername, source, duration);
-
-        return cas;
     }
 
     @Override
@@ -604,14 +646,14 @@ public class CasStorageServiceImpl
         throws IOException, CasSessionException
     {
         try (var logCtx = withProjectLogger(aDocument.getProject());
-                WithExclusiveAccess access = new WithExclusiveAccess(aDocument, aUsername)) {
-            boolean fileWasDeleted = driver.deleteCas(aDocument, aUsername);
+                var access = new WithExclusiveAccess(aDocument, aUsername)) {
+            var fileWasDeleted = driver.deleteCas(aDocument, aUsername);
 
             // Drop the CAS from the shared CAS it doesn't ghost around. Also set the deleted flag
             // in the holder in case anybody might still be holding on to the holder and needs to
             // know that CAS was deleted.
-            CasKey key = new CasKey(aDocument, aUsername);
-            CasHolder sharedCasHolder = sharedAccessCache.getIfPresent(key);
+            var key = new CasKey(aDocument, aUsername);
+            var sharedCasHolder = sharedAccessCache.getIfPresent(key);
             if (sharedCasHolder != null) {
                 sharedCasHolder.setDeleted(true);
             }
@@ -718,7 +760,7 @@ public class CasStorageServiceImpl
             casDoctor.analyze(aProject, aCas);
         }
         catch (CasDoctorException e) {
-            StringBuilder detailMsg = new StringBuilder();
+            var detailMsg = new StringBuilder();
             detailMsg.append("CAS Doctor found problems for user [").append(aUsername)
                     .append("] in document [").append(aDocumentName).append("] (")
                     .append(aDocumentId).append(") in project [").append(aProject.getName())
@@ -741,8 +783,8 @@ public class CasStorageServiceImpl
     {
         // Ensure that the CAS is not being re-written and temporarily unavailable while we export
         // it, then add this info to a mini-session to ensure that write-access is known
-        try (CasStorageSession session = CasStorageSession.openNested(true)) {
-            try (WithExclusiveAccess access = new WithExclusiveAccess(aDocument, aUser)) {
+        try (var session = CasStorageSession.openNested(true)) {
+            try (var access = new WithExclusiveAccess(aDocument, aUser)) {
                 session.add(aDocument.getId(), aUser, EXCLUSIVE_WRITE_ACCESS, access.getHolder());
 
                 driver.exportCas(aDocument, aUser, aStream);
@@ -765,8 +807,8 @@ public class CasStorageServiceImpl
     {
         // Ensure that the CAS is not being re-written and temporarily unavailable while we export
         // it, then add this info to a mini-session to ensure that write-access is known
-        try (CasStorageSession session = CasStorageSession.openNested(true)) {
-            try (WithExclusiveAccess access = new WithExclusiveAccess(aDocument, aUser)) {
+        try (var session = CasStorageSession.openNested(true)) {
+            try (var access = new WithExclusiveAccess(aDocument, aUser)) {
                 session.add(aDocument.getId(), aUser, EXCLUSIVE_WRITE_ACCESS, access.getHolder());
 
                 driver.importCas(aDocument, aUser, aStream);
@@ -802,11 +844,11 @@ public class CasStorageServiceImpl
     {
         // Ensure that the CAS is not being re-written and temporarily unavailable while we check
         // upgrade it, then add this info to a mini-session to ensure that write-access is known
-        try (CasStorageSession session = CasStorageSession.openNested(true)) {
-            try (WithExclusiveAccess access = new WithExclusiveAccess(aDocument, aUser)) {
+        try (var session = CasStorageSession.openNested(true)) {
+            try (var access = new WithExclusiveAccess(aDocument, aUser)) {
                 session.add(aDocument.getId(), aUser, EXCLUSIVE_WRITE_ACCESS, access.getHolder());
 
-                CAS cas = aLoader.load(aDocument, aUser);
+                var cas = aLoader.load(aDocument, aUser);
                 access.setCas(cas);
 
                 aAction.apply(cas);
@@ -835,8 +877,27 @@ public class CasStorageServiceImpl
 
         // Ensure that the CAS is not being re-written and temporarily unavailable while we check
         // for its existence
-        try (WithExclusiveAccess access = new WithExclusiveAccess(aDocument, aUser)) {
+        try (var access = new WithExclusiveAccess(aDocument, aUser)) {
             return driver.existsCas(aDocument, aUser);
+        }
+        catch (IOException e) {
+            throw e;
+        }
+        catch (Exception e) {
+            throw new IOException(e);
+        }
+    }
+
+    @Override
+    public Optional<Long> getCasFileSize(SourceDocument aDocument, String aUser) throws IOException
+    {
+        Validate.notNull(aDocument, "Source document must be specified");
+        Validate.notBlank(aUser, "User must be specified");
+
+        // Ensure that the CAS is not being re-written and temporarily unavailable while we check
+        // for its existence
+        try (var access = new WithExclusiveAccess(aDocument, aUser)) {
+            return driver.getCasFileSize(aDocument, aUser);
         }
         catch (IOException e) {
             throw e;
@@ -863,15 +924,15 @@ public class CasStorageServiceImpl
             documentId = aDocument.getId();
             username = aUser;
 
-            CasStorageSession session = CasStorageSession.get();
+            var session = CasStorageSession.get();
 
             if (!session.hasExclusiveAccess(aDocument, aUser)) {
-                log.trace("CAS storage session [{}]: trying to briefly borrow CAS [{}]@[{}]({})",
+                LOG.trace("CAS storage session [{}]: trying to briefly borrow CAS [{}]@[{}]({})",
                         session.hashCode(), aUser, aDocument.getName(), aDocument.getId());
 
                 holder = borrowCas(key);
 
-                log.trace("CAS storage session [{}]: briefly borrowed CAS [{}]@[{}]({})",
+                LOG.trace("CAS storage session [{}]: briefly borrowed CAS [{}]@[{}]({})",
                         session.hashCode(), aUser, aDocument.getName(), aDocument.getId());
 
                 if (holder.isCasSet()) {
@@ -893,13 +954,12 @@ public class CasStorageServiceImpl
             if (holder != null) {
                 return holder.isCasSet();
             }
-            else {
-                return CasStorageSession.get().getManagedState(documentId, username)
-                        .orElseThrow(() -> new IllegalStateException("This should not happen. If "
-                                + "the no holder is set, then the CAS must already be part of the "
-                                + "session."))
-                        .isCasSet();
-            }
+
+            return CasStorageSession.get().getManagedState(documentId, username)
+                    .orElseThrow(() -> new IllegalStateException("This should not happen. If "
+                            + "the no holder is set, then the CAS must already be part of the "
+                            + "session."))
+                    .isCasSet();
         }
 
         public void setCas(CAS aCas)
@@ -966,7 +1026,7 @@ public class CasStorageServiceImpl
         public void close()
         {
             if (holder != null) {
-                log.trace("Returning briefly borrowed CAS [{}]@[{}]({})", username, documentName,
+                LOG.trace("Returning briefly borrowed CAS [{}]@[{}]({})", username, documentName,
                         documentId);
                 exclusiveAccessPool.returnObject(key, holder);
                 logExclusiveAccessHolders();
@@ -982,7 +1042,7 @@ public class CasStorageServiceImpl
 
         // Ensure that the CAS is not being re-written and temporarily unavailable while we check
         // for its timestamp
-        try (WithExclusiveAccess access = new WithExclusiveAccess(aDocument, aUser)) {
+        try (var access = new WithExclusiveAccess(aDocument, aUser)) {
             return driver.getCasMetadata(aDocument, aUser).map(CasStorageMetadata::getTimestamp);
         }
         catch (IOException e) {
@@ -1003,7 +1063,7 @@ public class CasStorageServiceImpl
 
         // Ensure that the CAS is not being re-written and temporarily unavailable while we check
         // for its timestamp
-        try (WithExclusiveAccess access = new WithExclusiveAccess(aDocument, aUser)) {
+        try (var access = new WithExclusiveAccess(aDocument, aUser)) {
             return driver.verifyCasTimestamp(aDocument, aUser, aExpectedTimeStamp, aContextAction);
         }
         catch (IOException e) {
@@ -1024,12 +1084,12 @@ public class CasStorageServiceImpl
      */
     private void logExclusiveAccessHolders()
     {
-        if (log.isTraceEnabled()) {
+        if (LOG.isTraceEnabled()) {
             if (exclusiveAccessHolders.isEmpty()) {
-                log.trace("exclusiveAccessHolders: empty!");
+                LOG.trace("exclusiveAccessHolders: empty!");
             }
             else {
-                log.trace("exclusiveAccessHolders: {}", exclusiveAccessHolders);
+                LOG.trace("exclusiveAccessHolders: {}", exclusiveAccessHolders);
             }
         }
     }
@@ -1062,10 +1122,33 @@ public class CasStorageServiceImpl
     {
         analyze(aDocument.getProject(), aDocument.getName(), aDocument.getId(), aUserName, aCas);
 
-        log.debug("Writing annotation document [{}] ({}) for user [{}] in project [{}] ({})",
-                aDocument.getName(), aDocument.getId(), aUserName, aDocument.getProject().getName(),
-                aDocument.getProject().getId());
+        if (CasStorageSession.exists()) {
+            var session = CasStorageSession.get();
+            LOG.debug("CAS storage session [{}]: writing annotations for [{}]@{} in {}",
+                    session.hashCode(), aUserName, aDocument, aDocument.getProject());
+
+        }
+        else {
+            LOG.debug("Writing annotations for [{}]@{} in {}", aUserName, aDocument,
+                    aDocument.getProject());
+        }
 
         driver.writeCas(aDocument, aUserName, aCas);
+    }
+
+    public static class LoggingDefaultEvictionPolicy
+        extends DefaultEvictionPolicy<CasHolder>
+    {
+        @Override
+        public boolean evict(EvictionConfig aConfig, PooledObject<CasHolder> aUnderTest,
+                int aIdleCount)
+        {
+            var result = super.evict(aConfig, aUnderTest, aIdleCount);
+            if (result) {
+                LOG.debug("Marked CAS for eviction from exclusive-access pool: {}",
+                        aUnderTest.getObject());
+            }
+            return result;
+        }
     }
 }

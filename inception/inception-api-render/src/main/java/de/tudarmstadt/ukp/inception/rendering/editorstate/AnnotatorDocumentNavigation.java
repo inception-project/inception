@@ -20,15 +20,20 @@ package de.tudarmstadt.ukp.inception.rendering.editorstate;
 import java.util.List;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 
 public interface AnnotatorDocumentNavigation
 {
     // ---------------------------------------------------------------------------------------------
     // Document
     // ---------------------------------------------------------------------------------------------
+    void clearDocument();
+
     SourceDocument getDocument();
 
     void setDocument(SourceDocument aDocument, List<SourceDocument> aDocuments);
+
+    void refreshDocument(DocumentService aDocumentService);
 
     int getDocumentIndex();
 

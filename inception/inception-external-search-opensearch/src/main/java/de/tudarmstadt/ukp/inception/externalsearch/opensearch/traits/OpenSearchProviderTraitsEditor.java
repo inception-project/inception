@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.externalsearch.opensearch.traits;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.HtmlElementEvents.CHANGE_EVENT;
-import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CHANGE_EVENT;
+import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 import static java.util.Arrays.asList;
 
 import org.apache.wicket.AttributeModifier;
@@ -37,7 +37,6 @@ import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.validation.validator.UrlValidator;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchProviderFactory;
 import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
 import de.tudarmstadt.ukp.inception.security.client.auth.AuthenticationTraitsEditor;
@@ -45,6 +44,7 @@ import de.tudarmstadt.ukp.inception.security.client.auth.AuthenticationType;
 import de.tudarmstadt.ukp.inception.security.client.auth.NoAuthenticationTraitsEditor;
 import de.tudarmstadt.ukp.inception.security.client.auth.basic.BasicAuthenticationTraits;
 import de.tudarmstadt.ukp.inception.security.client.auth.basic.BasicAuthenticationTraitsEditor;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 
 public class OpenSearchProviderTraitsEditor
     extends Panel

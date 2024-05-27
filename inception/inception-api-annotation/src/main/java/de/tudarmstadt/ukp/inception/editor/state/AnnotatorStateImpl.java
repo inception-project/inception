@@ -17,19 +17,20 @@
  */
 package de.tudarmstadt.ukp.inception.editor.state;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.CHAIN_TYPE;
-import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.SPAN_TYPE;
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.SPAN_TYPE;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
 import static org.apache.wicket.event.Broadcast.BREADTH;
 
 import java.io.Serializable;
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Predicate;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
@@ -38,6 +39,8 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.core.request.handler.IPageRequestHandler;
 import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
 import org.apache.wicket.request.cycle.RequestCycle;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.constraints.model.ParsedConstraints;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -50,7 +53,10 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.inception.rendering.config.AnnotationEditorProperties;
+import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
+import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationPreference;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorStateMetaDataKey;
@@ -67,6 +73,8 @@ import de.tudarmstadt.ukp.inception.rendering.selection.Selection;
 public class AnnotatorStateImpl
     implements Serializable, AnnotatorState
 {
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
     private static final long serialVersionUID = 1078613192789450714L;
 
     /**
@@ -158,7 +166,7 @@ public class AnnotatorStateImpl
     private Mode mode;
 
     /**
-     * The previously selected {@link TagSet} and {@link Tag} for a span/Arc annotation so as toz
+     * The previously selected {@link TagSet} and {@link Tag} for a span/Arc annotation so as to
      * pre-fill the type in the span/arc annotation dialog (only for new span/arc annotations)
      */
     private AnnotationLayer rememberedSpanLayer;
@@ -237,6 +245,13 @@ public class AnnotatorStateImpl
     }
 
     @Override
+    public void clearProject()
+    {
+        project = null;
+        clearDocument();
+    }
+
+    @Override
     public ScriptDirection getScriptDirection()
     {
         return scriptDirection;
@@ -278,6 +293,12 @@ public class AnnotatorStateImpl
     }
 
     @Override
+    public void clearDocument()
+    {
+        setDocument(null, null);
+    }
+
+    @Override
     public void setDocument(SourceDocument aDocument, List<SourceDocument> aDocuments)
     {
         document = aDocument;
@@ -288,6 +309,23 @@ public class AnnotatorStateImpl
         else {
             documentIndex = -1;
             numberOfDocuments = -1;
+        }
+    }
+
+    @Override
+    public void refreshDocument(DocumentService aDocumentService)
+    {
+        if (document != null) {
+            document = aDocumentService.getSourceDocument(document.getProject().getId(),
+                    document.getId());
+        }
+    }
+
+    @Override
+    public void refreshProject(ProjectService aProjectService)
+    {
+        if (project != null) {
+            project = aProjectService.getProject(project.getId());
         }
     }
 
@@ -325,6 +363,18 @@ public class AnnotatorStateImpl
     @Override
     public void setVisibleUnits(List<Unit> aUnits, int aTotalUnitCount)
     {
+        if (aUnits.isEmpty()) {
+            unitCount = 0;
+            visibleUnits = aUnits;
+            firstVisibleUnitIndex = 0;
+            lastVisibleUnitIndex = 0;
+            focusUnitIndex = 0;
+            windowBeginOffset = 0;
+            windowEndOffset = 0;
+            fireViewStateChanged();
+            return;
+        }
+
         unitCount = aTotalUnitCount;
         visibleUnits = aUnits;
         firstVisibleUnitIndex = aUnits.get(0).getIndex();
@@ -403,16 +453,17 @@ public class AnnotatorStateImpl
     }
 
     @Override
-    public void refreshSelectableLayers(AnnotationEditorProperties aProperties)
+    public void refreshSelectableLayers(Predicate<AnnotationLayer> isLayerBlocked)
     {
         selectableLayers.clear();
 
         for (AnnotationLayer layer : getAnnotationLayers()) {
-            if (!layer.isEnabled() || layer.isReadonly() || aProperties.isLayerBlocked(layer)) {
+            if (!layer.isEnabled() || layer.isReadonly() || isLayerBlocked.test(layer)) {
                 continue;
             }
 
-            if (layer.getType().equals(SPAN_TYPE) || layer.getType().equals(CHAIN_TYPE)) {
+            if (layer.getType().equals(SpanLayerSupport.TYPE)
+                    || layer.getType().equals(ChainLayerSupport.TYPE)) {
                 selectableLayers.add(layer);
             }
         }
@@ -446,6 +497,7 @@ public class AnnotatorStateImpl
         preferences = aPreferences;
     }
 
+    @Deprecated
     @Override
     public Mode getMode()
     {
@@ -456,12 +508,6 @@ public class AnnotatorStateImpl
     public AnnotationLayer getRememberedSpanLayer()
     {
         return rememberedSpanLayer;
-    }
-
-    @Override
-    public AnnotationLayer getRememberedArcLayer()
-    {
-        return rememberedArcLayer;
     }
 
     @Override
@@ -571,12 +617,13 @@ public class AnnotatorStateImpl
     @Override
     public void rememberFeatures()
     {
+        LOG.trace("Remembering feature editor values");
         if (getSelection().isArc()) {
-            this.rememberedArcLayer = getSelectedAnnotationLayer();
+            rememberedArcLayer = getSelectedAnnotationLayer();
             setRememberedArcFeatures(featureModels);
         }
         else {
-            this.rememberedSpanLayer = getSelectedAnnotationLayer();
+            rememberedSpanLayer = getSelectedAnnotationLayer();
             setRememberedSpanFeatures(featureModels);
         }
     }
@@ -585,9 +632,9 @@ public class AnnotatorStateImpl
     public void clearRememberedFeatures()
     {
         setRememberedArcFeatures(null);
-        this.rememberedArcLayer = null;
+        rememberedArcLayer = null;
         setRememberedSpanFeatures(null);
-        this.rememberedSpanLayer = null;
+        rememberedSpanLayer = null;
     }
 
     @Override

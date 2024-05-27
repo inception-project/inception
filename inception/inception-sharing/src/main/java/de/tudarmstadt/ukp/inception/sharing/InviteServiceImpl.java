@@ -44,12 +44,12 @@ import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.springframework.context.event.EventListener;
 import org.springframework.transaction.annotation.Transactional;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.event.BeforeProjectRemovedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectState;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.project.api.ProjectService;
+import de.tudarmstadt.ukp.inception.project.api.event.BeforeProjectRemovedEvent;
 import de.tudarmstadt.ukp.inception.sharing.config.InviteServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.sharing.config.InviteServiceProperties;
 import de.tudarmstadt.ukp.inception.sharing.model.ProjectInvite;
@@ -373,7 +373,7 @@ public class InviteServiceImpl
         u.setUsername(generateRandomUsername());
         u.setUiName(aUsername);
         u.setPassword(EMPTY_PASSWORD);
-        u.setRealm(REALM_PROJECT_PREFIX + aProject.getId());
+        u.setRealm(realm);
         u.setEnabled(true);
         u.setRoles(Set.of(ROLE_USER));
         userRepository.create(u);

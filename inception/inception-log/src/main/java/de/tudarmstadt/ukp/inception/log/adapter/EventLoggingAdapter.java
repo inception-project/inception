@@ -27,7 +27,15 @@ import de.tudarmstadt.ukp.inception.log.model.LoggedEvent;
 
 public interface EventLoggingAdapter<T>
 {
-    boolean accepts(Object aEvent);
+    public static final String SYSTEM_USER = "<SYSTEM>";
+    public static final String ANONYMOUS_USER = "anonymousUser";
+
+    boolean accepts(Class<?> aEvent);
+
+    default boolean isLoggable(T aEvent)
+    {
+        return true;
+    }
 
     default String getDetails(T aEvent) throws Exception
     {
@@ -51,12 +59,11 @@ public interface EventLoggingAdapter<T>
 
     default Date getCreated(T aEvent)
     {
-        if (aEvent instanceof ApplicationEvent) {
-            return new Date(((ApplicationEvent) aEvent).getTimestamp());
+        if (aEvent instanceof ApplicationEvent event) {
+            return new Date(event.getTimestamp());
         }
-        else {
-            return new Date();
-        }
+
+        return new Date();
     }
 
     default String getEvent(T aEvent)
@@ -71,7 +78,7 @@ public interface EventLoggingAdapter<T>
             return context.getAuthentication().getName();
         }
         else {
-            return "<SYSTEM>";
+            return SYSTEM_USER;
         }
     }
 

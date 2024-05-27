@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.api.recommender;
 
-import org.apache.wicket.markup.html.panel.Panel;
+import org.apache.wicket.markup.html.panel.GenericPanel;
 import org.apache.wicket.model.IModel;
 
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
@@ -40,17 +40,12 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
  * limitations under the License.
  */
 public class AbstractTraitsEditor
-    extends Panel
+    extends GenericPanel<Recommender>
 {
     private static final long serialVersionUID = -5826029092354401342L;
 
     public AbstractTraitsEditor(String aId, IModel<Recommender> aRecommender)
     {
         super(aId, aRecommender);
-    }
-
-    public Recommender getModelObject()
-    {
-        return (Recommender) getDefaultModelObject();
     }
 }

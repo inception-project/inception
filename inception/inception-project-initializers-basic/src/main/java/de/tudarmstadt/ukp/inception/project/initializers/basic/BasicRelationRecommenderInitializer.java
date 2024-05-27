@@ -25,17 +25,15 @@ import static java.util.Arrays.asList;
 import java.io.IOException;
 import java.util.List;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.project.ProjectInitializer;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.inception.project.api.ProjectInitializer;
 import de.tudarmstadt.ukp.inception.project.initializers.basic.config.InceptionBasicProjectInitializersAutoConfiguration;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.relation.StringMatchingRelationRecommenderFactory;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.relation.StringMatchingRelationRecommenderTraits;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
 /**
  * <p>
@@ -46,7 +44,7 @@ import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 public class BasicRelationRecommenderInitializer
     implements ProjectInitializer
 {
-    private final AnnotationSchemaService annotationService;
+    private final AnnotationSchemaService schemaService;
     private final RecommendationService recommendationService;
     private final StringMatchingRelationRecommenderFactory recommenderFactory;
 
@@ -55,14 +53,14 @@ public class BasicRelationRecommenderInitializer
             StringMatchingRelationRecommenderFactory aRecommenderFactory)
     {
         recommendationService = aRecommenderService;
-        annotationService = aAnnotationService;
+        schemaService = aAnnotationService;
         recommenderFactory = aRecommenderFactory;
     }
 
     @Override
     public String getName()
     {
-        return "Basic relation recommender";
+        return "Generic relation recommender";
     }
 
     @Override
@@ -86,12 +84,11 @@ public class BasicRelationRecommenderInitializer
     @Override
     public void configure(Project aProject) throws IOException
     {
-        AnnotationLayer relationLayer = annotationService.findLayer(aProject,
-                BASIC_RELATION_LAYER_NAME);
-        AnnotationFeature labelFeature = annotationService
-                .getFeature(BASIC_RELATION_LABEL_FEATURE_NAME, relationLayer);
+        var relationLayer = schemaService.findLayer(aProject, BASIC_RELATION_LAYER_NAME);
+        var labelFeature = schemaService.getFeature(BASIC_RELATION_LABEL_FEATURE_NAME,
+                relationLayer);
 
-        Recommender recommender = new Recommender(getName(), relationLayer);
+        var recommender = new Recommender(getName(), relationLayer);
         recommender.setFeature(labelFeature);
         recommender.setMaxRecommendations(3);
         recommender.setThreshold(0.0d);
@@ -100,7 +97,7 @@ public class BasicRelationRecommenderInitializer
         @SuppressWarnings("unchecked")
         var factory = (RecommendationEngineFactory<StringMatchingRelationRecommenderTraits>) //
         recommendationService.getRecommenderFactory(recommender).get();
-        StringMatchingRelationRecommenderTraits traits = factory.readTraits(recommender);
+        var traits = factory.readTraits(recommender);
         traits.setAdjunctFeature(BASIC_SPAN_LABEL_FEATURE_NAME);
         factory.writeTraits(recommender, traits);
 

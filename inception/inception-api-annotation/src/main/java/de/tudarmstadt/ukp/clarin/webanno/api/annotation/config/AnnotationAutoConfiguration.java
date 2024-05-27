@@ -33,12 +33,14 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.LabelRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRendererImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderNotificationRenderStep;
-import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationEndpointFeatureSupport;
+import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.rendering.coloring.ColoringService;
-import de.tudarmstadt.ukp.inception.rendering.config.AnnotationEditorProperties;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
-import de.tudarmstadt.ukp.inception.schema.layer.LayerSupportRegistry;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.config.AnnotationSchemaProperties;
+import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistry;
 
 @Configuration
 @EnableConfigurationProperties(AnnotationEditorDefaultPreferencesPropertiesImpl.class)
@@ -88,11 +90,17 @@ public class AnnotationAutoConfiguration
             AnnotationEditorDefaultPreferencesProperties aDefaultPreferences,
             AnnotationSchemaService aAnnotationService, RepositoryProperties aRepositoryProperties,
             ColoringService aColoringService,
-            AnnotationEditorProperties aAnnotationEditorProperties,
-            PreferencesService aPreferencesService)
+            AnnotationSchemaProperties aAnnotationEditorProperties,
+            PreferencesService aPreferencesService, UserDao aUserService)
     {
         return new UserPreferencesServiceImpl(aDefaultPreferences, aAnnotationService,
                 aRepositoryProperties, aColoringService, aAnnotationEditorProperties,
-                aPreferencesService);
+                aPreferencesService, aUserService);
+    }
+
+    @Bean
+    public RelationEndpointFeatureSupport relationEndpointFeatureSupport()
+    {
+        return new RelationEndpointFeatureSupport();
     }
 }

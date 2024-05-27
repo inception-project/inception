@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>29.0-SNAPSHOT</version>
+    <version>33.0-SNAPSHOT</version>
   </parent>
   <artifactId>inception-support</artifactId>
   <name>INCEpTION - Support library</name>
@@ -40,6 +40,15 @@
     </dependency>
 
     <dependency>
+      <groupId>org.dkpro.core</groupId>
+      <artifactId>dkpro-core-api-segmentation-asl</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.dkpro.core</groupId>
+      <artifactId>dkpro-core-api-metadata-asl</artifactId>
+    </dependency>
+
+    <dependency>
       <groupId>commons-io</groupId>
       <artifactId>commons-io</artifactId>
     </dependency>
@@ -50,6 +59,10 @@
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-collections4</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>it.unimi.dsi</groupId>
+      <artifactId>fastutil</artifactId>
     </dependency>
 
     <dependency>
@@ -125,18 +138,6 @@
     <dependency>
       <groupId>org.wicketstuff</groupId>
       <artifactId>wicketstuff-input-events</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>de.agilecoders.wicket</groupId>
-      <artifactId>wicket-bootstrap-core</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>de.agilecoders.wicket</groupId>
-      <artifactId>wicket-bootstrap-extensions</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>de.agilecoders.wicket</groupId>
-      <artifactId>jquery-selectors</artifactId>
     </dependency>
     <dependency>
       <groupId>org.danekja</groupId>
@@ -222,7 +223,7 @@
               <configuration>
                 <excludes combine.children="append">
                   <!-- Trivial template file which a license header would bloat too much-->
-                  <exclude>src/main/java/de/tudarmstadt/ukp/clarin/webanno/support/wicket/input/remove-input-behavior.js</exclude>
+                  <exclude>**/remove-input-behavior.js</exclude>
                 </excludes>
               </configuration>
             </execution>

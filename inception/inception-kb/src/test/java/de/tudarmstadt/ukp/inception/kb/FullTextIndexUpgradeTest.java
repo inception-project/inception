@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.inception.kb;
 import static de.tudarmstadt.ukp.inception.kb.reification.Reification.NONE;
 import static java.nio.file.Files.newInputStream;
 import static org.apache.commons.io.FileUtils.copyDirectory;
-import static org.apache.commons.io.FileUtils.deleteQuietly;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.File;
@@ -31,13 +30,13 @@ import java.util.List;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
-import org.apache.commons.io.FileUtils;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
-import org.eclipse.rdf4j.repository.RepositoryConnection;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
@@ -45,8 +44,8 @@ import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfigurati
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.transaction.annotation.Transactional;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.inception.documents.api.RepositoryPropertiesImpl;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBasePropertiesImpl;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
@@ -54,7 +53,11 @@ import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder;
 
 @Transactional
-@DataJpaTest(excludeAutoConfiguration = LiquibaseAutoConfiguration.class)
+@DataJpaTest( //
+        showSql = false, //
+        properties = { //
+                "spring.main.banner-mode=off" }, //
+        excludeAutoConfiguration = LiquibaseAutoConfiguration.class)
 @EnableAutoConfiguration
 @EntityScan(basePackages = { //
         "de.tudarmstadt.ukp.inception.kb.model", //
@@ -62,23 +65,20 @@ import de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder;
 public class FullTextIndexUpgradeTest
 {
     static final String REF_DIR = "src/test/resources/KnowledgeBaseUpgradeTest";
-    static final String WORK_DIR = "target/test-output/KnowledgeBaseUpgradeTest";
 
-    @PersistenceContext
-    EntityManager entityManager;
+    private @PersistenceContext EntityManager entityManager;
+    private @TempDir File temp;
 
-    Project project;
-    RepositoryProperties repoProperties;
-    KnowledgeBaseProperties kbProperties;
-    KnowledgeBase kb;
+    private Project project;
+    private RepositoryPropertiesImpl repoProperties;
+    private KnowledgeBaseProperties kbProperties;
+    private KnowledgeBase kb;
 
-    KnowledgeBaseServiceImpl sut;
+    private KnowledgeBaseServiceImpl sut;
 
     @BeforeEach
     void setup()
     {
-        deleteQuietly(new File(WORK_DIR));
-
         kb = new KnowledgeBase();
         kb.setName("test");
         kb.setProject(project);
@@ -89,7 +89,7 @@ public class FullTextIndexUpgradeTest
         kb.setLabelIri(RDFS.LABEL.stringValue());
         kb.setPropertyTypeIri(RDF.PROPERTY.stringValue());
         kb.setDescriptionIri(RDFS.COMMENT.stringValue());
-        kb.setFullTextSearchIri(IriConstants.FTS_LUCENE.stringValue());
+        kb.setFullTextSearchIri(IriConstants.FTS_RDF4J_LUCENE.stringValue());
         kb.setPropertyLabelIri(RDFS.LABEL.stringValue());
         kb.setPropertyDescriptionIri(RDFS.COMMENT.stringValue());
         kb.setSubPropertyIri(RDFS.SUBPROPERTYOF.stringValue());
@@ -100,9 +100,16 @@ public class FullTextIndexUpgradeTest
         project = new Project("test");
         entityManager.persist(project);
 
-        repoProperties = new RepositoryProperties();
+        repoProperties = new RepositoryPropertiesImpl();
         kbProperties = new KnowledgeBasePropertiesImpl();
-        repoProperties.setPath(new File(WORK_DIR));
+        repoProperties.setPath(temp);
+    }
+
+    @AfterEach
+    public void tearDown() throws Exception
+    {
+        entityManager.clear();
+        sut.destroy();
     }
 
     @Disabled("Only needed when we want to create new reference data")
@@ -122,7 +129,7 @@ public class FullTextIndexUpgradeTest
     @Test
     void thatExistingKnowledgeBaseCanBeRead() throws Exception
     {
-        copyDirectory(new File(REF_DIR, "lucene-7.7.3"), new File(WORK_DIR));
+        copyDirectory(new File(REF_DIR, "lucene-7.7.3"), temp);
 
         sut = new KnowledgeBaseServiceImpl(repoProperties, kbProperties, entityManager);
 
@@ -134,7 +141,7 @@ public class FullTextIndexUpgradeTest
                 .withLabelStartingWith("Green Go");
 
         List<KBHandle> results;
-        try (RepositoryConnection conn = sut.getConnection(kb)) {
+        try (var conn = sut.getConnection(kb)) {
             results = builder.asHandles(conn, true);
         }
 
@@ -147,7 +154,7 @@ public class FullTextIndexUpgradeTest
     @Test
     void thatExistingKnowledgeBaseCanBeUpdated() throws Exception
     {
-        FileUtils.copyDirectory(new File(REF_DIR, "lucene-7.7.3"), new File(WORK_DIR));
+        copyDirectory(new File(REF_DIR, "lucene-7.7.3"), temp);
 
         sut = new KnowledgeBaseServiceImpl(repoProperties, kbProperties, entityManager);
 
@@ -164,7 +171,7 @@ public class FullTextIndexUpgradeTest
                 .withLabelContainingAnyOf("Green", "case");
 
         List<KBHandle> results;
-        try (RepositoryConnection conn = sut.getConnection(kb)) {
+        try (var conn = sut.getConnection(kb)) {
             results = builder.asHandles(conn, true);
         }
 

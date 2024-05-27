@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.annotatorjs;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.wicket.ServletContextUtils.referenceToUrl;
+import static de.tudarmstadt.ukp.inception.support.wicket.ServletContextUtils.referenceToUrl;
 import static java.util.Arrays.asList;
 
 import javax.servlet.ServletContext;
@@ -27,14 +27,15 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
 import de.tudarmstadt.ukp.inception.annotatorjs.resources.AnnotatorJsCssResourceReference;
 import de.tudarmstadt.ukp.inception.annotatorjs.resources.AnnotatorJsJavascriptResourceReference;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
+import de.tudarmstadt.ukp.inception.editor.AnnotationEditorFactory;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
+import de.tudarmstadt.ukp.inception.editor.view.DocumentViewFactory;
 import de.tudarmstadt.ukp.inception.externaleditor.ExternalAnnotationEditorBase;
 import de.tudarmstadt.ukp.inception.externaleditor.model.AnnotationEditorProperties;
-import de.tudarmstadt.ukp.inception.externaleditor.xhtml.XHtmlXmlDocumentIFrameViewFactory;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 
 public class AnnotatorJsHtmlAnnotationEditor
@@ -42,8 +43,8 @@ public class AnnotatorJsHtmlAnnotationEditor
 {
     private static final long serialVersionUID = -3358207848681467993L;
 
-    private @SpringBean AnnotatorJsHtmlAnnotationEditorFactory editorFactory;
-    private @SpringBean XHtmlXmlDocumentIFrameViewFactory viewFactory;
+    private @SpringBean(name = "annotatorJsHtmlAnnotationEditorFactory") AnnotationEditorFactory editorFactory;
+    private @SpringBean(name = "xHtmlXmlDocumentIFrameViewFactory") DocumentViewFactory viewFactory;
     private @SpringBean DocumentService documentService;
     private @SpringBean ServletContext servletContext;
 

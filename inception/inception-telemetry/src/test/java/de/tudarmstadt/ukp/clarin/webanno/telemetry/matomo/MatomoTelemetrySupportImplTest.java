@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.telemetry.matomo;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.fromJsonString;
 import static de.tudarmstadt.ukp.clarin.webanno.telemetry.matomo.MatomoTelemetrySupportImpl.CURRENT_SETTINGS_VERSION;
+import static de.tudarmstadt.ukp.inception.support.json.JSONUtil.fromJsonString;
 import static java.lang.String.format;
 import static java.net.URLDecoder.decode;
 import static java.nio.charset.StandardCharsets.UTF_8;

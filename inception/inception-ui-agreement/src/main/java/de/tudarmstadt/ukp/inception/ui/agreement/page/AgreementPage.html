@@ -19,43 +19,51 @@
 <html xmlns:wicket="http://wicket.apache.org">
 <body>
   <wicket:extend>
-    <div class="flex-content flex-h-container flex-gutter">
-      <div class="flex-content flex-v-container">
-        <form wicket:id="agreementForm" class="flex-v-container flex-gutter">
-          <div class="page-header">
-            <h1><wicket:container wicket:id="name"/></h1>
-          </div>
-          <div class="card">
+    <div class="flex-content flex-v-container flex-gutter">
+      <h1 class="px-3"><wicket:container wicket:id="name"/></h1>
+      <div class="flex-content flex-h-container flex-gutter">
+        <form wicket:id="agreementForm" class="d-flex flex-column" style="min-width: 30em;">
+          <div class="card flex-fill">
             <div class="card-header">
               <wicket:message key="settings"/>
               <span class="float-end">
                 <a wicket:id="agreementHelpLink"/>
               </span>
             </div>
-            <div class="card-body flex-h-container">
-              <div class="flex-content">
-                <div class="row form-row" wicket:enclosure="feature">
-                  <label wicket:for="feature" class="col-sm-4 col-form-label">
-                  <wicket:label key="feature"/></label>
-                  <div class="col-sm-8">
-                    <select wicket:id="feature" class="form-select" data-container="body"/>
-                  </div>
-                </div>
-                <div class="row form-row" wicket:enclosure="measure">
-                  <label wicket:for="measure" class="col-sm-4 col-form-label">
-                  <wicket:label key="measure"/></label>
-                  <div class="col-sm-8">
-                    <select wicket:id="measure" class="form-select" data-container="body"/>
-                  </div>
-                </div>
+            <div class="card-body scrolling d-flex flex-column">
+              <div class="form-row form-floating" wicket:enclosure="feature">
+                <select wicket:id="feature" class="form-select"/>
+                <label wicket:for="feature"><wicket:label key="feature"/></label>
               </div>
-              <div wicket:id="traitsContainer" class="flex-content">
+              <div class="form-row form-floating" wicket:enclosure="measure">
+                <select wicket:id="measure" class="form-select"/>
+                <label wicket:for="measure"><wicket:label key="measure"/></label>
+              </div>
+              <div wicket:id="traitsContainer">
                 <div wicket:id="traits"></div>
+              </div>
+              <div class="flex-fill d-flex flex-column">
+                <div class="d-flex flex-column flex-grow-1 form-row form-floating">
+                  <select wicket:id="annotators" class="form-select flex-grow-1" style="min-height: 10em;"/>
+                  <label wicket:for="annotators"><wicket:label key="annotators"/></label>
+                </div>
+                <div class="d-flex flex-column flex-grow-1 form-row form-floating">
+                  <select wicket:id="documents" class="form-select flex-grow-1" style="min-height: 10em;"/>
+                  <label wicket:for="documents"><wicket:label key="documents"/></label>
+                </div>
               </div>
             </div>
             <div class="card-footer flex-h-container">
               <div class="flex-content text-end">
-                <input type="submit" wicket:id="run" class="btn btn-primary" wicket:message="value:run"></input>
+                <button wicket:id="export" class="btn btn-secondary">
+                  <i class="fas fa-file-download me-2"/><wicket:message key="export"/>
+                </button>
+                <button wicket:id="calculatePairwiseAgreement" class="btn btn-primary">
+                  <i class="fas fa-play me-2"/><wicket:message key="calculatePairwiseAgreement"/>
+                </button>
+                <button wicket:id="calculatePerDocumentAgreement" class="btn btn-primary">
+                  <i class="fas fa-play me-2"/><wicket:message key="calculatePerDocumentAgreement"/>
+                </button>
               </div>
             </div>
           </div>

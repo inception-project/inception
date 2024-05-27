@@ -15,7 +15,7 @@
 // limitations under the License.
 
 [[sect_versioning]]
-= Project Versioning
+= 🧪 Project Versioning
 
 ====
 CAUTION: Experimental feature. To use this functionality, you need to enable it first by adding `versioning.enabled=true` to the `settings.properties` file (see the <<admin-guide.adoc#sect_settings, Admin Guide>>).

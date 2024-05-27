@@ -18,17 +18,21 @@
 package de.tudarmstadt.ukp.inception.workload.matrix.management.support;
 
 import static de.tudarmstadt.ukp.inception.workload.matrix.management.support.DocumentMatrixSortKey.DOCUMENT_NAME;
-import static java.util.stream.Collectors.toList;
+import static java.util.Collections.emptyList;
+import static java.util.regex.Pattern.CASE_INSENSITIVE;
+import static java.util.stream.Collectors.toCollection;
+import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
+import static org.apache.commons.lang3.StringUtils.containsIgnoreCase;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.wicket.extensions.markup.html.repeater.data.sort.SortOrder.ASCENDING;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.function.Predicate;
 import java.util.regex.Pattern;
-import java.util.stream.Stream;
+import java.util.regex.PatternSyntaxException;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.filter.IFilterStateLocator;
 import org.apache.wicket.extensions.markup.html.repeater.util.SortableDataProvider;
 import org.apache.wicket.model.IModel;
@@ -36,12 +40,12 @@ import org.apache.wicket.model.Model;
 
 public class DocumentMatrixDataProvider
     extends SortableDataProvider<DocumentMatrixRow, DocumentMatrixSortKey>
-    implements IFilterStateLocator<Filter>, Serializable
+    implements IFilterStateLocator<DocumentMatrixFilterState>, Serializable
 {
     private static final long serialVersionUID = -3869576909905361406L;
 
     private List<DocumentMatrixRow> matrixData;
-    private Filter filter;
+    private DocumentMatrixFilterState filter;
 
     public DocumentMatrixDataProvider(List<DocumentMatrixRow> aData)
     {
@@ -64,7 +68,7 @@ public class DocumentMatrixDataProvider
     public Iterator<? extends DocumentMatrixRow> iterator(long aFirst, long aCount)
     {
         // Apply Filter
-        List<DocumentMatrixRow> newList = getMatrixData();
+        var newList = getMatrixData();
 
         // Apply sorting
         newList.sort((o1, o2) -> {
@@ -87,21 +91,33 @@ public class DocumentMatrixDataProvider
 
     private List<DocumentMatrixRow> filter(List<DocumentMatrixRow> aData)
     {
-        Stream<DocumentMatrixRow> rowStream = matrixData.stream();
+        var rowStream = matrixData.stream();
 
-        if (StringUtils.isNotBlank(filter.getDocumentName())) {
+        String documentNameFilter = filter.getDocumentName();
+        if (isNotBlank(documentNameFilter)) {
             if (filter.isMatchDocumentNameAsRegex()) {
-                Predicate<String> p = Pattern.compile(".*(" + filter.getDocumentName() + ").*")
-                        .asMatchPredicate();
-                rowStream = rowStream.filter(row -> p.test(row.getSourceDocument().getName()));
+                try {
+                    var p = Pattern.compile(".*(" + documentNameFilter + ").*", CASE_INSENSITIVE)
+                            .asMatchPredicate();
+                    rowStream = rowStream.filter(row -> p.test(row.getSourceDocument().getName()));
+                }
+                catch (PatternSyntaxException e) {
+                    return emptyList();
+                }
             }
             else {
-                rowStream = rowStream.filter(row -> row.getSourceDocument().getName()
-                        .contains(filter.getDocumentName()));
+                rowStream = rowStream
+                        .filter(row -> containsIgnoreCase(row.getSourceDocument().getName(),
+                                documentNameFilter));
             }
         }
 
-        return rowStream.collect(toList());
+        // Filter by document states
+        if (isNotEmpty(filter.getStates())) {
+            rowStream = rowStream.filter(doc -> filter.getStates().contains(doc.getState()));
+        }
+
+        return rowStream.collect(toCollection(ArrayList::new));
     }
 
     @Override
@@ -111,13 +127,13 @@ public class DocumentMatrixDataProvider
     }
 
     @Override
-    public Filter getFilterState()
+    public DocumentMatrixFilterState getFilterState()
     {
         return filter;
     }
 
     @Override
-    public void setFilterState(Filter aState)
+    public void setFilterState(DocumentMatrixFilterState aState)
     {
         filter = aState;
     }

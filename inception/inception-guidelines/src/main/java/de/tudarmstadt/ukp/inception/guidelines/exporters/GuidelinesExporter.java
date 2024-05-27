@@ -37,9 +37,9 @@ import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExporter;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.support.ZipUtils;
 import de.tudarmstadt.ukp.inception.guidelines.GuidelinesService;
 import de.tudarmstadt.ukp.inception.guidelines.config.GuidelinesServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.support.io.ZipUtils;
 
 /**
  * <p>

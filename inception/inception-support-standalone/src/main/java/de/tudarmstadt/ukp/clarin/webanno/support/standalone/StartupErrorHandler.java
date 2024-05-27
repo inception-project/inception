@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.support.standalone;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.db.LiquibaseLockManager.PROP_FORCE_RELEASE_LOCK;
+import static de.tudarmstadt.ukp.inception.support.db.LiquibaseLockManager.PROP_FORCE_RELEASE_LOCK;
 import static javax.swing.JOptionPane.ERROR_MESSAGE;
 import static javax.swing.WindowConstants.DISPOSE_ON_CLOSE;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCause;
@@ -33,8 +33,8 @@ import javax.swing.JOptionPane;
 
 import org.springframework.boot.context.event.ApplicationFailedEvent;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.db.LockRemovedException;
-import de.tudarmstadt.ukp.clarin.webanno.support.db.NotLockedException;
+import de.tudarmstadt.ukp.inception.support.db.LockRemovedException;
+import de.tudarmstadt.ukp.inception.support.db.NotLockedException;
 import liquibase.exception.LockException;
 
 public class StartupErrorHandler

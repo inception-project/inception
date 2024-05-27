@@ -22,14 +22,13 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.apache.wicket.model.IModel;
+import org.springframework.core.annotation.Order;
 
 import com.networknt.schema.JsonSchema;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.Icon;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
-import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
-import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
-import de.tudarmstadt.ukp.clarin.webanno.support.WatchedResourceFile;
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebarFactory_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
@@ -38,6 +37,8 @@ import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.preferences.ClientSidePreferencesKey;
 import de.tudarmstadt.ukp.inception.preferences.ClientSideUserPreferencesProvider;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.support.io.WatchedResourceFile;
+import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 
 /**
  * <p>
@@ -45,6 +46,7 @@ import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
  * {@link AnnotationBrowserSidebarAutoConfiguration#annotationBrowserSidebarFactory}.
  * </p>
  */
+@Order(1000)
 public class DiamSidebarFactory
     extends AnnotationSidebarFactory_ImplBase
     implements ClientSideUserPreferencesProvider

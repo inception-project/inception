@@ -20,10 +20,13 @@
 
 <body>
   <wicket:panel>
-    <div wicket:id="finishDocumentDialog"></div>
+    <div wicket:id="dialog"></div>
     <div class="action-bar-group">
       <div class="btn-group">
-        <button wicket:id="showFinishDocumentDialog" class="btn btn-action-bar" type="button">
+        <button wicket:id="showResetDocumentDialog" class="btn btn-action-bar" type="button" title="Reset document">
+          <i class="fas fa-recycle"></i>
+        </button>
+        <button wicket:id="showFinishDocumentDialog" class="btn btn-action-bar" type="button"  wicket:message="title:stateToggle">
           <i wicket:id="state"></i>
         </button>
       </div>

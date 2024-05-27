@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering;
 
-import static de.tudarmstadt.ukp.inception.schema.adapter.TypeUtil.getUiLabelText;
+import static de.tudarmstadt.ukp.inception.schema.api.feature.TypeUtil.getUiLabelText;
 
 import org.springframework.core.annotation.Order;
 

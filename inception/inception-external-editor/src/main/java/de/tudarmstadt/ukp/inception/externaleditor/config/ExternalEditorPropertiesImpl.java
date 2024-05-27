@@ -26,6 +26,7 @@ public class ExternalEditorPropertiesImpl
     private boolean blockStyle = true;
 
     private boolean blockImg = true;
+    private Source allowImgSource = Source.NONE;
     private boolean blockEmbed = true;
     private boolean blockAudio = true;
     private boolean blockObject = true;
@@ -37,10 +38,31 @@ public class ExternalEditorPropertiesImpl
         return blockStyle;
     }
 
+    public void setBlockStyle(boolean aBlockStyle)
+    {
+        blockStyle = aBlockStyle;
+    }
+
     @Override
     public boolean isBlockImg()
     {
         return blockImg;
+    }
+
+    public void setBlockImg(boolean aBlockImg)
+    {
+        blockImg = aBlockImg;
+    }
+
+    @Override
+    public Source getAllowImgSource()
+    {
+        return allowImgSource;
+    }
+
+    public void setAllowImgSource(Source aAllowImgSource)
+    {
+        allowImgSource = aAllowImgSource;
     }
 
     @Override
@@ -49,10 +71,20 @@ public class ExternalEditorPropertiesImpl
         return blockEmbed;
     }
 
+    public void setBlockEmbed(boolean aBlockEmbed)
+    {
+        blockEmbed = aBlockEmbed;
+    }
+
     @Override
     public boolean isBlockAudio()
     {
         return blockAudio;
+    }
+
+    public void setBlockAudio(boolean aBlockAudio)
+    {
+        blockAudio = aBlockAudio;
     }
 
     @Override
@@ -61,9 +93,19 @@ public class ExternalEditorPropertiesImpl
         return blockObject;
     }
 
+    public void setBlockObject(boolean aBlockObject)
+    {
+        blockObject = aBlockObject;
+    }
+
     @Override
     public boolean isBlockVideo()
     {
         return blockVideo;
+    }
+
+    public void setBlockVideo(boolean aBlockVideo)
+    {
+        blockVideo = aBlockVideo;
     }
 }

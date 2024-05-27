@@ -25,7 +25,7 @@ import java.util.List;
 import org.apache.uima.collection.CollectionReaderDescription;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
-import org.apache.wicket.request.resource.CssResourceReference;
+import org.apache.wicket.request.resource.ResourceReference;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -83,7 +83,7 @@ public class IntertextFormatSupport
     // }
 
     @Override
-    public List<CssResourceReference> getCssStylesheets()
+    public List<ResourceReference> getCssStylesheets()
     {
         return asList(IntertextCssReference.get());
     }

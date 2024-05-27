@@ -1,0 +1,68 @@
+/*
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+.action-bar {
+  @extend .border-bottom;
+  padding: 5px;
+  background-color: var(--bs-card-cap-bg);
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  
+  @include media-breakpoint-down(xl) {
+    font-size: 1.3vw !important;
+  }
+
+  @include media-breakpoint-down(xl) {
+    .btn {
+      // Bootstrap forces the font size in btns but we want buttons in the action bar to follow
+      // the action bar scaling
+      font-size: inherit !important;
+    }
+  }
+  
+  .btn-group, .input-group {
+    @extend .bg-body;
+    @extend .px-0;
+    @extend .mx-1;
+    border-radius: var(--bs-border-radius);
+  }
+  
+  .btn-action-bar {
+    @extend .btn-outline-secondary;
+    
+    @include media-breakpoint-down(xl) {
+      --bs-btn-padding-x: 1vw !important;
+      --bs-btn-padding-y: 0.55vw !important;
+    }
+  }
+    
+  .action-bar-group {
+    margin-left: 0.25rem;
+    margin-right: 0.25rem;
+    padding-top: 0.25rem;
+    padding-bottom: 0.25rem;
+    background-color: var(--bs-light-border-subtle);
+    border-radius: var(--bs-border-radius);
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    flex: 0;
+  }
+}

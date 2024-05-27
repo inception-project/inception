@@ -20,10 +20,10 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>29.0-SNAPSHOT</version>
+    <version>33.0-SNAPSHOT</version>
   </parent>
   <artifactId>inception-boot-loader</artifactId>
-  <name>INCEpTION - Boot loader</name>
+  <name>INCEpTION - App - Boot loader</name>
   <packaging>jar</packaging>
   <properties>
     <maven.compiler.target>1.8</maven.compiler.target>

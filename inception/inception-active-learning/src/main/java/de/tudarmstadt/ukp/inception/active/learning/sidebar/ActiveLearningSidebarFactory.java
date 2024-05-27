@@ -19,9 +19,9 @@ package de.tudarmstadt.ukp.inception.active.learning.sidebar;
 
 import org.apache.wicket.Component;
 import org.apache.wicket.model.IModel;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.annotation.Order;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebarFactory_ImplBase;
@@ -37,12 +37,12 @@ import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
  * {@link ActiveLearningAutoConfiguration#activeLearningSidebarFactory}.
  * </p>
  */
+@Order(4000)
 public class ActiveLearningSidebarFactory
     extends AnnotationSidebarFactory_ImplBase
 {
     private final RecommendationService recommendationService;
 
-    @Autowired
     public ActiveLearningSidebarFactory(RecommendationService aRecommendationService)
     {
         recommendationService = aRecommendationService;

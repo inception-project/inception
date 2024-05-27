@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.relation;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.FEAT_REL_SOURCE;
-import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.FEAT_REL_TARGET;
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.FEAT_REL_SOURCE;
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.FEAT_REL_TARGET;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
 
@@ -33,11 +33,11 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.fit.util.FSUtil;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.DiffAdapter_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.Position;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
+import de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil;
 
 public class RelationDiffAdapter
     extends DiffAdapter_ImplBase
@@ -80,7 +80,7 @@ public class RelationDiffAdapter
     }
 
     @Override
-    public Position getPosition(int aCasId, FeatureStructure aFS, String aFeature, String aRole,
+    public Position getPosition(FeatureStructure aFS, String aFeature, String aRole,
             int aLinkTargetBegin, int aLinkTargetEnd, LinkCompareBehavior aLinkCompareBehavior)
     {
         Type type = aFS.getType();
@@ -107,7 +107,7 @@ public class RelationDiffAdapter
                     aLinkTargetEnd);
         }
 
-        return new RelationPosition(collectionId, documentId, aCasId, getType(),
+        return new RelationPosition(collectionId, documentId, getType(),
                 sourceFS != null ? sourceFS.getBegin() : -1,
                 sourceFS != null ? sourceFS.getEnd() : -1,
                 sourceFS != null ? sourceFS.getCoveredText() : null,

@@ -4,22 +4,20 @@ import * as textLayer from './page/textLayer'
 import PDFAnnoPage from './page/pdf/PDFAnnoPage'
 import { dispatchWindowEvent } from './shared/util'
 import EventEmitter from 'events'
-import AnnotationContainer from './core/src/annotation/container'
-import AbstractAnnotation from './core/src/annotation/abstract'
+import AnnotationContainer from './core/src/model/AnnotationContainer'
+import AbstractAnnotation from './core/src/model/AbstractAnnotation'
 import { installSpanSelection } from './core/src/UI/span'
 import { installRelationSelection } from './core/src/UI/relation'
-import { CompactAnnotatedText, CompactSpan, DiamAjax, Offsets, VID } from '@inception-project/inception-js-api'
+import { unpackCompactAnnotatedTextV2, DiamAjax, Offsets, AnnotatedText, Span, Relation, TextMarker } from '@inception-project/inception-js-api'
+import { CompactAnnotatedText } from '@inception-project/inception-js-api/src/model/compact_v2'
 import { DiamLoadAnnotationsOptions } from '@inception-project/inception-js-api/src/diam/DiamAjax'
-import SpanAnnotation from './core/src/annotation/span'
+import SpanAnnotation from './core/src/model/SpanAnnotation'
 import { getGlyphAtTextOffset, getGlyphsInRange } from './page/textLayer'
-import RelationAnnotation from './core/src/annotation/relation'
+import RelationAnnotation from './core/src/model/RelationAnnotation'
 import { createRect, mapToDocumentCoordinates, mergeRects } from './core/src/render/renderSpan'
 import { transform } from './core/src/render/appendChild'
-import { makeMarkerMap } from '@inception-project/inception-js-api/src/model/compact/CompactAnnotatedText'
-import { CompactTextMarker } from '@inception-project/inception-js-api/src/model/compact/CompactTextMarker'
-import { CompactRelation } from '@inception-project/inception-js-api/src/model/compact/CompactRelation'
-import { CompactAnnotationMarker } from '@inception-project/inception-js-api/src/model/compact/CompactAnnotationMarker'
 import { Rectangle } from '../vmodel/Rectangle'
+import AnnotationDetailPopOver from '@inception-project/inception-js-api/src/widget/AnnotationDetailPopOver.svelte'
 
 // TODO make it a global const.
 // const svgLayerId = 'annoLayer'
@@ -30,6 +28,9 @@ let annotationContainer: AnnotationContainer
 let diamAjax: DiamAjax
 let currentFocusPage: number
 let pagechangeEventCounter: number
+
+let data: AnnotatedText | undefined
+let popover: AnnotationDetailPopOver
 
 export async function initPdfAnno (ajax: DiamAjax): Promise<void> {
   globalThis.globalEvent = new EventEmitter()
@@ -82,10 +83,24 @@ export async function initPdfAnno (ajax: DiamAjax): Promise<void> {
   installSpanSelection()
   installRelationSelection()
 
+  popover = new AnnotationDetailPopOver({
+    target: document.body,
+    props: {
+      root: document.body,
+      ajax: diamAjax
+    }
+  })
+
   // Show a content.
   displayViewer()
 
   return initPromise
+}
+
+export function destroy() {
+  if (popover?.$destroy) {
+    popover.$destroy()
+  }
 }
 
 function onPageRendered (ev) {
@@ -198,13 +213,13 @@ function renderAnno () {
 
   dispatchWindowEvent('annotationlayercreated')
 
-  renderAnnotations()
+  rerenderAnnotations()
 }
 
 /**
  * Render all annotations.
  */
-function renderAnnotations () {
+function rerenderAnnotations () {
   const annotations = annotationContainer.getAllAnnotations()
   if (annotations.length === 0) {
     return
@@ -274,42 +289,44 @@ export function getAnnotations () {
 
   const options : DiamLoadAnnotationsOptions = {
     range: [extendedBegin, extendedEnd],
-    includeText: false
+    includeText: false,
+    format: 'compact_v2'
   }
 
   diamAjax.loadAnnotations(options).then((doc: CompactAnnotatedText) => {
-    annotationContainer.clear()
-
-    const annotationMarkers = makeMarkerMap(doc.annotationMarkers)
-
-    console.log(`Loaded ${doc.spans?.length || '0'} spans and ${doc.relations?.length || '0'} relations in range [${doc.window}]`)
-
-    if (doc.spans) {
-      for (const s of doc.spans) {
-        makeSpan(s, doc, annotationMarkers)
-      }
-    }
-
-    if (doc.relations) {
-      for (const r of doc.relations) {
-        makeRelation(r, annotationMarkers)
-      }
-    }
-
-    if (doc.textMarkers) {
-      for (const m of doc.textMarkers) {
-        makeTextMarker(m, doc)
-      }
-    }
-
-    renderAnnotations()
+    data = unpackCompactAnnotatedTextV2(doc)
+    renderAnnotations(data)
   })
 }
 
-function makeSpan (s: CompactSpan, doc: CompactAnnotatedText, annotationMarkers: Map<VID, Array<CompactAnnotationMarker>>) {
-  const offsets = s[1]
-  const begin = offsets[0][0] + doc.window[0]
-  const end = offsets[0][1] + doc.window[0]
+function renderAnnotations (doc: AnnotatedText): void {
+  const startTime = new Date().getTime()
+
+  annotationContainer.clear()
+
+  if (doc.spans) {
+    console.log(`Loaded ${doc.spans.size} span annotations`)
+    doc.spans.forEach(span => renderSpan(doc, span))
+  }
+
+  if (doc.relations) {
+    console.log(`Loaded ${doc.relations.size} relations annotations`)
+    doc.relations.forEach(relation => renderRelation(doc, relation))
+  }
+
+  if (doc.textMarkers) {
+    doc.textMarkers.forEach(marker => makeTextMarker(doc, marker))
+  }
+
+  rerenderAnnotations()
+
+  const endTime = new Date().getTime()
+  console.log(`Client-side rendering took ${Math.abs(endTime - startTime)}ms`)
+}
+
+function renderSpan (doc: AnnotatedText, span: Span) {
+  const begin = span.offsets[0][0] + doc.window[0]
+  const end = span.offsets[0][1] + doc.window[0]
   const range: Offsets = [begin, end]
 
   const page = textLayer.findPageForTextOffset(begin)?.index
@@ -323,40 +340,47 @@ function makeSpan (s: CompactSpan, doc: CompactAnnotatedText, annotationMarkers:
     return
   }
 
-  const span = new SpanAnnotation()
-  span.vid = `${s[0]}`
-  span.textRange = range
-  span.page = page
-  span.color = s[2]?.c || '#FFF'
-  span.text = s[2]?.l || ''
-  span.rectangles = rectangles
-  annotationMarkers.get(s[0])?.forEach(m => span.classList.push(`marker-${m[0]}`))
-  span.save()
+  const spanAnnotation = new SpanAnnotation()
+  spanAnnotation.source = span
+  spanAnnotation.vid = span.vid
+  spanAnnotation.textRange = range
+  spanAnnotation.page = page
+  spanAnnotation.color = span.color || '#FFF'
+  spanAnnotation.text = span.label || ''
+  spanAnnotation.rectangles = rectangles
+
+  const ms = doc.annotationMarkers.get(spanAnnotation.vid) || []
+  ms.forEach(m => spanAnnotation.classList.push(`marker-${m.type}`))
+
+  spanAnnotation.save()
 }
 
-function makeRelation (r: CompactRelation, annotationMarkers: Map<VID, Array<CompactAnnotationMarker>>) {
-  const source = annotationContainer.findById(r[1][0][0])
-  const target = annotationContainer.findById(r[1][1][0])
+function renderRelation (doc: AnnotatedText, relation: Relation) {
+  const source = annotationContainer.findById(relation.arguments[0].targetId)
+  const target = annotationContainer.findById(relation.arguments[1].targetId)
 
   if (!source || !target) {
-    console.warn(`Cannot find source or target for relation ${r[0]}`)
+    console.warn(`Cannot find source or target for relation ${relation[0]}`)
     return
   }
 
-  const rel = new RelationAnnotation()
-  rel.vid = `${r[0]}`
-  rel.rel1Annotation = source as SpanAnnotation
-  rel.rel2Annotation = target as SpanAnnotation
-  rel.color = r[2]?.c
-  rel.text = r[2]?.l || null
-  annotationMarkers.get(r[0])?.forEach(m => rel.classList.push(`marker-${m[0]}`))
-  rel.save()
+  const relationAnnotation = new RelationAnnotation()
+  relationAnnotation.source = relation
+  relationAnnotation.vid = relation.vid
+  relationAnnotation.rel1Annotation = source as SpanAnnotation
+  relationAnnotation.rel2Annotation = target as SpanAnnotation
+  relationAnnotation.color = relation.color || '#FFF'
+  relationAnnotation.text = relation.label || ''
+
+  const ms = doc.annotationMarkers.get(relationAnnotation.vid) || []
+  ms.forEach(m => relationAnnotation.classList.push(`marker-${m.type}`))
+
+  relationAnnotation.save()
 }
 
-function makeTextMarker (m: CompactTextMarker, doc: CompactAnnotatedText) {
-  const offsets = m[1]
-  const begin = offsets[0][0] + doc.window[0]
-  const end = offsets[0][1] + doc.window[0]
+function makeTextMarker (doc: AnnotatedText, marker: TextMarker) {
+  const begin = marker.offsets[0][0] + doc.window[0]
+  const end = marker.offsets[0][1] + doc.window[0]
   const range: Offsets = [begin, end]
 
   const page = textLayer.findPageForTextOffset(begin)?.index
@@ -370,14 +394,14 @@ function makeTextMarker (m: CompactTextMarker, doc: CompactAnnotatedText) {
     return
   }
 
-  const marker = new SpanAnnotation()
-  marker.textRange = range
-  marker.page = page
-  marker.knob = false
-  marker.border = false
-  marker.rectangles = rectangles
-  marker.classList = [`marker-${m[0]}`]
-  marker.save()
+  const markerAnnotation = new SpanAnnotation()
+  markerAnnotation.textRange = range
+  markerAnnotation.page = page
+  markerAnnotation.knob = false
+  markerAnnotation.border = false
+  markerAnnotation.rectangles = rectangles
+  markerAnnotation.classList = [`marker-$${marker.type}`]
+  markerAnnotation.save()
 }
 
 function calculateRectangles (range: [number, number]): Rectangle[] | null {

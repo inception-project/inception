@@ -18,8 +18,7 @@
 
 package de.tudarmstadt.ukp.clarin.webanno.curation.casdiff;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.RELATION_TYPE;
-import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.SPAN_TYPE;
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.RELATION_TYPE;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
 
@@ -34,7 +33,6 @@ import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
-import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.fit.factory.JCasFactory;
@@ -48,42 +46,46 @@ import org.apache.uima.util.CasCreationUtils;
 import org.dkpro.core.io.conll.Conll2006Reader;
 import org.dkpro.core.io.xmi.XmiReader;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoTsv2Reader;
 import de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoTsv3XReader;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
+import de.tudarmstadt.ukp.inception.support.WebAnnoConst;
 
 public class CurationTestUtils
 {
-
     public static final String HOST_TYPE = "webanno.custom.LinkHost";
     public static final String LINK_TYPE = "webanno.custom.LinkType";
+    public static final String SLOT_FILLER_TYPE = "webanno.custom.SlotFiller";
 
     public static JCas loadWebAnnoTsv3(String aPath) throws UIMAException, IOException
     {
-        CollectionReader reader = createReader(WebannoTsv3XReader.class,
+        var reader = createReader( //
+                WebannoTsv3XReader.class, //
                 WebannoTsv3XReader.PARAM_SOURCE_LOCATION, "src/test/resources/" + aPath);
-        JCas jcas = JCasFactory.createJCas();
+
+        var jcas = JCasFactory.createJCas();
         reader.getNext(jcas.getCas());
         return jcas;
     }
 
     public static JCas loadWebAnnoTsv3(File aPath) throws UIMAException, IOException
     {
-        CollectionReader reader = createReader(WebannoTsv3XReader.class,
+        var reader = createReader( //
+                WebannoTsv3XReader.class, //
                 WebannoTsv3XReader.PARAM_SOURCE_LOCATION, aPath);
-        JCas jcas = JCasFactory.createJCas();
+
+        var jcas = JCasFactory.createJCas();
         reader.getNext(jcas.getCas());
         return jcas;
     }
 
-    public static Map<String, List<CAS>> load(String... aPaths) throws UIMAException, IOException
+    public static Map<String, CAS> load(String... aPaths) throws UIMAException, IOException
     {
-        Map<String, List<CAS>> casByUser = new LinkedHashMap<>();
+        var casByUser = new LinkedHashMap<String, CAS>();
         int n = 1;
-        for (String path : aPaths) {
-            CAS cas = readConll2006(path);
-            casByUser.put("user" + n, asList(cas));
+        for (var path : aPaths) {
+            var cas = readConll2006(path);
+            casByUser.put("user" + n, cas);
             n++;
         }
         return casByUser;
@@ -224,22 +226,22 @@ public class CurationTestUtils
             List<String> aFeatures, String aAttacheType)
         throws Exception
     {
-        TypeSystemDescription type = new TypeSystemDescription_impl();
-        if (aType.equals(SPAN_TYPE)) {
-            TypeDescription td = type.addType(aTypeName, "", CAS.TYPE_NAME_ANNOTATION);
-            for (String feature : aFeatures) {
+        var type = new TypeSystemDescription_impl();
+        if (SpanLayerSupport.TYPE.equals(aType)) {
+            var td = type.addType(aTypeName, "", CAS.TYPE_NAME_ANNOTATION);
+            for (var feature : aFeatures) {
                 td.addFeature(feature, "", CAS.TYPE_NAME_STRING);
             }
 
         }
         else if (aType.equals(RELATION_TYPE)) {
-            TypeDescription td = type.addType(aTypeName, "", CAS.TYPE_NAME_ANNOTATION);
+            var td = type.addType(aTypeName, "", CAS.TYPE_NAME_ANNOTATION);
 
             td.addFeature(WebAnnoConst.FEAT_REL_TARGET, "", aAttacheType);
             td.addFeature(WebAnnoConst.FEAT_REL_SOURCE, "", aAttacheType);
 
-            for (String feature : aFeatures) {
-                td.addFeature(feature, "", "uima.cas.String");
+            for (var feature : aFeatures) {
+                td.addFeature(feature, "", CAS.TYPE_NAME_STRING);
             }
         }
 
@@ -248,8 +250,8 @@ public class CurationTestUtils
 
     public static void makeLinkHostFS(JCas aCas, int aBegin, int aEnd, FeatureStructure... aLinks)
     {
-        Type hostType = aCas.getTypeSystem().getType(HOST_TYPE);
-        AnnotationFS hostA1 = aCas.getCas().createAnnotation(hostType, aBegin, aEnd);
+        var hostType = aCas.getTypeSystem().getType(HOST_TYPE);
+        var hostA1 = aCas.getCas().createAnnotation(hostType, aBegin, aEnd);
         hostA1.setFeatureValue(hostType.getFeatureByBaseName("links"),
                 FSCollectionFactory.createFSArray(aCas, asList(aLinks)));
         aCas.getCas().addFsToIndexes(hostA1);
@@ -258,25 +260,30 @@ public class CurationTestUtils
     public static AnnotationFS makeLinkHostMultiSPanFeatureFS(JCas aCas, int aBegin, int aEnd,
             Feature aSpanFeature, String aValue, FeatureStructure... aLinks)
     {
-        Type hostType = aCas.getTypeSystem().getType(HOST_TYPE);
-        AnnotationFS hostA1 = aCas.getCas().createAnnotation(hostType, aBegin, aEnd);
+        var hostType = aCas.getTypeSystem().getType(HOST_TYPE);
+
+        var hostA1 = aCas.getCas().createAnnotation(hostType, aBegin, aEnd);
         hostA1.setFeatureValue(hostType.getFeatureByBaseName("links"),
                 FSCollectionFactory.createFSArray(aCas, asList(aLinks)));
         hostA1.setStringValue(aSpanFeature, aValue);
         aCas.getCas().addFsToIndexes(hostA1);
+
         return hostA1;
     }
 
     public static FeatureStructure makeLinkFS(JCas aCas, String aSlotLabel, int aTargetBegin,
             int aTargetEnd)
     {
-        Token token1 = new Token(aCas, aTargetBegin, aTargetEnd);
-        token1.addToIndexes();
+        var slotFillerType = aCas.getTypeSystem().getType(SLOT_FILLER_TYPE);
 
-        Type linkType = aCas.getTypeSystem().getType(LINK_TYPE);
-        FeatureStructure linkA1 = aCas.getCas().createFS(linkType);
+        var filler1 = aCas.getCas().createAnnotation(slotFillerType, aTargetBegin, aTargetEnd);
+        aCas.getCas().addFsToIndexes(filler1);
+
+        var linkType = aCas.getTypeSystem().getType(LINK_TYPE);
+
+        var linkA1 = aCas.getCas().createFS(linkType);
         linkA1.setStringValue(linkType.getFeatureByBaseName("role"), aSlotLabel);
-        linkA1.setFeatureValue(linkType.getFeatureByBaseName("target"), token1);
+        linkA1.setFeatureValue(linkType.getFeatureByBaseName("target"), filler1);
         aCas.getCas().addFsToIndexes(linkA1);
 
         return linkA1;

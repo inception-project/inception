@@ -19,6 +19,13 @@ import { calculateEndOffset, calculateStartOffset } from './OffsetUtils'
 
 export type ViewportTrackerCallback = (range: [number, number]) => void
 
+export type ViewportTrackerOptions = {
+  sectionSelector?: string,
+  ignoreSelector?: string
+}
+
+export const NO_TRACKING_CLASS = 'data-i7n-no-tracking'
+
 export class ViewportTracker {
   private _visibleElements = new Set<Element>()
   private _currentRange: [number, number] = [0, 0]
@@ -31,18 +38,23 @@ export class ViewportTracker {
   private debounceDelay = 250
   private callback: ViewportTrackerCallback
 
-  private sectionSelector?: string
+  private options?: ViewportTrackerOptions
 
   /**
    * @param element the element containing the elemnts to track
    * @param callback the callback to invoke when the visible elements change
-   * @param sectionSelector optional CSS selector indicating which elements are considered sections
-   * and should be tracked as a whole
+   * @param options optional CSS selector indicating which elements are considered sections
+   * and should be tracked as a whole or an options object
    */
-  public constructor (element: Element, callback: ViewportTrackerCallback, sectionSelector?: string) {
+  public constructor (element: Element, callback: ViewportTrackerCallback, options?: string | ViewportTrackerOptions, ignoreClasses?: string[]) {
     this.root = element
     this.callback = callback
-    this.sectionSelector = sectionSelector
+    if (typeof options === 'string') {
+      this.options = { sectionSelector: options }
+    }
+    else {
+      this.options = options;
+    }
 
     this.initializeElementTracking(this.root)
   }
@@ -56,13 +68,21 @@ export class ViewportTracker {
   }
 
   private shouldTrack (element: Element): boolean {
+    if (this.options?.ignoreSelector && element.matches(this.options.ignoreSelector)) {
+      return false
+    }
+
     const style = getComputedStyle(element)
     if (!style.display) {
       return false
     }
 
+    if (!element.textContent) {
+      return false;
+    }
+
     return style.display === 'block' || style.display === 'flex' || style.display === 'grid' ||
-      style.display.includes('table')
+      style.display === 'table-row'
 
     // return !style.display.startsWith('inline') && !style.display.includes('math')
   }
@@ -84,11 +104,11 @@ export class ViewportTracker {
 
     if (trackingCandidates.length > 0) {
       trackingCandidates = trackingCandidates.map(e => {
-        if (!this.sectionSelector || e.matches(this.sectionSelector)) {
+        if (!this.options?.sectionSelector || e.matches(this.options.sectionSelector)) {
           return e
         }
 
-        return e.closest(this.sectionSelector) || e
+        return e.closest(this.options.sectionSelector) || e
       })
       leafTrackingCandidates = new Set<Element>([...trackingCandidates])
       trackingCandidates.map(e => e.parentElement && leafTrackingCandidates.delete(e.parentElement))
@@ -98,7 +118,7 @@ export class ViewportTracker {
     console.debug(`Found ${leafTrackingCandidates.size} leaf tracking elements`)
 
     const options = {
-      root: element.ownerDocument,
+      root: element.ownerDocument.body,
       rootMargin: '0px',
       threshold: 0.0
     }

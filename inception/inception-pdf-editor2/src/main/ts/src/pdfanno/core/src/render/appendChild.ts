@@ -1,8 +1,8 @@
 import { renderSpan } from './renderSpan'
 import { renderRelation } from './renderRelation'
-import AbstractAnnotation from '../annotation/abstract'
-import SpanAnnotation from '../annotation/span'
-import RelationAnnotation from '../annotation/relation'
+import AbstractAnnotation from '../model/AbstractAnnotation'
+import SpanAnnotation from '../model/SpanAnnotation'
+import RelationAnnotation from '../model/RelationAnnotation'
 
 /**
  * Transform the rotation and scale of a node using SVG's native transform attribute.

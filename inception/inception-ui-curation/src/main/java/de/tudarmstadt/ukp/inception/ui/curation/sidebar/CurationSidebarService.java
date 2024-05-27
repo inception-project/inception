@@ -26,11 +26,15 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
+import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.curation.merge.MergeStrategyFactory;
+import de.tudarmstadt.ukp.inception.curation.merge.strategy.MergeStrategy;
+import de.tudarmstadt.ukp.inception.curation.model.CurationWorkflow;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 
 public interface CurationSidebarService
@@ -105,12 +109,6 @@ public interface CurationSidebarService
     List<User> listUsersReadyForCuration(String aUsername, Project aProject,
             SourceDocument aDocument);
 
-    /**
-     * @return list of users that have finished the given document
-     */
-    @SuppressWarnings("javadoc")
-    List<User> listCuratableUsers(SourceDocument aSourceDocument);
-
     List<User> listCuratableUsers(String aSessionOwner, SourceDocument aDocument);
 
     /**
@@ -128,4 +126,16 @@ public interface CurationSidebarService
     boolean isShowAll(String aUsername, Long aProjectId);
 
     void setDefaultSelectedUsersForDocument(String aSessionOwner, SourceDocument aDocument);
+
+    MergeStrategyFactory<?> merge(AnnotatorState aState, String aCurator, Collection<User> aUsers,
+            boolean aClearTargetCas)
+        throws IOException, UIMAException;
+
+    void merge(AnnotatorState aState, MergeStrategy aStrategy, String aCurator,
+            Collection<User> aUsers, boolean aClearTargetCas)
+        throws IOException, UIMAException;
+
+    MergeStrategyFactory<?> merge(AnnotatorState aState, CurationWorkflow aWorkflow,
+            String aCurator, Collection<User> aUsers, boolean aClearTargetCas)
+        throws IOException, UIMAException;
 }

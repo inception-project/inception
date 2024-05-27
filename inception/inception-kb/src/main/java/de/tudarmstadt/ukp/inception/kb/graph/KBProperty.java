@@ -44,6 +44,7 @@ public class KBProperty
     private String identifier;
     private String name;
     private String description;
+    private boolean deprecated;
     private String domain;
     private KnowledgeBase kb;
     private String range;
@@ -119,6 +120,17 @@ public class KBProperty
     public void setDescription(String aDescription)
     {
         description = aDescription;
+    }
+
+    public void setDeprecated(boolean aDeprecated)
+    {
+        deprecated = aDeprecated;
+    }
+
+    @Override
+    public boolean isDeprecated()
+    {
+        return deprecated;
     }
 
     public String getDomain()

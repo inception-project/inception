@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.project.wizard;
 
-import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_LUCENE;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_NONE;
+import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_RDF4J_LUCENE;
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.toMap;
 
@@ -50,13 +50,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
+import de.tudarmstadt.ukp.inception.bootstrap.BootstrapWizard;
+import de.tudarmstadt.ukp.inception.bootstrap.BootstrapWizardButtonBar;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
-import de.tudarmstadt.ukp.inception.ui.core.bootstrap.BootstrapWizard;
-import de.tudarmstadt.ukp.inception.ui.core.bootstrap.BootstrapWizardButtonBar;
+import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 import de.tudarmstadt.ukp.inception.ui.kb.project.AccessSettingsPanel;
 import de.tudarmstadt.ukp.inception.ui.kb.project.AccessSpecificSettingsPanel;
 import de.tudarmstadt.ukp.inception.ui.kb.project.GeneralSettingsPanel;
@@ -158,10 +158,14 @@ public class KnowledgeBaseCreationWizard
 
             switch (kbModel.getObject().getKb().getType()) {
             case LOCAL:
+                // Local KBs are writeable by default
+                kbModel.getObject().getKb().setReadOnly(false);
                 // local KBs are always RDF4J + Lucene, so we can set the FTS mode accordingly
-                kbModel.getObject().getKb().setFullTextSearchIri(FTS_LUCENE.stringValue());
+                kbModel.getObject().getKb().setFullTextSearchIri(FTS_RDF4J_LUCENE.stringValue());
                 break;
             case REMOTE:
+                // Local KBs are read-only
+                kbModel.getObject().getKb().setReadOnly(true);
                 // remote KBs are by default not using FTS but if we apply a remote DB profile,
                 // then it will set the FTS according to the setting in the profile
                 kbModel.getObject().getKb().setFullTextSearchIri(FTS_NONE.stringValue());

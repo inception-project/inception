@@ -21,13 +21,12 @@ import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.active.learning.config.ActiveLearningAutoConfiguration;
-import de.tudarmstadt.ukp.inception.active.learning.event.ActiveLearningRecommendationEvent;
 import de.tudarmstadt.ukp.inception.active.learning.event.ActiveLearningSuggestionOfferedEvent;
 import de.tudarmstadt.ukp.inception.log.adapter.EventLoggingAdapter;
 import de.tudarmstadt.ukp.inception.log.model.AnnotationDetails;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
+import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 
 /**
  * <p>
@@ -39,9 +38,9 @@ public class ActiveLearningSuggestionOfferedAdapter
     implements EventLoggingAdapter<ActiveLearningSuggestionOfferedEvent>
 {
     @Override
-    public boolean accepts(Object aEvent)
+    public boolean accepts(Class<?> aEvent)
     {
-        return aEvent instanceof ActiveLearningRecommendationEvent;
+        return ActiveLearningSuggestionOfferedEvent.class.isAssignableFrom(aEvent);
     }
 
     @Override
@@ -80,7 +79,7 @@ public class ActiveLearningSuggestionOfferedAdapter
     {
         public AnnotationDetails ann;
         public String annotationFeature;
-        public LearningRecordType userAction;
+        public LearningRecordUserAction userAction;
         public String currentLabel;
         public double score;
         public long recommenderId;

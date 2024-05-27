@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.annotation.feature.link;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.wicket.event.Broadcast.BUBBLE;
@@ -71,13 +71,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.ReorderableTag;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
-import de.tudarmstadt.ukp.clarin.webanno.support.DescriptionTooltipBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.support.StyledComboBox;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
 import de.tudarmstadt.ukp.inception.annotation.events.AnnotationDeletedEvent;
 import de.tudarmstadt.ukp.inception.annotation.feature.misc.ReorderableTagAutoCompleteField;
 import de.tudarmstadt.ukp.inception.annotation.feature.string.ClassicKendoComboboxTextFeatureEditor;
@@ -87,16 +80,23 @@ import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
 import de.tudarmstadt.ukp.inception.rendering.pipeline.RenderSlotsEvent;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
-import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
-import de.tudarmstadt.ukp.inception.schema.adapter.TypeAdapter;
-import de.tudarmstadt.ukp.inception.schema.adapter.TypeUtil;
-import de.tudarmstadt.ukp.inception.schema.feature.FeatureEditor;
-import de.tudarmstadt.ukp.inception.schema.feature.FeatureEditorValueChangedEvent;
-import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupport;
-import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupportRegistry;
-import de.tudarmstadt.ukp.inception.schema.feature.LinkWithRoleModel;
-import de.tudarmstadt.ukp.inception.schema.layer.LayerSupportRegistry;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureEditor;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureEditorValueChangedEvent;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupport;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.inception.schema.api.feature.LinkWithRoleModel;
+import de.tudarmstadt.ukp.inception.schema.api.feature.TypeUtil;
+import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistry;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior;
+import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
+import de.tudarmstadt.ukp.inception.support.wicket.DescriptionTooltipBehavior;
+import de.tudarmstadt.ukp.inception.support.wicket.StyledComboBox;
+import de.tudarmstadt.ukp.inception.support.wicket.WicketUtil;
 
 public class LinkFeatureEditor
     extends FeatureEditor
@@ -563,13 +563,12 @@ public class LinkFeatureEditor
         }
 
         @SuppressWarnings("unchecked")
-        List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) LinkFeatureEditor.this
-                .getModelObject().value;
-        AnnotatorState state = LinkFeatureEditor.this.stateModel.getObject();
+        var links = (List<LinkWithRoleModel>) LinkFeatureEditor.this.getModelObject().value;
+        var state = LinkFeatureEditor.this.stateModel.getObject();
 
-        LinkWithRoleModel m = new LinkWithRoleModel();
+        var m = new LinkWithRoleModel();
         m.role = (String) field.getModelObject();
-        int insertionPoint = findInsertionPoint(links);
+        var insertionPoint = findInsertionPoint(links);
         links.add(insertionPoint, m);
         state.setArmedSlot(getModelObject(), insertionPoint);
 
@@ -600,12 +599,11 @@ public class LinkFeatureEditor
         }
 
         @SuppressWarnings("unchecked")
-        List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) LinkFeatureEditor.this
-                .getModelObject().value;
-        AnnotatorState state = LinkFeatureEditor.this.stateModel.getObject();
+        var links = (List<LinkWithRoleModel>) LinkFeatureEditor.this.getModelObject().value;
+        var state = LinkFeatureEditor.this.stateModel.getObject();
 
         // Update the slot
-        LinkWithRoleModel m = links.get(state.getArmedSlot());
+        var m = links.get(state.getArmedSlot());
         m.role = (String) field.getModelObject();
         links.set(state.getArmedSlot(), m); // avoid reordering
 
@@ -623,11 +621,10 @@ public class LinkFeatureEditor
     private void actionDel(AjaxRequestTarget aTarget)
     {
         @SuppressWarnings("unchecked")
-        List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) LinkFeatureEditor.this
-                .getModelObject().value;
-        AnnotatorState state = LinkFeatureEditor.this.stateModel.getObject();
+        var links = (List<LinkWithRoleModel>) LinkFeatureEditor.this.getModelObject().value;
+        var state = LinkFeatureEditor.this.stateModel.getObject();
 
-        LinkWithRoleModel linkWithRoleModel = links.get(state.getArmedSlot());
+        var linkWithRoleModel = links.get(state.getArmedSlot());
         links.remove(state.getArmedSlot());
         state.clearArmedSlot();
 
@@ -638,7 +635,7 @@ public class LinkFeatureEditor
 
     private void actionToggleArmedState(AjaxRequestTarget aTarget, Item<LinkWithRoleModel> aItem)
     {
-        AnnotatorState state = LinkFeatureEditor.this.stateModel.getObject();
+        var state = LinkFeatureEditor.this.stateModel.getObject();
 
         if (state.isArmedSlot(getModelObject(), aItem.getIndex())) {
             state.clearArmedSlot();
@@ -681,7 +678,7 @@ public class LinkFeatureEditor
     public void onAnnotationDeleted(AnnotationDeletedEvent aEvent)
     {
         // It could be that a slot filler was deleted - so just in case, we re-render ourself.
-        aEvent.getRequestTarget().add(this);
+        aEvent.getRequestTarget().ifPresent(target -> target.add(this));
     }
 
     @OnEvent

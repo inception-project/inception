@@ -17,25 +17,28 @@
  */
 package de.tudarmstadt.ukp.inception.schema.service;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.withProjectLogger;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getRealCas;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.isNativeUimaType;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.isSame;
 import static de.tudarmstadt.ukp.clarin.webanno.model.LinkMode.WITH_ROLE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode.ARRAY;
-import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.RELATION_TYPE;
-import static de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil.selectByAddr;
-import static de.tudarmstadt.ukp.inception.schema.AttachedAnnotation.Direction.INCOMING;
-import static de.tudarmstadt.ukp.inception.schema.AttachedAnnotation.Direction.LOOP;
-import static de.tudarmstadt.ukp.inception.schema.AttachedAnnotation.Direction.OUTGOING;
+import static de.tudarmstadt.ukp.inception.project.api.ProjectService.withProjectLogger;
+import static de.tudarmstadt.ukp.inception.schema.api.AttachedAnnotation.Direction.INCOMING;
+import static de.tudarmstadt.ukp.inception.schema.api.AttachedAnnotation.Direction.LOOP;
+import static de.tudarmstadt.ukp.inception.schema.api.AttachedAnnotation.Direction.OUTGOING;
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.RELATION_TYPE;
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.RESTRICTED_FEATURE_NAMES;
+import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectByAddr;
+import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.getRealCas;
+import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.isNativeUimaType;
+import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.isSame;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Objects.isNull;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.uima.cas.impl.Serialization.deserializeCASComplete;
 import static org.apache.uima.cas.impl.Serialization.serializeCASComplete;
 import static org.apache.uima.cas.impl.Serialization.serializeWithCompression;
+import static org.apache.uima.cas.impl.TypeSystemUtils.isIdentifier;
 import static org.apache.uima.fit.factory.TypeSystemDescriptionFactory.createTypeSystemDescription;
 import static org.apache.uima.util.CasCreationUtils.mergeTypeSystems;
 import static org.hibernate.annotations.QueryHints.CACHEABLE;
@@ -50,9 +53,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.StringTokenizer;
 
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
+import javax.persistence.criteria.JoinType;
+import javax.persistence.criteria.Predicate;
 
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
@@ -60,8 +66,8 @@ import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.TypeSystem;
-import org.apache.uima.cas.impl.CASCompleteSerializer;
 import org.apache.uima.cas.impl.CASImpl;
+import org.apache.uima.cas.impl.TypeSystemUtils;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.factory.CasFactory;
 import org.apache.uima.fit.util.CasUtil;
@@ -70,9 +76,9 @@ import org.apache.uima.resource.metadata.FeatureDescription;
 import org.apache.uima.resource.metadata.TypeDescription;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.uima.resource.metadata.impl.TypeSystemDescription_impl;
-import org.apache.uima.util.AutoCloseableNoException;
 import org.apache.uima.util.CasCreationUtils;
 import org.apache.uima.util.CasIOUtils;
+import org.apache.wicket.validation.ValidationError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -82,12 +88,9 @@ import org.springframework.transaction.annotation.Transactional;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeSystemAnalysis;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeSystemAnalysis.RelationDetails;
-import de.tudarmstadt.ukp.clarin.webanno.api.event.TagCreatedEvent;
-import de.tudarmstadt.ukp.clarin.webanno.api.event.TagDeletedEvent;
-import de.tudarmstadt.ukp.clarin.webanno.api.event.TagUpdatedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature_;
@@ -101,24 +104,28 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag_;
-import de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainAdapter;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationAdapter;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanAdapter;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasMetadataUtils;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
-import de.tudarmstadt.ukp.inception.rendering.config.AnnotationEditorProperties;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
-import de.tudarmstadt.ukp.inception.schema.AttachedAnnotation;
-import de.tudarmstadt.ukp.inception.schema.adapter.IllegalFeatureValueException;
-import de.tudarmstadt.ukp.inception.schema.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.AttachedAnnotation;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.IllegalFeatureValueException;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.inception.schema.api.config.AnnotationSchemaProperties;
+import de.tudarmstadt.ukp.inception.schema.api.event.TagCreatedEvent;
+import de.tudarmstadt.ukp.inception.schema.api.event.TagDeletedEvent;
+import de.tudarmstadt.ukp.inception.schema.api.event.TagUpdatedEvent;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.inception.schema.api.feature.LinkWithRoleModel;
+import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupport;
+import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.inception.schema.config.AnnotationSchemaServiceAutoConfiguration;
-import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupportRegistry;
-import de.tudarmstadt.ukp.inception.schema.feature.LinkWithRoleModel;
-import de.tudarmstadt.ukp.inception.schema.layer.LayerSupport;
-import de.tudarmstadt.ukp.inception.schema.layer.LayerSupportRegistry;
+import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
 
 /**
  * <p>
@@ -137,7 +144,7 @@ public class AnnotationSchemaServiceImpl
     private final FeatureSupportRegistry featureSupportRegistry;
     private final LoadingCache<TagSet, List<ImmutableTag>> immutableTagsCache;
     private final TypeSystemDescription builtInTypes;
-    private final AnnotationEditorProperties annotationEditorProperties;
+    private final AnnotationSchemaProperties annotationEditorProperties;
 
     public AnnotationSchemaServiceImpl()
     {
@@ -148,7 +155,7 @@ public class AnnotationSchemaServiceImpl
     public AnnotationSchemaServiceImpl(LayerSupportRegistry aLayerSupportRegistry,
             FeatureSupportRegistry aFeatureSupportRegistry,
             ApplicationEventPublisher aApplicationEventPublisher,
-            AnnotationEditorProperties aAnnotationEditorProperties, EntityManager aEntityManager)
+            AnnotationSchemaProperties aAnnotationEditorProperties, EntityManager aEntityManager)
     {
         layerSupportRegistry = aLayerSupportRegistry;
         featureSupportRegistry = aFeatureSupportRegistry;
@@ -191,13 +198,13 @@ public class AnnotationSchemaServiceImpl
             return;
         }
 
-        TagSet tagset = aTags[0].getTagSet();
-        Project project = tagset.getProject();
+        var tagset = aTags[0].getTagSet();
+        var project = tagset.getProject();
 
-        int createdCount = 0;
-        int updatedCount = 0;
-        for (Tag tag : aTags) {
-            boolean created = createTagNoLog(tag);
+        var createdCount = 0;
+        var updatedCount = 0;
+        for (var tag : aTags) {
+            var created = createTagNoLog(tag);
             if (created) {
                 createdCount++;
             }
@@ -210,6 +217,8 @@ public class AnnotationSchemaServiceImpl
             log.info("Created {} tags and updated {} tags in tagset {} in project {}", createdCount,
                     updatedCount, tagset, project);
         }
+
+        flushImmutableTagCache(tagset);
     }
 
     private boolean createTagNoLog(Tag aTag)
@@ -400,13 +409,26 @@ public class AnnotationSchemaServiceImpl
 
     @Override
     @Transactional(noRollbackFor = NoResultException.class)
+    public boolean existsLayer(Project aProject)
+    {
+        return entityManager.createQuery(
+                "SELECT COUNT(*) FROM AnnotationLayer WHERE project = :project AND name NOT IN (:excluded)",
+                Long.class) //
+                .setParameter("project", aProject) //
+                .setParameter("excluded", asList(Token._TypeName, Sentence._TypeName)) //
+                .getSingleResult() > 0;
+    }
+
+    @Override
+    @Transactional(noRollbackFor = NoResultException.class)
     public boolean existsLayer(String aName, Project aProject)
     {
         try {
             entityManager
                     .createQuery("FROM AnnotationLayer WHERE name = :name AND project = :project",
                             AnnotationLayer.class)
-                    .setParameter("name", aName).setParameter("project", aProject)
+                    .setParameter("name", aName) //
+                    .setParameter("project", aProject) //
                     .getSingleResult();
             return true;
         }
@@ -422,13 +444,15 @@ public class AnnotationSchemaServiceImpl
         try {
             entityManager.createQuery(
                     "FROM AnnotationLayer WHERE name = :name AND type = :type AND project = :project",
-                    AnnotationLayer.class).setParameter("name", aName).setParameter("type", aType)
-                    .setParameter("project", aProject).getSingleResult();
+                    AnnotationLayer.class) //
+                    .setParameter("name", aName) //
+                    .setParameter("type", aType) //
+                    .setParameter("project", aProject) //
+                    .getSingleResult();
             return true;
         }
         catch (NoResultException e) {
             return false;
-
         }
     }
 
@@ -586,7 +610,7 @@ public class AnnotationSchemaServiceImpl
             // layer definitions for UIMA built-in types.
             if (superType == null) {
                 throw new NoResultException("Super-type [" + type.getSupertypeName() + "] of type ["
-                        + aName + "] not in type system - no suitable layer definition found");
+                        + aName + "] does not correspond to any project layer");
             }
 
             layer = getLayerInternal(superType.getName(), aProject);
@@ -653,7 +677,9 @@ public class AnnotationSchemaServiceImpl
         return entityManager
                 .createQuery("From AnnotationFeature where name = :name AND layer = :layer",
                         AnnotationFeature.class)
-                .setParameter("name", aName).setParameter("layer", aLayer).getSingleResult();
+                .setParameter("name", aName) //
+                .setParameter("layer", aLayer) //
+                .getSingleResult();
     }
 
     @Override
@@ -731,21 +757,42 @@ public class AnnotationSchemaServiceImpl
     @Transactional
     public List<AnnotationLayer> listAttachedRelationLayers(AnnotationLayer aLayer)
     {
-        String query = String.join("\n",
-                "SELECT l FROM AnnotationLayer l LEFT JOIN l.attachFeature f ", //
-                "WHERE l.type        = :type AND ", //
-                "      l.project     = :project AND ", //
-                "      (l.attachType = :attachType OR f.type = :attachTypeName) ", //
-                "ORDER BY l.uiName");
+        Objects.requireNonNull(aLayer, "Parameter [layer] must be specified");
 
-        return entityManager.createQuery(query, AnnotationLayer.class)
-                .setParameter("type", RELATION_TYPE) //
-                .setParameter("attachType", aLayer) //
-                .setParameter("attachTypeName", aLayer.getName())
-                // Checking for project is necessary because type match is string-based
-                .setParameter("project", aLayer.getProject()) //
-                .setHint(CACHEABLE, true) //
-                .getResultList();
+        var cb = entityManager.getCriteriaBuilder();
+        var cq = cb.createQuery(AnnotationLayer.class);
+
+        var layer = cq.from(AnnotationLayer.class);
+        var feature = layer.join(AnnotationLayer_.attachFeature, JoinType.LEFT);
+
+        var predicates = new ArrayList<Predicate>();
+        predicates.add(cb.equal(layer.get(AnnotationLayer_.type), RelationLayerSupport.TYPE));
+        predicates.add(cb.equal(layer.get(AnnotationLayer_.project), aLayer.getProject()));
+        var attachTypeCondition = cb.or( //
+                cb.equal(layer.get(AnnotationLayer_.attachType), aLayer), //
+                cb.isNull(layer.get(AnnotationLayer_.attachType)), //
+                cb.equal(feature.get(AnnotationFeature_.type), aLayer.getName()));
+        predicates.add(attachTypeCondition);
+
+        cq.where(predicates.toArray(new Predicate[0]));
+        cq.orderBy(cb.asc(layer.get(AnnotationLayer_.uiName)));
+
+        return entityManager.createQuery(cq).getResultList();
+
+        // var query = String.join("\n",
+        // "SELECT l FROM AnnotationLayer l LEFT JOIN l.attachFeature f ", //
+        // "WHERE l.type = :type AND ", //
+        // " l.project = :project AND ", //
+        // " (l.attachType = :attachType OR l.attachType IS NULL OR f.type = :attachTypeName) ", //
+        // "ORDER BY l.uiName");
+        //
+        // return entityManager.createQuery(query, AnnotationLayer.class)
+        // .setParameter("type", RelationLayerSupport.TYPE) //
+        // .setParameter("attachType", aLayer) //
+        // .setParameter("attachTypeName", aLayer.getName())
+        // // Checking for project is necessary because type match is string-based
+        // .setParameter("project", aLayer.getProject()) //
+        // .getResultList();
     }
 
     @Transactional
@@ -825,22 +872,10 @@ public class AnnotationSchemaServiceImpl
     @Transactional
     public List<AnnotationFeature> listEnabledFeatures(AnnotationLayer aLayer)
     {
-        if (isNull(aLayer) || isNull(aLayer.getId())) {
-            return new ArrayList<>();
-        }
-
-        var cb = entityManager.getCriteriaBuilder();
-        var query = cb.createQuery(AnnotationFeature.class);
-        var root = query.from(AnnotationFeature.class);
-
-        query //
-                .where(cb.and( //
-                        cb.equal(root.get(AnnotationFeature_.layer), aLayer),
-                        cb.isTrue(root.get(AnnotationFeature_.enabled))))
-                .orderBy(cb.asc(root.get(AnnotationFeature_.rank)),
-                        cb.asc(root.get(AnnotationFeature_.uiName)));
-
-        return entityManager.createQuery(query).setHint(CACHEABLE, true).getResultList();
+        return listAnnotationFeature(aLayer).stream() //
+                .filter(AnnotationFeature::isEnabled) //
+                .filter(featureSupportRegistry::isAccessible) //
+                .toList();
     }
 
     @Override
@@ -860,6 +895,17 @@ public class AnnotationSchemaServiceImpl
         return entityManager.createQuery(query) //
                 .setHint(CACHEABLE, true) //
                 .getResultList();
+    }
+
+    @Override
+    @Transactional
+    public List<AnnotationFeature> listEnabledFeatures(Project aProject)
+    {
+        return listAnnotationFeature(aProject).stream() //
+                .filter(f -> f.getLayer().isEnabled()) //
+                .filter(AnnotationFeature::isEnabled) //
+                .filter(featureSupportRegistry::isAccessible) //
+                .toList();
     }
 
     @Override
@@ -1013,23 +1059,19 @@ public class AnnotationSchemaServiceImpl
     @Transactional
     public List<AnnotationLayer> listSupportedLayers(Project aProject)
     {
-        List<AnnotationLayer> supportedLayers = new ArrayList<>();
+        return listAnnotationLayer(aProject).stream() //
+                .filter(layerSupportRegistry::isSupported) //
+                .toList();
+    }
 
-        for (AnnotationLayer l : listAnnotationLayer(aProject)) {
-            try {
-                layerSupportRegistry.getLayerSupport(l);
-            }
-            catch (IllegalArgumentException e) {
-                // Skip unsupported layers
-                continue;
-            }
-
-            // Add supported layers to the result
-            supportedLayers.add(l);
-        }
-
-        return supportedLayers;
-
+    @Override
+    @Transactional
+    public List<AnnotationLayer> listEnabledLayers(Project aProject)
+    {
+        return listAnnotationLayer(aProject).stream() //
+                .filter(AnnotationLayer::isEnabled) //
+                .filter(layerSupportRegistry::isSupported) //
+                .toList();
     }
 
     @Override
@@ -1038,7 +1080,7 @@ public class AnnotationSchemaServiceImpl
     {
         return listAnnotationFeature(aProject).stream() //
                 .filter($ -> featureSupportRegistry.findExtension($).isPresent()) //
-                .collect(toList());
+                .toList();
     }
 
     @Override
@@ -1046,17 +1088,17 @@ public class AnnotationSchemaServiceImpl
     public List<AnnotationFeature> listSupportedFeatures(AnnotationLayer aLayer)
     {
         return listAnnotationFeature(aLayer).stream() //
-                .filter($ -> featureSupportRegistry.findExtension($).isPresent()) //
-                .collect(toList());
+                .filter(featureSupportRegistry::isSupported) //
+                .toList();
     }
 
     @Override
     public TypeSystemDescription getCustomProjectTypes(Project aProject)
     {
         // Create a new type system from scratch
-        TypeSystemDescription tsd = new TypeSystemDescription_impl();
+        var tsd = new TypeSystemDescription_impl();
 
-        List<AnnotationFeature> allFeaturesInProject = listSupportedFeatures(aProject);
+        var allFeaturesInProject = listSupportedFeatures(aProject);
 
         listSupportedLayers(aProject).stream() //
                 .filter(layer -> !layer.isBuiltIn()) //
@@ -1070,17 +1112,17 @@ public class AnnotationSchemaServiceImpl
     public TypeSystemDescription getAllProjectTypes(Project aProject)
         throws ResourceInitializationException
     {
-        List<AnnotationLayer> allLayersInProject = listSupportedLayers(aProject);
-        List<AnnotationFeature> allFeaturesInProject = listSupportedFeatures(aProject);
+        var allLayersInProject = listSupportedLayers(aProject);
+        var allFeaturesInProject = listSupportedFeatures(aProject);
 
-        List<TypeSystemDescription> allTsds = new ArrayList<>();
-        for (AnnotationLayer layer : allLayersInProject) {
+        var allTsds = new ArrayList<TypeSystemDescription>();
+        for (var layer : allLayersInProject) {
             LayerSupport<?, ?> layerSupport = layerSupportRegistry.getLayerSupport(layer);
 
             // for built-in layers, we clone the information from the built-in type descriptors
-            TypeSystemDescription tsd = new TypeSystemDescription_impl();
+            var tsd = new TypeSystemDescription_impl();
             if (layer.isBuiltIn()) {
-                for (String typeName : layerSupport.getGeneratedTypeNames(layer)) {
+                for (var typeName : layerSupport.getGeneratedTypeNames(layer)) {
                     exportBuiltInTypeDescription(builtInTypes, tsd, typeName);
                 }
             }
@@ -1093,14 +1135,14 @@ public class AnnotationSchemaServiceImpl
 
         {
             // Explicitly add Token because the layer may not be declared in the project
-            TypeSystemDescription tsd = new TypeSystemDescription_impl();
+            var tsd = new TypeSystemDescription_impl();
             exportBuiltInTypeDescription(builtInTypes, tsd, Token.class.getName());
             allTsds.add(tsd);
         }
 
         {
             // Explicitly add Sentence because the layer may not be declared in the project
-            TypeSystemDescription tsd = new TypeSystemDescription_impl();
+            var tsd = new TypeSystemDescription_impl();
             exportBuiltInTypeDescription(builtInTypes, tsd, Sentence.class.getName());
             allTsds.add(tsd);
         }
@@ -1113,18 +1155,18 @@ public class AnnotationSchemaServiceImpl
     private void exportBuiltInTypeDescription(TypeSystemDescription aSource,
             TypeSystemDescription aTarget, String aType)
     {
-        TypeDescription builtInType = aSource.getType(aType);
+        var builtInType = aSource.getType(aType);
 
         if (builtInType == null) {
             throw new IllegalArgumentException(
                     "No type description found for type [" + aType + "]");
         }
 
-        TypeDescription clonedType = aTarget.addType(builtInType.getName(),
-                builtInType.getDescription(), builtInType.getSupertypeName());
+        var clonedType = aTarget.addType(builtInType.getName(), builtInType.getDescription(),
+                builtInType.getSupertypeName());
 
         if (builtInType.getFeatures() != null) {
-            for (FeatureDescription feature : builtInType.getFeatures()) {
+            for (var feature : builtInType.getFeatures()) {
                 clonedType.addFeature(feature.getName(), feature.getDescription(),
                         feature.getRangeTypeName(), feature.getElementType(),
                         feature.getMultipleReferencesAllowed());
@@ -1157,7 +1199,7 @@ public class AnnotationSchemaServiceImpl
             boolean aIncludeInternalTypes)
         throws ResourceInitializationException
     {
-        List<TypeSystemDescription> typeSystems = new ArrayList<>();
+        var typeSystems = new ArrayList<TypeSystemDescription>();
 
         // Types detected by uimaFIT
         typeSystems.add(builtInTypes);
@@ -1195,8 +1237,7 @@ public class AnnotationSchemaServiceImpl
             if (!upgraded) {
                 try (var logCtx = withProjectLogger(aSourceDocument.getProject())) {
                     log.debug(
-                            "CAS of user [{}] for document {} in project {} is already "
-                                    + "compatible with project type system - skipping upgrade",
+                            "CAS [{}]@{} in {} is already compatible with project type system - skipping upgrade",
                             aUser, aSourceDocument, aSourceDocument.getProject());
                 }
             }
@@ -1295,15 +1336,15 @@ public class AnnotationSchemaServiceImpl
         throws IOException, ResourceInitializationException
     {
         // Save source CAS type system (do this early since we might do an in-place upgrade)
-        TypeSystem sourceTypeSystem = aSourceCas.getTypeSystem();
+        var sourceTypeSystem = aSourceCas.getTypeSystem();
 
         // Save source CAS contents
-        ByteArrayOutputStream serializedCasContents = new ByteArrayOutputStream();
-        CAS realSourceCas = getRealCas(aSourceCas);
+        var serializedCasContents = new ByteArrayOutputStream();
+        var realSourceCas = getRealCas(aSourceCas);
         // UIMA-6162 Workaround: synchronize CAS during de/serialization
         synchronized (((CASImpl) realSourceCas).getBaseCAS()) {
             // Workaround for https://github.com/apache/uima-uimaj/issues/238
-            try (AutoCloseableNoException a = ((CASImpl) realSourceCas).ll_enableV2IdRefs(false)) {
+            try (var context = ((CASImpl) realSourceCas).ll_enableV2IdRefs(false)) {
                 serializeWithCompression(realSourceCas, serializedCasContents, sourceTypeSystem);
             }
         }
@@ -1312,8 +1353,8 @@ public class AnnotationSchemaServiceImpl
         CAS realTargetCas = getRealCas(aTargetCas);
         // UIMA-6162 Workaround: synchronize CAS during de/serialization
         synchronized (((CASImpl) realTargetCas).getBaseCAS()) {
-            CAS tempCas = CasFactory.createCas(aTargetTypeSystem);
-            CASCompleteSerializer serializer = serializeCASComplete((CASImpl) tempCas);
+            var tempCas = CasFactory.createCas(aTargetTypeSystem);
+            var serializer = serializeCASComplete((CASImpl) tempCas);
             deserializeCASComplete(serializer, (CASImpl) realTargetCas);
 
             // Leniently load the source CAS contents into the target CAS
@@ -1404,7 +1445,7 @@ public class AnnotationSchemaServiceImpl
     @Transactional(noRollbackFor = NoResultException.class)
     public TypeAdapter findAdapter(Project aProject, FeatureStructure aFS)
     {
-        AnnotationLayer layer = findLayer(aProject, aFS);
+        var layer = findLayer(aProject, aFS);
         return getAdapter(layer);
     }
 
@@ -1467,61 +1508,59 @@ public class AnnotationSchemaServiceImpl
     @Transactional
     public List<AttachedAnnotation> getAttachedRels(AnnotationLayer aLayer, AnnotationFS aFs)
     {
-        CAS cas = aFs.getCAS();
-        List<AttachedAnnotation> result = new ArrayList<>();
-        for (AnnotationLayer relationLayer : listAttachedRelationLayers(aLayer)) {
-            RelationAdapter relationAdapter = (RelationAdapter) getAdapter(relationLayer);
-            Type relationType = CasUtil.getType(cas, relationLayer.getName());
-            Feature sourceFeature = relationType
-                    .getFeatureByBaseName(relationAdapter.getSourceFeatureName());
-            Feature targetFeature = relationType
-                    .getFeatureByBaseName(relationAdapter.getTargetFeatureName());
+        var cas = aFs.getCAS();
+        var result = new ArrayList<AttachedAnnotation>();
+        for (var layer : listAttachedRelationLayers(aLayer)) {
+            var adapter = (RelationAdapter) getAdapter(layer);
+            var type = adapter.getAnnotationType(cas);
+            var sourceFeature = adapter.getSourceFeature(cas);
+            var targetFeature = adapter.getTargetFeature(cas);
 
             // This code is already prepared for the day that relations can go between
             // different layers and may have different attach features for the source and
             // target layers.
-            Feature relationSourceAttachFeature = null;
-            Feature relationTargetAttachFeature = null;
-            if (relationAdapter.getAttachFeatureName() != null) {
-                relationSourceAttachFeature = sourceFeature.getRange()
-                        .getFeatureByBaseName(relationAdapter.getAttachFeatureName());
-                relationTargetAttachFeature = targetFeature.getRange()
-                        .getFeatureByBaseName(relationAdapter.getAttachFeatureName());
+            Feature sourceAttachFeature = null;
+            Feature targetAttachFeature = null;
+            if (adapter.getAttachFeatureName() != null) {
+                sourceAttachFeature = sourceFeature.getRange()
+                        .getFeatureByBaseName(adapter.getAttachFeatureName());
+                targetAttachFeature = targetFeature.getRange()
+                        .getFeatureByBaseName(adapter.getAttachFeatureName());
             }
 
-            for (AnnotationFS relationFS : CasUtil.select(cas, relationType)) {
+            for (var relationFS : CasUtil.select(cas, type)) {
                 if (!(relationFS instanceof AnnotationFS)) {
                     continue;
                 }
 
                 // Here we get the annotations that the relation is pointing to in the UI
                 AnnotationFS sourceFS;
-                if (relationSourceAttachFeature != null) {
+                if (sourceAttachFeature != null) {
                     sourceFS = (AnnotationFS) relationFS.getFeatureValue(sourceFeature)
-                            .getFeatureValue(relationSourceAttachFeature);
+                            .getFeatureValue(sourceAttachFeature);
                 }
                 else {
                     sourceFS = (AnnotationFS) relationFS.getFeatureValue(sourceFeature);
                 }
 
                 AnnotationFS targetFS;
-                if (relationTargetAttachFeature != null) {
+                if (targetAttachFeature != null) {
                     targetFS = (AnnotationFS) relationFS.getFeatureValue(targetFeature)
-                            .getFeatureValue(relationTargetAttachFeature);
+                            .getFeatureValue(targetAttachFeature);
                 }
                 else {
                     targetFS = (AnnotationFS) relationFS.getFeatureValue(targetFeature);
                 }
 
                 if (sourceFS == null || targetFS == null) {
-                    StringBuilder message = new StringBuilder();
+                    var message = new StringBuilder();
 
-                    message.append("Relation [" + relationAdapter.getLayer().getName()
-                            + "] with id [" + ICasUtil.getAddr(relationFS)
+                    message.append("Relation [" + adapter.getLayer().getName() + "] with id ["
+                            + ICasUtil.getAddr(relationFS)
                             + "] has loose ends - cannot identify attached annotations.");
-                    if (relationAdapter.getAttachFeatureName() != null) {
-                        message.append("\nRelation [" + relationAdapter.getLayer().getName()
-                                + "] attached to feature [" + relationAdapter.getAttachFeatureName()
+                    if (adapter.getAttachFeatureName() != null) {
+                        message.append("\nRelation [" + adapter.getLayer().getName()
+                                + "] attached to feature [" + adapter.getAttachFeatureName()
                                 + "].");
                     }
                     message.append("\nSource: " + sourceFS);
@@ -1530,19 +1569,17 @@ public class AnnotationSchemaServiceImpl
                     continue;
                 }
 
-                boolean isIncoming = isSame(targetFS, aFs);
-                boolean isOutgoing = isSame(sourceFS, aFs);
+                var isIncoming = isSame(targetFS, aFs);
+                var isOutgoing = isSame(sourceFS, aFs);
 
                 if (isIncoming && isOutgoing) {
-                    result.add(new AttachedAnnotation(relationLayer, relationFS, sourceFS, LOOP));
+                    result.add(new AttachedAnnotation(layer, relationFS, sourceFS, LOOP));
                 }
                 else if (isIncoming) {
-                    result.add(
-                            new AttachedAnnotation(relationLayer, relationFS, sourceFS, INCOMING));
+                    result.add(new AttachedAnnotation(layer, relationFS, sourceFS, INCOMING));
                 }
                 else if (isOutgoing) {
-                    result.add(
-                            new AttachedAnnotation(relationLayer, relationFS, targetFS, OUTGOING));
+                    result.add(new AttachedAnnotation(layer, relationFS, targetFS, OUTGOING));
                 }
             }
         }
@@ -1643,5 +1680,137 @@ public class AnnotationSchemaServiceImpl
         selectedTag.setName(aValue);
         selectedTag.setTagSet(aFeature.getTagset());
         createTag(selectedTag);
+    }
+
+    @Override
+    public boolean hasValidLayerName(AnnotationLayer aLayer)
+    {
+        return validateLayerName(aLayer).isEmpty();
+    }
+
+    @Override
+    public List<ValidationError> validateLayerName(AnnotationLayer aLayer)
+    {
+        var name = aLayer.getName();
+
+        var errors = new ArrayList<ValidationError>();
+
+        if (isTypeName(name)) {
+            errors.add(new ValidationError(
+                    "Invalid technical name [" + name + "]. Try using a simpler name when "
+                            + "creating the layer and rename the layer after it has been created"));
+            return errors;
+        }
+
+        if (existsLayer(name, aLayer.getProject())) {
+            errors.add(new ValidationError(
+                    "A layer with the name [" + name + "] already exists in this project."));
+            return errors;
+        }
+
+        return errors;
+    }
+
+    @Override
+    public boolean hasValidFeatureName(AnnotationFeature aFeature)
+    {
+        return validateFeatureName(aFeature).isEmpty();
+    }
+
+    @Override
+    public List<ValidationError> validateFeatureName(AnnotationFeature aFeature)
+    {
+        var name = aFeature.getName();
+
+        var errors = new ArrayList<ValidationError>();
+
+        if (isBlank(name)) {
+            errors.add(new ValidationError("Feature name cannot be empty."));
+            return errors;
+        }
+
+        // Check if feature name is not from the restricted names list
+        if (RESTRICTED_FEATURE_NAMES.contains(name)) {
+            errors.add(new ValidationError("[" + name + "] is a reserved feature name. Please "
+                    + "use a different name for the feature."));
+            return errors;
+        }
+
+        var layerSupport = layerSupportRegistry.getLayerSupport(aFeature.getLayer());
+        errors.addAll(layerSupport.validateFeatureName(aFeature));
+        if (!errors.isEmpty()) {
+            return errors;
+        }
+
+        // Checking if feature name doesn't start with a number or underscore
+        // And only uses alphanumeric characters
+        if (!TypeSystemUtils.isIdentifier(name)) {
+            errors.add(new ValidationError("Invalid feature name [" + name
+                    + "].  Feature names must start with a letter and consist only of letters, digits, or underscores."));
+            return errors;
+        }
+
+        if (existsFeature(name, aFeature.getLayer())) {
+            errors.add(new ValidationError(
+                    "A feature with the name [" + name + "] already exists on this layer!"));
+            return errors;
+        }
+
+        return errors;
+    }
+
+    @Override
+    @Transactional
+    public List<AnnotationLayer> getRelationLayersFor(AnnotationLayer aSpanLayer)
+    {
+        var candidates = new ArrayList<AnnotationLayer>();
+        for (var layer : listEnabledLayers(aSpanLayer.getProject())) {
+            if (!RelationLayerSupport.TYPE.equals(layer.getType())) {
+                continue;
+            }
+
+            // Layer attaches explicitly to the given layer
+            if (aSpanLayer.equals(layer.getAttachType())) {
+                candidates.add(layer);
+                continue;
+            }
+
+            // Relation layer that attaches to any span layer
+            if (layer.getAttachType() == null) {
+                candidates.add(layer);
+                continue;
+            }
+
+            // Special case for built-in layers such as the Dependency layer
+            if (layer.getAttachFeature() != null
+                    && layer.getAttachFeature().getType().equals(aSpanLayer.getName())) {
+                candidates.add(layer);
+                continue;
+            }
+        }
+
+        return candidates;
+    }
+
+    private static final String NAMESPACE_SEPARATOR_AS_STRING = "" + TypeSystem.NAMESPACE_SEPARATOR;
+
+    // Remove method when upgrading to UIMA 3.6.0
+    // See https://github.com/apache/uima-uimaj/issues/369
+    // return TypeSystemUtil.isTypeName(name);
+    public static boolean isTypeName(String name)
+    {
+        var tok = new StringTokenizer(name, NAMESPACE_SEPARATOR_AS_STRING, true);
+        while (tok.hasMoreTokens()) {
+            if (!isIdentifier(tok.nextToken())) {
+                return false;
+            }
+            if (tok.hasMoreTokens()) {
+                if (!tok.nextToken().equals(NAMESPACE_SEPARATOR_AS_STRING)
+                        || !tok.hasMoreTokens()) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 }

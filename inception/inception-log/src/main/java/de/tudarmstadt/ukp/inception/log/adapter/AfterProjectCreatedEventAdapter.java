@@ -21,17 +21,17 @@ import java.io.IOException;
 
 import org.springframework.stereotype.Component;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterProjectCreatedEvent;
-import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
+import de.tudarmstadt.ukp.inception.project.api.event.AfterProjectCreatedEvent;
+import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 
 @Component
 public class AfterProjectCreatedEventAdapter
     implements EventLoggingAdapter<AfterProjectCreatedEvent>
 {
     @Override
-    public boolean accepts(Object aEvent)
+    public boolean accepts(Class<?> aEvent)
     {
-        return aEvent instanceof AfterProjectCreatedEvent;
+        return AfterProjectCreatedEvent.class.isAssignableFrom(aEvent);
     }
 
     @Override
@@ -43,7 +43,7 @@ public class AfterProjectCreatedEventAdapter
     @Override
     public String getDetails(AfterProjectCreatedEvent aEvent) throws IOException
     {
-        Details details = new Details();
+        var details = new Details();
         details.projectName = aEvent.getProject().getName();
         return JSONUtil.toJsonString(details);
     }

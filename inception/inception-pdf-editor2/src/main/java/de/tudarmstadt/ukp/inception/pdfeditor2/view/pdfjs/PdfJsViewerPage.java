@@ -38,9 +38,9 @@ import org.apache.wicket.util.resource.IResourceStream;
 import org.apache.wicket.util.value.AttributeMap;
 import org.wicketstuff.annotation.mount.MountPath;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.InputStreamResourceStream;
 import de.tudarmstadt.ukp.inception.pdfeditor2.config.PdfAnnotationEditor2WebMvcConfiguration;
 import de.tudarmstadt.ukp.inception.pdfeditor2.resources.PdfJsViewerJavaScriptReference;
+import de.tudarmstadt.ukp.inception.support.wicket.InputStreamResourceStream;
 
 @MountPath(PdfAnnotationEditor2WebMvcConfiguration.BASE_URL + "/viewer.html")
 public class PdfJsViewerPage
@@ -59,9 +59,11 @@ public class PdfJsViewerPage
         aResponse.render(JavaScriptHeaderItem.forReference(PdfJsViewerJavaScriptReference.get()));
         var script = String.join("\n", //
                 "window.addEventListener('DOMContentLoaded', function() {", //
+                "  PDFViewerApplicationOptions.set('annotationMode', 0);", //
                 "  PDFViewerApplicationOptions.set('defaultUrl', null);", //
                 "  PDFViewerApplicationOptions.set('disablePreferences', true);", //
                 "  PDFViewerApplicationOptions.set('workerSrc', 'pdf.worker.min.js');", //
+                "  PDFViewerApplicationOptions.set('isEvalSupported', false);", //
                 "  PDFViewerApplicationOptions.set('enableScripting', false);", //
                 "  PDFViewerApplicationOptions.set('viewOnLoad', 1);", //
                 // Because when when we jump to a location in a different document it sucks when

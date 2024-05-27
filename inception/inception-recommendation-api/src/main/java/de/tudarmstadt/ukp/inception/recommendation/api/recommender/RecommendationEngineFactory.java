@@ -35,6 +35,11 @@ public interface RecommendationEngineFactory<T>
      */
     boolean isDeprecated();
 
+    default boolean isSynchronous(Recommender aRecommender)
+    {
+        return false;
+    }
+
     default boolean isEvaluable()
     {
         return true;
@@ -72,4 +77,16 @@ public interface RecommendationEngineFactory<T>
     T readTraits(Recommender aRecommender);
 
     void writeTraits(Recommender aRecommender, T aTraits);
+
+    /**
+     * The task of a ranker is to provide ordered suggestions instead of scored suggestions. While a
+     * ranker will usually set the score property of a suggestion, that score should not be
+     * displayed prominently in the user interface.
+     * 
+     * @return {@code true} if the recommender is a ranker
+     */
+    default boolean isRanker(Recommender aRecommender)
+    {
+        return false;
+    }
 }

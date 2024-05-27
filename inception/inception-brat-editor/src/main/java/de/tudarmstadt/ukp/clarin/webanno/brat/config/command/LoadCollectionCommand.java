@@ -24,8 +24,8 @@ import java.io.IOException;
 import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetCollectionInformationResponse;
-import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.externaleditor.command.EditorCommand;
+import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 
 @Order(10)
 public class LoadCollectionCommand

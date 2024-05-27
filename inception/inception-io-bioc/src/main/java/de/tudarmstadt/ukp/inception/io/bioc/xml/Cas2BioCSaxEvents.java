@@ -17,8 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.io.bioc.xml;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.FEAT_REL_SOURCE;
-import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.FEAT_REL_TARGET;
 import static de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.Tsv3XCasSchemaAnalyzer.isRelationLayer;
 import static de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.Tsv3XCasSchemaAnalyzer.isSpanLayer;
 import static de.tudarmstadt.ukp.inception.io.bioc.BioCComponent.A_ID;
@@ -45,6 +43,8 @@ import static de.tudarmstadt.ukp.inception.io.bioc.BioCComponent.R_SOURCE;
 import static de.tudarmstadt.ukp.inception.io.bioc.BioCComponent.R_TARGET;
 import static de.tudarmstadt.ukp.inception.io.bioc.BioCComponent.getCollectionMetadataField;
 import static de.tudarmstadt.ukp.inception.io.bioc.xml.BioCXmlUtils.getChildTextElement;
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.FEAT_REL_SOURCE;
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.FEAT_REL_TARGET;
 import static java.util.stream.Collectors.toList;
 import static org.apache.uima.cas.CAS.FEATURE_FULL_NAME_BEGIN;
 import static org.apache.uima.cas.CAS.FEATURE_FULL_NAME_END;
@@ -69,8 +69,13 @@ import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.MetaDataStringField;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.inception.io.bioc.model.CasToBioC;
 import de.tudarmstadt.ukp.inception.io.xml.dkprocore.Cas2SaxEvents;
 
+/**
+ * @deprecated Experimental code that was deprecated in favor of {@link CasToBioC}
+ */
+@Deprecated
 public class Cas2BioCSaxEvents
     extends Cas2SaxEvents
 {
@@ -139,8 +144,9 @@ public class Cas2BioCSaxEvents
             return;
         }
 
-        for (var annotation : aSentenceElement.getCAS().select(Annotation.class)
-                .coveredBy(aSentenceElement)) {
+        var annotations = aSentenceElement.getCAS().select(Annotation.class)
+                .coveredBy(aSentenceElement);
+        for (var annotation : annotations) {
             serializeAnnotation(sentenceTextElement.get().getBegin(), annotation);
         }
     }

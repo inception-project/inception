@@ -17,15 +17,18 @@
  */
 package de.tudarmstadt.ukp.inception.log;
 
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Deque;
-import java.util.List;
-import java.util.Optional;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
@@ -33,7 +36,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.event.EventListener;
 
-import de.tudarmstadt.ukp.inception.log.adapter.EventLoggingAdapter;
 import de.tudarmstadt.ukp.inception.log.adapter.EventLoggingAdapterRegistry;
 import de.tudarmstadt.ukp.inception.log.config.EventLoggingAutoConfiguration;
 import de.tudarmstadt.ukp.inception.log.config.EventLoggingProperties;
@@ -49,13 +51,15 @@ import de.tudarmstadt.ukp.inception.support.spring.StartupProgressInfoEvent;
 public class EventLoggingListener
     implements DisposableBean
 {
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private final EventRepository repo;
     private final ScheduledExecutorService scheduler;
     private final Deque<LoggedEvent> queue;
     private final EventLoggingProperties properties;
     private final EventLoggingAdapterRegistry adapterRegistry;
+
+    private Map<String, Boolean> eventCache = new HashMap<>();
 
     private volatile boolean flushing = false;
 
@@ -73,6 +77,32 @@ public class EventLoggingListener
         scheduler.scheduleAtFixedRate(() -> flush(), 1, 1, TimeUnit.SECONDS);
     }
 
+    boolean shouldLogEvent(String aEventName)
+    {
+        if (eventCache.containsKey(aEventName)) {
+            return eventCache.get(aEventName);
+        }
+
+        boolean shouldLog;
+
+        if (CollectionUtils.isEmpty(properties.getIncludePatterns())) {
+            shouldLog = true;
+        }
+        else {
+            shouldLog = properties.getIncludePatterns().stream()
+                    .anyMatch(pattern -> Pattern.matches(pattern, aEventName));
+        }
+
+        if (shouldLog && !CollectionUtils.isEmpty(properties.getExcludePatterns())) {
+            shouldLog = properties.getExcludePatterns().stream()
+                    .noneMatch(pattern -> Pattern.matches(pattern, aEventName));
+        }
+
+        eventCache.put(aEventName, shouldLog);
+
+        return shouldLog;
+    }
+
     @EventListener
     public void onApplicationEvent(ApplicationEvent aEvent)
     {
@@ -80,33 +110,37 @@ public class EventLoggingListener
             return;
         }
 
-        Optional<EventLoggingAdapter<ApplicationEvent>> adapter = adapterRegistry
-                .getAdapter(aEvent);
+        var maybeAdapter = adapterRegistry.getAdapter(aEvent);
 
-        if (adapter.isPresent()) {
-            EventLoggingAdapter<ApplicationEvent> a = adapter.get();
+        if (!maybeAdapter.isPresent()) {
+            return;
+        }
 
-            if (properties.getExcludeEvents().contains(a.getEvent(aEvent))) {
-                return;
-            }
+        var adapter = maybeAdapter.get();
+        if (!adapter.isLoggable(aEvent)) {
+            return;
+        }
 
-            LoggedEvent e;
+        if (!shouldLogEvent(adapter.getEvent(aEvent))) {
+            return;
+        }
 
-            try {
-                e = a.toLoggedEvent(aEvent);
-            }
-            catch (Exception ex) {
-                log.error("Unable to log event [{}]", aEvent, ex);
-                return;
-            }
+        LoggedEvent e;
 
-            // Add to the writing queue which gets flushed regularly by a timer
-            queue.add(e);
+        try {
+            e = adapter.toLoggedEvent(aEvent);
+        }
+        catch (Exception ex) {
+            LOG.error("Unable to log event [{}]", aEvent, ex);
+            return;
+        }
 
-            // If the queue gets too large, force a flush even if the timer is not there yet
-            if (queue.size() > 1000) {
-                flush();
-            }
+        // Add to the writing queue which gets flushed regularly by a timer
+        queue.add(e);
+
+        // If the queue gets too large, force a flush even if the timer is not there yet
+        if (queue.size() > 1000) {
+            flush();
         }
     }
 
@@ -124,7 +158,7 @@ public class EventLoggingListener
                 flushing = true;
 
                 // Fetch all items that are currently in the queue
-                List<LoggedEvent> batch = new ArrayList<>();
+                var batch = new ArrayList<LoggedEvent>();
                 while (!queue.isEmpty()) {
                     batch.add(queue.pop());
                 }

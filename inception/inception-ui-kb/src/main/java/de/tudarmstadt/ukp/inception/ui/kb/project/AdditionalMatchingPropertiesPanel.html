@@ -33,22 +33,18 @@
         <div class="list-group-item">
           <div class="input-group">
             <input type="text" wicket:id="newPropertyField" class="form-control"/>
-            <span class="input-group-btn">
-              <a wicket:id="addProperty" class="btn btn-primary">
-                <i class="fas fa-plus" aria-hidden="true"></i>
-              </a>
-            </span>
+            <button wicket:id="addProperty" class="btn btn-primary">
+              <i class="fas fa-plus" aria-hidden="true"></i>
+            </button>
           </div>
         </div>
         <div wicket:id=additionalMatchingProperties class="list-group-item">
           <form wicket:id="propertyForm">
             <div class="input-group">
               <input type="text" wicket:id="textField" class="form-control"/>
-              <span class="input-group-btn">
-                <a wicket:id="removeProperty" class="btn btn-danger">
-                  <i class="fas fa-trash" aria-hidden="true"></i>
-                </a>
-              </span>
+              <button wicket:id="removeProperty" class="btn btn-danger">
+                <i class="fas fa-trash" aria-hidden="true"></i>
+              </button>
             </div>
           </form>
         </div>

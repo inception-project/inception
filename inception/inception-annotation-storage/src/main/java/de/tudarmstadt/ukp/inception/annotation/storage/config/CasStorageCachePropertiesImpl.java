@@ -31,6 +31,7 @@ public class CasStorageCachePropertiesImpl
     implements CasStorageCacheProperties
 {
     private Duration idleCasEvictionDelay = Duration.ofMinutes(5);
+    private Duration minIdleCasTime = Duration.ofMinutes(5);
     private Duration casBorrowWaitTimeout = Duration.ofMinutes(3);
     private long sharedCasCacheSize = getDefaultCasCacheSize();
 
@@ -65,6 +66,17 @@ public class CasStorageCachePropertiesImpl
     public void setSharedCasCacheSize(long aSharedCasCacheSize)
     {
         sharedCasCacheSize = aSharedCasCacheSize;
+    }
+
+    @Override
+    public Duration getMinIdleCasTime()
+    {
+        return minIdleCasTime;
+    }
+
+    public void setMinIdleCasTime(Duration aMinIdleCasTime)
+    {
+        minIdleCasTime = aMinIdleCasTime;
     }
 
     private static final long MB = 1024 * 1024;

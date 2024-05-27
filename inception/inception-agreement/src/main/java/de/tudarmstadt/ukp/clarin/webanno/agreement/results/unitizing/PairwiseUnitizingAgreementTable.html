@@ -20,9 +20,11 @@
   <div class="flex-content card">
     <div class="card-header">
       <wicket:message key="agreement" />
-      <span class="float-end btn btn-link">
-        <a wicket:id="legend"><wicket:message key="legend" /></a> 
-      </span>
+      <div class="actions">
+        <button wicket:id="legend" class="btn btn-secondary btn-action" type="button">
+          <wicket:message key="legend"/>
+        </button>
+      </div>
     </div>
     <div class="scrolling card-body fit-child-snug" style="padding: 0px;">
       <table style="width: 100%;">

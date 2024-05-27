@@ -19,12 +19,12 @@ package de.tudarmstadt.ukp.inception.recommendation.log;
 
 import java.io.IOException;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.log.adapter.EventLoggingAdapter;
 import de.tudarmstadt.ukp.inception.log.model.AnnotationDetails;
 import de.tudarmstadt.ukp.inception.log.model.FeatureChangeDetails;
+import de.tudarmstadt.ukp.inception.recommendation.api.event.RecommendationRejectedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAutoConfiguration;
-import de.tudarmstadt.ukp.inception.recommendation.event.RecommendationRejectedEvent;
+import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 
 /**
  * <p>
@@ -36,9 +36,9 @@ public class RecommendationRejectedEventAdapter
     implements EventLoggingAdapter<RecommendationRejectedEvent>
 {
     @Override
-    public boolean accepts(Object aEvent)
+    public boolean accepts(Class<?> aEvent)
     {
-        return aEvent instanceof RecommendationRejectedEvent;
+        return RecommendationRejectedEvent.class.isAssignableFrom(aEvent);
     }
 
     @Override

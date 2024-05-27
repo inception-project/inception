@@ -32,19 +32,22 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.security.core.session.SessionRegistry;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
+import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.recommendation.RecommendationEditorExtension;
+import de.tudarmstadt.ukp.inception.recommendation.actionbar.RecommenderActionBarExtension;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommenderFactoryRegistry;
+import de.tudarmstadt.ukp.inception.recommendation.api.SuggestionSupport;
+import de.tudarmstadt.ukp.inception.recommendation.api.SuggestionSupportRegistry;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
-import de.tudarmstadt.ukp.inception.recommendation.evaluation.EvaluationSimulationPageMenuItem;
 import de.tudarmstadt.ukp.inception.recommendation.exporter.LearningRecordExporter;
 import de.tudarmstadt.ukp.inception.recommendation.exporter.RecommenderExporter;
 import de.tudarmstadt.ukp.inception.recommendation.footer.RecommendationEventFooterItem;
+import de.tudarmstadt.ukp.inception.recommendation.link.LinkSuggestionSupport;
 import de.tudarmstadt.ukp.inception.recommendation.log.RecommendationAcceptedEventAdapter;
 import de.tudarmstadt.ukp.inception.recommendation.log.RecommendationRejectedEventAdapter;
 import de.tudarmstadt.ukp.inception.recommendation.log.RecommenderDeletedEventAdapter;
@@ -52,15 +55,16 @@ import de.tudarmstadt.ukp.inception.recommendation.log.RecommenderEvaluationResu
 import de.tudarmstadt.ukp.inception.recommendation.metrics.RecommendationMetricsImpl;
 import de.tudarmstadt.ukp.inception.recommendation.project.ProjectRecommendersMenuItem;
 import de.tudarmstadt.ukp.inception.recommendation.project.RecommenderProjectSettingsPanelFactory;
-import de.tudarmstadt.ukp.inception.recommendation.render.RecommendationRelationRenderer;
+import de.tudarmstadt.ukp.inception.recommendation.relation.RelationSuggestionSupport;
 import de.tudarmstadt.ukp.inception.recommendation.render.RecommendationRenderer;
-import de.tudarmstadt.ukp.inception.recommendation.render.RecommendationSpanRenderer;
 import de.tudarmstadt.ukp.inception.recommendation.service.RecommendationServiceImpl;
 import de.tudarmstadt.ukp.inception.recommendation.service.RecommenderFactoryRegistryImpl;
+import de.tudarmstadt.ukp.inception.recommendation.service.SuggestionSupportRegistryImpl;
 import de.tudarmstadt.ukp.inception.recommendation.sidebar.RecommendationSidebarFactory;
+import de.tudarmstadt.ukp.inception.recommendation.span.SpanSuggestionSupport;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
-import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 
 /**
  * Provides all back-end Spring beans for the recommendation functionality.
@@ -77,21 +81,12 @@ public class RecommenderServiceAutoConfiguration
             SessionRegistry aSessionRegistry, UserDao aUserRepository,
             RecommenderFactoryRegistry aRecommenderFactoryRegistry,
             SchedulingService aSchedulingService, AnnotationSchemaService aAnnoService,
-            DocumentService aDocumentService, ProjectService aProjectService,
-            ApplicationEventPublisher aApplicationEventPublisher)
+            ProjectService aProjectService, ApplicationEventPublisher aApplicationEventPublisher,
+            SuggestionSupportRegistry aLayerRecommendtionSupportRegistry)
     {
         return new RecommendationServiceImpl(aPreferencesService, aSessionRegistry, aUserRepository,
-                aRecommenderFactoryRegistry, aSchedulingService, aAnnoService, aDocumentService,
-                aProjectService, entityManager, aApplicationEventPublisher);
-    }
-
-    @ConditionalOnWebApplication
-    @ConditionalOnProperty(prefix = "recommender.evaluation-page", //
-            name = "enabled", havingValue = "true", matchIfMissing = true)
-    @Bean
-    public EvaluationSimulationPageMenuItem evaluationSimulationPageMenuItem()
-    {
-        return new EvaluationSimulationPageMenuItem();
+                aRecommenderFactoryRegistry, aSchedulingService, aAnnoService, aProjectService,
+                entityManager, aApplicationEventPublisher, aLayerRecommendtionSupportRegistry);
     }
 
     @Bean
@@ -150,7 +145,8 @@ public class RecommenderServiceAutoConfiguration
             havingValue = "true", matchIfMissing = true)
     @Bean
     public RecommendationSidebarFactory recommendationSidebarFactory(
-            RecommendationService aRecommendationService)
+            RecommendationService aRecommendationService, PreferencesService aPreferencesService,
+            UserDao aUserService)
     {
         return new RecommendationSidebarFactory(aRecommendationService);
     }
@@ -160,10 +156,11 @@ public class RecommenderServiceAutoConfiguration
     public RecommendationEditorExtension recommendationEditorExtension(
             AnnotationSchemaService aAnnotationService,
             RecommendationService aRecommendationService,
-            ApplicationEventPublisher aApplicationEventPublisher, UserDao aUserService)
+            ApplicationEventPublisher aApplicationEventPublisher, UserDao aUserService,
+            FeatureSupportRegistry aFeatureSupportRegistry)
     {
         return new RecommendationEditorExtension(aAnnotationService, aRecommendationService,
-                aApplicationEventPublisher, aUserService);
+                aApplicationEventPublisher, aUserService, aFeatureSupportRegistry);
     }
 
     @Bean
@@ -192,31 +189,59 @@ public class RecommenderServiceAutoConfiguration
     }
 
     @Bean
-    public RecommendationRenderer recommendationRenderer(AnnotationSchemaService aAnnotationService,
-            RecommendationSpanRenderer aRecommendationSpanRenderer,
-            RecommendationRelationRenderer aRecommendationRelationRenderer,
+    public RecommendationRenderer recommendationRenderer(
+            RecommendationService aRecommendationService,
+            SuggestionSupportRegistry aSuggestionSupportRegistry,
+            PreferencesService aPreferencesService, UserDao aUserService)
+    {
+        return new RecommendationRenderer(aRecommendationService, aSuggestionSupportRegistry,
+                aPreferencesService, aUserService);
+    }
+
+    @Bean
+    public RecommenderActionBarExtension recommenderActionBarExtension(
             RecommendationService aRecommendationService)
     {
-        return new RecommendationRenderer(aAnnotationService, aRecommendationSpanRenderer,
-                aRecommendationRelationRenderer, aRecommendationService);
+        return new RecommenderActionBarExtension(aRecommendationService);
     }
 
     @Bean
-    public RecommendationSpanRenderer recommendationSpanRenderer(
-            RecommendationService aRecommendationService,
-            AnnotationSchemaService aAnnotationService, FeatureSupportRegistry aFsRegistry,
+    public SpanSuggestionSupport spanSuggestionSupport(RecommendationService aRecommendationService,
+            LearningRecordService aLearningRecordService,
+            ApplicationEventPublisher aApplicationEventPublisher,
+            AnnotationSchemaService aSchemaService, FeatureSupportRegistry aFeatureSupportRegistry,
             RecommenderProperties aRecommenderProperties)
     {
-        return new RecommendationSpanRenderer(aRecommendationService, aAnnotationService,
-                aFsRegistry, aRecommenderProperties);
+        return new SpanSuggestionSupport(aRecommendationService, aLearningRecordService,
+                aApplicationEventPublisher, aSchemaService, aFeatureSupportRegistry,
+                aRecommenderProperties);
     }
 
     @Bean
-    public RecommendationRelationRenderer recommendationRelationRenderer(
+    public RelationSuggestionSupport relationSuggestionSupport(
             RecommendationService aRecommendationService,
-            AnnotationSchemaService aAnnotationService, FeatureSupportRegistry aFsRegistry)
+            LearningRecordService aLearningRecordService,
+            ApplicationEventPublisher aApplicationEventPublisher,
+            AnnotationSchemaService aSchemaService, FeatureSupportRegistry aFeatureSupportRegistry)
     {
-        return new RecommendationRelationRenderer(aRecommendationService, aAnnotationService,
-                aFsRegistry);
+        return new RelationSuggestionSupport(aRecommendationService, aLearningRecordService,
+                aApplicationEventPublisher, aSchemaService, aFeatureSupportRegistry);
+    }
+
+    @Bean
+    public LinkSuggestionSupport linkSuggestionSupport(RecommendationService aRecommendationService,
+            LearningRecordService aLearningRecordService,
+            ApplicationEventPublisher aApplicationEventPublisher,
+            AnnotationSchemaService aSchemaService, FeatureSupportRegistry aFeatureSupportRegistry)
+    {
+        return new LinkSuggestionSupport(aRecommendationService, aLearningRecordService,
+                aApplicationEventPublisher, aSchemaService, aFeatureSupportRegistry);
+    }
+
+    @Bean
+    public SuggestionSupportRegistry layerRecommendtionSupportRegistry(
+            @Lazy @Autowired(required = false) List<SuggestionSupport> aExtensions)
+    {
+        return new SuggestionSupportRegistryImpl(aExtensions);
     }
 }

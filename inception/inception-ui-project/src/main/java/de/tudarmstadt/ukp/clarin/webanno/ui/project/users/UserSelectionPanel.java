@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.project.users;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
-import static java.util.stream.Collectors.joining;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
@@ -30,7 +29,6 @@ import java.util.Map;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.form.Form;
-import org.apache.wicket.markup.html.form.IChoiceRenderer;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.util.CollectionModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
@@ -41,16 +39,15 @@ import com.googlecode.wicket.kendo.ui.KendoDataSource;
 import com.googlecode.wicket.kendo.ui.form.multiselect.lazy.MultiSelect;
 import com.googlecode.wicket.kendo.ui.renderer.ChoiceRenderer;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectUserPermissions;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.ListPanel_ImplBase;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.OverviewListChoice;
+import de.tudarmstadt.ukp.inception.project.api.ProjectService;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxButton;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
+import de.tudarmstadt.ukp.inception.support.wicket.ListPanel_ImplBase;
+import de.tudarmstadt.ukp.inception.support.wicket.OverviewListChoice;
 
 class UserSelectionPanel
     extends ListPanel_ImplBase
@@ -80,7 +77,8 @@ class UserSelectionPanel
         recentUsers = new HashMap<>();
 
         overviewList = new OverviewListChoice<>("user");
-        overviewList.setChoiceRenderer(makeUserChoiceRenderer());
+        overviewList
+                .setChoiceRenderer(new ProjectUserPermissionChoiceRenderer().setShowRoles(true));
         overviewList.setModel(userModel);
         overviewList.setChoices(this::listUsersWithPermissions);
         overviewList.add(new LambdaAjaxFormComponentUpdatingBehavior("change", this::onChange));
@@ -90,14 +88,14 @@ class UserSelectionPanel
         Form<Collection<User>> form = new Form<>("form", usersToAddModel);
         add(form);
 
-        ChoiceRenderer<User> userRenderer = new ChoiceRenderer<User>("username")
+        var userRenderer = new ChoiceRenderer<User>("username")
         {
             private static final long serialVersionUID = -2386864570904752307L;
 
             @Override
             public String getText(User user, String expression)
             {
-                StringBuilder builder = new StringBuilder();
+                var builder = new StringBuilder();
                 builder.append(user.getUiName());
                 if (!user.getUsername().equals(user.getUiName())) {
                     builder.append(" (");
@@ -194,47 +192,6 @@ class UserSelectionPanel
         usersToAdd.setModel(usersToAddModel);
         form.add(usersToAdd);
         form.add(new LambdaAjaxButton<>("add", this::actionAdd));
-    }
-
-    private IChoiceRenderer<ProjectUserPermissions> makeUserChoiceRenderer()
-    {
-        return new org.apache.wicket.markup.html.form.ChoiceRenderer<ProjectUserPermissions>()
-        {
-            private static final long serialVersionUID = 4607720784161484145L;
-
-            @Override
-            public Object getDisplayValue(ProjectUserPermissions aUser)
-            {
-                String username = aUser.getUsername();
-
-                StringBuilder builder = new StringBuilder();
-
-                aUser.getUser().ifPresentOrElse( //
-                        user -> {
-                            builder.append(user.getUiName());
-                            if (!aUser.getUsername().equals(user.getUiName())) {
-                                builder.append(" (");
-                                builder.append(aUser.getUsername());
-                                builder.append(")");
-                            }
-                        }, //
-                        () -> builder.append(username));
-
-                builder.append(" ");
-                builder.append(aUser.getRoles().stream().map(PermissionLevel::getName) //
-                        .collect(joining(", ", "[", "]")));
-
-                aUser.getUser().ifPresentOrElse( //
-                        user -> { //
-                            if (!user.isEnabled()) {
-                                builder.append(" (deactivated)");
-                            }
-                        }, //
-                        () -> builder.append(" (missing!)"));
-
-                return builder.toString();
-            }
-        };
     }
 
     private List<ProjectUserPermissions> listUsersWithPermissions()

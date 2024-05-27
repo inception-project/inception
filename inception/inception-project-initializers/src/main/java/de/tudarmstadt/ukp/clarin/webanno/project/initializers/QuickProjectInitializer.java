@@ -17,7 +17,11 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.project.initializers;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.project.ProjectInitializer;
+import java.util.Optional;
+
+import org.apache.wicket.request.resource.ResourceReference;
+
+import de.tudarmstadt.ukp.inception.project.api.ProjectInitializer;
 
 public interface QuickProjectInitializer
     extends ProjectInitializer
@@ -26,5 +30,15 @@ public interface QuickProjectInitializer
     default boolean applyByDefault()
     {
         return false;
+    }
+
+    default Optional<String> getDescription()
+    {
+        return Optional.empty();
+    }
+
+    default Optional<ResourceReference> getThumbnail()
+    {
+        return Optional.empty();
     }
 }

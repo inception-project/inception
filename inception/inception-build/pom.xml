@@ -20,9 +20,9 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>29.0-SNAPSHOT</version>
+    <version>33.0-SNAPSHOT</version>
   </parent>
   <artifactId>inception-build</artifactId>
-  <name>INCEpTION - Build resources</name>
+  <name>INCEpTION - Dev - Build resources</name>
   <packaging>jar</packaging>
 </project>

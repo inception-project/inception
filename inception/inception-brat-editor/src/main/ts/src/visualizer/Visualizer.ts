@@ -59,7 +59,7 @@ import '@svgdotjs/svg.filter.js'
 import { SVG, Element as SVGJSElement, Svg, Container, Text as SVGText, PathCommand, Rect, ArrayXY, SVGTypeMapping, Defs } from '@svgdotjs/svg.js'
 import { INSTANCE as Configuration } from '../configuration/Configuration'
 import { INSTANCE as Util } from '../util/Util'
-import { Offsets } from '@inception-project/inception-js-api'
+import { AnnotationOutEvent, AnnotationOverEvent, Offsets, Relation, Span } from '@inception-project/inception-js-api'
 declare const $: JQueryStatic
 
 /**
@@ -82,7 +82,6 @@ function setSourceDataDefaults (sourceData: SourceData) {
     'entities',
     'equivs',
     'events',
-    'normalizations',
     'relations',
     'triggers'
   ], (attrNo, attr) => {
@@ -523,33 +522,6 @@ export class Visualizer {
     }) // markedText
   }
 
-  applyNormalizations (normalizations: Array<NormalizationDto>) {
-    if (!normalizations || !this.data) {
-      return
-    }
-
-    for (const norm of normalizations) {
-      const target = norm[0]
-      const refdb = norm.length > 1 ? norm[1] : '#' // See Renderer.QUERY_LAYER_LEVEL_DETAILS
-      const refid = norm.length > 2 ? norm[2] : ''
-      const reftext = norm.length > 3 ? norm[3] : undefined
-
-      const span = this.data.spans[target]
-      if (span) {
-        span.normalizations.push([refdb, refid, reftext])
-        continue
-      }
-
-      const arc = this.data.arcById[target]
-      if (arc) {
-        arc.normalizations.push([refdb, refid, reftext])
-        continue
-      }
-
-      this.dispatcher.post('messages', [[['Annotation ' + target + ' does not exist.', 'error']]])
-    }
-  }
-
   buildSpansFromEntities (documentText: string, entities: Array<EntityDto>): Record<VID, Entity> {
     if (!entities) {
       return {}
@@ -670,7 +642,7 @@ export class Visualizer {
       for (let i = 1; i < len; i++) {
         const id = okEquivSpans[i - 1]
         const tiggerId = okEquivSpans[i - 1]
-        const roles: Array<RoleDto> = [[equiv[1], okEquivSpans[i]]]
+        const roles: Array<RoleDto> = [[parseInt(equiv[1]), okEquivSpans[i]]]
         const eventDesc = eventDescs[equiv[0] + '*' + i] = new EventDesc(id, tiggerId, roles, EQUIV)
         eventDesc.leftSpans = okEquivSpans.slice(0, i)
         eventDesc.rightSpans = okEquivSpans.slice(i)
@@ -763,11 +735,12 @@ export class Visualizer {
       if (comment[0] instanceof Array && comment[0][0] === 'sent') {
         // sentence comment
         const sent = comment[0][1]
+        const id = comment[0][2]
         let text = comment[2]
         if (docData.sentComment[sent]) {
           text = docData.sentComment[sent].text + '<br/>' + text
         }
-        docData.sentComment[sent] = { type: comment[1], text }
+        docData.sentComment[sent] = { id, type: comment[1], text }
         continue
       }
 
@@ -1032,7 +1005,6 @@ export class Visualizer {
       this.sourceData.sentence_offsets, this.data.chunks)
     this.assignFragmentsToChunks(this.data.chunks, sortedFragments)
     this.data.arcs = this.assignArcsToSpans(this.data, this.data.eventDescs, this.data.spans)
-    this.applyNormalizations(this.sourceData.normalizations)
     this.applyHighlighting(this.data, this.sourceData)
 
     if (this.data.spans) {
@@ -1311,8 +1283,6 @@ export class Visualizer {
       this.calculateChunkTextElementMeasure(fragment, text))
   }
 
-
-
   /**
    * measure the text position in pixels
    */
@@ -1331,8 +1301,7 @@ export class Visualizer {
             collapsedSpaces++
           }
           lastCharSpace = true
-        }
-        else {
+        } else {
           lastCharSpace = false
         }
       }
@@ -3404,7 +3373,7 @@ export class Visualizer {
       this.renderAssignFragmentsToRows(rows, fragmentHeights)
       Util.profileEnd('arcsPrep')
 
-      Util.profileStart('arcsPrep')
+      Util.profileStart('arcs')
       this.renderArcs(this.data, rows, fragmentHeights)
       Util.profileEnd('arcs')
 
@@ -3547,6 +3516,20 @@ export class Visualizer {
     this.triggerRender()
   }
 
+  onMouseOutSpan (evt: MouseEvent) {
+    if (!this.data) return
+
+    const target = $(evt.target)
+    const id = target.attr('data-span-id')
+    const span = this.data.spans[id]
+
+    if (span.hidden) { return }
+
+    if (evt.target) {
+      evt.target.dispatchEvent(new AnnotationOutEvent({ vid: id, layer: { id: span.type, name: Util.spanDisplayForm(this.entityTypes, span.type) } }, evt.originalEvent))
+    }
+  }
+
   onMouseOverSpan (evt: MouseEvent) {
     if (!this.data) return
 
@@ -3556,14 +3539,20 @@ export class Visualizer {
 
     if (span.hidden) { return }
 
-    this.dispatcher.post('displaySpanComment', [
-      evt, target, id, span.type, span.attributeText,
-      span.text,
-      span.hovertext,
-      span.comment && span.comment.text,
-      span.comment && span.comment.type,
-      span.normalizations
-    ])
+    if (evt.target) {
+      const fakeSpan = new Span()
+      fakeSpan.vid = id
+      fakeSpan.document = { text: this.data.text }
+      fakeSpan.layer = { id: span.type, name: Util.spanDisplayForm(this.entityTypes, span.type) }
+      if (span.comment) {
+        if (span.comment.type === 'AnnotationError') {
+          fakeSpan.comments = [{ type: 'error', comment: span.comment.text }]
+        } else {
+          fakeSpan.comments = [{ type: 'info', comment: span.comment.text }]
+        }
+      }
+      evt.target.dispatchEvent(new AnnotationOverEvent(fakeSpan, evt.originalEvent))
+    }
 
     if (span.actionButtons) {
       this.dispatcher.post('displaySpanButtons', [evt, target])
@@ -3641,6 +3630,33 @@ export class Visualizer {
     this.highlight.push(highlightBox)
   }
 
+  onMouseOutArc (evt: MouseEvent) {
+    if (!this.data) return
+
+    const target = $(evt.target)
+    const originSpanId = target.attr('data-arc-origin')
+    const role = target.attr('data-arc-role')
+    const arcEventDescId: string = target.attr('data-arc-ed')
+    let arcId: string | undefined
+
+    if (arcEventDescId) {
+      const eventDesc = this.data.eventDescs[arcEventDescId]
+      if (eventDesc.relation) {
+        // among arcs, only ones corresponding to relations have "independent" IDs
+        arcId = arcEventDescId
+      }
+    }
+
+    const originSpanType = this.data.spans[originSpanId].type || ''
+
+    if (arcId) {
+      if (evt.target) {
+        const labelText = Util.arcDisplayForm(this.entityTypes, originSpanType, role, this.relationTypes)
+        evt.target.dispatchEvent(new AnnotationOutEvent({ vid: arcId, layer: { id: role, name: labelText } }, evt.originalEvent))
+      }
+    }
+  }
+
   onMouseOverArc (evt: MouseEvent) {
     if (!this.data) return
 
@@ -3677,20 +3693,23 @@ export class Visualizer {
     }
 
     const originSpanType = this.data.spans[originSpanId].type || ''
-    const targetSpanType = this.data.spans[targetSpanId].type || ''
-    let normalizations : Array<[string?, string?, string?]> = []
-    if (arcId) {
-      normalizations = this.data.arcById[arcId].normalizations
-    }
-
-    this.dispatcher.post('displayArcComment', [
-      evt, target, symmetric, arcId,
-      originSpanId, originSpanType, role,
-      targetSpanId, targetSpanType,
-      commentText, commentType, normalizations
-    ])
 
     if (arcId) {
+      if (evt.target) {
+        const fakeRelation = new Relation()
+        fakeRelation.vid = arcId
+        const labelText = Util.arcDisplayForm(this.entityTypes, originSpanType, role, this.relationTypes)
+        fakeRelation.layer = { id: role, name: labelText }
+        if (commentText) {
+          if (commentType === 'AnnotationError') {
+            fakeRelation.comments = [{ type: 'error', comment: commentText }]
+          } else {
+            fakeRelation.comments = [{ type: 'info', comment: commentText }]
+          }
+        }
+        evt.target.dispatchEvent(new AnnotationOverEvent(fakeRelation, evt.originalEvent))
+      }
+
       this.highlightArcs = this.svg
         .find(`g[data-id="${arcId}"]`)
         .map(e => e.addClass('highlight'))
@@ -3715,7 +3734,13 @@ export class Visualizer {
     if (id) {
       const comment = this.data.sentComment[id]
       if (comment) {
-        this.dispatcher.post('displaySentComment', [evt, comment.text, comment.type])
+        if (evt.target) {
+          const fakeSpan = new Span()
+          fakeSpan.vid = comment.id
+          fakeSpan.document = { text: this.data.text }
+          fakeSpan.layer = { id: 0, name: Util.spanDisplayForm(this.entityTypes, comment.type) }
+          evt.target.dispatchEvent(new AnnotationOverEvent(fakeSpan, evt.originalEvent))
+        }
       }
     }
   }
@@ -3744,7 +3769,6 @@ export class Visualizer {
 
     const target = evt.target
     target.classList.remove('badTarget')
-    this.dispatcher.post('hideComment')
 
     if (this.highlight) {
       this.highlight.map(h => h.remove())
@@ -3759,6 +3783,15 @@ export class Visualizer {
     //     arc.removeClass('highlight')
     //   }
     // }
+
+    if (target.getAttribute('data-span-id')) {
+      this.onMouseOutSpan(evt)
+      return
+    }
+
+    if (target.getAttribute('data-arc-role')) {
+      this.onMouseOutArc(evt)
+    }
   }
 
   onSelectionStarted () {

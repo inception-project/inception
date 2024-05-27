@@ -14,6 +14,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+[[sect_settings_cas_storage]]
 = CAS storage
 
 This section describes settings related to the storage of CAS data objects (i.e. annotations).
@@ -61,13 +62,17 @@ This cache can be tuned using the following properties:
 | `20000`
 
 | `cas-storage.cache.idle-cas-eviction-delay`
-| Time a CAS is retained in the caches after the last access
+| Periodic interval in which the system should check if CASes can be removed from the memory cache
 | `5m`
-| `1h`
+| `30s`
+
+| `cas-storage.cache.min-idle-cas-time`
+| Time a CAS should at least remain cached in memory to avoid loading from disk
+| `5m`
+| `30s`
 
 | `cas-storage.cache.cas-borrow-wait-timeout`
 | Time for an exclusive action to wait for another exclusive action to finish
 | `3m`
 | `5m`
 |===
-

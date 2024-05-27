@@ -20,6 +20,8 @@ package de.tudarmstadt.ukp.inception.recommendation.footer;
 import static de.tudarmstadt.ukp.inception.websocket.config.WebSocketConstants.TOPIC_ELEMENT_PROJECT;
 import static de.tudarmstadt.ukp.inception.websocket.config.WebSocketConstants.TOPIC_ELEMENT_USER;
 import static de.tudarmstadt.ukp.inception.websocket.config.WebSocketConstants.TOPIC_RECOMMENDER;
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 
 import java.lang.invoke.MethodHandles;
 
@@ -35,7 +37,11 @@ import org.springframework.messaging.simp.annotation.SendToUser;
 import org.springframework.stereotype.Controller;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.inception.recommendation.actionbar.RecommenderActionBarPanel;
+import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderTaskNotificationEvent;
+import de.tudarmstadt.ukp.inception.recommendation.tasks.PredictionTask;
 
 @ConditionalOnWebApplication
 @ConditionalOnExpression("${websocket.enabled:true} and ${websocket.recommender-events.enabled:true}")
@@ -46,24 +52,47 @@ public class RecommendationEventWebsocketControllerImpl
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private final SimpMessagingTemplate msgTemplate;
+    private final RecommendationService recommendationService;
+    private final UserDao userService;
 
-    public RecommendationEventWebsocketControllerImpl(@Autowired SimpMessagingTemplate aMsgTemplate)
+    public RecommendationEventWebsocketControllerImpl(@Autowired SimpMessagingTemplate aMsgTemplate,
+            RecommendationService aRecommenderService, UserDao aUserService)
     {
         msgTemplate = aMsgTemplate;
+        recommendationService = aRecommenderService;
+        userService = aUserService;
     }
 
     @EventListener
     @Override
     public void onRecommenderTaskEvent(RecommenderTaskNotificationEvent aEvent)
     {
-        Project project = aEvent.getProject();
-        RRecommenderLogMessage eventMsg = new RRecommenderLogMessage(aEvent.getMessage().getLevel(),
-                aEvent.getMessage().getMessage());
-        String channel = getChannel(project, aEvent.getUser());
+        var project = aEvent.getProject();
+        var eventMsg = makeEventMessage(aEvent);
+
+        var channel = getChannel(project, aEvent.getUser());
 
         LOG.debug("Sending event to [{}]: {}", channel, eventMsg);
 
         msgTemplate.convertAndSend("/topic" + channel, eventMsg);
+    }
+
+    private RRecommenderLogMessage makeEventMessage(RecommenderTaskNotificationEvent aEvent)
+    {
+        if (aEvent.getSource() instanceof PredictionTask) {
+            var sessionOwner = userService.get(aEvent.getUser());
+            var predictions = recommendationService.getIncomingPredictions(sessionOwner,
+                    aEvent.getProject());
+
+            if (predictions != null && predictions.hasNewSuggestions()) {
+                return new RRecommenderLogMessage(aEvent.getMessage().getLevel(),
+                        aEvent.getMessage().getMessage(),
+                        asList(RecommenderActionBarPanel.STATE_PREDICTIONS_AVAILABLE), emptyList());
+            }
+        }
+
+        return new RRecommenderLogMessage(aEvent.getMessage().getLevel(),
+                aEvent.getMessage().getMessage());
     }
 
     static String getChannel(Project project, String aUsername)

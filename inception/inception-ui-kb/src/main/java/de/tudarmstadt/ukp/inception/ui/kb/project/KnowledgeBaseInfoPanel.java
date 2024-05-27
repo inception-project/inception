@@ -17,8 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.project;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.link.ExternalLink;
 import org.apache.wicket.markup.html.panel.Panel;
@@ -36,13 +37,26 @@ public class KnowledgeBaseInfoPanel
     {
         super(aId, aModel);
 
-        queue(new MarkdownLabel("description", aModel.bind("description"))
-                .add(visibleWhen(() -> aModel.getObject() != null)));
-        queue(new Label("hostInstitutionName", aModel.bind("hostInstitutionName"))
-                .add(visibleWhen(() -> aModel.getObject() != null)));
-        queue(new Label("authorName", aModel.bind("authorName"))
-                .add(visibleWhen(() -> aModel.getObject() != null)));
-        queue(new ExternalLink("websiteURL", aModel.bind("websiteURL"), aModel.bind("websiteURL"))
-                .add(visibleWhen(() -> aModel.getObject() != null)));
+        var description = aModel.map(KnowledgeBaseInfo::getDescription);
+        queue(new MarkdownLabel("description", description)
+                .add(visibleWhen(description.map(StringUtils::isNotBlank))));
+
+        var hostInstitutionName = aModel.map(KnowledgeBaseInfo::getHostInstitutionName);
+        queue(new Label("hostInstitutionName", hostInstitutionName)
+                .add(visibleWhen(hostInstitutionName.map(StringUtils::isNotBlank))));
+
+        var authorName = aModel.map(KnowledgeBaseInfo::getAuthorName);
+        queue(new Label("authorName", authorName)
+                .add(visibleWhen(authorName.map(StringUtils::isNotBlank))));
+
+        var websiteURL = aModel.map(KnowledgeBaseInfo::getWebsiteUrl);
+        queue(new ExternalLink("websiteUrl", websiteURL, websiteURL)
+                .add(visibleWhen(websiteURL.map(StringUtils::isNotBlank))));
+
+        var licenseUrl = aModel.map(KnowledgeBaseInfo::getLicenseUrl);
+        var licenseName = aModel.map(KnowledgeBaseInfo::getLicenseName)
+                .orElseGet(licenseUrl::getObject);
+        queue(new ExternalLink("licenseUrl", licenseUrl, licenseName)
+                .add(visibleWhen(licenseUrl.map(StringUtils::isNotBlank))));
     }
 }

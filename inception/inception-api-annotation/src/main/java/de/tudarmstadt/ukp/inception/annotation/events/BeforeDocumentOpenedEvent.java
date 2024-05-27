@@ -21,6 +21,7 @@ import org.apache.uima.cas.CAS;
 import org.springframework.context.ApplicationEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.inception.support.wicket.event.HybridApplicationUIEvent;
 
 /**
  * Fire BeforeDocumentOpenedEvent to give listeners a chance to look at or even modify the CAS
@@ -29,6 +30,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
  */
 public class BeforeDocumentOpenedEvent
     extends ApplicationEvent
+    implements HybridApplicationUIEvent
 {
     private static final long serialVersionUID = -4644605041626140906L;
 

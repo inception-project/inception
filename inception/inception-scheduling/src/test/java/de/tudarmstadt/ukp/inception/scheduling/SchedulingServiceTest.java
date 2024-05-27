@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.scheduling;
 
+import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -127,7 +128,10 @@ public class SchedulingServiceTest
 
     private Task buildDummyTask(String aUsername, String aProjectName)
     {
-        return new DummyTask(buildUser(aUsername), buildProject(aProjectName));
+        var task = DummyTask.builder().withSessionOwner(buildUser(aUsername))
+                .withProject(buildProject(aProjectName)).build();
+        task.afterPropertiesSet();
+        return task;
     }
 
     /**
@@ -137,9 +141,11 @@ public class SchedulingServiceTest
     private static class DummyTask
         extends Task
     {
-        DummyTask(User aUser, Project aProject)
+        private static final String TYPE = "DummyTask";
+
+        DummyTask(Builder<? extends Builder<?>> aBuilder)
         {
-            super(aUser, aProject, "JUnit");
+            super(aBuilder.withType(TYPE).withTrigger("test"));
         }
 
         @Override
@@ -152,6 +158,25 @@ public class SchedulingServiceTest
                 catch (InterruptedException e) {
                     break;
                 }
+            }
+        }
+
+        public static Builder<Builder<?>> builder()
+        {
+            return new Builder<>();
+        }
+
+        public static class Builder<T extends Builder<?>>
+            extends DebouncingTask.Builder<T>
+        {
+            protected Builder()
+            {
+                withDebounceMillis(ofSeconds(3));
+            }
+
+            public DummyTask build()
+            {
+                return new DummyTask(this);
             }
         }
     }

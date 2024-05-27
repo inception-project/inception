@@ -24,6 +24,8 @@
     interface RRecommenderLogMessage {
         level: "INFO" | "WARN" | "ERROR"
         message: string
+        addClasses: string[]
+        removeClasses: string[]
     }
 
     export let wsEndpointUrl: string; // should this be full ws://... url
@@ -72,14 +74,15 @@
         }
 
         var msgBody = JSON.parse(msg.body) as RRecommenderLogMessage;
+        console.log(msgBody)
+        msgBody.removeClasses?.forEach(c => document.body.classList.remove(c))
+        msgBody.addClasses?.forEach(c => document.body.classList.add(c))
         switch (msgBody.level) {
             case "ERROR":
                 feedbackPanelExtension.addErrorToFeedbackPanel(msgBody.message);
                 break;
             case "WARN":
-                feedbackPanelExtension.addEWarningToFeedbackPanel(
-                    msgBody.message
-                );
+                feedbackPanelExtension.addEWarningToFeedbackPanel(msgBody.message);
                 break;
             case "INFO":
                 feedbackPanelExtension.addInfoToFeedbackPanel(msgBody.message);

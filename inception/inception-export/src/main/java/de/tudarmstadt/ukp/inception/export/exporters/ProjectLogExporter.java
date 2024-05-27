@@ -19,23 +19,21 @@ package de.tudarmstadt.ukp.inception.export.exporters;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Enumeration;
-import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.FullProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExporter;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.support.ZipUtils;
 import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.project.api.ProjectService;
+import de.tudarmstadt.ukp.inception.support.io.ZipUtils;
 
 /**
  * <p>
@@ -63,8 +61,8 @@ public class ProjectLogExporter
             ExportedProject aExProject, File aStage)
         throws IOException
     {
-        Project project = aRequest.getProject();
-        File logDir = new File(aStage + LOG_FOLDER);
+        var project = aRequest.getProject();
+        var logDir = new File(aStage + LOG_FOLDER);
         FileUtils.forceMkdir(logDir);
         if (projectService.getProjectLogFile(project).exists()) {
             FileUtils.copyFileToDirectory(projectService.getProjectLogFile(project), logDir);
@@ -86,12 +84,11 @@ public class ProjectLogExporter
             ExportedProject aExProject, ZipFile aZip)
         throws IOException
     {
-        for (Enumeration<? extends ZipEntry> zipEnumerate = aZip.entries(); zipEnumerate
-                .hasMoreElements();) {
-            ZipEntry entry = zipEnumerate.nextElement();
+        for (var zipEnumerate = aZip.entries(); zipEnumerate.hasMoreElements();) {
+            var entry = zipEnumerate.nextElement();
 
             // Strip leading "/" that we had in ZIP files prior to 2.0.8 (bug #985)
-            String entryName = ZipUtils.normalizeEntryName(entry);
+            var entryName = ZipUtils.normalizeEntryName(entry);
 
             if (entryName.startsWith(LOG + "/")) {
                 FileUtils.copyInputStreamToFile(aZip.getInputStream(entry),

@@ -25,15 +25,15 @@ import static org.apache.uima.cas.CAS.TYPE_NAME_INTEGER;
 import static org.apache.uima.cas.CAS.TYPE_NAME_STRING;
 import static org.apache.uima.cas.CAS.TYPE_NAME_STRING_ARRAY;
 
+import java.util.List;
+
 import org.apache.commons.collections4.MultiValuedMap;
 import org.apache.commons.collections4.multimap.HashSetValuedHashMap;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.fit.util.FSUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupport;
-import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.inception.search.config.SearchServiceAutoConfiguration;
 
 /**
@@ -95,15 +95,15 @@ public class PrimitiveUimaIndexingSupport
     public MultiValuedMap<String, String> indexFeatureValue(String aFieldPrefix,
             AnnotationFS aAnnotation, String aFeaturePrefix, AnnotationFeature aFeature)
     {
-        FeatureSupport<?> featSup = featureSupportRegistry.findExtension(aFeature).orElseThrow();
+        var featSup = featureSupportRegistry.findExtension(aFeature).orElseThrow();
 
-        String featureIndexName = featureIndexName(aFieldPrefix, aFeaturePrefix, aFeature);
+        var featureIndexName = featureIndexName(aFieldPrefix, aFeaturePrefix, aFeature);
         if (aFeature.getMultiValueMode() == ARRAY) {
             var valuesMap = new HashSetValuedHashMap<String, String>();
-            var values = FSUtil.getFeature(aAnnotation, aFeature.getName(), String[].class);
+            List<String> values = featSup.getFeatureValue(aFeature, aAnnotation);
             if (values != null) {
-                for (String value : values) {
-                    String featureValue = featSup.renderFeatureValue(aFeature, value);
+                for (var value : values) {
+                    var featureValue = featSup.renderFeatureValue(aFeature, value);
                     if (isNotBlank(featureValue)) {
                         valuesMap.put(featureIndexName, featureValue);
                     }
@@ -111,20 +111,28 @@ public class PrimitiveUimaIndexingSupport
             }
             return valuesMap;
         }
+
         if (TYPE_NAME_BOOLEAN.equals(aFeature.getType())) {
-            var value = FSUtil.getFeature(aAnnotation, aFeature.getName(), Boolean.class);
+            var booleanFeature = aAnnotation.getType().getFeatureByBaseName(aFeature.getName());
+            boolean value;
+            if (booleanFeature == null) {
+                value = false;
+            }
+            else {
+                value = aAnnotation.getBooleanValue(booleanFeature);
+            }
+
             var valuesMap = new HashSetValuedHashMap<String, String>();
             valuesMap.put(featureIndexName, value ? "true" : "false");
             return valuesMap;
         }
-        else {
-            var valuesMap = new HashSetValuedHashMap<String, String>();
-            String featureValue = featSup.renderFeatureValue(aFeature, aAnnotation);
-            if (isNotBlank(featureValue)) {
-                valuesMap.put(featureIndexName, featureValue);
-            }
-            return valuesMap;
+
+        var valuesMap = new HashSetValuedHashMap<String, String>();
+        var featureValue = featSup.renderFeatureValue(aFeature, aAnnotation);
+        if (isNotBlank(featureValue)) {
+            valuesMap.put(featureIndexName, featureValue);
         }
+        return valuesMap;
     }
 
     @Override

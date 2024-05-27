@@ -25,8 +25,10 @@ public class AnnotationEditorProperties
     private String editorFactory;
     private String diamAjaxCallbackUrl;
     private String diamWsUrl;
+    private String userPreferencesKey;
     private List<String> scriptSources;
     private List<String> stylesheetSources;
+    private List<String> sectionElements;
     private boolean loadingIndicatorDisabled = false;
 
     public String getEditorFactory()
@@ -97,5 +99,25 @@ public class AnnotationEditorProperties
     public String getEditorFactoryId()
     {
         return editorFactoryId;
+    }
+
+    public void setUserPreferencesKey(String aUserPreferencesKey)
+    {
+        userPreferencesKey = aUserPreferencesKey;
+    }
+
+    public String getUserPreferencesKey()
+    {
+        return userPreferencesKey;
+    }
+
+    public List<String> getSectionElements()
+    {
+        return sectionElements;
+    }
+
+    public void setSectionElements(List<String> aSectionElements)
+    {
+        sectionElements = aSectionElements;
     }
 }

@@ -30,8 +30,8 @@ import org.junit.jupiter.api.Test;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
-import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
-import de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
+import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 
 public class GetCollectionInformationResponseTest
 {
@@ -54,7 +54,7 @@ public class GetCollectionInformationResponseTest
         layer.setId(1l);
         layer.setDescription("span annoattion");
         layer.setName("pos");
-        layer.setType(WebAnnoConst.SPAN_TYPE);
+        layer.setType(SpanLayerSupport.TYPE);
 
         TagSet tagset = new TagSet();
         tagset.setId(1l);
@@ -84,11 +84,11 @@ public class GetCollectionInformationResponseTest
         // collectionInformation.setSearchConfig(new ArrayList<>());
 
         List<String> tagSetNames = new ArrayList<>();
-        tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.POS);
-        tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.DEPENDENCY);
-        tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.NAMEDENTITY);
-        tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.COREFERENCE);
-        tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.COREFRELTYPE);
+        tagSetNames.add(de.tudarmstadt.ukp.inception.support.WebAnnoConst.POS);
+        tagSetNames.add(de.tudarmstadt.ukp.inception.support.WebAnnoConst.DEPENDENCY);
+        tagSetNames.add(de.tudarmstadt.ukp.inception.support.WebAnnoConst.NAMEDENTITY);
+        tagSetNames.add(de.tudarmstadt.ukp.inception.support.WebAnnoConst.COREFERENCE);
+        tagSetNames.add(de.tudarmstadt.ukp.inception.support.WebAnnoConst.COREFRELTYPE);
 
         JSONUtil.generatePrettyJson(collectionInformation, new File(jsonFilePath));
 

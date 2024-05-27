@@ -30,11 +30,13 @@ import de.tudarmstadt.ukp.clarin.webanno.diag.ChecksRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.diag.ChecksRegistryImpl;
 import de.tudarmstadt.ukp.clarin.webanno.diag.RepairsRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.diag.RepairsRegistryImpl;
+import de.tudarmstadt.ukp.clarin.webanno.diag.checks.AllAnnotationsStartAndEndWithCharactersCheck;
 import de.tudarmstadt.ukp.clarin.webanno.diag.checks.AllAnnotationsStartAndEndWithinSentencesCheck;
 import de.tudarmstadt.ukp.clarin.webanno.diag.checks.AllFeatureStructuresIndexedCheck;
 import de.tudarmstadt.ukp.clarin.webanno.diag.checks.CASMetadataTypeIsPresentCheck;
 import de.tudarmstadt.ukp.clarin.webanno.diag.checks.Check;
 import de.tudarmstadt.ukp.clarin.webanno.diag.checks.DanglingRelationsCheck;
+import de.tudarmstadt.ukp.clarin.webanno.diag.checks.DocumentTextStartsWithBomCheck;
 import de.tudarmstadt.ukp.clarin.webanno.diag.checks.FeatureAttachedSpanAnnotationsTrulyAttachedCheck;
 import de.tudarmstadt.ukp.clarin.webanno.diag.checks.LinksReachableThroughChainsCheck;
 import de.tudarmstadt.ukp.clarin.webanno.diag.checks.NegativeSizeAnnotationsCheck;
@@ -43,19 +45,22 @@ import de.tudarmstadt.ukp.clarin.webanno.diag.checks.NoZeroSizeTokensAndSentence
 import de.tudarmstadt.ukp.clarin.webanno.diag.checks.RelationOffsetsCheck;
 import de.tudarmstadt.ukp.clarin.webanno.diag.checks.TokensAndSententencedDoNotOverlapCheck;
 import de.tudarmstadt.ukp.clarin.webanno.diag.checks.UniqueDocumentAnnotationCheck;
+import de.tudarmstadt.ukp.clarin.webanno.diag.checks.UnreachableAnnotationsCheck;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.CoverAllTextInSentencesRepair;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.ReattachFeatureAttachedSpanAnnotationsAndDeleteExtrasRepair;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.ReattachFeatureAttachedSpanAnnotationsRepair;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.ReindexFeatureAttachedSpanAnnotationsRepair;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.RelationOffsetsRepair;
+import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.RemoveBomRepair;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.RemoveDanglingChainLinksRepair;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.RemoveDanglingFeatureAttachedSpanAnnotationsRepair;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.RemoveDanglingRelationsRepair;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.RemoveZeroSizeTokensAndSentencesRepair;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.Repair;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.SwitchBeginAndEndOnNegativeSizedAnnotationsRepair;
+import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.TrimAnnotationsRepair;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.UpgradeCasRepair;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
 @Configuration
 @EnableConfigurationProperties(CasDoctorPropertiesImpl.class)
@@ -228,5 +233,36 @@ public class CasDoctorAutoConfiguration
     public TokensAndSententencedDoNotOverlapCheck tokensAndSententencedDoNotOverlapCheck()
     {
         return new TokensAndSententencedDoNotOverlapCheck();
+    }
+
+    @Bean
+    public UnreachableAnnotationsCheck unreachableAnnotationsCheck()
+    {
+        return new UnreachableAnnotationsCheck();
+    }
+
+    @Bean
+    public AllAnnotationsStartAndEndWithCharactersCheck allAnnotationsStartAndEndWithCharactersCheck(
+            AnnotationSchemaService aAnnotationService)
+    {
+        return new AllAnnotationsStartAndEndWithCharactersCheck(aAnnotationService);
+    }
+
+    @Bean
+    public TrimAnnotationsRepair trimAnnotationsRepair(AnnotationSchemaService aAnnotationService)
+    {
+        return new TrimAnnotationsRepair(aAnnotationService);
+    }
+
+    @Bean
+    public DocumentTextStartsWithBomCheck documentTextStartsWithBomCheck()
+    {
+        return new DocumentTextStartsWithBomCheck();
+    }
+
+    @Bean
+    public RemoveBomRepair removeBomRepair()
+    {
+        return new RemoveBomRepair();
     }
 }

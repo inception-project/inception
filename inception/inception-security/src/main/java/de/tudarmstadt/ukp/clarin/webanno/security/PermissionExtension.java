@@ -21,7 +21,7 @@ import java.io.Serializable;
 
 import org.springframework.security.core.Authentication;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.Extension;
+import de.tudarmstadt.ukp.inception.support.extensionpoint.Extension;
 
 public interface PermissionExtension<D, P>
     extends Extension<Object>

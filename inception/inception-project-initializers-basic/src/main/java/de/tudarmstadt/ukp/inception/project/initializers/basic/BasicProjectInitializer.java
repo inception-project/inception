@@ -18,14 +18,20 @@
 package de.tudarmstadt.ukp.inception.project.initializers.basic;
 
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
+import org.apache.wicket.request.resource.PackageResourceReference;
+import org.apache.wicket.request.resource.ResourceReference;
 import org.springframework.context.ApplicationContext;
+import org.springframework.core.annotation.Order;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.project.ProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.QuickProjectInitializer;
+import de.tudarmstadt.ukp.inception.project.api.ProjectInitializationRequest;
+import de.tudarmstadt.ukp.inception.project.api.ProjectInitializer;
 import de.tudarmstadt.ukp.inception.project.initializers.basic.config.InceptionBasicProjectInitializersAutoConfiguration;
 
 /**
@@ -34,9 +40,13 @@ import de.tudarmstadt.ukp.inception.project.initializers.basic.config.InceptionB
  * {@link InceptionBasicProjectInitializersAutoConfiguration#basicProjectInitializer}.
  * </p>
  */
+@Order(1000)
 public class BasicProjectInitializer
     implements QuickProjectInitializer
 {
+    private static final PackageResourceReference THUMBNAIL = new PackageResourceReference(
+            MethodHandles.lookup().lookupClass(), "BasicProjectInitializer.svg");
+
     private final ApplicationContext context;
 
     public BasicProjectInitializer(ApplicationContext aContext)
@@ -48,6 +58,18 @@ public class BasicProjectInitializer
     public String getName()
     {
         return "Basic annotation (span/relation)";
+    }
+
+    @Override
+    public Optional<String> getDescription()
+    {
+        return Optional.of("Create annotations on words and connect them using relations.");
+    }
+
+    @Override
+    public Optional<ResourceReference> getThumbnail()
+    {
+        return Optional.of(THUMBNAIL);
     }
 
     @Override
@@ -75,7 +97,7 @@ public class BasicProjectInitializer
     }
 
     @Override
-    public void configure(Project aProject) throws IOException
+    public void configure(ProjectInitializationRequest aRequest) throws IOException
     {
         // Nothing to do - all initialization is already done by the dependencies
     }

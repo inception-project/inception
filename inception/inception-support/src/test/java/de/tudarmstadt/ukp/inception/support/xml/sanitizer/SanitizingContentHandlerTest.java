@@ -94,6 +94,31 @@ public class SanitizingContentHandlerTest
 
     @ParameterizedTest(name = "{0}")
     @MethodSource("builderVariants")
+    void thatElementsCanBeSkippedSelectively(String aName, PolicyCollectionBuilder aBuilder)
+        throws Exception
+    {
+        var buffer = new StringWriter();
+        var policy = aBuilder //
+                .defaultElementAction(ElementAction.PASS) //
+                .defaultAttributeAction(AttributeAction.PASS) //
+                .skipElements("child") //
+                .build();
+
+        var sut = new SanitizingContentHandler(makeXmlSerializer(buffer), policy);
+
+        sut.startDocument();
+        sut.startElement("root");
+        sut.startElement("child");
+        sut.characters("text");
+        sut.endElement("child");
+        sut.endElement("root");
+        sut.endDocument();
+
+        assertThat(buffer.toString()).isEqualTo("<root>text</root>");
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("builderVariants")
     void thatChildElementsCanBePreservedSelectively(String aName, PolicyCollectionBuilder aBuilder)
         throws Exception
     {
@@ -177,10 +202,10 @@ public class SanitizingContentHandlerTest
     void thatDisallowedAttributesAreDroppped(String aName, PolicyCollectionBuilder aBuilder)
         throws Exception
     {
-        QName root = new QName("root");
-        QName child = new QName("child");
-        QName attr1 = new QName("attr1");
-        QName attr2 = new QName("attr2");
+        var root = new QName("root");
+        var child = new QName("child");
+        var attr1 = new QName("attr1");
+        var attr2 = new QName("attr2");
 
         var buffer = new StringWriter();
         var policy = aBuilder //
@@ -202,12 +227,40 @@ public class SanitizingContentHandlerTest
         assertThat(buffer.toString()).isEqualTo("<root><child attr1=\"x\">text</child></root>");
     }
 
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("builderVariants")
+    void thatPrunedBranchesAreDropped(String aName, PolicyCollectionBuilder aBuilder)
+        throws Exception
+    {
+        var buffer = new StringWriter();
+        var policy = aBuilder //
+                .defaultElementAction(ElementAction.DROP) //
+                .defaultAttributeAction(AttributeAction.DROP) //
+                .allowElements("root", "child") //
+                .pruneElements("prune") //
+                .build();
+
+        var sut = new SanitizingContentHandler(makeXmlSerializer(buffer), policy);
+
+        sut.startDocument();
+        sut.startElement("root");
+        sut.startElement("prune");
+        sut.startElement("child");
+        sut.characters("text");
+        sut.endElement("child");
+        sut.endElement("prune");
+        sut.endElement("root");
+        sut.endDocument();
+
+        assertThat(buffer.toString()).isEqualTo("<root>    </root>");
+    }
+
     @Test
     void thatCaseInsensitiveModeWorks() throws Exception
     {
-        QName root = new QName("root");
-        QName child = new QName("child");
-        QName attr1 = new QName("attr1");
+        var root = new QName("root");
+        var child = new QName("child");
+        var attr1 = new QName("attr1");
 
         var buffer = new StringWriter();
         var policy = PolicyCollectionBuilder.caseInsensitive() //
@@ -232,9 +285,9 @@ public class SanitizingContentHandlerTest
     @Test
     void thatCaseSensitiveModeWorks() throws Exception
     {
-        QName root = new QName("ROOT");
-        QName child = new QName("child");
-        QName attr1 = new QName("attr1");
+        var root = new QName("ROOT");
+        var child = new QName("child");
+        var attr1 = new QName("attr1");
 
         var buffer = new StringWriter();
         var policy = PolicyCollectionBuilder.caseSensitive() //
@@ -261,7 +314,7 @@ public class SanitizingContentHandlerTest
     @Test
     void thatSanitizingDefaultXmlParserWorks() throws Exception
     {
-        QName root = new QName("http://namespace.org", "ROOT");
+        var root = new QName("http://namespace.org", "ROOT");
 
         var buffer = new StringWriter();
         var policy = PolicyCollectionBuilder.caseSensitive() //
@@ -270,11 +323,32 @@ public class SanitizingContentHandlerTest
 
         var sut = new SanitizingContentHandler(makeXmlSerializer(buffer), policy);
 
-        String xml = "<ns:ROOT xmlns:ns='http://namespace.org'/>";
+        var xml = "<ns:ROOT xmlns:ns='http://namespace.org'/>";
 
         var parser = newSaxParser();
         parser.parse(toInputStream(xml, UTF_8), new DefaultHandlerToContentHandlerAdapter<>(sut));
 
         assertThat(buffer.toString()).isEqualTo("<ns:ROOT xmlns:ns=\"http://namespace.org\"/>");
+    }
+
+    @Test
+    void thatNamespaceDeclarationsPass() throws Exception
+    {
+        var root = new QName("http://namespace.org", "ROOT");
+
+        var buffer = new StringWriter();
+        var policy = PolicyCollectionBuilder.caseSensitive() //
+                .allowElements(root) //
+                .build();
+
+        var sut = new SanitizingContentHandler(makeXmlSerializer(buffer), policy);
+
+        var xml = "<ns:ROOT xmlns:ns='http://namespace.org' xmlns:other='otherNs' xmlns='default'/>";
+
+        var parser = newSaxParser();
+        parser.parse(toInputStream(xml, UTF_8), new DefaultHandlerToContentHandlerAdapter<>(sut));
+
+        assertThat(buffer.toString()).isEqualTo(
+                "<ns:ROOT xmlns:ns=\"http://namespace.org\" xmlns:other=\"otherNs\" xmlns=\"default\"/>");
     }
 }

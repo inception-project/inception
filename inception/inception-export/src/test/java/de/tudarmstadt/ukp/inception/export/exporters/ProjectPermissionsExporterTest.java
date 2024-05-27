@@ -45,7 +45,6 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.FullProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
@@ -55,7 +54,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.project.exporters.ProjectPermissionsExporter;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
+import de.tudarmstadt.ukp.inception.project.api.ProjectService;
+import de.tudarmstadt.ukp.inception.support.spring.ApplicationContextProvider;
 
 @ExtendWith(MockitoExtension.class)
 public class ProjectPermissionsExporterTest
@@ -223,14 +223,14 @@ public class ProjectPermissionsExporterTest
 
     private ArgumentCaptor<ProjectPermission> captureCreatedPermissions()
     {
-        ArgumentCaptor<ProjectPermission> captor = ArgumentCaptor.forClass(ProjectPermission.class);
+        var captor = ArgumentCaptor.forClass(ProjectPermission.class);
         lenient().doNothing().when(projectService).createProjectPermission(captor.capture());
         return captor;
     }
 
     private ArgumentCaptor<User> captureCreatedUsers()
     {
-        ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
+        var captor = ArgumentCaptor.forClass(User.class);
         lenient().when(userService.create(captor.capture()))
                 .thenAnswer(_call -> _call.getArgument(0));
         return captor;

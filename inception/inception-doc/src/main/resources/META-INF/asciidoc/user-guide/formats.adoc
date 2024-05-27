@@ -24,3 +24,153 @@ includes a small table explaining whether the format can be imported, exported a
 layers are supported. The first column includes a format ID in addition to the format name. This
 ID can be used e.g. in conjunction with the remote API when to select the format when importing or
 exporting annotations and documents.
+
+For your convenience, the following table provides an overview over all the available formats. 
+The *remote API format ID* column shows which format ID must be used when importing or exporting 
+data in a particular format. The **feature flag** column shows which flags you can put into the
+`settings.properties` file to enable or disable a format. Most formats are enabled by default.
+
+.Formats overview
+|====
+| Format | Remote API format ID | Feature flag
+
+| <<sect_formats_bioc>>
+| `bioc`
+| `format.bioc.enabled`
+
+| <<sect_formats_brat_basic>>
+| `brat-basic`
+| `format.brat-basic.enabled`
+
+| <<sect_formats_brat_custom>>
+| `brat-custom`
+| `format.brat-custom.enabled`
+
+| <<sect_formats_conll2000>>
+| `conll2000`
+| `format.conll2000.enabled`
+
+| <<sect_formats_conll2002>>
+| `conll2000`
+| `format.conll2002.enabled`
+
+| <<sect_formats_conll2003>>
+| `conll2000`
+| `format.conll2003.enabled`
+
+| <<sect_formats_conll2006>>
+| `conll2006`
+| `format.conll2006.enabled`
+
+| <<sect_formats_conll2009>>
+| `conll2009`
+| `format.conll2009.enabled`
+
+| <<sect_formats_conll2012>>
+| `conll2012`
+| `format.conll2012.enabled`
+
+| <<sect_formats_conllcorenlp>>
+| `conll2012`
+| `format.conllcorenlp.enabled`
+
+| <<sect_formats_conllu>>
+| `conllu`
+| `format.conllu.enabled`
+
+| <<sect_formats_htmldoc>>
+| `htmldoc`
+| `format.html.enabled`
+
+| <<sect_formats_mhtml>>
+| `mhtml`
+| `format.mhtml.enabled`
+
+| <<sect_formats_html>>
+| `html`
+| `format.html-legacy.enabled`
+
+| <<sect_formats_imscwb>>
+| `imscwb`
+| `format.imscwb.enabled`
+
+// | <<sect_formats_lif>>
+// | `lif`
+// | `format.lif.enabled`
+
+| <<sect_formats_nif>>
+| `nif`
+| `format.nif.enabled`
+
+| <<sect_formats_pdf>>
+| `pdf2`
+| `format.pdf.enabled`
+
+| <<sect_formats_pdf_legacy>>
+| `pdf`
+| `format.pdf-legacy.enabled`
+
+| <<sect_formats_text>>
+| `text`
+| `format.text.enabled`
+
+| <<sect_formats_text_sentence_per_line>>
+| `textlines`
+| `format.text-line-oriented.enabled`
+
+| <<sect_formats_text_pretokenized>>
+| `pretokenized-textlines`
+| `format.text-pretokenized.enabled`
+
+| <<sect_formats_tei>>
+| `dkpro-core-tei`
+| `format.dkpro-core-tei.enabled`
+
+| <<sect_formats_uimabinarycas>>
+| `bin`
+| `format.uima-binary-cas.enabled`
+
+| <<sect_formats_inlinexml>>
+| `dkpro-core-uima-inline-xml`
+| `format.uima-inline-xml.enabled`
+
+| <<sect_formats_uimajson>>
+| `jsoncas`
+| `format.json-cas.enabled`
+
+| <<sect_formats_uimajson_legacy>>
+| `json`
+| `format.json-cas-legacy.enabled`
+
+| <<sect_formats_rdfcas,UIMA CAS RDF>>
+| `rdfcas`
+| `format.rdf-cas.enabled`
+
+| <<sect_formats_uimaxmi,UIMA XMI CAS (XML 1.0)>>
+| `xmi`
+| `format.uima-xmi.enabled`
+
+| <<sect_formats_uimaxmi,UIMA XMI CAS (XML 1.1)>>
+| `xmi-xml1.1`
+| `format.uima-xmi-xml1_1.enabled`
+
+| <<sect_formats_webannotsv1>>
+| `tsv`
+| `format.webanno1.enabled`
+
+| <<sect_formats_webannotsv2>>
+| `ctsv`
+| `format.webanno2.enabled`
+
+| <<sect_formats_webannotsv3>>
+| `ctsv3`
+| `format.webanno3.enabled`
+
+| <<sect_formats_tcf>>
+| `tcf`
+| `format.tcf.enabled`
+
+| <<sect_formats_xml>>
+| `dkpro-core-xml-document`
+| `format.generic-xml.enabled`
+|====

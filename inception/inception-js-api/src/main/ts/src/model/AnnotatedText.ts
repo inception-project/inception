@@ -23,6 +23,7 @@ import { Span } from './Span'
 import { TextMarker } from './TextMarker'
 import { Layer } from './Layer'
 import { MarkerType } from './Marker'
+import { Annotation } from './Annotation'
 
 export class AnnotatedText {
   window: Offsets
@@ -55,5 +56,9 @@ export class AnnotatedText {
     } else if (annotation instanceof Relation) {
       this.relations.set(annotation.vid, annotation)
     }
+  }
+
+  public getAnnotation (id: VID): Annotation | undefined {
+    return this.spans.get(id) || this.relations.get(id)
   }
 }

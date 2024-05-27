@@ -1,2 +1,0 @@
-org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-de.tudarmstadt.ukp.inception.externalsearch.pubannotation.config.PubAnnotationDocumentRepositoryAutoConfiguration

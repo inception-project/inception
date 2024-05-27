@@ -17,13 +17,13 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.keybindings;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
+import static org.apache.wicket.event.Broadcast.BUBBLE;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.uima.cas.CAS;
 import org.apache.wicket.ClassAttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.WebMarkupContainer;
@@ -34,17 +34,17 @@ import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.input.InputBehavior;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
-import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
-import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupport;
-import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureEditor;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureEditorValueChangedEvent;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior;
+import de.tudarmstadt.ukp.inception.support.wicket.input.InputBehavior;
 import wicket.contrib.input.events.EventType;
-import wicket.contrib.input.events.key.KeyType;
 
 /**
  * This can be added to a feature editor component to enable keyboard shortcuts for it.
@@ -57,8 +57,10 @@ public class KeyBindingsPanel
     private final AnnotationActionHandler actionHandler;
 
     private @SpringBean FeatureSupportRegistry featureSupportRegistry;
+    private @SpringBean AnnotationSchemaService schemaService;
 
     private boolean keyBindingsVisible = false;
+    private boolean toggleVisibile = true;
     private IModel<List<KeyBinding>> keyBindings;
 
     public KeyBindingsPanel(String aId, IModel<List<KeyBinding>> aKeyBindings,
@@ -71,7 +73,7 @@ public class KeyBindingsPanel
 
         add(visibleWhen(() -> keyBindings.map(List::isEmpty).getObject()));
 
-        WebMarkupContainer keyBindingsContainer = new WebMarkupContainer("keyBindingsContainer");
+        var keyBindingsContainer = new WebMarkupContainer("keyBindingsContainer");
         keyBindingsContainer.setOutputMarkupId(true);
         keyBindingsContainer.add(new ClassAttributeModifier()
         {
@@ -88,16 +90,15 @@ public class KeyBindingsPanel
         });
         add(keyBindingsContainer);
 
-        Label showHideMessage = new Label("showHideMessage", () -> {
-            return keyBindingsVisible ? "Hide key bindings..." : "Show key bindings...";
-        });
+        var showHideMessage = new Label("showHideMessage",
+                () -> keyBindingsVisible ? "Hide key bindings..." : "Show key bindings...");
         showHideMessage.setOutputMarkupId(true);
+        showHideMessage.add(visibleWhen(() -> toggleVisibile));
 
-        LambdaAjaxLink toggleKeyBindingHints = new LambdaAjaxLink("toggleKeyBindingHints",
-                _target -> {
-                    keyBindingsVisible = !keyBindingsVisible;
-                    _target.add(keyBindingsContainer, showHideMessage);
-                });
+        var toggleKeyBindingHints = new LambdaAjaxLink("toggleKeyBindingHints", _target -> {
+            keyBindingsVisible = !keyBindingsVisible;
+            _target.add(keyBindingsContainer, showHideMessage);
+        });
         toggleKeyBindingHints.add(showHideMessage);
         toggleKeyBindingHints
                 .add(LambdaBehavior.visibleWhen(() -> !aKeyBindings.getObject().isEmpty()));
@@ -110,14 +111,14 @@ public class KeyBindingsPanel
             @Override
             protected void populateItem(ListItem<KeyBinding> aItem)
             {
-                AnnotationFeature feature = aModel.getObject().feature;
-                String value = aItem.getModelObject().getValue();
-                FeatureSupport<?> fs = featureSupportRegistry.findExtension(feature).orElseThrow();
+                var feature = aModel.getObject().feature;
+                var value = aItem.getModelObject().getValue();
+                var fs = featureSupportRegistry.findExtension(feature).orElseThrow();
 
-                LambdaAjaxLink link = new LambdaAjaxLink("shortcut",
+                var link = new LambdaAjaxLink("shortcut",
                         _target -> actionInvokeShortcut(_target, aItem.getModelObject()));
 
-                KeyType[] keyCombo = aItem.getModelObject().asKeyTypes();
+                var keyCombo = aItem.getModelObject().asKeyTypes();
                 link.add(new InputBehavior(keyCombo, EventType.click)
                 {
                     private static final long serialVersionUID = -413804179695231212L;
@@ -137,6 +138,11 @@ public class KeyBindingsPanel
         });
     }
 
+    public void setToggleVisibile(boolean aToggleVisibile)
+    {
+        toggleVisibile = aToggleVisibile;
+    }
+
     public FeatureState getModelObject()
     {
         return (FeatureState) getDefaultModelObject();
@@ -145,10 +151,13 @@ public class KeyBindingsPanel
     private void actionInvokeShortcut(AjaxRequestTarget aTarget, KeyBinding aKeyBinding)
         throws IOException, AnnotationException
     {
-        CAS cas = actionHandler.getEditorCas();
-        AnnotationFeature feature = getModelObject().feature;
-        FeatureSupport<?> fs = featureSupportRegistry.findExtension(feature).orElseThrow();
+        var cas = actionHandler.getEditorCas();
+        var feature = getModelObject().feature;
+        var fs = featureSupportRegistry.findExtension(feature).orElseThrow();
         getModelObject().value = fs.wrapFeatureValue(feature, cas, aKeyBinding.getValue());
-        actionHandler.actionCreateOrUpdate(aTarget, actionHandler.getEditorCas());
+        var featureEditor = findParent(FeatureEditor.class);
+        send(featureEditor.getFocusComponent(), BUBBLE,
+                new FeatureEditorValueChangedEvent(featureEditor, aTarget));
+        aTarget.add(featureEditor);
     }
 }

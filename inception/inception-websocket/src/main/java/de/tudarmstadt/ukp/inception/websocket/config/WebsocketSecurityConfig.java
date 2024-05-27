@@ -74,8 +74,11 @@ public class WebsocketSecurityConfig
             .simpTypeMatchers(DISCONNECT).permitAll()
             // messages other than MESSAGE,SUBSCRIBE are allowed for authenticated users
             .nullDestMatcher().authenticated() //
-            // subscribing to logged events is only for admins
+            .simpSubscribeDestMatchers("/*/errors*").hasRole("USER")
             .simpSubscribeDestMatchers("/*/loggedEvents").hasRole("ADMIN")
+            .simpSubscribeDestMatchers("/*/scheduler/user").hasRole("USER")
+            .simpSubscribeDestMatchers("/*/scheduler" + TOPIC_ELEMENT_PROJECT + "{" + PARAM_PROJECT + "}")
+                .access("@projectAccess.canManageProject(#" + PARAM_PROJECT + ")")
             .simpSubscribeDestMatchers("/*" + NS_PROJECT + "/{" + PARAM_PROJECT + "}/exports")
                 .access("@projectAccess.canManageProject(#" + PARAM_PROJECT + ")")
             .simpSubscribeDestMatchers(annotationEditorTopic)

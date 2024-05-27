@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.diag.repairs;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.SPAN_TYPE;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
@@ -33,8 +32,9 @@ import org.apache.uima.cas.text.AnnotationFS;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.Repair.Safe;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 
 @Safe
 public class ReattachFeatureAttachedSpanAnnotationsRepair
@@ -51,7 +51,8 @@ public class ReattachFeatureAttachedSpanAnnotationsRepair
     public void repair(Project aProject, CAS aCas, List<LogMessage> aMessages)
     {
         for (AnnotationLayer layer : annotationService.listAnnotationLayer(aProject)) {
-            if (!(SPAN_TYPE.equals(layer.getType()) && layer.getAttachFeature() != null)) {
+            if (!(SpanLayerSupport.TYPE.equals(layer.getType())
+                    && layer.getAttachFeature() != null)) {
                 continue;
             }
 

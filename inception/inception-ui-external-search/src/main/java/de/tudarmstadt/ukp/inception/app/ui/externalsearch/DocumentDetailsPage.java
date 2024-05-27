@@ -23,8 +23,6 @@ import static de.tudarmstadt.ukp.inception.app.ui.externalsearch.DocumentDetails
 import static de.tudarmstadt.ukp.inception.app.ui.externalsearch.DocumentDetailsPage.PAGE_PARAM_DOCUMENT_ID;
 import static de.tudarmstadt.ukp.inception.app.ui.externalsearch.DocumentDetailsPage.PAGE_PARAM_REPOSITORY_ID;
 
-import java.io.IOException;
-
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
@@ -32,13 +30,13 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.string.StringValue;
 import org.wicketstuff.annotation.mount.MountPath;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchResult;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchService;
 import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
+import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 
 @MountPath(NS_PROJECT + "/${" + PAGE_PARAM_PROJECT + "}/search/${" + PAGE_PARAM_REPOSITORY_ID
         + "}/${" + PAGE_PARAM_COLLECTION_ID + "}/${" + PAGE_PARAM_DOCUMENT_ID + "}")
@@ -95,7 +93,7 @@ public class DocumentDetailsPage
         try {
             return externalSearchService.getDocumentText(repo, collectionId, documentId);
         }
-        catch (IOException e) {
+        catch (Exception e) {
             return "ERROR: " + e.getMessage();
         }
     }
@@ -105,7 +103,7 @@ public class DocumentDetailsPage
         try {
             return externalSearchService.getDocumentResult(repo, collectionId, documentId);
         }
-        catch (IOException e) {
+        catch (Exception e) {
             return new ExternalSearchResult(repo, collectionId, documentId);
         }
     }

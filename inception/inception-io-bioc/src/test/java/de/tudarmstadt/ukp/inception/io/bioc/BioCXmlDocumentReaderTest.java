@@ -29,6 +29,10 @@ import org.junit.jupiter.api.Test;
 
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 
+/**
+ * @deprecated Experimental code that was deprecated.
+ */
+@Deprecated
 public class BioCXmlDocumentReaderTest
 {
     @Test
@@ -43,8 +47,6 @@ public class BioCXmlDocumentReaderTest
 
         var cas = CasFactory.createCas();
         reader.getNext(cas);
-
-        // CasIOUtils.save(cas, System.out, XMI_PRETTY);
 
         assertThat(cas.getDocumentText()) //
                 .contains("Sentence 1.") //

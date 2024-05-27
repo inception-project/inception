@@ -28,23 +28,49 @@ export class RecogitoEditorFactory implements AnnotationEditorFactory {
 
     const ajax = diam.createAjaxClient(props.diamAjaxCallbackUrl)
 
-    let targetElement: Element
+    let targetElement: Element | null = null
+
     if ((element as any).querySelector) {
       targetElement = (element as any).querySelector('[data-capture-root]')
     }
 
     if (!targetElement && element instanceof HTMLDocument) {
-      const bodies = element.getElementsByTagName('body')
-      if (bodies && bodies.length > 0) {
-        targetElement = bodies[0]
-      }
+      targetElement = element.body
     }
 
     if (!targetElement) {
       targetElement = element as Element
     }
 
-    element[PROP_EDITOR] = new RecogitoEditor(targetElement, ajax)
+    // If the target element is the body of a HTML document and the body has only one child, then
+    // we use the child as the target element. This is to support the case where the body is
+    // used as a container for the additional editor functionality.
+    const body = element.ownerDocument?.body
+    if (body) {
+      // Add a (scrolling) wrapper in the body
+      const wrapper = element.ownerDocument.createElement('div')
+      wrapper.classList.add('i7n-wrapper')
+      wrapper.style.overflow = 'auto'
+
+      if (body === targetElement) {
+        Array.from(targetElement.childNodes).forEach((child) => wrapper.appendChild(child))
+        targetElement = wrapper
+      }
+      else  {
+        Array.from(body.childNodes).forEach((child) => wrapper.appendChild(child))
+      }
+
+      body.appendChild(wrapper)
+
+      // Configure a "full screen" flex layout on the body
+      body.style.display = 'flex'
+      body.style.flexDirection = 'column'
+      body.style.height = '100vh'
+      body.style.width = '100vw'
+      body.style.overflow = 'hidden'
+    }
+
+    element[PROP_EDITOR] = new RecogitoEditor(targetElement, ajax, props.userPreferencesKey)
     return element[PROP_EDITOR]
   }
 

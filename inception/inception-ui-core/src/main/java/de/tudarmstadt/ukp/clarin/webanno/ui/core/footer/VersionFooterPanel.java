@@ -20,7 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.core.footer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.panel.Panel;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
+import de.tudarmstadt.ukp.inception.support.SettingsUtil;
 
 public class VersionFooterPanel
     extends Panel

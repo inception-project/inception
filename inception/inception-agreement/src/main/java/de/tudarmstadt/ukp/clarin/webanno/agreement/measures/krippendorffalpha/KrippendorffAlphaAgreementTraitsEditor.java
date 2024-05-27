@@ -20,16 +20,17 @@ package de.tudarmstadt.ukp.clarin.webanno.agreement.measures.krippendorffalpha;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.model.IModel;
 
+import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.DefaultAgreementTraits;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.DefaultAgreementTraitsEditor;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 
 public class KrippendorffAlphaAgreementTraitsEditor
-    extends DefaultAgreementTraitsEditor<KrippendorffAlphaAgreementTraits>
+    extends DefaultAgreementTraitsEditor<DefaultAgreementTraits>
 {
     private static final long serialVersionUID = 7780019891761754494L;
 
     public KrippendorffAlphaAgreementTraitsEditor(String aId, IModel<AnnotationFeature> aFeature,
-            IModel<KrippendorffAlphaAgreementTraits> aModel)
+            IModel<DefaultAgreementTraits> aModel)
     {
         super(aId, aFeature, aModel);
 
@@ -37,8 +38,8 @@ public class KrippendorffAlphaAgreementTraitsEditor
     }
 
     @Override
-    public KrippendorffAlphaAgreementTraits getModelObject()
+    public DefaultAgreementTraits getModelObject()
     {
-        return (KrippendorffAlphaAgreementTraits) getDefaultModelObject();
+        return (DefaultAgreementTraits) getDefaultModelObject();
     }
 }

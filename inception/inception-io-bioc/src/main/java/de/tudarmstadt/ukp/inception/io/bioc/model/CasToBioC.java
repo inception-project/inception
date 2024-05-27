@@ -17,14 +17,14 @@
  */
 package de.tudarmstadt.ukp.inception.io.bioc.model;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.FEAT_REL_SOURCE;
-import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.FEAT_REL_TARGET;
 import static de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.Tsv3XCasSchemaAnalyzer.isRelationLayer;
 import static de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.Tsv3XCasSchemaAnalyzer.isSpanLayer;
 import static de.tudarmstadt.ukp.inception.io.bioc.BioCComponent.I_TYPE;
 import static de.tudarmstadt.ukp.inception.io.bioc.BioCComponent.R_SOURCE;
 import static de.tudarmstadt.ukp.inception.io.bioc.BioCComponent.R_TARGET;
 import static de.tudarmstadt.ukp.inception.io.bioc.BioCComponent.getCollectionMetadataField;
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.FEAT_REL_SOURCE;
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.FEAT_REL_TARGET;
 import static java.util.Arrays.asList;
 import static org.apache.uima.cas.CAS.FEATURE_FULL_NAME_BEGIN;
 import static org.apache.uima.cas.CAS.FEATURE_FULL_NAME_END;
@@ -38,6 +38,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.FSUtil;
 import org.apache.uima.jcas.JCas;
@@ -82,17 +83,16 @@ public class CasToBioC
             }
 
             var sentences = aJCas.select(Sentence.class).coveredBy(div).asList();
+            var annotations = aJCas.select(Annotation.class).coveredBy(div);
             if (sentences.isEmpty()) {
                 bioCPassage.setText(div.getCoveredText());
-                processAnnotations(bioCPassage, bioCPassage.getOffset(),
-                        aJCas.select(Annotation.class).coveredBy(div));
+                processAnnotations(bioCPassage, bioCPassage.getOffset(), annotations);
             }
             else {
                 var bioCSentences = processSentences(div.getBegin(), sentences);
                 bioCPassage.setSentences(bioCSentences);
                 processAnnotations(bioCPassage, bioCPassage.getOffset(),
-                        aJCas.select(Annotation.class).coveredBy(div)
-                                .filter(a -> aJCas.select(Sentence.class).covering(a).isEmpty())
+                        annotations.filter(a -> aJCas.select(Sentence.class).covering(a).isEmpty())
                                 .collect(Collectors.toList()));
             }
         }
@@ -198,6 +198,17 @@ public class CasToBioC
                 var value = aAnnotation.getFeatureValueAsString(feature);
                 if (value != null) {
                     aBioCAnnotation.addInfon(feature.getShortName(), value);
+                }
+            }
+
+            if (CAS.TYPE_NAME_STRING_ARRAY.equals(feature.getRange().getName())) {
+                var values = FSUtil.getFeature(aAnnotation, feature, String[].class);
+                if (values != null) {
+                    for (var value : values) {
+                        if (value != null) {
+                            aBioCAnnotation.addInfon(feature.getShortName(), value);
+                        }
+                    }
                 }
             }
         }

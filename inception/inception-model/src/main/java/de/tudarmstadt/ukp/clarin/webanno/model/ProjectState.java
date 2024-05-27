@@ -22,7 +22,7 @@ import static java.util.stream.Collectors.toUnmodifiableList;
 import java.util.List;
 import java.util.stream.Stream;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.PersistentEnum;
+import de.tudarmstadt.ukp.inception.support.db.PersistentEnum;
 
 /**
  * Variables for the different states of a {@link Project} workflow.

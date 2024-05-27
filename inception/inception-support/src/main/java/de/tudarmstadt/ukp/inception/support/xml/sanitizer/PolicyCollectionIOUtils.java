@@ -26,7 +26,7 @@ import javax.xml.namespace.QName;
 
 import org.apache.commons.lang3.StringUtils;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.YamlUtil;
+import de.tudarmstadt.ukp.inception.support.yaml.YamlUtil;
 
 public class PolicyCollectionIOUtils
 {
@@ -53,8 +53,17 @@ public class PolicyCollectionIOUtils
             policyCollectionBuilder
                     .defaultAttributeAction(externalCollection.getDefaultAttributeAction());
         }
+        if (externalCollection.getDefaultNamespace() != null) {
+            policyCollectionBuilder.defaultNamespace(externalCollection.getDefaultNamespace());
+        }
+        if (externalCollection.isMatchWithoutNamespace()) {
+            policyCollectionBuilder.matchWithoutNamespace();
+        }
+        if (externalCollection.isUseDefaultNamespaceForAttributes()) {
+            policyCollectionBuilder.useDefaultNamespaceForAttributes();
+        }
 
-        for (ExternalPolicy policy : externalCollection.getPolicies()) {
+        for (var policy : externalCollection.getPolicies()) {
             var isElementPolicy = policy.getElements() != null;
             var isAttributesPolicy = policy.getAttributes() != null;
 
@@ -71,6 +80,8 @@ public class PolicyCollectionIOUtils
                 attributesPolicy(policyCollectionBuilder, policy);
             }
         }
+
+        policyCollectionBuilder.allowAttributes("data-capture-root").globally();
 
         var policies = policyCollectionBuilder.build();
         policies.setDebug(externalCollection.isDebug());

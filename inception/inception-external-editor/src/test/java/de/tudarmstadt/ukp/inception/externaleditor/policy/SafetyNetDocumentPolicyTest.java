@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.externaleditor.policy;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil.getPropApplicationHome;
-import static de.tudarmstadt.ukp.inception.externaleditor.policy.SafetyNetDocumentPolicy.DEFAULT_POLICY_YAML;
+import static de.tudarmstadt.ukp.inception.externaleditor.policy.SafetyNetDocumentPolicy.SAFETY_NET_POLICY_OVERRIDE_YAML;
+import static de.tudarmstadt.ukp.inception.support.SettingsUtil.getPropApplicationHome;
 import static de.tudarmstadt.ukp.inception.support.xml.XmlParserUtils.makeXmlSerializer;
 import static java.lang.System.setProperty;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -126,14 +126,14 @@ class SafetyNetDocumentPolicyTest
     @Test
     void thatOverrideFileIsPickedUp(@TempDir Path aTemp) throws Exception
     {
-        Path policyFile = aTemp.resolve(DEFAULT_POLICY_YAML);
+        Path policyFile = aTemp.resolve(SAFETY_NET_POLICY_OVERRIDE_YAML);
         setProperty(getPropApplicationHome(), aTemp.toString());
 
         var properties = new ExternalEditorPropertiesImpl();
         var sut = new SafetyNetDocumentPolicy(properties);
 
         assertThat(policyFile).doesNotExist();
-        assertThat(sut.getPolicy().getElementPolicies()).hasSize(12);
+        assertThat(sut.getPolicy().getElementPolicies()).hasSize(11);
 
         write(policyFile.toFile(), "policies: []", UTF_8);
         assertThat(policyFile).exists();
@@ -146,7 +146,7 @@ class SafetyNetDocumentPolicyTest
 
         Files.delete(policyFile);
         assertThat(policyFile).doesNotExist();
-        assertThat(sut.getPolicy().getElementPolicies()).hasSize(12);
+        assertThat(sut.getPolicy().getElementPolicies()).hasSize(11);
     }
 
     static void touch(Path policyFile) throws IOException, InterruptedException

@@ -20,7 +20,7 @@ package de.tudarmstadt.ukp.inception.ui.core.menubar;
 import org.apache.wicket.Component;
 import org.apache.wicket.Page;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.Extension;
+import de.tudarmstadt.ukp.inception.support.extensionpoint.Extension;
 
 public interface MenuBarItem
     extends Extension<Page>

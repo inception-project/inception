@@ -1,0 +1,46 @@
+// Licensed to the Technische Universität Darmstadt under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The Technische Universität Darmstadt 
+// licenses this file to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.
+//  
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+[[sect_imls_ollama]]
+== 🧪 Ollama
+
+====
+CAUTION: Experimental feature. To use this functionality, you need to enable it first by adding `recommender.ollama.enabled=true` to the `settings.properties` file (see the <<admin-guide.adoc#sect_settings, Admin Guide>>).
+====
+
+This recommender allows to obtain annotation suggestions using large language models (LLMs) supported by link:https://ollama.ai[Ollama]. In order to use it, you first need to install Ollama and run it. 
+
+.Installing and running Mistral using Ollama on macOS via homebrew
+[source,sh]
+----
+$ brew install ollama
+$ ollama pull mistral
+$ ollama serve
+----
+
+By default, Ollama runs on `http://localhost:11434/` and {product-name} uses this as the default endpoint for communicating with it. If you run Ollama on a different host (e.g. one that has a more powerful GPU) or port, you can adjust this URL in the recommender settings.
+
+If {product-name} can successfully connect to Ollama, the **model** combo-box will offer all models that are available on the respective endpoint. If you want to use a model that is not listed here, you first need to `ollama pull` it.
+
+Now you can configure how to generate the prompts that are sent to Ollama and how to interpret its response using the following settings:
+
+* **Prompting mode:** here you can choose to generate one prompt **per sentence**, **per annotation** or **per document**.
+* **Response format:** here you can choose how to read the response from Ollama. The choice is between **default** (i.e. text) and a **JSON** format.
+* **Extraction mode:** here you can choose how interpret the response from Ollama. The availability of different extraction modes depends on the type of layer for which the recommender is configured. Choose **response as label** e.g. for classification or summarization tasks. It puts the response from the LLM directly into the feature that you configured the recommender to operate on. Choose **Mentions from JSON** (span layer) for information extraction tasks where you ask the LLM e.g. to identify and categorize certain types of entities in the text.
+*  **Prompt:** Here you can finally define the prompt that is sent to Ollama. The prompt should usually consist of an instruction and a piece of text to which the instruction is to be applied. Depending on the prompting mode, there are different variables that can be used in the prompt. The most important variable is `text` and it corresponds to the sentence text, annotated words or document text, depending on the prompting mode.
+
+The recommender comes with several example configurations that you can choose from a drop-down field. 
+

@@ -23,7 +23,7 @@ import org.springframework.context.annotation.Configuration;
 
 import de.tudarmstadt.ukp.clarin.webanno.plugin.api.PluginManager;
 import de.tudarmstadt.ukp.clarin.webanno.plugin.impl.PluginManagerImpl;
-import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
+import de.tudarmstadt.ukp.inception.support.SettingsUtil;
 
 @Configuration
 @ConditionalOnProperty(prefix = "plugins", name = "enabled", havingValue = "true", matchIfMissing = false)

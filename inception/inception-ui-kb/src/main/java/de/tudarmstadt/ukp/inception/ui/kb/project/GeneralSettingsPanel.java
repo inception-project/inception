@@ -17,7 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.project;
 
-import java.util.Arrays;
+import static java.util.Arrays.asList;
+
 import java.util.List;
 
 import org.apache.wicket.markup.html.form.CheckBox;
@@ -34,10 +35,10 @@ import org.apache.wicket.validation.ValidationError;
 import com.googlecode.wicket.kendo.ui.form.combobox.ComboBox;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.inception.kb.IriConstants;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 
 public class GeneralSettingsPanel
     extends Panel
@@ -46,7 +47,7 @@ public class GeneralSettingsPanel
 
     private final IModel<Project> projectModel;
     private final CompoundPropertyModel<KnowledgeBaseWrapper> kbModel;
-    private final List<String> languages = Arrays.asList("en", "de");
+    private final List<String> languages = asList("en", "de");
 
     private @SpringBean KnowledgeBaseService kbService;
     private @SpringBean KnowledgeBaseProperties kbproperties;
@@ -68,7 +69,7 @@ public class GeneralSettingsPanel
 
     private TextField<String> nameField(String id, String property)
     {
-        TextField<String> nameField = new RequiredTextField<>(id, kbModel.bind(property));
+        var nameField = new RequiredTextField<String>(id, kbModel.bind(property));
         nameField.add(new KnowledgeBaseNameValidator());
         return nameField;
     }
@@ -80,7 +81,7 @@ public class GeneralSettingsPanel
             aModel.setObject(languages.get(0));
         }
 
-        ComboBox<String> comboBox = new ComboBox<String>(id, aModel, languages);
+        var comboBox = new ComboBox<String>(id, aModel, languages);
         comboBox.setOutputMarkupId(true);
         comboBox.setRequired(true);
         // Do nothing just update the kbModel values
@@ -90,7 +91,7 @@ public class GeneralSettingsPanel
 
     private CheckBox createCheckbox(String aId, String aProperty)
     {
-        CheckBox cb = new CheckBox(aId, kbModel.bind(aProperty));
+        var cb = new CheckBox(aId, kbModel.bind(aProperty));
         cb.setOutputMarkupId(true);
         return cb;
     }
@@ -98,8 +99,8 @@ public class GeneralSettingsPanel
     private ComboBox<String> basePrefixField(String aId, String aProperty)
     {
         // Add textfield and label for basePrefix
-        ComboBox<String> basePrefix = new ComboBox<String>(aId, kbModel.bind(aProperty),
-                Arrays.asList(IriConstants.INCEPTION_NAMESPACE));
+        var basePrefix = new ComboBox<String>(aId, kbModel.bind(aProperty),
+                asList(IriConstants.INCEPTION_NAMESPACE));
         basePrefix.add(new LambdaAjaxFormComponentUpdatingBehavior("change"));
         basePrefix.setConvertEmptyInputStringToNull(false);
         basePrefix.setOutputMarkupId(true);
@@ -114,9 +115,9 @@ public class GeneralSettingsPanel
         @Override
         public void validate(IValidatable<String> aValidatable)
         {
-            String kbName = aValidatable.getValue();
+            var kbName = aValidatable.getValue();
             if (kbService.knowledgeBaseExists(projectModel.getObject(), kbName)) {
-                String message = String.format(
+                var message = String.format(
                         "There already exists a knowledge base in the project with name: [%s]!",
                         kbName);
                 aValidatable.error(new ValidationError(message));

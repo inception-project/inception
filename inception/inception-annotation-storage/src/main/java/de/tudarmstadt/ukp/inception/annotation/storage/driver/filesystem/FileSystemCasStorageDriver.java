@@ -17,11 +17,11 @@
  */
 package de.tudarmstadt.ukp.inception.annotation.storage.driver.filesystem;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.ANNOTATION_FOLDER;
-import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.DOCUMENT_FOLDER;
-import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.PROJECT_FOLDER;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.setDocumentId;
-import static de.tudarmstadt.ukp.clarin.webanno.support.logging.BaseLoggers.BOOT_LOG;
+import static de.tudarmstadt.ukp.inception.project.api.ProjectService.ANNOTATION_FOLDER;
+import static de.tudarmstadt.ukp.inception.project.api.ProjectService.DOCUMENT_FOLDER;
+import static de.tudarmstadt.ukp.inception.project.api.ProjectService.PROJECT_FOLDER;
+import static de.tudarmstadt.ukp.inception.support.logging.BaseLoggers.BOOT_LOG;
+import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.setDocumentId;
 import static java.lang.System.currentTimeMillis;
 import static java.nio.file.Files.move;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
@@ -36,11 +36,11 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.invoke.MethodHandles;
 import java.nio.file.Files;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Optional;
 import java.util.regex.Matcher;
 
@@ -50,24 +50,23 @@ import org.apache.commons.lang3.Validate;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.fit.util.FSUtil;
-import org.apache.uima.jcas.cas.TOP;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.ConcurentCasModificationException;
-import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.type.CASMetadata;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasMetadataUtils;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageMetadata;
 import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageBackupProperties;
 import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageProperties;
 import de.tudarmstadt.ukp.inception.annotation.storage.driver.CasStorageDriver;
+import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
+import de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil;
+import de.tudarmstadt.ukp.inception.support.wicket.WicketUtil;
 
 public class FileSystemCasStorageDriver
     implements CasStorageDriver
@@ -75,7 +74,7 @@ public class FileSystemCasStorageDriver
     public static final String SER_CAS_EXTENSION = ".ser";
     public static final String OLD_EXTENSION = ".old";
 
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private final RepositoryProperties repositoryProperties;
     private final CasStorageProperties casStorageProperties;
@@ -112,14 +111,16 @@ public class FileSystemCasStorageDriver
     @Override
     public CAS readCas(SourceDocument aDocument, String aUser) throws IOException
     {
-        File casFile = getCasFile(aDocument.getProject().getId(), aDocument.getId(), aUser);
-        File oldCasFile = new File(casFile.getPath() + OLD_EXTENSION);
+        LOG.trace("Reading CAS [{}]@{}", aUser, aDocument);
+
+        var casFile = getCasFile(aDocument.getProject().getId(), aDocument.getId(), aUser);
+        var oldCasFile = new File(casFile.getPath() + OLD_EXTENSION);
 
         if (metadataCache != null) {
             metadataCache.get(casFile).readAttempt();
         }
 
-        String msgOldExists = "";
+        var msgOldExists = "";
         if (oldCasFile.exists()) {
             msgOldExists = String.format(
                     "Existence of temporary annotation file [%s] indicates that a previous "
@@ -166,14 +167,14 @@ public class FileSystemCasStorageDriver
     @Override
     public void writeCas(SourceDocument aDocument, String aUserName, CAS aCas) throws IOException
     {
-        long t0 = currentTimeMillis();
+        var t0 = currentTimeMillis();
 
-        log.debug("Preparing to update annotations for user [{}] on document {} " //
+        LOG.debug("Preparing to update annotations for user [{}] on document {} " //
                 + "in project {}", aUserName, aDocument, aDocument.getProject());
 
-        File annotationFolder = getAnnotationFolder(aDocument);
-        File currentVersion = new File(annotationFolder, aUserName + SER_CAS_EXTENSION);
-        File oldVersion = new File(annotationFolder, aUserName + SER_CAS_EXTENSION + OLD_EXTENSION);
+        var annotationFolder = getAnnotationFolder(aDocument);
+        var currentVersion = new File(annotationFolder, aUserName + SER_CAS_EXTENSION);
+        var oldVersion = new File(annotationFolder, aUserName + SER_CAS_EXTENSION + OLD_EXTENSION);
 
         if (metadataCache != null) {
             metadataCache.get(currentVersion).writeAttempt();
@@ -204,24 +205,24 @@ public class FileSystemCasStorageDriver
             }
         }
         catch (Exception e) {
-            log.error("There was an error while trying to write the CAS to [" + currentVersion
+            LOG.error("There was an error while trying to write the CAS to [" + currentVersion
                     + "] - additional messages follow.");
             // If this is the first version, there is no old version, so do not restore anything
             if (!oldVersion.exists()) {
-                log.warn("There is no old version to restore - leaving the current version which "
+                LOG.warn("There is no old version to restore - leaving the current version which "
                         + "may be corrupt: [{}]", currentVersion);
                 // Now abort anyway
                 throw e;
             }
 
-            log.error("Restoring previous annotations for user [{}] on document {} in " //
+            LOG.error("Restoring previous annotations for user [{}] on document {} in " //
                     + "project {} due exception when trying to write new " + "annotations: [{}]",
                     aUserName, aDocument, aDocument.getProject(), oldVersion);
             try {
                 move(oldVersion.toPath(), currentVersion.toPath(), REPLACE_EXISTING);
             }
             catch (Exception ex) {
-                log.error("Unable to restore previous annotations: [{}]", oldVersion, ex);
+                LOG.error("Unable to restore previous annotations: [{}]", oldVersion, ex);
             }
 
             // Now abort anyway
@@ -232,7 +233,7 @@ public class FileSystemCasStorageDriver
                 * (casStorageProperties.isCompressedCasSerialization() ? 0.95d : 1.0d)))) {
             // If compression is enabled, then it is not so uncommon that the file size may also
             // become smaller at times, so we allow a bit of slip
-            log.debug(
+            LOG.debug(
                     "Annotations shrunk for user [{}] on document {} in project "
                             + "{}: {} -> {} bytes ({} bytes removed)",
                     aUserName, aDocument, aDocument.getProject(), oldVersion.length(),
@@ -248,7 +249,7 @@ public class FileSystemCasStorageDriver
         // happens for example in an annotation replacement operation (change layer of existing
         // annotation) which is implemented as a delete/create operation with an intermediate
         // save.
-        long lastModified = currentVersion.lastModified();
+        var lastModified = currentVersion.lastModified();
         CasMetadataUtils.addOrUpdateCasMetadata(aCas, lastModified, aDocument, aUserName);
         if (metadataCache != null) {
             metadataCache.get(currentVersion).writeSuccess(lastModified);
@@ -256,10 +257,10 @@ public class FileSystemCasStorageDriver
 
         manageHistory(currentVersion, aDocument, aUserName);
 
-        long duration = currentTimeMillis() - t0;
+        var duration = currentTimeMillis() - t0;
 
-        if (log.isDebugEnabled()) {
-            log.debug("Updated annotations for user [{}] on document {} in project {} " //
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Updated annotations for user [{}] on document {} in project {} " //
                     + "{} bytes in {}ms (file timestamp: {}, compression: {})", aUserName,
                     aDocument, aDocument.getProject(), currentVersion.length(), duration,
                     formatTimestamp(lastModified),
@@ -285,7 +286,7 @@ public class FileSystemCasStorageDriver
 
     private File getAnnotationFolder(long aProjectId, long aDocumentId) throws IOException
     {
-        File annotationFolder = new File(repositoryProperties.getPath(), "/" + PROJECT_FOLDER + "/"
+        var annotationFolder = new File(repositoryProperties.getPath(), "/" + PROJECT_FOLDER + "/"
                 + aProjectId + "/" + DOCUMENT_FOLDER + "/" + aDocumentId + "/" + ANNOTATION_FOLDER);
         FileUtils.forceMkdir(annotationFolder);
         return annotationFolder;
@@ -298,13 +299,13 @@ public class FileSystemCasStorageDriver
             return;
         }
 
-        File annotationFolder = getAnnotationFolder(aDocument);
+        var annotationFolder = getAnnotationFolder(aDocument);
 
         // Determine the reference point in time based on the current version
         long now = aCurrentVersion.lastModified();
 
         // Get all history files for the current user
-        File[] history = annotationFolder.listFiles(new FileFilter()
+        var history = annotationFolder.listFiles(new FileFilter()
         {
             private final Matcher matcher = compile(quote(aUserName) + "\\.ser\\.[0-9]+\\.bak")
                     .matcher("");
@@ -321,8 +322,8 @@ public class FileSystemCasStorageDriver
         Arrays.sort(history, LASTMODIFIED_COMPARATOR);
 
         // Check if we need to make a new history file
-        boolean historyFileCreated = false;
-        File historyFile = new File(annotationFolder, aUserName + ".ser." + now + ".bak");
+        var historyFileCreated = false;
+        var historyFile = new File(annotationFolder, aUserName + ".ser." + now + ".bak");
         if (history.length == 0) {
             // If there is no history yet but we should keep history, then we create a
             // history file in any case.
@@ -331,7 +332,7 @@ public class FileSystemCasStorageDriver
         }
         else {
             // Check if the newest history file is significantly older than the current one
-            File latestHistory = history[history.length - 1];
+            var latestHistory = history[history.length - 1];
             if (latestHistory.lastModified() + (backupProperties.getInterval() * 1000) < now) {
                 FileUtils.copyFile(aCurrentVersion, historyFile);
                 historyFileCreated = true;
@@ -346,24 +347,24 @@ public class FileSystemCasStorageDriver
         // Prune history based on number of backup
         // The new version is not in the history, so we keep that in any case. That
         // means we need to keep one less.
-        int toKeep = Math.max(backupProperties.getKeep().getNumber() - 1, 0);
+        var toKeep = Math.max(backupProperties.getKeep().getNumber() - 1, 0);
         if ((backupProperties.getKeep().getNumber() > 0) && (toKeep < history.length)) {
             // Copy the oldest files to a new array
-            File[] toRemove = new File[history.length - toKeep];
+            var toRemove = new File[history.length - toKeep];
             System.arraycopy(history, 0, toRemove, 0, toRemove.length);
 
             // Restrict the history to what is left
-            File[] newHistory = new File[toKeep];
+            var newHistory = new File[toKeep];
             if (toKeep > 0) {
                 System.arraycopy(history, toRemove.length, newHistory, 0, newHistory.length);
             }
             history = newHistory;
 
             // Remove these old files
-            for (File file : toRemove) {
+            for (var file : toRemove) {
                 FileUtils.forceDelete(file);
 
-                log.debug(
+                LOG.debug(
                         "Removed surplus history file [{}] of user [{}] for document {} in project {}",
                         file.getName(), aUserName, aDocument, aDocument.getProject());
             }
@@ -371,11 +372,11 @@ public class FileSystemCasStorageDriver
 
         // Prune history based on time
         if (backupProperties.getKeep().getTime() > 0) {
-            for (File file : history) {
+            for (var file : history) {
                 if ((file.lastModified() + (backupProperties.getKeep().getTime() * 1000)) < now) {
                     FileUtils.forceDelete(file);
 
-                    log.debug(
+                    LOG.debug(
                             "Removed outdated history file [{}] of user [{}] for "
                                     + "document {} in project {}",
                             file.getName(), aUserName, aDocument, aDocument.getProject());
@@ -400,7 +401,7 @@ public class FileSystemCasStorageDriver
         Validate.notNull(aDocument, "Source document must be specified");
         Validate.notBlank(aUser, "User must be specified");
 
-        try (InputStream is = Files.newInputStream(getCasFile(aDocument, aUser).toPath())) {
+        try (var is = Files.newInputStream(getCasFile(aDocument, aUser).toPath())) {
             IOUtils.copyLarge(is, aStream);
         }
     }
@@ -412,12 +413,12 @@ public class FileSystemCasStorageDriver
         Validate.notNull(aDocument, "Source document must be specified");
         Validate.notBlank(aUser, "User must be specified");
 
-        try (OutputStream os = Files.newOutputStream(getCasFile(aDocument, aUser).toPath())) {
+        try (var os = Files.newOutputStream(getCasFile(aDocument, aUser).toPath())) {
             IOUtils.copyLarge(aStream, os);
         }
     }
 
-    private File getCasFile(long aProjectId, long aDocumentId, String aUser) throws IOException
+    public File getCasFile(long aProjectId, long aDocumentId, String aUser) throws IOException
     {
         return new File(getAnnotationFolder(aProjectId, aDocumentId), aUser + SER_CAS_EXTENSION);
     }
@@ -425,10 +426,12 @@ public class FileSystemCasStorageDriver
     @Override
     public boolean deleteCas(SourceDocument aDocument, String aUser) throws IOException
     {
-        File casFile = getCasFile(aDocument.getProject().getId(), aDocument.getId(), aUser);
+        var casFile = getCasFile(aDocument.getProject().getId(), aDocument.getId(), aUser);
+
         if (metadataCache != null) {
             metadataCache.invalidate(casFile);
         }
+
         return casFile.delete();
     }
 
@@ -439,16 +442,27 @@ public class FileSystemCasStorageDriver
     }
 
     @Override
+    public Optional<Long> getCasFileSize(SourceDocument aDocument, String aUser) throws IOException
+    {
+        var file = getCasFile(aDocument, aUser);
+        if (file.exists()) {
+            return Optional.of(file.length());
+        }
+
+        return Optional.empty();
+    }
+
+    @Override
     public Optional<CasStorageMetadata> getCasMetadata(SourceDocument aDocument, String aUser)
         throws IOException
     {
-        File casFile = getCasFile(aDocument, aUser);
+        var casFile = getCasFile(aDocument, aUser);
+
         if (!casFile.exists()) {
             return Optional.empty();
         }
-        else {
-            return Optional.of(new Metadata(casFile));
-        }
+
+        return Optional.of(new Metadata(casFile));
     }
 
     @Override
@@ -456,13 +470,13 @@ public class FileSystemCasStorageDriver
             long aExpectedTimeStamp, String aContextAction)
         throws IOException, ConcurentCasModificationException
     {
-        File casFile = getCasFile(aDocument, aUser);
+        var casFile = getCasFile(aDocument, aUser);
 
         if (!casFile.exists()) {
             return Optional.empty();
         }
 
-        long diskLastModified = casFile.lastModified();
+        var diskLastModified = casFile.lastModified();
         if (Math.abs(diskLastModified - aExpectedTimeStamp) > casStorageProperties
                 .getFileSystemTimestampAccuracy().toMillis()) {
             StringBuilder lastWriteMsg = new StringBuilder();
@@ -472,7 +486,7 @@ public class FileSystemCasStorageDriver
                     lastWriteMsg.append("\n");
                     lastWriteMsg.append("Last known successful write was at ");
                     lastWriteMsg.append(formatTimestamp(meta.lastWriteSuccessTimestamp));
-                    lastWriteMsg.append("by:\n");
+                    lastWriteMsg.append(" by:\n");
                     for (StackTraceElement e : meta.lastWriteSuccessTrace) {
                         lastWriteMsg.append("    ");
                         lastWriteMsg.append(e);
@@ -501,15 +515,15 @@ public class FileSystemCasStorageDriver
         // If the type system of the CAS does not yet support CASMetadata, then we do not add it
         // and wait for the next regular CAS upgrade before we include this data.
         if (aCas.getTypeSystem().getType(CASMetadata._TypeName) == null) {
-            log.warn("Annotation file [{}] of user [{}] for document {} in project {} "
+            LOG.warn("Annotation file [{}] of user [{}] for document {} in project {} "
                     + "does not support CASMetadata yet - unable to detect concurrent modifications",
                     aCasFile.getName(), aUsername, aDocument, aDocument.getProject());
             return;
         }
 
-        List<TOP> cmds = aCas.select(CASMetadata._TypeName).asList();
+        var cmds = aCas.select(CASMetadata._TypeName).asList();
         if (cmds.isEmpty()) {
-            log.warn(
+            LOG.warn(
                     "Annotation file [{}] of user [{}] for document {} in project "
                             + "{} does not contain CASMetadata yet - unable to check for "
                             + "concurrent modifications",
@@ -521,8 +535,8 @@ public class FileSystemCasStorageDriver
             throw new IOException("CAS contains more than one CASMetadata instance");
         }
 
-        TOP cmd = cmds.get(0);
-        long lastKnownUpdate = FSUtil.getFeature(cmd, "lastChangedOnDisk", Long.class);
+        var cmd = cmds.get(0);
+        var lastKnownUpdate = FSUtil.getFeature(cmd, "lastChangedOnDisk", Long.class);
         verifyCasTimestamp(aDocument, aUsername, lastKnownUpdate, aContextAction);
     }
 

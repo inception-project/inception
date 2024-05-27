@@ -19,8 +19,8 @@ package de.tudarmstadt.ukp.inception.workload.matrix.event;
 
 import org.springframework.context.event.EventListener;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.event.AnnotationStateChangeEvent;
-import de.tudarmstadt.ukp.clarin.webanno.api.event.ProjectPermissionsChangedEvent;
+import de.tudarmstadt.ukp.inception.documents.event.AnnotationStateChangeEvent;
+import de.tudarmstadt.ukp.inception.project.api.event.ProjectPermissionsChangedEvent;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.workload.event.RecalculateProjectStateTask;
 import de.tudarmstadt.ukp.inception.workload.matrix.config.MatrixWorkloadManagerAutoConfiguration;
@@ -44,14 +44,19 @@ public class MatrixWorkloadStateWatcher
     @EventListener
     public void onProjectPermissionsChangedEvent(ProjectPermissionsChangedEvent aEvent)
     {
-        schedulingService.enqueue(new RecalculateProjectStateTask(aEvent.getProject(),
-                "onProjectPermissionsChangedEvent"));
+        schedulingService.enqueue(RecalculateProjectStateTask.builder() //
+                .withProject(aEvent.getProject()) //
+                .withTrigger("onProjectPermissionsChangedEvent") //
+                .build());
     }
 
     @EventListener
     public void onAnnotationStateChangeEvent(AnnotationStateChangeEvent aEvent)
     {
-        schedulingService.enqueue(new MatrixWorkloadUpdateDocumentStateTask(aEvent.getDocument(),
-                getClass().getSimpleName()));
+        var task = MatrixWorkloadUpdateDocumentStateTask.builder() //
+                .withDocument(aEvent.getDocument()) //
+                .withTrigger(getClass().getSimpleName()) //
+                .build();
+        schedulingService.enqueue(task);
     }
 }

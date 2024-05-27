@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.core.page;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.joining;
 
@@ -33,14 +34,14 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.apache.wicket.util.string.StringValue;
 import org.apache.wicket.util.string.StringValueConversionException;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.project.api.ProjectService;
+import de.tudarmstadt.ukp.inception.ui.core.AccessDeniedPage;
 import de.tudarmstadt.ukp.inception.ui.core.config.DashboardProperties;
 
 public abstract class ProjectPageBase
@@ -70,11 +71,12 @@ public abstract class ProjectPageBase
 
     protected final void requireAnyProjectRole(User aUser)
     {
-        Project project = getProjectModel().getObject();
+        var project = getProjectModel().getObject();
 
         if (aUser == null || !projectService.hasAnyRole(aUser, project)) {
             getSession().error(format("To access the [%s] you need to be a member of the project",
                     getClass().getSimpleName()));
+
             backToProjectPage();
         }
     }
@@ -82,7 +84,7 @@ public abstract class ProjectPageBase
     protected final void requireProjectRole(User aUser, PermissionLevel aRole,
             PermissionLevel... aMoreRoles)
     {
-        Project project = getProjectModel().getObject();
+        var project = getProjectModel().getObject();
 
         // Check access to project
         if (aUser == null || !projectService.hasRole(aUser, project, aRole, aMoreRoles)) {
@@ -97,22 +99,18 @@ public abstract class ProjectPageBase
 
     public void backToProjectPage()
     {
-        Class<? extends Page> projectDashboard = WicketObjects.resolveClass(
-                "de.tudarmstadt.ukp.inception.ui.core.dashboard.project.ProjectDashboardPage");
-
-        // If the current user cannot access the dashboard, at least update the feedback panel on
-        // the current page so that the user can see the error message that has most likely been
-        // queued
-        if (!projectService.hasRole(userService.getCurrentUsername(), getProject(),
-                PermissionLevel.MANAGER,
+        // If the current user cannot access the dashboard, send them to an access denied page
+        if (!projectService.hasRole(userService.getCurrentUsername(), getProject(), MANAGER,
                 dashboardProperties.getAccessibleByRoles().toArray(PermissionLevel[]::new))) {
             getRequestCycle().find(AjaxRequestTarget.class)
                     .ifPresent(_target -> _target.addChildren(getPage(), IFeedback.class));
-            return;
+            throw new RestartResponseException(AccessDeniedPage.class);
         }
 
-        PageParameters pageParameters = new PageParameters();
+        var pageParameters = new PageParameters();
         setProjectPageParameter(pageParameters, getProject());
+        Class<? extends Page> projectDashboard = WicketObjects.resolveClass(
+                "de.tudarmstadt.ukp.inception.ui.core.dashboard.project.ProjectDashboardPage");
         throw new RestartResponseException(projectDashboard, pageParameters);
     }
 
@@ -143,7 +141,7 @@ public abstract class ProjectPageBase
 
     public static Project getProjectFromParameters(Page aPage, ProjectService aProjectService)
     {
-        StringValue projectParameter = aPage.getPageParameters().get(PAGE_PARAM_PROJECT);
+        var projectParameter = aPage.getPageParameters().get(PAGE_PARAM_PROJECT);
 
         if (projectParameter.isEmpty()) {
             return null;

@@ -17,10 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.sidebar;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getDocumentTitle;
-import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
+import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.getDocumentTitle;
 import static java.util.stream.Collectors.groupingBy;
-import static org.apache.commons.lang3.StringUtils.repeat;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -46,23 +45,19 @@ import org.wicketstuff.event.annotation.OnEvent;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.Icon;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapModalDialog;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.AjaxDownloadLink;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.TempFileResource;
-import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanAdapter;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasMetadataUtils;
+import de.tudarmstadt.ukp.inception.bootstrap.BootstrapModalDialog;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
+import de.tudarmstadt.ukp.inception.recommendation.api.event.PredictionsSwitchedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.EvaluatedRecommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Preferences;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.Progress;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
@@ -70,10 +65,12 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup.Gro
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
-import de.tudarmstadt.ukp.inception.recommendation.event.PredictionsSwitchedEvent;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
-import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.inception.support.wicket.AjaxDownloadLink;
+import de.tudarmstadt.ukp.inception.support.wicket.TempFileResource;
 
 public class RecommenderInfoPanel
     extends Panel
@@ -99,29 +96,22 @@ public class RecommenderInfoPanel
                 .closeOnClick();
         add(detailsDialog);
 
-        add(new Label("progress", LoadableDetachableModel.of(() -> {
-            Progress p = recommendationService.getProgressTowardsNextEvaluation(sessionOwner,
-                    aModel.getObject().getProject());
-            return repeat("<i class=\"fas fa-circle\"></i>&nbsp;", p.getDone())
-                    + repeat("<i class=\"far fa-circle\"></i>&nbsp;", p.getTodo());
-        })).setEscapeModelStrings(false)); // SAFE - RENDERING ONLY SPECIFIC ICONS
-
-        WebMarkupContainer recommenderContainer = new WebMarkupContainer("recommenderContainer");
+        var recommenderContainer = new WebMarkupContainer("recommenderContainer");
         add(recommenderContainer);
 
-        ListView<Recommender> searchResultGroups = new ListView<Recommender>("recommender")
+        var searchResultGroups = new ListView<Recommender>("recommender")
         {
             private static final long serialVersionUID = -631500052426449048L;
 
             @Override
             protected void populateItem(ListItem<Recommender> item)
             {
-                Recommender recommender = item.getModelObject();
-                Optional<EvaluatedRecommender> evaluatedRecommender = recommendationService
+                var recommender = item.getModelObject();
+                var evaluatedRecommender = recommendationService
                         .getEvaluatedRecommender(sessionOwner, recommender);
                 item.add(new Label("name", recommender.getName()));
 
-                WebMarkupContainer state = new WebMarkupContainer("state");
+                var state = new WebMarkupContainer("state");
                 if (evaluatedRecommender.isPresent()) {
                     EvaluatedRecommender evalRec = evaluatedRecommender.get();
                     if (evalRec.isActive()) {
@@ -145,9 +135,9 @@ public class RecommenderInfoPanel
                 }
                 item.add(state);
 
-                Optional<EvaluationResult> evalResult = evaluatedRecommender
+                var evalResult = evaluatedRecommender
                         .map(EvaluatedRecommender::getEvaluationResult);
-                WebMarkupContainer resultsContainer = new WebMarkupContainer("resultsContainer");
+                var resultsContainer = new WebMarkupContainer("resultsContainer");
                 // Show results only if the evaluation was not skipped (and of course only if the
                 // result is actually present).
                 resultsContainer.setVisible(evalResult.map(r -> !r.isEvaluationSkipped())
@@ -190,18 +180,30 @@ public class RecommenderInfoPanel
                 item.add(exportModel);
 
                 item.add(new Label("noEvaluationMessage",
-                        evaluatedRecommender.map(EvaluatedRecommender::getReasonForState)
-                                .orElse("Waiting for evalation..."))
-                                        .add(visibleWhen(() -> !resultsContainer.isVisible())));
+                        getStateMessage(evaluatedRecommender.orElse(null)))
+                                .add(visibleWhen(() -> !resultsContainer.isVisible())));
             }
         };
-        IModel<List<Recommender>> recommenders = LoadableDetachableModel
-                .of(() -> recommendationService
-                        .listEnabledRecommenders(aModel.getObject().getProject()));
+        var recommenders = LoadableDetachableModel.of(() -> recommendationService
+                .listEnabledRecommenders(aModel.getObject().getProject()));
         searchResultGroups.setModel(recommenders);
 
         recommenderContainer.add(visibleWhen(() -> !recommenders.getObject().isEmpty()));
         recommenderContainer.add(searchResultGroups);
+    }
+
+    private String getStateMessage(EvaluatedRecommender aEvaluatedRecommender)
+    {
+        if (aEvaluatedRecommender == null) {
+            return "Waiting for evaluation...";
+        }
+
+        var maybeError = aEvaluatedRecommender.getEvaluationResult().getErrorMsg();
+        if (maybeError.isPresent()) {
+            return maybeError.get();
+        }
+
+        return aEvaluatedRecommender.getReasonForState();
     }
 
     private String exportModelName(Recommender aRecommender)
@@ -241,7 +243,7 @@ public class RecommenderInfoPanel
     @OnEvent
     public void onPredictionsSwitched(PredictionsSwitchedEvent aEvent)
     {
-        aEvent.getRequestTarget().add(this);
+        aEvent.getRequestTarget().ifPresent(target -> target.add(this));
     }
 
     private void actionShowDetails(AjaxRequestTarget aTarget, Recommender aRecommender)
@@ -301,13 +303,10 @@ public class RecommenderInfoPanel
 
             try {
                 // Upsert an annotation based on the suggestion
-                var layer = annotationService.getLayer(suggestion.getLayerId());
-                var feature = annotationService.getFeature(suggestion.getFeature(), layer);
-                var adapter = (SpanAdapter) annotationService.getAdapter(layer);
                 // int address =
                 recommendationService.acceptSuggestion(sessionOwner.getUsername(),
-                        state.getDocument(), state.getUser().getUsername(), cas, adapter, feature,
-                        suggestion, LearningRecordChangeLocation.REC_SIDEBAR);
+                        state.getDocument(), state.getUser().getUsername(), cas, suggestion,
+                        LearningRecordChangeLocation.REC_SIDEBAR);
 
                 // // Log the action to the learning record
                 // learningRecordService.logRecord(document, aState.getUser().getUsername(),

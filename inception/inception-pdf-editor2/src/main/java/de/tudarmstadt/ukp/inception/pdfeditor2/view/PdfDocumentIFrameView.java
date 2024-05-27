@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.pdfeditor2.view;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.time.Duration;
@@ -38,21 +37,22 @@ import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.request.handler.resource.ResourceStreamRequestHandler;
 import org.apache.wicket.request.resource.ContentDisposition;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.apache.wicket.util.resource.FileResourceStream;
 import org.apache.wicket.util.resource.StringResourceStream;
 import org.dkpro.core.api.pdf.type.PdfPage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentStorageService;
 import de.tudarmstadt.ukp.inception.pdfeditor2.PdfAnnotationEditor;
 import de.tudarmstadt.ukp.inception.pdfeditor2.format.VisualPdfReader;
 import de.tudarmstadt.ukp.inception.pdfeditor2.view.pdfjs.PdfJsViewerPage;
 import de.tudarmstadt.ukp.inception.pdfeditor2.visual.VisualPDFTextStripper;
 import de.tudarmstadt.ukp.inception.pdfeditor2.visual.model.VModel;
-import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
+import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
+import de.tudarmstadt.ukp.inception.support.wicket.WicketExceptionUtil;
 
 public class PdfDocumentIFrameView
     extends WebMarkupContainer
@@ -62,6 +62,7 @@ public class PdfDocumentIFrameView
     private static final long serialVersionUID = 4202869513273132875L;
 
     private @SpringBean DocumentService documentService;
+    private @SpringBean DocumentStorageService documentStorageService;
 
     private AbstractAjaxBehavior pdfProvider;
     private AbstractAjaxBehavior vModelProvider;
@@ -77,27 +78,22 @@ public class PdfDocumentIFrameView
             @Override
             public void onRequest()
             {
-                SourceDocument doc = aDoc.getObject();
+                try {
+                    var doc = aDoc.getObject();
 
-                File pdfFile = documentService.getSourceDocumentFile(doc);
+                    var resource = documentStorageService.getSourceDocumentResourceStream(doc,
+                            "application/pdf");
 
-                FileResourceStream resource = new FileResourceStream(pdfFile)
-                {
-                    private static final long serialVersionUID = 5985138568430773008L;
+                    var handler = new ResourceStreamRequestHandler(resource);
+                    handler.setFileName(doc.getName());
+                    handler.setCacheDuration(Duration.ZERO);
+                    handler.setContentDisposition(ContentDisposition.INLINE);
 
-                    @Override
-                    public String getContentType()
-                    {
-                        return "application/pdf";
-                    }
-                };
-
-                ResourceStreamRequestHandler handler = new ResourceStreamRequestHandler(resource);
-                handler.setFileName(doc.getName());
-                handler.setCacheDuration(Duration.ZERO);
-                handler.setContentDisposition(ContentDisposition.INLINE);
-
-                getRequestCycle().scheduleRequestHandlerAfterCurrent(handler);
+                    getRequestCycle().scheduleRequestHandlerAfterCurrent(handler);
+                }
+                catch (Exception e) {
+                    WicketExceptionUtil.handleException(LOG, PdfDocumentIFrameView.this, e);
+                }
             }
         });
 
@@ -146,15 +142,14 @@ public class PdfDocumentIFrameView
 
     private VModel visualModelFromPdfSource() throws IOException
     {
-        LOG.info("Loading visual model from source");
-        VModel vModel;
-        File file = documentService.getSourceDocumentFile(getModel().getObject());
-        try (PDDocument doc = PDDocument.load(file)) {
-            var extractor = new VisualPDFTextStripper();
-            extractor.writeText(doc, new StringWriter());
-            vModel = extractor.getVisualModel();
+        LOG.trace("Loading visual model from source");
+        try (var is = documentStorageService.openSourceDocumentFile(getModel().getObject())) {
+            try (var doc = PDDocument.load(is)) {
+                var extractor = new VisualPDFTextStripper();
+                extractor.writeText(doc, new StringWriter());
+                return extractor.getVisualModel();
+            }
         }
-        return vModel;
     }
 
     @Override

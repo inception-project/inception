@@ -19,17 +19,13 @@ package de.tudarmstadt.ukp.inception.annotation.storage;
 
 import static org.apache.uima.fit.factory.TypeSystemDescriptionFactory.createTypeSystemDescription;
 import static org.apache.uima.fit.util.CasUtil.getType;
+import static org.apache.uima.fit.util.FSUtil.setFeature;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.lang.invoke.MethodHandles;
 import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
-import org.apache.uima.cas.Type;
-import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.fit.util.FSUtil;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
@@ -41,7 +37,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
 public class CasMetadataUtils
 {
-    private static final Logger LOG = LoggerFactory.getLogger(CasMetadataUtils.class);
+    private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     public static TypeSystemDescription getInternalTypeSystem()
     {
@@ -57,8 +53,7 @@ public class CasMetadataUtils
             return;
         }
 
-        List<AnnotationFS> cmds = new ArrayList<>(
-                CasUtil.select(aCas, getType(aCas, CASMetadata.class)));
+        var cmds = aCas.select(CASMetadata.class).toList();
         if (cmds.size() > 1) {
             throw new IllegalStateException("CAS contains more than one CASMetadata instance");
         }
@@ -66,17 +61,8 @@ public class CasMetadataUtils
         cmds.forEach(aCas::removeFsFromIndexes);
     }
 
-    public static long getLastChanged(CAS aCas)
-    {
-        Type casMetadataType = getType(aCas, CASMetadata.class);
-        Feature feature = casMetadataType.getFeatureByBaseName("lastChangedOnDisk");
-        return aCas.select(casMetadataType).map(cmd -> cmd.getLongValue(feature)).findFirst()
-                .orElse(-1l);
-    }
-
     public static void addOrUpdateCasMetadata(CAS aCas, long aTimeStamp, SourceDocument aDocument,
             String aUsername)
-        throws IOException
     {
         // If the type system of the CAS does not yet support CASMetadata, then we do not add it
         // and wait for the next regular CAS upgrade before we include this data.
@@ -89,41 +75,42 @@ public class CasMetadataUtils
             return;
         }
 
-        Type casMetadataType = getType(aCas, CASMetadata.class);
+        var casMetadataType = getType(aCas, CASMetadata.class);
         FeatureStructure cmd;
-        List<AnnotationFS> cmds = new ArrayList<>(CasUtil.select(aCas, casMetadataType));
+        var cmds = aCas.select(CASMetadata.class).toList();
         if (cmds.size() > 1) {
-            throw new IOException("CAS contains more than one CASMetadata instance!");
+            throw new IllegalStateException("CAS contains more than one CASMetadata instance!");
         }
-        else if (cmds.size() == 1) {
+
+        if (cmds.size() == 1) {
             cmd = cmds.get(0);
         }
         else {
             cmd = aCas.createAnnotation(casMetadataType, 0, 0);
         }
 
-        if (cmd.getType().getFeatureByBaseName("username") != null) {
-            FSUtil.setFeature(cmd, "username", aUsername);
+        if (cmd.getType().getFeatureByBaseName(CASMetadata._FeatName_username) != null) {
+            setFeature(cmd, CASMetadata._FeatName_username, aUsername);
         }
 
-        if (cmd.getType().getFeatureByBaseName("sourceDocumentId") != null) {
-            FSUtil.setFeature(cmd, "sourceDocumentId", aDocument.getId());
+        if (cmd.getType().getFeatureByBaseName(CASMetadata._FeatName_sourceDocumentId) != null) {
+            setFeature(cmd, CASMetadata._FeatName_sourceDocumentId, aDocument.getId());
         }
 
-        if (cmd.getType().getFeatureByBaseName("sourceDocumentName") != null) {
-            FSUtil.setFeature(cmd, "sourceDocumentName", aDocument.getName());
+        if (cmd.getType().getFeatureByBaseName(CASMetadata._FeatName_sourceDocumentName) != null) {
+            setFeature(cmd, CASMetadata._FeatName_sourceDocumentName, aDocument.getName());
         }
 
-        if (cmd.getType().getFeatureByBaseName("projectId") != null) {
-            FSUtil.setFeature(cmd, "projectId", aDocument.getProject().getId());
+        if (cmd.getType().getFeatureByBaseName(CASMetadata._FeatName_projectId) != null) {
+            setFeature(cmd, CASMetadata._FeatName_projectId, aDocument.getProject().getId());
         }
 
-        if (cmd.getType().getFeatureByBaseName("projectName") != null) {
-            FSUtil.setFeature(cmd, "projectName", aDocument.getProject().getName());
+        if (cmd.getType().getFeatureByBaseName(CASMetadata._FeatName_projectName) != null) {
+            setFeature(cmd, CASMetadata._FeatName_projectName, aDocument.getProject().getName());
         }
 
-        if (cmd.getType().getFeatureByBaseName("lastChangedOnDisk") != null) {
-            FSUtil.setFeature(cmd, "lastChangedOnDisk", aTimeStamp);
+        if (cmd.getType().getFeatureByBaseName(CASMetadata._FeatName_lastChangedOnDisk) != null) {
+            setFeature(cmd, CASMetadata._FeatName_lastChangedOnDisk, aTimeStamp);
             LOG.trace("CAS [{}] for [{}]@[{}]({}): set lastChangedOnDisk: {}", aCas.hashCode(),
                     aUsername, aDocument.getName(), aDocument.getId(), aTimeStamp);
         }
@@ -131,11 +118,73 @@ public class CasMetadataUtils
         aCas.addFsToIndexes(cmd);
     }
 
+    public static Optional<FeatureStructure> getCasMetadataFS(CAS aCas)
+    {
+        return Optional.ofNullable(CasUtil.selectSingle(aCas, getType(aCas, CASMetadata.class)));
+    }
+
+    public static long getLastChanged(CAS aCas)
+    {
+        var casMetadataType = getType(aCas, CASMetadata.class);
+        var feature = casMetadataType.getFeatureByBaseName(CASMetadata._FeatName_lastChangedOnDisk);
+        return aCas.select(casMetadataType).map(cmd -> cmd.getLongValue(feature)).findFirst()
+                .orElse(-1l);
+    }
+
+    public static Optional<String> getUsername(CAS aCas)
+    {
+        try {
+            var fs = CasUtil.selectSingle(aCas, getType(aCas, CASMetadata.class));
+            return Optional.ofNullable(
+                    FSUtil.getFeature(fs, CASMetadata._FeatName_username, String.class));
+        }
+        catch (IllegalArgumentException e) {
+            return Optional.empty();
+        }
+    }
+
+    public static Optional<Long> getSourceDocumentId(CAS aCas)
+    {
+        try {
+            var fs = CasUtil.selectSingle(aCas, getType(aCas, CASMetadata.class));
+            return Optional.ofNullable(
+                    FSUtil.getFeature(fs, CASMetadata._FeatName_sourceDocumentId, Long.class));
+        }
+        catch (IllegalArgumentException e) {
+            return Optional.empty();
+        }
+    }
+
     public static Optional<String> getSourceDocumentName(CAS aCas)
     {
         try {
-            FeatureStructure fs = CasUtil.selectSingle(aCas, getType(aCas, CASMetadata.class));
-            return Optional.ofNullable(FSUtil.getFeature(fs, "sourceDocumentName", String.class));
+            var fs = CasUtil.selectSingle(aCas, getType(aCas, CASMetadata.class));
+            return Optional.ofNullable(
+                    FSUtil.getFeature(fs, CASMetadata._FeatName_sourceDocumentName, String.class));
+        }
+        catch (IllegalArgumentException e) {
+            return Optional.empty();
+        }
+    }
+
+    public static Optional<Long> getProjectId(CAS aCas)
+    {
+        try {
+            var fs = CasUtil.selectSingle(aCas, getType(aCas, CASMetadata.class));
+            return Optional
+                    .ofNullable(FSUtil.getFeature(fs, CASMetadata._FeatName_projectId, Long.class));
+        }
+        catch (IllegalArgumentException e) {
+            return Optional.empty();
+        }
+    }
+
+    public static Optional<String> getProjectName(CAS aCas)
+    {
+        try {
+            var fs = CasUtil.selectSingle(aCas, getType(aCas, CASMetadata.class));
+            return Optional.ofNullable(
+                    FSUtil.getFeature(fs, CASMetadata._FeatName_projectName, String.class));
         }
         catch (IllegalArgumentException e) {
             return Optional.empty();

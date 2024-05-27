@@ -49,7 +49,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import de.tudarmstadt.ukp.clarin.webanno.security.Realm;
-import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
+import de.tudarmstadt.ukp.inception.support.spring.ApplicationContextProvider;
 
 /**
  * User entity corresponding to the Spring standard schema. Conformance to this schema is the reason

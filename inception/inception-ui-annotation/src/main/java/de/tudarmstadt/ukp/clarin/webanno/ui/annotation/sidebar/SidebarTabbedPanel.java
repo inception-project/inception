@@ -37,12 +37,11 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.Icon;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
 import de.tudarmstadt.ukp.inception.preferences.Key;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.inception.support.wicket.WicketUtil;
 
 public class SidebarTabbedPanel<T extends SidebarTab>
     extends AjaxTabbedPanel<T>
@@ -69,7 +68,7 @@ public class SidebarTabbedPanel<T extends SidebarTab>
         setOutputMarkupId(true);
         setVisible(!aTabs.isEmpty());
 
-        LambdaAjaxLink showHideLink = new LambdaAjaxLink("showHideLink", this::showHideAction);
+        var showHideLink = new LambdaAjaxLink("showHideLink", this::showHideAction);
 
         showHideLink.add(new Icon("showHideIcon",
                 LoadableDetachableModel.of(() -> isExpanded() ? chevron_left_s : chevron_right_s)));
@@ -118,19 +117,19 @@ public class SidebarTabbedPanel<T extends SidebarTab>
 
     private void saveSidebarState()
     {
-        AnnotationSidebarState sidebarState = new AnnotationSidebarState();
+        var sidebarState = new AnnotationSidebarState();
         sidebarState.setSelectedTab(getTabs().get(getSelectedTab()).getFactoryId());
         sidebarState.setExpanded(expanded);
-        User user = userService.getCurrentUser();
+        var user = userService.getCurrentUser();
         prefService.saveTraitsForUserAndProject(KEY_SIDEBAR_STATE, user,
                 state.getObject().getProject(), sidebarState);
     }
 
     private void loadSidebarState()
     {
-        User user = userService.getCurrentUser();
-        AnnotationSidebarState sidebarState = prefService.loadTraitsForUserAndProject(
-                KEY_SIDEBAR_STATE, user, state.getObject().getProject());
+        var user = userService.getCurrentUser();
+        var sidebarState = prefService.loadTraitsForUserAndProject(KEY_SIDEBAR_STATE, user,
+                state.getObject().getProject());
         if (isNotBlank(sidebarState.getSelectedTab())) {
             var tabFactories = getTabs().stream().map(SidebarTab::getFactoryId)
                     .collect(Collectors.toList());
@@ -145,8 +144,8 @@ public class SidebarTabbedPanel<T extends SidebarTab>
     @Override
     protected Component newTitle(String aTitleId, IModel<?> aTitleModel, int aIndex)
     {
-        SidebarTab tab = getTabs().get(aIndex);
-        Component icon = tab.getIcon("icon", state);
+        var tab = getTabs().get(aIndex);
+        var icon = tab.getIcon("icon", state);
         icon.add(new AttributeModifier("title", aTitleModel));
         return icon;
     }

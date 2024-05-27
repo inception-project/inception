@@ -21,8 +21,10 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import de.tudarmstadt.ukp.inception.externaleditor.policy.DefaultHtmlDocumentPolicy;
 import de.tudarmstadt.ukp.inception.io.html.HtmlFormatSupport;
 import de.tudarmstadt.ukp.inception.io.html.LegacyHtmlFormatSupport;
+import de.tudarmstadt.ukp.inception.io.html.MHtmlFormatSupport;
 
 @Configuration
 public class HtmlSupportAutoConfiguration
@@ -30,9 +32,17 @@ public class HtmlSupportAutoConfiguration
     @Bean
     @ConditionalOnProperty(prefix = "format.html", name = "enabled", //
             havingValue = "true", matchIfMissing = false)
-    public HtmlFormatSupport htmlFormatSupport()
+    public HtmlFormatSupport htmlFormatSupport(DefaultHtmlDocumentPolicy aDefaultPolicy)
     {
-        return new HtmlFormatSupport();
+        return new HtmlFormatSupport(aDefaultPolicy);
+    }
+
+    @Bean
+    @ConditionalOnProperty(prefix = "format.mhtml", name = "enabled", //
+            havingValue = "true", matchIfMissing = false)
+    public MHtmlFormatSupport mhtmlFormatSupport(DefaultHtmlDocumentPolicy aDefaultPolicy)
+    {
+        return new MHtmlFormatSupport(aDefaultPolicy);
     }
 
     @Bean

@@ -1,0 +1,27 @@
+// Licensed to the Technische Universität Darmstadt under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The Technische Universität Darmstadt 
+// licenses this file to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.
+//  
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+[[sect_imls_azureai_openai]]
+== 🧪 AzureAI OpenAI
+
+====
+CAUTION: Experimental feature. To use this functionality, you need to enable it first by adding `recommender.azureai-openai.enabled=true` to the `settings.properties` file (see the <<admin-guide.adoc#sect_settings, Admin Guide>>).
+====
+
+This recommender allows to obtain annotation suggestions using large language models (LLMs) supported by link:https://learn.microsoft.com/en-us/azure/ai-services/openai/overview[Azure AI OpenAI]. In order to use it, you need an Azure AI account, deploy an OpenAI model there and obtain an API key for accessing that deployment. 
+
+For further information on how to configure the modes of the recommender, please refer to <<sect_imls_ollama>>.
+

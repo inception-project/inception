@@ -30,7 +30,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Comment;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Entity;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Marker;
-import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Normalization;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Offsets;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Relation;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.AjaxResponse;
@@ -79,7 +78,6 @@ public class GetDocumentResponse
      */
     private @JsonInclude(NON_EMPTY) List<Entity> entities = new ArrayList<>();
     private @JsonInclude(NON_EMPTY) List<Comment> comments = new ArrayList<>();
-    private @JsonInclude(NON_EMPTY) List<Normalization> normalizations = new ArrayList<>();
 
     private Map<String, List<Marker>> args = new HashMap<>();
 
@@ -121,21 +119,6 @@ public class GetDocumentResponse
     public void addComment(Comment aComment)
     {
         comments.add(aComment);
-    }
-
-    public List<Normalization> getNormalizations()
-    {
-        return normalizations;
-    }
-
-    public void setNormalizations(List<Normalization> aNormalizations)
-    {
-        normalizations = aNormalizations;
-    }
-
-    public void addNormalization(Normalization aNormalization)
-    {
-        normalizations.add(aNormalization);
     }
 
     public List<Offsets> getTokenOffsets()

@@ -40,34 +40,36 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.annotation.DirtiesContext.ClassMode;
 import org.springframework.transaction.annotation.Transactional;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.diag.config.CasDoctorAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.project.config.ProjectServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityAutoConfiguration;
-import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
 import de.tudarmstadt.ukp.clarin.webanno.text.TextFormatSupport;
 import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
+import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
+import de.tudarmstadt.ukp.inception.documents.api.RepositoryPropertiesImpl;
 import de.tudarmstadt.ukp.inception.documents.config.DocumentServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.io.xmi.XmiFormatSupport;
 import de.tudarmstadt.ukp.inception.io.xmi.config.UimaFormatsPropertiesImpl.XmiFormatProperties;
 import de.tudarmstadt.ukp.inception.preferences.config.PreferencesServiceAutoConfig;
+import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.scheduling.config.SchedulingServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.inception.schema.config.AnnotationSchemaServiceAutoConfiguration;
-import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.inception.search.FeatureIndexingSupportRegistry;
 import de.tudarmstadt.ukp.inception.search.config.SearchServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.search.index.IndexRebuildRequiredException;
+import de.tudarmstadt.ukp.inception.support.spring.ApplicationContextProvider;
 
 @Transactional
 @DataJpaTest( //
         showSql = false, //
         properties = { //
+                "spring.main.banner-mode=off", //
                 "debug.cas-doctor.force-release-behavior=true", //
                 "document-import.run-cas-doctor-on-import=OFF" })
 @DirtiesContext(classMode = ClassMode.BEFORE_EACH_TEST_METHOD)
@@ -126,7 +128,7 @@ public class MtasUpgradeTest
         srcDoc = new SourceDocument("test.txt", project, TextFormatSupport.ID);
         annDoc = new AnnotationDocument("user", srcDoc);
         documentService.createSourceDocument(srcDoc);
-        documentService.createAnnotationDocument(annDoc);
+        documentService.createOrUpdateAnnotationDocument(annDoc);
 
         index = new MtasDocumentIndex(project, documentService,
                 repositoryProperties.getPath().getAbsolutePath(), featureIndexingSupportRegistry,
@@ -184,7 +186,7 @@ public class MtasUpgradeTest
         @Bean
         RepositoryProperties repositoryProperties()
         {
-            var props = new RepositoryProperties();
+            var props = new RepositoryPropertiesImpl();
             props.setPath(new File(WORK_DIR));
             return props;
         }

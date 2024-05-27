@@ -22,34 +22,23 @@ import java.util.List;
 
 import de.tudarmstadt.ukp.inception.diam.model.ajax.AjaxResponse;
 
-/**
- * Response for the {@code normData} command.
- * 
- * This is essentially present in brat, but there {@code results} would be a member of an array
- * called {@code value}. We simplified this a bit here and in {@code visualizer_ui.js}.
- */
 public class LazyDetailsResponse
     extends AjaxResponse
 {
-    private List<LazyDetailQuery> results = new ArrayList<>();
+    private List<LazyDetailGroup> groups = new ArrayList<>();
 
     public LazyDetailsResponse(String aAction)
     {
         super(aAction);
     }
 
-    public List<LazyDetailQuery> getResults()
+    public List<LazyDetailGroup> getGroups()
     {
-        return results;
+        return groups;
     }
 
-    public void setResults(List<LazyDetailQuery> aResult)
+    public void setGroups(List<LazyDetailGroup> aGroups)
     {
-        results = aResult;
-    }
-
-    public void addResult(LazyDetailQuery aResult)
-    {
-        results.add(aResult);
+        groups = aGroups;
     }
 }

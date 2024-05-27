@@ -26,13 +26,13 @@ import static java.util.Objects.isNull;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMessage;
+import static org.apache.wicket.RuntimeConfigurationType.DEVELOPMENT;
 
 import java.io.IOException;
 import java.util.Optional;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.wicket.AttributeModifier;
-import org.apache.wicket.RuntimeConfigurationType;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.basic.Label;
@@ -52,14 +52,13 @@ import org.apache.wicket.validation.ValidationError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.project.api.ProjectService;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxButton;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 
 public class ProjectDetailPanel
     extends Panel
@@ -123,8 +122,7 @@ public class ProjectDetailPanel
 
         // If we run in development mode, then also show the ID of the project
         form.add(idLabel = new Label("id"));
-        idLabel.setVisible(RuntimeConfigurationType.DEVELOPMENT
-                .equals(getApplication().getConfigurationType()));
+        idLabel.setVisible(getApplication().getConfigurationType() == DEVELOPMENT);
 
         form.add(new TextArea<String>("description").setOutputMarkupId(true));
 
@@ -169,7 +167,7 @@ public class ProjectDetailPanel
         boolean isNewProject = isNull(project.getId());
         if (isNewProject) {
             try {
-                User user = userRepository.getCurrentUser();
+                var user = userRepository.getCurrentUser();
                 projectService.createProject(project);
                 projectService.assignRole(project, user, ANNOTATOR, CURATOR, MANAGER);
                 projectService.initializeProject(project);

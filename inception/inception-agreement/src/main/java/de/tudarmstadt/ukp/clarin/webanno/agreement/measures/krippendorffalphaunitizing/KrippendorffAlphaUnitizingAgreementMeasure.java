@@ -18,136 +18,87 @@
 package de.tudarmstadt.ukp.clarin.webanno.agreement.measures.krippendorffalphaunitizing;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
+import java.util.Objects;
 
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.Feature;
-import org.apache.uima.cas.Type;
-import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.FSUtil;
-import org.dkpro.statistics.agreement.IAgreementMeasure;
+import org.apache.uima.jcas.tcas.Annotation;
 import org.dkpro.statistics.agreement.unitizing.KrippendorffAlphaUnitizingAgreement;
 import org.dkpro.statistics.agreement.unitizing.UnitizingAnnotationStudy;
 
-import de.tudarmstadt.ukp.clarin.webanno.agreement.PairwiseAnnotationResult;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasure_ImplBase;
-import de.tudarmstadt.ukp.clarin.webanno.agreement.results.unitizing.UnitizingAgreementResult;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.DefaultAgreementTraits;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.results.unitizing.FullUnitizingAgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 
 public class KrippendorffAlphaUnitizingAgreementMeasure
     extends AgreementMeasure_ImplBase<//
-            PairwiseAnnotationResult<UnitizingAgreementResult>, //
-            KrippendorffAlphaUnitizingAgreementTraits>
+            FullUnitizingAgreementResult, //
+            DefaultAgreementTraits>
 {
-    private final AnnotationSchemaService annotationService;
-
     public KrippendorffAlphaUnitizingAgreementMeasure(AnnotationFeature aFeature,
-            KrippendorffAlphaUnitizingAgreementTraits aTraits,
-            AnnotationSchemaService aAnnotationService)
+            DefaultAgreementTraits aTraits)
     {
         super(aFeature, aTraits);
-        annotationService = aAnnotationService;
     }
 
     @Override
-    public PairwiseAnnotationResult<UnitizingAgreementResult> getAgreement(
-            Map<String, List<CAS>> aCasMap)
+    public FullUnitizingAgreementResult getAgreement(Map<String, CAS> aCasMap)
     {
-        PairwiseAnnotationResult<UnitizingAgreementResult> result = new PairwiseAnnotationResult<>(
-                getFeature(), getTraits());
-        List<Entry<String, List<CAS>>> entryList = new ArrayList<>(aCasMap.entrySet());
-        for (int m = 0; m < entryList.size(); m++) {
-            for (int n = 0; n < entryList.size(); n++) {
-                // Triangle matrix mirrored
-                if (n < m) {
-                    Map<String, List<CAS>> pairwiseCasMap = new LinkedHashMap<>();
-                    pairwiseCasMap.put(entryList.get(m).getKey(), entryList.get(m).getValue());
-                    pairwiseCasMap.put(entryList.get(n).getKey(), entryList.get(n).getValue());
-                    UnitizingAgreementResult res = calculatePairAgreement(pairwiseCasMap);
-                    result.add(entryList.get(m).getKey(), entryList.get(n).getKey(), res);
-                }
-            }
-        }
-        return result;
-    }
+        var typeName = getFeature().getLayer().getName();
 
-    public UnitizingAgreementResult calculatePairAgreement(Map<String, List<CAS>> aCasMap)
-    {
-        String typeName = getFeature().getLayer().getName();
-
-        // Calculate a character offset continuum over all CASses. We assume here that the documents
+        // Calculate a character offset continuum. We assume here that the documents
         // all have the same size - since the users cannot change the document sizes, this should be
         // an universally true assumption.
-        List<CAS> firstUserCasses = aCasMap.values().stream().findFirst().get();
-        int docCount = firstUserCasses.size();
-        int[] docSizes = new int[docCount];
-        Arrays.fill(docSizes, 0);
-        for (Entry<String, List<CAS>> set : aCasMap.entrySet()) {
-            int i = 0;
-            for (CAS cas : set.getValue()) {
-                if (cas != null) {
-                    assert docSizes[i] == 0 || docSizes[i] == cas.getDocumentText().length();
-
-                    docSizes[i] = cas.getDocumentText().length();
-                }
-                i++;
-            }
-        }
-        int continuumSize = Arrays.stream(docSizes).sum();
+        var someCas = aCasMap.values().stream().filter(Objects::nonNull).findAny().get();
 
         // Create a unitizing study for that continuum.
-        UnitizingAnnotationStudy study = new UnitizingAnnotationStudy(continuumSize);
+        var study = new UnitizingAnnotationStudy(someCas.getDocumentText().length());
 
         // For each annotator, extract the feature values from all the annotator's CASses and add
         // them to the unitizing study based on character offsets.
-        for (Entry<String, List<CAS>> set : aCasMap.entrySet()) {
-            int raterIdx = study.addRater(set.getKey());
-            int docOffset = 0;
-            int i = 0;
-            for (CAS cas : set.getValue()) {
+        for (var set : aCasMap.entrySet()) {
+            var cas = set.getValue();
+            if (cas == null) {
                 // If a user has never worked on a source document, its CAS is null here - we
                 // skip it.
-                if (cas != null) {
-                    Type t = cas.getTypeSystem().getType(typeName);
-                    Feature f = t.getFeatureByBaseName(getFeature().getName());
-                    int currentDocOffset = docOffset;
-                    cas.select(t).map(fs -> (AnnotationFS) fs).forEach(fs -> {
-                        Object featureValue = FSUtil.getFeature(fs, f, Object.class);
-                        if (featureValue instanceof Collection) {
-                            for (Object value : (Collection<?>) featureValue) {
-                                study.addUnit(currentDocOffset + fs.getBegin(),
-                                        fs.getEnd() - fs.getBegin(), raterIdx, value);
-                            }
-                        }
-                        else {
-                            study.addUnit(currentDocOffset + fs.getBegin(),
-                                    fs.getEnd() - fs.getBegin(), raterIdx, featureValue);
-                        }
-                    });
-                }
+                continue;
+            }
 
-                docOffset += docSizes[i];
-                i++;
+            var t = cas.getTypeSystem().getType(typeName);
+            if (t == null) {
+                // CAS not upgraded yet
+                continue;
+            }
+
+            var raterIdx = study.addRater(set.getKey());
+            var f = t.getFeatureByBaseName(getFeature().getName());
+            for (var ann : cas.<Annotation> select(t)) {
+                var featureValue = FSUtil.getFeature(ann, f, Object.class);
+                if (featureValue instanceof Collection) {
+                    for (var value : (Collection<?>) featureValue) {
+                        study.addUnit(ann.getBegin(), ann.getEnd() - ann.getBegin(), raterIdx,
+                                value);
+                    }
+                }
+                else {
+                    study.addUnit(ann.getBegin(), ann.getEnd() - ann.getBegin(), raterIdx,
+                            featureValue);
+                }
             }
         }
 
-        UnitizingAgreementResult result = new UnitizingAgreementResult(typeName,
-                getFeature().getName(), study, new ArrayList<>(aCasMap.keySet()),
-                getTraits().isExcludeIncomplete());
+        var result = new FullUnitizingAgreementResult(typeName, getFeature().getName(), study,
+                new ArrayList<>(aCasMap.keySet()), getTraits().isExcludeIncomplete());
 
-        IAgreementMeasure agreement = new KrippendorffAlphaUnitizingAgreement(study);
-
-        if (result.getStudy().getUnitCount() > 0) {
-            result.setAgreement(agreement.calculateAgreement());
+        if (result.isEmpty()) {
+            result.setAgreement(Double.NaN);
         }
         else {
-            result.setAgreement(Double.NaN);
+            var measure = new KrippendorffAlphaUnitizingAgreement(study);
+            result.setAgreement(measure.calculateAgreement());
         }
 
         return result;

@@ -24,7 +24,7 @@ import org.wicketstuff.progressbar.Progression;
 import org.wicketstuff.progressbar.ProgressionModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
-import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
+import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 
 /**
  * @deprecated Old export page code - to be removed in a future release.

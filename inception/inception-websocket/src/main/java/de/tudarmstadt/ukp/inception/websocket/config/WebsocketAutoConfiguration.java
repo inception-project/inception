@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.websocket.config;
 
-import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -27,12 +26,9 @@ import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBr
 
 import com.giffing.wicket.spring.boot.starter.configuration.extensions.core.csrf.CsrfAttacksPreventionProperties;
 
-import de.tudarmstadt.ukp.inception.log.config.EventLoggingAutoConfiguration;
-
 @ConditionalOnWebApplication
 @Configuration
 @EnableWebSocketMessageBroker
-@AutoConfigureAfter(EventLoggingAutoConfiguration.class)
 @ConditionalOnProperty(prefix = "websocket", name = "enabled", havingValue = "true", matchIfMissing = true)
 @EnableConfigurationProperties(CsrfAttacksPreventionProperties.class)
 public class WebsocketAutoConfiguration

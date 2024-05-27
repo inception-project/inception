@@ -22,8 +22,8 @@ import java.util.List;
 import org.apache.uima.cas.CAS;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.Extension;
-import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
+import de.tudarmstadt.ukp.inception.support.extensionpoint.Extension;
+import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 
 public interface Check
     extends Extension<Void>

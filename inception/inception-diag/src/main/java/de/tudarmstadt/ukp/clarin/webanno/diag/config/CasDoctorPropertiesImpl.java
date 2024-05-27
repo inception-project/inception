@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.diag.config;
 
+import java.util.Collections;
 import java.util.List;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -25,8 +26,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class CasDoctorPropertiesImpl
     implements CasDoctorProperties
 {
-    private List<String> checks;
-    private List<String> repairs;
+    private List<String> checks = Collections.emptyList();
+    private List<String> repairs = Collections.emptyList();
     private boolean fatal = true;
     private boolean forceReleaseBehavior = false;
 

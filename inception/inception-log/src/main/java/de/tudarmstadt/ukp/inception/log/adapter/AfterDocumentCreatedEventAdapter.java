@@ -21,18 +21,18 @@ import java.io.IOException;
 
 import org.springframework.stereotype.Component;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterDocumentCreatedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
-import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
+import de.tudarmstadt.ukp.inception.documents.event.AfterDocumentCreatedEvent;
+import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 
 @Component
 public class AfterDocumentCreatedEventAdapter
     implements EventLoggingAdapter<AfterDocumentCreatedEvent>
 {
     @Override
-    public boolean accepts(Object aEvent)
+    public boolean accepts(Class<?> aEvent)
     {
-        return aEvent instanceof AfterDocumentCreatedEvent;
+        return AfterDocumentCreatedEvent.class.isAssignableFrom(aEvent);
     }
 
     @Override
@@ -50,7 +50,7 @@ public class AfterDocumentCreatedEventAdapter
     @Override
     public String getDetails(AfterDocumentCreatedEvent aEvent) throws IOException
     {
-        Details details = new Details();
+        var details = new Details();
         details.documentName = aEvent.getDocument().getName();
         details.format = aEvent.getDocument().getFormat();
         details.state = aEvent.getDocument().getState();

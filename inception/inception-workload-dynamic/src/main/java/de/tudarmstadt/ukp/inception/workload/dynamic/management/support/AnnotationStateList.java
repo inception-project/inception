@@ -19,7 +19,7 @@ package de.tudarmstadt.ukp.inception.workload.dynamic.management.support;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.NEW;
-import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 import static de.tudarmstadt.ukp.inception.workload.dynamic.management.DynamicWorkloadManagementPage.CSS_CLASS_STATE_TOGGLE;
 import static java.time.Duration.between;
 import static java.time.Instant.now;
@@ -46,8 +46,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxEventBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxEventBehavior;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.workload.dynamic.management.support.event.AnnotatorColumnCellClickEvent;
 import de.tudarmstadt.ukp.inception.workload.dynamic.management.support.event.AnnotatorColumnCellShowAnnotatorCommentEvent;
 import de.tudarmstadt.ukp.inception.workload.dynamic.management.support.event.AnnotatorStateOpenContextMenuEvent;
@@ -75,16 +75,16 @@ public class AnnotationStateList
             @Override
             protected void populateItem(ListItem<AnnotationDocument> aItem)
             {
-                AnnotationDocument row = aItem.getModelObject();
-                User user = userRepository.get(aItem.getModelObject().getUser());
+                var row = aItem.getModelObject();
+                var user = userRepository.get(aItem.getModelObject().getUser());
 
                 var state = new WebMarkupContainer("state");
                 aItem.queue(state);
 
-                IModel<String> labelModel = aItem.getModel() //
+                var labelModel = aItem.getModel() //
                         .map(AnnotationDocumentState::symbol) //
                         .orElse(NEW.symbol());
-                Label stateLabel = new Label("stateSymbol");
+                var stateLabel = new Label("stateSymbol");
 
                 if (isAbandoned(row)) {
                     labelModel = labelModel

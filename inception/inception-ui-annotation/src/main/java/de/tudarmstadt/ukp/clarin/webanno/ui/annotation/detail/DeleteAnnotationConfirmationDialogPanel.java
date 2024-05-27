@@ -22,8 +22,8 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.StringResourceModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialogContentPanel_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel.AttachStatus;
+import de.tudarmstadt.ukp.inception.bootstrap.dialog.ConfirmationDialogContentPanel_ImplBase;
 
 public class DeleteAnnotationConfirmationDialogPanel
     extends ConfirmationDialogContentPanel_ImplBase

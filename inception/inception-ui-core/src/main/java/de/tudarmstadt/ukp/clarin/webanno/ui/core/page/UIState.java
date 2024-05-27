@@ -17,8 +17,11 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.core.page;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import de.tudarmstadt.ukp.inception.preferences.Key;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class UIState
 {
     public static final Key<UIState> KEY_UI = new Key<>(UIState.class, "global/ui");

@@ -25,14 +25,15 @@ import static de.tudarmstadt.ukp.inception.scheduling.MatchResult.NO_MATCH;
 import static de.tudarmstadt.ukp.inception.scheduling.MatchResult.UNQUEUE_EXISTING_AND_QUEUE_THIS;
 
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.util.Objects;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.scheduling.MatchResult;
+import de.tudarmstadt.ukp.inception.scheduling.ProjectTask;
 import de.tudarmstadt.ukp.inception.scheduling.Task;
 import de.tudarmstadt.ukp.inception.search.SearchService;
 import de.tudarmstadt.ukp.inception.search.model.Monitor;
@@ -43,16 +44,25 @@ import de.tudarmstadt.ukp.inception.search.model.Progress;
  */
 public class ReindexTask
     extends IndexingTask_ImplBase
+    implements ProjectTask
 {
-    private Logger log = LoggerFactory.getLogger(getClass());
+    public static final String TYPE = "ReindexTask";
+
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private @Autowired SearchService searchService;
 
     private Monitor monitor = new Monitor();
 
-    public ReindexTask(Project aProject, String aTrigger)
+    public ReindexTask(Builder<? extends Builder<?>> aBuilder)
     {
-        super(aProject, null, aTrigger);
+        super(aBuilder.withType(TYPE));
+    }
+
+    @Override
+    public String getTitle()
+    {
+        return "Rebuilding index...";
     }
 
     @Override
@@ -62,7 +72,7 @@ public class ReindexTask
             searchService.reindex(super.getProject(), monitor);
         }
         catch (IOException e) {
-            log.error("Unable to reindex project [{}]({})", getProject().getName(),
+            LOG.error("Unable to reindex project [{}]({})", getProject().getName(),
                     getProject().getId(), e);
         }
     }
@@ -86,5 +96,19 @@ public class ReindexTask
         }
 
         return NO_MATCH;
+    }
+
+    public static Builder<Builder<?>> builder()
+    {
+        return new Builder<>();
+    }
+
+    public static class Builder<T extends Builder<?>>
+        extends IndexingTask_ImplBase.Builder<T>
+    {
+        public ReindexTask build()
+        {
+            return new ReindexTask(this);
+        }
     }
 }

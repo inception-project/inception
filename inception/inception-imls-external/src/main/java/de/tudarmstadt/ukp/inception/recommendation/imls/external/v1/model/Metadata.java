@@ -19,9 +19,11 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import de.tudarmstadt.ukp.inception.rendering.model.Range;
+
 public class Metadata
 {
-
+    private final Range range;
     private final String layer;
     private final String feature;
     private final long projectId;
@@ -32,13 +34,15 @@ public class Metadata
             @JsonProperty(value = "feature", required = true) String aFeature,
             @JsonProperty(value = "projectId", required = true) long aProjectId,
             @JsonProperty(value = "anchoringMode", required = true) String aAnchoringMode,
-            @JsonProperty(value = "crossSentence", required = true) boolean aCrossSentence)
+            @JsonProperty(value = "crossSentence", required = true) boolean aCrossSentence,
+            @JsonProperty(value = "range", required = true) Range aRange)
     {
         layer = aLayer;
         feature = aFeature;
         projectId = aProjectId;
         anchoringMode = aAnchoringMode;
         crossSentence = aCrossSentence;
+        range = aRange;
     }
 
     public String getLayer()
@@ -64,5 +68,10 @@ public class Metadata
     public boolean isCrossSentence()
     {
         return crossSentence;
+    }
+
+    public Range getRange()
+    {
+        return range;
     }
 }

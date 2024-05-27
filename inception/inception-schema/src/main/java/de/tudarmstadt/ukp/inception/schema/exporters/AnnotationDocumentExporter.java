@@ -17,14 +17,14 @@
  */
 package de.tudarmstadt.ukp.inception.schema.exporters;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.ANNOTATION_FOLDER;
-import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.DOCUMENT_FOLDER;
-import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.PROJECT_FOLDER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.export.FullProjectExportRequest.FORMAT_AUTO;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.ANNOTATION;
 import static de.tudarmstadt.ukp.clarin.webanno.security.UserDaoImpl.RESERVED_USERNAMES;
-import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
-import static de.tudarmstadt.ukp.clarin.webanno.support.io.FastIOUtils.copy;
+import static de.tudarmstadt.ukp.inception.project.api.ProjectService.ANNOTATION_FOLDER;
+import static de.tudarmstadt.ukp.inception.project.api.ProjectService.DOCUMENT_FOLDER;
+import static de.tudarmstadt.ukp.inception.project.api.ProjectService.PROJECT_FOLDER;
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
+import static de.tudarmstadt.ukp.inception.support.io.FastIOUtils.copy;
 import static java.lang.Math.ceil;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Arrays.asList;
@@ -68,9 +68,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.FullProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportException;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
@@ -85,10 +83,12 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
+import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
 import de.tudarmstadt.ukp.inception.documents.exporters.SourceDocumentExporter;
 import de.tudarmstadt.ukp.inception.schema.config.AnnotationSchemaServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 
 /**
  * <p>
@@ -147,8 +147,7 @@ public class AnnotationDocumentExporter
     {
         List<ExportedAnnotationDocument> annotationDocuments = new ArrayList<>();
 
-        for (AnnotationDocument annotationDocument : documentService
-                .listAnnotationDocuments(aProject)) {
+        for (var annotationDocument : documentService.listAnnotationDocuments(aProject)) {
             ExportedAnnotationDocument exAnnotationDocument = new ExportedAnnotationDocument();
             exAnnotationDocument.setName(annotationDocument.getName());
             exAnnotationDocument.setState(annotationDocument.getState());
@@ -373,7 +372,7 @@ public class AnnotationDocumentExporter
             annotationDocument.setSentenceAccessed(exAnnotationDocument.getSentenceAccessed());
             annotationDocument.setCreated(exAnnotationDocument.getCreated());
             annotationDocument.setUpdated(exAnnotationDocument.getUpdated());
-            documentService.createAnnotationDocument(annotationDocument);
+            documentService.createOrUpdateAnnotationDocument(annotationDocument);
         }
     }
 

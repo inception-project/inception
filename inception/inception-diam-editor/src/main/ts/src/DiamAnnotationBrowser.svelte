@@ -31,6 +31,8 @@
     } from "./AnnotationBrowserState";
     import AnnotationsByPositionList from "./AnnotationsByPositionList.svelte";
     import AnnotationsByLabelList from "./AnnotationsByLabelList.svelte";
+    import AnnotationsByLayerList from "./AnnotationsByLayerList.svelte";
+    import AnnotationDetailPopOver from "@inception-project/inception-js-api/src/widget/AnnotationDetailPopOver.svelte"
 
     export let wsEndpointUrl: string;
     export let topicChannel: string;
@@ -38,6 +40,7 @@
     export let pinnedGroups: string[];
     export let userPreferencesKey: string;
 
+    let popover : AnnotationDetailPopOver = null;
     let connected = false;
     let element = null;
     let self = get_current_component();
@@ -51,7 +54,9 @@
     let modes = {
         "by-position": "Group by position",
         "by-label": "Group by label",
+        "by-layer": "Group by layer",
     };
+    let tooManyAnnotations = false;
 
     let data: AnnotatedText;
 
@@ -101,7 +106,17 @@
             return;
         }
 
-        data = unpackCompactAnnotatedTextV2(d);
+        let preData = unpackCompactAnnotatedTextV2(d);
+        if (preData.spans.size + preData.relations.size > 25000) {
+            console.error(`Too many annotations: ${preData.spans.size} spans ${preData.relations.size} relations`)
+            data = undefined
+            tooManyAnnotations = true
+        }
+        else {
+            console.info(`Loaded annotations: ${preData.spans.size} spans ${preData.relations.size} relations`)
+            tooManyAnnotations = false
+            data = preData;
+        }
     }
 
     export function connect(): void {
@@ -115,23 +130,54 @@
         connected = false;
     }
 
-    onMount(async () => connect());
+    onMount(async () => { 
+        connect()
+        popover = new AnnotationDetailPopOver({
+            target: element,
+            props: {
+                root: element,
+                ajax: ajaxClient
+            }
+        })
+    });
 
-    onDestroy(async () => disconnect());
-</script>
+    onDestroy(async () => { 
+        popover?.$destroy()
+        disconnect() 
+    });
 
-<div class="flex-content flex-v-container" bind:this={element}>
-    <select bind:value={$groupingMode} class="form-select">
+    function cancelRightClick (e: Event): void {
+    if (e instanceof MouseEvent) {
+      if (e.button === 2) {
+        e.preventDefault()
+        e.stopPropagation()
+      }
+    }
+  }</script>
+
+<!-- svelte-ignore a11y-click-events-have-key-events -->
+<div class="flex-content flex-v-container" bind:this={element} 
+    on:click|capture={cancelRightClick} on:mousedown|capture={cancelRightClick} 
+    on:mouseup|capture={cancelRightClick}>
+    <select bind:value={$groupingMode} class="form-select rounded-0">
         {#each Object.keys(modes) as value}<option {value}
                 >{modes[value]}</option
             >{/each}
     </select>
-    {#if $groupingMode == "by-position"}
+    {#if tooManyAnnotations}
+        <div class="m-auto text-center text-muted">
+            <div class="fs-1"><i class="far fa-dizzy"></i></div>
+            <div>Too many annotations</div>
+        </div>
+    {:else if $groupingMode == "by-position"}
         <AnnotationsByPositionList {ajaxClient} {data} />
+    {:else if $groupingMode == "by-layer"}
+        <AnnotationsByLayerList {ajaxClient} {data} />
     {:else}
         <AnnotationsByLabelList {ajaxClient} {data} {pinnedGroups} />
     {/if}
 </div>
 
 <style>
+     @import '../node_modules/@inception-project/inception-js-api/src/style/InceptionEditorIcons.scss';
 </style>

@@ -18,7 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.model;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode.ARRAY;
-import static de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil.getUimaTypeName;
+import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.getUimaTypeName;
 
 import java.io.Serializable;
 

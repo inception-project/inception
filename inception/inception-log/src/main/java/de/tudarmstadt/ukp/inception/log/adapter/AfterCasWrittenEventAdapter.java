@@ -21,18 +21,18 @@ import java.io.IOException;
 
 import org.springframework.stereotype.Component;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterCasWrittenEvent;
-import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
+import de.tudarmstadt.ukp.inception.documents.event.AfterCasWrittenEvent;
 import de.tudarmstadt.ukp.inception.log.model.CasDetails;
+import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 
 @Component
 public class AfterCasWrittenEventAdapter
     implements EventLoggingAdapter<AfterCasWrittenEvent>
 {
     @Override
-    public boolean accepts(Object aEvent)
+    public boolean accepts(Class<?> aEvent)
     {
-        return aEvent instanceof AfterCasWrittenEvent;
+        return AfterCasWrittenEvent.class.isAssignableFrom(aEvent);
     }
 
     @Override
@@ -56,7 +56,7 @@ public class AfterCasWrittenEventAdapter
     @Override
     public String getDetails(AfterCasWrittenEvent aEvent) throws IOException
     {
-        CasDetails details = new CasDetails(aEvent.getCas());
+        var details = new CasDetails(aEvent.getCas());
         return JSONUtil.toJsonString(details);
     }
 }

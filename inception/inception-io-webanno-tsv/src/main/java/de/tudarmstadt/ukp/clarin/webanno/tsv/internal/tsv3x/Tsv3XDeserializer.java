@@ -694,8 +694,8 @@ public class Tsv3XDeserializer
 
         // If not, then we have to create one
         if (annotation == null) {
-            annotation = aUnit.getDocument().getJCas().getCas().createAnnotation(aCol.uimaType,
-                    aUnit.getBegin(), aUnit.getEnd());
+            annotation = aUnit.getDocument().getJCas().getCas().createAnnotation(aCol.uimaType, -1,
+                    -1);
             aUnit.addUimaAnnotation(annotation);
         }
 
@@ -827,6 +827,8 @@ public class Tsv3XDeserializer
 
                 setFeature(aAnnotation, FEAT_REL_SOURCE, sourceAnnotation);
                 setFeature(aAnnotation, FEAT_REL_TARGET, targetAnnotation);
+                aAnnotation.setBegin(targetAnnotation.getBegin());
+                aAnnotation.setEnd(targetAnnotation.getEnd());
             });
             break;
         }

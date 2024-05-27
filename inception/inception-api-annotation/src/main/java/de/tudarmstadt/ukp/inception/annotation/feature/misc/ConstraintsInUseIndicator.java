@@ -26,8 +26,8 @@ import org.apache.wicket.StyleAttributeModifier;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.model.IModel;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior;
 
 /**
  * Shows whether constraints are triggered or not also shows state of constraints use.

@@ -17,12 +17,12 @@
  */
 package de.tudarmstadt.ukp.inception.io.bioc;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.FEAT_REL_SOURCE;
-import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.FEAT_REL_TARGET;
 import static de.tudarmstadt.ukp.inception.project.initializers.basic.BasicRelationLayerInitializer.BASIC_RELATION_LABEL_FEATURE_NAME;
 import static de.tudarmstadt.ukp.inception.project.initializers.basic.BasicRelationLayerInitializer.BASIC_RELATION_LAYER_NAME;
 import static de.tudarmstadt.ukp.inception.project.initializers.basic.BasicSpanLayerInitializer.BASIC_SPAN_LABEL_FEATURE_NAME;
 import static de.tudarmstadt.ukp.inception.project.initializers.basic.BasicSpanLayerInitializer.BASIC_SPAN_LAYER_NAME;
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.FEAT_REL_SOURCE;
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.FEAT_REL_TARGET;
 import static java.util.Arrays.asList;
 import static org.apache.uima.cas.CAS.TYPE_NAME_ANNOTATION;
 import static org.apache.uima.cas.CAS.TYPE_NAME_STRING;
@@ -108,6 +108,21 @@ public class BioCReaderTest
                 BioCReader.class, //
                 BioCReader.PARAM_SOURCE_LOCATION,
                 "src/test/resources/bioc/example-with-multiple-documents.xml");
+
+        var texts = new ArrayList<String>();
+        iteratePipeline(reader).forEach(cas -> texts.add(cas.getDocumentText().trim()));
+
+        assertThat(texts) //
+                .containsExactly("Document 1 text.", "Document 2 text.", "Document 3 text.");
+    }
+
+    @Test
+    void testReadFileWithIncompleteMetadata() throws Exception
+    {
+        var reader = createReaderDescription( //
+                BioCReader.class, //
+                BioCReader.PARAM_SOURCE_LOCATION,
+                "src/test/resources/bioc/example-with-incomplete-metadata.xml");
 
         var texts = new ArrayList<String>();
         iteratePipeline(reader).forEach(cas -> texts.add(cas.getDocumentText().trim()));

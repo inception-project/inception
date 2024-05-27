@@ -18,13 +18,19 @@
 import '@recogito/recogito-js/dist/recogito.min.css'
 import { Recogito } from '@recogito/recogito-js/src'
 import Connections from '@recogito/recogito-connections/src'
-import { AnnotationEditor, CompactAnnotatedText, CompactSpan, DiamAjax, VID } from '@inception-project/inception-js-api'
-import { CompactRelation } from '@inception-project/inception-js-api/src/model/compact/CompactRelation'
+import { AnnotatedText, AnnotationEditor, AnnotationOutEvent, AnnotationOverEvent, DiamAjax, VID, unpackCompactAnnotatedTextV2 } from '@inception-project/inception-js-api'
 import './RecogitoEditor.scss'
 import { DiamLoadAnnotationsOptions } from '@inception-project/inception-js-api/src/diam/DiamAjax'
 import { ViewportTracker } from '@inception-project/inception-js-api/src/util/ViewportTracker'
-import { calculateStartOffset, offsetToRange } from '@inception-project/inception-js-api/src/util/OffsetUtils'
+import { offsetToRange } from '@inception-project/inception-js-api/src/util/OffsetUtils'
 import convert from 'color-convert'
+import { CompactAnnotatedText } from '@inception-project/inception-js-api/src/model/compact_v2'
+import { showLabels } from './RecogitoEditorState'
+import { Writable } from 'svelte/store'
+import RecogitoEditorToolbar from './RecogitoEditorToolbar.svelte'
+import AnnotationDetailPopOver from '@inception-project/inception-js-api/src/widget/AnnotationDetailPopOver.svelte'
+
+export const NO_LABEL = '◌'
 
 interface WebAnnotationBodyItem {
   type: string;
@@ -52,63 +58,224 @@ interface WebAnnotation {
 }
 
 export class RecogitoEditor implements AnnotationEditor {
+  private alpha = '55'
   private ajax: DiamAjax
   private recogito: Recogito
   private connections: any
   private root: Element
   private annotations: WebAnnotation[]
   private tracker: ViewportTracker
+  private data? : AnnotatedText
+  private showInlineLabels: boolean
+  private toolbar: RecogitoEditorToolbar
+  private popover: AnnotationDetailPopOver
+  private laskMouseMoveEvent: MouseEvent | undefined
 
-  public constructor (element: Element, ajax: DiamAjax) {
+  public constructor (element: Element, ajax: DiamAjax, userPreferencesKey: string) {
     this.ajax = ajax
     this.root = element
 
-    this.recogito = new Recogito({
-      content: element,
-      disableEditor: true,
-      mode: 'pre'
+    const defaultPreferences = {
+      showLabels: false
+    }
+    let preferences = Object.assign({}, defaultPreferences)
+
+    ajax.loadPreferences(userPreferencesKey).then((p) => {
+      preferences = Object.assign(preferences, defaultPreferences, p)
+      console.log('Loaded preferences', preferences)
+      let preferencesDebounceTimeout: number | undefined = undefined
+
+      function bindPreference(writable: Writable<any>, propertyName: string) {
+        writable.set(
+          preferences[propertyName] !== undefined
+            ? preferences[propertyName]
+            : defaultPreferences[propertyName]
+        )
+
+        writable.subscribe((value) => {
+          preferences[propertyName] = value
+          if (preferencesDebounceTimeout) {
+            window.clearTimeout(preferencesDebounceTimeout)
+            preferencesDebounceTimeout = undefined
+          }
+          preferencesDebounceTimeout = window.setTimeout(() => { 
+            console.log(`Saved preferences under [${userPreferencesKey}]`)
+            ajax.savePreferences(userPreferencesKey, preferences)
+          }, 250)
+        })
+      }
+
+      bindPreference(showLabels, "showLabels")
+    }).then(() => {
+      this.toolbar = this.createToolbar()
+
+      const wrapper = element.ownerDocument.createElement('div')
+      Array.from(element.childNodes).forEach((child) => wrapper.appendChild(child))
+      element.appendChild(wrapper)
+
+      this.recogito = new Recogito({
+        content: wrapper,
+        disableEditor: true,
+        mode: 'pre'
+      })
+
+      this.recogito.on('createAnnotation', annotation => this.createSpan(annotation))
+      this.recogito.on('selectAnnotation', annotation => this.selectAnnotation(annotation))
+
+      element.addEventListener('contextmenu', e => this.openContextMenu(e))
+      // Prevent right-click from triggering a selection event
+      element.addEventListener('mousemove', e => this.trackMousePosition(e), { capture: true })
+      element.addEventListener('mousedown', e => this.cancelRightClick(e), { capture: true })
+      element.addEventListener('mouseup', e => this.cancelRightClick(e), { capture: true })
+      element.addEventListener('mouseclick', e => this.cancelRightClick(e), { capture: true })
+
+      this.installSpanRenderingPatch(this.recogito)
+
+      this.connections = Connections(this.recogito, { disableEditor: true, showLabels: true })
+      this.connections.canvas.on('createConnection', annotation => this.createRelation(annotation))
+      this.connections.canvas.on('selectConnection', annotation => this.selectAnnotation(annotation))
+      // this.recogito.on('updateConnection', annotation => this.createAnnotation(annotation))
+      // this.recogito.on('deleteConnection', annotation => this.createAnnotation(annotation))
+
+      this.installRelationRenderingPatch(this.recogito)
+
+      // Event handlers for custom events
+      this.root.ownerDocument.body.addEventListener('mouseover', event => {
+        if (!(event instanceof MouseEvent) || !(event.target instanceof Element)) return
+        const vid = event.target.closest("[data-id]")?.getAttribute('data-id')?.substring(1)
+        if (!vid) return
+        const annotation = this.data?.getAnnotation(vid)
+        if (!annotation) return
+        this.root.dispatchEvent(new AnnotationOverEvent(annotation, event))
+      })
+      this.root.ownerDocument.body.addEventListener('mouseout', event => {
+        if (!(event instanceof MouseEvent) || !(event.target instanceof Element)) return
+        const vid = event.target.closest("[data-id]")?.getAttribute('data-id')?.substring(1)
+        if (!vid) return
+        const annotation = this.data?.getAnnotation(vid)
+        if (!annotation) return
+        this.root.dispatchEvent(new AnnotationOutEvent(annotation, event))
+      })
+
+      // Add event handlers for highlighting extent of the annotation the mouse is currently over
+      this.root.ownerDocument.body.addEventListener('mouseover', e => this.addAnnotationHighlight(e as MouseEvent))
+      this.root.ownerDocument.body.addEventListener('mouseout', e => this.removeAnnotationHighight(e as MouseEvent))
+
+      this.tracker = new ViewportTracker(this.root, () => this.loadAnnotations(), { ignoreSelector: '.r6o-relations-layer' })
+
+      this.popover = new AnnotationDetailPopOver({
+        target: this.root.ownerDocument.body,
+        props: {
+          root: this.root,
+          ajax: this.ajax
+        }
+      })
+
+      let initialized = false
+      showLabels.subscribe(enabled => {
+        this.showInlineLabels = enabled
+        if (initialized) this.loadAnnotations()
+      })
+      initialized = true;
     })
-
-    this.recogito.on('createAnnotation', annotation => this.createSpan(annotation))
-    this.recogito.on('selectAnnotation', annotation => this.selectAnnotation(annotation))
-
-    element.addEventListener('contextmenu', e => this.openContextMenu(e))
-    // Prevent right-click from triggering a selection event
-    element.addEventListener('mousedown', e => this.cancelRightClick(e), { capture: true })
-    element.addEventListener('mouseup', e => this.cancelRightClick(e), { capture: true })
-    element.addEventListener('mouseclick', e => this.cancelRightClick(e), { capture: true })
-
-    this.connections = Connections(this.recogito, { disableEditor: true, showLabels: true })
-    this.connections.canvas.on('createConnection', annotation => this.createRelation(annotation))
-    this.connections.canvas.on('selectConnection', annotation => this.selectAnnotation(annotation))
-    // this.recogito.on('updateConnection', annotation => this.createAnnotation(annotation))
-    // this.recogito.on('deleteConnection', annotation => this.createAnnotation(annotation))
-
-    this.installColorRenderingPatch(this.recogito)
-
-    this.tracker = new ViewportTracker(this.root, () => this.loadAnnotations())
   }
 
-  /**
+  private addAnnotationHighlight (event: MouseEvent) {
+    if (!(event.target instanceof Element)) return
+
+    const vid = event.target.getAttribute('data-id')?.substring(1)
+    if (!vid) return
+
+    this.getHighlightsForAnnotation(vid).forEach(e => e.classList.add('iaa-hover'))
+  }
+
+  // eslint-disable-next-line no-undef
+  getHighlightsForAnnotation (vid: VID): NodeListOf<Element> {
+    return this.root.querySelectorAll(`[data-id="#${vid}"]`)
+  }
+
+  private removeAnnotationHighight (event: MouseEvent) {
+    if (!(event.target instanceof Element)) return
+
+    this.root.querySelectorAll('.iaa-hover').forEach(e => e.classList.remove('iaa-hover'))
+  }
+
+  private createToolbar () {
+    // Svelte components are appended to the target element. However, we want the toolbar to come
+    // first in the DOM, so we first create a container element and prepend it to the body.
+    const toolbarContainer = this.root.ownerDocument.createElement('div')
+    toolbarContainer.style.position = 'sticky'
+    toolbarContainer.style.top = '0px'
+    toolbarContainer.style.zIndex = '10000'
+    toolbarContainer.style.backgroundColor = '#fff'
+    this.root.ownerDocument.body.insertBefore(toolbarContainer, this.root.ownerDocument.body.firstChild)
+
+    // @ts-ignore - VSCode does not seem to understand the Svelte component
+    return new RecogitoEditorToolbar({ target: toolbarContainer, props: {} })
+  }
+
+    /**
    * Recogito does not support rendering annotations with a custom color. This is a workaround.
    */
-  private installColorRenderingPatch (recogito: Recogito) {
+  private installSpanRenderingPatch (recogito: Recogito) {
     const _setAnnotations = recogito.setAnnotations
     recogito.setAnnotations = annotations => {
       // Set annotations on instance first
       return _setAnnotations(annotations).then(() => {
+        this.postProcessHighlights(this.root.querySelectorAll(`[data-id]`))
+
         for (const annotation of annotations) {
           for (const element of this.root.querySelectorAll(`[data-id="${annotation.id}"]`)) {
             const c = convert.hex.rgb(annotation.body.color)
 
             // Span annotation
             if (element instanceof HTMLElement) {
-              element.style.backgroundColor = `rgba(${c[0]}, ${c[1]}, ${c[2]}, 0.2)`
-              element.style.borderBottomColor = annotation.body.color
+              const styleList = [
+                `--iaa-background-color: ${annotation.body.color || '#000000'}${this.alpha}`,
+                `--iaa-border-color: ${annotation.body.color || '#000000'}`
+              ]
+
+              element.setAttribute("data-iaa-label", annotation.body.value)
+              element.setAttribute("style", styleList.join('; '))
+              annotation.body.classes.forEach(c => element.classList.add(c))
             }
+          }
+        }
+
+        this.removeWhitepaceOnlyHighlights()
+      })
+    }
+  }
+
+  /**
+   * Some highlights may only contain whitepace. This method removes such highlights.
+   */
+    private removeWhitepaceOnlyHighlights (selector: string = '.iaa-highlighted') {
+      this.root.querySelectorAll(selector).forEach(e => {
+        if (!e.classList.contains('iaa-zero-width') && !e.textContent?.trim()) {
+          e.after(...e.childNodes)
+          e.remove()
+        }
+      })
+    }
+  
+  /**
+   * Recogito does not support rendering annotations with a custom color. This is a workaround.
+   */
+  private installRelationRenderingPatch (recogito: Recogito) {
+    const _setAnnotations = recogito.setAnnotations
+    recogito.setAnnotations = annotations => {
+      // Set annotations on instance first
+      return _setAnnotations(annotations).then(() => {
+        this.postProcessHighlights(this.root.querySelectorAll(`[data-id]`))
+
+        for (const annotation of annotations) {
+          for (const element of this.root.querySelectorAll(`[data-id="${annotation.id}"]`)) {
+            const c = convert.hex.rgb(annotation.body.color)
 
             // Relation annotation
             if (element instanceof SVGElement) {
+              annotation.body.classes.forEach(c => element.classList.add(c))
               element.querySelectorAll('.r6o-connections-edge-path-inner').forEach(path => {
                 if (path instanceof SVGElement) {
                   path.style.stroke = annotation.body.color
@@ -121,6 +288,12 @@ export class RecogitoEditor implements AnnotationEditor {
     }
   }
 
+  private trackMousePosition (e: Event): void {
+    if (e instanceof MouseEvent) {
+      this.laskMouseMoveEvent = e;
+    }
+  }
+  
   /**
    * Prevent right click from triggering a selection event.
    */
@@ -168,11 +341,17 @@ export class RecogitoEditor implements AnnotationEditor {
 
       const options: DiamLoadAnnotationsOptions = {
         range,
-        includeText: false
+        includeText: false,
+        format: 'compact_v2'
       }
 
+      console.log(`Loading annotations for range ${JSON.stringify(options.range)}`)
+
       this.ajax.loadAnnotations(options)
-        .then((doc: CompactAnnotatedText) => this.convertAnnotations(doc, view || this.root))
+        .then((doc: CompactAnnotatedText) => {
+          this.data = unpackCompactAnnotatedTextV2(doc)
+          this.convertAnnotations(this.data)
+        })
         .then(() => resolve())
     })
   }
@@ -196,65 +375,121 @@ export class RecogitoEditor implements AnnotationEditor {
     this.recogito.setAnnotations(this.annotations)
   }
 
-  private convertAnnotations (doc: CompactAnnotatedText, view: Element) {
+  private convertAnnotations (doc: AnnotatedText) {
     const webAnnotations: Array<WebAnnotation> = []
 
     if (doc.spans) {
-      webAnnotations.push(...this.compactSpansToWebAnnotation(doc))
+      webAnnotations.push(...this.spansToWebAnnotation(doc))
     }
 
     if (doc.relations) {
-      webAnnotations.push(...this.compactRelationsToWebAnnotation(doc))
+      webAnnotations.push(...this.relationsToWebAnnotation(doc))
     }
 
     this.annotations = webAnnotations
 
-    console.info(`Loaded ${webAnnotations.length} annotations from server (${doc.spans?.length || 0} spans and ${doc.relations?.length || 0} relations)`)
+    console.info(`Loaded ${webAnnotations.length} annotations from server (${doc.spans?.size || 0} spans and ${doc.relations?.size || 0} relations)`)
   }
 
-  private compactSpansToWebAnnotation (doc: CompactAnnotatedText): Array<WebAnnotation> {
-    const offset = doc.window[0]
-    const spans = doc.spans as Array<CompactSpan>
-    return spans.map(span => {
+  private spansToWebAnnotation (doc: AnnotatedText): Array<WebAnnotation> {
+    return Array.from(doc.spans.values()).map(span => {
+      const begin = span.offsets[0][0] + doc.window[0]
+      const end = span.offsets[0][1] + doc.window[0]
+  
       // console.log(`From ${span[1][0][0]}-${span[1][0][1]} +${offset}`, this.root)
+
+      const classList = ['iaa-highlighted']
+
+      if (begin === end) classList.push('iaa-zero-width')
+
+      const ms = doc.annotationMarkers.get(span.vid) || []
+      ms.forEach(m => classList.push(`i7n-marker-${m[0]}`))
+
       return {
-        id: '#' + span[0],
+        id: '#' + span.vid,
         type: 'Annotation',
         body: {
           type: 'TextualBody',
           purpose: 'tagging',
-          color: span[2]?.c || '#000000',
-          value: span[2]?.l || ''
+          color: span.color || '#000000',
+          value: span.label || `[${span.layer.name}]` || NO_LABEL,
+          classes: classList
         },
         target: {
-          selector: { type: 'TextPositionSelector', start: offset + span[1][0][0], end: offset + span[1][0][1] }
+          selector: { type: 'TextPositionSelector', start: begin, end: end }
         }
       }
     })
   }
 
-  private compactRelationsToWebAnnotation (doc: CompactAnnotatedText): Array<WebAnnotation> {
-    const relations = doc.relations as Array<CompactRelation>
-    return relations.map(relation => {
+  private postProcessHighlights (elements: NodeListOf<Element>) {
+    // Find all the highlights that belong to the same annotation (VID)
+    const highlightsByVid = this.groupHighlightsByVid(elements)
+
+    // Add special CSS classes to the first and last highlight of each annotation
+    for (const highlights of highlightsByVid.values()) {
+      if (highlights.length) {
+        if (this.showInlineLabels) {
+          highlights.forEach(e => e.classList.add('iaa-inline-label'))
+        }
+        highlights[0].classList.add('iaa-first-highlight')
+        highlights[highlights.length - 1].classList.add('iaa-last-highlight')
+      }
+    }
+  }
+
+  /**
+   * Groups highlights by their VID.
+   *
+   * @param highlights list of highlights.
+   * @returns groups of highlights by VID.
+   */
+  // eslint-disable-next-line no-undef
+  private groupHighlightsByVid (highlights: NodeListOf<Element>) {
+    const spansByVid = new Map<VID, Array<Element>>()
+    for (const highlight of Array.from(highlights)) {
+      const vid = highlight.getAttribute('data-id')?.substring(1)
+      if (!vid) continue
+
+      let sectionGroup = spansByVid.get(vid)
+      if (!sectionGroup) {
+        sectionGroup = []
+        spansByVid.set(vid, sectionGroup)
+      }
+      sectionGroup.push(highlight)
+    }
+    return spansByVid
+  }
+
+  private relationsToWebAnnotation (doc: AnnotatedText): Array<WebAnnotation> {
+    return Array.from(doc.relations.values()).map(relation => {
+      const classList = ['iaa-highlighted']
+      const ms = doc.annotationMarkers.get(relation.vid) || []
+      ms.forEach(m => classList.push(`i7n-marker-${m[0]}`))
+
       return {
-        id: '#' + relation[0],
+        id: '#' + relation.vid,
         type: 'Annotation',
         body: {
           type: 'TextualBody',
           purpose: 'tagging',
-          color: relation[2]?.c || '#000000',
-          value: relation[2]?.l || ''
+          color: relation.color || '#000000',
+          value: relation.label || `[${relation.layer.name}]` || NO_LABEL,
+          classes: classList
         },
         motivation: 'linking',
         target: [
-          { id: '#' + relation[1][0][0] },
-          { id: '#' + relation[1][1][0] }
+          { id: '#' + relation.arguments[0].targetId },
+          { id: '#' + relation.arguments[1].targetId }
         ]
       }
     })
   }
 
   public destroy (): void {
+    if (this.popover?.$destroy) {
+      this.popover.$destroy()
+    }
     this.connections.destroy()
     this.recogito.destroy()
   }
@@ -274,13 +509,15 @@ export class RecogitoEditor implements AnnotationEditor {
   }
 
   private createRelation (annotation): void {
+    if (!this.laskMouseMoveEvent) return
+
     const target = annotation.target
 
     // The RecogitoJS annotation IDs start with a hash `#` which we need to remove
     const sourceId = target[0].id?.substring(1) as VID
     const targetId = target[1].id?.substring(1) as VID
 
-    this.ajax.createRelationAnnotation(sourceId, targetId)
+    this.ajax.createRelationAnnotation(sourceId, targetId, this.laskMouseMoveEvent)
   }
 
   private selectAnnotation (annotation): void {

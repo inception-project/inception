@@ -106,12 +106,12 @@ export class Util {
     return str.replace(/"/g, '&quot;')
   }
 
-  getSpanLabels (spanTypes, spanType) {
+  getSpanLabels (spanTypes: Record<string, EntityTypeDto>, spanType: string) : string[] {
     const type = spanTypes[spanType]
     return (type && type.labels) || []
   }
 
-  spanDisplayForm (spanTypes, spanType) {
+  spanDisplayForm (spanTypes: Record<string, EntityTypeDto>, spanType: string) : string {
     const labels = this.getSpanLabels(spanTypes, spanType)
     if (labels[0]) {
       return labels[0]
@@ -473,6 +473,10 @@ export class Util {
 
   profileEnd (label: string) {
     if (!this.profileOn) return
+    if (!this.profileStarts[label]) {
+      console.log(`profileEnd(${label}) called without profileStart`)
+      return
+    }
     const profileElapsed = new Date().valueOf() - this.profileStarts[label].valueOf()
     if (!this.profiles[label]) this.profiles[label] = 0
     this.profiles[label] += profileElapsed

@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.project;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.fromJsonString;
+import static de.tudarmstadt.ukp.inception.support.json.JSONUtil.fromJsonString;
 
 import java.io.File;
 import java.io.IOException;
@@ -68,6 +68,11 @@ public class KnowledgeBaseWrapper
     public KnowledgeBase getKb()
     {
         return kb;
+    }
+
+    public boolean isKbSaved()
+    {
+        return kb != null && kb.getRepositoryId() != null;
     }
 
     public void setKb(KnowledgeBase aKB)

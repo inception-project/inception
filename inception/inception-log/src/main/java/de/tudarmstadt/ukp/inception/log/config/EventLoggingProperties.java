@@ -25,11 +25,25 @@ public interface EventLoggingProperties
 
     boolean isEnabled();
 
-    Set<String> getExcludeEvents();
+    /**
+     * @return Set of regex include patterns
+     */
+    Set<String> getIncludePatterns();
 
     /**
-     * @param aExcludeEvents
-     *            events never to be written to the event log.
+     * @param includePatterns
+     *            Set of regex include patterns
      */
-    void setExcludeEvents(Set<String> aExcludeEvents);
+    void setIncludePatterns(Set<String> includePatterns);
+
+    /**
+     * @return Set of regex exclude patterns
+     */
+    Set<String> getExcludePatterns();
+
+    /**
+     * @param excludePatterns
+     *            Set of regex exclude patterns
+     */
+    void setExcludePatterns(Set<String> excludePatterns);
 }

@@ -27,13 +27,13 @@ import org.apache.wicket.markup.repeater.Item;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.request.cycle.RequestCycle;
-import org.apache.wicket.util.resource.FileResourceStream;
+import org.apache.wicket.util.resource.IResourceStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.AjaxDownloadLink;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketExceptionUtil;
+import de.tudarmstadt.ukp.inception.support.wicket.AjaxDownloadLink;
+import de.tudarmstadt.ukp.inception.support.wicket.WicketExceptionUtil;
 
 public class SourceDocumentTableExportActionColumn
     extends AbstractColumn<SourceDocumentTableRow, SourceDocumentTableSortKeys>
@@ -65,11 +65,10 @@ public class SourceDocumentTableExportActionColumn
         aItem.add(fragment);
     }
 
-    private FileResourceStream export(SourceDocument aDocument)
+    private IResourceStream export(SourceDocument aDocument)
     {
         try {
-            return new FileResourceStream(
-                    table.getDocumentService().getSourceDocumentFile(aDocument));
+            return table.getDocumentStorageService().getSourceDocumentResourceStream(aDocument);
         }
         catch (Exception e) {
             var handler = RequestCycle.get().find(AjaxRequestTarget.class);

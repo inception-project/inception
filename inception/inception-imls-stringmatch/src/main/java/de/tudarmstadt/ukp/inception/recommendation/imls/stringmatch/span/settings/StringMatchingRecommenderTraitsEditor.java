@@ -17,13 +17,15 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.settings;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
+import static org.apache.uima.cas.CAS.TYPE_NAME_STRING;
+import static org.apache.uima.cas.CAS.TYPE_NAME_STRING_ARRAY;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
+import java.lang.invoke.MethodHandles;
 import java.util.List;
 
 import org.apache.commons.io.FilenameUtils;
@@ -35,7 +37,6 @@ import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.Form;
-import org.apache.wicket.markup.html.form.upload.FileUpload;
 import org.apache.wicket.markup.html.link.DownloadLink;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
@@ -49,20 +50,21 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.fileinput.FileInputConfig;
-import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapFileInput;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.inception.bootstrap.BootstrapFileInput;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.DefaultTrainableRecommenderTraitsEditor;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.StringMatchingRecommenderTraits;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.gazeteer.GazeteerService;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.gazeteer.model.Gazeteer;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior;
 
 public class StringMatchingRecommenderTraitsEditor
     extends DefaultTrainableRecommenderTraitsEditor
 {
-    private static final Logger LOG = LoggerFactory
-            .getLogger(StringMatchingRecommenderTraitsEditor.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private static final long serialVersionUID = 1677442652521110324L;
 
@@ -82,8 +84,8 @@ public class StringMatchingRecommenderTraitsEditor
 
         traits = toolFactory.readTraits(aRecommender.getObject());
 
-        Form<StringMatchingRecommenderTraits> form = new Form<StringMatchingRecommenderTraits>(
-                MID_FORM, CompoundPropertyModel.of(Model.of(traits)))
+        var form = new Form<StringMatchingRecommenderTraits>(MID_FORM,
+                CompoundPropertyModel.of(Model.of(traits)))
         {
             private static final long serialVersionUID = -3109239605742291123L;
 
@@ -95,17 +97,19 @@ public class StringMatchingRecommenderTraitsEditor
             }
         };
 
-        CheckBox ignoreCase = new CheckBox("ignoreCase");
+        var ignoreCase = new CheckBox("ignoreCase");
         ignoreCase.setOutputMarkupId(true);
+        ignoreCase.add(LambdaBehavior.visibleWhen(getModel() //
+                .map(Recommender::getFeature) //
+                .map(this::isStringBasedFeature)));
         form.add(ignoreCase);
         add(form);
 
         gazeteers = new GazeteerList("gazeteers", LoadableDetachableModel.of(this::listGazeteers));
-        gazeteers.add(visibleWhen(() -> aRecommender.getObject() != null
-                && aRecommender.getObject().getId() != null));
+        gazeteers.add(visibleWhen(getModel().map(Recommender::getId).isPresent()));
         add(gazeteers);
 
-        FileInputConfig config = new FileInputConfig();
+        var config = new FileInputConfig();
         config.initialCaption("Import gazeteers ...");
         config.allowedFileExtensions(asList("txt"));
         config.showPreview(false);
@@ -120,9 +124,15 @@ public class StringMatchingRecommenderTraitsEditor
                 actionUploadGazeteer(aTarget);
             }
         };
-        uploadField.add(visibleWhen(() -> aRecommender.getObject() != null
-                && aRecommender.getObject().getId() != null));
+        uploadField.add(visibleWhen(
+                getModel().map(r -> r.getId() != null && isStringBasedFeature(r.getFeature()))));
         add(uploadField);
+    }
+
+    private boolean isStringBasedFeature(AnnotationFeature f)
+    {
+        return f.isVirtualFeature()
+                || asList(TYPE_NAME_STRING, TYPE_NAME_STRING_ARRAY).contains(f.getType());
     }
 
     private void actionDeleteGazeteer(AjaxRequestTarget aTarget, Gazeteer aGazeteer)
@@ -138,21 +148,21 @@ public class StringMatchingRecommenderTraitsEditor
         aTarget.addChildren(getPage(), IFeedback.class);
         aTarget.add(gazeteers);
 
-        for (FileUpload importedGazeteer : uploadField.getModelObject()) {
-            Gazeteer gazeteer = new Gazeteer();
+        for (var importedGazeteer : uploadField.getModelObject()) {
+            var gazeteer = new Gazeteer();
             gazeteer.setName(importedGazeteer.getClientFileName());
             gazeteer.setRecommender(getModelObject());
 
             // Make sure the gazetter name is unique
-            int n = 2;
+            var n = 2;
             while (gazeteerService.existsGazeteer(gazeteer.getRecommender(), gazeteer.getName())) {
-                String baseName = FilenameUtils.getBaseName(importedGazeteer.getClientFileName());
-                String extension = FilenameUtils.getExtension(importedGazeteer.getClientFileName());
+                var baseName = FilenameUtils.getBaseName(importedGazeteer.getClientFileName());
+                var extension = FilenameUtils.getExtension(importedGazeteer.getClientFileName());
                 gazeteer.setName(baseName + ' ' + n + '.' + extension);
                 n++;
             }
 
-            try (InputStream is = importedGazeteer.getInputStream()) {
+            try (var is = importedGazeteer.getInputStream()) {
                 gazeteerService.createOrUpdateGazeteer(gazeteer);
                 gazeteerService.importGazeteerFile(gazeteer, is);
                 success("Imported gazeteer: [" + gazeteer.getName() + "]");
@@ -172,7 +182,7 @@ public class StringMatchingRecommenderTraitsEditor
 
     private List<Gazeteer> listGazeteers()
     {
-        Recommender recommender = getModelObject();
+        var recommender = getModelObject();
 
         if (recommender != null && recommender.getId() != null) {
             return gazeteerService.listGazeteers(recommender);
@@ -202,7 +212,7 @@ public class StringMatchingRecommenderTraitsEditor
                 @Override
                 protected void populateItem(ListItem<Gazeteer> aItem)
                 {
-                    Gazeteer gazeteer = aItem.getModelObject();
+                    var gazeteer = aItem.getModelObject();
 
                     aItem.add(new Label("name", aItem.getModelObject().getName()));
 

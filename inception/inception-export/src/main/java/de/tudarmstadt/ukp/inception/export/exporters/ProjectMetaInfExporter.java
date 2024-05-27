@@ -19,8 +19,6 @@ package de.tudarmstadt.ukp.inception.export.exporters;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Enumeration;
-import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import org.apache.commons.io.FileUtils;
@@ -28,15 +26,15 @@ import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.FullProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExporter;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.support.ZipUtils;
 import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.project.api.ProjectService;
+import de.tudarmstadt.ukp.inception.support.io.ZipUtils;
 
 /**
  * <p>
@@ -64,9 +62,9 @@ public class ProjectMetaInfExporter
             ExportedProject aExProject, File aStage)
         throws IOException
     {
-        File metaInfDir = new File(aStage + META_INF);
+        var metaInfDir = new File(aStage + META_INF);
         FileUtils.forceMkdir(metaInfDir);
-        File metaInf = projectService.getMetaInfFolder(aRequest.getProject());
+        var metaInf = projectService.getMetaInfFolder(aRequest.getProject());
         if (metaInf.exists()) {
             FileUtils.copyDirectory(metaInf, metaInfDir);
         }
@@ -87,15 +85,14 @@ public class ProjectMetaInfExporter
             ExportedProject aExProject, ZipFile aZip)
         throws Exception
     {
-        for (Enumeration<? extends ZipEntry> zipEnumerate = aZip.entries(); zipEnumerate
-                .hasMoreElements();) {
-            ZipEntry entry = zipEnumerate.nextElement();
+        for (var zipEnumerate = aZip.entries(); zipEnumerate.hasMoreElements();) {
+            var entry = zipEnumerate.nextElement();
 
             // Strip leading "/" that we had in ZIP files prior to 2.0.8 (bug #985)
-            String entryName = ZipUtils.normalizeEntryName(entry);
+            var entryName = ZipUtils.normalizeEntryName(entry);
 
             if (entryName.startsWith(META_INF_FOLDER + "/")) {
-                File metaInfDir = new File(projectService.getMetaInfFolder(aProject),
+                var metaInfDir = new File(projectService.getMetaInfFolder(aProject),
                         FilenameUtils.getPath(entry.getName().replace(META_INF_FOLDER + "/", "")));
                 // where the file reside in the META-INF/... directory
                 FileUtils.forceMkdir(metaInfDir);

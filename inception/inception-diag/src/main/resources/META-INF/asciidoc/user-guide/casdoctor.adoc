@@ -173,8 +173,9 @@ dependent.
 ID:: `CASMetadataTypeIsPresentCheck`
 Related repairs:: <<repair_UpgradeCasRepair>>
 
-Checks if the ìnternal type `CASMetadata is defined in the type system of this CAS. If this is
+Checks if the internal type `CASMetadata` is defined in the type system of this CAS. If this is
 not the case, then the application may not be able to detect concurrent modifications.
+
 
 [[check_DanglingRelationsCheck]]
 === Dangling relations
@@ -209,6 +210,34 @@ such as the default sentence-oriented brat editor. Also, sentence-oriented forma
 TSV or CoNLL formats will not include any text and annotations of parts of the documents that is
 not covered by sentences or may produce errors during export.
 
+
+[[check_UnreachableAnnotationsCheck]]
+=== Unreachable annotations check
+[horizontal]
+ID:: `UnreachableAnnotationsCheck`
+Related repairs:: <<repair_UpgradeCasRepair>>
+
+Checks if there are any unreachable feature structures. Such feature structures take up memory, but
+they are not regularly accessible. Such feature structures may be created as a result of bugs.
+Removing them is harmless and reduces memory and disk space usage.
+
+[[check_AllAnnotationsStartAndEndWithCharactersCheck]]
+=== All annotations start and end with characters
+[horizontal]
+ID:: `check_AllAnnotationsStartAndEndWithCharactersCheck`
+Related repairs:: <<repair_TrimAnnotationsRepair>>
+
+Checks if all annotations start and end with a character (i.e. not a whitespace). Annotations that start or end with a
+whitespace character can cause problems during rendering. Trimming whitespace at the begin and end is typically as 
+harmless procedure.
+
+[[check_DocumentTextStartsWithBomCheck]]
+=== Document text starts with Byte Order Mark
+[horizontal]
+ID:: `check_DocumentTextStartsWithBomCheck`
+Related repairs:: <<repair_RemoveBomRepair>>
+
+Checks if the document text starts with a Byte Order Mark (BOM).
 
 
 [[sect_repairs]]
@@ -332,6 +361,9 @@ ID:: `UpgradeCasRepair`
 Ensures that the CAS is up-to-date with the project type system. It performs the same operation
 which is regularly performed when a user opens a document for annotation/curation.
 
+This repair also removes any unreachable feature structures. Such feature structures may be created as a result of bugs.
+Removing them is harmless and reduces memory and disk space usage.
+
 This is considered to be safe repair action as it only garbage-collects data from the CAS that is
 no longer reachable anyway.
 
@@ -355,3 +387,20 @@ ID:: `CoverAllTextInSentencesRepair`
 This repair checks if there is any text not covered by sentences. If there is, it creates a new
 sentence annotation on this text starting at the end of the last sentence before it (or the start
 of the document text) and the begin of the next sentence (or the end of the document text).
+
+[[repair_TrimAnnotationsRepair]]
+=== Trim annotations
+
+[horizontal]
+ID:: `TrimAnnotationsRepair`
+
+This repair adjusts annotation boundaries such that they do not include any whitespace at the beginning or end of the 
+annotation.
+
+[[repair_RemoveBomRepair]]
+=== Remove Byte Order Mark
+
+[horizontal]
+ID:: `RemoveBomRepair`
+
+This repair removes the Byte Order Mark at the start of the document and adjusts all annotation offsets accordingly.

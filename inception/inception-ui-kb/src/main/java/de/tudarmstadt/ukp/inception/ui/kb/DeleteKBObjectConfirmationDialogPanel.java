@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhenNot;
+import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhenNot;
 
 import java.util.Collection;
 
@@ -26,7 +26,7 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.StringResourceModel;
 import org.eclipse.rdf4j.model.Statement;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialogContentPanel_ImplBase;
+import de.tudarmstadt.ukp.inception.bootstrap.dialog.ConfirmationDialogContentPanel_ImplBase;
 import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 
 public class DeleteKBObjectConfirmationDialogPanel

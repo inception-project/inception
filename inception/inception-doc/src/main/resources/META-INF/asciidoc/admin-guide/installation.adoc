@@ -17,6 +17,7 @@
 [[sect_installation]]
 = Installation
 
+
 You can run {product-name} on any major platform supporting Java, i.e. Linux, macOS or Windows.
 However, we do not provide explicit support for setting up a production-ready instance of each of these
 platforms. 

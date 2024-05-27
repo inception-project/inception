@@ -44,7 +44,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits_ImplBase;
 import de.tudarmstadt.ukp.inception.kb.IriConstants;
@@ -57,8 +56,9 @@ import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBasePropertiesImpl;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.kb.reification.Reification;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.exporters.LayerExporter;
+import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 
 /**
  * <p>
@@ -125,6 +125,7 @@ public class KnowledgeBaseExporter
             exportedKB.setPropertyTypeIri(kb.getPropertyTypeIri());
             exportedKB.setPropertyLabelIri(kb.getPropertyLabelIri());
             exportedKB.setPropertyDescriptionIri(kb.getPropertyDescriptionIri());
+            exportedKB.setDeprecationPropertyIri(kb.getDeprecationPropertyIri());
             exportedKB.setFullTextSearchIri(kb.getFullTextSearchIri());
             exportedKB.setReadOnly(kb.isReadOnly());
             exportedKB.setUseFuzzy(kb.isUseFuzzy());
@@ -181,11 +182,10 @@ public class KnowledgeBaseExporter
             ExportedProject aExProject, ZipFile aZip)
         throws Exception
     {
-        ExportedKnowledgeBase[] knowledgeBases = aExProject.getArrayProperty(KEY,
-                ExportedKnowledgeBase.class);
+        var knowledgeBases = aExProject.getArrayProperty(KEY, ExportedKnowledgeBase.class);
 
-        for (ExportedKnowledgeBase exportedKB : knowledgeBases) {
-            KnowledgeBase kb = new KnowledgeBase();
+        for (var exportedKB : knowledgeBases) {
+            var kb = new KnowledgeBase();
             kb.setName(exportedKB.getName());
             kb.setType(RepositoryType.valueOf(exportedKB.getType()));
             // set default value for IRIs if no value is present in
@@ -217,15 +217,18 @@ public class KnowledgeBaseExporter
             kb.setSubPropertyIri(exportedKB.getSubPropertyIri() != null //
                     ? exportedKB.getSubPropertyIri() //
                     : DEFAULTPROFILE.getSubPropertyIri());
+            kb.setDeprecationPropertyIri(exportedKB.getDeprecationPropertyIri() != null //
+                    ? exportedKB.getDeprecationPropertyIri() //
+                    : DEFAULTPROFILE.getDeprecationPropertyIri());
+
             // The imported project may date from a time where we did not yet have the FTS IRI.
             // In that case we use concept linking support as an indicator that we dealt with a
             // remote Virtuoso.
             if (exportedKB.isSupportConceptLinking() && exportedKB.getFullTextSearchIri() == null) {
                 kb.setFullTextSearchIri(IriConstants.FTS_VIRTUOSO.stringValue());
             }
-            kb.setFullTextSearchIri(
-                    exportedKB.getFullTextSearchIri() != null ? exportedKB.getFullTextSearchIri() //
-                            : null);
+            kb.setFullTextSearchIri(exportedKB.getFullTextSearchIri() != null ? //
+                    exportedKB.getFullTextSearchIri() : null);
 
             kb.setEnabled(exportedKB.isEnabled());
             kb.setUseFuzzy(exportedKB.isUseFuzzy());

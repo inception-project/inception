@@ -18,9 +18,9 @@
 
 package de.tudarmstadt.ukp.inception.conceptlinking.recommender;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.CHARACTERS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SINGLE_TOKEN;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
-import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.SPAN_TYPE;
 import static java.util.Arrays.asList;
 
 import org.apache.wicket.model.IModel;
@@ -28,6 +28,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.conceptlinking.config.EntityLinkingServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService;
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
@@ -35,7 +36,7 @@ import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactoryImplBase;
-import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 
 /**
  * <p>
@@ -73,10 +74,16 @@ public class NamedEntityLinkerFactory
     }
 
     @Override
+    public boolean isSynchronous(Recommender aRecommender)
+    {
+        return readTraits(aRecommender).isSynchronous();
+    }
+
+    @Override
     public RecommendationEngine build(Recommender aRecommender)
     {
-        NamedEntityLinkerTraits linkerTraits = readTraits(aRecommender);
-        ConceptFeatureTraits featureTraits = fsRegistry.readTraits(aRecommender.getFeature(),
+        var linkerTraits = readTraits(aRecommender);
+        var featureTraits = fsRegistry.readTraits(aRecommender.getFeature(),
                 ConceptFeatureTraits::new);
 
         return new NamedEntityLinker(aRecommender, linkerTraits, kbService, clService, fsRegistry,
@@ -95,8 +102,8 @@ public class NamedEntityLinkerFactory
         if (aLayer == null || aFeature == null) {
             return false;
         }
-        return asList(SINGLE_TOKEN, TOKENS).contains(aLayer.getAnchoringMode())
-                && !aLayer.isCrossSentence() && SPAN_TYPE.equals(aLayer.getType())
+        return asList(SINGLE_TOKEN, TOKENS, CHARACTERS).contains(aLayer.getAnchoringMode())
+                && SpanLayerSupport.TYPE.equals(aLayer.getType())
                 && aFeature.getType().startsWith(PREFIX);
     }
 

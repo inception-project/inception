@@ -31,18 +31,17 @@ import org.apache.uima.cas.CAS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSessionException;
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.WriteAccessNotPermittedException;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil;
 
 public class CasStorageSession
     implements AutoCloseable
 {
-    private static final Logger LOGGER = LoggerFactory
-            .getLogger(MethodHandles.lookup().lookupClass());
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private static final long SPECIAL_PURPOSE = -1;
 
@@ -78,7 +77,7 @@ public class CasStorageSession
 
         session.creatorStack = new Exception().getStackTrace();
 
-        LOGGER.trace("CAS storage session [{}]: opened root", session.hashCode());
+        LOG.trace("CAS storage session [{}]: opened root", session.hashCode());
 
         return session;
     }
@@ -121,7 +120,7 @@ public class CasStorageSession
 
         session.creatorStack = new Exception().getStackTrace();
 
-        LOGGER.trace("CAS storage session [{}]: opened nested (isolated: {}, previous: {})",
+        LOG.trace("CAS storage session [{}]: opened nested (isolated: {}, previous: {})",
                 session.hashCode(), aIsolated,
                 session.previousSession != null ? session.previousSession.hashCode() : "none");
 
@@ -129,7 +128,7 @@ public class CasStorageSession
     }
 
     /**
-     * @return the current session. Returns {@code null} if there is no current session.
+     * @return the current session.
      * @throws CasSessionException
      *             if no session is available.
      */
@@ -142,6 +141,14 @@ public class CasStorageSession
         }
 
         return session;
+    }
+
+    /**
+     * @return if a session exists.
+     */
+    public static boolean exists()
+    {
+        return activeSession.get() != null;
     }
 
     /**
@@ -164,21 +171,21 @@ public class CasStorageSession
         // previous session will be null, this thus clearing the active session.
         activeSession.set(previousSession);
 
-        LOGGER.trace("CAS storage session [{}]: closing...", hashCode());
+        LOG.trace("CAS storage session [{}]: closing...", hashCode());
 
         managedCases.values().forEach(casByUser -> casByUser.values().forEach(managedCas -> {
             if (managedCas.isReleaseOnClose()) {
-                LOGGER.trace("CAS storage session [{}]: releasing {}", hashCode(), managedCas);
+                LOG.trace("CAS storage session [{}]: releasing {}", hashCode(), managedCas);
                 managedCas.getCas().release();
             }
         }));
 
-        if (LOGGER.isTraceEnabled()) {
-            LOGGER.trace("CAS storage session [{}]: closed (max. CASes during lifetime: {})",
+        if (LOG.isTraceEnabled()) {
+            LOG.trace("CAS storage session [{}]: closed (max. CASes during lifetime: {})",
                     hashCode(), maxManagedCases);
         }
         else if (maxManagedCases > 0) {
-            LOGGER.debug("CAS storage session [{}]: closed (max. CASes during lifetime: {})",
+            LOG.debug("CAS storage session [{}]: closed (max. CASes during lifetime: {})",
                     hashCode(), maxManagedCases);
         }
     }
@@ -217,7 +224,7 @@ public class CasStorageSession
 
         maxManagedCases = Math.max(maxManagedCases, managedCases.size());
 
-        LOGGER.trace("CAS storage session [{}]: added {}", hashCode(), managedCas);
+        LOG.trace("CAS storage session [{}]: added {}", hashCode(), managedCas);
 
         return managedCas;
     }
@@ -315,11 +322,10 @@ public class CasStorageSession
         SessionManagedCas oldMCas = casByUser.put(aMCas.getUserId(), aMCas);
 
         if (oldMCas == null) {
-            LOGGER.trace("CAS storage session [{}]: added {}", hashCode(), aMCas);
+            LOG.trace("CAS storage session [{}]: added {}", hashCode(), aMCas);
         }
         else {
-            LOGGER.trace("CAS storage session [{}]: replaced {} with {}", hashCode(), oldMCas,
-                    aMCas);
+            LOG.trace("CAS storage session [{}]: replaced {} with {}", hashCode(), oldMCas, aMCas);
         }
     }
 

@@ -18,16 +18,15 @@
 package de.tudarmstadt.ukp.inception.image.feature;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
-import java.io.IOException;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.resource.metadata.TypeDescription;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.wicket.MarkupContainer;
@@ -39,17 +38,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.image.config.ImageSupportAutoConfiguration;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
-import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
-import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetailQuery;
-import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetailResult;
-import de.tudarmstadt.ukp.inception.schema.feature.FeatureEditor;
-import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupport;
-import de.tudarmstadt.ukp.inception.schema.feature.FeatureType;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetail;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetailGroup;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureEditor;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupport;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureType;
 
 /**
  * Extension providing image-related features for annotations.
@@ -150,32 +147,9 @@ public class ImageFeatureSupport
     }
 
     @Override
-    public ImageFeatureTraits readTraits(AnnotationFeature aFeature)
+    public ImageFeatureTraits createDefaultTraits()
     {
-        ImageFeatureTraits traits = null;
-        try {
-            traits = JSONUtil.fromJsonString(ImageFeatureTraits.class, aFeature.getTraits());
-        }
-        catch (IOException e) {
-            log.error("Unable to read traits", e);
-        }
-
-        if (traits == null) {
-            traits = new ImageFeatureTraits();
-        }
-
-        return traits;
-    }
-
-    @Override
-    public void writeTraits(AnnotationFeature aFeature, ImageFeatureTraits aTraits)
-    {
-        try {
-            aFeature.setTraits(JSONUtil.toJsonString(aTraits));
-        }
-        catch (IOException e) {
-            log.error("Unable to write traits", e);
-        }
+        return new ImageFeatureTraits();
     }
 
     @Override
@@ -199,21 +173,18 @@ public class ImageFeatureSupport
     }
 
     @Override
-    public List<VLazyDetailQuery> getLazyDetails(AnnotationFeature aFeature, FeatureStructure aFs)
+    public List<VLazyDetailGroup> lookupLazyDetails(AnnotationFeature aFeature, Object aValue)
     {
-        String label = renderFeatureValue(aFeature, aFs);
+        if (aValue instanceof String) {
+            var url = (String) aValue;
 
-        if (StringUtils.isEmpty(label)) {
-            return Collections.emptyList();
+            if (isBlank(url)) {
+                return emptyList();
+            }
+
+            return asList(new VLazyDetailGroup(new VLazyDetail("<img>", url)));
         }
 
-        return asList(new VLazyDetailQuery(aFeature.getName(), label));
-    }
-
-    @Override
-    public List<VLazyDetailResult> renderLazyDetails(CAS aCas, AnnotationFeature aFeature,
-            VID aParamId, String aQuery)
-    {
-        return asList(new VLazyDetailResult("<img>", aQuery));
+        return Collections.emptyList();
     }
 }

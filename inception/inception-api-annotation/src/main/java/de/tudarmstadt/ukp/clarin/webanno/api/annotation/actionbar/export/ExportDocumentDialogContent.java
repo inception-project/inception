@@ -17,12 +17,10 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.export;
 
-import static java.util.stream.Collectors.toList;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.Serializable;
-import java.util.List;
+import java.lang.invoke.MethodHandles;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -41,14 +39,14 @@ import org.apache.wicket.util.resource.IResourceStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.AjaxDownloadLink;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.InputStreamResourceStream;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.inception.support.wicket.AjaxDownloadLink;
+import de.tudarmstadt.ukp.inception.support.wicket.InputStreamResourceStream;
 
 /**
  * Modal window to Export annotated document
@@ -58,7 +56,7 @@ public class ExportDocumentDialogContent
 {
     private static final long serialVersionUID = -2102136855109258306L;
 
-    private static final Logger LOG = LoggerFactory.getLogger(ExportDocumentDialogContent.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private @SpringBean DocumentImportExportService importExportService;
     private @SpringBean DocumentService documentService;
@@ -73,19 +71,19 @@ public class ExportDocumentDialogContent
         super(aId);
         state = aModel;
 
-        List<String> writeableFormats = importExportService.getWritableFormats().stream()
+        var writeableFormats = importExportService.getWritableFormats().stream()
                 .map(FormatSupport::getName) //
-                .sorted() //
-                .collect(toList());
+                .sorted(String.CASE_INSENSITIVE_ORDER) //
+                .toList();
 
-        Preferences prefs = new Preferences();
+        var prefs = new Preferences();
         prefs.format = writeableFormats.get(0);
 
         preferences = Model.of(prefs);
 
         queue(new Form<>("form", CompoundPropertyModel.of(preferences)));
 
-        DropDownChoice<String> format = new DropDownChoice<>("format", writeableFormats);
+        var format = new DropDownChoice<String>("format", writeableFormats);
         format.add(new LambdaAjaxFormComponentUpdatingBehavior("change"));
         queue(format);
 
@@ -103,9 +101,8 @@ public class ExportDocumentDialogContent
     {
         File exportedFile = null;
         try {
-            AnnotatorState s = state.getObject();
-            FormatSupport format = importExportService
-                    .getFormatByName(preferences.getObject().format).get();
+            var s = state.getObject();
+            var format = importExportService.getFormatByName(preferences.getObject().format).get();
             exportedFile = importExportService.exportAnnotationDocument(s.getDocument(),
                     s.getUser().getUsername(), format, s.getMode());
 

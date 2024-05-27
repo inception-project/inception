@@ -51,7 +51,7 @@ public class ProjectSettingsDashboardMenuItem
     @Override
     public IconType getIcon()
     {
-        return FontAwesome5IconType.cogs_s;
+        return FontAwesome5IconType.sliders_h_s;
     }
 
     @Override

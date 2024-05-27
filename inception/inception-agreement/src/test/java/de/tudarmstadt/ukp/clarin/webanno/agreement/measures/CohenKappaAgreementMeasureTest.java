@@ -17,28 +17,36 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.agreement.measures;
 
+import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.Tag.COMPLETE;
+import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.Tag.DIFFERENCE;
+import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.Tag.INCOMPLETE_POSITION;
+import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.Tag.USED;
 import static java.lang.Double.NaN;
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
-import org.dkpro.statistics.agreement.coding.ICodingAnnotationItem;
+import java.util.Set;
+import java.util.stream.StreamSupport;
+
+import org.dkpro.statistics.agreement.IAnnotationUnit;
 import org.dkpro.statistics.agreement.coding.ICodingAnnotationStudy;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import de.tudarmstadt.ukp.clarin.webanno.agreement.PairwiseAnnotationResult;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.cohenkappa.CohenKappaAgreementMeasureSupport;
-import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.CodingAgreementResult;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.DiffResult;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.FullCodingAgreementResult;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.ConfigurationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
 public class CohenKappaAgreementMeasureTest
     extends AgreementMeasureTestSuite_ImplBase
 {
     private AgreementMeasureSupport<DefaultAgreementTraits, //
-            PairwiseAnnotationResult<CodingAgreementResult>, ICodingAnnotationStudy> sut;
+            FullCodingAgreementResult, ICodingAnnotationStudy> sut;
     private DefaultAgreementTraits traits;
 
     @Override
@@ -56,16 +64,14 @@ public class CohenKappaAgreementMeasureTest
     {
         when(annotationService.listSupportedFeatures(any(Project.class))).thenReturn(features);
 
-        var agreement = multiLinkWithRoleLabelDifferenceTest(sut);
+        var result = multiLinkWithRoleLabelDifferenceTest(sut);
 
-        CodingAgreementResult result = agreement.getStudy("user1", "user2");
-
-        DiffResult diff = result.getDiff();
+        var diff = result.getDiff();
 
         diff.print(System.out);
 
         assertEquals(3, diff.size());
-        assertEquals(0, diff.getDifferingConfigurationSets().size());
+        assertThat(diff.getDifferingConfigurationSets()).isEmpty();
         assertEquals(2, diff.getIncompleteConfigurationSets().size());
 
         assertEquals(NaN, result.getAgreement(), 0.00001d);
@@ -74,94 +80,80 @@ public class CohenKappaAgreementMeasureTest
     @Test
     public void twoEmptyCasTest() throws Exception
     {
-        PairwiseAnnotationResult<CodingAgreementResult> agreement = twoEmptyCasTest(sut);
+        var result = twoEmptyCasTest(sut);
 
-        CodingAgreementResult result = agreement.getStudy("user1", "user2");
-
-        DiffResult diff = result.getDiff();
+        var diff = result.getDiff();
 
         assertEquals(0, diff.size());
-        assertEquals(0, diff.getDifferingConfigurationSets().size());
-        assertEquals(0, diff.getIncompleteConfigurationSets().size());
+        assertThat(diff.getDifferingConfigurationSets()).isEmpty();
+        assertThat(diff.getIncompleteConfigurationSets()).isEmpty();
 
         assertEquals(NaN, result.getAgreement(), 0.000001d);
-        assertEquals(0, result.getIncompleteSetsByPosition().size());
+        assertThat(result.getIncompleteSetsByPosition()).isEmpty();
     }
 
     @Test
-    public void singleNoDifferencesWithAdditionalCasTest() throws Exception
+    public void threeCasesWithAnnotationOnlyInThird() throws Exception
     {
-        PairwiseAnnotationResult<CodingAgreementResult> agreement = singleNoDifferencesWithAdditionalCasTest(
-                sut);
+        var result = threeCasesWithAnnotationOnlyInThird(sut);
 
-        CodingAgreementResult result1 = agreement.getStudy("user1", "user2");
-        assertEquals(0, result1.getTotalSetCount());
-        assertEquals(0, result1.getIrrelevantSets().size());
-        assertEquals(0, result1.getRelevantSetCount());
-
-        CodingAgreementResult result2 = agreement.getStudy("user1", "user3");
-        assertEquals(1, result2.getTotalSetCount());
-        assertEquals(0, result2.getIrrelevantSets().size());
-        assertEquals(1, result2.getRelevantSetCount());
-
-        assertEquals(NaN, agreement.getStudy("user1", "user2").getAgreement(), 0.01);
-        assertEquals(NaN, agreement.getStudy("user1", "user3").getAgreement(), 0.01);
-        assertEquals(NaN, agreement.getStudy("user2", "user3").getAgreement(), 0.01);
+        assertThat(result.getAllSets()).hasSize(1);
+        assertThat(result.getIrrelevantSets()).isEmpty();
+        assertThat(result.getRelevantSets()).hasSize(1);
+        assertThat(result.getAgreement()).isNaN();
     }
 
     @Test
     public void twoWithoutLabelTest() throws Exception
     {
-        PairwiseAnnotationResult<CodingAgreementResult> agreement = twoWithoutLabelTest(sut,
-                traits);
-
-        CodingAgreementResult result = agreement.getStudy("user1", "user2");
+        var result = twoWithoutLabelTest(sut, traits);
 
         result.getDiff().print(System.out);
 
-        ICodingAnnotationItem item1 = result.getStudy().getItem(0);
-        ICodingAnnotationItem item2 = result.getStudy().getItem(1);
-        assertEquals("", item1.getUnit(0).getCategory());
-        assertEquals("", item1.getUnit(1).getCategory());
-        assertEquals("A", item2.getUnit(0).getCategory());
+        assertThat(result.getStudy().getItems())
+                .extracting(item -> StreamSupport.stream(item.getUnits().spliterator(), false)
+                        .map(IAnnotationUnit::getCategory).toList())
+                .containsExactly( //
+                        asList("", ""), //
+                        asList("A", "B"));
 
-        assertEquals(4, result.getTotalSetCount());
-        assertEquals(0, result.getIrrelevantSets().size());
-        assertEquals(2, result.getIncompleteSetsByPosition().size());
-        assertEquals(0, result.getIncompleteSetsByLabel().size());
-        assertEquals(1, result.getSetsWithDifferences().size());
-        assertEquals(4, result.getRelevantSetCount());
+        assertThat(result.getAllSets()).hasSize(4);
+        assertThat(result.getIrrelevantSets()).isEmpty();
+        assertThat(result.getIncompleteSetsByPosition()) //
+                .extracting(ConfigurationSet::getCasGroupIds, ConfigurationSet::getTags) //
+                .containsExactly( //
+                        tuple(Set.of("user1"), Set.of(INCOMPLETE_POSITION)), //
+                        tuple(Set.of("user2"), Set.of(INCOMPLETE_POSITION)));
+        assertThat(result.getIncompleteSetsByLabel()).isEmpty();
+        assertThat(result.getSetsWithDifferences()) //
+                .extracting(ConfigurationSet::getCasGroupIds, ConfigurationSet::getTags) //
+                .containsExactly( //
+                        tuple(Set.of("user1", "user2"), Set.of(DIFFERENCE, COMPLETE, USED)));
+        assertThat(result.getRelevantSets()) //
+                .extracting(ConfigurationSet::getCasGroupIds, ConfigurationSet::getTags) //
+                .containsExactly( //
+                        tuple(Set.of("user1", "user2"), Set.of(COMPLETE, USED)), //
+                        tuple(Set.of("user1"), Set.of(INCOMPLETE_POSITION)), //
+                        tuple(Set.of("user2"), Set.of(INCOMPLETE_POSITION)), //
+                        tuple(Set.of("user1", "user2"), Set.of(DIFFERENCE, COMPLETE, USED)));
+
         assertEquals(0.333, result.getAgreement(), 0.01);
     }
 
     @Test
     public void fullSingleCategoryAgreementWithTagsetTest() throws Exception
     {
-        PairwiseAnnotationResult<CodingAgreementResult> agreement = fullSingleCategoryAgreementWithTagset(
-                sut, traits);
+        var result = fullSingleCategoryAgreementWithTagset(sut, traits);
 
-        CodingAgreementResult result = agreement.getStudy("user1", "user2");
-
-        ICodingAnnotationItem item1 = result.getStudy().getItem(0);
+        var item1 = result.getStudy().getItem(0);
         assertEquals("+", item1.getUnit(0).getCategory());
 
-        assertEquals(1, result.getTotalSetCount());
-        assertEquals(0, result.getIrrelevantSets().size());
-        assertEquals(0, result.getIncompleteSetsByPosition().size());
-        assertEquals(0, result.getIncompleteSetsByLabel().size());
-        assertEquals(0, result.getSetsWithDifferences().size());
-        assertEquals(1, result.getRelevantSetCount());
+        assertThat(result.getAllSets()).hasSize(1);
+        assertThat(result.getIrrelevantSets()).isEmpty();
+        assertThat(result.getIncompleteSetsByPosition()).isEmpty();
+        assertThat(result.getIncompleteSetsByLabel()).isEmpty();
+        assertThat(result.getSetsWithDifferences()).isEmpty();
+        assertThat(result.getRelevantSets()).hasSize(1);
         assertEquals(1.0, result.getAgreement(), 0.01);
-    }
-
-    @Test
-    public void twoDocumentsNoOverlapTest() throws Exception
-    {
-        PairwiseAnnotationResult<CodingAgreementResult> agreement = twoDocumentsNoOverlap(sut,
-                traits);
-
-        CodingAgreementResult result = agreement.getStudy("user1", "user2");
-
-        assertThat(result.getAgreement()).isNaN();
     }
 }

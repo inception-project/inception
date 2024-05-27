@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.annotation.feature.string;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 
 import org.apache.wicket.MarkupContainer;

@@ -21,7 +21,7 @@ import java.io.Serializable;
 
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions.UndoableAnnotationAction;
 import de.tudarmstadt.ukp.inception.annotation.events.AnnotationEvent;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
 @FunctionalInterface
 public interface ActionFactory<T extends UndoableAnnotationAction, E extends AnnotationEvent>

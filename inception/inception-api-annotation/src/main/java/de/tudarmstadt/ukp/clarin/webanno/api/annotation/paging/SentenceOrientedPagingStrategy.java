@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSentences;
+import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.selectSentences;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,6 +35,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.paging.Unit;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 
 public class SentenceOrientedPagingStrategy
     extends PagingStrategy_ImplBase
@@ -78,7 +79,8 @@ public class SentenceOrientedPagingStrategy
         catch (IllegalArgumentException e) {
             // Ignore if there is no "id" feature on the sentence
         }
-        return new Unit(sentId, aIndex, aSentence.getBegin(), aSentence.getEnd());
+        return new Unit(VID.of(aSentence), sentId, aIndex, aSentence.getBegin(),
+                aSentence.getEnd());
     }
 
     @Override

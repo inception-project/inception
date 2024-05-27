@@ -1,9 +1,9 @@
 import { dispatchWindowEvent } from '../../shared/util'
 import { convertToExportY, paddingBetweenPages } from '../../shared/coords'
 import { adjustViewerSize } from '../util/window'
-import AnnotationContainer from '../../core/src/annotation/container'
-import SpanAnnotation from '../../core/src/annotation/span'
-import RelationAnnotation from '../../core/src/annotation/relation'
+import AnnotationContainer from '../../core/src/model/AnnotationContainer'
+import SpanAnnotation from '../../core/src/model/SpanAnnotation'
+import RelationAnnotation from '../../core/src/model/RelationAnnotation'
 import { VID } from '@inception-project/inception-js-api'
 
 /**

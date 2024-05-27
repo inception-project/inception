@@ -17,13 +17,12 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.core.logout;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
-import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
-import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.apache.commons.lang3.StringUtils.startsWith;
+import static de.tudarmstadt.ukp.clarin.webanno.security.WicketSecurityUtils.getAutoLogoutTime;
+import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.enabledWhen;
+import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-import javax.servlet.http.HttpSession;
-
+import org.apache.wicket.Component;
 import org.apache.wicket.devutils.stateless.StatelessComponent;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.JavaScriptHeaderItem;
@@ -33,9 +32,6 @@ import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.link.BookmarkablePageLink;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.protocol.http.servlet.ServletWebRequest;
-import org.apache.wicket.request.Request;
-import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.request.flow.RedirectToUrlException;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
@@ -44,13 +40,11 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.config.LoginProperties;
 import de.tudarmstadt.ukp.clarin.webanno.security.config.PreauthenticationProperties;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaStatelessLink;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.ApplicationSession;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.login.LoginPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.users.ManageUsersPage;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaStatelessLink;
 
-/**
- * A wicket panel for logout.
- */
 @StatelessComponent
 public class LogoutPanel
     extends Panel
@@ -66,11 +60,10 @@ public class LogoutPanel
         super(id, aUser);
 
         var logoutLink = new LambdaStatelessLink("logout", this::actionLogout);
-        logoutLink.add(visibleWhen(this::isLogoutEnabled));
         add(logoutLink);
 
         var logoutTimer = new WebMarkupContainer("logoutTimer");
-        logoutTimer.add(visibleWhen(() -> getAutoLogoutTime() > 0 && isLogoutEnabled()));
+        logoutTimer.add(visibleWhen(() -> getAutoLogoutTime() > 0));
         add(logoutTimer);
 
         var profileLinkParameters = new PageParameters().add(ManageUsersPage.PARAM_USER,
@@ -85,18 +78,6 @@ public class LogoutPanel
 
         add(visibleWhen(
                 () -> ApplicationSession.exists() && ApplicationSession.get().isSignedIn()));
-    }
-
-    private boolean isLogoutEnabled()
-    {
-        // Logout is disabled for external (OAuth2) users if autoLogin is enabled.
-        // Pre-authenticated users do not count as external users here as we may have a logout
-        // link from the IdP configured
-        if (startsWith(getModel().getObject().getRealm(), UserDao.REALM_EXTERNAL_PREFIX)) {
-            return isBlank(securityProperties.getAutoLogin());
-        }
-
-        return true;
     }
 
     @SuppressWarnings("unchecked")
@@ -126,30 +107,32 @@ public class LogoutPanel
 
     private void actionLogout()
     {
-        ApplicationSession.get().signOut();
-
-        if (preauthenticationProperties.getLogoutUrl().isPresent()) {
-            throw new RedirectToUrlException(preauthenticationProperties.getLogoutUrl().get());
-        }
-        else {
-            setResponsePage(getApplication().getHomePage());
-        }
+        actionLogout(this, preauthenticationProperties, securityProperties);
     }
 
-    /**
-     * Checks if auto-logout is enabled. For Winstone, we get a max session length of 0, so here it
-     * is disabled.
-     */
-    private int getAutoLogoutTime()
+    public static void actionLogout(Component aOwner,
+            PreauthenticationProperties aPreauthProperties, LoginProperties aSecProperties)
     {
-        int duration = 0;
-        Request request = RequestCycle.get().getRequest();
-        if (request instanceof ServletWebRequest) {
-            HttpSession session = ((ServletWebRequest) request).getContainerRequest().getSession();
-            if (session != null) {
-                duration = session.getMaxInactiveInterval();
-            }
+        // It would be nicer if we could just use the default Spring Security logout
+        // mechanism by making the logout button a link to `/logout`, but since
+        // we want to perform extra stuff afterwards, we currently use this way.
+        //
+        // The alternative would be to register a custom LogoutSuccessHandler with
+        // Spring Security which would do our special logout redirection behavior
+
+        ApplicationSession.get().signOut();
+
+        if (aPreauthProperties.getLogoutUrl().isPresent()) {
+            throw new RedirectToUrlException(aPreauthProperties.getLogoutUrl().get());
         }
-        return duration;
+
+        if (isNotBlank(aSecProperties.getAutoLogin())) {
+            var parameters = new PageParameters();
+            parameters.set(LoginPage.PARAM_SKIP_AUTO_LOGIN, true);
+            aOwner.setResponsePage(LoginPage.class, parameters);
+            return;
+        }
+
+        aOwner.setResponsePage(aOwner.getApplication().getHomePage());
     }
 }

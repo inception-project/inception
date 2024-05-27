@@ -17,16 +17,16 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.api.model;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.PersistentEnumUserType;
+import de.tudarmstadt.ukp.inception.support.db.PersistentEnumUserType;
 
 public class LearningRecordUserActionType
-    extends PersistentEnumUserType<LearningRecordType>
+    extends PersistentEnumUserType<LearningRecordUserAction>
 {
     private static final long serialVersionUID = -3003939154712866012L;
 
     @Override
-    public Class<LearningRecordType> returnedClass()
+    public Class<LearningRecordUserAction> returnedClass()
     {
-        return LearningRecordType.class;
+        return LearningRecordUserAction.class;
     }
 }

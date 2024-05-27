@@ -17,18 +17,20 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.tasks;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode.AUTO_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
+import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.AUTO_CAS_UPGRADE;
 import static java.lang.System.currentTimeMillis;
 import static java.text.MessageFormat.format;
 
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 import javax.persistence.NoResultException;
 
+import org.apache.commons.lang3.Validate;
 import org.apache.commons.lang3.concurrent.ConcurrentException;
 import org.apache.commons.lang3.concurrent.LazyInitializer;
 import org.apache.uima.cas.CAS;
@@ -37,36 +39,39 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst;
-import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
-import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.PercentageBasedSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.EvaluatedRecommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
-import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderEvaluationResultEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderTaskNotificationEvent;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.support.WebAnnoConst;
+import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 
 /**
  * This task evaluates all available classification tools for all annotation layers of the current
- * project. If a classifier exceeds its specific activation f-score limit during the evaluation it
- * is selected for active prediction.
+ * project. If a classifier exceeds its specific activation score limit during the evaluation it is
+ * selected for active prediction.
+ * 
+ * If the threshold is 0 (or less), the evaluation should be considered optional. That is, if the
+ * evaluation fails (e.g. because of too little data), then the training should still be scheduled.
  */
 public class SelectionTask
     extends RecommendationTask_ImplBase
 {
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    public static final String TYPE = "SelectionTask";
+
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private @Autowired AnnotationSchemaService annoService;
     private @Autowired DocumentService documentService;
@@ -77,33 +82,18 @@ public class SelectionTask
     private final SourceDocument currentDocument;
     private final String dataOwner;
 
-    /**
-     * Create a new selection task.
-     * 
-     * @param aUser
-     *            the user owning the selection session.
-     * @param aProject
-     *            the project to perform the selection on.
-     * @param aTrigger
-     *            the trigger that caused the selection to be scheduled.
-     * @param aCurrentDocument
-     *            the document currently open in the editor.
-     * @param aDataOwner
-     *            the user owning the annotations currently shown in the editor (this can differ
-     *            from the user owning the session e.g. if a manager views another users annotations
-     *            or a curator is performing curation to the {@link WebAnnoConst#CURATION_USER})
-     */
-    public SelectionTask(User aUser, Project aProject, String aTrigger,
-            SourceDocument aCurrentDocument, String aDataOwner)
+    public SelectionTask(Builder<? extends Builder<?>> aBuilder)
     {
-        super(aUser, aProject, aTrigger);
+        super(aBuilder.withType(TYPE));
 
-        if (getUser().isEmpty()) {
-            throw new IllegalArgumentException("SelectionTask requires a user");
-        }
+        currentDocument = aBuilder.currentDocument;
+        dataOwner = aBuilder.dataOwner;
+    }
 
-        currentDocument = aCurrentDocument;
-        dataOwner = aDataOwner;
+    @Override
+    public String getTitle()
+    {
+        return "Activating trainable recommenders...";
     }
 
     @Override
@@ -111,10 +101,9 @@ public class SelectionTask
     {
         try (CasStorageSession session = CasStorageSession.open()) {
             var sessionOwner = getUser().orElseThrow();
-            String sessionOwnerName = sessionOwner.getUsername();
+            var sessionOwnerName = sessionOwner.getUsername();
             var startTime = System.currentTimeMillis();
-            Project project = getProject();
-            logSelectionStarted(sessionOwner);
+            var project = getProject();
 
             // Read the CASes only when they are accessed the first time. This allows us to skip
             // reading the CASes in case that no layer / recommender is available or if no
@@ -128,8 +117,13 @@ public class SelectionTask
                 }
             };
 
+            var listAnnotationLayers = annoService.listAnnotationLayer(getProject());
+            getMonitor().setMaxProgress(listAnnotationLayers.size());
             boolean seenRecommender = false;
-            for (AnnotationLayer layer : annoService.listAnnotationLayer(getProject())) {
+            var layers = annoService.listAnnotationLayer(getProject());
+            for (AnnotationLayer layer : layers) {
+                getMonitor().incrementProgress();
+
                 if (!layer.isEnabled()) {
                     continue;
                 }
@@ -140,22 +134,26 @@ public class SelectionTask
                     continue;
                 }
 
-                seenRecommender = true;
-
                 var evaluatedRecommenders = new ArrayList<EvaluatedRecommender>();
                 for (Recommender r : recommenders) {
                     // Make sure we have the latest recommender config from the DB - the one from
                     // the active recommenders list may be outdated
-                    Optional<Recommender> optRecommender = freshenRecommender(sessionOwner, r);
+                    var optRecommender = freshenRecommender(sessionOwner, r);
                     if (optRecommender.isEmpty()) {
                         logRecommenderGone(sessionOwner, r);
                         continue;
+                    }
+
+                    if (!seenRecommender) {
+                        logSelectionStarted(sessionOwner);
+                        seenRecommender = true;
                     }
 
                     Recommender recommender = optRecommender.get();
                     try {
                         long start = System.currentTimeMillis();
 
+                        getMonitor().addMessage(LogMessage.info(this, "%s", recommender.getName()));
                         evaluate(sessionOwner, recommender, casLoader)
                                 .ifPresent(evaluatedRecommender -> {
                                     var result = evaluatedRecommender.getEvaluationResult();
@@ -201,44 +199,49 @@ public class SelectionTask
     private void logSelectionComplete(long startTime, String username)
     {
         var duration = currentTimeMillis() - startTime;
-        log.debug("[{}][{}]: Selection complete ({} ms)", getId(), username, duration);
+        LOG.debug("[{}][{}]: Selection complete ({} ms)", getId(), username, duration);
         info("Selection complete (%d ms).", duration);
     }
 
     private void logRecommenderGone(User user, Recommender aRecommender)
     {
-        log.debug("[{}][{}][{}]: Recommender no longer available... skipping", getId(),
+        LOG.debug("[{}][{}][{}]: Recommender no longer available... skipping", getId(),
                 user.getUsername(), aRecommender.getName());
     }
 
     private void logSelectionStarted(User sessionOwner)
     {
-        log.info("[{}]: Starting selection triggered by [{}]", sessionOwner.getUsername(),
+        LOG.info("[{}]: Starting selection triggered by [{}]", sessionOwner.getUsername(),
                 getTrigger());
         info("Starting selection triggered by [%s]", getTrigger());
     }
 
     private void scheduleTrainingTask(User sessionOwner)
     {
-        TrainingTask trainingTask = new TrainingTask(sessionOwner, getProject(),
-                "SelectionTask after activating recommenders", currentDocument, dataOwner);
+        var trainingTask = TrainingTask.builder() //
+                .withSessionOwner(sessionOwner) //
+                .withProject(getProject()) //
+                .withTrigger("SelectionTask after activating recommenders") //
+                .withCurrentDocument(currentDocument) //
+                .withDataOwner(dataOwner) //
+                .build();
         trainingTask.inheritLog(this);
         schedulingService.enqueue(trainingTask);
     }
 
     private void logNoRecommendersActive(String sessionOwnerName)
     {
-        log.debug("[{}]: No recommenders active, skipping training.", sessionOwnerName);
+        LOG.debug("[{}]: No recommenders active, skipping training.", sessionOwnerName);
     }
 
     private void logNoRecommendersSeen(String sessionOwnerName)
     {
-        log.trace("[{}]: No recommenders configured, skipping training.", sessionOwnerName);
+        LOG.trace("[{}]: No recommenders configured, skipping training.", sessionOwnerName);
     }
 
     private void logEvaluationSuccessful(User sessionOwner)
     {
-        log.info("[{}]: Evaluation complete", sessionOwner.getUsername());
+        LOG.info("[{}]: Evaluation complete", sessionOwner.getUsername());
         appEventPublisher.publishEvent(RecommenderTaskNotificationEvent
                 .builder(this, getProject(), sessionOwner.getUsername()) //
                 .withMessage(LogMessage.info(this, "Evaluation complete")) //
@@ -248,7 +251,7 @@ public class SelectionTask
     private void logEvaluationFailed(Project project, User sessionOwner, String recommenderName,
             Throwable e)
     {
-        log.error("[{}][{}]: Evaluation failed", sessionOwner.getUsername(), recommenderName, e);
+        LOG.error("[{}][{}]: Evaluation failed", sessionOwner.getUsername(), recommenderName, e);
         appEventPublisher.publishEvent(
                 RecommenderTaskNotificationEvent.builder(this, project, sessionOwner.getUsername()) //
                         .withMessage(LogMessage.error(this, e.getMessage())) //
@@ -257,7 +260,7 @@ public class SelectionTask
 
     private void logNoRecommenders(String sessionOwnerName, AnnotationLayer layer)
     {
-        log.trace("[{}][{}]: No recommenders, skipping selection.", sessionOwnerName,
+        LOG.trace("[{}][{}]: No recommenders, skipping selection.", sessionOwnerName,
                 layer.getUiName());
     }
 
@@ -286,18 +289,24 @@ public class SelectionTask
             return Optional.of(activateNonEvaluatableRecommender(userName, recommender));
         }
 
-        log.info("[{}][{}]: Evaluating...", userName, recommender.getName());
-        DataSplitter splitter = new PercentageBasedSplitter(0.8, 10);
-        RecommendationEngine recommendationEngine = factory.build(recommender);
+        LOG.info("[{}][{}]: Evaluating...", userName, recommender.getName());
+        var splitter = new PercentageBasedSplitter(0.8, 10);
+        var recommendationEngine = factory.build(recommender);
 
-        EvaluationResult result = recommendationEngine.evaluate(aCasses.get(), splitter);
+        var result = recommendationEngine.evaluate(aCasses.get(), splitter);
+        double threshold = recommender.getThreshold();
 
         if (result.isEvaluationSkipped()) {
+            var evaluationIsOptional = recommender.getThreshold() <= 0.0d;
+            if (evaluationIsOptional) {
+                return Optional.of(
+                        activateRecommenderAboveThreshold(user, recommender, result, 0, threshold));
+            }
+
             return Optional.of(skipRecommenderDueToFailedEvaluation(user, recommender, result));
         }
 
         double score = result.computeF1Score();
-        double threshold = recommender.getThreshold();
         if (score >= threshold) {
             return Optional.of(
                     activateRecommenderAboveThreshold(user, recommender, result, score, threshold));
@@ -311,7 +320,7 @@ public class SelectionTask
             EvaluationResult result, double score, double threshold)
     {
         String recommenderName = recommender.getName();
-        log.info("[{}][{}]: Not activated ({} < threshold {})", user.getUsername(), recommenderName,
+        LOG.info("[{}][{}]: Not activated ({} < threshold {})", user.getUsername(), recommenderName,
                 score, threshold);
         info("Recommender [%s] not activated (%f < threshold %f)", recommenderName, score,
                 threshold);
@@ -326,7 +335,7 @@ public class SelectionTask
         EvaluatedRecommender evaluatedRecommender = EvaluatedRecommender.makeActive(recommender,
                 result,
                 format("Score {0,number,#.####} >= threshold {1,number,#.####}", score, threshold));
-        log.info("[{}][{}]: Activated ({} >= threshold {})", user.getUsername(), recommenderName,
+        LOG.info("[{}][{}]: Activated ({} >= threshold {})", user.getUsername(), recommenderName,
                 score, threshold);
         info("Recommender [%s] activated (%f >= threshold %f)", recommenderName, score, threshold);
         return evaluatedRecommender;
@@ -338,7 +347,7 @@ public class SelectionTask
         String recommenderName = recommender.getName();
         String msg = String.format("Evaluation of recommender [%s] could not be performed: %s",
                 recommenderName, result.getErrorMsg().orElse("unknown reason"));
-        log.info("[{}][{}]: {}", user.getUsername(), recommenderName, msg);
+        LOG.info("[{}][{}]: {}", user.getUsername(), recommenderName, msg);
         warn("%s", msg);
         return EvaluatedRecommender.makeInactiveWithoutEvaluation(recommender, msg);
     }
@@ -347,7 +356,7 @@ public class SelectionTask
             Recommender recommender)
     {
         String recommenderName = recommender.getName();
-        log.debug("[{}][{}]: Activating [{}] without evaluating - not evaluable", userName,
+        LOG.debug("[{}][{}]: Activating [{}] without evaluating - not evaluable", userName,
                 recommenderName, recommenderName);
         info("Recommender [%s] activated without evaluating - not evaluable", recommenderName);
         return EvaluatedRecommender.makeActiveWithoutEvaluation(recommender);
@@ -357,7 +366,7 @@ public class SelectionTask
             Recommender recommender)
     {
         String recommenderName = recommender.getName();
-        log.debug("[{}][{}]: Activating [{}] without evaluating - always selected", userName,
+        LOG.debug("[{}][{}]: Activating [{}] without evaluating - always selected", userName,
                 recommenderName, recommenderName);
         info("Recommender [%s] activated without evaluating - always selected", recommenderName);
         return EvaluatedRecommender.makeActiveWithoutEvaluation(recommender);
@@ -367,7 +376,7 @@ public class SelectionTask
             Recommender recommender)
     {
         String recommenderName = recommender.getName();
-        log.info("[{}][{}]: Recommender configured with invalid layer or feature "
+        LOG.info("[{}][{}]: Recommender configured with invalid layer or feature "
                 + "- skipping recommender", user.getUsername(), recommenderName);
         info("Recommender [%s] configured with invalid layer or feature - skipping recommender",
                 recommenderName);
@@ -377,7 +386,7 @@ public class SelectionTask
 
     private void sendMissingFactoryNotification(User user, Recommender recommender)
     {
-        log.error("[{}][{}]: No recommender factory available for [{}]", user.getUsername(),
+        LOG.error("[{}][{}]: No recommender factory available for [{}]", user.getUsername(),
                 recommender.getName(), recommender.getTool());
         appEventPublisher.publishEvent(
                 RecommenderTaskNotificationEvent.builder(this, getProject(), user.getUsername()) //
@@ -397,7 +406,7 @@ public class SelectionTask
                 casses.add(cas);
             }
             catch (IOException e) {
-                log.error("Cannot read annotation CAS.", e);
+                LOG.error("Cannot read annotation CAS.", e);
             }
         }
         return casses;
@@ -412,16 +421,60 @@ public class SelectionTask
             recommender = recommendationService.getRecommender(r.getId());
         }
         catch (NoResultException e) {
-            log.info("[{}][{}]: Recommender no longer available... skipping", aUser.getUsername(),
+            LOG.info("[{}][{}]: Recommender no longer available... skipping", aUser.getUsername(),
                     r.getName());
             return Optional.empty();
         }
 
         if (!recommender.isEnabled()) {
-            log.debug("[{}][{}]: Disabled - skipping", aUser.getUsername(), recommender.getName());
+            LOG.debug("[{}][{}]: Disabled - skipping", aUser.getUsername(), recommender.getName());
             return Optional.empty();
         }
 
         return Optional.of(recommender);
+    }
+
+    public static Builder<Builder<?>> builder()
+    {
+        return new Builder<>();
+    }
+
+    public static class Builder<T extends Builder<?>>
+        extends RecommendationTask_ImplBase.Builder<T>
+    {
+        private SourceDocument currentDocument;
+        private String dataOwner;
+
+        /**
+         * @param aCurrentDocuemnt
+         *            the document currently open in the editor of the user triggering the task.
+         */
+        @SuppressWarnings("unchecked")
+        public T withCurrentDocument(SourceDocument aCurrentDocuemnt)
+        {
+            currentDocument = aCurrentDocuemnt;
+            return (T) this;
+        }
+
+        /**
+         * @param aDataOwner
+         *            the user owning the annotations currently shown in the editor (this can differ
+         *            from the user owning the session e.g. if a manager views another users
+         *            annotations or a curator is performing curation to the
+         *            {@link WebAnnoConst#CURATION_USER})
+         */
+        @SuppressWarnings("unchecked")
+        public T withDataOwner(String aDataOwner)
+        {
+            dataOwner = aDataOwner;
+            return (T) this;
+        }
+
+        public SelectionTask build()
+        {
+            Validate.notNull(sessionOwner, "SelectionTask requires a user");
+
+            return new SelectionTask(this);
+        }
     }
 }

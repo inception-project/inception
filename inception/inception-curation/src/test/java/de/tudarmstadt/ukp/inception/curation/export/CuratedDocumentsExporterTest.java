@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.curation.export;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.CURATION_USER;
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -40,10 +40,8 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageService;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.diag.ChecksRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.diag.RepairsRegistry;
@@ -56,13 +54,16 @@ import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageCachePro
 import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStoragePropertiesImpl;
 import de.tudarmstadt.ukp.inception.annotation.storage.driver.CasStorageDriver;
 import de.tudarmstadt.ukp.inception.annotation.storage.driver.filesystem.FileSystemCasStorageDriver;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
+import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
+import de.tudarmstadt.ukp.inception.documents.api.RepositoryPropertiesImpl;
 import de.tudarmstadt.ukp.inception.export.DocumentImportExportServiceImpl;
 import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceProperties;
 import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServicePropertiesImpl;
 import de.tudarmstadt.ukp.inception.io.xmi.XmiFormatSupport;
 import de.tudarmstadt.ukp.inception.io.xmi.config.UimaFormatsPropertiesImpl.XmiFormatProperties;
 import de.tudarmstadt.ukp.inception.project.export.ProjectExportServiceImpl;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
 @ExtendWith(MockitoExtension.class)
 public class CuratedDocumentsExporterTest
@@ -95,7 +96,7 @@ public class CuratedDocumentsExporterTest
 
         DocumentImportExportServiceProperties properties = new DocumentImportExportServicePropertiesImpl();
 
-        repositoryProperties = new RepositoryProperties();
+        repositoryProperties = new RepositoryPropertiesImpl();
         repositoryProperties.setPath(workFolder);
 
         CasStorageDriver driver = new FileSystemCasStorageDriver(repositoryProperties,
@@ -105,9 +106,9 @@ public class CuratedDocumentsExporterTest
                 new CasStorageCachePropertiesImpl(), null, schemaService));
 
         var xmiFormatSupport = new XmiFormatSupport(new XmiFormatProperties());
-        importExportSerivce = new DocumentImportExportServiceImpl(repositoryProperties,
-                asList(xmiFormatSupport), casStorageService, schemaService, properties,
-                checksRegistry, repairsRegistry, xmiFormatSupport);
+        importExportSerivce = new DocumentImportExportServiceImpl(asList(xmiFormatSupport),
+                casStorageService, schemaService, properties, checksRegistry, repairsRegistry,
+                xmiFormatSupport);
 
         // Dynamically generate a SourceDocument with an incrementing ID when asked for one
         when(documentService.getSourceDocument(any(), any())).then(invocation -> {

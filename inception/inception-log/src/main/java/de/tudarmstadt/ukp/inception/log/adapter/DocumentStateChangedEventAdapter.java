@@ -22,18 +22,18 @@ import java.util.Objects;
 
 import org.springframework.stereotype.Component;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.event.DocumentStateChangedEvent;
-import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
+import de.tudarmstadt.ukp.inception.documents.event.DocumentStateChangedEvent;
 import de.tudarmstadt.ukp.inception.log.model.StateChangeDetails;
+import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 
 @Component
 public class DocumentStateChangedEventAdapter
     implements EventLoggingAdapter<DocumentStateChangedEvent>
 {
     @Override
-    public boolean accepts(Object aEvent)
+    public boolean accepts(Class<?> aEvent)
     {
-        return aEvent instanceof DocumentStateChangedEvent;
+        return DocumentStateChangedEvent.class.isAssignableFrom(aEvent);
     }
 
     @Override
@@ -51,7 +51,7 @@ public class DocumentStateChangedEventAdapter
     @Override
     public String getDetails(DocumentStateChangedEvent aEvent) throws IOException
     {
-        StateChangeDetails details = new StateChangeDetails();
+        var details = new StateChangeDetails();
         details.setState(Objects.toString(aEvent.getNewState(), null));
         details.setPreviousState(Objects.toString(aEvent.getPreviousState(), null));
         return JSONUtil.toJsonString(details);

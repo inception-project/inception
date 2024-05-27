@@ -17,27 +17,31 @@
  */
 package de.tudarmstadt.ukp.inception.active.learning;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateChangeFlag.EXPLICIT_ANNOTATOR_USER_ACTION;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation.AL_SIDEBAR;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType.ACCEPTED;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType.CORRECTED;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType.REJECTED;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType.SKIPPED;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.ACCEPTED;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.CORRECTED;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.REJECTED;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.SKIPPED;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.lang.invoke.MethodHandles;
+import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
+import org.apache.commons.lang3.ClassUtils;
+import org.apache.uima.cas.CAS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.transaction.annotation.Transactional;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -45,19 +49,17 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.active.learning.config.ActiveLearningAutoConfiguration;
 import de.tudarmstadt.ukp.inception.active.learning.event.ActiveLearningRecommendationEvent;
 import de.tudarmstadt.ukp.inception.active.learning.strategy.ActiveLearningStrategy;
-import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanAdapter;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionDocumentGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup.Delta;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
-import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
-import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupport;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 
 /**
  * <p>
@@ -68,7 +70,7 @@ import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupportRegistry;
 public class ActiveLearningServiceImpl
     implements ActiveLearningService
 {
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private final ApplicationEventPublisher applicationEventPublisher;
     private final DocumentService documentService;
@@ -97,37 +99,18 @@ public class ActiveLearningServiceImpl
     @Override
     public List<SuggestionGroup<SpanSuggestion>> getSuggestions(User aUser, AnnotationLayer aLayer)
     {
-        Predictions predictions = recommendationService.getPredictions(aUser, aLayer.getProject());
+        var predictions = recommendationService.getPredictions(aUser, aLayer.getProject());
 
         if (predictions == null) {
             return emptyList();
         }
 
-        Map<String, SuggestionDocumentGroup<SpanSuggestion>> recommendationsMap = predictions
-                .getPredictionsForWholeProject(SpanSuggestion.class, aLayer, documentService);
+        var recommendationsMap = predictions.getPredictionsForWholeProject(SpanSuggestion.class,
+                aLayer, documentService);
 
         return recommendationsMap.values().stream() //
                 .flatMap(docMap -> docMap.stream()) //
                 .collect(toList());
-    }
-
-    @Override
-    public boolean isSuggestionVisible(LearningRecord aRecord)
-    {
-        var aSessionOwner = userService.get(aRecord.getUser());
-        var suggestionGroups = getSuggestions(aSessionOwner, aRecord.getLayer());
-        for (var suggestionGroup : suggestionGroups) {
-            if (suggestionGroup.stream().anyMatch(suggestion -> suggestion.getDocumentName()
-                    .equals(aRecord.getSourceDocument().getName())
-                    && suggestion.getFeature().equals(aRecord.getAnnotationFeature().getName())
-                    && suggestion.labelEquals(aRecord.getAnnotation())
-                    && suggestion.getBegin() == aRecord.getOffsetBegin()
-                    && suggestion.getEnd() == aRecord.getOffsetEnd() //
-                    && suggestion.isVisible())) {
-                return true;
-            }
-        }
-        return false;
     }
 
     @Override
@@ -174,27 +157,32 @@ public class ActiveLearningServiceImpl
         long startTimer = System.currentTimeMillis();
         var suggestionGroups = alState.getSuggestions();
         long getRecommendationsFromRecommendationService = System.currentTimeMillis();
-        log.trace("Getting recommendations from recommender system took {} ms.",
+        LOG.trace("Getting recommendations from recommender system took {} ms.",
                 (getRecommendationsFromRecommendationService - startTimer));
-
-        // remove duplicate recommendations
-        suggestionGroups = suggestionGroups.stream() //
-                .map(it -> removeDuplicateRecommendations(it)) //
-                .collect(toList());
-        long removeDuplicateRecommendation = System.currentTimeMillis();
-        log.trace("Removing duplicate recommendations took {} ms.",
-                (removeDuplicateRecommendation - getRecommendationsFromRecommendationService));
 
         // hide rejected recommendations
         hideRejectedOrSkippedAnnotations(aSessionOwner, aDataOwner, alState.getLayer(), true,
                 suggestionGroups);
         long removeRejectedSkippedRecommendation = System.currentTimeMillis();
-        log.trace("Removing rejected or skipped ones took {} ms.",
-                (removeRejectedSkippedRecommendation - removeDuplicateRecommendation));
+        LOG.trace("Hiding rejected or skipped ones took {} ms.",
+                (removeRejectedSkippedRecommendation
+                        - getRecommendationsFromRecommendationService));
+
+        // remove duplicate recommendations
+        suggestionGroups = suggestionGroups.stream() //
+                .map(it -> removeDuplicatesAndHiddenSuggestions(it)) //
+                .filter(it -> !it.isEmpty()) //
+                .collect(toList());
+        long removeDuplicateRecommendation = System.currentTimeMillis();
+        LOG.trace("Removing duplicate recommendations took {} ms.",
+                (removeDuplicateRecommendation - removeRejectedSkippedRecommendation));
 
         var pref = recommendationService.getPreferences(aDataOwner,
                 alState.getLayer().getProject());
-        return alState.getStrategy().generateNextSuggestion(pref, suggestionGroups);
+        var nextSuggestion = alState.getStrategy().generateNextSuggestion(pref, suggestionGroups);
+        assert !nextSuggestion.isPresent() || nextSuggestion.get().getFirst()
+                .isVisible() : "Generated suggestion must be visible";
+        return nextSuggestion;
     }
 
     @Override
@@ -208,7 +196,6 @@ public class ActiveLearningServiceImpl
                 .orElseThrow(() -> new IllegalArgumentException(
                         "No such layer: [" + aSuggestion.getLayerId() + "]"));
         var feature = schemaService.getFeature(aSuggestion.getFeature(), layer);
-        var adapter = (SpanAdapter) schemaService.getAdapter(layer);
 
         // Load CAS in which to create the annotation. This might be different from the one that
         // is currently viewed by the user, e.g. if the user switched to another document after
@@ -216,12 +203,11 @@ public class ActiveLearningServiceImpl
         var sessionOwner = userService.getCurrentUsername();
         var dataOwner = aDataOwner.getUsername();
         var cas = documentService.readAnnotationCas(aDocument, dataOwner);
-        var document = documentService.getSourceDocument(feature.getProject(),
-                aSuggestion.getDocumentName());
 
         // Create AnnotationFeature and FeatureSupport
         var featureSupport = featureSupportRegistry.findExtension(feature).orElseThrow();
-        var label = (String) featureSupport.unwrapFeatureValue(feature, cas, aValue);
+
+        var label = unwrapLabel(aValue, feature, cas, featureSupport);
 
         // Clone of the original suggestion with the selected by the user
         var suggestionWithUserSelectedLabel = aSuggestion.toBuilder().withLabel(label).build();
@@ -231,15 +217,16 @@ public class ActiveLearningServiceImpl
         var action = aSuggestion.labelEquals(label) ? ACCEPTED : CORRECTED;
         if (action == CORRECTED) {
             recommendationService.correctSuggestion(sessionOwner, aDocument, dataOwner, cas,
-                    adapter, feature, aSuggestion, suggestionWithUserSelectedLabel, AL_SIDEBAR);
+                    aSuggestion, suggestionWithUserSelectedLabel, AL_SIDEBAR);
         }
         else {
-            recommendationService.acceptSuggestion(sessionOwner, aDocument, dataOwner, cas, adapter,
-                    feature, suggestionWithUserSelectedLabel, AL_SIDEBAR);
+            recommendationService.acceptSuggestion(sessionOwner, aDocument, dataOwner, cas,
+                    suggestionWithUserSelectedLabel, AL_SIDEBAR);
         }
 
         // Save CAS after annotation has been created
-        documentService.writeAnnotationCas(cas, aDocument, aDataOwner, true);
+        documentService.writeAnnotationCas(cas, aDocument, aDataOwner,
+                EXPLICIT_ANNOTATOR_USER_ACTION);
 
         // Send an application event indicating if the user has accepted/skipped/corrected/rejected
         // the suggestion
@@ -249,15 +236,41 @@ public class ActiveLearningServiceImpl
                         feature.getLayer(), suggestionWithUserSelectedLabel.getBegin(),
                         suggestionWithUserSelectedLabel.getEnd(),
                         suggestionWithUserSelectedLabel.getFeature());
-        applicationEventPublisher.publishEvent(new ActiveLearningRecommendationEvent(this, document,
-                suggestionWithUserSelectedLabel, dataOwner, feature.getLayer(),
+
+        applicationEventPublisher.publishEvent(new ActiveLearningRecommendationEvent(this,
+                aDocument, suggestionWithUserSelectedLabel, dataOwner, feature.getLayer(),
                 suggestionWithUserSelectedLabel.getFeature(), action, alternativeSuggestions));
+    }
+
+    private String unwrapLabel(Object aValue, AnnotationFeature feature, CAS cas,
+            FeatureSupport<Object> featureSupport)
+    {
+        Object rawLabel = featureSupport.unwrapFeatureValue(feature, cas, aValue);
+        if (rawLabel instanceof Collection collectionValue) {
+            rawLabel = collectionValue.iterator().next();
+        }
+
+        if (rawLabel == null) {
+            return null;
+        }
+
+        if (ClassUtils.isPrimitiveOrWrapper(rawLabel.getClass())) {
+            return String.valueOf(rawLabel);
+        }
+
+        if (rawLabel instanceof String) {
+            return (String) rawLabel;
+        }
+
+        throw new IllegalArgumentException(
+                "Non-primitive suggestions are not supported: [" + rawLabel.getClass() + "]");
     }
 
     @Override
     @Transactional
     public void rejectSpanSuggestion(String aSessionOwner, User aDataOwner, AnnotationLayer aLayer,
             SpanSuggestion aSuggestion)
+        throws AnnotationException
     {
         var document = documentService.getSourceDocument(aLayer.getProject(),
                 aSuggestion.getDocumentName());
@@ -279,6 +292,7 @@ public class ActiveLearningServiceImpl
     @Transactional
     public void skipSpanSuggestion(String aSessionOwner, User aDataOwner, AnnotationLayer aLayer,
             SpanSuggestion aSuggestion)
+        throws AnnotationException
     {
         var document = documentService.getSourceDocument(aLayer.getProject(),
                 aSuggestion.getDocumentName());
@@ -296,35 +310,40 @@ public class ActiveLearningServiceImpl
                 alternativeSuggestions));
     }
 
-    private static SuggestionGroup<SpanSuggestion> removeDuplicateRecommendations(
-            SuggestionGroup<SpanSuggestion> unmodifiedRecommendationList)
+    private static SuggestionGroup<SpanSuggestion> removeDuplicatesAndHiddenSuggestions(
+            SuggestionGroup<SpanSuggestion> aSuggestionGroup)
     {
-        SuggestionGroup<SpanSuggestion> cleanRecommendationList = new SuggestionGroup<>();
+        var cleanSuggestionGroup = new SuggestionGroup<SpanSuggestion>();
 
-        unmodifiedRecommendationList.forEach(recommendationItem -> {
-            if (!isAlreadyInCleanList(cleanRecommendationList, recommendationItem)) {
-                cleanRecommendationList.add(recommendationItem);
+        aSuggestionGroup.forEach(suggestion -> {
+            if (!suggestion.isVisible()) {
+                return;
+            }
+
+            if (!isAlreadyInCleanList(cleanSuggestionGroup, suggestion)) {
+                cleanSuggestionGroup.add(suggestion);
             }
         });
 
-        return cleanRecommendationList;
+        return cleanSuggestionGroup;
     }
 
     private static boolean isAlreadyInCleanList(
             SuggestionGroup<SpanSuggestion> cleanRecommendationList,
             AnnotationSuggestion recommendationItem)
     {
-        String source = recommendationItem.getRecommenderName();
-        String annotation = recommendationItem.getLabel();
-        String documentName = recommendationItem.getDocumentName();
+        var source = recommendationItem.getRecommenderName();
+        var annotation = recommendationItem.getLabel();
+        var documentName = recommendationItem.getDocumentName();
 
-        for (AnnotationSuggestion existingRecommendation : cleanRecommendationList) {
-            boolean areLabelsEqual = existingRecommendation.labelEquals(annotation);
+        for (var existingRecommendation : cleanRecommendationList) {
+            var areLabelsEqual = existingRecommendation.labelEquals(annotation);
             if (existingRecommendation.getRecommenderName().equals(source) && areLabelsEqual
                     && existingRecommendation.getDocumentName().equals(documentName)) {
                 return true;
             }
         }
+
         return false;
     }
 

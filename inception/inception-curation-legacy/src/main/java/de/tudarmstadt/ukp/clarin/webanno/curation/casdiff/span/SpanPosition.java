@@ -33,12 +33,12 @@ public class SpanPosition
     private final int end;
     private final String text;
 
-    public SpanPosition(String aCollectionId, String aDocumentId, int aCasId, String aType,
-            int aBegin, int aEnd, String aText, String aFeature, String aRole, int aLinkTargetBegin,
+    public SpanPosition(String aCollectionId, String aDocumentId, String aType, int aBegin,
+            int aEnd, String aText, String aFeature, String aRole, int aLinkTargetBegin,
             int aLinkTargetEnd, String aLinkTargetText, LinkCompareBehavior aLinkCompareBehavior)
     {
-        super(aCollectionId, aDocumentId, aCasId, aType, aFeature, aRole, aLinkTargetBegin,
-                aLinkTargetEnd, aLinkTargetText, aLinkCompareBehavior);
+        super(aCollectionId, aDocumentId, aType, aFeature, aRole, aLinkTargetBegin, aLinkTargetEnd,
+                aLinkTargetText, aLinkCompareBehavior);
         begin = aBegin;
         end = aEnd;
         text = aText;

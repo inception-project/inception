@@ -15,7 +15,7 @@
 // limitations under the License.
 
 [[sect_projects_sharing]]
-= Invite Links
+= 🧪 Invite Links
 
 ====
 CAUTION: Experimental feature. To use this functionality, you need to enable it first by adding `sharing.invites.enabled=true` to the `settings.properties` file (see the <<admin-guide.adoc#sect_settings, Admin Guide>>).

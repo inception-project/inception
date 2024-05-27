@@ -17,7 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.diam.editor.actions;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.toJsonString;
+import static de.tudarmstadt.ukp.inception.diam.editor.actions.CreateSpanAnnotationHandler.getRangeFromRequest;
+import static de.tudarmstadt.ukp.inception.support.json.JSONUtil.toJsonString;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -36,15 +37,12 @@ import de.tudarmstadt.ukp.inception.rendering.paging.Unit;
 
 class CreateSpanAnnotationHandlerTest
 {
-
-    private CreateSpanAnnotationHandler sut;
     private CAS cas;
     private AnnotatorState state;
 
     @BeforeEach
     void setup() throws Exception
     {
-        sut = new CreateSpanAnnotationHandler();
         cas = CasFactory.createText("This is a test.");
         state = new AnnotatorStateImpl(Mode.ANNOTATION);
         state.setVisibleUnits(asList(new Unit(0, 0, cas.getDocumentText().length())), 1);
@@ -62,7 +60,7 @@ class CreateSpanAnnotationHandlerTest
         params.setParameterValue(CreateSpanAnnotationHandler.PARAM_OFFSETS,
                 toJsonString(new CompactRangeList(new CompactRange(begin, end))));
 
-        var range = sut.getRangeFromRequest(state, params, cas);
+        var range = getRangeFromRequest(state, params, cas);
 
         assertThat(range.getBegin()).isEqualTo(0);
         assertThat(range.getEnd()).isEqualTo(cas.getDocumentText().length());
@@ -81,7 +79,7 @@ class CreateSpanAnnotationHandlerTest
         params.setParameterValue(CreateSpanAnnotationHandler.PARAM_OFFSETS,
                 toJsonString(new CompactRangeList(new CompactRange(begin, end))));
 
-        var range = sut.getRangeFromRequest(state, params, cas);
+        var range = getRangeFromRequest(state, params, cas);
 
         assertThat(range.getBegin()).isEqualTo(0);
         assertThat(range.getEnd()).isEqualTo(end);

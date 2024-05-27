@@ -69,9 +69,6 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.messaging.WebSocketStompClient;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryAutoConfiguration;
-import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.project.config.ProjectServiceAutoConfiguration;
@@ -80,13 +77,16 @@ import de.tudarmstadt.ukp.clarin.webanno.security.InceptionDaoAuthenticationProv
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
-import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.documents.api.RepositoryAutoConfiguration;
+import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
 import de.tudarmstadt.ukp.inception.documents.config.DocumentServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.project.export.config.ProjectExportServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.schema.config.AnnotationSchemaServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.support.findbugs.SuppressFBWarnings;
+import de.tudarmstadt.ukp.inception.support.logging.Logging;
+import de.tudarmstadt.ukp.inception.support.spring.ApplicationContextProvider;
 import de.tudarmstadt.ukp.inception.websocket.config.WebsocketAutoConfiguration;
 import de.tudarmstadt.ukp.inception.websocket.config.WebsocketConfig;
 import de.tudarmstadt.ukp.inception.websocket.config.WebsocketSecurityConfig;
@@ -189,16 +189,18 @@ class ExportServiceControllerImplTest
         var session = stompClient.connect(websocketUrl, sessionHandler).get(10, SECONDS);
 
         responseRecievedLatch.await(20, SECONDS);
+        sessionHandler.detach();
+
+        assertThat(messageRecieved).isFalse();
+        assertThat(sessionHandler.errorMsg).containsIgnoringCase("Failed to send message");
+        assertThat(errorRecieved).isTrue();
+
         try {
             session.disconnect();
         }
         catch (Exception e) {
             // Ignore exceptions during disconnect
         }
-
-        assertThat(messageRecieved).isFalse();
-        assertThat(sessionHandler.errorMsg).containsIgnoringCase("AccessDeniedException");
-        assertThat(errorRecieved).isTrue();
     }
 
     @SuppressFBWarnings("RV_RETURN_VALUE_IGNORED")
@@ -217,11 +219,17 @@ class ExportServiceControllerImplTest
         var session = stompClient.connect(websocketUrl, sessionHandler).get(10, SECONDS);
 
         responseRecievedLatch.await(20, SECONDS);
-        session.disconnect();
 
         assertThat(messageRecieved).isTrue();
         assertThat(sessionHandler.errorMsg).isNull();
         assertThat(errorRecieved).isFalse();
+
+        try {
+            session.disconnect();
+        }
+        catch (Exception e) {
+            // Ignore exceptions during disconnect
+        }
     }
 
     private final class SessionHandler
@@ -230,6 +238,7 @@ class ExportServiceControllerImplTest
         private final AtomicBoolean errorRecieved;
         private final AtomicBoolean messageRecieved;
         private final CountDownLatch responseRecievedLatch;
+        private boolean attached = true;
 
         private String errorMsg;
 
@@ -241,9 +250,18 @@ class ExportServiceControllerImplTest
             errorRecieved = aErrorRecieved;
         }
 
+        public void detach()
+        {
+            attached = false;
+        }
+
         @Override
         public void afterConnected(StompSession aSession, StompHeaders aConnectedHeaders)
         {
+            if (!attached) {
+                return;
+            }
+
             aSession.subscribe("/app" + NS_PROJECT + "/" + project.getId() + "/exports",
                     new StompFrameHandler()
                     {
@@ -257,8 +275,8 @@ class ExportServiceControllerImplTest
                         public void handleFrame(StompHeaders aHeaders, Object aPayload)
                         {
                             LOG.info("GOT MESSAGE: {}", aPayload);
-                            responseRecievedLatch.countDown();
                             messageRecieved.set(true);
+                            responseRecievedLatch.countDown();
                         }
                     });
         }
@@ -266,6 +284,10 @@ class ExportServiceControllerImplTest
         @Override
         public void handleFrame(StompHeaders aHeaders, Object aPayload)
         {
+            if (!attached) {
+                return;
+            }
+
             LOG.error("Error: {}", aHeaders.get("message"));
             errorMsg = aHeaders.getFirst("message");
             errorRecieved.set(true);
@@ -276,6 +298,10 @@ class ExportServiceControllerImplTest
         public void handleException(StompSession aSession, StompCommand aCommand,
                 StompHeaders aHeaders, byte[] aPayload, Throwable aException)
         {
+            if (!attached) {
+                return;
+            }
+
             LOG.error("Exception: {}", aException.getMessage(), aException);
             errorMsg = aException.getMessage();
             errorRecieved.set(true);
@@ -285,6 +311,10 @@ class ExportServiceControllerImplTest
         @Override
         public void handleTransportError(StompSession aSession, Throwable aException)
         {
+            if (!attached) {
+                return;
+            }
+
             LOG.error("Transport error: {}", aException.getMessage(), aException);
             errorMsg = aException.getMessage();
             errorRecieved.set(true);
@@ -327,9 +357,9 @@ class ExportServiceControllerImplTest
         @Bean
         public SecurityFilterChain wsFilterChain(HttpSecurity aHttp) throws Exception
         {
-            aHttp.antMatcher(WebsocketConfig.WS_ENDPOINT);
-            aHttp.authorizeRequests() //
-                    .antMatchers("/**").authenticated() //
+            aHttp.securityMatcher(WebsocketConfig.WS_ENDPOINT);
+            aHttp.authorizeHttpRequests() //
+                    .requestMatchers("/**").authenticated() //
                     .anyRequest().denyAll();
             aHttp.sessionManagement() //
                     .sessionCreationPolicy(STATELESS);

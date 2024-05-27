@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.preferences;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.logging.BaseLoggers.BOOT_LOG;
+import static de.tudarmstadt.ukp.inception.support.logging.BaseLoggers.BOOT_LOG;
 import static java.util.Collections.unmodifiableList;
 import static org.apache.commons.lang3.ClassUtils.getAbbreviatedName;
 

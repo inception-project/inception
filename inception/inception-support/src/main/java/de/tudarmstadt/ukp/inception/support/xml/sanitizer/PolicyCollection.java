@@ -31,15 +31,17 @@ public class PolicyCollection
     private final ElementAction defaultElementAction;
     private final AttributeAction defaultAttributeAction;
 
-    private boolean debug = false;
-
     private String name;
     private String version;
 
-    public PolicyCollection(Map<QName, ElementPolicy> aElementPolicies,
+    private boolean debug = false;
+    private String defaultNamespace;
+
+    public PolicyCollection(String aDefaultNamespace, Map<QName, ElementPolicy> aElementPolicies,
             Map<QName, AttributePolicy> aGlobalAttributePolicies,
             ElementAction aDefaultElementAction, AttributeAction aDefaultAttributeAction)
     {
+        defaultNamespace = aDefaultNamespace;
         elementPolicies = aElementPolicies;
         globalAttributePolicies = aGlobalAttributePolicies;
         defaultElementAction = aDefaultElementAction;
@@ -104,6 +106,11 @@ public class PolicyCollection
     public String getName()
     {
         return name;
+    }
+
+    public Optional<String> getDefaultNamespace()
+    {
+        return Optional.ofNullable(defaultNamespace);
     }
 
     public void setName(String aName)

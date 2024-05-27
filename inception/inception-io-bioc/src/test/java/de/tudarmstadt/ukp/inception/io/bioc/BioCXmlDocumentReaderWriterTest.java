@@ -17,12 +17,12 @@
  */
 package de.tudarmstadt.ukp.inception.io.bioc;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.FEAT_REL_SOURCE;
-import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.FEAT_REL_TARGET;
 import static de.tudarmstadt.ukp.inception.project.initializers.basic.BasicRelationLayerInitializer.BASIC_RELATION_LABEL_FEATURE_NAME;
 import static de.tudarmstadt.ukp.inception.project.initializers.basic.BasicRelationLayerInitializer.BASIC_RELATION_LAYER_NAME;
 import static de.tudarmstadt.ukp.inception.project.initializers.basic.BasicSpanLayerInitializer.BASIC_SPAN_LABEL_FEATURE_NAME;
 import static de.tudarmstadt.ukp.inception.project.initializers.basic.BasicSpanLayerInitializer.BASIC_SPAN_LAYER_NAME;
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.FEAT_REL_SOURCE;
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.FEAT_REL_TARGET;
 import static java.util.Arrays.asList;
 import static org.apache.uima.cas.CAS.TYPE_NAME_ANNOTATION;
 import static org.apache.uima.cas.CAS.TYPE_NAME_STRING;
@@ -30,19 +30,21 @@ import static org.apache.uima.fit.factory.AnalysisEngineFactory.createEngineDesc
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReaderDescription;
 import static org.apache.uima.fit.factory.TypeSystemDescriptionFactory.createTypeSystemDescription;
 import static org.apache.uima.util.CasCreationUtils.mergeTypeSystems;
+import static org.xmlunit.assertj3.XmlAssert.assertThat;
+import static org.xmlunit.builder.Input.fromFile;
 
 import java.io.File;
-import java.io.IOException;
 
 import org.apache.uima.UIMAFramework;
 import org.apache.uima.cas.CAS;
-import org.custommonkey.xmlunit.XMLAssert;
 import org.dkpro.core.testing.IOTestRunner;
 import org.dkpro.core.testing.TestOptions;
 import org.junit.jupiter.api.Test;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
 
+/**
+ * @deprecated Experimental code that was deprecated.
+ */
+@Deprecated
 public class BioCXmlDocumentReaderWriterTest
 {
     @Test
@@ -72,12 +74,8 @@ public class BioCXmlDocumentReaderWriterTest
 
     private void assertXmlEquals(File expected, File actual)
     {
-        try {
-            XMLAssert.assertXMLEqual(new InputSource(expected.getPath()),
-                    new InputSource(actual.getPath()));
-        }
-        catch (SAXException | IOException e) {
-            throw new RuntimeException(e);
-        }
+        assertThat(fromFile(expected.getPath())) //
+                .and(fromFile(actual.getPath())) //
+                .areSimilar();
     }
 }

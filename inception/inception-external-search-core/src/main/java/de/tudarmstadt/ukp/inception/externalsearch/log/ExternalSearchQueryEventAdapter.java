@@ -21,18 +21,18 @@ import java.io.IOException;
 
 import org.springframework.stereotype.Component;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.externalsearch.event.ExternalSearchQueryEvent;
 import de.tudarmstadt.ukp.inception.log.adapter.EventLoggingAdapter;
+import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 
 @Component
 public class ExternalSearchQueryEventAdapter
     implements EventLoggingAdapter<ExternalSearchQueryEvent>
 {
     @Override
-    public boolean accepts(Object aEvent)
+    public boolean accepts(Class<?> aEvent)
     {
-        return aEvent instanceof ExternalSearchQueryEvent;
+        return ExternalSearchQueryEvent.class.isAssignableFrom(aEvent);
     }
 
     @Override

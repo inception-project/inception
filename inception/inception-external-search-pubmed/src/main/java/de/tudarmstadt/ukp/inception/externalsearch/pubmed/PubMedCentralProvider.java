@@ -35,8 +35,6 @@ import javax.xml.stream.XMLStreamException;
 
 import org.apache.uima.UIMAException;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchProvider;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchResult;
 import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
@@ -45,7 +43,8 @@ import de.tudarmstadt.ukp.inception.externalsearch.pubmed.pmcoa.PmcOaClient;
 import de.tudarmstadt.ukp.inception.externalsearch.pubmed.traits.PubMedProviderTraits;
 import de.tudarmstadt.ukp.inception.io.bioc.BioCFormatSupport;
 import de.tudarmstadt.ukp.inception.io.bioc.model.BioCToCas;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil;
 
 public class PubMedCentralProvider
     implements ExternalSearchProvider<PubMedProviderTraits>
@@ -73,7 +72,7 @@ public class PubMedCentralProvider
             PubMedProviderTraits aTraits, String aQuery)
     {
         var date = Instant.now().atZone(ZoneOffset.UTC).minus(Duration.ofHours(24));
-        var query = aQuery + " AND \"free full text\"[filter] AND (\"0001/01/01\"[PubDate] : \""
+        var query = aQuery + " AND \"open access\"[filter] AND (\"0001/01/01\"[PubDate] : \""
                 + date.get(YEAR) + "/" + date.get(MONTH_OF_YEAR) + "/" + date.get(DAY_OF_MONTH)
                 + "\"[PubDate])";
 
@@ -81,10 +80,10 @@ public class PubMedCentralProvider
         var summaryResponse = entrezClient.esummary(DB_PUB_MED_CENTRAL,
                 searchResponse.getIdList().stream().mapToInt(i -> i).toArray());
 
-        List<ExternalSearchResult> results = new ArrayList<>();
+        var results = new ArrayList<ExternalSearchResult>();
         for (var summary : summaryResponse.getDocSumaries()) {
-            ExternalSearchResult result = new ExternalSearchResult(aDocumentRepository,
-                    DB_PUB_MED_CENTRAL, summary.getId() + EXT_XML);
+            var result = new ExternalSearchResult(aDocumentRepository, DB_PUB_MED_CENTRAL,
+                    summary.getId() + EXT_XML);
             result.setOriginalUri(
                     "https://www.ncbi.nlm.nih.gov/pmc/articles/" + PMCID_PREFIX + summary.getId());
             result.setOriginalSource(summary.source());
@@ -110,9 +109,7 @@ public class PubMedCentralProvider
             PubMedProviderTraits aTraits, String aCollectionId, String aDocumentId)
         throws IOException
     {
-        ExternalSearchResult result = new ExternalSearchResult(aRepository, aCollectionId,
-                aDocumentId);
-        return result;
+        return new ExternalSearchResult(aRepository, aCollectionId, aDocumentId);
     }
 
     @Override
@@ -123,7 +120,7 @@ public class PubMedCentralProvider
         var biocXml = pmcoaClient.bioc(aTraits, PMCID_PREFIX + stripExtension(aDocumentId));
 
         try {
-            Project project = aDocumentRepository.getProject();
+            var project = aDocumentRepository.getProject();
             var cas = WebAnnoCasUtil.createCas(schemaService.getFullProjectTypeSystem(project));
             new BioCToCas().parseXml(new ByteArrayInputStream(biocXml), cas.getJCas());
             return cas.getDocumentText();

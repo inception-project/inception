@@ -19,7 +19,7 @@ package de.tudarmstadt.ukp.inception.log.adapter;
 
 import org.springframework.stereotype.Component;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.event.ProjectImportEvent;
+import de.tudarmstadt.ukp.inception.project.api.event.ProjectImportEvent;
 
 @Deprecated
 @Component
@@ -27,9 +27,9 @@ public class ProjectImportEventAdapter
     implements EventLoggingAdapter<ProjectImportEvent>
 {
     @Override
-    public boolean accepts(Object aEvent)
+    public boolean accepts(Class<?> aEvent)
     {
-        return aEvent instanceof ProjectImportEvent;
+        return ProjectImportEvent.class.isAssignableFrom(aEvent);
     }
 
     @Override

@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.core.users;
 
 import org.apache.wicket.Page;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
@@ -28,6 +29,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.wicket.resource.Strings;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
 import wicket.contrib.input.events.key.KeyType;
 
+@Order(200)
 @Component
 public class ManageUsersPageMenuItem
     implements MenuItem
@@ -52,9 +54,6 @@ public class ManageUsersPageMenuItem
         return Strings.getString("manageusers.page.menuitem.label");
     }
 
-    /**
-     * Only admins and project managers can see this page.
-     */
     @Override
     public boolean applies()
     {

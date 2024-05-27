@@ -152,10 +152,7 @@
                           <wicket:message key="assignDocument" />
                         </div>
                         <div class="card-body flex-content" style="height: 200px">
-                          <div class="">
-                            <select wicket:id="documentsToAdd" class="form-control"
-                              style="display: inline-block"></select>
-                          </div>
+                          <select wicket:id="documentsToAdd"/>
                         </div>
                         <div class="card-footer">
                           <button class="btn btn-primary" wicket:id="confirm" type="button">
@@ -194,6 +191,15 @@
                     </div>
                     <div class="row form-row">
                       <label class="col-form-label col-sm-7">
+                        <wicket:message key="workflow" />
+                        <a wicket:id="workflowHelpLink"/>
+                      </label>
+                      <div class="col-sm-5">
+                        <select wicket:id="workflowType" class="form-select"/>
+                      </div>
+                    </div>
+                    <div class="row form-row">
+                      <label class="col-form-label col-sm-7">
                         <wicket:message key="confirmFinishingDocuments" />
                       </label>
                       <div class="col-sm-5">
@@ -204,11 +210,12 @@
                     </div>
                     <div class="row form-row">
                       <label class="col-form-label col-sm-7">
-                        <wicket:message key="workflow" />
-                        <a wicket:id="workflowHelpLink"/>
+                        <wicket:message key="documentResetAllowed" />
                       </label>
                       <div class="col-sm-5">
-                        <select wicket:id="workflowType" class="form-select"/>
+                        <div class="form-check">
+                          <input class="form-check-input" type="checkbox" wicket:id="documentResetAllowed">
+                        </div>
                       </div>
                     </div>
                     <div class="row form-row">

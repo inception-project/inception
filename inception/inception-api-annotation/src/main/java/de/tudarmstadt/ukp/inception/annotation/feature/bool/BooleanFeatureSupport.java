@@ -18,8 +18,8 @@
 package de.tudarmstadt.ukp.inception.annotation.feature.bool;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.unmodifiableList;
 
-import java.util.Collections;
 import java.util.List;
 
 import org.apache.uima.cas.CAS;
@@ -33,8 +33,8 @@ import de.tudarmstadt.ukp.inception.annotation.feature.misc.UimaPrimitiveFeature
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
-import de.tudarmstadt.ukp.inception.schema.feature.FeatureEditor;
-import de.tudarmstadt.ukp.inception.schema.feature.FeatureType;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureEditor;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureType;
 
 /**
  * <p>
@@ -57,7 +57,7 @@ public class BooleanFeatureSupport
     @Override
     public List<FeatureType> getSupportedFeatureTypes(AnnotationLayer aAnnotationLayer)
     {
-        return Collections.unmodifiableList(primitiveTypes);
+        return unmodifiableList(primitiveTypes);
     }
 
     @Override
@@ -72,7 +72,7 @@ public class BooleanFeatureSupport
             AnnotationActionHandler aHandler, final IModel<AnnotatorState> aStateModel,
             final IModel<FeatureState> aFeatureStateModel)
     {
-        AnnotationFeature feature = aFeatureStateModel.getObject().feature;
+        var feature = aFeatureStateModel.getObject().feature;
 
         if (!accepts(feature)) {
             throw unsupportedFeatureTypeException(feature);

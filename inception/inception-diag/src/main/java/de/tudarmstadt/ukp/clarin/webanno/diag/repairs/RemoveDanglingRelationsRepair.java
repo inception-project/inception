@@ -18,25 +18,25 @@
 package de.tudarmstadt.ukp.clarin.webanno.diag.repairs;
 
 import static de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctorUtils.getNonIndexedFSes;
-import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.FEAT_REL_SOURCE;
-import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.FEAT_REL_TARGET;
-import static de.tudarmstadt.ukp.clarin.webanno.support.logging.LogLevel.INFO;
+import static de.tudarmstadt.ukp.inception.support.logging.LogLevel.INFO;
 
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
+
+import javax.persistence.NoResultException;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
-import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.Repair.Safe;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationAdapter;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 
 /**
  * Removes relations that were not properly cleaned up after deleting a source/target span. Such
@@ -61,23 +61,40 @@ public class RemoveDanglingRelationsRepair
     @Override
     public void repair(Project aProject, CAS aCas, List<LogMessage> aMessages)
     {
-        Set<FeatureStructure> nonIndexed = getNonIndexedFSes(aCas);
+        var nonIndexed = getNonIndexedFSes(aCas);
 
-        Set<FeatureStructure> toDelete = new LinkedHashSet<>();
+        var toDelete = new LinkedHashSet<FeatureStructure>();
 
-        for (AnnotationFS fs : aCas.getAnnotationIndex()) {
-            Type t = fs.getType();
+        var adapterCache = new HashMap<String, TypeAdapter>();
 
-            Feature sourceFeat = t.getFeatureByBaseName(FEAT_REL_SOURCE);
-            Feature targetFeat = t.getFeatureByBaseName(FEAT_REL_TARGET);
+        for (var fs : aCas.getAnnotationIndex()) {
+            var t = fs.getType();
+
+            TypeAdapter adapter = null;
+            try {
+                adapter = adapterCache.computeIfAbsent(t.getName(),
+                        $ -> annotationService.findAdapter(aProject, fs));
+            }
+            catch (NoResultException e) {
+                // Ignore
+            }
+
+            if (!(adapter instanceof RelationAdapter)) {
+                continue;
+            }
+
+            var relationAdapter = (RelationAdapter) adapter;
+
+            var sourceFeat = t.getFeatureByBaseName(relationAdapter.getSourceFeatureName());
+            var targetFeat = t.getFeatureByBaseName(relationAdapter.getTargetFeatureName());
 
             // Is this a relation?
             if (!(sourceFeat != null && targetFeat != null)) {
                 continue;
             }
 
-            FeatureStructure source = fs.getFeatureValue(sourceFeat);
-            FeatureStructure target = fs.getFeatureValue(targetFeat);
+            var source = fs.getFeatureValue(sourceFeat);
+            var target = fs.getFeatureValue(targetFeat);
 
             // Are there null end-points or does it point to deleted spans?
             if (source == null || target == null || nonIndexed.contains(source)
@@ -85,9 +102,6 @@ public class RemoveDanglingRelationsRepair
                 toDelete.add(fs);
                 continue;
             }
-
-            RelationAdapter relationAdapter = (RelationAdapter) annotationService
-                    .findAdapter(aProject, fs);
 
             Feature relationSourceAttachFeature = null;
             Feature relationTargetAttachFeature = null;

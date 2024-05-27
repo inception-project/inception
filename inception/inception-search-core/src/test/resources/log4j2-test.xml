@@ -8,8 +8,7 @@
   </Appenders>
 
   <Loggers>
-    <Logger name="gate.mimir.index" level="DEBUG"/>
-    <Root level="warn">
+    <Root level="WARN">
       <AppenderRef ref="ConsoleAppender" />
     </Root>
   </Loggers>

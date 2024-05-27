@@ -29,12 +29,13 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaForm;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorRegistry;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.search.SearchService;
 import de.tudarmstadt.ukp.inception.search.model.AnnotationSearchState;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaForm;
 
 public class AnnotationSearchStatePanel
     extends Panel
@@ -46,6 +47,7 @@ public class AnnotationSearchStatePanel
     private @SpringBean AnnotationEditorRegistry annotationEditorRegistry;
     private @SpringBean PreferencesService preferencesService;
     private @SpringBean SearchService searchService;
+    private @SpringBean UserDao userService;
 
     public AnnotationSearchStatePanel(String aId, IModel<Project> aProjectModel)
     {
@@ -77,7 +79,8 @@ public class AnnotationSearchStatePanel
 
     private void actionRebuildIndex(AjaxRequestTarget aTarget)
     {
-        searchService.enqueueReindexTask(getModel().getObject(), "manager");
+        searchService.enqueueReindexTask(getModel().getObject(), userService.getCurrentUser(),
+                "Project settings");
         info("Starting index rebuild... this may take a while. You can work as usual but search "
                 + "results will only become available once the process is complete.");
         aTarget.addChildren(getPage(), IFeedback.class);

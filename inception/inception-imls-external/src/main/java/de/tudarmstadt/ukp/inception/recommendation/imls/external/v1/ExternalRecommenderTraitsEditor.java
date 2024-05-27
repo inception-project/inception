@@ -17,9 +17,14 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.external.v1;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapability.TRAINING_NOT_SUPPORTED;
+import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CHANGE_EVENT;
+import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
+import static java.util.Arrays.asList;
 
 import org.apache.wicket.markup.html.form.CheckBox;
+import org.apache.wicket.markup.html.form.DropDownChoice;
+import org.apache.wicket.markup.html.form.EnumChoiceRenderer;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.model.CompoundPropertyModel;
@@ -28,10 +33,11 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.validation.validator.UrlValidator;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.DefaultTrainableRecommenderTraitsEditor;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapability;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 
 public class ExternalRecommenderTraitsEditor
     extends DefaultTrainableRecommenderTraitsEditor
@@ -63,18 +69,29 @@ public class ExternalRecommenderTraitsEditor
             }
         };
 
-        TextField<String> remoteUrl = new TextField<>("remoteUrl");
+        var remoteUrl = new TextField<String>("remoteUrl");
         remoteUrl.setRequired(true);
         remoteUrl.add(new UrlValidator());
         form.add(remoteUrl);
 
-        CheckBox trainable = new CheckBox("trainable");
-        trainable.setOutputMarkupId(true);
-        trainable.add(new LambdaAjaxFormComponentUpdatingBehavior("change",
-                _target -> _target.add(getTrainingStatesChoice())));
-        form.add(trainable);
+        var verifyCertificates = new CheckBox("verifyCertificates");
+        verifyCertificates.setOutputMarkupId(true);
+        form.add(verifyCertificates);
 
-        getTrainingStatesChoice().add(visibleWhen(() -> trainable.getModelObject() == true));
+        var trainingCapability = new DropDownChoice<TrainingCapability>("trainingCapability");
+        trainingCapability.setOutputMarkupId(true);
+        trainingCapability.setChoiceRenderer(new EnumChoiceRenderer<>(trainingCapability));
+        trainingCapability.setChoices(asList(TrainingCapability.values()));
+        trainingCapability.add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT,
+                _target -> _target.add(getTrainingStatesChoice())));
+        form.add(trainingCapability);
+
+        getTrainingStatesChoice().add(
+                visibleWhen(() -> trainingCapability.getModelObject() != TRAINING_NOT_SUPPORTED));
+
+        var ranker = new CheckBox("ranker");
+        ranker.setOutputMarkupId(true);
+        form.add(ranker);
 
         add(form);
     }

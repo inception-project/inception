@@ -26,9 +26,8 @@ public enum PredictionCapability
     PREDICTION_USES_TEXT_ONLY,
 
     /**
-     * Predictions make take annotations into account. When there are changes to annotations, new
-     * predictions need to be generated. If the recommender is also trainable, then recommendations
-     * should only be generated once a training phase has completed.
+     * Predictions may take annotations into account. When there are changes to annotations, new
+     * predictions should be generated.
      */
     PREDICTION_USES_ANNOTATIONS;
 }

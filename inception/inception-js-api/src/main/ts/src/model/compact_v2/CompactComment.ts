@@ -34,10 +34,7 @@ export function unpackCompactComments (doc: AnnotatedText, ann: Annotation, raws
   for (const raw of raws) {
     const cooked = new Comment()
     cooked.targetId = ann.vid
-    cooked.target = doc.spans.get(cooked.targetId) || doc.relations.get(cooked.targetId)
-    if (!cooked.target) {
-      console.warn(`Target annotation [${cooked.targetId}] not found`)
-    }
+    cooked.target = ann
     cooked.comment = raw[0]
     if (raw[1]) {
       switch (raw[1]) {

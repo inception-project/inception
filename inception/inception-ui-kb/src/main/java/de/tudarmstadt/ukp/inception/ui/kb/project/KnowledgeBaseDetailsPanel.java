@@ -17,17 +17,14 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.project;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static de.tudarmstadt.ukp.inception.kb.RepositoryType.LOCAL;
 import static de.tudarmstadt.ukp.inception.kb.RepositoryType.REMOTE;
+import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 import static java.util.Collections.emptyMap;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMessage;
 
-import java.io.File;
 import java.io.FileInputStream;
-import java.io.InputStream;
 
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.form.Form;
@@ -45,15 +42,15 @@ import org.eclipse.rdf4j.repository.sparql.config.SPARQLRepositoryConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
-import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapModalDialog;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
-import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
+import de.tudarmstadt.ukp.inception.bootstrap.BootstrapModalDialog;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
 import de.tudarmstadt.ukp.inception.kb.event.KnowledgeBaseConfigurationChangedEvent;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
+import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxButton;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.inception.support.spring.ApplicationEventPublisherHolder;
 
 public class KnowledgeBaseDetailsPanel
     extends Panel
@@ -147,7 +144,7 @@ public class KnowledgeBaseDetailsPanel
         aTarget.add(this);
 
         try {
-            KnowledgeBaseWrapper kbw = kbwModel.getObject();
+            var kbw = kbwModel.getObject();
 
             // if dealing with a remote repository and a non-empty URL, get a new
             // RepositoryImplConfig for the new URL; otherwise keep using the existing config
@@ -167,8 +164,8 @@ public class KnowledgeBaseDetailsPanel
 
             if (kb.getType() == LOCAL) {
                 kbService.defineBaseProperties(kb);
-                for (Pair<String, File> f : kbw.getFiles()) {
-                    try (InputStream is = new FileInputStream(f.getValue())) {
+                for (var f : kbw.getFiles()) {
+                    try (var is = new FileInputStream(f.getValue())) {
                         kbService.importData(kb, f.getValue().getName(), is);
                         success("Imported: " + f.getKey());
                     }

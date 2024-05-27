@@ -17,12 +17,13 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
-import static de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil.selectFsByAddr;
+import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
+import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectFsByAddr;
 import static org.apache.wicket.RuntimeConfigurationType.DEVELOPMENT;
 
 import java.lang.invoke.MethodHandles;
 
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.panel.Panel;
@@ -104,14 +105,13 @@ public class AnnotationInfoPanel
     {
         Label label = new Label("selectedAnnotationType", LoadableDetachableModel.of(() -> {
             try {
-                AnnotationDetailEditorPanel editorPanel = findParent(
-                        AnnotationDetailEditorPanel.class);
+                var editorPanel = findParent(AnnotationDetailEditorPanel.class);
                 return String.valueOf(selectFsByAddr(editorPanel.getEditorCas(),
                         getModelObject().getSelection().getAnnotation().getId())).trim();
             }
             catch (Exception e) {
                 LOG.warn("Unable to render selected annotation type", e);
-                return "";
+                return ExceptionUtils.getRootCauseMessage(e);
             }
         }));
         label.setOutputMarkupPlaceholderTag(true);

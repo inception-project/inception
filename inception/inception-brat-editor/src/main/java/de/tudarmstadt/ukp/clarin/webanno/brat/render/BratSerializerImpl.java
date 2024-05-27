@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.render;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.schema.BratSchemaGeneratorImpl.getBratTypeName;
 import static de.tudarmstadt.ukp.clarin.webanno.model.ScriptDirection.RTL;
 import static java.util.Arrays.asList;
-import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
@@ -47,28 +46,24 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.AnnotationMarker;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Argument;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Comment;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Entity;
-import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Normalization;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Offsets;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Relation;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.SentenceComment;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.SentenceMarker;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.TextMarker;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.TrimUtils;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.inception.rendering.paging.Unit;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VAnnotationMarker;
-import de.tudarmstadt.ukp.inception.rendering.vmodel.VArc;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VComment;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VMarker;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VSentenceMarker;
-import de.tudarmstadt.ukp.inception.rendering.vmodel.VSpan;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VTextMarker;
 import de.tudarmstadt.ukp.inception.support.text.TextUtils;
+import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
 
 /**
  * Render documents using brat. This class converts a UIMA annotation representation into the object
@@ -101,7 +96,7 @@ public class BratSerializerImpl
     @Override
     public GetDocumentResponse render(VDocument aVDoc, RenderRequest aRequest)
     {
-        GetDocumentResponse aResponse = new GetDocumentResponse();
+        var aResponse = new GetDocumentResponse();
         aResponse.setRtlMode(RTL == aRequest.getState().getScriptDirection());
         aResponse.setFontZoom(aRequest.getState().getPreferences().getFontZoom());
         aResponse.setWindowBegin(aVDoc.getWindowBegin());
@@ -126,9 +121,9 @@ public class BratSerializerImpl
 
     private void renderLayers(GetDocumentResponse aResponse, VDocument aVDoc)
     {
-        for (AnnotationLayer layer : aVDoc.getAnnotationLayers()) {
-            for (VSpan vspan : aVDoc.spans(layer.getId())) {
-                List<Offsets> offsets = vspan.getRanges().stream() //
+        for (var layer : aVDoc.getAnnotationLayers()) {
+            for (var vspan : aVDoc.spans(layer.getId())) {
+                var offsets = vspan.getRanges().stream() //
                         .flatMap(range -> split(aResponse.getSentenceOffsets(), aVDoc.getText(),
                                 aVDoc.getWindowBegin(), range.getBegin(), range.getEnd()).stream())
                         .map(range -> {
@@ -138,11 +133,10 @@ public class BratSerializerImpl
                             range.setEnd(span[1]);
                             return range;
                         }) //
-                        .collect(toList());
+                        .toList();
 
-                Entity entity = new Entity(vspan.getVid(), getBratTypeName(vspan.getLayer()),
-                        offsets, vspan.getLabelHint(), vspan.getColorHint(),
-                        vspan.isActionButtons());
+                var entity = new Entity(vspan.getVid(), getBratTypeName(vspan.getLayer()), offsets,
+                        vspan.getLabelHint(), vspan.getColorHint(), vspan.isActionButtons());
                 if (!layer.isShowTextInHover()) {
                     // If the layer is configured not to display the span text in the popup, then
                     // we simply set the popup to the empty string here.
@@ -159,22 +153,13 @@ public class BratSerializerImpl
                         vspan.getRanges().get(vspan.getRanges().size() - 1).isClippedAtEnd());
 
                 aResponse.addEntity(entity);
-
-                vspan.getLazyDetails().stream()
-                        .map(d -> new Normalization(vspan.getVid(), d.getFeature(), d.getQuery()))
-                        .forEach(aResponse::addNormalization);
             }
 
-            for (VArc varc : aVDoc.arcs(layer.getId())) {
-
-                Relation arc = new Relation(varc.getVid(), getBratTypeName(varc.getLayer()),
+            for (var varc : aVDoc.arcs(layer.getId())) {
+                var arc = new Relation(varc.getVid(), getBratTypeName(varc.getLayer()),
                         getArgument(varc.getSource(), varc.getTarget()), varc.getLabelHint(),
                         varc.getColorHint());
                 aResponse.addRelation(arc);
-
-                varc.getLazyDetails().stream()
-                        .map(d -> new Normalization(varc.getVid(), d.getFeature(), d.getQuery()))
-                        .forEach(aResponse::addNormalization);
             }
         }
     }
@@ -202,9 +187,6 @@ public class BratSerializerImpl
             case INFO:
                 type = AnnotationComment.ANNOTATOR_NOTES;
                 break;
-            case YIELD:
-                type = "Yield";
-                break;
             default:
                 type = AnnotationComment.ANNOTATOR_NOTES;
                 break;
@@ -225,7 +207,8 @@ public class BratSerializerImpl
                 }
 
                 int index = sentenceIndexes.get(fs);
-                aResponse.addComment(new SentenceComment(index, type, vcomment.getComment()));
+                aResponse.addComment(
+                        new SentenceComment(VID.of(fs), index, type, vcomment.getComment()));
             }
             else {
                 aResponse.addComment(
@@ -324,8 +307,8 @@ public class BratSerializerImpl
             // If there is a sentence ID, then make it accessible to the user via a sentence-level
             // comment.
             if (isNotBlank(unit.getId())) {
-                aResponse.addComment(new SentenceComment(unitNum, Comment.ANNOTATOR_NOTES,
-                        String.format("Sentence ID: %s", unit.getId())));
+                aResponse.addComment(new SentenceComment(unit.getVid(), unitNum,
+                        Comment.ANNOTATOR_NOTES, String.format("Sentence ID: %s", unit.getId())));
             }
 
             unitNum++;

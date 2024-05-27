@@ -42,21 +42,20 @@ import de.tudarmstadt.ukp.inception.diam.editor.actions.MoveSpanAnnotationHandle
 import de.tudarmstadt.ukp.inception.diam.editor.actions.SavePreferences;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.ScrollToHandler;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.SelectAnnotationHandler;
+import de.tudarmstadt.ukp.inception.diam.editor.actions.ShowContextMenuHandler;
 import de.tudarmstadt.ukp.inception.diam.editor.lazydetails.LazyDetailsLookupService;
 import de.tudarmstadt.ukp.inception.diam.editor.lazydetails.LazyDetailsLookupServiceImpl;
 import de.tudarmstadt.ukp.inception.diam.model.compact.CompactSerializer;
 import de.tudarmstadt.ukp.inception.diam.model.compact.CompactSerializerImpl;
-import de.tudarmstadt.ukp.inception.diam.model.compactv2.CompactSerializerV2;
-import de.tudarmstadt.ukp.inception.diam.model.compactv2.CompactSerializerV2Impl;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorExtensionRegistry;
 import de.tudarmstadt.ukp.inception.preferences.ClientSiderUserPreferencesProviderRegistry;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
-import de.tudarmstadt.ukp.inception.rendering.config.AnnotationEditorProperties;
 import de.tudarmstadt.ukp.inception.rendering.pipeline.RenderingPipeline;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.serialization.VDocumentSerializerExtensionPoint;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
-import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupportRegistry;
-import de.tudarmstadt.ukp.inception.schema.layer.LayerSupportRegistry;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.config.AnnotationSchemaProperties;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistry;
 
 @Configuration
 public class DiamAutoConfig
@@ -88,9 +87,10 @@ public class DiamAutoConfig
     }
 
     @Bean
-    public CreateSpanAnnotationHandler createSpanAnnotationHandler()
+    public CreateSpanAnnotationHandler createSpanAnnotationHandler(
+            AnnotationSchemaService aSchemaService)
     {
-        return new CreateSpanAnnotationHandler();
+        return new CreateSpanAnnotationHandler(aSchemaService);
     }
 
     @Bean
@@ -101,9 +101,17 @@ public class DiamAutoConfig
     }
 
     @Bean
-    public CreateRelationAnnotationHandler createRelationAnnotationHandler()
+    public CreateRelationAnnotationHandler createRelationAnnotationHandler(
+            AnnotationSchemaService aSchemaService,
+            AnnotationSchemaProperties aAnnotationSchemaProperties)
     {
-        return new CreateRelationAnnotationHandler();
+        return new CreateRelationAnnotationHandler(aSchemaService, aAnnotationSchemaProperties);
+    }
+
+    @Bean
+    public ShowContextMenuHandler ShowContextMenuHandler()
+    {
+        return new ShowContextMenuHandler();
     }
 
     @Bean
@@ -158,15 +166,9 @@ public class DiamAutoConfig
     }
 
     @Bean
-    public CompactSerializer compactSerializer(AnnotationEditorProperties aProperties)
+    public CompactSerializer compactSerializer(AnnotationSchemaProperties aProperties)
     {
         return new CompactSerializerImpl(aProperties);
-    }
-
-    @Bean
-    public CompactSerializerV2 compactSerializerV2(AnnotationEditorProperties aProperties)
-    {
-        return new CompactSerializerV2Impl(aProperties);
     }
 
     @Bean

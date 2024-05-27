@@ -17,13 +17,12 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.relation;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.RELATION_TYPE;
-
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.model.IModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactoryImplBase;
@@ -52,9 +51,8 @@ public class StringMatchingRelationRecommenderFactory
     @Override
     public RecommendationEngine build(Recommender aRecommender)
     {
-        StringMatchingRelationRecommenderTraits traits = readTraits(aRecommender);
-        StringMatchingRelationRecommender recommender = new StringMatchingRelationRecommender(
-                aRecommender, traits);
+        var traits = readTraits(aRecommender);
+        var recommender = new StringMatchingRelationRecommender(aRecommender, traits);
 
         return recommender;
     }
@@ -72,7 +70,7 @@ public class StringMatchingRelationRecommenderFactory
             return false;
         }
 
-        return RELATION_TYPE.equals(aLayer.getType()) && !aLayer.isAllowStacking()
+        return RelationLayerSupport.TYPE.equals(aLayer.getType()) && !aLayer.isAllowStacking()
                 && (CAS.TYPE_NAME_STRING.equals(aFeature.getType()) || aFeature.isVirtualFeature());
     }
 

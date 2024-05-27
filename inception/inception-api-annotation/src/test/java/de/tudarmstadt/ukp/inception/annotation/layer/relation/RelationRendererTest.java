@@ -22,12 +22,11 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.ANY_OVERLAP;
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.NO_OVERLAP;
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.OVERLAP_ONLY;
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.STACKING_ONLY;
-import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.FEAT_REL_SOURCE;
-import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.FEAT_REL_TARGET;
-import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.RELATION_TYPE;
-import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.inception.rendering.vmodel.VCommentType.ERROR;
-import static de.tudarmstadt.ukp.inception.rendering.vmodel.VCommentType.YIELD;
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.FEAT_REL_SOURCE;
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.FEAT_REL_TARGET;
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.RELATION_TYPE;
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.SPAN_TYPE;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.util.JCasUtil.select;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -60,7 +59,7 @@ import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VComment;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
-import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 
 @ExtendWith(MockitoExtension.class)
 public class RelationRendererTest
@@ -131,34 +130,82 @@ public class RelationRendererTest
     }
 
     @Test
-    public void thatRelationCrossSentenceBehaviorOnRenderGeneratesErrors() throws Exception
+    void thatYieldWorks() throws Exception
     {
-        TokenBuilder<Token, Sentence> builder = new TokenBuilder<>(Token.class, Sentence.class);
-        builder.buildTokens(jcas, "This is a test .\nThis is sentence two .");
+        var builder = new TokenBuilder<>(Token.class, Sentence.class);
+        builder.buildTokens(jcas, "1 2 3 4 5 6 7 8 9");
 
-        for (Token t : select(jcas, Token.class)) {
-            POS pos = new POS(jcas, t.getBegin(), t.getEnd());
+        for (var t : select(jcas, Token.class)) {
+            var pos = new POS(jcas, t.getBegin(), t.getEnd());
             t.setPos(pos);
             pos.addToIndexes();
         }
 
-        RelationAdapter adapter = new RelationAdapter(layerSupportRegistry, featureSupportRegistry,
-                null, depLayer, FEAT_REL_TARGET, FEAT_REL_SOURCE,
+        var pos = jcas.select(POS.class).asList();
+
+        var adapter = new RelationAdapter(layerSupportRegistry, featureSupportRegistry, null,
+                depLayer, FEAT_REL_TARGET, FEAT_REL_SOURCE,
                 () -> asList(dependencyLayerGovernor, dependencyLayerDependent), behaviors);
 
-        List<POS> posAnnotations = new ArrayList<>(select(jcas, POS.class));
+        var sut = new RelationRenderer(adapter, layerSupportRegistry, featureSupportRegistry,
+                asList(new RelationCrossSentenceBehavior()));
+        sut.typeSystemInit(jcas.getTypeSystem());
 
-        POS source = posAnnotations.get(0);
-        POS target = posAnnotations.get(posAnnotations.size() - 1);
+        var rel1 = adapter.add(document, username, pos.get(0), pos.get(4), jcas.getCas());
+        assertThat(sut.renderYield(rel1)).hasValue("5");
+
+        var rel2 = adapter.add(document, username, pos.get(4), pos.get(5), jcas.getCas());
+        assertThat(sut.renderYield(rel1)).hasValue("5 6");
+        assertThat(sut.renderYield(rel2)).hasValue("6");
+
+        var rel3 = adapter.add(document, username, pos.get(4), pos.get(2), jcas.getCas());
+        assertThat(sut.renderYield(rel1)).hasValue("3 ... 5 6");
+        assertThat(sut.renderYield(rel2)).hasValue("6");
+        assertThat(sut.renderYield(rel3)).hasValue("3");
+
+        var rel4 = adapter.add(document, username, pos.get(2), pos.get(1), jcas.getCas());
+        assertThat(sut.renderYield(rel1)).hasValue("2 3 ... 5 6");
+        assertThat(sut.renderYield(rel2)).hasValue("6");
+        assertThat(sut.renderYield(rel3)).hasValue("2 3");
+        assertThat(sut.renderYield(rel4)).hasValue("2");
+
+        var rel5 = adapter.add(document, username, pos.get(5), pos.get(4), jcas.getCas());
+        assertThat(sut.renderYield(rel1)).hasValue("2 3 ... 5 6");
+        assertThat(sut.renderYield(rel2)).hasValue("2 3 ... 5 6");
+        assertThat(sut.renderYield(rel3)).hasValue("2 3");
+        assertThat(sut.renderYield(rel4)).hasValue("2");
+        assertThat(sut.renderYield(rel5)).hasValue("2 3 ... 5 6");
+    }
+
+    @Test
+    void thatRelationCrossSentenceBehaviorOnRenderGeneratesErrors() throws Exception
+    {
+        var builder = new TokenBuilder<>(Token.class, Sentence.class);
+        builder.buildTokens(jcas, "This is a test .\nThis is sentence two .");
+
+        for (var t : select(jcas, Token.class)) {
+            var pos = new POS(jcas, t.getBegin(), t.getEnd());
+            t.setPos(pos);
+            pos.addToIndexes();
+        }
+
+        var adapter = new RelationAdapter(layerSupportRegistry, featureSupportRegistry, null,
+                depLayer, FEAT_REL_TARGET, FEAT_REL_SOURCE,
+                () -> asList(dependencyLayerGovernor, dependencyLayerDependent), behaviors);
+
+        var posAnnotations = new ArrayList<>(select(jcas, POS.class));
+
+        var source = posAnnotations.get(0);
+        var target = posAnnotations.get(posAnnotations.size() - 1);
 
         depLayer.setCrossSentence(true);
         AnnotationFS dep = adapter.add(document, username, source, target, jcas.getCas());
 
         depLayer.setCrossSentence(false);
-        RelationRenderer sut = new RelationRenderer(adapter, layerSupportRegistry,
-                featureSupportRegistry, asList(new RelationCrossSentenceBehavior()));
+        var sut = new RelationRenderer(adapter, layerSupportRegistry, featureSupportRegistry,
+                asList(new RelationCrossSentenceBehavior()));
 
-        VDocument vdoc = new VDocument();
+        var vdoc = new VDocument();
         sut.render(jcas.getCas(), asList(), vdoc, 0, jcas.getDocumentText().length());
 
         assertThat(vdoc.comments()) //
@@ -168,28 +215,28 @@ public class RelationRendererTest
     }
 
     @Test
-    public void thatRelationOverlapBehaviorOnRenderGeneratesErrors() throws Exception
+    void thatRelationOverlapBehaviorOnRenderGeneratesErrors() throws Exception
     {
-        TokenBuilder<Token, Sentence> builder = new TokenBuilder<>(Token.class, Sentence.class);
+        var builder = new TokenBuilder<>(Token.class, Sentence.class);
         builder.buildTokens(jcas, "This is a test .\nThis is sentence two .");
 
-        for (Token t : select(jcas, Token.class)) {
-            POS pos = new POS(jcas, t.getBegin(), t.getEnd());
+        for (var t : select(jcas, Token.class)) {
+            var pos = new POS(jcas, t.getBegin(), t.getEnd());
             t.setPos(pos);
             pos.addToIndexes();
         }
 
-        RelationAdapter adapter = new RelationAdapter(layerSupportRegistry, featureSupportRegistry,
-                null, depLayer, FEAT_REL_TARGET, FEAT_REL_SOURCE,
+        var adapter = new RelationAdapter(layerSupportRegistry, featureSupportRegistry, null,
+                depLayer, FEAT_REL_TARGET, FEAT_REL_SOURCE,
                 () -> asList(dependencyLayerGovernor, dependencyLayerDependent), behaviors);
 
-        List<POS> posAnnotations = new ArrayList<>(select(jcas, POS.class));
+        var posAnnotations = new ArrayList<>(select(jcas, POS.class));
 
-        POS source = posAnnotations.get(0);
-        POS target = posAnnotations.get(1);
+        var source = posAnnotations.get(0);
+        var target = posAnnotations.get(1);
 
-        RelationRenderer sut = new RelationRenderer(adapter, layerSupportRegistry,
-                featureSupportRegistry, asList(new RelationOverlapBehavior()));
+        var sut = new RelationRenderer(adapter, layerSupportRegistry, featureSupportRegistry,
+                asList(new RelationOverlapBehavior()));
 
         // Create two annotations stacked annotations
         depLayer.setOverlapMode(ANY_OVERLAP);
@@ -201,8 +248,7 @@ public class RelationRendererTest
             VDocument vdoc = new VDocument();
             sut.render(jcas.getCas(), asList(), vdoc, 0, jcas.getDocumentText().length());
 
-            assertThat(vdoc.comments()).filteredOn(c -> !YIELD.equals(c.getCommentType()))
-                    .isEmpty();
+            assertThat(vdoc.comments()).filteredOn(c -> ERROR.equals(c.getCommentType())).isEmpty();
         }
 
         {
@@ -210,8 +256,7 @@ public class RelationRendererTest
             VDocument vdoc = new VDocument();
             sut.render(jcas.getCas(), asList(), vdoc, 0, jcas.getDocumentText().length());
 
-            assertThat(vdoc.comments()).filteredOn(c -> !YIELD.equals(c.getCommentType()))
-                    .isEmpty();
+            assertThat(vdoc.comments()).filteredOn(c -> ERROR.equals(c.getCommentType())).isEmpty();
 
         }
 
@@ -221,7 +266,7 @@ public class RelationRendererTest
             sut.render(jcas.getCas(), asList(), vdoc, 0, jcas.getDocumentText().length());
 
             assertThat(vdoc.comments()) //
-                    .filteredOn(c -> !YIELD.equals(c.getCommentType()))
+                    .filteredOn(c -> ERROR.equals(c.getCommentType()))
                     .usingRecursiveFieldByFieldElementComparator().contains( //
                             new VComment(dep1, ERROR, "Stacking is not permitted."),
                             new VComment(dep2, ERROR, "Stacking is not permitted."));
@@ -233,14 +278,14 @@ public class RelationRendererTest
             sut.render(jcas.getCas(), asList(), vdoc, 0, jcas.getDocumentText().length());
 
             assertThat(vdoc.comments()) //
-                    .filteredOn(c -> !YIELD.equals(c.getCommentType()))
+                    .filteredOn(c -> ERROR.equals(c.getCommentType()))
                     .usingRecursiveFieldByFieldElementComparator().contains( //
                             new VComment(dep1, ERROR, "Stacking is not permitted."),
                             new VComment(dep2, ERROR, "Stacking is not permitted."));
         }
 
         // Remove the stacked annotation and introduce one that is purely overlapping
-        adapter.delete(document, username, jcas.getCas(), new VID(dep2));
+        adapter.delete(document, username, jcas.getCas(), VID.of(dep2));
         depLayer.setOverlapMode(ANY_OVERLAP);
         AnnotationFS dep3 = adapter.add(document, username, source, posAnnotations.get(2),
                 jcas.getCas());
@@ -251,7 +296,7 @@ public class RelationRendererTest
             sut.render(jcas.getCas(), asList(), vdoc, 0, jcas.getDocumentText().length());
 
             assertThat(vdoc.comments()) //
-                    .filteredOn(c -> !YIELD.equals(c.getCommentType()))
+                    .filteredOn(c -> ERROR.equals(c.getCommentType()))
                     .usingRecursiveFieldByFieldElementComparator().contains( //
                             new VComment(dep1, ERROR, "Overlap is not permitted."),
                             new VComment(dep3, ERROR, "Overlap is not permitted."));

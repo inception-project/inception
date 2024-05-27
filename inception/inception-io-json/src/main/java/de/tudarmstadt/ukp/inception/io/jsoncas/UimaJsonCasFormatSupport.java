@@ -34,7 +34,7 @@ import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.uima.util.TypeSystemUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.schema.service.AnnotationSchemaServiceImpl;
@@ -43,7 +43,7 @@ public class UimaJsonCasFormatSupport
     implements FormatSupport
 {
     public static final String ID = "jsoncas";
-    public static final String NAME = "UIMA CAS JSON 0.4.0 (experimental)";
+    public static final String NAME = "UIMA CAS JSON 0.4.0";
 
     private final DocumentImportExportService documentImportExportService;
 

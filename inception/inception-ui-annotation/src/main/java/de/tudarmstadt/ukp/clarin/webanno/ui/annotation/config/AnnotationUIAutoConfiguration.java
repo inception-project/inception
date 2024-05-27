@@ -27,9 +27,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageMenuItem;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.closesession.CloseSessionActionBarExtension;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.AnnotationUndoActionBarExtension;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions.ChainAnnotationActionUndoSupport;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions.FeatureValueActionUndoSupport;
@@ -37,6 +37,8 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions.Re
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions.SpanAnnotationActionUndoSupport;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions.UndoableActionSupportRegistryImpl;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions.UndoableAnnotationActionSupport;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.layer.LayerVisibilitySidebarFactory;
+import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 
 @ConditionalOnWebApplication
 @Configuration
@@ -84,5 +86,17 @@ public class AnnotationUIAutoConfiguration
     public FeatureValueActionUndoSupport featureValueActionUndoSupport()
     {
         return new FeatureValueActionUndoSupport();
+    }
+
+    @Bean
+    public CloseSessionActionBarExtension closeSessionActionBarExtension()
+    {
+        return new CloseSessionActionBarExtension();
+    }
+
+    @Bean
+    public LayerVisibilitySidebarFactory layerVisibilitySidebarFactory()
+    {
+        return new LayerVisibilitySidebarFactory();
     }
 }

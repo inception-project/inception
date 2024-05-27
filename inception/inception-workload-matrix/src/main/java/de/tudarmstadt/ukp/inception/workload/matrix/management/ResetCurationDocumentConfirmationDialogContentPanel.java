@@ -20,7 +20,7 @@ package de.tudarmstadt.ukp.inception.workload.matrix.management;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.model.ResourceModel;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ChallengeResponseDialogContentPanel_ImplBase;
+import de.tudarmstadt.ukp.inception.bootstrap.dialog.ChallengeResponseDialogContentPanel_ImplBase;
 
 public class ResetCurationDocumentConfirmationDialogContentPanel
     extends ChallengeResponseDialogContentPanel_ImplBase

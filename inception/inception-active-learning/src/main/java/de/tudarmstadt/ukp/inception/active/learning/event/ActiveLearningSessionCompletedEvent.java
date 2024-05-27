@@ -20,7 +20,7 @@ package de.tudarmstadt.ukp.inception.active.learning.event;
 import org.springframework.context.ApplicationEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.event.HybridApplicationUIEvent;
+import de.tudarmstadt.ukp.inception.support.wicket.event.HybridApplicationUIEvent;
 
 public class ActiveLearningSessionCompletedEvent
     extends ApplicationEvent

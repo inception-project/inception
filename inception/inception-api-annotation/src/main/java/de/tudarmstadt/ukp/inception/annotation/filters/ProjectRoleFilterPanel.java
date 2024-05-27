@@ -32,8 +32,8 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.ResourceModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.SymbolLabel;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.inception.support.wicket.SymbolLabel;
 
 public class ProjectRoleFilterPanel
     extends Panel

@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.project;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.withProjectLogger;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
@@ -26,6 +25,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.Project.MIN_PROJECT_SLUG_L
 import static de.tudarmstadt.ukp.clarin.webanno.model.Project.isValidProjectSlug;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Project.isValidProjectSlugInitialCharacter;
 import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.REALM_PROJECT_PREFIX;
+import static de.tudarmstadt.ukp.inception.project.api.ProjectService.withProjectLogger;
 import static java.lang.Math.min;
 import static java.lang.String.join;
 import static java.util.Arrays.asList;
@@ -82,14 +82,6 @@ import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 import org.springframework.transaction.annotation.Transactional;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
-import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterProjectCreatedEvent;
-import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterProjectRemovedEvent;
-import de.tudarmstadt.ukp.clarin.webanno.api.event.BeforeProjectRemovedEvent;
-import de.tudarmstadt.ukp.clarin.webanno.api.event.ProjectPermissionsChangedEvent;
-import de.tudarmstadt.ukp.clarin.webanno.api.event.ProjectStateChangedEvent;
-import de.tudarmstadt.ukp.clarin.webanno.api.project.ProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -100,8 +92,17 @@ import de.tudarmstadt.ukp.clarin.webanno.project.config.ProjectServiceAutoConfig
 import de.tudarmstadt.ukp.clarin.webanno.security.Realm;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.io.FastIOUtils;
-import de.tudarmstadt.ukp.clarin.webanno.support.logging.BaseLoggers;
+import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
+import de.tudarmstadt.ukp.inception.project.api.ProjectInitializationRequest;
+import de.tudarmstadt.ukp.inception.project.api.ProjectInitializer;
+import de.tudarmstadt.ukp.inception.project.api.ProjectService;
+import de.tudarmstadt.ukp.inception.project.api.event.AfterProjectCreatedEvent;
+import de.tudarmstadt.ukp.inception.project.api.event.AfterProjectRemovedEvent;
+import de.tudarmstadt.ukp.inception.project.api.event.BeforeProjectRemovedEvent;
+import de.tudarmstadt.ukp.inception.project.api.event.ProjectPermissionsChangedEvent;
+import de.tudarmstadt.ukp.inception.project.api.event.ProjectStateChangedEvent;
+import de.tudarmstadt.ukp.inception.support.io.FastIOUtils;
+import de.tudarmstadt.ukp.inception.support.logging.BaseLoggers;
 
 /**
  * <p>
@@ -397,6 +398,37 @@ public class ProjectServiceImpl
                 .getSingleResult() > 0;
     }
 
+    @Override
+    @Transactional
+    public boolean hasRoleInAnyProject(User aUser, PermissionLevel aRole,
+            PermissionLevel... aMoreRoles)
+    {
+        return hasRoleInAnyProject(aUser.getUsername(), aRole, aMoreRoles);
+    }
+
+    @Override
+    @Transactional
+    public boolean hasRoleInAnyProject(String aUser, PermissionLevel aRole,
+            PermissionLevel... aMoreRoles)
+    {
+        Validate.notNull(aRole, "hasRoleInAnyProject() requires at least one role to check");
+
+        var roles = new LinkedHashSet<>();
+        roles.add(aRole);
+        if (aMoreRoles != null) {
+            roles.addAll(asList(aMoreRoles));
+        }
+
+        String query = String.join("\n", //
+                "SELECT COUNT(*) FROM ProjectPermission ", //
+                "WHERE user = :user AND level IN (:roles)");
+
+        return entityManager.createQuery(query, Long.class) //
+                .setParameter("user", aUser) //
+                .setParameter("roles", roles) //
+                .getSingleResult() > 0;
+    }
+
     @Deprecated
     @Override
     @Transactional
@@ -489,7 +521,7 @@ public class ProjectServiceImpl
 
                 entityManager.persist(permission);
 
-                log.info("Created permission [{}] for user {} on project {}", level, aUser,
+                log.info("Granted permission [{}] for user {} on project {}", level, aUser,
                         aProject);
             }
 
@@ -847,9 +879,9 @@ public class ProjectServiceImpl
 
     @Override
     @Transactional
-    public void initializeProject(Project aProject) throws IOException
+    public void initializeProject(ProjectInitializationRequest aRequest) throws IOException
     {
-        initializeProject(aProject, initializers.stream() //
+        initializeProject(aRequest, initializers.stream() //
                 .filter(ProjectInitializer::applyByDefault) //
                 .collect(Collectors.toList()));
     }
@@ -886,23 +918,24 @@ public class ProjectServiceImpl
 
     @Override
     @Transactional
-    public void initializeProject(Project aProject, List<ProjectInitializer> aInitializers)
+    public void initializeProject(ProjectInitializationRequest aRequest,
+            List<ProjectInitializer> aInitializers)
         throws IOException
     {
-        Set<Class<? extends ProjectInitializer>> allInits = new HashSet<>();
-        Set<Class<? extends ProjectInitializer>> applied = new HashSet<>();
-        for (ProjectInitializer initializer : initializers) {
+        var allInits = new HashSet<Class<? extends ProjectInitializer>>();
+        var applied = new HashSet<Class<? extends ProjectInitializer>>();
+        for (var initializer : initializers) {
             allInits.add(initializer.getClass());
-            if (initializer.alreadyApplied(aProject)) {
+            if (initializer.alreadyApplied(aRequest.getProject())) {
                 applied.add(initializer.getClass());
             }
         }
 
-        Deque<ProjectInitializer> toApply = new LinkedList<>(collectDependencies(aInitializers));
+        var toApply = new LinkedList<ProjectInitializer>(collectDependencies(aInitializers));
         Set<ProjectInitializer> initsDeferred = SetUtils.newIdentityHashSet();
         while (!toApply.isEmpty()) {
-            ProjectInitializer initializer = toApply.pop();
-            String initializerName = initializer.getName();
+            var initializer = toApply.pop();
+            var initializerName = initializer.getName();
 
             if (applied.contains(initializer.getClass())) {
                 log.debug("Skipping project initializer that was already applied: [{}]",
@@ -924,7 +957,7 @@ public class ProjectServiceImpl
 
             if (applied.containsAll(initializer.getDependencies())) {
                 log.debug("Applying project initializer: [{}]", initializerName);
-                initializer.configure(aProject);
+                initializer.configure(aRequest);
                 applied.add(initializer.getClass());
                 initsDeferred.clear();
             }

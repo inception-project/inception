@@ -29,7 +29,7 @@ import org.apache.wicket.markup.repeater.Item;
 import org.apache.wicket.model.IModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 
 public class SourceDocumentTableDeleteActionColumn
     extends AbstractColumn<SourceDocumentTableRow, SourceDocumentTableSortKeys>

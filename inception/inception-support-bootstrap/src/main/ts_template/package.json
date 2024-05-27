@@ -1,0 +1,21 @@
+{
+  "name": "@inception-project/${project.artifactId}",
+  "version": "${semver}",
+  "author": "INCEpTION Team",
+  "license": "Apache-2.0",
+  "private": true,
+  "homepage": "https://github.com/inception-project/inception#readme",
+  "bugs": {
+    "url": "https://github.com/inception-project/issues"
+  },
+  "scripts": {
+    "build": "node build.js"
+  },
+  "devDependencies": {
+    "cross-env": "${cross-env.version}",
+    "bootstrap": "${bootstrap.version}",
+    "esbuild": "${esbuild.version}",
+    "esbuild-sass-plugin": "${esbuild-sass-plugin.version}",
+    "sass": "${sass.version}"
+  }
+}

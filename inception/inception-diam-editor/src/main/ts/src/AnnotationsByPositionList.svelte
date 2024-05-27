@@ -18,90 +18,157 @@
      */
     import {
         AnnotatedText,
+        Annotation,
+        AnnotationOverEvent,
+        AnnotationOutEvent,
         DiamAjax,
         Offsets,
         Relation,
         Span,
-    } from "@inception-project/inception-js-api"
-    import LabelBadge from "./LabelBadge.svelte"
-    import SpanText from "./SpanText.svelte"
-    import { groupRelationsByPosition, groupSpansByPosition, uniqueOffsets } from "./Utils"
+    } from "@inception-project/inception-js-api";
+    import LabelBadge from "./LabelBadge.svelte";
+    import SpanText from "./SpanText.svelte";
+    import {
+    debounce,
+        groupRelationsByPosition,
+        groupSpansByPosition,
+        uniqueOffsets,
+    } from "./Utils";
 
-    export let ajaxClient: DiamAjax
-    export let data: AnnotatedText
+    export let ajaxClient: DiamAjax;
+    export let data: AnnotatedText;
 
-    let groupedSpans: Record<string, Span[]>
-    let groupedRelations: Record<string, Relation[]>
-    let sortedSpanOffsets: Offsets[]
+    let groupedSpans: Record<string, Span[]>;
+    let groupedRelations: Record<string, Relation[]>;
+    let sortedSpanOffsets: Offsets[];
+    let filter = '';
 
-    $: groupedSpans = groupSpansByPosition(data)
-    $: groupedRelations = groupRelationsByPosition(data)
-    $: sortedSpanOffsets = uniqueOffsets(data)  
+    $: groupedSpans = groupSpansByPosition(data);
+    $: groupedRelations = groupRelationsByPosition(data);
+    $: { 
+        sortedSpanOffsets = uniqueOffsets(data);
+        const normalizedFilter = filter.replace(/\s+/g, ' ').toLowerCase()
+        sortedSpanOffsets = sortedSpanOffsets.filter(offset => {
+            let coveredText = data.text?.substring(offset[0], offset[1]) || '';
+            return coveredText.replace(/\s+/g, ' ').toLowerCase().includes(normalizedFilter)
+        })
+    }
 
-    function scrollToSpan (span: Span) {
+    function scrollToSpan(span: Span) {
         ajaxClient.scrollTo({ id: span.vid, offset: span.offsets[0] });
     }
 
-    function scrollToRelation (relation: Relation) {
+    function scrollToRelation(relation: Relation) {
         ajaxClient.scrollTo({ id: relation.vid });
+    }
+
+    function mouseOverAnnotation(event: MouseEvent, annotation: Annotation) {
+        event.target.dispatchEvent(new AnnotationOverEvent(annotation, event));
+    }
+
+    function mouseOutAnnotation(event: MouseEvent, annotation: Annotation) {
+        event.target.dispatchEvent(new AnnotationOutEvent(annotation, event));
+    }
+
+    const updateFilter = debounce(newFilter => { filter = newFilter }, 300);
+
+    // Function to handle input changes
+    function handleFilterChange(event) {
+        updateFilter(event.target.value)
     }
 </script>
 
 {#if !data}
-<div class="mt-5 d-flex flex-column justify-content-center">
-    <div class="d-flex flex-row justify-content-center">
-        <div class="spinner-border text-muted" role="status">
-            <span class="sr-only">Loading...</span>
+    <div class="m-auto d-flex flex-column justify-content-center">
+        <div class="d-flex flex-row justify-content-center">
+            <div class="spinner-border text-muted" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
         </div>
     </div>
-</div>
 {:else}
-<div class="flex-content fit-child-snug">
-    {#if sortedSpanOffsets || sortedSpanOffsets?.length}
-        <ul class="scrolling flex-content list-group list-group-flush">
-            {#each sortedSpanOffsets as offsets}
-                {@const spans = groupedSpans[`${offsets}`]}
-                {@const firstSpan = spans[0]}
-                <li class="list-group-item list-group-item-action p-0">
-                    <!-- svelte-ignore a11y-click-events-have-key-events -->
-                    <div class="flex-grow-1 my-1 mx-2 overflow-hidden" on:click={() => scrollToSpan(firstSpan)}>
-                        <div class="float-end labels">
-                            {#each spans as span}
-                                <LabelBadge annotation={span} {ajaxClient} />
-                            {/each}
+    <div class="d-flex flex-row flex-wrap">
+        <input type="text" class="form-control rounded-0" on:input={handleFilterChange} placeholder="Filter"/>
+    </div>
+    <div class="flex-content fit-child-snug">
+        {#if sortedSpanOffsets || sortedSpanOffsets?.length}
+            <ul class="scrolling flex-content list-group list-group-flush">
+                {#each sortedSpanOffsets as offsets}
+                    {@const spans = groupedSpans[`${offsets}`]}
+                    {@const firstSpan = spans[0]}
+                    <!-- svelte-ignore a11y-mouse-events-have-key-events -->
+                    <li class="list-group-item list-group-item-action p-0">
+                        <!-- svelte-ignore a11y-click-events-have-key-events -->
+                        <div
+                            class="flex-grow-1 my-1 mx-2 overflow-hidden"
+                            on:click={() => scrollToSpan(firstSpan)}
+                        >
+                            <div class="float-end labels">
+                                {#each spans as span}
+                                    <span
+                                        on:mouseover={(ev) =>
+                                            mouseOverAnnotation(ev, span)}
+                                        on:mouseout={(ev) =>
+                                            mouseOutAnnotation(ev, span)}
+                                    >
+                                        <LabelBadge
+                                            annotation={span}
+                                            {ajaxClient}
+                                        />
+                                    </span>
+                                {/each}
+                            </div>
+                            <SpanText {data} span={firstSpan} />
                         </div>
-                        <SpanText {data} span={firstSpan} />
-                    </div>
-                </li>
+                    </li>
 
-                {@const relations = groupedRelations[`${offsets}`]}
-                {#if relations} 
-                    {#each relations as relation}
-                        {@const target = relation.arguments[1].target}
-                        <li class="list-group-item list-group-item-action p-0 d-flex">
-                            <div class="text-secondary bg-light-subtle border-end px-2 d-flex align-items-center">
-                                <span>↳</span>
-                            </div>
-                            <!-- svelte-ignore a11y-click-events-have-key-events -->
-                            <div class="flex-grow-1 my-1 mx-2 overflow-hidden" on:click={() => scrollToRelation(relation)}>
-                                <div class="float-end labels">
-                                    <LabelBadge annotation={relation} {ajaxClient} />
+                    {@const relations = groupedRelations[`${offsets}`]}
+                    {#if relations}
+                        {#each relations as relation}
+                            {@const target = relation.arguments[1].target}
+                            <!-- svelte-ignore a11y-mouse-events-have-key-events -->
+                            <li
+                                class="list-group-item list-group-item-action p-0 d-flex"
+                                on:mouseover={(ev) =>
+                                    mouseOverAnnotation(ev, relation)}
+                                on:mouseout={(ev) =>
+                                    mouseOutAnnotation(ev, relation)}
+                            >
+                                <div
+                                    class="text-secondary bg-light-subtle border-end px-2 d-flex align-items-center"
+                                >
+                                    <span>↳</span>
                                 </div>
+                                <!-- svelte-ignore a11y-click-events-have-key-events -->
+                                <div
+                                    class="flex-grow-1 my-1 mx-2 overflow-hidden"
+                                    on:click={() => scrollToRelation(relation)}
+                                >
+                                    <div class="float-end labels">
+                                        <LabelBadge
+                                            annotation={relation}
+                                            {ajaxClient}
+                                        />
+                                    </div>
 
-                                <SpanText {data} span={target} />
-                            </div>
-                        </li>
-                    {/each}
-                {/if}
-            {/each}
-        </ul>
-    {/if}
-</div>
+                                    <SpanText {data} span={target} />
+                                </div>
+                            </li>
+                        {/each}
+                    {/if}
+                {/each}
+            </ul>
+        {/if}
+    </div>
 {/if}
 
 <style lang="scss">
     .labels {
-        background: linear-gradient(to right, transparent 0px, var(--bs-body-bg) 15px);
+        background: linear-gradient(
+            to right,
+            transparent 0px,
+            var(--bs-body-bg) 15px
+        );
         padding-left: 20px;
         z-index: 10;
         position: relative;
@@ -111,4 +178,3 @@
         border-bottom-width: 1px;
     }
 </style>
-  

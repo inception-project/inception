@@ -27,9 +27,9 @@ import org.apache.uima.jcas.JCas;
 import org.dkpro.core.api.io.JCasResourceCollectionReader_ImplBase;
 import org.dkpro.core.api.resources.CompressionUtils;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Div;
 import de.tudarmstadt.ukp.inception.externalsearch.pubannotation.model.PubAnnotationDocumentSection;
+import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 
 public class PubAnnotationSectionsReader
     extends JCasResourceCollectionReader_ImplBase

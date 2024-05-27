@@ -21,8 +21,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.event.BeforeProjectRemovedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.ConstraintSet;
+import de.tudarmstadt.ukp.inception.project.api.event.BeforeProjectRemovedEvent;
 
 @Component
 public class ConstraintsServiceEventAdapter

@@ -14,7 +14,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-= Editable segmentation
+= 🧪 Editable segmentation
 
 ====
 CAUTION: Experimental feature. To use this functionality, you need to enable it first by adding `ui.sentence-layer-editable=true` to the `settings.properties` file (see the <<admin-guide.adoc#sect_settings_segmentation, Admin Guide>>).

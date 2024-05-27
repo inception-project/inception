@@ -23,13 +23,14 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.project.ProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.TagSetInitializer;
+import de.tudarmstadt.ukp.inception.project.api.ProjectInitializationRequest;
+import de.tudarmstadt.ukp.inception.project.api.ProjectInitializer;
 import de.tudarmstadt.ukp.inception.project.initializers.doclabeling.config.InceptionDocumentLabelingProjectInitializersAutoConfiguration;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
 /**
  * <p>
@@ -75,10 +76,12 @@ public class BasicDocumentLabelTagSetInitializer
     }
 
     @Override
-    public void configure(Project aProject) throws IOException
+    public void configure(ProjectInitializationRequest aRequest) throws IOException
     {
-        TagSet tagSet = new TagSet();
-        tagSet.setProject(aProject);
+        var project = aRequest.getProject();
+
+        var tagSet = new TagSet();
+        tagSet.setProject(project);
         tagSet.setName(getName());
         tagSet.setDescription("Document labels");
         tagSet.setLanguage("en");
@@ -86,7 +89,7 @@ public class BasicDocumentLabelTagSetInitializer
 
         annotationSchemaService.createTagSet(tagSet);
 
-        Tag[] tags = new Tag[3];
+        var tags = new Tag[3];
         for (int i = 0; i < tags.length; i++) {
             tags[i] = new Tag(tagSet, "Label " + (i + 1));
         }

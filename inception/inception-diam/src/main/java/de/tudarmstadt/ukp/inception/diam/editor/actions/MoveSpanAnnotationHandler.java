@@ -22,21 +22,19 @@ import static de.tudarmstadt.ukp.inception.diam.editor.actions.CreateSpanAnnotat
 import java.io.IOException;
 
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.request.Request;
 import org.springframework.core.annotation.Order;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
-import de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanAdapter;
+import de.tudarmstadt.ukp.inception.diam.editor.DiamAjaxBehavior;
 import de.tudarmstadt.ukp.inception.diam.editor.config.DiamAutoConfig;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.DefaultAjaxResponse;
-import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.model.Range;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
-import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
+import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
 
 /**
  * <p>
@@ -63,15 +61,19 @@ public class MoveSpanAnnotationHandler
     }
 
     @Override
-    public DefaultAjaxResponse handle(AjaxRequestTarget aTarget, Request aRequest)
+    public DefaultAjaxResponse handle(DiamAjaxBehavior aBehavior, AjaxRequestTarget aTarget, Request aRequest)
     {
         try {
-            AnnotationPageBase page = getPage();
-            CAS cas = page.getEditorCas();
+            var page = getPage();
+
+            page.ensureIsEditable();
+
+            var cas = page.getEditorCas();
             var vid = getVid(aRequest);
-            AnnotatorState state = getAnnotatorState();
+            var state = getAnnotatorState();
             var range = getRangeFromRequest(state, aRequest.getRequestParameters(), cas);
             moveSpan(aTarget, cas, vid, range);
+            page.writeEditorCas(cas);
             return new DefaultAjaxResponse(getAction(aRequest));
         }
         catch (Exception e) {
@@ -82,12 +84,11 @@ public class MoveSpanAnnotationHandler
     private void moveSpan(AjaxRequestTarget aTarget, CAS aCas, VID aVid, Range aRange)
         throws IOException, AnnotationException
     {
-        AnnotatorState state = getAnnotatorState();
+        var state = getAnnotatorState();
 
-        AnnotationFS annoFs = ICasUtil.selectAnnotationByAddr(aCas, aVid.getId());
+        var annoFs = ICasUtil.selectAnnotationByAddr(aCas, aVid.getId());
 
-        SpanAdapter adapter = (SpanAdapter) annotationService.findAdapter(state.getProject(),
-                annoFs);
+        var adapter = (SpanAdapter) annotationService.findAdapter(state.getProject(), annoFs);
 
         adapter.move(state.getDocument(), state.getUser().getUsername(), aCas, annoFs,
                 aRange.getBegin(), aRange.getEnd());

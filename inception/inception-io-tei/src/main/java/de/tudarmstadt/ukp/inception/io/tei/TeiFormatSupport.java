@@ -25,11 +25,11 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.collection.CollectionReaderDescription;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
-import org.dkpro.core.io.tei.TeiReader;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.io.tei.config.TeiFormatsAutoConfiguration;
+import de.tudarmstadt.ukp.inception.io.tei.dkprobackport.TeiReader;
 import de.tudarmstadt.ukp.inception.io.tei.dkprobackport.TeiWriter;
 
 /**
@@ -42,7 +42,7 @@ public class TeiFormatSupport
     implements FormatSupport
 {
     public static final String ID = "dkpro-core-tei";
-    public static final String NAME = "TEI";
+    public static final String NAME = "TEI P5 XML (legacy)";
 
     @Override
     public String getId()

@@ -17,9 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.SPAN_TYPE;
-import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static de.tudarmstadt.ukp.inception.rendering.vmodel.VID.NONE;
+import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 
@@ -53,20 +52,21 @@ import org.slf4j.LoggerFactory;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
-import de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.rendering.Renderer;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.selection.Selection;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
-import de.tudarmstadt.ukp.inception.schema.AttachedAnnotation;
-import de.tudarmstadt.ukp.inception.schema.AttachedAnnotation.Direction;
-import de.tudarmstadt.ukp.inception.schema.adapter.TypeAdapter;
-import de.tudarmstadt.ukp.inception.schema.adapter.TypeUtil;
-import de.tudarmstadt.ukp.inception.schema.layer.LayerSupport;
-import de.tudarmstadt.ukp.inception.schema.layer.LayerSupportRegistry;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.AttachedAnnotation;
+import de.tudarmstadt.ukp.inception.schema.api.AttachedAnnotation.Direction;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.inception.schema.api.feature.TypeUtil;
+import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupport;
+import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistry;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
 
 public class AttachedAnnotationListPanel
     extends Panel
@@ -99,7 +99,8 @@ public class AttachedAnnotationListPanel
         noAttachedAnnotationsInfo.add(visibleWhen(
                 () -> getModelObject() != null && getModelObject().getSelection().isSet()
                         && getModelObject().getSelection().getAnnotation().getId() != NONE
-                        && SPAN_TYPE.equals(getModelObject().getSelectedAnnotationLayer().getType())
+                        && SpanLayerSupport.TYPE
+                                .equals(getModelObject().getSelectedAnnotationLayer().getType())
                         && annotations.getObject().isEmpty()));
         add(noAttachedAnnotationsInfo);
 
@@ -150,22 +151,22 @@ public class AttachedAnnotationListPanel
             return Collections.emptyList();
         }
 
-        VID localVid = new VID(annoFs);
+        var localVid = VID.of(annoFs);
 
-        List<AttachedAnnotation> attachedAnnotations = new ArrayList<>();
+        var attachedAnnotations = new ArrayList<AttachedAnnotation>();
         attachedAnnotations.addAll(schemaService
                 .getAttachedRels(getModelObject().getSelectedAnnotationLayer(), annoFs));
         attachedAnnotations.addAll(schemaService
                 .getAttachedLinks(getModelObject().getSelectedAnnotationLayer(), annoFs));
 
-        Map<AnnotationLayer, List<AnnotationFeature>> featureCache = new HashMap<>();
-        Map<AnnotationLayer, Renderer> rendererCache = new HashMap<>();
-        Map<AnnotationLayer, TypeAdapter> adapterCache = new HashMap<>();
+        var featureCache = new HashMap<AnnotationLayer, List<AnnotationFeature>>();
+        var rendererCache = new HashMap<AnnotationLayer, Renderer>();
+        var adapterCache = new HashMap<AnnotationLayer, TypeAdapter>();
 
-        List<AttachedAnnotationInfo> result = new ArrayList<>();
-        for (AttachedAnnotation rel : attachedAnnotations) {
-            AnnotationLayer layer = rel.getLayer();
-            List<AnnotationFeature> features = featureCache.get(layer);
+        var result = new ArrayList<AttachedAnnotationInfo>();
+        for (var rel : attachedAnnotations) {
+            var layer = rel.getLayer();
+            var features = featureCache.get(layer);
             TypeAdapter adapter;
             Renderer renderer;
             if (features == null) {
@@ -194,20 +195,16 @@ public class AttachedAnnotationListPanel
                         features);
             }
 
-            String labelText = TypeUtil.getUiLabelText(renderedFeatures);
+            var labelText = TypeUtil.getUiLabelText(renderedFeatures);
 
-            if (isEmpty(labelText)) {
-                labelText = rel.getLayer().getUiName();
-            }
-            else {
-                labelText = rel.getLayer().getUiName() + ": " + labelText;
-            }
+            labelText = isEmpty(labelText) //
+                    ? rel.getLayer().getUiName() //
+                    : rel.getLayer().getUiName() + ": " + labelText;
 
-            AttachedAnnotationInfo i = new AttachedAnnotationInfo(layer, localVid,
-                    rel.getRelation() != null ? new VID(rel.getRelation()) : null,
-                    new VID(rel.getEndpoint()), labelText, rel.getEndpoint().getCoveredText(),
-                    rel.getDirection());
-            result.add(i);
+            result.add(new AttachedAnnotationInfo(layer, localVid,
+                    rel.getRelation() != null ? VID.of(rel.getRelation()) : null,
+                    VID.of(rel.getEndpoint()), labelText, rel.getEndpoint().getCoveredText(),
+                    rel.getDirection()));
         }
 
         return result;

@@ -23,7 +23,7 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.jcas.tcas.DocumentAnnotation;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
+import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 
 /**
  * Checks that there is only a single {@link DocumentAnnotation} (or subclass) in the CAS.

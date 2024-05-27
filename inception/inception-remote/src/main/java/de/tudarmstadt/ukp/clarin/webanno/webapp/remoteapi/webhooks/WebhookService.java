@@ -30,7 +30,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSession;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -51,14 +53,14 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.transaction.event.TransactionalEventListener;
 import org.springframework.web.client.RestTemplate;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.event.AnnotationStateChangeEvent;
-import de.tudarmstadt.ukp.clarin.webanno.api.event.DocumentStateChangedEvent;
-import de.tudarmstadt.ukp.clarin.webanno.api.event.ProjectStateChangedEvent;
-import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.config.RemoteApiAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.json.AnnotationStateChangeMessage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.json.DocumentStateChangeMessage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.json.ProjectStateChangeMessage;
+import de.tudarmstadt.ukp.inception.documents.event.AnnotationStateChangeEvent;
+import de.tudarmstadt.ukp.inception.documents.event.DocumentStateChangedEvent;
+import de.tudarmstadt.ukp.inception.project.api.event.ProjectStateChangedEvent;
+import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 
 /**
  * <p>
@@ -101,13 +103,16 @@ public class WebhookService
         restTemplateBuilder = aRestTemplateBuilder;
 
         TrustStrategy acceptingTrustStrategy = (X509Certificate[] chain, String authType) -> true;
+        HostnameVerifier verifier = (String aHostname, SSLSession aSession) -> true;
 
         SSLContext sslContext = org.apache.http.ssl.SSLContexts.custom()
                 .loadTrustMaterial(null, acceptingTrustStrategy).build();
 
-        SSLConnectionSocketFactory csf = new SSLConnectionSocketFactory(sslContext);
+        SSLConnectionSocketFactory csf = new SSLConnectionSocketFactory(sslContext, verifier);
 
-        CloseableHttpClient httpClient = HttpClients.custom().setSSLSocketFactory(csf).build();
+        CloseableHttpClient httpClient = HttpClients.custom() //
+                .setSSLSocketFactory(csf) //
+                .build();
 
         nonValidatingRequestFactory = new HttpComponentsClientHttpRequestFactory();
         nonValidatingRequestFactory.setHttpClient(httpClient);
@@ -209,7 +214,7 @@ public class WebhookService
         }
     }
 
-    private void sendNotification(String topic, Object message, Webhook hook) throws IOException
+    void sendNotification(String topic, Object message, Webhook hook) throws IOException
     {
         log.trace("Sending webhook message on topic [{}] to [{}]", topic, hook.getUrl());
 

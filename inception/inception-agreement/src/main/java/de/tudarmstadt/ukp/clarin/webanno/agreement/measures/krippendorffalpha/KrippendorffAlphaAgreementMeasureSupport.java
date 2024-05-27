@@ -19,25 +19,30 @@ package de.tudarmstadt.ukp.clarin.webanno.agreement.measures.krippendorffalpha;
 
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
-import org.springframework.stereotype.Component;
 
-import de.tudarmstadt.ukp.clarin.webanno.agreement.PairwiseAnnotationResult;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasure;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.DefaultAgreementTraits;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.AbstractCodingAgreementMeasureSupport;
-import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.CodingAgreementResult;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.FullCodingAgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
-@Component
 public class KrippendorffAlphaAgreementMeasureSupport
-    extends AbstractCodingAgreementMeasureSupport<KrippendorffAlphaAgreementTraits>
+    extends AbstractCodingAgreementMeasureSupport<DefaultAgreementTraits>
 {
+    public static final String ID = "KrippendorffAlpha";
+
     private final AnnotationSchemaService annotationService;
 
     public KrippendorffAlphaAgreementMeasureSupport(AnnotationSchemaService aAnnotationService)
     {
-        super();
         annotationService = aAnnotationService;
+    }
+
+    @Override
+    public String getId()
+    {
+        return ID;
     }
 
     @Override
@@ -47,22 +52,28 @@ public class KrippendorffAlphaAgreementMeasureSupport
     }
 
     @Override
-    public AgreementMeasure<PairwiseAnnotationResult<CodingAgreementResult>> createMeasure(
-            AnnotationFeature aFeature, KrippendorffAlphaAgreementTraits aTraits)
+    public AgreementMeasure<FullCodingAgreementResult> createMeasure(AnnotationFeature aFeature,
+            DefaultAgreementTraits aTraits)
     {
         return new KrippendorffAlphaAgreementMeasure(aFeature, aTraits, annotationService);
     }
 
     @Override
     public Panel createTraitsEditor(String aId, IModel<AnnotationFeature> aFeature,
-            IModel<KrippendorffAlphaAgreementTraits> aModel)
+            IModel<DefaultAgreementTraits> aModel)
     {
         return new KrippendorffAlphaAgreementTraitsEditor(aId, aFeature, aModel);
     }
 
     @Override
-    public KrippendorffAlphaAgreementTraits createTraits()
+    public DefaultAgreementTraits createTraits()
     {
-        return new KrippendorffAlphaAgreementTraits();
+        return new DefaultAgreementTraits();
+    }
+
+    @Override
+    public boolean isSupportingMoreThanTwoRaters()
+    {
+        return true;
     }
 }

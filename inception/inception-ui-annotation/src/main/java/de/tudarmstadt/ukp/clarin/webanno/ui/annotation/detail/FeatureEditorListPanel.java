@@ -17,16 +17,16 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel.handleException;
+import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import org.apache.uima.cas.CAS;
 import org.apache.wicket.Component;
 import org.apache.wicket.MetaDataKey;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -49,16 +49,17 @@ import com.googlecode.wicket.kendo.ui.form.TextField;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.support.DescriptionTooltipBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.util.CachingReuseStrategy;
 import de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureEditor;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
-import de.tudarmstadt.ukp.inception.schema.feature.FeatureEditor;
-import de.tudarmstadt.ukp.inception.schema.feature.FeatureEditorValueChangedEvent;
-import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupport;
-import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureEditor;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureEditorValueChangedEvent;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupport;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.inception.support.wicket.DescriptionTooltipBehavior;
 
 public class FeatureEditorListPanel
     extends Panel
@@ -163,8 +164,13 @@ public class FeatureEditorListPanel
     @OnEvent(stop = true)
     public void onFeatureUpdatedEvent(FeatureEditorValueChangedEvent aEvent)
     {
-        AjaxRequestTarget target = aEvent.getTarget();
-        actionFeatureUpdate(aEvent.getEditor(), target);
+        var target = aEvent.getTarget();
+        try {
+            actionFeatureUpdate(aEvent.getEditor(), target);
+        }
+        catch (Exception e) {
+            handleException(this, target, e);
+        }
     }
 
     private static final class IsSidebarAction
@@ -297,64 +303,62 @@ public class FeatureEditorListPanel
     }
 
     private void actionFeatureUpdate(Component aComponent, AjaxRequestTarget aTarget)
+        throws AnnotationException, IOException
     {
-        try {
-            findParent(AnnotationPageBase.class).ensureIsEditable();
+        findParent(AnnotationPageBase.class).ensureIsEditable();
 
-            AnnotatorState state = getModelObject();
+        var state = getModelObject();
 
-            if (state.getConstraints() != null) {
-                // Make sure we update the feature editor panel because due to
-                // constraints the contents may have to be re-rendered
-                aTarget.add(featureEditorContainer);
-            }
+        if (state.getConstraints() != null) {
+            // Make sure we update the feature editor panel because due to
+            // constraints the contents may have to be re-rendered
+            aTarget.add(featureEditorContainer);
+        }
 
-            // When updating an annotation in the sidebar, we must not force a
-            // re-focus after rendering
-            getRequestCycle().setMetaData(IsSidebarAction.INSTANCE, true);
+        // When updating an annotation in the sidebar, we must not force a
+        // re-focus after rendering
+        getRequestCycle().setMetaData(IsSidebarAction.INSTANCE, true);
 
-            AnnotationDetailEditorPanel editorPanel = findParent(AnnotationDetailEditorPanel.class);
-            CAS cas = editorPanel.getEditorCas();
+        var editorPanel = findParent(AnnotationDetailEditorPanel.class);
+        var cas = editorPanel.getEditorCas();
 
-            editorPanel.internalCommitAnnotation(aTarget, cas);
-            editorPanel.internalCompleteAnnotation(aTarget, cas);
-            state.clearArmedSlot();
+        var adapter = annotationService.getAdapter(state.getSelectedAnnotationLayer());
+        editorPanel.commitFeatureStates(aTarget, state.getDocument(), state.getUser().getUsername(),
+                cas, state.getSelection().getAnnotation().getId(), adapter,
+                state.getFeatureStates());
+        editorPanel.internalCompleteAnnotation(aTarget, cas);
+        state.clearArmedSlot();
 
-            // If the focus was lost during the update, then try force-focusing the
-            // next editor or the first one if we are on the last one.
-            if (aTarget.getLastFocusedElementId() == null) {
-                List<FeatureEditor> allEditors = new ArrayList<>();
-                visitChildren(FeatureEditor.class, (editor, visit) -> {
-                    allEditors.add((FeatureEditor) editor);
-                    visit.dontGoDeeper();
-                });
+        // If the focus was lost during the update, then try force-focusing the
+        // next editor or the first one if we are on the last one.
+        if (aTarget.getLastFocusedElementId() == null) {
+            var allEditors = new ArrayList<FeatureEditor>();
+            visitChildren(FeatureEditor.class, (editor, visit) -> {
+                allEditors.add((FeatureEditor) editor);
+                visit.dontGoDeeper();
+            });
 
-                if (!allEditors.isEmpty()) {
-                    FeatureEditor currentEditor = aComponent instanceof FeatureEditor
-                            ? (FeatureEditor) aComponent
-                            : aComponent.findParent(FeatureEditor.class);
+            if (!allEditors.isEmpty()) {
+                var currentEditor = aComponent instanceof FeatureEditor //
+                        ? (FeatureEditor) aComponent
+                        : aComponent.findParent(FeatureEditor.class);
 
-                    int i = allEditors.indexOf(currentEditor);
+                int i = allEditors.indexOf(currentEditor);
 
-                    // If the current editor cannot be found then move the focus to the
-                    // first editor
-                    if (i == -1) {
-                        autoFocus(aTarget, allEditors.get(0).getFocusComponent());
-                    }
-                    // ... if it is the last one, say at the last one
-                    else if (i >= (allEditors.size() - 1)) {
-                        autoFocus(aTarget,
-                                allEditors.get(allEditors.size() - 1).getFocusComponent());
-                    }
-                    // ... otherwise move the focus to the next editor
-                    else {
-                        autoFocus(aTarget, allEditors.get(i + 1).getFocusComponent());
-                    }
+                // If the current editor cannot be found then move the focus to the
+                // first editor
+                if (i == -1) {
+                    autoFocus(aTarget, allEditors.get(0).getFocusComponent());
+                }
+                // ... if it is the last one, say at the last one
+                else if (i >= (allEditors.size() - 1)) {
+                    autoFocus(aTarget, allEditors.get(allEditors.size() - 1).getFocusComponent());
+                }
+                // ... otherwise move the focus to the next editor
+                else {
+                    autoFocus(aTarget, allEditors.get(i + 1).getFocusComponent());
                 }
             }
-        }
-        catch (Exception e) {
-            handleException(this, aTarget, e);
         }
     }
 

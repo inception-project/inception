@@ -22,45 +22,113 @@ provides.
 
 .Editor overview
 |====
-| Editor | Feature flag
+| Editor | Feature flag | Spans | Relations/Links
 
-| brat (sentence-based)
+| <<sect_editors_brat_sentence_oriented>>
 | `ui.brat.enabled`
+| yes
+| yes
 
-| brat (line-oriented)
+| <<sect_editors_brat_line_oriented>>
 | `ui.brat.enabled`
+| yes
+| yes
 
-| brat (wrapping @ 120 chars)
+| <<sect_editors_brat_wrapping>>
 | `ui.brat.enabled`
+| yes
+| yes
 
-| brat (wrapping @ 120 chars)
-| `ui.brat.enabled`
+| <<sect_editors_html_apache_annotator>>
+| `ui.html-apacheannotator.enabled`
+| yes
+| no
 
-// | DIAM debugger
-// | `ui.diam-debugger.enabled`
-
-| HTML (AnnotatorJS)
+| <<sect_editors_html_annotatorjs>>
 | `ui.html-annotatorjs.enabled`
+| yes
+| no
 
-| HTML (RecogitoJS)
-| `ui.ui.html-recogitojs.enabled`
+| <<sect_editors_html_recogitojs>>
+| `ui.html-recogitojs.enabled`
+| yes
+| yes
 
-| PDF
+| <<sect_editors_pdf>>
 | `ui.pdf.enabled`
+| yes
+| yes
 
-| PDF (legacy)
+| <<sect_editors_pdf_legacy>>
 | `ui.pdf-legacy.enabled`
-
-// | Review editor
-// | `ui.review.enabled`
+| yes
+| yes
 |====
 
-== Editor plugins
+[[sect_editors_brat_sentence_oriented]]
+== Brat (sentence-oriented)
+
+A sentence-oriented presentation of the text using inter-linear annotations. This editor is useful for texts that have been externally segmented into sentences. It supports rendering span annotations, relations and link features. The editor uses a heavily improved version of the rendering engine of link:https://brat.nlplab.org[brat].
+
+[[sect_editors_brat_line_oriented]]
+== Brat (line-oriented)
+
+A line-oriented presentation of the text using inter-linear annotations. This editor is useful for texts formatted using line breaks. It supports rendering span annotations, relations and link features. The editor uses a heavily improved version of the rendering engine of link:https://brat.nlplab.org[brat].
+
+[[sect_editors_brat_wrapping]]
+== Brat (wrapping @ 120 chars)
+
+A line-oriented presentation of the text using inter-linear annotations that also wraps lines longer than 120 characters. This editor is useful for texts using consecutive line breaks mainly to indicate paragraph boundaries but that do not use line breaks within paragraphs. It supports rendering span annotations, relations and link features. The editor uses a heavily improved version of the rendering engine of link:https://brat.nlplab.org[brat].
+
+[[sect_editors_html_apache_annotator]]
+== 🧪 HTML (Apache Annotator)
+
+====
+CAUTION: Experimental feature. To use this functionality, you need to enable it first by adding `ui.html-apacheannotator.enabled` to the `settings.properties` file.
+====
+
+This editor renders documents imported using a XML/HTML-based format such as <<sect_formats_mhtml>> or <<sect_formats_htmldoc>>. It is build on top of link:https://annotator.apache.org[Apache Annotator]. It supports rendering span annotations but not relations or link features.
+
+[[sect_editors_html_annotatorjs]]
+== 🪦 HTML (AnnotatorJS)
+
+====
+CAUTION: Legacy feature. To use this functionality, you need to enable it first by adding `ui.html-annotatorjs.enabled` to the `settings.properties` file.
+====
+
+This editor renders documents imported using a XML/HTML-based format such as <<sect_formats_mhtml>> or <<sect_formats_htmldoc>>. It is build on top of link:http://annotatorjs.org[AnnotatorJS]. It supports rendering span annotations but not relations or link features.
+
+[[sect_editors_html_recogitojs]]
+== 🧪 HTML (RecogitoJS)
+
+====
+CAUTION: Experimental feature. To use this functionality, you need to enable it first by adding `ui.html-recogitojs.enabled` to the `settings.properties` file.
+====
+
+This editor renders documents imported using a XML/HTML-based format such as <<sect_formats_mhtml>> or <<sect_formats_htmldoc>>. It is build on top of link:https://github.com/recogito/recogito-js[RecogitoJS]. It supports rendering span annotations, relations and link features.
+
+[[sect_editors_pdf]]
+== PDF
+
+This editor allows annotating PDF documents. It is based on link:https://mozilla.github.io/pdf.js/[PDF.js] (version 2.x) and on the {product-name} PDF format support. The editor supports rendering span annotations, relations and link features. The editor uses a heavily improved version of the rendering engine of link:https://github.com/paperai/pdfanno[PDFAnno].
+
+[[sect_editors_pdf_legacy]]
+== 🪦 PDF (old)
+
+====
+CAUTION: Legacy feature. To use this functionality, you need to enable it first by adding `ui.pdf-legacy.enabled` to the `settings.properties` file.
+====
+
+This editor allows annotating PDF documents. It is based on link:https://mozilla.github.io/pdf.js/[PDF.js] (version 1.x) and on the legacy {product-name} PDF format support. The editor supports rendering span annotations, relations and link features. It is only kept for compatibility to allow users to view old annotation projects. The editor uses an improved version of the rendering engine of link:https://github.com/paperai/pdfanno[PDFAnno].
+
+[[sect_editors_plugins]]
+== 🧪 Editor plugins
 
 ====
 CAUTION: Experimental feature. The available plugins as well as their compatibility with a given
 version of {product-name} may change without further notice.
 ====
+
 In addition to these different editors, {product-name} has the ability to load editor plugins.
 Several of these can be found on your link:https://github.com/orgs/inception-project/repositories[website]. You can use these as inspirations to <<developer-guide.adoc#sect_external_editors,write your own>>.
 

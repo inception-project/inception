@@ -25,12 +25,11 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.active.learning.ActiveLearningServiceImpl.ActiveLearningUserState;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup.Delta;
-import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 
 public interface ActiveLearningService
 {
@@ -45,17 +44,8 @@ public interface ActiveLearningService
     List<SuggestionGroup<SpanSuggestion>> getSuggestions(User aDataOwner, AnnotationLayer aLayer);
 
     /**
-     * @param aRecord
-     *            record to check
-     * @return if the suggestions from which the given record was created (or an equivalent one) is
-     *         visible to the user. This is useful to check if the suggestion can be highlighted
-     *         when clicking on a history record.
-     */
-    boolean isSuggestionVisible(LearningRecord aRecord);
-
-    /**
-     * @return if the are any records of type {@link LearningRecordType#SKIPPED} in the history of
-     *         the given layer for the given user.
+     * @return if the are any records of type {@link LearningRecordUserAction#SKIPPED} in the
+     *         history of the given layer for the given user.
      * 
      * @param aDataOwner
      *            annotator user to check suggestions for
@@ -64,8 +54,8 @@ public interface ActiveLearningService
      */
     boolean hasSkippedSuggestions(String aSessionOwner, User aDataOwner, AnnotationLayer aLayer);
 
-    void hideRejectedOrSkippedAnnotations(String aSessionOwner, User aDataOwner, AnnotationLayer aLayer,
-            boolean aFilterSkippedRecommendation,
+    void hideRejectedOrSkippedAnnotations(String aSessionOwner, User aDataOwner,
+            AnnotationLayer aLayer, boolean aFilterSkippedRecommendation,
             List<SuggestionGroup<SpanSuggestion>> aSuggestionGroups);
 
     Optional<Delta<SpanSuggestion>> generateNextSuggestion(String aSessionOwner, User aDataOwner,
@@ -76,8 +66,10 @@ public interface ActiveLearningService
         throws IOException, AnnotationException;
 
     void rejectSpanSuggestion(String aSessionOwner, User aDataOwner, AnnotationLayer aLayer,
-            SpanSuggestion aSuggestion);
+            SpanSuggestion aSuggestion)
+        throws AnnotationException;
 
     void skipSpanSuggestion(String aSessionOwner, User aDataOwner, AnnotationLayer aLayer,
-            SpanSuggestion aSuggestion);
+            SpanSuggestion aSuggestion)
+        throws AnnotationException;
 }

@@ -28,11 +28,11 @@ import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.StopWatch;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
+import de.tudarmstadt.ukp.inception.support.StopWatch;
 
 public class Queries
 {
@@ -50,6 +50,7 @@ public class Queries
                     .withIdentifier(propertyIris) //
                     .retrieveLabel() //
                     .retrieveDescription() //
+                    .retrieveDeprecation() //
                     .retrieveDomainAndRange() //
                     .asHandles(aConn, true) //
                     .stream() //

@@ -17,11 +17,11 @@
  */
 package de.tudarmstadt.ukp.inception.search;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode.NO_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.UNMANAGED_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.UNMANAGED_NON_INITIALIZING_ACCESS;
-import static de.tudarmstadt.ukp.inception.search.SearchCasUtils.casToByteArray;
+import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.NO_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.inception.search.model.AnnotationSearchState.KEY_SEARCH_STATE;
+import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.casToByteArray;
 import static java.lang.System.currentTimeMillis;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.toList;
@@ -54,14 +54,6 @@ import org.springframework.context.event.EventListener;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionalEventListener;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterCasWrittenEvent;
-import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterDocumentCreatedEvent;
-import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterProjectRemovedEvent;
-import de.tudarmstadt.ukp.clarin.webanno.api.event.BeforeDocumentRemovedEvent;
-import de.tudarmstadt.ukp.clarin.webanno.api.event.BeforeProjectRemovedEvent;
-import de.tudarmstadt.ukp.clarin.webanno.api.event.LayerConfigurationChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -69,9 +61,17 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
+import de.tudarmstadt.ukp.inception.documents.event.AfterCasWrittenEvent;
+import de.tudarmstadt.ukp.inception.documents.event.AfterDocumentCreatedEvent;
+import de.tudarmstadt.ukp.inception.documents.event.BeforeDocumentRemovedEvent;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
+import de.tudarmstadt.ukp.inception.project.api.ProjectService;
+import de.tudarmstadt.ukp.inception.project.api.event.AfterProjectRemovedEvent;
+import de.tudarmstadt.ukp.inception.project.api.event.BeforeProjectRemovedEvent;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.event.LayerConfigurationChangedEvent;
 import de.tudarmstadt.ukp.inception.search.config.SearchServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.search.config.SearchServiceProperties;
 import de.tudarmstadt.ukp.inception.search.index.IndexRebuildRequiredException;
@@ -336,7 +336,7 @@ public class SearchServiceImpl
     private PooledIndex acquireIndex(long aProjectId)
     {
         synchronized (indexes) {
-            PooledIndex pooledIndex = indexes.get(aProjectId);
+            var pooledIndex = indexes.get(aProjectId);
 
             if (pooledIndex != null && pooledIndex.isTombstone()) {
                 throw new IllegalStateException("Project [" + aProjectId
@@ -364,7 +364,7 @@ public class SearchServiceImpl
             }
 
             if (pooledIndex == null) {
-                Index index = loadIndex(aProjectId);
+                var index = loadIndex(aProjectId);
                 pooledIndex = new PooledIndex(index);
                 indexes.put(aProjectId, pooledIndex);
             }
@@ -405,27 +405,27 @@ public class SearchServiceImpl
 
     @TransactionalEventListener(fallbackExecution = true)
     @Transactional
-    public void afterDocumentCreate(AfterDocumentCreatedEvent aEvent)
+    public void onAfterDocumentCreated(AfterDocumentCreatedEvent aEvent)
     {
         log.trace("Starting afterDocumentCreate");
 
         // Schedule new document index process
-        enqueueIndexDocument(aEvent.getDocument(), "afterDocumentCreate");
+        enqueueIndexDocument(aEvent.getDocument(), "onAfterDocumentCreated");
     }
 
     @TransactionalEventListener(fallbackExecution = true)
     @Transactional
-    public void afterAnnotationUpdate(AfterCasWrittenEvent aEvent)
+    public void onAfterCasWritten(AfterCasWrittenEvent aEvent)
     {
         log.trace("Starting afterAnnotationUpdate");
 
         // Schedule new document index process
-        enqueueIndexDocument(aEvent.getDocument(), "afterAnnotationUpdate");
+        enqueueIndexDocument(aEvent.getDocument(), "onAfterCasWritten");
     }
 
     @TransactionalEventListener(fallbackExecution = true)
     @Transactional
-    public void beforeLayerConfigurationChanged(LayerConfigurationChangedEvent aEvent)
+    public void onLayerConfigurationChanged(LayerConfigurationChangedEvent aEvent)
     {
         log.trace("Starting beforeLayerConfigurationChanged");
 
@@ -439,13 +439,14 @@ public class SearchServiceImpl
         }
 
         // Schedule re-indexing of the physical index
-        enqueueReindexTask(aEvent.getProject(), "beforeLayerConfigurationChanged");
+        enqueueReindexTask(aEvent.getProject(), "onLayerConfigurationChanged");
     }
 
     @Override
+    @Transactional
     public void indexDocument(SourceDocument aSourceDocument, byte[] aBinaryCas)
     {
-        try (PooledIndex pooledIndex = acquireIndex(aSourceDocument.getProject().getId())) {
+        try (var pooledIndex = acquireIndex(aSourceDocument.getProject().getId())) {
             indexDocument(pooledIndex, aSourceDocument, aBinaryCas);
         }
     }
@@ -453,11 +454,11 @@ public class SearchServiceImpl
     private void indexDocument(PooledIndex aPooledIndex, SourceDocument aSourceDocument,
             byte[] aBinaryCas)
     {
-        Project project = aSourceDocument.getProject();
+        var project = aSourceDocument.getProject();
 
         log.debug("Request to index source document {} in project {}", aSourceDocument, project);
 
-        Index index = aPooledIndex.get();
+        var index = aPooledIndex.get();
         // Index already initialized? If not, schedule full re-indexing job. This will also
         // index the given document, so we can stop here after scheduling the re-indexing.
         if (!index.getPhysicalIndex().isCreated()) {
@@ -681,13 +682,13 @@ public class SearchServiceImpl
             try (var indexContext = BulkIndexingContext.init(aProject, schemaService, true,
                     prefs)) {
                 // Index all the source documents
-                for (SourceDocument doc : sourceDocuments) {
+                for (var doc : sourceDocuments) {
                     if (isPerformNoMoreActions(pooledIndex)) {
                         return;
                     }
 
-                    try (CasStorageSession session = CasStorageSession.openNested()) {
-                        byte[] casAsByteArray = casToByteArray(documentService
+                    try (var session = CasStorageSession.openNested()) {
+                        var casAsByteArray = casToByteArray(documentService
                                 .createOrReadInitialCas(doc, casUpgradeMode, accessModeInitialCas));
                         indexDocument(pooledIndex, doc, casAsByteArray);
                     }
@@ -696,13 +697,13 @@ public class SearchServiceImpl
                 }
 
                 // Index all the annotation documents
-                for (AnnotationDocument doc : annotationDocuments) {
+                for (var doc : annotationDocuments) {
                     if (isPerformNoMoreActions(pooledIndex)) {
                         return;
                     }
 
-                    try (CasStorageSession session = CasStorageSession.openNested()) {
-                        byte[] casAsByteArray = casToByteArray(
+                    try (var session = CasStorageSession.openNested()) {
+                        var casAsByteArray = casToByteArray(
                                 documentService.readAnnotationCas(doc.getDocument(), doc.getUser(),
                                         casUpgradeMode, accessModeAnnotationCas));
                         indexDocument(pooledIndex, doc, "reindex", casAsByteArray);
@@ -736,7 +737,7 @@ public class SearchServiceImpl
                 return false;
             }
 
-            return !pooledIndex.get().getInvalid();
+            return !pooledIndex.get().isInvalid();
         }
     }
 
@@ -803,7 +804,7 @@ public class SearchServiceImpl
         }
 
         // Is the index valid?
-        if (aIndex.getInvalid()) {
+        if (aIndex.isInvalid()) {
             if (getIndexProgress(aProject).isEmpty()) {
                 // Index is invalid, schedule a new index rebuild
                 enqueueReindexTask(aProject, "ensureIndexIsCreatedAndValid[invalid]");
@@ -830,27 +831,48 @@ public class SearchServiceImpl
 
     private void invalidateIndexAndForceIndexRebuild(Project aProject, Index aIndex, String aReason)
     {
-        aIndex.setInvalid(true);
-        entityManager.merge(aIndex);
+        if (!aIndex.isInvalid()) {
+            // Only update flag and DB if necessary
+            aIndex.setInvalid(true);
+            entityManager.merge(aIndex);
+        }
 
         enqueueReindexTask(aProject, "ensureIndexIsCreatedAndValid[doesNotExist]");
     }
 
+    private void enqueueReindexTask(Project aProject, String aTrigger)
+    {
+        enqueue(ReindexTask.builder() //
+                .withProject(aProject) //
+                .withTrigger(aTrigger) //
+                .build());
+    }
+
     @Override
     @Transactional
-    public void enqueueReindexTask(Project aProject, String aTrigger)
+    public void enqueueReindexTask(Project aProject, User aUser, String aTrigger)
     {
-        enqueue(new ReindexTask(aProject, aTrigger));
+        enqueue(ReindexTask.builder() //
+                .withProject(aProject) //
+                .withSessionOwner(aUser) //
+                .withTrigger(aTrigger) //
+                .build());
     }
 
     private void enqueueIndexDocument(SourceDocument aSourceDocument, String aTrigger)
     {
-        enqueue(new IndexSourceDocumentTask(aSourceDocument, aTrigger));
+        enqueue(IndexSourceDocumentTask.builder() //
+                .withSourceDocument(aSourceDocument) //
+                .withTrigger(aTrigger) //
+                .build());
     }
 
     private void enqueueIndexDocument(AnnotationDocument aAnnotationDocument, String aTrigger)
     {
-        enqueue(new IndexAnnotationDocumentTask(aAnnotationDocument, aTrigger));
+        enqueue(IndexAnnotationDocumentTask.builder() //
+                .withAnnotationDocument(aAnnotationDocument) //
+                .withTrigger(aTrigger) //
+                .build());
     }
 
     /**

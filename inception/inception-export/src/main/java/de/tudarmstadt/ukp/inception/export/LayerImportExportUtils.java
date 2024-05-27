@@ -19,13 +19,15 @@ package de.tudarmstadt.ukp.inception.export;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.ANY_OVERLAP;
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.OVERLAP_ONLY;
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CHAIN_TYPE;
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.COREFERENCE_RELATION_FEATURE;
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.COREFERENCE_TYPE_FEATURE;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
 
@@ -45,9 +47,11 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.ValidationMode;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
-import de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.morph.MorphologicalFeatures;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 
 /**
  * This class contains Utility methods that can be used in Project settings.
@@ -85,18 +89,12 @@ public class LayerImportExportUtils
      */
     public static Map<String, String> getTagSetFromFile(String aLineSeparatedTags)
     {
-        Map<String, String> tags = new LinkedHashMap<>();
-        StringTokenizer st = new StringTokenizer(aLineSeparatedTags, "\n");
+        var tags = new LinkedHashMap<String, String>();
+        var st = new StringTokenizer(aLineSeparatedTags, "\n");
         while (st.hasMoreTokens()) {
-            StringTokenizer stTag = new StringTokenizer(st.nextToken(), "\t");
-            String tag = stTag.nextToken();
-            String description;
-            if (stTag.hasMoreTokens()) {
-                description = stTag.nextToken();
-            }
-            else {
-                description = tag;
-            }
+            var stTag = new StringTokenizer(st.nextToken(), "\t");
+            var tag = stTag.nextToken();
+            var description = stTag.hasMoreTokens() ? stTag.nextToken() : tag;
             tags.put(tag.trim(), description);
         }
         return tags;
@@ -114,7 +112,7 @@ public class LayerImportExportUtils
         aTagSet.setProject(aProject);
         aAnnotationService.createTagSet(aTagSet);
 
-        for (ExportedTag exTag : aExTagSet.getTags()) {
+        for (var exTag : aExTagSet.getTags()) {
             // do not duplicate tag
             if (aAnnotationService.existsTag(exTag.getName(), aTagSet)) {
                 continue;
@@ -137,6 +135,7 @@ public class LayerImportExportUtils
         aLayer.setCrossSentence(aExLayer.isCrossSentence());
         aLayer.setDescription(aExLayer.getDescription());
         aLayer.setEnabled(aExLayer.isEnabled());
+
         if (aExLayer.getAnchoringMode() == null) {
             // This allows importing old projects which did not have the anchoring mode yet
             aLayer.setAnchoringMode(aExLayer.isLockToTokenOffset(), aExLayer.isMultipleTokens());
@@ -144,6 +143,7 @@ public class LayerImportExportUtils
         else {
             aLayer.setAnchoringMode(aExLayer.getAnchoringMode());
         }
+
         if (aExLayer.getOverlapMode() == null) {
             // This allows importing old projects which did not have the overlap mode yet
             aLayer.setOverlapMode(aExLayer.isAllowStacking() ? ANY_OVERLAP : OVERLAP_ONLY);
@@ -151,6 +151,7 @@ public class LayerImportExportUtils
         else {
             aLayer.setOverlapMode(aExLayer.getOverlapMode());
         }
+
         aLayer.setValidationMode(aExLayer.getValidationMode() != null ? aExLayer.getValidationMode()
                 : ValidationMode.NEVER);
         aLayer.setLinkedListBehavior(aExLayer.isLinkedListBehavior());
@@ -158,6 +159,8 @@ public class LayerImportExportUtils
         aLayer.setName(aExLayer.getName());
         aLayer.setProject(aProject);
         aLayer.setType(aExLayer.getType());
+        aLayer.setTraits(aExLayer.getTraits());
+
         aAnnotationService.createOrUpdateLayer(aLayer);
     }
 
@@ -165,30 +168,29 @@ public class LayerImportExportUtils
             User user, Project project, InputStream aIS)
         throws IOException
     {
-        String text = IOUtils.toString(aIS, "UTF-8");
+        var text = IOUtils.toString(aIS, "UTF-8");
 
-        ExportedAnnotationLayer[] exLayers = JSONUtil.getObjectMapper().readValue(text,
-                ExportedAnnotationLayer[].class);
+        var exLayers = JSONUtil.getObjectMapper().readValue(text, ExportedAnnotationLayer[].class);
 
         // First import the layers but without setting the attach-layers/features
-        Map<String, ExportedAnnotationLayer> exLayersMap = new HashMap<>();
-        Map<String, AnnotationLayer> layersMap = new HashMap<>();
-        for (ExportedAnnotationLayer exLayer : exLayers) {
-            AnnotationLayer layer = createLayer(annotationService, project, exLayer);
+        var exLayersMap = new HashMap<String, ExportedAnnotationLayer>();
+        var layersMap = new HashMap<String, AnnotationLayer>();
+        for (var exLayer : exLayers) {
+            var layer = createLayer(annotationService, project, exLayer);
             layersMap.put(layer.getName(), layer);
             exLayersMap.put(layer.getName(), exLayer);
         }
 
         // Second fill in the attach-layer and attach-feature information
-        for (AnnotationLayer layer : layersMap.values()) {
-            ExportedAnnotationLayer exLayer = exLayersMap.get(layer.getName());
+        for (var layer : layersMap.values()) {
+            var exLayer = exLayersMap.get(layer.getName());
             if (exLayer.getAttachType() != null) {
                 layer.setAttachType(layersMap.get(exLayer.getAttachType().getName()));
             }
             if (exLayer.getAttachFeature() != null) {
-                AnnotationLayer attachLayer = annotationService.findLayer(project,
+                var attachLayer = annotationService.findLayer(project,
                         exLayer.getAttachType().getName());
-                AnnotationFeature attachFeature = annotationService
+                var attachFeature = annotationService
                         .getFeature(exLayer.getAttachFeature().getName(), attachLayer);
                 layer.setAttachFeature(attachFeature);
             }
@@ -213,8 +215,8 @@ public class LayerImportExportUtils
             setLayer(annotationService, layer, aExLayer, project);
         }
 
-        for (ExportedAnnotationFeature exfeature : aExLayer.getFeatures()) {
-            ExportedTagSet exTagset = exfeature.getTagSet();
+        for (var exfeature : aExLayer.getFeatures()) {
+            var exTagset = exfeature.getTagSet();
             TagSet tagSet = null;
             if (exTagset != null && annotationService.existsTagSet(exTagset.getName(), project)) {
                 tagSet = annotationService.getTagSet(exTagset.getName(), project);
@@ -231,7 +233,7 @@ public class LayerImportExportUtils
                 setFeature(annotationService, feature, exfeature, project);
                 continue;
             }
-            AnnotationFeature feature = new AnnotationFeature();
+            var feature = new AnnotationFeature();
             feature.setLayer(layer);
             feature.setTagset(tagSet);
             setFeature(annotationService, feature, exfeature, project);
@@ -249,16 +251,23 @@ public class LayerImportExportUtils
         aFeature.setVisible(aExFeature.isVisible());
         aFeature.setUiName(aExFeature.getUiName());
         aFeature.setProject(aProject);
-        aFeature.setLayer(aFeature.getLayer());
-        boolean isItChainedLayer = aFeature.getLayer().getType().equals(WebAnnoConst.CHAIN_TYPE);
-        if (isItChainedLayer && (aExFeature.getName().equals(WebAnnoConst.COREFERENCE_TYPE_FEATURE)
-                || aExFeature.getName().equals(WebAnnoConst.COREFERENCE_RELATION_FEATURE))) {
+        aFeature.setName(aExFeature.getName());
+
+        var isItChainedLayer = CHAIN_TYPE.equals(aFeature.getLayer().getType());
+        if (isItChainedLayer && (COREFERENCE_TYPE_FEATURE.equals(aExFeature.getName())
+                || COREFERENCE_RELATION_FEATURE.equals(aExFeature.getName()))) {
             aFeature.setType(CAS.TYPE_NAME_STRING);
+        }
+        else if (Token._TypeName.equals(aFeature.getLayer().getName())
+                && Token._FeatName_morph.equals(aExFeature.getName())
+                && Lemma._TypeName.equals(aExFeature.getType())) {
+            // See https://github.com/inception-project/inception/issues/3080
+            aFeature.setType(MorphologicalFeatures._TypeName);
         }
         else {
             aFeature.setType(aExFeature.getType());
         }
-        aFeature.setName(aExFeature.getName());
+
         aFeature.setRemember(aExFeature.isRemember());
         aFeature.setRequired(aExFeature.isRequired());
         aFeature.setHideUnconstraintFeature(aExFeature.isHideUnconstraintFeature());
@@ -268,6 +277,8 @@ public class LayerImportExportUtils
         aFeature.setLinkTypeRoleFeatureName(aExFeature.getLinkTypeRoleFeatureName());
         aFeature.setLinkTypeTargetFeatureName(aExFeature.getLinkTypeTargetFeatureName());
         aFeature.setTraits(aExFeature.getTraits());
+        aFeature.setCuratable(aExFeature.isCuratable());
+        aFeature.setRank(aExFeature.getRank());
 
         aAnnotationService.createFeature(aFeature);
     }
@@ -278,15 +289,15 @@ public class LayerImportExportUtils
             Map<AnnotationFeature, ExportedAnnotationFeature> aFeatureToExFeature,
             AnnotationLayer aLayer, AnnotationSchemaService aAnnotationService)
     {
-        ExportedAnnotationLayer exLayer = new ExportedAnnotationLayer();
+        var exLayer = new ExportedAnnotationLayer();
         exLayer.setAllowStacking(aLayer.isAllowStacking());
+        exLayer.setLockToTokenOffset(AnchoringMode.SINGLE_TOKEN.equals(aLayer.getAnchoringMode()));
+        exLayer.setMultipleTokens(AnchoringMode.TOKENS.equals(aLayer.getAnchoringMode()));
         exLayer.setBuiltIn(aLayer.isBuiltIn());
         exLayer.setReadonly(aLayer.isReadonly());
         exLayer.setCrossSentence(aLayer.isCrossSentence());
         exLayer.setDescription(aLayer.getDescription());
         exLayer.setEnabled(aLayer.isEnabled());
-        exLayer.setLockToTokenOffset(AnchoringMode.SINGLE_TOKEN.equals(aLayer.getAnchoringMode()));
-        exLayer.setMultipleTokens(AnchoringMode.TOKENS.equals(aLayer.getAnchoringMode()));
         exLayer.setOverlapMode(aLayer.getOverlapMode());
         exLayer.setAnchoringMode(aLayer.getAnchoringMode());
         exLayer.setValidationMode(aLayer.getValidationMode());
@@ -295,14 +306,15 @@ public class LayerImportExportUtils
         exLayer.setProjectName(aLayer.getProject().getName());
         exLayer.setType(aLayer.getType());
         exLayer.setUiName(aLayer.getUiName());
+        exLayer.setTraits(aLayer.getTraits());
 
         if (aLayerToExLayer != null) {
             aLayerToExLayer.put(aLayer, exLayer);
         }
 
-        List<ExportedAnnotationFeature> exFeatures = new ArrayList<>();
-        for (AnnotationFeature feature : aAnnotationService.listAnnotationFeature(aLayer)) {
-            ExportedAnnotationFeature exFeature = new ExportedAnnotationFeature();
+        var exFeatures = new ArrayList<ExportedAnnotationFeature>();
+        for (var feature : aAnnotationService.listAnnotationFeature(aLayer)) {
+            var exFeature = new ExportedAnnotationFeature();
             exFeature.setDescription(feature.getDescription());
             exFeature.setEnabled(feature.isEnabled());
             exFeature.setRemember(feature.isRemember());
@@ -319,18 +331,20 @@ public class LayerImportExportUtils
             exFeature.setLinkTypeRoleFeatureName(feature.getLinkTypeRoleFeatureName());
             exFeature.setLinkTypeTargetFeatureName(feature.getLinkTypeTargetFeatureName());
             exFeature.setTraits(feature.getTraits());
+            exFeature.setCuratable(feature.isCuratable());
+            exFeature.setRank(feature.getRank());
 
             if (feature.getTagset() != null) {
-                TagSet tagSet = feature.getTagset();
-                ExportedTagSet exTagSet = new ExportedTagSet();
+                var tagSet = feature.getTagset();
+                var exTagSet = new ExportedTagSet();
                 exTagSet.setDescription(tagSet.getDescription());
                 exTagSet.setLanguage(tagSet.getLanguage());
                 exTagSet.setName(tagSet.getName());
                 exTagSet.setCreateTag(tagSet.isCreateTag());
 
-                List<ExportedTag> exportedTags = new ArrayList<>();
-                for (Tag tag : aAnnotationService.listTags(tagSet)) {
-                    ExportedTag exTag = new ExportedTag();
+                var exportedTags = new ArrayList<ExportedTag>();
+                for (var tag : aAnnotationService.listTags(tagSet)) {
+                    var exTag = new ExportedTag();
                     exTag.setDescription(tag.getDescription());
                     exTag.setName(tag.getName());
                     exportedTags.add(exTag);
@@ -343,6 +357,7 @@ public class LayerImportExportUtils
                 aFeatureToExFeature.put(feature, exFeature);
             }
         }
+
         exLayer.setFeatures(exFeatures);
         return exLayer;
     }

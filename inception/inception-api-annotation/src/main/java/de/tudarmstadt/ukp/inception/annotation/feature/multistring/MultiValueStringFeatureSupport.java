@@ -18,15 +18,14 @@
 package de.tudarmstadt.ukp.inception.annotation.feature.multistring;
 
 import static java.util.Arrays.asList;
-import static java.util.Collections.emptyList;
-import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.uima.cas.CAS.TYPE_NAME_STRING_ARRAY;
 
-import java.io.IOException;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -35,6 +34,7 @@ import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.StringArrayFS;
 import org.apache.uima.fit.util.FSUtil;
+import org.apache.uima.jcas.cas.StringArray;
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
@@ -44,20 +44,19 @@ import org.slf4j.LoggerFactory;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
-import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.annotation.feature.misc.UimaPrimitiveFeatureSupport_ImplBase;
 import de.tudarmstadt.ukp.inception.annotation.feature.string.StringFeatureSupportProperties;
 import de.tudarmstadt.ukp.inception.annotation.feature.string.StringFeatureSupportPropertiesImpl;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
-import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
-import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetailQuery;
-import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetailResult;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
-import de.tudarmstadt.ukp.inception.schema.adapter.IllegalFeatureValueException;
-import de.tudarmstadt.ukp.inception.schema.feature.FeatureEditor;
-import de.tudarmstadt.ukp.inception.schema.feature.FeatureType;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetail;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetailGroup;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.IllegalFeatureValueException;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureEditor;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureType;
 
 /**
  * <p>
@@ -132,6 +131,29 @@ public class MultiValueStringFeatureSupport
     }
 
     @Override
+    public Serializable wrapFeatureValue(AnnotationFeature aFeature, CAS aCAS, Object aValue)
+    {
+        if (aValue == null) {
+            return null;
+        }
+
+        if (aValue instanceof StringArray value) {
+            return new ArrayList<>(asList(value.toArray()));
+        }
+
+        if (aValue instanceof String value) {
+            return new ArrayList<>(asList(value));
+        }
+
+        if (aValue instanceof Collection) {
+            return (Serializable) aValue;
+        }
+
+        throw new IllegalArgumentException(
+                "Unable to handle value [" + aValue + "] of type [" + aValue.getClass() + "]");
+    }
+
+    @Override
     public void setFeatureValue(CAS aCas, AnnotationFeature aFeature, int aAddress, Object aValue)
         throws IllegalFeatureValueException
     {
@@ -139,9 +161,9 @@ public class MultiValueStringFeatureSupport
             throw unsupportedFeatureTypeException(aFeature);
         }
 
-        FeatureStructure fs = getFS(aCas, aFeature, aAddress);
-        List<String> values = unwrapFeatureValue(aFeature, fs.getCAS(), aValue);
-        if (values == null) {
+        var fs = getFS(aCas, aFeature, aAddress);
+        var values = unwrapFeatureValue(aFeature, fs.getCAS(), aValue);
+        if (values == null || values.isEmpty()) {
             FSUtil.setFeature(fs, aFeature.getName(), (Collection<String>) null);
             return;
         }
@@ -151,7 +173,7 @@ public class MultiValueStringFeatureSupport
         }
 
         // Create a new array if size differs otherwise re-use existing one
-        StringArrayFS array = FSUtil.getFeature(fs, aFeature.getName(), StringArrayFS.class);
+        var array = FSUtil.getFeature(fs, aFeature.getName(), StringArrayFS.class);
         if (array == null || (array.size() != values.size())) {
             array = fs.getCAS().createStringArrayFS(values.size());
         }
@@ -160,6 +182,46 @@ public class MultiValueStringFeatureSupport
         array.copyFromArray(values.toArray(new String[values.size()]), 0, 0, values.size());
 
         fs.setFeatureValue(fs.getType().getFeatureByBaseName(aFeature.getName()), array);
+    }
+
+    @Override
+    public void pushFeatureValue(CAS aCas, AnnotationFeature aFeature, int aAddress, Object aValue)
+        throws AnnotationException
+    {
+        if (!accepts(aFeature)) {
+            throw unsupportedFeatureTypeException(aFeature);
+        }
+
+        var fs = getFS(aCas, aFeature, aAddress);
+        var newValues = unwrapFeatureValue(aFeature, fs.getCAS(), aValue);
+        if (newValues == null || newValues.isEmpty()) {
+            return;
+        }
+
+        for (String value : newValues) {
+            schemaService.createMissingTag(aFeature, value);
+        }
+
+        var feature = fs.getType().getFeatureByBaseName(aFeature.getName());
+        var oldValues = (Collection<String>) wrapFeatureValue(aFeature, fs.getCAS(),
+                fs.getFeatureValue(feature));
+
+        var mergedValues = new LinkedHashSet<String>();
+        if (oldValues != null) {
+            mergedValues.addAll(oldValues);
+        }
+        mergedValues.addAll(newValues);
+
+        // Create a new array if size differs otherwise re-use existing one
+        var array = FSUtil.getFeature(fs, aFeature.getName(), StringArrayFS.class);
+        if (array == null || (array.size() != mergedValues.size())) {
+            array = fs.getCAS().createStringArrayFS(mergedValues.size());
+        }
+
+        array.copyFromArray(mergedValues.toArray(new String[mergedValues.size()]), 0, 0,
+                mergedValues.size());
+
+        fs.setFeatureValue(feature, array);
     }
 
     @Override
@@ -189,33 +251,9 @@ public class MultiValueStringFeatureSupport
     }
 
     @Override
-    public MultiValueStringFeatureTraits readTraits(AnnotationFeature aFeature)
+    public MultiValueStringFeatureTraits createDefaultTraits()
     {
-        MultiValueStringFeatureTraits traits = null;
-        try {
-            traits = JSONUtil.fromJsonString(MultiValueStringFeatureTraits.class,
-                    aFeature.getTraits());
-        }
-        catch (IOException e) {
-            log.error("Unable to read traits", e);
-        }
-
-        if (traits == null) {
-            traits = new MultiValueStringFeatureTraits();
-        }
-
-        return traits;
-    }
-
-    @Override
-    public void writeTraits(AnnotationFeature aFeature, MultiValueStringFeatureTraits aTraits)
-    {
-        try {
-            aFeature.setTraits(JSONUtil.toJsonString(aTraits));
-        }
-        catch (IOException e) {
-            log.error("Unable to write traits", e);
-        }
+        return new MultiValueStringFeatureTraits();
     }
 
     @Override
@@ -236,43 +274,25 @@ public class MultiValueStringFeatureSupport
     }
 
     @Override
-    public List<VLazyDetailQuery> getLazyDetails(AnnotationFeature aFeature, FeatureStructure aFs)
+    public List<VLazyDetailGroup> lookupLazyDetails(AnnotationFeature aFeature, Object aValue)
     {
-        Feature labelFeature = aFs.getType().getFeatureByBaseName(aFeature.getName());
+        var results = new VLazyDetailGroup();
+        if (aValue instanceof Iterable) {
+            var values = (Iterable<?>) aValue;
+            for (var v : values) {
+                if (v instanceof String value) {
+                    var tag = schemaService.getTag(value, aFeature.getTagset());
 
-        if (labelFeature == null) {
-            return emptyList();
-        }
+                    if (isNotBlank(value) && aFeature.getTagset() != null && tag.isEmpty()) {
+                        results.addDetail(new VLazyDetail(value, "Tag not in tagset"));
+                    }
 
-        List<String> values = getFeatureValue(aFeature, aFs);
-        if (values == null || values.isEmpty()) {
-            return emptyList();
-        }
-
-        var details = new ArrayList<VLazyDetailQuery>();
-        for (String value : values) {
-            if (isNotBlank(value) && aFeature.getTagset() != null) {
-                details.add(new VLazyDetailQuery(aFeature.getName(), value));
+                    if (tag.map(t -> isNotBlank(t.getDescription())).orElse(false)) {
+                        results.addDetail(new VLazyDetail(value, tag.get().getDescription()));
+                    }
+                }
             }
         }
-
-        return details;
-    }
-
-    @Override
-    public List<VLazyDetailResult> renderLazyDetails(CAS aCas, AnnotationFeature aFeature,
-            VID aParamId, String aQuery)
-    {
-        var tag = schemaService.getTag(aQuery, aFeature.getTagset());
-
-        if (tag.isEmpty()) {
-            return asList(new VLazyDetailResult(aQuery, "Tag not in tagset"));
-        }
-
-        if (tag.map(t -> isBlank(t.getDescription())).orElse(true)) {
-            return emptyList();
-        }
-
-        return asList(new VLazyDetailResult(aQuery, tag.get().getDescription()));
+        return asList(results);
     }
 }

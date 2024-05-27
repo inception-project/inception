@@ -23,10 +23,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.recommendation.imls.hf.client.HfInferenceClient;
 import de.tudarmstadt.ukp.inception.recommendation.imls.hf.client.HfInferenceClientImpl;
 import de.tudarmstadt.ukp.inception.recommendation.imls.hf.model.HfEntityGroup;
+import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 
 public class HfInferenceClientTest
 {

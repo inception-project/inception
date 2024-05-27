@@ -17,12 +17,12 @@
  */
 package de.tudarmstadt.ukp.inception.documents;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode.AUTO_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.UNMANAGED_ACCESS;
-import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
+import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.AUTO_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.inception.annotation.storage.CasMetadataUtils.getInternalTypeSystem;
 import static de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession.openNested;
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
 import static java.lang.Thread.sleep;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.repeat;
@@ -59,16 +59,12 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.context.ApplicationEventPublisher;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageService;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageServiceImpl;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
 import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageBackupProperties;
@@ -76,6 +72,12 @@ import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageCachePro
 import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStoragePropertiesImpl;
 import de.tudarmstadt.ukp.inception.annotation.storage.driver.CasStorageDriver;
 import de.tudarmstadt.ukp.inception.annotation.storage.driver.filesystem.FileSystemCasStorageDriver;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentStorageService;
+import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
+import de.tudarmstadt.ukp.inception.documents.api.RepositoryPropertiesImpl;
+import de.tudarmstadt.ukp.inception.project.api.ProjectService;
+import de.tudarmstadt.ukp.inception.support.logging.Logging;
 
 @ExtendWith(MockitoExtension.class)
 public class DocumentServiceImplConcurrencyTest
@@ -102,7 +104,8 @@ public class DocumentServiceImplConcurrencyTest
     private DocumentService sut;
 
     private RepositoryProperties repositoryProperties;
-    private CasStorageService storageService;
+    private CasStorageService casStorageService;
+    private DocumentStorageService docStorageService;
 
     @BeforeEach
     public void setup() throws Exception
@@ -115,18 +118,20 @@ public class DocumentServiceImplConcurrencyTest
         deleteCounter.set(0);
         deleteInitialCounter.set(0);
 
-        repositoryProperties = new RepositoryProperties();
+        repositoryProperties = new RepositoryPropertiesImpl();
         repositoryProperties.setPath(testFolder);
         MDC.put(Logging.KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
 
         CasStorageDriver driver = new FileSystemCasStorageDriver(repositoryProperties,
                 new CasStorageBackupProperties(), new CasStoragePropertiesImpl());
 
-        storageService = new CasStorageServiceImpl(driver, new CasStorageCachePropertiesImpl(),
+        casStorageService = new CasStorageServiceImpl(driver, new CasStorageCachePropertiesImpl(),
                 null, null);
+        docStorageService = new DocumentStorageServiceImpl(repositoryProperties);
 
-        var realSut = new DocumentServiceImpl(repositoryProperties, storageService,
-                importExportService, projectService, applicationEventPublisher, entityManager);
+        var realSut = new DocumentServiceImpl(repositoryProperties, casStorageService,
+                importExportService, projectService, applicationEventPublisher, entityManager,
+                docStorageService);
         sut = Mockito.mock(DocumentServiceImpl.class, Mockito.withSettings().spiedInstance(realSut)
                 .stubOnly().defaultAnswer(Answers.CALLS_REAL_METHODS));
 
@@ -137,7 +142,7 @@ public class DocumentServiceImplConcurrencyTest
         }).when(sut).getAnnotationDocument(any(), any(String.class));
 
         lenient()
-                .when(importExportService.importCasFromFile(any(File.class),
+                .when(importExportService.importCasFromFileNoChecks(any(File.class),
                         any(SourceDocument.class), any()))
                 .thenReturn(CasFactory.createText("Test"));
     }
@@ -146,13 +151,13 @@ public class DocumentServiceImplConcurrencyTest
     public void thatCreatingOrReadingInitialCasForNewDocumentCreatesNewCas() throws Exception
     {
         try (CasStorageSession session = CasStorageSession.open()) {
-            SourceDocument doc = makeSourceDocument(1l, 1l, "test");
+            var doc = makeSourceDocument(1l, 1l, "test");
 
-            JCas cas = sut.createOrReadInitialCas(doc).getJCas();
+            var cas = sut.createOrReadInitialCas(doc).getJCas();
 
             assertThat(cas).isNotNull();
             assertThat(cas.getDocumentText()).isEqualTo("Test");
-            assertThat(storageService.existsCas(doc, INITIAL_CAS_PSEUDO_USER)).isTrue();
+            assertThat(casStorageService.existsCas(doc, INITIAL_CAS_PSEUDO_USER)).isTrue();
         }
     }
 
@@ -167,7 +172,7 @@ public class DocumentServiceImplConcurrencyTest
 
             assertThat(cas).isNotNull();
             assertThat(cas.getDocumentText()).isEqualTo("Test");
-            assertThat(storageService.existsCas(sourceDocument, user.getUsername())).isTrue();
+            assertThat(casStorageService.existsCas(sourceDocument, user.getUsername())).isTrue();
         }
     }
 
@@ -178,8 +183,8 @@ public class DocumentServiceImplConcurrencyTest
         var typeSystem = mergeTypeSystems(
                 asList(createTypeSystemDescription(), getInternalTypeSystem()));
 
-        when(importExportService.importCasFromFile(any(File.class), any(SourceDocument.class),
-                any())).then(_invocation -> {
+        when(importExportService.importCasFromFileNoChecks(any(File.class),
+                any(SourceDocument.class), any())).then(_invocation -> {
                     CAS cas = createCas(typeSystem);
                     cas.setDocumentText(docText);
                     return cas;
@@ -246,8 +251,8 @@ public class DocumentServiceImplConcurrencyTest
         var typeSystem = mergeTypeSystems(
                 asList(createTypeSystemDescription(), getInternalTypeSystem()));
 
-        when(importExportService.importCasFromFile(any(File.class), any(SourceDocument.class),
-                any())).then(_invocation -> {
+        when(importExportService.importCasFromFileNoChecks(any(File.class),
+                any(SourceDocument.class), any())).then(_invocation -> {
                     CAS cas = createCas(typeSystem);
                     cas.setDocumentText(docText);
                     return cas;
@@ -343,10 +348,10 @@ public class DocumentServiceImplConcurrencyTest
                     return;
                 }
 
-                try (CasStorageSession session = openNested()) {
-                    CAS cas = sut.readAnnotationCas(doc, user);
+                try (var session = openNested()) {
+                    var cas = sut.readAnnotationCas(doc, user);
                     Thread.sleep(50);
-                    sut.writeAnnotationCas(cas, doc, user, false);
+                    sut.writeAnnotationCas(cas, doc, user);
                     writeCounter.incrementAndGet();
                 }
                 catch (Exception e) {

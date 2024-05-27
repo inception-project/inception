@@ -21,8 +21,8 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.ANNOTATION;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
-import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.CURATION_USER;
-import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
+import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.defaultIfEmpty;
 import static wicket.contrib.input.events.EventType.click;
@@ -44,19 +44,19 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.danekja.java.util.function.serializable.SerializableBiFunction;
 import org.wicketstuff.event.annotation.OnEvent;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.DecoratedObject;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.input.InputBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
+import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.inception.support.wicket.DecoratedObject;
+import de.tudarmstadt.ukp.inception.support.wicket.input.InputBehavior;
 import wicket.contrib.input.events.key.KeyType;
 
 /**
@@ -100,8 +100,8 @@ public class OpenDocumentDialogPanel
 
     private DropDownChoice<DecoratedObject<User>> createUserListChoice()
     {
-        DecoratedObject<User> currentUser = DecoratedObject.of(userRepository.getCurrentUser());
-        DecoratedObject<User> viewUser = DecoratedObject.of(state.getObject().getUser());
+        var currentUser = DecoratedObject.of(userRepository.getCurrentUser());
+        var viewUser = DecoratedObject.of(state.getObject().getUser());
 
         var choice = new DropDownChoice<>("user", Model.of(), listUsers());
         choice.setChoiceRenderer(new ChoiceRenderer<DecoratedObject<User>>()
@@ -111,8 +111,8 @@ public class OpenDocumentDialogPanel
             @Override
             public Object getDisplayValue(DecoratedObject<User> aUser)
             {
-                User user = aUser.get();
-                String username = defaultIfEmpty(aUser.getLabel(), user.getUiName());
+                var user = aUser.get();
+                var username = defaultIfEmpty(aUser.getLabel(), user.getUiName());
                 if (user.equals(currentUser.get())) {
                     username += " (me)";
                 }
@@ -149,21 +149,22 @@ public class OpenDocumentDialogPanel
 
     private List<DecoratedObject<User>> listUsers()
     {
-        List<DecoratedObject<User>> users = new ArrayList<>();
+        var users = new ArrayList<DecoratedObject<User>>();
 
-        Project project = state.getObject().getProject();
-        User currentUser = userRepository.getCurrentUser();
+        var project = state.getObject().getProject();
+        var currentUser = userRepository.getCurrentUser();
+
         // cannot select other user than themselves if curating or not admin
         if (state.getObject().getMode().equals(Mode.CURATION)
                 || !projectService.hasRole(currentUser, project, MANAGER, CURATOR)) {
-            DecoratedObject<User> du = DecoratedObject.of(currentUser);
+            var du = DecoratedObject.of(currentUser);
             du.setLabel(currentUser.getUiName());
             users.add(du);
             return users;
         }
 
-        for (User user : projectService.listProjectUsersWithPermissions(project, ANNOTATOR)) {
-            DecoratedObject<User> du = DecoratedObject.of(user);
+        for (var user : projectService.listProjectUsersWithPermissions(project, ANNOTATOR)) {
+            var du = DecoratedObject.of(user);
             du.setLabel(user.getUiName());
             if (user.equals(currentUser)) {
                 users.add(0, du);
@@ -178,8 +179,8 @@ public class OpenDocumentDialogPanel
 
     private List<AnnotationDocument> listDocuments()
     {
-        Project project = state.getObject().getProject();
-        User user = userListChoice.getModel().map(DecoratedObject::get).orElse(null).getObject();
+        var project = state.getObject().getProject();
+        var user = userListChoice.getModel().map(DecoratedObject::get).orElse(null).getObject();
 
         if (project == null || user == null) {
             return new ArrayList<>();
@@ -216,7 +217,7 @@ public class OpenDocumentDialogPanel
         // location.
         if (state.getObject().getProject() == null || state.getObject().getDocument() == null) {
             try {
-                ProjectPageBase ppb = findParent(ProjectPageBase.class);
+                var ppb = findParent(ProjectPageBase.class);
                 if (ppb != null) {
                     ((ProjectPageBase) ppb).backToProjectPage();
                 }

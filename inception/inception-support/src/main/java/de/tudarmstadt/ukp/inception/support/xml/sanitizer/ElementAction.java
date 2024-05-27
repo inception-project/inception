@@ -19,6 +19,24 @@ package de.tudarmstadt.ukp.inception.support.xml.sanitizer;
 
 public enum ElementAction
 {
-    PASS, //
-    DROP;
+    /**
+     * Element is passed through.
+     */
+    PASS,
+
+    /**
+     * Element is not passed through filter but any child text nodes are passed.
+     */
+    SKIP,
+
+    /**
+     * Element is not passed through.
+     */
+    DROP,
+
+    /**
+     * Element is not passed through and neither are any descendants even if they might otherwise be
+     * marked to pass.
+     */
+    PRUNE;
 }

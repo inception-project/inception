@@ -15,53 +15,69 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-import esbuild from "esbuild"
-import esbuildSvelte from "esbuild-svelte"
-import sveltePreprocess from "svelte-preprocess"
+import esbuild from 'esbuild'
+import esbuildSvelte from 'esbuild-svelte'
+import sveltePreprocess from 'svelte-preprocess'
 import yargs from 'yargs/yargs'
 import { hideBin } from 'yargs/helpers'
+import { sassPlugin } from 'esbuild-sass-plugin'
 import fs from 'fs-extra'
 
 const argv = yargs(hideBin(process.argv)).argv
 
-const packagePath = "de/tudarmstadt/ukp/inception/ui/core/dashboard/activity"
+const packagePath = 'de/tudarmstadt/ukp/inception/ui/core/dashboard/activity'
 
 let outbase = `../../../target/js/${packagePath}`
+if (argv.live) {
+  outbase = `../../../target/classes/${packagePath}`
+}
 
 const defaults = {
-  mainFields: ["svelte", "browser", "module", "main"],
-  format: "esm",
+  mainFields: ['svelte', 'browser', 'module', 'main'],
+  format: 'esm',
   plugins: [
+    sassPlugin(),
     esbuildSvelte({
+      compilerOptions: { dev: argv.live },
       preprocess: sveltePreprocess(),
-    }),
+      filterWarnings: (warning) => {
+        // Ignore warnings about unused CSS selectors in Svelte components which appear as we import
+        // Bootstrap CSS files. We do not use all selectors in the files and thus the warnings are
+        // expected.
+        if (warning.code === 'css-unused-selector') {
+          return false
+        }
+      }
+    })
   ],
   bundle: true,
   sourcemap: true,
   minify: !argv.live,
-  target: 'es6',
+  target: 'es2018',
   loader: { '.ts': 'ts' },
   logLevel: 'info'
 }
 
-if (argv.live) {
-  defaults.watch = {
-    onRebuild (error, result) {
-      if (error) console.error('watch build failed:', error)
-      else console.log('watch build succeeded:', result)
-    }
-  }
-  outbase = `../../../target/classes/${packagePath}`
-} else {
-  fs.emptyDirSync(outbase)
-}
 fs.mkdirsSync(`${outbase}`)
+fs.emptyDirSync(outbase)
 
-esbuild
-  .build(Object.assign({
-    entryPoints: ["src/ActivitiesDashlet.svelte"],
-    outfile: `${outbase}/ActivitiesDashlet.min.js`,
+if (argv.live) {
+  const context1 = await esbuild.context(Object.assign({
+    entryPoints: ['src/ActivitiesDashlet.svelte'],
+    outfile: `${outbase}/ActivitiesDashlet.min.js`
   }, defaults))
-  .catch(() => process.exit(1));
-  
+  const context2 = await esbuild.context(Object.assign({
+    entryPoints: ['src/ActivityPanel.svelte'],
+    outfile: `${outbase}/panel/ActivityPanel.min.js`
+  }, defaults))
+  await Promise.all([context1.watch(), context2.watch()])
+} else {
+  esbuild.build(Object.assign({
+    entryPoints: ['src/ActivitiesDashlet.svelte'],
+    outfile: `${outbase}/ActivitiesDashlet.min.js`
+  }, defaults))
+  esbuild.build(Object.assign({
+    entryPoints: ['src/ActivityPanel.svelte'],
+    outfile: `${outbase}/panel/ActivityPanel.min.js`
+  }, defaults))
+}

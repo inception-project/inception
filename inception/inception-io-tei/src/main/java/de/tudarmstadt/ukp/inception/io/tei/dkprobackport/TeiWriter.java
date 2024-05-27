@@ -17,23 +17,24 @@
  */
 package de.tudarmstadt.ukp.inception.io.tei.dkprobackport;
 
-import static org.dkpro.core.io.tei.internal.TeiConstants.ATTR_FUNCTION;
-import static org.dkpro.core.io.tei.internal.TeiConstants.ATTR_LEMMA;
-import static org.dkpro.core.io.tei.internal.TeiConstants.ATTR_TYPE;
-import static org.dkpro.core.io.tei.internal.TeiConstants.E_TEI_BODY;
-import static org.dkpro.core.io.tei.internal.TeiConstants.E_TEI_FILE_DESC;
-import static org.dkpro.core.io.tei.internal.TeiConstants.E_TEI_HEADER;
-import static org.dkpro.core.io.tei.internal.TeiConstants.E_TEI_TEI;
-import static org.dkpro.core.io.tei.internal.TeiConstants.E_TEI_TEXT;
-import static org.dkpro.core.io.tei.internal.TeiConstants.E_TEI_TITLE;
-import static org.dkpro.core.io.tei.internal.TeiConstants.E_TEI_TITLE_STMT;
-import static org.dkpro.core.io.tei.internal.TeiConstants.TAG_CHARACTER;
-import static org.dkpro.core.io.tei.internal.TeiConstants.TAG_PARAGRAPH;
-import static org.dkpro.core.io.tei.internal.TeiConstants.TAG_PHRASE;
-import static org.dkpro.core.io.tei.internal.TeiConstants.TAG_RS;
-import static org.dkpro.core.io.tei.internal.TeiConstants.TAG_SUNIT;
-import static org.dkpro.core.io.tei.internal.TeiConstants.TAG_WORD;
-import static org.dkpro.core.io.tei.internal.TeiConstants.TEI_NS;
+import static de.tudarmstadt.ukp.inception.io.tei.dkprobackport.TeiConstants.ATTR_FUNCTION;
+import static de.tudarmstadt.ukp.inception.io.tei.dkprobackport.TeiConstants.ATTR_LEMMA;
+import static de.tudarmstadt.ukp.inception.io.tei.dkprobackport.TeiConstants.ATTR_TYPE;
+import static de.tudarmstadt.ukp.inception.io.tei.dkprobackport.TeiConstants.ATTR_XML_ID;
+import static de.tudarmstadt.ukp.inception.io.tei.dkprobackport.TeiConstants.E_TEI_BODY;
+import static de.tudarmstadt.ukp.inception.io.tei.dkprobackport.TeiConstants.E_TEI_FILE_DESC;
+import static de.tudarmstadt.ukp.inception.io.tei.dkprobackport.TeiConstants.E_TEI_HEADER;
+import static de.tudarmstadt.ukp.inception.io.tei.dkprobackport.TeiConstants.E_TEI_TEI;
+import static de.tudarmstadt.ukp.inception.io.tei.dkprobackport.TeiConstants.E_TEI_TEXT;
+import static de.tudarmstadt.ukp.inception.io.tei.dkprobackport.TeiConstants.E_TEI_TITLE;
+import static de.tudarmstadt.ukp.inception.io.tei.dkprobackport.TeiConstants.E_TEI_TITLE_STMT;
+import static de.tudarmstadt.ukp.inception.io.tei.dkprobackport.TeiConstants.TAG_CHARACTER;
+import static de.tudarmstadt.ukp.inception.io.tei.dkprobackport.TeiConstants.TAG_PARAGRAPH;
+import static de.tudarmstadt.ukp.inception.io.tei.dkprobackport.TeiConstants.TAG_PHRASE;
+import static de.tudarmstadt.ukp.inception.io.tei.dkprobackport.TeiConstants.TAG_RS;
+import static de.tudarmstadt.ukp.inception.io.tei.dkprobackport.TeiConstants.TAG_SUNIT;
+import static de.tudarmstadt.ukp.inception.io.tei.dkprobackport.TeiConstants.TAG_WORD;
+import static de.tudarmstadt.ukp.inception.io.tei.dkprobackport.TeiConstants.TEI_NS;
 
 import java.io.OutputStream;
 import java.util.ArrayList;
@@ -64,21 +65,20 @@ import org.dkpro.core.api.parameter.MimeTypes;
 
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Div;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Paragraph;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.constituent.Constituent;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.constituent.ROOT;
+import eu.openminted.share.annotations.api.DocumentationResource;
 import javanet.staxutils.IndentingXMLEventWriter;
 
 /**
  * UIMA CAS consumer writing the CAS document text in TEI format.
- * <p>
- * Backported because of https://github.com/inception-project/inception/issues/2461 - Can be removed
- * after upgrade to DKPro Core 2.2.1 or higher.
  */
 @ResourceMetaData(name = "TEI XML Writer")
-// @DocumentationResource("${docbase}/format-reference.html#format-${command}")
+@DocumentationResource("${docbase}/format-reference.html#format-${command}")
 @MimeTypeCapability({ MimeTypes.APPLICATION_TEI_XML })
 @TypeCapability(inputs = { "de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData",
         "de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Paragraph",
@@ -263,12 +263,27 @@ public class TeiWriter
     {
         List<Attribute> attributes = new ArrayList<Attribute>();
         if (aAnnotation instanceof Token) {
-            Token t = (Token) aAnnotation;
+            var t = (Token) aAnnotation;
+            if (t.getId() != null) {
+                attributes.add(xmlef.createAttribute(ATTR_XML_ID, t.getId()));
+            }
             if (t.getPos() != null && t.getPos().getPosValue() != null) {
                 attributes.add(xmlef.createAttribute(ATTR_TYPE, t.getPos().getPosValue()));
             }
             if (t.getLemma() != null && t.getLemma().getValue() != null) {
                 attributes.add(xmlef.createAttribute(ATTR_LEMMA, t.getLemma().getValue()));
+            }
+        }
+        else if (aAnnotation instanceof Sentence) {
+            var s = (Sentence) aAnnotation;
+            if (s.getId() != null) {
+                attributes.add(xmlef.createAttribute(ATTR_XML_ID, s.getId()));
+            }
+        }
+        else if (aAnnotation instanceof Div) {
+            var div = (Div) aAnnotation;
+            if (div.getId() != null) {
+                attributes.add(xmlef.createAttribute(ATTR_XML_ID, div.getId()));
             }
         }
         else if (aAnnotation instanceof NamedEntity) {

@@ -35,7 +35,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.ReorderableTag;
-import de.tudarmstadt.ukp.clarin.webanno.support.NaturalStringComparator;
+import de.tudarmstadt.ukp.inception.support.text.NaturalStringComparator;
 
 public class TagRanker
 {

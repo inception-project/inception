@@ -22,7 +22,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.AeroRemote
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.event.ProjectStateChangedEvent;
+import de.tudarmstadt.ukp.inception.project.api.event.ProjectStateChangedEvent;
 
 public class ProjectStateChangeMessage
 {

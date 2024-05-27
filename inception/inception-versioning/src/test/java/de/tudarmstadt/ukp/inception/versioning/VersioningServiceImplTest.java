@@ -31,7 +31,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-import org.apache.uima.cas.CAS;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.treewalk.TreeWalk;
@@ -50,9 +49,6 @@ import org.springframework.context.annotation.Import;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.util.FileSystemUtils;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.diag.config.CasDoctorAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -64,14 +60,18 @@ import de.tudarmstadt.ukp.clarin.webanno.text.config.TextFormatsAutoConfiguratio
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
 import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.curation.config.CurationDocumentServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
+import de.tudarmstadt.ukp.inception.documents.api.RepositoryAutoConfiguration;
 import de.tudarmstadt.ukp.inception.documents.config.DocumentServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.io.xmi.config.UimaFormatsAutoConfiguration;
+import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.schema.config.AnnotationSchemaServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.versioning.config.VersioningServiceAutoConfiguration;
 
 @DataJpaTest( //
-        excludeAutoConfiguration = LiquibaseAutoConfiguration.class, showSql = false, //
+        showSql = false, //
+        excludeAutoConfiguration = LiquibaseAutoConfiguration.class, //
         properties = { //
                 "spring.main.banner-mode=off", //
                 "repository.path=" + VersioningServiceImplTest.TEST_OUTPUT_FOLDER, //
@@ -331,8 +331,8 @@ public class VersioningServiceImplTest
         File doc1 = getResource("docs/dinos.txt");
         File doc2 = getResource("docs/lorem.txt");
 
-        try (CasStorageSession session = CasStorageSession.open()) {
-            try (InputStream is = Files.newInputStream(doc1.toPath())) {
+        try (var session = CasStorageSession.open()) {
+            try (var is = Files.newInputStream(doc1.toPath())) {
                 documentService.uploadSourceDocument(is,
                         new SourceDocument(doc1.getName(), testProject, "pretokenized-textlines"));
             }
@@ -346,11 +346,11 @@ public class VersioningServiceImplTest
 
     private void createAnnotationDocuments(User aUser) throws Exception
     {
-        try (CasStorageSession session = CasStorageSession.open()) {
-            for (SourceDocument sourceDocument : documentService.listSourceDocuments(testProject)) {
+        try (var session = CasStorageSession.open()) {
+            for (var sourceDocument : documentService.listSourceDocuments(testProject)) {
                 documentService.createOrGetAnnotationDocument(sourceDocument, aUser);
-                CAS cas = documentService.createOrReadInitialCas(sourceDocument);
-                documentService.writeAnnotationCas(cas, sourceDocument, aUser, false);
+                var cas = documentService.createOrReadInitialCas(sourceDocument);
+                documentService.writeAnnotationCas(cas, sourceDocument, aUser);
             }
         }
     }

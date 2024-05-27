@@ -20,10 +20,7 @@ package de.tudarmstadt.ukp.inception.annotation.layer.relation;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
 
-import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
-import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.springframework.core.annotation.Order;
 
@@ -49,10 +46,10 @@ public class RelationAttachmentBehavior
         // case were we use the attach-feature is with the Dependency/Token layers and it works
         // because tokens cannot stack. "selectCovered" below would need to be replaced with
         // an actual lookup of the annotation pointed to by the attach-feature.
-        final CAS cas = aRequest.getCas();
-        final Type attachType = getType(cas, aAdapter.getLayer().getAttachType().getName());
-        AnnotationFS originFS = aRequest.getOriginFs();
-        AnnotationFS targetFS = aRequest.getTargetFs();
+        var cas = aRequest.getCas();
+        var attachType = getType(cas, aAdapter.getLayer().getAttachType().getName());
+        var originFS = aRequest.getOriginFs();
+        var targetFS = aRequest.getTargetFs();
         targetFS = selectCovered(cas, attachType, targetFS.getBegin(), targetFS.getEnd()).get(0);
         originFS = selectCovered(cas, attachType, originFS.getBegin(), originFS.getEnd()).get(0);
         return aRequest.changeRelation(originFS, targetFS);
@@ -60,16 +57,16 @@ public class RelationAttachmentBehavior
 
     public static FeatureStructure[] resolve(RelationAdapter aAdapter, AnnotationFS aRelation)
     {
-        Type type = aRelation.getType();
-        Feature targetFeature = type.getFeatureByBaseName(aAdapter.getTargetFeatureName());
-        Feature sourceFeature = type.getFeatureByBaseName(aAdapter.getSourceFeatureName());
+        var type = aRelation.getType();
+        var targetFeature = type.getFeatureByBaseName(aAdapter.getTargetFeatureName());
+        var sourceFeature = type.getFeatureByBaseName(aAdapter.getSourceFeatureName());
 
         FeatureStructure targetFs;
         FeatureStructure sourceFs;
 
         if (aAdapter.getAttachFeatureName() != null) {
-            Type spanType = getType(aRelation.getCAS(), aAdapter.getAttachTypeName());
-            Feature arcSpanFeature = spanType.getFeatureByBaseName(aAdapter.getAttachFeatureName());
+            var spanType = getType(aRelation.getCAS(), aAdapter.getAttachTypeName());
+            var arcSpanFeature = spanType.getFeatureByBaseName(aAdapter.getAttachFeatureName());
             targetFs = aRelation.getFeatureValue(targetFeature).getFeatureValue(arcSpanFeature);
             sourceFs = aRelation.getFeatureValue(sourceFeature).getFeatureValue(arcSpanFeature);
         }

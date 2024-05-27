@@ -69,16 +69,13 @@ import org.springframework.security.authentication.dao.DaoAuthenticationProvider
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.UserDetailsManager;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.messaging.WebSocketStompClient;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.AnnotationAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRenderer;
-import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryAutoConfiguration;
-import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -90,16 +87,18 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
-import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 import de.tudarmstadt.ukp.clarin.webanno.text.config.TextFormatsAutoConfiguration;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
 import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.diam.messages.MViewportInit;
 import de.tudarmstadt.ukp.inception.diam.messages.MViewportUpdate;
 import de.tudarmstadt.ukp.inception.diam.model.websocket.ViewportDefinition;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
+import de.tudarmstadt.ukp.inception.documents.api.RepositoryAutoConfiguration;
+import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
 import de.tudarmstadt.ukp.inception.documents.config.DocumentServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
@@ -107,6 +106,8 @@ import de.tudarmstadt.ukp.inception.rendering.vmodel.VRange;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VSpan;
 import de.tudarmstadt.ukp.inception.schema.config.AnnotationSchemaServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.support.findbugs.SuppressFBWarnings;
+import de.tudarmstadt.ukp.inception.support.logging.Logging;
+import de.tudarmstadt.ukp.inception.support.spring.ApplicationContextProvider;
 import de.tudarmstadt.ukp.inception.websocket.config.WebsocketAutoConfiguration;
 import de.tudarmstadt.ukp.inception.websocket.config.WebsocketConfig;
 import de.tudarmstadt.ukp.inception.websocket.config.WebsocketSecurityConfig;
@@ -200,10 +201,11 @@ public class DiamWebsocketController_ViewportRoutingTest
         documentService.createSourceDocument(testDocument);
 
         testAnnotationDocument = new AnnotationDocument(USER, testDocument);
-        documentService.createAnnotationDocument(testAnnotationDocument);
+        documentService.createOrUpdateAnnotationDocument(testAnnotationDocument);
 
         try (var session = CasStorageSession.open()) {
-            documentService.uploadSourceDocument(toInputStream("This is a test.", UTF_8),
+            documentService.uploadSourceDocument(
+                    toInputStream("This is a test. ".repeat(10).trim(), UTF_8),
                     testAnnotationDocument.getDocument());
         }
     }
@@ -214,26 +216,23 @@ public class DiamWebsocketController_ViewportRoutingTest
         entityManager.clear();
     }
 
+    @WithMockUser(username = "user", roles = { "USER" })
     @SuppressFBWarnings("RV_RETURN_VALUE_IGNORED")
     @Test
     public void thatViewportBasedMessageRoutingWorks() throws Exception
     {
-        CountDownLatch subscriptionDone = new CountDownLatch(2);
-        CountDownLatch initDone = new CountDownLatch(2);
+        var subscriptionDone = new CountDownLatch(2);
+        var initDone = new CountDownLatch(2);
 
-        ViewportDefinition vpd1 = new ViewportDefinition(testAnnotationDocument, 10, 20,
-                FORMAT_LEGACY);
-        ViewportDefinition vpd2 = new ViewportDefinition(testAnnotationDocument, 30, 40,
-                FORMAT_LEGACY);
+        var vpd1 = new ViewportDefinition(testAnnotationDocument, 10, 20, FORMAT_LEGACY);
+        var vpd2 = new ViewportDefinition(testAnnotationDocument, 30, 40, FORMAT_LEGACY);
 
         var sessionHandler1 = new SessionHandler(subscriptionDone, initDone, vpd1);
         var sessionHandler2 = new SessionHandler(subscriptionDone, initDone, vpd2);
 
         // try {
-        StompSession session1 = stompClient.connect(websocketUrl, sessionHandler1).get(1000,
-                SECONDS);
-        StompSession session2 = stompClient.connect(websocketUrl, sessionHandler2).get(1000,
-                SECONDS);
+        var session1 = stompClient.connect(websocketUrl, sessionHandler1).get(1000, SECONDS);
+        var session2 = stompClient.connect(websocketUrl, sessionHandler2).get(1000, SECONDS);
         // }
         // catch (Exception e) {
         // Thread.sleep(Duration.of(3, ChronoUnit.HOURS).toMillis());
@@ -256,8 +255,18 @@ public class DiamWebsocketController_ViewportRoutingTest
             assertThat(sessionHandler2.getRecieved()).containsExactly("31-33", "15-35");
         }
         finally {
-            session2.disconnect();
-            session1.disconnect();
+            try {
+                session1.disconnect();
+            }
+            catch (Exception e) {
+                // Ignore exceptions during disconnect
+            }
+            try {
+                session2.disconnect();
+            }
+            catch (Exception e) {
+                // Ignore exceptions during disconnect
+            }
         }
     }
 
@@ -330,7 +339,7 @@ public class DiamWebsocketController_ViewportRoutingTest
         public DaoAuthenticationProvider internalAuthenticationProvider(PasswordEncoder aEncoder,
                 @Lazy UserDetailsManager aUserDetailsManager)
         {
-            DaoAuthenticationProvider authProvider = new InceptionDaoAuthenticationProvider();
+            var authProvider = new InceptionDaoAuthenticationProvider();
             authProvider.setUserDetailsService(aUserDetailsManager);
             authProvider.setPasswordEncoder(aEncoder);
             return authProvider;
@@ -351,7 +360,7 @@ public class DiamWebsocketController_ViewportRoutingTest
                 @Override
                 public void render(VDocument aResponse, RenderRequest aRequest)
                 {
-                    AnnotationLayer layer = new AnnotationLayer();
+                    var layer = new AnnotationLayer();
                     layer.setId(1l);
                     aResponse.add(
                             new VSpan(layer, new VID(1), new VRange(aRequest.getWindowBeginOffset(),
@@ -364,9 +373,9 @@ public class DiamWebsocketController_ViewportRoutingTest
         @Bean
         public SecurityFilterChain wsFilterChain(HttpSecurity aHttp) throws Exception
         {
-            aHttp.antMatcher(WebsocketConfig.WS_ENDPOINT);
-            aHttp.authorizeRequests() //
-                    .antMatchers("/**").authenticated() //
+            aHttp.securityMatcher(WebsocketConfig.WS_ENDPOINT);
+            aHttp.authorizeHttpRequests() //
+                    .requestMatchers("/**").authenticated() //
                     .anyRequest().denyAll();
             aHttp.sessionManagement() //
                     .sessionCreationPolicy(STATELESS);

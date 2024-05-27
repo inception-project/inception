@@ -17,20 +17,20 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.curation.component;
 
-import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiffSingle;
+import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.getDiffAdapters;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior.LINK_ROLE_AS_LABEL;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
-import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.CHAIN_TYPE;
-import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.CURATION_USER;
-import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.RELATION_TYPE;
-import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotationState.ACCEPTED_BY_CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotationState.ANNOTATORS_AGREE;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotationState.ANNOTATORS_DISAGREE;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotationState.ANNOTATORS_INCOMPLETE;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotationState.REJECTED_BY_CURATOR;
 import static de.tudarmstadt.ukp.inception.rendering.selection.FocusPosition.CENTERED;
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CHAIN_TYPE;
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.RELATION_TYPE;
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.SPAN_TYPE;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -48,7 +48,6 @@ import java.util.Set;
 import org.apache.commons.lang3.Validate;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
@@ -65,22 +64,14 @@ import org.slf4j.LoggerFactory;
 
 import com.googlecode.wicket.jquery.ui.widget.menu.IMenuItem;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.schema.BratSchemaGenerator;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.Configuration;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.ConfigurationSet;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.DiffResult;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.DiffAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.Configuration;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.ConfigurationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaMenuItem;
-import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
-import de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.AjaxComponentRespondListener;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.ContextMenu;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotationState;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotatorSegmentState;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.render.AnnotationStateColoringStrategy;
@@ -91,13 +82,19 @@ import de.tudarmstadt.ukp.inception.curation.merge.CasMerge;
 import de.tudarmstadt.ukp.inception.curation.merge.CasMergeOperationResult;
 import de.tudarmstadt.ukp.inception.curation.merge.MergeConflictException;
 import de.tudarmstadt.ukp.inception.curation.service.CurationDocumentService;
-import de.tudarmstadt.ukp.inception.rendering.config.AnnotationEditorProperties;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
-import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
-import de.tudarmstadt.ukp.inception.schema.adapter.TypeAdapter;
-import de.tudarmstadt.ukp.inception.schema.adapter.TypeUtil;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.inception.schema.api.config.AnnotationSchemaProperties;
+import de.tudarmstadt.ukp.inception.schema.api.feature.TypeUtil;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaMenuItem;
+import de.tudarmstadt.ukp.inception.support.spring.ApplicationEventPublisherHolder;
+import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
+import de.tudarmstadt.ukp.inception.support.wicket.AjaxComponentRespondListener;
+import de.tudarmstadt.ukp.inception.support.wicket.ContextMenu;
 
 /**
  * Panel with the annotator's annotations.
@@ -127,7 +124,7 @@ public class AnnotatorsPanel
     private @SpringBean UserDao userService;
     private @SpringBean CurationRenderer curationRenderer;
     private @SpringBean BratSchemaGenerator bratSchemaGenerator;
-    private @SpringBean AnnotationEditorProperties annotationEditorProperties;
+    private @SpringBean AnnotationSchemaProperties annotationEditorProperties;
 
     public AnnotatorsPanel(String id, IModel<List<AnnotatorSegmentState>> aModel)
     {
@@ -440,15 +437,15 @@ public class AnnotatorsPanel
 
     private Map<String, CAS> getCasses(SourceDocument aDocument) throws IOException
     {
-        Map<String, CAS> casses = new HashMap<>();
+        var casses = new HashMap<String, CAS>();
 
         // This CAS is loaded writable - it is the one the annotations are merged into
         casses.put(CURATION_USER, curationDocumentService.readCurationCas(aDocument));
 
         // The source CASes from the annotators are all ready read-only / shared
-        for (var annDoc : curationDocumentService.listCuratableAnnotationDocuments(aDocument)) {
-            casses.put(annDoc.getUser(),
-                    documentService.readAnnotationCas(annDoc.getDocument(), annDoc.getUser()));
+        for (var user : curationDocumentService.listCuratableUsers(aDocument)) {
+            casses.put(user.getUsername(),
+                    documentService.readAnnotationCas(aDocument, user.getUsername()));
         }
 
         return casses;
@@ -457,9 +454,9 @@ public class AnnotatorsPanel
     private Map<String, Map<VID, AnnotationState>> calculateAnnotationStates(AnnotatorState aState,
             Map<String, CAS> aCasses)
     {
-        List<DiffAdapter> adapters = getDiffAdapters(schemaService, aState.getAnnotationLayers());
-        DiffResult diff = doDiffSingle(adapters, LINK_ROLE_AS_LABEL, aCasses,
-                aState.getWindowBeginOffset(), aState.getWindowEndOffset()).toResult();
+        var adapters = getDiffAdapters(schemaService, aState.getAnnotationLayers());
+        var diff = doDiff(adapters, LINK_ROLE_AS_LABEL, aCasses, aState.getWindowBeginOffset(),
+                aState.getWindowEndOffset()).toResult();
 
         var differingSets = diff.getDifferingConfigurationSetsWithExceptions(CURATION_USER)
                 .values();
@@ -467,12 +464,12 @@ public class AnnotatorsPanel
                 .values();
         differingSets.removeAll(incompleteSets);
 
-        List<ConfigurationSet> completeAgreementSets = new ArrayList<>();
+        var completeAgreementSets = new ArrayList<ConfigurationSet>();
         completeAgreementSets.addAll(diff.getConfigurationSets());
         completeAgreementSets.removeAll(differingSets);
         completeAgreementSets.removeAll(incompleteSets);
 
-        Map<String, Map<VID, AnnotationState>> annoStates = new HashMap<>();
+        var annoStates = new HashMap<String, Map<VID, AnnotationState>>();
         for (String casGroupId : aCasses.keySet()) {
             annoStates.put(casGroupId, new HashMap<>());
         }
@@ -565,53 +562,55 @@ public class AnnotatorsPanel
                 Map<VID, AnnotationState> annotationStates = aAnnotationStatesForAllUsers.get(user);
 
                 for (Configuration configuration : configurationSet.getConfigurations(user)) {
-                    FeatureStructure fs = configuration.getFs(user, aCasMap);
-
-                    VID vid;
-                    // link FS
-                    if (configuration.getPosition().getFeature() != null) {
-                        TypeAdapter typeAdapter = schemaService.findAdapter(aProject, fs);
-                        int fi = 0;
-                        for (AnnotationFeature f : typeAdapter.listFeatures()) {
-                            if (f.getName().equals(configuration.getPosition().getFeature())) {
-                                break;
+                    for (var fs : configuration.getFses(user, aCasMap)) {
+                        VID vid;
+                        // link FS
+                        if (configuration.getPosition().getFeature() != null) {
+                            TypeAdapter typeAdapter = schemaService.findAdapter(aProject, fs);
+                            int fi = 0;
+                            for (AnnotationFeature f : typeAdapter.listFeatures()) {
+                                if (f.getName().equals(configuration.getPosition().getFeature())) {
+                                    break;
+                                }
+                                fi++;
                             }
-                            fi++;
+
+                            vid = new VID(ICasUtil.getAddr(fs), fi,
+                                    configuration.getAID(user).index);
+                        }
+                        else {
+                            vid = new VID(ICasUtil.getAddr(fs));
                         }
 
-                        vid = new VID(ICasUtil.getAddr(fs), fi, configuration.getAID(user).index);
-                    }
-                    else {
-                        vid = new VID(ICasUtil.getAddr(fs));
-                    }
+                        // The curator has accepted this configuration
+                        if (configuration.getCasGroupIds().contains(CURATION_USER)) {
+                            annotationStates.put(vid, ACCEPTED_BY_CURATOR);
+                            continue;
+                        }
 
-                    // The curator has accepted this configuration
-                    if (configuration.getCasGroupIds().contains(CURATION_USER)) {
-                        annotationStates.put(vid, ACCEPTED_BY_CURATOR);
-                        continue;
-                    }
+                        // The curator has accepted *another* configuration in this set
+                        if (configurationSet.getCasGroupIds().contains(CURATION_USER)) {
+                            annotationStates.put(vid, REJECTED_BY_CURATOR);
+                            continue;
+                        }
 
-                    // The curator has accepted *another* configuration in this set
-                    if (configurationSet.getCasGroupIds().contains(CURATION_USER)) {
-                        annotationStates.put(vid, REJECTED_BY_CURATOR);
-                        continue;
-                    }
+                        // All annotators participated and agree but the curator did not make a
+                        // decision
+                        // yet.
+                        if (aSetType == ConfigurationSetType.COMPLETE_AGREEMENT_SET) {
+                            annotationStates.put(vid, ANNOTATORS_AGREE);
+                            continue;
+                        }
 
-                    // All annotators participated and agree but the curator did not make a decision
-                    // yet.
-                    if (aSetType == ConfigurationSetType.COMPLETE_AGREEMENT_SET) {
-                        annotationStates.put(vid, ANNOTATORS_AGREE);
-                        continue;
-                    }
+                        // Annotators disagree and the curator has not made a choice yet
+                        if (aSetType == ConfigurationSetType.DISAGREEMENT_SET) {
+                            annotationStates.put(vid, ANNOTATORS_DISAGREE);
+                            continue;
+                        }
 
-                    // Annotators disagree and the curator has not made a choice yet
-                    if (aSetType == ConfigurationSetType.DISAGREEMENT_SET) {
-                        annotationStates.put(vid, ANNOTATORS_DISAGREE);
-                        continue;
+                        // Annotation is incomplete and the curator has not made a choice yet
+                        annotationStates.put(vid, ANNOTATORS_INCOMPLETE);
                     }
-
-                    // Annotation is incomplete and the curator has not made a choice yet
-                    annotationStates.put(vid, ANNOTATORS_INCOMPLETE);
                 }
             }
         }

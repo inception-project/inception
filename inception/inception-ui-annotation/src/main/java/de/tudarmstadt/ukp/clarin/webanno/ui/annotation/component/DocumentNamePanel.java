@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
-import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhenNot;
+import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
+import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhenNot;
 import static org.apache.wicket.RuntimeConfigurationType.DEVELOPMENT;
 
 import org.apache.wicket.markup.html.WebMarkupContainer;
@@ -27,15 +27,15 @@ import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedSourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior;
 
 /**
  * A {@link Panel} which contains a {@link Label} to display document name as concatenations of
@@ -53,7 +53,7 @@ public class DocumentNamePanel
         super(id, aModel);
         setOutputMarkupId(true);
         queue(new WebMarkupContainer("read-only").add(LambdaBehavior.visibleWhen(() -> {
-            var page = findParent(AnnotationPage.class);
+            var page = findParent(AnnotationPageBase.class);
             return page != null ? !page.isEditable() : false;
         })));
         queue(new Label("user", aModel.map(AnnotatorState::getUser).map(User::getUiName))

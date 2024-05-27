@@ -15,11 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import './src/style/InceptionEditorColors.scss'
+//import './src/style/InceptionEditorColors.scss'
 
 export * from './src/diam'
 export * from './src/editor'
 export * from './src/model'
+export * from './src/event'
 export * from './src/model/compact'
 export * from './src/util'
 

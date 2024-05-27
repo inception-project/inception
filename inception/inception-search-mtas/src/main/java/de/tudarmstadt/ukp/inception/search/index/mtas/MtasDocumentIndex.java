@@ -21,9 +21,9 @@
  */
 package de.tudarmstadt.ukp.inception.search.index.mtas;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.PROJECT_FOLDER;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IGNORE;
+import static de.tudarmstadt.ukp.inception.project.api.ProjectService.PROJECT_FOLDER;
 import static de.tudarmstadt.ukp.inception.search.Metrics.VIRTUAL_FEATURE_SENTENCE;
 import static de.tudarmstadt.ukp.inception.search.Metrics.VIRTUAL_FEATURE_TOKEN;
 import static de.tudarmstadt.ukp.inception.search.Metrics.VIRTUAL_LAYER_SEGMENTATION;
@@ -52,7 +52,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -82,7 +81,6 @@ import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.index.SegmentReader;
 import org.apache.lucene.index.Term;
-import org.apache.lucene.index.Terms;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.IndexSearcher;
@@ -99,14 +97,14 @@ import org.slf4j.LoggerFactory;
 
 import com.github.openjson.JSONObject;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.inception.search.ExecutionException;
 import de.tudarmstadt.ukp.inception.search.FeatureIndexingSupport;
 import de.tudarmstadt.ukp.inception.search.FeatureIndexingSupportRegistry;
@@ -478,30 +476,42 @@ public class MtasDocumentIndex
     }
 
     @Override
-    public List<Integer> getUniqueDocuments(StatisticRequest aStatisticRequest) throws IOException
+    public List<Integer> getUniqueDocuments(StatisticRequest aRequest) throws IOException
     {
         IndexSearcher searcher = null;
-        Map<Long, Long> annotatableDocuments = listAnnotatableDocuments(
-                aStatisticRequest.getProject(), aStatisticRequest.getUser());
+        var sourceAnnotationDocPairs = documentService
+                .listAnnotatableDocuments(aRequest.getProject(), aRequest.getUser());
+        var sourceDocumentIndex = new HashMap<Long, SourceDocument>();
+        sourceAnnotationDocPairs.entrySet().stream()
+                .forEach(e -> sourceDocumentIndex.put(e.getKey().getId(), e.getKey()));
 
-        List<Integer> fullDocSet = new ArrayList<Integer>();
+        var fullDocSet = new ArrayList<Integer>();
 
         try {
             searcher = getSearcherManager().acquire();
-            IndexReader reader = searcher.getIndexReader();
+            var reader = searcher.getIndexReader();
 
             for (int i = 0; i < reader.maxDoc(); i++) {
-                String sourceID = reader.document(i).get(FIELD_SOURCE_DOCUMENT_ID);
-                String annotationID = reader.document(i).get(FIELD_ANNOTATION_DOCUMENT_ID);
-                // a -1 indicates source document
-                if (Long.valueOf(annotationID) != -1L) {
-                    if (reader.document(i).get(FIELD_USER)
-                            .equals(aStatisticRequest.getUser().getUsername())) {
-                        fullDocSet.add(i);
-                    }
+                var rawSourceDocumentId = reader.document(i).get(FIELD_SOURCE_DOCUMENT_ID);
+                var sourceDocumentId = Long.valueOf(rawSourceDocumentId);
+                var sourceDocument = sourceDocumentIndex.get(sourceDocumentId);
+                if (sourceDocument == null) {
+                    // Document is not annotatable by this user, so we skip this result
+                    continue;
                 }
-                // source document without annotation layer? then user is not relevant
-                else if (!annotatableDocuments.containsKey(Long.valueOf(sourceID))) {
+
+                var rawAnnotationDocumentId = reader.document(i).get(FIELD_ANNOTATION_DOCUMENT_ID);
+                var annotationDocumentId = Long.valueOf(rawAnnotationDocumentId);
+                var matchInSourceDocument = annotationDocumentId == -1L;
+                var documentOwner = reader.document(i).get(FIELD_USER);
+
+                var annotationDocument = sourceAnnotationDocPairs.get(sourceDocument);
+                // If there is no annotation document or the annotation document is NEW, we use the
+                // source document
+                if (matchInSourceDocument && !isAnnotationDocumentIndexed(annotationDocument)) {
+                    fullDocSet.add(i);
+                }
+                else if (documentOwner.equals(aRequest.getUser().getUsername())) {
                     fullDocSet.add(i);
                 }
             }
@@ -514,7 +524,14 @@ public class MtasDocumentIndex
                 searcher = null;
             }
         }
+
         return fullDocSet;
+    }
+
+    private boolean isAnnotationDocumentIndexed(AnnotationDocument annotationDocument)
+    {
+        return annotationDocument != null
+                && annotationDocument.getState() != AnnotationDocumentState.NEW;
     }
 
     private MtasSpanQuery parseQuery(String aQuery, AnnotationSearchState aPrefs)
@@ -767,85 +784,90 @@ public class MtasDocumentIndex
             MtasSpanQuery q)
         throws IOException
     {
-        ListIterator<LeafReaderContext> leafReaderContextIterator = searcher.getIndexReader()
-                .leaves().listIterator();
+        var leafReaderContextIterator = searcher.getIndexReader().leaves().listIterator();
 
-        Map<Long, Long> annotatableDocuments = listAnnotatableDocuments(aRequest.getProject(),
+        var annotatableDocuments = documentService.listAnnotatableDocuments(aRequest.getProject(),
                 aRequest.getUser());
+        var sourceDocumentIndex = new HashMap<Long, SourceDocument>();
+        annotatableDocuments.entrySet().stream()
+                .forEach(e -> sourceDocumentIndex.put(e.getKey().getId(), e.getKey()));
 
         final float boost = 0;
-        SpanWeight spanweight = q.rewrite(searcher.getIndexReader()).createWeight(searcher,
+        var spanweight = q.rewrite(searcher.getIndexReader()).createWeight(searcher,
                 COMPLETE_NO_SCORES, boost);
 
         long numResults = 0;
+        var limitedToDocument = aRequest.getLimitedToDocument();
 
         while (leafReaderContextIterator.hasNext()) {
             LeafReaderContext leafReaderContext = leafReaderContextIterator.next();
             try {
-                Spans spans = spanweight.getSpans(leafReaderContext, SpanWeight.Postings.POSITIONS);
-                SegmentReader segmentReader = (SegmentReader) leafReaderContext.reader();
-                if (spans != null) {
-                    while (spans.nextDoc() != Spans.NO_MORE_DOCS) {
-                        if (segmentReader.numDocs() == segmentReader.maxDoc()
-                                || segmentReader.getLiveDocs().get(spans.docID())) {
-                            Document document = segmentReader.document(spans.docID());
+                var spans = spanweight.getSpans(leafReaderContext, SpanWeight.Postings.POSITIONS);
+                var segmentReader = (SegmentReader) leafReaderContext.reader();
+                if (spans == null) {
+                    continue;
+                }
 
-                            // Retrieve user
-                            String user = document.get(FIELD_USER);
+                while (spans.nextDoc() != Spans.NO_MORE_DOCS) {
+                    if (segmentReader.numDocs() == segmentReader.maxDoc()
+                            || segmentReader.getLiveDocs().get(spans.docID())) {
+                        var document = segmentReader.document(spans.docID());
 
-                            // Retrieve source and annotation document ids
-                            String rawSourceDocumentId = document.get(FIELD_SOURCE_DOCUMENT_ID);
-                            String rawAnnotationDocumentId = document
-                                    .get(FIELD_ANNOTATION_DOCUMENT_ID);
-                            if (rawSourceDocumentId == null || rawAnnotationDocumentId == null) {
-                                log.trace(
-                                        "Indexed document lacks source/annotation document IDs"
-                                                + " - source: {}, annotation: {}",
-                                        rawSourceDocumentId, rawAnnotationDocumentId);
-                                continue;
+                        // Retrieve user
+                        var user = document.get(FIELD_USER);
 
-                            }
-                            long sourceDocumentId = Long.valueOf(rawSourceDocumentId);
-                            long annotationDocumentId = Long.valueOf(rawAnnotationDocumentId);
+                        // Retrieve source and annotation document ids
+                        var rawSourceDocumentId = document.get(FIELD_SOURCE_DOCUMENT_ID);
+                        var rawAnnotationDocumentId = document.get(FIELD_ANNOTATION_DOCUMENT_ID);
+                        if (!validSourceAndDocumentIds(rawSourceDocumentId,
+                                rawAnnotationDocumentId)) {
+                            continue;
+                        }
 
-                            // If the query is limited to a given document, skip any results
-                            // which are not in the given document
-                            Optional<SourceDocument> limitedToDocument = aRequest
-                                    .getLimitedToDocument();
-                            if (limitedToDocument.isPresent() && !Objects
-                                    .equals(limitedToDocument.get().getId(), sourceDocumentId)) {
-                                log.trace(
-                                        "Query limited to document {}, skipping results for "
-                                                + "document {}",
-                                        limitedToDocument.get().getId(), sourceDocumentId);
-                                continue;
-                            }
+                        var sourceDocumentId = Long.valueOf(rawSourceDocumentId);
+                        var annotationDocumentId = Long.valueOf(rawAnnotationDocumentId);
+                        var sourceDocument = sourceDocumentIndex.get(sourceDocumentId);
+                        var annotationDocument = annotatableDocuments.get(sourceDocument);
 
-                            if (annotatableDocuments.containsKey(sourceDocumentId)
-                                    && annotationDocumentId == -1) {
-                                // Exclude result if the retrieved document is a sourcedocument
-                                // (that is, has annotationDocument = -1) AND it has a
-                                // corresponding annotation document for this user
-                                log.trace("Skipping results from indexed source document {} in"
-                                        + "favor of results from the corresponding annotation "
-                                        + "document", sourceDocumentId);
-                                continue;
-                            }
-                            else if (annotationDocumentId != -1
-                                    && !aRequest.getUser().getUsername().equals(user)) {
-                                // Exclude result if the retrieved document is an annotation
-                                // document (that is, annotationDocument != -1 and its username
-                                // is different from the querying user
-                                log.trace(
-                                        "Skipping results from annotation document for user {} "
-                                                + "which does not match the requested user {}",
-                                        user, aRequest.getUser().getUsername());
-                                continue;
-                            }
+                        if (sourceDocument == null) {
+                            // Document is not annotatable by this user, so we skip this result
+                            continue;
+                        }
 
-                            while (spans.nextStartPosition() != Spans.NO_MORE_POSITIONS) {
-                                numResults++;
-                            }
+                        if (annotationDocument != null && IGNORE == annotationDocument.getState()) {
+                            log.trace("Skipping results from ignored document {}", sourceDocument);
+                        }
+
+                        if (!isWithinDocumentScope(limitedToDocument, sourceDocument)) {
+                            continue;
+                        }
+
+                        var matchInSourceDocument = annotationDocumentId == -1L;
+                        if (matchInSourceDocument
+                                && isAnnotationDocumentIndexed(annotationDocument)) {
+                            // Exclude result if the retrieved document is a sourcedocument
+                            // (that is, has annotationDocument = -1) AND it has a
+                            // corresponding annotation document for this user
+                            log.trace("Skipping results from indexed source document {} in"
+                                    + "favor of results from the corresponding annotation "
+                                    + "document", sourceDocument);
+                            continue;
+                        }
+
+                        if (!matchInSourceDocument
+                                && !aRequest.getUser().getUsername().equals(user)) {
+                            // Exclude result if the retrieved document is an annotation
+                            // document (that is, annotationDocument != -1 and its username
+                            // is different from the querying user
+                            log.trace(
+                                    "Skipping results from annotation document for user [{}] "
+                                            + "which does not match the requested user [{}]",
+                                    user, aRequest.getUser().getUsername());
+                            continue;
+                        }
+
+                        while (spans.nextStartPosition() != Spans.NO_MORE_POSITIONS) {
+                            numResults++;
                         }
                     }
                 }
@@ -858,14 +880,34 @@ public class MtasDocumentIndex
         return numResults;
     }
 
-    private Map<Long, Long> listAnnotatableDocuments(Project aProject, User aUser)
+    private boolean validSourceAndDocumentIds(String aRawSourceDocumentId,
+            String aRawAnnotationDocumentId)
     {
-        Map<Long, Long> annotateableDocuments = new HashMap<>();
-        documentService.listAnnotatableDocuments(aProject, aUser).entrySet().stream()
-                .filter(e -> e.getValue() != null) // only include entries where the annodoc is not
-                                                   // null
-                .forEach(e -> annotateableDocuments.put(e.getKey().getId(), e.getValue().getId()));
-        return annotateableDocuments;
+        if (aRawSourceDocumentId == null || aRawAnnotationDocumentId == null) {
+            log.trace(
+                    "Indexed document lacks source/annotation document IDs"
+                            + " - source: {}, annotation: {}",
+                    aRawSourceDocumentId, aRawAnnotationDocumentId);
+            return false;
+        }
+
+        return true;
+    }
+
+    private boolean isWithinDocumentScope(Optional<SourceDocument> limitedToDocument,
+            SourceDocument aDocument)
+    {
+        if (limitedToDocument.isEmpty()) {
+            return true;
+        }
+
+        if (!Objects.equals(limitedToDocument.get().getId(), aDocument.getId())) {
+            log.trace("Query limited to document [{}], skipping results for document {}",
+                    limitedToDocument.get().getId(), aDocument);
+            return false;
+        }
+
+        return true;
     }
 
     private List<LeafReaderContext> sortLeaves(List<LeafReaderContext> aLeaves,
@@ -924,218 +966,197 @@ public class MtasDocumentIndex
             SearchQueryRequest aRequest, MtasSpanQuery q)
         throws IOException
     {
-        Map<String, List<SearchResult>> results = new LinkedHashMap<>();
+        var results = new LinkedHashMap<String, List<SearchResult>>();
 
-        ListIterator<LeafReaderContext> leafReaderContextIterator = sortLeaves(
-                searcher.getIndexReader().leaves(), searcher, q).listIterator();
+        var leafReaderContextIterator = sortLeaves(searcher.getIndexReader().leaves(), searcher, q)
+                .listIterator();
 
-        Map<SourceDocument, AnnotationDocument> sourceAnnotationDocPairs = documentService
+        var sourceAnnotationDocPairs = documentService
                 .listAnnotatableDocuments(aRequest.getProject(), aRequest.getUser());
-        Map<Long, SourceDocument> sourceDocumentIndex = new HashMap<>();
+        var sourceDocumentIndex = new HashMap<Long, SourceDocument>();
         sourceAnnotationDocPairs.entrySet().stream()
                 .forEach(e -> sourceDocumentIndex.put(e.getKey().getId(), e.getKey()));
 
         final float boost = 0;
-        SpanWeight spanweight = q.rewrite(searcher.getIndexReader()).createWeight(searcher,
+        var spanweight = q.rewrite(searcher.getIndexReader()).createWeight(searcher,
                 COMPLETE_NO_SCORES, boost);
 
-        long offset = aRequest.getOffset();
-        long count = aRequest.getCount();
-        long current = 0;
+        var offset = aRequest.getOffset();
+        var count = aRequest.getCount();
+        var current = 0;
+        var limitedToDocument = aRequest.getLimitedToDocument();
 
         resultIteration: while (leafReaderContextIterator.hasNext()) {
             LeafReaderContext leafReaderContext = leafReaderContextIterator.next();
 
             try {
-                Spans spans = spanweight.getSpans(leafReaderContext, SpanWeight.Postings.POSITIONS);
-                SegmentReader segmentReader = (SegmentReader) leafReaderContext.reader();
-                Terms terms = segmentReader.terms(FIELD_CONTENT);
-                CodecInfo mtasCodecInfo = CodecInfo.getCodecInfoFromTerms(terms);
-                if (spans != null) {
-                    while (spans.nextDoc() != Spans.NO_MORE_DOCS) {
-                        if (segmentReader.numDocs() == segmentReader.maxDoc()
-                                || segmentReader.getLiveDocs().get(spans.docID())) {
-                            Document document = segmentReader.document(spans.docID());
+                var spans = spanweight.getSpans(leafReaderContext, SpanWeight.Postings.POSITIONS);
+                if (spans == null) {
+                    continue;
+                }
 
-                            // Retrieve user
-                            String user = document.get(FIELD_USER);
+                var segmentReader = (SegmentReader) leafReaderContext.reader();
+                var terms = segmentReader.terms(FIELD_CONTENT);
+                var mtasCodecInfo = CodecInfo.getCodecInfoFromTerms(terms);
+                while (spans.nextDoc() != Spans.NO_MORE_DOCS) {
+                    if (segmentReader.numDocs() == segmentReader.maxDoc()
+                            || segmentReader.getLiveDocs().get(spans.docID())) {
+                        var document = segmentReader.document(spans.docID());
 
-                            // Retrieve source and annotation document ids
-                            String rawSourceDocumentId = document.get(FIELD_SOURCE_DOCUMENT_ID);
-                            String rawAnnotationDocumentId = document
-                                    .get(FIELD_ANNOTATION_DOCUMENT_ID);
-                            if (rawSourceDocumentId == null || rawAnnotationDocumentId == null) {
-                                log.trace(
-                                        "Indexed document lacks source/annotation document IDs"
-                                                + " - source: {}, annotation: {}",
-                                        rawSourceDocumentId, rawAnnotationDocumentId);
-                                continue;
+                        // Retrieve user
+                        var user = document.get(FIELD_USER);
 
-                            }
+                        // Retrieve source and annotation document ids
+                        var rawSourceDocumentId = document.get(FIELD_SOURCE_DOCUMENT_ID);
+                        var rawAnnotationDocumentId = document.get(FIELD_ANNOTATION_DOCUMENT_ID);
+                        if (!validSourceAndDocumentIds(rawSourceDocumentId,
+                                rawAnnotationDocumentId)) {
+                            continue;
+                        }
 
-                            long sourceDocumentId = Long.valueOf(rawSourceDocumentId);
-                            long annotationDocumentId = Long.valueOf(rawAnnotationDocumentId);
-                            boolean matchInSourceDocument = annotationDocumentId == -1;
+                        var sourceDocumentId = Long.valueOf(rawSourceDocumentId);
+                        var annotationDocumentId = Long.valueOf(rawAnnotationDocumentId);
+                        var matchInSourceDocument = annotationDocumentId == -1;
 
-                            SourceDocument sourceDocument = sourceDocumentIndex
-                                    .get(sourceDocumentId);
+                        var sourceDocument = sourceDocumentIndex.get(sourceDocumentId);
+                        if (sourceDocument == null) {
+                            // Document is not annotatable by this user, so we skip this result
+                            continue;
+                        }
 
-                            if (sourceDocument == null) {
-                                // Document is not annotatable by this user, so we skip this result
-                                continue;
-                            }
+                        var annotationDocument = sourceAnnotationDocPairs.get(sourceDocument);
 
-                            AnnotationDocument annotationDocument = sourceAnnotationDocPairs
-                                    .get(sourceDocument);
+                        if (annotationDocument != null && IGNORE == annotationDocument.getState()) {
+                            log.trace("Skipping results from ignored document {}", sourceDocument);
+                        }
 
-                            if (annotationDocument != null
-                                    && IGNORE != annotationDocument.getState()) {
-                                // Skip if the document is ignored for this user
-                                log.trace("Skipping results from ignored document {}",
-                                        sourceDocumentId);
-                            }
+                        if (!isWithinDocumentScope(limitedToDocument, sourceDocument)) {
+                            continue;
+                        }
 
-                            // If the query is limited to a given document, skip any results
-                            // which are not in the given document
-                            Optional<SourceDocument> limitedToDocument = aRequest
-                                    .getLimitedToDocument();
-                            if (limitedToDocument.isPresent() && !Objects
-                                    .equals(limitedToDocument.get().getId(), sourceDocumentId)) {
-                                log.trace(
-                                        "Query limited to document {}, skipping results for "
-                                                + "document {}",
-                                        limitedToDocument.get().getId(), sourceDocumentId);
-                                continue;
-                            }
+                        if (matchInSourceDocument
+                                && isAnnotationDocumentIndexed(annotationDocument)) {
+                            log.trace("Skipping results from indexed source document {} in"
+                                    + "favor of results from the corresponding annotation "
+                                    + "document", sourceDocument);
+                            continue;
+                        }
 
-                            if (matchInSourceDocument && annotationDocument != null) {
-                                // Exclude result if the retrieved document is a sourcedocument
-                                // AND it has a corresponding annotation document for this user
-                                // AND the document is not ignored for this user
-                                log.trace("Skipping results from indexed source document {} in"
-                                        + "favor of results from the corresponding annotation "
-                                        + "document", sourceDocumentId);
-                                continue;
-                            }
-                            else if (annotationDocumentId != -1
-                                    && !aRequest.getUser().getUsername().equals(user)) {
-                                // Exclude result if the retrieved document is an annotation
-                                // document (that is, annotationDocument != -1 and its username
-                                // is different from the querying user
-                                log.trace(
-                                        "Skipping results from annotation document for user {} "
-                                                + "which does not match the requested user {}",
-                                        user, aRequest.getUser().getUsername());
-                                continue;
-                            }
+                        if (!matchInSourceDocument
+                                && !aRequest.getUser().getUsername().equals(user)) {
+                            log.trace(
+                                    "Skipping results from annotation document for user {} "
+                                            + "which does not match the requested user {}",
+                                    user, aRequest.getUser().getUsername());
+                            continue;
+                        }
 
-                            // Retrieve document title
-                            String documentTitle = document.get(FIELD_TITLE);
+                        // Retrieve document title
+                        String documentTitle = document.get(FIELD_TITLE);
 
-                            // String idValue = segmentReader.document(spans.docID())
-                            // .getField(FIELD_ID).stringValue();
-                            // log.debug("******** New doc {}-{}", + spans.docID(), idValue);
+                        // String idValue = segmentReader.document(spans.docID())
+                        // .getField(FIELD_ID).stringValue();
+                        // log.debug("******** New doc {}-{}", + spans.docID(), idValue);
 
-                            while (spans.nextStartPosition() != Spans.NO_MORE_POSITIONS) {
-                                if (current < offset) {
-                                    current++;
-                                    continue;
-                                }
-                                if (current - offset + 1 > count) {
-                                    break resultIteration;
-                                }
+                        while (spans.nextStartPosition() != Spans.NO_MORE_POSITIONS) {
+                            if (current < offset) {
                                 current++;
-                                int matchStart = spans.startPosition();
-                                int matchEnd = spans.endPosition();
+                                continue;
+                            }
+                            if (current - offset + 1 > count) {
+                                break resultIteration;
+                            }
+                            current++;
+                            int matchStart = spans.startPosition();
+                            int matchEnd = spans.endPosition();
 
-                                int windowStart = Math.max(matchStart - RESULT_WINDOW_SIZE, 0);
-                                int windowEnd = matchEnd + RESULT_WINDOW_SIZE - 1;
+                            int windowStart = Math.max(matchStart - RESULT_WINDOW_SIZE, 0);
+                            int windowEnd = matchEnd + RESULT_WINDOW_SIZE - 1;
 
-                                // Retrieve all indexed objects within the matching range
-                                List<MtasTokenString> tokens = mtasCodecInfo.getObjectsByPositions(
-                                        FIELD_CONTENT, spans.docID(), windowStart, windowEnd);
+                            // Retrieve all indexed objects within the matching range
+                            List<MtasTokenString> tokens = mtasCodecInfo.getObjectsByPositions(
+                                    FIELD_CONTENT, spans.docID(), windowStart, windowEnd);
 
-                                tokens.sort(Comparator.comparing(MtasTokenString::getOffsetStart));
+                            tokens.sort(Comparator.comparing(MtasTokenString::getOffsetStart));
 
-                                if (tokens.isEmpty()) {
+                            if (tokens.isEmpty()) {
+                                continue;
+                            }
+
+                            SearchResult result = new SearchResult();
+                            StringBuilder resultText = new StringBuilder();
+                            StringBuilder leftContext = new StringBuilder();
+                            StringBuilder rightContext = new StringBuilder();
+                            result.setDocumentId(sourceDocumentId);
+                            result.setDocumentTitle(documentTitle);
+                            result.setOffsetStart(tokens.stream()
+                                    .filter(t -> t.getPositionStart() >= matchStart
+                                            && t.getPositionEnd() < matchEnd)
+                                    .mapToInt(MtasTokenString::getOffsetStart).min()
+                                    .orElse(matchStart));
+                            result.setOffsetEnd(tokens.stream()
+                                    .filter(t -> t.getPositionStart() >= matchStart
+                                            && t.getPositionEnd() < matchEnd)
+                                    .mapToInt(MtasTokenString::getOffsetEnd).max()
+                                    .orElse(matchEnd));
+                            result.setTokenStart(matchStart);
+                            result.setTokenLength(matchEnd - matchStart);
+                            result.setReadOnly(annotationDocument != null
+                                    && FINISHED.equals(annotationDocument.getState()));
+                            result.setSelectedForAnnotation(!result.isReadOnly());
+
+                            MtasTokenString prevToken = null;
+                            for (MtasTokenString token : tokens) {
+                                if (!token.getPrefix().equals(DEFAULT_PREFIX)) {
                                     continue;
                                 }
 
-                                SearchResult result = new SearchResult();
-                                StringBuilder resultText = new StringBuilder();
-                                StringBuilder leftContext = new StringBuilder();
-                                StringBuilder rightContext = new StringBuilder();
-                                result.setDocumentId(sourceDocumentId);
-                                result.setDocumentTitle(documentTitle);
-                                result.setOffsetStart(tokens.stream()
-                                        .filter(t -> t.getPositionStart() >= matchStart
-                                                && t.getPositionEnd() < matchEnd)
-                                        .mapToInt(MtasTokenString::getOffsetStart).min()
-                                        .orElse(matchStart));
-                                result.setOffsetEnd(tokens.stream()
-                                        .filter(t -> t.getPositionStart() >= matchStart
-                                                && t.getPositionEnd() < matchEnd)
-                                        .mapToInt(MtasTokenString::getOffsetEnd).max()
-                                        .orElse(matchEnd));
-                                result.setTokenStart(matchStart);
-                                result.setTokenLength(matchEnd - matchStart);
-                                result.setReadOnly(annotationDocument != null
-                                        && FINISHED.equals(annotationDocument.getState()));
-                                result.setSelectedForAnnotation(!result.isReadOnly());
-
-                                MtasTokenString prevToken = null;
-                                for (MtasTokenString token : tokens) {
-                                    if (!token.getPrefix().equals(DEFAULT_PREFIX)) {
-                                        continue;
-                                    }
-
-                                    // When searching for an annotation, we don't get the matching
-                                    // text back... not sure why...
-                                    String tokenText = CodecUtil.termValue(token.getValue());
-                                    if (tokenText == null) {
-                                        continue;
-                                    }
-
-                                    if (token.getPositionStart() < matchStart) {
-                                        fill(leftContext, prevToken, token);
-                                        leftContext.append(tokenText);
-                                    }
-                                    else if (token.getPositionStart() >= matchEnd) {
-                                        fill(rightContext, prevToken, token);
-                                        rightContext.append(tokenText);
-                                    }
-                                    else {
-                                        // Only add the whitespace to the match if we already have
-                                        // added any text to the match - otherwise consider the
-                                        // whitespace to be part of the left context
-                                        if (resultText.length() > 0) {
-                                            fill(resultText, prevToken, token);
-                                        }
-                                        else {
-                                            fill(leftContext, prevToken, token);
-                                        }
-                                        resultText.append(tokenText);
-                                    }
-                                    prevToken = token;
+                                // When searching for an annotation, we don't get the matching
+                                // text back... not sure why...
+                                String tokenText = CodecUtil.termValue(token.getValue());
+                                if (tokenText == null) {
+                                    continue;
                                 }
-                                result.setText(resultText.toString());
-                                result.setLeftContext(leftContext.toString());
-                                result.setRightContext(rightContext.toString());
 
-                                AnnotationLayer groupingLayer = aRequest.getAnnoationLayer();
-                                AnnotationFeature groupingFeature = aRequest.getAnnotationFeature();
-
-                                if (groupingLayer != null && groupingFeature != null) {
-                                    List<String> featureValues = featureValuesAtMatch(tokens,
-                                            matchStart, matchEnd, groupingLayer, groupingFeature);
-                                    for (String featureValue : featureValues) {
-                                        addToResults(results, featureValue, result);
-                                    }
+                                if (token.getPositionStart() < matchStart) {
+                                    fill(leftContext, prevToken, token);
+                                    leftContext.append(tokenText);
+                                }
+                                else if (token.getPositionStart() >= matchEnd) {
+                                    fill(rightContext, prevToken, token);
+                                    rightContext.append(tokenText);
                                 }
                                 else {
-                                    // if no annotation feature is specified group by document title
-                                    addToResults(results, result.getDocumentTitle(), result);
+                                    // Only add the whitespace to the match if we already have
+                                    // added any text to the match - otherwise consider the
+                                    // whitespace to be part of the left context
+                                    if (resultText.length() > 0) {
+                                        fill(resultText, prevToken, token);
+                                    }
+                                    else {
+                                        fill(leftContext, prevToken, token);
+                                    }
+                                    resultText.append(tokenText);
                                 }
+                                prevToken = token;
+                            }
+                            result.setText(resultText.toString());
+                            result.setLeftContext(leftContext.toString());
+                            result.setRightContext(rightContext.toString());
+
+                            var groupingLayer = aRequest.getAnnoationLayer();
+                            var groupingFeature = aRequest.getAnnotationFeature();
+
+                            if (groupingLayer != null && groupingFeature != null) {
+                                var featureValues = featureValuesAtMatch(tokens, matchStart,
+                                        matchEnd, groupingLayer, groupingFeature);
+                                for (String featureValue : featureValues) {
+                                    addToResults(results, featureValue, result);
+                                }
+                            }
+                            else {
+                                // if no annotation feature is specified group by document title
+                                addToResults(results, result.getDocumentTitle(), result);
                             }
                         }
                     }

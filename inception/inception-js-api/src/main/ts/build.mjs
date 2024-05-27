@@ -15,9 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import esbuild from 'esbuild'
+import esbuildSvelte from 'esbuild-svelte'
+import sveltePreprocess from 'svelte-preprocess'
 import yargs from 'yargs/yargs'
 import { hideBin } from 'yargs/helpers'
-import esbuild from 'esbuild'
 import { sassPlugin } from 'esbuild-sass-plugin'
 import fs from 'fs-extra'
 
@@ -26,32 +28,43 @@ const argv = yargs(hideBin(process.argv)).argv
 const packagePath = 'de/tudarmstadt/ukp/inception/diam/editor/api/resources/'
 
 let outbase = `../../../target/js/${packagePath}`
+if (argv.live) {
+  outbase = `../../../target/classes/${packagePath}`
+}
 
 const defaults = {
+  entryPoints: ['index.ts'],
+  outfile: `${outbase}/InceptionJsAPI.min.js`,
+  globalName: 'InceptionJsAPI',
   bundle: true,
   sourcemap: true,
   minify: !argv.live,
-  target: 'es6',
+  target: 'es2018',
   loader: { '.ts': 'ts' },
   logLevel: 'info',
-  plugins: [sassPlugin()]
+  plugins: [
+    sassPlugin(),
+    esbuildSvelte({
+      compilerOptions: { dev: argv.live },
+      preprocess: sveltePreprocess(),
+      filterWarnings: (warning) => {
+        // Ignore warnings about unused CSS selectors in Svelte components which appear as we import
+        // Bootstrap CSS files. We do not use all selectors in the files and thus the warnings are
+        // expected.
+        if (warning.code === 'css-unused-selector') {
+          return false
+        }
+      }
+    })
+  ]
 }
+
+fs.mkdirsSync(`${outbase}`)
+fs.emptyDirSync(outbase)
 
 if (argv.live) {
-  defaults.watch = {
-    onRebuild (error, result) {
-      if (error) console.error('watch build failed:', error)
-      else console.log('watch build succeeded:', result)
-    }
-  }
-  outbase = `../../../target/classes/${packagePath}`
+  const context = await esbuild.context(defaults)
+  await context.watch()
 } else {
-  fs.emptyDirSync(outbase)
+  esbuild.build(defaults)
 }
-fs.mkdirsSync(`${outbase}`)
-
-esbuild.build(Object.assign({
-  entryPoints: ['index.ts'],
-  outfile: `${outbase}/InceptionJsAPI.min.js`,
-  globalName: 'InceptionJsAPI'
-}, defaults))

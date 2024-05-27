@@ -25,7 +25,6 @@ import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Queue;
 
@@ -37,17 +36,12 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.AnnotationAutoCon
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.UserPreferencesService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
-import de.tudarmstadt.ukp.inception.rendering.coloring.ColoringRules;
 import de.tudarmstadt.ukp.inception.rendering.coloring.ColoringService;
-import de.tudarmstadt.ukp.inception.rendering.coloring.ColoringStrategy;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationPreference;
-import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.pipeline.RenderStep;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
-import de.tudarmstadt.ukp.inception.rendering.vmodel.VObject;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
-import de.tudarmstadt.ukp.inception.schema.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
 /**
  * <p>
@@ -89,7 +83,7 @@ public class ColorRenderer
     @Override
     public void render(VDocument aVDoc, RenderRequest aRequest)
     {
-        Optional<AnnotationPreference> prefs = getPreferences(aRequest);
+        var prefs = getPreferences(aRequest);
 
         if (prefs.isEmpty()) {
             return;
@@ -106,9 +100,9 @@ public class ColorRenderer
                 .sorted(comparing(AnnotationLayer::getId)) //
                 .collect(toList());
 
-        Map<String[], Queue<String>> colorQueues = new HashMap<>();
-        for (AnnotationLayer layer : sortedLayers) {
-            ColoringStrategy coloringStrategy = aRequest.getColoringStrategyOverride()
+        var colorQueues = new HashMap<String[], Queue<String>>();
+        for (var layer : sortedLayers) {
+            var coloringStrategy = aRequest.getColoringStrategyOverride()
                     .orElse(coloringService.getStrategy(layer, prefs.get(), colorQueues));
 
             // If the layer is not included in the rendering, then we skip here - but only after
@@ -119,13 +113,13 @@ public class ColorRenderer
                 continue;
             }
 
-            TypeAdapter typeAdapter = schemaService.getAdapter(layer);
+            var typeAdapter = schemaService.getAdapter(layer);
 
-            ColoringRules coloringRules = typeAdapter.getTraits(ColoringRulesTrait.class)
+            var coloringRules = typeAdapter.getTraits(ColoringRulesTrait.class)
                     .map(ColoringRulesTrait::getColoringRules) //
                     .orElse(null);
 
-            for (VObject vobj : aVDoc.objects(layer.getId())) {
+            for (var vobj : aVDoc.objects(layer.getId())) {
                 vobj.setColorHint(
                         coloringStrategy.getColor(vobj, vobj.getLabelHint(), coloringRules));
             }
@@ -134,7 +128,7 @@ public class ColorRenderer
 
     private Optional<AnnotationPreference> getPreferences(RenderRequest aRequest)
     {
-        AnnotatorState state = aRequest.getState();
+        var state = aRequest.getState();
         if (state != null) {
             return Optional.of(state.getPreferences());
         }
@@ -142,7 +136,7 @@ public class ColorRenderer
         if (userPreferencesService != null) {
             try {
                 return Optional.of(userPreferencesService.loadPreferences(aRequest.getProject(),
-                        aRequest.getAnnotationUser().getUsername(), Mode.ANNOTATION));
+                        aRequest.getSessionOwner().getUsername(), Mode.ANNOTATION));
             }
             catch (IOException e) {
                 LOG.error("Cannot load annotation preferences: {}", getRootCauseMessage(e), e);

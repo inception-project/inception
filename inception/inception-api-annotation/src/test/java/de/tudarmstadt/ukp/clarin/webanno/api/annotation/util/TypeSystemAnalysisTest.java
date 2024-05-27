@@ -37,7 +37,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode;
-import de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst;
+import de.tudarmstadt.ukp.inception.support.WebAnnoConst;
 
 public class TypeSystemAnalysisTest
 {

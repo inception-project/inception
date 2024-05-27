@@ -17,24 +17,29 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport.FEAT_REL_SOURCE;
+import static de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport.FEAT_REL_TARGET;
+import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 
 import java.io.IOException;
+
+import javax.persistence.NoResultException;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
-import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 
 public class AnnotationTextPanel
     extends Panel
@@ -58,7 +63,11 @@ public class AnnotationTextPanel
                 .setAlwaysEnabled(true) // avoid disabling in read-only mode
                 .add(visibleWhen(() -> !isRelationSelected())));
 
+        add(new Label("originName", LoadableDetachableModel.of(this::getOriginName))
+                .add(visibleWhen(() -> isRelationSelected())));
         add(new Label("originText", PropertyModel.of(getModelObject(), "selection.originText"))
+                .add(visibleWhen(() -> isRelationSelected())));
+        add(new Label("targetName", LoadableDetachableModel.of(this::getTargetName))
                 .add(visibleWhen(() -> isRelationSelected())));
         add(new Label("targetText", PropertyModel.of(getModelObject(), "selection.targetText"))
                 .add(visibleWhen(() -> isRelationSelected())));
@@ -68,6 +77,30 @@ public class AnnotationTextPanel
         add(new LambdaAjaxLink("jumpToTarget", this::actionJumpToTarget) //
                 .setAlwaysEnabled(true) // avoid disabling in read-only mode
                 .add(visibleWhen(() -> isRelationSelected())));
+    }
+
+    private String getOriginName()
+    {
+        try {
+            return annotationService
+                    .getFeature(FEAT_REL_SOURCE, getModelObject().getSelectedAnnotationLayer())
+                    .getUiName();
+        }
+        catch (NoResultException e) {
+            return "From";
+        }
+    }
+
+    private String getTargetName()
+    {
+        try {
+            return annotationService
+                    .getFeature(FEAT_REL_TARGET, getModelObject().getSelectedAnnotationLayer())
+                    .getUiName();
+        }
+        catch (NoResultException e) {
+            return "To";
+        }
     }
 
     private boolean isRelationSelected()

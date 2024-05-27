@@ -21,18 +21,18 @@ import java.io.IOException;
 
 import org.springframework.stereotype.Component;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanEvent;
 import de.tudarmstadt.ukp.inception.log.model.AnnotationDetails;
+import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 
 @Component
 public class SpanEventAdapter
     implements EventLoggingAdapter<SpanEvent>
 {
     @Override
-    public boolean accepts(Object aEvent)
+    public boolean accepts(Class<?> aEvent)
     {
-        return aEvent instanceof SpanEvent;
+        return SpanEvent.class.isAssignableFrom(aEvent);
     }
 
     @Override
@@ -56,7 +56,7 @@ public class SpanEventAdapter
     @Override
     public String getDetails(SpanEvent aEvent) throws IOException
     {
-        AnnotationDetails details = new AnnotationDetails(aEvent.getAnnotation());
+        var details = new AnnotationDetails(aEvent.getAnnotation());
         return JSONUtil.toJsonString(details);
     }
 }

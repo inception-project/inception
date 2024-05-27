@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.externaleditor.xml;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.wicket.ServletContextUtils.referenceToUrl;
+import static de.tudarmstadt.ukp.inception.support.wicket.ServletContextUtils.referenceToUrl;
 import static java.util.stream.Collectors.toList;
 import static org.apache.uima.fit.util.JCasUtil.selectSingle;
 
@@ -41,19 +41,17 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.xml.sax.ContentHandler;
 import org.xml.sax.helpers.AttributesImpl;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorRegistry;
 import de.tudarmstadt.ukp.inception.externaleditor.ExternalAnnotationEditor;
 import de.tudarmstadt.ukp.inception.externaleditor.ExternalAnnotationEditorFactory;
 import de.tudarmstadt.ukp.inception.externaleditor.XmlDocumentViewControllerImplBase;
 import de.tudarmstadt.ukp.inception.externaleditor.policy.DefaultHtmlDocumentPolicy;
 import de.tudarmstadt.ukp.inception.externaleditor.policy.SafetyNetDocumentPolicy;
-import de.tudarmstadt.ukp.inception.io.xml.dkprocore.Cas2SaxEvents;
 
 @ConditionalOnWebApplication
 @RestController
@@ -130,7 +128,7 @@ public class XmlDocumentViewControllerImpl
         try (Writer out = new StringWriter()) {
             renderXmlDeclaration(out);
 
-            for (String cssUrl : formatRegistry.getFormatCssStylesheets(doc).stream()
+            for (var cssUrl : formatRegistry.getFormatCssStylesheets(doc).stream()
                     .map(css -> referenceToUrl(servletContext, css)).collect(toList())) {
                 renderXmlStylesheet(out, cssUrl);
             }
@@ -150,25 +148,25 @@ public class XmlDocumentViewControllerImpl
             if (maybeXmlDocument.isEmpty()) {
                 // Gracefully handle the case that the CAS does not contain any XML structure at all
                 // and show only the document text in this case.
-                ContentHandler ch = XmlCas2SaxEvents.makeSerializer(out);
+                var ch = XmlCas2SaxEvents.makeSerializer(out);
                 ch.startDocument();
                 ch.startElement(null, null, DOCUMENT, null);
-                AttributesImpl attrs = new AttributesImpl();
+                var attrs = new AttributesImpl();
                 attrs.addAttribute(null, null, XmlCas2SaxEvents.DATA_CAPTURE_ROOT, null, "");
                 ch.startElement(null, null, BODY, attrs);
-                String text = cas.getDocumentText();
+                var text = cas.getDocumentText();
                 ch.characters(text.toCharArray(), 0, text.length());
                 ch.endElement(null, null, BODY);
                 ch.endElement(null, null, DOCUMENT);
                 ch.endDocument();
             }
             else {
-                XmlDocument xml = selectSingle(cas.getJCas(), XmlDocument.class);
+                var xml = selectSingle(cas.getJCas(), XmlDocument.class);
 
-                ContentHandler ch = XmlCas2SaxEvents.makeSerializer(out);
+                var ch = XmlCas2SaxEvents.makeSerializer(out);
                 var sh = applySanitizers(aEditor, doc, ch);
 
-                Cas2SaxEvents serializer = new XmlCas2SaxEvents(xml, sh);
+                var serializer = new XmlCas2SaxEvents(xml, sh);
                 serializer.process(xml);
             }
 

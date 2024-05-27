@@ -1,5 +1,5 @@
 /*
- * Licensed to the Technische Universität Darmstadt under one
+# * Licensed to the Technische Universität Darmstadt under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
  * regarding copyright ownership.  The Technische Universität Darmstadt 
@@ -24,9 +24,7 @@ import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toCollection;
 
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.uima.cas.CAS;
 import org.dkpro.statistics.agreement.coding.FleissKappaAgreement;
@@ -34,12 +32,10 @@ import org.dkpro.statistics.agreement.coding.ICodingAnnotationStudy;
 
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.DefaultAgreementTraits;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.CodingAgreementMeasure_ImplBase;
-import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.CodingAgreementResult;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.DiffAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.FullCodingAgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
 public class FleissKappaAgreementMeasure
     extends CodingAgreementMeasure_ImplBase<DefaultAgreementTraits>
@@ -54,32 +50,31 @@ public class FleissKappaAgreementMeasure
     }
 
     @Override
-    public CodingAgreementResult calculatePairAgreement(Map<String, List<CAS>> aCasMap)
+    public FullCodingAgreementResult getAgreement(Map<String, CAS> aCasMap)
     {
-        AnnotationFeature feature = getFeature();
-        DefaultAgreementTraits traits = getTraits();
+        var feature = getFeature();
+        var traits = getTraits();
 
-        List<DiffAdapter> adapters = getDiffAdapters(annotationService, asList(feature.getLayer()));
+        var adapters = getDiffAdapters(annotationService, asList(feature.getLayer()));
 
-        CasDiff diff = doDiff(adapters, traits.getLinkCompareBehavior(), aCasMap);
+        var diff = doDiff(adapters, traits.getLinkCompareBehavior(), aCasMap);
 
-        Set<String> tagset = annotationService.listTags(feature.getTagset()).stream()
-                .map(Tag::getName).collect(toCollection(LinkedHashSet::new));
+        var tagset = annotationService.listTags(feature.getTagset()).stream() //
+                .map(Tag::getName) //
+                .collect(toCollection(LinkedHashSet::new));
 
-        CodingAgreementResult agreementResult = makeCodingStudy(diff, feature.getLayer().getName(),
-                feature.getName(), tagset, true, aCasMap);
+        var agreementResult = makeCodingStudy(diff, feature.getLayer().getName(), feature.getName(),
+                tagset, true, aCasMap);
 
-        InspectableFleissKappaAgreement agreement = new InspectableFleissKappaAgreement(
-                agreementResult.getStudy());
-
-        if (agreementResult.getStudy().getItemCount() == 0) {
+        if (agreementResult.isEmpty()) {
             agreementResult.setAgreement(Double.NaN);
         }
         else if (agreementResult.getObservedCategories().size() == 1) {
             agreementResult.setAgreement(1.0d);
         }
         else {
-            agreementResult.setAgreement(agreement.calculateAgreement());
+            var measure = new InspectableFleissKappaAgreement(agreementResult.getStudy());
+            agreementResult.setAgreement(measure.calculateAgreement());
         }
 
         return agreementResult;

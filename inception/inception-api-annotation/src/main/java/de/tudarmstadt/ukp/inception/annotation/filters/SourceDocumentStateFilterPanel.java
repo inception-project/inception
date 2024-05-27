@@ -30,8 +30,8 @@ import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.SymbolLabel;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.inception.support.wicket.SymbolLabel;
 
 public class SourceDocumentStateFilterPanel
     extends Panel
@@ -49,6 +49,8 @@ public class SourceDocumentStateFilterPanel
             SourceDocumentState... aStates)
     {
         super(aId, aModel);
+
+        setOutputMarkupId(true);
 
         var listview = new ListView<>("stateFilter", asList(aStates))
         {
@@ -86,6 +88,8 @@ public class SourceDocumentStateFilterPanel
         else {
             selectedStates.add(aState);
         }
+
+        aTarget.add(this);
 
         send(this, BUBBLE, new SourceDocumentFilterStateChanged(aTarget, selectedStates));
     }

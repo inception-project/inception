@@ -1,3 +1,5 @@
+import { VID } from "@inception-project/inception-js-api"
+
 /*
  * ## INCEpTION ##
  * Licensed to the Technische Universität Darmstadt under one
@@ -38,6 +40,7 @@
  * SOFTWARE.
  */
 export class Comment {
+  id: VID = undefined
   text: string = undefined
   type: string = undefined
 

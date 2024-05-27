@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.rendering.pipeline;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.ExtensionPoint;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
+import de.tudarmstadt.ukp.inception.support.extensionpoint.ExtensionPoint;
 
 public interface RenderStepExtensionPoint
     extends ExtensionPoint<RenderRequest, RenderStep>

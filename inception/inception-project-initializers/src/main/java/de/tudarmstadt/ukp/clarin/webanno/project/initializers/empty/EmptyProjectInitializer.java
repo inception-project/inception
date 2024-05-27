@@ -20,14 +20,20 @@ package de.tudarmstadt.ukp.clarin.webanno.project.initializers.empty;
 import static java.util.Arrays.asList;
 
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.util.List;
+import java.util.Optional;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.project.ProjectInitializer;
+import org.apache.wicket.request.resource.PackageResourceReference;
+import org.apache.wicket.request.resource.ResourceReference;
+import org.springframework.core.annotation.Order;
+
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.QuickProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.SentenceLayerInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.TokenLayerInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.config.ProjectInitializersAutoConfiguration;
+import de.tudarmstadt.ukp.inception.project.api.ProjectInitializer;
 
 /**
  * <p>
@@ -35,13 +41,23 @@ import de.tudarmstadt.ukp.clarin.webanno.project.initializers.config.ProjectInit
  * {@link ProjectInitializersAutoConfiguration#emptyProjectInitializer}.
  * </p>
  */
+@Order(4000)
 public class EmptyProjectInitializer
     implements QuickProjectInitializer
 {
+    private static final PackageResourceReference THUMBNAIL = new PackageResourceReference(
+            MethodHandles.lookup().lookupClass(), "thumbnail.svg");
+
     @Override
     public String getName()
     {
-        return "Empty project (no layers)";
+        return "Blank project (no layers)";
+    }
+
+    @Override
+    public Optional<ResourceReference> getThumbnail()
+    {
+        return Optional.of(THUMBNAIL);
     }
 
     @Override
@@ -67,7 +83,13 @@ public class EmptyProjectInitializer
     @Override
     public void configure(Project aProject) throws IOException
     {
-        aProject.setDescription("This project has no pre-defined layers. You will only be able to "
+        aProject.setDescription(getDescription().get());
+    }
+
+    @Override
+    public Optional<String> getDescription()
+    {
+        return Optional.of("This project has no pre-defined layers. You will only be able to "
                 + "annotate after you have defined annotation layers in the project settings.");
     }
 }

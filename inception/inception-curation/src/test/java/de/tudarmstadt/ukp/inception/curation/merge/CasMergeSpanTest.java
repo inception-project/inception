@@ -19,11 +19,11 @@ package de.tudarmstadt.ukp.inception.curation.merge;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.ANY_OVERLAP;
-import static de.tudarmstadt.ukp.clarin.webanno.support.uima.AnnotationBuilder.buildAnnotation;
 import static de.tudarmstadt.ukp.inception.curation.merge.CurationTestUtils.HOST_TYPE;
 import static de.tudarmstadt.ukp.inception.curation.merge.CurationTestUtils.createMultiLinkWithRoleTestTypeSystem;
 import static de.tudarmstadt.ukp.inception.curation.merge.CurationTestUtils.makeLinkFS;
 import static de.tudarmstadt.ukp.inception.curation.merge.CurationTestUtils.makeLinkHostFS;
+import static de.tudarmstadt.ukp.inception.support.uima.AnnotationBuilder.buildAnnotation;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.factory.CasFactory.createCas;
 import static org.apache.uima.fit.factory.JCasFactory.createJCas;
@@ -41,8 +41,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
-import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
-import de.tudarmstadt.ukp.inception.schema.feature.LinkWithRoleModel;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
+import de.tudarmstadt.ukp.inception.schema.api.feature.LinkWithRoleModel;
 
 public class CasMergeSpanTest
     extends CasMergeTestBase
@@ -52,10 +52,10 @@ public class CasMergeSpanTest
     @Test
     public void simpleCopyToEmptyTest() throws Exception
     {
-        CAS sourceCas = createCas();
-        AnnotationFS clickedFs = createNEAnno(sourceCas, "NN", 0, 0);
+        var sourceCas = createCas();
+        var clickedFs = createNEAnno(sourceCas, "NN", 0, 0);
 
-        CAS targetCas = createCas();
+        var targetCas = createCas();
         createToken(targetCas, 0, 0);
 
         sut.mergeSpanAnnotation(document, DUMMY_USER, neLayer, targetCas, clickedFs, false);

@@ -45,7 +45,9 @@ import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityAutoConfigurati
 import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityPropertiesImpl;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
-@DataJpaTest(showSql = false)
+@DataJpaTest(showSql = false, //
+        properties = { //
+                "spring.main.banner-mode=off" })
 @EnableAutoConfiguration
 @ImportAutoConfiguration( //
         exclude = { LiquibaseAutoConfiguration.class }, //
@@ -70,6 +72,7 @@ class UserDaoImplTest
         securityProperties.setMaximumUsernameLength(DEFAULT_MAXIMUM_USERNAME_LENGTH);
         securityProperties.setMinimumPasswordLength(DEFAULT_MINIMUM_PASSWORD_LENGTH);
         securityProperties.setMaximumPasswordLength(DEFAULT_MINIMUM_PASSWORD_LENGTH);
+        securityProperties.setSpaceAllowedInUsername(false);
     }
 
     @Test
@@ -122,6 +125,18 @@ class UserDaoImplTest
     }
 
     @Test
+    void thatAllowingSpaceInUsernameWorks()
+    {
+        securityProperties.setMinimumUsernameLength(0);
+
+        securityProperties.setSpaceAllowedInUsername(false);
+        assertThat(userDao.isValidUsername("a z")).isFalse();
+
+        securityProperties.setSpaceAllowedInUsername(true);
+        assertThat(userDao.isValidUsername("a z")).isTrue();
+    }
+
+    @Test
     void thatInvalidDefaultUserNameIsRejected()
     {
         securityProperties.setMinimumUsernameLength(1);
@@ -150,27 +165,27 @@ class UserDaoImplTest
         assertThat(userDao.validateUsername(" john")) //
                 .hasSize(1) //
                 .extracting(ValidationError::getMessage).first().asString() //
-                .contains("cannot contain a space");
+                .contains("cannot contain whitespace");
 
         assertThat(userDao.validateUsername("john ")) //
                 .hasSize(1) //
                 .extracting(ValidationError::getMessage).first().asString() //
-                .contains("cannot contain a space");
+                .contains("cannot contain whitespace");
 
         assertThat(userDao.validateUsername("jo hn")) //
                 .hasSize(1) //
                 .extracting(ValidationError::getMessage).first().asString() //
-                .contains("cannot contain a space");
+                .contains("cannot contain whitespace");
 
         assertThat(userDao.validateUsername("jo\thn")) //
                 .hasSize(1) //
                 .extracting(ValidationError::getMessage).first().asString() //
-                .contains("cannot contain a space");
+                .contains("cannot contain whitespace");
 
         assertThat(userDao.validateUsername("john\n")) //
                 .hasSize(1) //
                 .extracting(ValidationError::getMessage).first().asString() //
-                .contains("cannot contain a space");
+                .contains("cannot contain whitespace");
 
         assertThat(userDao.validateUsername("john\0")) //
                 .hasSize(1) //

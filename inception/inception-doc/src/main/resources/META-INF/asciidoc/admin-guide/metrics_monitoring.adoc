@@ -14,9 +14,50 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+[[sect_monitoring]]
 = Monitoring
 
-== Available metrics
+[[sect_health_check]]
+== Health check
+
+{product-name} offers a health-checking endpoint at `.../actuator/health`. It provides a JSON response indicating
+whether the application is up and running.
+
+[source,json]
+----
+{
+   "status":"UP",
+   "components":{
+      "db":{
+         "status":"UP",
+         "details":{
+            "database":"MariaDB",
+            "validationQuery":"isValid()"
+         }
+      },
+      "diskSpace":{
+         "status":"UP",
+         "details":{
+            "total": ...,
+            "free": ...,
+            "threshold": ...,
+            "exists":true
+         }
+      },
+      "ping":{
+         "status":"UP"
+      }
+   }
+}
+----
+
+
+== Metrics
+
+====
+NOTE: to make the metrics available `spring.jmx.enabled=true` and `monitoring.metrics.enabled=true`  must be set in 
+       the `settings.properties` file  (see <<sect_home_folder>> on this file)..
+====
 
 We expose some metrics of the running {product-name} instance via JMX. These are currently
 
@@ -25,10 +66,6 @@ We expose some metrics of the running {product-name} instance via JMX. These are
 * the number of enabled recommenders
 * the number of annotation documents i.e. documents being annotated per user
 
-To make the metrics available `spring.jmx.enabled=true`
-and `monitoring.metrics.enabled=true` 
-must be set in the `settings.properties` file 
-(see <<sect_home_folder>> on this file).
 
 == Setting up metrics exporter
 
@@ -40,7 +77,8 @@ file next to the {product-name} .jar file. An example `config.yml` file that exp
 INCEpTION but not webanno brat metrics (metrics associated with brat rendering) and conforms JMX metric 
 names to https://prometheus.io/docs/practices/naming/[Prometheus Naming conventions] is:
 
-....
+[source,yaml]
+----
 ssl: false
 whitelistObjectNames: ["de.tudarmstadt.ukp.inception.recommendation.metrics:*", 
 "de.tudarmstadt.ukp.clarin.webanno.api.dao.metrics:*", "de.tudarmstadt.ukp.clarin.webanno.security.metrics:*"]
@@ -61,16 +99,17 @@ rules:
     help: "Inception metric $4"
     type: GAUGE
     attrNameSnakeCase: true
-....
+----
 
 The following line will run the JMX exporter for the JVM that runs the inception.jar. 
 The exporter will expose the metrics on the http-endpoint _localhost:9404_.
 Make sure to use a port, 9404 in this case, that is not open to the public 
 (only to the local network that your Prometheus instance runs in).
 
-....
-java -javaagent:./jmx_prometheus_javaagent-0.13.0.jar=9404:config.yaml -jar inception.jar
-....
+[source,sh]
+----
+$ java -javaagent:./jmx_prometheus_javaagent-0.13.0.jar=9404:config.yaml -jar inception.jar
+----
 
 The JMX exporter will also automatically expose JVM metrics in the `java.lang` namespace 
 which can be used to e.g. monitor memory usage:
@@ -80,6 +119,43 @@ which can be used to e.g. monitor memory usage:
 that this memory is available to the JVM.
 
 and others.
+
+== Sentry
+In order to use Sentry as an error tracker, you will need to provide the Sentry SDK your Sentry project's Data Source Name (DSN) and other settings in {product-name}'s `settings.properties` file. The Sentry SDK will be deactivated unless a DSN is provided.
+
+|===
+| Setting | Description | Default | Example(s)
+
+| `sentry.dsn`
+| The DSN tells the Sentry SDK where to send events.
+| `null`
+| https://examplePublicKey@o0.ingest.sentry.io/0 https://examplePublicKey@sentry.your-org.com/N
+
+| `sentry.environment`
+| Set the application environment that will be sent with each event.
+| production
+| prod
+
+| `sentry.enable-tracing`
+| Enable transaction tracing used for performance monitoring.
+| false
+| true
+
+| `sentry.traces-sample-rate`
+| Adjust the procentage of transaction sent to Sentry.
+| 1.0
+| 0.2
+
+| `sentry.send-default-pii`
+| By default, the Sentry SDK do not purposefully send Personally Identifiable Information (PII) to your Sentry server.
+| off
+| on
+|===
+
+By default, only unhandled exceptions are sent to Sentry. This behavior can be tuned through configuring the `sentry.exception-resolver-order` property. For example, setting it to `-2147483647` (the value of `org.springframework.core.Ordered#HIGHEST_PRECEDENCE`) ensures exceptions that have been handled by exception resolvers with higher order are sent to Sentry - including ones handled by `@ExceptionHandler` annotated methods.
+
+More option that can be overwritten are listed in https://docs.sentry.io/platforms/java/guides/spring-boot/configuration/[the official Sentry SDK ducumentation].
+
 
 == Scheduling
 The default schedule for pulling of Prometheus is 10s, however it is necessary to make this a longer 

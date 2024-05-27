@@ -17,13 +17,13 @@
  */
 package de.tudarmstadt.ukp.inception.pdfeditor;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSentenceAt;
-import static de.tudarmstadt.ukp.clarin.webanno.support.wicket.ServletContextUtils.referenceToUrl;
 import static de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.render.PdfAnnoSerializer.convertToDocumentOffset;
 import static de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.render.PdfAnnoSerializer.convertToDocumentOffsets;
 import static de.tudarmstadt.ukp.inception.rendering.vmodel.VID.NONE_ID;
+import static de.tudarmstadt.ukp.inception.support.wicket.ServletContextUtils.referenceToUrl;
 import static java.lang.String.join;
 import static java.util.Arrays.asList;
+import static org.apache.uima.fit.util.CasUtil.getType;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -37,6 +37,7 @@ import javax.servlet.ServletContext;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.fit.util.CasUtil;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
@@ -47,8 +48,9 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorExtensionRegistry;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.editor.view.DocumentViewFactory;
@@ -63,8 +65,8 @@ import de.tudarmstadt.ukp.inception.pdfeditor.resources.PdfAnnotationEditorCssRe
 import de.tudarmstadt.ukp.inception.pdfeditor.resources.PdfAnnotationEditorJavascriptResourceReference;
 import de.tudarmstadt.ukp.inception.rendering.coloring.ColoringService;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
-import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 
 /**
  * @deprecated Superseded by the new PDF editor
@@ -217,10 +219,10 @@ public class PdfAnnotationEditor
         }
 
         try {
-            Offset offset = new Offset(aParams);
-            Offset docOffset = convertToDocumentOffset(offset, documentModel,
+            var offset = new Offset(aParams);
+            var docOffset = convertToDocumentOffset(offset, documentModel,
                     view.getPdfExtractFile());
-            AnnotatorState state = getModelObject();
+            var state = getModelObject();
             if (docOffset.getBegin() > -1 && docOffset.getEnd() > -1) {
                 if (state.isSlotArmed()) {
                     // When filling a slot, the current selection is *NOT* changed. The
@@ -313,5 +315,21 @@ public class PdfAnnotationEditor
                 "'primary': true,", //
                 "'colorMap': {},", //
                 "'annotations':[annoFile]}, true);");
+    }
+
+    /**
+     * Get the sentence for this CAS based on the begin and end offsets. This is basically used to
+     * transform sentence address in one CAS to other sentence address for different CAS
+     *
+     * @param aCas
+     *            the CAS.
+     * @param aBegin
+     *            the begin offset.
+     * @return the sentence.
+     */
+    private static AnnotationFS selectSentenceAt(CAS aCas, int aBegin)
+    {
+        return CasUtil.select(aCas, getType(aCas, Sentence.class)).stream()
+                .filter(s -> s.getBegin() == aBegin).findFirst().orElse(null);
     }
 }

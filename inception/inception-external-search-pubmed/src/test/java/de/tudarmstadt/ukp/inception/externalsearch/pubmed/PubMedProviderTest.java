@@ -36,7 +36,7 @@ import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
 import de.tudarmstadt.ukp.inception.externalsearch.pubmed.entrez.EntrezClient;
 import de.tudarmstadt.ukp.inception.externalsearch.pubmed.pmcoa.PmcOaClient;
 import de.tudarmstadt.ukp.inception.externalsearch.pubmed.traits.PubMedProviderTraits;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
 @ExtendWith(MockitoExtension.class)
 @Tag("slow")
@@ -72,12 +72,13 @@ public class PubMedProviderTest
     public void thatGetDocumentTextWorks() throws Exception
     {
         when(annotationService.getFullProjectTypeSystem(any()))
-            .thenReturn(createTypeSystemDescription());
-        
-        String results = sut.getDocumentText(repo, traits, "PMC", "PMC8222896");
+                .thenReturn(createTypeSystemDescription());
+
+        String results = sut.getDocumentText(repo, traits, "PMC", "7096989");
 
         // System.out.println(results);
 
-        assertThat(results).contains("Longitudinal symptoms in asthmatic COVID‐19 patients.");
+        assertThat(results)
+                .contains("Asthma is the most common inflammatory disease of the lungs.");
     }
 }

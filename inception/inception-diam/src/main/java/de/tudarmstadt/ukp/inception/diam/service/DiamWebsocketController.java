@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.diam.service;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging.KEY_REPOSITORY_PATH;
-import static de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging.KEY_USERNAME;
+import static de.tudarmstadt.ukp.inception.support.logging.Logging.KEY_REPOSITORY_PATH;
+import static de.tudarmstadt.ukp.inception.support.logging.Logging.KEY_USERNAME;
 import static de.tudarmstadt.ukp.inception.websocket.config.WebSocketConstants.PARAM_DOCUMENT;
 import static de.tudarmstadt.ukp.inception.websocket.config.WebSocketConstants.PARAM_PROJECT;
 import static de.tudarmstadt.ukp.inception.websocket.config.WebSocketConstants.PARAM_USER;
@@ -26,13 +26,13 @@ import static de.tudarmstadt.ukp.inception.websocket.config.WebSocketConstants.T
 import static de.tudarmstadt.ukp.inception.websocket.config.WebSocketConstants.TOPIC_ELEMENT_PROJECT;
 import static de.tudarmstadt.ukp.inception.websocket.config.WebSocketConstants.TOPIC_ELEMENT_USER;
 import static java.lang.Integer.MAX_VALUE;
-import static java.util.stream.Collectors.toList;
 
 import java.io.IOException;
 import java.security.Principal;
 import java.time.Duration;
 
 import javax.persistence.NoResultException;
+import javax.servlet.ServletContext;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,28 +56,27 @@ import com.flipkart.zjsonpatch.JsonDiff;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.UserPreferencesService;
-import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
-import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterCasWrittenEvent;
-import de.tudarmstadt.ukp.clarin.webanno.api.event.TransientAnnotationStateChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
 import de.tudarmstadt.ukp.inception.diam.messages.MViewportInit;
 import de.tudarmstadt.ukp.inception.diam.messages.MViewportUpdate;
 import de.tudarmstadt.ukp.inception.diam.model.websocket.ViewportDefinition;
 import de.tudarmstadt.ukp.inception.diam.model.websocket.ViewportState;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
+import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
+import de.tudarmstadt.ukp.inception.documents.event.AfterCasWrittenEvent;
+import de.tudarmstadt.ukp.inception.project.api.ProjectService;
+import de.tudarmstadt.ukp.inception.recommendation.api.event.TransientAnnotationStateChangedEvent;
 import de.tudarmstadt.ukp.inception.rendering.pipeline.RenderingPipeline;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.serialization.VDocumentSerializerExtensionPoint;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 
 /**
  * Differential INCEpTION Annotation Messaging (DIAM) protocol controller.
@@ -135,7 +134,7 @@ public class DiamWebsocketController
             RepositoryProperties aRepositoryProperties, AnnotationSchemaService aSchemaService,
             ProjectService aProjectService, UserDao aUserRepository,
             VDocumentSerializerExtensionPoint aVDocumentSerializerExtensionPoint,
-            UserPreferencesService aUserPreferencesService)
+            UserPreferencesService aUserPreferencesService, ServletContext aServletContext)
     {
         msgTemplate = aMsgTemplate;
         renderingPipeline = aRenderingPipeline;
@@ -148,7 +147,7 @@ public class DiamWebsocketController
         userPreferencesService = aUserPreferencesService;
 
         activeViewports = Caffeine.newBuilder() //
-                .expireAfterAccess(Duration.ofMinutes(30)) //
+                .expireAfterAccess(Duration.ofMinutes(aServletContext.getSessionTimeout())) //
                 .build(this::initState);
     }
 
@@ -168,10 +167,10 @@ public class DiamWebsocketController
     @EventListener
     public void onSessionUnsubscribe(SessionUnsubscribeEvent aEvent)
     {
-        SimpMessageHeaderAccessor headers = SimpMessageHeaderAccessor.wrap(aEvent.getMessage());
+        var headers = SimpMessageHeaderAccessor.wrap(aEvent.getMessage());
 
-        String sessionId = headers.getSessionId();
-        String subscriptionId = headers.getSubscriptionId();
+        var sessionId = headers.getSessionId();
+        var subscriptionId = headers.getSubscriptionId();
 
         log.trace("Unsubscribing {} from subscription {}", sessionId, subscriptionId);
 
@@ -190,13 +189,13 @@ public class DiamWebsocketController
     }
 
     @TransactionalEventListener(fallbackExecution = true)
-    public void afterAnnotationUpdate(AfterCasWrittenEvent aEvent)
+    public void onAfterCasWritten(AfterCasWrittenEvent aEvent)
     {
         sendUpdate(aEvent.getDocument());
     }
 
     @EventListener
-    public void onRecommendationRejected(TransientAnnotationStateChangedEvent aEvent)
+    public void onTransientAnnotationStateChanged(TransientAnnotationStateChangedEvent aEvent)
     {
         var doc = aEvent.getDocument();
         sendUpdate(doc.getProject().getId(), doc.getId(), aEvent.getUser(), 0, MAX_VALUE);
@@ -207,29 +206,29 @@ public class DiamWebsocketController
             Principal aPrincipal, //
             @DestinationVariable(PARAM_PROJECT) long aProjectId,
             @DestinationVariable(PARAM_DOCUMENT) long aDocumentId,
-            @DestinationVariable(PARAM_USER) String aUser,
+            @DestinationVariable(PARAM_USER) String aDataOwner,
             @DestinationVariable(PARAM_FROM) int aViewportBegin,
             @DestinationVariable(PARAM_TO) int aViewportEnd,
             @DestinationVariable(PARAM_FORMAT) String aFormat)
         throws IOException
     {
-        Project project = getProject(aProjectId);
+        var project = getProject(aProjectId);
 
-        try (CasStorageSession session = CasStorageSession.open()) {
+        try (var session = CasStorageSession.open()) {
             MDC.put(KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
             MDC.put(KEY_USERNAME, aPrincipal.getName());
 
-            ViewportDefinition vpd = new ViewportDefinition(aProjectId, aDocumentId, aUser,
-                    aViewportBegin, aViewportEnd, aFormat);
+            var vpd = new ViewportDefinition(aProjectId, aDocumentId, aDataOwner, aViewportBegin,
+                    aViewportEnd, aFormat);
 
             // Ensure that the viewport is registered
-            ViewportState vps = activeViewports.get(vpd);
+            var vps = activeViewports.get(vpd);
 
             log.trace("Subscribing {} to {}", aHeaderAccessor.getSessionId(), vpd.getTopic());
             vps.addSubscription(aHeaderAccessor.getSessionId(),
                     aHeaderAccessor.getSubscriptionId());
 
-            JsonNode json = render(project, aDocumentId, aUser, aViewportBegin, aViewportEnd,
+            var json = render(project, aDocumentId, aDataOwner, aViewportBegin, aViewportEnd,
                     aFormat);
             vps.setJson(json);
             return json;
@@ -271,26 +270,27 @@ public class DiamWebsocketController
     // }
     // }
 
-    private JsonNode render(Project aProject, long aDocumentId, String aUser, int aViewportBegin,
-            int aViewportEnd, String aFormat)
+    private JsonNode render(Project aProject, long aDocumentId, String aDataOwner,
+            int aViewportBegin, int aViewportEnd, String aFormat)
         throws IOException
     {
         var doc = documentService.getSourceDocument(aProject.getId(), aDocumentId);
-        var user = userRepository.getUserOrCurationUser(aUser);
+        var sessionOwner = userRepository.getCurrentUsername();
+        var dataOwner = userRepository.getUserOrCurationUser(aDataOwner);
 
-        var cas = documentService.readAnnotationCas(doc, aUser);
+        var cas = documentService.readAnnotationCas(doc, aDataOwner);
 
-        var prefs = userPreferencesService.loadPreferences(doc.getProject(), user.getUsername(),
+        var prefs = userPreferencesService.loadPreferences(doc.getProject(), sessionOwner,
                 Mode.ANNOTATION);
 
         var layers = schemaService.listSupportedLayers(aProject).stream()
                 .filter(AnnotationLayer::isEnabled) //
-                .filter(l -> !prefs.getHiddenAnnotationLayerIds().contains(l.getId()))
-                .collect(toList());
+                .filter(l -> !prefs.getHiddenAnnotationLayerIds().contains(l.getId())) //
+                .toList();
 
         var request = RenderRequest.builder() //
                 .withSessionOwner(userRepository.getCurrentUser()) //
-                .withDocument(doc, user) //
+                .withDocument(doc, dataOwner) //
                 .withWindow(aViewportBegin, aViewportEnd) //
                 .withCas(cas) //
                 .withVisibleLayers(layers) //
@@ -339,12 +339,12 @@ public class DiamWebsocketController
     {
         // MDC.put(KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
 
-        try (CasStorageSession session = CasStorageSession.openNested()) {
-            Project project = projectService.getProject(vpd.getProjectId());
-            JsonNode newJson = render(project, vpd.getDocumentId(), vpd.getUser(), vpd.getBegin(),
+        try (var session = CasStorageSession.openNested()) {
+            var project = projectService.getProject(vpd.getProjectId());
+            var newJson = render(project, vpd.getDocumentId(), vpd.getUser(), vpd.getBegin(),
                     vpd.getEnd(), vpd.getFormat());
 
-            JsonNode diff = JsonDiff.asJson(vps.getJson(), newJson);
+            var diff = JsonDiff.asJson(vps.getJson(), newJson);
 
             vps.setJson(newJson);
 
@@ -363,7 +363,7 @@ public class DiamWebsocketController
     private Project getProject(long aProjectId) throws AccessDeniedException
     {
         // Get current user - this will throw an exception if the current user does not exit
-        User user = userRepository.getCurrentUser();
+        var user = userRepository.getCurrentUser();
 
         // Get project
         Project project;

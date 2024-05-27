@@ -22,12 +22,14 @@ import javax.servlet.http.HttpServletRequest;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.request.Request;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.Extension;
+import de.tudarmstadt.ukp.inception.diam.editor.DiamAjaxBehavior;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.AjaxResponse;
+import de.tudarmstadt.ukp.inception.support.extensionpoint.Extension;
 
 public interface EditorAjaxRequestHandler
     extends Extension<Request>
 {
+    int PRIO_CONTEXT_MENU = -10;
     int PRIO_RENDER_HANDLER = 0;
     int PRIO_SLOT_FILLER_HANDLER = 100;
     int PRIO_UNARM_SLOT_HANDLER = 180;
@@ -41,9 +43,7 @@ public interface EditorAjaxRequestHandler
     String PARAM_OFFSETS = "offsets";
     String PARAM_TARGET_SPAN_ID = "targetSpanId";
     String PARAM_ORIGIN_SPAN_ID = "originSpanId";
-    String PARAM_TYPE = "type";
-    String PARAM_LAZY_DETAIL_DATABASE = "database";
-    String PARAM_LAZY_DETAIL_KEY = "key";
+    String PARAM_LAYER_ID = "layerId";
 
     String ACTION_CONTEXT_MENU = "contextMenu";
 
@@ -53,7 +53,7 @@ public interface EditorAjaxRequestHandler
             throw new IllegalArgumentException("Request is not a HttpServletRequest");
         }
 
-        HttpServletRequest request = (HttpServletRequest) aRequest.getContainerRequest();
+        var request = (HttpServletRequest) aRequest.getContainerRequest();
 
         return request.getMethod();
     }
@@ -67,5 +67,5 @@ public interface EditorAjaxRequestHandler
                 aRequest.getRequestParameters().getParameterValue(PARAM_ACTION).toOptionalString());
     }
 
-    AjaxResponse handle(AjaxRequestTarget aTarget, Request aRequest);
+    AjaxResponse handle(DiamAjaxBehavior aBehavior, AjaxRequestTarget aTarget, Request aRequest);
 }

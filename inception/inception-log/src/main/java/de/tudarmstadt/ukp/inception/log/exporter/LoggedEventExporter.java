@@ -23,16 +23,13 @@ import static java.util.function.Function.identity;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
-import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import org.slf4j.Logger;
@@ -40,12 +37,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.fasterxml.jackson.core.JsonEncoding;
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.util.MinimalPrettyPrinter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.FullProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExporter;
@@ -53,6 +47,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.documents.exporters.SourceDocumentExporter;
 import de.tudarmstadt.ukp.inception.log.EventRepository;
 import de.tudarmstadt.ukp.inception.log.config.EventLoggingAutoConfiguration;
@@ -67,7 +62,7 @@ import de.tudarmstadt.ukp.inception.log.model.LoggedEvent;
 public class LoggedEventExporter
     implements ProjectExporter
 {
-    private static final Logger LOG = LoggerFactory.getLogger(LoggedEventExporter.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private static final String EVENT_LOG = "event.log";
 
@@ -92,21 +87,21 @@ public class LoggedEventExporter
             ExportedProject aExProject, File aFile)
         throws IOException
     {
-        Project project = aRequest.getProject();
+        var project = aRequest.getProject();
 
-        AtomicInteger eventCount = new AtomicInteger(0);
-        Set<Long> missingDocuments = new HashSet<>();
-        AtomicInteger droppedEvents = new AtomicInteger(0);
+        var eventCount = new AtomicInteger(0);
+        var missingDocuments = new HashSet<Long>();
+        var droppedEvents = new AtomicInteger(0);
 
         // Set up a map of document IDs to document names because we export by name and not
         // by ID.
-        Map<Long, String> documentNameIndex = new HashMap<>();
+        var documentNameIndex = new HashMap<Long, String>();
         documentService.listSourceDocuments(project)
                 .forEach(doc -> documentNameIndex.put(doc.getId(), doc.getName()));
 
-        File eventLog = new File(aFile, EVENT_LOG);
+        var eventLog = new File(aFile, EVENT_LOG);
         eventLog.createNewFile();
-        try (JsonGenerator jGenerator = new ObjectMapper().getFactory()
+        try (var jGenerator = new ObjectMapper().getFactory()
                 .createGenerator(new FileOutputStream(eventLog), JsonEncoding.UTF8)) {
 
             jGenerator.setPrettyPrinter(new MinimalPrettyPrinter("\n"));
@@ -135,8 +130,7 @@ public class LoggedEventExporter
                 }
 
                 // Transfer data over to DTO
-                ExportedLoggedEvent exportedEvent = ExportedLoggedEvent
-                        .fromLoggedEvent(documentName, event);
+                var exportedEvent = ExportedLoggedEvent.fromLoggedEvent(documentName, event);
 
                 // Write DTO
                 try {
@@ -165,7 +159,7 @@ public class LoggedEventExporter
     {
         int eventCount = 0;
 
-        ZipEntry entry = aZip.getEntry(EVENT_LOG);
+        var entry = aZip.getEntry(EVENT_LOG);
 
         if (entry == null) {
             LOG.info("No event log available for import in project [{}]", aProject.getName());
@@ -173,16 +167,16 @@ public class LoggedEventExporter
         }
 
         // Query once for all the documents to avoid hitting the DB in the loop below
-        Map<String, SourceDocument> docs = documentService.listSourceDocuments(aProject).stream()
+        var docs = documentService.listSourceDocuments(aProject).stream()
                 .collect(Collectors.toMap(SourceDocument::getName, identity()));
 
-        try (JsonParser jParser = new ObjectMapper().getFactory()
+        try (var jParser = new ObjectMapper().getFactory()
                 .createParser(aZip.getInputStream(entry))) {
 
             // Persist events in batches to speed up import process
-            List<LoggedEvent> batch = new ArrayList<>();
+            var batch = new ArrayList<LoggedEvent>();
 
-            Iterator<ExportedLoggedEvent> i = jParser.readValuesAs(ExportedLoggedEvent.class);
+            var i = jParser.readValuesAs(ExportedLoggedEvent.class);
             while (i.hasNext()) {
                 // Flush events
                 if (batch.size() >= 50_000) {
@@ -191,9 +185,9 @@ public class LoggedEventExporter
                     LOG.trace("... {} events imported ...", eventCount);
                 }
 
-                ExportedLoggedEvent exportedEvent = i.next();
+                var exportedEvent = i.next();
 
-                LoggedEvent event = new LoggedEvent();
+                var event = new LoggedEvent();
                 event.setProject(aProject.getId());
                 event.setUser(exportedEvent.getUser());
                 event.setEvent(exportedEvent.getEvent());

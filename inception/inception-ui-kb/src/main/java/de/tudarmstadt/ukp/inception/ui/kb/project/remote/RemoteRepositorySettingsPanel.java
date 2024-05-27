@@ -17,11 +17,11 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.project.remote;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.HtmlElementEvents.CHANGE_EVENT;
-import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static de.tudarmstadt.ukp.inception.kb.RepositoryType.REMOTE;
 import static de.tudarmstadt.ukp.inception.security.client.auth.AuthenticationType.BASIC;
 import static de.tudarmstadt.ukp.inception.security.client.auth.AuthenticationType.OAUTH_CLIENT_CREDENTIALS;
+import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CHANGE_EVENT;
+import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 
@@ -42,9 +42,6 @@ import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
-import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseInfo;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 import de.tudarmstadt.ukp.inception.security.client.auth.AuthenticationTraitsEditor;
@@ -54,6 +51,8 @@ import de.tudarmstadt.ukp.inception.security.client.auth.basic.BasicAuthenticati
 import de.tudarmstadt.ukp.inception.security.client.auth.basic.BasicAuthenticationTraitsEditor;
 import de.tudarmstadt.ukp.inception.security.client.auth.oauth.OAuthClientCredentialsAuthenticationTraits;
 import de.tudarmstadt.ukp.inception.security.client.auth.oauth.OAuthClientCredentialsAuthenticationTraitsEditor;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.ui.kb.project.KnowledgeBaseInfoPanel;
 import de.tudarmstadt.ukp.inception.ui.kb.project.KnowledgeBaseWrapper;
 import de.tudarmstadt.ukp.inception.ui.kb.project.validators.Validators;
@@ -219,11 +218,11 @@ public class RemoteRepositorySettingsPanel
     private void actionPopulate(AjaxRequestTarget aTarget, KnowledgeBaseProfile aProfile)
     {
         // set all the fields according to the chosen profile
-        KnowledgeBaseWrapper kbw = getModel().getObject();
+        var kbw = getModel().getObject();
         kbw.setUrl(aProfile.getAccess().getAccessUrl());
         // sets root concepts list - if null then an empty list otherwise change the
         // values to IRI and populate the list
-        KnowledgeBase kb = kbw.getKb();
+        var kb = kbw.getKb();
         kb.applyRootConcepts(aProfile);
         kb.applyAdditionalMatchingProperties(aProfile);
         kb.applyMapping(aProfile.getMapping());

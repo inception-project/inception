@@ -15,12 +15,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { AnnotatedText, Annotation, Offsets, Relation, Span, VID } from '@inception-project/inception-js-api'
+import { AnnotatedText, Annotation, Layer, Offsets, Relation, Span, VID } from '@inception-project/inception-js-api'
 import { compareOffsets } from '@inception-project/inception-js-api/src/model/Offsets'
 
 export function renderLabel (ann?: Annotation): string {
   if (!ann) return ''
-  return `${ann.label || `[${ann.layer.name}]`}`
+  const maxLength = 300
+  let label = `${ann.label || `[${ann.layer.name}]`}`
+  label = label.replace(/\s+/g, ' ').trim()
+  if (label.length > maxLength) {
+    label = label.substring(0, maxLength).trim() + '…'
+  }
+  return label
+}
+
+export function uniqueLayers (data: AnnotatedText): Layer[] {
+  if (!data) return []
+
+  const sortedLayersWithDuplicates = Array.from(data.annotations(), (ann) => ann.layer)
+    .sort((a, b) => a.name.localeCompare(b.name, undefined, { usage: 'sort', sensitivity: 'variant' }))
+
+  const sortedLayers: Layer[] = []
+  for (let i = 0; i < sortedLayersWithDuplicates.length; i++) {
+    if (i === 0 || sortedLayersWithDuplicates[i - 1] !== sortedLayersWithDuplicates[i]) {
+      sortedLayers.push(sortedLayersWithDuplicates[i])
+    }
+  }
+
+  return sortedLayers
 }
 
 export function uniqueLabels (data: AnnotatedText): string[] {
@@ -91,6 +113,27 @@ export function groupSpansByLabel (data: AnnotatedText): Record<string, Span[]> 
   return groups
 }
 
+export function filterAnnotations (data: AnnotatedText, items: Annotation[], filter: string) {
+  const normalizedFilter = filter.toLowerCase().replace(/\s+/g, ' ')
+
+  if (!normalizedFilter) return items
+
+  return items.filter(item => {
+    if (item instanceof Relation) {
+      return getCoveredText(data, item.arguments[0].target).replace(/\s+/g, ' ').toLowerCase().includes(normalizedFilter)
+    }
+    if (item instanceof Span) {
+      return getCoveredText(data, item).replace(/\s+/g, ' ').toLowerCase().includes(normalizedFilter)
+    }
+    return false
+  })
+}
+
+export function getCoveredText (data: AnnotatedText, a: Span | undefined): string {
+  if (a === undefined) return ''
+  return data.text?.substring(a.offsets[0][0], a.offsets[0][1]) || ''
+}
+
 export function compareSpanText (data: AnnotatedText, a: Span, b: Span): number {
   const textA = data.text?.substring(a.offsets[0][0], a.offsets[0][1]) || ''
   const textB = data.text?.substring(b.offsets[0][0], b.offsets[0][1]) || ''
@@ -134,4 +177,15 @@ export function highlightClasses (vid: VID, data: AnnotatedText): string {
     classes.push(`marker-${marker.type}`)
   }
   return classes.join(' ')
+}
+
+export function debounce (func, delay: number) {
+  let timeoutId
+
+  return function (...args) {
+    clearTimeout(timeoutId)
+    timeoutId = setTimeout(() => {
+      func.apply(this, args)
+    }, delay)
+  }
 }

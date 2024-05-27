@@ -1,0 +1,73 @@
+// Licensed to the Technische Universität Darmstadt under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The Technische Universität Darmstadt 
+// licenses this file to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.
+//  
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+[[sect_security_authentication_policy]]
+= Security policies
+
+You have several options of configuring which types of usernames and passwords are accepted.
+Note that these values are only enforced when creating new users or updating passwords. They
+will not invalidate existing usernames or passwords. Length restrictions and patterns are checked
+independently. If either fails, the username or password is rejected.
+
+NOTE: When external pre-authentication is used, these settings are ignored.
+
+NOTE: In addition to the restrictions imposed here, {product-name} may impose additional restrictions.
+      E.g. certain usernames are not allowed and certain characters are also not allowed to appear in usernames.
+
+[cols="4*", options="header"]
+|===
+| Setting
+| Description
+| Default
+| Example
+  
+| `security.minimum-password-length`
+| Minimum number of characters a password can have
+| 8
+| (max 128)
+
+| `security.maximum-password-length`
+| Maximum number of characters a password can have
+| 32
+| (max 128)
+
+| `security.minimum-username-length`
+| Minimum number of characters a username can have
+| 4
+| (max 128)
+
+| `security.maximum-username-length`
+| Maximum number of characters a username can have
+| 64
+| (max 128)
+
+| `security.username-pattern`
+| Regular expression for valid usernames
+| `.*`
+| `[a-zA-Z0-9]+`
+
+| `security.password-pattern`
+| Regular expression for valid passwords
+| `.*`
+| `(?=.\*[a-z])(?=.*[A-Z])(?=.\*[0-9])(?=.*\p{Punct}).*`
+
+| `security.space-allowed-in-username`
+| Whether simple space characters are permitted in usernames. Enable this option only when necessary to restore access to existing accounts in certain scenarios such as when using external authentication. Usernames with spaces may lead to problems e.g. when exporting/importing projects or documents or when constructing certain URLs.
+| `false`
+| `true`
+|===
+
+      

@@ -1,8 +1,8 @@
 config = [
     agentLabel: '',
     maven: 'Maven 3',
-    jdk: 'Zulu 11',
-    extraMavenArguments: '',
+    jdk: 'Zulu 17',
+    extraMavenArguments: '-U -Ddkpro.core.testCachePath="${WORKSPACE}/cache/dkpro-core-datasets" -Dmaven.artifact.threads=15  -T 4',
     wipeWorkspaceBeforeBuild: true,
     wipeWorkspaceAfterBuild: true
   ]
@@ -28,7 +28,7 @@ pipeline {
   }
 
   agent {
-    label agentLabel
+    label params.agentLabel
   }
   
   tools {
@@ -97,7 +97,7 @@ pipeline {
             script {
               def mavenCommand = 'mvn ' +
                   params.extraMavenArguments +
-                  ' -B -Dmaven.test.failure.ignore=true clean verify';
+                  ' -B -Dmaven.test.failure.ignore=true -T 4 -Pjacoco clean verify javadoc:javadoc';
                   
               if (isUnix()) {
                 sh script: mavenCommand
@@ -130,7 +130,7 @@ pipeline {
             script {
               def mavenCommand = 'mvn ' +
                 params.extraMavenArguments +
-                ' -B -Dmaven.test.failure.ignore=true clean verify'
+                ' -B -Dmaven.test.failure.ignore=true -Pjacoco clean verify javadoc:javadoc'
                 
               if (isUnix()) {
                 sh script: mavenCommand
@@ -155,7 +155,7 @@ pipeline {
   }
   
   post {
-    success {
+    always {
       script {
         if (params.wipeWorkspaceAfterBuild) {
           echo "Wiping workspace..."

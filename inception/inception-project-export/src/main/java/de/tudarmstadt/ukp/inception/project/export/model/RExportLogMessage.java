@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.project.export.model;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogLevel;
-import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
+import de.tudarmstadt.ukp.inception.support.logging.LogLevel;
+import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 
 public class RExportLogMessage
 {

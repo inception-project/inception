@@ -23,7 +23,7 @@ import org.apache.uima.cas.CAS;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.type.CASMetadata;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
+import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 
 /**
  * Checks if the type {@link CASMetadata} is defined in the type system of this CAS. If this is not
@@ -35,9 +35,15 @@ public class CASMetadataTypeIsPresentCheck
     @Override
     public boolean check(Project aProject, CAS aCas, List<LogMessage> aMessages)
     {
-        if (aCas.getTypeSystem().getType(CASMetadata.class.getName()) == null) {
-            aMessages.add(LogMessage.warn(this, "CAS needs upgrade to support CASMetadata which is "
+        if (aCas.getTypeSystem().getType(CASMetadata._TypeName) == null) {
+            aMessages.add(LogMessage.info(this, "CAS needs upgrade to support CASMetadata which is "
                     + "required to detect concurrent modifications to CAS files."));
+            return true;
+        }
+
+        if (aCas.select(CASMetadata.class).isEmpty()) {
+            aMessages.add(LogMessage.warn(this,
+                    "CAS contains no CASMetadata. Cannot check concurrent access."));
         }
 
         // This is an informative check - not critical, so we always pass it.

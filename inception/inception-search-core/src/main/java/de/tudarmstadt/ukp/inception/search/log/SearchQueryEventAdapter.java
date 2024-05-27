@@ -20,10 +20,10 @@ package de.tudarmstadt.ukp.inception.search.log;
 import java.io.IOException;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.log.adapter.EventLoggingAdapter;
 import de.tudarmstadt.ukp.inception.search.config.SearchServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.search.event.SearchQueryEvent;
+import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 
 /**
  * <p>
@@ -35,9 +35,9 @@ public class SearchQueryEventAdapter
     implements EventLoggingAdapter<SearchQueryEvent>
 {
     @Override
-    public boolean accepts(Object aEvent)
+    public boolean accepts(Class<?> aEvent)
     {
-        return aEvent instanceof SearchQueryEvent;
+        return SearchQueryEvent.class.isAssignableFrom(aEvent);
     }
 
     @Override

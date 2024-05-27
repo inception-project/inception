@@ -17,9 +17,9 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.support.standalone;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil.getGlobalLogFile;
-import static de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil.getGlobalLogFolder;
-import static de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil.getSettingsFileLocation;
+import static de.tudarmstadt.ukp.inception.support.SettingsUtil.getGlobalLogFile;
+import static de.tudarmstadt.ukp.inception.support.SettingsUtil.getGlobalLogFolder;
+import static de.tudarmstadt.ukp.inception.support.SettingsUtil.getSettingsFileLocation;
 import static java.awt.Desktop.getDesktop;
 import static java.awt.Font.BOLD;
 import static java.awt.Font.SANS_SERIF;
@@ -73,9 +73,9 @@ import javax.swing.text.DefaultCaret;
 
 import org.slf4j.Logger;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
-import de.tudarmstadt.ukp.clarin.webanno.support.about.ApplicationInformation;
-import de.tudarmstadt.ukp.clarin.webanno.support.logging.RingBufferAppender;
+import de.tudarmstadt.ukp.inception.support.SettingsUtil;
+import de.tudarmstadt.ukp.inception.support.about.ApplicationInformation;
+import de.tudarmstadt.ukp.inception.support.logging.RingBufferAppender;
 
 public class StandaloneUserInterface
 {
@@ -222,7 +222,7 @@ public class StandaloneUserInterface
 
     private static String getLog()
     {
-        return RingBufferAppender.events().stream() //
+        return RingBufferAppender.messages().stream() //
                 .map(msg -> "[" + msg.level + "]: "
                         + msg.getMessage().replace("↩", "").replace("\n", "↩\n\t")) //
                 .collect(Collectors.joining("\n"));

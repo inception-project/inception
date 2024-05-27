@@ -43,10 +43,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.util.FileSystemUtils;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryAutoConfiguration;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -59,9 +56,11 @@ import de.tudarmstadt.ukp.clarin.webanno.text.TextFormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.text.config.TextFormatsAutoConfiguration;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
 import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
+import de.tudarmstadt.ukp.inception.documents.api.RepositoryAutoConfiguration;
 import de.tudarmstadt.ukp.inception.documents.config.DocumentServiceAutoConfiguration;
-import de.tudarmstadt.ukp.inception.scheduling.config.SchedulingServiceAutoConfiguration;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.project.api.ProjectService;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.config.AnnotationSchemaServiceAutoConfiguration;
 
 @EnableAutoConfiguration
@@ -79,8 +78,7 @@ import de.tudarmstadt.ukp.inception.schema.config.AnnotationSchemaServiceAutoCon
         CasStorageServiceAutoConfiguration.class, //
         RepositoryAutoConfiguration.class, //
         AnnotationSchemaServiceAutoConfiguration.class, //
-        SecurityAutoConfiguration.class, //
-        SchedulingServiceAutoConfiguration.class })
+        SecurityAutoConfiguration.class })
 public class DocumentServiceImplDatabaseTest
 {
     static final String TEST_OUTPUT_FOLDER = "target/test-output/DocumentServiceImplDatabaseTest";
@@ -110,10 +108,10 @@ public class DocumentServiceImplDatabaseTest
     @Test
     public void testThatAnnotationDocumentsForNonExistingUserAreNotReturned() throws Exception
     {
-        SourceDocument doc = sut.createSourceDocument(new SourceDocument("doc", project, "text"));
+        var doc = sut.createSourceDocument(new SourceDocument("doc", project, "text"));
 
-        AnnotationDocument ann = sut
-                .createAnnotationDocument(new AnnotationDocument(annotator1.getUsername(), doc));
+        var ann = sut
+                .createOrUpdateAnnotationDocument(new AnnotationDocument(annotator1.getUsername(), doc));
 
         assertThat(sut.listAnnotationDocuments(doc))
                 .as("As long as the user exists, the annotation document must be found")
@@ -129,10 +127,10 @@ public class DocumentServiceImplDatabaseTest
     @Test
     public void thatExplicitUserActionsSetAnnotatorState()
     {
-        SourceDocument doc = sut.createSourceDocument(new SourceDocument("doc", project, "text"));
+        var doc = sut.createSourceDocument(new SourceDocument("doc", project, "text"));
 
-        AnnotationDocument ann = sut
-                .createAnnotationDocument(new AnnotationDocument(annotator1.getUsername(), doc));
+        var ann = sut
+                .createOrUpdateAnnotationDocument(new AnnotationDocument(annotator1.getUsername(), doc));
 
         sut.setAnnotationDocumentState(ann, AnnotationDocumentState.IGNORE);
         assertThat(ann.getState()) //
@@ -193,11 +191,11 @@ public class DocumentServiceImplDatabaseTest
     @Test
     public void thatResettingADocumentSetsAlsoResetsTheStates() throws Exception
     {
-        SourceDocument doc = sut
+        var doc = sut
                 .createSourceDocument(new SourceDocument("doc.txt", project, TextFormatSupport.ID));
 
-        AnnotationDocument ann = sut
-                .createAnnotationDocument(new AnnotationDocument(annotator1.getUsername(), doc));
+        var ann = sut
+                .createOrUpdateAnnotationDocument(new AnnotationDocument(annotator1.getUsername(), doc));
 
         try (var session = CasStorageSession.open()) {
             sut.uploadSourceDocument(toInputStream("This is a test.", UTF_8), doc);
@@ -228,7 +226,7 @@ public class DocumentServiceImplDatabaseTest
         {
             var tsd = createTypeSystemDescription();
             var importService = mock(DocumentImportExportService.class);
-            when(importService.importCasFromFile(any(), any(), any()))
+            when(importService.importCasFromFileNoChecks(any(), any(), any()))
                     .thenReturn(CasCreationUtils.createCas(tsd, null, null, null));
             return importService;
         }

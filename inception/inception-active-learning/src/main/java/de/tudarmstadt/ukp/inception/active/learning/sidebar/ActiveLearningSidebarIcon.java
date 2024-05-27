@@ -51,7 +51,7 @@ public class ActiveLearningSidebarIcon
 
         setOutputMarkupId(true);
 
-        queue(new Icon("icon", FontAwesome5IconType.robot_s));
+        queue(new Icon("icon", FontAwesome5IconType.font_s));
         queue(new Icon("badge", LoadableDetachableModel.of(this::getStateIcon))
                 .add(new ClassAttributeModifier()
                 {
@@ -103,12 +103,12 @@ public class ActiveLearningSidebarIcon
     @OnEvent
     public void sessionStarted(ActiveLearningSessionStartedEvent aEvent)
     {
-        aEvent.getRequestTarget().add(this);
+        aEvent.getRequestTarget().ifPresent(target -> target.add(this));
     }
 
     @OnEvent
     public void sessionStarted(ActiveLearningSessionCompletedEvent aEvent)
     {
-        aEvent.getRequestTarget().add(this);
+        aEvent.getRequestTarget().ifPresent(target -> target.add(this));
     }
 }

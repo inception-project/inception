@@ -23,7 +23,6 @@ import java.lang.invoke.MethodHandles;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
-import org.apache.wicket.request.IRequestParameters;
 import org.apache.wicket.request.Request;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.slf4j.Logger;
@@ -33,7 +32,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.DefaultAjaxResponse;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
-import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 
 public abstract class EditorAjaxRequestHandlerBase
     implements EditorAjaxRequestHandler
@@ -72,25 +71,25 @@ public abstract class EditorAjaxRequestHandlerBase
 
     public VID getVid(Request aRequest)
     {
-        IRequestParameters requestParameters = aRequest.getRequestParameters();
+        var requestParameters = aRequest.getRequestParameters();
 
         return VID.parseOptional(requestParameters.getParameterValue(PARAM_ID).toString());
     }
 
     protected void attachResponse(AjaxRequestTarget aTarget, Request aRequest, String json)
     {
-        String token = aRequest.getRequestParameters().getParameterValue(PARAM_TOKEN).toString();
+        var token = aRequest.getRequestParameters().getParameterValue(PARAM_TOKEN).toString();
         aTarget.prependJavaScript(
                 "document['DIAM_TRANSPORT_BUFFER']['" + token + "'] = " + json + ";");
     }
 
     protected DefaultAjaxResponse handleError(String aMessage, Exception e)
     {
-        AjaxRequestTarget target = getAjaxRequestTarget();
+        var target = getAjaxRequestTarget();
 
         target.addChildren(target.getPage(), IFeedback.class);
 
-        String fullMessage = aMessage + ": " + e.getMessage();
+        var fullMessage = aMessage + ": " + e.getMessage();
 
         if (e instanceof AnnotationException) {
             // These are common exceptions happening as part of the user interaction. We do

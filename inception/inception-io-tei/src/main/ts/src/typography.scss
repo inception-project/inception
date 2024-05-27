@@ -1,0 +1,142 @@
+/*
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+// https://www.deutschestextarchiv.de/doku/basisformat/typogrAllg.html
+TEI {
+  i {
+    font-style: italic;
+  }
+
+  b, hi[rend='bold'] {
+    font-weight: bold;
+  }
+
+  ex {
+    font-style: oblique;
+  }
+
+  milestone[rendition='#hr'] {
+    display: block;
+    border-top: 1px solid black;
+    margin-top: 1em;
+    margin-bottom: 1em;
+  }
+
+  hi[rendition='#aq'] {
+    font-family: sans-serif;
+  }
+
+  // https://www.deutschestextarchiv.de/doku/basisformat/fettdruck.html
+  hi[rendition='#b'] {
+    font-weight: bold;
+  }
+
+  hi[rendition='#blue'] {
+    color: blue;
+  }
+
+  hi[rendition='#c'] {
+    display: block;
+    text-align: center;
+  }
+
+  hi[rendition='#et'] {
+    display: block;
+    margin-left: 2em;
+    text-indent: 0;
+  }
+
+  hi[rendition='#et2'] {
+    display: block;
+    margin-left: 4em;
+    text-indent: 0;
+  }
+
+  hi[rendition='#et3'] {
+    display: block;
+    margin-left: 6em;
+    text-indent: 0;
+  }
+
+  hi[rendition='#f'] {
+    border: 1px dotted silver;
+  }
+
+  hi[rendition='#fr'] {
+    border: 1px dotted silver;
+  }
+
+  hi[rendition='#g'] {
+    letter-spacing: 0.125em;
+  }
+
+  hi[rendition='#i'] {
+    font-style: italic;
+  }
+
+  hi[rendition='#in'] {
+    font-size: 150%;
+  }
+
+  hi[rendition='#k'] {
+    font-variant: small-caps;
+  }
+
+  hi[rendition='#larger'] {
+    font-size: larger;
+  }
+
+  hi[rendition='#red'], hi[rend='red'] {
+    color: red;
+  }
+
+  hi[rendition='#right'] {
+    display: block;
+    text-align: right;
+  }
+
+  hi[rendition='#s'] {
+    text-decoration: line-through;
+  }
+
+  hi[rendition='#smaller'] {
+    font-size: smaller;
+  }
+
+  hi[rendition='#sub'] {
+    vertical-align: sub;
+    font-size: .7em;
+  }
+
+  hi[rendition='#sup'] {
+    vertical-align: super;
+    font-size: .7em;
+  }
+
+  hi[rendition='#u'] {
+    text-decoration: underline;
+  }
+
+  hi[rendition='#uu'] {
+    border-bottom: double 3px #000;
+  }
+
+  hi[type='dropcap'] {
+    font-size: 1.5em;
+    font-weight: bold;
+  }
+}

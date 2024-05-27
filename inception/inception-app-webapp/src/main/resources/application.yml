@@ -2,27 +2,7 @@
 # INCEpTION Properties
 # ===================================================================
 
-backup:
-  keep:
-    time: 0
-    number: 0
-  interval: 0
-
-debug:
-  casDoctor:
-    checks:
-    repairs:
-    fatal: false
-    forceReleaseBehavior: false
-
-annotation:
-  default-preferences:
-    auto-scroll: false
-    remember-layer: true
-
-ui:
-  brat:
-    singleClickSelection: true
+# See properties classes for default values
 
 # ===================================================================
 # Spring Boot Properties

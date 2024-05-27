@@ -18,8 +18,7 @@
 
 package de.tudarmstadt.ukp.clarin.webanno.curation.casdiff;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.RELATION_TYPE;
-import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.SPAN_TYPE;
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.RELATION_TYPE;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
 
@@ -47,9 +46,10 @@ import org.apache.uima.util.CasCreationUtils;
 import org.dkpro.core.io.conll.Conll2006Reader;
 import org.dkpro.core.io.xmi.XmiReader;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoTsv2Reader;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
+import de.tudarmstadt.ukp.inception.support.WebAnnoConst;
 
 public class DiffTestUtils
 {
@@ -205,7 +205,7 @@ public class DiffTestUtils
         throws Exception
     {
         TypeSystemDescription type = new TypeSystemDescription_impl();
-        if (aType.equals(SPAN_TYPE)) {
+        if (SpanLayerSupport.TYPE.equals(aType)) {
             TypeDescription td = type.addType(aTypeName, "", CAS.TYPE_NAME_ANNOTATION);
             for (String feature : aFeatures) {
                 td.addFeature(feature, "", CAS.TYPE_NAME_STRING);

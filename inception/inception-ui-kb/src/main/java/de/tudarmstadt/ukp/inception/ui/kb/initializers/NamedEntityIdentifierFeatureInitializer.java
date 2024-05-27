@@ -21,21 +21,23 @@ import static de.tudarmstadt.ukp.inception.ui.kb.feature.ConceptFeatureSupport.T
 import static java.util.Arrays.asList;
 
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.util.List;
+import java.util.Optional;
 
-import javax.persistence.NoResultException;
-
+import org.apache.wicket.request.resource.PackageResourceReference;
+import org.apache.wicket.request.resource.ResourceReference;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.project.ProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.LayerInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.NamedEntityLayerInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.TokenLayerInitializer;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.project.api.ProjectInitializer;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.support.wicket.resource.Strings;
 import de.tudarmstadt.ukp.inception.ui.kb.config.KnowledgeBaseServiceUIAutoConfiguration;
 
 /**
@@ -48,6 +50,9 @@ import de.tudarmstadt.ukp.inception.ui.kb.config.KnowledgeBaseServiceUIAutoConfi
 public class NamedEntityIdentifierFeatureInitializer
     implements LayerInitializer
 {
+    private static final PackageResourceReference THUMBNAIL = new PackageResourceReference(
+            MethodHandles.lookup().lookupClass(), "NamedEntityIdentifierFeatureInitializer.svg");
+
     private final AnnotationSchemaService annotationSchemaService;
 
     @Autowired
@@ -63,6 +68,18 @@ public class NamedEntityIdentifierFeatureInitializer
     }
 
     @Override
+    public Optional<String> getDescription()
+    {
+        return Optional.of(Strings.getString("entity-linking-layer.description"));
+    }
+
+    @Override
+    public Optional<ResourceReference> getThumbnail()
+    {
+        return Optional.of(THUMBNAIL);
+    }
+
+    @Override
     public List<Class<? extends ProjectInitializer>> getDependencies()
     {
         // Because locks to token boundaries
@@ -72,22 +89,18 @@ public class NamedEntityIdentifierFeatureInitializer
     @Override
     public boolean alreadyApplied(Project aProject)
     {
-        AnnotationLayer neLayer;
-        try {
-            neLayer = annotationSchemaService.findLayer(aProject, NamedEntity.class.getName());
-        }
-        catch (NoResultException e) {
+        if (!annotationSchemaService.existsLayer(NamedEntity._TypeName, aProject)) {
             return false;
         }
 
+        var neLayer = annotationSchemaService.findLayer(aProject, NamedEntity.class.getName());
         return annotationSchemaService.existsFeature("identifier", neLayer);
     }
 
     @Override
     public void configure(Project aProject) throws IOException
     {
-        AnnotationLayer neLayer = annotationSchemaService.findLayer(aProject,
-                NamedEntity.class.getName());
+        var neLayer = annotationSchemaService.findLayer(aProject, NamedEntity.class.getName());
 
         annotationSchemaService.createFeature(new AnnotationFeature(aProject, neLayer, "identifier",
                 "identifier", TYPE_ANY_OBJECT, "Linked entity", null));

@@ -18,15 +18,13 @@
 package de.tudarmstadt.ukp.inception.ui.kb.feature;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.resource.metadata.TypeDescription;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
@@ -39,18 +37,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
-import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
-import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetailQuery;
-import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetailResult;
-import de.tudarmstadt.ukp.inception.schema.feature.FeatureEditor;
-import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupport;
-import de.tudarmstadt.ukp.inception.schema.feature.FeatureType;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetail;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetailGroup;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureEditor;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupport;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureType;
+import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 import de.tudarmstadt.ukp.inception.ui.kb.config.KnowledgeBaseServiceUIAutoConfiguration;
 
 /**
@@ -99,8 +96,15 @@ public class ConceptFeatureSupport
             return Optional.empty();
         }
 
-        return Optional.of(new FeatureType(aFeature.getType(),
-                aFeature.getType().substring(PREFIX.length()), featureSupportId));
+        var traits = readTraits(aFeature);
+        traits.getAllowedValueType();
+
+        var uiName = "KB: " + traits.getAllowedValueType();
+        if (!TYPE_ANY_OBJECT.equals(aFeature.getType())) {
+            uiName += " (" + aFeature.getType().substring(PREFIX.length()) + ")";
+        }
+
+        return Optional.of(new FeatureType(aFeature.getType(), uiName, featureSupportId));
     }
 
     @Override
@@ -131,7 +135,7 @@ public class ConceptFeatureSupport
             return null;
         }
 
-        ConceptFeatureTraits traits = readTraits(aFeature);
+        var traits = readTraits(aFeature);
         return getConceptHandle(aFeature, aIdentifier, traits).getUiLabel();
     }
 
@@ -168,10 +172,11 @@ public class ConceptFeatureSupport
         }
 
         if (aValue instanceof String) {
-            String identifier = (String) aValue;
-            ConceptFeatureTraits traits = readTraits(aFeature);
-            KBHandle chbk = getConceptHandle(aFeature, identifier, traits);
-            var clone = new KBHandle(identifier, chbk.getUiLabel(), chbk.getDescription());
+            var identifier = (String) aValue;
+            var traits = readTraits(aFeature);
+            var chbk = getConceptHandle(aFeature, identifier, traits);
+            // Clone the cached original so we can override the KB
+            var clone = new KBHandle(chbk);
             clone.setKB(chbk.getKB());
             return clone;
         }
@@ -191,41 +196,33 @@ public class ConceptFeatureSupport
             AnnotationActionHandler aHandler, IModel<AnnotatorState> aStateModel,
             IModel<FeatureState> aFeatureStateModel)
     {
-        AnnotationFeature feature = aFeatureStateModel.getObject().feature;
-        FeatureEditor editor;
+        var feature = aFeatureStateModel.getObject().feature;
 
         switch (feature.getMultiValueMode()) {
         case NONE:
             if (feature.getType().startsWith(PREFIX)) {
-                editor = new ConceptFeatureEditor(aId, aOwner, aFeatureStateModel, aStateModel,
+                return new ConceptFeatureEditor(aId, aOwner, aFeatureStateModel, aStateModel,
                         aHandler);
             }
             else {
                 throw unsupportedMultiValueModeException(feature);
             }
-            break;
         case ARRAY: // fall-through
         default:
             throw unsupportedMultiValueModeException(feature);
         }
+    }
 
-        return editor;
+    @Override
+    public ConceptFeatureTraits createDefaultTraits()
+    {
+        return new ConceptFeatureTraits();
     }
 
     @Override
     public ConceptFeatureTraits readTraits(AnnotationFeature aFeature)
     {
-        ConceptFeatureTraits traits = null;
-        try {
-            traits = JSONUtil.fromJsonString(ConceptFeatureTraits.class, aFeature.getTraits());
-        }
-        catch (IOException e) {
-            LOG.error("Unable to read traits", e);
-        }
-
-        if (traits == null) {
-            traits = new ConceptFeatureTraits();
-        }
+        var traits = FeatureSupport.super.readTraits(aFeature);
 
         // If there is no scope set in the trait, see if once can be extracted from the legacy
         // location which is the feature type.
@@ -263,37 +260,26 @@ public class ConceptFeatureSupport
     }
 
     @Override
-    public List<VLazyDetailQuery> getLazyDetails(AnnotationFeature aFeature, String aLabel)
+    public List<VLazyDetailGroup> lookupLazyDetails(AnnotationFeature aFeature, Object aValue)
     {
-        if (StringUtils.isEmpty(aLabel)) {
-            return Collections.emptyList();
+        if (aValue instanceof KBHandle handle) {
+            var result = new VLazyDetailGroup(handle.getIdentifier());
+            result.addDetail(new VLazyDetail("Label", handle.getUiLabel()));
+
+            if (isNotBlank(handle.getDescription())) {
+                result.addDetail(new VLazyDetail("Description", handle.getDescription()));
+            }
+
+            return asList(result);
         }
 
-        return asList(new VLazyDetailQuery(aFeature.getName(), aLabel));
-    }
-
-    @Override
-    public List<VLazyDetailResult> renderLazyDetails(CAS aCas, AnnotationFeature aFeature,
-            VID aParamId, String aQuery)
-    {
-        List<VLazyDetailResult> result = new ArrayList<>();
-
-        ConceptFeatureTraits traits = readTraits(aFeature);
-        KBHandle handle = getConceptHandle(aFeature, aQuery, traits);
-
-        result.add(new VLazyDetailResult("Label", handle.getUiLabel()));
-
-        if (isNotBlank(handle.getDescription())) {
-            result.add(new VLazyDetailResult("Description", handle.getDescription()));
-        }
-
-        return result;
+        return emptyList();
     }
 
     @Override
     public boolean suppressAutoFocus(AnnotationFeature aFeature)
     {
-        ConceptFeatureTraits traits = readTraits(aFeature);
+        var traits = readTraits(aFeature);
         return !traits.getKeyBindings().isEmpty();
     }
 }

@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { DiamAjax, Offsets, VID } from '@inception-project/inception-js-api'
+import { Annotation, DiamAjax, Offsets, VID, LazyDetailGroup } from '@inception-project/inception-js-api'
 import { DiamLoadAnnotationsOptions, DiamSelectAnnotationOptions } from '@inception-project/inception-js-api/src/diam/DiamAjax'
 
 declare const Wicket: any
@@ -118,17 +118,29 @@ export class DiamAjaxImpl implements DiamAjax {
     })
   }
 
-  createRelationAnnotation (originSpanId: VID, targetSpanId: VID): void {
+  createRelationAnnotation (originSpanId: VID, targetSpanId: VID, evt: MouseEvent): void {
+    let { clientX, clientY, overlay } = this.calculateClientPosition(evt)
+
     DiamAjaxImpl.performAjaxCall(() => {
-      Wicket.Ajax.ajax({
-        m: 'POST',
-        u: this.ajaxEndpoint,
-        ep: {
-          action: 'arcOpenDialog',
-          originSpanId,
-          targetSpanId
-        }
-      })
+      new Promise<void>((resolve, reject) => {
+        Wicket.Ajax.ajax({
+          m: 'POST',
+          u: this.ajaxEndpoint,
+          ep: {
+            action: 'arcOpenDialog',
+            originSpanId,
+            targetSpanId,
+            clientX,
+            clientY
+          },
+          sh: [() => {
+            resolve()
+          }],
+          eh: [() => {
+            reject(new Error('Error while trying to create relation'))
+          }]
+        })
+      }).then(() => this.closeOverlayWhenContextMenuIsHidden(overlay))
     })
   }
 
@@ -229,16 +241,28 @@ export class DiamAjaxImpl implements DiamAjax {
     })
   }
 
-  loadLazyDetails (id: VID, type: string, database: string, key: string): Promise<any> {
+  loadLazyDetails (idOrAnnotation: VID | Annotation, optionaLayerId?: number): Promise<LazyDetailGroup[]> {
     const token = DiamAjaxImpl.newToken()
+
+    let id : VID
+    if (Object.prototype.hasOwnProperty.call(idOrAnnotation, 'vid')) {
+      id = (idOrAnnotation as Annotation).vid
+    } else {
+      id = idOrAnnotation as VID
+    }
+
+    let layerId : number
+    if (optionaLayerId) {
+      layerId = optionaLayerId
+    } else {
+      layerId = (idOrAnnotation as Annotation).layer.id
+    }
 
     const params: Record<string, any> = {
       action: 'normData',
       token,
       id,
-      type,
-      database,
-      key
+      layerId
     }
 
     return new Promise((resolve, reject) => {
@@ -253,12 +277,26 @@ export class DiamAjaxImpl implements DiamAjax {
             return
           }
 
-          resolve(result)
+          const detailGroups : LazyDetailGroup[] = []
+          for (const detailGroup of result) {
+            const group : LazyDetailGroup = {
+              title: detailGroup.title,
+              details: []
+            }
+
+            for (const detail of detailGroup.details as []) {
+              group.details.push({ label: detail[0], value: detail[1] })
+            }
+
+            detailGroups.push(group)
+          }
+
+          resolve(detailGroups)
         }],
         eh: [() => {
           DiamAjaxImpl.clearResult(token)
 
-          reject(new Error('Unable to load annotation'))
+          reject(new Error('Unable to load lazy details'))
         }]
       })
     })
@@ -325,10 +363,42 @@ export class DiamAjaxImpl implements DiamAjax {
   }
 
   openContextMenu (id: VID, evt: MouseEvent): void {
+    let { clientX, clientY, overlay } = this.calculateClientPosition(evt)
+
+    DiamAjaxImpl.performAjaxCall(() => {
+      new Promise<void>((resolve, reject) => {
+        Wicket.Ajax.ajax({
+          m: 'POST',
+          u: this.ajaxEndpoint,
+          ep: {
+            action: 'contextMenu',
+            id,
+            clientX,
+            clientY
+          },
+          sh: [() => {
+            resolve()
+          }],
+          eh: [() => {
+            reject(new Error('Unable to open context menu'))
+          }]
+        })
+      }).then(() => this.closeOverlayWhenContextMenuIsHidden(overlay))
+    })
+  }
+
+  private calculateClientPosition(evt: MouseEvent | null) : { clientX: number; clientY: number; overlay?: HTMLElement } {
+    if (!evt) {
+      return { 
+        clientX: Math.round(window.innerWidth / 2), 
+        clientY: Math.round(window.innerHeight / 2), 
+        overlay: undefined };
+    }
+
     let clientX = evt.clientX
     let clientY = evt.clientY
 
-    let overlay: HTMLElement
+    let overlay: HTMLElement | undefined = undefined
 
     // If the editor is in an IFrame, we need to adjust the coordinates.
     // We also need to ensure that clicks outside the context menu are not
@@ -358,26 +428,7 @@ export class DiamAjaxImpl implements DiamAjax {
     clientX = Math.round(clientX)
     clientY = Math.round(clientY)
 
-    DiamAjaxImpl.performAjaxCall(() => {
-      new Promise<void>((resolve, reject) => {
-        Wicket.Ajax.ajax({
-          m: 'POST',
-          u: this.ajaxEndpoint,
-          ep: {
-            action: 'contextMenu',
-            id,
-            clientX,
-            clientY
-          },
-          sh: [() => {
-            resolve()
-          }],
-          eh: [() => {
-            reject(new Error('Unable to open context menu'))
-          }]
-        })
-      }).then(() => this.closeOverlayWhenContextMenuIsHidden(overlay))
-    })
+    return { clientX, clientY, overlay }
   }
 
   private createOverlay (frame: HTMLElement): HTMLElement {
@@ -392,7 +443,7 @@ export class DiamAjaxImpl implements DiamAjax {
     return overlay
   }
 
-  private closeOverlayWhenContextMenuIsHidden (overlay: HTMLElement): void {
+  private closeOverlayWhenContextMenuIsHidden (overlay?: HTMLElement): void {
     if (!overlay) {
       return
     }

@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.recogitojseditor;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.wicket.ServletContextUtils.referenceToUrl;
+import static de.tudarmstadt.ukp.inception.support.wicket.ServletContextUtils.referenceToUrl;
 import static java.util.Arrays.asList;
 
 import javax.servlet.ServletContext;
@@ -27,13 +27,14 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorFactory;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.editor.view.DocumentViewFactory;
 import de.tudarmstadt.ukp.inception.externaleditor.ExternalAnnotationEditorBase;
 import de.tudarmstadt.ukp.inception.externaleditor.model.AnnotationEditorProperties;
+import de.tudarmstadt.ukp.inception.preferences.ClientSideUserPreferencesProvider;
 import de.tudarmstadt.ukp.inception.recogitojseditor.resources.RecogitoJsCssResourceReference;
 import de.tudarmstadt.ukp.inception.recogitojseditor.resources.RecogitoJsJavascriptResourceReference;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
@@ -71,6 +72,11 @@ public class RecogitoHtmlAnnotationEditor
         // The factory is the JS call. Cf. the "globalName" in build.js and the factory method
         // defined in main.ts
         props.setEditorFactory("RecogitoEditor.factory()");
+        props.setEditorFactoryId(getFactory().getBeanName());
+        if (getFactory() instanceof ClientSideUserPreferencesProvider) {
+            ((ClientSideUserPreferencesProvider) getFactory()).getUserPreferencesKey()
+                    .ifPresent(key -> props.setUserPreferencesKey(key.getClientSideKey()));
+        }
         props.setDiamAjaxCallbackUrl(getDiamBehavior().getCallbackUrl().toString());
         props.setStylesheetSources(
                 asList(referenceToUrl(servletContext, RecogitoJsCssResourceReference.get())));

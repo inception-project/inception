@@ -17,53 +17,111 @@
  */
 package de.tudarmstadt.ukp.inception.scheduling;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging.KEY_PROJECT_ID;
-import static de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging.KEY_REPOSITORY_PATH;
-import static de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging.KEY_USERNAME;
+import static de.tudarmstadt.ukp.inception.support.logging.Logging.KEY_PROJECT_ID;
+import static de.tudarmstadt.ukp.inception.support.logging.Logging.KEY_REPOSITORY_PATH;
+import static de.tudarmstadt.ukp.inception.support.logging.Logging.KEY_USERNAME;
 import static org.apache.commons.lang3.Validate.notNull;
 
+import java.lang.invoke.MethodHandles;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
+import de.tudarmstadt.ukp.inception.scheduling.controller.SchedulerWebsocketController;
+import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 
 public abstract class Task
-    implements Runnable
+    implements Runnable, InitializingBean
 {
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
     private final static AtomicInteger nextId = new AtomicInteger(1);
 
     private @Autowired RepositoryProperties repositoryProperties;
+    private @Autowired(required = false) SchedulerWebsocketController schedulerController;
 
-    private final User user;
+    private final TaskHandle handle;
+    private final User sessionOwner;
     private final Project project;
     private final String trigger;
     private final int id;
+    private final String type;
+    private final boolean cancellable;
 
-    public Task(Project aProject, String aTrigger)
+    private TaskMonitor monitor;
+    private Task parentTask;
+
+    private TaskScope scope;
+
+    protected Task(Builder<? extends Builder<?>> builder)
     {
-        this(null, aProject, aTrigger);
+        notNull(builder.project, "Project must be specified");
+        notNull(builder.trigger, "Trigger must be specified");
+        notNull(builder.scope, "Scope must be specified");
+        notNull(builder.type, "Type must be specified");
+
+        id = nextId.getAndIncrement();
+        handle = new TaskHandle(id);
+        sessionOwner = builder.sessionOwner;
+        project = builder.project;
+        trigger = builder.trigger;
+        type = builder.type;
+
+        cancellable = builder.cancellable;
+        parentTask = builder.parentTask;
+        scope = builder.scope;
     }
 
-    public Task(User aUser, Project aProject, String aTrigger)
+    @Override
+    public void afterPropertiesSet()
     {
-        notNull(aProject, "Project must be specified");
-        notNull(aTrigger, "Trigger must be specified");
+        // For tasks that have a parent task, we use a non-notifying monitor. Also, we do not report
+        // such subtasks ia the SchedulerControllerImpl - they are internal.
+        if (schedulerController != null && sessionOwner != null && parentTask == null) {
+            monitor = new NotifyingTaskMonitor(handle, this, schedulerController);
+        }
+        else {
+            monitor = new TaskMonitor(handle, this);
+        }
+    }
 
-        user = aUser;
-        project = aProject;
-        trigger = aTrigger;
-        id = nextId.getAndIncrement();
+    public boolean isCancellable()
+    {
+        return cancellable;
+    }
+
+    public Task getParentTask()
+    {
+        return parentTask;
+    }
+
+    public String getType()
+    {
+        return type;
+    }
+
+    public String getTitle()
+    {
+        return getClass().getSimpleName();
+    }
+
+    public TaskMonitor getMonitor()
+    {
+        return monitor;
     }
 
     public Optional<User> getUser()
     {
-        return Optional.ofNullable(user);
+        return Optional.ofNullable(sessionOwner);
     }
 
     public Project getProject()
@@ -91,8 +149,20 @@ public abstract class Task
         return true;
     }
 
+    public TaskScope getScope()
+    {
+        return scope;
+    }
+
+    void destroy()
+    {
+        if (monitor != null) {
+            monitor.destroy();
+        }
+    }
+
     @Override
-    public void run()
+    public final void run()
     {
         try {
             // We are in a new thread. Set up thread-specific MDC
@@ -106,7 +176,7 @@ public abstract class Task
                 MDC.put(KEY_PROJECT_ID, String.valueOf(getProject().getId()));
             }
 
-            execute();
+            runSync();
         }
         finally {
             MDC.remove(KEY_REPOSITORY_PATH);
@@ -115,17 +185,33 @@ public abstract class Task
         }
     }
 
-    public abstract void execute();
+    public void runSync()
+    {
+        try {
+            monitor.setState(TaskState.RUNNING);
+            execute();
+            if (monitor.getState() == TaskState.RUNNING) {
+                monitor.setState(TaskState.COMPLETED);
+            }
+        }
+        catch (Exception e) {
+            monitor.addMessage(LogMessage.error(this, "Task failed."));
+            monitor.setState(TaskState.FAILED);
+            LOG.error("Task [{}] failed (trigger: [{}])", getTitle(), getTrigger(), e);
+        }
+    }
+
+    public abstract void execute() throws Exception;
 
     @Override
     public String toString()
     {
         StringBuilder sb = new StringBuilder(getName());
-        sb.append('{');
-        sb.append("user=").append(user != null ? user.getUsername() : "<SYSTEM>");
+        sb.append('[');
+        sb.append("user=").append(sessionOwner != null ? sessionOwner.getUsername() : "<SYSTEM>");
         sb.append(", project=").append(project.getName());
         sb.append(", trigger=\"").append(trigger);
-        sb.append("\"}");
+        sb.append("\"]");
         return sb.toString();
     }
 
@@ -139,12 +225,92 @@ public abstract class Task
             return false;
         }
         Task task = (Task) o;
-        return Objects.equals(user, task.user) && project.equals(task.project);
+        return Objects.equals(sessionOwner, task.sessionOwner) && project.equals(task.project);
     }
 
     @Override
     public int hashCode()
     {
-        return Objects.hash(user, project);
+        return Objects.hash(sessionOwner, project);
+    }
+
+    public static abstract class Builder<T extends Builder<?>>
+    {
+        protected User sessionOwner;
+        protected Project project;
+        protected String trigger;
+        protected String type;
+        protected boolean cancellable;
+        protected Task parentTask;
+        protected TaskScope scope = TaskScope.EPHEMERAL;
+
+        protected Builder()
+        {
+        }
+
+        /**
+         * @param aSessionOwner
+         *            the user owning the task.
+         */
+        @SuppressWarnings("unchecked")
+        public T withSessionOwner(User aSessionOwner)
+        {
+            this.sessionOwner = aSessionOwner;
+            return (T) this;
+        }
+
+        /**
+         * @param aProject
+         *            the project on which the task operates.
+         */
+        @SuppressWarnings("unchecked")
+        public T withProject(Project aProject)
+        {
+            this.project = aProject;
+            return (T) this;
+        }
+
+        /**
+         * @param aTrigger
+         *            the trigger that caused the selection to be scheduled.
+         */
+        @SuppressWarnings("unchecked")
+        public T withTrigger(String aTrigger)
+        {
+            this.trigger = aTrigger;
+            return (T) this;
+        }
+
+        @SuppressWarnings("unchecked")
+        public T withType(String aType)
+        {
+            this.type = aType;
+            return (T) this;
+        }
+
+        @SuppressWarnings("unchecked")
+        public T withCancellable(boolean aCancellable)
+        {
+            this.cancellable = aCancellable;
+            return (T) this;
+        }
+
+        /**
+         * @param aParentTask
+         *            parent task for this task.
+         */
+        @SuppressWarnings("unchecked")
+        public T withParentTask(Task aParentTask)
+        {
+            this.parentTask = aParentTask;
+            return (T) this;
+        }
+
+        @SuppressWarnings("unchecked")
+        public T withScope(TaskScope aScope)
+        {
+            this.scope = aScope;
+            return (T) this;
+        }
     }
 }

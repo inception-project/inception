@@ -21,7 +21,7 @@ import org.apache.wicket.Component;
 import org.apache.wicket.model.IModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.Extension;
+import de.tudarmstadt.ukp.inception.support.extensionpoint.Extension;
 
 public interface DocumentViewFactory
     extends Extension<SourceDocument>

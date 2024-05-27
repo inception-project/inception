@@ -17,11 +17,13 @@
  */
 package de.tudarmstadt.ukp.inception.annotation.feature.string;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.apache.wicket.behavior.Behavior.onTag;
 import static org.apache.wicket.event.Broadcast.BUBBLE;
 
 import java.util.List;
+import java.util.Objects;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.wicket.AttributeModifier;
@@ -32,50 +34,59 @@ import org.apache.wicket.ajax.form.AjaxFormChoiceComponentUpdatingBehavior;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.FormComponent;
+import org.apache.wicket.markup.html.form.Radio;
 import org.apache.wicket.markup.html.form.RadioGroup;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.IModelComparator;
+import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.PropertyModel;
 
-import com.googlecode.wicket.kendo.ui.form.Radio;
-
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.keybindings.KeyBinding;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.keybindings.KeyBindingsPanel;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.keybindings.KeybindingLabel;
 import de.tudarmstadt.ukp.clarin.webanno.model.ReorderableTag;
-import de.tudarmstadt.ukp.clarin.webanno.support.DescriptionTooltipBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.support.DescriptionTooltipBehavior.Mode;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
-import de.tudarmstadt.ukp.inception.schema.feature.FeatureEditorValueChangedEvent;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureEditorValueChangedEvent;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.inception.support.wicket.DescriptionTooltipBehavior;
+import de.tudarmstadt.ukp.inception.support.wicket.DescriptionTooltipBehavior.Mode;
 
 public class RadioGroupStringFeatureEditor
     extends TextFeatureEditorBase
 {
     private static final long serialVersionUID = 9112762779124263198L;
 
+    private StringFeatureTraits traits;
+    private KeyBindingsPanel keyBindingsPanel;
+
     public RadioGroupStringFeatureEditor(String aId, MarkupContainer aItem,
             IModel<FeatureState> aModel, AnnotationActionHandler aHandler)
     {
         super(aId, aItem, aModel);
 
-        AnnotationFeature feat = getModelObject().feature;
-        StringFeatureTraits traits = readFeatureTraits(feat);
+        var feat = getModelObject().feature;
+        traits = readFeatureTraits(feat);
 
         add(new LambdaAjaxLink("clear", this::actionClear));
 
-        WebMarkupContainer emptyTagsetWarning = new WebMarkupContainer("emptyTagsetWarning");
+        var emptyTagsetWarning = new WebMarkupContainer("emptyTagsetWarning");
         emptyTagsetWarning.setOutputMarkupPlaceholderTag(true);
         emptyTagsetWarning.add(visibleWhen(() -> CollectionUtils.isEmpty(getModelObject().tagset)));
         add(emptyTagsetWarning);
 
-        add(new KeyBindingsPanel("keyBindings", () -> traits.getKeyBindings(), aModel, aHandler)
-                // The key bindings are only visible when the label is also enabled, i.e. when the
-                // editor is used in a "normal" context and not e.g. in the keybindings
-                // configuration panel
-                .add(visibleWhen(() -> getLabelComponent().isVisible())));
+        keyBindingsPanel = new KeyBindingsPanel("keyBindings", () -> traits.getKeyBindings(),
+                aModel, aHandler);
+        // The key bindings are only visible when the label is also enabled, i.e. when the
+        // editor is used in a "normal" context and not e.g. in the keybindings
+        // configuration panel
+        keyBindingsPanel.add(visibleWhen(() -> getLabelComponent().isVisible()));
+        // We render the key bindings inside the choices already. The panel is only necessary to
+        // actually react to the bindings
+        keyBindingsPanel.setToggleVisibile(false);
+        add(keyBindingsPanel);
     }
 
     private void actionClear(AjaxRequestTarget aTarget)
@@ -87,10 +98,9 @@ public class RadioGroupStringFeatureEditor
     }
 
     @Override
-    protected FormComponent createInputField()
+    protected FormComponent<?> createInputField()
     {
-        RadioGroup<Object> group = new RadioGroup<Object>("value",
-                new PropertyModel<>(getModel(), "value"))
+        var group = new RadioGroup<Object>("value", new PropertyModel<>(getModel(), "value"))
         {
             private static final long serialVersionUID = 1L;
 
@@ -112,9 +122,9 @@ public class RadioGroupStringFeatureEditor
                             return false;
                         }
 
-                        String tagA = a instanceof ReorderableTag ? ((ReorderableTag) a).getName()
+                        var tagA = a instanceof ReorderableTag ? ((ReorderableTag) a).getName()
                                 : String.valueOf(a);
-                        String tagB = b instanceof ReorderableTag ? ((ReorderableTag) b).getName()
+                        var tagB = b instanceof ReorderableTag ? ((ReorderableTag) b).getName()
                                 : String.valueOf(b);
 
                         return tagA.equals(tagB);
@@ -146,33 +156,56 @@ public class RadioGroupStringFeatureEditor
             @Override
             protected void populateItem(ListItem<ReorderableTag> item)
             {
-                Radio<Object> radio = new Radio<Object>("radio", (IModel) item.getModel(), aGroup);
-                Radio.Label label = new Radio.Label("label",
-                        item.getModel().map(ReorderableTag::getName), radio);
-                label.add(AttributeModifier.append("class",
-                        item.getModel().map(ReorderableTag::getReordered)
-                                .map(_flag -> _flag ? "font-weight-bold" : "")));
+                var tag = item.getModel();
 
-                String descriptionText = item.getModel().getObject().getDescription();
+                var radio = new Radio<>("radio", (IModel) tag, aGroup);
+                item.add(radio);
+                item.add(radio);
 
-                Label score = new Label("score", item.getModel().map(ReorderableTag::getScore));
+                var button = new WebMarkupContainer("button", item.getModel());
+                button.add(onTag((c, t) -> t.put("for", radio.getMarkupId())));
+                item.add(button);
 
-                WebMarkupContainer description = new WebMarkupContainer("description");
+                var label = new Label("label", item.getModel().map(ReorderableTag::getName));
+                label.add(AttributeModifier.append("class", item.getModel()
+                        .map(ReorderableTag::getReordered).map(_flag -> _flag ? "fw-bold" : "")));
+
+                button.add(label);
+
+                var score = new Label("score", item.getModel().map(ReorderableTag::getScore));
+                button.add(score);
+
+                var descriptionText = item.getModel().getObject().getDescription();
+                var description = new WebMarkupContainer("description");
                 description.add(visibleWhen(() -> isNotBlank(descriptionText)));
-
                 if (isNotBlank(descriptionText)) {
-                    DescriptionTooltipBehavior tooltip = new DescriptionTooltipBehavior(
+                    var tooltip = new DescriptionTooltipBehavior(
                             item.getModel().map(ReorderableTag::getName).getObject(),
                             descriptionText);
                     tooltip.setMode(Mode.MARKDOWN);
                     description.add(tooltip);
                 }
+                button.add(description);
 
-                add(description);
-
-                item.add(radio, label, score, description);
+                var keyComboModel = LoadableDetachableModel.of(() -> getKeyBinding(tag));
+                var keyCombo = new KeybindingLabel("keyCombo", keyComboModel);
+                keyCombo.add(visibleWhen(() -> keyBindingsPanel.isVisibilityAllowed()));
+                button.add(keyCombo);
             }
         };
+    }
+
+    private KeyBinding getKeyBinding(IModel<ReorderableTag> aTag)
+    {
+        if (traits.getKeyBindings() == null) {
+            return null;
+        }
+
+        return traits.getKeyBindings().stream() //
+                .filter(kb -> aTag.map(t -> Objects.equals(t.getName(), kb.getValue()))
+                        .orElse(false).getObject())
+                .findFirst() //
+                .orElse(null);
     }
 
     @Override
@@ -180,7 +213,7 @@ public class RadioGroupStringFeatureEditor
     {
         // Need to use a AjaxFormChoiceComponentUpdatingBehavior here since we use a RadioGroup
         // here.
-        FormComponent<?> focusComponent = getFocusComponent();
+        var focusComponent = getFocusComponent();
         focusComponent.add(new AjaxFormChoiceComponentUpdatingBehavior()
         {
             private static final long serialVersionUID = -5058365578109385064L;

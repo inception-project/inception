@@ -24,21 +24,21 @@
       <div id="annotationFeatureForm" class="annotatation-detail-panel flex-content flex-v-container flex-gutter">
         <div wicket:id="layerContainer" class="card"/>
         <div class="flex-content panel card">
-          <div class="card-header">
+          <div wicket:id="header" class="card-header">
             <div class="clearfix">
-              <wicket:message key="annotation"/>
+              <span wicket:id="layerType"/>
               <div wicket:id="buttonContainer" class="actions">
                 <button wicket:id="delete" class="btn btn-danger" wicket:message="title:delete">
                   <i class="fas fa-trash"></i>
-                  <span class="d-none d-xl-inline">&nbsp;<wicket:message key="delete"/></span>
+                  <span class="d-none d-xl-inline ms-1"><wicket:message key="delete"/></span>
                 </button>
                 <button wicket:id="reverse" class="btn btn-secondary" wicket:message="title:reverse">
                   <i class="fas fa-arrows-alt-h"></i>
-                  <span class="d-none d-xl-inline">&nbsp;<wicket:message key="reverse"/></span>
+                  <span class="d-none d-xl-inline ms-1"><wicket:message key="reverse"/></span>
                 </button>
                 <button wicket:id="clear" class="btn btn-secondary" wicket:message="title:clear">
                   <i class="fas fa-times"></i>
-                  <span class="d-none d-xl-inline">&nbsp;<wicket:message key="clear"/></span>
+                  <span class="d-none d-xl-inline ms-1"><wicket:message key="clear"/></span>
                 </button>
               </div>
             </div>

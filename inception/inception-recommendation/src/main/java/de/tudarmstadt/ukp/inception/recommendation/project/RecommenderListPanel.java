@@ -33,15 +33,15 @@ import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.ListPanel_ImplBase;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.OverviewListChoice;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.RecommenderGeneralSettings;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxButton;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.inception.support.wicket.ListPanel_ImplBase;
+import de.tudarmstadt.ukp.inception.support.wicket.OverviewListChoice;
 
 public class RecommenderListPanel
     extends ListPanel_ImplBase
@@ -75,16 +75,22 @@ public class RecommenderListPanel
         overviewList.add(new LambdaAjaxFormComponentUpdatingBehavior("change", this::onChange));
         add(overviewList);
 
-        LambdaAjaxLink lambdaAjaxLink = new LambdaAjaxLink(MID_CREATE_BUTTON, this::actionCreate);
+        var lambdaAjaxLink = new LambdaAjaxLink(MID_CREATE_BUTTON, this::actionCreate);
         lambdaAjaxLink.setVisible(showCreateButton);
         add(lambdaAjaxLink);
 
-        RecommenderGeneralSettings settings = preferencesService.loadDefaultTraitsForProject(
+        var settings = preferencesService.loadDefaultTraitsForProject(
                 KEY_RECOMMENDER_GENERAL_SETTINGS, projectModel.getObject());
 
         var form = new Form<>("form", CompoundPropertyModel.of(settings));
         form.setOutputMarkupId(true);
-        form.add(new CheckBox("waitForRecommendersOnOpenDocument").setOutputMarkupId(true));
+        form.add(new CheckBox("waitForRecommendersOnOpenDocument") //
+                .setOutputMarkupId(true));
+        form.add(new CheckBox("showRecommendationsWhenViewingOtherUser") //
+                .setOutputMarkupId(true));
+        form.add(new CheckBox("showRecommendationsWhenViewingCurationUser") //
+                .setOutputMarkupId(true) //
+                .setVisible(recommendationService.isCurationSidebarEnabled()));
         form.add(new LambdaAjaxButton<>("save", this::actionSaveSettings));
         add(form);
     }

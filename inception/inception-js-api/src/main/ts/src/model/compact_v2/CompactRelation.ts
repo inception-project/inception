@@ -29,12 +29,14 @@ export type CompactRelation = [
 
 export function unpackCompactRelation (doc: AnnotatedText, raw: CompactRelation): Relation {
   const cooked = new Relation()
+  cooked.document = doc
   cooked.layer = doc.__getOrCreateLayer(raw[0])
   cooked.vid = raw[1]
   cooked.arguments = raw[2].map(arg => unpackCompactArgument(doc, arg))
   cooked.color = raw[3]?.c
   cooked.label = raw[3]?.l
   cooked.score = raw[3]?.s
+  cooked.hideScore = raw[3]?.hs ? true : false
   cooked.comments = unpackCompactComments(doc, cooked, raw[3]?.cm)
   return cooked
 }

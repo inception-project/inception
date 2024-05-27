@@ -21,7 +21,7 @@ import java.util.Optional;
 
 import org.springframework.context.ApplicationEvent;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.ExtensionPoint;
+import de.tudarmstadt.ukp.inception.support.extensionpoint.ExtensionPoint;
 
 public interface UndoableActionSupportRegistry
     extends ExtensionPoint<ApplicationEvent, UndoableAnnotationActionSupport>

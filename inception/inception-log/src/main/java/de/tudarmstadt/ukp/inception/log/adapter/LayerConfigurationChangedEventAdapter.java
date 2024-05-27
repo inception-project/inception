@@ -19,16 +19,16 @@ package de.tudarmstadt.ukp.inception.log.adapter;
 
 import org.springframework.stereotype.Component;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.event.LayerConfigurationChangedEvent;
+import de.tudarmstadt.ukp.inception.schema.api.event.LayerConfigurationChangedEvent;
 
 @Component
 public class LayerConfigurationChangedEventAdapter
     implements EventLoggingAdapter<LayerConfigurationChangedEvent>
 {
     @Override
-    public boolean accepts(Object aEvent)
+    public boolean accepts(Class<?> aEvent)
     {
-        return aEvent instanceof LayerConfigurationChangedEvent;
+        return LayerConfigurationChangedEvent.class.isAssignableFrom(aEvent);
     }
 
     @Override

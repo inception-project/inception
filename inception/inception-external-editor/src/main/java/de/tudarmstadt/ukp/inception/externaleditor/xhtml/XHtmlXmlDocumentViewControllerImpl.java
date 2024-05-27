@@ -22,6 +22,7 @@ import static org.slf4j.LoggerFactory.getLogger;
 import static org.springframework.http.HttpStatus.OK;
 
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.StringWriter;
 import java.security.Principal;
 import java.util.Locale;
@@ -29,6 +30,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import javax.servlet.ServletContext;
+import javax.xml.XMLConstants;
 
 import org.apache.uima.cas.CAS;
 import org.dkpro.core.api.xml.type.XmlDocument;
@@ -50,16 +52,17 @@ import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.AttributesImpl;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.ServletContextUtils;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentStorageService;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorRegistry;
 import de.tudarmstadt.ukp.inception.externaleditor.XmlDocumentViewControllerImplBase;
 import de.tudarmstadt.ukp.inception.externaleditor.policy.DefaultHtmlDocumentPolicy;
 import de.tudarmstadt.ukp.inception.externaleditor.policy.SafetyNetDocumentPolicy;
 import de.tudarmstadt.ukp.inception.externaleditor.xml.XmlCas2SaxEvents;
 import de.tudarmstadt.ukp.inception.io.xml.dkprocore.Cas2SaxEvents;
+import de.tudarmstadt.ukp.inception.support.wicket.ServletContextUtils;
 
 @ConditionalOnWebApplication
 @RestController
@@ -77,13 +80,16 @@ public class XHtmlXmlDocumentViewControllerImpl
     private static final String HTML = "html";
     private static final String BODY = "body";
     private static final String HEAD = "head";
+    private static final String P = "p";
 
     private final DocumentService documentService;
+    private final DocumentStorageService documentStorageService;
     private final DocumentImportExportService formatRegistry;
     private final ServletContext servletContext;
 
     @Autowired
     public XHtmlXmlDocumentViewControllerImpl(DocumentService aDocumentService,
+            DocumentStorageService aDocumentStorageService,
             AnnotationEditorRegistry aAnnotationEditorRegistry, ServletContext aServletContext,
             DocumentImportExportService aFormatRegistry, DefaultHtmlDocumentPolicy aDefaultPolicy,
             SafetyNetDocumentPolicy aSafetyNetPolicy)
@@ -91,6 +97,7 @@ public class XHtmlXmlDocumentViewControllerImpl
         super(aDefaultPolicy, aSafetyNetPolicy, aFormatRegistry, aAnnotationEditorRegistry);
 
         documentService = aDocumentService;
+        documentStorageService = aDocumentStorageService;
         servletContext = aServletContext;
         formatRegistry = aFormatRegistry;
     }
@@ -121,11 +128,11 @@ public class XHtmlXmlDocumentViewControllerImpl
             @RequestParam("editor") Optional<String> aEditor, Principal principal)
         throws Exception
     {
-        SourceDocument doc = documentService.getSourceDocument(aProjectId, aDocumentId);
+        var doc = documentService.getSourceDocument(aProjectId, aDocumentId);
 
-        CAS cas = documentService.createOrReadInitialCas(doc);
+        var cas = documentService.createOrReadInitialCas(doc);
 
-        try (StringWriter out = new StringWriter()) {
+        try (var out = new StringWriter()) {
             Optional<XmlDocument> maybeXmlDocument;
             if (cas.getTypeSystem().getType(XmlDocument._TypeName) != null) {
                 maybeXmlDocument = cas.select(XmlDocument.class).findFirst();
@@ -139,54 +146,113 @@ public class XHtmlXmlDocumentViewControllerImpl
                     .map(qname -> HTML.equals(qname.toLowerCase(Locale.ROOT))) //
                     .orElse(false);
 
-            ContentHandler ch = XmlCas2SaxEvents.makeSerializer(out);
+            var rawHandler = XmlCas2SaxEvents.makeSerializer(out);
+            var sanitizingHandler = applySanitizers(aEditor, doc, rawHandler);
+            var resourceFilteringHandler = applyHtmlResourceUrlFilter(doc, sanitizingHandler);
+            var finalHandler = resourceFilteringHandler;
 
             // If the CAS contains an actual HTML structure, then we send that. Mind that we do
             // not inject format-specific CSS then!
             if (casContainsHtml) {
-                XmlDocument xml = maybeXmlDocument.get();
-                Cas2SaxEvents serializer = new XmlCas2SaxEvents(xml, ch);
-                ch.startDocument();
-                ch.startPrefixMapping("", XHTML_NS_URI);
+                var xml = maybeXmlDocument.get();
+                startXHtmlDocument(rawHandler);
+
+                var serializer = new XmlCas2SaxEvents(xml, finalHandler);
                 serializer.process(xml.getRoot());
-                ch.endPrefixMapping("");
-                ch.endDocument();
+
+                endXHtmlDocument(rawHandler);
                 return toResponse(out);
             }
 
-            ch.startDocument();
-            ch.startPrefixMapping("", XHTML_NS_URI);
-            ch.startElement(null, null, HTML, null);
-            ch.startElement(null, null, HEAD, null);
-            for (String cssUrl : formatRegistry.getFormatCssStylesheets(doc).stream()
-                    .map(css -> ServletContextUtils.referenceToUrl(servletContext, css))
-                    .collect(Collectors.toList())) {
-                renderXmlStylesheet(ch, cssUrl);
-            }
+            startXHtmlDocument(rawHandler);
 
-            ch.endElement(null, null, HEAD);
-            ch.startElement(null, null, BODY, null);
+            rawHandler.startElement(null, null, HTML, null);
 
+            renderHead(doc, rawHandler);
+
+            rawHandler.startElement(null, null, BODY, null);
             if (maybeXmlDocument.isEmpty()) {
                 // Gracefully handle the case that the CAS does not contain any XML structure at all
                 // and show only the document text in this case.
-                String text = cas.getDocumentText();
-                ch.characters(text.toCharArray(), 0, text.length());
+                renderTextContent(cas, finalHandler);
             }
             else {
-                XmlDocument xml = maybeXmlDocument.get();
-                var sh = applySanitizers(aEditor, doc, ch);
-                Cas2SaxEvents serializer = new XmlCas2SaxEvents(xml, sh);
-                serializer.process(xml.getRoot());
-            }
+                var formatPolicy = formatRegistry.getFormatPolicy(doc);
+                var defaultNamespace = formatPolicy.flatMap(policy -> policy.getDefaultNamespace());
 
-            ch.endElement(null, null, BODY);
-            ch.endElement(null, null, HTML);
-            ch.endPrefixMapping("");
-            ch.endDocument();
+                if (defaultNamespace.isPresent()) {
+                    finalHandler.startPrefixMapping(XMLConstants.DEFAULT_NS_PREFIX,
+                            defaultNamespace.get());
+                }
+
+                renderXmlContent(doc, finalHandler, aEditor, maybeXmlDocument.get());
+
+                if (defaultNamespace.isPresent()) {
+                    finalHandler.endPrefixMapping(XMLConstants.DEFAULT_NS_PREFIX);
+                }
+            }
+            rawHandler.endElement(null, null, BODY);
+
+            rawHandler.endElement(null, null, HTML);
+
+            endXHtmlDocument(rawHandler);
 
             return toResponse(out);
         }
+    }
+
+    private void endXHtmlDocument(ContentHandler ch) throws SAXException
+    {
+        ch.endPrefixMapping("");
+        ch.endDocument();
+    }
+
+    private void startXHtmlDocument(ContentHandler ch) throws SAXException
+    {
+        ch.startDocument();
+        ch.startPrefixMapping("", XHTML_NS_URI);
+    }
+
+    private void renderHead(SourceDocument doc, ContentHandler ch) throws SAXException
+    {
+        ch.startElement(null, null, HEAD, null);
+        for (String cssUrl : formatRegistry.getFormatCssStylesheets(doc).stream()
+                .map(css -> ServletContextUtils.referenceToUrl(servletContext, css))
+                .collect(Collectors.toList())) {
+            renderXmlStylesheet(ch, cssUrl);
+        }
+        ch.endElement(null, null, HEAD);
+    }
+
+    private void renderXmlContent(SourceDocument doc, ContentHandler ch, Optional<String> aEditor,
+            XmlDocument aXmlDocument)
+        throws IOException, SAXException
+    {
+        Cas2SaxEvents serializer = new XmlCas2SaxEvents(aXmlDocument, ch);
+        serializer.process(aXmlDocument.getRoot());
+    }
+
+    private void renderTextContent(CAS cas, ContentHandler ch) throws SAXException
+    {
+        var text = cas.getDocumentText().toCharArray();
+        ch.startElement(null, null, P, null);
+        var lineBreakSequenceLength = 0;
+        for (int i = 0; i < text.length; i++) {
+            if (text[i] == '\n') {
+                lineBreakSequenceLength++;
+            }
+            else if (text[i] != '\r') {
+                if (lineBreakSequenceLength > 1) {
+                    ch.endElement(null, null, P);
+                    ch.startElement(null, null, P, null);
+                }
+
+                lineBreakSequenceLength = 0;
+            }
+
+            ch.characters(text, i, 1);
+        }
+        ch.endElement(null, null, P);
     }
 
     @PreAuthorize("@documentAccess.canViewAnnotationDocument(#aProjectId, #aDocumentId, #principal.name)")
@@ -201,25 +267,31 @@ public class XHtmlXmlDocumentViewControllerImpl
         var srcDoc = documentService.getSourceDocument(aProjectId, aDocumentId);
 
         var maybeFormatSupport = formatRegistry.getFormatById(srcDoc.getFormat());
-        if (!maybeFormatSupport.isPresent()) {
+        if (maybeFormatSupport.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
 
-        var srcDocFile = documentService.getSourceDocumentFile(srcDoc);
+        var srcDocFile = documentStorageService.getSourceDocumentFile(srcDoc);
 
         var formatSupport = maybeFormatSupport.get();
 
+        if (!formatSupport.hasResources()
+                || !formatSupport.isAccessibleResource(srcDocFile, aResourceId)) {
+            LOG.debug("Resource [{}] for document {} not found", aResourceId, srcDoc);
+            return ResponseEntity.notFound().build();
+        }
+
         try {
             var inputStream = formatSupport.openResourceStream(srcDocFile, aResourceId);
-            HttpHeaders httpHeaders = new HttpHeaders();
+            var httpHeaders = new HttpHeaders();
             return new ResponseEntity<>(new InputStreamResource(inputStream), httpHeaders, OK);
         }
         catch (FileNotFoundException e) {
-            LOG.error("Resource [{}] for document {} not found", aResourceId, srcDoc);
+            LOG.debug("Resource [{}] for document {} not found", aResourceId, srcDoc);
             return ResponseEntity.notFound().build();
         }
         catch (Exception e) {
-            LOG.error("Unable to load resource [{}] for document {}", aResourceId, srcDoc, e);
+            LOG.debug("Unable to load resource [{}] for document {}", aResourceId, srcDoc, e);
             return ResponseEntity.notFound().build();
         }
     }

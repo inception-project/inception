@@ -28,12 +28,14 @@ export type CompactSpan = [
 
 export function unpackCompactSpan (doc: AnnotatedText, raw: CompactSpan): Span {
   const cooked = new Span()
+  cooked.document = doc
   cooked.layer = doc.__getOrCreateLayer(raw[0])
   cooked.vid = raw[1]
   cooked.offsets = raw[2]
   cooked.color = raw[3]?.c
   cooked.label = raw[3]?.l
   cooked.score = raw[3]?.s
+  cooked.hideScore = raw[3]?.hs ? true : false
   cooked.clippingFlags = raw[3]?.cl
   cooked.comments = unpackCompactComments(doc, cooked, raw[3]?.cm)
   return cooked

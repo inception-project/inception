@@ -42,6 +42,10 @@ import de.tudarmstadt.ukp.inception.io.xml.dkprocore.CasXmlHandler;
 import de.tudarmstadt.ukp.inception.io.xml.dkprocore.CasXmlHandler.ElementListener;
 import de.tudarmstadt.ukp.inception.support.xml.XmlParserUtils;
 
+/**
+ * @deprecated Experimental code that was deprecated in favor of {@link BioCReader}
+ */
+@Deprecated
 public class BioCXmlDocumentReader
     extends BioCReaderImplBase
 {

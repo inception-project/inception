@@ -23,9 +23,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.event.TagEvent;
-import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.log.model.TagDetails;
+import de.tudarmstadt.ukp.inception.schema.api.event.TagEvent;
+import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 
 @Component
 public class TagEventAdapter
@@ -34,9 +34,9 @@ public class TagEventAdapter
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     @Override
-    public boolean accepts(Object aEvent)
+    public boolean accepts(Class<?> aEvent)
     {
-        return aEvent instanceof TagEvent;
+        return TagEvent.class.isAssignableFrom(aEvent);
     }
 
     @Override
@@ -49,7 +49,7 @@ public class TagEventAdapter
     public String getDetails(TagEvent aEvent)
     {
         try {
-            TagDetails details = new TagDetails(aEvent.getTag());
+            var details = new TagDetails(aEvent.getTag());
             return JSONUtil.toJsonString(details);
         }
         catch (IOException e) {

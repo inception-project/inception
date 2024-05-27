@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.telemetry.ui;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,13 +34,13 @@ import org.apache.wicket.model.util.ListModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.wicketstuff.annotation.mount.MountPath;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.telemetry.TelemetryDetail;
 import de.tudarmstadt.ukp.clarin.webanno.telemetry.TelemetryService;
 import de.tudarmstadt.ukp.clarin.webanno.telemetry.TelemetrySupport;
 import de.tudarmstadt.ukp.clarin.webanno.telemetry.model.TelemetrySettings;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxButton;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 
 @AuthorizeInstantiation("ROLE_ADMIN")
 @MountPath("/telemetry.html")

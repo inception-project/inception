@@ -21,6 +21,7 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.request.Request;
 import org.springframework.core.annotation.Order;
 
+import de.tudarmstadt.ukp.inception.diam.editor.DiamAjaxBehavior;
 import de.tudarmstadt.ukp.inception.diam.editor.config.DiamAutoConfig;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.DefaultAjaxResponse;
 
@@ -43,10 +44,12 @@ public class FillSlotWithExistingAnnotationHandler
     }
 
     @Override
-    public DefaultAjaxResponse handle(AjaxRequestTarget aTarget, Request aRequest)
+    public DefaultAjaxResponse handle(DiamAjaxBehavior aBehavior, AjaxRequestTarget aTarget, Request aRequest)
     {
         try {
             var page = getPage();
+            page.ensureIsEditable();
+
             var cas = page.getEditorCas();
             var slotFillerId = getVid(aRequest);
             // When filling a slot, the current selection is *NOT* changed. The Span annotation

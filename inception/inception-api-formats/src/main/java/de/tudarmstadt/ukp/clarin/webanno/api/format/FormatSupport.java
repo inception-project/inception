@@ -17,13 +17,11 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.format;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.ZipUtils.zipFolder;
+import static de.tudarmstadt.ukp.inception.support.io.ZipUtils.zipFolder;
 import static java.io.File.createTempFile;
 import static java.util.Collections.unmodifiableSet;
 import static org.apache.commons.io.FileUtils.copyFile;
 import static org.apache.commons.io.FilenameUtils.getExtension;
-import static org.apache.commons.io.FilenameUtils.normalize;
-import static org.apache.commons.lang3.StringUtils.prependIfMissing;
 import static org.apache.uima.fit.factory.AnalysisEngineFactory.createEngine;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
 import static org.apache.uima.fit.factory.ConfigurationParameterFactory.addConfigurationParameters;
@@ -34,7 +32,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -52,12 +49,13 @@ import org.apache.uima.collection.CollectionReaderDescription;
 import org.apache.uima.fit.util.LifeCycleUtil;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
-import org.apache.wicket.request.resource.CssResourceReference;
+import org.apache.wicket.request.resource.ResourceReference;
 import org.dkpro.core.api.io.JCasFileWriter_ImplBase;
 import org.dkpro.core.api.io.ResourceCollectionReaderBase;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.inception.support.io.ZipUtils;
 import de.tudarmstadt.ukp.inception.support.xml.sanitizer.PolicyCollection;
 
 public interface FormatSupport
@@ -111,29 +109,28 @@ public interface FormatSupport
         return false;
     }
 
-    default boolean isAccessibelResource(File aDocFile, String aResourcePath)
+    default boolean isAccessibleResource(File aDocFile, String aResourcePath)
     {
         return DEFAULT_PERMITTED_RESOURCE_EXTENSIONS.contains(getExtension(aResourcePath));
     }
 
     default InputStream openResourceStream(File aDocFile, String aResourcePath) throws IOException
     {
-        if (!hasResources() || !isAccessibelResource(aDocFile, aResourcePath)) {
-            throw new FileNotFoundException("Resource not found [" + aResourcePath + "]");
-        }
-
-        if (aResourcePath.contains("..") || aResourcePath.contains("//")) {
-            throw new FileNotFoundException("Resource not found [" + aResourcePath + "]");
-        }
-
-        var path = prependIfMissing(normalize(aResourcePath, true), "/");
-        return new URL("jar:" + aDocFile.toURI().toURL() + "!" + path).openStream();
+        return ZipUtils.openResourceStream(aDocFile, aResourcePath);
     }
 
     /**
      * @return format-specific CSS style-sheets that styleable editors should load.
      */
-    default List<CssResourceReference> getCssStylesheets()
+    default List<ResourceReference> getCssStylesheets()
+    {
+        return Collections.emptyList();
+    }
+
+    /**
+     * @return format-specific section elements
+     */
+    default List<String> getSectionElements()
     {
         return Collections.emptyList();
     }
@@ -180,7 +177,7 @@ public interface FormatSupport
     default void read(Project aProject, CAS cas, File aFile)
         throws ResourceInitializationException, IOException, CollectionException
     {
-        CollectionReaderDescription readerDescription = getReaderDescription(aProject, null);
+        var readerDescription = getReaderDescription(aProject, null);
         addConfigurationParameters(readerDescription,
                 ResourceCollectionReaderBase.PARAM_SOURCE_LOCATION,
                 aFile.getParentFile().getAbsolutePath(),

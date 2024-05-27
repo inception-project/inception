@@ -24,10 +24,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import javax.annotation.Nullable;
-
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
+import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 
 public class RecommenderContext
 {
@@ -43,7 +41,6 @@ public class RecommenderContext
     }
 
     @SuppressWarnings("unchecked")
-    @Nullable
     synchronized public <T> Optional<T> get(Key<T> aKey)
     {
         return Optional.ofNullable((T) store.get(aKey.name));
@@ -58,31 +55,13 @@ public class RecommenderContext
         store.put(aKey.name, aValue);
     }
 
-    synchronized public void info(String aFormat, Object... aValues)
+    synchronized public void log(LogMessage aMessage)
     {
         if (closed) {
             throw new IllegalStateException("Adding data to a closed context is not permitted.");
         }
 
-        messages.add(LogMessage.info(this, aFormat, aValues));
-    }
-
-    synchronized public void warn(String aFormat, Object... aValues)
-    {
-        if (closed) {
-            throw new IllegalStateException("Adding data to a closed context is not permitted.");
-        }
-
-        messages.add(LogMessage.warn(this, aFormat, aValues));
-    }
-
-    synchronized public void error(String aFormat, Object... aValues)
-    {
-        if (closed) {
-            throw new IllegalStateException("Adding data to a closed context is not permitted.");
-        }
-
-        messages.add(LogMessage.error(this, aFormat, aValues));
+        messages.add(aMessage);
     }
 
     public List<LogMessage> getMessages()

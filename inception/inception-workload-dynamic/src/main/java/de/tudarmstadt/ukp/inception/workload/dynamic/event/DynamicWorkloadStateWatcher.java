@@ -19,8 +19,8 @@ package de.tudarmstadt.ukp.inception.workload.dynamic.event;
 
 import org.springframework.context.event.EventListener;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.event.AnnotationStateChangeEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.inception.documents.event.AnnotationStateChangeEvent;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.workload.dynamic.config.DynamicWorkloadManagerAutoConfiguration;
 
@@ -48,7 +48,10 @@ public class DynamicWorkloadStateWatcher
 
     private void recalculateDocumentState(AnnotationDocument aAnnotationDocument)
     {
-        schedulingService.enqueue(new DynamicWorkloadUpdateDocumentStateTask(
-                aAnnotationDocument.getDocument(), getClass().getSimpleName()));
+        var task = DynamicWorkloadUpdateDocumentStateTask.builder() //
+                .withDocument(aAnnotationDocument.getDocument()) //
+                .withTrigger(getClass().getSimpleName()) //
+                .build();
+        schedulingService.enqueue(task);
     }
 }

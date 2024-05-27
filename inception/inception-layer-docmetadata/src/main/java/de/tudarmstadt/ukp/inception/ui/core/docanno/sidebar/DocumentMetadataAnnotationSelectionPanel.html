@@ -22,38 +22,67 @@
     <div><wicket:message key="noMetaAvailable"/></div>
   </div>
   <div wicket:id="content" class="flex-content flex-v-container">
-    <div class="card-body flex-grow-0 pb-0">
+    <div class="flex-grow-0 pb-0">
       <div class=" mb-0">
         <div class="input-group">
-          <select class="form-select flex-content" wicket:id="layer" data-size="10"/>
-          <button wicket:id="create" class="btn btn-primary">
+          <select class="form-select flex-content rounded-0 border-0" wicket:id="layer" data-size="10"/>
+          <button wicket:id="create" class="btn btn-primary rounded-0">
             <i class="fas fa-plus"></i>
           </button>
         </div>
       </div>
     </div>
-    <div class="scrolling card-body flex-v-container">
-      <ul wicket:id="annotationsContainer" class="list-group">
-        <li wicket:id="annotations" class="list-group-item">
-          <div class="d-flex">
-            <div class="flex-grow-1" style="min-width: 0px;">
-              <div wicket:id="annotation" class="d-flex align-items-center">
-                <span wicket:id="open"><i class="far fa-plus-square"></i></span>
-                <span wicket:id="close"><i class="far fa-minus-square"></i></span>
-                <div class="d-inline-flex flex-grow-1 flex-column ms-2" style="min-width: 0px;">
-                  <span wicket:id="type" class="badge bg-secondary"/>
-                  <span wicket:id="label" class="scrolling" style="flex: 0 0 100%; height: unset; max-height: 4.5rem; word-wrap: break-word; min-width: 0px;"/>
-                </div>
-              </div>
-            </div>
-            <div class="d-flex align-items-center">
-              <button wicket:id="delete" type="button" class="btn btn-sm btn-danger">
-                <i class="fas fa-trash"></i>
-              </button>
-            </div>
+    <div class="flex-grow-1 flex-v-container">
+      <ul wicket:id="layersContainer" class="scrolling flex-content list-group list-group-flush">
+        <li wicket:id="layers" class="list-group-item py-0 px-0 border-0">
+          <div class="px-2 py-1 bg-light-subtle fw-bold sticky-top border-top border-bottom">
+            <wicket:container wicket:id="layerName"/>
           </div>
           
-          <div wicket:id="annotationDetails"></div>
+          <ul wicket:id="annotationsContainer" class="px-0 list-group list-group-flush">
+            <li wicket:id="annotations" class="list-group-item p-0 d-flex border-bottom">
+              <div class="text-secondary bg-light-subtle border-end px-2 d-flex align-items-center">
+                <i class="fas fa-tag text-center" style="width: 1em;"></i>
+              </div>
+                
+              <div class="d-flex flex-grow-1 flex-column">
+                <div class="d-flex" wicket:enclosure="annotation">
+                  <div class="flex-grow-1 my-1 mx-2 position-relative overflow-hidden">
+                    <div class="float-end">
+                      <div class="btn-group mb-0 ms-1 bg-body" role="group">
+                        <button wicket:id="delete" type="button"
+                          class="btn-outline-danger btn btn-sm py-0 px-1"
+                          title="Delete">
+                          <i class="far fa-times-circle"></i>
+                        </button>
+                        <button wicket:id="accept" type="button"
+                          class="btn-outline-success btn btn-sm py-0 px-1"
+                          title="Accept">
+                          <i class="far fa-check-circle"></i>
+                          <span wicket:id="score" class="small font-monospace text-muted"/>
+                        </button>
+                        <button wicket:id="reject" type="button"
+                          class="btn-outline-danger btn btn-sm py-0 px-1"
+                          title="Reject">
+                          <i class="far fa-times-circle"></i>
+                        </button>
+                      </div>
+                    </div>
+                    
+                    <div wicket:id="annotation" class="d-flex align-items-center">
+                      <span wicket:id="open"><i class="far fa-plus-square"></i></span>
+                      <span wicket:id="close"><i class="far fa-minus-square"></i></span>
+                      <div class="d-inline-flex flex-grow-1 flex-column ms-2" style="min-width: 0px;">
+                        <span wicket:id="label" class="text-break"/>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div wicket:id="annotationDetails" class="mx-3"></div>
+              </div>
+            </li>
+          </ul>
         </li>
       </ul>
     </div>

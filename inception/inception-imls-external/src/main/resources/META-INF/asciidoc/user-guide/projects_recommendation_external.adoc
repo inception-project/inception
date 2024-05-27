@@ -16,6 +16,18 @@
 
 == External Recommender
 
-This recommender allows to use external web-services to generate predictions. For details on the
-protocol used in the communication with the external services, please refer to the developer
-documentation.
+This recommender allows to use an external web-service to generate predictions. 
+
+You can find an example implementation of several external recommenders in the link:https://github.com/inception-project/inception-external-recommender[INCEpTION External Recommender repository] on GitHub.
+
+For more details on the protocol used in the communication with the external services, please refer to the developer documentation.
+
+.HTTPS support
+The remote recommender service can be accessed via an encrypted HTTPS connection. However, this will fail unless the certificate is either signed by a well-known certificate authority or has been imported into the certificate store of the Java virtual machine. 
+
+NOTE: For testing purposes, the validation of the SSL certificate can be disabled in the 
+      external recommender settings. However, the SSL certificate will still need to contain a host 
+      name that matches the URL of the external recommender. If you also need to disable host name 
+      verification, you need to start {product-name} with the system property 
+      `jdk.internal.httpclient.disableHostnameVerification`. Note this needs to be specified **on the 
+      command line** and not in the `settings.properties` file.

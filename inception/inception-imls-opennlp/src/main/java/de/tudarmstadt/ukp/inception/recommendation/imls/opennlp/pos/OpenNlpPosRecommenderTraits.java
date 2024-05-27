@@ -22,7 +22,6 @@ import java.io.Serializable;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-import opennlp.tools.ml.AbstractTrainer;
 import opennlp.tools.util.TrainingParameters;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -88,7 +87,6 @@ public class OpenNlpPosRecommenderTraits
     public TrainingParameters getParameters()
     {
         TrainingParameters parameters = TrainingParameters.defaultParams();
-        parameters.put(AbstractTrainer.VERBOSE_PARAM, "false");
         parameters.put(TrainingParameters.THREADS_PARAM, numThreads);
         return parameters;
     }

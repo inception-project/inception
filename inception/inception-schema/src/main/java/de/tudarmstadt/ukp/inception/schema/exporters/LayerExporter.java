@@ -19,9 +19,9 @@ package de.tudarmstadt.ukp.inception.schema.exporters;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.ANY_OVERLAP;
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.OVERLAP_ONLY;
-import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.CHAIN_TYPE;
-import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.COREFERENCE_RELATION_FEATURE;
-import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.COREFERENCE_TYPE_FEATURE;
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CHAIN_TYPE;
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.COREFERENCE_RELATION_FEATURE;
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.COREFERENCE_TYPE_FEATURE;
 import static java.util.Arrays.asList;
 
 import java.io.File;
@@ -56,7 +56,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.ValidationMode;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.morph.MorphologicalFeatures;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.config.AnnotationSchemaServiceAutoConfiguration;
 
 /**
@@ -89,20 +89,20 @@ public class LayerExporter
     public void exportData(FullProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
             ExportedProject aExProject, File aStage)
     {
-        List<ExportedAnnotationLayer> exLayers = new ArrayList<>();
+        var exLayers = new ArrayList<ExportedAnnotationLayer>();
 
         // Store map of layer and its equivalent exLayer so that the attach type is attached later
-        Map<AnnotationLayer, ExportedAnnotationLayer> layerToExLayers = new HashMap<>();
+        var layerToExLayers = new HashMap<AnnotationLayer, ExportedAnnotationLayer>();
 
         // Store map of feature and its equivalent exFeature so that the attach feature is attached
         // later
-        Map<AnnotationFeature, ExportedAnnotationFeature> featureToExFeatures = new HashMap<>();
-        for (AnnotationLayer layer : annotationService.listAnnotationLayer(aRequest.getProject())) {
+        var featureToExFeatures = new HashMap<AnnotationFeature, ExportedAnnotationFeature>();
+        for (var layer : annotationService.listAnnotationLayer(aRequest.getProject())) {
             exLayers.add(exportLayerDetails(layerToExLayers, featureToExFeatures, layer));
         }
 
         // add the attach-type and attach-feature to the exported layers and exported feature
-        for (AnnotationLayer layer : layerToExLayers.keySet()) {
+        for (var layer : layerToExLayers.keySet()) {
             if (layer.getAttachType() != null) {
                 layerToExLayers.get(layer).setAttachType(
                         new ExportedAnnotationLayerReference(layer.getAttachType().getName()));
@@ -126,7 +126,7 @@ public class LayerExporter
             Map<AnnotationFeature, ExportedAnnotationFeature> aFeatureToExFeature,
             AnnotationLayer aLayer)
     {
-        ExportedAnnotationLayer exLayer = new ExportedAnnotationLayer();
+        var exLayer = new ExportedAnnotationLayer();
         // Allow limited backwards compatibility by exporting data that older versions used
         exLayer.setAllowStacking(aLayer.isAllowStacking());
         exLayer.setLockToTokenOffset(AnchoringMode.SINGLE_TOKEN.equals(aLayer.getAnchoringMode()));
@@ -178,6 +178,7 @@ public class LayerExporter
         exFeature.setType(feature.getType());
         exFeature.setUiName(feature.getUiName());
         exFeature.setVisible(feature.isVisible());
+        exFeature.setIncludeInHover(feature.isIncludeInHover());
         exFeature.setMultiValueMode(feature.getMultiValueMode());
         exFeature.setLinkMode(feature.getLinkMode());
         exFeature.setLinkTypeName(feature.getLinkTypeName());
@@ -305,6 +306,7 @@ public class LayerExporter
         aFeature.setDescription(aExFeature.getDescription());
         aFeature.setEnabled(aExFeature.isEnabled());
         aFeature.setVisible(aExFeature.isVisible());
+        aFeature.setIncludeInHover(aExFeature.isIncludeInHover());
         aFeature.setUiName(aExFeature.getUiName());
         aFeature.setProject(aProject);
         aFeature.setName(aExFeature.getName());

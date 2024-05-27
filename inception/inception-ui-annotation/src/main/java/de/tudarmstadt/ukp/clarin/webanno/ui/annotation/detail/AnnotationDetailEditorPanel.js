@@ -20,13 +20,14 @@ $(document).ready(function() {
   // http://stackoverflow.com/questions/2335553/jquery-how-to-catch-enter-key-and-change-event-to-tab
 
   function moveToNextInput(current) {
-    var inputs = $(current).parents("#annotationFeatureForm").eq(0).find(":input");
-    var idx = inputs.index(current);
+    let inputs = $(current).parents("#annotationFeatureForm").eq(0).find(":input");
+    let idx = inputs.index(current);
     if (idx == inputs.length - 1) {
       inputs[idx].blur();
     } else {
-      inputs[idx + 1].focus(); //  handles submit buttons
-      inputs[idx + 1].select();
+      let input = inputs[idx + 1];
+      if (input.focus) input.focus(); //  handles submit buttons
+      if (input.select) input.select();
     }
   }
   

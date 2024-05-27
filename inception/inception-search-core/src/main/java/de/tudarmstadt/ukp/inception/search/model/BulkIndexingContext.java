@@ -23,7 +23,7 @@ import java.util.Optional;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
 public class BulkIndexingContext
     implements AutoCloseable
@@ -80,11 +80,13 @@ public class BulkIndexingContext
     public static BulkIndexingContext init(Project aProject, AnnotationSchemaService aSchemaService,
             boolean aFullReindex, AnnotationSearchState aPrefs)
     {
-        var features = aSchemaService.listSupportedFeatures(aProject);
-        features.removeIf(f -> !f.isEnabled() || !f.getLayer().isEnabled());
+        var features = aSchemaService.listSupportedFeatures(aProject).stream() //
+                .filter(f -> f.isEnabled() && f.getLayer().isEnabled()) //
+                .toList();
 
-        var layers = aSchemaService.listSupportedLayers(aProject);
-        layers.removeIf(l -> !l.isEnabled());
+        var layers = aSchemaService.listSupportedLayers(aProject).stream() //
+                .filter(AnnotationLayer::isEnabled) //
+                .toList();
 
         var indexingContext = new BulkIndexingContext(aProject, layers, features, aFullReindex,
                 aPrefs);

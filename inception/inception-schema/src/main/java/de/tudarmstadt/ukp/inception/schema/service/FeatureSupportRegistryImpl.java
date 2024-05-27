@@ -29,10 +29,10 @@ import org.springframework.context.annotation.Lazy;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.CachingContextLookupExtensionPoint_ImplBase;
-import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupport;
-import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupportRegistry;
-import de.tudarmstadt.ukp.inception.schema.feature.FeatureType;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupport;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureType;
+import de.tudarmstadt.ukp.inception.support.extensionpoint.CachingContextLookupExtensionPoint_ImplBase;
 
 /**
  * <p>
@@ -89,7 +89,7 @@ public class FeatureSupportRegistryImpl
 
         // Figure out which feature support provides the given type.
         // If we can find a suitable feature support, then use it to resolve the type to a
-        // FeaatureType
+        // FeatureType
         FeatureType featureType = null;
         for (FeatureSupport<?> s : getExtensions()) {
             Optional<FeatureType> ft = s.getFeatureType(aFeature);
@@ -112,5 +112,19 @@ public class FeatureSupportRegistryImpl
     public <T> T readTraits(AnnotationFeature aFeature, SerializableSupplier<T> aIfMissing)
     {
         return findExtension(aFeature).map(fs -> (T) fs.readTraits(aFeature)).orElseGet(aIfMissing);
+    }
+
+    @Override
+    public boolean isSupported(AnnotationFeature aFeature)
+    {
+        return findExtension(aFeature).isPresent();
+    }
+
+    @Override
+    public boolean isAccessible(AnnotationFeature aFeature)
+    {
+        return findExtension(aFeature) //
+                .map(extension -> extension.isAccessible(aFeature)) //
+                .orElse(false);
     }
 }

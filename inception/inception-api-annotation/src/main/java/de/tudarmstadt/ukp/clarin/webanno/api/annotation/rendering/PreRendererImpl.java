@@ -20,12 +20,12 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering;
 import static java.lang.System.currentTimeMillis;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 import java.util.List;
 import java.util.Objects;
 
 import org.apache.commons.lang3.Validate;
-import org.apache.uima.cas.CAS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,17 +36,15 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.AnnotationAutoConfiguration;
-import de.tudarmstadt.ukp.clarin.webanno.api.event.LayerConfigurationChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.inception.rendering.Renderer;
 import de.tudarmstadt.ukp.inception.rendering.pipeline.RenderStep;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
-import de.tudarmstadt.ukp.inception.schema.layer.LayerSupport;
-import de.tudarmstadt.ukp.inception.schema.layer.LayerSupportRegistry;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.event.LayerConfigurationChangedEvent;
+import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupport;
+import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistry;
 
 /**
  * <p>
@@ -95,43 +93,42 @@ public class PreRendererImpl
     {
         log.trace("Prerenderer.render()");
 
-        CAS cas = aRequest.getCas();
+        var cas = aRequest.getCas();
+        var documentText = cas.getDocumentText();
+
         Validate.notNull(cas, "CAS cannot be null");
 
-        if (aRequest.getVisibleLayers().isEmpty()) {
+        if (aRequest.getVisibleLayers().isEmpty() || isEmpty(documentText)) {
             return;
         }
 
-        long start = System.currentTimeMillis();
-
-        String documentText = cas.getDocumentText();
-        int renderBegin = Math.max(0, aRequest.getWindowBeginOffset());
-        int renderEnd = Math.min(documentText.length(), aRequest.getWindowEndOffset());
+        var renderBegin = Math.max(0, aRequest.getWindowBeginOffset());
+        var renderEnd = Math.min(documentText.length(), aRequest.getWindowEndOffset());
         aResponse.setText(documentText.substring(renderBegin, renderEnd));
-
         aResponse.setWindowBegin(renderBegin);
         aResponse.setWindowEnd(renderEnd);
 
-        Project project = aRequest.getProject();
+        var start = System.currentTimeMillis();
+        var project = aRequest.getProject();
 
         // Listing the features once is faster than repeatedly hitting the DB to list features for
         // every layer.
-        List<AnnotationFeature> supportedFeatures = supportedFeaturesCache.get(project);
-        List<AnnotationFeature> allFeatures = allFeaturesCache.get(project);
+        var supportedFeatures = supportedFeaturesCache.get(project);
+        var allFeatures = allFeaturesCache.get(project);
 
         // Render (custom) layers
-        for (AnnotationLayer layer : aRequest.getVisibleLayers()) {
-            List<AnnotationFeature> layerSupportedFeatures = supportedFeatures.stream() //
+        for (var layer : aRequest.getVisibleLayers()) {
+            var layerSupportedFeatures = supportedFeatures.stream() //
                     .filter(feature -> feature.getLayer().equals(layer)) //
                     .collect(toList());
-            List<AnnotationFeature> layerAllFeatures = allFeatures.stream() //
+            var layerAllFeatures = allFeatures.stream() //
                     .filter(feature -> feature.getLayer().equals(layer)) //
                     .collect(toList());
             // We need to pass in *all* the annotation features here because we also to that in
             // other places where we create renderers - and the set of features must always be
             // the same because otherwise the IDs of armed slots would be inconsistent
             LayerSupport<?, ?> layerSupport = layerSupportRegistry.getLayerSupport(layer);
-            Renderer renderer = layerSupport.createRenderer(layer, () -> layerAllFeatures);
+            var renderer = layerSupport.createRenderer(layer, () -> layerAllFeatures);
             renderer.render(cas, layerSupportedFeatures, aResponse, renderBegin, renderEnd);
         }
 

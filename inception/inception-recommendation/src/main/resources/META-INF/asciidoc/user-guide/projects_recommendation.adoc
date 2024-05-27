@@ -41,6 +41,9 @@ performed some action such as creating an annotation.
 NOTE: Enable this option only if all of your non-trainable recommenders have a fast response time,
       as otherwise your users may complain about a long delay when opening documents.
 
+The option **show suggestions when viewing annotations from another user** configures whether to display annotation
+suggestions when viewing annotations from another user (e.g. as project manager, you can select to view annotations from
+any annotator in the open document dialog).
 
 == Per-recommender settings
 

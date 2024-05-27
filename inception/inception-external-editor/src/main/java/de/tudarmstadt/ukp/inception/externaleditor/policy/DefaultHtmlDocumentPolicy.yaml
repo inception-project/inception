@@ -1,0 +1,81 @@
+# Licensed to the Technische Universität Darmstadt under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The Technische Universität Darmstadt 
+# licenses this file to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.
+#  
+# http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+name: Default HTML policy
+version: 1.0
+case_sensitive: false
+default_attribute_action: DROP
+default_element_action: DROP
+default_namespace: http://www.w3.org/1999/xhtml
+match_without_namespace: true
+debug: true
+policies:
+  - action: PASS
+    elements: ["html", "head", "body", "title"]
+  # Content sectioning
+  - action: PASS
+    elements: ["address", "article", "aside", "footer", "header", 
+               "h1", "h2", "h3", "h4", "h5", "h6", "main", "section"]
+  # Navigaton sectioning (probably not relevant for annotation)
+  - action: PRUNE
+    elements: ["nav"]
+  # Text content
+  - action: PASS
+    elements: ["blockquote", "dd", "div", "dl", "dt", "figcaption", "figure", "hr", "li", 
+               "menu", "ol", "p", "pre", "ul"]
+  # Links / anchors
+  - action: SKIP
+    elements: ["a"]
+  # Inline text semantics
+  - action: PASS
+    elements: ["abbr", "b", "bdi", "bdo", "br", "cite", "code", "data", "dfn",
+               "em", "i", "kbd", "mark", "q", "rp", "rt", "ruby", "s", "samp", "small",
+               "span", "strong", "sub", "sup", "time", "u", "var", "wbr"]
+  # Demarcating edits
+  - action: PASS
+    elements: ["del", "ins"]
+  # Table content
+  - action: PASS
+    elements: ["caption", "col", "colgroup", "table", "tbody", "td", "tfoot", "th",
+               "thead", "tr"]
+  # Deprecated stuff
+  - action: PASS
+    elements: ["font", "center"]
+  - on_elements: ["font"]
+    action: PASS
+    attributes: ["face", "size"]
+  - action: PASS
+    attributes: ["align", "size", "width"]
+    # We leave out "color", "bgcolor" because they could interfere with the annotation highlights
+  # Common attributes
+  - action: PASS
+    attributes: ["title"]
+    matching: "[\\p{L}\\p{N}\\s\\-_',:\\[\\]!\\./\\\\\\(\\)&]*"
+  - action: PASS
+    attributes: ["class"]
+    matching: "[a-zA-Z0-9\\s,\\-_]+"
+  # Images - depending on the security configurations, the safety net may block these
+  - action: PASS
+    elements: ["img"]
+  - on_elements: ["img"]
+    action: PASS
+    attributes: ["decoding", "alt", "width", "height"]
+  - on_elements: ["img"]
+    action: PASS
+    attributes: ["src"]
+    matching: "res[?]resId=.*" # Allow only access to embedded resources
+
+  

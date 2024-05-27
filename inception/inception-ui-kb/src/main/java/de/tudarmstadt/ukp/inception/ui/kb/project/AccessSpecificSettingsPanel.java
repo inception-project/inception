@@ -47,7 +47,7 @@ public class AccessSpecificSettingsPanel
 
         aModel.getObject().clearFiles();
 
-        boolean isHandlingLocalRepository = aModel.getObject().getKb().getType() == LOCAL;
+        var isHandlingLocalRepository = aModel.getObject().getKb().getType() == LOCAL;
 
         // container for form components related to local KBs
         local = new LocalRepositorySettingsPanel("localSpecificSettings", aModel,
@@ -73,9 +73,6 @@ public class AccessSpecificSettingsPanel
         KnowledgeBase kb = getModel().getObject().getKb();
         switch (kb.getType()) {
         case LOCAL:
-            // local knowledge bases are editable by default
-            kb.setReadOnly(false);
-
             // We need to handle this manually here because the onSubmit method of the upload
             // form is only called *after* the upload component has already been detached and
             // as a consequence all uploaded files have been cleared

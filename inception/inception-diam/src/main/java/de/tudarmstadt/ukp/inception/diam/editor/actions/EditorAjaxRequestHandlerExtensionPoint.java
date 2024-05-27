@@ -21,7 +21,7 @@ import java.util.Optional;
 
 import org.apache.wicket.request.Request;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.ExtensionPoint;
+import de.tudarmstadt.ukp.inception.support.extensionpoint.ExtensionPoint;
 
 public interface EditorAjaxRequestHandlerExtensionPoint
     extends ExtensionPoint<Request, EditorAjaxRequestHandler>

@@ -25,22 +25,21 @@ class ExtendedId
 {
     private static final long serialVersionUID = -5214683455382881005L;
 
-    private final String documentName;
-    private final long layerId;
-    private final Position position;
-    private final int annotationId;
+    private final int suggestionId;
     private final long recommenderId;
+    private final long layerId;
+    private final String documentName;
+    private final Position position;
     private final int hash;
 
-    public ExtendedId(String documentName, long layerId, Position aPosition, long recommenderId,
-            int annotationId)
+    public ExtendedId(AnnotationSuggestion aSuggestion)
     {
-        this.documentName = documentName;
-        this.layerId = layerId;
-        this.annotationId = annotationId;
-        this.recommenderId = recommenderId;
-        this.position = aPosition;
-        hash = Objects.hash(annotationId, documentName, layerId, position, recommenderId);
+        documentName = aSuggestion.getDocumentName();
+        layerId = aSuggestion.getLayerId();
+        suggestionId = aSuggestion.getId();
+        recommenderId = aSuggestion.getRecommenderId();
+        position = aSuggestion.getPosition();
+        hash = Objects.hash(suggestionId, documentName, layerId, position, recommenderId);
     }
 
     public String getDocumentName()
@@ -58,9 +57,9 @@ class ExtendedId
         return position;
     }
 
-    public int getAnnotationId()
+    public int getSuggestionId()
     {
-        return annotationId;
+        return suggestionId;
     }
 
     public long getRecommenderId()
@@ -91,7 +90,7 @@ class ExtendedId
 
         ExtendedId other = (ExtendedId) obj;
         return Objects.equals(position, other.position) //
-                && annotationId == other.annotationId //
+                && suggestionId == other.suggestionId //
                 && Objects.equals(documentName, other.documentName) //
                 && layerId == other.layerId //
                 && recommenderId == other.recommenderId;

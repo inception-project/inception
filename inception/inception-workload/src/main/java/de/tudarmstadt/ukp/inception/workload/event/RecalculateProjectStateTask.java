@@ -25,8 +25,8 @@ import javax.persistence.NoResultException;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.scheduling.DebouncingTask;
 import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtension;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
@@ -34,12 +34,20 @@ import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 public class RecalculateProjectStateTask
     extends DebouncingTask
 {
+    public static final String TYPE = "RecalculateProjectStateTask";
+
     private @Autowired ProjectService projectService;
     private @Autowired WorkloadManagementService workloadService;
 
-    public RecalculateProjectStateTask(Project aProject, String aTrigger)
+    public RecalculateProjectStateTask(Builder<? extends Builder<?>> aBuilder)
     {
-        super(aProject, aTrigger, ofSeconds(3));
+        super(aBuilder.withType(TYPE));
+    }
+
+    @Override
+    public String getTitle()
+    {
+        return "Updating project state...";
     }
 
     @Override
@@ -77,5 +85,24 @@ public class RecalculateProjectStateTask
     public int hashCode()
     {
         return Objects.hash(getProject());
+    }
+
+    public static Builder<Builder<?>> builder()
+    {
+        return new Builder<>();
+    }
+
+    public static class Builder<T extends Builder<?>>
+        extends DebouncingTask.Builder<T>
+    {
+        protected Builder()
+        {
+            withDebounceMillis(ofSeconds(3));
+        }
+
+        public RecalculateProjectStateTask build()
+        {
+            return new RecalculateProjectStateTask(this);
+        }
     }
 }

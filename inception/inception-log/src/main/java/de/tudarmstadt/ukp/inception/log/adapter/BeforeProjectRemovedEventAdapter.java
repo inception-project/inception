@@ -19,16 +19,16 @@ package de.tudarmstadt.ukp.inception.log.adapter;
 
 import org.springframework.stereotype.Component;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.event.BeforeProjectRemovedEvent;
+import de.tudarmstadt.ukp.inception.project.api.event.BeforeProjectRemovedEvent;
 
 @Component
 public class BeforeProjectRemovedEventAdapter
     implements EventLoggingAdapter<BeforeProjectRemovedEvent>
 {
     @Override
-    public boolean accepts(Object aEvent)
+    public boolean accepts(Class<?> aEvent)
     {
-        return aEvent instanceof BeforeProjectRemovedEvent;
+        return BeforeProjectRemovedEvent.class.isAssignableFrom(aEvent);
     }
 
     @Override

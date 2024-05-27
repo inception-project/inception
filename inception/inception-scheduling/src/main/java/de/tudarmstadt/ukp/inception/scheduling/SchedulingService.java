@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.scheduling;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Predicate;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -39,6 +40,11 @@ public interface SchedulingService
      */
     List<Task> getRunningTasks();
 
+    /**
+     * @return tasks which are no longer running (completed, failed).
+     */
+    List<Task> getTasksPendingAcknowledgment();
+
     List<Task> getScheduledAndRunningTasks();
 
     List<Task> getAllTasks();
@@ -58,6 +64,8 @@ public interface SchedulingService
      *            the task to be enqueued.
      */
     void enqueue(Task aTask);
+
+    Optional<Task> findTask(Predicate<Task> aPredicate);
 
     /**
      * Removes all task for the user with name {@code aUsername} from the scheduler's queue.

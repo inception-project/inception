@@ -20,7 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar;
 import org.apache.wicket.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
-import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.Extension;
+import de.tudarmstadt.ukp.inception.support.extensionpoint.Extension;
 
 public interface ActionBarExtension
     extends Extension<AnnotationPageBase>
@@ -61,10 +61,22 @@ public interface ActionBarExtension
     Component createActionBarItem(String aId, AnnotationPageBase aPage);
 
     /**
-     * Called when the {@link ActionBar} is added to the page. This allows the action bar extensions
-     * e.g. to inject behaviors into the page before their items are even visible on screen.
+     * Called when the {@link ActionBar} is added to the page or when its contents change based on
+     * the page state and the {@link #accepts(AnnotationPageBase)} method. This allows the action
+     * bar extensions e.g. to inject behaviors into the page before their items are even visible on
+     * screen.
      */
     default void onInitialize(AnnotationPageBase aPage)
+    {
+        // Do nothing by default
+    }
+
+    /**
+     * Called when the {@link ActionBar} contents change based on the page state and the
+     * {@link #accepts(AnnotationPageBase)} method. This allows the action bar extensions e.g. to
+     * inject behaviors into the page before their items are even visible on screen.
+     */
+    default void onRemove(AnnotationPageBase aPage)
     {
         // Do nothing by default
     }

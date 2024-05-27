@@ -32,11 +32,11 @@ public class ExternalEditorPluginDescripion
     private String id;
     private String factory;
     private String name;
-    private String annotationFormat;
     private String view;
 
     private List<String> scripts = Collections.emptyList();
     private List<String> stylesheets = Collections.emptyList();
+    private List<String> sectionElements = Collections.emptyList();
 
     private @JsonIgnore Path basePath;
 
@@ -68,16 +68,6 @@ public class ExternalEditorPluginDescripion
     public void setName(String aName)
     {
         name = aName;
-    }
-
-    public String getAnnotationFormat()
-    {
-        return annotationFormat;
-    }
-
-    public void setAnnotationFormat(String aAnnotationFormat)
-    {
-        annotationFormat = aAnnotationFormat;
     }
 
     public String getView()
@@ -118,5 +108,15 @@ public class ExternalEditorPluginDescripion
     public void setStylesheets(List<String> aStylesheets)
     {
         stylesheets = aStylesheets;
+    }
+
+    public List<String> getSectionElements()
+    {
+        return sectionElements;
+    }
+
+    public void setSectionElements(List<String> aSectionElements)
+    {
+        sectionElements = aSectionElements;
     }
 }

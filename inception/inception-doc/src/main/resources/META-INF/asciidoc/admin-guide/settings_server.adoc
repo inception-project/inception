@@ -26,37 +26,42 @@ These settings relate to the embedded web server in the JAR version of {product-
 | Default
 | Example
 
-| server.port
+| `server.port`
 | Port on which the server listens
-| 8080
-| 18080
+| `8080`
+| `18080`
 
-| server.address
+| `server.address`
 | IP address on which the server listens
-| 0.0.0.0
-| 127.0.0.1
+| `0.0.0.0`
+| `127.0.0.1`
 
-| server.ajp.port
+| `server.ajp.port`
 | Port for AJP connector
-| -1 _(disabled)_
-| 8009
+| `-1` _(disabled)_
+| `8009`
 
-| server.ajp.address
+| `server.ajp.address`
 | IP address on which the AJP connector listens
-| 127.0.0.1
-| 0.0.0.0
+| `127.0.0.1`
+| `0.0.0.0`
 
-| server.ajp.secret-required
+| `server.ajp.secret-required`
 | Whether AJP connections require a shared secret
-| true
-| false
+| `true`
+| `false`
 
-| server.ajp.secret
+| `server.ajp.secret`
 | Shared secret for AJP connections
 | _unset_
 | _some secret string of your choice_
+
+| `server.startup-notice.enabled`
+| Whether a self-refreshing startup screen is served while the application is booting before the login screen becomes available
+| `true`
+| `false`
 |===
 
 NOTE: The application is based on Spring Boot and using an embedded Tomcat server. You can configure 
-      additional aspects of the embedded web server using default link:https://docs.spring.io/spring-boot/docs/1.5.22.RELEASE/reference/html/common-application-properties.html[Spring Boot configuration settings].
+      additional aspects of the embedded web server using default link:https://docs.spring.io/spring-boot/docs/2.7.x/reference/html/application-properties.html[Spring Boot configuration settings].
 

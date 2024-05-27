@@ -42,10 +42,11 @@ class PmcOaClientTest
     @Test
     public void thatBiocWorks() throws Exception
     {
-        String results = new String(sut.bioc(traits, "PMC8222896"), UTF_8);
+        String results = new String(sut.bioc(traits, "PMC7096989"), UTF_8);
 
         // System.out.println(results);
 
-        assertThat(results).contains("Longitudinal symptoms in asthmatic COVID‐19 patients.");
+        assertThat(results)
+                .contains("Asthma is the most common inflammatory disease of the lungs.");
     }
 }

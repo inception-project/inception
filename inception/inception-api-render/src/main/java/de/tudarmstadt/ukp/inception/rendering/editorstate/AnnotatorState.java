@@ -28,6 +28,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 
 /**
  * Covers information about the state of the annotation editor component that is relevant across
@@ -79,8 +80,6 @@ public interface AnnotatorState
 
     AnnotationLayer getRememberedSpanLayer();
 
-    AnnotationLayer getRememberedArcLayer();
-
     Map<AnnotationFeature, Serializable> getRememberedSpanFeatures();
 
     Map<AnnotationFeature, Serializable> getRememberedArcFeatures();
@@ -107,7 +106,11 @@ public interface AnnotatorState
     @Override
     Project getProject();
 
+    void clearProject();
+
     void setProject(Project aProject);
+
+    void refreshProject(ProjectService aProjectService);
 
     // ---------------------------------------------------------------------------------------------
     // Constraints

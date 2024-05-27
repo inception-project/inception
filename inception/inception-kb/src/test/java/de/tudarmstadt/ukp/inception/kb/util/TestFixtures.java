@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.kb.util;
 
-import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_LUCENE;
+import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_RDF4J_LUCENE;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.INCEPTION_NAMESPACE;
 import static de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClientUtils.newPerThreadSslCheckingHttpClientBuilder;
 import static java.net.HttpURLConnection.HTTP_MOVED_PERM;
@@ -42,6 +42,7 @@ import org.apache.commons.compress.compressors.CompressorStreamFactory;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.eclipse.rdf4j.model.vocabulary.SKOS;
@@ -101,12 +102,13 @@ public class TestFixtures
         kb.setPropertyTypeIri(RDF.PROPERTY.stringValue());
         kb.setDescriptionIri(RDFS.COMMENT.stringValue());
         kb.setSubPropertyIri(RDFS.SUBPROPERTYOF.stringValue());
-        kb.setFullTextSearchIri(FTS_LUCENE.stringValue());
+        kb.setFullTextSearchIri(FTS_RDF4J_LUCENE.stringValue());
         // Intentionally using different IRIs for label/description and property-label/description
         // to detect cases where we accidentally construct queries using the wrong mapping, e.g.
         // querying for properties with the class label.
         kb.setPropertyLabelIri(SKOS.PREF_LABEL.stringValue());
         kb.setPropertyDescriptionIri(SKOS.DEFINITION.stringValue());
+        kb.setDeprecationPropertyIri(OWL.DEPRECATED.stringValue());
         kb.setRootConcepts(new ArrayList<>());
         kb.setReification(reification);
         kb.setMaxResults(1000);

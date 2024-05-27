@@ -18,20 +18,24 @@
 package de.tudarmstadt.ukp.inception.project.initializers.wikidatalinking;
 
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
+import org.apache.wicket.request.resource.PackageResourceReference;
+import org.apache.wicket.request.resource.ResourceReference;
 import org.springframework.context.ApplicationContext;
+import org.springframework.core.annotation.Order;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.project.ProjectInitializer;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.NamedEntityLayerInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.QuickProjectInitializer;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
+import de.tudarmstadt.ukp.inception.project.api.ProjectInitializer;
 import de.tudarmstadt.ukp.inception.project.initializers.wikidatalinking.config.WikiDataLinkingProjectInitializersAutoConfiguration;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.support.wicket.resource.Strings;
 import de.tudarmstadt.ukp.inception.ui.kb.initializers.NamedEntityIdentifierFeatureInitializer;
 
 /**
@@ -40,9 +44,13 @@ import de.tudarmstadt.ukp.inception.ui.kb.initializers.NamedEntityIdentifierFeat
  * {@link WikiDataLinkingProjectInitializersAutoConfiguration#entityLinkingProjectInitializer}.
  * </p>
  */
+@Order(5000)
 public class EntityLinkingProjectInitializer
     implements QuickProjectInitializer
 {
+    private static final PackageResourceReference THUMBNAIL = new PackageResourceReference(
+            MethodHandles.lookup().lookupClass(), "EntityLinkingProjectInitializer.svg");
+
     private final AnnotationSchemaService annotationService;
     private final ApplicationContext context;
 
@@ -60,6 +68,18 @@ public class EntityLinkingProjectInitializer
     }
 
     @Override
+    public Optional<String> getDescription()
+    {
+        return Optional.of(Strings.getString("entity-linking-project.description"));
+    }
+
+    @Override
+    public Optional<ResourceReference> getThumbnail()
+    {
+        return Optional.of(THUMBNAIL);
+    }
+
+    @Override
     public boolean alreadyApplied(Project aProject)
     {
         return false;
@@ -68,7 +88,7 @@ public class EntityLinkingProjectInitializer
     @Override
     public List<Class<? extends ProjectInitializer>> getDependencies()
     {
-        List<Class<? extends ProjectInitializer>> dependencies = new ArrayList<>();
+        var dependencies = new ArrayList<Class<? extends ProjectInitializer>>();
         dependencies.add(NamedEntityLayerInitializer.class);
         dependencies.add(NamedEntityIdentifierFeatureInitializer.class);
         dependencies.add(WikiDataKnowledgeBaseInitializer.class);
@@ -84,9 +104,8 @@ public class EntityLinkingProjectInitializer
     @Override
     public void configure(Project aProject) throws IOException
     {
-        AnnotationLayer layer = annotationService.findLayer(aProject, NamedEntity.class.getName());
-        AnnotationFeature valueFeature = annotationService.getFeature(NamedEntity._FeatName_value,
-                layer);
+        var layer = annotationService.findLayer(aProject, NamedEntity.class.getName());
+        var valueFeature = annotationService.getFeature(NamedEntity._FeatName_value, layer);
         valueFeature.setEnabled(false);
         annotationService.createFeature(valueFeature);
     }

@@ -15,9 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { VID, Comment, Layer } from '.'
+import { VID, Comment, Layer, AnnotatedText } from '.'
 
 export interface Annotation {
+    document: AnnotatedText
+
     layer: Layer
 
     vid: VID
@@ -36,6 +38,11 @@ export interface Annotation {
      * Score (optional)
      */
     score?: number
+
+    /**
+     * Whether to display the score in the UI or not.
+     */
+    hideScore: boolean
 
     /**
      * Comments

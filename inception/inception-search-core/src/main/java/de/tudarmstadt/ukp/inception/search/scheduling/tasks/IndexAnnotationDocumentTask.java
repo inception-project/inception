@@ -21,27 +21,28 @@
  */
 package de.tudarmstadt.ukp.inception.search.scheduling.tasks;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode.AUTO_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
+import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.AUTO_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.inception.scheduling.MatchResult.DISCARD_OR_QUEUE_THIS;
 import static de.tudarmstadt.ukp.inception.scheduling.MatchResult.NO_MATCH;
 import static de.tudarmstadt.ukp.inception.scheduling.MatchResult.UNQUEUE_EXISTING_AND_QUEUE_THIS;
-import static de.tudarmstadt.ukp.inception.search.SearchCasUtils.casToByteArray;
 
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.util.Objects;
 
+import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.scheduling.MatchResult;
 import de.tudarmstadt.ukp.inception.scheduling.Task;
 import de.tudarmstadt.ukp.inception.search.SearchService;
 import de.tudarmstadt.ukp.inception.search.model.Progress;
+import de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil;
 
 /**
  * (Re)indexes the annotation document for a specific user.
@@ -49,16 +50,26 @@ import de.tudarmstadt.ukp.inception.search.model.Progress;
 public class IndexAnnotationDocumentTask
     extends IndexingTask_ImplBase
 {
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    public static final String TYPE = "IndexAnnotationDocumentTask";
+
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private @Autowired SearchService searchService;
     private @Autowired DocumentService documentService;
 
     private int done = 0;
 
-    public IndexAnnotationDocumentTask(AnnotationDocument aAnnotationDocument, String aTrigger)
+    public IndexAnnotationDocumentTask(Builder<? extends Builder<?>> aBuilder)
     {
-        super(aAnnotationDocument, aTrigger);
+        super(aBuilder //
+                .withProject(aBuilder.annotationDocument.getProject()) //
+                .withType(TYPE));
+    }
+
+    @Override
+    public String getTitle()
+    {
+        return "Indexing annotations...";
     }
 
     @Override
@@ -68,10 +79,10 @@ public class IndexAnnotationDocumentTask
             var aDoc = getAnnotationDocument();
             var cas = documentService.readAnnotationCas(aDoc.getDocument(), aDoc.getUser(),
                     AUTO_CAS_UPGRADE, SHARED_READ_ONLY_ACCESS);
-            searchService.indexDocument(aDoc, casToByteArray(cas));
+            searchService.indexDocument(aDoc, WebAnnoCasUtil.casToByteArray(cas));
         }
         catch (IOException e) {
-            log.error("Error indexing annotation document {}", getSourceDocument(), e);
+            LOG.error("Error indexing annotation document {}", getSourceDocument(), e);
         }
 
         done++;
@@ -103,5 +114,21 @@ public class IndexAnnotationDocumentTask
         }
 
         return NO_MATCH;
+    }
+
+    public static Builder<Builder<?>> builder()
+    {
+        return new Builder<>();
+    }
+
+    public static class Builder<T extends Builder<?>>
+        extends IndexingTask_ImplBase.Builder<T>
+    {
+        public IndexAnnotationDocumentTask build()
+        {
+            Validate.notNull(annotationDocument, "Annotation document must be specified");
+
+            return new IndexAnnotationDocumentTask(this);
+        }
     }
 }

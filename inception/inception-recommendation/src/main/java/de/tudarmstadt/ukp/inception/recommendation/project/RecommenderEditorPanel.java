@@ -17,10 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.project;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.RELATION_TYPE;
-import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.SPAN_TYPE;
-import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.MAX_RECOMMENDATIONS_CAP;
+import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CHANGE_EVENT;
+import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
@@ -59,19 +58,21 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormSubmittingBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.ModelChangedVisitor;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainLayerSupport;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommenderFactoryRegistry;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormSubmittingBehavior;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaModelAdapter;
+import de.tudarmstadt.ukp.inception.support.spring.ApplicationEventPublisherHolder;
+import de.tudarmstadt.ukp.inception.support.wicket.ModelChangedVisitor;
 
 public class RecommenderEditorPanel
     extends Panel
@@ -99,6 +100,7 @@ public class RecommenderEditorPanel
     private @SpringBean AnnotationSchemaService annotationSchemaService;
     private @SpringBean RecommenderFactoryRegistry recommenderRegistry;
     private @SpringBean ApplicationEventPublisherHolder appEventPublisherHolder;
+    private @SpringBean FeatureSupportRegistry featureSupportRegistry;
     private @SpringBean UserDao userDao;
 
     private TextField<String> nameField;
@@ -152,7 +154,7 @@ public class RecommenderEditorPanel
         layerChoice.setChoiceRenderer(new ChoiceRenderer<>("uiName"));
         layerChoice.setRequired(true);
         // The features and tools depend on the layer, so reload them when the layer is changed
-        layerChoice.add(new LambdaAjaxFormComponentUpdatingBehavior("change", t -> {
+        layerChoice.add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT, t -> {
             toolChoice.setModelObject(null);
             featureChoice.setModelObject(null);
             autoUpdateName(t, nameField, recommenderModel.getObject());
@@ -336,7 +338,7 @@ public class RecommenderEditorPanel
             return;
         }
 
-        Recommender recommender = recommenderModel.getObject();
+        var recommender = recommenderModel.getObject();
         // check if recommender and layer still match
         var factory = recommenderRegistry.getFactory(aToolModel.getObject().getKey());
         if (!factory.accepts(recommender.getLayer(), recommender.getFeature())) {
@@ -358,7 +360,7 @@ public class RecommenderEditorPanel
 
         var factory = recommenderRegistry.getFactory(aRecommender.getTool());
 
-        String factoryName = factory != null ? factory.getName() : "NO FACTORY!";
+        var factoryName = factory != null ? factory.getName() : "NO FACTORY!";
 
         return String.format(Locale.US, "[%s@%s] %s", aRecommender.getLayer().getUiName(),
                 aRecommender.getFeature().getUiName(), factoryName);
@@ -406,11 +408,10 @@ public class RecommenderEditorPanel
     private List<AnnotationLayer> listLayers()
     {
         return annotationSchemaService.listAnnotationLayer(projectModel.getObject()).stream() //
-                .filter(layer -> (SPAN_TYPE.equals(layer.getType())
-                        || RELATION_TYPE.equals(layer.getType())) && //
-                        !(Token._TypeName.equals(layer.getName())
-                                || Sentence._TypeName.equals(layer.getName())))
-                .collect(toList());
+                .filter(layer -> !ChainLayerSupport.TYPE.equals(layer.getType()) && //
+                        !Token._TypeName.equals(layer.getName()) && //
+                        !Sentence._TypeName.equals(layer.getName()))
+                .toList();
     }
 
     private List<AnnotationFeature> listFeatures()
@@ -419,13 +420,14 @@ public class RecommenderEditorPanel
             return emptyList();
         }
 
-        AnnotationLayer layer = recommenderModel.getObject().getLayer();
+        var layer = recommenderModel.getObject().getLayer();
         if (layer == null) {
             return emptyList();
         }
 
         return annotationSchemaService.listSupportedFeatures(layer).stream()
                 .filter(feat -> feat.getType() != null) //
+                .filter(feat -> featureSupportRegistry.isAccessible(feat)) //
                 .collect(toList());
     }
 
@@ -435,8 +437,8 @@ public class RecommenderEditorPanel
             return emptyList();
         }
 
-        AnnotationLayer layer = recommenderModel.getObject().getLayer();
-        AnnotationFeature feature = recommenderModel.getObject().getFeature();
+        var layer = recommenderModel.getObject().getLayer();
+        var feature = recommenderModel.getObject().getFeature();
         if (layer == null || feature == null) {
             return emptyList();
         }
@@ -449,7 +451,7 @@ public class RecommenderEditorPanel
 
     private void actionSave(AjaxRequestTarget aTarget)
     {
-        Recommender recommender = recommenderModel.getObject();
+        var recommender = recommenderModel.getObject();
         recommender.setProject(recommender.getLayer().getProject());
 
         recommendationService.createOrUpdateRecommender(recommender);

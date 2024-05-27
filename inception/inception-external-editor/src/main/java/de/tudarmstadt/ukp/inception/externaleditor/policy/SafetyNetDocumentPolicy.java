@@ -22,9 +22,9 @@ import static java.util.regex.Pattern.compile;
 import java.io.File;
 import java.io.IOException;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
-import de.tudarmstadt.ukp.clarin.webanno.support.WatchedResourceFile;
 import de.tudarmstadt.ukp.inception.externaleditor.config.ExternalEditorProperties;
+import de.tudarmstadt.ukp.inception.support.SettingsUtil;
+import de.tudarmstadt.ukp.inception.support.io.WatchedResourceFile;
 import de.tudarmstadt.ukp.inception.support.xml.sanitizer.AttributeAction;
 import de.tudarmstadt.ukp.inception.support.xml.sanitizer.ElementAction;
 import de.tudarmstadt.ukp.inception.support.xml.sanitizer.PolicyCollection;
@@ -33,7 +33,11 @@ import de.tudarmstadt.ukp.inception.support.xml.sanitizer.PolicyCollectionIOUtil
 
 public class SafetyNetDocumentPolicy
 {
-    static final String DEFAULT_POLICY_YAML = "safety-net.yaml";
+    static final String SAFETY_NET_POLICY_OVERRIDE_YAML = "safety-net.yaml";
+
+    private static final String[] JAVASCRIPT_ACTIVE_ATTRIBUTES = { "href", "src", "codebase",
+            "cite", "background", "action", "longdesc", "profile", "classid", "data", "usemap",
+            "formaction", "icon", "manifest", "poster", "srcset", "archive" };
 
     private static final String[] JAVASCRIPT_EVENT_ATTRIBUTES = { "onafterprint", "onbeforeprint",
             "onbeforeunload", "onerror", "onhashchange", "onload", "onmessage", "onoffline",
@@ -63,45 +67,64 @@ public class SafetyNetDocumentPolicy
 
         var appHome = SettingsUtil.getApplicationHome();
         policyOverrideFile = new WatchedResourceFile<>(
-                new File(appHome, DEFAULT_POLICY_YAML).toPath(),
+                new File(appHome, SAFETY_NET_POLICY_OVERRIDE_YAML).toPath(),
                 PolicyCollectionIOUtils::loadPolicies);
     }
 
     private PolicyCollection makeDefaultPolicy()
     {
-        var builder = PolicyCollectionBuilder //
+        var policy = PolicyCollectionBuilder //
                 .caseInsensitive() //
                 .defaultAttributeAction(AttributeAction.PASS) //
                 .defaultElementAction(ElementAction.PASS);
 
-        builder.disallowElements("script", "meta", "applet", "link", "iframe", "a");
+        policy.disallowElements("script", "meta", "applet", "link", "iframe");
 
         if (properties.isBlockStyle()) {
-            builder.disallowElements("style");
-        }
-        if (properties.isBlockAudio()) {
-            builder.disallowElements("audio");
-        }
-        if (properties.isBlockEmbed()) {
-            builder.disallowElements("embed");
-        }
-        if (properties.isBlockImg()) {
-            builder.disallowElements("img");
-        }
-        if (properties.isBlockObject()) {
-            builder.disallowElements("object");
-        }
-        if (properties.isBlockVideo()) {
-            builder.disallowElements("video");
+            policy.disallowElements("style");
         }
 
-        builder.disallowAttributes("href", "src", "codebase", "cite", "background", "action",
-                "longdesc", "profile", "classid", "data", "usemap", "formaction", "icon",
-                "manifest", "poster", "srcset", "archive").matching(compile("\\s*javascript:.*"))
+        if (properties.isBlockAudio()) {
+            policy.disallowElements("audio");
+        }
+
+        if (properties.isBlockEmbed()) {
+            policy.disallowElements("embed");
+        }
+
+        if (properties.isBlockImg()) {
+            policy.disallowElements("img");
+        }
+        else {
+            switch (properties.getAllowImgSource()) {
+            case NONE:
+                policy.disallowAttributes("src").onElements("img");
+                break;
+            case LOCAL:
+                policy.disallowAttributes("src") //
+                        .matching(compile("(?!res[?]resId=).*")) //
+                        .onElements("img");
+                break;
+            case ANY:
+                // No restriction in this case
+                break;
+            }
+        }
+
+        if (properties.isBlockObject()) {
+            policy.disallowElements("object");
+        }
+
+        if (properties.isBlockVideo()) {
+            policy.disallowElements("video");
+        }
+
+        policy.disallowAttributes(JAVASCRIPT_ACTIVE_ATTRIBUTES) //
+                .matching(compile("\\s*javascript:.*")) //
                 .globally();
 
-        builder.disallowAttributes(JAVASCRIPT_EVENT_ATTRIBUTES).globally();
-        return builder.build();
+        policy.disallowAttributes(JAVASCRIPT_EVENT_ATTRIBUTES).globally();
+        return policy.build();
     }
 
     public PolicyCollection getPolicy() throws IOException

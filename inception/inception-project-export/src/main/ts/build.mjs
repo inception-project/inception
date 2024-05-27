@@ -28,8 +28,13 @@ const argv = yargs(hideBin(process.argv)).argv
 const packagePath = 'de/tudarmstadt/ukp/inception/project/export/settings'
 
 let outbase = `../../../target/js/${packagePath}`
+if (argv.live) {
+  outbase = `../../../target/classes/${packagePath}`
+}
 
 const defaults = {
+  entryPoints: ['src/RunningExportsPanel.svelte'],
+  outfile: `${outbase}/RunningExportsPanel.min.js`,
   mainFields: ['svelte', 'browser', 'module', 'main'],
   format: 'esm',
   plugins: [
@@ -40,26 +45,17 @@ const defaults = {
   bundle: true,
   sourcemap: false,
   minify: !argv.live,
-  target: 'es6',
+  target: 'es2018',
   loader: { '.ts': 'ts' },
   logLevel: 'info'
 }
 
-if (argv.live) {
-  defaults.watch = {
-    onRebuild (error, result) {
-      if (error) console.error('watch build failed:', error)
-      else console.log('watch build succeeded:', result)
-    }
-  }
-  outbase = `../../../target/classes/${packagePath}`
-} else {
-  fs.emptyDirSync(outbase)
-}
 fs.mkdirsSync(`${outbase}`)
+fs.emptyDirSync(outbase)
 
-esbuild.build(Object.assign({
-  entryPoints: ['src/RunningExportsPanel.svelte'],
-  outfile: `${outbase}/RunningExportsPanel.min.js`
-}, defaults))
-.catch(() => process.exit(1))
+if (argv.live) {
+  const context = await esbuild.context(defaults)
+  await context.watch()
+} else {
+  esbuild.build(defaults)
+}

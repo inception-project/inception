@@ -20,10 +20,10 @@ package de.tudarmstadt.ukp.inception.documents;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterDocumentCreatedEvent;
-import de.tudarmstadt.ukp.clarin.webanno.api.event.BeforeDocumentRemovedEvent;
-import de.tudarmstadt.ukp.clarin.webanno.api.event.DocumentStateChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.inception.documents.event.AfterDocumentCreatedEvent;
+import de.tudarmstadt.ukp.inception.documents.event.BeforeDocumentRemovedEvent;
+import de.tudarmstadt.ukp.inception.documents.event.DocumentStateChangedEvent;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 
 /**
@@ -59,6 +59,9 @@ public class DocumentStateWatcher
 
     private void recalculateProjectState(Project aProject)
     {
-        schedulingService.enqueue(new UpdateProjectStateTask(aProject, getClass().getSimpleName()));
+        schedulingService.enqueue(UpdateProjectStateTask.builder() //
+                .withProject(aProject) //
+                .withTrigger(getClass().getSimpleName()) //
+                .build());
     }
 }
