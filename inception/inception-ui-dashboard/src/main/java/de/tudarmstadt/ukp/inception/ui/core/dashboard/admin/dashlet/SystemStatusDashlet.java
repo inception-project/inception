@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.inception.ui.core.dashboard.admin.dashlet;
 
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
-import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhenNot;
 import static java.util.Arrays.asList;
 import static java.util.Collections.list;
 import static java.util.Locale.ROOT;
@@ -77,6 +76,8 @@ public class SystemStatusDashlet
         super(aId);
         setOutputMarkupId(true);
 
+        var devMode = getApplication().getConfigurationType() == DEVELOPMENT;
+
         add(new ClientUrlAjaxBehavior());
 
         queue(new Label("activeUsers", LoadableDetachableModel.of(() -> getActiveUsers().size())));
@@ -89,14 +90,18 @@ public class SystemStatusDashlet
         var isProxyOk = isRemoteIpCoveredByProxyHeader() || isProxyTrusted();
         queue(new Fragment("isProxyTrusted", isProxyOk ? "proxyTrusted" : "proxyNotTrusted", this));
         queue(new Label("remoteIp", LoadableDetachableModel.of(this::getRemoteIp))
-                .setVisible(!isProxyOk));
+                .setVisible(!isProxyOk || devMode));
+        queue(new Label("trustedProxies", LoadableDetachableModel.of(this::getTrustedProxies))
+                .setVisible(!isProxyOk || devMode));
+        queue(new Label("internalProxies", LoadableDetachableModel.of(this::getInternalProxies))
+                .setVisible(!isProxyOk || devMode));
 
         queue(new MarkdownLabel("isProtocolOk", LoadableDetachableModel
                 .of(() -> getString(isProtocolOk() ? "protocolOk" : "protocolNotOk"))));
         queue(new Label("clientUrl", LoadableDetachableModel.of(() -> clientUrl))
-                .add(visibleWhenNot(this::isProtocolOk)));
+                .add(visibleWhen(() -> isProtocolOk() || devMode)));
         queue(new Label("serverUrl", LoadableDetachableModel.of(this::getServerUrl))
-                .add(visibleWhenNot(this::isProtocolOk)));
+                .add(visibleWhen(() -> isProtocolOk() || devMode)));
 
         queue(new MarkdownLabel("hasCsrfWithProtocol", LoadableDetachableModel.of(() -> getString(
                 hasCsrfWithProtocol() ? "csrfWithProtocolOk" : "csrfWithProtocolNotOk"))));
@@ -106,16 +111,17 @@ public class SystemStatusDashlet
                         .of(() -> getString(hasCsrfWithoutProtocol() ? "csrfWithoutProtocolOk"
                                 : "csrfWithoutProtocolNotOk"))));
 
-        queue(new WebMarkupContainer("requestDetails")
-                .add(visibleWhen(() -> getApplication().getConfigurationType() == DEVELOPMENT)));
+        queue(new WebMarkupContainer("requestDetails").add(visibleWhen(() -> devMode)));
 
         queue(new Label("headers", LoadableDetachableModel.of(this::getHeaders)));
+
         var reverseProxyHeaders = LoadableDetachableModel.of(this::getReverseProxyHeaders);
         queue(new Label("reverseProxyHeaders", reverseProxyHeaders)
                 .add(visibleWhen(reverseProxyHeaders.map(StringUtils::isNotBlank))));
+
         var csrfInfo = LoadableDetachableModel.of(this::getCsrfAcceptedOrigins);
-        queue(new Label("csrfInfo", csrfInfo)
-                .add(visibleWhen(reverseProxyHeaders.map(StringUtils::isNotBlank))));
+        queue(new Label("csrfInfo", csrfInfo).add(
+                visibleWhen(reverseProxyHeaders.map(StringUtils::isNotBlank).orElse(devMode))));
     }
 
     @OnEvent
