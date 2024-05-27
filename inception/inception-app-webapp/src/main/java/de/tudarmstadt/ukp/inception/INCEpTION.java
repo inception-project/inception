@@ -27,8 +27,11 @@ import static org.springframework.boot.WebApplicationType.SERVLET;
 
 import java.io.IOException;
 import java.util.Optional;
+import java.util.logging.Level;
+import java.util.logging.LogManager;
 
 import org.dkpro.core.api.resources.ResourceObjectProviderBase;
+import org.slf4j.bridge.SLF4JBridgeHandler;
 import org.springframework.boot.Banner;
 import org.springframework.boot.autoconfigure.AutoConfigurationPackage;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -94,6 +97,12 @@ public class INCEpTION
             System.setProperty("wicket.core.settings.general.configuration-type", "development");
             System.setProperty("webanno.debug.enforce_cas_thread_lock", "true");
             aBuilder.profiles(DeploymentModeService.PROFILE_DEVELOPMENT_MODE);
+
+            // Route JUL through log4j
+            java.util.logging.LogManager.getLogManager().reset();
+            SLF4JBridgeHandler.removeHandlersForRootLogger();
+            SLF4JBridgeHandler.install();
+            LogManager.getLogManager().getLogger("").setLevel(Level.ALL);
         }
         else {
             aBuilder.profiles(DeploymentModeService.PROFILE_PRODUCTION_MODE);
