@@ -22,17 +22,17 @@
     <form wicket:id="form">
       <input type="hidden" id="urlfragment" wicket:id="urlfragment" />
       <h6 class="card-title mb-3 text-center">
-        Log in using credentials
+          <wicket:message key="logInUsingCredentials" />
       </h6>
       <div class="row mb-3 form-floating">
         <input wicket:id="username" type="text" class="form-control" placeholder="User ID" autofocus
           autocomplete="username" />
-        <label wicket:for="username">User ID</label>
+        <label wicket:for="username"><wicket:message key="userId" /></label>
       </div>
       <div class="row mb-3 form-floating">
         <input wicket:id="password" type="password" class="form-control" placeholder="Password"
           autocomplete="current-password" />
-        <label wicket:for="password">Password</label>
+        <label wicket:for="password"><wicket:message key="loginPassword" /></label>
       </div>
       <div class="row justify-content-md-center">
         <input wicket:id="signInBtn" type="submit" class="btn btn-login btn-primary w-100"

@@ -24,6 +24,7 @@ import org.springframework.stereotype.Component;
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
 import de.tudarmstadt.ukp.clarin.webanno.ui.project.casdoctor.CasDoctorProjectSettingsPanelFactory;
+import de.tudarmstadt.ukp.inception.support.wicket.resource.Strings;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.settings.ProjectSettingsMenuItemBase;
 
 @Component
@@ -46,7 +47,7 @@ public class ProjectCasDoctorMenuItem
     @Override
     public String getLabel()
     {
-        return "CAS Doctor";
+        return Strings.getString("projectcasdoctor.menuitem.label");
     }
 
     @Override

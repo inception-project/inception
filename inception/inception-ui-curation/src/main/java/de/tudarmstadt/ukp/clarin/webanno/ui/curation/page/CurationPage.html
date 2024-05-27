@@ -112,41 +112,37 @@
                   <ul class="dropdown-menu shadow-lg" role="menu" style="min-width: 20em;">
                     <li class="dropdown-item-text agree">
                       <span class="badge badge-pill border border-secondary">&nbsp;</span>
-                      Agreement
+                      <wicket:message key="agreement"/>
                       <div class="small text-muted ms-4">
-                        There is no disagreement between annotators. There is nothing to
-                        curate.
+                        <wicket:message key="noDisagreement"/>
                       </div>
                     </li>
                     <li class="dropdown-item-text">
                       <span class="badge badge-pill curated">&nbsp;</span>
-                      Curated
+                      <wicket:message key="curated"/>
                       <div class="small text-muted ms-4">
-                        For every position any annotator has annotated, the is a corresponding 
-                        annotation at the same position in the curator's document.
+                        <wicket:message key="correspondingAnnotationAtSamePosition"/>
                       </div>
                     </li>
                     <li class="dropdown-item-text">
                       <span class="badge badge-pill stacked">&nbsp;</span>
-                      Stacked annotations
+                      <wicket:message key="statckedAnnotations"/>
                       <div class="small text-muted ms-4">
-                        A single annotator has made multiple annotations of the same layer at a
-                        given position.
+                        <wicket:message key="multipleAnnotationsOfSameLayer"/>
                       </div>
                     </li>
                     <li class="dropdown-item-text">
                       <span class="badge badge-pill incomplete">&nbsp;</span>
-                      Incomplete annotation
+                      <wicket:message key="incompleteAnnotation"/>
                       <div class="small text-muted ms-4">
-                        A position has been annoated by some annotators but not by all.
+                        <wicket:message key="positionAnnotatedNotByAll"/>
                       </div>
                     </li>
                     <li class="dropdown-item-text">
                       <span class="badge badge-pill disagree">&nbsp;</span>
-                      Disagreement
+                      <wicket:message key="disagreement"/>
                       <div class="small text-muted ms-4">
-                        Multiple annotators have annotated a position, but different labels were
-                        assigned.
+                        <wicket:message key="multipleAnnotatorsButDifferentLabels"/>
                       </div>
                     </li>
                   </ul>

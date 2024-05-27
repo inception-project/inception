@@ -23,6 +23,7 @@ import org.springframework.core.annotation.Order;
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
 import de.tudarmstadt.ukp.inception.app.ui.externalsearch.config.ExternalSearchUIAutoConfiguration;
+import de.tudarmstadt.ukp.inception.support.wicket.resource.Strings;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.settings.ProjectSettingsMenuItemBase;
 
 /**
@@ -51,7 +52,7 @@ public class ProjectDocumentRepositoriesMenuItem
     @Override
     public String getLabel()
     {
-        return "Document Repositories";
+        return Strings.getString("projectdocumentrepositories.menuitem.label");
     }
 
     @Override

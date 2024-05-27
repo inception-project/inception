@@ -28,6 +28,7 @@ import org.springframework.core.annotation.Order;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelFactory;
 import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.support.wicket.resource.Strings;
 
 /**
  * <p>
@@ -50,7 +51,7 @@ public class RecommenderProjectSettingsPanelFactory
     @Override
     public String getLabel()
     {
-        return "Recommenders";
+        return Strings.getString("recommenderprojectsettings.panel.factory.label");
     }
 
     @Override

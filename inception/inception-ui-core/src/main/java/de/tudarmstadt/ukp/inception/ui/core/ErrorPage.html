@@ -21,8 +21,8 @@
   <wicket:extend>
     <div class="scrolling flex-content flex-h-container mt-5 pt-5" style="min-width: 30em;">
       <div class="flex-content flex-v-container flex-centered" style="min-height: 20em;">
-        <h1 class="display-1">Whoops!</h1>
-        <p class="lead">Something went wrong...</p>
+        <h1 class="display-1"><wicket:message key="whoops"/></h1>
+        <p class="lead"><wicket:message key="somethingWrong"/></p>
         <div style="max-width: 90%;">
         <table class="table-sm small">
           <tr wicket:enclosure="statusCode">
@@ -34,27 +34,27 @@
           </tr>
 
           <tr wicket:enclosure="servletName">
-            <th>Servlet</th>
+            <th><wicket:message key="servlet"/></th>
             <td><span wicket:id="servletName" /></td>
           </tr>
 
           <tr wicket:enclosure="requestUri">
-            <th>Request&nbsp;path</th>
+            <th><wicket:message key="requestPath"/></th>
             <td><span wicket:id="requestUri" /></td>
           </tr>
 
           <tr wicket:enclosure="message">
-            <th>Message</th>
+            <th><wicket:message key="message"/></th>
             <td><span wicket:id="message" /></td>
           </tr>
 
           <tr wicket:enclosure="exceptionMessage">
-            <th>Exception&nbsp;message</th>
+            <th><wicket:message key="exceptionMessage"/></th>
             <td><span wicket:id="exceptionMessage" /></td>
           </tr>
 
           <tr wicket:enclosure="exceptionStackTrace">
-            <th style="vertical-align: top;">Exception&nbsp;stack&nbsp;trace</th>
+            <th style="vertical-align: top;"><wicket:message key="exceptionStackTrace"/></th>
             <td class="border">
               <div class="scrolling fit-child-snug" style="height: 10rem;">
                 <pre class="m-0 p-0" wicket:id="exceptionStackTrace"/>
@@ -63,12 +63,12 @@
           </tr>
 
           <tr wicket:enclosure="appVersion">
-            <th>Application&nbsp;version</th>
+            <th><wicket:message key="applicationVersion"/></th>
             <td><span wicket:id="appVersion" /></td>
           </tr>
 
           <tr wicket:enclosure="javaVendor">
-            <th>Java&nbsp;version</th>
+            <th><wicket:message key="javaVersion"/></th>
             <td>
               <span wicket:id="javaVendor" />
               <span wicket:id="javaVersion" />
@@ -76,7 +76,7 @@
           </tr>
 
           <tr wicket:enclosure="osName">
-            <th>Operating&nbsp;system</th>
+            <th><wicket:message key="operatingSystem"/></th>
             <td>
               <span wicket:id="osName" />
               <span wicket:id="osVersion" />

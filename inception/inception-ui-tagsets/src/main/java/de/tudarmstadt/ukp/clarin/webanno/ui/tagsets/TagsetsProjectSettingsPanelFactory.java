@@ -24,6 +24,7 @@ import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelFactory;
+import de.tudarmstadt.ukp.inception.support.wicket.resource.Strings;
 
 @Component
 @Order(TagsetsProjectSettingsPanelFactory.ORDER)
@@ -41,7 +42,7 @@ public class TagsetsProjectSettingsPanelFactory
     @Override
     public String getLabel()
     {
-        return "Tagsets";
+        return Strings.getString("tagsetsprojectsettings.panel.factory.label");
     }
 
     @Override

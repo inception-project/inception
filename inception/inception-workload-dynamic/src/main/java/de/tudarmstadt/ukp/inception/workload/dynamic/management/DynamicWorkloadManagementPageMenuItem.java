@@ -34,6 +34,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.ProjectMenuItem;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
+import de.tudarmstadt.ukp.inception.support.wicket.resource.Strings;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 import wicket.contrib.input.events.key.KeyType;
 
@@ -71,7 +72,7 @@ public class DynamicWorkloadManagementPageMenuItem
     @Override
     public String getLabel()
     {
-        return "Workload";
+        return Strings.getString("dynamicworkloadmanagement.page.menuitem.label");
     }
 
     /**

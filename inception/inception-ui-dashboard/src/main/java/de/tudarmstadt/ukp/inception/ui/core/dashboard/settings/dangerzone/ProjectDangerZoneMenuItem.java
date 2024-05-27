@@ -23,6 +23,7 @@ import org.springframework.stereotype.Component;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
+import de.tudarmstadt.ukp.inception.support.wicket.resource.Strings;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.settings.ProjectSettingsMenuItemBase;
 import de.tudarmstadt.ukp.inception.ui.project.dangerzone.ProjectDangerZonePanelFactory;
 
@@ -46,7 +47,7 @@ public class ProjectDangerZoneMenuItem
     @Override
     public String getLabel()
     {
-        return "Danger Zone";
+        return Strings.getString("projectdangerzone.menuitem.label");
     }
 
     @Override

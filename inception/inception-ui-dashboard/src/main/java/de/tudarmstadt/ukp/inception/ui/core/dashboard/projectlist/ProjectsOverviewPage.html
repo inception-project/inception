@@ -26,7 +26,7 @@
             <span class="btn-group" role="group">
               <button wicket:id="newProject" class="btn btn-primary">
                 <i class="fas fa-plus me-1"/><wicket:message key="newProject"/>
-              </button> 
+              </button>
             </span>
           </span>
           <span wicket:id="projectImportGroup" class="dropdown sticky-dropdown" aria-haspopup="true" aria-expanded="false">
@@ -87,8 +87,8 @@
                     <span wicket:id="role" class="badge bg-secondary ms-1"><wicket:container wicket:id="label"/></span>
                   </div>
                   <div class="text-nowrap mt-auto">
-                    <small class="text-muted" wicket:enclosure="created">Created: <wicket:container wicket:id="created"/></small>
-                    <small class="text-muted" wicket:enclosure="id">ID: <wicket:container wicket:id="id"/></small>
+                    <small class="text-muted" wicket:enclosure="created"><wicket:message key="created"/> <wicket:container wicket:id="created"/></small>
+                    <small class="text-muted" wicket:enclosure="id"><wicket:message key="id"/> <wicket:container wicket:id="id"/></small>
                   </div>
                 </div>
                 <div wicket:id="actionDropdown" class="d-flex">

@@ -24,7 +24,7 @@
         <div class="form-check">
           <input wicket:id="multipleRows" class="form-check-input" type="checkbox">
           <label wicket:for="multipleRows" class="form-check-label">
-            Multiple rows
+            <wicket:message key="multipleRows"/>
           </label>
         </div>
       </div>
@@ -34,14 +34,14 @@
         <div class="form-check">
           <input wicket:id="dynamicSize" class="form-check-input" type="checkbox">
           <label wicket:for="dynamicSize" class="form-check-label">
-            Dynamic size
+            <wicket:message key="dynamicSize"/>
           </label>
         </div>
       </div>
     </div>
     <div class="row form-row" wicket:enclosure="collapsedRows">
       <label wicket:for="collapsedRows" class="col-sm-4 col-form-label">
-        Collapsed rows
+        <wicket:message key="collapsedRows"/>
       </label>
       <div class="col-sm-8">
         <input type="number" style="width:100%;" wicket:id="collapsedRows" data-container="body"></input>
@@ -49,7 +49,7 @@
     </div>
     <div class="row form-row" wicket:enclosure="expandedRows">
       <label wicket:for="expandedRows" class="col-sm-4 col-form-label">
-        Expanded rows
+        <wicket:message key="expandedRows"/>
       </label>
       <div class="col-sm-8">
         <input type="number" style="width:100%;" wicket:id="expandedRows" data-container="body"></input>
@@ -65,7 +65,7 @@
     </div>
     <div class="row form-row" wicket:id="editorTypeContainer">
       <label wicket:for="editorType" class="col-sm-4 col-form-label">
-        Editor type
+        <wicket:message key="editorType"/>
       </label>
       <div class="col-sm-8">
         <select class="form-select flex-content" wicket:id="editorType"/>
@@ -74,7 +74,7 @@
   </form>
   <div class="row form-row">
     <label class="col-sm-4 col-form-label">
-      Key bindings
+      <wicket:message key="keyBindings"/>
     </label>
     <div class="col-sm-8">
       <div wicket:id="keyBindings"/>

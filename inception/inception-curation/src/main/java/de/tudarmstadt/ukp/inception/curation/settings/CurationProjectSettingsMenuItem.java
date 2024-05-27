@@ -23,6 +23,7 @@ import org.springframework.core.annotation.Order;
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
 import de.tudarmstadt.ukp.inception.curation.config.CurationServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.support.wicket.resource.Strings;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.settings.ProjectSettingsMenuItemBase;
 
 /**
@@ -50,7 +51,7 @@ public class CurationProjectSettingsMenuItem
     @Override
     public String getLabel()
     {
-        return "Curation";
+        return Strings.getString("curationprojectsettings.menuitem.label");
     }
 
     @Override

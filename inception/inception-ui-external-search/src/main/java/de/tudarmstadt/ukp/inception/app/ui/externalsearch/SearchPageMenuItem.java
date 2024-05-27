@@ -31,6 +31,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.ProjectMenuItem;
 import de.tudarmstadt.ukp.inception.app.ui.externalsearch.config.ExternalSearchUIAutoConfiguration;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchService;
+import de.tudarmstadt.ukp.inception.support.wicket.resource.Strings;
 import wicket.contrib.input.events.key.KeyType;
 
 /**
@@ -61,7 +62,7 @@ public class SearchPageMenuItem
     @Override
     public String getLabel()
     {
-        return "Search";
+        return Strings.getString("search.page.menuitem.label");
     }
 
     @Override

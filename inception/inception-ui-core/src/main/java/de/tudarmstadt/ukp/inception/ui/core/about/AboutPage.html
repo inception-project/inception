@@ -22,7 +22,7 @@
     <div class="scrolling flex-content flex-h-container" style="min-width: 30em;">
       <div class="flex-content flex-v-container flex-centered text-center" style="min-height: 20em;">
         <h1 class="display-1 mt-5 pt-5"><wicket:message key="product.name"/></h1>
-        <p class="lead mb-4">your friendly neighborhood semantic text annotation tool</p>
+        <p class="lead mb-4"><wicket:message key="semanticTextAnnotationTool"/></p>
         <p class="mb-3">
           <wicket:message key="shortDescription"/>
         </p>
@@ -33,11 +33,11 @@
           <wicket:container wicket:id="copyright"/>
         </p>
         <p class="mb-3">
-          <a wicket:id="home" class="btn btn-secondary">Back to work</a>
+          <a wicket:id="home" class="btn btn-secondary"><wicket:message key="backToWork"/></a>
         </p>
         <div class="flex-content panel card w-75 m-3 small text-left" wicket:enclosure="dependencies">
           <div class="card-header">
-            Dependencies
+            <wicket:message key="dependencies"/>
           </div>
           <div class="scrolling card-body fit-child-snug flex-v-container p-0 m-0" style="min-height: 10em;">
             <pre class="p-3 m-0"><wicket:container wicket:id="dependencies"/></pre>

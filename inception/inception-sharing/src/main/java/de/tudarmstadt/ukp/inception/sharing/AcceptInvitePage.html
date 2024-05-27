@@ -47,7 +47,7 @@
           <div class="card-body container-sm">
             <div wicket:id="expirationNotice">
               <h5 class="card-title mb-3 text-center">
-                Unfortunately, no additional annotators are accepted at this time.
+                <wicket:message key="noAnnotatorAccepted"/>
               </h5>
             </div>
             <form wicket:id="acceptInvitationForm">
@@ -63,10 +63,10 @@
                 <input wicket:id="username" type="text" class="form-control"/>
               </div>
               <div class="row mb-3" wicket:enclosure="password">
-                <input wicket:id="password" type="password" class="form-control" placeholder="Password"/>
+                <input wicket:id="password" type="password" class="form-control" wicket:message="placeholder:passwordPlaceholder"/>
               </div>
               <div class="row mb-3" wicket:enclosure="eMail">
-                <input wicket:id="eMail" type="email" class="form-control" placeholder="eMail address"/>
+                <input wicket:id="eMail" type="email" class="form-control" wicket:message="placeholder:mailPlaceholder"/>
               </div>
               <div class="row text-center mb-3" wicket:enclosure="registeredLogin">
                 <div class="form-check w-100">
@@ -77,7 +77,7 @@
                 </div>
               </div>
               <div class="row justify-content-md-center">
-                <button wicket:id="join" type="submit" class="btn btn-login btn-primary w-100">Join project</button>
+                <button wicket:id="join" type="submit" class="btn btn-login btn-primary w-100"><wicket:message key="joinProject"/></button>
               </div>
             </form>
           </div>

@@ -24,6 +24,7 @@ import org.springframework.core.annotation.Order;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelFactory;
 import de.tudarmstadt.ukp.inception.curation.config.CurationServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.support.wicket.resource.Strings;
 
 /**
  * <p>
@@ -46,7 +47,7 @@ public class CurationProjectSettingsPanelFactory
     @Override
     public String getLabel()
     {
-        return "Curation";
+        return Strings.getString("curationprojectsettings.panel.factory.label");
     }
 
     @Override

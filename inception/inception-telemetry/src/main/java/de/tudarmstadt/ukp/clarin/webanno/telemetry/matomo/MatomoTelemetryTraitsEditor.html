@@ -23,32 +23,7 @@
       <div class="" wicket:enclosure="enabled">
         <div class="flex-h-container flex-gutter">
           <div class="flex-content">
-            <p>
-              This usage data collector helps the developer team of
-              <wicket:message key="product.name" />
-              discover the number of installations and the size of the user base. These are
-              important indicators for the success of the product and are e.g. included in reports
-              to funders. Please support the future development of
-              <wicket:message key="product.name" />
-              by submitting these <b>anonymous usage statistics</b> to the developers at UKP Lab,
-              Technische Universität Darmstadt, Germany.
-            </p>
-            <p>
-              When enabled, the anonymous usage statistics are sent to our server every time the 
-              application is started and immediately when turning the collection on here. Also,
-              an update is sent in regular intervals for long-running instances.
-            </p>
-            <p>
-              <b>NOTE:</b> This collector does <b>not</b> collect any data from users (e.g. 
-              annotators) logging into the system. It does, however, collect the number of enabled
-              user accounts in the server since that is important for assessing the size of the
-              user base for a multi-user capable system such as 
-              <wicket:message key="product.name" />.
-            </p>
-            <p>
-              Use the <b>Toggle details...</b> button above to see in full detail which data we
-              collect and why.
-            </p>
+            <wicket:message key="traitsEditorDescription"/>
           </div>
           <div>
             <select wicket:id="enabled"/>

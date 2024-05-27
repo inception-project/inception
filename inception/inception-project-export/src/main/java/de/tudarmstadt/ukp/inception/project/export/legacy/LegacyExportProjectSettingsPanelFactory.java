@@ -24,6 +24,7 @@ import org.springframework.core.annotation.Order;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelFactory;
 import de.tudarmstadt.ukp.inception.project.export.config.ProjectExportServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.support.wicket.resource.Strings;
 
 /**
  * <p>
@@ -49,7 +50,7 @@ public class LegacyExportProjectSettingsPanelFactory
     @Override
     public String getLabel()
     {
-        return "Export";
+        return Strings.getString("legacyexportprojectsettings.panel.factory.label");
     }
 
     @Override

@@ -24,6 +24,7 @@ import org.springframework.core.annotation.Order;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelFactory;
 import de.tudarmstadt.ukp.inception.sharing.config.InviteServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.support.wicket.resource.Strings;
 
 /**
  * <p>
@@ -46,7 +47,7 @@ public class InviteProjectSettingsPanelFactory
     @Override
     public String getLabel()
     {
-        return "Share Project";
+        return Strings.getString("inviteprojectsettings.panel.factory.label");
     }
 
     @Override

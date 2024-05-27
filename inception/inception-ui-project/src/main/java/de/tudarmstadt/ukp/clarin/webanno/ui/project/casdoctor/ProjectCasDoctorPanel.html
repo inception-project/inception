@@ -23,14 +23,12 @@
       <form wicket:id="casDoctorForm" class="flex-h-container flex-gutter" style="flex: .4; min-height: 250px">
         <div class="flex-content card">
           <div class="card-header">
-            Check
+            <wicket:message key="check"/>
           </div>
           <div class="scrolling card-body">
             <div class="col-sm-12">
               <p>
-                Here, you can perform a bulk diagnosis on all documents in the project. It is 
-                recommended to first <b>Check</b> for potential problems before using the
-                <b>Repair</b> function.
+                <wicket:message key="bulkDiagnosis"/>
               </p>
             </div>
           </div>
@@ -43,7 +41,7 @@
         </div>
         <div class="flex-content card">
           <div class="card-header">
-            Active repairs
+            <wicket:message key="activeRepairs"/>
           </div>
           <div class="scrolling card-body">
             <div class="col-sm-12">
@@ -61,7 +59,7 @@
       <div class="flex-content flex-h-container flex-gutter" style="min-height: 250px">
         <div class="flex-content card" wicket:enclosure="messageSets">
           <div class="card-header">
-            Diagnostic Report
+            <wicket:message key="diagnosticReport"/>
           </div>
           <div class="scrolling card-body">
             <table class="col-sm-12 table table-sm">

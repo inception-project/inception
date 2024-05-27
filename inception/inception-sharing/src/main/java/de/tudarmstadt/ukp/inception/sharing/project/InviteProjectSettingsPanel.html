@@ -51,7 +51,7 @@
             </button>
             <span wicket:id="alertExpirationDatePassed" class="alert alert-warning px-2 py-0 m-0 float-end" role="alert">
               <i class="fas fa-exclamation-triangle"></i>
-              Expiration date is in the past.
+              <wicket:message key="expDateInPast"/>
             </span>
           </div>
         </div>
@@ -60,7 +60,7 @@
             <div class="form-check">
               <span wicket:id="alertAnnotationFinished" class="alert alert-warning px-2 py-0 m-0 float-end" role="alert">
                 <i class="fas fa-exclamation-triangle"></i>
-                All documents have been finished.
+                <wicket:message key="documentsFinished"/>
               </span>
               <input class="form-check-input" type="checkbox" wicket:id="disableOnAnnotationComplete">
               <label class="form-check-label" wicket:for="disableOnAnnotationComplete">
@@ -76,7 +76,7 @@
           <div class="col-sm-10">
             <span wicket:id="alertMaxAnnotatorsReached" class="alert alert-warning px-2 py-0 m-0 float-end" role="alert">
               <i class="fas fa-exclamation-triangle"></i>
-              Maximum number of annotators reached.
+              <wicket:message key="maxAnnotators"/>
             </span>
             <input wicket:id="maxAnnotatorCount" class="form-control" style="width: auto" type="number"/>
           </div>
@@ -88,7 +88,7 @@
           <div class="col-sm-10">
             <textarea wicket:id="invitationText" class="form-control" rows="10"></textarea>
             <div class="small text-muted">
-              <i class="fab fa-markdown"></i> Markdown supported
+              <i class="fab fa-markdown"></i> <wicket:message key="markdownSupported"/>
             </div>
           </div>
         </div>
@@ -107,7 +107,7 @@
             <wicket:label key="userIdPlaceholder" />
           </label>
           <div class="col-sm-10">
-            <input wicket:id="userIdPlaceholder" class="form-control" type="text" placeholder="User ID"/>
+            <input wicket:id="userIdPlaceholder" class="form-control" type="text" wicket:message="placeholder:userId"/>
           </div>
         </div>
         <div class="row form-row" wicket:enclosure="askForEMail">

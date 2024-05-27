@@ -24,6 +24,7 @@ import org.apache.wicket.model.IModel;
 import de.tudarmstadt.ukp.inception.curation.config.CurationServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.curation.merge.strategy.DefaultMergeStrategy;
 import de.tudarmstadt.ukp.inception.curation.model.CurationWorkflow;
+import de.tudarmstadt.ukp.inception.support.wicket.resource.Strings;
 
 /**
  * <p>
@@ -45,7 +46,7 @@ public class DefaultMergeStrategyFactory
     @Override
     public String getLabel()
     {
-        return "Merge completely agreeing non-stacked annotations";
+        return Strings.getString("defaultmergestrategy.factory.label");
     }
 
     @Override

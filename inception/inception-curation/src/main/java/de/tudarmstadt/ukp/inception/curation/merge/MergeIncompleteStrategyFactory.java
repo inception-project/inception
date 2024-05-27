@@ -24,6 +24,7 @@ import org.apache.wicket.model.IModel;
 import de.tudarmstadt.ukp.inception.curation.config.CurationServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.curation.merge.strategy.MergeIncompleteStrategy;
 import de.tudarmstadt.ukp.inception.curation.model.CurationWorkflow;
+import de.tudarmstadt.ukp.inception.support.wicket.resource.Strings;
 
 /**
  * <p>
@@ -45,7 +46,7 @@ public class MergeIncompleteStrategyFactory
     @Override
     public String getLabel()
     {
-        return "Merge incomplete agreeing non-stacked annotations";
+        return Strings.getString("mergeincompletestrategy.factory.label");
     }
 
     @Override

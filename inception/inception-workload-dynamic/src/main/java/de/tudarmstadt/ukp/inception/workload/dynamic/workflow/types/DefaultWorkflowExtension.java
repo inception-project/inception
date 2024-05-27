@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.workload.dynamic.workflow.types;
 import java.util.List;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.inception.support.wicket.resource.Strings;
 import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.WorkflowExtension;
 
 /**
@@ -33,7 +34,7 @@ public class DefaultWorkflowExtension
     @Override
     public String getLabel()
     {
-        return "Default workflow";
+        return Strings.getString("defaultworkflow.extension.label");
     }
 
     @Override

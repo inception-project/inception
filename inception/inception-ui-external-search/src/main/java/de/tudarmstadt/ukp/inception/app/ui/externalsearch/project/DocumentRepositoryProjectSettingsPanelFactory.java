@@ -28,6 +28,7 @@ import org.springframework.core.annotation.Order;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelFactory;
 import de.tudarmstadt.ukp.inception.app.ui.externalsearch.config.ExternalSearchUIAutoConfiguration;
+import de.tudarmstadt.ukp.inception.support.wicket.resource.Strings;
 
 /**
  * Project settings panel to configure document repositories for the external search.
@@ -51,7 +52,7 @@ public class DocumentRepositoryProjectSettingsPanelFactory
     @Override
     public String getLabel()
     {
-        return "Document Repositories";
+        return Strings.getString("documentrepositoryprojectsettings.panel.factory.label");
     }
 
     @Override

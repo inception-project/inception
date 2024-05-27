@@ -35,6 +35,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.ProjectMenuItem;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
+import de.tudarmstadt.ukp.inception.support.wicket.resource.Strings;
 import de.tudarmstadt.ukp.inception.ui.kb.config.KnowledgeBaseServiceUIAutoConfiguration;
 import wicket.contrib.input.events.key.KeyType;
 
@@ -76,7 +77,7 @@ public class KnowledgeBasePageMenuItem
     @Override
     public String getLabel()
     {
-        return "Knowledge Base";
+        return Strings.getString("knowledgebase.page.menuitem.label");
     }
 
     @Override

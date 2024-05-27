@@ -43,7 +43,7 @@
         </form>
 
         <div wicket:id="mainContainer" class="flex-content flex-v-container flex-gutter flex-only-internal-gutter">
-          <span class="flex-content no-data-notice" wicket:id="noRecommenders">no Recommenders</span>
+          <span class="flex-content no-data-notice" wicket:id="noRecommenders"><wicket:message key="noRecommenders"/></span>
         
           <div class="card flex-content mt-3" wicket:enclosure="noRecommendationLabel">
             <div class="card-body d-flex">
@@ -52,7 +52,7 @@
           </div>
   
           <form class="card" wicket:id="learnFromSkippedRecommendationForm">
-            <span class="col-sm-12" wicket:id="onlySkippedRecommendationLabel">learnSkippedOnes</span>
+            <span class="col-sm-12" wicket:id="onlySkippedRecommendationLabel"><wicket:message key="learnSkippedOnes"/></span>
             <div class="card-footer text-end">
               <input type="submit" class="btn btn-success" wicket:id="learnSkippedOnes" value="Yes"/>
             </div>
@@ -103,13 +103,13 @@
               </div>
             </div>
             <div class="card-footer flex-h-container btn-group">
-              <button type="submit" class="btn btn-success" wicket:id="annotateButton" title="Annotate">
+              <button type="submit" class="btn btn-success" wicket:id="annotateButton" wicket:message="title:annotate">
                 <i class="far fa-check-circle"/>
               </button>
-              <button type="button" class="btn btn-danger" wicket:id="rejectButton" title="Reject">
+              <button type="button" class="btn btn-danger" wicket:id="rejectButton" wicket:message="title:reject">
                 <i class="far fa-times-circle"/>
               </button>
-              <button type="button" class="btn btn-warning" wicket:id="skipButton" title="Skip">
+              <button type="button" class="btn btn-warning" wicket:id="skipButton" wicket:message="title:skip">
                 <i class="far fa-arrow-alt-circle-right"/>
               </button>
             </div>

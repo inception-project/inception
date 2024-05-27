@@ -274,32 +274,31 @@
             <span class="dropdown" aria-haspopup="true" aria-expanded="false">
               <span class="btn-group" role="group">
                 <button class="btn btn-secondary btn-action" type="button">
-                  Legend
+                  <wicket:message key="legend" />
                 </button>
                 <button class="btn btn-secondary btn-action dropdown-toggle flex-content border-start" type="button" data-bs-toggle="dropdown"></button>
                 <ul class="dropdown-menu shadow-lg" role="menu" style="min-width: 20em; font-size: small;">
-                  <li class="dropdown-header">Document states</li>
-                  <li class="dropdown-item-text"><i class="far fa-circle"/> Not started yet</li>
-                  <li class="dropdown-item-text"><i class="far fa-play-circle"/> Annotation in progress</li>
-                  <li class="dropdown-item-text"><i class="far fa-check-circle"/> Annotation finished</li>
-                  <li class="dropdown-item-text"><i class="fas fa-clipboard"/> Curation in progress</li>
-                  <li class="dropdown-item-text"><i class="fas fa-clipboard-check"/> Curation finished</li>
-                  <li class="dropdown-header">Curation states</li>
-                  <li class="dropdown-item-text"><i class="far fa-circle"/> Not started yet</li>
-                  <li class="dropdown-item-text"><i class="fas fa-clipboard"/> In progress</li>
-                  <li class="dropdown-item-text"><i class="fas fa-clipboard-check"/> Finished</li>
-                  <li class="dropdown-header">Annotation states</li>
-                  <li class="dropdown-item-text"><i class="far fa-circle"/> Not started yet</li>
-                  <li class="dropdown-item-text"><i class="far fa-play-circle"/> In progress</li>
-                  <li class="dropdown-item-text"><i class="far fa-check-circle"/> Finished</li>
-                  <li class="dropdown-item-text"><i class="fas fa-exclamation-triangle"/> Problem</li>
-                  <li class="dropdown-item-text"><i class="fas fa-lock"/> Locked / cannot be accessed</li>
-                  <li class="dropdown-header">Other</li>
+                  <li class="dropdown-header"><wicket:message key="docStates" /></li>
+                  <li class="dropdown-item-text"><i class="far fa-circle"/> <wicket:message key="docStatesNotStarted" /></li>
+                  <li class="dropdown-item-text"><i class="far fa-play-circle"/> <wicket:message key="docStatesInProgress" /></li>
+                  <li class="dropdown-item-text"><i class="far fa-check-circle"/> <wicket:message key="docStatesFinished" /></li>
+                  <li class="dropdown-item-text"><i class="fas fa-clipboard"/> <wicket:message key="docStatesCurInProgress" /></li>
+                  <li class="dropdown-item-text"><i class="fas fa-clipboard-check"/> <wicket:message key="docStatesCurFinished" /></li>
+                  <li class="dropdown-header"><wicket:message key="curStates" /></li>
+                  <li class="dropdown-item-text"><i class="far fa-circle"/> <wicket:message key="curStatesNotStarted" /></li>
+                  <li class="dropdown-item-text"><i class="fas fa-clipboard"/> <wicket:message key="curStatesInProgress" /></li>
+                  <li class="dropdown-item-text"><i class="fas fa-clipboard-check"/> <wicket:message key="curStatesFinished" /></li>
+                  <li class="dropdown-header"><wicket:message key="annotationStates" /></li>
+                  <li class="dropdown-item-text"><i class="far fa-circle"/> <wicket:message key="annotationStatesNotStarted" /></li>
+                  <li class="dropdown-item-text"><i class="far fa-play-circle"/> <wicket:message key="annotationStatesInProgress" /></li>
+                  <li class="dropdown-item-text"><i class="far fa-check-circle"/> <wicket:message key="annotationStatesFinished" /></li>
+                  <li class="dropdown-item-text"><i class="fas fa-exclamation-triangle"/> <wicket:message key="annotationStatesProblem" /></li>
+                  <li class="dropdown-item-text"><i class="fas fa-lock"/> <wicket:message key="annotationStatesLocked" /></li>
+                  <li class="dropdown-header"><wicket:message key="other" /></li>
                   <li class="dropdown-item-text"><i class="fas fa-lock"/> (<i class="far fa-play-circle"/>) 
-                  If the state assigned by the annotator user differs from the effective state, it is
-                  show in parentheses</li>
+                  <wicket:message key="otherInParentheses" /></li>
                   <li class="dropdown-item-text"><i class="fas fa-user-clock"/>
-                  Annotator has abandoned the document</li>
+                  <wicket:message key="otherAbandoned" /></li>
                 </ul>
               </span>
             </span>

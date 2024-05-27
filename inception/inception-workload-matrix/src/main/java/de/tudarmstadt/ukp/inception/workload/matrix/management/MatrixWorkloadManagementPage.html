@@ -83,7 +83,7 @@
               <span class="d-none d-lg-inline"><wicket:message key="refresh" /></span>
             </button>
           </div>
-          
+
           <div class="flex-h-container flex-gutter flex-only-internal-gutter">
             <div class="flex-h-container flex-gutter flex-only-internal-gutter flex-content">
               <div class="input-group mb-3" wicket:enclosure="documentNameFilter">
@@ -119,12 +119,12 @@
                 <span class="dropdown" aria-haspopup="true" aria-expanded="false">
                   <span class="btn-group" role="group">
                     <button wicket:id="toggleBulkChange" class="btn btn-action" type="button">
-                      Bulk change
+                      <wicket:message key="bulkChange" />
                     </button>
                     <button wicket:id="bulkActionDropdownButton" class="btn btn-primary btn-action dropdown-toggle flex-content border-start" type="button" data-bs-toggle="dropdown"></button>
                     <div wicket:id="bulkActionDropdown" class="dropdown-menu shadow-lg" role="menu" style="min-width: 20em;">
                       <a wicket:id="bulkOpen" class="dropdown-item">
-                        Open annotation
+                        <wicket:message key="openAnnotation" />
                         <span class="float-end text-muted">
                           <i class="far fa-check-circle"></i>&nbsp;<i class="fas fa-long-arrow-alt-right"></i>&nbsp;<i class="far fa-play-circle"></i>
                           &nbsp;&nbsp;
@@ -132,7 +132,7 @@
                         </span>
                       </a>
                       <a wicket:id="bulkClose" class="dropdown-item">
-                        Close annotation
+                        <wicket:message key="closeAnnotation" />
                         <span class="float-end text-muted">
                           <i class="far fa-play-circle"></i>&nbsp;<i class="fas fa-long-arrow-alt-right"></i>&nbsp;<i class="far fa-check-circle"></i>
                           &nbsp;&nbsp;
@@ -141,51 +141,51 @@
                       </a>
                       <hr class="dropdown-divider"/>
                       <a wicket:id="bulkStartProgress" class="dropdown-item">
-                        Start annotation (dev-only) 
+                        <wicket:message key="startAnnotation" />
                         <span class="float-end text-muted">
                           <i class="far fa-circle"></i>&nbsp;<i class="fas fa-long-arrow-alt-right"></i>&nbsp;<i class="far fa-play-circle"></i>
                         </span>
                       </a>
                       <a wicket:id="bulkLock" class="dropdown-item">
-                        Lock annotation 
+                        <wicket:message key="lockAnnotation" />
                         <span class="float-end text-muted">
                           <i class="far fa-circle"></i>&nbsp;<i class="fas fa-long-arrow-alt-right"></i>&nbsp;<i class="fas fa-lock"></i>
                         </span>
                       </a>
                       <a wicket:id="bulkUnlock" class="dropdown-item">
-                        Unlock annotation
+                        <wicket:message key="unlockAnnotation" />
                         <span class="float-end text-muted">
                           <i class="fas fa-lock"></i>&nbsp;<i class="fas fa-long-arrow-alt-right"></i>&nbsp;<i class="far fa-circle"></i>
                         </span>
                       </a>
                       <hr class="dropdown-divider"/>
                       <a wicket:id="bulkFinish" class="dropdown-item">
-                        Finish annotation
+                        <wicket:message key="finishAnnotation" />
                         <span class="float-end text-muted">
                           <i class="far fa-play-circle"></i>&nbsp;<i class="fas fa-long-arrow-alt-right"></i>&nbsp;<i class="far fa-check-circle"></i>
                         </span>
                       </a>
                       <a wicket:id="bulkResume" class="dropdown-item">
-                        Resume annotation
+                        <wicket:message key="resumeAnnotation" />
                         <span class="float-end text-muted">
                           <i class="far fa-check-circle"></i>&nbsp;<i class="fas fa-long-arrow-alt-right"></i>&nbsp;<i class="far fa-play-circle"></i>
                         </span>
                       </a>
                       <a wicket:id="bulkResumeCuration" class="dropdown-item">
-                        Resume curation
+                        <wicket:message key="resumeCuration" />
                         <span class="float-end text-muted">
                           <i class="fas fa-clipboard-check"></i>&nbsp;<i class="fas fa-long-arrow-alt-right"></i>&nbsp;<i class="fas fa-clipboard"></i>
                         </span>
                       </a>
                       <hr class="dropdown-divider"/>
                       <a wicket:id="bulkReset" class="dropdown-item">
-                        Reset annotation
+                        <wicket:message key="resetAnnotation" />
                         <span class="float-end badge badge-pill bg-danger">
                           <i class="fas fa-trash"></i>
                         </span>
                       </a>
                       <a wicket:id="bulkResetCuration" class="dropdown-item">
-                        Reset curation
+                        <wicket:message key="resetCuration" />
                         <span class="float-end badge badge-pill bg-danger">
                           <i class="fas fa-trash"></i>
                         </span>

@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.List;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.inception.support.wicket.resource.Strings;
 import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.WorkflowExtension;
 
 /**
@@ -34,7 +35,7 @@ public class RandomizedWorkflowExtension
     @Override
     public String getLabel()
     {
-        return "Randomized workflow";
+        return Strings.getString("randomizedworkflow.extension.label");
     }
 
     @Override

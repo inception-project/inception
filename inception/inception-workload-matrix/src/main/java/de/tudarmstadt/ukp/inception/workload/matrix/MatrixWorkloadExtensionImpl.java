@@ -43,6 +43,7 @@ import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.documents.api.SourceDocumentStateStats;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
+import de.tudarmstadt.ukp.inception.support.wicket.resource.Strings;
 import de.tudarmstadt.ukp.inception.workload.matrix.config.MatrixWorkloadManagerAutoConfiguration;
 import de.tudarmstadt.ukp.inception.workload.matrix.trait.MatrixWorkloadTraits;
 import de.tudarmstadt.ukp.inception.workload.matrix.trait.MatrixWorkloadTraitsEditor;
@@ -87,7 +88,7 @@ public class MatrixWorkloadExtensionImpl
     @Override
     public String getLabel()
     {
-        return "Static assignment";
+        return Strings.getString("matrixworloadextension.impl.label");
     }
 
     @Override

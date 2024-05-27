@@ -42,12 +42,12 @@
       <div class="col-sm-9">
         <div class="btn-group w-100" role="group">
           <input wicket:id="modelId" type="text" class="form-control"></input>
-          <button wicket:id="changeService" class="btn btn-outline-secondary">Change</button>
+          <button wicket:id="changeService" class="btn btn-outline-secondary"><wicket:message key="change"/></button>
         </div>
         <div class="text-muted small pt-2">
           <div wicket:id="serviceDescription"/>
           <a wicket:id="catalogLink" class="float-end" target="_blank">
-            <i class="fas fa-external-link-alt"></i>&nbsp;Open in Hugging Face Hub
+            <i class="fas fa-external-link-alt"></i>&nbsp;<wicket:message key="openInHuggingFaceHub"/>
           </a>
         </div>
       </div>

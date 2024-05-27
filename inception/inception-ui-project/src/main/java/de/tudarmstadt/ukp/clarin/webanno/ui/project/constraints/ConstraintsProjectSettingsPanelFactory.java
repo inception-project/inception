@@ -24,6 +24,7 @@ import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelFactory;
+import de.tudarmstadt.ukp.inception.support.wicket.resource.Strings;
 
 @Component
 @Order(ConstraintsProjectSettingsPanelFactory.ORDER)
@@ -41,7 +42,7 @@ public class ConstraintsProjectSettingsPanelFactory
     @Override
     public String getLabel()
     {
-        return "Constraints";
+        return Strings.getString("constraintsprojectsettings.panel.factory.label");
     }
 
     @Override

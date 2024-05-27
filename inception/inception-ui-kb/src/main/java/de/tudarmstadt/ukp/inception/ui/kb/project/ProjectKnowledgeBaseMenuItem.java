@@ -22,6 +22,7 @@ import org.springframework.core.annotation.Order;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
+import de.tudarmstadt.ukp.inception.support.wicket.resource.Strings;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.settings.ProjectSettingsMenuItemBase;
 import de.tudarmstadt.ukp.inception.ui.kb.config.KnowledgeBaseServiceUIAutoConfiguration;
 
@@ -50,7 +51,7 @@ public class ProjectKnowledgeBaseMenuItem
     @Override
     public String getLabel()
     {
-        return "Knowledge Bases";
+        return Strings.getString("projectknowledgebase.menuitem.label");
     }
 
     @Override

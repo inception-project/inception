@@ -26,6 +26,7 @@ import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
+import de.tudarmstadt.ukp.inception.support.wicket.resource.Strings;
 import wicket.contrib.input.events.key.KeyType;
 
 @Order(200)
@@ -50,7 +51,7 @@ public class ManageUsersPageMenuItem
     @Override
     public String getLabel()
     {
-        return "Users";
+        return Strings.getString("manageusers.page.menuitem.label");
     }
 
     @Override

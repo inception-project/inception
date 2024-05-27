@@ -21,16 +21,16 @@
   <form wicket:id="form" class="form-horizontal">
     <div class="row form-row">
       <label class="col-4 col-form-label">
-        Quick preset
+        <wicket:message key="quickPreset"/>
       </label>
       <div class="col-8">
-        <button class="btn btn-outline-secondary" type="button" wicket:id="presetMajorityVote">Majority vote</button>
-        <button class="btn btn-outline-secondary" type="button" wicket:id="presetUnanimousVote">Unanimous vote</button>
+        <button class="btn btn-outline-secondary" type="button" wicket:id="presetMajorityVote"><wicket:message key="majorityVote"/></button>
+        <button class="btn btn-outline-secondary" type="button" wicket:id="presetUnanimousVote"><wicket:message key="unanimousVote"/></button>
       </div>
     </div>
     <div class="row form-row" wicket:enclosure="userThreshold">
       <label class="col-sm-4 col-form-label" wicket:for="userThreshold">
-        User threshold
+        <wicket:message key="userThreshold"/>
       </label>
       <div class="col-sm-8">
         <input wicket:id="userThreshold" type="number" class="form-control"></input>
@@ -38,7 +38,7 @@
     </div>
     <div class="row form-row" wicket:enclosure="confidenceThreshold">
       <label class="col-sm-4 col-form-label" wicket:for="confidenceThreshold">
-        Confidence threshold
+        <wicket:message key="confidenceThreshold"/>
       </label>
       <div class="col-sm-8">
         <div class="input-group">
@@ -49,7 +49,7 @@
     </div>
     <div class="row form-row" wicket:enclosure="topRanks">
       <label class="col-sm-4 col-form-label" wicket:for="topRanks">
-        Top-voted
+        <wicket:message key="topVoted"/>
       </label>
       <div class="col-sm-8">
         <input wicket:id="topRanks" type="number" class="form-control"></input>

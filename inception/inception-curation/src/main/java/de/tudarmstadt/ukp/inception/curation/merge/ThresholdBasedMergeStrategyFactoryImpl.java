@@ -24,6 +24,7 @@ import de.tudarmstadt.ukp.inception.curation.config.CurationServiceAutoConfigura
 import de.tudarmstadt.ukp.inception.curation.merge.strategy.MergeStrategy;
 import de.tudarmstadt.ukp.inception.curation.merge.strategy.ThresholdBasedMergeStrategy;
 import de.tudarmstadt.ukp.inception.curation.model.CurationWorkflow;
+import de.tudarmstadt.ukp.inception.support.wicket.resource.Strings;
 
 /**
  * <p>
@@ -46,7 +47,7 @@ public class ThresholdBasedMergeStrategyFactoryImpl
     @Override
     public String getLabel()
     {
-        return "Merge using thresholds";
+        return Strings.getString("thresholdbasedmergestrategy.factory.impl.label");
     }
 
     @Override
