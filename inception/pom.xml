@@ -90,6 +90,12 @@
       <scope>runtime</scope>
     </dependency>
     <dependency>
+      <!-- Route Java Util Logging over SLF4J -->
+      <groupId>org.slf4j</groupId>
+      <artifactId>jul-to-slf4j</artifactId>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
       <!-- Add json logger for Logstash -->
       <groupId>org.apache.logging.log4j</groupId>
       <artifactId>log4j-layout-template-json</artifactId>
@@ -417,6 +423,7 @@
             <dependency>org.apache.logging.log4j:log4j-core</dependency>
             <dependency>org.slf4j:log4j-over-slf4j</dependency>
             <dependency>org.slf4j:jcl-over-slf4j</dependency>
+            <dependency>org.slf4j:jul-to-slf4j</dependency>
             <dependency>commons-logging:commons-logging</dependency>
             <!--
               - JAXB is used via reflection and cannot be detected by Maven
