@@ -41,15 +41,21 @@
 
           <p wicket:id="isProxyTrusted"></p>
           <p wicket:enclosure="remoteIp">
-            Remote IP: <span wicket:id="remoteIp"/>
+            Remote IP: <code wicket:id="remoteIp"/>
+          </p>
+          <p wicket:enclosure="internalProxies">
+            Internal proxies: <code wicket:id="internalProxies"/>
+          </p>
+          <p wicket:enclosure="trustedProxies">
+            Trusted proxies: <code wicket:id="trustedProxies"/>
           </p>
           
           <div wicket:id="isProtocolOk"></div>
           <p wicket:enclosure="clientUrl">
-            Client URL: <span wicket:id="clientUrl"/>
+            Client URL: <code wicket:id="clientUrl"/>
           </p>
           <p wicket:enclosure="serverUrl">
-            Server URL: <span wicket:id="serverUrl"/>
+            Server URL: <code wicket:id="serverUrl"/>
           </p>
           
           <div wicket:id="hasCsrfWithProtocol"></div>
