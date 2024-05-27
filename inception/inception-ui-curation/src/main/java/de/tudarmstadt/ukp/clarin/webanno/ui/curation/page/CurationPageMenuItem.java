@@ -31,9 +31,9 @@ import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5I
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.resource.Strings;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.ProjectMenuItem;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
+import de.tudarmstadt.ukp.inception.support.wicket.resource.Strings;
 import wicket.contrib.input.events.key.KeyType;
 
 @ConditionalOnWebApplication

@@ -21,10 +21,10 @@ import org.apache.wicket.Component;
 import org.apache.wicket.markup.html.panel.EmptyPanel;
 import org.apache.wicket.model.IModel;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.resource.Strings;
 import de.tudarmstadt.ukp.inception.curation.config.CurationServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.curation.merge.strategy.MergeIncompleteStrategy;
 import de.tudarmstadt.ukp.inception.curation.model.CurationWorkflow;
+import de.tudarmstadt.ukp.inception.support.wicket.resource.Strings;
 
 /**
  * <p>

@@ -24,7 +24,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTA
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
-import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.fromJsonString;
+import static de.tudarmstadt.ukp.inception.support.json.JSONUtil.fromJsonString;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -45,9 +45,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.transaction.annotation.Transactional;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.SourceDocumentStateStats;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -56,9 +53,12 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.resource.Strings;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
+import de.tudarmstadt.ukp.inception.documents.api.SourceDocumentStateStats;
+import de.tudarmstadt.ukp.inception.project.api.ProjectService;
+import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
+import de.tudarmstadt.ukp.inception.support.wicket.resource.Strings;
 import de.tudarmstadt.ukp.inception.workload.dynamic.config.DynamicWorkloadManagerAutoConfiguration;
 import de.tudarmstadt.ukp.inception.workload.dynamic.trait.DynamicWorkloadTraits;
 import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.WorkflowExtension;

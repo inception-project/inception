@@ -21,7 +21,7 @@ import java.util.Collections;
 import java.util.List;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.resource.Strings;
+import de.tudarmstadt.ukp.inception.support.wicket.resource.Strings;
 import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.WorkflowExtension;
 
 /**

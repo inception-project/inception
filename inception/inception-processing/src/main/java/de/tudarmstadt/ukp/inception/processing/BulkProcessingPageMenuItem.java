@@ -15,50 +15,62 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.evaluation;
+package de.tudarmstadt.ukp.inception.processing;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
+import static java.lang.String.format;
+
+import javax.servlet.ServletContext;
 
 import org.apache.wicket.Page;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.core.annotation.Order;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.resource.Strings;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.ProjectMenuItem;
-import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
-import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.project.api.ProjectService;
+import de.tudarmstadt.ukp.inception.support.wicket.resource.Strings;
 import wicket.contrib.input.events.key.KeyType;
 
-/**
- * <p>
- * This class is exposed as a Spring Component via
- * {@link RecommenderServiceAutoConfiguration#evaluationSimulationPageMenuItem()}.
- * </p>
- */
-@Order(300)
-public class EvaluationSimulationPageMenuItem
+@ConditionalOnWebApplication
+@Order(200)
+public class BulkProcessingPageMenuItem
     implements ProjectMenuItem
 {
-    private @Autowired UserDao userRepo;
-    private @Autowired ProjectService projectService;
-    private @Autowired RecommendationService recommenderService;
+    private final UserDao userRepo;
+    private final ProjectService projectService;
+    private final ServletContext servletContext;
+
+    public BulkProcessingPageMenuItem(UserDao aUserRepo, ProjectService aProjectService,
+            ServletContext aServletContext)
+    {
+        userRepo = aUserRepo;
+        projectService = aProjectService;
+        servletContext = aServletContext;
+    }
 
     @Override
     public String getPath()
     {
-        return "/evaluation";
+        return "/process";
+    }
+
+    public String getUrl(Project aProject, long aDocumentId)
+    {
+        String p = aProject.getSlug() != null ? aProject.getSlug()
+                : String.valueOf(aProject.getId());
+
+        return format("%s/p/%s%s/%d", servletContext.getContextPath(), p, getPath(), aDocumentId);
     }
 
     @Override
     public IconType getIcon()
     {
-        return FontAwesome5IconType.chart_line_s;
+        return FontAwesome5IconType.robot_s;
     }
 
     @Override
@@ -70,24 +82,23 @@ public class EvaluationSimulationPageMenuItem
     @Override
     public boolean applies(Project aProject)
     {
-        // Visible if the current user is a curator
-        User user = userRepo.getCurrentUser();
-        if (!(projectService.hasRole(user, aProject, MANAGER))) {
+        if (aProject == null) {
             return false;
         }
 
-        return !recommenderService.listRecommenders(aProject).isEmpty();
+        User user = userRepo.getCurrentUser();
+        return projectService.hasRole(user, aProject, MANAGER);
     }
 
     @Override
     public Class<? extends Page> getPageClass()
     {
-        return EvaluationSimulationPage.class;
+        return BulkProcessingPage.class;
     }
 
     @Override
     public KeyType[] shortcut()
     {
-        return new KeyType[] { KeyType.Alt, KeyType.s };
+        return new KeyType[] { KeyType.Alt, KeyType.p };
     }
 }

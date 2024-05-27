@@ -36,97 +36,76 @@
     <div class="flex-content flex-h-container flex-gutter overflow-hidden">
       <div class="flex-content flex-v-container flex-gutter">
         <div class="flex-content flex-v-container flex-gutter flex-only-internal-gutter">
-          <div class="page-header">
-            <h1><wicket:container wicket:id="name"/></h1>
-          </div>
+          <h1><wicket:container wicket:id="name"/></h1>
           <div wicket:id="modalDialog"/>
-          <div wicket:id="resetDocumentDialog"/>
           <div wicket:id="contextMenu" style="width: 250px;"></div>
           
           <div class="flex-h-container flex-gutter flex-only-internal-gutter">
-            <div class="flex-h-container flex-gutter flex-only-internal-gutter">
-              <span class="dropdown sticky-dropdown" aria-haspopup="true" aria-expanded="false">
-                <button
-                  class="btn btn-action btn-secondary dropdown-toggle flex-content"
-                  type="button" data-bs-toggle="dropdown">
-                  <i class="fas fa-filter"></i>
-                  <span class="d-none d-lg-inline">
-                    &nbsp;<wicket:message key="filter" />
-                  </span>
-                </button> 
-                <div class="dropdown-menu shadow-lg pt-0 pb-0 ddFilterForm" role="menu"
-                  style="min-width: 600px;">
-                  <div wicket:id="filterPanel"/>
-                </div>
-              </span> 
-              <span class="dropdown sticky-dropdown" aria-haspopup="true" aria-expanded="false">
-                <button class="btn btn-action btn-secondary dropdown-toggle flex-content"
-                  type="button" data-bs-toggle="dropdown">
-                  <i class="fas fa-cog"></i>
-                  <span class="d-none d-lg-inline">
-                    &nbsp;<wicket:message key="settings" />
-                  </span>
-                </button>
-                <div class="dropdown-menu shadow-lg pt-0 pb-0" role="menu" style="min-width: 600px;">
-                  <form wicket:id="settingsForm" class="card border-0">
-                    <div class="card-header">
-                      <wicket:message key="settings" />
-                    </div>
-                    <div class="card-body">
-                      <div class="row form-row">
-                        <label class="col-form-label col-sm-7">
-                          <wicket:message key="reopenableByAnnotator" />
-                        </label>
-                        <div class="col-sm-5">
-                          <div class="form-check">
-                            <input class="form-check-input" type="checkbox" wicket:id="reopenableByAnnotator">
-                          </div>
+            <span class="dropdown sticky-dropdown" aria-haspopup="true" aria-expanded="false">
+              <button class="btn btn-action btn-secondary dropdown-toggle flex-content"
+                type="button" data-bs-toggle="dropdown">
+                <i class="fas fa-cog"></i>
+                <span class="d-none d-lg-inline">
+                  &nbsp;<wicket:message key="settings" />
+                </span>
+              </button>
+              <div class="dropdown-menu shadow-lg pt-0 pb-0" role="menu" style="min-width: 600px;">
+                <form wicket:id="settingsForm" class="card border-0">
+                  <div class="card-header">
+                    <wicket:message key="settings" />
+                  </div>
+                  <div class="card-body">
+                    <div class="row form-row">
+                      <label class="col-form-label col-sm-7">
+                        <wicket:message key="reopenableByAnnotator" />
+                      </label>
+                      <div class="col-sm-5">
+                        <div class="form-check">
+                          <input class="form-check-input" type="checkbox" wicket:id="reopenableByAnnotator">
                         </div>
                       </div>
                     </div>
-                    <div class="card-footer text-end">
-                      <button class="btn btn-primary" wicket:id="save">
-                        <wicket:message key="save" />
-                      </button>
-                    </div>
-                  </form>
+                  </div>
+                  <div class="card-footer text-end">
+                    <button class="btn btn-primary" wicket:id="save">
+                      <wicket:message key="save" />
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </span>
+            <button wicket:id="assignWork" class="btn btn-action btn-secondary">
+              <i class="fas fa-users me-2"></i>
+              <span class="d-none d-lg-inline"><wicket:message key="assignWork" /></span>
+            </button>
+            <button wicket:id="refresh" class="btn btn-action btn-secondary">
+              <i class="fas fa-redo me-2"></i>
+              <span class="d-none d-lg-inline"><wicket:message key="refresh" /></span>
+            </button>
+          </div>
+
+          <div class="flex-h-container flex-gutter flex-only-internal-gutter">
+            <div class="flex-h-container flex-gutter flex-only-internal-gutter flex-content">
+              <div class="input-group mb-3" wicket:enclosure="documentNameFilter">
+                <span class="input-group-text">
+                  <i class="fas fa-search"></i>
+                </span>
+                <input wicket:id="documentNameFilter" class="form-control" wicket:message="placeholder:documentNameFilter.placeholder"/>
+                <div class="input-group-text">
+                  <span wicket:id="matchDocumentNameAsRegex" />
                 </div>
-              </span>
-              <button wicket:id="refresh" class="btn btn-action btn-secondary">
-                <i class="fas fa-redo"></i>
-                <span class="d-none d-lg-inline">
-                  &nbsp;<wicket:message key="refresh" />
+              </div>
+              <div class="input-group mb-3" wicket:enclosure="userNameFilter">
+                <span class="input-group-text">
+                  <i class="fas fa-search"></i>
                 </span>
-              </button>
+                <input wicket:id="userNameFilter" class="form-control" wicket:message="placeholder:userNameFilter.placeholder"/>
+                <div class="input-group-text">
+                  <span wicket:id="matchUserNameAsRegex" />
+                </div>
+              </div>
             </div>
-            <div class="flex-content flex-h-container flex-gutter flex-only-internal-gutter justify-content-end">
-              <span class="dropdown" aria-haspopup="true" aria-expanded="false">
-                <span class="btn-group" role="group">
-                  <button class="btn btn-secondary btn-action" type="button">
-                    <wicket:message key="legend" />
-                  </button>
-                  <button class="btn btn-secondary btn-action dropdown-toggle flex-content border-start" type="button" data-bs-toggle="dropdown"></button>
-                  <ul class="dropdown-menu shadow-lg" role="menu" style="min-width: 20em;">
-                    <li class="dropdown-header"><wicket:message key="docStates" /></li>
-                    <li class="dropdown-item-text"><i class="far fa-circle"/> <wicket:message key="docStatesNotStarted" /></li>
-                    <li class="dropdown-item-text"><i class="far fa-play-circle"/> <wicket:message key="docStatesInProgress" /></li>
-                    <li class="dropdown-item-text"><i class="far fa-check-circle"/> <wicket:message key="docStatesFinished" /></li>
-                    <li class="dropdown-item-text"><i class="fas fa-clipboard"/> <wicket:message key="docStatesCurInProgress" /></li>
-                    <li class="dropdown-item-text"><i class="fas fa-clipboard-check"/> <wicket:message key="docStatesCurFinished" /></li>
-                    <li class="dropdown-header"><wicket:message key="curStates" /></li>
-                    <li class="dropdown-item-text"><i class="far fa-circle"/> <wicket:message key="curStatesNotStarted" /></li>
-                    <li class="dropdown-item-text"><i class="fas fa-clipboard"/> <wicket:message key="curStatesInProgress" /></li>
-                    <li class="dropdown-item-text"><i class="fas fa-clipboard-check"/> <wicket:message key="curStatesFinished" /></li>
-                    <li class="dropdown-header"><wicket:message key="annotationStates" /></li>
-                    <li class="dropdown-item-text"><i class="far fa-circle"/> <wicket:message key="annotationStatesNotStarted" /></li>
-                    <li class="dropdown-item-text"><i class="far fa-play-circle"/> <wicket:message key="annotationStatesInProgress" /></li>
-                    <li class="dropdown-item-text"><i class="far fa-check-circle"/> <wicket:message key="annotationStatesFinished" /></li>
-                    <li class="dropdown-item-text"><i class="fas fa-exclamation-triangle"/> <wicket:message key="annotationStatesProblem" /></li>
-                    <li class="dropdown-item-text"><i class="fas fa-lock"/> <wicket:message key="annotationStatesLocked" /></li>
-                  </ul>
-                </span>
-              </span>
-            </div>
+            <div wicket:id="stateFilters" />
           </div>
                     
           <div class="flex-content card" style="min-height: 220px;">
@@ -134,6 +113,9 @@
               <wicket:message key="document_status" />
               <a wicket:id="documentStatusHelpLink"/>
               <div wicket:id="actionContainer" class="actions">
+                <button wicket:id="legend" class="btn btn-secondary btn-action" type="button">
+                  <wicket:message key="legend"/>
+                </button>
                 <span class="dropdown" aria-haspopup="true" aria-expanded="false">
                   <span class="btn-group" role="group">
                     <button wicket:id="toggleBulkChange" class="btn btn-action" type="button">
@@ -141,57 +123,69 @@
                     </button>
                     <button wicket:id="bulkActionDropdownButton" class="btn btn-primary btn-action dropdown-toggle flex-content border-start" type="button" data-bs-toggle="dropdown"></button>
                     <div wicket:id="bulkActionDropdown" class="dropdown-menu shadow-lg" role="menu" style="min-width: 20em;">
-                      <a wicket:id="bulkClose" class="dropdown-item">
-                        <wicket:message key="closeSelected" />
-                        <span class="float-end text-muted">
-                          <i class="far fa-play-circle"></i>&nbsp;<i class="fas fa-long-arrow-alt-right"></i>&nbsp;<i class="far fa-check-circle"></i>
-                          &nbsp;&nbsp;
-                          <i class="far fa-circle"></i>&nbsp;<i class="fas fa-long-arrow-alt-right"></i>&nbsp;<i class="fas fa-lock"></i>
-                        </span>
-                      </a>
                       <a wicket:id="bulkOpen" class="dropdown-item">
-                        <wicket:message key="openSelected" />
+                        <wicket:message key="openAnnotation" />
                         <span class="float-end text-muted">
                           <i class="far fa-check-circle"></i>&nbsp;<i class="fas fa-long-arrow-alt-right"></i>&nbsp;<i class="far fa-play-circle"></i>
                           &nbsp;&nbsp;
                           <i class="fas fa-lock"></i>&nbsp;<i class="fas fa-long-arrow-alt-right"></i>&nbsp;<i class="far fa-circle"></i>
                         </span>
                       </a>
+                      <a wicket:id="bulkClose" class="dropdown-item">
+                        <wicket:message key="closeAnnotation" />
+                        <span class="float-end text-muted">
+                          <i class="far fa-play-circle"></i>&nbsp;<i class="fas fa-long-arrow-alt-right"></i>&nbsp;<i class="far fa-check-circle"></i>
+                          &nbsp;&nbsp;
+                          <i class="far fa-circle"></i>&nbsp;<i class="fas fa-long-arrow-alt-right"></i>&nbsp;<i class="fas fa-lock"></i>
+                        </span>
+                      </a>
                       <hr class="dropdown-divider"/>
                       <a wicket:id="bulkStartProgress" class="dropdown-item">
-                        <wicket:message key="startProgress" />
+                        <wicket:message key="startAnnotation" />
                         <span class="float-end text-muted">
                           <i class="far fa-circle"></i>&nbsp;<i class="fas fa-long-arrow-alt-right"></i>&nbsp;<i class="far fa-play-circle"></i>
                         </span>
                       </a>
                       <a wicket:id="bulkLock" class="dropdown-item">
-                        <wicket:message key="lockSelected" />
+                        <wicket:message key="lockAnnotation" />
                         <span class="float-end text-muted">
                           <i class="far fa-circle"></i>&nbsp;<i class="fas fa-long-arrow-alt-right"></i>&nbsp;<i class="fas fa-lock"></i>
                         </span>
                       </a>
                       <a wicket:id="bulkUnlock" class="dropdown-item">
-                        <wicket:message key="unlockSelected" />
+                        <wicket:message key="unlockAnnotation" />
                         <span class="float-end text-muted">
                           <i class="fas fa-lock"></i>&nbsp;<i class="fas fa-long-arrow-alt-right"></i>&nbsp;<i class="far fa-circle"></i>
                         </span>
                       </a>
                       <hr class="dropdown-divider"/>
                       <a wicket:id="bulkFinish" class="dropdown-item">
-                        <wicket:message key="finishSelected" />
+                        <wicket:message key="finishAnnotation" />
                         <span class="float-end text-muted">
                           <i class="far fa-play-circle"></i>&nbsp;<i class="fas fa-long-arrow-alt-right"></i>&nbsp;<i class="far fa-check-circle"></i>
                         </span>
                       </a>
                       <a wicket:id="bulkResume" class="dropdown-item">
-                        <wicket:message key="resumeSelected" />
+                        <wicket:message key="resumeAnnotation" />
                         <span class="float-end text-muted">
                           <i class="far fa-check-circle"></i>&nbsp;<i class="fas fa-long-arrow-alt-right"></i>&nbsp;<i class="far fa-play-circle"></i>
                         </span>
                       </a>
+                      <a wicket:id="bulkResumeCuration" class="dropdown-item">
+                        <wicket:message key="resumeCuration" />
+                        <span class="float-end text-muted">
+                          <i class="fas fa-clipboard-check"></i>&nbsp;<i class="fas fa-long-arrow-alt-right"></i>&nbsp;<i class="fas fa-clipboard"></i>
+                        </span>
+                      </a>
                       <hr class="dropdown-divider"/>
                       <a wicket:id="bulkReset" class="dropdown-item">
-                        <wicket:message key="resetSelected" />
+                        <wicket:message key="resetAnnotation" />
+                        <span class="float-end badge badge-pill bg-danger">
+                          <i class="fas fa-trash"></i>
+                        </span>
+                      </a>
+                      <a wicket:id="bulkResetCuration" class="dropdown-item">
+                        <wicket:message key="resetCuration" />
                         <span class="float-end badge badge-pill bg-danger">
                           <i class="fas fa-trash"></i>
                         </span>

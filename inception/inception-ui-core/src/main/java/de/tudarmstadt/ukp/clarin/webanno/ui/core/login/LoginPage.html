@@ -17,48 +17,129 @@
   limitations under the License.
 -->
 <html xmlns:wicket="http://wicket.apache.org">
-<body>
-  <wicket:extend>
-    <div class="scrolling flex-content flex-h-container flex-centered">
-      <div class="flex-content flex-v-container flex-centered">
-        <div class="card hvr-shadow-radial bg-body p-5 login-form w-min-440px">
-          <div class="card-body container-sm">
-            <h5 class="card-title mb-3 text-center">
-              <wicket:message key="welcome"/>
-            </h5>
-            <div wicket:id="oauth2LoginPanel" class="mb-4"/>
-            <div wicket:id="saml2LoginPanel" class="mb-4"/>
-            
-            <form wicket:id="loginForm">
-              <input type="hidden" id="urlfragment" wicket:id="urlfragment" />
-              <h6 class="card-title mb-3 text-center">
-                <wicket:message key="logInUsingCredentials"/>
-              </h6>
-              <div class="row mb-3 form-floating">
-                <input wicket:id="username" type="text" class="form-control" wicket:message="placeholder:userId" autofocus autocomplete="username"/>
-                <label wicket:for="username"><wicket:message key="userId"/></label>
-              </div>
-              <div class="row mb-3 form-floating">
-                <input wicket:id="password" type="password" class="form-control" wicket:message="placeholder:loginPassword" autocomplete="current-password"/>
-                <label wicket:for="password"><wicket:message key="loginPassword"/></label>
-              </div>
-              <div class="row justify-content-md-center">
-                <input wicket:id="signInBtn" type="submit" class="btn btn-login btn-primary w-100" wicket:message="value:signIn"/>
-              </div>
-              <div class="row mt-3" wicket:enclosure="loginMessage">
-                <span wicket:id="loginMessage"></span>
-              </div>
-            </form>
-            
-            <wicket:enclosure>
-              <div class="row mt-3 text-danger fw-bold text-center" wicket:id="usersLabel">
-                <wicket:message key="tooManyUsers"/>
-              </div>
-            </wicket:enclosure>
+<wicket:head>
+  <style>
+    :root {
+      --input-padding-x: 0.75rem;
+      --input-padding-y: 0.75rem;
+      --border-radius: 20px;
+    }
+
+    .login-form {
+      min-width: 440px;
+      max-width: 30%;
+      transition: box-shadow 10s;
+      border-radius: var(--border-radius) !important;
+    }
+
+    .login-form:hover, .login-form:focus-within {
+      box-shadow: 0 0 5rem var(--bs-tertiary-color);
+    }
+
+    .login-form input[type=text], input[type=password] {
+      padding: var(--input-padding-y) var(--input-padding-x);
+      border-radius: var(--border-radius);
+    }
+
+    .login-form .btn-login {
+      font-size: 0.9rem !important;
+      letter-spacing: 0.05rem !important;
+      padding: 0.75rem 1rem !important;
+      border-radius: var(--border-radius) !important;
+    }
+
+    .form-floating>.form-control:not(:placeholder-shown)~label::after {
+      background-color: unset !important;
+    }
+
+    .animated-border {
+      --start-r: 27;
+      --start-g: 27;
+      --start-b: 83;
+      --end-r: 156;
+      --end-g: 156;
+      --end-b: 223;
+      --size: 1vmin;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      border-radius: var(--border-radius);
+      transition: width 10s, height 10s, transform 10s, background-color 10s;
+      /* background-color: rgba(var(--bs-tertiary-color-rgb), 0.05); */
+      background-color: rgba(calc(var(--start-r) + var(--end-r) * var(--factor)), calc(var(--start-g) + var(--end-g) * var(--factor)), calc(var(--start-b) + var(--end-b) * var(--factor)), 0.05);
+      width: var(--size);
+      height: var(--size);
+      z-index: 1;
+    }
+
+    .login-form-wrapper {
+      z-index: 100;
+    }
+
+    .login-form-wrapper:hover ~ .animated-border.l1,  .login-form-wrapper:focus-within ~ .animated-border.l1 {
+      --size: 60vmin;
+      --factor: 0.2;
+      transform: translate(-50%, -50%) rotate(10deg);
+    }
+
+    .login-form-wrapper:hover ~ .animated-border.l2,  .login-form-wrapper:focus-within ~ .animated-border.l2 {
+      --size: 70vmin;
+      --factor: 0.4;
+      transform: translate(-50%, -50%) rotate(20deg);
+    }
+
+    .login-form-wrapper:hover ~ .animated-border.l3,  .login-form-wrapper:focus-within ~ .animated-border.l3 {
+      --size: 80vmin;
+      --factor: 0.6;
+      transform: translate(-50%, -50%) rotate(30deg);
+    }
+
+    .login-form-wrapper:hover ~ .animated-border.l4,  .login-form-wrapper:focus-within ~ .animated-border.l4 {
+      --size: 90vmin;
+      --factor: 0.8;
+      transform: translate(-50%, -50%) rotate(40deg);
+    }
+
+    .login-form-wrapper:hover ~ .animated-border.l5,  .login-form-wrapper:focus-within ~ .animated-border.l5 {
+      --size: 100vmin;
+      --factor: 1.0;
+      transform: translate(-50%, -50%) rotate(50deg);
+    }
+  </style>
+</wicket:head>
+<wicket:extend>
+  <div class="scrolling flex-content flex-h-container flex-centered">
+    <div class="login-form-wrapper flex-content flex-v-container flex-centered">
+      <div class="card bg-body p-5 login-form w-min-440px">
+        <div class="card-body container-sm">
+          <h5 class="card-title mb-3 text-center">
+            Welcome!
+          </h5>
+
+          <div wicket:id="initialAccountCreationPanel" class="mb-4" />
+          <div wicket:id="oauth2LoginPanel" class="mb-4" />
+          <div wicket:id="saml2LoginPanel" class="mb-4" />
+          <div wicket:id="localLoginPanel" class="mb-4" />
+
+          <div class="mt-3 text-danger fw-bold text-center" wicket:id="recoveryModeMessage">
+            <wicket:message key="recoveryMode" />
+          </div>
+
+          <div class="mt-3 text-danger fw-bold text-center" wicket:id="tooManyUsersMessage">
+            <wicket:message key="tooManyUsers" />
           </div>
         </div>
       </div>
     </div>
-  </wicket:extend>
-</body>
+    <!--
+    <div class="animated-border flex-content flex-v-container flex-centered l1"/>
+    <div class="animated-border flex-content flex-v-container flex-centered l2"/>
+    <div class="animated-border flex-content flex-v-container flex-centered l3"/>
+    <div class="animated-border flex-content flex-v-container flex-centered l4"/>
+    <div class="animated-border flex-content flex-v-container flex-centered l5"/>
+    -->
+  </div>
+</wicket:extend>
+
 </html>

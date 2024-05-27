@@ -20,38 +20,25 @@
 <body>
   <wicket:panel>
     <form wicket:id="form" class="card">
-      <div class="card-header">
-        <wicket:message key="filter" />
-      </div>
-      <div class="card-body">
-        <div class="form-group">
-          <label wicket:for="documentName"><wicket:message key="documentName"/></label>
-          <div class="input-group">
-            <input wicket:id="documentName" type="text" class="form-control">
-            <div class="input-group-text">
-              <span wicket:id="matchDocumentNameAsRegex" />
-            </div>
-          </div>
-        </div>
-        <div class="form-group">
-          <label wicket:for="userName"><wicket:message key="userName"/></label>
-          <div class="input-group">
-            <input wicket:id="userName" type="text" class="form-control">
-            <div class="input-group-text">
-              <span wicket:id="matchUserNameAsRegex" />
-             </div>
+      <div class="form-group">
+        <label wicket:for="documentName"><wicket:message key="documentName"/></label>
+        <div class="input-group">
+          <input wicket:id="documentName" type="text" class="form-control">
+          <div class="input-group-text">
+            <span wicket:id="matchDocumentNameAsRegex" />
           </div>
         </div>
       </div>
-      <div class="card-footer text-end">
-        <button wicket:id="reset" class="btn btn-secondary">
-          <wicket:message key="reset" />
-        </button>
-        <button wicket:id="apply" class="btn btn-primary">
-          <wicket:message key="apply" />
-        </button>
+      <div class="form-group">
+        <label wicket:for="userName"><wicket:message key="userName"/></label>
+        <div class="input-group">
+          <input wicket:id="userName" type="text" class="form-control">
+          <div class="input-group-text">
+            <span wicket:id="matchUserNameAsRegex" />
+           </div>
+        </div>
       </div>
-     </form>
+    </form>
   </wicket:panel>
 </body>
 </html>
