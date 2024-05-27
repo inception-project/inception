@@ -21,7 +21,7 @@
   <wicket:panel>
     <form wicket:id="form">
       <h6 class="card-title mb-3 text-center">
-        Create/reset admin account
+          <wicket:message key="createAdminAccount" />
       </h6>
       <div class="mb-3 text-center" wicket:id="noUserWelcomeMessage">
         <wicket:message key="noUserWelcomeMessage" />
@@ -32,20 +32,20 @@
       <div class="row mb-3 form-floating">
         <input wicket:id="username" type="text" class="form-control" placeholder="User ID" 
           autocomplete="username" />
-        <label wicket:for="username">User ID</label>
+        <label wicket:for="username"><wicket:message key="userId" /></label>
       </div>
       <div class="row mb-3 form-floating">
         <input wicket:id="password" type="password" class="form-control" placeholder="Password" autofocus
           autocomplete="new-password" />
-        <label wicket:for="password">Password</label>
+        <label wicket:for="password"><wicket:message key="loginPassword" /></label>
       </div>
       <div class="row mb-3 form-floating">
         <input wicket:id="password2" type="password" class="form-control" placeholder="Repeat password"
           autocomplete="new-password" />
-        <label wicket:for="password">Repeat password</label>
+        <label wicket:for="password"><wicket:message key="repeatPassword" /></label>
       </div>
       <div class="row justify-content-md-center">
-        <button wicket:id="createAccount" class="btn btn-login btn-primary w-100">Create/reset account</button>
+        <button wicket:id="createAccount" class="btn btn-login btn-primary w-100"><wicket:message key="createAccount" /></button>
       </div>
     </form>
   </wicket:panel>
