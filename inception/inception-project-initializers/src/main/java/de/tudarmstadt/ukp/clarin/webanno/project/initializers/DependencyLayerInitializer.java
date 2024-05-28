@@ -65,7 +65,7 @@ public class DependencyLayerInitializer
     @Override
     public String getName()
     {
-        return "Dependency parsing";
+        return Strings.getString("dependency-layer.name");
     }
 
     @Override

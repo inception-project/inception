@@ -70,7 +70,7 @@ public class SentenceLabelLayerInitializer
     @Override
     public String getName()
     {
-        return "Generic sentence classification";
+        return Strings.getString("sentence-labeling-layer.name");
     }
 
     @Override

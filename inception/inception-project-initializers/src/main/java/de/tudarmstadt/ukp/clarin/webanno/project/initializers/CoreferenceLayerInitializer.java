@@ -65,7 +65,7 @@ public class CoreferenceLayerInitializer
     @Override
     public String getName()
     {
-        return "Co-reference annotation";
+        return Strings.getString("coreference-layer.name");
     }
 
     @Override

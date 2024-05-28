@@ -64,7 +64,7 @@ public class NamedEntityLayerInitializer
     @Override
     public String getName()
     {
-        return "Named entity tagging";
+        return Strings.getString("named-entity-layer.name");
     }
 
     @Override

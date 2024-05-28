@@ -64,7 +64,7 @@ public class SurfaceFormLayerInitializer
     @Override
     public String getName()
     {
-        return "Text normalization";
+        return Strings.getString("surface-form-layer.name");
     }
 
     @Override

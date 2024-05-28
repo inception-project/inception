@@ -65,7 +65,7 @@ public class MorphologicalFeaturesLayerInitializer
     @Override
     public String getName()
     {
-        return "Morphological analysis";
+        return Strings.getString("morpholological-features-layer.name");
     }
 
     @Override

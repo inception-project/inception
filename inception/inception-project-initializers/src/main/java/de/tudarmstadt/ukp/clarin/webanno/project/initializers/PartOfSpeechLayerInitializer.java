@@ -66,7 +66,7 @@ public class PartOfSpeechLayerInitializer
     @Override
     public String getName()
     {
-        return "Part-of-speech tagging";
+        return Strings.getString("pos-layer.name");
     }
 
     @Override

@@ -71,7 +71,7 @@ public class BasicRelationLayerInitializer
     @Override
     public String getName()
     {
-        return "Generic relation annotation";
+        return Strings.getString("basic-relation-layer.name");
     }
 
     @Override

@@ -65,7 +65,7 @@ public class OrthographyLayerInitializer
     @Override
     public String getName()
     {
-        return "Spelling correction";
+        return Strings.getString("orthography-layer.name");
     }
 
     @Override

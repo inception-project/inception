@@ -64,7 +64,7 @@ public class NamedEntityIdentifierFeatureInitializer
     @Override
     public String getName()
     {
-        return "Named entity linking";
+        return Strings.getString("entity-linking-layer.name");
     }
 
     @Override

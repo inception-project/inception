@@ -68,7 +68,7 @@ public class SemPredArgLayerInitializer
     @Override
     public String getName()
     {
-        return "Predicate argument structure";
+        return Strings.getString("predicate-argument-layer.name");
     }
 
     @Override

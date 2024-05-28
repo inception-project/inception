@@ -73,7 +73,7 @@ public class BasicDocumentLabelLayerInitializer
     @Override
     public String getName()
     {
-        return "Generic document classification";
+        return Strings.getString("document-labeling-layer.name");
     }
 
     @Override

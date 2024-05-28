@@ -70,7 +70,7 @@ public class BasicSpanLayerInitializer
     @Override
     public String getName()
     {
-        return "Generic span annotation";
+        return Strings.getString("basic-span-layer.name");
     }
 
     @Override

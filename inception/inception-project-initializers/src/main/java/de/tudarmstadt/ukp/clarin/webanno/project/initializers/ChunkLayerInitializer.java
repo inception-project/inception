@@ -76,7 +76,7 @@ public class ChunkLayerInitializer
     @Override
     public String getName()
     {
-        return "Chunking";
+        return Strings.getString("chunk-layer.name");
     }
 
     @Override
