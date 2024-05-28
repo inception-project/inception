@@ -215,6 +215,10 @@ public class LazyDetailsLookupServiceImpl
         }
 
         var extension = extensionRegistry.getExtension(aVid.getExtensionId());
+        if (extension == null) {
+            return emptyList();
+        }
+
         return extension.lookupLazyDetails(aDocument, aUser, aCas, aVid, aLayer);
     }
 }

@@ -342,6 +342,9 @@ export class RecogitoEditor implements AnnotationEditor {
       const options: DiamLoadAnnotationsOptions = {
         range,
         includeText: false,
+        clipSpans: true,
+        clipRelations: false,
+        outOfRangeRelations: true,
         format: 'compact_v2'
       }
 

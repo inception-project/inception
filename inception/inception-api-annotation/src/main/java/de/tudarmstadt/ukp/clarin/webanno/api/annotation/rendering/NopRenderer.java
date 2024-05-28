@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.TypeSystem;
 import org.apache.uima.cas.text.AnnotationFS;
 
@@ -45,12 +44,6 @@ public class NopRenderer
     protected boolean typeSystemInit(TypeSystem aTypeSystem)
     {
         return false;
-    }
-
-    @Override
-    public List<AnnotationFS> selectAnnotationsInWindow(CAS aCas, int aWindowBegin, int aWindowEnd)
-    {
-        return Collections.emptyList();
     }
 
     @Override

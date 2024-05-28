@@ -17,11 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.annotation.layer.relation;
 
-import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.groupingBy;
 import static org.apache.commons.lang3.StringUtils.abbreviate;
-import static org.apache.uima.fit.util.CasUtil.selectCovered;
+import static org.apache.uima.cas.text.AnnotationPredicates.overlapping;
 
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayDeque;
@@ -56,6 +55,8 @@ import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetail;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetailGroup;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VObject;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VRange;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VSpan;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
@@ -68,6 +69,18 @@ public class RelationRenderer
     extends Renderer_ImplBase<RelationAdapter>
 {
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
+    private static final VID VID_BEFORE = VID.builder() //
+            .withExtensionId("rel") //
+            .withAnnotationId(0) //
+            .withExtensionPayload("before") //
+            .build();
+
+    private static final VID VID_AFTER = VID.builder() //
+            .withExtensionId("rel") //
+            .withAnnotationId(1) //
+            .withExtensionPayload("after") //
+            .build();
 
     private final List<RelationLayerBehavior> behaviors;
     private final RelationLayerTraits traits;
@@ -118,10 +131,31 @@ public class RelationRenderer
         return true;
     }
 
-    @Override
-    public List<AnnotationFS> selectAnnotationsInWindow(CAS aCas, int aWindowBegin, int aWindowEnd)
+    private List<Annotation> selectAnnotationsInWindow(RenderRequest aRequest, int aWindowBegin,
+            int aWindowEnd)
     {
-        return selectCovered(aCas, type, aWindowBegin, aWindowEnd);
+        var cas = aRequest.getCas();
+
+        if (!aRequest.isOutOfRangeRelations()) {
+            return cas.<Annotation> select(type).coveredBy(aWindowBegin, aWindowEnd).toList();
+        }
+
+        var result = new ArrayList<Annotation>();
+        for (var rel : cas.<Annotation> select(type)) {
+            var sourceFs = getSourceFs(rel);
+            var targetFs = getTargetFs(rel);
+
+            if (sourceFs instanceof Annotation source && targetFs instanceof Annotation target) {
+                var relBegin = Math.min(source.getBegin(), target.getBegin());
+                var relEnd = Math.max(source.getEnd(), target.getEnd());
+
+                if (overlapping(relBegin, relEnd, aWindowBegin, aWindowEnd)) {
+                    result.add(rel);
+                }
+            }
+        }
+
+        return result;
     }
 
     @Override
@@ -137,16 +171,17 @@ public class RelationRenderer
         // Index mapping annotations to the corresponding rendered arcs
         var annoToArcIdx = new HashMap<AnnotationFS, VArc>();
 
-        var annotations = selectAnnotationsInWindow(aRequest.getCas(), aWindowBegin, aWindowEnd);
+        var annotations = selectAnnotationsInWindow(aRequest, aWindowBegin, aWindowEnd);
 
         for (var fs : annotations) {
-            for (var arc : render(aRequest, aFeatures, aResponse, aWindowBegin, aWindowEnd, fs)) {
-                if (!(arc instanceof VArc)) {
+            for (var obj : render(aRequest, aFeatures, aResponse, aWindowBegin, aWindowEnd, fs)) {
+                if (!(obj instanceof VArc)) {
+                    aResponse.add(obj);
                     continue;
                 }
 
-                aResponse.add(arc);
-                annoToArcIdx.put(fs, (VArc) arc);
+                aResponse.add(obj);
+                annoToArcIdx.put(fs, (VArc) obj);
 
                 renderRequiredFeatureErrors(aRequest, aFeatures, fs, aResponse);
             }
@@ -216,10 +251,12 @@ public class RelationRenderer
 
         switch (traits.getRenderMode()) {
         case ALWAYS:
-            return renderRelationAsArcs(aFS, typeAdapter, sourceFs, targetFs, labelFeatures);
+            return renderRelationAsArcs(aRequest, aVDocument, aFS, typeAdapter, sourceFs, targetFs,
+                    labelFeatures, aWindowBegin, aWindowEnd);
         case WHEN_SELECTED:
             if (aRequest.getState() == null || isSelected(aRequest, aFS, sourceFs, targetFs)) {
-                return renderRelationAsArcs(aFS, typeAdapter, sourceFs, targetFs, labelFeatures);
+                return renderRelationAsArcs(aRequest, aVDocument, aFS, typeAdapter, sourceFs,
+                        targetFs, labelFeatures, aWindowBegin, aWindowEnd);
             }
             return renderRelationOnLabel(aVDocument, typeAdapter, sourceFs, targetFs,
                     labelFeatures);
@@ -227,7 +264,8 @@ public class RelationRenderer
             return renderRelationOnLabel(aVDocument, typeAdapter, sourceFs, targetFs,
                     labelFeatures);
         default:
-            return renderRelationAsArcs(aFS, typeAdapter, sourceFs, targetFs, labelFeatures);
+            return renderRelationAsArcs(aRequest, aVDocument, aFS, typeAdapter, sourceFs, targetFs,
+                    labelFeatures, aWindowBegin, aWindowEnd);
         }
     }
 
@@ -278,17 +316,80 @@ public class RelationRenderer
         return emptyList();
     }
 
-    private List<VObject> renderRelationAsArcs(AnnotationFS aFS, RelationAdapter typeAdapter,
-            FeatureStructure sourceFs, FeatureStructure targetFs, Map<String, String> labelFeatures)
+    private List<VObject> renderRelationAsArcs(RenderRequest aRequest, VDocument aVDocument,
+            AnnotationFS aFS, RelationAdapter typeAdapter, FeatureStructure sourceFs,
+            FeatureStructure targetFs, Map<String, String> labelFeatures, int aWindowBegin,
+            int aWindowEnd)
     {
-        var arc = VArc.builder().forAnnotation(aFS) //
-                .withLayer(typeAdapter.getLayer()) //
-                .withSource(sourceFs) //
-                .withTarget(targetFs) //
-                .withFeatures(labelFeatures) //
-                .build();
+        var objects = new ArrayList<VObject>();
 
-        return asList(arc);
+        var source = createRelationEndpoint(aRequest, aVDocument, (AnnotationFS) sourceFs,
+                aWindowBegin, aWindowEnd, typeAdapter);
+
+        var target = createRelationEndpoint(aRequest, aVDocument, (AnnotationFS) targetFs,
+                aWindowBegin, aWindowEnd, typeAdapter);
+
+        objects.add(VArc.builder().forAnnotation(aFS) //
+                .withLayer(typeAdapter.getLayer()) //
+                .withSource(source) //
+                .withTarget(target) //
+                .withFeatures(labelFeatures) //
+                .build());
+
+        return objects;
+    }
+
+    private VID createRelationEndpoint(RenderRequest aRequest, VDocument aVDocument,
+            AnnotationFS aEndpoint, int aWindowBegin, int aWindowEnd, RelationAdapter aTypeAdapter)
+    {
+        if (aEndpoint.getEnd() < aWindowBegin) {
+            if (aRequest.isClipRelations()) {
+                if (aVDocument.getSpan(VID_BEFORE) == null) {
+                    var beforeAnchor = VSpan.builder() //
+                            .withVid(VID_BEFORE) //
+                            .withLayer(aTypeAdapter.getLayer()) //
+                            .withRange(new VRange(0, 0)) //
+                            .build();
+                    aVDocument.add(beforeAnchor);
+                }
+                return VID_BEFORE;
+            }
+
+            var placeholder = VSpan.builder() //
+                    .forAnnotation(aEndpoint) //
+                    .withLayer(aTypeAdapter.getLayer()) //
+                    .withRange(new VRange(aEndpoint.getBegin() - aWindowBegin,
+                            aEndpoint.getEnd() - aWindowBegin)) //
+                    .build();
+            aVDocument.add(placeholder);
+            return placeholder.getVid();
+        }
+
+        if (aEndpoint.getBegin() >= aWindowEnd) {
+            if (aRequest.isClipRelations()) {
+                if (aVDocument.getSpan(VID_AFTER) == null) {
+                    var afterAnchor = VSpan.builder() //
+                            .withVid(VID_AFTER) //
+                            .withLayer(aTypeAdapter.getLayer()) //
+                            .withRange(new VRange(aWindowEnd - aWindowBegin,
+                                    aWindowEnd - aWindowBegin)) //
+                            .build();
+                    aVDocument.add(afterAnchor);
+                }
+                return VID_AFTER;
+            }
+
+            var placeholder = VSpan.builder() //
+                    .forAnnotation(aEndpoint) //
+                    .withLayer(aTypeAdapter.getLayer()) //
+                    .withRange(new VRange(aEndpoint.getBegin() - aWindowBegin,
+                            aEndpoint.getEnd() - aWindowBegin)) //
+                    .build();
+            aVDocument.add(placeholder);
+            return placeholder.getVid();
+        }
+
+        return VID.of(aEndpoint);
     }
 
     @Override

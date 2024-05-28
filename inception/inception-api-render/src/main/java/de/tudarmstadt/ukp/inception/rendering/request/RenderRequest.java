@@ -44,6 +44,8 @@ public class RenderRequest
     private final int windowEndOffset;
     private final boolean includeText;
     private final boolean clipSpans;
+    private final boolean clipRelations;
+    private final boolean outOfRangeRelations;
     private final List<AnnotationLayer> allLayers;
     private final List<AnnotationLayer> visibleLayers;
     private final CAS cas;
@@ -55,6 +57,8 @@ public class RenderRequest
         this.windowEndOffset = builder.windowEndOffset;
         this.includeText = builder.includeText;
         this.clipSpans = builder.clipSpans;
+        this.clipRelations = builder.clipRelations;
+        this.outOfRangeRelations = builder.outOfRangeRelations;
         this.state = builder.state;
         this.constraints = builder.constraints;
         this.sourceDocument = builder.sourceDocument;
@@ -89,6 +93,16 @@ public class RenderRequest
     public boolean isClipSpans()
     {
         return clipSpans;
+    }
+
+    public boolean isClipRelations()
+    {
+        return clipRelations;
+    }
+
+    public boolean isOutOfRangeRelations()
+    {
+        return outOfRangeRelations;
     }
 
     public User getAnnotationUser()
@@ -154,6 +168,8 @@ public class RenderRequest
         private int windowEndOffset;
         private boolean includeText = true;
         private boolean clipSpans = true;
+        private boolean clipRelations = true;
+        private boolean outOfRangeRelations = false;
         private AnnotatorState state;
         private SourceDocument sourceDocument;
         private User annotationUser;
@@ -206,6 +222,18 @@ public class RenderRequest
         public Builder withClipSpans(boolean aFlag)
         {
             clipSpans = aFlag;
+            return this;
+        }
+
+        public Builder withClipRelations(boolean aFlag)
+        {
+            clipRelations = aFlag;
+            return this;
+        }
+
+        public Builder withOutOfRangeRelations(boolean aFlag)
+        {
+            outOfRangeRelations = aFlag;
             return this;
         }
 

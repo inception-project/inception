@@ -89,7 +89,6 @@ public class ChainRenderer
         return true;
     }
 
-    @Override
     public List<AnnotationFS> selectAnnotationsInWindow(CAS aCas, int aWindowBegin, int aWindowEnd)
     {
         var typeAdapter = getTypeAdapter();

@@ -50,13 +50,13 @@ import { Row } from './Row'
 import { RectBox } from './RectBox'
 import { AttributeType, ValType } from './AttributeType'
 import { CollectionLoadedResponse } from './CollectionLoadedResponse'
-import { RelationTypeDto, EntityTypeDto, EntityDto, CommentDto, NormalizationDto, SourceData, TriggerDto, AttributeDto, EquivDto, ColorCode, MarkerType, MarkerDto, RelationDto, EDITED, FOCUS, MATCH_FOCUS, MATCH, RoleDto, VID } from '../protocol/Protocol'
+import { RelationTypeDto, EntityTypeDto, EntityDto, CommentDto, SourceData, TriggerDto, AttributeDto, EquivDto, ColorCode, MarkerType, MarkerDto, RelationDto, EDITED, FOCUS, MATCH_FOCUS, MATCH, RoleDto, VID } from '../protocol/Protocol'
 import type { Dispatcher, Message } from '../dispatcher/Dispatcher'
 import * as jsonpatch from 'fast-json-patch'
 import { Operation } from 'fast-json-patch'
 import { scrollbarWidth } from '../util/ScrollbarWidth'
 import '@svgdotjs/svg.filter.js'
-import { SVG, Element as SVGJSElement, Svg, Container, Text as SVGText, PathCommand, Rect, ArrayXY, SVGTypeMapping, Defs } from '@svgdotjs/svg.js'
+import { SVG, Element as SVGJSElement, Svg, Container, Text as SVGText, PathCommand, Rect, ArrayXY, SVGTypeMapping, Defs, G } from '@svgdotjs/svg.js'
 import { INSTANCE as Configuration } from '../configuration/Configuration'
 import { INSTANCE as Util } from '../util/Util'
 import { AnnotationOutEvent, AnnotationOverEvent, Offsets, Relation, Span } from '@inception-project/inception-js-api'
@@ -134,7 +134,7 @@ export class Visualizer {
 
   data?: DocumentData
   private sourceData?: SourceData
-  private requestedData: SourceData = null // FIXME Do we really need requestedData AND sourceData?
+  private requestedData: SourceData | null = null // FIXME Do we really need requestedData AND sourceData?
 
   private args: Partial<Record<MarkerType, MarkerDto>> = {}
 
@@ -1803,7 +1803,7 @@ export class Visualizer {
       chunk.fragments.forEach(fragment => {
         const span = fragment.span
 
-        if (span.hidden) {
+        if (span.hidden || span.id === "rel:0-before" || span.id === "rel:1-after") {
           return
         }
 
@@ -2588,8 +2588,8 @@ export class Visualizer {
 
     const leftBox = left.rowBBox()
     const rightBox = right.rowBBox()
-    const leftRow = left.chunk.row.index
-    const rightRow = right.chunk.row.index
+    const leftRow = left.chunk.row.index // row with the left end of the arc?
+    const rightRow = right.chunk.row.index // row with the right end of the arc?
 
     if (!arrows[arrowHead]) {
       const arrow = this.makeArrow(arrowHead)
@@ -2656,8 +2656,9 @@ export class Visualizer {
         .attr('data-id', arc.eventDescId)
         .addTo(row.arcs)
 
+      // Calculate x position of left side of the arc in current row  
       let from: number
-      if (rowIndex === leftRow) {
+      if (rowIndex === leftRow && left.span.id !== "rel:0-before") {
         if (this.rtlmode) {
           from = leftBox.x + (chunkReverse ? leftBox.width : 0)
         } else {
@@ -2667,8 +2668,9 @@ export class Visualizer {
         from = this.rtlmode ? this.canvasWidth - 2 * Configuration.visual.margin.y - this.sentNumMargin : this.sentNumMargin
       }
 
+      // Calculate x position of right side of the arc in current row  
       let to: number
-      if (rowIndex === rightRow) {
+      if (rowIndex === rightRow && right.span.id !== "rel:1-after") {
         if (this.rtlmode) {
           to = rightBox.x + (chunkReverse ? 0 : rightBox.width)
         } else {
@@ -2701,88 +2703,12 @@ export class Visualizer {
         height += 0.5
       }
 
-      const originType = docData.spans[arc.origin].type
-      const arcLabels = Util.getArcLabels(this.entityTypes, originType, arc.type, this.relationTypes)
-      let labelText = Util.arcDisplayForm(this.entityTypes, originType, arc.type, this.relationTypes)
-      // if (Configuration.abbrevsOn && !ufoCatcher && arcLabels) {
-      if (Configuration.abbrevsOn && arcLabels) {
-        let labelIdx = 1 // first abbreviation
-
-        // strictly speaking 2*arcSlant would be needed to allow for
-        // the full-width arcs to fit, but judged abbreviated text
-        // to be more important than the space for arcs.
-        const maxLength = (to - from) - (this.arcSlant)
-        while (docData.sizes.arcs.widths[labelText] > maxLength && arcLabels[labelIdx]) {
-          labelText = arcLabels[labelIdx]
-          labelIdx++
-        }
-      }
-
-      if (arc.eventDescId && docData.eventDescs[arc.eventDescId]) {
-        if (docData.eventDescs[arc.eventDescId].labelText) {
-          labelText = docData.eventDescs[arc.eventDescId].labelText
-        }
-      }
-
       let shadowGroup: SVGTypeMapping<SVGGElement> | undefined
       if (arc.shadowClass || arc.marked) {
         shadowGroup = this.svg.group().addTo(arcGroup)
       }
 
-      // guess at the correct baseline shift to get vertical centering.
-      // (CSS dominant-baseline can't be used as not all SVG renders support it.)
-      const baselineShift = docData.sizes.arcs.height / 4
-      this.svg.plain(labelText)
-        .amove((from + to) / 2, -height + baselineShift)
-        .attr({
-          // 'fill': color,
-          fill: '#000000',
-          'data-arc-role': arc.type,
-          'data-arc-origin': arc.origin,
-          'data-arc-target': arc.target,
-          // TODO: confirm this is unused and remove.
-          // 'data-arc-id': arc.id,
-          'data-arc-ed': arc.eventDescId
-        })
-        .addTo(arcGroup)
-
-      const width = docData.sizes.arcs.widths[labelText]
-      const textBox = {
-        x: (from + to - width) / 2,
-        width,
-        y: -height - docData.sizes.arcs.height / 2,
-        height: docData.sizes.arcs.height
-      }
-
-      if (arc.marked && shadowGroup) {
-        this.svg.rect()
-          .move(textBox.x - this.markedArcSize, textBox.y - this.markedArcSize)
-          .width(textBox.width + 2 * this.markedArcSize)
-          .height(textBox.height + 2 * this.markedArcSize)
-          .attr({
-            filter: 'url(#Gaussian_Blur)',
-            class: 'shadow_EditHighlight',
-            rx: this.markedArcSize,
-            ry: this.markedArcSize
-          })
-          .addTo(shadowGroup)
-      }
-
-      if (arc.shadowClass && shadowGroup) {
-        this.renderArcShadow(arc, shadowGroup, textBox)
-      }
-      let textStart = textBox.x
-      let textEnd = textBox.x + textBox.width
-
-      // adjust by margin for arc drawing
-      textStart -= Configuration.visual.arcTextMargin * (this.fontZoom / 100.0)
-      textEnd += Configuration.visual.arcTextMargin * (this.fontZoom / 100.0)
-
-      if (from > to) {
-        const tmp = textStart
-        textStart = textEnd
-        textEnd = tmp
-      }
+      let { textStart, textEnd } = this.renderArcLabel(docData, arc, to, from, height, arcGroup, shadowGroup)
 
       if (this.roundCoordinates) {
         // don't ask
@@ -2812,7 +2738,7 @@ export class Visualizer {
         }
       }
 
-      const renderCurlyPath = (path: PathCommand[]) => {
+      const renderArcSegmentPath = (path: PathCommand[]) => {
         this.svg.path(path)
           .css('stroke', color)
           .stroke({ dasharray: dashArray })
@@ -2843,56 +2769,8 @@ export class Visualizer {
         }
       }
 
-      const arrowStart = textStart - arrowAtLabelAdjust
-      let path: PathCommand[] = [['M', arrowStart, -height]]
-      if (rowIndex === leftRow) {
-        let cornerx = from + (this.rtlmode ? -1 : 1) * ufoCatcherMod * this.arcSlant
-        if (this.rtlmode) {
-          if (!ufoCatcher && cornerx < arrowStart + 1) {
-            cornerx = arrowStart + 1
-          }
-        } else {
-          if (!ufoCatcher && cornerx > arrowStart - 1) {
-            cornerx = arrowStart - 1
-          }
-        }
-
-        if (this.smoothArcCurves) {
-          let controlx: number
-          let endy: number
-          if (this.rtlmode) {
-            controlx = ufoCatcher
-              ? cornerx - 2 * ufoCatcherMod * this.reverseArcControlx
-              : this.smoothArcSteepness * from + (1 - this.smoothArcSteepness) * cornerx
-            endy = leftBox.y + (leftToRight && !arc.equiv
-              ? Configuration.visual.margin.y
-              : leftBox.height / 2)
-          } else {
-            controlx = ufoCatcher
-              ? cornerx + 2 * ufoCatcherMod * this.reverseArcControlx
-              : this.smoothArcSteepness * from + (1 - this.smoothArcSteepness) * cornerx
-            endy = leftBox.y + (leftToRight || arc.equiv
-              ? leftBox.height / 2
-              : Configuration.visual.margin.y)
-          }
-
-          // no curving for short lines covering short vertical
-          // distances, the arrowheads can go off (#925)
-          if (Math.abs(-height - endy) < 2 &&
-            Math.abs(cornerx - from) < 5) {
-            endy = -height
-          }
-          path.push(['L', cornerx, -height])
-          path.push(['Q', controlx, -height, from, endy])
-        } else {
-          path.push(['L', cornerx, -height])
-          path.push(['L', from, leftBox.y + (leftToRight || arc.equiv ? leftBox.height / 2 : Configuration.visual.margin.y)])
-        }
-      } else {
-        path.push(['L', from, -height])
-      }
-
-      renderCurlyPath(path)
+      let pathLeft = this.makeLeftArcSegmentPath(left, textStart, arrowAtLabelAdjust, height, rowIndex, leftRow, from, ufoCatcherMod, ufoCatcher, leftBox, leftToRight, arc)
+      renderArcSegmentPath(pathLeft)
 
       if (!symmetric) {
         myArrowHead = (arcDesc && arcDesc.arrowHead)
@@ -2904,61 +2782,208 @@ export class Visualizer {
       arrowType = arrows[arrowName]
       arrowDecl = arrowType && ('url(#' + arrowType + ')')
 
-      const arrowEnd = textEnd + arrowAtLabelAdjust
-      path = [['M', arrowEnd, -height]]
-      if (rowIndex === rightRow) {
-        let cornerx = to - (this.rtlmode ? -1 : 1) * ufoCatcherMod * this.arcSlant
+      let pathRight = this.makeRightArcSegmentPath(right, textEnd, arrowAtLabelAdjust, height, rowIndex, rightRow, to, ufoCatcherMod, ufoCatcher, rightBox, leftToRight, arc)
+      renderArcSegmentPath(pathRight)
+    } // arc rows
+  }
 
-        // TODO: duplicates above in part, make funcs
-        // for normal cases, should not be past textEnd even if narrow
-        if (this.rtlmode) {
-          if (!ufoCatcher && cornerx > arrowEnd - 1) {
-            cornerx = arrowEnd - 1
-          }
-        } else {
-          if (!ufoCatcher && cornerx < arrowEnd + 1) {
-            cornerx = arrowEnd + 1
-          }
-        }
+  private makeRightArcSegmentPath(right: Fragment, textEnd: number, arrowAtLabelAdjust: number, height: number, rowIndex: number, rightRow: number, to: number, ufoCatcherMod: number, ufoCatcher: boolean, rightBox: RectBox, leftToRight: boolean, arc: Arc) {
+    const arrowEnd = textEnd + arrowAtLabelAdjust
+    let path: PathCommand[] = [['M', arrowEnd, -height]]
+    if (rowIndex !== rightRow || right.span.id === "rel:1-after") {
+      // Render straight line pointing to the end of the row
+      path.push(['L', to, -height])
+      return path
+    }
 
-        if (this.smoothArcCurves) {
-          let controlx: number
-          let endy: number
-          if (this.rtlmode) {
-            controlx = ufoCatcher
-              ? cornerx + 2 * ufoCatcherMod * this.reverseArcControlx
-              : this.smoothArcSteepness * to + (1 - this.smoothArcSteepness) * cornerx
-            endy = rightBox.y + (leftToRight && !arc.equiv
-              ? Configuration.visual.margin.y
-              : rightBox.height / 2)
-          } else {
-            controlx = ufoCatcher
-              ? cornerx - 2 * ufoCatcherMod * this.reverseArcControlx
-              : this.smoothArcSteepness * to + (1 - this.smoothArcSteepness) * cornerx
-            endy = rightBox.y + (leftToRight && !arc.equiv
-              ? Configuration.visual.margin.y
-              : rightBox.height / 2)
-          }
+    // Render curve pointing to the rught annotation endpoint
+    let cornerx = to - (this.rtlmode ? -1 : 1) * ufoCatcherMod * this.arcSlant
 
-          // no curving for short lines covering short vertical
-          // distances, the arrowheads can go off (#925)
-          if (Math.abs(-height - endy) < 2 &&
-            Math.abs(cornerx - to) < 5) {
-            endy = -height
-          }
+    // TODO: duplicates above in part, make funcs
+    // for normal cases, should not be past textEnd even if narrow
+    if (this.rtlmode) {
+      if (!ufoCatcher && cornerx > arrowEnd - 1) {
+        cornerx = arrowEnd - 1
+      }
+    } else {
+      if (!ufoCatcher && cornerx < arrowEnd + 1) {
+        cornerx = arrowEnd + 1
+      }
+    }
 
-          path.push(['L', cornerx, -height])
-          path.push(['Q', controlx, -height, to, endy])
-        } else {
-          path.push(['L', cornerx, -height])
-          path.push(['L', to, rightBox.y + (leftToRight && !arc.equiv ? Configuration.visual.margin.y : rightBox.height / 2)])
-        }
+    if (this.smoothArcCurves) {
+      let controlx: number
+      let endy: number
+      if (this.rtlmode) {
+        controlx = ufoCatcher
+          ? cornerx + 2 * ufoCatcherMod * this.reverseArcControlx
+          : this.smoothArcSteepness * to + (1 - this.smoothArcSteepness) * cornerx
+        endy = rightBox.y + (leftToRight && !arc.equiv
+          ? Configuration.visual.margin.y
+          : rightBox.height / 2)
       } else {
-        path.push(['L', to, -height])
+        controlx = ufoCatcher
+          ? cornerx - 2 * ufoCatcherMod * this.reverseArcControlx
+          : this.smoothArcSteepness * to + (1 - this.smoothArcSteepness) * cornerx
+        endy = rightBox.y + (leftToRight && !arc.equiv
+          ? Configuration.visual.margin.y
+          : rightBox.height / 2)
       }
 
-      renderCurlyPath(path)
-    } // arc rows
+      // no curving for short lines covering short vertical
+      // distances, the arrowheads can go off (#925)
+      if (Math.abs(-height - endy) < 2 &&
+        Math.abs(cornerx - to) < 5) {
+        endy = -height
+      }
+
+      path.push(['L', cornerx, -height])
+      path.push(['Q', controlx, -height, to, endy])
+    } else {
+      path.push(['L', cornerx, -height])
+      path.push(['L', to, rightBox.y + (leftToRight && !arc.equiv ? Configuration.visual.margin.y : rightBox.height / 2)])
+    }
+    return path
+  }
+
+  private makeLeftArcSegmentPath(left: Fragment, textStart: number, arrowAtLabelAdjust: number, height: number, rowIndex: number, leftRow: number, from: number, ufoCatcherMod: number, ufoCatcher: boolean, leftBox: RectBox, leftToRight: boolean, arc: Arc) {
+    const arrowStart = textStart - arrowAtLabelAdjust
+    if (isNaN(arrowStart)) {
+      debugger
+    }
+    let path: PathCommand[] = [['M', arrowStart, -height]]
+    if (rowIndex !== leftRow || left.span.id === "rel:0-before") {
+      // Render straight line pointing to the start of the row
+      path.push(['L', from, -height])
+      return path
+    }
+
+    // Render curve pointing to the left annotation endpoint
+    let cornerx = from + (this.rtlmode ? -1 : 1) * ufoCatcherMod * this.arcSlant
+    if (this.rtlmode) {
+      if (!ufoCatcher && cornerx < arrowStart + 1) {
+        cornerx = arrowStart + 1
+      }
+    } else {
+      if (!ufoCatcher && cornerx > arrowStart - 1) {
+        cornerx = arrowStart - 1
+      }
+    }
+
+    if (this.smoothArcCurves) {
+      let controlx: number
+      let endy: number
+      if (this.rtlmode) {
+        controlx = ufoCatcher
+          ? cornerx - 2 * ufoCatcherMod * this.reverseArcControlx
+          : this.smoothArcSteepness * from + (1 - this.smoothArcSteepness) * cornerx
+        endy = leftBox.y + (leftToRight && !arc.equiv
+          ? Configuration.visual.margin.y
+          : leftBox.height / 2)
+      } else {
+        controlx = ufoCatcher
+          ? cornerx + 2 * ufoCatcherMod * this.reverseArcControlx
+          : this.smoothArcSteepness * from + (1 - this.smoothArcSteepness) * cornerx
+        endy = leftBox.y + (leftToRight || arc.equiv
+          ? leftBox.height / 2
+          : Configuration.visual.margin.y)
+      }
+
+      // no curving for short lines covering short vertical
+      // distances, the arrowheads can go off (#925)
+      if (Math.abs(-height - endy) < 2 &&
+        Math.abs(cornerx - from) < 5) {
+        endy = -height
+      }
+      path.push(['L', cornerx, -height])
+      path.push(['Q', controlx, -height, from, endy])
+    } else {
+      path.push(['L', cornerx, -height])
+      path.push(['L', from, leftBox.y + (leftToRight || arc.equiv ? leftBox.height / 2 : Configuration.visual.margin.y)])
+    }
+    return path
+  }
+
+  private renderArcLabel(docData: DocumentData, arc: Arc, to: number, from: number, height: number, arcGroup: G, shadowGroup: import("@svgdotjs/svg.js").G | undefined) {
+    const originType = docData.spans[arc.origin].type
+    const arcLabels = Util.getArcLabels(this.entityTypes, originType, arc.type, this.relationTypes)
+    let labelText = Util.arcDisplayForm(this.entityTypes, originType, arc.type, this.relationTypes)
+    // if (Configuration.abbrevsOn && !ufoCatcher && arcLabels) {
+    if (Configuration.abbrevsOn && arcLabels) {
+      let labelIdx = 1 // first abbreviation
+
+      // strictly speaking 2*arcSlant would be needed to allow for
+      // the full-width arcs to fit, but judged abbreviated text
+      // to be more important than the space for arcs.
+      const maxLength = (to - from) - (this.arcSlant)
+      while (docData.sizes.arcs.widths[labelText] > maxLength && arcLabels[labelIdx]) {
+        labelText = arcLabels[labelIdx]
+        labelIdx++
+      }
+    }
+
+    if (arc.eventDescId && docData.eventDescs[arc.eventDescId]) {
+      if (docData.eventDescs[arc.eventDescId].labelText) {
+        labelText = docData.eventDescs[arc.eventDescId].labelText
+      }
+    }
+
+    // guess at the correct baseline shift to get vertical centering.
+    // (CSS dominant-baseline can't be used as not all SVG renders support it.)
+    const baselineShift = docData.sizes.arcs.height / 4
+    this.svg.plain(labelText)
+      .amove((from + to) / 2, -height + baselineShift)
+      .attr({
+        // 'fill': color,
+        fill: '#000000',
+        'data-arc-role': arc.type,
+        'data-arc-origin': arc.origin,
+        'data-arc-target': arc.target,
+        // TODO: confirm this is unused and remove.
+        // 'data-arc-id': arc.id,
+        'data-arc-ed': arc.eventDescId
+      })
+      .addTo(arcGroup)
+
+    const width = docData.sizes.arcs.widths[labelText]
+    const textBox = {
+      x: (from + to - width) / 2,
+      width,
+      y: -height - docData.sizes.arcs.height / 2,
+      height: docData.sizes.arcs.height
+    }
+
+    if (arc.marked && shadowGroup) {
+      this.svg.rect()
+        .move(textBox.x - this.markedArcSize, textBox.y - this.markedArcSize)
+        .width(textBox.width + 2 * this.markedArcSize)
+        .height(textBox.height + 2 * this.markedArcSize)
+        .attr({
+          filter: 'url(#Gaussian_Blur)',
+          class: 'shadow_EditHighlight',
+          rx: this.markedArcSize,
+          ry: this.markedArcSize
+        })
+        .addTo(shadowGroup)
+    }
+
+    if (arc.shadowClass && shadowGroup) {
+      this.renderArcShadow(arc, shadowGroup, textBox)
+    }
+    let textStart = textBox.x
+    let textEnd = textBox.x + textBox.width
+
+    // adjust by margin for arc drawing
+    textStart -= Configuration.visual.arcTextMargin * (this.fontZoom / 100.0)
+    textEnd += Configuration.visual.arcTextMargin * (this.fontZoom / 100.0)
+
+    if (from > to) {
+      const tmp = textStart
+      textStart = textEnd
+      textEnd = tmp
+    }
+
+    return { textStart, textEnd }
   }
 
   renderFragmentConnectors (docData: DocumentData, rows: Row[]) {

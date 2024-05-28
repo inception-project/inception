@@ -290,6 +290,9 @@ export function getAnnotations () {
   const options : DiamLoadAnnotationsOptions = {
     range: [extendedBegin, extendedEnd],
     includeText: false,
+    clipSpans: true,
+    clipRelations: false,
+    outOfRangeRelations: true,
     format: 'compact_v2'
   }
 
@@ -305,7 +308,7 @@ function renderAnnotations (doc: AnnotatedText): void {
   annotationContainer.clear()
 
   if (doc.spans) {
-    console.log(`Loaded ${doc.spans.size} span annotations`)
+    console.log(`Loaded ${doc.spans.size} span annotations`, doc.spans)
     doc.spans.forEach(span => renderSpan(doc, span))
   }
 

@@ -143,7 +143,7 @@ public class BratAnnotationEditor
 
     private GetDocumentResponse render(CAS aCas)
     {
-        AnnotatorState aState = getModelObject();
+        var aState = getModelObject();
         return render(aCas, aState.getWindowBeginOffset(), aState.getWindowEndOffset(),
                 bratSerializer);
     }
@@ -160,7 +160,7 @@ public class BratAnnotationEditor
             try {
                 var bratDocModel = render(getCasProvider().get());
                 return diffRenderSupport.differentialRendering(bratDocModel).map(rr -> {
-                    StringBuilder js = new StringBuilder();
+                    var js = new StringBuilder();
 
                     js.append("{");
 

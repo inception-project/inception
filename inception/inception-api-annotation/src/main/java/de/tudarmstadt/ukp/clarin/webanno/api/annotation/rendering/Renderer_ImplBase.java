@@ -18,13 +18,11 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.TypeSystem;
-import org.apache.uima.cas.text.AnnotationFS;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -142,7 +140,4 @@ public abstract class Renderer_ImplBase<T extends TypeAdapter>
 
         return Optional.empty();
     }
-
-    public abstract List<AnnotationFS> selectAnnotationsInWindow(CAS aCas, int aWindowBegin,
-            int aWindowEnd);
 }
