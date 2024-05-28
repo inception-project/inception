@@ -91,10 +91,12 @@ public class SystemStatusDashlet
         queue(new Fragment("isProxyTrusted", isProxyOk ? "proxyTrusted" : "proxyNotTrusted", this));
         queue(new Label("remoteIp", LoadableDetachableModel.of(this::getRemoteIp))
                 .setVisible(!isProxyOk || devMode));
-        queue(new Label("trustedProxies", LoadableDetachableModel.of(this::getTrustedProxies))
-                .setVisible(!isProxyOk || devMode));
-        queue(new Label("internalProxies", LoadableDetachableModel.of(this::getInternalProxies))
-                .setVisible(!isProxyOk || devMode));
+        queue(new Label("trustedProxies",
+                LoadableDetachableModel.of(this::getTrustedProxies).orElse("-- not set --"))
+                        .setVisible(!isProxyOk || devMode));
+        queue(new Label("internalProxies",
+                LoadableDetachableModel.of(this::getInternalProxies).orElse("-- not set --"))
+                        .setVisible(!isProxyOk || devMode));
 
         queue(new MarkdownLabel("isProtocolOk", LoadableDetachableModel
                 .of(() -> getString(isProtocolOk() ? "protocolOk" : "protocolNotOk"))));
