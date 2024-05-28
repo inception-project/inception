@@ -21,7 +21,7 @@
   <wicket:panel>
     <form wicket:id="form" class="min-content-height" style="min-width: 440px;">
       <div class="card-header">
-        Import Tagset(s)
+        <wicket:message key="importTagset" />
       </div>
       <div class="card-body">
         <div class="row form-row">
@@ -37,7 +37,7 @@
             <div class="form-check">
               <input wicket:id="overwrite" class="form-check-input" type="checkbox"/>
               <label wicket:for="overwrite" class="form-check-label">
-                Overwrite
+                  <wicket:message key="overwrite" />
               </label>
             </div>
           </div>
