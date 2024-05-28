@@ -87,14 +87,16 @@ public class SystemStatusDashlet
         queue(new WebMarkupContainer("reverseProxyInfo")
                 .add(visibleWhen(LoadableDetachableModel.of(this::isRunningBehindReverseProxy))));
 
-        var isProxyOk = isRemoteIpCoveredByProxyHeader() || isProxyTrusted();
+        var isProxyOk = isProxyTrusted();
         queue(new Fragment("isProxyTrusted", isProxyOk ? "proxyTrusted" : "proxyNotTrusted", this));
         queue(new Label("remoteIp", LoadableDetachableModel.of(this::getRemoteIp))
                 .setVisible(!isProxyOk || devMode));
-        queue(new Label("trustedProxies", LoadableDetachableModel.of(this::getTrustedProxies))
-                .setVisible(!isProxyOk || devMode));
-        queue(new Label("internalProxies", LoadableDetachableModel.of(this::getInternalProxies))
-                .setVisible(!isProxyOk || devMode));
+        queue(new Label("trustedProxies",
+                LoadableDetachableModel.of(this::getTrustedProxies).orElse("-- not set --"))
+                        .setVisible(!isProxyOk || devMode));
+        queue(new Label("internalProxies",
+                LoadableDetachableModel.of(this::getInternalProxies).orElse("-- not set --"))
+                        .setVisible(!isProxyOk || devMode));
 
         queue(new MarkdownLabel("isProtocolOk", LoadableDetachableModel
                 .of(() -> getString(isProtocolOk() ? "protocolOk" : "protocolNotOk"))));
@@ -208,9 +210,25 @@ public class SystemStatusDashlet
 
     private boolean isProxyTrusted()
     {
-        if (startsWith(clientUrl, getServerUrl())) {
+        var remoteIp = getRemoteIp();
+        if (getRequest() instanceof ServletWebRequest request) {
+            for (var header : asList("x-forwarded-for", "x-real-ip")) {
+                var headerValue = request.getHeader(header);
+                if (headerValue != null && headerValue.equals(remoteIp)) {
+                    LOG.debug(
+                            "Proxy seems trusted as remoteIp [{}] seems to have been picked up from header [{}]",
+                            remoteIp, header);
+                    return true;
+                }
+            }
+        }
+
+        if (clientUrl != null && startsWith(clientUrl, getServerUrl())) {
             // It seems that the URL the client requested is known to us, so we seem to have
             // trusted the proxy
+            LOG.debug(
+                    "Proxy seems trusted as clientUrl starts with serverUrl: [{}] starts with [{}]",
+                    clientUrl, getServerUrl());
             return true;
         }
 
@@ -219,7 +237,11 @@ public class SystemStatusDashlet
         var trustedProxies = getTrustedProxies();
         if (isNotBlank(trustedProxies)) {
             try {
-                return Pattern.matches(trustedProxies, getRemoteIp());
+                if (Pattern.matches(trustedProxies, remoteIp)) {
+                    LOG.debug("Proxy seems trusted by trustedProxies: [{}] matches [{}]", remoteIp,
+                            trustedProxies);
+                    return true;
+                }
             }
             catch (Exception e) {
                 LOG.error("Cannot check trusted proxies expression [" + trustedProxies + "]", e);
@@ -229,13 +251,21 @@ public class SystemStatusDashlet
         var internalProxies = getInternalProxies();
         if (isNotBlank(internalProxies)) {
             try {
-                return Pattern.matches(internalProxies, getRemoteIp());
+                if (Pattern.matches(internalProxies, remoteIp)) {
+                    LOG.debug("Proxy seems trusted by internalProxies: [{}] matches [{}]", remoteIp,
+                            internalProxies);
+                    return true;
+                }
             }
             catch (Exception e) {
                 LOG.error("Cannot check internal proxies expression [" + internalProxies + "]", e);
             }
         }
 
+        LOG.debug(
+                "Proxy seems not to be trusted: clientUrl [{}] and serverUrl [{}] do not match and remoteIP [] does"
+                        + "not match trustedProxies [{}] or internalProxies [{}]",
+                clientUrl, getServerUrl(), remoteIp, trustedProxies, internalProxies);
         return false;
     }
 
@@ -368,15 +398,6 @@ public class SystemStatusDashlet
         var urlRenderer = getRequestCycle().getUrlRenderer();
         var homePageUrl = urlFor(getApplication().getHomePage(), null);
         return urlRenderer.renderFullUrl(Url.parse(homePageUrl));
-    }
-
-    private boolean isRemoteIpCoveredByProxyHeader()
-    {
-        if (getRequest() instanceof ServletWebRequest request) {
-            return asList(request.getHeader("x-forwarded-for"), request.getHeader("x-real-ip"))
-                    .contains(getRemoteIp());
-        }
-        return false;
     }
 
     private String getRemoteIp()
