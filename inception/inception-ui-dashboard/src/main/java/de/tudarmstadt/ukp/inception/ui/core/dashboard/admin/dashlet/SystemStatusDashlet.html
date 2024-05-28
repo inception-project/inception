@@ -19,11 +19,11 @@
   xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
 <body>
   <wicket:panel>
-    <h1>System Status</h1>
+    <h1><wicket:message key="systemStatus" /></h1>
 
     <div class="card m-2">
       <div class="card-header">
-        Active Users 
+        <wicket:message key="activeUsers" />
         <span class="badge rounded-pill text-bg-secondary float-end">
           <wicket:container wicket:id="activeUsers" />
         </span>
@@ -34,22 +34,22 @@
     </div>
 
     <div wicket:id="reverseProxyInfo" class="card m-2">
-      <div class="card-header">Reverse Proxy Status</div>
+      <div class="card-header"><wicket:message key="reverseProxyStatus" /></div>
       <div class="card-body">
         <div class="row form-row">
           <p><wicket:message key="proxyDetected"/></p>
 
           <p wicket:id="isProxyTrusted"></p>
           <p wicket:enclosure="remoteIp">
-            Remote IP: <span wicket:id="remoteIp"/>
+              <wicket:message key="remoteIpLabel" /> <span wicket:id="remoteIp"/>
           </p>
           
           <div wicket:id="isProtocolOk"></div>
           <p wicket:enclosure="clientUrl">
-            Client URL: <span wicket:id="clientUrl"/>
+              <wicket:message key="clientUrlLabel" /> <span wicket:id="clientUrl"/>
           </p>
           <p wicket:enclosure="serverUrl">
-            Server URL: <span wicket:id="serverUrl"/>
+              <wicket:message key="serverUrlLabel" /> <span wicket:id="serverUrl"/>
           </p>
           
           <div wicket:id="hasCsrfWithProtocol"></div>
@@ -59,24 +59,24 @@
     </div>
 
     <div wicket:id="requestDetails" class="card m-2">
-      <div class="card-header">Request Details</div>
+      <div class="card-header"><wicket:message key="requestDetailsLabel" /></div>
       <div class="card-body">
         <div class="row form-row" wicket:enclosure="reverseProxyHeaders">
-          <label class="col-sm-4 col-form-label"> Reverse Proxy Headers </label>
+          <label class="col-sm-4 col-form-label"> <wicket:message key="reverseProxyHeadersLabel" /> </label>
           <div class="col-sm-8">
             <pre wicket:id="reverseProxyHeaders" class="form-control" />
           </div>
         </div>
 
         <div class="row form-row" wicket:enclosure="csrfInfo">
-          <label class="col-sm-4 col-form-label"> CSRF </label>
+          <label class="col-sm-4 col-form-label"> <wicket:message key="csrfLabel" /> </label>
           <div class="col-sm-8">
             <pre wicket:id="csrfInfo" class="form-control" />
           </div>
         </div>
 
         <div class="row form-row" wicket:enclosure="headers">
-          <label class="col-sm-4 col-form-label"> All Headers </label>
+          <label class="col-sm-4 col-form-label"> <wicket:message key="allHeaders" /> </label>
           <div class="col-sm-8">
             <pre wicket:id="headers" class="form-control" />
           </div>
