@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import de.tudarmstadt.ukp.inception.support.wicket.resource.Strings;
 import org.apache.wicket.request.resource.PackageResourceReference;
 import org.apache.wicket.request.resource.ResourceReference;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -59,7 +60,7 @@ public class StandardProjectInitializer
     @Override
     public String getName()
     {
-        return "Classic linguistic project";
+        return Strings.getString("standard-project.name");
     }
 
     @Override
@@ -93,7 +94,6 @@ public class StandardProjectInitializer
     @Override
     public Optional<String> getDescription()
     {
-        return Optional.of("Comes pre-configured for many linguistic annotation tasks. "
-                + "This is closest to the classic WebAnno project setup.");
+        return Optional.of(Strings.getString("standard-project.description"));
     }
 }

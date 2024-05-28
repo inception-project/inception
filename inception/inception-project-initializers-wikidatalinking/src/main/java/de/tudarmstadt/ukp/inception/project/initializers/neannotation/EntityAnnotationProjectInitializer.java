@@ -77,7 +77,7 @@ public class EntityAnnotationProjectInitializer
     @Override
     public String getName()
     {
-        return "Entity annotation";
+        return Strings.getString("entity-annotation-project.name");
     }
 
     @Override

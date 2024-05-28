@@ -56,7 +56,7 @@ public class UniversalDependenciesProjectInitializer
     @Override
     public String getName()
     {
-        return "Universal Dependencies";
+        return Strings.getString("ud-project.name");
     }
 
     @Override

@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import de.tudarmstadt.ukp.inception.support.wicket.resource.Strings;
 import org.apache.wicket.request.resource.PackageResourceReference;
 import org.apache.wicket.request.resource.ResourceReference;
 import org.springframework.context.ApplicationContext;
@@ -57,13 +58,13 @@ public class BasicProjectInitializer
     @Override
     public String getName()
     {
-        return "Basic annotation (span/relation)";
+        return Strings.getString("basic-project.name");
     }
 
     @Override
     public Optional<String> getDescription()
     {
-        return Optional.of("Create annotations on words and connect them using relations.");
+        return Optional.of(Strings.getString("basic-project.description"));
     }
 
     @Override

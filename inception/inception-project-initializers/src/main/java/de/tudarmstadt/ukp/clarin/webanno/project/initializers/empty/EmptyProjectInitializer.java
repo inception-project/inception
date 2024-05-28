@@ -24,6 +24,7 @@ import java.lang.invoke.MethodHandles;
 import java.util.List;
 import java.util.Optional;
 
+import de.tudarmstadt.ukp.inception.support.wicket.resource.Strings;
 import org.apache.wicket.request.resource.PackageResourceReference;
 import org.apache.wicket.request.resource.ResourceReference;
 import org.springframework.core.annotation.Order;
@@ -51,7 +52,7 @@ public class EmptyProjectInitializer
     @Override
     public String getName()
     {
-        return "Blank project (no layers)";
+        return Strings.getString("empty-project.name");
     }
 
     @Override
@@ -89,7 +90,6 @@ public class EmptyProjectInitializer
     @Override
     public Optional<String> getDescription()
     {
-        return Optional.of("This project has no pre-defined layers. You will only be able to "
-                + "annotate after you have defined annotation layers in the project settings.");
+        return Optional.of(Strings.getString("empty-project.description"));
     }
 }

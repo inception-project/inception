@@ -64,7 +64,7 @@ public class EntityLinkingProjectInitializer
     @Override
     public String getName()
     {
-        return "Entity linking (Wikidata)";
+        return Strings.getString("entity-linking-project.name");
     }
 
     @Override
