@@ -31,12 +31,12 @@
     <div class="flex-content flex-v-container">
       <div class="m-3 d-flex flex-row align-items-center">
         <button wicket:id="refresh" class="btn btn-primary">
-          <i class="fas fa-sync-alt me-2"></i> Refresh
+          <i class="fas fa-sync-alt me-2"></i> <wicket:message key="refresh" />
         </button>
         
         <div class="form-check form-switch ms-3">
           <input class="form-check-input" type="checkbox" role="switch" wicket:id="autoRefresh">
-          <label class="form-check-label" wicket:for="autoRefresh">Auto-refresh</label>
+          <label class="form-check-label" wicket:for="autoRefresh"><wicket:message key="autoRefreshLabel" /></label>
         </div>
       </div>
       <div wicket:id="messagesContainer" class="flex-content scrolling ">
@@ -44,8 +44,8 @@
           <thead>
             <tr class="headers">
               <td></td>
-              <td>Time</td>
-              <td>Message</td>
+              <td><wicket:message key="time" /></td>
+              <td><wicket:message key="messageTitle" /></td>
             </tr>
           </thead>
           <tbody>
