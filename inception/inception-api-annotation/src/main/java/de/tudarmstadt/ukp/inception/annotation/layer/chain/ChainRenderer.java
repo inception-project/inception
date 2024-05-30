@@ -99,7 +99,7 @@ public class ChainRenderer
 
     @Override
     public void render(RenderRequest aRequest, List<AnnotationFeature> aFeatures,
-            VDocument aResponse, int aWindowBegin, int aWindowEnd)
+            VDocument aResponse)
     {
         if (!checkTypeSystem(aRequest.getCas())) {
             return;
@@ -125,7 +125,10 @@ public class ChainRenderer
         // Sorted index mapping annotations to the corresponding rendered spans
         var annoToSpanIdx = new HashMap<AnnotationFS, VSpan>();
 
-        int colorIndex = 0;
+        var windowBegin = aResponse.getWindowBegin();
+        var windowEnd = aResponse.getWindowEnd();
+
+        var colorIndex = 0;
         // Iterate over the chains
         var chains = aRequest.getCas().select(typeAdapter.getChainTypeName()).asList();
         for (var chainFs : chains) {
@@ -139,13 +142,13 @@ public class ChainRenderer
                 var nextLinkFs = (AnnotationFS) linkFs.getFeatureValue(linkNext);
 
                 // Is link after window? If yes, we can skip the rest of the chain
-                if (linkFs.getBegin() >= aWindowEnd) {
+                if (linkFs.getBegin() >= windowBegin) {
                     break; // Go to next chain
                 }
 
                 // Is not overlapping the viewport? We only need links that are actually visible in
                 // the viewport
-                if (!overlapping(linkFs, aWindowBegin, aWindowEnd)) {
+                if (!overlapping(linkFs, windowBegin, windowEnd)) {
                     // prevLinkFs remains null until we enter the window
                     linkFs = nextLinkFs;
                     continue; // Go to next link
@@ -201,13 +204,13 @@ public class ChainRenderer
         }
 
         for (var behavior : behaviors) {
-            behavior.onRender(typeAdapter, aResponse, annoToSpanIdx, aWindowBegin, aWindowEnd);
+            behavior.onRender(typeAdapter, aResponse, annoToSpanIdx);
         }
     }
 
     @Override
     public List<VObject> render(RenderRequest aRequest, List<AnnotationFeature> aFeatures,
-            VDocument aResponse, int windowBeginOffset, int windowEndOffset, AnnotationFS aFS)
+            VDocument aResponse, AnnotationFS aFS)
     {
         return Collections.emptyList();
     }

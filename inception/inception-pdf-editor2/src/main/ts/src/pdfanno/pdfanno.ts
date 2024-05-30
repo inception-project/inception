@@ -291,8 +291,8 @@ export function getAnnotations () {
     range: [extendedBegin, extendedEnd],
     includeText: false,
     clipSpans: true,
-    clipRelations: false,
-    outOfRangeRelations: true,
+    clipArcs: false,
+    longArcs: true,
     format: 'compact_v2'
   }
 

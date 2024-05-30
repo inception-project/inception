@@ -214,9 +214,12 @@ public class RelationRendererTest
         var sut = new RelationRenderer(adapter, layerSupportRegistry, featureSupportRegistry,
                 asList(new RelationCrossSentenceBehavior()));
 
-        var request = RenderRequest.builder().withCas(jcas.getCas()).build();
-        var vdoc = new VDocument();
-        sut.render(request, asList(), vdoc, 0, jcas.getDocumentText().length());
+        var request = RenderRequest.builder() //
+                .withCas(jcas.getCas()) //
+                .withWindow(0, jcas.getCas().getDocumentText().length()) //
+                .build();
+        var vdoc = new VDocument(jcas.getCas().getDocumentText());
+        sut.render(request, asList(), vdoc);
 
         assertThat(vdoc.comments()) //
                 .usingRecursiveFieldByFieldElementComparator() //
@@ -254,29 +257,31 @@ public class RelationRendererTest
         var dep1 = adapter.add(document, username, source, target, jcas.getCas());
         var dep2 = adapter.add(document, username, source, target, jcas.getCas());
 
-        var request = RenderRequest.builder().withCas(jcas.getCas()).build();
+        var request = RenderRequest.builder() //
+                .withCas(jcas.getCas()) //
+                .withWindow(0, jcas.getCas().getDocumentText().length()) //
+                .build();
 
         {
             depLayer.setOverlapMode(ANY_OVERLAP);
-            var vdoc = new VDocument();
-            sut.render(request, asList(), vdoc, 0, jcas.getDocumentText().length());
+            var vdoc = new VDocument(jcas.getCas().getDocumentText());
+            sut.render(request, asList(), vdoc);
 
             assertThat(vdoc.comments()).filteredOn(c -> ERROR.equals(c.getCommentType())).isEmpty();
         }
 
         {
             depLayer.setOverlapMode(STACKING_ONLY);
-            var vdoc = new VDocument();
-            sut.render(request, asList(), vdoc, 0, jcas.getDocumentText().length());
+            var vdoc = new VDocument(jcas.getCas().getDocumentText());
+            sut.render(request, asList(), vdoc);
 
             assertThat(vdoc.comments()).filteredOn(c -> ERROR.equals(c.getCommentType())).isEmpty();
-
         }
 
         {
             depLayer.setOverlapMode(OVERLAP_ONLY);
-            var vdoc = new VDocument();
-            sut.render(request, asList(), vdoc, 0, jcas.getDocumentText().length());
+            var vdoc = new VDocument(jcas.getCas().getDocumentText());
+            sut.render(request, asList(), vdoc);
 
             assertThat(vdoc.comments()) //
                     .filteredOn(c -> ERROR.equals(c.getCommentType()))
@@ -287,8 +292,8 @@ public class RelationRendererTest
 
         {
             depLayer.setOverlapMode(NO_OVERLAP);
-            VDocument vdoc = new VDocument();
-            sut.render(request, asList(), vdoc, 0, jcas.getDocumentText().length());
+            VDocument vdoc = new VDocument(jcas.getCas().getDocumentText());
+            sut.render(request, asList(), vdoc);
 
             assertThat(vdoc.comments()) //
                     .filteredOn(c -> ERROR.equals(c.getCommentType()))
@@ -304,8 +309,8 @@ public class RelationRendererTest
 
         {
             depLayer.setOverlapMode(NO_OVERLAP);
-            var vdoc = new VDocument();
-            sut.render(request, asList(), vdoc, 0, jcas.getDocumentText().length());
+            var vdoc = new VDocument(jcas.getCas().getDocumentText());
+            sut.render(request, asList(), vdoc);
 
             assertThat(vdoc.comments()) //
                     .filteredOn(c -> ERROR.equals(c.getCommentType()))

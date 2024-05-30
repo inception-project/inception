@@ -60,6 +60,19 @@ public class VDocument
         // Nothing to do
     }
 
+    public VDocument(String aText)
+    {
+        text = aText;
+        windowBegin = 0;
+        windowEnd = aText.length();
+    }
+
+    public void setWindow(int aWindowBegin, int aWindowEnd)
+    {
+        windowBegin = aWindowBegin;
+        windowEnd = aWindowEnd;
+    }
+
     public void setWindowBegin(int aWindowBegin)
     {
         windowBegin = aWindowBegin;
@@ -82,6 +95,8 @@ public class VDocument
 
     public void setText(String aText)
     {
+        assert text == null : "Text can only be set once";
+
         text = aText;
     }
 

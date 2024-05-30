@@ -99,10 +99,12 @@ public class SpanRendererTest
         var sut = new SpanRenderer(adapter, layerSupportRegistry, featureSupportRegistry,
                 asList(new SpanCrossSentenceBehavior()));
 
-        var request = RenderRequest.builder().withCas(jcas.getCas()).build();
-        var vdoc = new VDocument();
-        vdoc.setWindowEnd(20);
-        sut.render(request, asList(), vdoc, 0, jcas.getDocumentText().length());
+        var request = RenderRequest.builder() //
+                .withCas(jcas.getCas()) //
+                .withWindow(0, jcas.getCas().getDocumentText().length()) //
+                .build();
+        var vdoc = new VDocument(jcas.getCas().getDocumentText());
+        sut.render(request, asList(), vdoc);
 
         assertThat(vdoc.comments()) //
                 .usingRecursiveFieldByFieldElementComparator() //
@@ -127,13 +129,15 @@ public class SpanRendererTest
         var sut = new SpanRenderer(adapter, layerSupportRegistry, featureSupportRegistry,
                 asList(new SpanOverlapBehavior()));
 
-        var request = RenderRequest.builder().withCas(jcas.getCas()).build();
+        var request = RenderRequest.builder() //
+                .withCas(jcas.getCas()) //
+                .withWindow(0, jcas.getCas().getDocumentText().length()) //
+                .build();
 
         {
             neLayer.setOverlapMode(OverlapMode.NO_OVERLAP);
-            var vdoc = new VDocument();
-            vdoc.setWindowEnd(20);
-            sut.render(request, asList(), vdoc, 0, jcas.getDocumentText().length());
+            var vdoc = new VDocument(jcas.getCas().getDocumentText());
+            sut.render(request, asList(), vdoc);
             assertThat(vdoc.comments()) //
                     .usingRecursiveFieldByFieldElementComparator() //
                     .containsExactlyInAnyOrder( //
@@ -143,9 +147,8 @@ public class SpanRendererTest
 
         {
             neLayer.setOverlapMode(OVERLAP_ONLY);
-            var vdoc = new VDocument();
-            vdoc.setWindowEnd(20);
-            sut.render(request, asList(), vdoc, 0, jcas.getDocumentText().length());
+            var vdoc = new VDocument(jcas.getCas().getDocumentText());
+            sut.render(request, asList(), vdoc);
             assertThat(vdoc.comments()).usingRecursiveFieldByFieldElementComparator()
                     .containsExactlyInAnyOrder(
                             new VComment(ne1, VCommentType.ERROR, "Stacking is not permitted."),
@@ -154,17 +157,15 @@ public class SpanRendererTest
 
         {
             neLayer.setOverlapMode(STACKING_ONLY);
-            var vdoc = new VDocument();
-            vdoc.setWindowEnd(20);
-            sut.render(request, asList(), vdoc, 0, jcas.getDocumentText().length());
+            var vdoc = new VDocument(jcas.getCas().getDocumentText());
+            sut.render(request, asList(), vdoc);
             assertThat(vdoc.comments()).isEmpty();
         }
 
         {
             neLayer.setOverlapMode(ANY_OVERLAP);
-            var vdoc = new VDocument();
-            vdoc.setWindowEnd(20);
-            sut.render(request, asList(), vdoc, 0, jcas.getDocumentText().length());
+            var vdoc = new VDocument(jcas.getCas().getDocumentText());
+            sut.render(request, asList(), vdoc);
             assertThat(vdoc.comments()).isEmpty();
         }
     }

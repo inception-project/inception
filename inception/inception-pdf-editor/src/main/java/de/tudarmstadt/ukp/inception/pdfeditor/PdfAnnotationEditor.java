@@ -175,7 +175,7 @@ public class PdfAnnotationEditor
                 .withCas(aCas) //
                 .withSessionOwner(userService.getCurrentUser()) //
                 .withVisibleLayers(getLayersToRender(getModelObject())) //
-                .withOutOfRangeRelations(false) //
+                .withLongArcs(false) //
                 .build();
 
         var vdoc = renderingPipeline.render(request);

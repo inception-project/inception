@@ -194,7 +194,7 @@ public abstract class AnnotationEditorBase
                 .withCas(aCas) //
                 .withSessionOwner(userService.getCurrentUser()) //
                 .withVisibleLayers(getLayersToRender(getModelObject())) //
-                .withOutOfRangeRelations(true) //
+                .withLongArcs(true) //
                 .build();
 
         var vdoc = renderingPipeline.render(request);

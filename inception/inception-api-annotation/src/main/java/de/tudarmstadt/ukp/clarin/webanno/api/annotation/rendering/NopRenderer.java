@@ -48,14 +48,14 @@ public class NopRenderer
 
     @Override
     public void render(RenderRequest aRequest, List<AnnotationFeature> aFeatures,
-            VDocument aResponse, int windowBeginOffset, int windowEndOffset)
+            VDocument aResponse)
     {
         // Nothing to do
     }
 
     @Override
     public List<VObject> render(RenderRequest aRequest, List<AnnotationFeature> aFeatures,
-            VDocument aResponse, int windowBeginOffset, int windowEndOffset, AnnotationFS aFS)
+            VDocument aResponse, AnnotationFS aFS)
 
     {
         return Collections.emptyList();

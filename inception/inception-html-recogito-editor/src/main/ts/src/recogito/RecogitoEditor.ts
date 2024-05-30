@@ -343,8 +343,8 @@ export class RecogitoEditor implements AnnotationEditor {
         range,
         includeText: false,
         clipSpans: true,
-        clipRelations: false,
-        outOfRangeRelations: true,
+        clipArcs: false,
+        longArcs: true,
         format: 'compact_v2'
       }
 

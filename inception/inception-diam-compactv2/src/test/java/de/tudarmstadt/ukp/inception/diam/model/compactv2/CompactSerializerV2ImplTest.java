@@ -64,10 +64,7 @@ public class CompactSerializerV2ImplTest
                 .withName("custom.Relation") //
                 .withType(WebAnnoConst.RELATION_TYPE) //
                 .build();
-        var vdoc = new VDocument();
-        vdoc.setText("This is a test.");
-        vdoc.setWindowBegin(0);
-        vdoc.setWindowEnd(vdoc.getText().length());
+        var vdoc = new VDocument("This is a test.");
         var span1 = new VSpan(spanLayer, new VID(1), new VRange(0, 4), Map.of(), null);
         span1.setLabelHint("span1");
         vdoc.add(span1);

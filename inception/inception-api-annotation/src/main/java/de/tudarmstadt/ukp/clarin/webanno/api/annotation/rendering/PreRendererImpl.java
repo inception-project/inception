@@ -105,8 +105,7 @@ public class PreRendererImpl
         var renderBegin = Math.max(0, aRequest.getWindowBeginOffset());
         var renderEnd = Math.min(documentText.length(), aRequest.getWindowEndOffset());
         aResponse.setText(documentText.substring(renderBegin, renderEnd));
-        aResponse.setWindowBegin(renderBegin);
-        aResponse.setWindowEnd(renderEnd);
+        aResponse.setWindow(renderBegin, renderEnd);
 
         var start = System.currentTimeMillis();
         var project = aRequest.getProject();
@@ -129,7 +128,7 @@ public class PreRendererImpl
             // the same because otherwise the IDs of armed slots would be inconsistent
             LayerSupport<?, ?> layerSupport = layerSupportRegistry.getLayerSupport(layer);
             var renderer = layerSupport.createRenderer(layer, () -> layerAllFeatures);
-            renderer.render(aRequest, layerSupportedFeatures, aResponse, renderBegin, renderEnd);
+            renderer.render(aRequest, layerSupportedFeatures, aResponse);
         }
 
         if (LOG.isTraceEnabled()) {
