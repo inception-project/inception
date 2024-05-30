@@ -41,6 +41,7 @@ public class VSpan
     private VSpan(Builder builder)
     {
         super(builder.layer, builder.vid, builder.equivalenceSet, builder.features);
+        setPlaceholder(builder.placeholder);
         setLabelHint(builder.label);
         ranges = builder.ranges;
     }
@@ -135,6 +136,7 @@ public class VSpan
         private Map<String, String> features = Collections.emptyMap();
         private List<VRange> ranges;
         private String label;
+        private boolean placeholder;
 
         private Builder()
         {
@@ -179,6 +181,12 @@ public class VSpan
         public Builder withLabel(String aLabel)
         {
             this.label = aLabel;
+            return this;
+        }
+
+        public Builder placeholder()
+        {
+            this.placeholder = true;
             return this;
         }
 

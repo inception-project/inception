@@ -199,7 +199,7 @@ public class BratSerializerImplTest
                 .withVisibleLayers(schemaService.listAnnotationLayer(project)) //
                 .build();
 
-        VDocument vdoc = new VDocument();
+        var vdoc = new VDocument();
         preRenderer.render(vdoc, request);
         labelRenderer.render(vdoc, request);
         colorRenderer.render(vdoc, request);
@@ -215,35 +215,34 @@ public class BratSerializerImplTest
     @Test
     public void thatLineOrientedStrategyRenderCorrectly() throws Exception
     {
-        String jsonFilePath = "target/test-output/multiline.json";
-        String file = "src/test/resources/multiline.txt";
+        var jsonFilePath = "target/test-output/multiline.json";
+        var file = "src/test/resources/multiline.txt";
 
-        CAS cas = JCasFactory.createJCas().getCas();
-        CollectionReader reader = createReader(TextReader.class, TextReader.PARAM_SOURCE_LOCATION,
-                file);
+        var cas = JCasFactory.createJCas().getCas();
+        var reader = createReader(TextReader.class, TextReader.PARAM_SOURCE_LOCATION, file);
         reader.getNext(cas);
-        AnalysisEngine segmenter = createEngine(BreakIteratorSegmenter.class);
+        var segmenter = createEngine(BreakIteratorSegmenter.class);
         segmenter.process(cas);
-        AnnotatorState state = new AnnotatorStateImpl(Mode.ANNOTATION);
+        var state = new AnnotatorStateImpl(Mode.ANNOTATION);
         state.setPagingStrategy(new LineOrientedPagingStrategy());
         state.getPreferences().setWindowSize(10);
         state.setFirstVisibleUnit(getFirstSentence(cas));
         state.setProject(project);
         state.setDocument(sourceDocument, asList(sourceDocument));
 
-        RenderRequest request = RenderRequest.builder() //
+        var request = RenderRequest.builder() //
                 .withState(state) //
                 .withWindow(state.getWindowBeginOffset(), state.getWindowEndOffset()) //
                 .withCas(cas) //
                 .withVisibleLayers(schemaService.listAnnotationLayer(project)) //
                 .build();
 
-        VDocument vdoc = new VDocument();
+        var vdoc = new VDocument();
         preRenderer.render(vdoc, request);
         labelRenderer.render(vdoc, request);
         colorRenderer.render(vdoc, request);
 
-        GetDocumentResponse response = sut.render(vdoc, request);
+        var response = sut.render(vdoc, request);
 
         JSONUtil.generatePrettyJson(response, new File(jsonFilePath));
 

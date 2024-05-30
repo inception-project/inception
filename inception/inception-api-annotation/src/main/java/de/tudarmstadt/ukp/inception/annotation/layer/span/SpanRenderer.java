@@ -131,7 +131,7 @@ public class SpanRenderer
 
     @Override
     public void render(RenderRequest aRequest, List<AnnotationFeature> aFeatures,
-            VDocument aResponse, int aWindowBegin, int aWindowEnd)
+            VDocument aResponse)
     {
         if (!checkTypeSystem(aRequest.getCas())) {
             return;
@@ -142,10 +142,11 @@ public class SpanRenderer
         // Index mapping annotations to the corresponding rendered spans
         var annoToSpanIdx = new HashMap<AnnotationFS, VSpan>();
 
-        var annotations = selectAnnotationsInWindow(aRequest, aWindowBegin, aWindowEnd);
+        var annotations = selectAnnotationsInWindow(aRequest, aResponse.getWindowBegin(),
+                aResponse.getWindowEnd());
 
         for (var fs : annotations) {
-            for (var vobj : render(aRequest, aFeatures, aResponse, aWindowBegin, aWindowEnd, fs)) {
+            for (var vobj : render(aRequest, aFeatures, aResponse, fs)) {
                 aResponse.add(vobj);
 
                 if (vobj instanceof VSpan vspan) {
@@ -157,13 +158,13 @@ public class SpanRenderer
         }
 
         for (var behavior : behaviors) {
-            behavior.onRender(typeAdapter, aResponse, annoToSpanIdx, aWindowBegin, aWindowEnd);
+            behavior.onRender(typeAdapter, aResponse, annoToSpanIdx);
         }
     }
 
     @Override
     public List<VObject> render(RenderRequest aRequest, List<AnnotationFeature> aFeatures,
-            VDocument aResponse, int windowBeginOffset, int windowEndOffset, AnnotationFS aFS)
+            VDocument aResponse, AnnotationFS aFS)
     {
         if (!checkTypeSystem(aFS.getCAS())) {
             return emptyList();
@@ -181,20 +182,20 @@ public class SpanRenderer
             spansAndSlots.add(span);
         }
         else {
-            source = RelationRenderer.createEndpoint(aRequest, aResponse, aFS, windowBeginOffset,
-                    windowEndOffset, getTypeAdapter());
+            source = RelationRenderer.createEndpoint(aRequest, aResponse, aFS, getTypeAdapter());
         }
 
-        renderSlots(aRequest, aResponse, aFS, source, spansAndSlots, windowBeginOffset,
-                windowEndOffset);
+        renderSlots(aRequest, aResponse, aFS, source, spansAndSlots);
 
         return spansAndSlots;
     }
 
     private void renderSlots(RenderRequest aRequest, VDocument aVDocument, AnnotationFS aFS,
-            VID aSource, List<VObject> aSpansAndSlots, int aWindowBegin, int aWindowEnd)
+            VID aSource, List<VObject> aSpansAndSlots)
     {
         var typeAdapter = getTypeAdapter();
+        var aWindowBegin = aVDocument.getWindowBegin();
+        var aWindowEnd = aVDocument.getWindowEnd();
 
         int fi = 0;
         nextFeature: for (var feat : typeAdapter.listFeatures()) {
@@ -214,7 +215,7 @@ public class SpanRenderer
 
                     if (overlapping(arcBegin, arcEnd, aWindowBegin, aWindowEnd)) {
                         var target = RelationRenderer.createEndpoint(aRequest, aVDocument, targetFS,
-                                aWindowBegin, aWindowEnd, typeAdapter);
+                                typeAdapter);
 
                         var vid = VID.builder().forAnnotation(aFS) //
                                 .withAttribute(fi) //

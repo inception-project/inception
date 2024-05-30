@@ -60,13 +60,8 @@ public interface Renderer
      *            the features.
      * @param aResponse
      *            The rendering response.
-     * @param windowBeginOffset
-     *            The start position of the window offset.
-     * @param windowEndOffset
-     *            The end position of the window offset.
      */
-    void render(RenderRequest aRequest, List<AnnotationFeature> aFeatures, VDocument aResponse,
-            int windowBeginOffset, int windowEndOffset);
+    void render(RenderRequest aRequest, List<AnnotationFeature> aFeatures, VDocument aResponse);
 
     /**
      * Render a single annotation .
@@ -77,13 +72,9 @@ public interface Renderer
      *            the features.
      * @param aResponse
      *            The rendering response.
-     * @param windowBeginOffset
-     *            The start position of the window offset.
-     * @param windowEndOffset
-     *            The end position of the window offset.
      */
     List<VObject> render(RenderRequest aRequest, List<AnnotationFeature> aFeatures,
-            VDocument aResponse, int windowBeginOffset, int windowEndOffset, AnnotationFS aFS);
+            VDocument aResponse, AnnotationFS aFS);
 
     FeatureSupportRegistry getFeatureSupportRegistry();
 

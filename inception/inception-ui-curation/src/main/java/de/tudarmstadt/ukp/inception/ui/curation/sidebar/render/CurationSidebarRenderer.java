@@ -177,7 +177,6 @@ public class CurationSidebarRenderer
                 var renderer = layerSupport.createRenderer(layer, () -> layerAllFeatures);
 
                 var objects = renderer.render(aRequest, layerSupportedFeatures, aVdoc,
-                        aRequest.getWindowBeginOffset(), aRequest.getWindowEndOffset(),
                         (AnnotationFS) fs);
 
                 for (var object : objects) {
