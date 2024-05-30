@@ -98,7 +98,7 @@ public class SpanRenderer
     {
         var cas = aRequest.getCas();
 
-        if (!aRequest.isOutOfRangeRelations()) {
+        if (!aRequest.isLongArcs()) {
             return cas.select(type).coveredBy(0, aWindowEnd) //
                     .includeAnnotationsWithEndBeyondBounds() //
                     .map(fs -> (AnnotationFS) fs)

@@ -204,16 +204,16 @@ export class DiamAjaxImpl implements DiamAjax {
         params.text = options.includeText
       }
 
-      if (options.outOfRangeRelations === true) {
-        params.outOfRangeRelations = options.outOfRangeRelations
+      if (options.longArcs === true) {
+        params.longArcs = options.longArcs
       }
 
       if (options.clipSpans === false) {
         params.clip = options.clipSpans
       }
 
-      if (options.clipRelations === false) {
-        params.clipRelations = options.clipRelations
+      if (options.clipArcs === false) {
+        params.clipArcs = options.clipArcs
       }
 
       if (options.format) {

@@ -137,7 +137,7 @@ public class RelationRenderer
     {
         var cas = aRequest.getCas();
 
-        if (!aRequest.isOutOfRangeRelations()) {
+        if (!aRequest.isLongArcs()) {
             return cas.<Annotation> select(type).coveredBy(aWindowBegin, aWindowEnd).toList();
         }
 
@@ -345,7 +345,7 @@ public class RelationRenderer
         var windowEnd = aVDocument.getWindowEnd();
 
         if (aEndpoint.getEnd() < windowBegin) {
-            if (aRequest.isClipRelations()) {
+            if (aRequest.isClipArcs()) {
                 if (aVDocument.getSpan(VID_BEFORE) == null) {
                     var beforeAnchor = VSpan.builder() //
                             .withVid(VID_BEFORE) //
@@ -369,7 +369,7 @@ public class RelationRenderer
         }
 
         if (aEndpoint.getBegin() >= windowEnd) {
-            if (aRequest.isClipRelations()) {
+            if (aRequest.isClipArcs()) {
                 if (aVDocument.getSpan(VID_AFTER) == null) {
                     var afterAnchor = VSpan.builder() //
                             .withVid(VID_AFTER) //

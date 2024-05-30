@@ -53,8 +53,8 @@ public class LoadAnnotationsHandler
     public static final String PARAM_END = "end";
     public static final String PARAM_TEXT = "text";
     public static final String PARAM_CLIP_SPANS = "clip";
-    public static final String PARAM_CLIP_RELATIONS = "clipRelations";
-    public static final String PARAM_OUT_OF_RANGE_RELATIONS = "outOfRangeRelations";
+    public static final String PARAM_CLIP_ARCS = "clipArcs";
+    public static final String PARAM_LONG_ARCS = "longArcs";
 
     private final RenderingPipeline renderingPipeline;
     private final VDocumentSerializerExtensionPoint vDocumentSerializerExtensionPoint;
@@ -104,10 +104,10 @@ public class LoadAnnotationsHandler
                 .toBoolean(true);
         var clipSpans = aRequest.getRequestParameters().getParameterValue(PARAM_CLIP_SPANS)
                 .toBoolean(true);
-        var clipRelations = aRequest.getRequestParameters().getParameterValue(PARAM_CLIP_RELATIONS)
+        var clipArcs = aRequest.getRequestParameters().getParameterValue(PARAM_CLIP_ARCS)
                 .toBoolean(true);
-        var outOfRangeRelations = aRequest.getRequestParameters()
-                .getParameterValue(PARAM_OUT_OF_RANGE_RELATIONS).toBoolean(false);
+        var longArcs = aRequest.getRequestParameters().getParameterValue(PARAM_LONG_ARCS)
+                .toBoolean(false);
 
         return RenderRequest.builder() //
                 .withState(state) //
@@ -116,8 +116,8 @@ public class LoadAnnotationsHandler
                 .withWindow(begin, end) //
                 .withText(includeText) //
                 .withClipSpans(clipSpans) //
-                .withClipRelations(clipRelations) //
-                .withOutOfRangeRelations(outOfRangeRelations) //
+                .withClipArcs(clipArcs) //
+                .withLongArcs(longArcs) //
                 .withVisibleLayers(state.getAnnotationLayers()) //
                 .build();
     }

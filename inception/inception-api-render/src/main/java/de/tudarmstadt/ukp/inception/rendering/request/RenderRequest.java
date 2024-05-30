@@ -44,8 +44,8 @@ public class RenderRequest
     private final int windowEndOffset;
     private final boolean includeText;
     private final boolean clipSpans;
-    private final boolean clipRelations;
-    private final boolean outOfRangeRelations;
+    private final boolean clipArcs;
+    private final boolean longArcs;
     private final List<AnnotationLayer> allLayers;
     private final List<AnnotationLayer> visibleLayers;
     private final CAS cas;
@@ -57,8 +57,8 @@ public class RenderRequest
         this.windowEndOffset = builder.windowEndOffset;
         this.includeText = builder.includeText;
         this.clipSpans = builder.clipSpans;
-        this.clipRelations = builder.clipRelations;
-        this.outOfRangeRelations = builder.outOfRangeRelations;
+        this.clipArcs = builder.clipArcs;
+        this.longArcs = builder.longArcs;
         this.state = builder.state;
         this.constraints = builder.constraints;
         this.sourceDocument = builder.sourceDocument;
@@ -95,14 +95,14 @@ public class RenderRequest
         return clipSpans;
     }
 
-    public boolean isClipRelations()
+    public boolean isClipArcs()
     {
-        return clipRelations;
+        return clipArcs;
     }
 
-    public boolean isOutOfRangeRelations()
+    public boolean isLongArcs()
     {
-        return outOfRangeRelations;
+        return longArcs;
     }
 
     public User getAnnotationUser()
@@ -168,8 +168,8 @@ public class RenderRequest
         private int windowEndOffset;
         private boolean includeText = true;
         private boolean clipSpans = true;
-        private boolean clipRelations = true;
-        private boolean outOfRangeRelations = false;
+        private boolean clipArcs = true;
+        private boolean longArcs = false;
         private AnnotatorState state;
         private SourceDocument sourceDocument;
         private User annotationUser;
@@ -225,15 +225,15 @@ public class RenderRequest
             return this;
         }
 
-        public Builder withClipRelations(boolean aFlag)
+        public Builder withClipArcs(boolean aFlag)
         {
-            clipRelations = aFlag;
+            clipArcs = aFlag;
             return this;
         }
 
-        public Builder withOutOfRangeRelations(boolean aFlag)
+        public Builder withLongArcs(boolean aFlag)
         {
-            outOfRangeRelations = aFlag;
+            longArcs = aFlag;
             return this;
         }
 
