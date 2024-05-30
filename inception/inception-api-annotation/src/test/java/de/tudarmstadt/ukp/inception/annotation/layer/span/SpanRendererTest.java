@@ -101,7 +101,7 @@ public class SpanRendererTest
 
         var request = RenderRequest.builder().withCas(jcas.getCas()).build();
         var vdoc = new VDocument();
-        vdoc.setWindowEnd(20);
+        vdoc.setWindowEnd(jcas.getDocumentText().length());
         sut.render(request, asList(), vdoc, 0, jcas.getDocumentText().length());
 
         assertThat(vdoc.comments()) //

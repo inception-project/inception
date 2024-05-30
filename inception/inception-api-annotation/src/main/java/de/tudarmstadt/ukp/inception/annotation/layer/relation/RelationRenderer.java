@@ -57,6 +57,7 @@ import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetailGroup;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VObject;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VRange;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VSpan;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
@@ -70,13 +71,13 @@ public class RelationRenderer
 {
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
-    private static final VID VID_BEFORE = VID.builder() //
+    public static final VID VID_BEFORE = VID.builder() //
             .withExtensionId("rel") //
             .withAnnotationId(0) //
             .withExtensionPayload("before") //
             .build();
 
-    private static final VID VID_AFTER = VID.builder() //
+    public static final VID VID_AFTER = VID.builder() //
             .withExtensionId("rel") //
             .withAnnotationId(1) //
             .withExtensionPayload("after") //
@@ -323,10 +324,10 @@ public class RelationRenderer
     {
         var objects = new ArrayList<VObject>();
 
-        var source = createRelationEndpoint(aRequest, aVDocument, (AnnotationFS) sourceFs,
+        var source = createEndpoint(aRequest, aVDocument, (AnnotationFS) sourceFs,
                 aWindowBegin, aWindowEnd, typeAdapter);
 
-        var target = createRelationEndpoint(aRequest, aVDocument, (AnnotationFS) targetFs,
+        var target = createEndpoint(aRequest, aVDocument, (AnnotationFS) targetFs,
                 aWindowBegin, aWindowEnd, typeAdapter);
 
         objects.add(VArc.builder().forAnnotation(aFS) //
@@ -339,8 +340,8 @@ public class RelationRenderer
         return objects;
     }
 
-    private VID createRelationEndpoint(RenderRequest aRequest, VDocument aVDocument,
-            AnnotationFS aEndpoint, int aWindowBegin, int aWindowEnd, RelationAdapter aTypeAdapter)
+    public static VID createEndpoint(RenderRequest aRequest, VDocument aVDocument,
+            AnnotationFS aEndpoint, int aWindowBegin, int aWindowEnd, TypeAdapter aTypeAdapter)
     {
         if (aEndpoint.getEnd() < aWindowBegin) {
             if (aRequest.isClipRelations()) {
