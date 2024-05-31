@@ -46,7 +46,7 @@ public class Configuration
 
     private final Position position;
     final Map<String, AID> fsAddresses = new TreeMap<>();
-    private List<AID> extras;
+    private Map<String, List<AID>> extras;
 
     /**
      * Flag indicating that there is at least once CAS group containing more than one annotation at
@@ -88,9 +88,10 @@ public class Configuration
         var old = fsAddresses.put(aCasGroupId, aAID);
         if (old != null) {
             if (extras == null) {
-                extras = new ArrayList<>();
+                extras = new TreeMap<>();
             }
-            extras.add(old);
+            var list = extras.computeIfAbsent(aCasGroupId, $ -> new ArrayList<AID>());
+            list.add(old);
             stacked = true;
         }
     }
@@ -139,18 +140,23 @@ public class Configuration
             return false;
         }
 
-        return extras.contains(aAID);
+        var list = extras.get(aCasGroupId);
+        if (list == null) {
+            return false;
+        }
+
+        return list.contains(aAID);
     }
 
     private <T extends FeatureStructure> FeatureStructure getFs(String aCasGroupId, Class<T> aClass,
             Map<String, CAS> aCasMap)
     {
-        AID aid = fsAddresses.get(aCasGroupId);
+        var aid = fsAddresses.get(aCasGroupId);
         if (aid == null) {
             return null;
         }
 
-        CAS cas = aCasMap.get(aCasGroupId);
+        var cas = aCasMap.get(aCasGroupId);
         if (cas == null) {
             return null;
         }
@@ -179,8 +185,11 @@ public class Configuration
         allFs.add(ICasUtil.selectFsByAddr(cas, aid.addr));
 
         if (extras != null) {
-            for (var eAid : extras) {
-                allFs.add(ICasUtil.selectFsByAddr(cas, eAid.addr));
+            var list = extras.get(aCasGroupId);
+            if (list != null) {
+                for (var eAid : list) {
+                    allFs.add(ICasUtil.selectFsByAddr(cas, eAid.addr));
+                }
             }
         }
 
@@ -206,7 +215,13 @@ public class Configuration
             sb.append(e.getValue());
             if (extras != null) {
                 sb.append(" (extras: ");
-                sb.append(extras.stream().map(String::valueOf).collect(joining(", ")));
+                for (var entries : extras.entrySet()) {
+                    sb.append(" {");
+                    sb.append(entries.getKey());
+                    sb.append(entries.getValue().stream().map(String::valueOf)
+                            .collect(joining(", ")));
+                    sb.append("} ");
+                }
                 sb.append(")");
             }
         }
