@@ -420,6 +420,7 @@ export class ApacheAnnotatorVisualizer {
 
     window.clearTimeout(this.removeTransientMarkersTimeout)
     this.removeTransientMarkers.forEach(remove => remove())
+    this.root.normalize() // https://github.com/apache/incubator-annotator/issues/120
 
     const removeScrollMarker = highlightText(range, 'mark', { id: 'iaa-scroll-marker' })
     this.removeTransientMarkers = [removeScrollMarker]
@@ -469,6 +470,7 @@ export class ApacheAnnotatorVisualizer {
     this.removeTransientMarkersTimeout = window.setTimeout(() => {
       this.removeTransientMarkers.forEach(remove => remove())
       this.removeTransientMarkers = []
+      this.root.normalize() // https://github.com/apache/incubator-annotator/issues/120
     }, 2000)
   }
 
