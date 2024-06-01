@@ -18,17 +18,19 @@
 package de.tudarmstadt.ukp.inception.support.extensionpoint;
 
 import static de.tudarmstadt.ukp.inception.support.logging.BaseLoggers.BOOT_LOG;
+import static java.lang.invoke.MethodHandles.lookup;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.ClassUtils.getAbbreviatedName;
+import static org.slf4j.LoggerFactory.getLogger;
 
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
@@ -36,7 +38,7 @@ import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 public abstract class ExtensionPoint_ImplBase<C, E extends Extension<C>>
     implements ExtensionPoint<C, E>
 {
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    private static final Logger LOG = getLogger(lookup().lookupClass());
 
     private final List<E> extensionsListProxy;
 
@@ -55,14 +57,14 @@ public abstract class ExtensionPoint_ImplBase<C, E extends Extension<C>>
 
     public void init()
     {
-        List<E> extensions = new ArrayList<>();
+        var extensions = new ArrayList<E>();
 
         if (extensionsListProxy != null) {
             extensions.addAll(extensionsListProxy);
-            AnnotationAwareOrderComparator.sort(extensions);
+            extensions.sort(makeComparator());
 
             for (E fs : extensions) {
-                log.debug("Found {} extension: {}", getClass().getSimpleName(),
+                LOG.debug("Found {} extension: {}", getClass().getSimpleName(),
                         getAbbreviatedName(fs.getClass(), 20));
             }
         }
@@ -72,15 +74,21 @@ public abstract class ExtensionPoint_ImplBase<C, E extends Extension<C>>
         extensionsList = unmodifiableList(extensions);
     }
 
+    @SuppressWarnings("unchecked")
+    protected Comparator<E> makeComparator()
+    {
+        return (Comparator<E>) AnnotationAwareOrderComparator.INSTANCE;
+    }
+
     @Override
     public List<E> getExtensions()
     {
         if (extensionsList == null) {
-            log.error(
+            LOG.error(
                     "List of extensions was accessed on this extension point before the extension "
                             + "point was initialized!",
                     new IllegalStateException());
-            return Collections.emptyList();
+            return emptyList();
         }
 
         return extensionsList;

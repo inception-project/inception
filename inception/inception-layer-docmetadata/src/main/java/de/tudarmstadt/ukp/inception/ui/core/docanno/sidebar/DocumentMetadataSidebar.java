@@ -17,29 +17,26 @@
  */
 package de.tudarmstadt.ukp.inception.ui.core.docanno.sidebar;
 
-import org.apache.wicket.model.IModel;
 import org.wicketstuff.event.annotation.OnEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase2;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.recommendation.api.event.PredictionsSwitchedEvent;
-import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 
 public class DocumentMetadataSidebar
     extends AnnotationSidebar_ImplBase
 {
     private static final long serialVersionUID = 2085197932148384096L;
 
-    public DocumentMetadataSidebar(String aId, IModel<AnnotatorState> aModel,
-            AnnotationActionHandler aActionHandler, CasProvider aCasProvider,
-            AnnotationPage aAnnotationPage)
+    public DocumentMetadataSidebar(String aId, AnnotationActionHandler aActionHandler,
+            CasProvider aCasProvider, AnnotationPageBase2 aAnnotationPage)
     {
-        super(aId, aModel, aActionHandler, aCasProvider, aAnnotationPage);
+        super(aId, aActionHandler, aCasProvider, aAnnotationPage);
 
         add(new DocumentMetadataAnnotationSelectionPanel("annotations", aCasProvider,
-                aAnnotationPage, aActionHandler, aModel));
+                aAnnotationPage, aActionHandler));
     }
 
     @OnEvent

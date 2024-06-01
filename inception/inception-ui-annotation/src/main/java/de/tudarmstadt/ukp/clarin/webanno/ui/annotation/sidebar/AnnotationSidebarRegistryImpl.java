@@ -17,82 +17,47 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar;
 
-import static java.util.Collections.unmodifiableList;
+import static java.lang.invoke.MethodHandles.lookup;
+import static org.slf4j.LoggerFactory.getLogger;
 
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
-import org.apache.commons.lang3.ClassUtils;
 import org.apache.commons.lang3.builder.CompareToBuilder;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
-import org.springframework.context.event.ContextRefreshedEvent;
-import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 import org.springframework.stereotype.Component;
 
-import de.tudarmstadt.ukp.inception.support.logging.BaseLoggers;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
+import de.tudarmstadt.ukp.inception.support.extensionpoint.ExtensionPoint_ImplBase;
 
 @Component
 public class AnnotationSidebarRegistryImpl
+    extends ExtensionPoint_ImplBase<AnnotationPageBase, AnnotationSidebarFactory>
     implements AnnotationSidebarRegistry
 {
-    private final Logger log = LoggerFactory.getLogger(getClass());
-
-    private final List<AnnotationSidebarFactory> extensionsProxy;
-
-    private List<AnnotationSidebarFactory> extensions;
+    private static final Logger LOG = getLogger(lookup().lookupClass());
 
     public AnnotationSidebarRegistryImpl(
             @Lazy @Autowired(required = false) List<AnnotationSidebarFactory> aExtensions)
     {
-        extensionsProxy = aExtensions;
+        super(aExtensions);
     }
 
-    @EventListener
-    public void onContextRefreshedEvent(ContextRefreshedEvent aEvent)
-    {
-        init();
-    }
-
-    /* package private */ void init()
-    {
-        List<AnnotationSidebarFactory> exts = new ArrayList<>();
-
-        if (extensionsProxy != null) {
-            exts.addAll(extensionsProxy);
-            exts.sort(buildComparator());
-
-            for (AnnotationSidebarFactory fs : exts) {
-                log.debug("Found annotation sidebar extension: {}",
-                        ClassUtils.getAbbreviatedName(fs.getClass(), 20));
-            }
-        }
-
-        BaseLoggers.BOOT_LOG.info("Found [{}] annotation sidebar extensions", exts.size());
-
-        extensions = unmodifiableList(exts);
-    }
-
+    @Deprecated
     @Override
     public List<AnnotationSidebarFactory> getSidebarFactories()
     {
-        return extensions;
+        return getExtensions();
     }
 
+    @Deprecated
     @Override
     public AnnotationSidebarFactory getSidebarFactory(String aId)
     {
-        if (aId == null) {
-            return null;
-        }
-        else {
-            return extensions.stream().filter(f -> aId.equals(f.getBeanName())).findFirst()
-                    .orElse(null);
-        }
+        return getExtension(aId).orElseThrow();
     }
 
     @Override
@@ -107,10 +72,12 @@ public class AnnotationSidebarRegistryImpl
      * 
      * @return The comparator
      */
-    private Comparator<AnnotationSidebarFactory> buildComparator()
+    @Override
+    protected Comparator<AnnotationSidebarFactory> makeComparator()
     {
-        return (asf1, asf2) -> new CompareToBuilder()
-                .appendSuper(AnnotationAwareOrderComparator.INSTANCE.compare(asf1, asf2))
-                .append(asf1.getDisplayName(), asf2.getDisplayName()).toComparison();
+        return (asf1, asf2) -> new CompareToBuilder() //
+                .appendSuper(AnnotationAwareOrderComparator.INSTANCE.compare(asf1, asf2)) //
+                .append(asf1.getDisplayName(), asf2.getDisplayName()) //
+                .toComparison();
     }
 }

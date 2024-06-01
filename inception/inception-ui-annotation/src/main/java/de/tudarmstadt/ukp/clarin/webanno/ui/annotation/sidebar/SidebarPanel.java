@@ -34,9 +34,8 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.springframework.context.ApplicationContext;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase2;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
-import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.support.spring.ApplicationContextProvider;
 
 public class SidebarPanel
@@ -48,13 +47,12 @@ public class SidebarPanel
 
     private AnnotationActionHandler actionHandler;
     private CasProvider casProvider;
-    private AnnotationPage annotationPage;
-    private IModel<AnnotatorState> stateModel;
+    private AnnotationPageBase2 annotationPage;
     private SidebarTabbedPanel<SidebarTab> tabsPanel;
 
-    public SidebarPanel(String aId, IModel<AnnotatorState> aModel, IModel<Integer> aWidthModel,
+    public SidebarPanel(String aId, IModel<Integer> aWidthModel,
             final AnnotationActionHandler aActionHandler, final CasProvider aCasProvider,
-            AnnotationPage aAnnotationPage)
+            AnnotationPageBase2 aAnnotationPage)
     {
         super(aId);
 
@@ -66,9 +64,9 @@ public class SidebarPanel
         actionHandler = aActionHandler;
         casProvider = aCasProvider;
         annotationPage = aAnnotationPage;
-        stateModel = aModel;
 
-        tabsPanel = new SidebarTabbedPanel<>("leftSidebarContent", makeTabs(), stateModel);
+        tabsPanel = new SidebarTabbedPanel<>("leftSidebarContent", makeTabs(),
+                annotationPage.getModel());
         add(tabsPanel);
 
         add(new AttributeAppender("class",
@@ -87,7 +85,9 @@ public class SidebarPanel
         super.onConfigure();
 
         // Only show sidebar if a document is selected
-        setVisible(stateModel.getObject() != null && stateModel.getObject().getDocument() != null);
+        setVisible(annotationPage.getModel() //
+                .map(state -> state.getDocument() != null) //
+                .orElse(false).getObject());
     }
 
     public void refreshTabs(AjaxRequestTarget aTarget)
@@ -104,7 +104,7 @@ public class SidebarPanel
         var tabs = new ArrayList<SidebarTab>();
         for (var factory : sidebarRegistry.getSidebarFactories()) {
 
-            if (!factory.applies(stateModel.getObject())) {
+            if (!factory.accepts(annotationPage)) {
                 continue;
             }
 
@@ -123,7 +123,7 @@ public class SidebarPanel
                         ApplicationContext ctx = ApplicationContextProvider.getApplicationContext();
                         return ctx.getBean(AnnotationSidebarRegistry.class)
                                 .getSidebarFactory(factoryId)
-                                .create(Id, stateModel, actionHandler, casProvider, annotationPage);
+                                .create(Id, actionHandler, casProvider, annotationPage);
                     }
                     catch (Exception e) {
                         throw new RuntimeException(e);

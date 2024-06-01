@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.ui.curation.page;
+package de.tudarmstadt.ukp.inception.ui.curation.page;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static java.lang.String.format;
@@ -30,7 +30,6 @@ import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.ProjectMenuItem;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import wicket.contrib.input.events.key.KeyType;
@@ -55,13 +54,12 @@ public class CurationPageMenuItem
     @Override
     public String getPath()
     {
-        return "/curate";
+        return "/curate2";
     }
 
     public String getUrl(Project aProject, long aDocumentId)
     {
-        String p = aProject.getSlug() != null ? aProject.getSlug()
-                : String.valueOf(aProject.getId());
+        var p = aProject.getSlug() != null ? aProject.getSlug() : String.valueOf(aProject.getId());
 
         return format("%s/p/%s%s/%d", servletContext.getContextPath(), p, getPath(), aDocumentId);
     }
@@ -75,7 +73,7 @@ public class CurationPageMenuItem
     @Override
     public String getLabel()
     {
-        return "Curation";
+        return "Curation (new)";
     }
 
     @Override
@@ -86,7 +84,7 @@ public class CurationPageMenuItem
         }
 
         // Visible if the current user is a curator
-        User user = userRepo.getCurrentUser();
+        var user = userRepo.getCurrentUser();
         return projectService.hasRole(user, aProject, CURATOR);
     }
 

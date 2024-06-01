@@ -28,7 +28,7 @@ import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase2;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebarFactory_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
@@ -76,18 +76,17 @@ public class CurationSidebarFactory
     }
 
     @Override
-    public AnnotationSidebar_ImplBase create(String aId, IModel<AnnotatorState> aModel,
-            AnnotationActionHandler aActionHandler, CasProvider aCasProvider,
-            AnnotationPage aAnnotationPage)
+    public AnnotationSidebar_ImplBase create(String aId, AnnotationActionHandler aActionHandler,
+            CasProvider aCasProvider, AnnotationPageBase2 aAnnotationPage)
     {
-        return new CurationSidebar(aId, aModel, aActionHandler, aCasProvider, aAnnotationPage);
+        return new CurationSidebar(aId, aActionHandler, aCasProvider, aAnnotationPage);
     }
 
     @Override
     public boolean applies(AnnotatorState aState)
     {
-        String currentUser = userService.getCurrentUsername();
-        boolean isCurator = projectService.hasRole(aState.getUser(), aState.getProject(), CURATOR);
+        var currentUser = userService.getCurrentUsername();
+        var isCurator = projectService.hasRole(aState.getUser(), aState.getProject(), CURATOR);
         return isCurator && aState.getUser().getUsername().equals(currentUser);
     }
 }

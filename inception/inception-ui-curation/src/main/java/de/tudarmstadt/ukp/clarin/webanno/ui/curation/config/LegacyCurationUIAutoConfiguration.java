@@ -30,7 +30,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.curation.actionbar.CurationUndoActio
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.actionbar.CurationWorkflowActionBarExtension;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.render.CurationRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.render.CurationRendererImpl;
-import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.CurationPageMenuItem;
+import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.LegacyCurationPageMenuItem;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.rendering.coloring.ColoringService;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
@@ -38,13 +38,13 @@ import de.tudarmstadt.ukp.inception.schema.api.config.AnnotationSchemaProperties
 
 @ConditionalOnWebApplication
 @Configuration
-public class CurationUIAutoConfiguration
+public class LegacyCurationUIAutoConfiguration
 {
     @Bean
-    public CurationPageMenuItem curationPageMenuItem(UserDao aUserRepo,
+    public LegacyCurationPageMenuItem legacyCurationPageMenuItem(UserDao aUserRepo,
             ProjectService aProjectService, ServletContext aServletContext)
     {
-        return new CurationPageMenuItem(aUserRepo, aProjectService, aServletContext);
+        return new LegacyCurationPageMenuItem(aUserRepo, aProjectService, aServletContext);
     }
 
     @Bean

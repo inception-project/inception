@@ -15,9 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.processing;
+package de.tudarmstadt.ukp.clarin.webanno.ui.curation.page;
 
-import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static java.lang.String.format;
 
 import javax.servlet.ServletContext;
@@ -36,15 +36,15 @@ import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import wicket.contrib.input.events.key.KeyType;
 
 @ConditionalOnWebApplication
-@Order(250)
-public class BulkProcessingPageMenuItem
+@Order(200)
+public class LegacyCurationPageMenuItem
     implements ProjectMenuItem
 {
     private final UserDao userRepo;
     private final ProjectService projectService;
     private final ServletContext servletContext;
 
-    public BulkProcessingPageMenuItem(UserDao aUserRepo, ProjectService aProjectService,
+    public LegacyCurationPageMenuItem(UserDao aUserRepo, ProjectService aProjectService,
             ServletContext aServletContext)
     {
         userRepo = aUserRepo;
@@ -55,7 +55,7 @@ public class BulkProcessingPageMenuItem
     @Override
     public String getPath()
     {
-        return "/process";
+        return "/curate";
     }
 
     public String getUrl(Project aProject, long aDocumentId)
@@ -69,13 +69,13 @@ public class BulkProcessingPageMenuItem
     @Override
     public IconType getIcon()
     {
-        return FontAwesome5IconType.robot_s;
+        return FontAwesome5IconType.clipboard_s;
     }
 
     @Override
     public String getLabel()
     {
-        return "Process";
+        return "Curation";
     }
 
     @Override
@@ -85,19 +85,20 @@ public class BulkProcessingPageMenuItem
             return false;
         }
 
+        // Visible if the current user is a curator
         User user = userRepo.getCurrentUser();
-        return projectService.hasRole(user, aProject, MANAGER);
+        return projectService.hasRole(user, aProject, CURATOR);
     }
 
     @Override
     public Class<? extends Page> getPageClass()
     {
-        return BulkProcessingPage.class;
+        return LegacyCurationPage.class;
     }
 
     @Override
     public KeyType[] shortcut()
     {
-        return new KeyType[] { KeyType.Alt, KeyType.p };
+        return new KeyType[] { KeyType.Alt, KeyType.c };
     }
 }

@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.ui.annotation;
+package de.tudarmstadt.ukp.inception.ui.curation.page;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase.PAGE_PARAM_DOCUMENT;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_PROJECT;
@@ -24,13 +24,15 @@ import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAG
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.wicketstuff.annotation.mount.MountPath;
 
-@MountPath(NS_PROJECT + "/${" + PAGE_PARAM_PROJECT + "}/annotate/#{" + PAGE_PARAM_DOCUMENT + "}")
-public class AnnotationPage
-    extends AnnotationPageBase2
-{
-    private static final long serialVersionUID = 3894448797109813277L;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 
-    public AnnotationPage(PageParameters aPageParameters)
+@MountPath(NS_PROJECT + "/${" + PAGE_PARAM_PROJECT + "}/curate2/#{" + PAGE_PARAM_DOCUMENT + "}")
+public class CurationPage
+    extends AnnotationPage
+{
+    private static final long serialVersionUID = 8665608337791132617L;
+
+    public CurationPage(PageParameters aPageParameters)
     {
         super(aPageParameters);
     }

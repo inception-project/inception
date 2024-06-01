@@ -47,7 +47,7 @@ import com.googlecode.wicket.kendo.ui.widget.tooltip.TooltipBehavior;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase2;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
@@ -80,11 +80,10 @@ public class RecommendationSidebar
     private RecommenderInfoPanel recommenderInfos;
     private LogDialog logDialog;
 
-    public RecommendationSidebar(String aId, IModel<AnnotatorState> aModel,
-            AnnotationActionHandler aActionHandler, CasProvider aCasProvider,
-            AnnotationPage aAnnotationPage)
+    public RecommendationSidebar(String aId, AnnotationActionHandler aActionHandler,
+            CasProvider aCasProvider, AnnotationPageBase2 aAnnotationPage)
     {
-        super(aId, aModel, aActionHandler, aCasProvider, aAnnotationPage);
+        super(aId, aActionHandler, aCasProvider, aAnnotationPage);
 
         recommendersAvailable = LoadableDetachableModel.of(this::isRecommendersAvailable);
 
@@ -95,9 +94,9 @@ public class RecommendationSidebar
         var sessionOwner = userRepository.getCurrentUser();
         var modelPreferences = LambdaModelAdapter.of(
                 () -> recommendationService.getPreferences(sessionOwner,
-                        aModel.getObject().getProject()),
+                        aAnnotationPage.getModelObject().getProject()),
                 (v) -> recommendationService.setPreferences(sessionOwner,
-                        aModel.getObject().getProject(), v));
+                        aAnnotationPage.getModelObject().getProject(), v));
 
         warning = new WebMarkupContainer("warning");
         warning.setOutputMarkupPlaceholderTag(true);
@@ -110,7 +109,7 @@ public class RecommendationSidebar
         var noRecommendersLabel = new Label("noRecommendersLabel",
                 new StringResourceModel("noRecommenders"));
         var recommenders = recommendationService
-                .listEnabledRecommenders(aModel.getObject().getProject());
+                .listEnabledRecommenders(aAnnotationPage.getModelObject().getProject());
         noRecommendersLabel.add(visibleWhen(() -> recommenders.isEmpty()));
         add(noRecommendersLabel);
 
@@ -126,13 +125,13 @@ public class RecommendationSidebar
 
         var modelEnabled = LambdaModelAdapter.of(
                 () -> !recommendationService.isSuspended(sessionOwner.getUsername(),
-                        aModel.getObject().getProject()),
+                        aAnnotationPage.getModelObject().getProject()),
                 (v) -> recommendationService.setSuspended(sessionOwner.getUsername(),
-                        aModel.getObject().getProject(), !v));
+                        aAnnotationPage.getModelObject().getProject(), !v));
         mainContainer.add(new CheckBox("enabled", modelEnabled).setOutputMarkupId(true)
                 .add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT)));
-        mainContainer.add(
-                new EvaluationProgressPanel("progress", aModel.map(AnnotatorState::getProject)));
+        mainContainer.add(new EvaluationProgressPanel("progress",
+                aAnnotationPage.getModel().map(AnnotatorState::getProject)));
 
         form = new Form<>("form", CompoundPropertyModel.of(modelPreferences));
         form.setOutputMarkupId(true);
@@ -157,7 +156,7 @@ public class RecommendationSidebar
 
         add(form);
 
-        recommenderInfos = new RecommenderInfoPanel("recommenders", aModel);
+        recommenderInfos = new RecommenderInfoPanel("recommenders", aAnnotationPage.getModel());
         recommenderInfos.add(visibleWhen(() -> !recommenders.isEmpty()));
         mainContainer.add(recommenderInfos);
 

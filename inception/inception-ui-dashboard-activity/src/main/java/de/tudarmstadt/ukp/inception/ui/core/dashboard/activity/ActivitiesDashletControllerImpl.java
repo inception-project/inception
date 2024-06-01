@@ -57,7 +57,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageMenuItem;
-import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.CurationPageMenuItem;
+import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.LegacyCurationPageMenuItem;
 import de.tudarmstadt.ukp.inception.annotation.events.FeatureValueUpdatedEvent;
 import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainLinkCreatedEvent;
 import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainLinkDeletedEvent;
@@ -89,7 +89,7 @@ public class ActivitiesDashletControllerImpl
     private final ProjectService projectRepository;
     private final UserDao userRepository;
     private final AnnotationPageMenuItem annotationPageMenuItem;
-    private final CurationPageMenuItem curationPageMenuItem;
+    private final LegacyCurationPageMenuItem curationPageMenuItem;
     private final ServletContext servletContext;
 
     private final Set<String> annotationEvents = unmodifiableSet( //
@@ -110,7 +110,7 @@ public class ActivitiesDashletControllerImpl
             DocumentService aDocumentService, CurationDocumentService aCurationService,
             ProjectService aProjectRepository, UserDao aUserRepository,
             AnnotationPageMenuItem aAnnotationPageMenuItem,
-            CurationPageMenuItem aCurationPageMenuItem, ServletContext aServletContext)
+            LegacyCurationPageMenuItem aCurationPageMenuItem, ServletContext aServletContext)
     {
         eventRepository = aEventRepository;
         documentService = aDocumentService;

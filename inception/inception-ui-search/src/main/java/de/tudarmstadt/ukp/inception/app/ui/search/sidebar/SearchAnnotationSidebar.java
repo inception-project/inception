@@ -85,7 +85,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase2;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
 import de.tudarmstadt.ukp.inception.annotation.events.BulkAnnotationEvent;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanAdapter;
@@ -188,11 +188,10 @@ public class SearchAnnotationSidebar
     private final LambdaAjaxLink deleteOptionsLink;
     private final Form<Void> annotationForm;
 
-    public SearchAnnotationSidebar(String aId, IModel<AnnotatorState> aModel,
-            AnnotationActionHandler aActionHandler, CasProvider aCasProvider,
-            AnnotationPage aAnnotationPage)
+    public SearchAnnotationSidebar(String aId, AnnotationActionHandler aActionHandler,
+            CasProvider aCasProvider, AnnotationPageBase2 aAnnotationPage)
     {
-        super(aId, aModel, aActionHandler, aCasProvider, aAnnotationPage);
+        super(aId, aActionHandler, aCasProvider, aAnnotationPage);
 
         resultsProvider = new SearchResultsProviderWrapper(
                 new SearchResultsProvider(searchService, groupedResults),
@@ -211,8 +210,9 @@ public class SearchAnnotationSidebar
                 .setUncheckedTitle(Model.of("Search in all documents"))
                 .setModel(searchOptions.bind(MID_LIMITED_TO_CURRENT_DOCUMENT))
                 .add(visibleWhen(() -> workloadService
-                        .getWorkloadManagerExtension(aModel.getObject().getProject())
-                        .isDocumentRandomAccessAllowed(aModel.getObject().getProject())))
+                        .getWorkloadManagerExtension(aAnnotationPage.getModelObject().getProject())
+                        .isDocumentRandomAccessAllowed(
+                                aAnnotationPage.getModelObject().getProject())))
                 .add(new LambdaAjaxFormComponentUpdatingBehavior()));
 
         resultsProvider.emptyQuery();

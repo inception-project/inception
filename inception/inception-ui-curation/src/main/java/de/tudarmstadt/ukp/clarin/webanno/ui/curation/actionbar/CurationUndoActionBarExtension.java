@@ -23,13 +23,13 @@ import org.springframework.core.annotation.Order;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBarExtension;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.UndoPanel;
-import de.tudarmstadt.ukp.clarin.webanno.ui.curation.config.CurationUIAutoConfiguration;
-import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.CurationPage;
+import de.tudarmstadt.ukp.clarin.webanno.ui.curation.config.LegacyCurationUIAutoConfiguration;
+import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.LegacyCurationPage;
 
 /**
  * <p>
  * This class is exposed as a Spring Component via
- * {@link CurationUIAutoConfiguration#curationUndoActionBarExtension}.
+ * {@link LegacyCurationUIAutoConfiguration#curationUndoActionBarExtension}.
  * </p>
  */
 @Order(0)
@@ -39,7 +39,7 @@ public class CurationUndoActionBarExtension
     @Override
     public boolean accepts(AnnotationPageBase aPage)
     {
-        return aPage instanceof CurationPage;
+        return aPage instanceof LegacyCurationPage;
     }
 
     @Override
