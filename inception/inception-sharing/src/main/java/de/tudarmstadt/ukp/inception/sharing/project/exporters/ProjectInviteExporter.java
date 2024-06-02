@@ -17,10 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.sharing.project.exporters;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.ZipFile;
+import java.util.zip.ZipOutputStream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,14 +58,14 @@ public class ProjectInviteExporter
 
     @Override
     public void exportData(FullProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
-            ExportedProject aExProject, File aStage)
+            ExportedProject aExProject, ZipOutputStream aStage)
     {
-        Project project = aRequest.getProject();
+        var project = aRequest.getProject();
 
         // add project permissions to the project
         List<ExportedProjectInvite> projectInvites = new ArrayList<>();
 
-        ProjectInvite invite = inviteService.readProjectInvite(project);
+        var invite = inviteService.readProjectInvite(project);
         if (invite != null) {
             ExportedProjectInvite exportedInvite = new ExportedProjectInvite();
             exportedInvite.setCreated(invite.getCreated());
@@ -92,12 +92,11 @@ public class ProjectInviteExporter
             ExportedProject aExProject, ZipFile aZip)
         throws Exception
     {
-        ExportedProjectInvite[] exportedProjectInvites = aExProject.getArrayProperty(KEY,
-                ExportedProjectInvite.class);
+        var exportedProjectInvites = aExProject.getArrayProperty(KEY, ExportedProjectInvite.class);
 
         if (exportedProjectInvites.length > 0) {
-            ProjectInvite invite = new ProjectInvite();
-            ExportedProjectInvite exportedInvite = exportedProjectInvites[0];
+            var invite = new ProjectInvite();
+            var exportedInvite = exportedProjectInvites[0];
             invite.setProject(aProject);
             invite.setCreated(exportedInvite.getCreated());
             invite.setExpirationDate(exportedInvite.getExpirationDate());

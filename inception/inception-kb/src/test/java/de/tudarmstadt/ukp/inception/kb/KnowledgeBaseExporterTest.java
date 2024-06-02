@@ -34,6 +34,7 @@ import java.io.File;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.zip.ZipFile;
+import java.util.zip.ZipOutputStream;
 
 import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
@@ -45,6 +46,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.export.FullProjectExportRequest;
@@ -106,7 +108,8 @@ public class KnowledgeBaseExporterTest
         var exportRequest = new FullProjectExportRequest(sourceProject, null, false);
         var monitor = new ProjectExportTaskMonitor(sourceProject, null, "test");
         var exportedProject = new ExportedProject();
-        sut.exportData(exportRequest, monitor, exportedProject, temporaryFolder);
+        var stage = Mockito.mock(ZipOutputStream.class);
+        sut.exportData(exportRequest, monitor, exportedProject, stage);
 
         // Import the project again
         var exportKbCaptor = ArgumentCaptor.forClass(KnowledgeBase.class);
@@ -139,7 +142,8 @@ public class KnowledgeBaseExporterTest
         var exportRequest = new FullProjectExportRequest(sourceProject, null, false);
         var monitor = new ProjectExportTaskMonitor(sourceProject, null, "test");
         var exportedProject = new ExportedProject();
-        sut.exportData(exportRequest, monitor, exportedProject, temporaryFolder);
+        var stage = Mockito.mock(ZipOutputStream.class);
+        sut.exportData(exportRequest, monitor, exportedProject, stage);
 
         // Mock that the KB ID changes during import when registerKnowledgeBase is called
         doAnswer(i -> {

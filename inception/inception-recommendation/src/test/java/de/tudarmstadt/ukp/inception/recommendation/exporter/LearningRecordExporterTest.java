@@ -24,10 +24,10 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.io.File;
 import java.util.List;
 import java.util.stream.Stream;
 import java.util.zip.ZipFile;
+import java.util.zip.ZipOutputStream;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -119,7 +119,7 @@ public class LearningRecordExporterTest
         var exportRequest = new FullProjectExportRequest(project, null, false);
         var monitor = new ProjectExportTaskMonitor(project, null, "test");
         var exportedProject = new ExportedProject();
-        var file = mock(File.class);
+        var file = mock(ZipOutputStream.class);
 
         sut.exportData(exportRequest, monitor, exportedProject, file);
 

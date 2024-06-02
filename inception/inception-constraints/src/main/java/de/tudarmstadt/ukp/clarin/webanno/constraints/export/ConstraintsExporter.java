@@ -17,13 +17,11 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.constraints.export;
 
-import java.io.File;
 import java.io.IOException;
-import java.util.Enumeration;
-import java.util.zip.ZipEntry;
+import java.nio.file.Files;
 import java.util.zip.ZipFile;
+import java.util.zip.ZipOutputStream;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,17 +50,17 @@ public class ConstraintsExporter
 
     @Override
     public void exportData(FullProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
-            ExportedProject aExProject, File aStage)
+            ExportedProject aExProject, ZipOutputStream aStage)
         throws IOException
     {
-        File constraintsDir = new File(aStage + CONSTRAINTS);
-        FileUtils.forceMkdir(constraintsDir);
-        String fileName;
-        for (ConstraintSet set : constraintsService.listConstraintSets(aRequest.getProject())) {
-            fileName = set.getName();
+        for (var set : constraintsService.listConstraintSets(aRequest.getProject())) {
             // Copying with file's original name to save ConstraintSet's name
-            FileUtils.copyFile(constraintsService.exportConstraintAsFile(set),
-                    new File(constraintsDir, fileName));
+            ProjectExporter.writeEntry(aStage, CONSTRAINTS + set.getName(), os -> {
+                try (var is = Files
+                        .newInputStream(constraintsService.exportConstraintAsFile(set).toPath())) {
+                    is.transferTo(os);
+                }
+            });
         }
     }
 
@@ -71,19 +69,19 @@ public class ConstraintsExporter
             ExportedProject aExProject, ZipFile aZip)
         throws Exception
     {
-        for (Enumeration<? extends ZipEntry> zipEnumerate = aZip.entries(); zipEnumerate
-                .hasMoreElements();) {
-            ZipEntry entry = zipEnumerate.nextElement();
+        for (var zipEnumerate = aZip.entries(); zipEnumerate.hasMoreElements();) {
+            var entry = zipEnumerate.nextElement();
 
             // Strip leading "/" that we had in ZIP files prior to 2.0.8 (bug #985)
-            String entryName = ZipUtils.normalizeEntryName(entry);
+            var entryName = ZipUtils.normalizeEntryName(entry);
 
             if (entryName.startsWith(ConstraintsService.CONSTRAINTS + "/")) {
-                String fileName = FilenameUtils.getName(entry.getName());
+                var fileName = FilenameUtils.getName(entry.getName());
                 if (fileName.trim().isEmpty()) {
                     continue;
                 }
-                ConstraintSet constraintSet = new ConstraintSet();
+
+                var constraintSet = new ConstraintSet();
                 constraintSet.setProject(aProject);
                 constraintSet.setName(fileName);
                 constraintsService.createOrUpdateConstraintSet(constraintSet);

@@ -17,12 +17,16 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.export;
 
-import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.Collections;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+import java.util.zip.ZipOutputStream;
+
+import org.apache.commons.io.output.CloseShieldOutputStream;
+import org.apache.commons.lang3.function.FailableConsumer;
 
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -40,7 +44,7 @@ public interface ProjectExporter
     }
 
     void exportData(FullProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
-            ExportedProject aExProject, File aStage)
+            ExportedProject aExProject, ZipOutputStream aZOs)
         throws ProjectExportException, IOException, InterruptedException;
 
     void importData(ProjectImportRequest aRequest, Project aProject, ExportedProject aExProject,
@@ -56,5 +60,19 @@ public interface ProjectExporter
         }
 
         return entryName;
+    }
+
+    static void writeEntry(ZipOutputStream aStage, String aEntryName,
+            FailableConsumer<OutputStream, IOException> aWriter)
+        throws IOException
+    {
+        var entry = new ZipEntry(aEntryName);
+        aStage.putNextEntry(entry);
+        try {
+            aWriter.accept(CloseShieldOutputStream.wrap(aStage));
+        }
+        finally {
+            aStage.closeEntry();
+        }
     }
 }

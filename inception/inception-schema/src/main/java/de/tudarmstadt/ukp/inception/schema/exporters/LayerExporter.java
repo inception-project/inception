@@ -24,13 +24,13 @@ import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.COREFERENCE_RELA
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.COREFERENCE_TYPE_FEATURE;
 import static java.util.Arrays.asList;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.zip.ZipFile;
+import java.util.zip.ZipOutputStream;
 
 import org.apache.uima.cas.CAS;
 import org.slf4j.Logger;
@@ -87,7 +87,7 @@ public class LayerExporter
 
     @Override
     public void exportData(FullProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
-            ExportedProject aExProject, File aStage)
+            ExportedProject aExProject, ZipOutputStream aStage)
     {
         var exLayers = new ArrayList<ExportedAnnotationLayer>();
 

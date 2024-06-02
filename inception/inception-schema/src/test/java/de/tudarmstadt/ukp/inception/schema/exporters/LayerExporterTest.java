@@ -31,14 +31,13 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.io.File;
 import java.util.List;
 import java.util.zip.ZipFile;
+import java.util.zip.ZipOutputStream;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.io.TempDir;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -55,12 +54,9 @@ import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 @ExtendWith(MockitoExtension.class)
 public class LayerExporterTest
 {
-    public @TempDir File tempFolder;
-
     private @Mock AnnotationSchemaService annotationService;
 
     private Project project;
-    private File workFolder;
 
     private LayerExporter sut;
 
@@ -70,8 +66,6 @@ public class LayerExporterTest
         project = new Project();
         project.setId(1l);
         project.setName("Test Project");
-
-        workFolder = tempFolder;
 
         when(annotationService.listAnnotationLayer(any())).thenReturn(layers());
 
@@ -112,8 +106,9 @@ public class LayerExporterTest
         var exportRequest = new FullProjectExportRequest(project, null, false);
         var monitor = new ProjectExportTaskMonitor(project, null, "test");
         var exportedProject = new ExportedProject();
+        var stage = mock(ZipOutputStream.class);
 
-        sut.exportData(exportRequest, monitor, exportedProject, workFolder);
+        sut.exportData(exportRequest, monitor, exportedProject, stage);
 
         // Import the project again
         var captor = ArgumentCaptor.forClass(AnnotationLayer.class);

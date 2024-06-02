@@ -19,9 +19,9 @@ package de.tudarmstadt.ukp.inception.curation.export;
 
 import static java.lang.invoke.MethodHandles.lookup;
 
-import java.io.File;
 import java.util.Optional;
 import java.util.zip.ZipFile;
+import java.util.zip.ZipOutputStream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,12 +61,12 @@ public class CurationWorkflowExporter
 
     @Override
     public void exportData(FullProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
-            ExportedProject aExProject, File aStage)
+            ExportedProject aExProject, ZipOutputStream aStage)
     {
-        Project project = aRequest.getProject();
+        var project = aRequest.getProject();
 
-        CurationWorkflow curationWorkflow = curationService.readOrCreateCurationWorkflow(project);
-        ExportedCurationWorkflow exportedCurationWorkflow = new ExportedCurationWorkflow();
+        var curationWorkflow = curationService.readOrCreateCurationWorkflow(project);
+        var exportedCurationWorkflow = new ExportedCurationWorkflow();
         exportedCurationWorkflow.setMergeStrategy(curationWorkflow.getMergeStrategy());
         exportedCurationWorkflow.setMergeStrategyTraits(curationWorkflow.getMergeStrategyTraits());
 
@@ -86,9 +86,9 @@ public class CurationWorkflowExporter
             return;
         }
 
-        ExportedCurationWorkflow exportedCurationWorkflow = maybeExportedCurationWorkflow.get();
+        var exportedCurationWorkflow = maybeExportedCurationWorkflow.get();
 
-        CurationWorkflow curationWorkflow = new CurationWorkflow();
+        var curationWorkflow = new CurationWorkflow();
         curationWorkflow.setProject(aProject);
         curationWorkflow.setMergeStrategy(exportedCurationWorkflow.getMergeStrategy());
         curationWorkflow.setMergeStrategyTraits(exportedCurationWorkflow.getMergeStrategyTraits());

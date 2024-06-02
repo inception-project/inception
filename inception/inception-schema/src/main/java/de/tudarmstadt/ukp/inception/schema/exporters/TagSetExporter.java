@@ -17,13 +17,13 @@
  */
 package de.tudarmstadt.ukp.inception.schema.exporters;
 
-import java.io.File;
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.zip.ZipFile;
+import java.util.zip.ZipOutputStream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,7 +51,7 @@ import de.tudarmstadt.ukp.inception.support.WebAnnoConst;
 public class TagSetExporter
     implements ProjectExporter
 {
-    private static final Logger LOG = LoggerFactory.getLogger(TagSetExporter.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private final AnnotationSchemaService annotationService;
 
@@ -62,19 +62,19 @@ public class TagSetExporter
 
     @Override
     public void exportData(FullProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
-            ExportedProject aExProject, File aStage)
+            ExportedProject aExProject, ZipOutputStream aStage)
     {
-        List<ExportedTagSet> extTagSets = new ArrayList<>();
-        for (TagSet tagSet : annotationService.listTagSets(aRequest.getProject())) {
-            ExportedTagSet exTagSet = new ExportedTagSet();
+        var extTagSets = new ArrayList<ExportedTagSet>();
+        for (var tagSet : annotationService.listTagSets(aRequest.getProject())) {
+            var exTagSet = new ExportedTagSet();
             exTagSet.setCreateTag(tagSet.isCreateTag());
             exTagSet.setDescription(tagSet.getDescription());
             exTagSet.setLanguage(tagSet.getLanguage());
             exTagSet.setName(tagSet.getName());
 
-            List<ExportedTag> exTags = new ArrayList<>();
-            for (Tag tag : annotationService.listTags(tagSet)) {
-                ExportedTag exTag = new ExportedTag();
+            var exTags = new ArrayList<ExportedTag>();
+            for (var tag : annotationService.listTags(tagSet)) {
+                var exTag = new ExportedTag();
                 exTag.setDescription(tag.getDescription());
                 exTag.setName(tag.getName());
                 exTags.add(exTag);
@@ -111,7 +111,7 @@ public class TagSetExporter
     @Deprecated
     private void importTagSetsV0(Project aProject, ExportedProject aExProject) throws IOException
     {
-        List<ExportedTagSet> importedTagSets = aExProject.getTagSets();
+        var importedTagSets = aExProject.getTagSets();
 
         List<String> posTags = new ArrayList<>();
         List<String> depTags = new ArrayList<>();
@@ -173,18 +173,18 @@ public class TagSetExporter
         aTagSet.setProject(aProject);
         annotationService.createTagSet(aTagSet);
 
-        Set<String> existingTags = annotationService.listTags(aTagSet).stream() //
+        var existingTags = annotationService.listTags(aTagSet).stream() //
                 .map(Tag::getName) //
                 .collect(Collectors.toSet());
 
-        List<Tag> tags = new ArrayList<>();
-        for (ExportedTag exTag : aExTagSet.getTags()) {
+        var tags = new ArrayList<Tag>();
+        for (var exTag : aExTagSet.getTags()) {
             // do not duplicate tag
             if (existingTags.contains(exTag.getName())) {
                 continue;
             }
 
-            Tag tag = new Tag();
+            var tag = new Tag();
             tag.setTagSet(aTagSet);
             tag.setName(exTag.getName());
             tag.setDescription(exTag.getDescription());

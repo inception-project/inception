@@ -22,13 +22,12 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.io.File;
 import java.util.zip.ZipFile;
+import java.util.zip.ZipOutputStream;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.io.TempDir;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -45,8 +44,6 @@ import de.tudarmstadt.ukp.inception.sharing.model.ProjectInvite;
 @ExtendWith(MockitoExtension.class)
 public class ProjectInviteExporterTest
 {
-    public @TempDir File workFolder;
-
     private @Mock InviteService inviteService;
 
     private Project project;
@@ -67,7 +64,7 @@ public class ProjectInviteExporterTest
 
     private ProjectInvite invite()
     {
-        ProjectInvite i = new ProjectInvite();
+        var i = new ProjectInvite();
         i.setId(1l);
         i.setProject(project);
         i.setInviteId("deadbeaf");
@@ -81,18 +78,19 @@ public class ProjectInviteExporterTest
     public void thatExportingWorks() throws Exception
     {
         // Export the project
-        FullProjectExportRequest exportRequest = new FullProjectExportRequest(project, null, false);
-        ProjectExportTaskMonitor monitor = new ProjectExportTaskMonitor(project, null, "test");
-        ExportedProject exportedProject = new ExportedProject();
+        var exportRequest = new FullProjectExportRequest(project, null, false);
+        var monitor = new ProjectExportTaskMonitor(project, null, "test");
+        var exportedProject = new ExportedProject();
+        var stage = mock(ZipOutputStream.class);
 
-        sut.exportData(exportRequest, monitor, exportedProject, workFolder);
+        sut.exportData(exportRequest, monitor, exportedProject, stage);
 
         // Import the project again
-        ArgumentCaptor<ProjectInvite> captor = ArgumentCaptor.forClass(ProjectInvite.class);
+        var captor = ArgumentCaptor.forClass(ProjectInvite.class);
         doNothing().when(inviteService).writeProjectInvite(captor.capture());
 
-        ProjectImportRequest importRequest = new ProjectImportRequest(true);
-        ZipFile zipFile = mock(ZipFile.class);
+        var importRequest = new ProjectImportRequest(true);
+        var zipFile = mock(ZipFile.class);
         sut.importData(importRequest, project, exportedProject, zipFile);
 
         // Check that after re-importing the exported projects, they are identical to the original

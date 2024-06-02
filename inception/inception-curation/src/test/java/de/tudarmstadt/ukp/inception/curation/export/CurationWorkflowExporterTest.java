@@ -22,8 +22,8 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.io.File;
 import java.util.zip.ZipFile;
+import java.util.zip.ZipOutputStream;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -82,12 +82,12 @@ public class CurationWorkflowExporterTest
         throws Exception
     {
         // Export the project
-        FullProjectExportRequest exportRequest = new FullProjectExportRequest(project, null, false);
-        ProjectExportTaskMonitor monitor = new ProjectExportTaskMonitor(project, null, "test");
-        ExportedProject exportedProject = new ExportedProject();
-        File file = mock(File.class);
+        var exportRequest = new FullProjectExportRequest(project, null, false);
+        var monitor = new ProjectExportTaskMonitor(project, null, "test");
+        var exportedProject = new ExportedProject();
+        var stage = mock(ZipOutputStream.class);
 
-        sut.exportData(exportRequest, monitor, exportedProject, file);
+        sut.exportData(exportRequest, monitor, exportedProject, stage);
 
         // Import the project again
         ArgumentCaptor<CurationWorkflow> captor = ArgumentCaptor.forClass(CurationWorkflow.class);

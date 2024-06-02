@@ -17,10 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.export.exporters;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.Date;
 import java.util.zip.ZipFile;
+import java.util.zip.ZipOutputStream;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.export.FullProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
@@ -50,7 +50,7 @@ public class ProjectSettingsExporter
 
     @Override
     public void exportData(FullProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
-            ExportedProject aExProject, File aStage)
+            ExportedProject aExProject, ZipOutputStream aStage)
     {
         var project = aRequest.getProject();
         aExProject.setDescription(project.getDescription());

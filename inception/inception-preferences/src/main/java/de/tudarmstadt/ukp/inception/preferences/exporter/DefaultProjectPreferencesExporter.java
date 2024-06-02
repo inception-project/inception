@@ -17,9 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.preferences.exporter;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.zip.ZipFile;
+import java.util.zip.ZipOutputStream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,7 +58,7 @@ public class DefaultProjectPreferencesExporter
 
     @Override
     public void exportData(FullProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
-            ExportedProject aExProject, File aFile)
+            ExportedProject aExProject, ZipOutputStream aStage)
     {
         var project = aRequest.getProject();
 
