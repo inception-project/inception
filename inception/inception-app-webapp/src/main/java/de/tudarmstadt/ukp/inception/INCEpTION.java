@@ -97,15 +97,17 @@ public class INCEpTION
             System.setProperty("wicket.core.settings.general.configuration-type", "development");
             System.setProperty("webanno.debug.enforce_cas_thread_lock", "true");
             aBuilder.profiles(DeploymentModeService.PROFILE_DEVELOPMENT_MODE);
+        }
+        else {
+            aBuilder.profiles(DeploymentModeService.PROFILE_PRODUCTION_MODE);
+        }
 
-            // Route JUL through log4j
+        // Route JUL through log4j
+        if (Boolean.getBoolean("inception.jul-logging")) {
             java.util.logging.LogManager.getLogManager().reset();
             SLF4JBridgeHandler.removeHandlersForRootLogger();
             SLF4JBridgeHandler.install();
             LogManager.getLogManager().getLogger("").setLevel(Level.ALL);
-        }
-        else {
-            aBuilder.profiles(DeploymentModeService.PROFILE_PRODUCTION_MODE);
         }
 
         // We rely on FS IDs being stable, so we need to enable this
