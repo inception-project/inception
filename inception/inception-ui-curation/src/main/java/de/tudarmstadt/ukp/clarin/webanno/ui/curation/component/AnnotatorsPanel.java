@@ -470,7 +470,7 @@ public class AnnotatorsPanel
         completeAgreementSets.removeAll(incompleteSets);
 
         var annoStates = new HashMap<String, Map<VID, AnnotationState>>();
-        for (String casGroupId : aCasses.keySet()) {
+        for (var casGroupId : aCasses.keySet()) {
             annoStates.put(casGroupId, new HashMap<>());
         }
 
@@ -496,16 +496,15 @@ public class AnnotatorsPanel
             return;
         }
 
-        Map<String, CAS> casses = getCasses(aState.getDocument());
-        Map<String, Map<VID, AnnotationState>> annoStates = calculateAnnotationStates(aState,
-                casses);
+        var casses = getCasses(aState.getDocument());
+        var annoStates = calculateAnnotationStates(aState, casses);
 
         // get differing feature structures
         annotatorSegments.visitChildren(BratSuggestionVisualizer.class, (v, visit) -> {
-            BratSuggestionVisualizer vis = (BratSuggestionVisualizer) v;
-            AnnotatorSegmentState seg = vis.getModelObject();
+            var vis = (BratSuggestionVisualizer) v;
+            var seg = vis.getModelObject();
 
-            CAS cas = casses.get(seg.getUser().getUsername());
+            var cas = casses.get(seg.getUser().getUsername());
 
             if (cas == null) {
                 // This may happen if a user has not yet finished document

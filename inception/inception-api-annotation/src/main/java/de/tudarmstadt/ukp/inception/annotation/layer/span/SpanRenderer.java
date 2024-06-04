@@ -93,20 +93,21 @@ public class SpanRenderer
         return true;
     }
 
-    public List<AnnotationFS> selectAnnotationsInWindow(RenderRequest aRequest, int aWindowBegin,
+    @Override
+    public List<Annotation> selectAnnotationsInWindow(RenderRequest aRequest, int aWindowBegin,
             int aWindowEnd)
     {
         var cas = aRequest.getCas();
 
         if (!aRequest.isLongArcs()) {
-            return cas.select(type).coveredBy(0, aWindowEnd) //
+            return cas.<Annotation> select(type) //
+                    .coveredBy(0, aWindowEnd) //
                     .includeAnnotationsWithEndBeyondBounds() //
-                    .map(fs -> (AnnotationFS) fs)
                     .filter(ann -> AnnotationPredicates.overlapping(ann, aWindowBegin, aWindowEnd))
                     .toList();
         }
 
-        return aRequest.getCas().select(type).map(fs -> (AnnotationFS) fs).toList();
+        return aRequest.getCas().<Annotation> select(type).toList();
     }
 
     @Override

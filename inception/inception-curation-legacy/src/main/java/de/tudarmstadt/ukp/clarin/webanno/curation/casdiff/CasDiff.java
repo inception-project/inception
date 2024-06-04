@@ -22,7 +22,6 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
-import static org.apache.uima.fit.util.CasUtil.select;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -32,7 +31,6 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.stream.Stream;
@@ -47,6 +45,7 @@ import org.apache.uima.cas.Type;
 import org.apache.uima.cas.TypeSystem;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.FSUtil;
+import org.apache.uima.jcas.tcas.Annotation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -145,11 +144,12 @@ public class CasDiff
 
         var diff = new CasDiff(aBegin, aEnd, aAdapters, aLinkCompareBehavior);
 
-        for (Entry<String, CAS> e : aCasMap.entrySet()) {
+        for (var e : aCasMap.entrySet()) {
             var cas = e.getValue();
+            var casGroup = e.getKey();
             for (var adapter : aAdapters) {
                 // null elements in the list can occur if a user has never worked on a CAS
-                diff.addCas(e.getKey(), cas != null ? cas : null, adapter.getType());
+                diff.addCas(casGroup, cas != null ? cas : null, adapter.getType());
             }
         }
 
@@ -209,7 +209,7 @@ public class CasDiff
             String collectionId = null;
             String documentId = null;
             try {
-                FeatureStructure dmd = WebAnnoCasUtil.getDocumentMetadata(aCas);
+                var dmd = WebAnnoCasUtil.getDocumentMetadata(aCas);
                 collectionId = FSUtil.getFeature(dmd, "collectionId", String.class);
                 documentId = FSUtil.getFeature(dmd, "documentId", String.class);
                 LOG.debug("User [" + collectionId + "] - Document [" + documentId + "]");
@@ -229,9 +229,9 @@ public class CasDiff
 
         var adapter = getAdapter(aType);
 
-        Collection<AnnotationFS> annotations;
+        Collection<Annotation> annotations;
         if (begin == -1 && end == -1) {
-            annotations = select(aCas, type);
+            annotations = aCas.<Annotation> select(type).asList();
         }
         else {
             annotations = adapter.selectAnnotationsInWindow(aCas, begin, end);
@@ -246,7 +246,7 @@ public class CasDiff
         LOG.debug("CAS group [" + aCasGroupId + "] contains [" + annotations.size()
                 + "] annotations of type [" + aType + "]");
 
-        int posBefore = configSets.keySet().size();
+        var posBefore = configSets.keySet().size();
         LOG.debug("Positions before: [{}]", posBefore);
 
         for (var fs : annotations) {
