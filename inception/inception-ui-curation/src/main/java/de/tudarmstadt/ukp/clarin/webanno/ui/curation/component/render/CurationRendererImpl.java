@@ -65,11 +65,11 @@ public class CurationRendererImpl
     {
         var layersToRender = new ArrayList<AnnotationLayer>();
         for (var layer : aState.getAnnotationLayers()) {
-            boolean isNonEditableTokenLayer = layer.getName().equals(Token.class.getName())
+            var isNonEditableTokenLayer = layer.getName().equals(Token.class.getName())
                     && !annotationEditorProperties.isTokenLayerEditable();
-            boolean isNonEditableSentenceLayer = layer.getName().equals(Sentence.class.getName())
+            var isNonEditableSentenceLayer = layer.getName().equals(Sentence.class.getName())
                     && !annotationEditorProperties.isSentenceLayerEditable();
-            boolean isUnsupportedLayer = layer.getType().equals(CHAIN_TYPE);
+            var isUnsupportedLayer = layer.getType().equals(CHAIN_TYPE);
 
             if (layer.isEnabled() && !isNonEditableTokenLayer && !isNonEditableSentenceLayer
                     && !isUnsupportedLayer) {
@@ -84,6 +84,9 @@ public class CurationRendererImpl
                 .withCas(aCas) //
                 .withVisibleLayers(layersToRender) //
                 .withColoringStrategyOverride(aColoringStrategy) //
+                .withClipSpans(true) //
+                .withClipArcs(true) //
+                .withLongArcs(true) //
                 .build();
 
         var vdoc = new VDocument();
@@ -91,7 +94,7 @@ public class CurationRendererImpl
 
         new LabelRenderer().render(vdoc, request);
 
-        ColorRenderer colorRenderer = new ColorRenderer(schemaService, coloringService);
+        var colorRenderer = new ColorRenderer(schemaService, coloringService);
         colorRenderer.render(vdoc, request);
 
         return vdoc;

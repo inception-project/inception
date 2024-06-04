@@ -31,6 +31,7 @@ import java.util.Map;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.jcas.tcas.Annotation;
 
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.ConstraintsEvaluator;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -159,4 +160,7 @@ public interface Renderer
             }
         }
     }
+
+    List<Annotation> selectAnnotationsInWindow(RenderRequest aRequest, int aWindowBegin,
+            int aWindowEnd);
 }

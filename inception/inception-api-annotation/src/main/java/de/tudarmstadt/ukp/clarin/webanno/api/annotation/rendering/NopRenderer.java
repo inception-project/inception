@@ -22,6 +22,7 @@ import java.util.List;
 
 import org.apache.uima.cas.TypeSystem;
 import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.jcas.tcas.Annotation;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
@@ -57,6 +58,13 @@ public class NopRenderer
     public List<VObject> render(RenderRequest aRequest, List<AnnotationFeature> aFeatures,
             VDocument aResponse, AnnotationFS aFS)
 
+    {
+        return Collections.emptyList();
+    }
+
+    @Override
+    public List<Annotation> selectAnnotationsInWindow(RenderRequest aRequest, int aWindowBegin,
+            int aWindowEnd)
     {
         return Collections.emptyList();
     }
