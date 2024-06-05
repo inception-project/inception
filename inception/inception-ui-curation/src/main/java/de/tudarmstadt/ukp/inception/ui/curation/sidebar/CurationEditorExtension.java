@@ -24,6 +24,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode.NONE;
 import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectAnnotationByAddr;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
@@ -32,7 +33,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -285,7 +285,7 @@ public class CurationEditorExtension
                     .toList();
 
             // This is where we get the "show on hover" stuff...
-            detailsLookupService.lookupLayerLevelDetails(aVid, aCas, aLayer)
+            detailsLookupService.lookupLayerLevelDetails(vid, srcCas, aLayer)
                     .forEach(detailGroups::add);
 
             // The curatable features need to be all the same across the users for the position
@@ -293,7 +293,7 @@ public class CurationEditorExtension
                     .filter(f -> f.isCuratable()) //
                     .toList();
             for (var feature : curatableFeatures) {
-                detailsLookupService.lookupFeatureLevelDetails(aVid, aCas, feature)
+                detailsLookupService.lookupFeatureLevelDetails(vid, srcCas, feature)
                         .forEach(detailGroups::add);
             }
 
@@ -345,7 +345,7 @@ public class CurationEditorExtension
             for (var f : nonCuratableFeatures) {
                 featureSupportRegistry.findExtension(f).ifPresent(support -> {
                     var label = support.renderFeatureValue(f, fs);
-                    if (StringUtils.isNotBlank(label)) {
+                    if (isNotBlank(label)) {
                         group.addDetail(new VLazyDetail(f.getUiName(), label));
                     }
                 });
@@ -356,22 +356,6 @@ public class CurationEditorExtension
         }
 
         return detailGroups;
-
-        // for (var group : delegateDetailGroups) {
-        // if (isNotBlank(group.getTitle())) {
-        // var detailGroup = new VLazyDetailGroup(srcUser + ": " + group.getTitle());
-        // group.getDetails().forEach(d -> detailGroup.addDetail(d));
-        // detailGroups.add(detailGroup);
-        // }
-        // else {
-        // var detailGroup = new VLazyDetailGroup();
-        // for (var detail : group.getDetails()) {
-        // detailGroup.addDetail(new VLazyDetail(srcUser + ": " + detail.getLabel(),
-        // detail.getValue()));
-        // }
-        // detailGroups.add(detailGroup);
-        // }
-        // }
     }
 
     private Map<String, CAS> collectCasses(SourceDocument aDocument, User aUser, CAS aCas,
