@@ -21,6 +21,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.Webhoo
 import static de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.WebhookService.DOCUMENT_STATE;
 import static de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.WebhookService.PROJECT_STATE;
 import static de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.WebhookService.X_AERO_NOTIFICATION;
+import static de.tudarmstadt.ukp.inception.support.test.http.HttpTestUtils.assumeEndpointIsAvailable;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
@@ -32,6 +33,8 @@ import java.util.List;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -225,9 +228,12 @@ public class WebhookServiceTest
                 .containsExactly(new AnnotationStateChangeMessage(event));
     }
 
+    @Tag("slow")
     @Test
     void thatDisablingCertificateValidationWorks_expired()
     {
+        assumeEndpointIsAvailable("https://expired.badssl.com/");
+
         hook.setUrl("https://expired.badssl.com/");
 
         hook.setVerifyCertificates(true);
@@ -241,9 +247,12 @@ public class WebhookServiceTest
                 .withMessageContaining("405 Not Allowed");
     }
 
+    @Tag("slow")
     @Test
     void thatDisablingCertificateValidationWorks_wrongHost()
     {
+        assumeEndpointIsAvailable("https://wrong.host.badssl.com/");
+
         hook.setUrl("https://wrong.host.badssl.com/");
 
         hook.setVerifyCertificates(true);
@@ -257,9 +266,12 @@ public class WebhookServiceTest
                 .withMessageContaining("405 Not Allowed");
     }
 
+    @Tag("slow")
     @Test
     void thatDisablingCertificateValidationWorks_selfSigned()
     {
+        assumeEndpointIsAvailable("https://self-signed.badssl.com/");
+
         hook.setUrl("https://self-signed.badssl.com/");
 
         hook.setVerifyCertificates(true);
@@ -273,9 +285,12 @@ public class WebhookServiceTest
                 .withMessageContaining("405 Not Allowed");
     }
 
+    @Tag("slow")
     @Test
     void thatDisablingCertificateValidationWorks_untrusted()
     {
+        assumeEndpointIsAvailable("https://untrusted-root.badssl.com/");
+
         hook.setUrl("https://untrusted-root.badssl.com/");
 
         hook.setVerifyCertificates(true);
@@ -289,10 +304,14 @@ public class WebhookServiceTest
                 .withMessageContaining("405 Not Allowed");
     }
 
+    @Tag("slow")
     @Test
+    @Disabled("Currently tends to fail with a 404 error")
     void thatDisablingCertificateValidationWorks_revoked()
     {
-        hook.setUrl("https://revoked.badssl.com/");
+        assumeEndpointIsAvailable("https://revoked.badssl.com");
+
+        hook.setUrl("https://revoked.badssl.com");
 
         hook.setVerifyCertificates(true);
         assertThatExceptionOfType(ResourceAccessException.class) //
@@ -305,9 +324,12 @@ public class WebhookServiceTest
                 .withMessageContaining("405 Not Allowed");
     }
 
+    @Tag("slow")
     @Test
     void thatCertificateValidationWorks()
     {
+        assumeEndpointIsAvailable("https://tls-v1-2.badssl.com:1012/");
+
         hook.setUrl("https://tls-v1-2.badssl.com:1012/");
 
         hook.setVerifyCertificates(true);

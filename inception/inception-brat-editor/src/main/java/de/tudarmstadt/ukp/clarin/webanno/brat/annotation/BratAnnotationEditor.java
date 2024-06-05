@@ -113,7 +113,7 @@ public class BratAnnotationEditor
     @Override
     protected AnnotationEditorProperties getProperties()
     {
-        AnnotationEditorProperties props = new AnnotationEditorProperties();
+        var props = new AnnotationEditorProperties();
         // The factory is the JS call. Cf. the "globalName" in build.js and the factory method
         // defined in main.ts
         props.setEditorFactory("Brat.factory()");
@@ -142,7 +142,7 @@ public class BratAnnotationEditor
 
     private GetDocumentResponse render(CAS aCas)
     {
-        AnnotatorState aState = getModelObject();
+        var aState = getModelObject();
         return render(aCas, aState.getWindowBeginOffset(), aState.getWindowEndOffset(),
                 bratSerializer);
     }
@@ -159,7 +159,7 @@ public class BratAnnotationEditor
             try {
                 var bratDocModel = render(getCasProvider().get());
                 return diffRenderSupport.differentialRendering(bratDocModel).map(rr -> {
-                    StringBuilder js = new StringBuilder();
+                    var js = new StringBuilder();
 
                     js.append("{");
 
@@ -215,7 +215,8 @@ public class BratAnnotationEditor
         }
 
         @Override
-        public AjaxResponse handle(AjaxRequestTarget aTarget, Request aRequest)
+        public AjaxResponse handle(DiamAjaxBehavior aBehavior, AjaxRequestTarget aTarget,
+                Request aRequest)
         {
             try {
                 var cas = getCasProvider().get();

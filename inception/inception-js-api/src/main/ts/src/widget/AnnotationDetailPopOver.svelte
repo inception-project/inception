@@ -81,11 +81,6 @@
     function onMouseMove(e: MouseEvent) {
         if (!annotation) return;
 
-        // if (!popoverTimeoutId && annotation) {
-        //     annotation = undefined
-        //     return
-        // }
-
         movePopover(e);
     }
 
@@ -146,6 +141,8 @@
     }
 
     function movePopover(e: MouseEvent) {
+        if (!popover) return
+
         const rect = popover.getBoundingClientRect();
 
         const x = e.clientX;

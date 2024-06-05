@@ -43,6 +43,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -72,6 +73,7 @@ import mtas.analysis.util.MtasParserException;
 @ExtendWith(MockitoExtension.class)
 public class MtasUimaParserTest
 {
+    protected @Mock ConstraintsService constraintsService;
     private @Mock AnnotationSchemaService annotationSchemaService;
 
     private LayerSupportRegistryImpl layerSupportRegistry;
@@ -400,17 +402,17 @@ public class MtasUimaParserTest
                 .thenReturn(new RelationAdapter(layerSupportRegistry, featureSupportRegistry, null,
                         depLayer, FEAT_REL_TARGET, FEAT_REL_SOURCE,
                         () -> asList(dependencyLayerGovernor, dependencyLayerDependent),
-                        emptyList()));
+                        emptyList(), constraintsService));
 
-        MtasUimaParser sut = new MtasUimaParser(
+        var sut = new MtasUimaParser(
                 asList(tokenLayerPos, posLayerValue, dependencyLayerGovernor,
                         dependencyLayerDependent),
                 annotationSchemaService, featureIndexingSupportRegistry, prefs);
-        MtasTokenCollection tc = sut.createTokenCollection(jcas.getCas());
+        var tc = sut.createTokenCollection(jcas.getCas());
 
         // MtasUtils.print(tc);
 
-        List<MtasToken> tokens = new ArrayList<>();
+        var tokens = new ArrayList<MtasToken>();
         tc.iterator().forEachRemaining(tokens::add);
 
         assertThat(tokens) //
@@ -426,7 +428,7 @@ public class MtasUimaParserTest
 
     private List<MtasToken> toList(MtasTokenCollection result) throws MtasParserException
     {
-        List<MtasToken> tokens = new ArrayList<>();
+        var tokens = new ArrayList<MtasToken>();
         result.iterator().forEachRemaining(tokens::add);
         return tokens;
     }

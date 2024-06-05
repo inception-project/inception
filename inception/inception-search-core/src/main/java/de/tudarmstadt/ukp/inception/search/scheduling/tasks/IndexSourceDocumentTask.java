@@ -39,9 +39,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.scheduling.MatchResult;
+import de.tudarmstadt.ukp.inception.scheduling.Progress;
 import de.tudarmstadt.ukp.inception.scheduling.Task;
 import de.tudarmstadt.ukp.inception.search.SearchService;
-import de.tudarmstadt.ukp.inception.search.model.Progress;
 import de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil;
 
 /**
@@ -87,6 +87,7 @@ public class IndexSourceDocumentTask
         done++;
     }
 
+    @Deprecated
     @Override
     public Progress getProgress()
     {

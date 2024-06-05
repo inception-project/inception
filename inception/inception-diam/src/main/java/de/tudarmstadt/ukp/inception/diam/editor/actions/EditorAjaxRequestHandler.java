@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.diam.editor.actions;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.request.Request;
 
+import de.tudarmstadt.ukp.inception.diam.editor.DiamAjaxBehavior;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.AjaxResponse;
 import de.tudarmstadt.ukp.inception.support.extensionpoint.Extension;
 import jakarta.servlet.http.HttpServletRequest;
@@ -27,6 +28,7 @@ import jakarta.servlet.http.HttpServletRequest;
 public interface EditorAjaxRequestHandler
     extends Extension<Request>
 {
+    int PRIO_CONTEXT_MENU = -10;
     int PRIO_RENDER_HANDLER = 0;
     int PRIO_SLOT_FILLER_HANDLER = 100;
     int PRIO_UNARM_SLOT_HANDLER = 180;
@@ -50,7 +52,7 @@ public interface EditorAjaxRequestHandler
             throw new IllegalArgumentException("Request is not a HttpServletRequest");
         }
 
-        HttpServletRequest request = (HttpServletRequest) aRequest.getContainerRequest();
+        var request = (HttpServletRequest) aRequest.getContainerRequest();
 
         return request.getMethod();
     }
@@ -64,5 +66,5 @@ public interface EditorAjaxRequestHandler
                 aRequest.getRequestParameters().getParameterValue(PARAM_ACTION).toOptionalString());
     }
 
-    AjaxResponse handle(AjaxRequestTarget aTarget, Request aRequest);
+    AjaxResponse handle(DiamAjaxBehavior aBehavior, AjaxRequestTarget aTarget, Request aRequest);
 }

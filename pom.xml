@@ -56,7 +56,7 @@
     <connection>scm:git:https://github.com/inception-project/inception.git</connection>
     <developerConnection>scm:git:https://github.com/inception-project/inception.git</developerConnection>
     <url>https://github.com/inception-project/inception</url>
-    <tag>inception-33.0-beta-1</tag>
+    <tag>inception-33.0-beta-3</tag>
   </scm>
 
   <distributionManagement>
@@ -72,10 +72,10 @@
 
     <junit-jupiter.version>5.10.2</junit-jupiter.version>
     <junit-platform.version>1.10.2</junit-platform.version>
-    <mockito.version>5.11.0</mockito.version>
+    <mockito.version>5.12.0</mockito.version>
     <assertj.version>3.25.2</assertj.version>
-    <xmlunit.version>2.9.1</xmlunit.version>
-    <testcontainers.version>1.19.7</testcontainers.version>
+    <xmlunit.version>2.10.0</xmlunit.version>
+    <testcontainers.version>1.19.8</testcontainers.version>
 
     <awaitility.version>4.2.1</awaitility.version>
 
@@ -91,7 +91,7 @@
     <spring.data.version>3.2.4</spring.data.version>
     <spring.security.version>6.2.2</spring.security.version>
     <springdoc.version>1.8.0</springdoc.version>
-    <swagger.version>2.2.21</swagger.version>
+    <swagger.version>2.2.22</swagger.version>
     <jjwt.version>0.12.5</jjwt.version>
 
     <slf4j.version>2.0.13</slf4j.version>
@@ -124,7 +124,7 @@
     <!-- * 8.11.1.0 depends on Lucene 8.11.1 -->
     <!--   no mtas  depends on Lucene 9.x -->
 
-    <elasticsearch.version>7.17.20</elasticsearch.version> 
+    <elasticsearch.version>7.17.21</elasticsearch.version> 
     <!--   7.10.x   depends on Lucene 8.7.0 - last ASL 2.0 version! -->
     <!-- * 7.17.x   depends on Lucene 8.11.1 -->
     <!--   8.1.x    depends on Lucene 9.0.0 -->
@@ -150,7 +150,7 @@
 
     <json.version>20230227</json.version>
     <pf4j.version>2.6.0</pf4j.version>
-    <jackson.version>2.17.0</jackson.version>
+    <jackson.version>2.17.1</jackson.version>
     <snakeyaml.version>2.2</snakeyaml.version>
     <okhttp.version>4.12.0</okhttp.version>
     <okio.version>3.9.0</okio.version>
@@ -176,7 +176,7 @@
     <jsdom.version>^20.0.0</jsdom.version>
     <jsdom-global.version>^3.0.2</jsdom-global.version>
     <jquery.version>3.7.1</jquery.version>
-    <jquery-ui.version>1.13.2</jquery-ui.version>
+    <jquery-ui.version>1.13.3</jquery-ui.version>
     <pdfjs.version>2.14.305</pdfjs.version>
     <popperjs.version>2.11.8</popperjs.version>
     <recogitojs.version>1.8.2</recogitojs.version>
@@ -254,11 +254,11 @@
       </snapshots>
     </repository>
     -->
-    <!-- For Apache UIMA release candidates -->
+    <!-- For release candidates -->
     <!--
     <repository>
       <id>ext-staging</id>
-      <url>https://repository.apache.org/content/repositories/orgapacheuima-1261</url>
+      <url>https://repository.apache.org/content/repositories/orgapachewicket-1203</url>
       <releases>
         <enabled>true</enabled>
       </releases>

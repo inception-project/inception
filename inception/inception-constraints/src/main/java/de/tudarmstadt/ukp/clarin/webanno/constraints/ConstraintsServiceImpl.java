@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.constraints;
 
 import static de.tudarmstadt.ukp.inception.project.api.ProjectService.PROJECT_FOLDER;
 import static de.tudarmstadt.ukp.inception.project.api.ProjectService.withProjectLogger;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Objects.isNull;
 
 import java.io.File;
@@ -26,8 +27,9 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
+import java.lang.invoke.MethodHandles;
 import java.util.List;
-import java.util.Map.Entry;
+import java.util.Objects;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -36,33 +38,58 @@ import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.springframework.context.event.EventListener;
 import org.springframework.transaction.annotation.Transactional;
 
-import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ASTConstraintsSet;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.LoadingCache;
+
+import de.tudarmstadt.ukp.clarin.webanno.constraints.config.ConstraintsProperties;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ConstraintsParser;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ParseException;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.model.ParsedConstraints;
-import de.tudarmstadt.ukp.clarin.webanno.constraints.model.Scope;
 import de.tudarmstadt.ukp.clarin.webanno.model.ConstraintSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
+import de.tudarmstadt.ukp.inception.project.api.event.AfterProjectRemovedEvent;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.NoResultException;
 import jakarta.persistence.PersistenceContext;
 
-@Component(ConstraintsService.SERVICE_NAME)
 public class ConstraintsServiceImpl
     implements ConstraintsService
 {
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private @PersistenceContext EntityManager entityManager;
     private @Autowired RepositoryProperties repositoryProperties;
 
-    public ConstraintsServiceImpl()
+    private final ConstraintsProperties properties;
+    private final LoadingCache<Project, ParsedConstraints> constraintsCache;
+
+    public ConstraintsServiceImpl(ConstraintsProperties aProperties)
     {
-        // Nothing to do
+        properties = aProperties;
+        constraintsCache = createContstaintsCache(properties);
+    }
+
+    private LoadingCache<Project, ParsedConstraints> createContstaintsCache(
+            ConstraintsProperties aProperties)
+    {
+        var queryCacheBuilder = Caffeine.newBuilder() //
+                .expireAfterAccess(aProperties.getCacheExpireDelay());
+
+        if (LOG.isTraceEnabled()) {
+            queryCacheBuilder.recordStats();
+        }
+
+        return queryCacheBuilder.build(this::loadConstraints);
+    }
+
+    @EventListener
+    public void onAfterProjectRemoved(AfterProjectRemovedEvent aEvent)
+    {
+        flushCache(aEvent.getProject());
     }
 
     @Override
@@ -84,12 +111,12 @@ public class ConstraintsServiceImpl
         try (var logCtx = withProjectLogger(aSet.getProject())) {
             if (isNull(aSet.getId())) {
                 entityManager.persist(aSet);
-                log.info("Created constraints set [{}] in project {}", aSet.getName(),
+                LOG.info("Created constraints set [{}] in project {}", aSet.getName(),
                         aSet.getProject());
             }
             else {
                 entityManager.merge(aSet);
-                log.info("Updated constraints set [{}] in project {}", aSet.getName(),
+                LOG.info("Updated constraints set [{}] in project {}", aSet.getName(),
                         aSet.getProject());
             }
         }
@@ -102,27 +129,29 @@ public class ConstraintsServiceImpl
         try (var logCtx = withProjectLogger(aSet.getProject())) {
             entityManager.remove(entityManager.merge(aSet));
 
-            log.info("Removed constraints set [{}] in project {}", aSet.getName(),
+            LOG.info("Removed constraints set [{}] in project {}", aSet.getName(),
                     aSet.getProject());
         }
+
+        flushCache(aSet.getProject());
     }
 
     @Override
     public String readConstrainSet(ConstraintSet aSet) throws IOException
     {
         try (var logCtx = withProjectLogger(aSet.getProject())) {
-            String constraintRulesPath = repositoryProperties.getPath().getAbsolutePath() + "/"
+            var constraintRulesPath = repositoryProperties.getPath().getAbsolutePath() + "/"
                     + PROJECT_FOLDER + "/" + aSet.getProject().getId() + "/"
                     + ConstraintsService.CONSTRAINTS + "/";
-            String filename = aSet.getId() + ".txt";
+            var filename = aSet.getId() + ".txt";
 
             String data;
-            try (BOMInputStream is = new BOMInputStream(
+            try (var is = new BOMInputStream(
                     new FileInputStream(new File(constraintRulesPath, filename)))) {
-                data = IOUtils.toString(is, "UTF-8");
+                data = IOUtils.toString(is, UTF_8);
             }
 
-            log.debug("Read constraints set [{}] in project {}", aSet.getName(), aSet.getProject());
+            LOG.debug("Read constraints set [{}] in project {}", aSet.getName(), aSet.getProject());
 
             return data;
         }
@@ -132,15 +161,17 @@ public class ConstraintsServiceImpl
     public void writeConstraintSet(ConstraintSet aSet, InputStream aContent) throws IOException
     {
         try (var logCtx = withProjectLogger(aSet.getProject())) {
-            String constraintRulesPath = repositoryProperties.getPath().getAbsolutePath() + "/"
+            var constraintRulesPath = repositoryProperties.getPath().getAbsolutePath() + "/"
                     + PROJECT_FOLDER + "/" + aSet.getProject().getId() + "/"
                     + ConstraintsService.CONSTRAINTS + "/";
-            String filename = aSet.getId() + ".txt";
+            var filename = aSet.getId() + ".txt";
             FileUtils.forceMkdir(new File(constraintRulesPath));
             FileUtils.copyInputStreamToFile(aContent, new File(constraintRulesPath, filename));
 
-            log.info("Saved constraints set [{}] in project {}", aSet.getName(), aSet.getProject());
+            LOG.info("Saved constraints set [{}] in project {}", aSet.getName(), aSet.getProject());
         }
+
+        flushCache(aSet.getProject());
     }
 
     /**
@@ -150,18 +181,18 @@ public class ConstraintsServiceImpl
     public File exportConstraintAsFile(ConstraintSet aSet)
     {
         try (var logCtx = withProjectLogger(aSet.getProject())) {
-            String constraintRulesPath = repositoryProperties.getPath().getAbsolutePath() + "/"
+            var constraintRulesPath = repositoryProperties.getPath().getAbsolutePath() + "/"
                     + PROJECT_FOLDER + "/" + aSet.getProject().getId() + "/"
                     + ConstraintsService.CONSTRAINTS + "/";
-            String filename = aSet.getId() + ".txt";
-            File constraintsFile = new File(constraintRulesPath, filename);
+            var filename = aSet.getId() + ".txt";
+            var constraintsFile = new File(constraintRulesPath, filename);
             if (constraintsFile.exists()) {
-                log.info("Exported constraints set [{}] from project {}", aSet.getName(),
+                LOG.info("Exported constraints set [{}] from project {}", aSet.getName(),
                         aSet.getProject());
                 return constraintsFile;
             }
             else {
-                log.error("Unable to read constraints set file [{}] in project {}", filename,
+                LOG.error("Unable to read constraints set file [{}] in project {}", filename,
                         aSet.getProject());
                 return null;
             }
@@ -183,7 +214,8 @@ public class ConstraintsServiceImpl
                     .createQuery(
                             "FROM ConstraintSet WHERE project = :project" + " AND name = :name ",
                             ConstraintSet.class)
-                    .setParameter("project", aProject).setParameter("name", constraintSetName)
+                    .setParameter("project", aProject) //
+                    .setParameter("name", constraintSetName) //
                     .getSingleResult();
             return true;
         }
@@ -192,30 +224,42 @@ public class ConstraintsServiceImpl
         }
     }
 
+    private void flushCache(Project aProject)
+    {
+        // Drop cached results from the KB being updated
+        constraintsCache.asMap().keySet()
+                .removeIf(key -> Objects.equals(key.getId(), aProject.getId()));
+    }
+
     @Override
-    public ParsedConstraints loadConstraints(Project aProject) throws IOException, ParseException
+    public ParsedConstraints getMergedConstraints(Project aProject)
+    {
+        return constraintsCache.get(aProject);
+    }
+
+    private ParsedConstraints loadConstraints(Project aProject) throws IOException, ParseException
     {
         try (var logCtx = withProjectLogger(aProject)) {
             ParsedConstraints merged = null;
 
-            for (ConstraintSet set : listConstraintSets(aProject)) {
-                String script = readConstrainSet(set);
-                ConstraintsParser parser = new ConstraintsParser(new StringReader(script));
-                ASTConstraintsSet astConstraintsSet = parser.constraintsSet();
-                ParsedConstraints constraints = new ParsedConstraints(astConstraintsSet);
+            for (var set : listConstraintSets(aProject)) {
+                var script = readConstrainSet(set);
+                var parser = new ConstraintsParser(new StringReader(script));
+                var astConstraintsSet = parser.constraintsSet();
+                var constraints = new ParsedConstraints(astConstraintsSet);
 
                 if (merged == null) {
                     merged = constraints;
                 }
                 else {
                     // Merge imports
-                    for (Entry<String, String> e : constraints.getImports().entrySet()) {
+                    for (var e : constraints.getImports().entrySet()) {
                         // Check if the value already points to some other feature in previous
                         // constraint file(s).
                         if (merged.getImports().containsKey(e.getKey()) && !e.getValue()
                                 .equalsIgnoreCase(merged.getImports().get(e.getKey()))) {
                             // If detected, notify user with proper message and abort merging
-                            String errorMessage = "Conflict detected in imports for key \""
+                            var errorMessage = "Conflict detected in imports for key \""
                                     + e.getKey() + "\", conflicting values are \"" + e.getValue()
                                     + "\" & \"" + merged.getImports().get(e.getKey())
                                     + "\". Please contact Project Admin for correcting this."
@@ -227,8 +271,8 @@ public class ConstraintsServiceImpl
                     merged.getImports().putAll(constraints.getImports());
 
                     // Merge scopes
-                    for (Scope scope : constraints.getScopes()) {
-                        Scope target = merged.getScopeByName(scope.getScopeName());
+                    for (var scope : constraints.getScopes()) {
+                        var target = merged.getScopeByName(scope.getScopeName());
                         if (target == null) {
                             // Scope does not exist yet
                             merged.getScopes().add(scope);

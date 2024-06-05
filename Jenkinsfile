@@ -130,7 +130,7 @@ pipeline {
             script {
               def mavenCommand = 'mvn ' +
                 params.extraMavenArguments +
-                ' -B -Dmaven.test.failure.ignore=true -Pjacoco,full-tests clean verify javadoc:javadoc'
+                ' -B -Dmaven.test.failure.ignore=true -Pjacoco clean verify javadoc:javadoc'
                 
               if (isUnix()) {
                 sh script: mavenCommand

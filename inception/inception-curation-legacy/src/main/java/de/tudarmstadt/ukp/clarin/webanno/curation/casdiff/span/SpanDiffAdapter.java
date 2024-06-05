@@ -29,6 +29,7 @@ import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.cas.text.AnnotationPredicates;
 import org.apache.uima.fit.util.FSUtil;
+import org.apache.uima.jcas.tcas.Annotation;
 
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.DiffAdapter_ImplBase;
@@ -66,14 +67,15 @@ public class SpanDiffAdapter
     }
 
     /**
-     * @see SpanRenderer#selectAnnotationsInWindow(CAS, int, int)
+     * @see SpanRenderer#selectAnnotationsInWindow
      */
     @Override
-    public List<AnnotationFS> selectAnnotationsInWindow(CAS aCas, int aWindowBegin, int aWindowEnd)
+    public List<Annotation> selectAnnotationsInWindow(CAS aCas, int aWindowBegin, int aWindowEnd)
     {
-        return aCas.select(getType()).coveredBy(0, aWindowEnd)
-                .includeAnnotationsWithEndBeyondBounds().map(fs -> (AnnotationFS) fs)
-                .filter(ann -> AnnotationPredicates.overlapping(ann, aWindowBegin, aWindowEnd))
+        return aCas.select(getType()).coveredBy(0, aWindowEnd) //
+                .includeAnnotationsWithEndBeyondBounds() //
+                .map(fs -> (Annotation) fs) //
+                .filter(ann -> AnnotationPredicates.overlapping(ann, aWindowBegin, aWindowEnd)) //
                 .collect(toList());
     }
 
@@ -86,7 +88,7 @@ public class SpanDiffAdapter
         String collectionId = null;
         String documentId = null;
         try {
-            FeatureStructure dmd = WebAnnoCasUtil.getDocumentMetadata(aFS.getCAS());
+            var dmd = WebAnnoCasUtil.getDocumentMetadata(aFS.getCAS());
             collectionId = FSUtil.getFeature(dmd, "collectionId", String.class);
             documentId = FSUtil.getFeature(dmd, "documentId", String.class);
         }

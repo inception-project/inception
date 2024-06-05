@@ -55,6 +55,7 @@ function handleMouseUp (ev: MouseEvent): void {
     const event = new CustomEvent('createRelationAnnotation', {
       bubbles: true,
       detail: {
+        originalEvent: ev,
         origin: relationAnnotation.rel1Annotation.vid,
         target: hoveredAnnotation.vid
       }

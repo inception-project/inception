@@ -73,9 +73,9 @@ import org.wicketstuff.event.annotation.OnEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.IllegalPlacementException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
+import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.ConstraintsEvaluator;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.PossibleValue;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.RulesIndicator;
-import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.ValuesGenerator;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -450,6 +450,7 @@ public abstract class AnnotationDetailEditorPanel
     }
 
     @Override
+    @Deprecated
     public void actionCreateOrUpdate(AjaxRequestTarget aTarget, CAS aCas)
         throws IOException, AnnotationException
     {
@@ -517,6 +518,10 @@ public abstract class AnnotationDetailEditorPanel
         }
     }
 
+    /**
+     * @deprecated To be removed without replacement.
+     */
+    @Deprecated
     private void prepareCreateOrUpdateRelation(AjaxRequestTarget aTarget, CAS aCas,
             AnnotatorState state)
         throws IllegalPlacementException, IOException, AnnotationException
@@ -531,7 +536,7 @@ public abstract class AnnotationDetailEditorPanel
         var originFS = selectAnnotationByAddr(aCas, state.getSelection().getOrigin());
         var targetFS = selectAnnotationByAddr(aCas, state.getSelection().getTarget());
 
-        if (!schemaProperties.isCrossLayerRelationEnabled()
+        if (!schemaProperties.isCrossLayerRelationsEnabled()
                 && !originFS.getType().equals(targetFS.getType())) {
             reset(aTarget);
             throw new IllegalPlacementException(
@@ -558,7 +563,7 @@ public abstract class AnnotationDetailEditorPanel
         }
         // Otherwise, look up the possible relation layer(s) in the database.
         else {
-            var viableRelationLayers = getRelationLayersFor(originLayer);
+            var viableRelationLayers = annotationService.getRelationLayersFor(originLayer);
             if (viableRelationLayers.isEmpty()) {
                 throw new IllegalPlacementException(
                         "There are no relation layers that can be created between these endpoints");
@@ -577,28 +582,6 @@ public abstract class AnnotationDetailEditorPanel
                     state.getSelectedAnnotationLayer());
             loadFeatureEditorModels(aTarget);
         }
-    }
-
-    private List<AnnotationLayer> getRelationLayersFor(AnnotationLayer aSpanLayer)
-    {
-        var candidates = new ArrayList<AnnotationLayer>();
-        for (var layer : annotationService.listAnnotationLayer(aSpanLayer.getProject())) {
-            if (!RelationLayerSupport.TYPE.equals(layer.getType())) {
-                continue;
-            }
-
-            if (aSpanLayer.equals(layer.getAttachType())) {
-                candidates.add(layer);
-            }
-
-            // Special case for built-in layers such as the Dependency layer
-            if (layer.getAttachFeature() != null
-                    && layer.getAttachFeature().getType().equals(aSpanLayer.getName())) {
-                candidates.add(layer);
-            }
-        }
-
-        return candidates;
     }
 
     /**
@@ -681,12 +664,12 @@ public abstract class AnnotationDetailEditorPanel
     private AttachStatus checkAttachStatus(AjaxRequestTarget aTarget, Project aProject,
             AnnotationFS aFS)
     {
-        AnnotationLayer layer = annotationService.findLayer(aProject, aFS);
+        var layer = annotationService.findLayer(aProject, aFS);
 
-        AttachStatus attachStatus = new AttachStatus();
+        var attachStatus = new AttachStatus();
 
-        List<AttachedAnnotation> attachedRels = annotationService.getAttachedRels(layer, aFS);
-        boolean attachedToReadOnlyRels = attachedRels.stream()
+        var attachedRels = annotationService.getAttachedRels(layer, aFS);
+        var attachedToReadOnlyRels = attachedRels.stream()
                 .anyMatch(rel -> rel.getLayer().isReadonly());
         if (attachedToReadOnlyRels) {
             attachStatus.readOnlyAttached |= true;
@@ -705,8 +688,8 @@ public abstract class AnnotationDetailEditorPanel
         // }
         // attachStatus.attachCount += attachedSpans.size();
 
-        List<AttachedAnnotation> attachedLinks = annotationService.getAttachedLinks(layer, aFS);
-        boolean attachedToReadOnlyLinks = attachedLinks.stream()
+        var attachedLinks = annotationService.getAttachedLinks(layer, aFS);
+        var attachedToReadOnlyLinks = attachedLinks.stream()
                 .anyMatch(rel -> rel.getLayer().isReadonly());
         if (attachedToReadOnlyLinks) {
             attachStatus.readOnlyAttached |= true;
@@ -719,19 +702,19 @@ public abstract class AnnotationDetailEditorPanel
     @Override
     public void actionDelete(AjaxRequestTarget aTarget) throws IOException, AnnotationException
     {
-        AnnotatorState state = getModelObject();
+        var state = getModelObject();
         if (state.getSelection().getAnnotation().isNotSet()) {
             error("No annotation selected.");
             aTarget.addChildren(getPage(), IFeedback.class);
             return;
         }
 
-        CAS cas = getEditorCas();
+        var cas = getEditorCas();
 
-        VID vid = state.getSelection().getAnnotation();
-        AnnotationFS fs = selectAnnotationByAddr(cas, vid.getId());
-        AnnotationLayer layer = annotationService.findLayer(state.getProject(), fs);
-        TypeAdapter adapter = annotationService.getAdapter(layer);
+        var vid = state.getSelection().getAnnotation();
+        var fs = selectAnnotationByAddr(cas, vid.getId());
+        var layer = annotationService.findLayer(state.getProject(), fs);
+        var adapter = annotationService.getAdapter(layer);
 
         if (layer.isReadonly()) {
             error("Cannot delete an annotation on a read-only layer.");
@@ -739,7 +722,7 @@ public abstract class AnnotationDetailEditorPanel
             return;
         }
 
-        AttachStatus attachStatus = checkAttachStatus(aTarget, state.getProject(), fs);
+        var attachStatus = checkAttachStatus(aTarget, state.getProject(), fs);
         if (attachStatus.readOnlyAttached) {
             error("Cannot delete an annotation to which annotations on read-only layers attach.");
             aTarget.addChildren(getPage(), IFeedback.class);
@@ -1188,40 +1171,23 @@ public abstract class AnnotationDetailEditorPanel
     {
         var state = getModelObject();
 
-        // Add values from rules
-        String restrictionFeaturePath;
-        switch (aModel.feature.getLinkMode()) {
-        case WITH_ROLE:
-            restrictionFeaturePath = aModel.feature.getName() + "."
-                    + aModel.feature.getLinkTypeRoleFeatureName();
-            break;
-        case NONE:
-            restrictionFeaturePath = aModel.feature.getName();
-            break;
-        default:
-            throw new IllegalArgumentException(
-                    "Unsupported link mode [" + aModel.feature.getLinkMode() + "] on feature ["
-                            + aModel.feature.getName() + "]");
-        }
-
         aModel.indicator.reset();
 
         // Fetch possible values from the constraint rules
         List<PossibleValue> possibleValues;
         try {
-            var featureStructure = selectFsByAddr(aCas,
-                    state.getSelection().getAnnotation().getId());
+            var fs = selectFsByAddr(aCas, state.getSelection().getAnnotation().getId());
 
-            var evaluator = new ValuesGenerator();
+            var evaluator = new ConstraintsEvaluator();
             // Only show indicator if this feature can be affected by Constraint rules!
-            aModel.indicator.setAffected(evaluator.isThisAffectedByConstraintRules(featureStructure,
-                    restrictionFeaturePath, state.getConstraints()));
+            aModel.indicator.setAffected(evaluator
+                    .isAffectedByConstraints(state.getConstraints(), fs, aModel.feature));
 
-            possibleValues = evaluator.generatePossibleValues(featureStructure,
-                    restrictionFeaturePath, state.getConstraints());
+            possibleValues = evaluator.generatePossibleValues(state.getConstraints(), fs,
+                    aModel.feature);
 
-            LOG.debug("Possible values for [" + featureStructure.getType().getName() + "] ["
-                    + restrictionFeaturePath + "]: " + possibleValues);
+            LOG.debug("Possible values for [{}] : {}", fs.getType().getName(), aModel.feature,
+                    possibleValues);
         }
         catch (Exception e) {
             error("Unable to evaluate constraints: " + ExceptionUtils.getRootCauseMessage(e));
@@ -1395,7 +1361,7 @@ public abstract class AnnotationDetailEditorPanel
 
     private LambdaAjaxLink createDeleteButton()
     {
-        LambdaAjaxLink link = new LambdaAjaxLink("delete", this::actionDelete);
+        var link = new LambdaAjaxLink("delete", this::actionDelete);
         link.setOutputMarkupPlaceholderTag(true);
         link.add(visibleWhen(() -> getModelObject().getSelection().getAnnotation().isSet()
                 && editorPage.isEditable()));

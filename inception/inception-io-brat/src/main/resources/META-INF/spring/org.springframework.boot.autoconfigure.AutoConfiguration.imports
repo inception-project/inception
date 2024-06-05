@@ -1,2 +1,1 @@
-org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
 de.tudarmstadt.ukp.inception.io.brat.config.BratAutoConfiguration

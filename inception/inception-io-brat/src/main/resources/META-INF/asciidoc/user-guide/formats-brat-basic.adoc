@@ -32,9 +32,9 @@ Before importing, ensure that your project contains the pre-defined layers **Bas
 |====
 | Format | Read | Write | Custom Layers | Description
 
-| brat (experimental) (`brat`)
-| false
+| brat (experimental) (`bratBasic`)
 | yes
+| no
 | no
 | brat format
 

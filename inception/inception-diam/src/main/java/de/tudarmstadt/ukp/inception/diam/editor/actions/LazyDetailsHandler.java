@@ -19,12 +19,18 @@ package de.tudarmstadt.ukp.inception.diam.editor.actions;
 
 import static de.tudarmstadt.ukp.inception.support.json.JSONUtil.toInterpretableJsonString;
 
+import java.lang.invoke.MethodHandles;
+
+import org.apache.uima.cas.impl.LowLevelException;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.request.Request;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
+import de.tudarmstadt.ukp.inception.diam.editor.DiamAjaxBehavior;
 import de.tudarmstadt.ukp.inception.diam.editor.config.DiamAutoConfig;
 import de.tudarmstadt.ukp.inception.diam.editor.lazydetails.LazyDetailsLookupService;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.AjaxResponse;
@@ -39,6 +45,8 @@ import de.tudarmstadt.ukp.inception.diam.model.ajax.DefaultAjaxResponse;
 public class LazyDetailsHandler
     extends EditorAjaxRequestHandlerBase
 {
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
     public static final String COMMAND = "normData";
 
     private final LazyDetailsLookupService lazyDetailsLookupService;
@@ -55,7 +63,7 @@ public class LazyDetailsHandler
     }
 
     @Override
-    public AjaxResponse handle(AjaxRequestTarget aTarget, Request aRequest)
+    public AjaxResponse handle(DiamAjaxBehavior aBehavior, AjaxRequestTarget aTarget, Request aRequest)
     {
         try {
             var page = (AnnotationPageBase) aTarget.getPage();
@@ -70,6 +78,17 @@ public class LazyDetailsHandler
                     state.getUser(), state.getWindowBeginOffset(), state.getWindowEndOffset());
             attachResponse(aTarget, aRequest, toInterpretableJsonString(details));
 
+            return new DefaultAjaxResponse(COMMAND);
+        }
+        catch (LowLevelException e) {
+            // This can happen when the lazy details are loading while switching between documents.
+            // In this case, it is possible that the details for an annotation with an ID from the
+            // old document are still being loaded while the backend editor state has already been
+            // configured for the new document. If no suitable annotation with the given ID exists
+            // in the new document, this exception will be thrown. As part of switching the
+            // document, the popover will be destroyed and re-created anyway, so in any case, the
+            // user should never see this data.
+            // So, we ignore this exception.
             return new DefaultAjaxResponse(COMMAND);
         }
         catch (Exception e) {

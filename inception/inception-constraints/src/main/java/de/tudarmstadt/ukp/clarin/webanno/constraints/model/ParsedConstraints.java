@@ -17,17 +17,18 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.constraints.model;
 
+import static java.util.Collections.unmodifiableMap;
+import static java.util.Collections.unmodifiableSet;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ASTConstraintsSet;
-import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ASTRule;
 
 /***
  * Serialized Class containing objects after parsing and creating objects based on rules file.
@@ -39,14 +40,16 @@ public class ParsedConstraints
 
     private final Map<String, String> imports;
     private final List<Scope> scopes;
-    private Map<String, Scope> scopeMap = null;
+    private final Map<String, Scope> scopeMap;
     // Contains possible scenarios for which rules are available.
-    private Set<FSFPair> rulesSet = null;
+    private final Set<FSFPair> rulesSet;
 
     public ParsedConstraints(Map<String, String> aAliases, List<Scope> aScopes)
     {
         imports = aAliases;
         scopes = aScopes;
+        rulesSet = buildRulesSet();
+        scopeMap = buildScopeMap();
     }
 
     public ParsedConstraints(ASTConstraintsSet astConstraintsSet)
@@ -54,31 +57,16 @@ public class ParsedConstraints
         imports = astConstraintsSet.getImports();
         scopes = new ArrayList<>();
 
-        for (Entry<String, List<ASTRule>> ruleGroup : astConstraintsSet.getScopes().entrySet()) {
-            List<Rule> rules = new ArrayList<Rule>();
-            for (ASTRule astRule : ruleGroup.getValue()) {
+        for (var ruleGroup : astConstraintsSet.getScopes().entrySet()) {
+            var rules = new ArrayList<Rule>();
+            for (var astRule : ruleGroup.getValue()) {
                 rules.add(new Rule(astRule));
             }
             scopes.add(new Scope(ruleGroup.getKey(), rules));
         }
-    }
 
-    @Override
-    public String toString()
-    {
-        return "Imports\n[" + printImports() + "]\n" + scopes.toString() + "]\n]";
-    }
-
-    private String printImports()
-    {
-        StringBuilder output = new StringBuilder();
-        for (Entry<String, String> e : imports.entrySet()) {
-            output.append(e.getKey());
-            output.append(" is short for ");
-            output.append(e.getValue());
-            output.append(System.lineSeparator());
-        }
-        return output.toString();
+        scopeMap = buildScopeMap();
+        rulesSet = buildRulesSet();
     }
 
     public Map<String, String> getImports()
@@ -88,7 +76,7 @@ public class ParsedConstraints
 
     public String getShortName(String aLongName)
     {
-        for (Entry<String, String> e : imports.entrySet()) {
+        for (var e : imports.entrySet()) {
             if (e.getValue().equals(aLongName)) {
                 return e.getKey();
             }
@@ -103,49 +91,56 @@ public class ParsedConstraints
 
     public Scope getScopeByName(String scopeName)
     {
-
         if (scopeMap == null) { // initialize map if not set already
-            scopeMap = new HashMap<>();
-            for (Scope scope : scopes) {
-                scopeMap.put(scope.getScopeName(), scope);
-            }
         }
         return scopeMap.get(scopeName);
     }
 
     /**
-     * Checks if rules exists or not
+     * @return if rules exists or not
      */
-    public boolean areThereRules(String featureStructure, String feature)
+    public boolean areThereRules(String aFS, String aFeature)
     {
         if (rulesSet == null) {
             buildRulesSet();
         }
 
-        if (getShortName(featureStructure) == null) {
+        if (getShortName(aFS) == null) {
             return false;
         }
-        if (getScopeByName(getShortName(featureStructure)) == null) {
+
+        if (getScopeByName(getShortName(aFS)) == null) {
             return false;
         }
-        FSFPair _tempFsfPair = new FSFPair(getShortName(featureStructure), feature);
+
+        var _tempFsfPair = new FSFPair(getShortName(aFS), aFeature);
         if (rulesSet.contains(_tempFsfPair)) {
             // If it has rules satisfying with proper input FS and affecting feature
             return true;
         }
+
         return false;
     }
 
-    /**
-     * Fill Set with values of different conditions for which rules are available.
-     */
-    private void buildRulesSet()
+    private Map<String, Scope> buildScopeMap()
     {
-        rulesSet = new HashSet<>();
-        FSFPair _temp;
+        var scopeMap = new HashMap<String, Scope>();
         for (Scope scope : scopes) {
-            for (Rule rule : scope.getRules()) {
-                for (Restriction restriction : rule.getRestrictions()) {
+            scopeMap.put(scope.getScopeName(), scope);
+        }
+        return unmodifiableMap(scopeMap);
+    }
+
+    /**
+     * @return Set with values of different conditions for which rules are available.
+     */
+    private Set<FSFPair> buildRulesSet()
+    {
+        var rulesSet = new HashSet<FSFPair>();
+        FSFPair _temp;
+        for (var scope : scopes) {
+            for (var rule : scope.getRules()) {
+                for (var restriction : rule.getRestrictions()) {
                     _temp = new FSFPair(scope.getScopeName(), restriction.getPath());
                     if (!rulesSet.contains(_temp)) {
                         rulesSet.add(_temp);
@@ -153,5 +148,24 @@ public class ParsedConstraints
                 }
             }
         }
+        return unmodifiableSet(rulesSet);
+    }
+
+    private String printImports()
+    {
+        var output = new StringBuilder();
+        for (var e : imports.entrySet()) {
+            output.append(e.getKey());
+            output.append(" is short for ");
+            output.append(e.getValue());
+            output.append(System.lineSeparator());
+        }
+        return output.toString();
+    }
+
+    @Override
+    public String toString()
+    {
+        return "Imports\n[" + printImports() + "]\n" + scopes.toString() + "]\n]";
     }
 }

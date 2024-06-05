@@ -27,6 +27,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
+import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.annotation.feature.bool.BooleanFeatureSupport;
 import de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureSupport;
@@ -135,28 +136,28 @@ public class AnnotationSchemaServiceAutoConfiguration
     @Bean
     public SpanLayerSupport spanLayerSupport(FeatureSupportRegistry aFeatureSupportRegistry,
             ApplicationEventPublisher aEventPublisher,
-            LayerBehaviorRegistry aLayerBehaviorsRegistry)
+            LayerBehaviorRegistry aLayerBehaviorsRegistry, ConstraintsService aConstraintsService)
     {
         return new SpanLayerSupport(aFeatureSupportRegistry, aEventPublisher,
-                aLayerBehaviorsRegistry);
+                aLayerBehaviorsRegistry, aConstraintsService);
     }
 
     @Bean
     public RelationLayerSupport relationLayerSupport(FeatureSupportRegistry aFeatureSupportRegistry,
             ApplicationEventPublisher aEventPublisher,
-            LayerBehaviorRegistry aLayerBehaviorsRegistry)
+            LayerBehaviorRegistry aLayerBehaviorsRegistry, ConstraintsService aConstraintsService)
     {
         return new RelationLayerSupport(aFeatureSupportRegistry, aEventPublisher,
-                aLayerBehaviorsRegistry);
+                aLayerBehaviorsRegistry, aConstraintsService);
     }
 
     @Bean
     public ChainLayerSupport chainLayerSupport(FeatureSupportRegistry aFeatureSupportRegistry,
             ApplicationEventPublisher aEventPublisher,
-            LayerBehaviorRegistry aLayerBehaviorsRegistry)
+            LayerBehaviorRegistry aLayerBehaviorsRegistry, ConstraintsService aConstraintsService)
     {
         return new ChainLayerSupport(aFeatureSupportRegistry, aEventPublisher,
-                aLayerBehaviorsRegistry);
+                aLayerBehaviorsRegistry, aConstraintsService);
     }
 
     @Bean

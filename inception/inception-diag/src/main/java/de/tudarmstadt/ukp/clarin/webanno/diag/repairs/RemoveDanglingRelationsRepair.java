@@ -24,6 +24,8 @@ import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 
+import javax.persistence.NoResultException;
+
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
@@ -68,8 +70,14 @@ public class RemoveDanglingRelationsRepair
         for (var fs : aCas.getAnnotationIndex()) {
             var t = fs.getType();
 
-            var adapter = adapterCache.computeIfAbsent(t.getName(),
-                    $ -> annotationService.findAdapter(aProject, fs));
+            TypeAdapter adapter = null;
+            try {
+                adapter = adapterCache.computeIfAbsent(t.getName(),
+                        $ -> annotationService.findAdapter(aProject, fs));
+            }
+            catch (NoResultException e) {
+                // Ignore
+            }
 
             if (!(adapter instanceof RelationAdapter)) {
                 continue;

@@ -176,8 +176,9 @@ public abstract class BratSuggestionVisualizer
                 AjaxEventBehavior.onEvent("click", _t -> actionShowAnnotatorComment(_t, annDoc)));
         queue(commentSymbol);
 
-        controller = new DiamAjaxBehavior().setGlobalHandlersEnabled(false)
-                .addPriorityHandler(new CurationLazyDetailsHandler())
+        controller = new DiamAjaxBehavior() //
+                .setGlobalHandlersEnabled(false) //
+                .addPriorityHandler(new CurationLazyDetailsHandler()) //
                 .addPriorityHandler(new CurationActionAjaxRequestHandler());
         add(controller);
     }
@@ -278,6 +279,9 @@ public abstract class BratSuggestionVisualizer
                     .withState(state) //
                     .withSessionOwner(userService.getCurrentUser()) //
                     .withWindow(state.getWindowBeginOffset(), state.getWindowEndOffset()) //
+                    .withClipArcs(true) //
+                    .withClipSpans(true) //
+                    .withLongArcs(true) //
                     .build();
             var response = bratSerializer.render(getModelObject().getVDocument(), request);
 
@@ -292,8 +296,8 @@ public abstract class BratSuggestionVisualizer
     private String getCollectionData()
     {
         try {
-            AnnotatorState aState = getModelObject().getAnnotatorState();
-            GetCollectionInformationResponse info = new GetCollectionInformationResponse();
+            var aState = getModelObject().getAnnotatorState();
+            var info = new GetCollectionInformationResponse();
             info.setEntityTypes(bratSchemaGenerator.buildEntityTypes(aState.getProject(),
                     aState.getAnnotationLayers()));
             return JSONUtil.toInterpretableJsonString(info);
@@ -344,7 +348,7 @@ public abstract class BratSuggestionVisualizer
         // being re-rendered and once for the brat view to re-render.
         final boolean deferredRendering = false;
 
-        StringBuilder js = new StringBuilder();
+        var js = new StringBuilder();
 
         if (deferredRendering) {
             js.append("setTimeout(function() {");
@@ -374,7 +378,8 @@ public abstract class BratSuggestionVisualizer
         }
 
         @Override
-        public AjaxResponse handle(AjaxRequestTarget aTarget, Request aRequest)
+        public AjaxResponse handle(DiamAjaxBehavior aBehavior, AjaxRequestTarget aTarget,
+                Request aRequest)
         {
             try {
                 final IRequestParameters request = getRequest().getPostParameters();
@@ -404,7 +409,8 @@ public abstract class BratSuggestionVisualizer
         private static final long serialVersionUID = 8053988681869772378L;
 
         @Override
-        public AjaxResponse handle(AjaxRequestTarget aTarget, Request aRequest)
+        public AjaxResponse handle(DiamAjaxBehavior aBehavior, AjaxRequestTarget aTarget,
+                Request aRequest)
         {
             try {
                 onClientEvent(aTarget);

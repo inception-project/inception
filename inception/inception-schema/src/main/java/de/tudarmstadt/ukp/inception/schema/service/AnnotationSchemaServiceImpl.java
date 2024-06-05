@@ -103,6 +103,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainAdapter;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationAdapter;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanAdapter;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasMetadataUtils;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
@@ -122,6 +123,8 @@ import de.tudarmstadt.ukp.inception.schema.config.AnnotationSchemaServiceAutoCon
 import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.NoResultException;
+import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.Predicate;
 
 /**
  * <p>
@@ -606,7 +609,7 @@ public class AnnotationSchemaServiceImpl
             // layer definitions for UIMA built-in types.
             if (superType == null) {
                 throw new NoResultException("Super-type [" + type.getSupertypeName() + "] of type ["
-                        + aName + "] not in type system - no suitable layer definition found");
+                        + aName + "] does not correspond to any project layer");
             }
 
             layer = getLayerInternal(superType.getName(), aProject);
@@ -755,21 +758,40 @@ public class AnnotationSchemaServiceImpl
     {
         Objects.requireNonNull(aLayer, "Parameter [layer] must be specified");
 
-        var query = String.join("\n",
-                "SELECT l FROM AnnotationLayer l LEFT JOIN l.attachFeature f ", //
-                "WHERE l.type        = :type AND ", //
-                "      l.project     = :project AND ", //
-                "      (l.attachType = :attachType OR f.type = :attachTypeName) ", //
-                "ORDER BY l.uiName");
+        var cb = entityManager.getCriteriaBuilder();
+        var cq = cb.createQuery(AnnotationLayer.class);
 
-        return entityManager.createQuery(query, AnnotationLayer.class)
-                .setParameter("type", RELATION_TYPE) //
-                .setParameter("attachType", aLayer) //
-                .setParameter("attachTypeName", aLayer.getName())
-                // Checking for project is necessary because type match is string-based
-                .setParameter("project", aLayer.getProject()) //
-                .setHint(CACHEABLE, true) //
-                .getResultList();
+        var layer = cq.from(AnnotationLayer.class);
+        var feature = layer.join(AnnotationLayer_.attachFeature, JoinType.LEFT);
+
+        var predicates = new ArrayList<Predicate>();
+        predicates.add(cb.equal(layer.get(AnnotationLayer_.type), RelationLayerSupport.TYPE));
+        predicates.add(cb.equal(layer.get(AnnotationLayer_.project), aLayer.getProject()));
+        var attachTypeCondition = cb.or( //
+                cb.equal(layer.get(AnnotationLayer_.attachType), aLayer), //
+                cb.isNull(layer.get(AnnotationLayer_.attachType)), //
+                cb.equal(feature.get(AnnotationFeature_.type), aLayer.getName()));
+        predicates.add(attachTypeCondition);
+
+        cq.where(predicates.toArray(new Predicate[0]));
+        cq.orderBy(cb.asc(layer.get(AnnotationLayer_.uiName)));
+
+        return entityManager.createQuery(cq).getResultList();
+
+        // var query = String.join("\n",
+        // "SELECT l FROM AnnotationLayer l LEFT JOIN l.attachFeature f ", //
+        // "WHERE l.type = :type AND ", //
+        // " l.project = :project AND ", //
+        // " (l.attachType = :attachType OR l.attachType IS NULL OR f.type = :attachTypeName) ", //
+        // "ORDER BY l.uiName");
+        //
+        // return entityManager.createQuery(query, AnnotationLayer.class)
+        // .setParameter("type", RelationLayerSupport.TYPE) //
+        // .setParameter("attachType", aLayer) //
+        // .setParameter("attachTypeName", aLayer.getName())
+        // // Checking for project is necessary because type match is string-based
+        // .setParameter("project", aLayer.getProject()) //
+        // .getResultList();
     }
 
     @Transactional
@@ -1422,7 +1444,7 @@ public class AnnotationSchemaServiceImpl
     @Transactional(noRollbackFor = NoResultException.class)
     public TypeAdapter findAdapter(Project aProject, FeatureStructure aFS)
     {
-        AnnotationLayer layer = findLayer(aProject, aFS);
+        var layer = findLayer(aProject, aFS);
         return getAdapter(layer);
     }
 
@@ -1485,61 +1507,59 @@ public class AnnotationSchemaServiceImpl
     @Transactional
     public List<AttachedAnnotation> getAttachedRels(AnnotationLayer aLayer, AnnotationFS aFs)
     {
-        CAS cas = aFs.getCAS();
-        List<AttachedAnnotation> result = new ArrayList<>();
-        for (AnnotationLayer relationLayer : listAttachedRelationLayers(aLayer)) {
-            RelationAdapter relationAdapter = (RelationAdapter) getAdapter(relationLayer);
-            Type relationType = CasUtil.getType(cas, relationLayer.getName());
-            Feature sourceFeature = relationType
-                    .getFeatureByBaseName(relationAdapter.getSourceFeatureName());
-            Feature targetFeature = relationType
-                    .getFeatureByBaseName(relationAdapter.getTargetFeatureName());
+        var cas = aFs.getCAS();
+        var result = new ArrayList<AttachedAnnotation>();
+        for (var layer : listAttachedRelationLayers(aLayer)) {
+            var adapter = (RelationAdapter) getAdapter(layer);
+            var type = adapter.getAnnotationType(cas);
+            var sourceFeature = adapter.getSourceFeature(cas);
+            var targetFeature = adapter.getTargetFeature(cas);
 
             // This code is already prepared for the day that relations can go between
             // different layers and may have different attach features for the source and
             // target layers.
-            Feature relationSourceAttachFeature = null;
-            Feature relationTargetAttachFeature = null;
-            if (relationAdapter.getAttachFeatureName() != null) {
-                relationSourceAttachFeature = sourceFeature.getRange()
-                        .getFeatureByBaseName(relationAdapter.getAttachFeatureName());
-                relationTargetAttachFeature = targetFeature.getRange()
-                        .getFeatureByBaseName(relationAdapter.getAttachFeatureName());
+            Feature sourceAttachFeature = null;
+            Feature targetAttachFeature = null;
+            if (adapter.getAttachFeatureName() != null) {
+                sourceAttachFeature = sourceFeature.getRange()
+                        .getFeatureByBaseName(adapter.getAttachFeatureName());
+                targetAttachFeature = targetFeature.getRange()
+                        .getFeatureByBaseName(adapter.getAttachFeatureName());
             }
 
-            for (AnnotationFS relationFS : CasUtil.select(cas, relationType)) {
+            for (var relationFS : CasUtil.select(cas, type)) {
                 if (!(relationFS instanceof AnnotationFS)) {
                     continue;
                 }
 
                 // Here we get the annotations that the relation is pointing to in the UI
                 AnnotationFS sourceFS;
-                if (relationSourceAttachFeature != null) {
+                if (sourceAttachFeature != null) {
                     sourceFS = (AnnotationFS) relationFS.getFeatureValue(sourceFeature)
-                            .getFeatureValue(relationSourceAttachFeature);
+                            .getFeatureValue(sourceAttachFeature);
                 }
                 else {
                     sourceFS = (AnnotationFS) relationFS.getFeatureValue(sourceFeature);
                 }
 
                 AnnotationFS targetFS;
-                if (relationTargetAttachFeature != null) {
+                if (targetAttachFeature != null) {
                     targetFS = (AnnotationFS) relationFS.getFeatureValue(targetFeature)
-                            .getFeatureValue(relationTargetAttachFeature);
+                            .getFeatureValue(targetAttachFeature);
                 }
                 else {
                     targetFS = (AnnotationFS) relationFS.getFeatureValue(targetFeature);
                 }
 
                 if (sourceFS == null || targetFS == null) {
-                    StringBuilder message = new StringBuilder();
+                    var message = new StringBuilder();
 
-                    message.append("Relation [" + relationAdapter.getLayer().getName()
-                            + "] with id [" + ICasUtil.getAddr(relationFS)
+                    message.append("Relation [" + adapter.getLayer().getName() + "] with id ["
+                            + ICasUtil.getAddr(relationFS)
                             + "] has loose ends - cannot identify attached annotations.");
-                    if (relationAdapter.getAttachFeatureName() != null) {
-                        message.append("\nRelation [" + relationAdapter.getLayer().getName()
-                                + "] attached to feature [" + relationAdapter.getAttachFeatureName()
+                    if (adapter.getAttachFeatureName() != null) {
+                        message.append("\nRelation [" + adapter.getLayer().getName()
+                                + "] attached to feature [" + adapter.getAttachFeatureName()
                                 + "].");
                     }
                     message.append("\nSource: " + sourceFS);
@@ -1548,19 +1568,17 @@ public class AnnotationSchemaServiceImpl
                     continue;
                 }
 
-                boolean isIncoming = isSame(targetFS, aFs);
-                boolean isOutgoing = isSame(sourceFS, aFs);
+                var isIncoming = isSame(targetFS, aFs);
+                var isOutgoing = isSame(sourceFS, aFs);
 
                 if (isIncoming && isOutgoing) {
-                    result.add(new AttachedAnnotation(relationLayer, relationFS, sourceFS, LOOP));
+                    result.add(new AttachedAnnotation(layer, relationFS, sourceFS, LOOP));
                 }
                 else if (isIncoming) {
-                    result.add(
-                            new AttachedAnnotation(relationLayer, relationFS, sourceFS, INCOMING));
+                    result.add(new AttachedAnnotation(layer, relationFS, sourceFS, INCOMING));
                 }
                 else if (isOutgoing) {
-                    result.add(
-                            new AttachedAnnotation(relationLayer, relationFS, targetFS, OUTGOING));
+                    result.add(new AttachedAnnotation(layer, relationFS, targetFS, OUTGOING));
                 }
             }
         }
@@ -1738,6 +1756,39 @@ public class AnnotationSchemaServiceImpl
         }
 
         return errors;
+    }
+
+    @Override
+    @Transactional
+    public List<AnnotationLayer> getRelationLayersFor(AnnotationLayer aSpanLayer)
+    {
+        var candidates = new ArrayList<AnnotationLayer>();
+        for (var layer : listEnabledLayers(aSpanLayer.getProject())) {
+            if (!RelationLayerSupport.TYPE.equals(layer.getType())) {
+                continue;
+            }
+
+            // Layer attaches explicitly to the given layer
+            if (aSpanLayer.equals(layer.getAttachType())) {
+                candidates.add(layer);
+                continue;
+            }
+
+            // Relation layer that attaches to any span layer
+            if (layer.getAttachType() == null) {
+                candidates.add(layer);
+                continue;
+            }
+
+            // Special case for built-in layers such as the Dependency layer
+            if (layer.getAttachFeature() != null
+                    && layer.getAttachFeature().getType().equals(aSpanLayer.getName())) {
+                candidates.add(layer);
+                continue;
+            }
+        }
+
+        return candidates;
     }
 
     private static final String NAMESPACE_SEPARATOR_AS_STRING = "" + TypeSystem.NAMESPACE_SEPARATOR;

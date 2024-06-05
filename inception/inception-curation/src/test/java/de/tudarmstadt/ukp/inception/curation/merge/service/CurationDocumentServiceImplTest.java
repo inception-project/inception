@@ -43,6 +43,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.util.FileSystemUtils;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
+import de.tudarmstadt.ukp.clarin.webanno.constraints.config.ConstraintsServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -70,6 +71,7 @@ import de.tudarmstadt.ukp.inception.schema.config.AnnotationSchemaServiceAutoCon
         "de.tudarmstadt.ukp.clarin.webanno.model", //
         "de.tudarmstadt.ukp.clarin.webanno.security.model" })
 @Import({ //
+        ConstraintsServiceAutoConfiguration.class, //
         DocumentServiceAutoConfiguration.class, //
         ProjectServiceAutoConfiguration.class, //
         CasStorageServiceAutoConfiguration.class, //

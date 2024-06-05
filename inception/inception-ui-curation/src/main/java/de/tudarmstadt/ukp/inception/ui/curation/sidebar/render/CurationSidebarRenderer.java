@@ -176,8 +176,8 @@ public class CurationSidebarRenderer
                 var layerSupport = layerSupportRegistry.getLayerSupport(layer);
                 var renderer = layerSupport.createRenderer(layer, () -> layerAllFeatures);
 
-                var objects = renderer.render(aVdoc, (AnnotationFS) fs, layerSupportedFeatures,
-                        aRequest.getWindowBeginOffset(), aRequest.getWindowEndOffset());
+                var objects = renderer.render(aRequest, layerSupportedFeatures, aVdoc,
+                        (AnnotationFS) fs);
 
                 for (var object : objects) {
                     if (cfg.getPosition() instanceof SpanPosition spanPosition) {

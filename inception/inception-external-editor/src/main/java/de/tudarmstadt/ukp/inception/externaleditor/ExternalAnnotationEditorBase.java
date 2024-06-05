@@ -40,7 +40,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.diam.editor.DiamAjaxBehavior;
 import de.tudarmstadt.ukp.inception.diam.editor.DiamJavaScriptReference;
-import de.tudarmstadt.ukp.inception.diam.editor.actions.ShowContextMenuHandler;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorBase;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorExtensionRegistry;
@@ -122,10 +121,7 @@ public abstract class ExternalAnnotationEditorBase
 
     protected DiamAjaxBehavior createDiamBehavior()
     {
-        var diam = new DiamAjaxBehavior();
-        diam.addPriorityHandler(new ShowContextMenuHandler(extensionRegistry, contextMenu,
-                getModel(), getActionHandler(), getCasProvider()));
-        return diam;
+        return new DiamAjaxBehavior(contextMenu);
     }
 
     protected Component getViewComponent()

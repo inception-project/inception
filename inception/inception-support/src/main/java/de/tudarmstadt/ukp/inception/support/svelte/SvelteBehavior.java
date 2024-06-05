@@ -171,7 +171,8 @@ public class SvelteBehavior
                 "if (element.$destroy) {", //
                 "  element.$destroy();", //
                 "  delete element.$destroy;", //
-                "  console.log('Svelte component on element [" + id + "] was destroyed');", //
+                "  console.log('Svelte component with class [" + host.getClass().getName()
+                        + "] on element [" + id + "] was destroyed');", //
                 "}"));
     }
 }

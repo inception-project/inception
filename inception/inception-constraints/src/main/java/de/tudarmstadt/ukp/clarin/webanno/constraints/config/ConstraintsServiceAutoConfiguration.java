@@ -15,36 +15,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.search.model;
+package de.tudarmstadt.ukp.clarin.webanno.constraints.config;
 
-public class Progress
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
+import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsServiceImpl;
+
+@Configuration
+@EnableConfigurationProperties(ConstraintsPropertiesImpl.class)
+public class ConstraintsServiceAutoConfiguration
 {
-    private final int done;
-    private final int total;
-
-    public Progress(int aDone, int aTotal)
+    @Bean
+    public ConstraintsService constraintsService(ConstraintsProperties aProperties)
     {
-        done = aDone;
-        total = aTotal;
-    }
-
-    public int getDone()
-    {
-        return done;
-    }
-
-    public int getTotal()
-    {
-        return total;
-    }
-
-    public int percent()
-    {
-        if (total > 0) {
-            return done * 100 / total;
-        }
-        else {
-            return 0;
-        }
+        return new ConstraintsServiceImpl(aProperties);
     }
 }
