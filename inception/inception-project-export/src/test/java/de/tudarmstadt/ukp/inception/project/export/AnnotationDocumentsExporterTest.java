@@ -197,7 +197,7 @@ public class AnnotationDocumentsExporterTest
     private List<AnnotationDocument> annotationDocuments()
     {
         var docs = new ArrayList<AnnotationDocument>();
-        for (var i = 0l; i < 10l; i++) {
+        for (var i = 1l; i <= 10l; i++) {
             var doc = sourceDocument(i);
             var adoc = AnnotationDocument.builder() //
                     .withId(i) //
@@ -213,7 +213,7 @@ public class AnnotationDocumentsExporterTest
     private List<SourceDocument> sourceDocuments()
     {
         var docs = new ArrayList<SourceDocument>();
-        for (var i = 0l; i < 10l; i++) {
+        for (var i = 1l; i <= 10l; i++) {
             var doc = sourceDocument(i);
             docs.add(doc);
         }

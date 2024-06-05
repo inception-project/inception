@@ -17,16 +17,16 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.constraints.export;
 
+import static java.nio.file.Files.newInputStream;
+
 import java.io.IOException;
-import java.nio.file.Files;
+import java.lang.invoke.MethodHandles;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 
 import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.export.FullProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
@@ -38,15 +38,19 @@ import de.tudarmstadt.ukp.clarin.webanno.model.ConstraintSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.support.io.ZipUtils;
 
-@Component
 public class ConstraintsExporter
     implements ProjectExporter
 {
     private static final String CONSTRAINTS = "/constraints/";
 
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
-    private @Autowired ConstraintsService constraintsService;
+    private ConstraintsService constraintsService;
+
+    public ConstraintsExporter(ConstraintsService aConstraintsService)
+    {
+        constraintsService = aConstraintsService;
+    }
 
     @Override
     public void exportData(FullProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
@@ -56,8 +60,8 @@ public class ConstraintsExporter
         for (var set : constraintsService.listConstraintSets(aRequest.getProject())) {
             // Copying with file's original name to save ConstraintSet's name
             ProjectExporter.writeEntry(aStage, CONSTRAINTS + set.getName(), os -> {
-                try (var is = Files
-                        .newInputStream(constraintsService.exportConstraintAsFile(set).toPath())) {
+                try (var is = newInputStream(
+                        constraintsService.exportConstraintAsFile(set).toPath())) {
                     is.transferTo(os);
                 }
             });
@@ -86,7 +90,7 @@ public class ConstraintsExporter
                 constraintSet.setName(fileName);
                 constraintsService.createOrUpdateConstraintSet(constraintSet);
                 constraintsService.writeConstraintSet(constraintSet, aZip.getInputStream(entry));
-                log.info("Imported constraint [" + fileName + "] for project [" + aProject.getName()
+                LOG.info("Imported constraint [" + fileName + "] for project [" + aProject.getName()
                         + "] with id [" + aProject.getId() + "]");
             }
         }

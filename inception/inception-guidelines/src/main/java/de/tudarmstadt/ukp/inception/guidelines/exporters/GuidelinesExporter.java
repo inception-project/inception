@@ -24,7 +24,6 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.nio.file.Files;
-import java.util.Enumeration;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
@@ -68,6 +67,7 @@ public class GuidelinesExporter
      * Copy Project guidelines from the file system of this project to the export folder
      * 
      * @throws IOException
+     *             if an I/O error occurs.
      */
     @Override
     public void exportData(FullProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
@@ -103,8 +103,7 @@ public class GuidelinesExporter
             ExportedProject aExProject, ZipFile aZip)
         throws Exception
     {
-        for (Enumeration<? extends ZipEntry> zipEnumerate = aZip.entries(); zipEnumerate
-                .hasMoreElements();) {
+        for (var zipEnumerate = aZip.entries(); zipEnumerate.hasMoreElements();) {
             var entry = (ZipEntry) zipEnumerate.nextElement();
 
             // Strip leading "/" that we had in ZIP files prior to 2.0.8 (bug #985)

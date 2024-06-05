@@ -45,20 +45,17 @@ import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.diag.ChecksRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.diag.RepairsRegistry;
-import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageServiceImpl;
 import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageBackupProperties;
 import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageCachePropertiesImpl;
 import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStoragePropertiesImpl;
-import de.tudarmstadt.ukp.inception.annotation.storage.driver.CasStorageDriver;
 import de.tudarmstadt.ukp.inception.annotation.storage.driver.filesystem.FileSystemCasStorageDriver;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryPropertiesImpl;
 import de.tudarmstadt.ukp.inception.export.DocumentImportExportServiceImpl;
-import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceProperties;
 import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServicePropertiesImpl;
 import de.tudarmstadt.ukp.inception.io.xmi.XmiFormatSupport;
 import de.tudarmstadt.ukp.inception.io.xmi.config.UimaFormatsPropertiesImpl.XmiFormatProperties;
@@ -94,12 +91,12 @@ public class CuratedDocumentsExporterTest
         project.setId(1l);
         project.setName("Test Project");
 
-        DocumentImportExportServiceProperties properties = new DocumentImportExportServicePropertiesImpl();
+        var properties = new DocumentImportExportServicePropertiesImpl();
 
         repositoryProperties = new RepositoryPropertiesImpl();
         repositoryProperties.setPath(workFolder);
 
-        CasStorageDriver driver = new FileSystemCasStorageDriver(repositoryProperties,
+        var driver = new FileSystemCasStorageDriver(repositoryProperties,
                 new CasStorageBackupProperties(), new CasStoragePropertiesImpl());
 
         casStorageService = spy(new CasStorageServiceImpl(driver,
@@ -126,34 +123,36 @@ public class CuratedDocumentsExporterTest
     public void thatImportingAnnotationProjectWorks_3_6_1() throws Exception
     {
         // Export the project and import it again
-        List<Pair<SourceDocument, String>> imported = runImportAndFetchDocuments(new ZipFile(
+        var imported = runImportAndFetchDocuments(new ZipFile(
                 "src/test/resources/exports/Export+Test+-+Curated+annotation+project_3_6_1.zip"));
 
         // Check that the curation for the document in the project is imported
-        assertThat(imported).extracting(p -> p.getKey().getName())
+        assertThat(imported) //
+                .extracting(p -> p.getKey().getName()) //
                 .containsExactlyInAnyOrder("example_sentence.txt");
-        assertThat(imported).extracting(Pair::getValue).containsExactlyInAnyOrder(CURATION_USER);
+        assertThat(imported) //
+                .extracting(Pair::getValue) //
+                .containsExactlyInAnyOrder(CURATION_USER);
     }
 
     private List<Pair<SourceDocument, String>> runImportAndFetchDocuments(ZipFile aZipFile)
         throws Exception
     {
-        ArgumentCaptor<SourceDocument> sourceDocCaptor = ArgumentCaptor
-                .forClass(SourceDocument.class);
-        ArgumentCaptor<String> usernameCaptor = ArgumentCaptor.forClass(String.class);
+        var sourceDocCaptor = ArgumentCaptor.forClass(SourceDocument.class);
+        var usernameCaptor = ArgumentCaptor.forClass(String.class);
 
         // Import the project again
-        ExportedProject exProject = ProjectExportServiceImpl.loadExportedProject(aZipFile);
-        ProjectImportRequest importRequest = new ProjectImportRequest(true);
+        var exProject = ProjectExportServiceImpl.loadExportedProject(aZipFile);
+        var importRequest = new ProjectImportRequest(true);
         sut.importData(importRequest, project, exProject, aZipFile);
 
         verify(documentService, atLeastOnce()).importCas(sourceDocCaptor.capture(),
                 usernameCaptor.capture(), any());
 
-        List<Pair<SourceDocument, String>> importedCases = new ArrayList<>();
-        List<SourceDocument> docs = sourceDocCaptor.getAllValues();
-        List<String> users = usernameCaptor.getAllValues();
-        for (int i = 0; i < docs.size(); i++) {
+        var importedCases = new ArrayList<Pair<SourceDocument, String>>();
+        var docs = sourceDocCaptor.getAllValues();
+        var users = usernameCaptor.getAllValues();
+        for (var i = 0; i < docs.size(); i++) {
             importedCases.add(Pair.of(docs.get(i), users.get(i)));
         }
 
