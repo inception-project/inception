@@ -24,6 +24,7 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.weblicht.exporter;
 import static java.util.Arrays.asList;
 
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
@@ -55,7 +56,7 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.weblicht.model.WeblichtC
 public class ChainExporter
     implements ProjectExporter
 {
-    private static final Logger LOG = LoggerFactory.getLogger(ChainExporter.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private static final String KEY = "weblicht-chains";
 

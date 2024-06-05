@@ -71,10 +71,11 @@ public class CurationWorkflowExporterTest
         when(curationService.readOrCreateCurationWorkflow(project)).thenReturn(curationWorkflow());
 
         // Export the project and import it again
-        ArgumentCaptor<CurationWorkflow> captor = runExportImportAndFetchCurationWorkflow();
+        var captor = runExportImportAndFetchCurationWorkflow();
 
         // Check that after re-importing the exported projects, they are identical to the original
-        assertThat(captor.getAllValues()).usingRecursiveFieldByFieldElementComparator()
+        assertThat(captor.getAllValues()) //
+                .usingRecursiveFieldByFieldElementComparator() //
                 .containsExactly(curationWorkflow());
     }
 
@@ -90,11 +91,11 @@ public class CurationWorkflowExporterTest
         sut.exportData(exportRequest, monitor, exportedProject, stage);
 
         // Import the project again
-        ArgumentCaptor<CurationWorkflow> captor = ArgumentCaptor.forClass(CurationWorkflow.class);
+        var captor = ArgumentCaptor.forClass(CurationWorkflow.class);
         doNothing().when(curationService).createOrUpdateCurationWorkflow(captor.capture());
 
-        ProjectImportRequest importRequest = new ProjectImportRequest(true);
-        ZipFile zipFile = mock(ZipFile.class);
+        var importRequest = new ProjectImportRequest(true);
+        var zipFile = mock(ZipFile.class);
         sut.importData(importRequest, project, exportedProject, zipFile);
 
         return captor;
@@ -102,7 +103,7 @@ public class CurationWorkflowExporterTest
 
     private CurationWorkflow curationWorkflow()
     {
-        CurationWorkflow curationWorkflow = new CurationWorkflow();
+        var curationWorkflow = new CurationWorkflow();
         curationWorkflow.setProject(project);
         curationWorkflow.setMergeStrategy(factory.getId());
         factory.writeTraits(curationWorkflow, new ThresholdBasedMergeStrategyTraits());

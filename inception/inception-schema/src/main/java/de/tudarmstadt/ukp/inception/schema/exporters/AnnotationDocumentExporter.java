@@ -38,6 +38,7 @@ import static org.apache.commons.io.FilenameUtils.getExtension;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -95,7 +96,7 @@ public class AnnotationDocumentExporter
     private static final String ANNOTATION_AS_SERIALISED_CAS = "annotation_ser";
     private static final String ANNOTATION_CAS_FOLDER = "/" + ANNOTATION_AS_SERIALISED_CAS + "/";
 
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private final DocumentService documentService;
     private final UserDao userRepository;
@@ -194,7 +195,7 @@ public class AnnotationDocumentExporter
                             : aRequest.getFormat();
 
                     format = importExportService.getWritableFormatById(formatId).orElseGet(() -> {
-                        FormatSupport fallbackFormat = importExportService.getFallbackFormat();
+                        var fallbackFormat = importExportService.getFallbackFormat();
                         aMonitor.addMessage(LogMessage.warn(this, "Annotation: [%s] No writer "
                                 + "found for format [%s] - falling back to exporting as [%s] "
                                 + "instead.", srcDoc.getName(), formatId,
@@ -229,7 +230,7 @@ public class AnnotationDocumentExporter
                             INITIAL_CAS_PSEUDO_USER);
                 }
 
-                log.info("Exported annotation document content for user [{}] for source document "
+                LOG.info("Exported annotation document content for user [{}] for source document "
                         + "{} in project {}", INITIAL_CAS_PSEUDO_USER, srcDoc, project);
 
                 //
@@ -256,7 +257,7 @@ public class AnnotationDocumentExporter
                                     annDoc.getUser());
                         }
 
-                        log.info("Exported annotation document content for user [{}] for " //
+                        LOG.info("Exported annotation document content for user [{}] for " //
                                 + "source document {} in project {}", annDoc.getUser(), srcDoc,
                                 project);
                     }
@@ -319,13 +320,13 @@ public class AnnotationDocumentExporter
     {
         var start = currentTimeMillis();
 
-        Map<String, SourceDocument> nameToDoc = documentService.listSourceDocuments(aProject)
-                .stream().collect(toMap(SourceDocument::getName, identity()));
+        var nameToDoc = documentService.listSourceDocuments(aProject).stream()
+                .collect(toMap(SourceDocument::getName, identity()));
 
         importAnnotationDocuments(aExProject, aProject, nameToDoc);
         importAnnotationDocumentContents(aZip, aProject, nameToDoc);
 
-        log.info("Imported [{}] annotation documents for project [{}] ({})",
+        LOG.info("Imported [{}] annotation documents for project [{}] ({})",
                 aExProject.getSourceDocuments().size(), aExProject.getName(),
                 DurationFormatUtils.formatDurationWords(currentTimeMillis() - start, true, true));
     }
@@ -365,18 +366,18 @@ public class AnnotationDocumentExporter
     /**
      * copy annotation documents (serialized CASs) from the exported project
      * 
-     * @param zip
+     * @param aZipFile
      *            the ZIP file.
      * @param aProject
      *            the project.
      * @throws IOException
      *             if an I/O error occurs.
      */
-    private void importAnnotationDocumentContents(ZipFile zip, Project aProject,
+    private void importAnnotationDocumentContents(ZipFile aZipFile, Project aProject,
             Map<String, SourceDocument> aNameToDoc)
         throws IOException
     {
-        int n = 0;
+        var n = 0;
 
         // NOTE: we resort to internal knowledge about the CasStorageService here, but
         // it makes the import quite a bit faster than using DocumentService.getCasFile(...)
@@ -387,11 +388,11 @@ public class AnnotationDocumentExporter
 
         var annotationFolderInitialized = new HashSet<SourceDocument>();
 
-        for (var zipEnumerate = zip.entries(); zipEnumerate.hasMoreElements();) {
+        for (var zipEnumerate = aZipFile.entries(); zipEnumerate.hasMoreElements();) {
             var entry = (ZipEntry) zipEnumerate.nextElement();
 
             // Strip leading "/" that we had in ZIP files prior to 2.0.8 (bug #985)
-            String entryName = ProjectExporter.normalizeEntryName(entry);
+            var entryName = ProjectExporter.normalizeEntryName(entry);
 
             if (!entryName.startsWith(ANNOTATION_AS_SERIALISED_CAS + "/")
                     || !entryName.endsWith(".ser")) {
@@ -421,10 +422,10 @@ public class AnnotationDocumentExporter
                 annotationFolderInitialized.add(sourceDocument);
             }
 
-            copy(zip.getInputStream(entry), annFolder.resolve(username + ".ser").toFile());
+            copy(aZipFile.getInputStream(entry), annFolder.resolve(username + ".ser").toFile());
 
             n++;
-            log.info(
+            LOG.info(
                     "Imported content for annotation document {}: user [{}] for [{}]({}) in project [{}]({})",
                     n, username, sourceDocument.getName(), sourceDocument.getId(),
                     aProject.getName(), aProject.getId());
