@@ -27,6 +27,7 @@ import org.apache.uima.cas.ArrayFS;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.FSUtil;
+import org.apache.uima.jcas.cas.AnnotationBase;
 
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkFeatureDecl;
@@ -81,7 +82,7 @@ public abstract class DiffAdapter_ImplBase
     }
 
     @Override
-    public List<? extends Position> generateSubPositions(AnnotationFS aFs,
+    public List<? extends Position> generateSubPositions(AnnotationBase aFs,
             LinkCompareBehavior aLinkCompareBehavior)
     {
         var subPositions = new ArrayList<Position>();
