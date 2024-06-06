@@ -56,18 +56,23 @@ public class LayerExporterTest
 {
     private @Mock AnnotationSchemaService annotationService;
 
-    private Project project;
-
     private LayerExporter sut;
+
+    private Project sourceProject;
+    private Project targetProject;
 
     @BeforeEach
     public void setUp() throws Exception
     {
-        project = new Project();
-        project.setId(1l);
-        project.setName("Test Project");
+        sourceProject = Project.builder() //
+                .withId(1l) //
+                .withName("Test Project") //
+                .build();
 
-        when(annotationService.listAnnotationLayer(any())).thenReturn(layers());
+        targetProject = Project.builder() //
+                .withId(2l) //
+                .withName("Test Project") //
+                .build();
 
         sut = new LayerExporter(annotationService);
     }
@@ -75,16 +80,32 @@ public class LayerExporterTest
     @Test
     public void thatExportingWorks() throws Exception
     {
+        when(annotationService.listAnnotationLayer(any())).thenReturn(layers(sourceProject));
+
         // Export the project and import it again
-        var captor = runExportImportAndFetchLayers();
+        // Export the project
+        var exportRequest = new FullProjectExportRequest(sourceProject, null, false);
+        var monitor = new ProjectExportTaskMonitor(sourceProject, null, "test");
+        var exportedProject = new ExportedProject();
+        var stage = mock(ZipOutputStream.class);
+
+        sut.exportData(exportRequest, monitor, exportedProject, stage);
+
+        // Import the project again
+        var captor = ArgumentCaptor.forClass(AnnotationLayer.class);
+        doNothing().when(annotationService).createOrUpdateLayer(captor.capture());
+
+        var importRequest = new ProjectImportRequest(true);
+        var zipFile = mock(ZipFile.class);
+        sut.importData(importRequest, targetProject, exportedProject, zipFile);
 
         // Check that after re-importing the exported projects, they are identical to the original
         assertThat(captor.getAllValues()) //
                 .usingRecursiveFieldByFieldElementComparatorIgnoringFields("id")
-                .containsExactlyInAnyOrderElementsOf(layers());
+                .containsExactlyInAnyOrderElementsOf(layers(targetProject));
     }
 
-    private List<AnnotationLayer> layers()
+    private List<AnnotationLayer> layers(Project project)
     {
         var layer1 = new AnnotationLayer("webanno.custom.Span", "Span", SPAN_TYPE, project, false,
                 SINGLE_TOKEN, NO_OVERLAP);
@@ -100,24 +121,4 @@ public class LayerExporterTest
         return asList(layer1, layer2, layer3);
     }
 
-    private ArgumentCaptor<AnnotationLayer> runExportImportAndFetchLayers() throws Exception
-    {
-        // Export the project
-        var exportRequest = new FullProjectExportRequest(project, null, false);
-        var monitor = new ProjectExportTaskMonitor(project, null, "test");
-        var exportedProject = new ExportedProject();
-        var stage = mock(ZipOutputStream.class);
-
-        sut.exportData(exportRequest, monitor, exportedProject, stage);
-
-        // Import the project again
-        var captor = ArgumentCaptor.forClass(AnnotationLayer.class);
-        doNothing().when(annotationService).createOrUpdateLayer(captor.capture());
-
-        var importRequest = new ProjectImportRequest(true);
-        var zipFile = mock(ZipFile.class);
-        sut.importData(importRequest, project, exportedProject, zipFile);
-
-        return captor;
-    }
 }

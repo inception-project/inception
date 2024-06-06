@@ -28,7 +28,6 @@ import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.zip.ZipFile;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -65,8 +64,6 @@ import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 @ExtendWith(MockitoExtension.class)
 public class CuratedDocumentsExporterTest
 {
-    public @TempDir File tempFolder;
-
     private RepositoryProperties repositoryProperties;
     private DocumentImportExportService importExportSerivce;
     private CasStorageService casStorageService;
@@ -76,8 +73,9 @@ public class CuratedDocumentsExporterTest
     private @Mock ChecksRegistry checksRegistry;
     private @Mock RepairsRegistry repairsRegistry;
 
-    private Project project;
-    private File workFolder;
+    private Project targetProject;
+
+    private @TempDir File tempDir;
     private long nextDocId = 1;
 
     private CuratedDocumentsExporter sut;
@@ -85,16 +83,15 @@ public class CuratedDocumentsExporterTest
     @BeforeEach
     public void setUp() throws Exception
     {
-        workFolder = tempFolder;
-
-        project = new Project();
-        project.setId(1l);
-        project.setName("Test Project");
+        targetProject = Project.builder() //
+                .withId(2l) //
+                .withName("Test Project") //
+                .build();
 
         var properties = new DocumentImportExportServicePropertiesImpl();
 
         repositoryProperties = new RepositoryPropertiesImpl();
-        repositoryProperties.setPath(workFolder);
+        repositoryProperties.setPath(tempDir);
 
         var driver = new FileSystemCasStorageDriver(repositoryProperties,
                 new CasStorageBackupProperties(), new CasStoragePropertiesImpl());
@@ -108,13 +105,8 @@ public class CuratedDocumentsExporterTest
                 xmiFormatSupport);
 
         // Dynamically generate a SourceDocument with an incrementing ID when asked for one
-        when(documentService.getSourceDocument(any(), any())).then(invocation -> {
-            SourceDocument doc = new SourceDocument();
-            doc.setId(nextDocId++);
-            doc.setProject(invocation.getArgument(0, Project.class));
-            doc.setName(invocation.getArgument(1, String.class));
-            return doc;
-        });
+        when(documentService.getSourceDocument(any(), any()))
+                .then(call -> sourceDocument(call.getArgument(0), call.getArgument(1)));
 
         sut = new CuratedDocumentsExporter(documentService, importExportSerivce);
     }
@@ -122,29 +114,16 @@ public class CuratedDocumentsExporterTest
     @Test
     public void thatImportingAnnotationProjectWorks_3_6_1() throws Exception
     {
-        // Export the project and import it again
-        var imported = runImportAndFetchDocuments(new ZipFile(
-                "src/test/resources/exports/Export+Test+-+Curated+annotation+project_3_6_1.zip"));
-
-        // Check that the curation for the document in the project is imported
-        assertThat(imported) //
-                .extracting(p -> p.getKey().getName()) //
-                .containsExactlyInAnyOrder("example_sentence.txt");
-        assertThat(imported) //
-                .extracting(Pair::getValue) //
-                .containsExactlyInAnyOrder(CURATION_USER);
-    }
-
-    private List<Pair<SourceDocument, String>> runImportAndFetchDocuments(ZipFile aZipFile)
-        throws Exception
-    {
+        // Project is already exported
+        var zipFile = new ZipFile(
+                "src/test/resources/exports/Export+Test+-+Curated+annotation+project_3_6_1.zip");
         var sourceDocCaptor = ArgumentCaptor.forClass(SourceDocument.class);
         var usernameCaptor = ArgumentCaptor.forClass(String.class);
 
         // Import the project again
-        var exProject = ProjectExportServiceImpl.loadExportedProject(aZipFile);
+        var exProject = ProjectExportServiceImpl.loadExportedProject(zipFile);
         var importRequest = new ProjectImportRequest(true);
-        sut.importData(importRequest, project, exProject, aZipFile);
+        sut.importData(importRequest, targetProject, exProject, zipFile);
 
         verify(documentService, atLeastOnce()).importCas(sourceDocCaptor.capture(),
                 usernameCaptor.capture(), any());
@@ -155,7 +134,23 @@ public class CuratedDocumentsExporterTest
         for (var i = 0; i < docs.size(); i++) {
             importedCases.add(Pair.of(docs.get(i), users.get(i)));
         }
+        var imported = importedCases;
 
-        return importedCases;
+        // Check that the curation for the document in the project is imported
+        assertThat(imported) //
+                .extracting(p -> p.getKey().getName()) //
+                .containsExactlyInAnyOrder("example_sentence.txt");
+        assertThat(imported) //
+                .extracting(Pair::getValue) //
+                .containsExactlyInAnyOrder(CURATION_USER);
+    }
+
+    private Object sourceDocument(Project aProject, String aName)
+    {
+        var doc = new SourceDocument();
+        doc.setId(nextDocId++);
+        doc.setProject(aProject);
+        doc.setName(aName);
+        return doc;
     }
 }

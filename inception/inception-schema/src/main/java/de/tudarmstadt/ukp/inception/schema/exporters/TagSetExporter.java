@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.inception.schema.exporters;
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.stream.Collectors;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
@@ -53,11 +52,11 @@ public class TagSetExporter
 {
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
-    private final AnnotationSchemaService annotationService;
+    private final AnnotationSchemaService schemaService;
 
-    public TagSetExporter(AnnotationSchemaService aAnnotationService)
+    public TagSetExporter(AnnotationSchemaService aSchemaService)
     {
-        annotationService = aAnnotationService;
+        schemaService = aSchemaService;
     }
 
     @Override
@@ -65,7 +64,7 @@ public class TagSetExporter
             ExportedProject aExProject, ZipOutputStream aStage)
     {
         var extTagSets = new ArrayList<ExportedTagSet>();
-        for (var tagSet : annotationService.listTagSets(aRequest.getProject())) {
+        for (var tagSet : schemaService.listTagSets(aRequest.getProject())) {
             var exTagSet = new ExportedTagSet();
             exTagSet.setCreateTag(tagSet.isCreateTag());
             exTagSet.setDescription(tagSet.getDescription());
@@ -73,7 +72,7 @@ public class TagSetExporter
             exTagSet.setName(tagSet.getName());
 
             var exTags = new ArrayList<ExportedTag>();
-            for (var tag : annotationService.listTags(tagSet)) {
+            for (var tag : schemaService.listTags(tagSet)) {
                 var exTag = new ExportedTag();
                 exTag.setDescription(tag.getDescription());
                 exTag.setName(tag.getName());
@@ -100,7 +99,7 @@ public class TagSetExporter
             return;
         }
 
-        for (ExportedTagSet exTagSet : aExProject.getTagSets()) {
+        for (var exTagSet : aExProject.getTagSets()) {
             importTagSet(new TagSet(), exTagSet, aProject);
         }
     }
@@ -113,52 +112,52 @@ public class TagSetExporter
     {
         var importedTagSets = aExProject.getTagSets();
 
-        List<String> posTags = new ArrayList<>();
-        List<String> depTags = new ArrayList<>();
-        List<String> neTags = new ArrayList<>();
-        List<String> posTagDescriptions = new ArrayList<>();
-        List<String> depTagDescriptions = new ArrayList<>();
-        List<String> neTagDescriptions = new ArrayList<>();
-        List<String> corefTypeTags = new ArrayList<>();
-        List<String> corefRelTags = new ArrayList<>();
-        for (ExportedTagSet tagSet : importedTagSets) {
+        var posTags = new ArrayList<String>();
+        var depTags = new ArrayList<String>();
+        var neTags = new ArrayList<String>();
+        var posTagDescriptions = new ArrayList<String>();
+        var depTagDescriptions = new ArrayList<String>();
+        var neTagDescriptions = new ArrayList<String>();
+        var corefTypeTags = new ArrayList<String>();
+        var corefRelTags = new ArrayList<String>();
+        for (var tagSet : importedTagSets) {
             switch (tagSet.getTypeName()) {
             case WebAnnoConst.POS:
-                for (ExportedTag tag : tagSet.getTags()) {
+                for (var tag : tagSet.getTags()) {
                     posTags.add(tag.getName());
                     posTagDescriptions.add(tag.getDescription());
                 }
                 break;
             case WebAnnoConst.DEPENDENCY:
-                for (ExportedTag tag : tagSet.getTags()) {
+                for (var tag : tagSet.getTags()) {
                     depTags.add(tag.getName());
                     depTagDescriptions.add(tag.getDescription());
                 }
                 break;
             case WebAnnoConst.NAMEDENTITY:
-                for (ExportedTag tag : tagSet.getTags()) {
+                for (var tag : tagSet.getTags()) {
                     neTags.add(tag.getName());
                     neTagDescriptions.add(tag.getDescription());
                 }
                 break;
             case WebAnnoConst.COREFRELTYPE:
-                for (ExportedTag tag : tagSet.getTags()) {
+                for (var tag : tagSet.getTags()) {
                     corefTypeTags.add(tag.getName());
                 }
                 break;
             case WebAnnoConst.COREFERENCE:
-                for (ExportedTag tag : tagSet.getTags()) {
+                for (var tag : tagSet.getTags()) {
                     corefRelTags.add(tag.getName());
                 }
                 break;
             }
         }
 
-        new LegacyProjectInitializer(annotationService).initialize(aProject,
-                posTags.toArray(new String[0]), posTagDescriptions.toArray(new String[0]),
-                depTags.toArray(new String[0]), depTagDescriptions.toArray(new String[0]),
-                neTags.toArray(new String[0]), neTagDescriptions.toArray(new String[0]),
-                corefTypeTags.toArray(new String[0]), corefRelTags.toArray(new String[0]));
+        new LegacyProjectInitializer(schemaService).initialize(aProject,
+                posTags.toArray(String[]::new), posTagDescriptions.toArray(String[]::new),
+                depTags.toArray(String[]::new), depTagDescriptions.toArray(String[]::new),
+                neTags.toArray(String[]::new), neTagDescriptions.toArray(String[]::new),
+                corefTypeTags.toArray(String[]::new), corefRelTags.toArray(String[]::new));
     }
 
     private void importTagSet(TagSet aTagSet, ExportedTagSet aExTagSet, Project aProject)
@@ -171,9 +170,9 @@ public class TagSetExporter
         aTagSet.setLanguage(aExTagSet.getLanguage());
         aTagSet.setName(aExTagSet.getName());
         aTagSet.setProject(aProject);
-        annotationService.createTagSet(aTagSet);
+        schemaService.createTagSet(aTagSet);
 
-        var existingTags = annotationService.listTags(aTagSet).stream() //
+        var existingTags = schemaService.listTags(aTagSet).stream() //
                 .map(Tag::getName) //
                 .collect(Collectors.toSet());
 
@@ -192,6 +191,6 @@ public class TagSetExporter
             tags.add(tag);
         }
 
-        annotationService.createTags(tags.stream().toArray(Tag[]::new));
+        schemaService.createTags(tags.stream().toArray(Tag[]::new));
     }
 }

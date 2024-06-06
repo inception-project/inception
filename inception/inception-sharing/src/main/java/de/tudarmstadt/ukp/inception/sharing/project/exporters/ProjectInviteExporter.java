@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.inception.sharing.project.exporters;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 
@@ -63,11 +62,11 @@ public class ProjectInviteExporter
         var project = aRequest.getProject();
 
         // add project permissions to the project
-        List<ExportedProjectInvite> projectInvites = new ArrayList<>();
+        var projectInvites = new ArrayList<ExportedProjectInvite>();
 
         var invite = inviteService.readProjectInvite(project);
         if (invite != null) {
-            ExportedProjectInvite exportedInvite = new ExportedProjectInvite();
+            var exportedInvite = new ExportedProjectInvite();
             exportedInvite.setCreated(invite.getCreated());
             exportedInvite.setExpirationDate(invite.getExpirationDate());
             exportedInvite.setGuestAccessible(invite.isGuestAccessible());

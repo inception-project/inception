@@ -81,13 +81,15 @@ public class KnowledgeBaseExporterTest
     @BeforeEach
     public void setUp() throws Exception
     {
-        sourceProject = new Project();
-        sourceProject.setId(1l);
-        sourceProject.setName("Test Project");
+        sourceProject = Project.builder() //
+                .withId(1l) //
+                .withName("Test Project") //
+                .build();
 
-        targetProject = new Project();
-        sourceProject.setId(2l);
-        targetProject.setName("Test Project");
+        targetProject = Project.builder() //
+                .withId(2l) //
+                .withName("Test Project") //
+                .build();
 
         when(kbService.getKnowledgeBases(sourceProject)).thenReturn(knowledgeBases());
 

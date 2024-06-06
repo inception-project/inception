@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.sharing.project.exporters;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.when;
 
 import java.util.zip.ZipFile;
@@ -46,27 +47,32 @@ public class ProjectInviteExporterTest
 {
     private @Mock InviteService inviteService;
 
-    private Project project;
+    private Project sourceProject;
+    private Project targetProject;
 
     private ProjectInviteExporter sut;
 
     @BeforeEach
     public void setUp() throws Exception
     {
-        project = new Project();
-        project.setId(1l);
-        project.setName("Test Project");
+        sourceProject = Project.builder() //
+                .withId(1l) //
+                .withName("Test Project") //
+                .build();
 
-        when(inviteService.readProjectInvite(Mockito.any())).thenReturn(invite());
+        targetProject = Project.builder() //
+                .withId(2l) //
+                .withName("Test Project") //
+                .build();
 
         sut = new ProjectInviteExporter(inviteService);
     }
 
-    private ProjectInvite invite()
+    private ProjectInvite invite(Project aProject)
     {
         var i = new ProjectInvite();
         i.setId(1l);
-        i.setProject(project);
+        i.setProject(aProject);
         i.setInviteId("deadbeaf");
         i.setInvitationText("Join the fray!");
         i.setUserIdPlaceholder("Nickname");
@@ -77,13 +83,17 @@ public class ProjectInviteExporterTest
     @Test
     public void thatExportingWorks() throws Exception
     {
+        when(inviteService.readProjectInvite(Mockito.any())).thenReturn(invite(sourceProject));
+
         // Export the project
-        var exportRequest = new FullProjectExportRequest(project, null, false);
-        var monitor = new ProjectExportTaskMonitor(project, null, "test");
+        var exportRequest = new FullProjectExportRequest(sourceProject, null, false);
+        var monitor = new ProjectExportTaskMonitor(sourceProject, null, "test");
         var exportedProject = new ExportedProject();
         var stage = mock(ZipOutputStream.class);
 
         sut.exportData(exportRequest, monitor, exportedProject, stage);
+
+        reset(inviteService);
 
         // Import the project again
         var captor = ArgumentCaptor.forClass(ProjectInvite.class);
@@ -91,11 +101,11 @@ public class ProjectInviteExporterTest
 
         var importRequest = new ProjectImportRequest(true);
         var zipFile = mock(ZipFile.class);
-        sut.importData(importRequest, project, exportedProject, zipFile);
+        sut.importData(importRequest, targetProject, exportedProject, zipFile);
 
         // Check that after re-importing the exported projects, they are identical to the original
         assertThat(captor.getAllValues()) //
                 .usingRecursiveFieldByFieldElementComparatorIgnoringFields("id") //
-                .containsExactlyInAnyOrder(invite());
+                .containsExactlyInAnyOrder(invite(targetProject));
     }
 }

@@ -81,9 +81,15 @@ public class GazeteerExporterTest
     @BeforeEach
     public void setUp() throws Exception
     {
-        sourceProject = new Project();
-        sourceProject.setId(1l);
-        sourceProject.setName("Test Project");
+        sourceProject = Project.builder() //
+                .withId(1l) //
+                .withName("Test Project") //
+                .build();
+
+        targetProject = Project.builder() //
+                .withId(2l) //
+                .withName("Test Project") //
+                .build();
 
         sourceLayer = new AnnotationLayer("span", "span", SpanLayerSupport.TYPE, sourceProject,
                 false, TOKENS, NO_OVERLAP);
@@ -91,10 +97,6 @@ public class GazeteerExporterTest
                 TYPE_NAME_STRING);
         sourceRecommender = new Recommender("rec1", sourceLayer);
         sourceRecommender.setFeature(sourceFeature);
-
-        targetProject = new Project();
-        targetProject.setId(2l);
-        targetProject.setName("Test Project");
 
         targetLayer = new AnnotationLayer("span", "span", SpanLayerSupport.TYPE, sourceProject,
                 false, TOKENS, NO_OVERLAP);

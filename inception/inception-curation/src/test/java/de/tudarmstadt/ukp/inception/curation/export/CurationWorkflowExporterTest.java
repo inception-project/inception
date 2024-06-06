@@ -18,8 +18,10 @@
 package de.tudarmstadt.ukp.inception.curation.export;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.when;
 
 import java.util.zip.ZipFile;
@@ -47,7 +49,8 @@ import de.tudarmstadt.ukp.inception.curation.service.CurationService;
 public class CurationWorkflowExporterTest
 {
     private @Mock CurationService curationService;
-    private Project project;
+    private Project sourceProject;
+    private Project targetProject;
 
     private CurationWorkflowExporter sut;
 
@@ -56,9 +59,15 @@ public class CurationWorkflowExporterTest
     @BeforeEach
     public void setUp()
     {
-        project = new Project();
-        project.setId(1l);
-        project.setName("Test Project");
+        sourceProject = Project.builder() //
+                .withId(1l) //
+                .withName("Test Project") //
+                .build();
+
+        targetProject = Project.builder() //
+                .withId(2l) //
+                .withName("Test Project") //
+                .build();
 
         sut = new CurationWorkflowExporter(curationService);
 
@@ -68,27 +77,18 @@ public class CurationWorkflowExporterTest
     @Test
     public void thatExportingWorks() throws Exception
     {
-        when(curationService.readOrCreateCurationWorkflow(project)).thenReturn(curationWorkflow());
+        when(curationService.readOrCreateCurationWorkflow(any()))
+                .thenReturn(curationWorkflow(sourceProject));
 
-        // Export the project and import it again
-        var captor = runExportImportAndFetchCurationWorkflow();
-
-        // Check that after re-importing the exported projects, they are identical to the original
-        assertThat(captor.getAllValues()) //
-                .usingRecursiveFieldByFieldElementComparator() //
-                .containsExactly(curationWorkflow());
-    }
-
-    private ArgumentCaptor<CurationWorkflow> runExportImportAndFetchCurationWorkflow()
-        throws Exception
-    {
         // Export the project
-        var exportRequest = new FullProjectExportRequest(project, null, false);
-        var monitor = new ProjectExportTaskMonitor(project, null, "test");
+        var exportRequest = new FullProjectExportRequest(sourceProject, null, false);
+        var monitor = new ProjectExportTaskMonitor(sourceProject, null, "test");
         var exportedProject = new ExportedProject();
         var stage = mock(ZipOutputStream.class);
 
         sut.exportData(exportRequest, monitor, exportedProject, stage);
+
+        reset(curationService);
 
         // Import the project again
         var captor = ArgumentCaptor.forClass(CurationWorkflow.class);
@@ -96,15 +96,19 @@ public class CurationWorkflowExporterTest
 
         var importRequest = new ProjectImportRequest(true);
         var zipFile = mock(ZipFile.class);
-        sut.importData(importRequest, project, exportedProject, zipFile);
+        sut.importData(importRequest, targetProject, exportedProject, zipFile);
 
-        return captor;
+        // Export the project and import it again
+        // Check that after re-importing the exported projects, they are identical to the original
+        assertThat(captor.getAllValues()) //
+                .usingRecursiveFieldByFieldElementComparator() //
+                .containsExactly(curationWorkflow(targetProject));
     }
 
-    private CurationWorkflow curationWorkflow()
+    private CurationWorkflow curationWorkflow(Project aProject)
     {
         var curationWorkflow = new CurationWorkflow();
-        curationWorkflow.setProject(project);
+        curationWorkflow.setProject(aProject);
         curationWorkflow.setMergeStrategy(factory.getId());
         factory.writeTraits(curationWorkflow, new ThresholdBasedMergeStrategyTraits());
         return curationWorkflow;

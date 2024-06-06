@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.preferences.exporter;
+package de.tudarmstadt.ukp.inception.schema.exporters;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -43,23 +43,24 @@ import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
-import de.tudarmstadt.ukp.inception.preferences.model.DefaultProjectPreference;
+import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
+import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
 @ExtendWith(MockitoExtension.class)
-class DefaultProjectPreferencesExporterTest
+class TagSetExporterTest
 {
-    private @TempDir File tempFolder;
+    private @Mock AnnotationSchemaService schemaService;
 
-    private @Mock PreferencesService preferencesService;
+    private @TempDir File tempDir;
+
+    private TagSetExporter sut;
 
     private Project sourceProject;
     private Project targetProject;
 
-    private DefaultProjectPreferencesExporter sut;
-
     @BeforeEach
-    public void setUp() throws Exception
+    void setup()
     {
         sourceProject = Project.builder() //
                 .withId(1l) //
@@ -71,53 +72,76 @@ class DefaultProjectPreferencesExporterTest
                 .withName("Test Project") //
                 .build();
 
-        sut = new DefaultProjectPreferencesExporter(preferencesService);
+        sut = new TagSetExporter(schemaService);
     }
 
     @Test
     void thatExportingAndImportingAgainWorks() throws Exception
     {
-        when(preferencesService.listDefaultTraitsForProject(any(Project.class))) //
-                .thenReturn(defaultTraits(sourceProject));
+        var exportFile = new File(tempDir, "export.zip");
 
-        var exportFile = new File(tempFolder, "export.zip");
+        when(schemaService.listTagSets(any())).thenReturn(tagSets(sourceProject));
+        when(schemaService.listTags(any())).then(call -> tags(call.getArgument(0)));
 
         // Export the project
         var exportRequest = new FullProjectExportRequest(sourceProject, null, false);
         var monitor = new ProjectExportTaskMonitor(sourceProject, null, "test");
         var exportedProject = new ExportedProject();
+        exportedProject.setVersion(32);
 
         try (var zos = new ZipOutputStream(new FileOutputStream(exportFile))) {
             sut.exportData(exportRequest, monitor, exportedProject, zos);
         }
 
-        reset(preferencesService);
+        reset(schemaService);
+        var tagSetCaptor = ArgumentCaptor.forClass(TagSet.class);
+        doNothing().when(schemaService).createTagSet(tagSetCaptor.capture());
+        var tagsCaptor = ArgumentCaptor.forClass(Tag[].class);
+        doNothing().when(schemaService).createTags(tagsCaptor.capture());
 
         // Import the project again
-        var captor = ArgumentCaptor.forClass(DefaultProjectPreference.class);
-        doNothing().when(preferencesService).saveDefaultProjectPreference(captor.capture());
-
         var importRequest = ProjectImportRequest.builder().build();
         try (var zipFile = new ZipFile(exportFile)) {
             sut.importData(importRequest, targetProject, exportedProject, zipFile);
         }
 
-        assertThat(captor.getAllValues()) //
-                .usingRecursiveFieldByFieldElementComparatorIgnoringFields("id") //
-                .containsExactlyElementsOf(defaultTraits(targetProject));
+        assertThat(tagSetCaptor.getAllValues()) //
+                .usingRecursiveFieldByFieldElementComparatorIgnoringFields("id", "project") //
+                .containsExactlyElementsOf(tagSets(targetProject));
+
+        assertThat(tagsCaptor.getAllValues()) //
+                .usingRecursiveFieldByFieldElementComparatorIgnoringFields("id", "tagSet.id",
+                        "tagSet.project") //
+                .containsExactlyElementsOf(tagSets(targetProject).stream()
+                        .map(tagSet -> tags(tagSet).toArray(Tag[]::new)).toList());
     }
 
-    private List<DefaultProjectPreference> defaultTraits(Project aProject)
+    private List<Tag> tags(TagSet aTagSet)
     {
-        var result = new ArrayList<DefaultProjectPreference>();
+        var result = new ArrayList<Tag>();
 
-        for (var i = 1l; i <= 10; i++) {
-            var pref = new DefaultProjectPreference();
-            pref.setId(i);
-            pref.setProject(aProject);
-            pref.setName("pref");
-            pref.setTraits("traits");
-            result.add(pref);
+        for (var i = 1l; i <= 3; i++) {
+            var tag = new Tag();
+            tag.setId(i);
+            tag.setTagSet(aTagSet);
+            tag.setName(aTagSet.getName() + " " + i);
+            tag.setRank((int) i - 1);
+            result.add(tag);
+        }
+
+        return result;
+    }
+
+    private List<TagSet> tagSets(Project aProject)
+    {
+        var result = new ArrayList<TagSet>();
+
+        for (var i = 1l; i <= 3; i++) {
+            var tagSet = new TagSet();
+            tagSet.setId(i);
+            tagSet.setProject(aProject);
+            tagSet.setName("TagSet " + i);
+            result.add(tagSet);
         }
 
         return result;

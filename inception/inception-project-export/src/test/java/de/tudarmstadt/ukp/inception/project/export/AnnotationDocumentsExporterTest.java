@@ -22,6 +22,7 @@ import static java.util.Arrays.asList;
 import static org.apache.commons.io.FilenameUtils.removeExtension;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.when;
 
 import java.io.File;
@@ -83,16 +84,23 @@ public class AnnotationDocumentsExporterTest
     private @Mock RepairsRegistry repairsRegistry;
     private @Mock UserDao userService;
 
-    private Project project;
+    private Project sourceProject;
+    private Project targetProject;
 
     private AnnotationDocumentExporter sut;
 
     @BeforeEach
     public void setUp() throws Exception
     {
-        project = new Project();
-        project.setId(1l);
-        project.setName("Test Project");
+        sourceProject = Project.builder() //
+                .withId(1l) //
+                .withName("Test Project") //
+                .build();
+
+        targetProject = Project.builder() //
+                .withId(2l) //
+                .withName("Test Project") //
+                .build();
 
         var properties = new DocumentImportExportServicePropertiesImpl();
 
@@ -118,9 +126,9 @@ public class AnnotationDocumentsExporterTest
     void thatExportingAndImportingAgainWorks() throws Exception
     {
         when(documentService.listAnnotationDocuments(any(Project.class))) //
-                .thenReturn(annotationDocuments());
+                .thenReturn(annotationDocuments(sourceProject));
         when(documentService.listSourceDocuments(any(Project.class))) //
-                .thenReturn(sourceDocuments());
+                .thenReturn(sourceDocuments(sourceProject));
         when(documentService.existsCas(any())) //
                 .thenReturn(true);
         when(userService.get(any(String.class)))
@@ -129,8 +137,8 @@ public class AnnotationDocumentsExporterTest
         var exportFile = new File(tempFolder, "export.zip");
 
         // Export the project
-        var exportRequest = new FullProjectExportRequest(project, null, false);
-        var monitor = new ProjectExportTaskMonitor(project, null, "test");
+        var exportRequest = new FullProjectExportRequest(sourceProject, null, false);
+        var monitor = new ProjectExportTaskMonitor(sourceProject, null, "test");
         var exportedProject = new ExportedProject();
 
         try (var zos = new ZipOutputStream(new FileOutputStream(exportFile))) {
@@ -138,30 +146,51 @@ public class AnnotationDocumentsExporterTest
         }
 
         // Import the project again
+        reset(documentService);
+        when(documentService.listSourceDocuments(any(Project.class))) //
+                .thenReturn(sourceDocuments(targetProject));
+
         var captor = ArgumentCaptor.forClass(AnnotationDocument.class);
         when(documentService.createOrUpdateAnnotationDocument(captor.capture())).thenReturn(null);
 
         var importRequest = ProjectImportRequest.builder().build();
         try (var zipFile = new ZipFile(exportFile)) {
-            sut.importData(importRequest, project, exportedProject, zipFile);
+            sut.importData(importRequest, targetProject, exportedProject, zipFile);
         }
 
         assertThat(captor.getAllValues()) //
-                .usingRecursiveFieldByFieldElementComparatorIgnoringFields("id") //
-                .containsExactlyElementsOf(annotationDocuments());
+                .usingRecursiveFieldByFieldElementComparatorIgnoringFields("id", "project") //
+                .containsExactlyElementsOf(annotationDocuments(targetProject));
 
         assertThat(tempFolder) //
                 .isDirectoryRecursivelyContaining(
-                        "glob:**/project/1/document/9/annotation/INITIAL_CAS.ser") //
+                        "glob:**/project/2/document/9/annotation/INITIAL_CAS.ser") //
                 .isDirectoryRecursivelyContaining(
-                        "glob:**/project/1/document/9/annotation/someuser.ser");
+                        "glob:**/project/2/document/9/annotation/someuser.ser");
     }
 
     @Test
     void thatImportingAnnotationProjectWorks_3_6_1() throws Exception
     {
-        var imported = runImportAndFetchDocuments(new ZipFile(
-                "src/test/resources/exports/Export+Test+-+Curated+annotation+project_3_6_1.zip"));
+        var aZipFile = new ZipFile(
+                "src/test/resources/exports/Export+Test+-+Curated+annotation+project_3_6_1.zip");
+        var exProject = ProjectExportServiceImpl.loadExportedProject(aZipFile);
+
+        // Provide source documents based on data in the exported project
+        when(documentService.listSourceDocuments(any()))
+                .then(invocation -> sourceDocuments(exProject, targetProject));
+
+        var importRequest = new ProjectImportRequest(true);
+        sut.importData(importRequest, targetProject, exProject, aZipFile);
+
+        var importedCases = new ArrayList<Pair<SourceDocument, String>>();
+        for (var doc : documentService.listSourceDocuments(sourceProject)) {
+            var annFolder = driver.getAnnotationFolder(doc);
+            for (var serFile : annFolder.listFiles((dir, name) -> name.endsWith(".ser"))) {
+                importedCases.add(Pair.of(doc, removeExtension(serFile.getName())));
+            }
+        }
+        var imported = importedCases;
 
         // Check that the curation for the document in the project is imported
         assertThat(imported).extracting(p -> p.getKey().getName())
@@ -170,35 +199,11 @@ public class AnnotationDocumentsExporterTest
                 .containsExactlyInAnyOrder(INITIAL_CAS_PSEUDO_USER, "admin");
     }
 
-    private List<Pair<SourceDocument, String>> runImportAndFetchDocuments(ZipFile aZipFile)
-        throws Exception
-    {
-        // Import the project again
-        var exProject = ProjectExportServiceImpl.loadExportedProject(aZipFile);
-
-        // Provide source documents based on data in the exported project
-        when(documentService.listSourceDocuments(any()))
-                .then(invocation -> sourceDocuments(exProject));
-
-        var importRequest = new ProjectImportRequest(true);
-        sut.importData(importRequest, project, exProject, aZipFile);
-
-        var importedCases = new ArrayList<Pair<SourceDocument, String>>();
-        for (var doc : documentService.listSourceDocuments(project)) {
-            var annFolder = driver.getAnnotationFolder(doc);
-            for (var serFile : annFolder.listFiles((dir, name) -> name.endsWith(".ser"))) {
-                importedCases.add(Pair.of(doc, removeExtension(serFile.getName())));
-            }
-        }
-
-        return importedCases;
-    }
-
-    private List<AnnotationDocument> annotationDocuments()
+    private List<AnnotationDocument> annotationDocuments(Project aProject)
     {
         var docs = new ArrayList<AnnotationDocument>();
         for (var i = 1l; i <= 10l; i++) {
-            var doc = sourceDocument(i);
+            var doc = sourceDocument(i, aProject);
             var adoc = AnnotationDocument.builder() //
                     .withId(i) //
                     .withUser("someuser") //
@@ -210,27 +215,27 @@ public class AnnotationDocumentsExporterTest
         return docs;
     }
 
-    private List<SourceDocument> sourceDocuments()
+    private List<SourceDocument> sourceDocuments(Project aProject)
     {
         var docs = new ArrayList<SourceDocument>();
         for (var i = 1l; i <= 10l; i++) {
-            var doc = sourceDocument(i);
+            var doc = sourceDocument(i, aProject);
             docs.add(doc);
         }
         return docs;
     }
 
-    private SourceDocument sourceDocument(long i)
+    private SourceDocument sourceDocument(long i, Project aProject)
     {
         var doc = SourceDocument.builder() //
                 .withId(i) //
-                .withProject(project) //
+                .withProject(aProject) //
                 .withName(i + ".txt") //
                 .build();
         return doc;
     }
 
-    private List<SourceDocument> sourceDocuments(ExportedProject exProject)
+    private List<SourceDocument> sourceDocuments(ExportedProject exProject, Project aProject)
     {
         long i = 1;
         var docs = new ArrayList<SourceDocument>();
@@ -238,7 +243,7 @@ public class AnnotationDocumentsExporterTest
             var doc = new SourceDocument();
             doc.setId(i++);
             doc.setName(exDoc.getName());
-            doc.setProject(project);
+            doc.setProject(aProject);
             docs.add(doc);
         }
         return docs;

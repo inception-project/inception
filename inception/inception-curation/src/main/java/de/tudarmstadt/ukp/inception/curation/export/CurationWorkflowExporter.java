@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.inception.curation.export;
 
 import static java.lang.invoke.MethodHandles.lookup;
 
-import java.util.Optional;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 
@@ -79,8 +78,8 @@ public class CurationWorkflowExporter
             ExportedProject aExProject, ZipFile aZip)
         throws Exception
     {
-        Optional<ExportedCurationWorkflow> maybeExportedCurationWorkflow = aExProject
-                .getProperty(KEY, ExportedCurationWorkflow.class);
+        var maybeExportedCurationWorkflow = aExProject.getProperty(KEY,
+                ExportedCurationWorkflow.class);
 
         if (maybeExportedCurationWorkflow.isEmpty()) {
             return;

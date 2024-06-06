@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.when;
 
 import java.io.File;
@@ -60,16 +61,23 @@ class ConstraintsExporterTest
 
     private @Mock ConstraintsService constraintsService;
 
-    private Project project;
+    private Project sourceProject;
+    private Project targetProject;
 
     private ConstraintsExporter sut;
 
     @BeforeEach
     public void setUp() throws Exception
     {
-        project = new Project();
-        project.setId(1l);
-        project.setName("Test Project");
+        sourceProject = Project.builder() //
+                .withId(1l) //
+                .withName("Test Project") //
+                .build();
+
+        targetProject = Project.builder() //
+                .withId(2l) //
+                .withName("Test Project") //
+                .build();
 
         sut = new ConstraintsExporter(constraintsService);
     }
@@ -78,20 +86,22 @@ class ConstraintsExporterTest
     void thatExportingAndImportingAgainWorks() throws Exception
     {
         when(constraintsService.listConstraintSets(any(Project.class))) //
-                .thenReturn(constraintSets());
+                .thenReturn(constraintSets(sourceProject));
         when(constraintsService.exportConstraintAsFile(any())) //
                 .thenAnswer(call -> constraintSetFile(call.getArgument(0)));
 
         var exportFile = new File(tempFolder, "export.zip");
 
         // Export the project
-        var exportRequest = new FullProjectExportRequest(project, null, false);
-        var monitor = new ProjectExportTaskMonitor(project, null, "test");
+        var exportRequest = new FullProjectExportRequest(sourceProject, null, false);
+        var monitor = new ProjectExportTaskMonitor(sourceProject, null, "test");
         var exportedProject = new ExportedProject();
 
         try (var zos = new ZipOutputStream(new FileOutputStream(exportFile))) {
             sut.exportData(exportRequest, monitor, exportedProject, zos);
         }
+
+        reset(constraintsService);
 
         // Import the project again
         var constraintSetCaptor = ArgumentCaptor.forClass(ConstraintSet.class);
@@ -106,12 +116,12 @@ class ConstraintsExporterTest
 
         var importRequest = ProjectImportRequest.builder().build();
         try (var zipFile = new ZipFile(exportFile)) {
-            sut.importData(importRequest, project, exportedProject, zipFile);
+            sut.importData(importRequest, targetProject, exportedProject, zipFile);
         }
 
         assertThat(constraintSetCaptor.getAllValues()) //
                 .usingRecursiveFieldByFieldElementComparatorIgnoringFields("id") //
-                .containsExactlyElementsOf(constraintSets());
+                .containsExactlyElementsOf(constraintSets(targetProject));
 
         assertThat(constraintDataCaptured) //
                 .allMatch(DATA::equals);
@@ -124,14 +134,14 @@ class ConstraintsExporterTest
         return file;
     }
 
-    private List<ConstraintSet> constraintSets()
+    private List<ConstraintSet> constraintSets(Project aProject)
     {
         var result = new ArrayList<ConstraintSet>();
 
         for (var i = 1l; i <= 10l; i++) {
             var constraintSet = new ConstraintSet();
             constraintSet.setId(i);
-            constraintSet.setProject(project);
+            constraintSet.setProject(aProject);
             constraintSet.setName("set" + i + ".txt");
             result.add(constraintSet);
         }
