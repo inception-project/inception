@@ -23,6 +23,7 @@ import org.springframework.context.annotation.Configuration;
 
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsServiceImpl;
+import de.tudarmstadt.ukp.clarin.webanno.constraints.export.ConstraintsExporter;
 
 @Configuration
 @EnableConfigurationProperties(ConstraintsPropertiesImpl.class)
@@ -32,5 +33,11 @@ public class ConstraintsServiceAutoConfiguration
     public ConstraintsService constraintsService(ConstraintsProperties aProperties)
     {
         return new ConstraintsServiceImpl(aProperties);
+    }
+
+    @Bean
+    public ConstraintsExporter ConstraintsExporter(ConstraintsService aConstraintsService)
+    {
+        return new ConstraintsExporter(aConstraintsService);
     }
 }

@@ -15,23 +15,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.sharing.project.exporters;
+package de.tudarmstadt.ukp.inception.preferences.exporter;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.when;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.io.TempDir;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.export.FullProjectExportRequest;
@@ -39,18 +43,20 @@ import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.inception.sharing.InviteService;
-import de.tudarmstadt.ukp.inception.sharing.model.ProjectInvite;
+import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
+import de.tudarmstadt.ukp.inception.preferences.model.DefaultProjectPreference;
 
 @ExtendWith(MockitoExtension.class)
-public class ProjectInviteExporterTest
+class DefaultProjectPreferencesExporterTest
 {
-    private @Mock InviteService inviteService;
+    private @TempDir File tempFolder;
+
+    private @Mock PreferencesService preferencesService;
 
     private Project sourceProject;
     private Project targetProject;
 
-    private ProjectInviteExporter sut;
+    private DefaultProjectPreferencesExporter sut;
 
     @BeforeEach
     public void setUp() throws Exception
@@ -65,47 +71,55 @@ public class ProjectInviteExporterTest
                 .withName("Test Project") //
                 .build();
 
-        sut = new ProjectInviteExporter(inviteService);
-    }
-
-    private ProjectInvite invite(Project aProject)
-    {
-        var i = new ProjectInvite();
-        i.setId(1l);
-        i.setProject(aProject);
-        i.setInviteId("deadbeaf");
-        i.setInvitationText("Join the fray!");
-        i.setUserIdPlaceholder("Nickname");
-        i.setGuestAccessible(true);
-        return i;
+        sut = new DefaultProjectPreferencesExporter(preferencesService);
     }
 
     @Test
-    public void thatExportingWorks() throws Exception
+    void thatExportingAndImportingAgainWorks() throws Exception
     {
-        when(inviteService.readProjectInvite(Mockito.any())).thenReturn(invite(sourceProject));
+        when(preferencesService.listDefaultTraitsForProject(any(Project.class))) //
+                .thenReturn(defaultTraits(sourceProject));
+
+        var exportFile = new File(tempFolder, "export.zip");
 
         // Export the project
         var exportRequest = new FullProjectExportRequest(sourceProject, null, false);
         var monitor = new ProjectExportTaskMonitor(sourceProject, null, "test");
         var exportedProject = new ExportedProject();
-        var stage = mock(ZipOutputStream.class);
 
-        sut.exportData(exportRequest, monitor, exportedProject, stage);
+        try (var zos = new ZipOutputStream(new FileOutputStream(exportFile))) {
+            sut.exportData(exportRequest, monitor, exportedProject, zos);
+        }
 
-        reset(inviteService);
+        reset(preferencesService);
 
         // Import the project again
-        var captor = ArgumentCaptor.forClass(ProjectInvite.class);
-        doNothing().when(inviteService).writeProjectInvite(captor.capture());
+        var captor = ArgumentCaptor.forClass(DefaultProjectPreference.class);
+        doNothing().when(preferencesService).saveDefaultProjectPreference(captor.capture());
 
-        var importRequest = new ProjectImportRequest(true);
-        var zipFile = mock(ZipFile.class);
-        sut.importData(importRequest, targetProject, exportedProject, zipFile);
+        var importRequest = ProjectImportRequest.builder().build();
+        try (var zipFile = new ZipFile(exportFile)) {
+            sut.importData(importRequest, targetProject, exportedProject, zipFile);
+        }
 
-        // Check that after re-importing the exported projects, they are identical to the original
         assertThat(captor.getAllValues()) //
                 .usingRecursiveFieldByFieldElementComparatorIgnoringFields("id") //
-                .containsExactlyInAnyOrder(invite(targetProject));
+                .containsExactlyElementsOf(defaultTraits(targetProject));
+    }
+
+    private List<DefaultProjectPreference> defaultTraits(Project aProject)
+    {
+        var result = new ArrayList<DefaultProjectPreference>();
+
+        for (var i = 1l; i <= 10; i++) {
+            var pref = new DefaultProjectPreference();
+            pref.setId(i);
+            pref.setProject(aProject);
+            pref.setName("pref");
+            pref.setTraits("traits");
+            result.add(pref);
+        }
+
+        return result;
     }
 }
