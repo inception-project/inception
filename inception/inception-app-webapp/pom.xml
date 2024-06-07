@@ -450,12 +450,12 @@
       <artifactId>rhino-runtime</artifactId>
     </dependency>
     <dependency>
-      <groupId>com.googlecode.wicket-jquery-ui</groupId>
-      <artifactId>wicket-jquery-ui-theme-uilightness</artifactId>
+      <groupId>org.wicketstuff</groupId>
+      <artifactId>wicketstuff-jquery-ui-theme-uilightness</artifactId>
     </dependency>
     <dependency>
-      <groupId>com.googlecode.wicket-jquery-ui</groupId>
-      <artifactId>wicket-kendo-ui-theme-bootstrap</artifactId>
+      <groupId>org.wicketstuff</groupId>
+      <artifactId>wicketstuff-kendo-ui-theme-bootstrap</artifactId>
     </dependency>
 
     <!-- Spring dependencies -->
@@ -1005,8 +1005,8 @@
               <usedDependency>io.sentry:sentry-spring-boot-starter</usedDependency>
               <usedDependency>io.sentry:sentry-log4j2</usedDependency>
               <!-- Themes -->
-              <usedDependency>com.googlecode.wicket-jquery-ui:wicket-kendo-ui-theme-bootstrap</usedDependency>
-              <usedDependency>com.googlecode.wicket-jquery-ui:wicket-jquery-ui-theme-uilightness</usedDependency>
+              <usedDependency>org.wicketstuff:wicketstuff-kendo-ui-theme-bootstrap</usedDependency>
+              <usedDependency>org.wicketstuff:wicketstuff-jquery-ui-theme-uilightness</usedDependency>
               <!-- Wicket plugins -->
               <usedDependency>org.wicketstuff:wicketstuff-htmlcompressor</usedDependency>
               <usedDependency>org.mozilla:rhino-runtime</usedDependency>

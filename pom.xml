@@ -107,9 +107,8 @@
     <hibernate.version>6.4.4.Final</hibernate.version>
     <hibernate.validator.version>8.0.1.Final</hibernate.validator.version>
 
-    <wicket.version>10.0.0</wicket.version>
-    <wicketstuff.version>10.0.0</wicketstuff.version>
-    <wicket-jquery-ui.version>10.0.0-M1</wicket-jquery-ui.version>
+    <wicket.version>10.1.0</wicket.version>
+    <wicketstuff.version>10.2.0-SNAPSHOT</wicketstuff.version>
     <wicket-bootstrap.version>7.0.3</wicket-bootstrap.version>
     <wicket-jquery-selectors.version>4.0.4</wicket-jquery-selectors.version>
     <wicket-webjars.version>4.0.3</wicket-webjars.version>

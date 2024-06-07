@@ -202,34 +202,32 @@
         <version>${awaitility.version}</version>
       </dependency>
 
-      <!-- Wicket jQuery -->
-      <dependency>
-        <groupId>com.googlecode.wicket-jquery-ui</groupId>
-        <artifactId>wicket-jquery-ui</artifactId>
-        <version>${wicket-jquery-ui.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.googlecode.wicket-jquery-ui</groupId>
-        <artifactId>wicket-jquery-ui-core</artifactId>
-        <version>${wicket-jquery-ui.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.googlecode.wicket-jquery-ui</groupId>
-        <artifactId>wicket-jquery-ui-theme-uilightness</artifactId>
-        <version>${wicket-jquery-ui.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.googlecode.wicket-jquery-ui</groupId>
-        <artifactId>wicket-kendo-ui</artifactId>
-        <version>${wicket-jquery-ui.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.googlecode.wicket-jquery-ui</groupId>
-        <artifactId>wicket-kendo-ui-theme-bootstrap</artifactId>
-        <version>${wicket-jquery-ui.version}</version>
-      </dependency>
-
       <!-- Wicketstuff -->
+      <dependency>
+        <groupId>org.wicketstuff</groupId>
+        <artifactId>wicketstuff-jquery-ui</artifactId>
+        <version>${wicketstuff.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.wicketstuff</groupId>
+        <artifactId>wicketstuff-jquery-ui-core</artifactId>
+        <version>${wicketstuff.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.wicketstuff</groupId>
+        <artifactId>wicketstuff-jquery-ui-theme-uilightness</artifactId>
+        <version>${wicketstuff.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.wicketstuff</groupId>
+        <artifactId>wicketstuff-kendo-ui</artifactId>
+        <version>${wicketstuff.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.wicketstuff</groupId>
+        <artifactId>wicketstuff-kendo-ui-theme-bootstrap</artifactId>
+        <version>${wicketstuff.version}</version>
+      </dependency>
       <dependency>
         <groupId>org.wicketstuff</groupId>
         <artifactId>wicketstuff-htmlcompressor</artifactId>
