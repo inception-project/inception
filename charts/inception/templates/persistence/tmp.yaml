@@ -1,0 +1,11 @@
+kind: PersistentVolumeClaim
+apiVersion: v1
+metatmp:
+  name: inception-tmp-pvc
+spec:
+  storageClassName: {{ .Values.storage.tmp.storageClassName }}
+  accessModes:
+    - {{ .Values.storage.tmp.accessMode }}
+  resources:
+    requests:
+      storage: {{ .Values.storage.tmp.size }}

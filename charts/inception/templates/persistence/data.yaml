@@ -1,0 +1,11 @@
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: inception-data-pvc
+spec:
+  storageClassName: {{ .Values.storage.data.storageClassName }}
+  accessModes:
+    - {{ .Values.storage.data.accessMode }}
+  resources:
+    requests:
+      storage: {{ .Values.storage.data.size }}
