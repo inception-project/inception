@@ -30,10 +30,10 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.io.File;
 import java.util.List;
 import java.util.Set;
 import java.util.zip.ZipFile;
+import java.util.zip.ZipOutputStream;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -59,7 +59,8 @@ public class RecommenderExporterTest
 {
     private @Mock AnnotationSchemaService annotationService;
     private @Mock RecommendationService recommendationService;
-    private Project project;
+    private Project sourceProject;
+    private Project targetProject;
     private AnnotationLayer layer;
 
     private RecommenderExporter sut;
@@ -70,11 +71,17 @@ public class RecommenderExporterTest
         layer = new AnnotationLayer();
         layer.setName("Layer");
 
-        project = new Project();
-        project.setId(1l);
-        project.setName("Test Project");
+        sourceProject = Project.builder() //
+                .withId(1l) //
+                .withName("Test Project") //
+                .build();
 
-        when(annotationService.findLayer(project, layer.getName())).thenReturn(layer);
+        targetProject = Project.builder() //
+                .withId(2l) //
+                .withName("Test Project") //
+                .build();
+
+        when(annotationService.findLayer(sourceProject, layer.getName())).thenReturn(layer);
         when(annotationService.getFeature(eq("Feature 1"), any(AnnotationLayer.class)))
                 .thenReturn(buildFeature("1"));
 
@@ -90,31 +97,32 @@ public class RecommenderExporterTest
                 .thenReturn(buildFeature("3"));
         when(annotationService.getFeature(eq("Feature 4"), any(AnnotationLayer.class)))
                 .thenReturn(buildFeature("4"));
-        when(recommendationService.listRecommenders(project)).thenReturn(recommenders());
+        when(recommendationService.listRecommenders(sourceProject))
+                .thenReturn(recommenders(sourceProject));
 
         // Export the project and import it again
-        ArgumentCaptor<Recommender> captor = runExportImportAndFetchRecommenders();
+        var captor = runExportImportAndFetchRecommenders();
 
         // Check that after re-importing the exported projects, they are identical to the original
         assertThat(captor.getAllValues()) //
                 .usingRecursiveFieldByFieldElementComparator()
-                .containsExactlyInAnyOrderElementsOf(recommenders());
+                .containsExactlyInAnyOrderElementsOf(recommenders(targetProject));
     }
 
     @Test
     public void thatMaxRecommendationCapIsEnforcedOnImport()
     {
-        Recommender recommender = buildRecommender("1");
+        var recommender = buildRecommender(sourceProject, "1");
         recommender.setAlwaysSelected(true);
         recommender.setEnabled(true);
         recommender.setThreshold(.1);
         recommender.setSkipEvaluation(true);
         recommender.setMaxRecommendations(1000);
 
-        when(recommendationService.listRecommenders(project)).thenReturn(asList(recommender));
+        when(recommendationService.listRecommenders(sourceProject)).thenReturn(asList(recommender));
 
         // Export the project and import it again
-        ArgumentCaptor<Recommender> captor = runExportImportAndFetchRecommenders();
+        var captor = runExportImportAndFetchRecommenders();
 
         // Check that after re-importing the exported projects, they are identical to the original
         assertThat(captor.getAllValues()).hasSize(1);
@@ -125,48 +133,48 @@ public class RecommenderExporterTest
     @Test
     public void thatMissingMaxRecommendationIsSetToDefault()
     {
-        Recommender recommender = buildRecommender("1");
+        var recommender = buildRecommender(sourceProject, "1");
         recommender.setAlwaysSelected(true);
         recommender.setEnabled(true);
         recommender.setThreshold(.1);
         recommender.setSkipEvaluation(true);
         recommender.setMaxRecommendations(0);
 
-        when(recommendationService.listRecommenders(project)).thenReturn(asList(recommender));
+        when(recommendationService.listRecommenders(sourceProject)).thenReturn(asList(recommender));
 
         // Export the project and import it again
-        ArgumentCaptor<Recommender> captor = runExportImportAndFetchRecommenders();
+        var captor = runExportImportAndFetchRecommenders();
 
         // Check that after re-importing the exported projects, they are identical to the original
         assertThat(captor.getAllValues()).hasSize(1);
-        assertThat(captor.getAllValues().get(0)).hasFieldOrPropertyWithValue("maxRecommendations",
-                MAX_RECOMMENDATIONS_DEFAULT);
+        assertThat(captor.getAllValues().get(0)) //
+                .hasFieldOrPropertyWithValue("maxRecommendations", MAX_RECOMMENDATIONS_DEFAULT);
     }
 
     private ArgumentCaptor<Recommender> runExportImportAndFetchRecommenders()
     {
         // Export the project
-        FullProjectExportRequest exportRequest = new FullProjectExportRequest(project, null, false);
-        ProjectExportTaskMonitor monitor = new ProjectExportTaskMonitor(project, null, "test");
-        ExportedProject exportedProject = new ExportedProject();
-        File file = mock(File.class);
+        var exportRequest = new FullProjectExportRequest(sourceProject, null, false);
+        var monitor = new ProjectExportTaskMonitor(sourceProject, null, "test");
+        var exportedProject = new ExportedProject();
+        var file = mock(ZipOutputStream.class);
 
         sut.exportData(exportRequest, monitor, exportedProject, file);
 
         // Import the project again
-        ArgumentCaptor<Recommender> captor = ArgumentCaptor.forClass(Recommender.class);
+        var captor = ArgumentCaptor.forClass(Recommender.class);
         doNothing().when(recommendationService).createOrUpdateRecommender(captor.capture());
 
-        ProjectImportRequest importRequest = new ProjectImportRequest(true);
-        ZipFile zipFile = mock(ZipFile.class);
-        sut.importData(importRequest, project, exportedProject, zipFile);
+        var importRequest = new ProjectImportRequest(true);
+        var zipFile = mock(ZipFile.class);
+        sut.importData(importRequest, targetProject, exportedProject, zipFile);
 
         return captor;
     }
 
-    private List<Recommender> recommenders()
+    private List<Recommender> recommenders(Project aProject)
     {
-        Recommender recommender1 = buildRecommender("1");
+        var recommender1 = buildRecommender(aProject, "1");
         recommender1.setAlwaysSelected(true);
         recommender1.setEnabled(true);
         recommender1.setThreshold(.1);
@@ -174,7 +182,7 @@ public class RecommenderExporterTest
         recommender1.setMaxRecommendations(3);
         recommender1.setStatesIgnoredForTraining(Set.of(NEW, IN_PROGRESS, FINISHED));
 
-        Recommender recommender2 = buildRecommender("2");
+        var recommender2 = buildRecommender(aProject, "2");
         recommender2.setAlwaysSelected(false);
         recommender2.setEnabled(false);
         recommender2.setThreshold(.2);
@@ -182,7 +190,7 @@ public class RecommenderExporterTest
         recommender2.setMaxRecommendations(4);
         recommender2.setStatesIgnoredForTraining(Set.of(NEW, IN_PROGRESS));
 
-        Recommender recommender3 = buildRecommender("3");
+        var recommender3 = buildRecommender(aProject, "3");
         recommender3.setAlwaysSelected(true);
         recommender3.setEnabled(false);
         recommender3.setThreshold(.3);
@@ -190,7 +198,7 @@ public class RecommenderExporterTest
         recommender3.setMaxRecommendations(5);
         recommender3.setStatesIgnoredForTraining(Set.of(AnnotationDocumentState.values()));
 
-        Recommender recommender4 = buildRecommender("4");
+        var recommender4 = buildRecommender(aProject, "4");
         recommender4.setAlwaysSelected(false);
         recommender4.setEnabled(true);
         recommender4.setThreshold(.4);
@@ -203,22 +211,22 @@ public class RecommenderExporterTest
 
     private AnnotationFeature buildFeature(String id)
     {
-        AnnotationFeature feature = new AnnotationFeature();
+        var feature = new AnnotationFeature();
         feature.setName("Feature " + id);
         return feature;
     }
 
-    private Recommender buildRecommender(String id)
+    private Recommender buildRecommender(Project aProject, String id)
     {
-        AnnotationFeature feature = buildFeature(id);
+        var feature = buildFeature(id);
 
-        Recommender recommender = new Recommender();
+        var recommender = new Recommender();
         recommender.setFeature(feature);
         recommender.setName("Recommender " + id);
         recommender.setTool("Tool " + id);
         recommender.setTraits("Traits " + id);
         recommender.setLayer(layer);
-        recommender.setProject(project);
+        recommender.setProject(aProject);
         return recommender;
     }
 }

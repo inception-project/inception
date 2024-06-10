@@ -80,6 +80,7 @@ public class EventRepositoryImpl
             LOG.trace("{}", event);
             entityManager.persist(event);
         }
+
         long duration = System.currentTimeMillis() - start;
 
         if (aEvents.length > 0 && !LOG.isTraceEnabled()) {

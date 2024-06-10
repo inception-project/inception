@@ -96,7 +96,6 @@ import de.tudarmstadt.ukp.inception.curation.service.CurationMergeService;
 import de.tudarmstadt.ukp.inception.curation.service.CurationService;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorBase;
-import de.tudarmstadt.ukp.inception.editor.AnnotationEditorFactory;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorRegistry;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.editor.state.AnnotatorStateImpl;
@@ -160,15 +159,15 @@ public class LegacyCurationPage
 
         LOG.debug("Setting up curation page with parameters: {}", aPageParameters);
 
-        AnnotatorState state = new AnnotatorStateImpl(Mode.CURATION);
+        var state = new AnnotatorStateImpl(Mode.CURATION);
         setModel(Model.of(state));
 
-        User user = userRepository.getCurrentUser();
+        var user = userRepository.getCurrentUser();
 
         requireProjectRole(user, CURATOR);
 
-        StringValue document = aPageParameters.get(PAGE_PARAM_DOCUMENT);
-        StringValue focus = aPageParameters.get(PAGE_PARAM_FOCUS);
+        var document = aPageParameters.get(PAGE_PARAM_DOCUMENT);
+        var focus = aPageParameters.get(PAGE_PARAM_FOCUS);
 
         handleParameters(document, focus, null);
 
@@ -201,9 +200,9 @@ public class LegacyCurationPage
         splitter.add(new SplitterBehavior("#" + splitter.getMarkupId(),
                 new Options("orientation", Options.asString("vertical")), new SplitterAdapter()));
 
-        List<AnnotatorSegmentState> segments = new LinkedList<>();
+        var segments = new LinkedList<AnnotatorSegmentState>();
 
-        AnnotatorSegmentState annotatorSegment = new AnnotatorSegmentState();
+        var annotatorSegment = new AnnotatorSegmentState();
         annotatorSegment.setAnnotatorState(getModelObject());
         segments.add(annotatorSegment);
 
@@ -230,11 +229,11 @@ public class LegacyCurationPage
 
     private AnnotationEditorBase createAnnotationEditor(String aId)
     {
-        String editorId = annotationService.isSentenceLayerEditable(getProject())
+        var editorId = annotationService.isSentenceLayerEditable(getProject())
                 ? BratLineOrientedAnnotationEditorFactory.ID
                 : BratSentenceOrientedAnnotationEditorFactory.ID;
-        AnnotatorState state = getModelObject();
-        AnnotationEditorFactory factory = editorRegistry.getEditorFactory(editorId);
+        var state = getModelObject();
+        var factory = editorRegistry.getEditorFactory(editorId);
         if (factory == null) {
             if (state.getDocument() != null) {
                 factory = editorRegistry.getPreferredEditorFactory(state.getProject(),
@@ -246,8 +245,7 @@ public class LegacyCurationPage
         }
 
         state.setEditorFactoryId(factory.getBeanName());
-        AnnotationEditorBase editor = factory.create(aId, getModel(), detailEditor,
-                this::getEditorCas);
+        var editor = factory.create(aId, getModel(), detailEditor, this::getEditorCas);
         editor.add(visibleWhen(getModel().map(AnnotatorState::getDocument).isPresent()));
         editor.setOutputMarkupPlaceholderTag(true);
 
@@ -763,6 +761,7 @@ public class LegacyCurationPage
                     FORCE_CAS_UPGRADE, UNMANAGED_ACCESS);
             curationMergeService.mergeCasses(aState.getDocument(), aState.getUser().getUsername(),
                     mergeCas, aCasses, aMergeStrategy, aState.getAnnotationLayers(), true);
+            curationDocumentService.deleteCurationCas(aDocument);
             curationDocumentService.writeCurationCas(mergeCas, aDocument, false);
         }
         else {

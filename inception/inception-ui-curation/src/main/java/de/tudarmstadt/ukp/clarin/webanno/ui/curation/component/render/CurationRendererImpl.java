@@ -84,6 +84,9 @@ public class CurationRendererImpl
                 .withCas(aCas) //
                 .withVisibleLayers(layersToRender) //
                 .withColoringStrategyOverride(aColoringStrategy) //
+                .withClipSpans(true) //
+                .withClipArcs(true) //
+                .withLongArcs(true) //
                 .build();
 
         var vdoc = new VDocument();

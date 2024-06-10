@@ -23,6 +23,9 @@ import static de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClien
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder.DEFAULT_LIMIT;
 import static de.tudarmstadt.ukp.inception.project.api.ProjectService.withProjectLogger;
 import static de.tudarmstadt.ukp.inception.support.logging.BaseLoggers.BOOT_LOG;
+import static java.lang.Math.max;
+import static java.lang.Math.min;
+import static java.lang.Math.round;
 import static java.nio.file.Files.createDirectories;
 import static java.nio.file.Files.move;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
@@ -1486,7 +1489,7 @@ public class KnowledgeBaseServiceImpl
 
                 // Apply the FTS results limit to the KB
                 luceneSailCfg.setParameter(LuceneSail.MAX_DOCUMENTS_KEY,
-                        Integer.toString(aKB.getMaxResults()));
+                        Long.toString(getFtsInternalMaxResultsFactor(aKB)));
 
                 // Improve fuzzy search speed
                 luceneSailCfg.setParameter(LuceneSail.FUZZY_PREFIX_LENGTH_KEY,
@@ -1503,7 +1506,7 @@ public class KnowledgeBaseServiceImpl
                 if (sailConnection instanceof LuceneSailConnection luceneSailConnection) {
                     var luceneIndex = (LuceneIndex) readField(luceneSailConnection, "luceneIndex",
                             true);
-                    writeField(luceneIndex, "maxDocs", kb.getMaxResults(), true);
+                    writeField(luceneIndex, "maxDocs", getFtsInternalMaxResultsFactor(kb), true);
                     writeField(luceneIndex, "fuzzyPrefixLength", LOCAL_FUZZY_PREFIX_LENGTH, true);
                 }
             }
@@ -1512,6 +1515,12 @@ public class KnowledgeBaseServiceImpl
             throw new RuntimeException("Unable to sync query parameters into live index - "
                     + "maybe the RDF4J Lucene index implementation has changed.", e);
         }
+    }
+
+    private int getFtsInternalMaxResultsFactor(KnowledgeBase aKB)
+    {
+        return (int) round(aKB.getMaxResults()
+                * min(10.0, max(1.0, properties.getFtsInternalMaxResultsFactor())));
     }
 
     private void syncSparqlUrlLiveParameters(KnowledgeBase kb,

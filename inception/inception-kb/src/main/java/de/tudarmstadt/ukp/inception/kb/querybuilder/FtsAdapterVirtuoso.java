@@ -44,7 +44,7 @@ public class FtsAdapterVirtuoso
 
         var valuePatterns = new ArrayList<GraphPattern>();
         for (var value : aValues) {
-            var sanitizedValue = SPARQLQueryBuilder.sanitizeQueryString_FTS(value);
+            var sanitizedValue = builder.sanitizeQueryString_FTS(value);
 
             if (isBlank(sanitizedValue)) {
                 continue;
@@ -55,6 +55,10 @@ public class FtsAdapterVirtuoso
                             literalOf("\"" + sanitizedValue + "\"")))
                     .filter(builder.equalsPattern(VAR_MATCH_TERM, value,
                             builder.getKnowledgeBase())));
+        }
+
+        if (valuePatterns.isEmpty()) {
+            builder.noResult();
         }
 
         builder.addPattern(PRIMARY, and( //
@@ -69,7 +73,7 @@ public class FtsAdapterVirtuoso
 
         var valuePatterns = new ArrayList<GraphPattern>();
         for (var value : aValues) {
-            var sanitizedValue = SPARQLQueryBuilder.sanitizeQueryString_FTS(value);
+            var sanitizedValue = builder.sanitizeQueryString_FTS(value);
 
             if (isBlank(sanitizedValue)) {
                 continue;
@@ -79,6 +83,10 @@ public class FtsAdapterVirtuoso
                     .and(VAR_MATCH_TERM.has(VIRTUOSO_QUERY,
                             literalOf("\"" + sanitizedValue + "\"")))
                     .filter(builder.containsPattern(VAR_MATCH_TERM, value)));
+        }
+
+        if (valuePatterns.isEmpty()) {
+            builder.noResult();
         }
 
         builder.addPattern(PRIMARY, and( //
@@ -92,20 +100,20 @@ public class FtsAdapterVirtuoso
         // addPrefix(PREFIX_VIRTUOSO_SEARCH);
 
         // Strip single quotes and asterisks because they have special semantics
-        String sanitizedQuery = SPARQLQueryBuilder.sanitizeQueryString_FTS(aPrefixQuery);
+        var queryString = builder.sanitizeQueryString_FTS(aPrefixQuery);
 
         // If the query string entered by the user does not end with a space character, then
         // we assume that the user may not yet have finished writing the word and add a
         // wildcard
         if (!aPrefixQuery.endsWith(" ")) {
-            sanitizedQuery = virtuosoStartsWithQuery(sanitizedQuery);
+            queryString = virtuosoStartsWithQuery(queryString);
         }
 
         // If the query string was reduced to nothing, then the query should always return an
         // empty
         // result.
-        if (sanitizedQuery.length() == 2) {
-            builder.setReturnEmptyResult(true);
+        if (queryString.length() == 2) {
+            builder.noResult();
         }
 
         // Locate all entries where the label contains the prefix (using the FTS) and then
@@ -114,7 +122,7 @@ public class FtsAdapterVirtuoso
                 builder.bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY),
                 VAR_SUBJECT.has(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM)
                         .and(VAR_MATCH_TERM.has(VIRTUOSO_QUERY,
-                                literalOf("\"" + sanitizedQuery + "\"")))
+                                literalOf("\"" + queryString + "\"")))
                         .filter(builder.startsWithPattern(VAR_MATCH_TERM, aPrefixQuery))));
     }
 
@@ -153,7 +161,7 @@ public class FtsAdapterVirtuoso
 
         var valuePatterns = new ArrayList<GraphPattern>();
         for (var value : aValues) {
-            var sanitizedValue = SPARQLQueryBuilder.sanitizeQueryString_FTS(value);
+            var sanitizedValue = builder.sanitizeQueryString_FTS(value);
 
             if (isBlank(sanitizedValue)) {
                 continue;
@@ -168,6 +176,10 @@ public class FtsAdapterVirtuoso
 
             valuePatterns.add(VAR_SUBJECT.has(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM).and(
                     VAR_MATCH_TERM.has(VIRTUOSO_QUERY, literalOf("\"" + sanitizedValue + "\""))));
+        }
+
+        if (valuePatterns.isEmpty()) {
+            builder.noResult();
         }
 
         builder.addPattern(PRIMARY, and( //

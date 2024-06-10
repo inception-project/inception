@@ -132,13 +132,16 @@ public class RelationRenderer
         return true;
     }
 
-    private List<Annotation> selectAnnotationsInWindow(RenderRequest aRequest, int aWindowBegin,
+    @Override
+    public List<Annotation> selectAnnotationsInWindow(RenderRequest aRequest, int aWindowBegin,
             int aWindowEnd)
     {
         var cas = aRequest.getCas();
 
         if (!aRequest.isLongArcs()) {
-            return cas.<Annotation> select(type).coveredBy(aWindowBegin, aWindowEnd).toList();
+            return cas.<Annotation> select(type) //
+                    .coveredBy(aWindowBegin, aWindowEnd) //
+                    .toList();
         }
 
         var result = new ArrayList<Annotation>();

@@ -217,6 +217,10 @@ include::{include-dir}pdf-editor-legacy.adoc[leveloffset=+1]
 
 <<<
 
+include::{include-dir}cross-layer-relations.adoc[leveloffset=+1]
+
+<<<
+
 include::{include-dir}editable-segmentation.adoc[leveloffset=+1]
 
 <<<

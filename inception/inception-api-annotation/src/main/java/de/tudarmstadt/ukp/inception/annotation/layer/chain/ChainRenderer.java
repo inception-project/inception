@@ -29,11 +29,11 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
-import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.TypeSystem;
 import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.jcas.tcas.Annotation;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.Renderer_ImplBase;
@@ -89,11 +89,14 @@ public class ChainRenderer
         return true;
     }
 
-    public List<AnnotationFS> selectAnnotationsInWindow(CAS aCas, int aWindowBegin, int aWindowEnd)
+    @Override
+    public List<Annotation> selectAnnotationsInWindow(RenderRequest aRequest, int aWindowBegin,
+            int aWindowEnd)
     {
+        var cas = aRequest.getCas();
+
         var typeAdapter = getTypeAdapter();
-        return aCas.select(typeAdapter.getAnnotationTypeName()) //
-                .map(a -> (AnnotationFS) a) //
+        return cas.<Annotation> select(typeAdapter.getAnnotationTypeName()) //
                 .toList();
     }
 

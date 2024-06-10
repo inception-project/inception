@@ -33,6 +33,7 @@ import de.tudarmstadt.ukp.inception.conceptlinking.feature.EntityRankingFeatureG
 import de.tudarmstadt.ukp.inception.conceptlinking.feature.FrequencyFeatureGenerator;
 import de.tudarmstadt.ukp.inception.conceptlinking.feature.FtsScoreFeatureGenerator;
 import de.tudarmstadt.ukp.inception.conceptlinking.feature.LevenshteinFeatureGenerator;
+import de.tudarmstadt.ukp.inception.conceptlinking.feature.MatchingTokenOverlapFeatureGenerator;
 import de.tudarmstadt.ukp.inception.conceptlinking.feature.SemanticSignatureFeatureGenerator;
 import de.tudarmstadt.ukp.inception.conceptlinking.feature.WikidataIdRankFeatureGenerator;
 import de.tudarmstadt.ukp.inception.conceptlinking.recommender.NamedEntityLinkerFactory;
@@ -79,6 +80,12 @@ public class EntityLinkingServiceAutoConfiguration
     public LevenshteinFeatureGenerator levenshteinFeatureGenerator()
     {
         return new LevenshteinFeatureGenerator();
+    }
+
+    @Bean
+    public MatchingTokenOverlapFeatureGenerator matchingTokenOverlapFeatureGenerator()
+    {
+        return new MatchingTokenOverlapFeatureGenerator();
     }
 
     @Bean

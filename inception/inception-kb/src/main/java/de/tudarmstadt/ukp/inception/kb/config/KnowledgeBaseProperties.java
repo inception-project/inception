@@ -21,6 +21,8 @@ import java.time.Duration;
 
 public interface KnowledgeBaseProperties
 {
+    double getFtsInternalMaxResultsFactor();
+
     int getDefaultMaxResults();
 
     int getHardMaxResults();

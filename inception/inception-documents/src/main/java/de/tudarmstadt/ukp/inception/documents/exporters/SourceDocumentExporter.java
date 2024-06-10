@@ -24,16 +24,16 @@ import static java.lang.System.currentTimeMillis;
 import static java.nio.file.Files.createDirectories;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
-import static org.apache.commons.io.FileUtils.forceMkdir;
 import static org.apache.commons.lang3.time.DurationFormatUtils.formatDurationWords;
 
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
+import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.zip.ZipFile;
+import java.util.zip.ZipOutputStream;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -82,7 +82,7 @@ public class SourceDocumentExporter
 
     @Override
     public void exportData(FullProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
-            ExportedProject aExProject, File aStage)
+            ExportedProject aExProject, ZipOutputStream aStage)
         throws IOException, ProjectExportException, InterruptedException
     {
         exportSourceDocuments(aRequest.getProject(), aExProject);
@@ -111,12 +111,10 @@ public class SourceDocumentExporter
     }
 
     private void exportSourceDocumentContents(FullProjectExportRequest aRequest,
-            ProjectExportTaskMonitor aMonitor, ExportedProject aExProject, File aStage)
+            ProjectExportTaskMonitor aMonitor, ExportedProject aExProject, ZipOutputStream aStage)
         throws IOException, ProjectExportException, InterruptedException
     {
         var project = aRequest.getProject();
-        var documentStage = new File(aStage, SOURCE_FOLDER);
-        forceMkdir(documentStage);
         // Get all the source documents from the project
         var documents = documentService.listSourceDocuments(project);
         int i = 1;
@@ -127,8 +125,14 @@ public class SourceDocumentExporter
             }
 
             try {
-                documentStorageService.copySourceDocumentFile(sourceDocument,
-                        new File(documentStage, sourceDocument.getName()));
+                ProjectExporter.writeEntry(aStage, SOURCE_FOLDER + "/" + sourceDocument.getName(),
+                        os -> {
+                            try (var is = Files.newInputStream(documentStorageService
+                                    .getSourceDocumentFile(sourceDocument).toPath())) {
+                                is.transferTo(os);
+                            }
+                        });
+
                 aMonitor.setProgress((int) Math.ceil(((double) i) / documents.size() * 10.0));
                 LOG.info("Exported content for source document {}/{}: {} in {}", i,
                         documents.size(), sourceDocument, project);
