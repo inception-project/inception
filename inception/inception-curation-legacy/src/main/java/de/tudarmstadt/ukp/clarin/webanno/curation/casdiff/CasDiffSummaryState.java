@@ -21,6 +21,9 @@ import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
 
 import java.util.HashSet;
 
+import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.relation.RelationPosition;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span.SpanPosition;
+
 /**
  * An enumeration to differentiate sentences in a document with different colors so as to easily
  * identify
@@ -65,29 +68,44 @@ public enum CasDiffSummaryState
         return cssClass;
     }
 
-    public static CasDiffSummaryState calculateState(DiffResult diff)
+    private static boolean isTextLevel(ConfigurationSet aCfg)
     {
-        var differingSets = diff.getDifferingConfigurationSetsWithExceptions(CURATION_USER);
+        var position = aCfg.getPosition();
+        return position instanceof SpanPosition || position instanceof RelationPosition;
+    }
+
+    public static CasDiffSummaryState calculateState(DiffResult aDiff)
+    {
+        var differingSets = aDiff.getDifferingConfigurationSetsWithExceptions(CURATION_USER)
+                .values().stream() //
+                .filter(CasDiffSummaryState::isTextLevel) //
+                .toList();
 
         // CURATED:
         // The curation user participates in every configuration set
-        var allCurated = diff.getConfigurationSets().stream() //
+        var textLevelConfigurations = aDiff.getConfigurationSets().stream() //
+                .filter(CasDiffSummaryState::isTextLevel) //
+                .toList();
+        var allCurated = textLevelConfigurations.stream() //
                 .allMatch(set -> set.getCasGroupIds().contains(CURATION_USER));
-        if (!diff.getConfigurationSets().isEmpty() && allCurated) {
+        if (!textLevelConfigurations.isEmpty() && allCurated) {
             return CURATED;
         }
 
         // AGREE:
         // - there are no differences between the annotators
         // - the annotations are complete
-        if (differingSets.isEmpty()
-                && diff.getIncompleteConfigurationSetsWithExceptions(CURATION_USER).isEmpty()) {
+        var incompleteConfigurationSetsWithExceptions = aDiff
+                .getIncompleteConfigurationSetsWithExceptions(CURATION_USER).values().stream() //
+                .filter(CasDiffSummaryState::isTextLevel) //
+                .toList();
+        if (differingSets.isEmpty() && incompleteConfigurationSetsWithExceptions.isEmpty()) {
             return AGREE;
         }
 
         // Is this confSet a diff due to stacked annotations (with same configuration)?
         var stackedDiff = false;
-        stackedDiffSet: for (var set : differingSets.values()) {
+        stackedDiffSet: for (var set : differingSets) {
             for (var user : set.getCasGroupIds()) {
                 if (set.getConfigurations(user).size() > 1) {
                     stackedDiff = true;
@@ -100,9 +118,12 @@ public enum CasDiffSummaryState
             return STACKED;
         }
 
-        var usersExceptCurator = new HashSet<>(diff.getCasGroupIds());
+        var usersExceptCurator = new HashSet<>(aDiff.getCasGroupIds());
         usersExceptCurator.remove(CURATION_USER);
-        for (var set : diff.getIncompleteConfigurationSets().values()) {
+        var incompleteSets = aDiff.getIncompleteConfigurationSets().values().stream() //
+                .filter(CasDiffSummaryState::isTextLevel) //
+                .toList();
+        for (var set : incompleteSets) {
             if (!set.getCasGroupIds().containsAll(usersExceptCurator)) {
                 return INCOMPLETE;
             }
