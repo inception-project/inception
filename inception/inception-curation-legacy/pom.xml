@@ -64,6 +64,10 @@
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-model-vdoc</artifactId>
     </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-layer-docmetadata</artifactId>
+    </dependency>
 
     <dependency>
       <groupId>org.dkpro.core</groupId>
@@ -115,6 +119,7 @@
             <ignoredDependencies combine.children="append">
               <!-- Directly used only in tests but we need it for a transitive base class -->
               <ignoredDependency>de.tudarmstadt.ukp.inception.app:inception-support</ignoredDependency>
+              <ignoredDependency>de.tudarmstadt.ukp.inception.app:inception-layer-docmetadata</ignoredDependency>
             </ignoredDependencies>
           </configuration>
         </plugin>

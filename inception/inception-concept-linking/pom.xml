@@ -243,7 +243,7 @@
             <ignoredDependencies>
               <!-- Dependency analysis does not get it... -->
               <ignoredDependency>org.danekja:jdk-serializable-functional</ignoredDependency>
-              <ignoredDependency>javax.persistence:javax.persistence-api</ignoredDependency>
+              <ignoredDependency>jakarta.persistence:jakarta.persistence-api</ignoredDependency>
             </ignoredDependencies>
             <usedDependencies>
               <!-- Testing - used via reflection -->

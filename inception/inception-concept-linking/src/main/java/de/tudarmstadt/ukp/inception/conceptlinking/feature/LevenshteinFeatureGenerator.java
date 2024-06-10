@@ -44,26 +44,26 @@ import de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity;
 public class LevenshteinFeatureGenerator
     implements EntityRankingFeatureGenerator
 {
-    private final LevenshteinDistance lev = LevenshteinDistance.getDefaultInstance();
+    private final static LevenshteinDistance MEASURE = LevenshteinDistance.getDefaultInstance();
 
     @Override
     public void apply(CandidateEntity aCandidate)
     {
-        String label = aCandidate.getLabel();
+        var label = aCandidate.getLabel();
         update(aCandidate, label);
         aCandidate.getHandle().getMatchTerms().forEach(p -> update(aCandidate, p.getKey()));
     }
 
     private void update(CandidateEntity aCandidate, String aTerm)
     {
-        String termNC = aTerm.toLowerCase(aCandidate.getLocale());
+        var termNC = aTerm.toLowerCase(aCandidate.getLocale());
 
         aCandidate.get(KEY_MENTION_NC) //
-                .map(mention -> lev.apply(termNC, mention)) //
+                .map(mention -> MEASURE.apply(termNC, mention)) //
                 .ifPresent(score -> aCandidate.mergeMin(KEY_LEVENSHTEIN_MENTION_NC, score));
 
         aCandidate.get(KEY_QUERY_NC) //
-                .map(query -> lev.apply(termNC, query)) //
+                .map(query -> MEASURE.apply(termNC, query)) //
                 .ifPresent(score -> {
                     if (aCandidate.mergeMin(KEY_LEVENSHTEIN_QUERY_NC, score)) {
                         aCandidate.put(KEY_QUERY_BEST_MATCH_TERM_NC, aTerm);
@@ -71,15 +71,15 @@ public class LevenshteinFeatureGenerator
                 });
 
         aCandidate.get(KEY_MENTION) //
-                .map(mention -> lev.apply(aTerm, mention)) //
+                .map(mention -> MEASURE.apply(aTerm, mention)) //
                 .ifPresent(score -> aCandidate.mergeMin(KEY_LEVENSHTEIN_MENTION, score));
 
         aCandidate.get(KEY_QUERY) //
-                .map(query -> lev.apply(aTerm, query)) //
+                .map(query -> MEASURE.apply(aTerm, query)) //
                 .ifPresent(score -> aCandidate.mergeMin(KEY_LEVENSHTEIN_QUERY, score));
 
         aCandidate.get(KEY_MENTION_CONTEXT) //
-                .map(context -> lev.apply(aTerm, join(context, ' '))) //
+                .map(context -> MEASURE.apply(aTerm, join(context, ' '))) //
                 .ifPresent(score -> aCandidate.mergeMin(KEY_LEVENSHTEIN_MENTION_CONTEXT, score));
     }
 }

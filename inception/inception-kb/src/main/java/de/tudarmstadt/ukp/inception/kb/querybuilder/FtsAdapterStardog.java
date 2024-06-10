@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.kb.querybuilder;
 
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.PREFIX_STARDOG;
+import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder.convertToRequiredTokenPrefixMatchingQuery;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder.Priority.PRIMARY;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.prefix;
@@ -33,6 +34,10 @@ import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPattern;
 public class FtsAdapterStardog
     implements FtsAdapter
 {
+    private static final String MULTI_CHAR_WILDCARD = "*";
+
+    private static final String FUZZY_SUFFIX = "~";
+
     private final static Prefix PREFIX_STARDOG_SEARCH = prefix("fts", iri(PREFIX_STARDOG));
 
     private final SPARQLQueryBuilder builder;
@@ -49,7 +54,7 @@ public class FtsAdapterStardog
 
         var valuePatterns = new ArrayList<GraphPattern>();
         for (var value : aValues) {
-            var sanitizedValue = SPARQLQueryBuilder.sanitizeQueryString_FTS(value);
+            var sanitizedValue = builder.sanitizeQueryString_FTS(value);
 
             if (isBlank(sanitizedValue)) {
                 continue;
@@ -59,6 +64,10 @@ public class FtsAdapterStardog
                     .withLimit(builder.getLimit()) //
                     .and(VAR_SUBJECT.has(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM).filter(builder
                             .equalsPattern(VAR_MATCH_TERM, value, builder.getKnowledgeBase()))));
+        }
+
+        if (valuePatterns.isEmpty()) {
+            builder.noResult();
         }
 
         builder.addPattern(PRIMARY, and( //
@@ -73,7 +82,7 @@ public class FtsAdapterStardog
 
         var valuePatterns = new ArrayList<GraphPattern>();
         for (var value : aValues) {
-            var sanitizedValue = SPARQLQueryBuilder.sanitizeQueryString_FTS(value);
+            var sanitizedValue = builder.sanitizeQueryString_FTS(value);
 
             if (isBlank(sanitizedValue)) {
                 continue;
@@ -83,6 +92,10 @@ public class FtsAdapterStardog
                     .withLimit(builder.getLimit()) //
                     .and(VAR_SUBJECT.has(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM)
                             .filter(builder.containsPattern(VAR_MATCH_TERM, value))));
+        }
+
+        if (valuePatterns.isEmpty()) {
+            builder.noResult();
         }
 
         builder.addPattern(PRIMARY, and( //
@@ -96,19 +109,17 @@ public class FtsAdapterStardog
         builder.addPrefix(PREFIX_STARDOG_SEARCH);
 
         // Strip single quotes and asterisks because they have special semantics
-        var sanitizedValue = SPARQLQueryBuilder.sanitizeQueryString_FTS(aPrefixQuery);
+        var queryString = builder.sanitizeQueryString_FTS(aPrefixQuery);
 
-        if (isBlank(sanitizedValue)) {
-            builder.setReturnEmptyResult(true);
+        if (isBlank(queryString)) {
+            builder.noResult();
         }
-
-        var queryString = sanitizedValue.trim();
 
         // If the query string entered by the user does not end with a space character, then
         // we assume that the user may not yet have finished writing the word and add a
         // wildcard
         if (!aPrefixQuery.endsWith(" ")) {
-            queryString += "*";
+            queryString += MULTI_CHAR_WILDCARD;
         }
 
         builder.addPattern(PRIMARY, and( //
@@ -126,8 +137,9 @@ public class FtsAdapterStardog
 
         var valuePatterns = new ArrayList<GraphPattern>();
         for (var value : aValues) {
-            var sanitizedValue = SPARQLQueryBuilder.sanitizeQueryString_FTS(value);
-            var fuzzyQuery = SPARQLQueryBuilder.convertToFuzzyMatchingQuery(sanitizedValue, "~");
+            var sanitizedValue = builder.sanitizeQueryString_FTS(value);
+            var fuzzyQuery = convertToRequiredTokenPrefixMatchingQuery(sanitizedValue, "",
+                    FUZZY_SUFFIX);
 
             if (isBlank(sanitizedValue) || isBlank(fuzzyQuery)) {
                 continue;
@@ -136,6 +148,10 @@ public class FtsAdapterStardog
             valuePatterns.add(new StardogEntitySearchService(VAR_MATCH_TERM, fuzzyQuery) //
                     .withLimit(builder.getLimit()) //
                     .and(VAR_SUBJECT.has(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM)));
+        }
+
+        if (valuePatterns.isEmpty()) {
+            builder.noResult();
         }
 
         builder.addPattern(PRIMARY, and( //

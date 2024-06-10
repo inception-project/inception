@@ -1,0 +1,31 @@
+// Licensed to the Technische Universität Darmstadt under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The Technische Universität Darmstadt 
+// licenses this file to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.
+//  
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+= 🧪 Cross-layer relations
+
+====
+CAUTION: Experimental feature. To use this functionality, you need to enable it first by adding `ui.cross-layer-relations-enabled=true` to the `settings.properties` file (see the <<admin-guide.adoc#sect_settings_cross-layer-relations, Admin Guide>>). While this feature introduces a new level of flexibility, it can also interact with existing features in unexpected and untested ways.
+====
+
+By default, relations can only be created between two endpoints on the same layer.
+Also, it is only possible to create a single relation layer for any given span layer.
+
+Enable this experimental option feature the creation of relation layers that can go between different span layers.
+This is done by adding a new option **Any span** to the **Attach to layer** setting in the relation layer details.
+
+With this experimental feature, it becomes possible to define multiple annotation layer per span layer. 
+If this is the case, the annotation editor will offer a selection list when a new relation is created between two spans to which multiple relation layers could apply.
+
