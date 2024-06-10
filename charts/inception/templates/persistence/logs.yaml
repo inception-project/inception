@@ -1,6 +1,6 @@
 kind: PersistentVolumeClaim
 apiVersion: v1
-metalogs:
+metadata:
   name: inception-logs-pvc
 spec:
   storageClassName: {{ .Values.storage.logs.storageClassName }}

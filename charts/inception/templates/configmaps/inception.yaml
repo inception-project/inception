@@ -1,6 +1,0 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: {{ .Release.Name }}
-data: 
-{{ tpl (.Files.Glob "configuration/inception/*").AsConfig . | nindent 2 }}

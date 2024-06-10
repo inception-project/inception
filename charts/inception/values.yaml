@@ -5,14 +5,20 @@
 replicaCount: 1
 
 image:
-  repository: ghcr.io/inception-project/inception-snapshots
+  repository: ghcr.io/inception-project/inception
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "33.0-SNAPSHOT"
+  tag: "32.3"
 
 imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: ""
+
+config:
+  database:
+    username: "inception"
+    password:
+      existingSecret: ""
 
 serviceAccount:
   # Specifies whether a service account should be created
@@ -36,7 +42,7 @@ podSecurityContext:
 
 securityContext:
   readOnlyRootFilesystem: true
-  privileged: fals
+  privileged: false
 
 service:
   type: ClusterIP
@@ -45,14 +51,13 @@ service:
 ingress:
   enabled: true
   className: "nginx"
-  annotations: {}
-    # kubernetes.io/ingress.class: nginx
-    # kubernetes.io/tls-acme: "true"
+  annotations:
+    nginx.ingress.kubernetes.io/app-root: /inception
+
   hosts:
-    - host: inception.local
-      paths:
-        - path: /
-          pathType: ImplementationSpecific
+    - paths:
+      - path: /
+        pathType: Prefix
   tls: []
   #  - secretName: chart-example-tls
   #    hosts:
@@ -70,14 +75,14 @@ resources: {}
   #   cpu: 100m
   #   memory: 128Mi
 
-livenessProbe:
-  httpGet:
-    path: /
-    port: http
-readinessProbe:
-  httpGet:
-    path: /
-    port: http
+# livenessProbe:
+#   httpGet:
+#     path: /inception
+#     port: http
+# readinessProbe:
+#   httpGet:
+#     path: /inception
+#     port: http
 
 autoscaling:
   enabled: false
@@ -88,24 +93,19 @@ autoscaling:
 
 storage:
   data:
-    storageClassName: "local-path"
+    storageClassName: "standard"
     size: "5Gi"
-    accessMode:
-    - ReadWriteMany
+    accessMode: ReadWriteOnce
   logs:
-    storageClassName: "local-path"
+    storageClassName: "standard"
     size: "5Gi"
-    accessMode:
-    - ReadWriteMany
+    accessMode: ReadWriteOnce
   tmp:
-    storageClassName: "local-path"
+    storageClassName: "standard"
     size: "5Gi"
-    accessMode:
-    - ReadWriteMany
+    accessMode: ReadWriteOnce
   
     
-    
-
 nodeSelector: {}
 
 tolerations: []
@@ -114,6 +114,16 @@ affinity: {}
 
 mariadb:
   enabled: true
+  image:
+    debug: true
   auth:
+    database: "inception"
     username: "inception"
-    password: "testpwd"
+    configuration: |-
+      [mysql]
+      default-character-set=utf8mb4
+
+      [mysqld]
+      collation-server = utf8mb4_unicode_ci
+      init-connect='SET NAMES utf8mb4'
+      character-set-server = utf8mb4

@@ -26,6 +26,7 @@ appVersion: "32.3"
 # Using Bitnami MArioDB chart qs Inception's DB backend
 dependencies:
 - name: mariadb
+  alias: mariadb
   condition: mariadb.enabled
   version: "18.2.1"
   repository: "oci://registry-1.docker.io/bitnamicharts"

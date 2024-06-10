@@ -36,6 +36,16 @@ spec:
             {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+          - name: INCEPTION_DB_URL
+            value: "jdbc:mariadb://{{ include "inception.fullname" . }}-mariadb:3306/inception?useSSL=false&serverTimezone=UTC&useUnicode=true&characterEncoding=UTF-8"
+          - name: INCEPTION_DB_USERNAME
+            value: "inception"
+          - name: INCEPTION_DB_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: {{ include "inception.fullname" . }}-mariadb
+                key: mariadb-password
           ports:
             - name: http
               containerPort: {{ .Values.service.port }}
@@ -48,7 +58,8 @@ spec:
             {{- toYaml .Values.resources | nindent 12 }}
 
           volumeMounts:
-          - mountPath: /srv/inception/
+          - mountPath: /export/settings.properties
+            subPath: settings.properties
             name: inception-settings
           - mountPath: /export
             name: inception-data-pv
@@ -60,7 +71,7 @@ spec:
       volumes:
       - name: inception-settings
         configMap:
-          name: {{ .Release.Name }}
+          name: {{ .Release.Name }}-conf
       - name: inception-data-pv
         persistentVolumeClaim:
           claimName: inception-data-pvc
@@ -69,7 +80,7 @@ spec:
           claimName: inception-tmp-pvc
       - name: inception-log-pv
         persistentVolumeClaim:
-          claimName: inception-log-pvc
+          claimName: inception-logs-pvc
 
       {{- with .Values.nodeSelector }}
       nodeSelector:
