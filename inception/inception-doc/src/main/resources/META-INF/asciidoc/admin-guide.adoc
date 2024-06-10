@@ -115,6 +115,7 @@ include::{include-dir}settings_theming.adoc[leveloffset=+1]
 include::{include-dir}settings_annotation-editor.adoc[leveloffset=+1]
 include::{include-dir}settings_annotation-editor_pdf.adoc[leveloffset=+2]
 include::{include-dir}settings_annotation-editor_pdf_legacy.adoc[leveloffset=+2]
+include::{include-dir}settings_cross-layer-relations.adoc[leveloffset=+2]
 include::{include-dir}settings_segmentation.adoc[leveloffset=+2]
 
 include::{include-dir}settings_documentmetadata.adoc[leveloffset=+1]
