@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.kb.querybuilder;
 
+import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder.convertToRequiredTokenPrefixMatchingQuery;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder.Priority.PRIMARY;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.prefix;
@@ -33,6 +34,8 @@ import org.eclipse.rdf4j.sparqlbuilder.rdf.Iri;
 public class FtsAdapterFuseki
     implements FtsAdapter
 {
+    private static final String MULTI_CHAR_WILDCARD = "*";
+    private static final String FUZZY_SUFFIX = "~";
     private static final Prefix PREFIX_FUSEKI_SEARCH = prefix("text",
             iri("http://jena.apache.org/text#"));
     private static final Iri FUSEKI_QUERY = PREFIX_FUSEKI_SEARCH.iri("query");
@@ -51,15 +54,7 @@ public class FtsAdapterFuseki
 
         var valuePatterns = new ArrayList<GraphPattern>();
         for (var value : aValues) {
-            var sanitizedValue = SPARQLQueryBuilder.sanitizeQueryString_FTS(value);
-
-            // We assume that the FTS is case insensitive and found that some FTSes (i.e.
-            // Fuseki) can have trouble matching if they get upper-case query when they
-            // internally lower-case#
-            if (builder.isCaseInsensitive()) {
-                sanitizedValue = SPARQLQueryBuilder.toLowerCase(builder.getKnowledgeBase(),
-                        sanitizedValue);
-            }
+            var sanitizedValue = builder.sanitizeQueryString_FTS(value);
 
             if (isBlank(sanitizedValue)) {
                 continue;
@@ -74,6 +69,10 @@ public class FtsAdapterFuseki
                                     builder.getKnowledgeBase())));
         }
 
+        if (valuePatterns.isEmpty()) {
+            builder.noResult();
+        }
+
         builder.addPattern(PRIMARY, and( //
                 builder.bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY), //
                 union(valuePatterns.toArray(GraphPattern[]::new))));
@@ -86,15 +85,7 @@ public class FtsAdapterFuseki
 
         var valuePatterns = new ArrayList<GraphPattern>();
         for (var value : aValues) {
-            var sanitizedValue = SPARQLQueryBuilder.sanitizeQueryString_FTS(value);
-
-            // We assume that the FTS is case insensitive and found that some FTSes (i.e.
-            // Fuseki) can have trouble matching if they get upper-case query when they
-            // internally lower-case#
-            if (builder.isCaseInsensitive()) {
-                sanitizedValue = SPARQLQueryBuilder.toLowerCase(builder.getKnowledgeBase(),
-                        sanitizedValue);
-            }
+            var sanitizedValue = builder.sanitizeQueryString_FTS(value);
 
             if (isBlank(sanitizedValue)) {
                 continue;
@@ -108,6 +99,10 @@ public class FtsAdapterFuseki
                             .filter(builder.containsPattern(VAR_MATCH_TERM, value)));
         }
 
+        if (valuePatterns.isEmpty()) {
+            builder.noResult();
+        }
+
         builder.addPattern(PRIMARY, and(builder.bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY),
                 union(valuePatterns.toArray(GraphPattern[]::new))));
     }
@@ -117,24 +112,18 @@ public class FtsAdapterFuseki
     {
         builder.addPrefix(PREFIX_FUSEKI_SEARCH);
 
-        var queryString = aPrefixQuery.trim();
+        // Strip single quotes and asterisks because they have special semantics
+        var queryString = builder.sanitizeQueryString_FTS(aPrefixQuery);
 
-        // We assume that the FTS is case insensitive and found that some FTSes (i.e.
-        // Fuseki) can have trouble matching if they get upper-case query when they
-        // internally lower-case#
-        if (builder.isCaseInsensitive()) {
-            queryString = SPARQLQueryBuilder.toLowerCase(builder.getKnowledgeBase(), queryString);
-        }
-
-        if (queryString.isEmpty()) {
-            builder.setReturnEmptyResult(true);
+        if (isBlank(queryString)) {
+            builder.noResult();
         }
 
         // If the query string entered by the user does not end with a space character, then
         // we assume that the user may not yet have finished writing the word and add a
         // wildcard
         if (!aPrefixQuery.endsWith(" ")) {
-            queryString += "*";
+            queryString += MULTI_CHAR_WILDCARD;
         }
 
         builder.addProjection(VAR_SCORE);
@@ -156,21 +145,14 @@ public class FtsAdapterFuseki
 
         var valuePatterns = new ArrayList<GraphPattern>();
         for (var value : aValues) {
-            var sanitizedValue = SPARQLQueryBuilder.sanitizeQueryString_FTS(value);
+            var sanitizedValue = builder.sanitizeQueryString_FTS(value);
 
             if (isBlank(sanitizedValue)) {
                 continue;
             }
 
-            // We assume that the FTS is case insensitive and found that some FTSes (i.e.
-            // Fuseki) can have trouble matching if they get upper-case query when they
-            // internally lower-case#
-            if (builder.isCaseInsensitive()) {
-                sanitizedValue = SPARQLQueryBuilder.toLowerCase(builder.getKnowledgeBase(),
-                        sanitizedValue);
-            }
-
-            String fuzzyQuery = SPARQLQueryBuilder.convertToFuzzyMatchingQuery(sanitizedValue, "~");
+            var fuzzyQuery = convertToRequiredTokenPrefixMatchingQuery(sanitizedValue, "",
+                    FUZZY_SUFFIX);
 
             if (isBlank(fuzzyQuery)) {
                 continue;
@@ -180,6 +162,10 @@ public class FtsAdapterFuseki
 
             valuePatterns.add(new FusekiFtsQuery(VAR_SUBJECT, VAR_SCORE, VAR_MATCH_TERM,
                     VAR_MATCH_TERM_PROPERTY, fuzzyQuery).withLimit(builder.getLimit()));
+        }
+
+        if (valuePatterns.isEmpty()) {
+            builder.noResult();
         }
 
         builder.addPattern(PRIMARY, and(builder.bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY),

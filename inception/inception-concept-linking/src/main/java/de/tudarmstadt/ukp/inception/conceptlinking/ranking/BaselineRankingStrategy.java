@@ -29,6 +29,7 @@ import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_QUERY_IS_LOWER_CASE;
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_QUERY_NC;
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_SIGNATURE_OVERLAP_SCORE;
+import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_TOKEN_OVERLAP_QUERY_NC;
 
 import java.util.Comparator;
 
@@ -44,6 +45,11 @@ public class BaselineRankingStrategy
             // a 0 while a mismatch is represented using 1. The typical case is that neither
             // candidate matches the query which causes the next ranking criteria to be evaluated
             .append(queryMatchesIri(e1), queryMatchesIri(e2))
+            // Use FTS score if available
+            // .append(e2.get(KEY_FTS_SCORE).get(), e1.get(KEY_FTS_SCORE).get())
+            // Require token overlap
+            .append(e1.get(KEY_TOKEN_OVERLAP_QUERY_NC).get(),
+                    e2.get(KEY_TOKEN_OVERLAP_QUERY_NC).get())
             // Prefer matches where the query appears in the label
             .append(labelMatchesQueryNC(e1), labelMatchesQueryNC(e2))
             // Compare geometric mean of the Levenshtein distance to query and mention

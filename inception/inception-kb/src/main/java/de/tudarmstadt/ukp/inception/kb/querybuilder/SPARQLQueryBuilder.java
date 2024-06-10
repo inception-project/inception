@@ -35,6 +35,7 @@ import static java.lang.String.CASE_INSENSITIVE_ORDER;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Collections.emptyList;
 import static java.util.Comparator.comparing;
+import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Stream.concat;
 import static org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions.and;
@@ -70,7 +71,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.StringJoiner;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.rdf4j.model.IRI;
@@ -85,7 +88,6 @@ import org.eclipse.rdf4j.query.TupleQuery;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.eclipse.rdf4j.sparqlbuilder.constraint.Expression;
 import org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions;
-import org.eclipse.rdf4j.sparqlbuilder.constraint.Operand;
 import org.eclipse.rdf4j.sparqlbuilder.constraint.SparqlFunction;
 import org.eclipse.rdf4j.sparqlbuilder.constraint.propertypath.builder.PropertyPathBuilder;
 import org.eclipse.rdf4j.sparqlbuilder.core.Prefix;
@@ -124,6 +126,8 @@ public class SPARQLQueryBuilder
 {
     private final static Logger LOG = LoggerFactory.getLogger(SPARQLQueryBuilder.class);
 
+    public static final Pattern TOKENKIZER_PATTERN = Pattern.compile("\\s+");
+
     public static final int DEFAULT_LIMIT = 0;
 
     private static final RdfValue EMPTY_STRING = () -> "\"\"";
@@ -135,6 +139,8 @@ public class SPARQLQueryBuilder
     private final List<GraphPattern> secondaryPatterns = new ArrayList<>();
 
     private boolean labelImplicitlyRetrieved = false;
+
+    private boolean filterUsingRegex = true;
 
     enum Priority
     {
@@ -186,7 +192,7 @@ public class SPARQLQueryBuilder
      * @see #reduceRedundantResults(List)
      */
 
-    private static enum Mode
+    static enum Mode
     {
         ITEM, CLASS, INSTANCE, PROPERTY;
 
@@ -504,7 +510,7 @@ public class SPARQLQueryBuilder
         return builder;
     }
 
-    private SPARQLQueryBuilder(KnowledgeBase aKB, Mode aMode)
+    SPARQLQueryBuilder(KnowledgeBase aKB, Mode aMode)
     {
         kb = aKB;
         mode = aMode;
@@ -552,6 +558,11 @@ public class SPARQLQueryBuilder
     private Projectable getDeprecationProjection()
     {
         return VAR_DEPRECATION;
+    }
+
+    boolean noResult()
+    {
+        return returnEmptyResult = true;
     }
 
     @Override
@@ -738,7 +749,7 @@ public class SPARQLQueryBuilder
                 .toArray(String[]::new);
 
         if (values.length == 0) {
-            returnEmptyResult = true;
+            noResult();
             return this;
         }
 
@@ -752,7 +763,7 @@ public class SPARQLQueryBuilder
 
     private FtsAdapter getAdapter()
     {
-        IRI ftsMode = getFtsMode();
+        var ftsMode = getFtsMode();
 
         if (FTS_RDF4J_LUCENE.equals(ftsMode)) {
             return new FtsAdapterRdf4J(this);
@@ -840,7 +851,7 @@ public class SPARQLQueryBuilder
                 .toArray(String[]::new);
 
         if (values.length == 0) {
-            returnEmptyResult = true;
+            noResult();
             return this;
         }
 
@@ -861,7 +872,7 @@ public class SPARQLQueryBuilder
                 .toArray(String[]::new);
 
         if (values.length == 0) {
-            returnEmptyResult = true;
+            noResult();
             return this;
         }
 
@@ -879,7 +890,7 @@ public class SPARQLQueryBuilder
         var value = trimQueryString(aPrefixQuery);
 
         if (value == null || value.length() == 0) {
-            returnEmptyResult = true;
+            noResult();
             return this;
         }
 
@@ -938,32 +949,36 @@ public class SPARQLQueryBuilder
 
     private Expression<?> matchString(SparqlFunction aFunction, Variable aVariable, String aValue)
     {
-        Operand variable = aVariable;
-
-        var regexFlags = "";
-        if (caseInsensitive) {
-            regexFlags += "i";
-        }
-
-        String value;
-        switch (aFunction) {
-        // Match using REGEX to be resilient against extra whitespace
-        case STRSTARTS:
-            // Match at start
-            value = "^" + asRegexp(aValue);
-            break;
-        case CONTAINS:
-            // Match anywhere
-            value = ".*" + asRegexp(aValue) + ".*";
-            break;
-        default:
-            throw new IllegalArgumentException(
-                    "Only STRSTARTS and CONTAINS are supported, but got [" + aFunction + "]");
-        }
-
         var expressions = new ArrayList<Expression<?>>();
-        expressions.add(
-                function(REGEX, function(STR, variable), literalOf(value), literalOf(regexFlags)));
+
+        if (filterUsingRegex) {
+            var regexFlags = "";
+            if (caseInsensitive) {
+                regexFlags += "i";
+            }
+
+            String value;
+            switch (aFunction) {
+            // Match using REGEX to be resilient against extra whitespace
+            case STRSTARTS:
+                // Match at start
+                value = "^" + asRegexp(aValue) + ".*";
+                break;
+            case CONTAINS:
+                // Match anywhere
+                value = Stream.of(TOKENKIZER_PATTERN.split(aValue)) //
+                        .map(t -> "(?=.*" + asRegexp(t) + ")") //
+                        .collect(joining());
+                break;
+            default:
+                throw new IllegalArgumentException(
+                        "Only STRSTARTS and CONTAINS are supported, but got [" + aFunction + "]");
+            }
+
+            expressions.add(function(REGEX, function(STR, aVariable), literalOf(value),
+                    literalOf(regexFlags)));
+        }
+
         expressions.add(matchKbLanguage(aVariable));
 
         return and(expressions.toArray(Expression[]::new)).parenthesize();
@@ -971,7 +986,7 @@ public class SPARQLQueryBuilder
 
     Expression<?> matchKbLanguage(Variable aVariable)
     {
-        String language = kb.getDefaultLanguage();
+        var language = kb.getDefaultLanguage();
 
         if (language != null) {
             return matchWithOrWithoutLanguage(aVariable, language);
@@ -1020,7 +1035,7 @@ public class SPARQLQueryBuilder
     {
         forceDisableFTS.add("descendantsOf query");
 
-        Iri contextIri = iri(aClassIri);
+        var contextIri = iri(aClassIri);
 
         addPattern(PRIMARY, mode.descendentsPattern(kb, contextIri));
 
@@ -1032,7 +1047,7 @@ public class SPARQLQueryBuilder
     {
         forceDisableFTS.add("childrenOf query");
 
-        Iri contextIri = iri(aClassIri);
+        var contextIri = iri(aClassIri);
 
         addPattern(PRIMARY, mode.childrenPattern(kb, contextIri));
 
@@ -1044,7 +1059,7 @@ public class SPARQLQueryBuilder
     {
         forceDisableFTS.add("parentsOf query");
 
-        Iri contextIri = iri(aClassIri);
+        var contextIri = iri(aClassIri);
 
         addPattern(PRIMARY, mode.parentsPattern(kb, contextIri));
 
@@ -1053,11 +1068,11 @@ public class SPARQLQueryBuilder
 
     private void limitToClasses()
     {
-        Iri classIri = iri(kb.getClassIri());
-        Iri subClassProperty = iri(kb.getSubclassIri());
-        Iri typeOfProperty = iri(kb.getTypeIri());
+        var classIri = iri(kb.getClassIri());
+        var subClassProperty = iri(kb.getSubclassIri());
+        var typeOfProperty = iri(kb.getTypeIri());
 
-        List<GraphPattern> classPatterns = new ArrayList<>();
+        var classPatterns = new ArrayList<GraphPattern>();
 
         // An item is a class if ...
         // ... it is explicitly defined as being a class
@@ -1080,9 +1095,9 @@ public class SPARQLQueryBuilder
 
     private void limitToInstances()
     {
-        Iri classIri = iri(kb.getClassIri());
-        Iri subClassProperty = iri(kb.getSubclassIri());
-        Iri typeOfProperty = iri(kb.getTypeIri());
+        var classIri = iri(kb.getClassIri());
+        var subClassProperty = iri(kb.getSubclassIri());
+        var typeOfProperty = iri(kb.getTypeIri());
 
         // An item is an instance if ... (make sure to add the LiftableExistsFilter
         // directly to the PRIMARY_RESTRICTIONS and not nested in another pattern
@@ -1613,14 +1628,24 @@ public class SPARQLQueryBuilder
         return aQuery;
     }
 
-    static String sanitizeQueryString_FTS(String aQuery)
+    public String sanitizeQueryString_FTS(String aQuery)
     {
-        return aQuery
+        var sanitizedValue = aQuery
                 // character classes to replace with a simple space
                 .replaceAll("[\\p{Punct}\\p{Space}\\p{Cntrl}[~+*(){}\\[\\]]]+", " ")
                 // character classes to remove from the query string
                 // \u00AD : SOFT HYPHEN
-                .replaceAll("[\\u00AD]", "").trim();
+                .replaceAll("[\\u00AD]", "") //
+                .trim();
+
+        // We assume that the FTS is case insensitive and found that some FTSes (i.e.
+        // Fuseki) can have trouble matching if they get upper-case query when they
+        // internally lower-cased
+        if (isCaseInsensitive()) {
+            sanitizedValue = toLowerCase(getKnowledgeBase(), sanitizedValue);
+        }
+
+        return sanitizedValue.trim();
     }
 
     public static String convertToFuzzyMatchingQuery(String aQuery, String aOperator)
@@ -1638,6 +1663,26 @@ public class SPARQLQueryBuilder
             // I think this should be handled by stopwords and not be excluding any short words...
             else if (term.length() >= 3) {
                 joiner.add(term);
+            }
+            else {
+                // Terms shorter than 3 are ignored
+            }
+        }
+
+        return joiner.toString();
+    }
+
+    public static String convertToRequiredTokenPrefixMatchingQuery(String aQuery,
+            String aPrefixOperator, String aSuffixOperator)
+    {
+        var terms = aQuery.split("\\s");
+        var joiner = new StringJoiner(" ");
+        for (var term : terms) {
+            if (term.length() >= 3) {
+                joiner.add(aPrefixOperator + term + aSuffixOperator);
+            }
+            else {
+                // Terms shorter than 3 are ignored
             }
         }
 

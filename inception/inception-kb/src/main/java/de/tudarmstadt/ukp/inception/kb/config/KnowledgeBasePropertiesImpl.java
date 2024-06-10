@@ -36,6 +36,8 @@ public class KnowledgeBasePropertiesImpl
 {
     public static final int HARD_MIN_RESULTS = 10;
 
+    private double ftsInternalMaxResultsFactor = 2.5;
+
     private int defaultMaxResults = 1_000;
     private int hardMaxResults = 10_000;
 
@@ -48,6 +50,17 @@ public class KnowledgeBasePropertiesImpl
     private long renderCacheSize = 10_000;
     private @DurationUnit(MINUTES) Duration renderCacheExpireDelay = ofMinutes(10);
     private @DurationUnit(MINUTES) Duration renderCacheRefreshDelay = ofMinutes(1);
+
+    public void setInternalFtsMaxResultsFactor(double aFtsMaxResultsFactor)
+    {
+        ftsInternalMaxResultsFactor = aFtsMaxResultsFactor;
+    }
+
+    @Override
+    public double getFtsInternalMaxResultsFactor()
+    {
+        return ftsInternalMaxResultsFactor;
+    }
 
     @Override
     public int getDefaultMaxResults()
