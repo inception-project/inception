@@ -762,6 +762,7 @@ public class CurationPage
                     aTemplate.getUser(), FORCE_CAS_UPGRADE, UNMANAGED_ACCESS);
             curationMergeService.mergeCasses(aState.getDocument(), aState.getUser().getUsername(),
                     mergeCas, aCasses, aMergeStrategy, aState.getAnnotationLayers(), true);
+            curationDocumentService.deleteCurationCas(aDocument);
             curationDocumentService.writeCurationCas(mergeCas, aTemplate.getDocument(), false);
         }
         else {
