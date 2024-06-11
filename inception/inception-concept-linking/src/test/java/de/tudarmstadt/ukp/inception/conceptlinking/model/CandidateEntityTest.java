@@ -15,23 +15,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.conceptlinking.feature;
+package de.tudarmstadt.ukp.inception.conceptlinking.model;
 
-import de.tudarmstadt.ukp.inception.conceptlinking.config.EntityLinkingServiceAutoConfiguration;
-import de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity;
+import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.sortedBagOfWords;
+import static org.assertj.core.api.Assertions.assertThat;
 
-/**
- * <p>
- * This class is exposed as a Spring Component via
- * {@link EntityLinkingServiceAutoConfiguration#ftsScoreFeatureGenerator()}.
- * </p>
- */
-public class FtsScoreFeatureGenerator
-    implements EntityRankingFeatureGenerator
+import org.junit.jupiter.api.Test;
+
+class CandidateEntityTest
 {
-    @Override
-    public void apply(CandidateEntity aCandidate)
+
+    @Test
+    void testSortedBagOfWords()
     {
-        aCandidate.put(CandidateEntity.SCORE_FTS, aCandidate.getHandle().getScore());
+        assertThat(sortedBagOfWords("this is (a test)")) //
+                .containsExactly("test", "this", "is", "a");
     }
+
 }
