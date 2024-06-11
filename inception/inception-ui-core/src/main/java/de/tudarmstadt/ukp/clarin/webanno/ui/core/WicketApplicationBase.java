@@ -249,10 +249,16 @@ public abstract class WicketApplicationBase
         getRequestCycleListeners().add(new PageRequestHandlerTracker());
     }
 
+    @Override
+    protected void internalInit()
+    {
+        super.internalInit();
+
+        WicketWebjars.install(this);
+    }
+
     protected void initWebFrameworks()
     {
-        WicketWebjars.install(this);
-
         initJQueryResourceReference();
 
         addJQueryJavascriptToAllPages();
