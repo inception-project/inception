@@ -23,13 +23,15 @@ import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_QUERY_BEST_MATCH_TERM_NC;
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_QUERY_BOW;
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_QUERY_BOW_NC;
-import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_TOKEN_OVERLAP_MENTION;
-import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_TOKEN_OVERLAP_MENTION_CONTEXT;
-import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_TOKEN_OVERLAP_MENTION_NC;
-import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_TOKEN_OVERLAP_QUERY;
-import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_TOKEN_OVERLAP_QUERY_NC;
+import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.SCORE_TOKEN_OVERLAP_MENTION;
+import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.SCORE_TOKEN_OVERLAP_MENTION_CONTEXT;
+import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.SCORE_TOKEN_OVERLAP_MENTION_NC;
+import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.SCORE_TOKEN_OVERLAP_QUERY;
+import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.SCORE_TOKEN_OVERLAP_QUERY_NC;
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.sortedBagOfWords;
 import static java.util.Arrays.copyOf;
+
+import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.inception.conceptlinking.config.EntityLinkingServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity;
@@ -40,6 +42,7 @@ import de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity;
  * {@link EntityLinkingServiceAutoConfiguration#matchingTokenOverlapFeatureGenerator}.
  * </p>
  */
+@Order(200) // Make sure QUERY_BEST_MATCH_TERM from Levenshtein is overwritten
 public class MatchingTokenOverlapFeatureGenerator
     implements EntityRankingFeatureGenerator
 {
@@ -47,8 +50,7 @@ public class MatchingTokenOverlapFeatureGenerator
     @Override
     public void apply(CandidateEntity aCandidate)
     {
-        var label = aCandidate.getLabel();
-        update(aCandidate, label);
+        update(aCandidate, aCandidate.getLabel());
         aCandidate.getHandle().getMatchTerms().forEach(p -> update(aCandidate, p.getKey()));
     }
 
@@ -60,13 +62,13 @@ public class MatchingTokenOverlapFeatureGenerator
         aCandidate.get(KEY_MENTION_BOW_NC) //
                 .map(mention -> distance(tokensNC, mention)) //
                 .filter(score -> score >= 0) //
-                .ifPresent(score -> aCandidate.mergeMin(KEY_TOKEN_OVERLAP_MENTION_NC, score));
+                .ifPresent(score -> aCandidate.mergeMin(SCORE_TOKEN_OVERLAP_MENTION_NC, score));
 
         aCandidate.get(KEY_QUERY_BOW_NC) //
                 .map(query -> distance(tokensNC, query)) //
                 .filter(score -> score >= 0) //
                 .ifPresent(score -> {
-                    if (aCandidate.mergeMin(KEY_TOKEN_OVERLAP_QUERY_NC, score)) {
+                    if (aCandidate.mergeMin(SCORE_TOKEN_OVERLAP_QUERY_NC, score)) {
                         aCandidate.put(KEY_QUERY_BEST_MATCH_TERM_NC, aTerm);
                     }
                 });
@@ -74,17 +76,18 @@ public class MatchingTokenOverlapFeatureGenerator
         aCandidate.get(KEY_MENTION_BOW) //
                 .map(mention -> distance(tokens, mention)) //
                 .filter(score -> score >= 0) //
-                .ifPresent(score -> aCandidate.mergeMin(KEY_TOKEN_OVERLAP_MENTION, score));
+                .ifPresent(score -> aCandidate.mergeMin(SCORE_TOKEN_OVERLAP_MENTION, score));
 
         aCandidate.get(KEY_QUERY_BOW) //
                 .map(query -> distance(tokens, query)) //
                 .filter(score -> score >= 0) //
-                .ifPresent(score -> aCandidate.mergeMin(KEY_TOKEN_OVERLAP_QUERY, score));
+                .ifPresent(score -> aCandidate.mergeMin(SCORE_TOKEN_OVERLAP_QUERY, score));
 
         aCandidate.get(KEY_MENTION_CONTEXT) //
                 .map(context -> distance(tokens, context.toArray(String[]::new))) //
                 .filter(score -> score >= 0) //
-                .ifPresent(score -> aCandidate.mergeMin(KEY_TOKEN_OVERLAP_MENTION_CONTEXT, score));
+                .ifPresent(
+                        score -> aCandidate.mergeMin(SCORE_TOKEN_OVERLAP_MENTION_CONTEXT, score));
     }
 
     private int distance(String[] aSortedBowCandidate, String[] aSortedBowUser)

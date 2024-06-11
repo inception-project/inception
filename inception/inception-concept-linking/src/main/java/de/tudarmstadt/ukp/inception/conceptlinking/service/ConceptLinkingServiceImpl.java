@@ -304,8 +304,8 @@ public class ConceptLinkingServiceImpl
         }
 
         var duration = currentTimeMillis() - startTime;
-        LOG.debug("Found [{}] candidates using matching {} in {}ms", result.size(),
-                asList(longLabels), duration);
+        LOG.debug("Found [{}] candidates containing {} in {}ms", result.size(), asList(longLabels),
+                duration);
         WicketUtil.serverTiming("findContainingMatches", duration);
 
         return result;

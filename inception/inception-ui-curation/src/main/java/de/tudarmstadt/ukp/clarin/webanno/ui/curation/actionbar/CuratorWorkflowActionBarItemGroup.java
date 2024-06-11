@@ -133,21 +133,21 @@ public class CuratorWorkflowActionBarItemGroup
     protected void actionToggleCurationState(AjaxRequestTarget aTarget)
         throws IOException, AnnotationException
     {
-        try {
-            page.actionValidateDocument(aTarget, page.getEditorCas());
-        }
-        catch (ValidationException e) {
-            page.error("Document cannot be marked as finished: " + e.getMessage());
-            aTarget.addChildren(page, IFeedback.class);
-            return;
-        }
-
-        AnnotatorState state = page.getModelObject();
-        SourceDocument sourceDocument = state.getDocument();
+        var state = page.getModelObject();
+        var sourceDocument = state.getDocument();
         var docState = sourceDocument.getState();
 
         switch (docState) {
         case CURATION_IN_PROGRESS:
+            try {
+                page.actionValidateDocument(aTarget, page.getEditorCas());
+            }
+            catch (ValidationException e) {
+                page.error("Document cannot be marked as finished: " + e.getMessage());
+                aTarget.addChildren(page, IFeedback.class);
+                return;
+            }
+
             documentService.setSourceDocumentState(sourceDocument, CURATION_FINISHED);
             aTarget.add(page);
             break;
