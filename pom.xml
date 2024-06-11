@@ -86,10 +86,10 @@
 
     <pdfbox.version>2.0.30</pdfbox.version>
 
-    <spring.version>6.1.5</spring.version>
-    <spring.boot.version>3.2.3</spring.boot.version>
+    <spring.version>6.1.8</spring.version>
+    <spring.boot.version>3.3.0</spring.boot.version>
     <spring.data.version>3.2.4</spring.data.version>
-    <spring.security.version>6.2.2</spring.security.version>
+    <spring.security.version>6.3.0</spring.security.version>
     <springdoc.version>1.8.0</springdoc.version>
     <swagger.version>2.2.22</swagger.version>
     <jjwt.version>0.12.5</jjwt.version>
@@ -99,20 +99,20 @@
     <jboss.logging.version>3.5.3.Final</jboss.logging.version>
     <sentry.version>6.34.0</sentry.version>
 
-    <tomcat.version>10.1.19</tomcat.version>
+    <tomcat.version>10.1.24</tomcat.version>
     <servlet-api.version>6.0.0</servlet-api.version>
 
     <mariadb.driver.version>2.7.12</mariadb.driver.version>
     <postgres.driver.version>42.7.3</postgres.driver.version>
-    <hibernate.version>6.4.4.Final</hibernate.version>
+    <hibernate.version>6.5.2.Final</hibernate.version>
     <hibernate.validator.version>8.0.1.Final</hibernate.validator.version>
 
     <wicket.version>10.1.0</wicket.version>
     <wicketstuff.version>10.1.0</wicketstuff.version>
-    <wicket-bootstrap.version>7.0.3</wicket-bootstrap.version>
-    <wicket-jquery-selectors.version>4.0.4</wicket-jquery-selectors.version>
-    <wicket-webjars.version>4.0.3</wicket-webjars.version>
-    <wicket-spring-boot.version>4.0.0-M1</wicket-spring-boot.version>
+    <wicket-bootstrap.version>7.0.5</wicket-bootstrap.version>
+    <wicket-jquery-selectors.version>4.0.5</wicket-jquery-selectors.version>
+    <wicket-webjars.version>4.0.4</wicket-webjars.version>
+    <wicket-spring-boot.version>4.0.0</wicket-spring-boot.version>
 
     <!--
       - These are all interconnected - because they share the dependency on Lucene.
