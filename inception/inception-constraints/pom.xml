@@ -95,8 +95,8 @@
 
     <!-- Hibernate dependencies -->
     <dependency>
-      <groupId>javax.persistence</groupId>
-      <artifactId>javax.persistence-api</artifactId>
+      <groupId>jakarta.persistence</groupId>
+      <artifactId>jakarta.persistence-api</artifactId>
     </dependency>
     
     <!-- DEPENDENCIES FOR TESTING -->

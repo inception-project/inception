@@ -17,8 +17,6 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.project;
 
-import javax.persistence.NoResultException;
-
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,6 +28,7 @@ import de.tudarmstadt.ukp.clarin.webanno.project.config.ProjectServiceAutoConfig
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
+import jakarta.persistence.NoResultException;
 
 /**
  * <p>

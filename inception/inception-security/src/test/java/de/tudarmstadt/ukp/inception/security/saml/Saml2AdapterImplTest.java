@@ -72,6 +72,17 @@ class Saml2AdapterImplTest
     @Autowired
     Saml2Adapter sut;
 
+    static {
+        try {
+            var c = Saml2AdapterImplTest.class.getClassLoader()
+                    .loadClass("jakarta.xml.bind.JAXBException");
+        }
+        catch (ClassNotFoundException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+    }
+
     @BeforeEach
     void setup()
     {

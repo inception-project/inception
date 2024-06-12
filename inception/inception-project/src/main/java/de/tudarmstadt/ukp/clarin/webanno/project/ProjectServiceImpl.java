@@ -17,8 +17,6 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.project;
 
-import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
-import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Project.MAX_PROJECT_SLUG_LENGTH;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Project.MIN_PROJECT_SLUG_LENGTH;
@@ -64,9 +62,6 @@ import java.util.Random;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.persistence.EntityManager;
-import javax.persistence.NoResultException;
-
 import org.apache.commons.collections4.SetUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
@@ -87,8 +82,10 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
+import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission_;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectState;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectUserPermissions;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project_;
 import de.tudarmstadt.ukp.clarin.webanno.project.config.ProjectServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.security.Realm;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -104,6 +101,8 @@ import de.tudarmstadt.ukp.inception.project.api.event.ProjectPermissionsChangedE
 import de.tudarmstadt.ukp.inception.project.api.event.ProjectStateChangedEvent;
 import de.tudarmstadt.ukp.inception.support.io.FastIOUtils;
 import de.tudarmstadt.ukp.inception.support.logging.BaseLoggers;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.NoResultException;
 
 /**
  * <p>
@@ -232,13 +231,6 @@ public class ProjectServiceImpl
             PermissionLevel aLevel)
     {
         return hasRole(aUser, aProject, aLevel);
-    }
-
-    @Override
-    public File getProjectFolder(Project aProject)
-    {
-        return new File(repositoryProperties.getPath().getAbsolutePath() + "/" + PROJECT_FOLDER
-                + "/" + aProject.getId());
     }
 
     @Override
@@ -803,30 +795,6 @@ public class ProjectServiceImpl
         return false;
     }
 
-    @Deprecated
-    @Transactional
-    @Override
-    public boolean isManager(Project aProject, User aUser)
-    {
-        return hasRole(aUser, aProject, MANAGER);
-    }
-
-    @Deprecated
-    @Transactional
-    @Override
-    public boolean isCurator(Project aProject, User aUser)
-    {
-        return hasRole(aUser, aProject, CURATOR);
-    }
-
-    @Deprecated
-    @Transactional
-    @Override
-    public boolean isAnnotator(Project aProject, User aUser)
-    {
-        return hasRole(aUser, aProject, ANNOTATOR);
-    }
-
     @EventListener
     @Transactional
     public void onContextRefreshedEvent(ContextRefreshedEvent aEvent)
@@ -991,31 +959,6 @@ public class ProjectServiceImpl
 
     @Override
     @Transactional
-    @Deprecated
-    public List<Project> listProjectsForAgreement()
-    {
-        String query = String.join("\n", //
-                "SELECT DISTINCT p FROM Project p, ProjectPermission pp ", //
-                "WHERE pp.project = p.id ", //
-                "AND pp.level = :annotator ", //
-                "GROUP BY p.id HAVING count(*) > 1 ", //
-                "ORDER BY p.name ASC");
-        List<Project> projects = entityManager.createQuery(query, Project.class)
-                .setParameter("annotator", ANNOTATOR) //
-                .getResultList();
-        return projects;
-    }
-
-    @Override
-    @Transactional
-    @Deprecated
-    public List<Project> listManageableCuratableProjects(User aUser)
-    {
-        return listProjectsWithUserHavingRole(aUser, CURATOR, MANAGER);
-    }
-
-    @Override
-    @Transactional
     public List<Project> listProjectsWithUserHavingRole(User aUser, PermissionLevel aRole,
             PermissionLevel... aMoreRoles)
     {
@@ -1028,17 +971,28 @@ public class ProjectServiceImpl
             roles.addAll(asList(aMoreRoles));
         }
 
-        String query = String.join("\n", //
-                "SELECT DISTINCT p FROM Project p, ProjectPermission pp ", //
-                "WHERE pp.project = p.id ", //
-                "AND pp.user = :username ", //
-                "AND pp.level IN (:roles) ", //
-                "ORDER BY p.name ASC");
-        List<Project> projects = entityManager.createQuery(query, Project.class)
-                .setParameter("username", aUser.getUsername()) //
-                .setParameter("roles", roles) //
-                .getResultList();
-        return projects;
+        var cb = entityManager.getCriteriaBuilder();
+        var cq = cb.createQuery(Project.class);
+        var permission = cq.from(ProjectPermission.class);
+        var project = permission.join(ProjectPermission_.project);
+        cq.select(project).distinct(true);
+        cq.where(cb.and( //
+                cb.equal(permission.get(ProjectPermission_.user), aUser.getUsername()), //
+                permission.get(ProjectPermission_.level).in(roles)));
+        cq.orderBy(cb.asc(project.get(Project_.name)));
+        return entityManager.createQuery(cq).getResultList();
+
+        // String query = String.join("\n", //
+        // "SELECT DISTINCT p FROM Project p, ProjectPermission pp ", //
+        // "WHERE pp.project = p.id ", //
+        // "AND pp.user = :username ", //
+        // "AND pp.level IN (:roles) ", //
+        // "ORDER BY p.name ASC");
+        // List<Project> projects = entityManager.createQuery(query, Project.class)
+        // .setParameter("username", aUser.getUsername()) //
+        // .setParameter("roles", roles) //
+        // .getResultList();
+        // return projects;
     }
 
     @Override

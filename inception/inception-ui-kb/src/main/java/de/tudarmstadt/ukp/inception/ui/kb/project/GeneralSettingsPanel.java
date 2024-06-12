@@ -31,8 +31,7 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.validation.IValidatable;
 import org.apache.wicket.validation.IValidator;
 import org.apache.wicket.validation.ValidationError;
-
-import com.googlecode.wicket.kendo.ui.form.combobox.ComboBox;
+import org.wicketstuff.kendo.ui.form.combobox.ComboBox;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.kb.IriConstants;

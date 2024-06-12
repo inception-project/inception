@@ -98,16 +98,6 @@ public class Saml2AdapterImpl
                 aToken.getToken().getRelyingPartyRegistration().getRegistrationId());
     }
 
-    @Override
-    public Saml2Authentication process(org.springframework.security.saml2.provider.service. //
-            authentication.OpenSamlAuthenticationProvider.ResponseToken aToken,
-            Saml2Authentication aAuthentication)
-    {
-
-        return process(aAuthentication,
-                aToken.getToken().getRelyingPartyRegistration().getRegistrationId());
-    }
-
     public Saml2Authentication process(Saml2Authentication aAuthentication, String aRegistrationId)
     {
         User u = loadSamlUser(aAuthentication.getName(), aRegistrationId);

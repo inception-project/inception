@@ -25,21 +25,21 @@ import static org.apache.commons.lang3.StringUtils.isEmpty;
 import java.io.Serializable;
 import java.util.Date;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Lob;
-import javax.persistence.PrePersist;
-import javax.persistence.PreUpdate;
-import javax.persistence.Table;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
-import javax.persistence.UniqueConstraint;
-
 import org.apache.commons.lang3.Validate;
 import org.hibernate.annotations.Type;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Lob;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
+import jakarta.persistence.Table;
+import jakarta.persistence.Temporal;
+import jakarta.persistence.TemporalType;
+import jakarta.persistence.UniqueConstraint;
 
 /**
  * A persistence object for a Project.
@@ -66,7 +66,7 @@ public class Project
     private String slug;
 
     @Lob
-    @Column(length = 64000)
+    @Column(length = 16_777_216)
     private String description;
 
     /**
@@ -82,7 +82,7 @@ public class Project
     // Disable users from exporting annotation documents
     private boolean disableExport = false;
 
-    @Type(type = "de.tudarmstadt.ukp.clarin.webanno.model.ScriptDirectionType")
+    @Type(ScriptDirectionType.class)
     private ScriptDirection scriptDirection;
 
     @Temporal(TemporalType.TIMESTAMP)
@@ -94,7 +94,7 @@ public class Project
     private Date updated;
 
     @Column(nullable = true)
-    @Type(type = "de.tudarmstadt.ukp.clarin.webanno.model.ProjectStateType")
+    @Type(ProjectStateType.class)
     private ProjectState state;
 
     @Column(nullable = false)

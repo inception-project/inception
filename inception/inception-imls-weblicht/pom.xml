@@ -27,10 +27,6 @@
   <name>INCEpTION - ML - WebLicht</name>
   <dependencies>
     <dependency>
-      <groupId>javax.persistence</groupId>
-      <artifactId>javax.persistence-api</artifactId>
-    </dependency>
-    <dependency>
       <groupId>eu.clarin.weblicht</groupId>
       <artifactId>wlfxb</artifactId>
     </dependency>
@@ -152,8 +148,8 @@
       <artifactId>wicket-spring</artifactId>
     </dependency>
     <dependency>
-      <groupId>com.googlecode.wicket-jquery-ui</groupId>
-      <artifactId>wicket-kendo-ui</artifactId>
+      <groupId>org.wicketstuff</groupId>
+      <artifactId>wicketstuff-kendo-ui</artifactId>
     </dependency>
     <dependency>
       <groupId>de.agilecoders.wicket</groupId>
@@ -170,8 +166,12 @@
     </dependency>
     
     <dependency>
-      <groupId>org.hibernate</groupId>
+      <groupId>org.hibernate.orm</groupId>
       <artifactId>hibernate-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>jakarta.persistence</groupId>
+      <artifactId>jakarta.persistence-api</artifactId>
     </dependency>
     
     <dependency>

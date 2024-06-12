@@ -28,8 +28,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-import javax.persistence.NoResultException;
-
 import de.tudarmstadt.ukp.clarin.webanno.brat.config.BratAnnotationEditorAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.brat.schema.model.EntityType;
 import de.tudarmstadt.ukp.clarin.webanno.brat.schema.model.RelationType;
@@ -43,6 +41,7 @@ import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainLayerSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import jakarta.persistence.NoResultException;
 
 /**
  * <p>

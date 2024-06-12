@@ -69,7 +69,7 @@
   <properties>
     <build-ant-version>1.10.14</build-ant-version>
     <build-groovy-version>4.0.21</build-groovy-version>
-  
+
     <junit-jupiter.version>5.10.2</junit-jupiter.version>
     <junit-platform.version>1.10.2</junit-platform.version>
     <mockito.version>5.12.0</mockito.version>
@@ -86,10 +86,10 @@
 
     <pdfbox.version>2.0.30</pdfbox.version>
 
-    <spring.version>5.3.36</spring.version>
-    <spring.boot.version>2.7.18</spring.boot.version>
-    <spring.data.version>2.7.18</spring.data.version>
-    <spring.security.version>5.8.12</spring.security.version>
+    <spring.version>6.1.8</spring.version>
+    <spring.boot.version>3.3.0</spring.boot.version>
+    <spring.data.version>3.2.4</spring.data.version>
+    <spring.security.version>6.3.0</spring.security.version>
     <springdoc.version>1.8.0</springdoc.version>
     <swagger.version>2.2.22</swagger.version>
     <jjwt.version>0.12.5</jjwt.version>
@@ -99,22 +99,20 @@
     <jboss.logging.version>3.5.3.Final</jboss.logging.version>
     <sentry.version>6.34.0</sentry.version>
 
-    <tomcat.version>9.0.89</tomcat.version>
-    <servlet-api.version>4.0.1</servlet-api.version>
+    <tomcat.version>10.1.24</tomcat.version>
+    <servlet-api.version>6.0.0</servlet-api.version>
 
     <mariadb.driver.version>2.7.12</mariadb.driver.version>
     <postgres.driver.version>42.7.3</postgres.driver.version>
-    <hibernate.version>5.6.15.Final</hibernate.version>
-    <hibernate.validator.version>6.2.5.Final</hibernate.validator.version>
+    <hibernate.version>6.5.2.Final</hibernate.version>
+    <hibernate.validator.version>8.0.1.Final</hibernate.validator.version>
 
-    <wicket.version>9.18.0</wicket.version>
-    <wicketstuff.version>9.18.0</wicketstuff.version>
-    <wicket-jquery-ui.version>9.18.0</wicket-jquery-ui.version>
-    <wicket-bootstrap.version>6.0.5</wicket-bootstrap.version>
-    <wicket-jquery-selectors.version>3.0.6</wicket-jquery-selectors.version>
-    <wicket-webjars.version>3.0.7</wicket-webjars.version>
-    <!-- Stuck with 3.1.6: https://github.com/MarcGiffing/wicket-spring-boot/issues/199 -->
-    <wicket-spring-boot.version>3.1.6</wicket-spring-boot.version>
+    <wicket.version>10.1.0</wicket.version>
+    <wicketstuff.version>10.1.0</wicketstuff.version>
+    <wicket-bootstrap.version>7.0.5</wicket-bootstrap.version>
+    <wicket-jquery-selectors.version>4.0.5</wicket-jquery-selectors.version>
+    <wicket-webjars.version>4.0.4</wicket-webjars.version>
+    <wicket-spring-boot.version>4.0.0</wicket-spring-boot.version>
 
     <!--
       - These are all interconnected - because they share the dependency on Lucene.
@@ -152,7 +150,7 @@
     <json.version>20230227</json.version>
     <pf4j.version>2.6.0</pf4j.version>
     <jackson.version>2.17.1</jackson.version>
-    <snakeyaml.version>1.33</snakeyaml.version>
+    <snakeyaml.version>2.2</snakeyaml.version>
     <okhttp.version>4.12.0</okhttp.version>
     <okio.version>3.9.0</okio.version>
 

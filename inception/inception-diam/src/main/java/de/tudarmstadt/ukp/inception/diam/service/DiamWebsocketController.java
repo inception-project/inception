@@ -31,9 +31,6 @@ import java.io.IOException;
 import java.security.Principal;
 import java.time.Duration;
 
-import javax.persistence.NoResultException;
-import javax.servlet.ServletContext;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -78,6 +75,8 @@ import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.serialization.VDocumentSerializerExtensionPoint;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
+import jakarta.persistence.NoResultException;
+import jakarta.servlet.ServletContext;
 
 /**
  * Differential INCEpTION Annotation Messaging (DIAM) protocol controller.

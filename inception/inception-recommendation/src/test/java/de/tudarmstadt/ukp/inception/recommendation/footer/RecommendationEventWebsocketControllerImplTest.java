@@ -30,8 +30,6 @@ import static org.springframework.security.config.http.SessionCreationPolicy.STA
 import java.io.File;
 import java.util.Map;
 
-import javax.persistence.EntityManager;
-
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -87,6 +85,7 @@ import de.tudarmstadt.ukp.inception.support.test.websocket.WebSocketSessionTestH
 import de.tudarmstadt.ukp.inception.websocket.config.WebsocketAutoConfiguration;
 import de.tudarmstadt.ukp.inception.websocket.config.WebsocketConfig;
 import de.tudarmstadt.ukp.inception.websocket.config.WebsocketSecurityConfig;
+import jakarta.persistence.EntityManager;
 
 @SpringBootTest( //
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, //
@@ -189,12 +188,12 @@ class RecommendationEventWebsocketControllerImplTest
                 }) //
                 .build();
 
-        var session = stompClient.connect(websocketUrl, sessionHandler).get(10, SECONDS);
+        var session = stompClient.connectAsync(websocketUrl, sessionHandler).get(10, SECONDS);
 
         Awaitility.await().atMost(20, SECONDS).until(sessionHandler::messagesProcessed);
 
         sessionHandler
-                .assertError(msg -> assertThat(msg).containsIgnoringCase("AccessDeniedException"));
+                .assertError(msg -> assertThat(msg).containsIgnoringCase("Failed to send message"));
 
         try {
             session.disconnect();
@@ -218,12 +217,12 @@ class RecommendationEventWebsocketControllerImplTest
                 }) //
                 .build();
 
-        var session = stompClient.connect(websocketUrl, sessionHandler).get(10, SECONDS);
+        var session = stompClient.connectAsync(websocketUrl, sessionHandler).get(10, SECONDS);
 
         Awaitility.await().atMost(20, SECONDS).until(sessionHandler::messagesProcessed);
 
         sessionHandler
-                .assertError(msg -> assertThat(msg).containsIgnoringCase("AccessDeniedException"));
+                .assertError(msg -> assertThat(msg).containsIgnoringCase("Failed to send message"));
 
         try {
             session.disconnect();
@@ -249,7 +248,7 @@ class RecommendationEventWebsocketControllerImplTest
                 }) //
                 .build();
 
-        var session = stompClient.connect(websocketUrl, sessionHandler).get(10, SECONDS);
+        var session = stompClient.connectAsync(websocketUrl, sessionHandler).get(10, SECONDS);
         Awaitility.await().atMost(20, SECONDS).until(sessionHandler::messagesProcessed);
 
         sessionHandler.assertSuccess();
@@ -305,7 +304,7 @@ class RecommendationEventWebsocketControllerImplTest
         @Bean
         public SecurityFilterChain wsFilterChain(HttpSecurity aHttp) throws Exception
         {
-            aHttp.antMatcher(WebsocketConfig.WS_ENDPOINT);
+            aHttp.securityMatcher(WebsocketConfig.WS_ENDPOINT);
             aHttp.authorizeHttpRequests() //
                     .requestMatchers("/**").authenticated() //
                     .anyRequest().denyAll();

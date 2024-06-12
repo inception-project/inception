@@ -23,8 +23,6 @@ import static java.util.stream.Collectors.joining;
 
 import java.util.stream.Stream;
 
-import javax.persistence.NoResultException;
-
 import org.apache.wicket.Page;
 import org.apache.wicket.RestartResponseException;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -43,6 +41,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.ui.core.AccessDeniedPage;
 import de.tudarmstadt.ukp.inception.ui.core.config.DashboardProperties;
+import jakarta.persistence.NoResultException;
 
 public abstract class ProjectPageBase
     extends ApplicationPageBase

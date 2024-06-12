@@ -30,8 +30,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
-import javax.persistence.NoResultException;
-
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
@@ -73,6 +71,7 @@ import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
 import de.tudarmstadt.ukp.inception.support.wicket.DecoratedObject;
+import jakarta.persistence.NoResultException;
 
 public abstract class AnnotationPageBase
     extends ProjectPageBase

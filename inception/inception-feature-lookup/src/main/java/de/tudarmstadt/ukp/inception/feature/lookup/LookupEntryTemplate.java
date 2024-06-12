@@ -20,7 +20,7 @@ package de.tudarmstadt.ukp.inception.feature.lookup;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.googlecode.wicket.jquery.core.template.IJQueryTemplate;
+import org.wicketstuff.jquery.core.template.IJQueryTemplate;
 
 final class LookupEntryTemplate
     implements IJQueryTemplate

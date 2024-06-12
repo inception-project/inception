@@ -63,10 +63,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wicketstuff.annotation.mount.MountPath;
 import org.wicketstuff.event.annotation.OnEvent;
-
-import com.googlecode.wicket.jquery.core.Options;
-import com.googlecode.wicket.kendo.ui.widget.splitter.SplitterAdapter;
-import com.googlecode.wicket.kendo.ui.widget.splitter.SplitterBehavior;
+import org.wicketstuff.jquery.core.Options;
+import org.wicketstuff.kendo.ui.widget.splitter.SplitterAdapter;
+import org.wicketstuff.kendo.ui.widget.splitter.SplitterBehavior;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBar;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;

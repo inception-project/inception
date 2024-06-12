@@ -27,10 +27,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import javax.persistence.EntityManager;
-import javax.persistence.NoResultException;
-import javax.persistence.PersistenceContext;
-
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,6 +40,9 @@ import de.tudarmstadt.ukp.inception.preferences.model.UserPreference;
 import de.tudarmstadt.ukp.inception.preferences.model.UserProjectPreference;
 import de.tudarmstadt.ukp.inception.preferences.model.UserProjectPreference_;
 import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.NoResultException;
+import jakarta.persistence.PersistenceContext;
 
 /**
  * <p>

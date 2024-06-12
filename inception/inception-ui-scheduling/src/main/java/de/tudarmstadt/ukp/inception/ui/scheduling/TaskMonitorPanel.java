@@ -25,8 +25,6 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import java.util.Map;
 
-import javax.servlet.ServletContext;
-
 import org.apache.wicket.authorization.Action;
 import org.apache.wicket.authroles.authorization.strategies.role.annotations.AuthorizeAction;
 import org.apache.wicket.markup.html.WebMarkupContainer;
@@ -37,6 +35,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.scheduling.controller.SchedulerController;
 import de.tudarmstadt.ukp.inception.scheduling.controller.SchedulerWebsocketController;
 import de.tudarmstadt.ukp.inception.support.svelte.SvelteBehavior;
+import jakarta.servlet.ServletContext;
 
 @AuthorizeAction(action = Action.RENDER, roles = "ROLE_USER")
 public class TaskMonitorPanel

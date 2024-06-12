@@ -23,11 +23,10 @@ import java.util.Locale;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.util.convert.ConversionException;
 import org.apache.wicket.util.convert.IConverter;
-
-import com.googlecode.wicket.jquery.core.JQueryBehavior;
-import com.googlecode.wicket.jquery.core.Options;
-import com.googlecode.wicket.jquery.core.template.IJQueryTemplate;
-import com.googlecode.wicket.kendo.ui.form.autocomplete.AutoCompleteTextField;
+import org.wicketstuff.jquery.core.JQueryBehavior;
+import org.wicketstuff.jquery.core.Options;
+import org.wicketstuff.jquery.core.template.IJQueryTemplate;
+import org.wicketstuff.kendo.ui.form.autocomplete.AutoCompleteTextField;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.ReorderableTag;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;

@@ -17,12 +17,12 @@
  */
 package de.tudarmstadt.ukp.inception.support.wicket;
 
-import javax.servlet.ServletContext;
-
 import org.apache.wicket.Application;
 import org.apache.wicket.request.handler.resource.ResourceReferenceRequestHandler;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.request.resource.ResourceReference;
+
+import jakarta.servlet.ServletContext;
 
 public class ServletContextUtils
 {

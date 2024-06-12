@@ -46,7 +46,7 @@ import de.tudarmstadt.ukp.inception.support.SettingsUtil;
 
 @ConditionalOnWebApplication
 @ConditionalOnProperty(prefix = "format.custom-xml", name = "enabled", havingValue = "true", matchIfMissing = false)
-@Configuration
+@Configuration(proxyBeanMethods = false)
 public class CustomXmlFormatLoader
     implements BeanDefinitionRegistryPostProcessor
 {

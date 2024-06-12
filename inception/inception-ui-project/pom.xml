@@ -188,12 +188,12 @@
       <artifactId>wicket-bootstrap-extensions</artifactId>
     </dependency>
     <dependency>
-      <groupId>com.googlecode.wicket-jquery-ui</groupId>
-      <artifactId>wicket-jquery-ui-core</artifactId>
+      <groupId>org.wicketstuff</groupId>
+      <artifactId>wicketstuff-jquery-ui-core</artifactId>
     </dependency>
     <dependency>
-      <groupId>com.googlecode.wicket-jquery-ui</groupId>
-      <artifactId>wicket-kendo-ui</artifactId>
+      <groupId>org.wicketstuff</groupId>
+      <artifactId>wicketstuff-kendo-ui</artifactId>
     </dependency>
     <dependency>
       <groupId>org.wicketstuff</groupId>
@@ -213,8 +213,8 @@
     </dependency>
 
     <dependency>
-      <groupId>javax.persistence</groupId>
-      <artifactId>javax.persistence-api</artifactId>
+      <groupId>jakarta.persistence</groupId>
+      <artifactId>jakarta.persistence-api</artifactId>
     </dependency>
   </dependencies>
 </project>
