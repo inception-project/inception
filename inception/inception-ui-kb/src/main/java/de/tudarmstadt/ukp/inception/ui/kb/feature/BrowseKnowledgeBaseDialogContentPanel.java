@@ -22,7 +22,6 @@ import static de.tudarmstadt.ukp.inception.kb.ConceptFeatureValueType.CONCEPT;
 import static de.tudarmstadt.ukp.inception.kb.ConceptFeatureValueType.INSTANCE;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 
-import java.util.Optional;
 import java.util.Set;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -34,13 +33,12 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.wicketstuff.event.annotation.OnEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
+import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits_ImplBase;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
 import de.tudarmstadt.ukp.inception.kb.graph.KBInstance;
 import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
-import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxConceptNavigateEvent;
@@ -60,18 +58,16 @@ public class BrowseKnowledgeBaseDialogContentPanel
     private final IModel<KBObject> concept;
     private final IModel<KBObject> instance;
 
-    public BrowseKnowledgeBaseDialogContentPanel(String aId, IModel<FeatureState> aModel)
+    public BrowseKnowledgeBaseDialogContentPanel(String aId, IModel<Project> aProject,
+            IModel<KBObject> aModel, IModel<ConceptFeatureTraits_ImplBase> aTraits)
     {
         super(aId, aModel);
 
-        var project = aModel.getObject().feature.getProject();
+        var project = aProject.getObject();
 
-        ConceptFeatureTraits conceptFeatureTraits = fsRegistry
-                .readTraits(aModel.getObject().feature, ConceptFeatureTraits::new);
+        knowledgeBase = Model.of(findKnowledgeBase(project, aTraits.getObject()));
 
-        knowledgeBase = Model.of(findKnowledgeBase(project, conceptFeatureTraits));
-
-        KBObject kbObject = (KBObject) aModel.getObject().value;
+        var kbObject = (KBObject) aModel.getObject();
         if (knowledgeBase.isPresent().getObject() && kbObject != null
                 && !(kbObject instanceof KBInstance || kbObject instanceof KBConcept)) {
             kbObject = kbService.readItem(knowledgeBase.getObject(), kbObject.getIdentifier())
@@ -91,16 +87,16 @@ public class BrowseKnowledgeBaseDialogContentPanel
 
         instanceListBrowser = new InstanceListBrowser("instances", concept, instance);
         instanceListBrowser.add(visibleWhen(() -> Set.of(ANY_OBJECT, INSTANCE)
-                .contains(conceptFeatureTraits.getAllowedValueType())));
+                .contains(aTraits.getObject().getAllowedValueType())));
         instanceListBrowser.setOutputMarkupPlaceholderTag(true);
 
         conceptTreeBrowser = new ConceptTreeBrowser("concepts", knowledgeBase, concept);
         conceptTreeBrowser.add(visibleWhen(() -> Set.of(ANY_OBJECT, CONCEPT, INSTANCE)
-                .contains(conceptFeatureTraits.getAllowedValueType())));
+                .contains(aTraits.getObject().getAllowedValueType())));
         conceptTreeBrowser.setConceptNavigationEnabled(
-                Set.of(ANY_OBJECT, INSTANCE).contains(conceptFeatureTraits.getAllowedValueType()));
+                Set.of(ANY_OBJECT, INSTANCE).contains(aTraits.getObject().getAllowedValueType()));
         conceptTreeBrowser.setConceptSelectionEnabled(
-                Set.of(ANY_OBJECT, CONCEPT).contains(conceptFeatureTraits.getAllowedValueType()));
+                Set.of(ANY_OBJECT, CONCEPT).contains(aTraits.getObject().getAllowedValueType()));
         conceptTreeBrowser.setOutputMarkupPlaceholderTag(true);
 
         queue(instanceListBrowser, conceptTreeBrowser);
@@ -116,10 +112,10 @@ public class BrowseKnowledgeBaseDialogContentPanel
     }
 
     private KnowledgeBase findKnowledgeBase(Project project,
-            ConceptFeatureTraits conceptFeatureTraits)
+            ConceptFeatureTraits_ImplBase conceptFeatureTraits)
     {
         if (conceptFeatureTraits.getRepositoryId() != null) {
-            Optional<KnowledgeBase> kb = kbService.getKnowledgeBaseById(project,
+            var kb = kbService.getKnowledgeBaseById(project,
                     conceptFeatureTraits.getRepositoryId());
             if (kb.isPresent() && kb.get().isEnabled() && kb.get().isSupportConceptLinking()) {
                 return kb.get();

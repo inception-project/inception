@@ -17,14 +17,20 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.feature;
 
+import static org.apache.wicket.event.Broadcast.BUBBLE;
+import static org.apache.wicket.extensions.ajax.markup.html.modal.ModalDialog.CONTENT_ID;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
 import org.apache.wicket.MarkupContainer;
+import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.form.FormComponent;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.wicketstuff.event.annotation.OnEvent;
 
 import com.googlecode.wicket.jquery.core.JQueryBehavior;
 import com.googlecode.wicket.jquery.core.template.IJQueryTemplate;
@@ -32,14 +38,23 @@ import com.googlecode.wicket.kendo.ui.form.multiselect.lazy.MultiSelect;
 import com.googlecode.wicket.kendo.ui.renderer.ChoiceRenderer;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.inception.bootstrap.BootstrapModalDialog;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
+import de.tudarmstadt.ukp.inception.kb.ConceptFeatureValueType;
+import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.MultiValueConceptFeatureTraits;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
+import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureEditorValueChangedEvent;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupport;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.inception.support.kendo.KendoStyleUtils;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior;
+import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxConceptSelectionEvent;
+import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxInstanceSelectionEvent;
 
 public class MultiValueConceptFeatureEditor
     extends ConceptFeatureEditor_ImplBase
@@ -49,11 +64,13 @@ public class MultiValueConceptFeatureEditor
     private static final String CID_VALUE = "value";
 
     private @SpringBean FeatureSupportRegistry featureSupportRegistry;
+    private @SpringBean KnowledgeBaseService knowledgeBaseService;
+
+    private FormComponent<Collection<KBHandle>> focusComponent;
+    private BootstrapModalDialog dialog;
 
     private final AnnotationActionHandler handler;
     private final IModel<AnnotatorState> stateModel;
-
-    private FormComponent<Collection<KBHandle>> focusComponent;
     private boolean featureUpdateBehaviorRequested = false;
     private boolean featureUpdateBehaviorAdded = false;
 
@@ -68,6 +85,13 @@ public class MultiValueConceptFeatureEditor
 
         focusComponent = createInput();
         add(focusComponent);
+
+        dialog = new BootstrapModalDialog("dialog");
+        dialog.trapFocus();
+        queue(dialog);
+
+        queue(new LambdaAjaxLink("openBrowseDialog", this::actionOpenBrowseDialog)
+                .add(LambdaBehavior.visibleWhen(this::isBrowsingAllowed)));
     }
 
     @SuppressWarnings("unchecked")
@@ -154,6 +178,56 @@ public class MultiValueConceptFeatureEditor
         FeatureSupport<?> fs = featureSupportRegistry.findExtension(aAnnotationFeature)
                 .orElseThrow();
         return (MultiValueConceptFeatureTraits) fs.readTraits(aAnnotationFeature);
+    }
+
+    private boolean isBrowsingAllowed()
+    {
+        var traits = featureSupportRegistry.readTraits(getModelObject().feature,
+                MultiValueConceptFeatureTraits::new);
+
+        // There is now KB selector in the browser yet, so we do not show it unless either the
+        // feature is bound to a specific KB or there is only a single KB in the project.
+        if (traits.getRepositoryId() == null && knowledgeBaseService
+                .getEnabledKnowledgeBases(getModelObject().feature.getProject()).size() > 1) {
+            return false;
+        }
+
+        // Properties are not supported in the browser
+        if (traits.getAllowedValueType() == ConceptFeatureValueType.PROPERTY) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private void actionOpenBrowseDialog(AjaxRequestTarget aTarget)
+    {
+        var traits = featureSupportRegistry.readTraits(getModelObject().feature,
+                MultiValueConceptFeatureTraits::new);
+
+        var content = new BrowseKnowledgeBaseDialogContentPanel(CONTENT_ID,
+                getModel().map(fs -> fs.getFeature().getProject()), Model.of(), Model.of(traits));
+        dialog.open(content, aTarget);
+    }
+
+    @OnEvent
+    public void onConceptSelectionEvent(AjaxConceptSelectionEvent aEvent)
+    {
+        selectItem(aEvent.getTarget(), aEvent.getSelection());
+    }
+
+    @OnEvent
+    public void onInstanceSelectionEvent(AjaxInstanceSelectionEvent aEvent)
+    {
+        selectItem(aEvent.getTarget(), aEvent.getSelection());
+    }
+
+    private void selectItem(AjaxRequestTarget aTarget, KBObject aKBObject)
+    {
+        ((Collection<KBObject>) getModelObject().value).add(aKBObject);
+        dialog.close(aTarget);
+        aTarget.add(this);
+        send(focusComponent, BUBBLE, new FeatureEditorValueChangedEvent(this, aTarget));
     }
 
     private final class KBHandleMultiSelect

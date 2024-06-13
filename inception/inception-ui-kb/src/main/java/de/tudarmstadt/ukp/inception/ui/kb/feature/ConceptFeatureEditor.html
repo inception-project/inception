@@ -26,6 +26,9 @@
         <i class="fas fa-external-link-alt"/>
       </a>
       <span class="float-end">
+        <a wicket:id="openBrowseDialog" class="float-end">
+          <i class="fas fa-sitemap"/>
+        </a>
         <span wicket:id="deprecationMarker" class="badge rounded-pill text-secondary border border-secondary">deprecated</span>
         <span wicket:id="disabledKBWarning"/>
       </span>
@@ -37,10 +40,7 @@
             <div class="input-group-text border-0">
               <span wicket:id="iriInfoBadge"/>
             </div>
-            <button wicket:id="openBrowseDialog" class="btn btn-outline-secondary border-secondary-subtle border-top-0 border-bottom-0" type="button">
-              <i class="fas fa-sitemap"/>
-            </button>
-            <input class="flex-content border-0" wicket:id="value" type="text"/>
+            <input class="flex-content border-bottom-0 border-end-0 border-top-0 " wicket:id="value" type="text"/>
           </div>
         </ul>
         <ul wicket:id="descriptionContainer" class="list-group-item p-0 m-0 overflow-hidden" readonly>
