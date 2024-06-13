@@ -18,14 +18,18 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
   xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
 <wicket:panel>
+  <div wicket:id="dialog"/>
   <div class="row form-row" wicket:enclosure="value">
     <label wicket:for="value" wicket:enclosure="feature" class="feature-editor-label col-form-label">
       <span wicket:id="feature"/>
       <span class="float-end">
+        <a wicket:id="openBrowseDialog" class="float-end">
+          <i class="fas fa-sitemap"/>
+        </a>
         <span wicket:id="disabledKBWarning"/>
       </span>
     </label>
-    <div class="feature-editor-value">
+    <div class="feature-editor-value d-flex flex-row">
       <select wicket:id="value" type="text"/>
     </div>
   </div>
