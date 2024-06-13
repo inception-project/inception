@@ -39,6 +39,7 @@ import org.apache.wicket.markup.html.form.FormComponent;
 import org.apache.wicket.markup.html.link.ExternalLink;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
+import org.apache.wicket.model.Model;
 import org.apache.wicket.request.IRequestParameters;
 import org.apache.wicket.request.http.WebRequest;
 import org.apache.wicket.spring.injection.annot.SpringBean;
@@ -96,10 +97,10 @@ public class ConceptFeatureEditor
     {
         super(aId, aItem, aModel);
 
-        AnnotationFeature feat = getModelObject().feature;
-        ConceptFeatureTraits traits = readFeatureTraits(feat);
+        var feat = getModelObject().feature;
+        var traits = readFeatureTraits(feat);
 
-        IModel<String> iriModel = LoadableDetachableModel.of(this::iriTooltipValue);
+        var iriModel = LoadableDetachableModel.of(this::iriTooltipValue);
 
         iriBadge = new IriInfoBadge("iriInfoBadge", iriModel);
         iriBadge.setOutputMarkupPlaceholderTag(true);
@@ -163,7 +164,12 @@ public class ConceptFeatureEditor
 
     private void actionOpenBrowseDialog(AjaxRequestTarget aTarget)
     {
-        var content = new BrowseKnowledgeBaseDialogContentPanel(CONTENT_ID, getModel());
+        var traits = featureSupportRegistry.readTraits(getModelObject().feature,
+                ConceptFeatureTraits::new);
+
+        var content = new BrowseKnowledgeBaseDialogContentPanel(CONTENT_ID,
+                getModel().map(fs -> fs.getFeature().getProject()),
+                getModel().map(fs -> (KBObject) fs.value), Model.of(traits));
         dialog.open(content, aTarget);
     }
 
@@ -218,8 +224,7 @@ public class ConceptFeatureEditor
     {
         getModelObject().value = aKBObject;
         dialog.close(aTarget);
-        send(focusComponent, BUBBLE,
-                new FeatureEditorValueChangedEvent(ConceptFeatureEditor.this, aTarget));
+        send(focusComponent, BUBBLE, new FeatureEditorValueChangedEvent(this, aTarget));
     }
 
     @Override
