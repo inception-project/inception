@@ -17,20 +17,21 @@
  */
 package de.tudarmstadt.ukp.inception.conceptlinking.feature;
 
-import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_LEVENSHTEIN_MENTION;
-import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_LEVENSHTEIN_MENTION_CONTEXT;
-import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_LEVENSHTEIN_MENTION_NC;
-import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_LEVENSHTEIN_QUERY;
-import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_LEVENSHTEIN_QUERY_NC;
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_MENTION;
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_MENTION_CONTEXT;
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_MENTION_NC;
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_QUERY;
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_QUERY_BEST_MATCH_TERM_NC;
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_QUERY_NC;
+import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.SCORE_LEVENSHTEIN_MENTION;
+import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.SCORE_LEVENSHTEIN_MENTION_CONTEXT;
+import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.SCORE_LEVENSHTEIN_MENTION_NC;
+import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.SCORE_LEVENSHTEIN_QUERY;
+import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.SCORE_LEVENSHTEIN_QUERY_NC;
 import static org.apache.commons.lang3.StringUtils.join;
 
 import org.apache.commons.text.similarity.LevenshteinDistance;
+import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.inception.conceptlinking.config.EntityLinkingServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity;
@@ -41,6 +42,7 @@ import de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity;
  * {@link EntityLinkingServiceAutoConfiguration#levenshteinFeatureGenerator()}.
  * </p>
  */
+@Order(100)
 public class LevenshteinFeatureGenerator
     implements EntityRankingFeatureGenerator
 {
@@ -60,26 +62,26 @@ public class LevenshteinFeatureGenerator
 
         aCandidate.get(KEY_MENTION_NC) //
                 .map(mention -> MEASURE.apply(termNC, mention)) //
-                .ifPresent(score -> aCandidate.mergeMin(KEY_LEVENSHTEIN_MENTION_NC, score));
+                .ifPresent(score -> aCandidate.mergeMin(SCORE_LEVENSHTEIN_MENTION_NC, score));
 
         aCandidate.get(KEY_QUERY_NC) //
                 .map(query -> MEASURE.apply(termNC, query)) //
                 .ifPresent(score -> {
-                    if (aCandidate.mergeMin(KEY_LEVENSHTEIN_QUERY_NC, score)) {
+                    if (aCandidate.mergeMin(SCORE_LEVENSHTEIN_QUERY_NC, score)) {
                         aCandidate.put(KEY_QUERY_BEST_MATCH_TERM_NC, aTerm);
                     }
                 });
 
         aCandidate.get(KEY_MENTION) //
                 .map(mention -> MEASURE.apply(aTerm, mention)) //
-                .ifPresent(score -> aCandidate.mergeMin(KEY_LEVENSHTEIN_MENTION, score));
+                .ifPresent(score -> aCandidate.mergeMin(SCORE_LEVENSHTEIN_MENTION, score));
 
         aCandidate.get(KEY_QUERY) //
                 .map(query -> MEASURE.apply(aTerm, query)) //
-                .ifPresent(score -> aCandidate.mergeMin(KEY_LEVENSHTEIN_QUERY, score));
+                .ifPresent(score -> aCandidate.mergeMin(SCORE_LEVENSHTEIN_QUERY, score));
 
         aCandidate.get(KEY_MENTION_CONTEXT) //
                 .map(context -> MEASURE.apply(aTerm, join(context, ' '))) //
-                .ifPresent(score -> aCandidate.mergeMin(KEY_LEVENSHTEIN_MENTION_CONTEXT, score));
+                .ifPresent(score -> aCandidate.mergeMin(SCORE_LEVENSHTEIN_MENTION_CONTEXT, score));
     }
 }

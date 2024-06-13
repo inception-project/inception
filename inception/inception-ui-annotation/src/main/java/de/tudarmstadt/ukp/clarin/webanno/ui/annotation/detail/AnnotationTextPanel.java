@@ -23,8 +23,6 @@ import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visible
 
 import java.io.IOException;
 
-import javax.persistence.NoResultException;
-
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.panel.Panel;
@@ -40,6 +38,7 @@ import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
+import jakarta.persistence.NoResultException;
 
 public class AnnotationTextPanel
     extends Panel

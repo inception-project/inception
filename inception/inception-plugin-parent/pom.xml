@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>33.0-SNAPSHOT</version>
+    <version>34.0-SNAPSHOT</version>
   </parent>
   <artifactId>inception-plugin-parent</artifactId>
   <name>INCEpTION - Plugin Parent POM</name>
@@ -45,7 +45,7 @@
       <scope>provided</scope>
     </dependency>
     
-    <!-- The logging subsystem used by WebAnno -->
+    <!-- The logging subsystem used by INCEpTION -->
     <dependency>
       <!-- Use Log4J http as logging backend -->
       <groupId>org.apache.logging.log4j</groupId>
@@ -62,12 +62,6 @@
       <!-- Route Log4J v1 over SLF4J -->
       <groupId>org.slf4j</groupId>
       <artifactId>log4j-over-slf4j</artifactId>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <!-- Route Java Commons Logging over SLF4J -->
-      <groupId>org.slf4j</groupId>
-      <artifactId>jcl-over-slf4j</artifactId>
       <scope>provided</scope>
     </dependency>
     <dependency>

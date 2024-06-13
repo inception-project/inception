@@ -22,20 +22,6 @@ import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.getUimaTypeName
 
 import java.io.Serializable;
 
-import javax.persistence.Cacheable;
-import javax.persistence.Column;
-import javax.persistence.ConstraintMode;
-import javax.persistence.Entity;
-import javax.persistence.ForeignKey;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.Lob;
-import javax.persistence.ManyToOne;
-import javax.persistence.Table;
-import javax.persistence.UniqueConstraint;
-
 import org.apache.uima.cas.Feature;
 import org.apache.uima.jcas.cas.CommonPrimitiveArray;
 import org.apache.uima.jcas.cas.TOP;
@@ -44,6 +30,20 @@ import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.annotations.Type;
+
+import jakarta.persistence.Cacheable;
+import jakarta.persistence.Column;
+import jakarta.persistence.ConstraintMode;
+import jakarta.persistence.Entity;
+import jakarta.persistence.ForeignKey;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.Lob;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 
 /**
  * A persistence object for an annotation feature. One or more features can be defined per
@@ -90,7 +90,7 @@ public class AnnotationFeature
     private String uiName;
 
     @Lob
-    @Column(length = 64000)
+    @Column(length = 16_777_216)
     private String description;
 
     private boolean enabled = true;
@@ -111,11 +111,11 @@ public class AnnotationFeature
     private boolean required;
 
     @Column(name = "multi_value_mode")
-    @Type(type = "de.tudarmstadt.ukp.clarin.webanno.model.MultiValueModeType")
+    @Type(MultiValueModeType.class)
     private MultiValueMode multiValueMode = MultiValueMode.NONE;
 
     @Column(name = "link_mode")
-    @Type(type = "de.tudarmstadt.ukp.clarin.webanno.model.LinkModeType")
+    @Type(LinkModeType.class)
     private LinkMode linkMode = LinkMode.NONE;
 
     @Column(name = "link_type_name")
@@ -128,7 +128,7 @@ public class AnnotationFeature
     private String linkTypeTargetFeatureName;
 
     @Lob
-    @Column(length = 64000)
+    @Column(length = 16_777_216)
     private String traits;
 
     private boolean curatable = true;

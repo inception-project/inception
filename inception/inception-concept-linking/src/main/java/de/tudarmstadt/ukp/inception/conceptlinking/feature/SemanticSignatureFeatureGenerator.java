@@ -20,7 +20,7 @@ package de.tudarmstadt.ukp.inception.conceptlinking.feature;
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_MENTION_CONTEXT;
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_NUM_RELATIONS;
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_SIGNATURE_OVERLAP;
-import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_SIGNATURE_OVERLAP_SCORE;
+import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.SCORE_SIGNATURE_OVERLAP;
 
 import java.io.File;
 import java.util.Arrays;
@@ -138,7 +138,7 @@ public class SemanticSignatureFeatureGenerator
         }
 
         aCandidate.put(KEY_SIGNATURE_OVERLAP, signatureOverlap);
-        aCandidate.put(KEY_SIGNATURE_OVERLAP_SCORE, signatureOverlap.size());
+        aCandidate.put(SCORE_SIGNATURE_OVERLAP, signatureOverlap.size());
         aCandidate.put(KEY_NUM_RELATIONS,
                 (sig.getRelatedRelations() != null) ? sig.getRelatedRelations().size() : 0);
     }

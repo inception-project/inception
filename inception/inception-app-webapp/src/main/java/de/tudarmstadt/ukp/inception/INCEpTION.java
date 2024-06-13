@@ -37,7 +37,6 @@ import org.springframework.boot.autoconfigure.AutoConfigurationPackage;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.autoconfigure.elasticsearch.ElasticsearchRestClientAutoConfiguration;
-import org.springframework.boot.autoconfigure.solr.SolrAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
 import org.springframework.cache.annotation.EnableCaching;
@@ -58,7 +57,7 @@ import de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeService;
 // @formatter:off
 @SpringBootApplication(
         scanBasePackages = { INCEPTION_BASE_PACKAGE, WEBANNO_BASE_PACKAGE },
-        exclude = { SolrAutoConfiguration.class, ElasticsearchRestClientAutoConfiguration.class} )
+        exclude = { ElasticsearchRestClientAutoConfiguration.class} )
 @AutoConfigurationPackage(basePackages = { INCEPTION_BASE_PACKAGE, WEBANNO_BASE_PACKAGE })
 @EntityScan(basePackages = { INCEPTION_BASE_PACKAGE, WEBANNO_BASE_PACKAGE })
 @EnableAsync

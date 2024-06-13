@@ -23,23 +23,22 @@ import java.time.Instant;
 import java.util.Date;
 import java.util.Objects;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.Lob;
-import javax.persistence.ManyToOne;
-import javax.persistence.Table;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
-import javax.persistence.UniqueConstraint;
-
 import org.apache.commons.lang3.NotImplementedException;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.security.client.auth.oauth.OAuthSession;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.Lob;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import jakarta.persistence.Temporal;
+import jakarta.persistence.TemporalType;
+import jakarta.persistence.UniqueConstraint;
 
 @Entity
 @Table(name = "elg_session", uniqueConstraints = { @UniqueConstraint(columnNames = { "project" }) })
@@ -56,14 +55,14 @@ public class ElgSession
     private Project project;
 
     @Lob
-    @Column(length = 4096)
+    @Column(length = 16_777_216)
     private String accessToken;
 
     @Temporal(TemporalType.TIMESTAMP)
     private Date accessTokenValidUntil;
 
     @Lob
-    @Column(length = 4096)
+    @Column(length = 16_777_216)
     private String refreshToken;
 
     @Temporal(TemporalType.TIMESTAMP)

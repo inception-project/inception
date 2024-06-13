@@ -21,57 +21,36 @@ import static java.lang.String.format;
 import static java.lang.System.getProperty;
 
 import java.awt.GraphicsEnvironment;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
-import org.springframework.boot.loader.PropertiesLauncher;
-import org.springframework.boot.loader.archive.Archive;
-import org.springframework.boot.loader.archive.JarFileArchive;
+import org.springframework.boot.loader.launch.Archive;
+import org.springframework.boot.loader.launch.WarLauncher;
 
 public class ExtensibleClasspathEnabledWarLauncher
-    extends PropertiesLauncher
+    extends WarLauncher
 {
     private static final String DEBUG = "loader.debug";
 
-    private static final String WEB_INF = "WEB-INF/";
-
-    private static final String WEB_INF_CLASSES = WEB_INF + "classes/";
-
-    private static final String WEB_INF_LIB = WEB_INF + "lib/";
-
-    private static final String WEB_INF_LIB_PROVIDED = WEB_INF + "lib-provided/";
-
     private static final String EXTRA_LIB = "/lib";
 
-    private final Archive archive;
-
-    public ExtensibleClasspathEnabledWarLauncher()
+    public ExtensibleClasspathEnabledWarLauncher() throws Exception
     {
-        try {
-            archive = createArchive();
-        }
-        catch (Exception ex) {
-            throw new IllegalStateException(ex);
-        }
+    }
+
+    protected ExtensibleClasspathEnabledWarLauncher(Archive archive) throws Exception
+    {
+        super(archive);
     }
 
     @Override
-    protected Iterator<Archive> getClassPathArchivesIterator() throws Exception
+    protected Set<URL> getClassPathUrls() throws Exception
     {
-        return getClassPathArchives().iterator();
-    }
-
-    @Deprecated
-    @Override
-    protected List<Archive> getClassPathArchives() throws Exception
-    {
-        List<Archive> archives = new ArrayList<>();
-        archive.getNestedArchives(this::isNestedArchive, candidateArchive -> true)
-                .forEachRemaining(archives::add);
+        Set<URL> urls = new LinkedHashSet<>(super.getClassPathUrls());
 
         Path extraLibPath = Paths.get(getApplicationHome() + EXTRA_LIB);
 
@@ -80,7 +59,7 @@ public class ExtensibleClasspathEnabledWarLauncher
 
             for (Path jar : Files.newDirectoryStream(extraLibPath, "*.jar")) {
                 debug("Registering JAR: [" + jar + "]");
-                archives.add(new JarFileArchive(jar.toFile()));
+                urls.add(jar.toUri().toURL());
             }
         }
         else {
@@ -88,18 +67,7 @@ public class ExtensibleClasspathEnabledWarLauncher
                     + "] - path does not exist");
         }
 
-        return archives;
-    }
-
-    protected boolean isNestedArchive(Archive.Entry entry)
-    {
-        if (entry.isDirectory()) {
-            return entry.getName().equals(WEB_INF_CLASSES);
-        }
-        else {
-            return entry.getName().startsWith(WEB_INF_LIB)
-                    || entry.getName().startsWith(WEB_INF_LIB_PROVIDED);
-        }
+        return urls;
     }
 
     private void debug(String message)
@@ -155,10 +123,10 @@ public class ExtensibleClasspathEnabledWarLauncher
 
     public static boolean checkSystemRequirements(int ver)
     {
-        if (ver < 11) {
+        if (ver < 17) {
             StringBuilder message = new StringBuilder();
             message.append(
-                    format("INCEpTION requires at least Java 11, but you are running Java %s.%n%n",
+                    format("INCEpTION requires at least Java 17, but you are running Java %s.%n%n",
                             getProperty("java.specification.version")));
             message.append(format("Installation: %s%n", getProperty("java.home")));
             message.append(format("Vendor: %s%n", getProperty("java.vendor")));

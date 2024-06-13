@@ -19,9 +19,6 @@ package de.tudarmstadt.ukp.clarin.webanno.security;
 
 import java.lang.invoke.MethodHandles;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.apache.wicket.Session;
 import org.apache.wicket.authroles.authentication.AuthenticatedWebSession;
@@ -53,6 +50,9 @@ import de.tudarmstadt.ukp.clarin.webanno.security.config.AuthenticationConfigura
 import de.tudarmstadt.ukp.inception.support.logging.Logging;
 import de.tudarmstadt.ukp.inception.support.spring.ApplicationContextProvider;
 import de.tudarmstadt.ukp.inception.support.spring.ApplicationEventPublisherHolder;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 
 /**
  * An {@link AuthenticatedWebSession} based on {@link Authentication}
@@ -105,8 +105,9 @@ public class SpringAuthenticatedWebSession
             if (request instanceof ServletWebRequest) {
                 var containerRequest = ((ServletWebRequest) request).getContainerRequest();
 
-                // Kill current session and create a new one as part of the authentication
+                // Kill current session and create a new one
                 containerRequest.getSession().invalidate();
+                containerRequest.getSession(true);
             }
 
             var authentication = authenticationConfigurationHolder.getAuthenticationConfiguration()
@@ -159,9 +160,11 @@ public class SpringAuthenticatedWebSession
         LOG.debug("Stored authentication for user [{}] in security context",
                 aAuthentication.getName());
 
-        setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY,
+        HttpSession session = ((ServletWebRequest) RequestCycle.get().getRequest())
+                .getContainerRequest().getSession(false);
+        session.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY,
                 SecurityContextHolder.getContext());
-        LOG.debug("Stored security context in session");
+        LOG.debug("Stored security context in session [{}]", getId());
 
         bind();
 

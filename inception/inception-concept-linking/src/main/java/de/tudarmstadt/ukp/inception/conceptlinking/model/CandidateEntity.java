@@ -42,7 +42,7 @@ import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
  */
 public class CandidateEntity
 {
-    public static final Pattern TOKENKIZER_PATTERN = Pattern.compile("\\s+");
+    public static final Pattern TOKENKIZER_PATTERN = Pattern.compile("[\\s()\\-]+");
 
     public static String[] sortedBagOfWords(String aString)
     {
@@ -94,15 +94,15 @@ public class CandidateEntity
      * the default value to ensure that candidates are ranked last on this feature if it could not
      * be calculated.
      */
-    public static final Key<Integer> KEY_LEVENSHTEIN_MENTION = new Key<>("levMention", MAX_VALUE);
+    public static final Key<Integer> SCORE_LEVENSHTEIN_MENTION = new Key<>("levMention", MAX_VALUE);
 
-    public static final Key<Integer> KEY_LEVENSHTEIN_MENTION_NC = new Key<>("levMentionNc",
+    public static final Key<Integer> SCORE_LEVENSHTEIN_MENTION_NC = new Key<>("levMentionNc",
             MAX_VALUE);
 
-    public static final Key<Integer> KEY_TOKEN_OVERLAP_MENTION = new Key<>("tokenOverlapMention",
+    public static final Key<Integer> SCORE_TOKEN_OVERLAP_MENTION = new Key<>("tokenOverlapMention",
             MAX_VALUE);
 
-    public static final Key<Integer> KEY_TOKEN_OVERLAP_MENTION_NC = new Key<>(
+    public static final Key<Integer> SCORE_TOKEN_OVERLAP_MENTION_NC = new Key<>(
             "tokenOverlapMentionNc", MAX_VALUE);
 
     /**
@@ -112,10 +112,10 @@ public class CandidateEntity
      * the default value to ensure that candidates are ranked last on this feature if it could not
      * be calculated.
      */
-    public static final Key<Integer> KEY_LEVENSHTEIN_MENTION_CONTEXT = new Key<>("levContext",
+    public static final Key<Integer> SCORE_LEVENSHTEIN_MENTION_CONTEXT = new Key<>("levContext",
             MAX_VALUE);
 
-    public static final Key<Integer> KEY_TOKEN_OVERLAP_MENTION_CONTEXT = new Key<>(
+    public static final Key<Integer> SCORE_TOKEN_OVERLAP_MENTION_CONTEXT = new Key<>(
             "tokenOverlapContext", MAX_VALUE);
 
     /**
@@ -125,14 +125,15 @@ public class CandidateEntity
      * the default value to ensure that candidates are ranked last on this feature if it could not
      * be calculated.
      */
-    public static final Key<Integer> KEY_LEVENSHTEIN_QUERY = new Key<>("levQuery", MAX_VALUE);
+    public static final Key<Integer> SCORE_LEVENSHTEIN_QUERY = new Key<>("levQuery", MAX_VALUE);
 
-    public static final Key<Integer> KEY_LEVENSHTEIN_QUERY_NC = new Key<>("levQueryNc", MAX_VALUE);
-
-    public static final Key<Integer> KEY_TOKEN_OVERLAP_QUERY = new Key<>("tokenOverlapQuery",
+    public static final Key<Integer> SCORE_LEVENSHTEIN_QUERY_NC = new Key<>("levQueryNc",
             MAX_VALUE);
 
-    public static final Key<Integer> KEY_TOKEN_OVERLAP_QUERY_NC = new Key<>("tokenOverlapQueryNc",
+    public static final Key<Integer> SCORE_TOKEN_OVERLAP_QUERY = new Key<>("tokenOverlapQuery",
+            MAX_VALUE);
+
+    public static final Key<Integer> SCORE_TOKEN_OVERLAP_QUERY_NC = new Key<>("tokenOverlapQueryNc",
             MAX_VALUE);
 
     /**
@@ -150,7 +151,7 @@ public class CandidateEntity
      * number of related entities whose entity label occurs in <i>content tokens</i> <i>Content
      * tokens</i> consist of tokens in mention sentence annotated as nouns, verbs or adjectives
      */
-    public static final Key<Integer> KEY_SIGNATURE_OVERLAP_SCORE = new Key<>(
+    public static final Key<Integer> SCORE_SIGNATURE_OVERLAP = new Key<>(
             "signatureOverlapScore", 0);
 
     /**
@@ -161,7 +162,7 @@ public class CandidateEntity
     /**
      * FTS score - score assigned by the KB FTS (if any)
      */
-    public static final Key<Double> KEY_FTS_SCORE = new Key<>("ftsScore", 0.0d);
+    public static final Key<Double> SCORE_FTS = new Key<>("ftsScore", 0.0d);
 
     /**
      * in-link count of wikipedia article of IRI

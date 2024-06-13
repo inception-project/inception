@@ -15,12 +15,14 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception</artifactId>
-    <version>33.0-SNAPSHOT</version>
+    <version>34.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>inception-app</artifactId>
@@ -37,20 +39,20 @@
     <excludedTestCategories>slow</excludedTestCategories>
     <npm-install-command>ci</npm-install-command>
   </properties>
-  
+
   <dependencyManagement>
     <dependencies>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-bom</artifactId>
-        <version>33.0-SNAPSHOT</version>
+        <version>34.0-SNAPSHOT</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-dependencies</artifactId>
-        <version>33.0-SNAPSHOT</version>
+        <version>34.0-SNAPSHOT</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -84,10 +86,10 @@
       <scope>runtime</scope>
     </dependency>
     <dependency>
-      <!-- Route Java Commons Logging over SLF4J -->
+      <!-- Avoid Commons Logging (we use the spring-jcl bridge -->
       <groupId>org.slf4j</groupId>
       <artifactId>jcl-over-slf4j</artifactId>
-      <scope>runtime</scope>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <!-- Route Java Util Logging over SLF4J -->
@@ -101,7 +103,13 @@
       <artifactId>log4j-layout-template-json</artifactId>
     </dependency>
     <dependency>
-      <!-- Avoid Commons Logging -->
+      <!-- Route Java Commons Logging over SLF4J -->
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-jcl</artifactId>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <!-- Avoid Commons Logging (we use the spring-jcl bridge -->
       <groupId>commons-logging</groupId>
       <artifactId>commons-logging</artifactId>
       <scope>provided</scope>
@@ -122,10 +130,15 @@
     </dependency>
     
     <!-- JAXB is no longer included with Java 9+ by default -->
+    <!-- Old javax JAXB -->
+    <dependency>
+      <groupId>org.glassfish.jaxb</groupId>
+      <artifactId>jaxb-runtime</artifactId>
+      <scope>runtime</scope>
+    </dependency>
     <dependency>
       <groupId>javax.xml.bind</groupId>
       <artifactId>jaxb-api</artifactId>
-      <scope>runtime</scope>
     </dependency>
     <dependency>
       <groupId>com.sun.xml.bind</groupId>
@@ -133,13 +146,18 @@
       <scope>runtime</scope>
     </dependency>
     <dependency>
-      <groupId>com.sun.xml.bind</groupId>
-      <artifactId>jaxb-impl</artifactId>
-      <scope>runtime</scope>
-    </dependency>
-    <dependency>
       <groupId>javax.activation</groupId>
       <artifactId>javax.activation-api</artifactId>
+      <scope>runtime</scope>
+    </dependency>
+    <!-- New jakarta JAXB -->
+    <dependency>
+      <groupId>jakarta.xml.bind</groupId>
+      <artifactId>jakarta.xml.bind-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.sun.xml.bind</groupId>
+      <artifactId>jaxb-impl</artifactId>
       <scope>runtime</scope>
     </dependency>
     
@@ -331,7 +349,7 @@
         <configuration>
           <annotationProcessorPaths>
             <path>
-              <groupId>org.hibernate</groupId>
+              <groupId>org.hibernate.orm</groupId>
               <artifactId>hibernate-jpamodelgen</artifactId>
               <version>${hibernate.version}</version>
             </path>
@@ -425,9 +443,12 @@
             <dependency>org.slf4j:jcl-over-slf4j</dependency>
             <dependency>org.slf4j:jul-to-slf4j</dependency>
             <dependency>commons-logging:commons-logging</dependency>
+            <dependency>org.springframework:spring-jcl</dependency>
             <!--
               - JAXB is used via reflection and cannot be detected by Maven
             -->
+            <dependency>jakarta.xml.bind:jakarta.xml.bind-api</dependency>
+            <dependency>org.glassfish.jaxb</dependency>
             <dependency>javax.xml.bind:jaxb-api</dependency>
             <dependency>com.sun.xml.bind:jaxb-core</dependency>
             <dependency>com.sun.xml.bind:jaxb-impl</dependency>
@@ -494,13 +515,6 @@
                 <requireJavaVersion>
                   <version>[${maven.compiler.release},)</version>
                 </requireJavaVersion>
-                <!--
-                <bannedDependencies>
-                  <excludes>
-                    <exclude>junit:junit</exclude>
-                  </excludes>
-                </bannedDependencies>
-                -->
               </rules>
             </configuration>
           </execution>

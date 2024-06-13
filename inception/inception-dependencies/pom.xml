@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception</artifactId>
-    <version>33.0-SNAPSHOT</version>
+    <version>34.0-SNAPSHOT</version>
     <relativePath>../..</relativePath>
   </parent>
 
@@ -64,6 +64,11 @@
         <scope>import</scope>
       </dependency>
       <dependency>
+        <groupId>jakarta.xml.bind</groupId>
+        <artifactId>jakarta.xml.bind-api</artifactId>
+        <version>4.0.2</version>
+      </dependency>
+      <dependency>
         <groupId>javax.xml.bind</groupId>
         <artifactId>jaxb-api</artifactId>
         <version>2.3.1</version>
@@ -72,6 +77,16 @@
         <groupId>com.sun.xml.bind</groupId>
         <artifactId>jaxb-core</artifactId>
         <version>2.3.0.1</version>
+      </dependency>
+      <dependency>
+        <groupId>com.sun.xml.bind</groupId>
+        <artifactId>jaxb-impl</artifactId>
+        <version>2.3.9</version>
+      </dependency>
+      <dependency>
+        <groupId>org.glassfish.jaxb</groupId>
+        <artifactId>jaxb-runtime</artifactId>
+        <version>2.3.9</version>
       </dependency>
       <dependency>
         <groupId>javax.activation</groupId>
@@ -187,34 +202,32 @@
         <version>${awaitility.version}</version>
       </dependency>
 
-      <!-- Wicket jQuery -->
-      <dependency>
-        <groupId>com.googlecode.wicket-jquery-ui</groupId>
-        <artifactId>wicket-jquery-ui</artifactId>
-        <version>${wicket-jquery-ui.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.googlecode.wicket-jquery-ui</groupId>
-        <artifactId>wicket-jquery-ui-core</artifactId>
-        <version>${wicket-jquery-ui.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.googlecode.wicket-jquery-ui</groupId>
-        <artifactId>wicket-jquery-ui-theme-uilightness</artifactId>
-        <version>${wicket-jquery-ui.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.googlecode.wicket-jquery-ui</groupId>
-        <artifactId>wicket-kendo-ui</artifactId>
-        <version>${wicket-jquery-ui.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.googlecode.wicket-jquery-ui</groupId>
-        <artifactId>wicket-kendo-ui-theme-bootstrap</artifactId>
-        <version>${wicket-jquery-ui.version}</version>
-      </dependency>
-
       <!-- Wicketstuff -->
+      <dependency>
+        <groupId>org.wicketstuff</groupId>
+        <artifactId>wicketstuff-jquery-ui</artifactId>
+        <version>${wicketstuff.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.wicketstuff</groupId>
+        <artifactId>wicketstuff-jquery-ui-core</artifactId>
+        <version>${wicketstuff.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.wicketstuff</groupId>
+        <artifactId>wicketstuff-jquery-ui-theme-uilightness</artifactId>
+        <version>${wicketstuff.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.wicketstuff</groupId>
+        <artifactId>wicketstuff-kendo-ui</artifactId>
+        <version>${wicketstuff.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.wicketstuff</groupId>
+        <artifactId>wicketstuff-kendo-ui-theme-bootstrap</artifactId>
+        <version>${wicketstuff.version}</version>
+      </dependency>
       <dependency>
         <groupId>org.wicketstuff</groupId>
         <artifactId>wicketstuff-htmlcompressor</artifactId>
@@ -415,11 +428,23 @@
         <groupId>org.apache.pdfbox</groupId>
         <artifactId>pdfbox</artifactId>
         <version>${pdfbox.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.apache.pdfbox</groupId>
         <artifactId>fontbox</artifactId>
         <version>${pdfbox.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
 
       <dependency>
@@ -444,6 +469,12 @@
         <groupId>commons-beanutils</groupId>
         <artifactId>commons-beanutils</artifactId>
         <version>1.9.4</version>
+        <exclusions>
+          <exclusion>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.apache.commons</groupId>
@@ -581,8 +612,8 @@
       </dependency>
 
       <dependency>
-        <groupId>javax.servlet</groupId>
-        <artifactId>javax.servlet-api</artifactId>
+        <groupId>jakarta.servlet</groupId>
+        <artifactId>jakarta.servlet-api</artifactId>
         <version>${servlet-api.version}</version>
       </dependency>
 
@@ -644,11 +675,6 @@
         <groupId>javax.validation</groupId>
         <artifactId>validation-api</artifactId>
         <version>2.0.1.Final</version>
-      </dependency>
-      <dependency>
-        <groupId>javax.persistence</groupId>
-        <artifactId>javax.persistence-api</artifactId>
-        <version>2.2</version>
       </dependency>
       <dependency>
         <groupId>org.javassist</groupId>
@@ -935,6 +961,16 @@
       </dependency>
       <dependency>
         <groupId>org.apache.solr</groupId>
+        <artifactId>solr-solrj</artifactId>
+        <version>${solr.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.solr</groupId>
+        <artifactId>solr-core</artifactId>
+        <version>${solr.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.solr</groupId>
         <artifactId>solr-test-framework</artifactId>
         <version>${solr.version}</version>
         <scope>test</scope>
@@ -1153,7 +1189,6 @@
       <dependency>
         <groupId>org.codelibs.opensearch</groupId>
         <artifactId>opensearch-runner</artifactId>
-<!--    <version>${opensearch.version}.0</version>-->
         <version>${opensearch.version}.0</version>
       </dependency>
       <dependency>
@@ -1268,6 +1303,11 @@
       <dependency>
         <groupId>org.apache.logging.log4j</groupId>
         <artifactId>log4j-api</artifactId>
+        <version>${log4j2.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.logging.log4j</groupId>
+        <artifactId>log4j-jmx-gui</artifactId>
         <version>${log4j2.version}</version>
       </dependency>
       <dependency>

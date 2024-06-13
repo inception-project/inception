@@ -75,7 +75,7 @@ class MatchingTokenOverlapFeatureGeneratorTest
 
         sut.apply(candidateEntity);
 
-        assertThat(candidateEntity.get(CandidateEntity.KEY_TOKEN_OVERLAP_QUERY)) //
+        assertThat(candidateEntity.get(CandidateEntity.SCORE_TOKEN_OVERLAP_QUERY)) //
                 .get().isEqualTo(distance);
     }
 }
