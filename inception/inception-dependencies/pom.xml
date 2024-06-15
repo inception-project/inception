@@ -113,6 +113,12 @@
         </exclusions>
       </dependency>
 
+      <dependency>
+        <groupId>jakarta.data</groupId>
+        <artifactId>jakarta.data-api</artifactId>
+        <version>1.0.0</version>
+      </dependency>
+
       <!-- Testing -->
       <dependency>
         <groupId>org.junit</groupId>
