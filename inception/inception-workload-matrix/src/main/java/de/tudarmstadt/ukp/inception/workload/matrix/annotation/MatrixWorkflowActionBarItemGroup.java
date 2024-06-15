@@ -139,7 +139,7 @@ public class MatrixWorkflowActionBarItemGroup
     {
         // Curators can re-open documents anyway via the monitoring page, so we can always allow
         // the re-open documents here as well
-        AnnotatorState state = page.getModelObject();
+        var state = page.getModelObject();
         if (projectService.hasRole(userRepository.getCurrentUsername(), state.getProject(),
                 CURATOR)) {
             return true;
@@ -155,10 +155,10 @@ public class MatrixWorkflowActionBarItemGroup
 
     public ResourceModel getStateTooltip()
     {
-        AnnotatorState state = page.getModelObject();
+        var state = page.getModelObject();
 
         // Curation sidebar: when writing to the curation document, we need to update the document
-        if (state.getUser().getUsername().equals(CURATION_USER)) {
+        if (CURATION_USER.equals(state.getUser().getUsername())) {
             if (state.getDocument().getState() == SourceDocumentState.CURATION_FINISHED) {
                 return new ResourceModel("stateToggle.curationFinished");
             }
@@ -177,7 +177,7 @@ public class MatrixWorkflowActionBarItemGroup
 
     public String getStateClass()
     {
-        AnnotatorState state = page.getModelObject();
+        var state = page.getModelObject();
 
         // Curation sidebar: when writing to the curation document, we need to update the document
         if (state.getUser().getUsername().equals(CURATION_USER)) {
@@ -262,11 +262,11 @@ public class MatrixWorkflowActionBarItemGroup
     private void actionToggleDocumentState(AjaxRequestTarget aTarget)
     {
         // state instead
-        AnnotatorState state = page.getModelObject();
-        SourceDocument document = state.getDocument();
+        var state = page.getModelObject();
+        var document = state.getDocument();
 
         // Curation sidebar: when writing to the curation document, we need to update the docuement
-        if (state.getUser().getUsername().equals(CURATION_USER)) {
+        if (CURATION_USER.equals(state.getUser().getUsername())) {
             switch (document.getState()) {
             case CURATION_FINISHED:
                 documentService.setSourceDocumentState(document, CURATION_IN_PROGRESS);

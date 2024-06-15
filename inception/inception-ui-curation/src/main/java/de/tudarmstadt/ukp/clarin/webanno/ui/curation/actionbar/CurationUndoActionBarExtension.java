@@ -25,6 +25,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.UndoPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.config.LegacyCurationUIAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.LegacyCurationPage;
+import de.tudarmstadt.ukp.inception.ui.curation.page.CurationPage;
 
 /**
  * <p>
@@ -39,7 +40,7 @@ public class CurationUndoActionBarExtension
     @Override
     public boolean accepts(AnnotationPageBase aPage)
     {
-        return aPage instanceof LegacyCurationPage;
+        return aPage instanceof LegacyCurationPage || aPage instanceof CurationPage;
     }
 
     @Override

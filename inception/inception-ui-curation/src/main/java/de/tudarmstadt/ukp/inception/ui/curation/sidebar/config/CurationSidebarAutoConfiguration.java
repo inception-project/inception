@@ -99,6 +99,7 @@ public class CurationSidebarAutoConfiguration
         return new CurationSidebarApplicationInitializer();
     }
 
+    @Deprecated
     @Bean
     public CurationSidebarDocumentNavigatorActionBarExtension curationSidebarDocumentNavigatorActionBarExtension(
             CurationSidebarService aCurationSidebarService, UserDao aUserRepository)

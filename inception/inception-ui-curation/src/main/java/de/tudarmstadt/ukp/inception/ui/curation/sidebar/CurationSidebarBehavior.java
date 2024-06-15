@@ -45,6 +45,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.inception.annotation.events.PreparingToOpenDocumentEvent;
 import de.tudarmstadt.ukp.inception.curation.service.CurationDocumentService;
+import de.tudarmstadt.ukp.inception.curation.service.CurationService;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
@@ -65,6 +66,7 @@ public class CurationSidebarBehavior
 
     private @SpringBean DocumentService documentService;
     private @SpringBean CurationDocumentService curationDocumentService;
+    private @SpringBean CurationService curationService;
     private @SpringBean CurationSidebarService curationSidebarService;
     private @SpringBean UserDao userService;
     private @SpringBean ProjectService projectService;
@@ -73,7 +75,10 @@ public class CurationSidebarBehavior
     @Override
     public void onEvent(Component aComponent, IEvent<?> aEvent)
     {
-        if (!(aEvent.getPayload() instanceof PreparingToOpenDocumentEvent)) {
+        if (aEvent.getPayload() instanceof PreparingToOpenDocumentEvent prepOpenDocEvent) {
+            onPreparingToOpenDocumentEvent(prepOpenDocEvent);
+        }
+        else {
             if (aEvent.getPayload() != null) {
                 LOG.trace("Event not relevant to curation sidebar: {} / {}", aEvent.getClass(),
                         aEvent.getPayload().getClass());
@@ -83,10 +88,6 @@ public class CurationSidebarBehavior
             }
             return;
         }
-
-        var event = (PreparingToOpenDocumentEvent) aEvent.getPayload();
-        onPreparingToOpenDocumentEvent(event);
-
     }
 
     private void onPreparingToOpenDocumentEvent(PreparingToOpenDocumentEvent aEvent)
@@ -150,8 +151,11 @@ public class CurationSidebarBehavior
                         state.getUser().getUsername(), FORCE_CAS_UPGRADE);
                 var selectedUsers = curationSidebarService.getSelectedUsers(sessionOwner,
                         project.getId());
-                var mergeStrategyFactory = curationSidebarService.merge(state,
+
+                var workflow = curationService.readOrCreateCurationWorkflow(state.getProject());
+                var mergeStrategyFactory = curationSidebarService.merge(state, workflow,
                         state.getUser().getUsername(), selectedUsers, true);
+
                 page.success(
                         "Performed initial merge using [" + mergeStrategyFactory.getLabel() + "].");
                 aEvent.getRequestTarget().ifPresent($ -> $.addChildren(page, IFeedback.class));

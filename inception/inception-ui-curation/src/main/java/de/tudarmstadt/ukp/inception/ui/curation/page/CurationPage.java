@@ -24,11 +24,11 @@ import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAG
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.wicketstuff.annotation.mount.MountPath;
 
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase2;
 
 @MountPath(NS_PROJECT + "/${" + PAGE_PARAM_PROJECT + "}/curate2/#{" + PAGE_PARAM_DOCUMENT + "}")
 public class CurationPage
-    extends AnnotationPage
+    extends AnnotationPageBase2
 {
     private static final long serialVersionUID = 8665608337791132617L;
 

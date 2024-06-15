@@ -26,7 +26,7 @@ import org.slf4j.Logger;
 
 import com.giffing.wicket.spring.boot.context.extensions.WicketApplicationInitConfiguration;
 
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase2;
 
 public class CurationSidebarApplicationInitializer
     implements WicketApplicationInitConfiguration
@@ -42,16 +42,13 @@ public class CurationSidebarApplicationInitializer
 
     private void addCurationSidebarBehaviorToAnnotationPage(Component aComponent)
     {
-        if (!(aComponent instanceof AnnotationPage)) {
-            return;
-        }
+        if (aComponent instanceof AnnotationPageBase2 annotationPage) {
+            if (!annotationPage.getBehaviors(CurationSidebarBehavior.class).isEmpty()) {
+                LOG.trace("CurationSidebarBehavior is already installed");
+            }
 
-        var annotationPage = (AnnotationPage) aComponent;
-        if (!annotationPage.getBehaviors(CurationSidebarBehavior.class).isEmpty()) {
-            LOG.trace("CurationSidebarBehavior is already installed");
+            LOG.trace("Installing CurationSidebarBehavior");
+            annotationPage.add(new CurationSidebarBehavior());
         }
-
-        LOG.trace("Installing CurationSidebarBehavior");
-        annotationPage.add(new CurationSidebarBehavior());
     }
 }

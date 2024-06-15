@@ -27,7 +27,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATI
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
-import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
 import java.io.IOException;
@@ -62,7 +61,6 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.annotation.events.DocumentOpenedEvent;
 import de.tudarmstadt.ukp.inception.curation.config.CurationServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.curation.merge.MergeStrategyFactory;
-import de.tudarmstadt.ukp.inception.curation.merge.strategy.MergeStrategy;
 import de.tudarmstadt.ukp.inception.curation.model.CurationSettings;
 import de.tudarmstadt.ukp.inception.curation.model.CurationSettingsId;
 import de.tudarmstadt.ukp.inception.curation.model.CurationWorkflow;
@@ -179,7 +177,7 @@ public class CurationSidebarServiceImpl
                 users = setting.getSelectedUserNames().stream()
                         .map(username -> userRegistry.get(username))
                         .filter(user -> projectService.hasAnyRole(user, project)) //
-                        .collect(toList());
+                        .toList();
             }
             state = new CurationSession(setting.getCurationUserName(), users);
         }
@@ -190,20 +188,19 @@ public class CurationSidebarServiceImpl
 
     private List<CurationSettings> queryDBForSetting(String aSessionOwner, long aProjectId)
     {
-        Validate.notBlank(aSessionOwner, "User must be specified");
-        Validate.notNull(aProjectId, "project must be specified");
+        Validate.notBlank(aSessionOwner, "Session owner must be specified");
+        Validate.notNull(aProjectId, "Project must be specified");
 
         var query = "FROM " + CurationSettings.class.getName() //
                 + " o WHERE o.username = :username " //
                 + "AND o.projectId = :projectId";
 
-        var settings = entityManager //
+        return entityManager //
                 .createQuery(query, CurationSettings.class) //
                 .setParameter("username", aSessionOwner) //
                 .setParameter("projectId", aProjectId) //
                 .setMaxResults(1) //
                 .getResultList();
-        return settings;
     }
 
     @Transactional
@@ -270,9 +267,13 @@ public class CurationSidebarServiceImpl
                 .collect(Collectors.toList());
     }
 
+    /**
+     * @return CAS associated with curation doc for the given user
+     */
+    // REC: Do we really needs this? Why not save via the AnnotationPage facilities? Or at least
+    // the curation target should already be set in the annotator state, so why not rely on that?
     @Transactional
-    @Override
-    public Optional<CAS> retrieveCurationCAS(String aSessionOwner, long aProjectId,
+    private Optional<CAS> retrieveCurationCAS(String aSessionOwner, long aProjectId,
             SourceDocument aDoc)
         throws IOException
     {
@@ -284,11 +285,13 @@ public class CurationSidebarServiceImpl
         return Optional.of(documentService.readAnnotationCas(aDoc, curationUser));
     }
 
+    /**
+     * Write to CAS associated with curation doc for the given user and update timestamp
+     */
     // REC: Do we really needs this? Why not save via the AnnotationPage facilities? Or at least
     // the curation target should already be set in the annotator state, so why not rely on that?
     @Transactional
-    @Override
-    public void writeCurationCas(CAS aTargetCas, AnnotatorState aState, long aProjectId)
+    private void writeCurationCas(CAS aTargetCas, AnnotatorState aState, long aProjectId)
         throws IOException
     {
         User curator;
@@ -306,9 +309,11 @@ public class CurationSidebarServiceImpl
                 .ifPresent(aState::setAnnotationDocumentTimestamp);
     }
 
+    /**
+     * Store which name the curated document should be associated with
+     */
     @Transactional
-    @Override
-    public void setCurationTarget(String aSessionOwner, Project aProject, boolean aOwnDocument)
+    private void setCurationTarget(String aSessionOwner, Project aProject, boolean aOwnDocument)
     {
         synchronized (sessions) {
             var session = sessions.get(new CurationSessionKey(aSessionOwner, aProject.getId()));
@@ -519,17 +524,9 @@ public class CurationSidebarServiceImpl
                         && sourceDoc.getState().equals(CURATION_FINISHED));
     }
 
-    @Override
-    public MergeStrategyFactory<?> merge(AnnotatorState aState, String aCurator,
-            Collection<User> aUsers, boolean aClearTargetCas)
-        throws IOException, UIMAException
-    {
-        var workflow = curationService.readOrCreateCurationWorkflow(aState.getProject());
-        return merge(aState, workflow, aCurator, aUsers, aClearTargetCas);
-    }
-
     @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
+    @Transactional
     public MergeStrategyFactory<?> merge(AnnotatorState aState, CurationWorkflow aWorkflow,
             String aCurator, Collection<User> aUsers, boolean aClearTargetCas)
         throws IOException, UIMAException
@@ -537,15 +534,6 @@ public class CurationSidebarServiceImpl
         MergeStrategyFactory factory = curationService.getMergeStrategyFactory(aWorkflow);
         var traits = factory.readTraits(aWorkflow);
         var mergeStrategy = factory.makeStrategy(traits);
-        merge(aState, mergeStrategy, aCurator, aUsers, aClearTargetCas);
-        return factory;
-    }
-
-    @Override
-    public void merge(AnnotatorState aState, MergeStrategy aStrategy, String aCurator,
-            Collection<User> aUsers, boolean aClearTargetCas)
-        throws IOException, UIMAException
-    {
         var doc = aState.getDocument();
         var aTargetCas = retrieveCurationCAS(aCurator, doc.getProject().getId(), doc).orElseThrow(
                 () -> new IllegalArgumentException("No target CAS configured in curation state"));
@@ -556,12 +544,13 @@ public class CurationSidebarServiceImpl
         // deleting the users annotations!!!), currently fixed by warn message to user
         // prepare merged CAS
         curationMergeService.mergeCasses(doc, aState.getUser().getUsername(), aTargetCas, userCases,
-                aStrategy, aState.getAnnotationLayers(), aClearTargetCas);
+                mergeStrategy, aState.getAnnotationLayers(), aClearTargetCas);
 
         // write back and update timestamp
         writeCurationCas(aTargetCas, aState, doc.getProject().getId());
 
         LOG.debug("Merge done");
+        return factory;
     }
 
     private class CurationSession
