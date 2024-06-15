@@ -74,10 +74,10 @@ public abstract class ExtensionPoint_ImplBase<C, E extends Extension<C>>
         extensionsList = unmodifiableList(extensions);
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     protected Comparator<E> makeComparator()
     {
-        return (Comparator<E>) AnnotationAwareOrderComparator.INSTANCE;
+        return (Comparator) AnnotationAwareOrderComparator.INSTANCE;
     }
 
     @Override

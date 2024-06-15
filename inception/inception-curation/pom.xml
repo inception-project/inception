@@ -137,6 +137,10 @@
       <artifactId>jakarta.persistence-api</artifactId>
     </dependency>
     <dependency>
+      <groupId>jakarta.data</groupId>
+      <artifactId>jakarta.data-api</artifactId>
+    </dependency>
+    <dependency>
       <groupId>org.hibernate.orm</groupId>
       <artifactId>hibernate-core</artifactId>
     </dependency>
