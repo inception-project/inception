@@ -15,31 +15,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.ui.curation.page;
-
-import java.io.Serializable;
+package de.tudarmstadt.ukp.inception.curation.settings;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-import de.tudarmstadt.ukp.inception.preferences.Key;
+import de.tudarmstadt.ukp.inception.preferences.PreferenceKey;
+import de.tudarmstadt.ukp.inception.preferences.PreferenceValue;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class CurationManagerPrefs
-    implements Serializable
+    implements PreferenceValue
 {
     private static final long serialVersionUID = -1827435212756903504L;
 
-    public static final Key<CurationManagerPrefs> KEY_CURATION_MANAGER_PREFS = new Key<>(
-            CurationManagerPrefs.class, "curation/manager");
+    public static final PreferenceKey<CurationManagerPrefs> KEY_CURATION_MANAGER_PREFS = //
+            new PreferenceKey<>(CurationManagerPrefs.class, "curation/manager");
 
-    private String curationPageType;
+    private CurationPageType curationPageType;
 
-    public void setCurationPageType(String aCurationPageType)
+    public void setCurationPageType(CurationPageType aCurationPageType)
     {
         curationPageType = aCurationPageType;
     }
 
-    public String getCurationPageType()
+    public CurationPageType getCurationPageType()
     {
         return curationPageType;
     }

@@ -22,6 +22,7 @@ import static org.slf4j.LoggerFactory.getLogger;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 import org.apache.commons.lang3.builder.CompareToBuilder;
 import org.slf4j.Logger;
@@ -57,7 +58,8 @@ public class AnnotationSidebarRegistryImpl
     @Override
     public AnnotationSidebarFactory getSidebarFactory(String aId)
     {
-        return getExtension(aId).orElseThrow();
+        return getExtension(aId).orElseThrow(
+                () -> new NoSuchElementException("No extension with id [" + aId + "] found"));
     }
 
     @Override

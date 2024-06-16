@@ -41,7 +41,15 @@
                 </label>
               </div>
             </div>
-          </div>          
+          </div>
+          <div class="row form-row" wicket:enclosure="curationPageType">
+            <label wicket:for="curationPageType" class="col-sm-4 col-form-label">
+              <wicket:label key="curationPageType"/>
+            </label>
+            <div class="col-sm-8">
+              <select wicket:id="curationPageType" class="form-select" data-container="body"></select>
+            </div>
+          </div>
           <div wicket:id="mergeStrategy" />
         </div>
       </div>

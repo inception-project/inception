@@ -24,10 +24,11 @@ import de.tudarmstadt.ukp.inception.support.extensionpoint.ExtensionPoint;
 
 public interface AnnotationSidebarRegistry
     extends ExtensionPoint<AnnotationPageBase, AnnotationSidebarFactory>
-
 {
+    @Deprecated
     List<AnnotationSidebarFactory> getSidebarFactories();
 
+    @Deprecated
     AnnotationSidebarFactory getSidebarFactory(String aId);
 
     AnnotationSidebarFactory getDefaultSidebarFactory();

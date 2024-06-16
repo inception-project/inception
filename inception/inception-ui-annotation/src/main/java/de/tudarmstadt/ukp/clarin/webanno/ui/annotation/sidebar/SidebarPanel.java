@@ -26,12 +26,12 @@ import org.apache.commons.lang3.Validate;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.AttributeAppender;
+import org.apache.wicket.markup.html.panel.EmptyPanel;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.springframework.context.ApplicationContext;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase2;
@@ -114,16 +114,18 @@ public class SidebarPanel
                 private static final long serialVersionUID = 2144644282070158783L;
 
                 @Override
-                public Panel getPanel(String Id)
+                public Panel getPanel(String aId)
                 {
                     try {
                         // We need to get the methods and services directly in here so
                         // that the lambda doesn't have a dependency on the non-serializable
                         // AnnotationSidebarFactory class.
-                        ApplicationContext ctx = ApplicationContextProvider.getApplicationContext();
-                        return ctx.getBean(AnnotationSidebarRegistry.class)
-                                .getSidebarFactory(factoryId)
-                                .create(Id, actionHandler, casProvider, annotationPage);
+                        var ctx = ApplicationContextProvider.getApplicationContext();
+                        return ctx.getBean(AnnotationSidebarRegistry.class) //
+                                .getExtension(factoryId) //
+                                .map($ -> (Panel) $.create(aId, actionHandler, casProvider,
+                                        annotationPage))
+                                .orElseGet(() -> new EmptyPanel(aId));
                     }
                     catch (Exception e) {
                         throw new RuntimeException(e);
