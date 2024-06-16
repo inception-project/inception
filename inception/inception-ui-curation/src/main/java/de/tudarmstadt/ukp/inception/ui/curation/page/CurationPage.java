@@ -22,9 +22,12 @@ import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAGE_PARAM_PROJECT;
 
 import org.apache.wicket.request.mapper.parameter.PageParameters;
+import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.wicketstuff.annotation.mount.MountPath;
 
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase2;
+import de.tudarmstadt.ukp.inception.ui.curation.sidebar.CurationSidebarService;
 
 @MountPath(NS_PROJECT + "/${" + PAGE_PARAM_PROJECT + "}/curate2/#{" + PAGE_PARAM_DOCUMENT + "}")
 public class CurationPage
@@ -32,8 +35,16 @@ public class CurationPage
 {
     private static final long serialVersionUID = 8665608337791132617L;
 
+    private @SpringBean CurationSidebarService curationSidebarService;
+    private @SpringBean UserDao userRepository;
+
     public CurationPage(PageParameters aPageParameters)
     {
         super(aPageParameters);
+
+        var sessionOwner = userRepository.getCurrentUsername();
+        var state = getModelObject();
+
+        curationSidebarService.startSession(sessionOwner, state.getProject(), false);
     }
 }

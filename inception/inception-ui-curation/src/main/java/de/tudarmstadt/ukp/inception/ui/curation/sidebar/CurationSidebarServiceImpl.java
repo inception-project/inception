@@ -39,7 +39,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.Validate;
 import org.apache.commons.lang3.builder.EqualsBuilder;
@@ -264,7 +263,7 @@ public class CurationSidebarServiceImpl
         return curationDocumentService.listCuratableUsers(aDocument).stream()
                 .filter(user -> !user.getUsername().equals(aSessionOwner)
                         || curationTarget.equals(CURATION_USER))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     /**
