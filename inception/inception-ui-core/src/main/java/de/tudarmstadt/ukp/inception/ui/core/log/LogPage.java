@@ -163,11 +163,12 @@ public class LogPage
     private String scrollDownScript()
     {
         return """
-                var element = document.getElementById('""" + messagesContainer.getMarkupId() + """
-                ');\
-                if (element) {\
-                  element.scrollTop = element.scrollHeight;\
-                }""";
+               var element = document.getElementById('""" + messagesContainer.getMarkupId()
+                + """
+                  ');\
+                  if (element) {\
+                    element.scrollTop = element.scrollHeight;\
+                  }""";
     }
 
     private List<LogEvent> getMessages()

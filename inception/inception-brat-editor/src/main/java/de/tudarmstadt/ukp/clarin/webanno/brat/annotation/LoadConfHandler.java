@@ -52,7 +52,8 @@ class LoadConfHandler
     }
 
     @Override
-    public AjaxResponse handle(DiamAjaxBehavior aBehavior, AjaxRequestTarget aTarget, Request aRequest)
+    public AjaxResponse handle(DiamAjaxBehavior aBehavior, AjaxRequestTarget aTarget,
+            Request aRequest)
     {
         try {
             var result = new LoadConfResponse(bratProperties);

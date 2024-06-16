@@ -2,13 +2,13 @@
  * Licensed to the Technische Universität Darmstadt under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
- * regarding copyright ownership.  The Technische Universität Darmstadt
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
  * licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.
- *
+ *  
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,30 +17,12 @@
  */
 package de.tudarmstadt.ukp.inception.preferences;
 
-public class Key<T>
+import java.util.LinkedHashMap;
+
+public class ClientSidePreferenceMapValue
+    extends LinkedHashMap<String, Object>
+    implements PreferenceValue
 {
-    private final Class<T> traitClass;
-    private final String name;
+    private static final long serialVersionUID = 3976844813459821088L;
 
-    public Key(Class<T> aTraitClass, String aName)
-    {
-        traitClass = aTraitClass;
-        name = aName;
-    }
-
-    public Class<T> getTraitClass()
-    {
-        return traitClass;
-    }
-
-    public String getName()
-    {
-        return name;
-    }
-
-    @Override
-    public String toString()
-    {
-        return "[" + name + "]";
-    }
 }

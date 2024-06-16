@@ -34,5 +34,5 @@ public interface ClientSideUserPreferencesProvider
     /**
      * @return the key under which to store the preferences.
      */
-    <T> Optional<ClientSidePreferencesKey<T>> getUserPreferencesKey();
+    <T extends PreferenceValue> Optional<ClientSidePreferenceKey<T>> getUserPreferencesKey();
 }

@@ -19,9 +19,14 @@ package de.tudarmstadt.ukp.inception.ui.core.dashboard;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+import de.tudarmstadt.ukp.inception.preferences.PreferenceValue;
+
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PinState
+    implements PreferenceValue
 {
+    private static final long serialVersionUID = -4175227752743540608L;
+
     public final boolean isPinned;
 
     public PinState()

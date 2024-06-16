@@ -17,44 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.preferences;
 
-import java.util.List;
+import java.io.Serializable;
 
-public class TestTraits
-    implements PreferenceValue
+public interface PreferenceValue
+    extends Serializable
 {
-    private static final long serialVersionUID = 3910415681988129881L;
-
-    private boolean testBoolean;
-    private String testString;
-    private List<String> testList;
-
-    public boolean isTestBoolean()
-    {
-        return testBoolean;
-    }
-
-    public void setTestBoolean(boolean aTestBoolean)
-    {
-        testBoolean = aTestBoolean;
-    }
-
-    public String getTestString()
-    {
-        return testString;
-    }
-
-    public void setTestString(String aTestString)
-    {
-        testString = aTestString;
-    }
-
-    public List<String> getTestList()
-    {
-        return testList;
-    }
-
-    public void setTestList(List<String> aTestList)
-    {
-        testList = aTestList;
-    }
+    // Marker interface
 }

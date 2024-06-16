@@ -61,7 +61,8 @@ public class MoveSpanAnnotationHandler
     }
 
     @Override
-    public DefaultAjaxResponse handle(DiamAjaxBehavior aBehavior, AjaxRequestTarget aTarget, Request aRequest)
+    public DefaultAjaxResponse handle(DiamAjaxBehavior aBehavior, AjaxRequestTarget aTarget,
+            Request aRequest)
     {
         try {
             var page = getPage();

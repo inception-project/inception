@@ -17,13 +17,13 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.api.model;
 
-import java.io.Serializable;
-
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+import de.tudarmstadt.ukp.inception.preferences.PreferenceValue;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class RecommenderGeneralSettings
-    implements Serializable
+    implements PreferenceValue
 {
     private static final long serialVersionUID = -1889889346307217345L;
 

@@ -64,7 +64,8 @@ public class PreferencesServiceImplIntegrationTest
 {
     static final String TEST_OUTPUT_FOLDER = "target/test-output/PreferencesServiceImplIntegrationTest";
 
-    private static final Key<TestTraits> KEY = new Key<>(TestTraits.class, "test.traits");
+    private static final PreferenceKey<TestTraits> KEY = new PreferenceKey<>(TestTraits.class,
+            "test.traits");
 
     private PreferencesServiceImpl sut;
 

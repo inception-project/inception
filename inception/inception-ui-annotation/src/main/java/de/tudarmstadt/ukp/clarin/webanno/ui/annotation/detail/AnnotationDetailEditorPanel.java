@@ -1180,8 +1180,8 @@ public abstract class AnnotationDetailEditorPanel
 
             var evaluator = new ConstraintsEvaluator();
             // Only show indicator if this feature can be affected by Constraint rules!
-            aModel.indicator.setAffected(evaluator
-                    .isAffectedByConstraints(state.getConstraints(), fs, aModel.feature));
+            aModel.indicator.setAffected(
+                    evaluator.isAffectedByConstraints(state.getConstraints(), fs, aModel.feature));
 
             possibleValues = evaluator.generatePossibleValues(state.getConstraints(), fs,
                     aModel.feature);

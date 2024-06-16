@@ -85,7 +85,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.project.ProjectImportPanel;
 import de.tudarmstadt.ukp.inception.annotation.filters.ProjectRoleFilterPanel;
 import de.tudarmstadt.ukp.inception.annotation.filters.ProjectRoleFilterStateChanged;
 import de.tudarmstadt.ukp.inception.bootstrap.BootstrapModalDialog;
-import de.tudarmstadt.ukp.inception.preferences.Key;
+import de.tudarmstadt.ukp.inception.preferences.PreferenceKey;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.project.export.ProjectExportService;
@@ -104,7 +104,7 @@ import de.tudarmstadt.ukp.inception.ui.core.dashboard.project.ProjectDashboardPa
 public class ProjectsOverviewPage
     extends ApplicationPageBase
 {
-    public static final Key<ProjectListSortState> KEY_PROJECT_LIST_SORT_MODE = new Key<>(
+    public static final PreferenceKey<ProjectListSortState> KEY_PROJECT_LIST_SORT_MODE = new PreferenceKey<>(
             ProjectListSortState.class, "project-overview/project-list-sort-mode");
 
     private static final String MID_CREATED = "created";

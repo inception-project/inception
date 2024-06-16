@@ -114,9 +114,9 @@ class OllamaRecommenderTest
         var traits = new OllamaRecommenderTraits();
         traits.setModel("mistral");
         traits.setPrompt("""
-                Identify all even numbers in the following list and return them as JSON.
+                         Identify all even numbers in the following list and return them as JSON.
 
-                {{ text }}""");
+                         {{ text }}""");
         traits.setFormat(JSON);
         traits.setPromptingMode(PER_DOCUMENT);
         traits.setExtractionMode(MENTIONS_FROM_JSON);
@@ -158,16 +158,16 @@ class OllamaRecommenderTest
     void testPerDocumentUsingMentionsFromJsonList_Politicians() throws Exception
     {
         cas.setDocumentText("""
-                John is will meet President Livingston tomorrow.
-                They will lunch together with the minister of foreign affairs.
-                Later they meet the the Lord of Darkness, Don Horny.""");
+                            John is will meet President Livingston tomorrow.
+                            They will lunch together with the minister of foreign affairs.
+                            Later they meet the the Lord of Darkness, Don Horny.""");
 
         var traits = new OllamaRecommenderTraits();
         traits.setModel("mistral");
         traits.setPrompt("""
-                Identify all politicians in the following text and return them as JSON.
+                         Identify all politicians in the following text and return them as JSON.
 
-                {{ text }}""");
+                         {{ text }}""");
         traits.setFormat(JSON);
         traits.setPromptingMode(PER_DOCUMENT);
         traits.setExtractionMode(MENTIONS_FROM_JSON);
@@ -185,7 +185,8 @@ class OllamaRecommenderTest
     @Test
     void testPerSentenceUsingMentionsFromJsonList_Politicians_fewShjot() throws Exception
     {
-        TokenBuilder.create(Token.class, Sentence.class).buildTokens(cas.getJCas(), """
+        TokenBuilder.create(Token.class, Sentence.class).buildTokens(cas.getJCas(),
+                """
                 John is will meet President Livingston tomorrow .
                 They will lunch together with the minister of foreign affairs .
                 Later they meet the the Lord of Darkness, Don Horny .""");
@@ -199,24 +200,24 @@ class OllamaRecommenderTest
         var traits = new OllamaRecommenderTraits();
         traits.setModel("mistral");
         traits.setPrompt("""
-                Identify all politicians in the following text and return them as JSON.
+                         Identify all politicians in the following text and return them as JSON.
 
-                {% for example in examples %}
-                Text:
-                '''
-                {{ example.getText() }}
-                '''
+                         {% for example in examples %}
+                         Text:
+                         '''
+                         {{ example.getText() }}
+                         '''
 
-                Response:
-                {{ example.getLabelledMentions() | tojson }}
-                {% endfor %}
+                         Response:
+                         {{ example.getLabelledMentions() | tojson }}
+                         {% endfor %}
 
-                Text:
-                '''
-                {{ text }}
-                '''
+                         Text:
+                         '''
+                         {{ text }}
+                         '''
 
-                Response:""");
+                         Response:""");
         traits.setFormat(JSON);
         traits.setPromptingMode(PER_SENTENCE);
         traits.setExtractionMode(MENTIONS_FROM_JSON);
