@@ -2,13 +2,13 @@
  * Licensed to the Technische Universität Darmstadt under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
- * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * regarding copyright ownership.  The Technische Universität Darmstadt
  * licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.
- *  
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,21 +17,30 @@
  */
 package de.tudarmstadt.ukp.inception.preferences;
 
-public class ClientSidePreferencesKey<T>
-    extends Key<T>
+public class PreferenceKey<T extends PreferenceValue>
 {
-    public static final String KEY_PREFIX_CLIENT_SIDE_ANNOTATION = "client-side/";
+    private final Class<T> traitClass;
+    private final String name;
 
-    private final String clientSideKey;
-
-    public ClientSidePreferencesKey(Class<T> aTraitClass, String aClientSideKey)
+    public PreferenceKey(Class<T> aTraitClass, String aName)
     {
-        super(aTraitClass, KEY_PREFIX_CLIENT_SIDE_ANNOTATION + aClientSideKey);
-        clientSideKey = aClientSideKey;
+        traitClass = aTraitClass;
+        name = aName;
     }
 
-    public String getClientSideKey()
+    public Class<T> getTraitClass()
     {
-        return clientSideKey;
+        return traitClass;
+    }
+
+    public String getName()
+    {
+        return name;
+    }
+
+    @Override
+    public String toString()
+    {
+        return "[" + name + "]";
     }
 }

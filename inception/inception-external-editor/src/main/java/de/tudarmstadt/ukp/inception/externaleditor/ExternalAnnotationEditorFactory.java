@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.inception.externaleditor;
 
 import java.io.IOException;
-import java.util.Map;
 import java.util.Optional;
 
 import org.apache.wicket.model.IModel;
@@ -31,8 +30,10 @@ import de.tudarmstadt.ukp.inception.editor.AnnotationEditorBase;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorFactoryImplBase;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.externaleditor.config.ExternalEditorPluginDescripion;
-import de.tudarmstadt.ukp.inception.preferences.ClientSidePreferencesKey;
+import de.tudarmstadt.ukp.inception.preferences.ClientSidePreferenceKey;
+import de.tudarmstadt.ukp.inception.preferences.ClientSidePreferenceMapValue;
 import de.tudarmstadt.ukp.inception.preferences.ClientSideUserPreferencesProvider;
+import de.tudarmstadt.ukp.inception.preferences.PreferenceValue;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.support.io.WatchedResourceFile;
 import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
@@ -111,9 +112,9 @@ public class ExternalAnnotationEditorFactory
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
-    public <T> Optional<ClientSidePreferencesKey<T>> getUserPreferencesKey()
+    public <T extends PreferenceValue> Optional<ClientSidePreferenceKey<T>> getUserPreferencesKey()
     {
-        return (Optional) Optional
-                .of(new ClientSidePreferencesKey<Map>(Map.class, "annotation/" + getBeanName()));
+        return (Optional) Optional.of(new ClientSidePreferenceKey<ClientSidePreferenceMapValue>(
+                ClientSidePreferenceMapValue.class, "annotation/" + getBeanName()));
     }
 }

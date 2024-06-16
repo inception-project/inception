@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Technische Universität Darmstadt under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,31 +15,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.search.model;
+package de.tudarmstadt.ukp.inception.preferences;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-
-import de.tudarmstadt.ukp.inception.preferences.PreferenceKey;
-import de.tudarmstadt.ukp.inception.preferences.PreferenceValue;
-
-@JsonIgnoreProperties(ignoreUnknown = true)
-public class AnnotationSearchState
-    implements PreferenceValue
+public class ClientSidePreferenceKey<T extends PreferenceValue>
+    extends PreferenceKey<T>
 {
-    public static final PreferenceKey<AnnotationSearchState> KEY_SEARCH_STATE = new PreferenceKey<>(
-            AnnotationSearchState.class, "annotation/search");
+    public static final String KEY_PREFIX_CLIENT_SIDE_ANNOTATION = "client-side/";
 
-    private static final long serialVersionUID = 6273739145955045285L;
+    private final String clientSideKey;
 
-    private boolean caseSensitive = true;
-
-    public boolean isCaseSensitive()
+    public ClientSidePreferenceKey(Class<T> aTraitClass, String aClientSideKey)
     {
-        return caseSensitive;
+        super(aTraitClass, KEY_PREFIX_CLIENT_SIDE_ANNOTATION + aClientSideKey);
+        clientSideKey = aClientSideKey;
     }
 
-    public void setCaseSensitive(boolean aCaseSensitive)
+    public String getClientSideKey()
     {
-        caseSensitive = aCaseSensitive;
+        return clientSideKey;
     }
 }

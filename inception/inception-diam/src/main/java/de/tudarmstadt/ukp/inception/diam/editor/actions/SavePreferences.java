@@ -20,8 +20,6 @@ package de.tudarmstadt.ukp.inception.diam.editor.actions;
 import static de.tudarmstadt.ukp.inception.support.json.JSONUtil.fromValidatedJsonString;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
-import java.util.Map;
-
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.request.Request;
 import org.springframework.core.annotation.Order;
@@ -31,6 +29,7 @@ import de.tudarmstadt.ukp.inception.diam.editor.DiamAjaxBehavior;
 import de.tudarmstadt.ukp.inception.diam.editor.config.DiamAutoConfig;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.AjaxResponse;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.DefaultAjaxResponse;
+import de.tudarmstadt.ukp.inception.preferences.ClientSidePreferenceMapValue;
 import de.tudarmstadt.ukp.inception.preferences.ClientSiderUserPreferencesProviderRegistry;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 
@@ -67,7 +66,8 @@ public class SavePreferences
     }
 
     @Override
-    public AjaxResponse handle(DiamAjaxBehavior aBehavior, AjaxRequestTarget aTarget, Request aRequest)
+    public AjaxResponse handle(DiamAjaxBehavior aBehavior, AjaxRequestTarget aTarget,
+            Request aRequest)
     {
         try {
             var keyParameter = aRequest.getRequestParameters().getParameterValue(PARAM_KEY)
@@ -95,7 +95,8 @@ public class SavePreferences
             var project = getAnnotatorState().getProject();
             var sessionOwner = userService.getCurrentUser();
             var dataString = aRequest.getRequestParameters().getParameterValue(PARAM_DATA);
-            var data = fromValidatedJsonString(Map.class, dataString.toString(), schema.get());
+            var data = fromValidatedJsonString(ClientSidePreferenceMapValue.class,
+                    dataString.toString(), schema.get());
             preferencesService.saveTraitsForUserAndProject(key.get(), sessionOwner, project, data);
             return new DefaultAjaxResponse();
         }
