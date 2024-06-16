@@ -150,7 +150,7 @@ public class CurationSidebarRenderer
 
         var generatedCurationVids = new HashSet<VID>();
         var showAll = curationService.isShowAll(sessionOwner, project.getId());
-        var curationTarget = curationService.getCurationTarget(sessionOwner, project.getId());
+        var curationTarget = aRequest.getAnnotationUser().getUsername();
         for (var cfgSet : diff.getConfigurationSets()) {
             if (!showAll && cfgSet.getCasGroupIds().contains(curationTarget)) {
                 // Hide configuration sets where the curator has already curated (likely)

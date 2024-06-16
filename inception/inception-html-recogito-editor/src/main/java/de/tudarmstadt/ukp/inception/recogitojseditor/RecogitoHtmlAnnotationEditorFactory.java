@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.inception.recogitojseditor;
 
 import java.io.IOException;
-import java.util.Map;
 import java.util.Optional;
 
 import org.apache.wicket.model.IModel;
@@ -30,7 +29,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorBase;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorFactoryImplBase;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
-import de.tudarmstadt.ukp.inception.preferences.ClientSidePreferencesKey;
+import de.tudarmstadt.ukp.inception.preferences.ClientSidePreferenceKey;
+import de.tudarmstadt.ukp.inception.preferences.ClientSidePreferenceMapValue;
 import de.tudarmstadt.ukp.inception.preferences.ClientSideUserPreferencesProvider;
 import de.tudarmstadt.ukp.inception.recogitojseditor.config.RecogitoHtmlAnnotationEditorSupportAutoConfiguration;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
@@ -48,6 +48,10 @@ public class RecogitoHtmlAnnotationEditorFactory
     extends AnnotationEditorFactoryImplBase
     implements ClientSideUserPreferencesProvider
 {
+    private static final ClientSidePreferenceKey<ClientSidePreferenceMapValue> KEY_RECOGITO_EDITOR_PREFS = //
+            new ClientSidePreferenceKey<>(ClientSidePreferenceMapValue.class,
+                    "annotation/recogito-annotator-editor");
+
     private WatchedResourceFile<JsonSchema> userPreferencesSchema;
 
     public RecogitoHtmlAnnotationEditorFactory()
@@ -78,12 +82,11 @@ public class RecogitoHtmlAnnotationEditorFactory
         aModelObject.setPagingStrategy(new NoPagingStrategy());
     }
 
-    @SuppressWarnings({ "unchecked", "rawtypes" })
+    @SuppressWarnings({ "unchecked" })
     @Override
-    public Optional<ClientSidePreferencesKey<Map>> getUserPreferencesKey()
+    public Optional<ClientSidePreferenceKey<ClientSidePreferenceMapValue>> getUserPreferencesKey()
     {
-        return Optional.of(
-                new ClientSidePreferencesKey<>(Map.class, "annotation/recogito-annotator-editor"));
+        return Optional.of(KEY_RECOGITO_EDITOR_PREFS);
     }
 
     @Override

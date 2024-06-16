@@ -151,8 +151,8 @@ public class CandidateEntity
      * number of related entities whose entity label occurs in <i>content tokens</i> <i>Content
      * tokens</i> consist of tokens in mention sentence annotated as nouns, verbs or adjectives
      */
-    public static final Key<Integer> SCORE_SIGNATURE_OVERLAP = new Key<>(
-            "signatureOverlapScore", 0);
+    public static final Key<Integer> SCORE_SIGNATURE_OVERLAP = new Key<>("signatureOverlapScore",
+            0);
 
     /**
      * logarithm of the wikidata ID - based on the assumption that lower IDs are more important

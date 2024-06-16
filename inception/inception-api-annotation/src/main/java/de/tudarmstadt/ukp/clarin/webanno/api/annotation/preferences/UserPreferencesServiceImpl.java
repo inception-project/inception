@@ -29,7 +29,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.Serializable;
 import java.lang.reflect.ParameterizedType;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -51,7 +50,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
-import de.tudarmstadt.ukp.inception.preferences.Key;
+import de.tudarmstadt.ukp.inception.preferences.PreferenceKey;
+import de.tudarmstadt.ukp.inception.preferences.PreferenceValue;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.rendering.coloring.ColoringService;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationPreference;
@@ -390,8 +390,9 @@ public class UserPreferencesServiceImpl
      * @deprecated We have this only so we can read the default page size here...
      */
     @Deprecated
-    public static final Key<BratAnnotationEditorManagerPrefs> KEY_BRAT_EDITOR_MANAGER_PREFS = new Key<>(
-            BratAnnotationEditorManagerPrefs.class, "annotation/editor/brat/manager");
+    public static final PreferenceKey<BratAnnotationEditorManagerPrefs> KEY_BRAT_EDITOR_MANAGER_PREFS = //
+            new PreferenceKey<>(BratAnnotationEditorManagerPrefs.class,
+                    "annotation/editor/brat/manager");
 
     /**
      * @deprecated We have this only so we can read the default page size here...
@@ -399,7 +400,7 @@ public class UserPreferencesServiceImpl
     @Deprecated
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class BratAnnotationEditorManagerPrefs
-        implements Serializable
+        implements PreferenceValue
     {
         private static final long serialVersionUID = 8809856241481077303L;
 
