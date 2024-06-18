@@ -116,7 +116,7 @@ public abstract class WicketApplicationBase
     {
         super.init();
 
-        CompoundAuthorizationStrategy authorizationStrategy = new CompoundAuthorizationStrategy();
+        var authorizationStrategy = new CompoundAuthorizationStrategy();
         authorizationStrategy.add(new RoleAuthorizationStrategy(this));
         getSecuritySettings().setAuthorizationStrategy(authorizationStrategy);
 

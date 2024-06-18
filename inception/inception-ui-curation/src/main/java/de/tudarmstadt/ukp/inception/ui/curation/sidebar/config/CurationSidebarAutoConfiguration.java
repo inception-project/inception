@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.ui.curation.sidebar.config;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
@@ -47,7 +46,6 @@ import jakarta.persistence.EntityManager;
 
 @ConditionalOnWebApplication
 @Configuration
-@ConditionalOnProperty(prefix = "curation.sidebar", name = "enabled", havingValue = "true")
 public class CurationSidebarAutoConfiguration
 {
     @Bean
@@ -79,9 +77,10 @@ public class CurationSidebarAutoConfiguration
 
     @Bean("curationSidebar")
     public CurationSidebarFactory curationSidebarFactory(ProjectService aProjectService,
-            UserDao aUserService)
+            UserDao aUserService, CurationSidebarProperties aCurationSidebarProperties)
     {
-        return new CurationSidebarFactory(aProjectService, aUserService);
+        return new CurationSidebarFactory(aProjectService, aUserService,
+                aCurationSidebarProperties);
     }
 
     @Bean
@@ -93,6 +92,7 @@ public class CurationSidebarAutoConfiguration
                 aDocumentService, aUserRepository, aAnnotationService);
     }
 
+    @Deprecated
     @Bean
     public CurationSidebarApplicationInitializer curationSidebarApplicationInitializer()
     {

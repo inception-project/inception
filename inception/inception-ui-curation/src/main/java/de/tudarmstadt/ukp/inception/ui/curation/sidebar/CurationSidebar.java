@@ -56,6 +56,7 @@ import org.slf4j.LoggerFactory;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase2;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.MergeDialog;
@@ -117,7 +118,8 @@ public class CurationSidebar
 
         var state = aAnnotationPage.getModelObject();
 
-        queue(createSessionControlForm(CID_SESSION_CONTROL_FORM));
+        queue(createSessionControlForm(CID_SESSION_CONTROL_FORM)
+                .add(visibleWhen(() -> getPage() instanceof AnnotationPage)));
 
         var isTargetFinished = LambdaModel.of(() -> curationSidebarService.isCurationFinished(state,
                 userRepository.getCurrentUsername()));

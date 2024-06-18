@@ -29,6 +29,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.curation.actionbar.CurationWorkflowA
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.render.CurationRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.render.CurationRendererImpl;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.LegacyCurationPageMenuItem;
+import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.rendering.coloring.ColoringService;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
@@ -41,9 +42,11 @@ public class LegacyCurationUIAutoConfiguration
 {
     @Bean
     public LegacyCurationPageMenuItem legacyCurationPageMenuItem(UserDao aUserRepo,
-            ProjectService aProjectService, ServletContext aServletContext)
+            ProjectService aProjectService, ServletContext aServletContext,
+            PreferencesService aPreferencesService)
     {
-        return new LegacyCurationPageMenuItem(aUserRepo, aProjectService, aServletContext);
+        return new LegacyCurationPageMenuItem(aUserRepo, aProjectService, aServletContext,
+                aPreferencesService);
     }
 
     @Bean

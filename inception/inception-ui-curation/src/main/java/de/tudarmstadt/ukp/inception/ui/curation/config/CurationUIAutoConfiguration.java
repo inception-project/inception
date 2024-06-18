@@ -17,12 +17,13 @@
  */
 package de.tudarmstadt.ukp.inception.ui.curation.config;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.LegacyCurationPageMenuItem;
+import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.ui.curation.page.CurationPageMenuItem;
 import jakarta.servlet.ServletContext;
@@ -31,11 +32,13 @@ import jakarta.servlet.ServletContext;
 @Configuration
 public class CurationUIAutoConfiguration
 {
-    @ConditionalOnProperty(prefix = "curation.new-page", name = "enabled", havingValue = "true")
     @Bean
     public CurationPageMenuItem curationPageMenuItem(UserDao aUserRepo,
-            ProjectService aProjectService, ServletContext aServletContext)
+            ProjectService aProjectService, ServletContext aServletContext,
+            PreferencesService aPreferencesService,
+            LegacyCurationPageMenuItem aLegacyCurationPageMenuItem)
     {
-        return new CurationPageMenuItem(aUserRepo, aProjectService, aServletContext);
+        return new CurationPageMenuItem(aUserRepo, aProjectService, aServletContext,
+                aPreferencesService, aLegacyCurationPageMenuItem);
     }
 }

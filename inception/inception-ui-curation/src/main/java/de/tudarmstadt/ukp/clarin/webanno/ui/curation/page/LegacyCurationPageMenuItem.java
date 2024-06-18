@@ -18,6 +18,8 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.curation.page;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
+import static de.tudarmstadt.ukp.inception.curation.settings.CurationManagerPrefs.KEY_CURATION_MANAGER_PREFS;
+import static de.tudarmstadt.ukp.inception.curation.settings.CurationPageType.WEBANNO;
 import static java.lang.String.format;
 
 import org.apache.wicket.Page;
@@ -30,6 +32,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.ProjectMenuItem;
+import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import jakarta.servlet.ServletContext;
 import wicket.contrib.input.events.key.KeyType;
@@ -42,19 +45,21 @@ public class LegacyCurationPageMenuItem
     private final UserDao userRepo;
     private final ProjectService projectService;
     private final ServletContext servletContext;
+    private final PreferencesService preferencesService;
 
     public LegacyCurationPageMenuItem(UserDao aUserRepo, ProjectService aProjectService,
-            ServletContext aServletContext)
+            ServletContext aServletContext, PreferencesService aPreferencesService)
     {
         userRepo = aUserRepo;
         projectService = aProjectService;
         servletContext = aServletContext;
+        preferencesService = aPreferencesService;
     }
 
     @Override
     public String getPath()
     {
-        return "/curate";
+        return "/curate-split";
     }
 
     public String getUrl(Project aProject, long aDocumentId)
@@ -81,6 +86,12 @@ public class LegacyCurationPageMenuItem
     public boolean applies(Project aProject)
     {
         if (aProject == null) {
+            return false;
+        }
+
+        var prefs = preferencesService.loadDefaultTraitsForProject(KEY_CURATION_MANAGER_PREFS,
+                aProject);
+        if (prefs.getCurationPageType() != WEBANNO) {
             return false;
         }
 

@@ -33,7 +33,6 @@ import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -58,7 +57,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.annotation.events.DocumentOpenedEvent;
-import de.tudarmstadt.ukp.inception.curation.config.CurationServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.curation.merge.MergeStrategyFactory;
 import de.tudarmstadt.ukp.inception.curation.model.CurationSettings;
 import de.tudarmstadt.ukp.inception.curation.model.CurationSettingsId;
@@ -70,12 +68,13 @@ import de.tudarmstadt.ukp.inception.curation.sidebar.CurationSidebarProperties;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.ui.curation.sidebar.config.CurationSidebarAutoConfiguration;
 import jakarta.persistence.EntityManager;
 
 /**
  * <p>
  * This class is exposed as a Spring Component via
- * {@link CurationServiceAutoConfiguration#curationService}.
+ * {@link CurationSidebarAutoConfiguration#curationSidebarService}.
  * </p>
  */
 public class CurationSidebarServiceImpl
@@ -144,7 +143,8 @@ public class CurationSidebarServiceImpl
             if (!(aOther instanceof CurationSessionKey)) {
                 return false;
             }
-            CurationSessionKey castOther = (CurationSessionKey) aOther;
+
+            var castOther = (CurationSessionKey) aOther;
             return new EqualsBuilder().append(username, castOther.username)
                     .append(projectId, castOther.projectId).isEquals();
         }
@@ -224,7 +224,7 @@ public class CurationSidebarServiceImpl
         synchronized (sessions) {
             var session = sessions.get(new CurationSessionKey(aSessionOwner, aProjectId));
             if (session == null) {
-                return Collections.emptyList();
+                return emptyList();
             }
 
             var selectedUsers = session.getSelectedUsers();
@@ -240,13 +240,13 @@ public class CurationSidebarServiceImpl
         synchronized (sessions) {
             var session = sessions.get(new CurationSessionKey(aSessionOwner, aProject.getId()));
             if (session == null) {
-                return Collections.emptyList();
+                return emptyList();
             }
 
             var selectedUsers = session.getSelectedUsers();
 
             if (selectedUsers == null || selectedUsers.isEmpty()) {
-                return new ArrayList<>();
+                return emptyList();
             }
 
             var finishedUsers = curationDocumentService.listCuratableUsers(aDocument);

@@ -114,7 +114,8 @@ import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
  * between user annotations for a specific document. The interface provides a tool for merging these
  * annotations and storing them as a new annotation.
  */
-@MountPath(NS_PROJECT + "/${" + PAGE_PARAM_PROJECT + "}/curate/#{" + PAGE_PARAM_DOCUMENT + "}")
+@MountPath(NS_PROJECT + "/${" + PAGE_PARAM_PROJECT + "}/curate-split/#{" + PAGE_PARAM_DOCUMENT
+        + "}")
 public class LegacyCurationPage
     extends AnnotationPageBase
 {

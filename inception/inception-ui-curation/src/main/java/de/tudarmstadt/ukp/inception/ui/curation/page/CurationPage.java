@@ -18,18 +18,21 @@
 package de.tudarmstadt.ukp.inception.ui.curation.page;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase.PAGE_PARAM_DOCUMENT;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_PROJECT;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAGE_PARAM_PROJECT;
 
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.apache.wicket.util.string.StringValue;
 import org.wicketstuff.annotation.mount.MountPath;
 
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase2;
+import de.tudarmstadt.ukp.inception.ui.curation.sidebar.CurationSidebarBehavior;
 import de.tudarmstadt.ukp.inception.ui.curation.sidebar.CurationSidebarService;
 
-@MountPath(NS_PROJECT + "/${" + PAGE_PARAM_PROJECT + "}/curate2/#{" + PAGE_PARAM_DOCUMENT + "}")
+@MountPath(NS_PROJECT + "/${" + PAGE_PARAM_PROJECT + "}/curate/#{" + PAGE_PARAM_DOCUMENT + "}")
 public class CurationPage
     extends AnnotationPageBase2
 {
@@ -42,9 +45,21 @@ public class CurationPage
     {
         super(aPageParameters);
 
+        add(new CurationSidebarBehavior());
+
         var sessionOwner = userRepository.getCurrentUsername();
         var state = getModelObject();
 
         curationSidebarService.startSession(sessionOwner, state.getProject(), false);
+    }
+
+    @Override
+    protected void handleParameters(StringValue aDocumentParameter, StringValue aFocusParameter,
+            StringValue aUserParameter)
+    {
+        var sessionOwner = userRepository.getCurrentUser();
+        requireProjectRole(sessionOwner, CURATOR);
+
+        super.handleParameters(aDocumentParameter, aFocusParameter, aUserParameter);
     }
 }

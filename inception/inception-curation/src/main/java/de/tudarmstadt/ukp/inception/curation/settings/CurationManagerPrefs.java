@@ -40,6 +40,10 @@ public class CurationManagerPrefs
 
     public CurationPageType getCurationPageType()
     {
+        if (curationPageType == null) {
+            return CurationPageType.WEBANNO;
+        }
+
         return curationPageType;
     }
 }

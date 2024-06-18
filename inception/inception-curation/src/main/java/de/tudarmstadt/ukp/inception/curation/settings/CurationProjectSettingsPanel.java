@@ -91,7 +91,6 @@ public class CurationProjectSettingsPanel
                 .setChoiceRenderer(new EnumChoiceRenderer<>(this)) //
                 .setChoices(asList(CurationPageType.values())) //
                 .setModel(curationPrefs.bind("curationPageType")) //
-                .add(visibleWhen(() -> curationSidebarProperties.isEnabled())) //
                 .setOutputMarkupPlaceholderTag(true));
 
         form.add(new LambdaAjaxButton<>(MID_SAVE, this::actionSave).triggerAfterSubmit());

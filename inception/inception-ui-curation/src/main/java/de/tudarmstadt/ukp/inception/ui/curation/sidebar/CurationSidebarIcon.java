@@ -28,7 +28,9 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.Icon;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior;
 
 public class CurationSidebarIcon
     extends GenericPanel<AnnotatorState>
@@ -43,7 +45,8 @@ public class CurationSidebarIcon
         super(aId, aState);
 
         queue(new Icon("icon", clipboard_s));
-        queue(new Icon("badge", () -> isSessionActive() ? play_circle_s : stop_circle_s)
+        queue(new Icon("badge", () -> isSessionActive() ? play_circle_s : stop_circle_s) //
+                .add(LambdaBehavior.visibleWhen(this::isSidebarCurationMode)) //
                 .add(AttributeModifier.append("class",
                         () -> isSessionActive() ? "text-primary" : "text-muted")));
     }
@@ -58,5 +61,10 @@ public class CurationSidebarIcon
         }
 
         return false;
+    }
+
+    private boolean isSidebarCurationMode()
+    {
+        return getPage() instanceof AnnotationPage;
     }
 }

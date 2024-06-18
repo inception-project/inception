@@ -33,6 +33,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase2;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebarFactory_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
+import de.tudarmstadt.ukp.inception.curation.sidebar.CurationSidebarProperties;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
@@ -53,11 +54,14 @@ public class CurationSidebarFactory
 
     private final ProjectService projectService;
     private final UserDao userService;
+    private final CurationSidebarProperties curationSidebarProperties;
 
-    public CurationSidebarFactory(ProjectService aProjectService, UserDao aUserService)
+    public CurationSidebarFactory(ProjectService aProjectService, UserDao aUserService,
+            CurationSidebarProperties aCurationSidebarProperties)
     {
         projectService = aProjectService;
         userService = aUserService;
+        curationSidebarProperties = aCurationSidebarProperties;
     }
 
     @Override
@@ -88,7 +92,8 @@ public class CurationSidebarFactory
     @Override
     public boolean accepts(AnnotationPageBase aContext)
     {
-        if (aContext instanceof AnnotationPage || aContext instanceof CurationPage) {
+        if ((aContext instanceof AnnotationPage && curationSidebarProperties.isEnabled())
+                || aContext instanceof CurationPage) {
             var state = aContext.getModelObject();
             var currentUser = userService.getCurrentUsername();
             var isCurator = projectService.hasRole(state.getUser(), state.getProject(), CURATOR);
