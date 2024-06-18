@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<mtas>
+  <configurations type="mtas.analysis.util.MtasTokenizerFactory">
+    <configuration name="folia" file="mtas/demo_folia.xml" />
+    <configuration name="tei" file="mtas/demo_tei.xml" />
+    <configuration name="iso-tei" file="mtas/demo_iso-tei.xml" />
+    <configuration name="chat" file="mtas/demo_chat.xml" />
+  </configurations>
+  <configurations type="mtas.analysis.util.MtasCharFilterFactory">
+    <configuration name="folia" type="url" prefix="http://localhost/demo/" postfix="" />
+    <configuration name="tei" type="url" prefix="http://localhost/demo/" postfix="" />
+    <configuration name="iso-tei" type="url" prefix="http://localhost/demo/" postfix="" />
+    <configuration name="chat" type="url" prefix="http://localhost/demo/" postfix="" />
+  </configurations>
+</mtas>
+

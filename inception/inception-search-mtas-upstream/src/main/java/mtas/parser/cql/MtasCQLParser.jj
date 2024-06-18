@@ -1,0 +1,1155 @@
+options
+{
+  STATIC = false;
+  UNICODE_INPUT = true;
+  JAVA_UNICODE_ESCAPE = false;
+  DEBUG_PARSER = false;
+  DEBUG_LOOKAHEAD = false;
+  DEBUG_TOKEN_MANAGER = false;
+
+  LOOKAHEAD= 1000;
+  FORCE_LA_CHECK = true;
+}
+
+PARSER_BEGIN(MtasCQLParser)
+package mtas.parser.cql;
+import mtas.parser.cql.util.MtasCQLParserGroupCondition;
+import mtas.parser.cql.util.MtasCQLParserGroupFullCondition;
+import mtas.parser.cql.util.MtasCQLParserWordCondition;
+import mtas.parser.cql.util.MtasCQLParserWordPositionQuery;
+import mtas.parser.cql.util.MtasCQLParserWordFullCondition;
+import mtas.parser.cql.util.MtasCQLParserBasicSentenceCondition;
+import mtas.parser.cql.util.MtasCQLParserSentenceCondition;
+import mtas.parser.cql.util.MtasCQLParserSentencePartCondition;
+import mtas.parser.cql.util.MtasCQLParserGroupQuery;
+import mtas.parser.cql.util.MtasCQLParserWordQuery;
+import mtas.parser.cql.util.MtasCQLParserDefaultPrefixCondition;
+import mtas.parser.cql.util.MtasCQLParserWordOperatorQuery;
+import mtas.parser.cql.util.MtasCQLParserGroupOperatorQuery;
+import org.apache.lucene.index.Term;
+import mtas.search.spans.util.MtasSpanQuery;
+import mtas.search.spans.util.MtasSpanUniquePositionQuery;
+import mtas.search.spans.MtasSpanContainingQuery;
+import mtas.search.spans.MtasSpanWithinQuery;
+import mtas.search.spans.MtasSpanIntersectingQuery;
+import mtas.search.spans.MtasSpanFullyAlignedWithQuery;
+import mtas.search.spans.MtasSpanFollowedByQuery;
+import mtas.search.spans.MtasSpanPrecededByQuery;
+import mtas.search.spans.MtasSpanNotQuery;
+import mtas.search.spans.MtasSpanSequenceItem;
+import mtas.search.spans.MtasSpanSequenceQuery;
+import mtas.search.spans.MtasSpanOrQuery;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+public class MtasCQLParser
+{
+  public MtasSpanQuery parse(String field, String defaultPrefix, HashMap < String, String [] > variables, MtasSpanQuery ignore, Integer maximumIgnoreLength) throws ParseException
+  {
+    HashSet < String > usedVariables = new HashSet < String > ();
+    MtasSpanQuery query = cql(field, defaultPrefix, variables, usedVariables, ignore, maximumIgnoreLength);
+    if (variables != null && variables.size() > usedVariables.size())
+    {
+      for (String key : variables.keySet())
+      {
+        if (!usedVariables.contains(key))
+        {
+          throw new ParseException("variable $" + key + " not used");
+        }
+      }
+      throw new ParseException("unused variables defined");
+    }
+    return new MtasSpanUniquePositionQuery(query);
+  }
+
+  private String unquoteString(String unfiltered)
+  {
+    if (unfiltered.startsWith("\"") && unfiltered.endsWith("\""))
+    {
+      unfiltered = unfiltered.substring(1, unfiltered.length());
+      unfiltered = unfiltered.substring(0, unfiltered.length() - 1);
+    }
+    return unfiltered;
+  }
+
+  private String variableString(String variable)
+  {
+    if (variable.startsWith("$"))
+    {
+      variable = variable.substring(1, variable.length());
+    }
+    return variable;
+  }
+}
+
+PARSER_END(MtasCQLParser)
+
+SKIP :
+{
+  " "
+| "\r"
+| "\t"
+| "\n"
+}
+
+TOKEN :
+{
+  < CONTAINING : "containing" >
+}
+
+TOKEN :
+{
+  < NOT_CONTAINING : "!containing" >
+}
+
+TOKEN :
+{
+  < WITHIN : "within" >
+}
+
+TOKEN :
+{
+  < NOT_WITHIN : "!within" >
+}
+
+TOKEN :
+{
+  < INTERSECTING : "intersecting" >
+}
+
+TOKEN :
+{
+  < NOT_INTERSECTING : "!intersecting" >
+}
+
+TOKEN :
+{
+  < FULLYALIGNEDWITH : "fullyalignedwith" >
+}
+
+TOKEN :
+{
+  < NOT_FULLYALIGNEDWITH : "!fullyalignedwith" >
+}
+
+TOKEN :
+{
+  < FOLLOWEDBY : "followedby" >
+}
+
+TOKEN :
+{
+  < NOT_FOLLOWEDBY : "!followedby" >
+}
+
+TOKEN :
+{
+  < PRECEDEDBY : "precededby" >
+}
+
+TOKEN :
+{
+  < NOT_PRECEDEDBY : "!precededby" >
+}
+
+TOKEN :
+{
+  < GROUP_START : "<" >
+}
+
+TOKEN :
+{
+  < GROUP_END : ">" >
+}
+
+TOKEN :
+{
+  < WORD_START : "[" >
+}
+
+TOKEN :
+{
+  < WORD_END : "]" >
+}
+
+TOKEN :
+{
+  < BRACKET_START : "(" >
+}
+
+TOKEN :
+{
+  < BRACKET_END : ")" >
+}
+
+TOKEN :
+{
+  < CURLY_BRACKET_START : "{" >
+}
+
+TOKEN :
+{
+  < CURLY_BRACKET_END : "}" >
+}
+
+TOKEN :
+{
+  < SLASH : "/" >
+}
+
+TOKEN :
+{
+  < QUESTION_MARK : "?" >
+}
+
+TOKEN :
+{
+  < NEGATION : "!" >
+}
+
+TOKEN :
+{
+  < AND : "&" >
+}
+
+TOKEN :
+{
+  < OR : "|" >
+}
+
+TOKEN :
+{
+  < KOMMA : "," >
+}
+
+TOKEN :
+{
+  < TOKEN_NOTEQUALS : "!=" >
+}
+
+TOKEN :
+{
+  < TOKEN_EQUALS : "=" >
+}
+
+TOKEN :
+{
+  < NUMBER : (< DIGIT >)+ >
+}
+
+TOKEN :
+{
+  < VARIABLE :
+    "$"
+    (
+      < ALLOWED_UNQUOTED_CHARACTER >
+    | < DIGIT >
+    )+ 
+  >
+}
+
+TOKEN :
+{
+  < QUOTED_VALUE :
+    "\""
+    (
+      "\\" ~[ ] //any escaped character    | //or      ~[ "\"", "\\" ] //any character except quote or backslash    )*
+    "\"" >
+}
+
+TOKEN :
+{
+  < UNQUOTED_VALUE :
+    (      (< ALLOWED_UNQUOTED_CHARACTER > | < DIGIT >)+
+    )  >
+}
+
+TOKEN :
+{
+  < NUMBER_VALUE :
+    (< DIGIT >)+ >
+}
+
+TOKEN :
+{
+  < OCTOTHORPE : [ "#" ] >
+}
+
+TOKEN :
+{
+  < #DIGIT : [ "0"-"9" ] >
+}
+
+TOKEN :
+{
+  < #ALLOWED_UNQUOTED_CHARACTER : 
+    [ "a"-"z", "A"-"Z", "_", ".", "-" ] 
+  >
+}
+
+private MtasSpanQuery cql(String field, String defaultPrefix, HashMap < String, String [ ] > variables, HashSet < String > usedVariables, MtasSpanQuery ignore, Integer maximumIgnoreLength) throws ParseException :
+{
+  MtasSpanSequenceItem si;
+  MtasSpanQuery mainCQL = null;
+  MtasSpanQuery orCQL = null;
+  ArrayList < MtasSpanSequenceItem > itemList = new ArrayList < MtasSpanSequenceItem > ();  
+}
+{
+  si = cqlBlock(field, defaultPrefix, variables, usedVariables, ignore, maximumIgnoreLength)
+  {
+    itemList.add(si);
+  }
+  (
+    si = cqlBlock(field, defaultPrefix, variables, usedVariables, ignore, maximumIgnoreLength)
+    {
+      itemList.add(si);
+    }
+  )*
+  (
+    < OR > 
+    orCQL = cql(field, defaultPrefix, variables, usedVariables, ignore, maximumIgnoreLength)
+  | 
+    < EOF >
+  )
+  {
+    if (itemList.size() > 1)
+    {
+      mainCQL = new MtasSpanSequenceQuery(itemList, ignore, maximumIgnoreLength);
+    }
+    else
+    {
+      mainCQL = itemList.get(0).getQuery();
+    }
+    if (orCQL != null)
+    {
+      return new MtasSpanOrQuery(mainCQL,orCQL);
+    }
+    else
+    {
+      return mainCQL;
+    }
+  }
+}
+
+private MtasSpanSequenceItem cqlBlock(String field, String defaultPrefix, HashMap < String, String [ ] > variables, HashSet < String > usedVariables, MtasSpanQuery ignore, Integer maximumIgnoreLength) throws ParseException :
+{
+  MtasCQLParserSentenceCondition sc1 = null, sc2 = null;
+  MtasSpanSequenceItem si1 = null, si2 = null;
+  ArrayList < MtasSpanSequenceItem > itemList1 = new ArrayList < MtasSpanSequenceItem > ();
+  ArrayList < MtasSpanSequenceItem > itemList2 = new ArrayList < MtasSpanSequenceItem > ();
+  MtasSpanQuery q1 = null, q2 = null;
+  Token end = null;
+  String operator = null;
+  String OPERATOR_CONTAINING = "containing";
+  String OPERATOR_NOT_CONTAINING = "not_containing";
+  String OPERATOR_WITHIN = "within";
+  String OPERATOR_NOT_WITHIN = "not_within";
+  String OPERATOR_INTERSECTING = "intersecting";
+  String OPERATOR_NOT_INTERSECTING = "not_intersecting";
+  String OPERATOR_FULLYALIGNEDWITH = "fullyalignedwith";
+  String OPERATOR_NOT_FULLYALIGNEDWITH = "not_fullyalignedwith";
+  String OPERATOR_FOLLOWEDBY = "followedby";
+  String OPERATOR_NOT_FOLLOWEDBY = "not_followedby";
+  String OPERATOR_PRECEDEDBY = "precededby";
+  String OPERATOR_NOT_PRECEDEDBY = "not_precededby";
+}
+{
+  (
+    sc1 = sentence(field, defaultPrefix, variables, usedVariables, ignore, maximumIgnoreLength)
+  |  
+    < BRACKET_START > 
+    si1 = cqlBlock(field, defaultPrefix, variables, usedVariables, ignore, maximumIgnoreLength)
+    {
+      itemList1.add(si1);
+    }
+    (
+      si1 = cqlBlock(field, defaultPrefix, variables, usedVariables, ignore, maximumIgnoreLength)
+      {
+        itemList1.add(si1);
+      }
+    )*
+    < BRACKET_END >
+  )
+  
+  [
+    (
+      < CONTAINING >
+      {
+        operator = OPERATOR_CONTAINING;
+      }
+    | < NOT_CONTAINING >
+      {
+        operator = OPERATOR_NOT_CONTAINING;
+      }
+    | < WITHIN >
+      {
+        operator = OPERATOR_WITHIN;
+      }
+    | < NOT_WITHIN >
+      {
+        operator = OPERATOR_NOT_WITHIN;
+      }
+    | < INTERSECTING >
+      {
+        operator = OPERATOR_INTERSECTING;
+      }
+    | < NOT_INTERSECTING >
+      {
+        operator = OPERATOR_NOT_INTERSECTING;
+      }
+    | < FULLYALIGNEDWITH >
+      {
+        operator = OPERATOR_FULLYALIGNEDWITH;
+      }
+    | < NOT_FULLYALIGNEDWITH >
+      {
+        operator = OPERATOR_NOT_FULLYALIGNEDWITH;
+      }
+    | < FOLLOWEDBY >
+      {
+        operator = OPERATOR_FOLLOWEDBY;
+      }
+    | < NOT_FOLLOWEDBY >
+      {
+        operator = OPERATOR_NOT_FOLLOWEDBY;
+      }
+    | < PRECEDEDBY >
+      {
+        operator = OPERATOR_PRECEDEDBY;
+      }
+    | < NOT_PRECEDEDBY >
+      {
+        operator = OPERATOR_NOT_PRECEDEDBY;
+      }    
+    )
+    (
+      sc2 = sentence(field, defaultPrefix, variables, usedVariables, ignore, maximumIgnoreLength)
+    | < BRACKET_START > 
+      si2 = cqlBlock(field, defaultPrefix, variables, usedVariables, ignore, maximumIgnoreLength)
+      {
+        itemList2.add(si2);
+      }
+      (
+        si2 = cqlBlock(field, defaultPrefix, variables, usedVariables, ignore, maximumIgnoreLength)
+        {
+          itemList2.add(si2);
+        }
+      )*
+      < BRACKET_END >
+    )
+  ]
+  {
+    if (sc1 != null)
+    {
+      si1 = new MtasSpanSequenceItem(sc1.getQuery(), sc1.isOptional());
+    }
+    else if (itemList1.size() == 1)
+    {
+      si1 = itemList1.get(0);
+    }
+    else
+    {
+      MtasSpanQuery q = new MtasSpanSequenceQuery(itemList1, ignore, maximumIgnoreLength);
+      si1 = new MtasSpanSequenceItem(q, false);
+    }
+    if (operator != null)
+    {
+      if (sc2 != null)
+      {
+        si2 = new MtasSpanSequenceItem(sc2.getQuery(), sc2.isOptional());
+      }
+      else if (itemList2.size() == 1)
+      {
+        si2 = itemList2.get(0);
+      }
+      else
+      {
+        MtasSpanQuery q = new MtasSpanSequenceQuery(itemList2, ignore, maximumIgnoreLength);
+        si2 = new MtasSpanSequenceItem(q, false);
+      }
+      if (operator.equals(OPERATOR_CONTAINING))
+      {
+        MtasSpanQuery q = new MtasSpanContainingQuery(si1.getQuery(), si2.getQuery());
+        return new MtasSpanSequenceItem(q, si1.isOptional());
+      }
+      else if (operator.equals(OPERATOR_NOT_CONTAINING))
+      {
+        MtasSpanQuery q = new MtasSpanNotQuery(si1.getQuery(), new MtasSpanContainingQuery(si1.getQuery(), si2.getQuery()));
+        return new MtasSpanSequenceItem(q, si1.isOptional());
+      }
+      else if (operator.equals(OPERATOR_WITHIN))
+      {
+        MtasSpanQuery q = new MtasSpanWithinQuery(si2.getQuery(), si1.getQuery());
+        return new MtasSpanSequenceItem(q, si1.isOptional());
+      }
+      else if (operator.equals(OPERATOR_NOT_WITHIN))
+      {
+        MtasSpanQuery q = new MtasSpanNotQuery(si1.getQuery(), new MtasSpanWithinQuery(si2.getQuery(), si1.getQuery()));
+        return new MtasSpanSequenceItem(q, si1.isOptional());
+      }
+      else if (operator.equals(OPERATOR_INTERSECTING))
+      {
+        MtasSpanQuery q = new MtasSpanIntersectingQuery(si1.getQuery(), si2.getQuery());
+        return new MtasSpanSequenceItem(q, si1.isOptional());
+      }
+      else if (operator.equals(OPERATOR_NOT_INTERSECTING))
+      {
+        MtasSpanQuery q = new MtasSpanNotQuery(si1.getQuery(), new MtasSpanIntersectingQuery(si1.getQuery(), si2.getQuery()));
+        return new MtasSpanSequenceItem(q, si1.isOptional());
+      }
+      else if (operator.equals(OPERATOR_FULLYALIGNEDWITH))
+      {
+        MtasSpanQuery q = new MtasSpanFullyAlignedWithQuery(si1.getQuery(), si2.getQuery());
+        return new MtasSpanSequenceItem(q, si1.isOptional());
+      }
+      else if (operator.equals(OPERATOR_NOT_FULLYALIGNEDWITH))
+      {
+        MtasSpanQuery q = new MtasSpanNotQuery(si1.getQuery(), new MtasSpanFullyAlignedWithQuery(si1.getQuery(), si2.getQuery()));
+        return new MtasSpanSequenceItem(q, si1.isOptional());
+      }
+      else if (operator.equals(OPERATOR_FOLLOWEDBY))
+      {
+        MtasSpanQuery q = new MtasSpanFollowedByQuery(si1.getQuery(), si2.getQuery());
+        return new MtasSpanSequenceItem(q, si1.isOptional());
+      }
+      else if (operator.equals(OPERATOR_NOT_FOLLOWEDBY))
+      {
+        MtasSpanQuery q = new MtasSpanNotQuery(si1.getQuery(), new MtasSpanFollowedByQuery(si1.getQuery(), si2.getQuery()));
+        return new MtasSpanSequenceItem(q, si1.isOptional());
+      }
+      else if (operator.equals(OPERATOR_PRECEDEDBY))
+      {
+        MtasSpanQuery q = new MtasSpanPrecededByQuery(si1.getQuery(), si2.getQuery());
+        return new MtasSpanSequenceItem(q, si1.isOptional());
+      }
+      else if (operator.equals(OPERATOR_NOT_PRECEDEDBY))
+      {
+        MtasSpanQuery q = new MtasSpanNotQuery(si1.getQuery(), new MtasSpanPrecededByQuery(si1.getQuery(), si2.getQuery()));
+        return new MtasSpanSequenceItem(q, si1.isOptional());
+      }
+      else
+      {
+        throw new ParseException("unexpected operator " + operator);
+      }
+    }
+    else
+    {
+      return si1;
+    }
+  }
+}
+
+private MtasCQLParserSentenceCondition sentence(String field, String defaultPrefix, HashMap < String, String [ ] > variables, HashSet < String > usedVariables, MtasSpanQuery ignore, Integer maximumIgnoreLength) throws ParseException :
+{
+  MtasCQLParserSentenceCondition sentenceCondition;
+  MtasCQLParserSentencePartCondition condition;
+  Token questionMark = null;
+  Token minValue = null;
+  Token maxValue = null;
+  int minimumOccurence = 1;
+  int maximumOccurence = 1;
+}
+{
+  condition = sentencePart(field, defaultPrefix, variables, usedVariables, ignore, maximumIgnoreLength)
+  {
+    sentenceCondition = condition.createFullSentence();
+    return sentenceCondition;
+  }
+}
+
+private MtasCQLParserSentencePartCondition sentencePart(String field, String defaultPrefix, HashMap < String, String [ ] > variables, HashSet < String > usedVariables, MtasSpanQuery ignore, Integer maximumIgnoreLength) throws ParseException :
+{
+  Token operator;
+  MtasCQLParserSentencePartCondition condition, sentencePart;
+  MtasCQLParserBasicSentenceCondition basicSentence;
+  Token questionMark = null;
+  Token minValue = null;
+  Token maxValue = null;
+  int minimumOccurence = 1;
+  int maximumOccurence = 1;
+}
+{
+  (
+    basicSentence = basicSentence(field, defaultPrefix, variables, usedVariables, ignore, maximumIgnoreLength)
+    {
+      condition = new MtasCQLParserSentencePartCondition(basicSentence, ignore, maximumIgnoreLength);
+    }
+  |
+    (
+      < BRACKET_START > sentencePart = sentencePart(field, defaultPrefix, variables, usedVariables, ignore, maximumIgnoreLength) < BRACKET_END >
+      [
+        {
+          questionMark = null;
+        }
+        (
+          < CURLY_BRACKET_START > minValue = < NUMBER > < KOMMA > maxValue = < NUMBER > < CURLY_BRACKET_END >
+        | < CURLY_BRACKET_START > minValue = < NUMBER > < CURLY_BRACKET_END >
+        | questionMark = < QUESTION_MARK >
+        )
+      ]
+      {
+        condition = new MtasCQLParserSentencePartCondition(sentencePart.createFullSentence(), ignore, maximumIgnoreLength);
+        if (questionMark != null)
+        {
+          minimumOccurence = 0;
+          maximumOccurence = 1;
+        }
+        else if (minValue != null)
+        {
+          minimumOccurence = Integer.parseInt(minValue.image);
+          if (maxValue != null)
+          {
+            maximumOccurence = Integer.parseInt(maxValue.image);
+          }
+          else
+          {
+            maximumOccurence = minimumOccurence;
+          }
+        }
+        condition.setFirstOccurence(minimumOccurence, maximumOccurence);
+      }
+    )
+  )
+  (
+    {
+      operator = null;
+    }
+    [ operator = < OR > ]
+    (
+      sentencePart = sentencePart(field, defaultPrefix, variables, usedVariables, ignore, maximumIgnoreLength)
+      {
+        if (operator == null)
+        {
+          condition.setOr(false);
+        }
+        else
+        {
+          condition.setOr(true);
+        }
+        condition.setSecondPart(sentencePart);
+      }
+    )
+  )?
+  {
+    return condition;
+  }
+}
+
+private MtasCQLParserBasicSentenceCondition basicSentence(String field, String defaultPrefix, HashMap < String, String [ ] > variables, HashSet < String > usedVariables, MtasSpanQuery ignore, Integer maximumIgnoreLength) throws ParseException :
+{
+  MtasCQLParserWordFullCondition subWordCondition;
+  MtasCQLParserGroupFullCondition subGroupCondition;
+  MtasCQLParserBasicSentenceCondition condition = new MtasCQLParserBasicSentenceCondition(ignore, maximumIgnoreLength);
+}
+{
+  (
+    subWordCondition = word(field, defaultPrefix, variables, usedVariables)
+    {
+      condition.addWord(subWordCondition);
+    }
+  | subGroupCondition = group(field)
+    {
+      condition.addGroup(subGroupCondition);
+    }
+  )
+  (
+    (
+      subWordCondition = word(field, defaultPrefix, variables, usedVariables)
+      {
+        condition.addWord(subWordCondition);
+      }
+    | subGroupCondition = group(field)
+      {
+        condition.addGroup(subGroupCondition);
+      }
+    )
+  )*
+  {
+    return condition;
+  }
+}
+
+private MtasCQLParserGroupFullCondition group(String field) throws ParseException :
+{
+  Token questionMark = null;
+  MtasCQLParserGroupFullCondition groupCondition;
+  MtasCQLParserGroupCondition condition;
+  Boolean startGroup, endGroup;
+  Token minValue = null;
+  Token maxValue = null;
+  Token slash = null;
+  int minimumOccurence = 1;
+  int maximumOccurence = 1;
+}
+{
+  < GROUP_START >
+  (
+    condition = groupCondition(field) [ slash = < SLASH > ]
+    {
+      if (slash == null)
+      {
+        startGroup = true;
+        endGroup = false;
+      }
+      else
+      {
+        startGroup = false;
+        endGroup = false;
+      }
+    }
+  | < SLASH > condition = groupCondition(field)
+    {
+      startGroup = false;
+      endGroup = true;
+    }
+  )
+  < GROUP_END >
+  [
+    {
+      questionMark = null;
+    }
+    (
+      < CURLY_BRACKET_START > minValue = < NUMBER > < KOMMA > maxValue = < NUMBER > < CURLY_BRACKET_END >
+    | < CURLY_BRACKET_START > minValue = < NUMBER > < CURLY_BRACKET_END >
+    | questionMark = < QUESTION_MARK >
+    )
+  ]
+  {
+    if (startGroup)
+    {
+      groupCondition = new MtasCQLParserGroupFullCondition(condition, MtasCQLParserGroupFullCondition.GROUP_START);
+    }
+    else if (endGroup)
+    {
+      groupCondition = new MtasCQLParserGroupFullCondition(condition, MtasCQLParserGroupFullCondition.GROUP_END);
+    }
+    else
+    {
+      groupCondition = new MtasCQLParserGroupFullCondition(condition, MtasCQLParserGroupFullCondition.GROUP_FULL);
+    }
+    if (questionMark != null)
+    {
+      minimumOccurence = 0;
+      maximumOccurence = 1;
+    }
+    else if (minValue != null)
+    {
+      minimumOccurence = Integer.parseInt(minValue.image);
+      if (maxValue != null)
+      {
+        maximumOccurence = Integer.parseInt(maxValue.image);
+      }
+      else
+      {
+        maximumOccurence = minimumOccurence;
+      }
+    }
+    groupCondition.setOccurence(minimumOccurence, maximumOccurence);
+    return groupCondition;
+  }
+}
+
+private MtasCQLParserGroupCondition groupCondition(String field) throws ParseException :
+{
+  Token prefix;
+  Token dequals = null;
+  Token value = null;
+  Token operator1 = null;
+  Token operator2 = null;  
+}
+{
+  (
+    (prefix = < UNQUOTED_VALUE >)      
+      (
+        operator1 = < GROUP_START >
+        [operator2 = < TOKEN_EQUALS >]
+      | operator1 = < GROUP_END >
+        [operator2 = < TOKEN_EQUALS >]  
+      | operator1 = < TOKEN_EQUALS >  
+      )
+      (value = < NUMBER >)
+    {
+        String operator = operator1.image;
+        if(operator2!=null) {
+          operator = operator + operator2.image;
+        }
+        MtasSpanQuery q = new MtasCQLParserGroupOperatorQuery(field, prefix.image, operator, Integer.parseInt(value.image));
+        MtasCQLParserGroupCondition condition = new MtasCQLParserGroupCondition(field, q);           
+        return condition;                     
+    }
+ )| (    (
+	    prefix = < UNQUOTED_VALUE > < TOKEN_EQUALS > [ dequals = < TOKEN_EQUALS > ] value = < QUOTED_VALUE >
+	  | prefix = < UNQUOTED_VALUE >
+	    {
+	      value = null;
+	    }
+	  )
+	  {
+	    if (value != null)
+	    {
+	      MtasSpanQuery q;
+	      if(dequals != null) {
+	        q = new MtasCQLParserGroupQuery(field, prefix.image, unquoteString(value.image), MtasCQLParserGroupQuery.MTAS_CQL_TERM_QUERY);
+	      } else {
+	        q = new MtasCQLParserGroupQuery(field, prefix.image, unquoteString(value.image), MtasCQLParserGroupQuery.MTAS_CQL_REGEXP_QUERY);
+	      }  
+	      MtasCQLParserGroupCondition condition = new MtasCQLParserGroupCondition(field, q);
+	      return condition;
+	    }
+	    else
+	    {
+	      MtasSpanQuery q = new MtasCQLParserGroupQuery(field, prefix.image, null);
+	      MtasCQLParserGroupCondition condition = new MtasCQLParserGroupCondition(field, q);
+	      return condition;
+	    }
+	  }
+  )          
+}
+
+private MtasCQLParserWordFullCondition word(String field, String defaultPrefix, HashMap < String, String [ ] > variables, HashSet < String > usedVariables) throws ParseException :
+{
+  Token questionMark = null;
+  Token value;
+  MtasCQLParserWordFullCondition wordCondition;
+  MtasCQLParserWordCondition condition, subCondition;
+  Token minValue = null;
+  Token maxValue = null;
+  int minimumOccurence = 1;
+  int maximumOccurence = 1;
+}
+{
+  (
+    value = < QUOTED_VALUE >
+    {
+      condition = new MtasCQLParserDefaultPrefixCondition(field, defaultPrefix, unquoteString(value.image), variables, usedVariables);
+    }
+  | 
+    < WORD_START >
+    (
+      subCondition = wordCondition(field, variables, usedVariables)
+      (
+        < AND >
+        {
+          condition = new MtasCQLParserWordCondition(field, MtasCQLParserWordCondition.TYPE_AND);
+          condition.addCondition(subCondition);
+        }
+        subCondition = wordCondition(field, variables, usedVariables)
+        {
+          condition.addCondition(subCondition);
+        }
+        (
+          < AND > subCondition = wordCondition(field, variables, usedVariables)
+          {
+            condition.addCondition(subCondition);
+          }
+        )*
+      | < OR >
+        {
+          condition = new MtasCQLParserWordCondition(field, MtasCQLParserWordCondition.TYPE_OR);
+          condition.addCondition(subCondition);
+        }
+        subCondition = wordCondition(field, variables, usedVariables)
+        {
+          condition.addCondition(subCondition);
+        }
+        (
+          < OR > subCondition = wordCondition(field, variables, usedVariables)
+          {
+            condition.addCondition(subCondition);
+          }
+        )*
+      )
+    | condition = wordCondition(field, variables, usedVariables)
+    )
+    < WORD_END >
+  |
+    {
+      condition = new MtasCQLParserWordCondition(field, MtasCQLParserWordCondition.TYPE_AND);
+    }
+    < WORD_START > < WORD_END >
+  )
+  [
+    {
+      questionMark = null;
+    }
+    (
+      < CURLY_BRACKET_START > minValue = < NUMBER > < KOMMA > maxValue = < NUMBER > < CURLY_BRACKET_END >
+    | < CURLY_BRACKET_START > minValue = < NUMBER > < CURLY_BRACKET_END >
+    | questionMark = < QUESTION_MARK >
+    )
+  ]
+  {
+    condition.simplify();
+    wordCondition = new MtasCQLParserWordFullCondition(condition);
+    if (questionMark != null)
+    {
+      minimumOccurence = 0;
+      maximumOccurence = 1;
+    }
+    else if (minValue != null)
+    {
+      minimumOccurence = Integer.parseInt(minValue.image);
+      if (maxValue != null)
+      {
+        maximumOccurence = Integer.parseInt(maxValue.image);
+      }
+      else
+      {
+        maximumOccurence = minimumOccurence;
+      }
+    }
+    wordCondition.setOccurence(minimumOccurence, maximumOccurence);
+    //System.out.println(wordCondition + "\n");    return wordCondition;
+  }
+}
+
+private MtasCQLParserWordCondition wordCondition(String field, HashMap < String, String [ ] > variables, HashSet < String > usedVariables) throws ParseException :
+{
+  Token negation = null;
+  MtasCQLParserWordCondition condition, subCondition;
+}
+{ 
+  (
+    //condition with brackets    [ negation = < NEGATION > ] < BRACKET_START >
+    (
+      {
+        condition = new MtasCQLParserWordCondition(field, MtasCQLParserWordCondition.TYPE_AND);
+      }
+      (
+        subCondition = wordAtomCondition(field, variables, usedVariables)
+      | subCondition = wordCondition(field, variables, usedVariables)
+      )
+      {
+        condition.addCondition(subCondition);
+      }
+      < AND >
+      (
+        subCondition = wordAtomCondition(field, variables, usedVariables)
+      | subCondition = wordCondition(field, variables, usedVariables)
+      )
+      {
+        condition.addCondition(subCondition);
+      }
+      (
+        < AND >
+        (
+          subCondition = wordAtomCondition(field, variables, usedVariables)
+        | subCondition = wordCondition(field, variables, usedVariables)
+        )
+        {
+          condition.addCondition(subCondition);
+        }
+      )*
+    |
+      {
+        condition = new MtasCQLParserWordCondition(field, MtasCQLParserWordCondition.TYPE_OR);
+      }
+      (
+        subCondition = wordAtomCondition(field, variables, usedVariables)
+      | subCondition = wordCondition(field, variables, usedVariables)
+      )
+      {
+        condition.addCondition(subCondition);
+      }
+      < OR >
+      (
+        subCondition = wordAtomCondition(field, variables, usedVariables)
+      | subCondition = wordCondition(field, variables, usedVariables)
+      )
+      {
+        condition.addCondition(subCondition);
+      }
+      (
+        < OR >
+        (
+          subCondition = wordAtomCondition(field, variables, usedVariables)
+        | subCondition = wordCondition(field, variables, usedVariables)
+        )
+        {
+          condition.addCondition(subCondition);
+        }
+      )*
+    |
+      (
+        condition = wordAtomCondition(field, variables, usedVariables)
+      | condition = wordCondition(field, variables, usedVariables)
+      )
+    )
+    < BRACKET_END >
+    {
+      if (negation != null)
+      {
+        condition.swapNot();
+      }
+      //System.out.println("=== wordCondition ===\n" + condition + "\n");      return condition;
+    }
+  | //plain atom is a valid condition    subCondition = wordAtomCondition(field, variables, usedVariables)
+    {
+      //System.out.println("=== wordCondition ===\n" + subCondition + "\n");      return subCondition;
+    }
+  )
+  {
+    //System.out.println("=== wordCondition ===\n" + condition + "\n");    return null;
+  }
+}
+
+private MtasCQLParserWordCondition wordAtomCondition(String field, HashMap < String, String [ ] > variables, HashSet < String > usedVariables) throws ParseException :
+{
+  Token negation = null;
+  Token nequals = null;
+  Token dequals = null;
+  Token prefix;
+  Token value;
+  Token operator1 = null;
+  Token operator2 = null;
+}
+{
+  [ negation = < NEGATION > ]
+  (
+    (
+      < OCTOTHORPE >
+      (
+        value = < NUMBER >
+      | 
+        value = < UNQUOTED_VALUE >
+      )
+      {
+        Integer startPosition = null;
+        Integer endPosition = null;
+        Pattern range = Pattern.compile("([0-9]+)(\\-([0-9]+))?");
+        Matcher m = range.matcher(value.image);
+        if (m.find())
+        {
+          startPosition = m.group(1) != null ? Integer.parseInt(m.group(1)) : null;
+          endPosition = m.group(3) != null ? Integer.parseInt(m.group(3)) : null;
+        }
+        else
+        {
+          throw new ParseException("invalid range '" + value.image + "'");
+        }
+        MtasCQLParserWordCondition condition = new MtasCQLParserWordCondition(field, MtasCQLParserWordCondition.TYPE_AND);
+        if (startPosition != null && endPosition != null)
+        {
+          MtasSpanQuery q = new MtasCQLParserWordPositionQuery(field, startPosition, endPosition);
+          condition.addPositiveQuery(q);
+        }
+        else if (startPosition != null)
+        {
+          MtasSpanQuery q = new MtasCQLParserWordPositionQuery(field, startPosition, startPosition);
+          condition.addPositiveQuery(q);
+        }
+        else
+        {
+          //should not happen
+          throw new ParseException("invalid range");
+        }
+        return condition;
+      }
+    )
+  |
+    (
+      (prefix = < UNQUOTED_VALUE >)
+      (
+        nequals = < TOKEN_NOTEQUALS >
+      | < TOKEN_EQUALS >
+      )
+      [ dequals = < TOKEN_EQUALS > ]
+      (value = < VARIABLE >)
+      {
+        if (nequals != null)
+        {
+          //use RegexpQuery combined with SpanMultiTermQueryWrapper
+          throw new ParseException("TODO: not implemented '" + prefix.image + nequals.image + value.image + "'");
+        }
+        else
+        {
+          MtasCQLParserWordCondition condition = new MtasCQLParserWordCondition(field, MtasCQLParserWordCondition.TYPE_OR);
+          MtasSpanQuery q;
+          if (dequals != null) {
+            q = new MtasCQLParserWordQuery(field, prefix.image, variableString(value.image), MtasCQLParserWordQuery.MTAS_CQL_VARIABLE_TERM_QUERY, variables, usedVariables);
+          } else {
+            q = new MtasCQLParserWordQuery(field, prefix.image, variableString(value.image), MtasCQLParserWordQuery.MTAS_CQL_VARIABLE_REGEXP_QUERY, variables, usedVariables);
+          }  
+          if (negation != null)
+          {
+            condition.swapNot();
+          }
+          condition.addPositiveQuery(q);
+          //System.out.println("=== wordAtomCondition ===\n" + condition + "\n");
+          return condition;
+        }
+      }
+    )
+  |
+    (
+      (prefix = < UNQUOTED_VALUE >)
+      (
+        nequals = < TOKEN_NOTEQUALS >
+      | < TOKEN_EQUALS >
+      )
+      [ dequals = < TOKEN_EQUALS > ]
+      (value = < QUOTED_VALUE >)
+      {
+        if (nequals != null)
+        {
+          //use RegexpQuery combined with SpanMultiTermQueryWrapper          throw new ParseException("TODO: not implemented '" + prefix.image + nequals.image + value.image + "'");
+        }
+        else
+        {
+          MtasCQLParserWordCondition condition = new MtasCQLParserWordCondition(field, MtasCQLParserWordCondition.TYPE_AND);
+          MtasSpanQuery q;
+          if (dequals != null) { 
+            q = new MtasCQLParserWordQuery(field, prefix.image, unquoteString(value.image), MtasCQLParserWordQuery.MTAS_CQL_TERM_QUERY, variables, usedVariables);
+          } else {
+            q = new MtasCQLParserWordQuery(field, prefix.image, unquoteString(value.image), MtasCQLParserWordQuery.MTAS_CQL_REGEXP_QUERY, variables, usedVariables);
+          }  
+          if (negation != null)
+          {
+            condition.swapNot();
+          }
+          condition.addPositiveQuery(q);
+          //System.out.println("=== wordAtomCondition ===\n" + condition + "\n");          return condition;
+        }
+      }
+    )
+  |
+    (
+      (prefix = < UNQUOTED_VALUE >)      
+      (
+        operator1 = < GROUP_START >
+        [operator2 = < TOKEN_EQUALS >]
+      | operator1 = < GROUP_END >
+        [operator2 = < TOKEN_EQUALS >]
+      | operator1 = < TOKEN_EQUALS >  
+      )
+      (value = < NUMBER >)
+      {
+        String operator = operator1.image;
+        if(operator2!=null) {
+          operator = operator + operator2.image;
+        }
+        if (nequals != null)
+        {
+          //use RegexpQuery combined with SpanMultiTermQueryWrapper        
+          throw new ParseException("TODO: not implemented '" + prefix.image + operator + "'");
+        }
+        else
+        {
+          MtasCQLParserWordCondition condition = new MtasCQLParserWordCondition(field, MtasCQLParserWordCondition.TYPE_AND);
+           
+          MtasSpanQuery q = new MtasCQLParserWordOperatorQuery(field, prefix.image, operator, Integer.parseInt(value.image));
+          if (negation != null)
+          {
+            condition.swapNot();
+          }
+          condition.addPositiveQuery(q);
+          //System.out.println("=== wordAtomCondition ===\n" + condition + "\n");
+          return condition;	            
+        }
+      }
+    )           
+  )
+}

@@ -1,0 +1,20 @@
+== MTAS
+
+All (almost) files in this module are from MTAS licensed under the Apache License 2.0
+
+Original source: https://github.com/textexploration/mtas
+Commit:          2bf0ce407b6cc9d50ab11f3c4d4c0ab7946fba1a
+
+
+The files were modified to remove references to Solr. Also files not relevant for building 
+library (e.g. website, etc.) were removed. The build process in the pom.xml was changed to
+integrate with the build of INCEpTION.
+
+
+== Apache Solr
+
+The file 'org.apache.solr.legacy.LegacyNumericUtils' was obtained from Apache Solre 9.6.0
+licensed under the Apache License 2.0
+
+Original source: https://github.com/apache/solr
+Commit:          501aa0228619b06ba9f962168b584b1c6d8ee4b5
