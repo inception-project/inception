@@ -96,15 +96,6 @@ storage:
     storageClassName: "standard"
     size: "5Gi"
     accessMode: ReadWriteOnce
-  logs:
-    storageClassName: "standard"
-    size: "5Gi"
-    accessMode: ReadWriteOnce
-  tmp:
-    storageClassName: "standard"
-    size: "5Gi"
-    accessMode: ReadWriteOnce
-  
     
 nodeSelector: {}
 

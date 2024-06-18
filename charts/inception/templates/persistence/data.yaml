@@ -1,7 +1,7 @@
 kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
-  name: inception-data-pvc
+  name: {{ include "inception.fullname" . }}-data
 spec:
   storageClassName: {{ .Values.storage.data.storageClassName }}
   accessModes:

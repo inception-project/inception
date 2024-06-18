@@ -30,6 +30,25 @@ spec:
       serviceAccountName: {{ include "inception.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      initContainers:
+      - name: wait-for-db
+        image: mariadb
+        env:
+        - name: MARIADB_DATABASE
+          value: "inception"
+        - name: MARIADB_USER
+          value: "inception"
+        - name: MARIADB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "inception.fullname" . }}-mariadb
+              key: mariadb-password
+        command: 
+          - mysql 
+          - -u"MARIADB_USER" 
+          - -p"$MARIADB_PASSWORD" 
+          - -e "USE $MARIADB_DATABASE"
+          
       containers:
         - name: {{ .Chart.Name }}
           securityContext:
@@ -62,25 +81,20 @@ spec:
             subPath: settings.properties
             name: inception-settings
           - mountPath: /export
-            name: inception-data-pv
+            name: data
           - mountPath: /tmp
-            name: inception-tmp-pv
-          - mountPath: /var/log
-            name: inception-log-pv
+            name: tmp
 
       volumes:
       - name: inception-settings
         configMap:
           name: {{ .Release.Name }}-conf
-      - name: inception-data-pv
+      - name: data
         persistentVolumeClaim:
-          claimName: inception-data-pvc
-      - name: inception-tmp-pv
-        persistentVolumeClaim:
-          claimName: inception-tmp-pvc
-      - name: inception-log-pv
-        persistentVolumeClaim:
-          claimName: inception-logs-pvc
+          claimName: {{ include "inception.fullname" . }}-data
+      - name: tmp
+        emptyDir:
+          sizeLimit: 1Gi
 
       {{- with .Values.nodeSelector }}
       nodeSelector:
