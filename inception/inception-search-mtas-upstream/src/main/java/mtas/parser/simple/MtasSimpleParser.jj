@@ -1,0 +1,242 @@
+options
+{
+  STATIC = false;
+  UNICODE_INPUT = true;
+  JAVA_UNICODE_ESCAPE = false;
+  DEBUG_PARSER = false;
+  DEBUG_LOOKAHEAD = false;
+  DEBUG_TOKEN_MANAGER = false;
+
+  LOOKAHEAD= 1000;
+}
+
+PARSER_BEGIN(MtasSimpleParser)
+package mtas.parser.simple;
+import java.util.List;
+import java.util.ArrayList;
+import mtas.parser.simple.util.MtasSimpleParserWordQuery;
+import mtas.search.spans.util.MtasSpanQuery;
+import mtas.search.spans.util.MtasSpanUniquePositionQuery;
+import mtas.search.spans.MtasSpanSequenceItem;
+import mtas.search.spans.MtasSpanSequenceQuery;
+import mtas.search.spans.MtasSpanAndQuery;
+import mtas.search.spans.MtasSpanOrQuery;
+
+public class MtasSimpleParser
+{
+  public List<MtasSpanQuery> parse(String field, String defaultPrefix, MtasSpanQuery ignore, Integer maximumIgnoreLength) throws ParseException
+  {
+    List<MtasSpanQuery> queries = simple(field, defaultPrefix, ignore, maximumIgnoreLength, true);
+    for(int i=0; i<queries.size(); i++) {
+      queries.set(i, new MtasSpanUniquePositionQuery(queries.get(i)));
+    }
+    return queries; 
+  }
+
+  private String unescapeWord(String escapedWord) {
+    return escapedWord.replaceAll("\\\\(.)", "$1");  
+  }
+}
+
+PARSER_END(MtasSimpleParser)
+
+SKIP :
+{
+    " "
+|   "\r"
+|   "\t"
+}
+
+
+TOKEN :
+{
+  < WORD :
+    (
+      "\\" ~[ ] //any escaped character
+    | //or
+      ~[ "\"", "\\", " ", "\r", "\t", "&", "|", "(", ")"] 
+    )+ >
+}
+
+
+TOKEN:
+
+{
+    < QUOTE : ["\""] >
+}
+
+
+TOKEN:
+
+{
+    < AND : ["&"] >
+}
+
+TOKEN:
+
+{
+    < OR : ["|"] >
+}
+
+TOKEN:
+
+{
+    < BRACKET_OPEN : "(" >
+}
+
+TOKEN:
+
+{
+    < BRACKET_CLOSE : [")"] >
+}
+
+
+private List<MtasSpanQuery> simple(String field, String defaultPrefix, MtasSpanQuery ignore, Integer maximumIgnoreLength, boolean fullQuery)  :
+{
+  Token eol;
+  MtasSpanQuery quotedQuery;
+  MtasSpanQuery wordQuery;
+  List<MtasSpanQuery> queries = new ArrayList<MtasSpanQuery>();
+  List<MtasSpanQuery> wordQueries;  
+} 
+{
+  (
+    
+      quotedQuery = quotedSimple(field, defaultPrefix, ignore,  maximumIgnoreLength)
+        {
+          queries.add(quotedQuery);
+        }
+     
+  | 
+          wordQuery = simpleWord(field, defaultPrefix, ignore,  maximumIgnoreLength)
+	    {
+	      queries.add(wordQuery);
+	    }
+
+  |
+      < BRACKET_OPEN >
+      wordQueries = simple(field, defaultPrefix, ignore, maximumIgnoreLength, false)
+      < BRACKET_CLOSE >
+      {
+        queries.addAll(wordQueries);
+      }   
+       
+  )+
+
+  (    <EOF>
+  | 
+    {
+      if(fullQuery) {
+        //System.out.println("Expected <EOF>");
+        throw new ParseException("Expected <EOF>");
+      }  
+    }
+  )  
+  {
+    return queries;
+  }
+}
+
+private MtasSpanQuery quotedSimple(String field, String defaultPrefix, MtasSpanQuery ignore, Integer maximumIgnoreLength)  :
+{
+  MtasSpanQuery wordQuery;
+  List<MtasSpanSequenceItem> quotedItems = new ArrayList<MtasSpanSequenceItem>();
+} 
+{ 
+  < QUOTE >
+  {
+    quotedItems = new ArrayList<MtasSpanSequenceItem>();
+  }
+  (
+      wordQuery = simpleWord(field, defaultPrefix, ignore,  maximumIgnoreLength)
+      {        
+        quotedItems.add(new MtasSpanSequenceItem(wordQuery, false));
+      }
+  )+
+  < QUOTE >
+  {
+    if(quotedItems.size() >1) { 
+      return new MtasSpanSequenceQuery(quotedItems, null, null);
+    } else {
+      return quotedItems.get(0).getQuery();
+    }
+  }   
+}
+
+private MtasSpanQuery simpleWord(String field, String defaultPrefix, MtasSpanQuery ignore, Integer maximumIgnoreLength) :
+{
+  Token word;
+  MtasSpanQuery query;
+  ArrayList < MtasSpanQuery > queryList = new ArrayList < MtasSpanQuery > ();
+}
+{
+  (
+
+    (      word = < WORD >
+      {
+        queryList.add(new MtasSimpleParserWordQuery(field, defaultPrefix, unescapeWord(word.image)));    
+      }
+    |
+      < BRACKET_OPEN >
+      query = simpleWord(field, defaultPrefix, ignore,  maximumIgnoreLength)
+      < BRACKET_CLOSE >
+      {
+        queryList.add(query);    
+      }
+    )  
+    (
+      (
+        < AND >
+        (
+	      word = < WORD >
+	      {
+	        queryList.add(new MtasSimpleParserWordQuery(field, defaultPrefix, unescapeWord(word.image)));    
+	      }
+	    |
+	      < BRACKET_OPEN >
+	      query = simpleWord(field, defaultPrefix, ignore,  maximumIgnoreLength)
+	      < BRACKET_CLOSE >
+	      {
+	        queryList.add(query);    
+	      }
+	    ) 
+      )+
+      {
+        if(queryList.size()==1) { 
+          query = queryList.get(0);
+        } else {
+          query = new MtasSpanAndQuery(queryList.toArray(new MtasSpanQuery[queryList.size()]));
+        }
+        return query;
+      }
+    |
+      (
+        < OR >
+        (
+	      word = < WORD >
+	      {
+	        queryList.add(new MtasSimpleParserWordQuery(field, defaultPrefix, unescapeWord(word.image)));    
+	      }
+	    |
+	      < BRACKET_OPEN >
+	      query = simpleWord(field, defaultPrefix, ignore,  maximumIgnoreLength)
+	      < BRACKET_CLOSE >
+	      {
+	        queryList.add(query);    
+	      }
+	    ) 
+      )*
+      {
+        if(queryList.size()==1) { 
+          query = queryList.get(0);
+        } else {
+          query = new MtasSpanOrQuery(queryList.toArray(new MtasSpanQuery[queryList.size()]));
+        }
+        return query;
+      }
+    )
+  )       
+}
+
+
+
