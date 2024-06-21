@@ -905,9 +905,21 @@ export class Visualizer {
     let currentChunkId = 0
     let chunk: Chunk
     for (const fragment of sortedFragments) {
-      while (fragment.to > (chunk = chunks[currentChunkId]).to) {
+      const span = fragment.span
+
+      chunk = chunks[currentChunkId]
+      while (fragment.to > chunk.to) {
         currentChunkId++
+        chunk = chunks[currentChunkId]
+        if (!chunk) {
+          // If the fragment is outside of the last chunk, create a new chunk because otherwise
+          // we won't be able to render relations towards the end of the viewport
+          chunk = new Chunk(currentChunkId, '', fragment.from, fragment.to, '')
+          chunks.push(chunk)
+          break
+        }
       }
+
       chunk.fragments.push(fragment)
       fragment.text = chunk.text.substring(fragment.from - chunk.from, fragment.to - chunk.from)
       fragment.chunk = chunk
@@ -1918,7 +1930,7 @@ export class Visualizer {
         if (fragment === span.headFragment) {
           const checkLeftRightArcs = (arc: Arc, refSpan: Entity, leftSpan: Entity) => {
             const refChunk = leftSpan.headFragment.chunk
-            if (!refChunk.row) {
+            if (!refChunk || !refChunk.row) {
               hasRightArcs = true
               return
             }
@@ -1974,7 +1986,7 @@ export class Visualizer {
 
           for (const arc of span.incoming) {
             const origin = docData.spans[arc.origin].headFragment.chunk
-            if (chunk.index === origin.index) {
+            if (origin && chunk.index === origin.index) {
               hasInternalArcs = true
             }
           }
