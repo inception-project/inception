@@ -52,6 +52,8 @@ import org.apache.uima.cas.CAS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.event.EventListener;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.core.session.SessionDestroyedEvent;
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.transaction.annotation.Transactional;
@@ -374,6 +376,8 @@ public class CurationSidebarServiceImpl
                 listCuratableUsers(aSessionOwner, aDocument));
     }
 
+    // Set order so this is handled before session info is removed from sessionRegistry
+    @Order(Ordered.HIGHEST_PRECEDENCE)
     @EventListener
     @Transactional
     public void onSessionDestroyed(SessionDestroyedEvent event)
@@ -448,9 +452,9 @@ public class CurationSidebarServiceImpl
 
     private void closeAllSessions(User aSessionOwner)
     {
-        projectService.listAccessibleProjects(aSessionOwner).stream() //
-                .map(Project::getId) //
-                .forEach(pId -> closeSession(aSessionOwner.getUsername(), pId));
+        synchronized (sessions) {
+            sessions.keySet().removeIf(k -> k.username.equals(aSessionOwner.getUsername()));
+        }
     }
 
     @Transactional

@@ -1045,8 +1045,9 @@ public class RecommendationServiceImpl
         }
     }
 
-    @EventListener
+    // Set order so this is handled before session info is removed from sessionRegistry
     @Order(Ordered.HIGHEST_PRECEDENCE)
+    @EventListener
     public void onSessionDestroyed(SessionDestroyedEvent event)
     {
         var info = sessionRegistry.getSessionInformation(event.getId());
