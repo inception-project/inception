@@ -21,6 +21,7 @@ import java.io.Serializable;
 import java.util.Optional;
 
 import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.cas.text.AnnotationPredicates;
 
 import de.tudarmstadt.ukp.inception.support.annotation.OffsetSpan;
 
@@ -131,7 +132,7 @@ public class VRange
             int aEnd)
     {
         // Range is fully outside the viewport.
-        if (aEnd < aViewportBegin || aBegin > aViewPortEnd) {
+        if (!AnnotationPredicates.overlapping(aViewportBegin, aViewPortEnd, aBegin, aEnd)) {
             return Optional.empty();
         }
 
