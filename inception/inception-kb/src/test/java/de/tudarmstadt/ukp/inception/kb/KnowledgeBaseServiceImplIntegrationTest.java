@@ -1610,7 +1610,6 @@ public class KnowledgeBaseServiceImplIntegrationTest
     public void getConceptRoots_WithWildlifeOntologyAndExplicityDefinedConcepts_ShouldReturnRootConcepts(
             Reification reification)
         throws Exception
-
     {
         setUp(reification);
 
@@ -1623,8 +1622,7 @@ public class KnowledgeBaseServiceImplIntegrationTest
         importKnowledgeBase("data/wildlife_ontology.ttl");
         setSchema(kb, OWL.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.COMMENT, RDFS.LABEL, RDF.PROPERTY);
 
-        Stream<String> rootConcepts = sut.listRootConcepts(kb, false).stream()
-                .map(KBHandle::getName);
+        var rootConcepts = sut.listRootConcepts(kb, false).stream().map(KBHandle::getName);
 
         String[] expectedLabels = { "Animal Intelligence", "Ecozone" };
         assertThat(rootConcepts).as("Check that all root concepts have been found")
@@ -1824,8 +1822,8 @@ public class KnowledgeBaseServiceImplIntegrationTest
     {
         setUp(reification);
 
-        KBInstance germanInstance = buildInstanceWithLanguage("de");
-        KBInstance englishInstance = buildInstanceWithLanguage("en");
+        var germanInstance = buildInstanceWithLanguage("de");
+        var englishInstance = buildInstanceWithLanguage("en");
 
         kb.setDefaultLanguage("en");
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
@@ -1837,8 +1835,9 @@ public class KnowledgeBaseServiceImplIntegrationTest
             englishInstance.write(conn, kb);
         });
 
-        KBInstance firstInstance = sut.readInstance(kb, germanInstance.getIdentifier()).get();
-        assertThat(firstInstance.getLanguage()).as("Check that the English instance is retrieved.")
+        var firstInstance = sut.readInstance(kb, germanInstance.getIdentifier()).get();
+        assertThat(firstInstance.getLanguage()) //
+                .as("Check that the English instance is retrieved.") //
                 .isEqualTo("en");
     }
 

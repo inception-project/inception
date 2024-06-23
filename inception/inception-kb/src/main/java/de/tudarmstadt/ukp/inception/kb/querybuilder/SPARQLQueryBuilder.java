@@ -63,11 +63,11 @@ import static org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.literalOf;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.IllformedLocaleException;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.StringJoiner;
@@ -106,9 +106,11 @@ import org.eclipse.rdf4j.sparqlbuilder.util.SparqlBuilderUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
+import de.tudarmstadt.ukp.inception.support.spring.ApplicationContextProvider;
 
 /**
  * Build queries against the KB.
@@ -156,6 +158,8 @@ public class SPARQLQueryBuilder
 
     private final KnowledgeBase kb;
     private final Mode mode;
+
+    private List<String> fallbackLanguages = emptyList();
 
     /**
      * Case-insensitive mode is a best-effort approach. Depending on the underlying FTS, it may or
@@ -521,6 +525,12 @@ public class SPARQLQueryBuilder
                 && FTS_WIKIDATA.stringValue().equals(aKB.getFullTextSearchIri())) {
             forceDisableFTS.add("Wikidata property query");
         }
+
+        var appCtx = ApplicationContextProvider.getApplicationContext();
+        if (appCtx != null) {
+            var props = appCtx.getBean(KnowledgeBaseProperties.class);
+            withFallbackLanguages(props.getDefaultFallbackLanguages());
+        }
     }
 
     void addPattern(Priority aPriority, GraphPattern aPattern)
@@ -563,6 +573,22 @@ public class SPARQLQueryBuilder
     boolean noResult()
     {
         return returnEmptyResult = true;
+    }
+
+    @Override
+    public SPARQLQueryPrimaryConditions withFallbackLanguages(String... aString)
+    {
+        fallbackLanguages = Stream.of(aString).distinct().toList();
+
+        return this;
+    }
+
+    @Override
+    public SPARQLQueryPrimaryConditions withFallbackLanguages(Collection<String> aString)
+    {
+        fallbackLanguages = aString.stream().distinct().toList();
+
+        return this;
     }
 
     @Override
@@ -986,26 +1012,22 @@ public class SPARQLQueryBuilder
 
     Expression<?> matchKbLanguage(Variable aVariable)
     {
-        var language = kb.getDefaultLanguage();
+        var defaultLang = kb.getDefaultLanguage();
 
-        if (language != null) {
-            return matchWithOrWithoutLanguage(aVariable, language);
+        var languages = new ArrayList<Expression<?>>();
+        if (defaultLang != null) {
+            // Match with default language
+            languages.add(function(LANGMATCHES, function(LANG, aVariable), literalOf(defaultLang)));
         }
 
-        return matchWithoutLanguage(aVariable);
-    }
+        for (var lang : fallbackLanguages) {
+            languages.add(function(LANGMATCHES, function(LANG, aVariable), literalOf(lang)));
+        }
 
-    private Expression<?> matchWithOrWithoutLanguage(Variable aVariable, String language)
-    {
-        return or(// Match with default language
-                function(LANGMATCHES, function(LANG, aVariable), literalOf(language)),
-                // Match without language
-                matchWithoutLanguage(aVariable)).parenthesize(); //
-    }
+        // Match without language
+        languages.add(Expressions.equals(function(LANG, aVariable), EMPTY_STRING));
 
-    private Expression<?> matchWithoutLanguage(Variable aVariable)
-    {
-        return Expressions.equals(function(LANG, aVariable), EMPTY_STRING);
+        return or(languages.toArray(Expression[]::new));
     }
 
     @Override
@@ -1451,9 +1473,16 @@ public class SPARQLQueryBuilder
      */
     private List<KBHandle> reduceRedundantResults(List<KBHandle> aHandles)
     {
-        Map<String, KBHandle> cMap = new LinkedHashMap<>();
-        for (KBHandle handle : aHandles) {
-            KBHandle current = cMap.get(handle.getIdentifier());
+        var langPrio = new ArrayList<>();
+        if (kb.getDefaultLanguage() != null) {
+            langPrio.add(kb.getDefaultLanguage());
+        }
+        langPrio.addAll(fallbackLanguages);
+        langPrio.add(null);
+
+        var cMap = new LinkedHashMap<String, KBHandle>();
+        for (var handle : aHandles) {
+            var current = cMap.get(handle.getIdentifier());
 
             // Not recorded yet -> add it
             if (current == null) {
@@ -1468,8 +1497,8 @@ public class SPARQLQueryBuilder
             }
             // Found an exact language match -> use that one instead
             // Note that having a language implies that there is a label!
-            else if (kb.getDefaultLanguage() != null
-                    && kb.getDefaultLanguage().equals(handle.getLanguage())) {
+            else if (langPrio.indexOf(current.getLanguage()) > langPrio
+                    .indexOf(handle.getLanguage())) {
                 replace = true;
             }
 
@@ -1691,9 +1720,21 @@ public class SPARQLQueryBuilder
 
     public static String toLowerCase(KnowledgeBase kb, String aValue)
     {
-        var language = kb.getDefaultLanguage() != null ? kb.getDefaultLanguage() : "en";
-        aValue = aValue.toLowerCase(Locale.forLanguageTag(language));
-        return aValue;
+        if (aValue == null) {
+            return null;
+        }
+
+        var locale = Locale.ROOT;
+        if (kb != null && kb.getDefaultLanguage() != null) {
+            try {
+                locale = Locale.forLanguageTag(kb.getDefaultLanguage());
+            }
+            catch (IllformedLocaleException e) {
+                // Ignore
+            }
+        }
+
+        return aValue.toLowerCase(locale);
     }
 
     @Override
