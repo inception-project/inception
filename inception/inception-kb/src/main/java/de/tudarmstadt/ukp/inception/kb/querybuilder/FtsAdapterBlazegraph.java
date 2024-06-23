@@ -21,6 +21,7 @@ import static de.tudarmstadt.ukp.inception.kb.IriConstants.PREFIX_BLAZEGRAPH;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder.convertToRequiredTokenPrefixMatchingQuery;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder.Priority.PRIMARY;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions.and;
 import static org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.prefix;
 import static org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns.and;
 import static org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns.union;
@@ -28,6 +29,7 @@ import static org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.iri;
 
 import java.util.ArrayList;
 
+import org.eclipse.rdf4j.sparqlbuilder.constraint.Expression;
 import org.eclipse.rdf4j.sparqlbuilder.core.Prefix;
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPattern;
 
@@ -159,10 +161,14 @@ public class FtsAdapterBlazegraph
 
             builder.addProjection(SPARQLQueryBuilder.VAR_SCORE);
 
+            var labelFilterExpressions = new ArrayList<Expression<?>>();
+            labelFilterExpressions.add(builder.matchKbLanguage(VAR_MATCH_TERM));
+
             valuePatterns.add(new BlazegraphFtsQuery(SPARQLQueryBuilder.VAR_SUBJECT,
                     SPARQLQueryBuilder.VAR_SCORE, SPARQLQueryBuilder.VAR_MATCH_TERM,
-                    SPARQLQueryBuilder.VAR_MATCH_TERM_PROPERTY, fuzzyQuery)
-                            .withLimit(builder.getLimit()));
+                    SPARQLQueryBuilder.VAR_MATCH_TERM_PROPERTY, fuzzyQuery) //
+                            .withLimit(builder.getLimit()) //
+                            .filter(and(labelFilterExpressions.toArray(Expression[]::new))));
         }
 
         if (valuePatterns.isEmpty()) {
