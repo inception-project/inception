@@ -77,6 +77,11 @@ public class Offsets
         end = aEnd;
     }
 
+    public boolean isEmpty()
+    {
+        return end == begin;
+    }
+
     @Override
     public String toString()
     {
