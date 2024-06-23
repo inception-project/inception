@@ -134,7 +134,7 @@ public class OllamaClientImpl
             }
         }
 
-        return result.toString();
+        return result.toString().trim();
     }
 
     public List<OllamaModel> listModels(String aUrl) throws IOException
