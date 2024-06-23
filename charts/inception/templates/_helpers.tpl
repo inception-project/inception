@@ -60,3 +60,28 @@ Create the name of the service account to use
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}
 {{- end }}
+
+{{/*
+Database configuration
+*/}}
+{{- define "inception.deployment.database.hostname" -}}
+{{- include "inception.fullname" . }}-mariadb
+{{- end }}
+
+{{- define "inception.secret.databaseAuth.name" -}}
+{{- include "inception.fullname" .}}-database-auth
+{{- end }}
+
+{{/*
+Application configuration
+*/}}
+{{- define "inception.configmap.appConf.name" -}}
+{{- include "inception.fullname" .}}-application-configuration
+{{- end }}
+
+{{/*
+Application persistence
+*/}}
+{{- define "inception.persistence.pvc.name" -}}
+data-{{ include "inception.fullname" . }}
+{{- end }}

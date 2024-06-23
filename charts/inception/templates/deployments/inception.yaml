@@ -1,3 +1,5 @@
+{{- $dbHostname := ternary (include "inception.deployment.database.hostname" .) (.Values.config.database.hostname) .Values.mariadb.enabled -}}
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -34,20 +36,28 @@ spec:
       - name: wait-for-db
         image: mariadb
         env:
+        - name: MARIADB_HOST
+          value: {{ $dbHostname }}
         - name: MARIADB_DATABASE
-          value: "inception"
+          value: {{ .Values.config.database.name }}
         - name: MARIADB_USER
-          value: "inception"
+          value: {{ .Values.config.database.auth.username }}
         - name: MARIADB_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: {{ include "inception.fullname" . }}-mariadb
-              key: mariadb-password
+              name: {{ default (include "inception.secret.databaseAuth.name" .) .Values.config.database.auth.password.existingSecret.secretName }}
+              key: {{ default "password" .Values.config.database.auth.password.existingSecret.secretkey }}
         command: 
-          - mysql 
-          - -u"MARIADB_USER" 
-          - -p"$MARIADB_PASSWORD" 
-          - -e "USE $MARIADB_DATABASE"
+          - sh
+          - -c
+          - "mariadb \
+              --skip-ssl
+              --default-character-set=utf8mb4 \
+              --database $MARIADB_DATABASE \
+              -h $MARIADB_HOST \
+              -u $MARIADB_USER \
+              -p$MARIADB_PASSWORD \ 
+              -e \"USE $MARIADB_DATABASE\""
           
       containers:
         - name: {{ .Chart.Name }}
@@ -57,14 +67,15 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           env:
           - name: INCEPTION_DB_URL
-            value: "jdbc:mariadb://{{ include "inception.fullname" . }}-mariadb:3306/inception?useSSL=false&serverTimezone=UTC&useUnicode=true&characterEncoding=UTF-8"
+            value: "jdbc:mariadb://{{ $dbHostname }}:{{ .Values.config.database.port }}/{{ .Values.config.database.name }}?useSSL={{ .Values.config.database.useSSL }}&serverTimezone={{ .Values.config.database.serverTimezone }}&useUnicode=true&characterEncoding=UTF-8"
           - name: INCEPTION_DB_USERNAME
-            value: "inception"
+            value: {{ .Values.config.database.auth.username }}
           - name: INCEPTION_DB_PASSWORD
             valueFrom:
               secretKeyRef:
-                name: {{ include "inception.fullname" . }}-mariadb
-                key: mariadb-password
+                name: {{ default (include "inception.secret.databaseAuth.name" .) .Values.config.database.auth.password.existingSecret.secretName }}
+                key: {{ default "password" .Values.config.database.auth.password.existingSecret.secretkey }}
+
           ports:
             - name: http
               containerPort: {{ .Values.service.port }}
@@ -81,18 +92,18 @@ spec:
             subPath: settings.properties
             name: inception-settings
           - mountPath: /export
-            name: data
+            name: inception-data
           - mountPath: /tmp
-            name: tmp
+            name: inception-tmp
 
       volumes:
       - name: inception-settings
         configMap:
-          name: {{ .Release.Name }}-conf
-      - name: data
+          name: {{ include "inception.configmap.appConf.name" . }}
+      - name: inception-data
         persistentVolumeClaim:
-          claimName: {{ include "inception.fullname" . }}-data
-      - name: tmp
+          claimName: {{ include "inception.persistence.pvc.name" . }}
+      - name: inception-tmp
         emptyDir:
           sizeLimit: 1Gi
 
