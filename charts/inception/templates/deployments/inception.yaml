@@ -80,10 +80,21 @@ spec:
             - name: http
               containerPort: {{ .Values.service.port }}
               protocol: TCP
+          {{- if .Values.livenessProbe.enabled }}
           livenessProbe:
-            {{- toYaml .Values.livenessProbe | nindent 12 }}
+            httpGet:
+              path: /actuator/health
+              port: http
+          {{- end }}
+          {{- if .Values.readinessProbe.enabled }}
           readinessProbe:
-            {{- toYaml .Values.readinessProbe | nindent 12 }}
+            httpGet:
+              path: /actuator/health
+              port: httpgit
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            failureThreshold: 2
+          {{- end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
 
