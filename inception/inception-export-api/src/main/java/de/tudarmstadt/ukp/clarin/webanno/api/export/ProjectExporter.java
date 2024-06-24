@@ -17,6 +17,9 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.export;
 
+import static org.apache.commons.io.FilenameUtils.normalize;
+import static org.apache.commons.lang3.StringUtils.removeStart;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Collections;
@@ -62,12 +65,22 @@ public interface ProjectExporter
         return entryName;
     }
 
+    static ZipEntry getEntry(ZipFile aFile, String aEntryName)
+    {
+        var entryName = new ZipEntry(removeStart(normalize(aEntryName, true), "/"));
+        var entry = aFile.getEntry(aEntryName);
+        if (entry != null) {
+            return entry;
+        }
+        return aFile.getEntry("/" + entryName);
+    }
+
     static void writeEntry(ZipOutputStream aStage, String aEntryName,
             FailableConsumer<OutputStream, IOException> aWriter)
         throws IOException
     {
-        var entry = new ZipEntry(aEntryName);
-        aStage.putNextEntry(entry);
+        var entryName = new ZipEntry(removeStart(normalize(aEntryName, true), "/"));
+        aStage.putNextEntry(entryName);
         try {
             aWriter.accept(CloseShieldOutputStream.wrap(aStage));
         }
