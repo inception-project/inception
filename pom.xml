@@ -73,7 +73,7 @@
     <junit-jupiter.version>5.10.2</junit-jupiter.version>
     <junit-platform.version>1.10.2</junit-platform.version>
     <mockito.version>5.12.0</mockito.version>
-    <assertj.version>3.25.2</assertj.version>
+    <assertj.version>3.26.0</assertj.version>
     <xmlunit.version>2.10.0</xmlunit.version>
     <testcontainers.version>1.19.8</testcontainers.version>
 
@@ -86,7 +86,7 @@
 
     <pdfbox.version>2.0.30</pdfbox.version>
 
-    <spring.version>5.3.36</spring.version>
+    <spring.version>5.3.37</spring.version>
     <spring.boot.version>2.7.18</spring.boot.version>
     <spring.data.version>2.7.18</spring.data.version>
     <spring.security.version>5.8.12</spring.security.version>
@@ -99,7 +99,7 @@
     <jboss.logging.version>3.5.3.Final</jboss.logging.version>
     <sentry.version>6.34.0</sentry.version>
 
-    <tomcat.version>9.0.89</tomcat.version>
+    <tomcat.version>9.0.90</tomcat.version>
     <servlet-api.version>4.0.1</servlet-api.version>
 
     <mariadb.driver.version>2.7.12</mariadb.driver.version>
@@ -125,7 +125,7 @@
     <!-- * 8.11.1.0 depends on Lucene 8.11.1 -->
     <!--   no mtas  depends on Lucene 9.x -->
 
-    <elasticsearch.version>7.17.21</elasticsearch.version> 
+    <elasticsearch.version>7.17.22</elasticsearch.version> 
     <!--   7.10.x   depends on Lucene 8.7.0 - last ASL 2.0 version! -->
     <!-- * 7.17.x   depends on Lucene 8.11.1 -->
     <!--   8.1.x    depends on Lucene 9.0.0 -->
