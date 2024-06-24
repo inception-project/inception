@@ -255,6 +255,8 @@ public class SPARQLQueryBuilderLocalTestScenarios
                         SPARQLQueryBuilderLocalTestScenarios::thatRootsCanBeRetrieved_ontolex),
                 new Scenario("testWithLabelContainingAnyOf_withLanguage_noFTS",
                         SPARQLQueryBuilderLocalTestScenarios::testWithLabelContainingAnyOf_withLanguage_noFTS),
+                new Scenario("testWithLabelMatchingAnyOf_withFallbackLanguages",
+                        SPARQLQueryBuilderLocalTestScenarios::testWithLabelMatchingAnyOf_withFallbackLanguages),
                 new Scenario("testWithLabelContainingAnyOf_withLanguage",
                         SPARQLQueryBuilderLocalTestScenarios::testWithLabelContainingAnyOf_withLanguage),
                 new Scenario("testWithLabelMatchingAnyOf_withLanguage",
@@ -384,7 +386,7 @@ public class SPARQLQueryBuilderLocalTestScenarios
     {
         importDataFromString(aRepository, aKB, TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
 
-        boolean result = exists(aRepository, SPARQLQueryBuilder.forClasses(aKB));
+        var result = exists(aRepository, SPARQLQueryBuilder.forClasses(aKB));
 
         assertThat(result).isTrue();
     }
@@ -458,7 +460,7 @@ public class SPARQLQueryBuilderLocalTestScenarios
     {
         importDataFromString(aRepository, aKB, TURTLE, TURTLE_PREFIX, DATA_MULTIPLE_LABELS);
 
-        for (String term : asList("specimen", "sample", "instance", "case")) {
+        for (var term : asList("specimen", "sample", "instance", "case")) {
             var results = asHandles(aRepository, SPARQLQueryBuilder //
                     .forItems(aKB) //
                     .withLabelMatchingAnyOf(term) //
@@ -545,7 +547,7 @@ public class SPARQLQueryBuilderLocalTestScenarios
     {
         importDataFromString(aRepository, aKB, TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
 
-        boolean result = exists(aRepository,
+        var result = exists(aRepository,
                 SPARQLQueryBuilder.forClasses(aKB).parentsOf("http://example.org/#explicitRoot"));
 
         assertThat(result).isFalse();
@@ -563,7 +565,7 @@ public class SPARQLQueryBuilderLocalTestScenarios
     {
         importDataFromString(aRepository, aKB, TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
 
-        boolean result = exists(aRepository, SPARQLQueryBuilder.forClasses(aKB)
+        var result = exists(aRepository, SPARQLQueryBuilder.forClasses(aKB)
                 .withIdentifier("http://example.org/#explicitRoot"));
 
         assertThat(result).isTrue();
@@ -581,7 +583,7 @@ public class SPARQLQueryBuilderLocalTestScenarios
     {
         importDataFromString(aRepository, aKB, TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
 
-        boolean result = exists(aRepository, SPARQLQueryBuilder.forClasses(aKB)
+        var result = exists(aRepository, SPARQLQueryBuilder.forClasses(aKB)
                 .withIdentifier("http://example.org/#implicitRoot"));
 
         assertThat(result).isTrue();
@@ -600,7 +602,7 @@ public class SPARQLQueryBuilderLocalTestScenarios
     {
         importDataFromString(aRepository, aKB, TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
 
-        boolean result = exists(aRepository, SPARQLQueryBuilder.forClasses(aKB)
+        var result = exists(aRepository, SPARQLQueryBuilder.forClasses(aKB)
                 .withIdentifier("http://example.org/#DoesNotExist"));
 
         assertThat(result).isFalse();
@@ -1011,10 +1013,13 @@ public class SPARQLQueryBuilderLocalTestScenarios
         assertThat(results).extracting(KBHandle::getUiLabel)
                 .allMatch(label -> label.contains("Goblin"));
         assertThat(results).extracting(KBHandle::getIdentifier).doesNotHaveDuplicates();
-        assertThat(results).usingRecursiveFieldByFieldElementComparatorOnFields("identifier",
-                "name", "language").containsExactlyInAnyOrder(
-                        new KBHandle("http://example.org/#red-goblin", "Red Goblin"), new KBHandle(
-                                "http://example.org/#green-goblin", "Green Goblin", null, "en"));
+        assertThat(results) //
+                .usingRecursiveFieldByFieldElementComparatorOnFields( //
+                        "identifier", "name", "language") //
+                .containsExactlyInAnyOrder(
+                        new KBHandle("http://example.org/#red-goblin", "Red Goblin"), //
+                        new KBHandle("http://example.org/#green-goblin", "Green Goblin", null,
+                                "en"));
     }
 
     static void testWithLabelContainingAnyOf_withLanguage_noFTS(Repository aRepository,
@@ -1024,6 +1029,28 @@ public class SPARQLQueryBuilderLocalTestScenarios
         aKB.setFullTextSearchIri(null);
 
         testWithLabelContainingAnyOf_withLanguage(aRepository, aKB);
+    }
+
+    static void testWithLabelMatchingAnyOf_withFallbackLanguages(Repository aRepository,
+            KnowledgeBase aKB)
+        throws Exception
+    {
+        importDataFromString(aRepository, aKB, TURTLE, TURTLE_PREFIX,
+                DATA_LABELS_AND_DESCRIPTIONS_WITH_LANGUAGE);
+
+        var results = asHandles(aRepository, SPARQLQueryBuilder //
+                .forItems(aKB) //
+                .withFallbackLanguages("it", "fr") //
+                .withLabelMatchingAnyOf("Blue"));
+
+        assertThat(results).extracting(KBHandle::getUiLabel)
+                .allMatch(label -> label.contains("Blu"));
+        assertThat(results).extracting(KBHandle::getIdentifier).doesNotHaveDuplicates();
+        assertThat(results) //
+                .usingRecursiveFieldByFieldElementComparatorOnFields( //
+                        "identifier", "name", "language") //
+                .containsExactlyInAnyOrder(new KBHandle("http://example.org/#blue-goblin",
+                        "Folletto Blue", null, "it"));
     }
 
     static void testWithLabelContainingAnyOf_withLanguage(Repository aRepository, KnowledgeBase aKB)
@@ -1331,7 +1358,7 @@ public class SPARQLQueryBuilderLocalTestScenarios
             // If the RDF file contains relative URLs, then they probably start with a hash.
             // To avoid having two hashes here, we drop the hash from the base prefix configured
             // by the user.
-            String prefix = StringUtils.removeEnd(aKB.getBasePrefix(), "#");
+            var prefix = StringUtils.removeEnd(aKB.getBasePrefix(), "#");
             if (aKB.getDefaultDatasetIri() != null) {
                 var ctx = SimpleValueFactory.getInstance().createIRI(aKB.getDefaultDatasetIri());
                 conn.add(aIS, prefix, aFormat, ctx);
@@ -1389,13 +1416,9 @@ public class SPARQLQueryBuilderLocalTestScenarios
 
     public static void assertIsReachable(Repository aRepository)
     {
-        if (!(aRepository instanceof SPARQLRepository)) {
-            return;
+        if (aRepository instanceof SPARQLRepository sparqlRepository) {
+            assumeTrue(isReachable(sparqlRepository.toString()),
+                    "Remote repository at [" + sparqlRepository + "] is not reachable");
         }
-
-        SPARQLRepository sparqlRepository = (SPARQLRepository) aRepository;
-
-        assumeTrue(isReachable(sparqlRepository.toString()),
-                "Remote repository at [" + sparqlRepository + "] is not reachable");
     }
 }

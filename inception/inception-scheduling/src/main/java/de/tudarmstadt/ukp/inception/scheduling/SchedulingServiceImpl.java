@@ -442,8 +442,9 @@ public class SchedulingServiceImpl
         deletionPending.remove(aEvent.getProject());
     }
 
-    @EventListener
+    // Set order so this is handled before session info is removed from sessionRegistry
     @Order(Ordered.HIGHEST_PRECEDENCE)
+    @EventListener
     public void onSessionDestroyed(SessionDestroyedEvent event)
     {
         LOG.debug("Cleaning up tasks on session destroyed");

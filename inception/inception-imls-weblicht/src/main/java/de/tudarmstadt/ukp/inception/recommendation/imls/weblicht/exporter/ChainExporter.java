@@ -128,7 +128,8 @@ public class ChainExporter
             chain.setRecommender(recommender);
             chainService.createOrUpdateChain(chain);
 
-            var entry = aZip.getEntry(CHAINS_FOLDER + "/" + exportedChain.getId() + ".xml");
+            var entry = ProjectExporter.getEntry(aZip,
+                    CHAINS_FOLDER + "/" + exportedChain.getId() + ".xml");
             try (var is = aZip.getInputStream(entry)) {
                 chainService.importChainFile(chain, is);
             }

@@ -79,7 +79,6 @@ public class FtsAdapterRdf4J
 
         var valuePatterns = new ArrayList<GraphPattern>();
         for (var value : aValues) {
-            // Strip single quotes and asterisks because they have special semantics
             var sanitizedValue = builder.sanitizeQueryString_FTS(value);
 
             if (isBlank(sanitizedValue)) {
