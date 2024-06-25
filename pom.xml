@@ -132,9 +132,9 @@
     <!-- * 1.3.5    depends on Lucene 8.10.1 -->
     <!--   2.x      depends on Lucene 9.x -->
 
-    <rdf4j.version>4.3.12</rdf4j.version> 
+    <rdf4j.version>5.0.0</rdf4j.version> 
     <!-- * 4.3.x depends on Lucene 8.9.x -->
-    <!-- * 5.x.x depends on Lucene 9.x.x -->
+    <!-- * 5.x.x depends on Lucene 8.9.x -->
 
     <jena.version>4.6.1</jena.version>
     <!-- * 4.6.1    depends on Lucene 8.11.1 -->
