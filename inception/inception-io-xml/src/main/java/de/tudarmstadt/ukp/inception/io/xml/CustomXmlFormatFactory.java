@@ -120,7 +120,10 @@ public class CustomXmlFormatFactory
             TypeSystemDescription aTSD)
         throws ResourceInitializationException
     {
-        return createReaderDescription(XmlDocumentReader.class, aTSD);
+        return createReaderDescription(XmlDocumentReader.class, aTSD, //
+                XmlDocumentReader.PARAM_BLOCK_ELEMENTS, description.getBlockElements(), //
+                XmlDocumentReader.PARAM_SPLIT_SENTENCES_IN_BLOCK_ELEMENTS,
+                description.isSplitSentencesInBlockElements());
     }
 
     @Override

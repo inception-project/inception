@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.support.uima;
 import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.createSentence;
 import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.createToken;
 import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.selectSentences;
+import static org.apache.uima.fit.util.CasUtil.getType;
 
 import java.text.BreakIterator;
 import java.util.Locale;
@@ -27,6 +28,7 @@ import java.util.Locale;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
 
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 
 public abstract class SegmentationUtils
@@ -45,6 +47,24 @@ public abstract class SegmentationUtils
     public static void splitSentences(CAS aCas)
     {
         splitSentences(aCas, null);
+    }
+
+    public static void splitSentences(CAS aCas, int aBegin, int aEnd)
+    {
+        var bi = BreakIterator.getSentenceInstance(Locale.US);
+        bi.setText(aCas.getDocumentText().substring(aBegin, aEnd));
+        var last = bi.first();
+        var cur = bi.next();
+        while (cur != BreakIterator.DONE) {
+            var sentence = aCas.createAnnotation(getType(aCas, Sentence.class), last + aBegin,
+                    cur + aBegin);
+            sentence.trim();
+            if (sentence.getBegin() != sentence.getEnd()) {
+                aCas.addFsToIndexes(sentence);
+            }
+            last = cur;
+            cur = bi.next();
+        }
     }
 
     public static void splitSentences(CAS aCas, Iterable<? extends AnnotationFS> aZones)
@@ -72,12 +92,12 @@ public abstract class SegmentationUtils
         for (int i = 1; i < sortedZoneBoundaries.length; i++) {
             var begin = sortedZoneBoundaries[i - 1];
             var end = sortedZoneBoundaries[i];
-            BreakIterator bi = BreakIterator.getSentenceInstance(Locale.US);
+            var bi = BreakIterator.getSentenceInstance(Locale.US);
             bi.setText(aCas.getDocumentText().substring(begin, end));
-            int last = bi.first();
-            int cur = bi.next();
+            var last = bi.first();
+            var cur = bi.next();
             while (cur != BreakIterator.DONE) {
-                int[] span = new int[] { last + begin, cur + begin };
+                var span = new int[] { last + begin, cur + begin };
                 trim(aCas.getDocumentText(), span);
                 if (!isEmpty(span[0], span[1])) {
                     aCas.addFsToIndexes(createSentence(aCas, span[0], span[1]));
