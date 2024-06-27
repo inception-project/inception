@@ -1,5 +1,5 @@
 /*
- * Licensed to the Technische Universität Darmstadt under one
+  * Licensed to the Technische Universität Darmstadt under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
  * regarding copyright ownership.  The Technische Universität Darmstadt 
@@ -20,18 +20,22 @@ package de.tudarmstadt.ukp.inception.search;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.UNMANAGED_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.UNMANAGED_NON_INITIALIZING_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.NO_CAS_UPGRADE;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.inception.scheduling.TaskState.RUNNING;
 import static de.tudarmstadt.ukp.inception.search.model.AnnotationSearchState.KEY_SEARCH_STATE;
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.casToByteArray;
 import static java.lang.Integer.MAX_VALUE;
 import static java.lang.System.currentTimeMillis;
+import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toUnmodifiableSet;
 import static org.springframework.transaction.annotation.Propagation.REQUIRES_NEW;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -77,7 +81,6 @@ import de.tudarmstadt.ukp.inception.schema.api.event.LayerConfigurationChangedEv
 import de.tudarmstadt.ukp.inception.search.config.SearchServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.search.config.SearchServiceProperties;
 import de.tudarmstadt.ukp.inception.search.index.IndexRebuildRequiredException;
-import de.tudarmstadt.ukp.inception.search.index.PhysicalIndex;
 import de.tudarmstadt.ukp.inception.search.index.PhysicalIndexFactory;
 import de.tudarmstadt.ukp.inception.search.index.PhysicalIndexRegistry;
 import de.tudarmstadt.ukp.inception.search.model.BulkIndexingContext;
@@ -100,7 +103,7 @@ import jakarta.persistence.PersistenceContext;
 public class SearchServiceImpl
     implements SearchService, DisposableBean
 {
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private @PersistenceContext EntityManager entityManager;
 
@@ -132,7 +135,7 @@ public class SearchServiceImpl
         preferencesService = aPreferencesService;
 
         properties = aProperties;
-        log.debug("Index keep-open time: {}", properties.getIndexKeepOpenTime());
+        LOG.debug("Index keep-open time: {}", properties.getIndexKeepOpenTime());
 
         indexClosingScheduler = new ScheduledThreadPoolExecutor(0);
         indexClosingScheduler.scheduleWithFixedDelay(this::closeIdleIndexes, 10, 10, SECONDS);
@@ -147,7 +150,7 @@ public class SearchServiceImpl
         synchronized (indexes) {
             pooledIndexesSnapshot = new ArrayList<>(indexes.values());
 
-            for (PooledIndex pooledIndex : pooledIndexesSnapshot) {
+            for (var pooledIndex : pooledIndexesSnapshot) {
                 if (pooledIndex.isTombstone()) {
                     continue;
                 }
@@ -163,7 +166,7 @@ public class SearchServiceImpl
     @Override
     public void destroy()
     {
-        log.info("Shutting down search service!");
+        LOG.info("Shutting down search service!");
 
         shutdown = true;
 
@@ -206,7 +209,7 @@ public class SearchServiceImpl
 
         Index index = aIndex.get();
 
-        log.trace("Unloading index for project {}", index.getProject());
+        LOG.trace("Unloading index for project {}", index.getProject());
 
         synchronized (indexes) {
             try {
@@ -221,7 +224,7 @@ public class SearchServiceImpl
                 }
             }
             catch (Throwable e) {
-                log.error("Exception while tying to unload index for project {}",
+                LOG.error("Exception while tying to unload index for project {}",
                         index.getProject(), e);
             }
         }
@@ -239,12 +242,12 @@ public class SearchServiceImpl
     {
         Project aProject = projectService.getProject(aProjectId);
 
-        log.trace("Loading index for project {}", aProject);
+        LOG.trace("Loading index for project {}", aProject);
 
         // Check if an index state has already been stored in the database
         // Currently, we assume that a project can have only a single index
-        String sql = "FROM " + Index.class.getName() + " WHERE project = :project";
-        Index index = entityManager.createQuery(sql, Index.class) //
+        var sql = "FROM " + Index.class.getName() + " WHERE project = :project";
+        var index = entityManager.createQuery(sql, Index.class) //
                 .setParameter("project", aProject) //
                 .getResultStream() //
                 .findFirst().orElse(null);
@@ -252,7 +255,7 @@ public class SearchServiceImpl
         // If no index state has been saved in the database yet, create one and save it
         if (index == null) {
             // Not found in the DB, create new index instance and store it in DB
-            log.trace("Initializing persistent index state in project {}", aProject);
+            LOG.trace("Initializing persistent index state in project {}", aProject);
 
             index = new Index();
             index.setInvalid(false);
@@ -289,13 +292,13 @@ public class SearchServiceImpl
         Project project = aEvent.getProject();
 
         if (isBeingDeleted(project.getId())) {
-            log.trace(
+            LOG.trace(
                     "Ignoring repeated attempt to delete project which is already in progress of being deleted",
                     project);
             return;
         }
 
-        log.trace("Removing index for project {} because project is being removed", project);
+        LOG.trace("Removing index for project {} because project is being removed", project);
 
         try (PooledIndex pooledIndex = acquireIndex(project.getId())) {
             pooledIndex.tombstone();
@@ -328,7 +331,7 @@ public class SearchServiceImpl
     private boolean isBeingDeleted(long aProjectId)
     {
         synchronized (indexes) {
-            PooledIndex pooledIndex = indexes.get(aProjectId);
+            var pooledIndex = indexes.get(aProjectId);
             if (pooledIndex != null && pooledIndex.isTombstone()) {
                 return true;
             }
@@ -352,7 +355,7 @@ public class SearchServiceImpl
                 if (pooledIndex.isForceRecycle() || pooledIndex.isDead()) {
                     while (!pooledIndex.isIdle() && !pooledIndex.isDead()) {
                         try {
-                            log.trace("Index recycle is forced but index is not idle - waiting...");
+                            LOG.trace("Index recycle is forced but index is not idle - waiting...");
                             // Thread.sleep(1000);
                             indexes.wait(1000);
                         }
@@ -381,15 +384,15 @@ public class SearchServiceImpl
     @EventListener
     public void beforeDocumentRemove(BeforeDocumentRemovedEvent aEvent) throws IOException
     {
-        SourceDocument document = aEvent.getDocument();
-        Project project = document.getProject();
+        var document = aEvent.getDocument();
+        var project = document.getProject();
 
-        log.trace(
+        LOG.trace(
                 "Removing document {} from index for project {} because document is being removed",
                 document, project);
 
-        try (PooledIndex pooledIndex = acquireIndex(project.getId())) {
-            Index index = pooledIndex.get();
+        try (var pooledIndex = acquireIndex(project.getId())) {
+            var index = pooledIndex.get();
             // If the index has not been created yet, there is nothing to do
             if (!index.getPhysicalIndex().isCreated()) {
                 return;
@@ -399,8 +402,7 @@ public class SearchServiceImpl
             index.getPhysicalIndex().deindexDocument(document);
 
             // Remove related annotation documents from the index
-            for (AnnotationDocument annotationDocument : documentService
-                    .listAnnotationDocuments(document)) {
+            for (var annotationDocument : documentService.listAnnotationDocuments(document)) {
                 index.getPhysicalIndex().deindexDocument(annotationDocument);
             }
         }
@@ -409,7 +411,7 @@ public class SearchServiceImpl
     @TransactionalEventListener(fallbackExecution = true)
     public void onAfterDocumentCreated(AfterDocumentCreatedEvent aEvent)
     {
-        log.trace("Starting afterDocumentCreate");
+        LOG.trace("Starting afterDocumentCreate");
 
         // Schedule new document index process
         enqueueIndexDocument(aEvent.getDocument(), "onAfterDocumentCreated");
@@ -418,7 +420,7 @@ public class SearchServiceImpl
     @TransactionalEventListener(fallbackExecution = true)
     public void onAfterCasWritten(AfterCasWrittenEvent aEvent)
     {
-        log.trace("Starting afterAnnotationUpdate");
+        LOG.trace("Starting afterAnnotationUpdate");
 
         // Schedule new document index process
         enqueueIndexDocument(aEvent.getDocument(), "onAfterCasWritten");
@@ -428,11 +430,11 @@ public class SearchServiceImpl
     @Transactional(propagation = REQUIRES_NEW)
     public void onLayerConfigurationChanged(LayerConfigurationChangedEvent aEvent)
     {
-        log.trace("Starting beforeLayerConfigurationChanged");
+        LOG.trace("Starting beforeLayerConfigurationChanged");
 
         var project = aEvent.getProject();
 
-        try (PooledIndex pooledIndex = acquireIndex(project.getId())) {
+        try (var pooledIndex = acquireIndex(project.getId())) {
             pooledIndex.forceRecycle();
             Index index = pooledIndex.get();
             index.setInvalid(true);
@@ -457,13 +459,13 @@ public class SearchServiceImpl
     {
         var project = aSourceDocument.getProject();
 
-        log.debug("Request to index source document {} in project {}", aSourceDocument, project);
+        LOG.debug("Request to index source document {} in project {}", aSourceDocument, project);
 
         var index = aPooledIndex.get();
         // Index already initialized? If not, schedule full re-indexing job. This will also
         // index the given document, so we can stop here after scheduling the re-indexing.
         if (!index.getPhysicalIndex().isCreated()) {
-            log.trace(
+            LOG.trace(
                     "Index in project {} has not yet been initialized. Scheduling an asynchronous re-indexing.",
                     project);
             invalidateIndexAndForceIndexRebuild(project, index, "indexDocument");
@@ -480,11 +482,11 @@ public class SearchServiceImpl
             invalidateIndexAndForceIndexRebuild(project, index, "indexDocument[error]");
         }
         catch (Exception e) {
-            log.error("Error indexing source document {} in project {}", aSourceDocument, project,
+            LOG.error("Error indexing source document {} in project {}", aSourceDocument, project,
                     e);
         }
         catch (Throwable e) {
-            log.error("Fatal error indexing source document {} in project {}", aSourceDocument,
+            LOG.error("Fatal error indexing source document {} in project {}", aSourceDocument,
                     project, e);
         }
     }
@@ -494,11 +496,11 @@ public class SearchServiceImpl
     {
         Project project = aAnnotationDocument.getProject();
 
-        try (PooledIndex pooledIndex = acquireIndex(project.getId())) {
+        try (var pooledIndex = acquireIndex(project.getId())) {
             indexDocument(pooledIndex, aAnnotationDocument, "indexDocument", aBinaryCas);
         }
         catch (Exception e) {
-            log.error("Error indexing annotation document {} in project {}", aAnnotationDocument,
+            LOG.error("Error indexing annotation document {} in project {}", aAnnotationDocument,
                     project, e);
         }
     }
@@ -515,20 +517,20 @@ public class SearchServiceImpl
     private void indexDocument(PooledIndex aPooledIndex, AnnotationDocument aAnnotationDocument,
             String aTrigger, byte[] aBinaryCas)
     {
-        Project project = aAnnotationDocument.getProject();
+        var project = aAnnotationDocument.getProject();
 
-        log.debug("Request to index annotation document {} in project {}", aAnnotationDocument,
+        LOG.debug("Request to index annotation document {} in project {}", aAnnotationDocument,
                 project);
 
         if (isPerformNoMoreActions(aPooledIndex)) {
             return;
         }
 
-        Index index = aPooledIndex.get();
+        var index = aPooledIndex.get();
         // Index already initialized? If not, schedule full re-indexing job. This will also
         // index the given document, so we can stop here after scheduling the re-indexing.
         if (!index.getPhysicalIndex().isCreated()) {
-            log.trace(
+            LOG.trace(
                     "Index in project {} has not yet been initialized. Scheduling an asynchronous re-indexing.",
                     project);
             invalidateIndexAndForceIndexRebuild(project, index, "indexDocument");
@@ -541,7 +543,7 @@ public class SearchServiceImpl
 
         try {
             // Add annotation document to the index again
-            log.trace("Indexing new version of annotation document {} in project {}",
+            LOG.trace("Indexing new version of annotation document {} in project {}",
                     aAnnotationDocument, project);
             index.getPhysicalIndex().indexDocument(aAnnotationDocument, aBinaryCas);
         }
@@ -549,7 +551,7 @@ public class SearchServiceImpl
             invalidateIndexAndForceIndexRebuild(project, index, "indexDocument[error]");
         }
         catch (IOException e) {
-            log.error("Error indexing annotation document {} in project {}", aAnnotationDocument,
+            LOG.error("Error indexing annotation document {} in project {}", aAnnotationDocument,
                     project, e);
         }
     }
@@ -582,7 +584,7 @@ public class SearchServiceImpl
             AnnotationFeature aAnnotationFeature, long offset, long count)
         throws IOException, ExecutionException
     {
-        log.trace("Query [{}] for user {} in project {}", aQuery, aUser, aProject);
+        LOG.trace("Query [{}] for user {} in project {}", aQuery, aUser, aProject);
 
         try (var pooledIndex = acquireIndex(aProject.getId())) {
             var index = pooledIndex.get();
@@ -600,7 +602,7 @@ public class SearchServiceImpl
         throws IOException, ExecutionException
     {
         try (PooledIndex pooledIndex = acquireIndex(aProject.getId())) {
-            Index index = pooledIndex.get();
+            var index = pooledIndex.get();
             ensureIndexIsCreatedAndValid(aProject, index);
 
             var prefs = preferencesService.loadDefaultTraitsForProject(KEY_SEARCH_STATE, aProject);
@@ -614,19 +616,19 @@ public class SearchServiceImpl
             int aMinTokenPerDoc, int aMaxTokenPerDoc, Set<AnnotationFeature> aFeatures)
         throws ExecutionException, IOException
     {
-        try (PooledIndex pooledIndex = acquireIndex(aProject.getId())) {
-            Index index = pooledIndex.get();
+        try (var pooledIndex = acquireIndex(aProject.getId())) {
+            var index = pooledIndex.get();
             ensureIndexIsCreatedAndValid(aProject, index);
-            PhysicalIndex physicalIndex = index.getPhysicalIndex();
+            var physicalIndex = index.getPhysicalIndex();
 
             var prefs = preferencesService.loadDefaultTraitsForProject(KEY_SEARCH_STATE, aProject);
-            StatisticRequest statRequest = new StatisticRequest(aProject, aUser, aMinTokenPerDoc,
+            var statRequest = new StatisticRequest(aProject, aUser, aMinTokenPerDoc,
                     aMaxTokenPerDoc, aFeatures, aQuery, prefs);
-            LayerStatistics statistics = physicalIndex.getLayerStatistics(statRequest,
-                    statRequest.getQuery(), physicalIndex.getUniqueDocuments(statRequest));
+            var statistics = physicalIndex.getLayerStatistics(statRequest, statRequest.getQuery(),
+                    physicalIndex.getUniqueDocuments(statRequest));
 
             statistics.setQuery(aQuery);
-            Map<String, LayerStatistics> statisticsMap = new HashMap<String, LayerStatistics>();
+            var statisticsMap = new HashMap<String, LayerStatistics>();
             statisticsMap.put("query." + aQuery, statistics);
 
             StatisticsResult results = new StatisticsResult(statRequest, statisticsMap, aFeatures);
@@ -642,7 +644,7 @@ public class SearchServiceImpl
     @Transactional
     public void reindex(Project aProject, TaskMonitor aMonitor) throws IOException
     {
-        log.info("Re-indexing project {}. This may take a while...", aProject);
+        LOG.info("Re-indexing project {}. This may take a while...", aProject);
 
         try (var pooledIndex = acquireIndex(aProject.getId())) {
             if (isPerformNoMoreActions(pooledIndex)) {
@@ -666,7 +668,7 @@ public class SearchServiceImpl
                     .collect(toUnmodifiableSet());
             var annotationDocuments = documentService.listAnnotationDocuments(aProject).stream()
                     .filter(annDoc -> usersWithPermissions.contains(annDoc.getUser())) //
-                    .collect(toList());
+                    .toList();
             var sourceDocuments = documentService.listSourceDocuments(aProject);
 
             var progress = 0;
@@ -710,13 +712,28 @@ public class SearchServiceImpl
                     }
 
                     try (var session = CasStorageSession.openNested()) {
+                        // Index source document
                         var casAsByteArray = casToByteArray(documentService
                                 .createOrReadInitialCas(doc, casUpgradeMode, accessModeInitialCas));
                         indexDocument(pooledIndex, doc, casAsByteArray);
+
+                        // Index curation document (if available)
+                        if (documentService.existsCas(doc, CURATION_USER)
+                                && asList(CURATION_IN_PROGRESS, CURATION_FINISHED)
+                                        .contains(doc.getState())) {
+                            var aDoc = documentService.getAnnotationDocument(doc, CURATION_USER);
+                            var curationCasAsByteArray = casToByteArray(
+                                    documentService.readAnnotationCas(doc, CURATION_USER,
+                                            casUpgradeMode, accessModeInitialCas));
+                            indexDocument(pooledIndex, aDoc, "reindex", curationCasAsByteArray);
+                        }
+                    }
+                    catch (Exception e) {
+                        LOG.error("Error indexing document {}", doc, e);
                     }
                 }
 
-                // Index all the annotation documents
+                // Index all the annotation documents (from annotators)
                 for (var doc : annotationDocuments) {
                     progress++;
 
@@ -747,6 +764,9 @@ public class SearchServiceImpl
                     catch (FileNotFoundException e) {
                         // Ignore it if a annotation CAS does not exist yet
                     }
+                    catch (Exception e) {
+                        LOG.error("Error indexing document {}", doc, e);
+                    }
                 }
             }
 
@@ -759,10 +779,10 @@ public class SearchServiceImpl
         }
 
         if (aMonitor == null || !aMonitor.isCancelled()) {
-            log.info("Re-indexing project {} complete!", aProject);
+            LOG.info("Re-indexing project {} complete!", aProject);
         }
         else {
-            log.info("Re-indexing project {} aborted!", aProject);
+            LOG.info("Re-indexing project {} aborted!", aProject);
         }
     }
 
@@ -816,11 +836,11 @@ public class SearchServiceImpl
             AnnotationFeature aAnnotationFeature)
         throws IOException, ExecutionException
     {
-        log.trace("Count results for query [{}] for user {} in project {}", aQuery, aUser,
+        LOG.trace("Count results for query [{}] for user {} in project {}", aQuery, aUser,
                 aProject);
 
-        try (PooledIndex pooledIndex = acquireIndex(aProject.getId())) {
-            Index index = pooledIndex.get();
+        try (var pooledIndex = acquireIndex(aProject.getId())) {
+            var index = pooledIndex.get();
 
             ensureIndexIsCreatedAndValid(aProject, index);
 
