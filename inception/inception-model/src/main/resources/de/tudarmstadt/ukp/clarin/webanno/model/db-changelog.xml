@@ -1115,9 +1115,9 @@
     </dropColumn>  
   </changeSet>
 
-  <changeSet author="INCEpTION Team" id="20210218-2">
+  <changeSet author="INCEpTION Team" id="20210218-2.1">
     <preConditions onFail="MARK_RAN">
-      <changeSetExecuted author="WebAnno Team" id="1512223050574-14"/>
+      <tableExists tableName="train_document"/>
     </preConditions>
     <dropTable tableName="train_document" cascadeConstraints="true"/>
   </changeSet>
