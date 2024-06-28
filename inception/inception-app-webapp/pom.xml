@@ -533,10 +533,6 @@
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
-      <artifactId>jcl-over-slf4j</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.slf4j</groupId>
       <artifactId>log4j-over-slf4j</artifactId>
     </dependency>
 
@@ -569,6 +565,11 @@
     <dependency>
       <groupId>org.liquibase</groupId>
       <artifactId>liquibase-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.mattbertolini</groupId>
+      <artifactId>liquibase-slf4j</artifactId>
+      <version>5.0.0</version>
     </dependency>
 
     <dependency>
@@ -997,6 +998,7 @@
               <usedDependency>org.postgresql:postgresql</usedDependency>
               <usedDependency>org.hsqldb:hsqldb</usedDependency>
               <!-- Logging - used via reflection / optional -->
+              <usedDependency>com.mattbertolini:liquibase-slf4j</usedDependency>
               <usedDependency>org.slf4j:log4j-over-slf4j</usedDependency>
               <usedDependency>org.apache.logging.log4j:log4j-slf4j2-impl</usedDependency>
               <usedDependency>org.apache.logging.log4j:log4j-core</usedDependency>
