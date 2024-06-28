@@ -86,12 +86,6 @@
       <scope>runtime</scope>
     </dependency>
     <dependency>
-      <!-- Avoid Commons Logging (we use the spring-jcl bridge -->
-      <groupId>org.slf4j</groupId>
-      <artifactId>jcl-over-slf4j</artifactId>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
       <!-- Route Java Util Logging over SLF4J -->
       <groupId>org.slf4j</groupId>
       <artifactId>jul-to-slf4j</artifactId>
@@ -106,13 +100,6 @@
       <!-- Route Java Commons Logging over SLF4J -->
       <groupId>org.springframework</groupId>
       <artifactId>spring-jcl</artifactId>
-      <scope>runtime</scope>
-    </dependency>
-    <dependency>
-      <!-- Avoid Commons Logging (we use the spring-jcl bridge -->
-      <groupId>commons-logging</groupId>
-      <artifactId>commons-logging</artifactId>
-      <scope>provided</scope>
     </dependency>
     
     <!-- Dev aids -->
@@ -440,7 +427,6 @@
             <dependency>org.apache.logging.log4j:log4j-layout-template-json</dependency>
             <dependency>org.apache.logging.log4j:log4j-core</dependency>
             <dependency>org.slf4j:log4j-over-slf4j</dependency>
-            <dependency>org.slf4j:jcl-over-slf4j</dependency>
             <dependency>org.slf4j:jul-to-slf4j</dependency>
             <dependency>commons-logging:commons-logging</dependency>
             <dependency>org.springframework:spring-jcl</dependency>
@@ -515,6 +501,13 @@
                 <requireJavaVersion>
                   <version>[${maven.compiler.release},)</version>
                 </requireJavaVersion>
+                <bannedDependencies>
+                  <excludes>
+                    <exclude>commons-logging:commons-logging</exclude>
+                    <exclude>commons-logging:commons-logging-api</exclude>
+                    <exclude>org.slf4j:jcl-over-slf4j</exclude>
+                  </excludes>
+                </bannedDependencies>
               </rules>
             </configuration>
           </execution>
