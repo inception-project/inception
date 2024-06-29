@@ -29,7 +29,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
@@ -91,8 +90,7 @@ public class AnnotationDocument
      * Comment the anntoator can leave when marking a document as finished. Typically used to report
      * problems to the curator.
      */
-    @Lob
-    @Column(length = 16_777_216)
+    @Column(length = 64000)
     private String annotatorComment;
 
     /**

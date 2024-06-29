@@ -1245,4 +1245,116 @@
       <column name="project"/>
     </createIndex>
   </changeSet>
+
+  <changeSet author="INCEpTION Team" id="20240629-1" dbms="!postgresql">
+    <modifyDataType tableName="tag_set" columnName="createTag" newDataType="BOOLEAN"/>
+    <addNotNullConstraint tableName="tag_set" columnName="createTag" columnDataType="BOOLEAN"/>
+  </changeSet>
+  <changeSet author="INCEpTION Team" id="20240629-1-pg" dbms="postgresql">
+    <sql>ALTER TABLE tag_set ALTER "createTag" TYPE BOOLEAN USING ("createTag"::int::bool)</sql>
+  </changeSet>
+
+  <changeSet author="INCEpTION Team" id="20240629-2" dbms="!postgresql">
+    <modifyDataType tableName="annotation_type" columnName="builtIn" newDataType="BOOLEAN"/>
+    <addNotNullConstraint tableName="annotation_type" columnName="builtIn" columnDataType="BOOLEAN"/>
+  </changeSet>
+  <changeSet author="INCEpTION Team" id="20240629-2-pg" dbms="postgresql">
+    <sql>ALTER TABLE annotation_type ALTER "builtIn" TYPE BOOLEAN USING ("builtIn"::int::bool)</sql>
+  </changeSet>
+  
+  <changeSet author="INCEpTION Team" id="20240629-3" dbms="!postgresql">
+    <modifyDataType tableName="annotation_type" columnName="crossSentence" newDataType="BOOLEAN"/>
+    <addNotNullConstraint tableName="annotation_type" columnName="crossSentence" columnDataType="BOOLEAN"/>
+  </changeSet>
+  <changeSet author="INCEpTION Team" id="20240629-3-pg" dbms="postgresql">
+    <sql>ALTER TABLE annotation_type ALTER "crossSentence" TYPE BOOLEAN USING ("crossSentence"::int::bool)</sql>
+  </changeSet>
+  
+  <changeSet author="INCEpTION Team" id="20240629-4" dbms="!postgresql">
+    <modifyDataType tableName="annotation_type" columnName="enabled" newDataType="BOOLEAN"/>
+    <addNotNullConstraint tableName="annotation_type" columnName="enabled" columnDataType="BOOLEAN"/>
+  </changeSet>
+  <changeSet author="INCEpTION Team" id="20240629-4-pg" dbms="postgresql">
+    <sql>ALTER TABLE annotation_type ALTER "enabled" TYPE BOOLEAN USING ("enabled"::int::bool)</sql>
+  </changeSet>
+  
+  <changeSet author="INCEpTION Team" id="20240629-5" dbms="!postgresql">
+    <modifyDataType tableName="annotation_type" columnName="linkedListBehavior" newDataType="BOOLEAN"/>
+    <addNotNullConstraint tableName="annotation_type" columnName="linkedListBehavior" columnDataType="BOOLEAN"/>
+  </changeSet>
+  <changeSet author="INCEpTION Team" id="20240629-5-pg" dbms="postgresql">
+    <sql>ALTER TABLE annotation_type ALTER "linkedListBehavior" TYPE BOOLEAN USING ("linkedListBehavior"::int::bool)</sql>
+  </changeSet>
+  
+  <changeSet author="INCEpTION Team" id="20240629-6" dbms="!postgresql">
+    <modifyDataType tableName="annotation_type" columnName="readonly" newDataType="BOOLEAN"/>
+    <addNotNullConstraint tableName="annotation_type" columnName="readonly" columnDataType="BOOLEAN"/>
+  </changeSet>
+  <changeSet author="INCEpTION Team" id="20240629-6-pg" dbms="postgresql">
+    <sql>ALTER TABLE annotation_type ALTER "readonly" TYPE BOOLEAN USING ("readonly"::int::bool)</sql>
+  </changeSet>
+  
+  <changeSet author="INCEpTION Team" id="20240629-7" dbms="!postgresql">
+    <modifyDataType tableName="annotation_type" columnName="showTextInHover" newDataType="BOOLEAN"/>
+    <addNotNullConstraint tableName="annotation_type" columnName="showTextInHover" columnDataType="BOOLEAN"/>
+  </changeSet>
+  <changeSet author="INCEpTION Team" id="20240629-7-pg" dbms="postgresql">
+    <sql>ALTER TABLE annotation_type ALTER "showTextInHover" TYPE BOOLEAN USING ("showTextInHover"::int::bool)</sql>
+  </changeSet>
+
+  <changeSet author="INCEpTION Team" id="20240629-8" dbms="!postgresql">
+    <modifyDataType tableName="annotation_feature" columnName="enabled" newDataType="BOOLEAN"/>
+    <addNotNullConstraint tableName="annotation_feature" columnName="enabled" columnDataType="BOOLEAN"/>
+  </changeSet>
+  <changeSet author="INCEpTION Team" id="20240629-8-pg" dbms="postgresql">
+    <sql>ALTER TABLE annotation_feature ALTER "enabled" TYPE BOOLEAN USING ("enabled"::int::bool)</sql>
+  </changeSet>
+
+  <changeSet author="INCEpTION Team" id="20240629-9" dbms="!postgresql">
+    <modifyDataType tableName="annotation_feature" columnName="hideUnconstraintFeature" newDataType="BOOLEAN"/>
+    <addNotNullConstraint tableName="annotation_feature" columnName="hideUnconstraintFeature" columnDataType="BOOLEAN"/>
+  </changeSet>
+  <changeSet author="INCEpTION Team" id="20240629-9-pg" dbms="postgresql">
+    <sql>ALTER TABLE annotation_feature ALTER "hideUnconstraintFeature" TYPE BOOLEAN USING ("hideUnconstraintFeature"::int::bool)</sql>
+  </changeSet>
+
+  <changeSet author="INCEpTION Team" id="20240629-10" dbms="!postgresql">
+    <modifyDataType tableName="annotation_feature" columnName="includeInHover" newDataType="BOOLEAN"/>
+    <addNotNullConstraint tableName="annotation_feature" columnName="includeInHover" columnDataType="BOOLEAN"/>
+  </changeSet>
+  <changeSet author="INCEpTION Team" id="20240629-10-pg" dbms="postgresql">
+    <sql>ALTER TABLE annotation_feature ALTER "includeInHover" TYPE BOOLEAN USING ("includeInHover"::int::bool)</sql>
+  </changeSet>
+
+  <changeSet author="INCEpTION Team" id="20240629-11" dbms="!postgresql">
+    <modifyDataType tableName="annotation_feature" columnName="remember" newDataType="BOOLEAN"/>
+    <addNotNullConstraint tableName="annotation_feature" columnName="remember" columnDataType="BOOLEAN"/>
+  </changeSet>
+  <changeSet author="INCEpTION Team" id="20240629-11-pg" dbms="postgresql">
+    <sql>ALTER TABLE annotation_feature ALTER "remember" TYPE BOOLEAN USING ("remember"::int::bool)</sql>
+  </changeSet>
+
+  <changeSet author="INCEpTION Team" id="20240629-12" dbms="!postgresql">
+    <modifyDataType tableName="annotation_feature" columnName="required" newDataType="BOOLEAN"/>
+    <addNotNullConstraint tableName="annotation_feature" columnName="required" columnDataType="BOOLEAN"/>
+  </changeSet>
+  <changeSet author="INCEpTION Team" id="20240629-12-pg" dbms="postgresql">
+    <sql>ALTER TABLE annotation_feature ALTER "required" TYPE BOOLEAN USING ("required"::int::bool)</sql>
+  </changeSet>
+
+  <changeSet author="INCEpTION Team" id="20240629-13" dbms="!postgresql">
+    <modifyDataType tableName="annotation_feature" columnName="visible" newDataType="BOOLEAN"/>
+    <addNotNullConstraint tableName="annotation_feature" columnName="visible" columnDataType="BOOLEAN"/>
+  </changeSet>
+  <changeSet author="INCEpTION Team" id="20240629-13-pg" dbms="postgresql">
+    <sql>ALTER TABLE annotation_feature ALTER "visible" TYPE BOOLEAN USING ("visible"::int::bool)</sql>
+  </changeSet>
+
+  <changeSet author="INCEpTION Team" id="20240629-14" dbms="!postgresql">
+    <modifyDataType tableName="annotation_feature" columnName="curatable" newDataType="BOOLEAN"/>
+    <addNotNullConstraint tableName="annotation_feature" columnName="curatable" columnDataType="BOOLEAN"/>
+  </changeSet>
+  <changeSet author="INCEpTION Team" id="20240629-14-pg" dbms="postgresql">
+    <sql>ALTER TABLE annotation_feature ALTER "curatable" TYPE BOOLEAN USING ("curatable"::int::bool)</sql>
+  </changeSet>
 </databaseChangeLog>
