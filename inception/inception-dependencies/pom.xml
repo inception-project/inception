@@ -1344,6 +1344,11 @@
         <artifactId>postgresql</artifactId>
         <version>${postgres.driver.version}</version>
       </dependency>
+      <dependency>
+        <groupId>com.microsoft.sqlserver</groupId>
+        <artifactId>mssql-jdbc</artifactId>
+        <version>${mssql.driver.version}</version>
+      </dependency>
 
       <dependency>
         <groupId>org.springframework.boot</groupId>
