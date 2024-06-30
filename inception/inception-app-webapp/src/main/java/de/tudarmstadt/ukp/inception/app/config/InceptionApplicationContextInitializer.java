@@ -35,6 +35,7 @@ import org.springframework.util.unit.DataSize;
 
 import de.tudarmstadt.ukp.inception.support.SettingsUtil;
 import de.tudarmstadt.ukp.inception.support.db.InceptionHSQLDialect;
+import de.tudarmstadt.ukp.inception.support.db.InceptionMySQLDialect;
 import de.tudarmstadt.ukp.inception.support.logging.BaseLoggers;
 import de.tudarmstadt.ukp.inception.support.logging.LoggingFilter;
 
@@ -105,6 +106,16 @@ public class InceptionApplicationContextInitializer
             overrides.put("spring.jpa.properties.hibernate.globally_quoted_identifiers", true);
             aEnvironment.getPropertySources()
                     .addFirst(new MapPropertySource("PostgreSQL-Overrides", overrides));
+        }
+
+        if (datasourceUrl.startsWith("jdbc:mysql:")) {
+            var overrides = new HashMap<String, Object>();
+            // We use certain column names like `rank` that are reserved words in MySQL
+            overrides.put("spring.jpa.properties.hibernate.globally_quoted_identifiers", true);
+            overrides.put("spring.jpa.properties.hibernate.dialect",
+                    InceptionMySQLDialect.class.getName());
+            aEnvironment.getPropertySources()
+                    .addFirst(new MapPropertySource("MySQL-Overrides", overrides));
         }
     }
 

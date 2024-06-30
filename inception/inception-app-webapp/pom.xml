@@ -703,7 +703,17 @@
     </dependency>
     <dependency>
       <groupId>org.testcontainers</groupId>
+      <artifactId>mysql</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.testcontainers</groupId>
       <artifactId>postgresql</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>mysql</groupId>
+      <artifactId>mysql-connector-java</artifactId>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -1019,6 +1029,7 @@
               <usedDependency>org.hibernate.orm:hibernate-core</usedDependency>
               <usedDependency>org.hsqldb:hsqldb</usedDependency>
               <usedDependency>org.mariadb.jdbc:mariadb-java-client</usedDependency>
+              <usedDependency>mysql:mysql-connector-java</usedDependency>
               <usedDependency>org.postgresql:postgresql</usedDependency>
               <!-- Logging - used via reflection / optional -->
               <usedDependency>com.mattbertolini:liquibase-slf4j</usedDependency>
