@@ -1349,6 +1349,11 @@
         <artifactId>mssql-jdbc</artifactId>
         <version>${mssql.driver.version}</version>
       </dependency>
+      <dependency>
+        <groupId>mysql</groupId>
+        <artifactId>mysql-connector-java</artifactId>
+        <version>${mysql.driver.version}</version>
+      </dependency>
 
       <dependency>
         <groupId>org.springframework.boot</groupId>
