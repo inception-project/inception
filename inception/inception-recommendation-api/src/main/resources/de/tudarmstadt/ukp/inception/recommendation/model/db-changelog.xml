@@ -523,4 +523,12 @@
       </column>
     </addColumn>
   </changeSet>
+
+  <changeSet author="INCEpTION Team" id="20240629-15" dbms="!postgresql">
+    <modifyDataType tableName="recommender" columnName="alwaysSelected" newDataType="BOOLEAN"/>
+    <addNotNullConstraint tableName="recommender" columnName="alwaysSelected" columnDataType="BOOLEAN"/>
+  </changeSet>
+  <changeSet author="INCEpTION Team" id="20240629-15-pg" dbms="postgresql">
+    <sql>ALTER TABLE recommender ALTER "alwaysSelected" TYPE BOOLEAN USING ("alwaysSelected"::int::bool)</sql>
+  </changeSet>
 </databaseChangeLog>

@@ -30,7 +30,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
@@ -56,8 +55,7 @@ public class UserPreference
     @Column(nullable = false)
     private String name;
 
-    @Lob
-    @Column(length = 16_777_216)
+    @Column(length = 64000)
     private String traits;
 
     public Long getId()
