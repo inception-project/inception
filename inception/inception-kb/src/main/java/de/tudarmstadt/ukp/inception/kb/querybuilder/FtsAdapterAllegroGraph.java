@@ -21,6 +21,7 @@ import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder.co
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder.convertToRequiredTokenPrefixMatchingQuery;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder.Priority.PRIMARY;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions.and;
 import static org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.prefix;
 import static org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns.and;
 import static org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns.union;
@@ -28,6 +29,7 @@ import static org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.iri;
 
 import java.util.ArrayList;
 
+import org.eclipse.rdf4j.sparqlbuilder.constraint.Expression;
 import org.eclipse.rdf4j.sparqlbuilder.core.Prefix;
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPattern;
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Iri;
@@ -101,8 +103,12 @@ public class FtsAdapterAllegroGraph
 
             builder.addProjection(VAR_SCORE);
 
+            var labelFilterExpressions = new ArrayList<Expression<?>>();
+            labelFilterExpressions.add(builder.matchKbLanguage(VAR_MATCH_TERM));
+
             valuePatterns.add(new AllegroGraphFtsQuery(VAR_SUBJECT, VAR_SCORE, VAR_MATCH_TERM,
-                    VAR_MATCH_TERM_PROPERTY, query));
+                    VAR_MATCH_TERM_PROPERTY, query)
+                            .filter(and(labelFilterExpressions.toArray(Expression[]::new))));
         }
 
         if (valuePatterns.isEmpty()) {
@@ -134,13 +140,17 @@ public class FtsAdapterAllegroGraph
 
         builder.addProjection(VAR_SCORE);
 
+        var labelFilterExpressions = new ArrayList<Expression<?>>();
+        labelFilterExpressions.add(builder.startsWithPattern(VAR_MATCH_TERM, aPrefixQuery));
+        labelFilterExpressions.add(builder.matchKbLanguage(VAR_MATCH_TERM));
+
         // Locate all entries where the label contains the prefix (using the FTS) and then
         // filter them by those which actually start with the prefix.
         builder.addPattern(PRIMARY, and( //
                 builder.bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY), //
                 new AllegroGraphFtsQuery(VAR_SUBJECT, VAR_SCORE, VAR_MATCH_TERM,
                         VAR_MATCH_TERM_PROPERTY, queryString) //
-                                .filter(builder.startsWithPattern(VAR_MATCH_TERM, aPrefixQuery))));
+                                .filter(and(labelFilterExpressions.toArray(Expression[]::new)))));
     }
 
     @Override
@@ -164,8 +174,12 @@ public class FtsAdapterAllegroGraph
 
             builder.addProjection(VAR_SCORE);
 
+            var labelFilterExpressions = new ArrayList<Expression<?>>();
+            labelFilterExpressions.add(builder.matchKbLanguage(VAR_MATCH_TERM));
+
             valuePatterns.add(new AllegroGraphFtsQuery(VAR_SUBJECT, VAR_SCORE, VAR_MATCH_TERM,
-                    VAR_MATCH_TERM_PROPERTY, query));
+                    VAR_MATCH_TERM_PROPERTY, query) //
+                            .filter(and(labelFilterExpressions.toArray(Expression[]::new))));
         }
 
         if (valuePatterns.isEmpty()) {

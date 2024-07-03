@@ -281,7 +281,7 @@ export class Visualizer {
   }
 
   scrollTo (args: { offset: number, position?: string, pingRanges?: Offsets[] }): void {
-    const chunk = this.getChunkAtOffset(args.offset - (this.sourceData?.windowBegin || 0))
+    const chunk = this.findChunkClosestToOffset(args.offset - (this.sourceData?.windowBegin || 0))
 
     if (!chunk) {
       console.warn('Could not find chunk at offset', args.offset)
@@ -820,6 +820,17 @@ export class Visualizer {
     let chunk: Chunk
     const chunks : Chunk[] = []
 
+    for (const fragment of sortedFragments) {
+      if (fragment.span.id === 'rel:0-before') {
+        chunk = new Chunk(chunkNo++, '', fragment.from, fragment.to, '')
+        chunk.virtual = true
+        fragment.chunk = chunk
+        chunk.fragments.push(fragment)
+        chunks.push(chunk)
+        break;
+      }
+    }
+
     tokenOffsets.forEach(offset => {
       const from = offset[0]
       const to = offset[1]
@@ -827,7 +838,7 @@ export class Visualizer {
         firstFrom = from
       }
 
-      // Is the token end inside a span?
+      // Is the token end inside a span annotation / fragment?
       if (startFragmentId && to > sortedFragments[startFragmentId - 1].to) {
         while (startFragmentId < numFragments && to > sortedFragments[startFragmentId].from) {
           startFragmentId++
@@ -848,6 +859,7 @@ export class Visualizer {
       if (chunk) {
         chunk.nextSpace = space
       }
+
       //               (index,     text, from,      to, space) {
       chunk = new Chunk(chunkNo++, text, firstFrom, to, space)
       chunk.lastSpace = space
@@ -855,6 +867,17 @@ export class Visualizer {
       lastTo = to
       firstFrom = null
     })
+
+    for (const fragment of sortedFragments) {
+      if (fragment.span.id === 'rel:1-after') {
+        chunk = new Chunk(chunkNo++, '', fragment.from, fragment.to, '')
+        chunk.virtual = true
+        fragment.chunk = chunk
+        chunk.fragments.push(fragment)
+        chunks.push(chunk)
+        break;
+      }
+    }
 
     return chunks
   }
@@ -868,13 +891,10 @@ export class Visualizer {
     let chunkNo = 0
     let sentenceNo = firstSentence
 
-    for (const offset of sentenceOffsets) {
-      const from = offset[0]
-      const to = offset[1]
-
+    for (const [sentFrom, sentTo] of sentenceOffsets) {
       // Skip all chunks that belonged to the previous sentence
       let chunk : Chunk | undefined
-      while (chunkNo < numChunks && (chunk = chunks[chunkNo]).from < from) {
+      while (chunkNo < numChunks && (chunk = chunks[chunkNo]).from < sentFrom) {
         chunkNo++
       }
 
@@ -884,7 +904,7 @@ export class Visualizer {
       }
 
       // If the current chunk is not within the current sentence, then it was an empty sentence
-      if (chunks[chunkNo].from >= to) {
+      if (!covering(sentFrom, sentTo, chunks[chunkNo].from, chunks[chunkNo].to)) {
         sentenceNo++
         continue
       }
@@ -902,12 +922,21 @@ export class Visualizer {
       return
     }
 
-    let currentChunkId = 0
-    let chunk: Chunk
+    // Avoid assigining fragments to virtual chunks link those created for rel:0-before and rel:1-after
+    chunks = chunks.filter(chunk => !chunk.virtual)
+
     for (const fragment of sortedFragments) {
-      while (fragment.to > (chunk = chunks[currentChunkId]).to) {
-        currentChunkId++
+      // The before and after fragments have already been assigned to their own chunks in 
+      // buildChunksFromTokenOffsets
+      if (fragment.span.id === 'rel:0-before' || fragment.span.id === 'rel:1-after') continue
+
+      let chunk = chunks.find(c => overlapping(c.from, c.to, fragment.from, fragment.to));
+
+      if (!chunk) {
+        console.warn('Could not find chunk for fragment', fragment);
+        continue
       }
+
       chunk.fragments.push(fragment)
       fragment.text = chunk.text.substring(fragment.from - chunk.from, fragment.to - chunk.from)
       fragment.chunk = chunk
@@ -987,7 +1016,7 @@ export class Visualizer {
     const triggerHash = this.buildSpansFromTriggers(this.sourceData.triggers)
     this.buildEventDescsFromTriggers(this.data, this.sourceData, triggerHash)
 
-    // split spans into span fragments (for discontinuous spans)
+    // split span annotations into span fragments (for discontinuous spans)
     this.splitSpansIntoFragments(Object.values(this.data.spans))
     this.buildEventDescsFromEquivs(this.sourceData.equivs, this.data.spans, this.data.eventDescs)
     this.buildEventDescsFromRelations(this.sourceData.relations, this.data.eventDescs)
@@ -1244,6 +1273,9 @@ export class Visualizer {
       }
     }
 
+    // Add dummy element used only to get the text height even if we have no chunks
+    this.svg.plain("TEXT").addTo(textMeasureGroup)
+
     const bbox = textMeasureGroup.bbox()
     textMeasureGroup.remove()
 
@@ -1477,16 +1509,22 @@ export class Visualizer {
   }
 
   private calculateSubstringWidthFast (text: SVGTextContentElement, firstChar: number, lastChar: number) {
-    let startPos: number
-    if (firstChar < text.getNumberOfChars()) {
-      startPos = text.getStartPositionOfChar(firstChar).x
-    } else {
-      startPos = text.getComputedTextLength()
+    try {
+{      let startPos: number
+      if (firstChar < text.getNumberOfChars()) {
+        startPos = text.getStartPositionOfChar(firstChar).x
+      } else {
+        startPos = text.getComputedTextLength()
+      }
+      const endPos = (lastChar < firstChar)
+        ? startPos
+        : text.getEndPositionOfChar(lastChar).x
+      return [startPos, endPos]
+}    }
+    catch (e) {
+      console.error(`Unable to calculate width of range ${firstChar}-${lastChar} on [${text}]`, e)
+      return [0, 0]
     }
-    const endPos = (lastChar < firstChar)
-      ? startPos
-      : text.getEndPositionOfChar(lastChar).x
-    return [startPos, endPos]
   }
 
   /**
@@ -1797,9 +1835,10 @@ export class Visualizer {
       let chunkTo = 0
       let chunkHeight = 0
       let spacing = 0
-      let spacingChunkId: number
+      let spacingChunkId: number | undefined = undefined
       let spacingRowBreak = 0
 
+      // Render the fragments for the current chunk
       chunk.fragments.forEach(fragment => {
         const span = fragment.span
 
@@ -1918,7 +1957,7 @@ export class Visualizer {
         if (fragment === span.headFragment) {
           const checkLeftRightArcs = (arc: Arc, refSpan: Entity, leftSpan: Entity) => {
             const refChunk = leftSpan.headFragment.chunk
-            if (!refChunk.row) {
+            if (!refChunk || !refChunk.row) {
               hasRightArcs = true
               return
             }
@@ -1974,7 +2013,7 @@ export class Visualizer {
 
           for (const arc of span.incoming) {
             const origin = docData.spans[arc.origin].headFragment.chunk
-            if (chunk.index === origin.index) {
+            if (origin && chunk.index === origin.index) {
               hasInternalArcs = true
             }
           }
@@ -1995,7 +2034,7 @@ export class Visualizer {
       // If chunkFrom becomes negative (LTR) or chunkTo becomes positive (RTL), then boxX becomes positive
       const boxX = this.rtlmode ? chunkTo : -Math.min(chunkFrom, 0)
 
-      let boxWidth
+      let boxWidth : number
       if (this.rtlmode) {
         boxWidth = Math.max(textWidth, -chunkFrom) - Math.min(0, -chunkTo)
       } else {
@@ -2030,7 +2069,7 @@ export class Visualizer {
         // row is added
       }
 
-      let chunkDoesNotFit
+      let chunkDoesNotFit : boolean
       if (this.rtlmode) {
         chunkDoesNotFit = currentX - boxWidth - leftBorderForArcs <=
           2 * Configuration.visual.margin.x
@@ -2039,13 +2078,14 @@ export class Visualizer {
           this.canvasWidth - 2 * Configuration.visual.margin.x
       }
 
+      // Check if a new row needs to be started and if so start it
       if (chunk.sentence > sourceData.sentence_number_offset || chunkDoesNotFit) {
         // the chunk does not fit
         row.arcs = this.svg.group().addTo(row.group).addClass('arcs')
         let indent = 0
         if (chunk.lastSpace) {
           const spaceLen = chunk.lastSpace.length || 0
-          let spacePos
+          let spacePos : number
           if (chunk.sentence) {
             // If this is line-initial spacing, fetch the sentence to which the chunk belongs
             // so we can determine where it begins
@@ -2083,23 +2123,24 @@ export class Visualizer {
           spacing = 0 // do not center intervening elements
         }
 
-        // new row
+        // Finish up current row
         rows.push(row)
-
         chunk.group.remove()
+
+        // Start new row
         row = new Row(this.svg)
-        // Change row background color if a new sentence is starting
         if (chunk.sentence) {
+          // Change row background color if a new sentence is starting
           sentenceToggle = 1 - sentenceToggle
         }
         row.backgroundIndex = sentenceToggle
         row.index = ++rowIndex
         chunk.group.addTo(row.group)
         chunk.group = SVG(row.group.node.lastElementChild as SVGGElement)
-        $(chunk.group).children("g[class='span']").each((index, element) => {
+        chunk.group.node.querySelectorAll("g.span").forEach((element, index) => {
           chunk.fragments[index].group = SVG(element as SVGGElement)
         })
-        $(chunk.group).find('rect[data-span-id]').each((index, element) => {
+        chunk.group.node.querySelectorAll('rect[data-span-id]').forEach((element, index) => {
           chunk.fragments[index].rect = SVG(element as SVGElement)
         })
       }
@@ -2143,8 +2184,8 @@ export class Visualizer {
         row.sentence = ++sentenceNumber
       }
 
-      if (spacing > 0) {
-        // if we added a gap, center the intervening elements
+      // if we added a gap, center the intervening elements
+      if (spacing > 0 && spacingChunkId !== undefined) {
         spacing /= 2
         const firstChunkInRow = row.chunks[row.chunks.length - 1]
         if (firstChunkInRow === undefined) {
@@ -2161,6 +2202,7 @@ export class Visualizer {
         }
       }
 
+      // Assign chunk to row
       row.chunks.push(chunk)
       chunk.row = row
 
@@ -2347,7 +2389,7 @@ export class Visualizer {
 
         for (let i = 0; i < chunk.fragments.length; i++) {
           const fragment = chunk.fragments[orderedIdx[i]]
-          if (fragment.span.hidden) {
+          if (fragment.span.hidden || fragment.span.id === "rel:0-before" || fragment.span.id === "rel:1-after") {
             continue
           }
 
@@ -3085,7 +3127,7 @@ export class Visualizer {
     let currentSent = 0
     for (const row of rows) {
       // find the maximum fragment height
-      row.updateFragmentHeight()
+      row.updateFragmentHeight(docData.sizes.texts.height)
       row.updateRowBoxHeight(this.rowSpacing, this.rowPadding)
 
       if (row.sentence) {
@@ -4130,8 +4172,28 @@ export class Visualizer {
       .addTo(fragment.group)
   }
 
-  getChunkAtOffset (offset: number) : Chunk | null {
-    return this.data?.chunks?.find(chunk => chunk.from <= offset && offset < chunk.to) || null
+  findChunkClosestToOffset (offset: number) : Chunk | null {
+    let closestChunk : Chunk | null = null
+    let closestNonVirtualChunk : Chunk | null = null
+    let minDiff = Infinity
+    let nonVirtualMinDiff = Infinity
+    for (const chunk of this.data?.chunks || []) {
+      const diff = Math.min(Math.abs(chunk.from - offset), Math.abs(chunk.to - offset))
+
+      if (!chunk.virtual && diff < nonVirtualMinDiff) {
+        closestNonVirtualChunk = chunk
+        nonVirtualMinDiff = diff
+      }
+
+      if (diff < minDiff) {
+        closestChunk = chunk
+        minDiff = diff
+      }
+    }
+
+    // Try to return a non-virtual chunk because we can highlight that with a ping.
+    // Only if no non-virtual chunk is found, return the closest chunk.
+    return closestNonVirtualChunk || closestChunk;
   }
 
   getChunkElementWithId (id: VID): Element | null {
@@ -4387,4 +4449,12 @@ function sentenceSplit (text: string): Array<Offsets> {
   }
 
   return sentenceOffsets
+}
+
+function overlapping(aXBegin: number, aXEnd: number, aYBegin: number, aYEnd: number): boolean {
+  return aYBegin === aXBegin || aYEnd === aXEnd || (aXBegin < aYEnd && aYBegin < aXEnd);
+} 
+
+function covering(aXBegin: number, aXEnd: number, aYBegin: number, aYEnd: number): boolean {
+  return aXBegin <= aYBegin && aYEnd <= aXEnd;
 }

@@ -157,7 +157,7 @@ public class LoggedEventExporter
     {
         int eventCount = 0;
 
-        var entry = aZip.getEntry(EVENT_LOG);
+        var entry = ProjectExporter.getEntry(aZip, EVENT_LOG);
 
         if (entry == null) {
             LOG.info("No event log available for import in project [{}]", aProject.getName());

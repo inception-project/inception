@@ -33,6 +33,7 @@ import java.util.List;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.jcas.tcas.Annotation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.Order;
@@ -170,6 +171,10 @@ public class CurationSidebarRenderer
 
             for (var cfg : cfgSet.getConfigurations()) {
                 var fs = cfg.getRepresentative(casDiff.getCasMap());
+                if (!(fs instanceof Annotation)) {
+                    continue;
+                }
+
                 var user = cfg.getRepresentativeCasGroupId();
 
                 // We need to pass in *all* the annotation features here because we also to that in

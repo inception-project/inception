@@ -79,7 +79,6 @@ import com.giffing.wicket.spring.boot.starter.app.WicketBootSecuredWebApplicatio
 
 import de.agilecoders.wicket.core.Bootstrap;
 import de.agilecoders.wicket.core.settings.IBootstrapSettings;
-import de.agilecoders.wicket.webjars.WicketWebjars;
 import de.tudarmstadt.ukp.clarin.webanno.security.SpringAuthenticatedWebSession;
 import de.tudarmstadt.ukp.clarin.webanno.ui.config.FontAwesomeResourceBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
@@ -247,14 +246,6 @@ public abstract class WicketApplicationBase
     private void initPageRequestTracker()
     {
         getRequestCycleListeners().add(new PageRequestHandlerTracker());
-    }
-
-    @Override
-    protected void internalInit()
-    {
-        super.internalInit();
-
-        WicketWebjars.install(this);
     }
 
     protected void initWebFrameworks()

@@ -73,7 +73,7 @@
     <junit-jupiter.version>5.10.2</junit-jupiter.version>
     <junit-platform.version>1.10.2</junit-platform.version>
     <mockito.version>5.12.0</mockito.version>
-    <assertj.version>3.25.2</assertj.version>
+    <assertj.version>3.26.0</assertj.version>
     <xmlunit.version>2.10.0</xmlunit.version>
     <testcontainers.version>1.19.8</testcontainers.version>
 
@@ -103,12 +103,13 @@
     <servlet-api.version>6.0.0</servlet-api.version>
 
     <mariadb.driver.version>2.7.12</mariadb.driver.version>
+    <mysql.driver.version>8.0.27</mysql.driver.version>
     <postgres.driver.version>42.7.3</postgres.driver.version>
     <hibernate.version>6.5.2.Final</hibernate.version>
     <hibernate.validator.version>8.0.1.Final</hibernate.validator.version>
 
     <wicket.version>10.1.0</wicket.version>
-    <wicketstuff.version>10.1.0</wicketstuff.version>
+    <wicketstuff.version>10.1.1</wicketstuff.version>
     <wicket-bootstrap.version>7.0.5</wicket-bootstrap.version>
     <wicket-jquery-selectors.version>4.0.5</wicket-jquery-selectors.version>
     <wicket-webjars.version>4.0.4</wicket-webjars.version>
@@ -123,7 +124,7 @@
     <!-- * 8.11.1.0 depends on Lucene 8.11.1 -->
     <!--   no mtas  depends on Lucene 9.x -->
 
-    <elasticsearch.version>7.17.21</elasticsearch.version> 
+    <elasticsearch.version>7.17.22</elasticsearch.version> 
     <!--   7.10.x   depends on Lucene 8.7.0 - last ASL 2.0 version! -->
     <!-- * 7.17.x   depends on Lucene 8.11.1 -->
     <!--   8.1.x    depends on Lucene 9.0.0 -->

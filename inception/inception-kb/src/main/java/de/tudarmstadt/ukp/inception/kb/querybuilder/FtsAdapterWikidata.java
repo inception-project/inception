@@ -29,6 +29,7 @@ import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPattern;
 public class FtsAdapterWikidata
     implements FtsAdapter
 {
+    private static final String FALLBACK_LANGUAGE = "en";
     private final SPARQLQueryBuilder builder;
 
     public FtsAdapterWikidata(SPARQLQueryBuilder aBuilder)
@@ -43,7 +44,8 @@ public class FtsAdapterWikidata
 
         // In our KB settings, the language can be unset, but the Wikidata entity search
         // requires a preferred language. So we use English as the default.
-        var language = kb.getDefaultLanguage() != null ? kb.getDefaultLanguage() : "en";
+        var language = kb.getDefaultLanguage() != null ? kb.getDefaultLanguage()
+                : FALLBACK_LANGUAGE;
 
         var valuePatterns = new ArrayList<GraphPattern>();
         for (var value : aValues) {
@@ -74,7 +76,8 @@ public class FtsAdapterWikidata
 
         // In our KB settings, the language can be unset, but the Wikidata entity search
         // requires a preferred language. So we use English as the default.
-        var language = kb.getDefaultLanguage() != null ? kb.getDefaultLanguage() : "en";
+        var language = kb.getDefaultLanguage() != null ? kb.getDefaultLanguage()
+                : FALLBACK_LANGUAGE;
 
         var valuePatterns = new ArrayList<GraphPattern>();
         for (var value : aValues) {
@@ -105,7 +108,8 @@ public class FtsAdapterWikidata
 
         // In our KB settings, the language can be unset, but the Wikidata entity search
         // requires a preferred language. So we use English as the default.
-        var language = kb.getDefaultLanguage() != null ? kb.getDefaultLanguage() : "en";
+        var language = kb.getDefaultLanguage() != null ? kb.getDefaultLanguage()
+                : FALLBACK_LANGUAGE;
 
         if (aPrefixQuery.isEmpty()) {
             builder.noResult();
@@ -127,7 +131,8 @@ public class FtsAdapterWikidata
 
         // In our KB settings, the language can be unset, but the Wikidata entity search
         // requires a preferred language. So we use English as the default.
-        var language = kb.getDefaultLanguage() != null ? kb.getDefaultLanguage() : "en";
+        var language = kb.getDefaultLanguage() != null ? kb.getDefaultLanguage()
+                : FALLBACK_LANGUAGE;
 
         var valuePatterns = new ArrayList<GraphPattern>();
         for (var value : aValues) {

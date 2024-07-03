@@ -445,7 +445,20 @@ public abstract class AnnotationPageBase2
 
             LOG.trace("Preparing to open document {}@{} {}", state.getUser(), state.getDocument(),
                     aFocus);
+
+            // Load constraints
+            state.setConstraints(constraintsService.getMergedConstraints(state.getProject()));
+
+            // Load user preferences
+            loadPreferences();
+
+            // Set the actual editor component. This has to happen *before* any AJAX refreshes are
+            // scheduled and *after* the preferences have been loaded (because the current editor
+            // type is set in the preferences.
+            createAnnotationEditor();
+
             state.reset();
+
             applicationEventPublisherHolder.get().publishEvent(
                     new PreparingToOpenDocumentEvent(this, getModelObject().getDocument(),
                             getModelObject().getUser().getUsername(), sessionOwnerName));
@@ -493,22 +506,12 @@ public abstract class AnnotationPageBase2
                 bumpAnnotationCasTimestamp(state);
             }
 
-            // Load constraints
-            state.setConstraints(constraintsService.getMergedConstraints(state.getProject()));
-
-            // Load user preferences
-            loadPreferences();
-
             // if project is changed, reset some project specific settings
             if (currentProjectId != state.getProject().getId()) {
                 state.clearRememberedFeatures();
                 currentProjectId = state.getProject().getId();
             }
 
-            // Set the actual editor component. This has to happen *before* any AJAX refreshes are
-            // scheduled and *after* the preferences have been loaded (because the current editor
-            // type is set in the preferences.
-            createAnnotationEditor();
             actionBar.refresh();
 
             // update paging, only do it during document load so we load the CAS after it has been

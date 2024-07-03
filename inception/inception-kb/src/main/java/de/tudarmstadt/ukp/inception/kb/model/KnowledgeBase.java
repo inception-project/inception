@@ -46,7 +46,6 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.NamedQueries;
 import jakarta.persistence.NamedQuery;
@@ -216,8 +215,7 @@ public class KnowledgeBase
     @Column(nullable = false)
     private boolean skipSslValidation = false;
 
-    @Lob
-    @Column(length = 16_777_216)
+    @Column(length = 64000)
     private String traits;
 
     public String getRepositoryId()
