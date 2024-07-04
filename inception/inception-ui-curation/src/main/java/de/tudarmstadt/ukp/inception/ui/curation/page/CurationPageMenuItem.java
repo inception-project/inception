@@ -88,7 +88,7 @@ public class CurationPageMenuItem
     @Override
     public String getLabel()
     {
-        return "Curation (new)";
+        return "Curation";
     }
 
     @Override

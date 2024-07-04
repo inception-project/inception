@@ -22,15 +22,20 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_PROJECT;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAGE_PARAM_PROJECT;
 
+import java.util.List;
+
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.string.StringValue;
 import org.wicketstuff.annotation.mount.MountPath;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase2;
+import de.tudarmstadt.ukp.inception.curation.service.CurationDocumentService;
 import de.tudarmstadt.ukp.inception.ui.curation.sidebar.CurationSidebarBehavior;
 import de.tudarmstadt.ukp.inception.ui.curation.sidebar.CurationSidebarService;
+import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 
 @MountPath(NS_PROJECT + "/${" + PAGE_PARAM_PROJECT + "}/curate/#{" + PAGE_PARAM_DOCUMENT + "}")
 public class CurationPage
@@ -40,6 +45,8 @@ public class CurationPage
 
     private @SpringBean CurationSidebarService curationSidebarService;
     private @SpringBean UserDao userRepository;
+    private @SpringBean WorkloadManagementService workloadManagementService;
+    private @SpringBean CurationDocumentService curationDocumentService;
 
     public CurationPage(PageParameters aPageParameters)
     {
@@ -61,5 +68,16 @@ public class CurationPage
         requireProjectRole(sessionOwner, CURATOR);
 
         super.handleParameters(aDocumentParameter, aFocusParameter, aUserParameter);
+    }
+
+    @Override
+    public List<SourceDocument> getListOfDocs()
+    {
+        var state = getModelObject();
+        // Since the curatable documents depend on the document state, let's make sure the document
+        // state is up-to-date
+        workloadManagementService.getWorkloadManagerExtension(state.getProject())
+                .freshenStatus(state.getProject());
+        return curationDocumentService.listCuratableSourceDocuments(state.getProject());
     }
 }
