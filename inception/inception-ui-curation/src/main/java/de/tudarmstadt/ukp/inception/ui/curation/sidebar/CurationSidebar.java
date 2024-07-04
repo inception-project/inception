@@ -48,7 +48,6 @@ import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.model.ResourceModel;
-import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -105,9 +104,9 @@ public class CurationSidebar
     private final Form<Void> usersForm;
     private CheckBox showMerged;
     private final IModel<CurationWorkflow> curationWorkflowModel;
+    private final IModel<Boolean> isTargetFinished;
 
     private final Label noDocsLabel;
-    private final Label finishedLabel;
 
     private final MergeDialog mergeConfirm;
 
@@ -121,14 +120,8 @@ public class CurationSidebar
         queue(createSessionControlForm(CID_SESSION_CONTROL_FORM)
                 .add(visibleWhen(() -> getPage() instanceof AnnotationPage)));
 
-        var isTargetFinished = LambdaModel.of(() -> curationSidebarService.isCurationFinished(state,
+        isTargetFinished = LambdaModel.of(() -> curationSidebarService.isCurationFinished(state,
                 userRepository.getCurrentUsername()));
-
-        finishedLabel = new Label("finishedLabel", new StringResourceModel("finished", this,
-                LoadableDetachableModel.of(state::getUser)));
-        finishedLabel.setOutputMarkupPlaceholderTag(true);
-        finishedLabel.add(visibleWhen(() -> isSessionActive() && isTargetFinished.getObject()));
-        queue(finishedLabel);
 
         noDocsLabel = new Label("noDocumentsLabel", new ResourceModel("noDocuments"));
         noDocsLabel.add(visibleWhen(() -> isSessionActive() && !isTargetFinished.getObject()
@@ -284,11 +277,10 @@ public class CurationSidebar
 
         var form = new Form<Void>(aId);
         form.setOutputMarkupPlaceholderTag(true);
-        form.add(visibleWhen(() -> isSessionActive()
-                && !curationSidebarService.isCurationFinished(getModelObject(), sessionOwner)
-                && !users.getModelObject().isEmpty()));
+        form.add(visibleWhen(() -> isSessionActive() && !users.getModelObject().isEmpty()));
 
-        form.add(new LambdaAjaxButton<>("merge", this::actionOpenMergeDialog));
+        form.add(new LambdaAjaxButton<>("merge", this::actionOpenMergeDialog)
+                .add(visibleWhenNot(isTargetFinished)));
 
         users = new ListView<User>("users", LoadableDetachableModel.of(this::listCuratableUsers))
         {
