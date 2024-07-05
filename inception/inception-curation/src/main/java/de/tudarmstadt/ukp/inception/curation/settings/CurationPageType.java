@@ -15,30 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar;
+package de.tudarmstadt.ukp.inception.curation.settings;
 
-import org.springframework.beans.factory.BeanNameAware;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-public abstract class AnnotationSidebarFactory_ImplBase
-    implements BeanNameAware, AnnotationSidebarFactory
+public enum CurationPageType
 {
-    private String beanName;
-
-    @Override
-    public void setBeanName(String aName)
-    {
-        beanName = aName;
-    }
-
-    @Override
-    public String getBeanName()
-    {
-        return beanName;
-    }
-
-    @Override
-    public String getId()
-    {
-        return beanName;
-    }
+    @JsonProperty("webanno")
+    WEBANNO, //
+    @JsonProperty("integrated")
+    INTEGRATED;
 }

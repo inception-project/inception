@@ -24,7 +24,7 @@ import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase2;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebarFactory_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
@@ -82,11 +82,9 @@ public class RecommendationSidebarFactory
     }
 
     @Override
-    public AnnotationSidebar_ImplBase create(String aId, IModel<AnnotatorState> aModel,
-            AnnotationActionHandler aActionHandler, CasProvider aCasProvider,
-            AnnotationPage aAnnotationPage)
+    public AnnotationSidebar_ImplBase create(String aId, AnnotationActionHandler aActionHandler,
+            CasProvider aCasProvider, AnnotationPageBase2 aAnnotationPage)
     {
-        return new RecommendationSidebar(aId, aModel, aActionHandler, aCasProvider,
-                aAnnotationPage);
+        return new RecommendationSidebar(aId, aActionHandler, aCasProvider, aAnnotationPage);
     }
 }

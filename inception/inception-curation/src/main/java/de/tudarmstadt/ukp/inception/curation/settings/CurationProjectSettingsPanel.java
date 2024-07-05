@@ -17,13 +17,17 @@
  */
 package de.tudarmstadt.ukp.inception.curation.settings;
 
+import static de.tudarmstadt.ukp.inception.curation.settings.CurationManagerPrefs.KEY_CURATION_MANAGER_PREFS;
 import static de.tudarmstadt.ukp.inception.curation.sidebar.CurationSidebarManagerPrefs.KEY_CURATION_SIDEBAR_MANAGER_PREFS;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
+import static java.util.Arrays.asList;
 
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.form.CheckBox;
+import org.apache.wicket.markup.html.form.DropDownChoice;
+import org.apache.wicket.markup.html.form.EnumChoiceRenderer;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
@@ -57,6 +61,7 @@ public class CurationProjectSettingsPanel
 
     private IModel<CurationWorkflow> curationWorkflowModel;
     private CompoundPropertyModel<CurationSidebarManagerPrefs> curationSidebarPrefs;
+    private CompoundPropertyModel<CurationManagerPrefs> curationPrefs;
 
     private MarkupContainer mergeStrategyPanel;
 
@@ -70,6 +75,7 @@ public class CurationProjectSettingsPanel
 
         curationWorkflowModel = Model.of(loadCurationWorkflow());
         curationSidebarPrefs = new CompoundPropertyModel<>(Model.of(loadSidebarPrefs()));
+        curationPrefs = new CompoundPropertyModel<>(Model.of(loadCurationPrefs()));
 
         mergeStrategyPanel = new MergeStrategyPanel(MID_MERGE_STRATEGY, curationWorkflowModel);
         form.add(mergeStrategyPanel);
@@ -79,6 +85,12 @@ public class CurationProjectSettingsPanel
         form.add(new CheckBox("autoMergeCurationSidebar") //
                 .setModel(curationSidebarPrefs.bind("autoMergeCurationSidebar")) //
                 .add(visibleWhen(() -> curationSidebarProperties.isEnabled())) //
+                .setOutputMarkupPlaceholderTag(true));
+
+        form.add(new DropDownChoice<CurationPageType>("curationPageType") //
+                .setChoiceRenderer(new EnumChoiceRenderer<>(this)) //
+                .setChoices(asList(CurationPageType.values())) //
+                .setModel(curationPrefs.bind("curationPageType")) //
                 .setOutputMarkupPlaceholderTag(true));
 
         form.add(new LambdaAjaxButton<>(MID_SAVE, this::actionSave).triggerAfterSubmit());
@@ -104,10 +116,19 @@ public class CurationProjectSettingsPanel
                 getModelObject());
     }
 
+    private CurationManagerPrefs loadCurationPrefs()
+    {
+        return preferencesService.loadDefaultTraitsForProject(KEY_CURATION_MANAGER_PREFS,
+                getModelObject());
+    }
+
     public void actionSave(AjaxRequestTarget aTarget, Form<Project> aForm)
     {
         preferencesService.saveDefaultTraitsForProject(KEY_CURATION_SIDEBAR_MANAGER_PREFS,
                 getModelObject(), curationSidebarPrefs.getObject());
+
+        preferencesService.saveDefaultTraitsForProject(KEY_CURATION_MANAGER_PREFS, getModelObject(),
+                curationPrefs.getObject());
 
         curationService.createOrUpdateCurationWorkflow(curationWorkflowModel.getObject());
 

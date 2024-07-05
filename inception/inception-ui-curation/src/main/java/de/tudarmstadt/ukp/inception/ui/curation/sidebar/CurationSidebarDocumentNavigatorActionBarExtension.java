@@ -28,7 +28,15 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.actionbar.CurationDocumentNavigator;
 import de.tudarmstadt.ukp.inception.ui.curation.actionbar.opendocument.CurationOpenDocumentDialog;
+import de.tudarmstadt.ukp.inception.ui.curation.page.CurationPage;
 
+/**
+ * @deprecated Can be removed when the sidebar curation mode on the annotation page goes away. On
+ *             the new {@link CurationPage}, this is not required anymore because the
+ *             {@code MatrixWorkflowActionBarExtension} is used.
+ * @forRemoval 35.0
+ */
+@Deprecated(forRemoval = true)
 @Order(0)
 public class CurationSidebarDocumentNavigatorActionBarExtension
     implements ActionBarExtension
@@ -58,14 +66,13 @@ public class CurationSidebarDocumentNavigatorActionBarExtension
     @Override
     public boolean accepts(AnnotationPageBase aPage)
     {
-        if (!(aPage instanceof AnnotationPage)) {
-            return false;
+        if (aPage instanceof AnnotationPage) {
+            var project = aPage.getProject();
+            var sessionOwner = userRepository.getCurrentUsername();
+            return curationSidebarService.existsSession(sessionOwner, project.getId());
         }
 
-        var project = aPage.getProject();
-        var sessionOwner = userRepository.getCurrentUsername();
-
-        return curationSidebarService.existsSession(sessionOwner, project.getId());
+        return false;
     }
 
     @Override

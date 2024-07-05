@@ -75,7 +75,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ReorderableTag;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase2;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
 import de.tudarmstadt.ukp.inception.active.learning.ActiveLearningService;
 import de.tudarmstadt.ukp.inception.active.learning.ActiveLearningServiceImpl;
@@ -182,7 +182,7 @@ public class ActiveLearningSidebar
 
     private final WebMarkupContainer alMainContainer;
 
-    private AnnotationPage annotationPage;
+    private AnnotationPageBase2 annotationPage;
     private BootstrapModalDialog dialog;
     private FeatureEditor editor;
     private Form<Void> recommendationForm;
@@ -199,11 +199,10 @@ public class ActiveLearningSidebar
         KEEP_SELECTED_ANNOTATION_AND_VIEW, CLEAR_SELECTED_ANNOTATION_AND_JUMP_TO_SUGGESTION
     }
 
-    public ActiveLearningSidebar(String aId, IModel<AnnotatorState> aModel,
-            AnnotationActionHandler aActionHandler, CasProvider aCasProvider,
-            AnnotationPage aAnnotationPage)
+    public ActiveLearningSidebar(String aId, AnnotationActionHandler aActionHandler,
+            CasProvider aCasProvider, AnnotationPageBase2 aAnnotationPage)
     {
-        super(aId, aModel, aActionHandler, aCasProvider, aAnnotationPage);
+        super(aId, aActionHandler, aCasProvider, aAnnotationPage);
 
         annotationPage = aAnnotationPage;
 

@@ -383,6 +383,10 @@
               <name>modifiable</name>
               <placement>X</placement>
             </tag>
+            <tag>
+              <name>forRemoval</name>
+              <placement>X</placement>
+            </tag>
           </tags>
         </configuration>
       </plugin>

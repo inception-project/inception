@@ -103,6 +103,7 @@ public class CurationSidebarRenderer
     @Override
     public boolean accepts(RenderRequest aRequest)
     {
+        var project = aRequest.getProject();
         var state = aRequest.getState();
 
         // do not show predictions on the decicated curation page
@@ -114,6 +115,11 @@ public class CurationSidebarRenderer
             return false;
         }
 
+        var sessionOwner = userRepository.getCurrentUsername();
+        if (!curationService.existsSession(sessionOwner, project.getId())) {
+            return false;
+        }
+
         return true;
     }
 
@@ -122,10 +128,6 @@ public class CurationSidebarRenderer
     {
         var sessionOwner = userRepository.getCurrentUsername();
         var project = aRequest.getProject();
-
-        if (!curationService.existsSession(sessionOwner, project.getId())) {
-            return;
-        }
 
         var selectedUsers = curationService.listUsersReadyForCuration(sessionOwner, project,
                 aRequest.getSourceDocument());

@@ -15,9 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.processing;
+package de.tudarmstadt.ukp.clarin.webanno.ui.curation.page;
 
-import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
+import static de.tudarmstadt.ukp.inception.curation.settings.CurationManagerPrefs.KEY_CURATION_MANAGER_PREFS;
+import static de.tudarmstadt.ukp.inception.curation.settings.CurationPageType.WEBANNO;
 import static java.lang.String.format;
 
 import org.apache.wicket.Page;
@@ -30,31 +32,34 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.ProjectMenuItem;
+import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import jakarta.servlet.ServletContext;
 import wicket.contrib.input.events.key.KeyType;
 
 @ConditionalOnWebApplication
-@Order(250)
-public class BulkProcessingPageMenuItem
+@Order(200)
+public class LegacyCurationPageMenuItem
     implements ProjectMenuItem
 {
     private final UserDao userRepo;
     private final ProjectService projectService;
     private final ServletContext servletContext;
+    private final PreferencesService preferencesService;
 
-    public BulkProcessingPageMenuItem(UserDao aUserRepo, ProjectService aProjectService,
-            ServletContext aServletContext)
+    public LegacyCurationPageMenuItem(UserDao aUserRepo, ProjectService aProjectService,
+            ServletContext aServletContext, PreferencesService aPreferencesService)
     {
         userRepo = aUserRepo;
         projectService = aProjectService;
         servletContext = aServletContext;
+        preferencesService = aPreferencesService;
     }
 
     @Override
     public String getPath()
     {
-        return "/process";
+        return "/curate-split";
     }
 
     public String getUrl(Project aProject, long aDocumentId)
@@ -68,13 +73,13 @@ public class BulkProcessingPageMenuItem
     @Override
     public IconType getIcon()
     {
-        return FontAwesome5IconType.robot_s;
+        return FontAwesome5IconType.clipboard_s;
     }
 
     @Override
     public String getLabel()
     {
-        return "Process";
+        return "Curation";
     }
 
     @Override
@@ -84,19 +89,26 @@ public class BulkProcessingPageMenuItem
             return false;
         }
 
+        var prefs = preferencesService.loadDefaultTraitsForProject(KEY_CURATION_MANAGER_PREFS,
+                aProject);
+        if (prefs.getCurationPageType() != WEBANNO) {
+            return false;
+        }
+
+        // Visible if the current user is a curator
         User user = userRepo.getCurrentUser();
-        return projectService.hasRole(user, aProject, MANAGER);
+        return projectService.hasRole(user, aProject, CURATOR);
     }
 
     @Override
     public Class<? extends Page> getPageClass()
     {
-        return BulkProcessingPage.class;
+        return LegacyCurationPage.class;
     }
 
     @Override
     public KeyType[] shortcut()
     {
-        return new KeyType[] { KeyType.Alt, KeyType.p };
+        return new KeyType[] { KeyType.Alt, KeyType.c };
     }
 }

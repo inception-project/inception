@@ -44,7 +44,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.ValidationExce
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.CurationPage;
+import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.LegacyCurationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.MergeDialog;
 import de.tudarmstadt.ukp.inception.curation.merge.MergeStrategyFactory;
 import de.tudarmstadt.ukp.inception.curation.merge.strategy.MergeStrategy;
@@ -177,7 +177,7 @@ public class CuratorWorkflowActionBarItemGroup
             aTarget.addChildren(getPage(), IFeedback.class);
         }
 
-        ((CurationPage) page).readOrCreateCurationCas(mergeStrategy, true);
+        ((LegacyCurationPage) page).readOrCreateCurationCas(mergeStrategy, true);
 
         // ... and load it
         page.actionLoadDocument(aTarget);

@@ -40,7 +40,7 @@ public class ActivityPanel
     {
         super(aId);
 
-        long projectId = aModel.map(Project::getId).orElse(-1l).getObject();
+        var projectId = aModel.map(Project::getId).orElse(-1l).getObject();
         setDefaultModel(Model.ofMap(Map.of( //
                 "overviewDataUrl", controller.getActivityOverviewUrl(projectId), //
                 "summaryDataUrl", controller.getActivitySummaryUrl(projectId))));
