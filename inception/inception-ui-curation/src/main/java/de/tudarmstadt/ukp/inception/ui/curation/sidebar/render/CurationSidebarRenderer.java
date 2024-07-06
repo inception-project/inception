@@ -21,6 +21,8 @@ import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.getDiffAdapters;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior.LINK_ROLE_AS_LABEL;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.ANNOTATION;
+import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.NO_OVERLAP;
+import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.STACKING_ONLY;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toMap;
@@ -169,6 +171,9 @@ public class CurationSidebarRenderer
                     .filter(feature -> feature.getLayer().equals(layer)) //
                     .toList();
 
+            var noOverlap = layer.getOverlapMode() == NO_OVERLAP
+                    || layer.getOverlapMode() == STACKING_ONLY;
+
             for (var cfg : cfgSet.getConfigurations()) {
                 var fs = cfg.getRepresentative(casDiff.getCasMap());
                 if (!(fs instanceof Annotation)) {
@@ -196,11 +201,24 @@ public class CurationSidebarRenderer
                     }
 
                     if (!showAll && object instanceof VSpan) {
+                        // Check if the target already contains an annotation from this
+                        // configuration
                         var sourceConfiguration = diff.findConfiguration(
                                 cfg.getRepresentativeCasGroupId(), new AID(object.getVid()));
                         if (sourceConfiguration.map($ -> $.getAID(targetUser) != null)
                                 .orElse(false)) {
                             continue;
+                        }
+
+                        // Check if the position could be merged at all or if the merge is blocked
+                        // by an overlapping annotation (which may not be contained in the
+                        // configuration)
+                        if (noOverlap && fs instanceof Annotation ann) {
+                            var cas = aRequest.getCas();
+                            if (cas.<Annotation> select(ann.getType().getName())
+                                    .anyMatch(f -> ann.overlapping(f))) {
+                                continue;
+                            }
                         }
                     }
 
