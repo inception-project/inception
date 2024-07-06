@@ -1,0 +1,48 @@
+{{- if .Values.networkPolicies.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "inception.networkPolicies.egress.server.name" . }}
+spec:
+  policyTypes:
+  - Egress
+  podSelector:
+    matchLabels:
+      {{ include "inception.networkPolicies.server.labels" . | nindent 6 }}
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: mariadb
+    ports:
+    - protocol: TCP
+      port: {{ .Values.config.database.port }}
+
+    # Allow dns resolution
+    ports:
+    - port: 53
+      protocol: UDP
+    - port: 53
+      protocol: TCP
+    {{- if .Values.auth.oidc.enabled }}
+    - port: 443
+      protocol: TCP
+    {{- end }}
+
+---
+
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "inception.networkPolicies.ingress.server.name" . }}
+spec:
+  policyTypes:
+  - Ingress
+  podSelector:
+    matchLabels:
+      {{ include "inception.networkPolicies.server.labels" . | nindent 6 }}
+  ingress:
+  - ports:
+    - port: 8080
+      protocol: TCP
+{{- end }}

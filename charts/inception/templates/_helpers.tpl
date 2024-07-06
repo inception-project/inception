@@ -35,7 +35,10 @@ Common labels
 */}}
 {{- define "inception.labels" -}}
 helm.sh/chart: {{ include "inception.chart" . }}
-{{ include "inception.selectorLabels" . }}
+{{ include "inception.selectorLabels" . }} 
+{{- if .Values.networkPolicies.enabled }}
+{{ include "inception.networkPolicies.server.labels" . }}
+{{- end }}
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
@@ -80,8 +83,32 @@ Application configuration
 {{- end }}
 
 {{/*
-Application persistence
+Persistence configuration
 */}}
 {{- define "inception.persistence.pvc.name" -}}
 data-{{ include "inception.fullname" . }}
+{{- end }}
+
+{{/*
+NetworkPolicies configuration
+*/}}
+
+{{- define "inception.networkPolicies.egress.server.name" -}}
+{{ include "inception.fullname" . }}-server-egress
+{{- end }}
+{{- define "inception.networkPolicies.ingress.server.name" -}}
+{{ include "inception.fullname" . }}-server-ingress
+{{- end }}
+
+
+{{- define "inception.networkPolicies.server.labels" -}}
+{{ include "inception.fullname" . }}-server: "true"
+{{- if not .Values.mariadb.networkPolicy.allowExternal }}
+{{ include "inception.fullname" . }}-mariadb-client: "true"
+{{- end }}
+{{- end }}
+
+
+{{- define "inception.networkPolicies.database.role" -}}
+app.kubernetes.io/role: database
 {{- end }}

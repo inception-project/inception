@@ -32,32 +32,6 @@ spec:
       serviceAccountName: {{ include "inception.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
-      initContainers:
-      - name: wait-for-db
-        image: mariadb
-        env:
-        - name: MARIADB_HOST
-          value: {{ $dbHostname }}
-        - name: MARIADB_DATABASE
-          value: {{ .Values.config.database.name }}
-        - name: MARIADB_USER
-          value: {{ .Values.config.database.auth.username }}
-        - name: MARIADB_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: {{ default (include "inception.secret.databaseAuth.name" .) .Values.config.database.auth.password.existingSecret.secretName }}
-              key: {{ default "password" .Values.config.database.auth.password.existingSecret.secretkey }}
-        command: 
-          - sh
-          - -c
-          - "mariadb \
-              --skip-ssl
-              --default-character-set=utf8mb4 \
-              --database $MARIADB_DATABASE \
-              -h $MARIADB_HOST \
-              -u $MARIADB_USER \
-              -p$MARIADB_PASSWORD \ 
-              -e \"USE $MARIADB_DATABASE\""
           
       containers:
         - name: {{ .Chart.Name }}
@@ -90,7 +64,7 @@ spec:
           readinessProbe:
             httpGet:
               path: /actuator/health
-              port: httpgit
+              port: http
             initialDelaySeconds: 5
             periodSeconds: 5
             failureThreshold: 2
