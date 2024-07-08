@@ -593,6 +593,10 @@
       <groupId>org.postgresql</groupId>
       <artifactId>postgresql</artifactId>
     </dependency>
+    <dependency>
+      <groupId>com.microsoft.sqlserver</groupId>
+      <artifactId>mssql-jdbc</artifactId>
+    </dependency>
 
     <!-- JAXB DEPENDENCIES -->
     <dependency>
@@ -709,6 +713,11 @@
     <dependency>
       <groupId>org.testcontainers</groupId>
       <artifactId>postgresql</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>mssqlserver</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -1029,6 +1038,7 @@
               <usedDependency>org.hibernate.orm:hibernate-core</usedDependency>
               <usedDependency>org.hsqldb:hsqldb</usedDependency>
               <usedDependency>org.mariadb.jdbc:mariadb-java-client</usedDependency>
+              <usedDependency>com.microsoft.sqlserver:mssql-jdbc</usedDependency>
               <usedDependency>mysql:mysql-connector-java</usedDependency>
               <usedDependency>org.postgresql:postgresql</usedDependency>
               <!-- Logging - used via reflection / optional -->
