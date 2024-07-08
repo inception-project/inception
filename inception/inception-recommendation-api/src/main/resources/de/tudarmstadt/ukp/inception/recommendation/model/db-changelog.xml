@@ -1,7 +1,7 @@
 <?xml version="1.1" encoding="UTF-8" standalone="no"?>
 <databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.27.xsd">
 
   <changeSet author="INCEpTION Team" id="1512303750846-12">
     <preConditions onFail="MARK_RAN">
@@ -41,6 +41,26 @@
     <addForeignKeyConstraint baseColumnNames="project" baseTableName="recommender"
       constraintName="FK_qxr2jggx4mxf5u2f2gr972po5" deferrable="false" initiallyDeferred="false"
       onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="project" />
+  </changeSet>
+
+  <changeSet author="INCEpTION Team" id="1512303750846-12a">
+    <preConditions onFail="MARK_RAN">
+      <columnExists tableName="recommender" columnName="layer"/>
+    </preConditions>
+    <dropForeignKeyConstraint baseTableName="recommender" constraintName="FK_51umycaq4igfmpkuy0bmiqsq8"/>
+    <addForeignKeyConstraint baseColumnNames="layer" baseTableName="recommender"
+      constraintName="FK__recommender__annotation_type__id" deferrable="false" initiallyDeferred="false"
+      onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="annotation_type" />
+  </changeSet>
+
+  <changeSet author="INCEpTION Team" id="1512303750846-12b">
+    <preConditions onFail="MARK_RAN">
+      <columnExists tableName="recommender" columnName="project"/>
+    </preConditions>
+    <dropForeignKeyConstraint baseTableName="recommender" constraintName="FK_qxr2jggx4mxf5u2f2gr972po5"/>
+    <addForeignKeyConstraint baseColumnNames="project" baseTableName="recommender"
+      constraintName="FK__recommender__project__id" deferrable="false" initiallyDeferred="false"
+      onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="project" />
   </changeSet>
 
   <changeSet author="INCEpTION Team" id="20171203-01">
@@ -229,24 +249,31 @@
     </addColumn>
   </changeSet>
 
-  <changeSet author="INCEpTION Team" id="20180301-recommendation-01b" dbms="!postgresql">
+  <changeSet author="INCEpTION Team" id="20180301-recommendation-01b" dbms="!postgresql,!mssql">
     <sql>update recommender set alwaysSelected = b'1' where alwaysSelected is null</sql>
     <addNotNullConstraint tableName="recommender"
       columnName="alwaysSelected" columnDataType="BOOLEAN"
      />
   </changeSet>
-
   <changeSet author="INCEpTION Team" id="20180301-recommendation-01b-pg" dbms="postgresql">
     <sql>update recommender set "alwaysSelected" = b'1' where "alwaysSelected" is null</sql>
     <addNotNullConstraint tableName="recommender"
       columnName="alwaysSelected" columnDataType="BOOLEAN"
      />
   </changeSet>
+  <changeSet author="INCEpTION Team" id="20180301-recommendation-01b-mssql" dbms="mssql">
+    <update tableName="recommender">
+      <column name="alwaysSelected" type="BOOLEAN" value="1"/>
+      <where>"alwaysSelected" is null</where>
+    </update>
+    <addNotNullConstraint tableName="recommender"
+      columnName="alwaysSelected" columnDataType="BOOLEAN" />
+  </changeSet>
 
   <!-- Change foreign key constraint to allow cascade deletion/update of learning 
     records whenever an annotation type is deleted/has the id changed. The next 
     two changesets ensure that the (possibly) previously existing foreign key 
-    constraint will be deleted first, and then a new one will be created. -->
+    constraint will be deleted first, and then a new one will be created. 
   <changeSet author="INCEpTION Team" id="20180308-al-08a">
     <preConditions onFail="MARK_RAN">
       <foreignKeyConstraintExists
@@ -255,7 +282,6 @@
     <dropForeignKeyConstraint baseTableName="learning_record"
       constraintName="FK_ll6m5mjjwl5730578g7xon0oa" />
   </changeSet>
-
   <changeSet author="INCEpTION Team" id="20180308-al-08b">
     <preConditions onFail="MARK_RAN">
       <not>
@@ -268,11 +294,37 @@
       deferrable="false" initiallyDeferred="false" onDelete="CASCADE"
       onUpdate="CASCADE" referencedColumnNames="id" referencedTableName="annotation_type" />
   </changeSet>
+  -->
+  <!-- 
+    We define the FK for the annotation_type without cascading because the learning_record will be transitively
+    removed through the annotation_feature when an annotation_type is deleted.
+  -->
+  <changeSet author="INCEpTION Team" id="20180308-al-08c">
+    <preConditions onFail="MARK_RAN">
+      <foreignKeyConstraintExists
+        foreignKeyTableName="learning_record" foreignKeyName="FK_ll6m5mjjwl5730578g7xon0oa" />
+    </preConditions>
+    <dropForeignKeyConstraint baseTableName="learning_record"
+      constraintName="FK_ll6m5mjjwl5730578g7xon0oa" />
+  </changeSet>
+  <changeSet author="INCEpTION Team" id="20180308-al-08d">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <foreignKeyConstraintExists
+          foreignKeyTableName="learning_record" foreignKeyName="FK_ll6m5mjjwl5730578g7xon0oa" />
+      </not>
+    </preConditions>
+    <addForeignKeyConstraint baseColumnNames="layer"
+      baseTableName="learning_record" constraintName="FK_ll6m5mjjwl5730578g7xon0oa"
+      deferrable="false" initiallyDeferred="false" onDelete="NO ACTION"
+      onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="annotation_type" />
+  </changeSet>
 
   <!-- Change foreign key constraint to allow cascade deletion/update of learning 
     records whenever a source document is deleted/has the id changed. The next 
     two changesets ensure that the (possibly) previously existing foreign key 
     constraint will be deleted first, and then a new one will be created. -->
+  <!--  
   <changeSet author="INCEpTION Team" id="20180314-al-09a">
     <preConditions onFail="MARK_RAN">
       <foreignKeyConstraintExists
@@ -294,6 +346,30 @@
       deferrable="false" initiallyDeferred="false" onDelete="CASCADE"
       onUpdate="CASCADE" referencedColumnNames="id" referencedTableName="source_document" />
   </changeSet>
+  -->
+
+  <changeSet author="INCEpTION Team" id="20180314-al-09c">
+    <preConditions onFail="MARK_RAN">
+      <foreignKeyConstraintExists
+        foreignKeyTableName="learning_record" foreignKeyName="FK_22prhdappogyh3qx47mhagcum" />
+    </preConditions>
+    <dropForeignKeyConstraint baseTableName="learning_record"
+      constraintName="FK_22prhdappogyh3qx47mhagcum" />
+  </changeSet>
+
+  <changeSet author="INCEpTION Team" id="20180314-al-09d">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <foreignKeyConstraintExists
+          foreignKeyTableName="learning_record" foreignKeyName="FK_22prhdappogyh3qx47mhagcum" />
+      </not>
+    </preConditions>
+    <addForeignKeyConstraint baseColumnNames="document"
+      baseTableName="learning_record" constraintName="FK_22prhdappogyh3qx47mhagcum"
+      deferrable="false" initiallyDeferred="false" onDelete="NO ACTION"
+      onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="source_document" />
+  </changeSet>
+
 
   <changeSet author="INCEpTION Team" id="20180426-recommendation-1">
     <preConditions onFail="MARK_RAN">
@@ -417,7 +493,7 @@
     </addColumn>
   </changeSet>
   
-  <changeSet author="INCEpTION Team" id="20190104-1b">
+  <changeSet author="INCEpTION Team" id="20190104-1b" dbms="!mssql">
     <preConditions onFail="MARK_RAN">
       <not><changeSetExecuted author="INCEpTION Team" id="20190104-1" changeLogFile="de/tudarmstadt/ukp/inception/recommendation/model/db-changelog.xml"/></not>
     </preConditions>
@@ -426,6 +502,17 @@
       SET featuremigration = (SELECT feat.id
         FROM annotation_feature feat
         WHERE rec.feature = feat.name AND rec.layer = feat.annotation_type)
+    </sql>
+  </changeSet>
+  <changeSet author="INCEpTION Team" id="20190104-1b.1-mssql" dbms="mssql">
+    <preConditions onFail="MARK_RAN">
+      <not><changeSetExecuted author="INCEpTION Team" id="20190104-1" changeLogFile="de/tudarmstadt/ukp/inception/recommendation/model/db-changelog.xml"/></not>
+    </preConditions>
+    <sql>
+      UPDATE recommender
+      SET featuremigration = (SELECT feat.id
+        FROM annotation_feature feat
+        WHERE recommender.feature = feat.name AND recommender.layer = feat.annotation_type)
     </sql>
   </changeSet>
     

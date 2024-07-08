@@ -108,6 +108,14 @@ public class InceptionApplicationContextInitializer
                     .addFirst(new MapPropertySource("PostgreSQL-Overrides", overrides));
         }
 
+        if (datasourceUrl.startsWith("jdbc:sqlserver:")) {
+            var overrides = new HashMap<String, Object>();
+            // We use certain column names like `user` that are reserved words in MS SQL Server
+            overrides.put("spring.jpa.properties.hibernate.globally_quoted_identifiers", true);
+            aEnvironment.getPropertySources()
+                    .addFirst(new MapPropertySource("MS-SQL-Server-Overrides", overrides));
+        }
+
         if (datasourceUrl.startsWith("jdbc:mysql:")) {
             var overrides = new HashMap<String, Object>();
             // We use certain column names like `rank` that are reserved words in MySQL

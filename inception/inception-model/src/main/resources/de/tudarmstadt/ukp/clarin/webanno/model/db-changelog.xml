@@ -890,7 +890,7 @@
     </addColumn>
   </changeSet>
   
-  <changeSet author="WebAnno Team" id="20181005-2b" dbms="!postgresql">
+  <changeSet author="WebAnno Team" id="20181005-2b" dbms="!postgresql,!mssql">
     <preConditions onFail="MARK_RAN">
       <and>
         <columnExists tableName="annotation_type" columnName="lockToTokenOffset"/>
@@ -937,7 +937,31 @@
       <column name="anchoring_mode" type="VARCHAR(255)" value="tokens"/>
       <where>"lockToTokenOffset" = b'0' and "multipleTokens" = b'1'</where>
     </update>
-  </changeSet> 
+  </changeSet>
+  <changeSet author="WebAnno Team" id="20181005-2b-mssql" dbms="mssql">
+    <preConditions onFail="MARK_RAN">
+      <and>
+        <columnExists tableName="annotation_type" columnName="lockToTokenOffset"/>
+        <columnExists tableName="annotation_type" columnName="multipleTokens"/>
+      </and>
+    </preConditions>
+    <update tableName="annotation_type">
+      <column name="anchoring_mode" type="VARCHAR(255)" value="characters"/>
+      <where>"lockToTokenOffset" = 0 and "multipleTokens" = 0</where>
+    </update>
+    <update tableName="annotation_type">
+      <column name="anchoring_mode" type="VARCHAR(255)" value="singleToken"/>
+      <where>"lockToTokenOffset" = 1 and "multipleTokens" = 0</where>
+    </update>
+    <update tableName="annotation_type">
+      <column name="anchoring_mode" type="VARCHAR(255)" value="tokens"/>
+      <where>"lockToTokenOffset" = 1 and "multipleTokens" = 1</where>
+    </update>
+    <update tableName="annotation_type">
+      <column name="anchoring_mode" type="VARCHAR(255)" value="tokens"/>
+      <where>"lockToTokenOffset" = 0 and "multipleTokens" = 1</where>
+    </update>
+  </changeSet>
 
   <changeSet author="WebAnno Team" id="20181005-2c" failOnError="false">
     <preConditions onFail="MARK_RAN">
@@ -995,7 +1019,7 @@
     </addColumn>
   </changeSet>
 
-  <changeSet author="WebAnno Team" id="20190125-1b" dbms="!postgresql">
+  <changeSet author="WebAnno Team" id="20190125-1b" dbms="!postgresql,!mssql">
     <preConditions onFail="MARK_RAN">
       <columnExists tableName="annotation_type" columnName="allowSTacking"/>
     </preConditions>
@@ -1019,6 +1043,19 @@
     <update tableName="annotation_type">
       <column name="overlap_mode" type="VARCHAR(255)" value="overlapOnly"/>
       <where>"allowSTacking" = b'0'</where>
+    </update>
+  </changeSet>
+  <changeSet author="WebAnno Team" id="20190125-1b-mssql" dbms="mssql">
+    <preConditions onFail="MARK_RAN">
+      <columnExists tableName="annotation_type" columnName="allowSTacking"/>
+    </preConditions>
+    <update tableName="annotation_type">
+      <column name="overlap_mode" type="VARCHAR(255)" value="any"/>
+      <where>"allowSTacking" = 1</where>
+    </update>
+    <update tableName="annotation_type">
+      <column name="overlap_mode" type="VARCHAR(255)" value="overlapOnly"/>
+      <where>"allowSTacking" = 0</where>
     </update>
   </changeSet>
 
