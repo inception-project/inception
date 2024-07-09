@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>33.2</version>
+    <version>33.3-SNAPSHOT</version>
   </parent>
   <artifactId>inception-export-api</artifactId>
   <name>INCEpTION - Export - API</name>
