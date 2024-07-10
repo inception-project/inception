@@ -23,8 +23,6 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.factory.AnalysisEngineFactory.createEngine;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
-import static org.apache.uima.fit.util.CasUtil.getType;
-import static org.apache.uima.fit.util.CasUtil.select;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.contentOf;
 import static org.mockito.ArgumentMatchers.any;
@@ -32,10 +30,8 @@ import static org.mockito.Mockito.when;
 
 import java.io.File;
 
-import org.apache.uima.analysis_engine.AnalysisEngine;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.dkpro.core.io.tcf.TcfReader;
 import org.dkpro.core.io.text.TextReader;
@@ -55,7 +51,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.LabelRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRendererImpl;
 import de.tudarmstadt.ukp.clarin.webanno.brat.config.BratAnnotationEditorPropertiesImpl;
-import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -75,7 +70,6 @@ import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainLayerSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.editor.state.AnnotatorStateImpl;
-import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
@@ -83,7 +77,7 @@ import de.tudarmstadt.ukp.inception.schema.service.FeatureSupportRegistryImpl;
 import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 
 @ExtendWith(MockitoExtension.class)
-public class BratSerializerImplTest
+class BratSerializerImplTest
 {
     private @Mock ConstraintsService constraintsService;
     private @Mock AnnotationSchemaService schemaService;
@@ -104,7 +98,7 @@ public class BratSerializerImplTest
     private BratSerializerImpl sut;
 
     @BeforeEach
-    public void setup()
+    void setup()
     {
         project = new Project();
         sourceDocument = new SourceDocument("test.txt", project, null);
@@ -169,7 +163,7 @@ public class BratSerializerImplTest
     }
 
     @Test
-    public void thatSentenceOrientedStrategyRenderCorrectly() throws Exception
+    void thatSentenceOrientedStrategyRenderCorrectly() throws Exception
     {
         when(schemaService.getAdapter(any(AnnotationLayer.class))).then(_call -> {
             AnnotationLayer layer = _call.getArgument(0);
@@ -177,14 +171,13 @@ public class BratSerializerImplTest
                     () -> asList(posFeature));
         });
 
-        String jsonFilePath = "target/test-output/output-sentence-oriented.json";
-        String file = "src/test/resources/tcf04-karin-wl.xml";
+        var jsonFilePath = "target/test-output/output-sentence-oriented.json";
+        var file = "src/test/resources/tcf04-karin-wl.xml";
 
-        CAS cas = JCasFactory.createJCas().getCas();
-        CollectionReader reader = createReader(TcfReader.class, TcfReader.PARAM_SOURCE_LOCATION,
-                file);
+        var cas = JCasFactory.createJCas().getCas();
+        var reader = createReader(TcfReader.class, TcfReader.PARAM_SOURCE_LOCATION, file);
         reader.getNext(cas);
-        AnnotatorState state = new AnnotatorStateImpl(Mode.ANNOTATION);
+        var state = new AnnotatorStateImpl(Mode.ANNOTATION);
         state.setAllAnnotationLayers(schemaService.listAnnotationLayer(project));
         state.setPagingStrategy(new SentenceOrientedPagingStrategy());
         state.getPreferences().setWindowSize(10);
@@ -192,7 +185,7 @@ public class BratSerializerImplTest
         state.setProject(project);
         state.setDocument(sourceDocument, asList(sourceDocument));
 
-        RenderRequest request = RenderRequest.builder() //
+        var request = RenderRequest.builder() //
                 .withState(state) //
                 .withWindow(state.getWindowBeginOffset(), state.getWindowEndOffset()) //
                 .withCas(cas) //
@@ -204,7 +197,7 @@ public class BratSerializerImplTest
         labelRenderer.render(vdoc, request);
         colorRenderer.render(vdoc, request);
 
-        GetDocumentResponse response = sut.render(vdoc, request);
+        var response = sut.render(vdoc, request);
 
         JSONUtil.generatePrettyJson(response, new File(jsonFilePath));
 
@@ -213,7 +206,7 @@ public class BratSerializerImplTest
     }
 
     @Test
-    public void thatLineOrientedStrategyRenderCorrectly() throws Exception
+    void thatLineOrientedStrategyRenderCorrectly() throws Exception
     {
         var jsonFilePath = "target/test-output/multiline.json";
         var file = "src/test/resources/multiline.txt";
@@ -251,37 +244,36 @@ public class BratSerializerImplTest
     }
 
     @Test
-    public void thatTokenWrappingStrategyRenderCorrectly() throws Exception
+    void thatTokenWrappingStrategyRenderCorrectly() throws Exception
     {
-        String jsonFilePath = "target/test-output/longlines.json";
-        String file = "src/test/resources/longlines.txt";
+        var jsonFilePath = "target/test-output/longlines.json";
+        var file = "src/test/resources/longlines.txt";
 
-        CAS cas = JCasFactory.createJCas().getCas();
-        CollectionReader reader = createReader(TextReader.class, TextReader.PARAM_SOURCE_LOCATION,
-                file);
+        var cas = JCasFactory.createJCas().getCas();
+        var reader = createReader(TextReader.class, TextReader.PARAM_SOURCE_LOCATION, file);
         reader.getNext(cas);
-        AnalysisEngine segmenter = createEngine(BreakIteratorSegmenter.class);
+        var segmenter = createEngine(BreakIteratorSegmenter.class);
         segmenter.process(cas);
-        AnnotatorState state = new AnnotatorStateImpl(Mode.ANNOTATION);
+        var state = new AnnotatorStateImpl(Mode.ANNOTATION);
         state.setPagingStrategy(new TokenWrappingPagingStrategy(80));
         state.getPreferences().setWindowSize(10);
         state.setFirstVisibleUnit(getFirstSentence(cas));
         state.setProject(project);
         state.setDocument(sourceDocument, asList(sourceDocument));
 
-        RenderRequest request = RenderRequest.builder() //
+        var request = RenderRequest.builder() //
                 .withState(state) //
                 .withWindow(state.getWindowBeginOffset(), state.getWindowEndOffset()) //
                 .withCas(cas) //
                 .withVisibleLayers(schemaService.listAnnotationLayer(project)) //
                 .build();
 
-        VDocument vdoc = new VDocument();
+        var vdoc = new VDocument();
         preRenderer.render(vdoc, request);
         labelRenderer.render(vdoc, request);
         colorRenderer.render(vdoc, request);
 
-        GetDocumentResponse response = sut.render(vdoc, request);
+        var response = sut.render(vdoc, request);
 
         JSONUtil.generatePrettyJson(response, new File(jsonFilePath));
 
@@ -289,21 +281,8 @@ public class BratSerializerImplTest
                 .isEqualToNormalizingNewlines(contentOf(new File(jsonFilePath), UTF_8));
     }
 
-    /**
-     * Get the internal address of the first sentence annotation from CAS. This will be used as a
-     * reference for moving forward/backward sentences positions
-     *
-     * @param aCas
-     *            The CAS object assumed to contains some sentence annotations
-     * @return the sentence number or -1 if aCas don't have sentence annotation
-     */
-    private static AnnotationFS getFirstSentence(CAS aCas)
+    static AnnotationFS getFirstSentence(CAS aCas)
     {
-        AnnotationFS firstSentence = null;
-        for (AnnotationFS s : select(aCas, getType(aCas, Sentence.class))) {
-            firstSentence = s;
-            break;
-        }
-        return firstSentence;
+        return aCas.select(Sentence.class).nullOK().get();
     }
 }
