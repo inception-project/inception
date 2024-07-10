@@ -21,7 +21,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>34.0-SNAPSHOT</version>
+    <version>34.0-beta-1</version>
     <relativePath>..</relativePath>
   </parent>
 
@@ -1182,8 +1182,7 @@
                 </goals>
                 <configuration>
                   <executable>true</executable>
-                  <layoutFactory
-                    implementation="de.tudarmstadt.ukp.inception.bootloader.ExtensibleClasspathEnabledWarLayoutFactory" />
+                  <layoutFactory implementation="de.tudarmstadt.ukp.inception.bootloader.ExtensibleClasspathEnabledWarLayoutFactory" />
                   <!--
                     We want the original file to be the WAR and the repackaged all-inclusive runnable
                     thing with the embedded Tomcat to be the JAR.
