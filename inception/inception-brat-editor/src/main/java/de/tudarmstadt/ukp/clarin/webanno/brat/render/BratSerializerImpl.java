@@ -22,6 +22,8 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.ScriptDirection.RTL;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.uima.cas.text.AnnotationPredicates.covering;
+import static org.apache.uima.cas.text.AnnotationPredicates.overlappingAtBegin;
+import static org.apache.uima.cas.text.AnnotationPredicates.overlappingAtEnd;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
 
@@ -330,7 +332,7 @@ public class BratSerializerImpl
      *            (window-relative positions)
      * @return list of ranges.
      */
-    private List<Offsets> split(List<Offsets> aRows, String aText, int aWindowBegin, int aBegin,
+    static List<Offsets> split(List<Offsets> aRows, String aText, int aWindowBegin, int aBegin,
             int aEnd)
     {
         // Zero-width spans never need to be split
@@ -370,28 +372,31 @@ public class BratSerializerImpl
 
         var coveredRows = aRows.subList(aRows.indexOf(beginRow), aRows.indexOf(endRow) + 1);
 
-        var ranges = new ArrayList<Offsets>();
+        var segments = new ArrayList<Offsets>();
         for (var row : coveredRows) {
-            Offsets range;
+            Offsets segment;
 
-            if (row.getBegin() <= aBegin && aBegin < row.getEnd()) {
-                range = new Offsets(aBegin, row.getEnd());
+            if (covering(aBegin, aEnd, row.getBegin(), row.getEnd())) {
+                segment = new Offsets(row.getBegin(), row.getEnd());
             }
-            else if (row.getBegin() <= aEnd && aEnd <= row.getEnd()) {
-                range = new Offsets(row.getBegin(), aEnd);
+            else if (overlappingAtBegin(row.getBegin(), row.getEnd(), aBegin, aEnd)) {
+                segment = new Offsets(aBegin, row.getEnd());
+            }
+            else if (overlappingAtEnd(row.getBegin(), row.getEnd(), aBegin, aEnd)) {
+                segment = new Offsets(row.getBegin(), aEnd);
             }
             else {
-                range = new Offsets(row.getBegin(), row.getEnd());
+                continue;
             }
 
-            trim(aText, range);
+            trim(aText, segment);
 
-            if (!range.isEmpty()) {
-                ranges.add(range);
+            if (!segment.isEmpty()) {
+                segments.add(segment);
             }
         }
 
-        return ranges;
+        return segments;
     }
 
     public static String abbreviate(String aName)
@@ -440,7 +445,7 @@ public class BratSerializerImpl
      * @param aOffsets
      *            the offsets.
      */
-    static private void trim(CharSequence aText, Offsets aOffsets)
+    static void trim(CharSequence aText, Offsets aOffsets)
     {
         if (aOffsets.getBegin() == aOffsets.getEnd()) {
             // Nothing to do on empty spans
@@ -465,7 +470,7 @@ public class BratSerializerImpl
         aOffsets.setEnd(end);
     }
 
-    private static boolean trimChar(final char aChar)
+    static boolean trimChar(final char aChar)
     {
         switch (aChar) {
         case '\n': // Line break
