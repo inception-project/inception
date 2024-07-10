@@ -22,6 +22,7 @@ import static com.fasterxml.jackson.core.JsonToken.START_ARRAY;
 import static com.fasterxml.jackson.core.JsonToken.VALUE_NUMBER_INT;
 
 import java.io.IOException;
+import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.core.JsonParser;
@@ -52,7 +53,6 @@ public class Offsets
 
     public Offsets(int aBegin, int aEnd)
     {
-        super();
         begin = aBegin;
         end = aEnd;
     }
@@ -126,5 +126,22 @@ public class Offsets
 
             return offsets;
         }
+    }
+
+    @Override
+    public boolean equals(final Object other)
+    {
+        if (!(other instanceof Offsets)) {
+            return false;
+        }
+
+        var castOther = (Offsets) other;
+        return Objects.equals(begin, castOther.begin) && Objects.equals(end, castOther.end);
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return Objects.hash(begin, end);
     }
 }

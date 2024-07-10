@@ -122,35 +122,50 @@ public class CuratedDocumentsExporter
             try (var session = CasStorageSession.openNested()) {
                 // If depending on aInProgress, include only the the curation documents that are
                 // finished or also the ones that are in progress
-                if (documentService.existsCas(sourceDocument, CURATION_USER)
-                        && (aRequest.isIncludeInProgress()
-                                && CURATION_IN_PROGRESS.equals(sourceDocument.getState()))
-                        || CURATION_FINISHED.equals(sourceDocument.getState())) {
-                    // Copy CAS - this is used when importing the project again
-                    exportSerializedCas(sourceDocument, aStage);
+                var shouldExport = (aRequest.isIncludeInProgress()
+                        && CURATION_IN_PROGRESS == sourceDocument.getState())
+                        || CURATION_FINISHED == sourceDocument.getState();
+                if (!shouldExport) {
+                    aMonitor.setProgress(
+                            initProgress + (int) ceil(((double) i) / documents.size() * 10.0));
+                    i++;
+                    continue;
+                }
 
-                    // Determine which format to use for export
-                    if (aRequest.getFormat() != null) {
-                        var formatId = FORMAT_AUTO.equals(aRequest.getFormat())
-                                ? sourceDocument.getFormat()
-                                : aRequest.getFormat();
+                if (!documentService.existsCas(sourceDocument, CURATION_USER)) {
+                    aMonitor.addMessage(LogMessage.warn(this,
+                            "Curation CAS for document %s could not be found!", sourceDocument));
+                    LOG.warn("Curation CAS for document {} could not be found!", sourceDocument);
+                    aMonitor.setProgress(
+                            initProgress + (int) ceil(((double) i) / documents.size() * 10.0));
+                    i++;
+                    continue;
+                }
 
-                        var format = importExportService.getWritableFormatById(formatId)
-                                .orElseGet(() -> {
-                                    var fallbackFormat = importExportService.getFallbackFormat();
-                                    aMonitor.addMessage(LogMessage.warn(this,
-                                            "Curation: %s No writer found for original format [%s] "
-                                                    + "- exporting as [%s] instead.",
-                                            sourceDocument, formatId, fallbackFormat.getName()));
-                                    return fallbackFormat;
-                                });
+                // Copy CAS - this is used when importing the project again
+                exportSerializedCas(sourceDocument, aStage);
 
-                        // Copy secondary export format for convenience - not used during import
-                        exportAdditionalFormat(bulkOperationContext, sourceDocument, aStage,
-                                format);
-                    }
+                // Determine which format to use for export
+                if (aRequest.getFormat() != null) {
+                    var formatId = FORMAT_AUTO.equals(aRequest.getFormat())
+                            ? sourceDocument.getFormat()
+                            : aRequest.getFormat();
+
+                    var format = importExportService.getWritableFormatById(formatId)
+                            .orElseGet(() -> {
+                                var fallbackFormat = importExportService.getFallbackFormat();
+                                aMonitor.addMessage(LogMessage.warn(this,
+                                        "Curation: %s No writer found for original format [%s] "
+                                                + "- exporting as [%s] instead.",
+                                        sourceDocument, formatId, fallbackFormat.getName()));
+                                return fallbackFormat;
+                            });
+
+                    // Copy secondary export format for convenience - not used during import
+                    exportAdditionalFormat(bulkOperationContext, sourceDocument, aStage, format);
                 }
             }
+
             aMonitor.setProgress(initProgress + (int) ceil(((double) i) / documents.size() * 10.0));
             i++;
         }

@@ -817,7 +817,7 @@ export class Visualizer {
     let firstFrom: number | null = null
     let chunkNo = 0
     let space: string
-    let chunk: Chunk
+    let chunk: Chunk | null = null
     const chunks : Chunk[] = []
 
     for (const fragment of sortedFragments) {
@@ -831,9 +831,7 @@ export class Visualizer {
       }
     }
 
-    tokenOffsets.forEach(offset => {
-      const from = offset[0]
-      const to = offset[1]
+    for (const [from, to] of tokenOffsets) {
       if (firstFrom === null) {
         firstFrom = from
       }
@@ -850,7 +848,7 @@ export class Visualizer {
       }
       // if yes, the next token is in the same chunk
       if (currentFragmentId < numFragments && to > sortedFragments[currentFragmentId].from) {
-        return
+        continue
       }
 
       // otherwise, create the chunk found so far
@@ -866,7 +864,7 @@ export class Visualizer {
       chunks.push(chunk)
       lastTo = to
       firstFrom = null
-    })
+    }
 
     for (const fragment of sortedFragments) {
       if (fragment.span.id === 'rel:1-after') {
