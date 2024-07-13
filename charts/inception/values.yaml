@@ -8,7 +8,7 @@ image:
   repository: ghcr.io/inception-project/inception
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "32.3"
+  tag: "33.2"
 
 imagePullSecrets: []
 nameOverride: ""
@@ -18,9 +18,11 @@ networkPolicies:
   enabled: true
 
 config:
-  baseUrl: "/inception"
-  externalHost: "localhost"
-  allowHttp: true
+  baseUrl: "/"
+  logging: DEBUG
+  security:
+    acceptedOrigins: "localhost"
+    allowHttp: true
   database:
     name: "inception"
     hostname: ""
@@ -36,8 +38,33 @@ config:
           secretKey: ""
 
 auth:
-  oidc:
-    enabled: true  
+  oauth2:
+    enabled: true
+    autoLogin: false 
+    clientName: Keycloak
+    clientID: inception-local
+    clientSecret: 
+      value: "Tn6yHpQ9kik6BFZPGXxTvqBJiQ54TxwS"
+      existingSecret: 
+        secretName: ""
+        secretKey: ""
+    scope: openid, profile
+    authorizationGrantType: authorization_code
+    redirectURI: http://localhost/login/inception/oauth2/code/inception-local
+    issuerURI: https://auth.workshop.eds-ovh.org/realms/datalab-workshop
+    userNameAttribute: preferred_username
+
+  saml2:
+    enabled: false
+    autoLogin: false
+    signRequest: false 
+    assertingPartyCertificate:
+      value: ""
+      existingSecret: 
+        secretName: ""
+        secretKey: ""    
+    assertingPartyEntityID: 
+    assertingPartySSOUrl: 
 
 serviceAccount:
   # Specifies whether a service account should be created
@@ -70,12 +97,10 @@ service:
 ingress:
   enabled: true
   className: "nginx"
-  annotations:
-    nginx.ingress.kubernetes.io/app-root: /inception
 
   hosts:
     - paths:
-      - path: /
+      - path: /inception
         pathType: Prefix
   tls: []
   #  - secretName: chart-example-tls
@@ -95,9 +120,9 @@ resources: {}
   #   memory: 128Mi
 
 livenessProbe:
-  enabled: true
+  enabled: false
 readinessProbe:
-  enabled: true
+  enabled: false
 
 autoscaling:
   enabled: false
@@ -123,6 +148,11 @@ mariadb:
   image:
     debug: true
   primary:
+    persistence:
+      storageClass: "standard"
+      accessModes:
+      - "ReadWriteOnce"
+      size: "5Gi"
     service:
       ports:
         mysql: 3306

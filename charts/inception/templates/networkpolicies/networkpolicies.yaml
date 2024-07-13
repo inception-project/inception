@@ -24,7 +24,7 @@ spec:
       protocol: UDP
     - port: 53
       protocol: TCP
-    {{- if .Values.auth.oidc.enabled }}
+    {{- if .Values.auth.oauth2.enabled }}
     - port: 443
       protocol: TCP
     {{- end }}

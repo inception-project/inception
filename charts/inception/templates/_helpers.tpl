@@ -82,6 +82,11 @@ Application configuration
 {{- include "inception.fullname" .}}-application-configuration
 {{- end }}
 
+{{- define "inception.secret.oauth2.name" -}}
+{{- include "inception.fullname" .}}-oidc
+{{- end }}
+
+
 {{/*
 Persistence configuration
 */}}

@@ -6,6 +6,8 @@ metadata:
   name: {{ include "inception.fullname" . }}
   labels:
     {{- include "inception.labels" . | nindent 4 }}
+  annotations:
+    checksum/config: {{ include (print $.Template.BasePath "/configmaps/inception.yaml") . | sha256sum }}
 spec:
   {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
@@ -49,6 +51,11 @@ spec:
               secretKeyRef:
                 name: {{ default (include "inception.secret.databaseAuth.name" .) .Values.config.database.auth.password.existingSecret.secretName }}
                 key: {{ default "password" .Values.config.database.auth.password.existingSecret.secretkey }}
+          - name: OIDC_CLIENT_SECRET
+            valueFrom:
+              secretKeyRef:
+                name: {{ default (include "inception.secret.oauth2.name" .) .Values.auth.oauth2.clientSecret.existingSecret.secretName }}
+                key: {{ default "clientSecret" .Values.auth.oauth2.clientSecret.existingSecret.secretKey }}
 
           ports:
             - name: http
