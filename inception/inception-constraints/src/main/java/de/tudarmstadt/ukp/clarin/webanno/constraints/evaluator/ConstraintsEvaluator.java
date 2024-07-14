@@ -61,7 +61,7 @@ public class ConstraintsEvaluator
             FeatureStructure aContext, String aFeature)
         throws UIMAException
     {
-        if (!aConstraints.areThereRules(aContext.getType().getName(), aFeature)) {
+        if (!aConstraints.isPathUsedInAnyRestriction(aContext, aFeature)) {
             return Collections.emptyList();
         }
 
@@ -69,7 +69,7 @@ public class ConstraintsEvaluator
 
         var scope = getScope(aConstraints, aContext);
         for (var rule : scope.getRules()) {
-            if (!ruleTriggers(aConstraints, aContext, rule)) {
+            if (!allRuleConditionsMatch(aConstraints, rule, aContext)) {
                 continue;
             }
 
@@ -84,12 +84,12 @@ public class ConstraintsEvaluator
         return possibleValues;
     }
 
-    public boolean isRestrictionTriggered(ParsedConstraints aConstraints, FeatureStructure aContext,
-            AnnotationFeature aFeature)
+    public boolean anyRuleAffectingFeatureMatchesAllConditions(ParsedConstraints aConstraints,
+            FeatureStructure aContext, AnnotationFeature aFeature)
     {
         var feature = aFeature.getName();
 
-        if (!aConstraints.areThereRules(aContext.getType().getName(), feature)) {
+        if (!aConstraints.isPathUsedInAnyRestriction(aContext, feature)) {
             return false;
         }
 
@@ -99,8 +99,8 @@ public class ConstraintsEvaluator
         }
 
         for (var rule : scope.getRules()) {
-            if (ruleTriggers(aConstraints, aContext, rule)) {
-                return true;
+            if (allRuleConditionsMatch(aConstraints, rule, aContext)) {
+                return anyRestrictionAffectsFeature(aConstraints, rule, aFeature);
             }
         }
 
@@ -112,7 +112,7 @@ public class ConstraintsEvaluator
     {
         var feature = aFeature.getName();
 
-        if (!aConstraints.areThereRules(aContext.getType().getName(), feature)) {
+        if (!aConstraints.isPathUsedInAnyRestriction(aContext, feature)) {
             return true;
         }
 
@@ -124,7 +124,7 @@ public class ConstraintsEvaluator
         var actualFeatureValue = FSUtil.getFeature(aContext, feature, String.class);
 
         for (var rule : scope.getRules()) {
-            if (!ruleTriggers(aConstraints, aContext, rule)) {
+            if (!allRuleConditionsMatch(aConstraints, rule, aContext)) {
                 continue;
             }
 
@@ -150,20 +150,20 @@ public class ConstraintsEvaluator
             return false;
         }
 
-        if (!isAffectedByConstraints(aConstraints, aContext, aFeature)) {
+        if (!isPathUsedInAnyRestriction(aConstraints, aContext, aFeature)) {
             return false;
         }
 
-        return !isRestrictionTriggered(aConstraints, aContext, aFeature);
+        return !anyRuleAffectingFeatureMatchesAllConditions(aConstraints, aContext, aFeature);
     }
 
     @Override
-    public boolean isAffectedByConstraints(ParsedConstraints aConstraints,
+    public boolean isPathUsedInAnyRestriction(ParsedConstraints aConstraints,
             FeatureStructure aContext, AnnotationFeature aFeature)
     {
         var restrictionFeaturePath = getRestrictionPathForFeature(aFeature);
 
-        return aConstraints.areThereRules(aContext.getType().getName(), restrictionFeaturePath);
+        return aConstraints.isPathUsedInAnyRestriction(aContext, restrictionFeaturePath);
     }
 
     private Scope getScope(ParsedConstraints aConstraints, FeatureStructure aContext)
@@ -176,8 +176,17 @@ public class ConstraintsEvaluator
         return aConstraints.getScopeByName(shortTypeName);
     }
 
-    private boolean ruleTriggers(ParsedConstraints aConstraints, FeatureStructure aContext,
-            Rule aRule)
+    private boolean anyRestrictionAffectsFeature(ParsedConstraints aConstraints, Rule aRule,
+            AnnotationFeature aFeature)
+    {
+        var restrictionFeaturePath = getRestrictionPathForFeature(aFeature);
+
+        return aRule.getRestrictions().stream()
+                .anyMatch(restriction -> restrictionFeaturePath.equals(restriction.getPath()));
+    }
+
+    private boolean allRuleConditionsMatch(ParsedConstraints aConstraints, Rule aRule,
+            FeatureStructure aContext)
     {
         return aRule.getConditions().stream()
                 .allMatch(condition -> conditionMatches(aConstraints, aContext, condition));
@@ -186,13 +195,15 @@ public class ConstraintsEvaluator
     private boolean conditionMatches(ParsedConstraints aConstraints, FeatureStructure aContext,
             Condition aCondition)
     {
-        var value = getValue(aConstraints, aContext, aCondition.getPath());
+        var values = getValue(aConstraints, aContext, aCondition.getPath());
+        var result = aCondition.matchesAny(values);
 
         if (LOG.isTraceEnabled()) {
-            LOG.trace("comparing [{}] to [{}]", aCondition.getValue(), value);
+            LOG.trace("comparing [{}]/@{}[{} == {}] -> {}", aContext.getType().getName(),
+                    aCondition.getPath(), aCondition.getValue(), values, result);
         }
 
-        return aCondition.matches(value);
+        return result;
     }
 
     private List<String> getValue(ParsedConstraints aConstraints, FeatureStructure aContext,
