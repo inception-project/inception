@@ -17,15 +17,17 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.core.login;
 
-import static java.util.stream.Collectors.toList;
+import static java.util.Collections.emptyList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.removeEnd;
 import static org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestRedirectFilter.DEFAULT_AUTHORIZATION_REQUEST_BASE_URI;
 import static org.springframework.security.oauth2.core.AuthorizationGrantType.AUTHORIZATION_CODE;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
+
+import javax.servlet.ServletContext;
 
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.link.ExternalLink;
@@ -46,6 +48,7 @@ public class OAuth2LoginPanel
 
     private @SpringBean LoginProperties loginProperties;
     private @SpringBean OAuth2Adapter oAuth2Adapter;
+    private @SpringBean ServletContext servletContext;
 
     public OAuth2LoginPanel(String aId)
     {
@@ -79,7 +82,7 @@ public class OAuth2LoginPanel
             return;
         }
 
-        List<LoginLink> loginLinks = getLoginLinks();
+        var loginLinks = getLoginLinks();
         var maybeAutoLoginTarget = loginLinks.stream() //
                 .filter(link -> loginProperties.getAutoLogin().equals(link.getRegistrationId()))
                 .findFirst();
@@ -97,19 +100,21 @@ public class OAuth2LoginPanel
     private List<LoginLink> getLoginLinks()
     {
         try {
-            var registrations = oAuth2Adapter.getOAuthClientRegistrations().stream()
-                    .filter(r -> AUTHORIZATION_CODE.equals(r.getAuthorizationGrantType()))
-                    .collect(toList());
+            var registrations = oAuth2Adapter.getOAuthClientRegistrations().stream() //
+                    .filter(r -> AUTHORIZATION_CODE.equals(r.getAuthorizationGrantType())) //
+                    .toList();
 
             // String authorizationRequestBaseUri =
             // (this.authorizationEndpointConfig.authorizationRequestBaseUri != null)
             // ? this.authorizationEndpointConfig.authorizationRequestBaseUri
             // : OAuth2AuthorizationRequestRedirectFilter.DEFAULT_AUTHORIZATION_REQUEST_BASE_URI;
-            String authorizationRequestBaseUri = DEFAULT_AUTHORIZATION_REQUEST_BASE_URI;
 
-            List<LoginLink> loginLinkList = new ArrayList<>();
+            var authorizationRequestBaseUri = removeEnd(servletContext.getContextPath(), "/")
+                    + DEFAULT_AUTHORIZATION_REQUEST_BASE_URI;
+
+            var loginLinkList = new ArrayList<LoginLink>();
             registrations.forEach((registration) -> {
-                String authorizationRequestUri = authorizationRequestBaseUri + "/"
+                var authorizationRequestUri = authorizationRequestBaseUri + "/"
                         + registration.getRegistrationId();
                 loginLinkList.add(new LoginLink(registration.getRegistrationId(),
                         registration.getClientName(), authorizationRequestUri));
@@ -119,7 +124,7 @@ public class OAuth2LoginPanel
         }
         catch (NoSuchBeanDefinitionException e) {
             // No OAuth2 clients configured
-            return Collections.emptyList();
+            return emptyList();
         }
     }
 

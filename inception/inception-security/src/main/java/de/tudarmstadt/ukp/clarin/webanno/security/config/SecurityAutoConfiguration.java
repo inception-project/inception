@@ -24,6 +24,7 @@ import java.util.Optional;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import javax.servlet.ServletContext;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -132,11 +133,11 @@ public class SecurityAutoConfiguration
     }
 
     @Bean
-    public Saml2Adapter saml2Adapter(@Lazy UserDao aUserRepository,
+    public Saml2Adapter saml2Adapter(@Lazy ServletContext aContext, @Lazy UserDao aUserRepository,
             @Lazy OverridableUserDetailsManager aUserDetailsManager,
             @Lazy Optional<RelyingPartyRegistrationRepository> aRelyingPartyRegistrationRepository)
     {
-        return new Saml2AdapterImpl(aUserRepository, aUserDetailsManager,
+        return new Saml2AdapterImpl(aContext, aUserRepository, aUserDetailsManager,
                 aRelyingPartyRegistrationRepository);
     }
 

@@ -89,6 +89,12 @@
       <artifactId>spring-security-core</artifactId>
     </dependency>
 
+    <dependency>
+      <groupId>javax.servlet</groupId>
+      <artifactId>javax.servlet-api</artifactId>
+      <scope>provided</scope>
+    </dependency>
+
     <!-- Hibernate dependencies -->
     <dependency>
       <groupId>javax.persistence</groupId>
@@ -132,23 +138,15 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
+
   <build>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-dependency-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>default</id>
-            <phase>verify</phase>
-            <goals>
-              <goal>analyze-only</goal>
-            </goals>
-          </execution>
-        </executions>
         <configuration>
-          <failOnWarning>true</failOnWarning>
           <ignoredDependencies>
+            <ignoredDependency>javax.servlet:javax.servlet-api</ignoredDependency>
             <ignoredDependency>org.hsqldb:hsqldb</ignoredDependency>
             <ignoredDependency>org.springframework.boot:spring-boot-starter-data-jpa</ignoredDependency>
           </ignoredDependencies>

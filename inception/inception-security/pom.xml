@@ -167,6 +167,7 @@
       <artifactId>spring-boot-autoconfigure</artifactId>
     </dependency>
   </dependencies>
+  
   <build>
     <pluginManagement>
       <plugins>

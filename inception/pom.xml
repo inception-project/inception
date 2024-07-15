@@ -143,6 +143,13 @@
       <scope>runtime</scope>
     </dependency>
     
+    <!-- Java Servlet API -->
+    <dependency>
+      <groupId>javax.servlet</groupId>
+      <artifactId>javax.servlet-api</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-test-dependencies</artifactId>
@@ -432,6 +439,10 @@
             <dependency>com.sun.xml.bind:jaxb-core</dependency>
             <dependency>com.sun.xml.bind:jaxb-impl</dependency>
             <dependency>javax.activation:javax.activation-api</dependency>
+            <!--
+              - Servlet API
+            -->
+            <dependency>javax.servlet:javax.servlet-api</dependency>
             <!--
               - hsqldb and data-jpa, used via reflection in tests in search-mtas,
               - cannot be detected by Maven
