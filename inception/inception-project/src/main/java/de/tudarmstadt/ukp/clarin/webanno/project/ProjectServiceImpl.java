@@ -1157,10 +1157,10 @@ public class ProjectServiceImpl
         long projectId = Long.valueOf(substringAfter(aRealmId, REALM_PROJECT_PREFIX));
         Project project = getProject(projectId);
         if (project != null) {
-            return new Realm(aRealmId, project.getName());
+            return new Realm(aRealmId, "<Project> " + project.getName());
         }
         else {
-            return new Realm(aRealmId, "<Deleted project: " + projectId + ">");
+            return new Realm(aRealmId, "<Project (deleted)>: " + projectId + ">");
         }
     }
 }
