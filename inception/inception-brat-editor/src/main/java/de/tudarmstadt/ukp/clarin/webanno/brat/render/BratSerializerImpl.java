@@ -21,6 +21,9 @@ import static de.tudarmstadt.ukp.clarin.webanno.brat.schema.BratSchemaGeneratorI
 import static de.tudarmstadt.ukp.clarin.webanno.model.ScriptDirection.RTL;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.apache.uima.cas.text.AnnotationPredicates.covering;
+import static org.apache.uima.cas.text.AnnotationPredicates.overlappingAtBegin;
+import static org.apache.uima.cas.text.AnnotationPredicates.overlappingAtEnd;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
 
@@ -329,7 +332,7 @@ public class BratSerializerImpl
      *            (window-relative positions)
      * @return list of ranges.
      */
-    private List<Offsets> split(List<Offsets> aRows, String aText, int aWindowBegin, int aBegin,
+    static List<Offsets> split(List<Offsets> aRows, String aText, int aWindowBegin, int aBegin,
             int aEnd)
     {
         // Zero-width spans never need to be split
@@ -338,12 +341,11 @@ public class BratSerializerImpl
         }
 
         // If the annotation extends across the row boundaries, create multiple ranges for the
-        // annotation, one for every row. Note that in UIMA annotations are
-        // half-open intervals [begin,end) so that a begin offset must always be
-        // smaller than the end of a covering annotation to be considered properly
-        // covered.
-        Offsets beginRow = aRows.stream()
-                .filter(span -> span.getBegin() <= aBegin && aBegin < span.getEnd()) //
+        // annotation, one for every row. Note that in UIMA annotations are half-open intervals
+        // [begin,end) so that a begin offset must always be smaller than the end of a covering
+        // annotation to be considered properly covered.
+        var beginRow = aRows.stream() //
+                .filter(row -> covering(row.getBegin(), row.getEnd(), aBegin, aBegin)) //
                 .findFirst() //
                 .orElseThrow(() -> new IllegalArgumentException(
                         "Start position of range [" + (aWindowBegin + aBegin) + "-"
@@ -351,12 +353,11 @@ public class BratSerializerImpl
                                 + "sentence-based editor, this is most likely caused by "
                                 + "annotations outside sentences."));
 
-        // Zero-width annotations that are on the boundary of two directly
-        // adjacent sentences (i.e. without whitespace between them) are considered
-        // to be at the end of the first sentence rather than at the beginning of the
-        // second sentence.
-        Offsets endRow = aRows.stream()
-                .filter(span -> span.getBegin() <= aEnd && aEnd <= span.getEnd()) //
+        // Zero-width annotations that are on the boundary of two directly adjacent sentences (i.e.
+        // without whitespace between them) are considered to be at the end of the first sentence
+        // rather than at the beginning of the second sentence.
+        var endRow = aRows.stream() //
+                .filter(row -> covering(row.getBegin(), row.getEnd(), aEnd, aEnd)) //
                 .findFirst() //
                 .orElseThrow(() -> new IllegalArgumentException(
                         "End position of range [" + (aWindowBegin + aBegin) + "-"
@@ -369,29 +370,33 @@ public class BratSerializerImpl
             return asList(new Offsets(aBegin, aEnd));
         }
 
-        List<Offsets> coveredRows = aRows.subList(aRows.indexOf(beginRow),
-                aRows.indexOf(endRow) + 1);
+        var coveredRows = aRows.subList(aRows.indexOf(beginRow), aRows.indexOf(endRow) + 1);
 
-        List<Offsets> ranges = new ArrayList<>();
-        for (Offsets row : coveredRows) {
-            Offsets range;
+        var segments = new ArrayList<Offsets>();
+        for (var row : coveredRows) {
+            Offsets segment;
 
-            if (row.getBegin() <= aBegin && aBegin < row.getEnd()) {
-                range = new Offsets(aBegin, row.getEnd());
+            if (covering(aBegin, aEnd, row.getBegin(), row.getEnd())) {
+                segment = new Offsets(row.getBegin(), row.getEnd());
             }
-            else if (row.getBegin() <= aEnd && aEnd <= row.getEnd()) {
-                range = new Offsets(row.getBegin(), aEnd);
+            else if (overlappingAtBegin(row.getBegin(), row.getEnd(), aBegin, aEnd)) {
+                segment = new Offsets(aBegin, row.getEnd());
+            }
+            else if (overlappingAtEnd(row.getBegin(), row.getEnd(), aBegin, aEnd)) {
+                segment = new Offsets(row.getBegin(), aEnd);
             }
             else {
-                range = new Offsets(row.getBegin(), row.getEnd());
+                continue;
             }
 
-            trim(aText, range);
+            trim(aText, segment);
 
-            ranges.add(range);
+            if (!segment.isEmpty()) {
+                segments.add(segment);
+            }
         }
 
-        return ranges;
+        return segments;
     }
 
     public static String abbreviate(String aName)
@@ -440,19 +445,24 @@ public class BratSerializerImpl
      * @param aOffsets
      *            the offsets.
      */
-    static private void trim(CharSequence aText, Offsets aOffsets)
+    static void trim(CharSequence aText, Offsets aOffsets)
     {
-        int begin = aOffsets.getBegin();
-        int end = aOffsets.getEnd() - 1;
+        if (aOffsets.getBegin() == aOffsets.getEnd()) {
+            // Nothing to do on empty spans
+            return;
+        }
 
-        // Remove whitespace at end
-        while ((end > 0) && trimChar(aText.charAt(end))) {
+        int begin = aOffsets.getBegin();
+        int end = aOffsets.getEnd();
+
+        // First we trim at the end. If a trimmed span is empty, we want to return the original
+        // begin as the begin/end of the trimmed span
+        while ((end > 0) && end > begin && trimChar(aText.charAt(end - 1))) {
             end--;
         }
-        end++;
 
-        // Remove whitespace at start
-        while ((begin < end) && trimChar(aText.charAt(begin))) {
+        // Then, trim at the start
+        while ((begin < (aText.length() - 1)) && begin < end && trimChar(aText.charAt(begin))) {
             begin++;
         }
 
@@ -460,7 +470,7 @@ public class BratSerializerImpl
         aOffsets.setEnd(end);
     }
 
-    private static boolean trimChar(final char aChar)
+    static boolean trimChar(final char aChar)
     {
         switch (aChar) {
         case '\n': // Line break

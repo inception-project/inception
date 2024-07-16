@@ -17,22 +17,23 @@
  */
 package de.tudarmstadt.ukp.inception.ui.curation.sidebar;
 
-import java.util.Set;
+import static de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType.clipboard_s;
+import static de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType.play_circle_s;
+import static de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType.stop_circle_s;
 
-import org.apache.wicket.ClassAttributeModifier;
-import org.apache.wicket.markup.html.panel.Panel;
+import org.apache.wicket.AttributeModifier;
+import org.apache.wicket.markup.html.panel.GenericPanel;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.Icon;
-import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
-import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior;
 
 public class CurationSidebarIcon
-    extends Panel
+    extends GenericPanel<AnnotatorState>
 {
     private static final long serialVersionUID = -1870047500327624860L;
 
@@ -42,57 +43,28 @@ public class CurationSidebarIcon
     public CurationSidebarIcon(String aId, IModel<AnnotatorState> aState)
     {
         super(aId, aState);
-        queue(new Icon("icon", FontAwesome5IconType.clipboard_s));
-        queue(new Icon("badge", LoadableDetachableModel.of(this::getStateIcon))
-                .add(new ClassAttributeModifier()
-                {
-                    private static final long serialVersionUID = 8029123921246115447L;
 
-                    @Override
-                    protected Set<String> update(Set<String> aClasses)
-                    {
-                        if (isSessionActive()) {
-                            aClasses.add("text-primary");
-                            aClasses.remove("text-muted");
-                        }
-                        else {
-                            aClasses.add("text-muted");
-                            aClasses.remove("text-primary");
-                        }
-
-                        return aClasses;
-                    }
-                }));
-    }
-
-    @SuppressWarnings("unchecked")
-    public IModel<AnnotatorState> getModel()
-    {
-        return (IModel<AnnotatorState>) getDefaultModel();
-    }
-
-    public AnnotatorState getModelObject()
-    {
-        return (AnnotatorState) getDefaultModelObject();
-    }
-
-    private IconType getStateIcon()
-    {
-        if (isSessionActive()) {
-            return FontAwesome5IconType.play_circle_s;
-        }
-
-        return FontAwesome5IconType.stop_circle_s;
+        queue(new Icon("icon", clipboard_s));
+        queue(new Icon("badge", () -> isSessionActive() ? play_circle_s : stop_circle_s) //
+                .add(LambdaBehavior.visibleWhen(this::isSidebarCurationMode)) //
+                .add(AttributeModifier.append("class",
+                        () -> isSessionActive() ? "text-primary" : "text-muted")));
     }
 
     private boolean isSessionActive()
     {
         var project = getModelObject().getProject();
+
         if (project != null && curationSidebarService
                 .existsSession(userService.getCurrentUsername(), project.getId())) {
             return true;
         }
 
         return false;
+    }
+
+    private boolean isSidebarCurationMode()
+    {
+        return getPage() instanceof AnnotationPage;
     }
 }

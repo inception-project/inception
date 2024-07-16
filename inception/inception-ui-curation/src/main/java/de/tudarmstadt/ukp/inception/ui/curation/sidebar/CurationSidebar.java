@@ -48,7 +48,6 @@ import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.model.ResourceModel;
-import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,6 +56,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase2;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.MergeDialog;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.MergeDialog.State;
@@ -68,7 +68,6 @@ import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorExtensionRegistry;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
-import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormChoiceComponentUpdatingBehavior;
@@ -105,30 +104,24 @@ public class CurationSidebar
     private final Form<Void> usersForm;
     private CheckBox showMerged;
     private final IModel<CurationWorkflow> curationWorkflowModel;
+    private final IModel<Boolean> isTargetFinished;
 
     private final Label noDocsLabel;
-    private final Label finishedLabel;
 
     private final MergeDialog mergeConfirm;
 
-    public CurationSidebar(String aId, IModel<AnnotatorState> aModel,
-            AnnotationActionHandler aActionHandler, CasProvider aCasProvider,
-            AnnotationPage aAnnotationPage)
+    public CurationSidebar(String aId, AnnotationActionHandler aActionHandler,
+            CasProvider aCasProvider, AnnotationPageBase2 aAnnotationPage)
     {
-        super(aId, aModel, aActionHandler, aCasProvider, aAnnotationPage);
+        super(aId, aActionHandler, aCasProvider, aAnnotationPage);
 
-        var state = aModel.getObject();
+        var state = aAnnotationPage.getModelObject();
 
-        queue(createSessionControlForm(CID_SESSION_CONTROL_FORM));
+        queue(createSessionControlForm(CID_SESSION_CONTROL_FORM)
+                .add(visibleWhen(() -> getPage() instanceof AnnotationPage)));
 
-        var isTargetFinished = LambdaModel.of(() -> curationSidebarService.isCurationFinished(state,
+        isTargetFinished = LambdaModel.of(() -> curationSidebarService.isCurationFinished(state,
                 userRepository.getCurrentUsername()));
-
-        finishedLabel = new Label("finishedLabel", new StringResourceModel("finished", this,
-                LoadableDetachableModel.of(state::getUser)));
-        finishedLabel.setOutputMarkupPlaceholderTag(true);
-        finishedLabel.add(visibleWhen(() -> isSessionActive() && isTargetFinished.getObject()));
-        queue(finishedLabel);
 
         noDocsLabel = new Label("noDocumentsLabel", new ResourceModel("noDocuments"));
         noDocsLabel.add(visibleWhen(() -> isSessionActive() && !isTargetFinished.getObject()
@@ -284,11 +277,10 @@ public class CurationSidebar
 
         var form = new Form<Void>(aId);
         form.setOutputMarkupPlaceholderTag(true);
-        form.add(visibleWhen(() -> isSessionActive()
-                && !curationSidebarService.isCurationFinished(getModelObject(), sessionOwner)
-                && !users.getModelObject().isEmpty()));
+        form.add(visibleWhen(() -> isSessionActive() && !users.getModelObject().isEmpty()));
 
-        form.add(new LambdaAjaxButton<>("merge", this::actionOpenMergeDialog));
+        form.add(new LambdaAjaxButton<>("merge", this::actionOpenMergeDialog)
+                .add(visibleWhenNot(isTargetFinished)));
 
         users = new ListView<User>("users", LoadableDetachableModel.of(this::listCuratableUsers))
         {

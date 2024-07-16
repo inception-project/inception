@@ -70,6 +70,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase2;
 import de.tudarmstadt.ukp.inception.annotation.events.FeatureValueUpdatedEvent;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
@@ -122,7 +123,7 @@ public class DocumentMetadataAnnotationSelectionPanel
     private @SpringBean RecommendationService recommendationService;
     private @SpringBean UserDao userService;
 
-    private final AnnotationPage annotationPage;
+    private final AnnotationPageBase2 annotationPage;
     private final CasProvider casProvider;
     private final AnnotationActionHandler actionHandler;
     private final WebMarkupContainer layersContainer;
@@ -135,10 +136,9 @@ public class DocumentMetadataAnnotationSelectionPanel
     private int createdAnnotationAddress;
 
     public DocumentMetadataAnnotationSelectionPanel(String aId, CasProvider aCasProvider,
-            AnnotationPage aAnnotationPage, AnnotationActionHandler aActionHandler,
-            IModel<AnnotatorState> aState)
+            AnnotationPageBase2 aAnnotationPage, AnnotationActionHandler aActionHandler)
     {
-        super(aId, aState);
+        super(aId, aAnnotationPage.getModel());
 
         setOutputMarkupPlaceholderTag(true);
 

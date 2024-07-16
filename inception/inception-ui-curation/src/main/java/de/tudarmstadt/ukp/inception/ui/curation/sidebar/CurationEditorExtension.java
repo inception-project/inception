@@ -112,7 +112,7 @@ public class CurationEditorExtension
     }
 
     @Override
-    public void handleAction(AnnotationActionHandler aPanel, AnnotatorState aState,
+    public void handleAction(AnnotationActionHandler aActionHandler, AnnotatorState aState,
             AjaxRequestTarget aTarget, CAS aCas, VID aParamId, String aAction)
         throws AnnotationException, IOException
     {
@@ -135,28 +135,42 @@ public class CurationEditorExtension
         }
 
         if (SelectAnnotationHandler.COMMAND.equals(aAction)) {
-            if (curationSidebarService.isCurationFinished(aState,
-                    userRepository.getCurrentUsername())) {
-                throw new NotEditableException("Curation is already finished. You can put it back "
-                        + "into progress via the monitoring page.");
-            }
-
-            var page = (AnnotationPageBase) aTarget.getPage();
-            page.ensureIsEditable();
-
-            mergeAnnotation(aAction, aPanel, aState, aTarget, aCas, curationVid);
+            actionCurationSuggestionSelected(aActionHandler, aState, aTarget, aCas, aAction,
+                    curationVid);
         }
         else if (ScrollToHandler.COMMAND.equals(aAction)) {
-            // get user CAS and annotation (to be merged into curator's)
-            var vid = VID.parse(curationVid.getExtensionPayload());
-
-            var srcCas = documentService.readAnnotationCas(doc, srcUser);
-            var sourceAnnotation = selectAnnotationByAddr(srcCas, vid.getId());
-
-            var page = (AnnotationPageBase) aTarget.getPage();
-            page.getAnnotationActionHandler().actionJump(aTarget, sourceAnnotation.getBegin(),
-                    sourceAnnotation.getEnd());
+            actionJumpTo(aActionHandler, aTarget, curationVid, doc, srcUser);
         }
+    }
+
+    private void actionJumpTo(AnnotationActionHandler aActionHandler, AjaxRequestTarget aTarget,
+            CurationVID curationVid, SourceDocument doc, String srcUser)
+        throws IOException, AnnotationException
+    {
+        // get user CAS and annotation (to be merged into curator's)
+        var vid = VID.parse(curationVid.getExtensionPayload());
+
+        var srcCas = documentService.readAnnotationCas(doc, srcUser);
+        var sourceAnnotation = selectAnnotationByAddr(srcCas, vid.getId());
+
+        aActionHandler.actionJump(aTarget, sourceAnnotation.getBegin(), sourceAnnotation.getEnd());
+    }
+
+    private void actionCurationSuggestionSelected(AnnotationActionHandler aActionHandler,
+            AnnotatorState aState, AjaxRequestTarget aTarget, CAS aCas, String aAction,
+            CurationVID curationVid)
+        throws NotEditableException, IOException, AnnotationException
+    {
+        if (curationSidebarService.isCurationFinished(aState,
+                userRepository.getCurrentUsername())) {
+            throw new NotEditableException("Curation is already finished. You can put it back "
+                    + "into progress via the monitoring page.");
+        }
+
+        var page = (AnnotationPageBase) aTarget.getPage();
+        page.ensureIsEditable();
+
+        mergeAnnotation(aAction, aActionHandler, aState, aTarget, aCas, curationVid);
     }
 
     @Override

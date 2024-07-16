@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.kb.exporter;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExporter.getEntry;
 import static java.util.Arrays.asList;
 
 import java.io.IOException;
@@ -326,12 +327,9 @@ public class KnowledgeBaseExporter
      */
     private void importKnowledgeBaseFiles(ZipFile aZip, KnowledgeBase kb) throws IOException
     {
-        var sourceFileName = getSourceFileName(kb);
-        // remove leading "/"
-        var entry = aZip.getEntry(sourceFileName.substring(1));
-
+        var entry = getEntry(aZip, getSourceFileName(kb));
         try (var is = aZip.getInputStream(entry)) {
-            kbService.importData(kb, sourceFileName, is);
+            kbService.importData(kb, entry.getName(), is);
         }
     }
 

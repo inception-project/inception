@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.kb.config;
 
 import java.time.Duration;
+import java.util.List;
 
 public interface KnowledgeBaseProperties
 {
@@ -54,4 +55,6 @@ public interface KnowledgeBaseProperties
     Duration getRenderCacheExpireDelay();
 
     long getRenderCacheSize();
+
+    List<String> getDefaultFallbackLanguages();
 }

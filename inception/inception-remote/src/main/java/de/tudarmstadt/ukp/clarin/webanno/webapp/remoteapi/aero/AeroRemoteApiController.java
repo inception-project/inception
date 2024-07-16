@@ -100,7 +100,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.tsv.WebAnnoTsv3FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.exception.AccessForbiddenException;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.exception.IllegalNameException;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.exception.IllegalObjectStateException;
@@ -458,10 +457,8 @@ public class AeroRemoteApiController
                                     .toString()));
         }
 
-        FullProjectExportRequest request = new FullProjectExportRequest(project,
-                aFormat.orElse(WebAnnoTsv3FormatSupport.ID), true);
-        ProjectExportTaskMonitor monitor = new ProjectExportTaskMonitor(project, null,
-                "report-export");
+        var request = new FullProjectExportRequest(project, aFormat.orElse(null), true);
+        var monitor = new ProjectExportTaskMonitor(project, null, "report-export");
         File exportedFile = exportService.exportProject(request, monitor);
 
         // Turn the file into a resource and auto-delete the file when the resource closes the

@@ -21,6 +21,8 @@ import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.getDiffAdapters;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior.LINK_ROLE_AS_LABEL;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.ANNOTATION;
+import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.NO_OVERLAP;
+import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.STACKING_ONLY;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toMap;
@@ -33,6 +35,7 @@ import java.util.List;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.jcas.tcas.Annotation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.Order;
@@ -102,6 +105,7 @@ public class CurationSidebarRenderer
     @Override
     public boolean accepts(RenderRequest aRequest)
     {
+        var project = aRequest.getProject();
         var state = aRequest.getState();
 
         // do not show predictions on the decicated curation page
@@ -113,6 +117,11 @@ public class CurationSidebarRenderer
             return false;
         }
 
+        var sessionOwner = userRepository.getCurrentUsername();
+        if (!curationService.existsSession(sessionOwner, project.getId())) {
+            return false;
+        }
+
         return true;
     }
 
@@ -121,10 +130,6 @@ public class CurationSidebarRenderer
     {
         var sessionOwner = userRepository.getCurrentUsername();
         var project = aRequest.getProject();
-
-        if (!curationService.existsSession(sessionOwner, project.getId())) {
-            return;
-        }
 
         var selectedUsers = curationService.listUsersReadyForCuration(sessionOwner, project,
                 aRequest.getSourceDocument());
@@ -166,8 +171,15 @@ public class CurationSidebarRenderer
                     .filter(feature -> feature.getLayer().equals(layer)) //
                     .toList();
 
+            var noOverlap = layer.getOverlapMode() == NO_OVERLAP
+                    || layer.getOverlapMode() == STACKING_ONLY;
+
             for (var cfg : cfgSet.getConfigurations()) {
                 var fs = cfg.getRepresentative(casDiff.getCasMap());
+                if (!(fs instanceof Annotation)) {
+                    continue;
+                }
+
                 var user = cfg.getRepresentativeCasGroupId();
 
                 // We need to pass in *all* the annotation features here because we also to that in
@@ -189,11 +201,24 @@ public class CurationSidebarRenderer
                     }
 
                     if (!showAll && object instanceof VSpan) {
+                        // Check if the target already contains an annotation from this
+                        // configuration
                         var sourceConfiguration = diff.findConfiguration(
                                 cfg.getRepresentativeCasGroupId(), new AID(object.getVid()));
                         if (sourceConfiguration.map($ -> $.getAID(targetUser) != null)
                                 .orElse(false)) {
                             continue;
+                        }
+
+                        // Check if the position could be merged at all or if the merge is blocked
+                        // by an overlapping annotation (which may not be contained in the
+                        // configuration)
+                        if (noOverlap && fs instanceof Annotation ann) {
+                            var cas = aRequest.getCas();
+                            if (cas.<Annotation> select(ann.getType().getName())
+                                    .anyMatch(f -> ann.overlapping(f))) {
+                                continue;
+                            }
                         }
                     }
 

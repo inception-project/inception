@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.annotation.layer;
 
 import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectFsByAddr;
 
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -32,6 +33,8 @@ import java.util.function.Supplier;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
 
@@ -51,6 +54,8 @@ import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistry;
 public abstract class TypeAdapter_ImplBase
     implements TypeAdapter
 {
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
     private final LayerSupportRegistry layerSupportRegistry;
     private final FeatureSupportRegistry featureSupportRegistry;
     private final ConstraintsService constraintsService;
@@ -178,6 +183,8 @@ public abstract class TypeAdapter_ImplBase
     private void clearHiddenFeatures(SourceDocument aDocument, String aUsername,
             FeatureStructure aFS)
     {
+        LOG.trace("begin clear hidden");
+
         var constraints = constraintsService.getMergedConstraints(aDocument.getProject());
         if (constraints == null) {
             return;
@@ -200,6 +207,8 @@ public abstract class TypeAdapter_ImplBase
                 }
             }
         }
+
+        LOG.trace("end clear hidden");
     }
 
     @Override

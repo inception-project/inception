@@ -114,13 +114,14 @@ import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
  * between user annotations for a specific document. The interface provides a tool for merging these
  * annotations and storing them as a new annotation.
  */
-@MountPath(NS_PROJECT + "/${" + PAGE_PARAM_PROJECT + "}/curate/#{" + PAGE_PARAM_DOCUMENT + "}")
-public class CurationPage
+@MountPath(NS_PROJECT + "/${" + PAGE_PARAM_PROJECT + "}/curate-split/#{" + PAGE_PARAM_DOCUMENT
+        + "}")
+public class LegacyCurationPage
     extends AnnotationPageBase
 {
     private static final String MID_NUMBER_OF_PAGES = "numberOfPages";
 
-    private final static Logger LOG = LoggerFactory.getLogger(CurationPage.class);
+    private final static Logger LOG = LoggerFactory.getLogger(LegacyCurationPage.class);
 
     private static final long serialVersionUID = 1378872465851908515L;
 
@@ -152,7 +153,7 @@ public class CurationPage
     private AnnotationEditorBase annotationEditor;
     private AnnotatorsPanel annotatorsPanel;
 
-    public CurationPage(final PageParameters aPageParameters)
+    public LegacyCurationPage(final PageParameters aPageParameters)
     {
         super(aPageParameters);
 
@@ -311,13 +312,13 @@ public class CurationPage
             @Override
             public CAS getEditorCas() throws IOException
             {
-                return CurationPage.this.getEditorCas();
+                return LegacyCurationPage.this.getEditorCas();
             }
 
             @Override
             public void writeEditorCas() throws IOException, AnnotationException
             {
-                CurationPage.this.writeEditorCas(getEditorCas());
+                LegacyCurationPage.this.writeEditorCas(getEditorCas());
             }
         };
         panel.add(enabledWhen(() -> getModelObject() != null //
@@ -571,7 +572,7 @@ public class CurationPage
                     + "that only administrators can do).");
             var pageParameters = new PageParameters();
             setProjectPageParameter(pageParameters, getProject());
-            throw new RestartResponseException(CurationPage.class, pageParameters);
+            throw new RestartResponseException(LegacyCurationPage.class, pageParameters);
         }
 
         var casses = documentService.readAllCasesSharedNoUpgrade(state.getDocument(),

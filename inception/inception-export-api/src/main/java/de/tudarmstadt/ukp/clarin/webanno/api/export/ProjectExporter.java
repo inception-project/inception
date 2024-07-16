@@ -17,6 +17,10 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.export;
 
+import static org.apache.commons.io.FilenameUtils.normalize;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static org.apache.commons.lang3.StringUtils.removeStart;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Collections;
@@ -53,21 +57,38 @@ public interface ProjectExporter
 
     static String normalizeEntryName(ZipEntry aEntry)
     {
-        // Strip leading "/" that we had in ZIP files prior to 2.0.8 (bug #985)
-        var entryName = aEntry.toString();
-        if (entryName.startsWith("/")) {
-            entryName = entryName.substring(1);
+        var name = removeStart(normalize(aEntry.getName(), true), "/");
+
+        if (isEmpty(name)) {
+            return null;
         }
 
-        return entryName;
+        return name;
+    }
+
+    static ZipEntry getEntry(ZipFile aFile, String aEntryName)
+    {
+        var normalizedEntryName = normalize(aEntryName, true);
+
+        var entry = aFile.getEntry(normalizedEntryName);
+        if (entry != null) {
+            return entry;
+        }
+
+        if (normalizedEntryName.startsWith("/")) {
+            return aFile.getEntry(removeStart(normalizedEntryName, "/"));
+        }
+        else {
+            return aFile.getEntry("/" + normalizedEntryName);
+        }
     }
 
     static void writeEntry(ZipOutputStream aStage, String aEntryName,
             FailableConsumer<OutputStream, IOException> aWriter)
         throws IOException
     {
-        var entry = new ZipEntry(aEntryName);
-        aStage.putNextEntry(entry);
+        var entryName = new ZipEntry(removeStart(normalize(aEntryName, true), "/"));
+        aStage.putNextEntry(entryName);
         try {
             aWriter.accept(CloseShieldOutputStream.wrap(aStage));
         }

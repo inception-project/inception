@@ -32,7 +32,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.Lob;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
@@ -65,8 +64,7 @@ public class ProjectInvite
     @Column(nullable = false)
     private Date expirationDate;
 
-    @Lob
-    @Column(length = 16_777_216, nullable = true)
+    @Column(length = 64000)
     private String invitationText;
 
     @Temporal(TemporalType.TIMESTAMP)

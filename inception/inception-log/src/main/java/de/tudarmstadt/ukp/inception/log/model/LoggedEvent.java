@@ -24,7 +24,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
@@ -66,11 +65,10 @@ public class LoggedEvent
     /**
      * If the event does not belong to an annotation document, then the annotator ID should be null.
      */
-    @Column(nullable = true)
+    @Column()
     private String annotator;
 
-    @Lob
-    @Column(length = 16_777_216, nullable = true)
+    @Column(length = 64000)
     private String details;
 
     public LoggedEvent()

@@ -33,6 +33,7 @@ import static org.mockito.Mockito.when;
 import java.io.File;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 
@@ -119,6 +120,8 @@ public class KnowledgeBaseExporterTest
 
         var importRequest = new ProjectImportRequest(true);
         var zipFile = mock(ZipFile.class);
+        var zipFileEntry = mock(ZipEntry.class);
+        when(zipFile.getEntry(any())).thenReturn(zipFileEntry);
 
         sut.importData(importRequest, targetProject, exportedProject, zipFile);
 
@@ -165,6 +168,8 @@ public class KnowledgeBaseExporterTest
         // Import the project again
         var importRequest = new ProjectImportRequest(true);
         var zipFile = mock(ZipFile.class);
+        var zipFileEntry = mock(ZipEntry.class);
+        when(zipFile.getEntry(any())).thenReturn(zipFileEntry);
         sut.importData(importRequest, targetProject, exportedProject, zipFile);
 
         // Verify that features were actually processed

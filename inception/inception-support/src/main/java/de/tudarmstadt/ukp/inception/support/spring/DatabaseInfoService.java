@@ -90,8 +90,7 @@ public class DatabaseInfoService
         if (session != null) {
             Dialect dialect = null;
             try {
-                SessionFactoryImplementor sessionFactory = ((SessionFactoryImplementor) session
-                        .getSessionFactory());
+                var sessionFactory = ((SessionFactoryImplementor) session.getSessionFactory());
                 dialect = sessionFactory.getJdbcServices().getDialect();
                 settings.add(new Setting("Database dialect", dialect.getClass().getName(),
                         databaseDialect));

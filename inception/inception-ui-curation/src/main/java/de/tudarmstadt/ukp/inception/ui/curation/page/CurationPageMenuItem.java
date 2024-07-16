@@ -15,9 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.ui.curation.page;
+package de.tudarmstadt.ukp.inception.ui.curation.page;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
+import static de.tudarmstadt.ukp.inception.curation.settings.CurationManagerPrefs.KEY_CURATION_MANAGER_PREFS;
+import static de.tudarmstadt.ukp.inception.curation.settings.CurationPageType.INTEGRATED;
 import static java.lang.String.format;
 
 import org.apache.wicket.Page;
@@ -28,8 +30,9 @@ import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.ProjectMenuItem;
+import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.LegacyCurationPageMenuItem;
+import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import jakarta.servlet.ServletContext;
 import wicket.contrib.input.events.key.KeyType;
@@ -42,13 +45,18 @@ public class CurationPageMenuItem
     private final UserDao userRepo;
     private final ProjectService projectService;
     private final ServletContext servletContext;
+    private final PreferencesService preferencesService;
+    private final LegacyCurationPageMenuItem legacyCurationPageMenuItem;
 
     public CurationPageMenuItem(UserDao aUserRepo, ProjectService aProjectService,
-            ServletContext aServletContext)
+            ServletContext aServletContext, PreferencesService aPreferencesService,
+            LegacyCurationPageMenuItem aLegacyCurationPageMenuItem)
     {
         userRepo = aUserRepo;
         projectService = aProjectService;
         servletContext = aServletContext;
+        preferencesService = aPreferencesService;
+        legacyCurationPageMenuItem = aLegacyCurationPageMenuItem;
     }
 
     @Override
@@ -59,8 +67,14 @@ public class CurationPageMenuItem
 
     public String getUrl(Project aProject, long aDocumentId)
     {
-        String p = aProject.getSlug() != null ? aProject.getSlug()
-                : String.valueOf(aProject.getId());
+        // Make sure the activity dashlet gets the right URL
+        var prefs = preferencesService.loadDefaultTraitsForProject(KEY_CURATION_MANAGER_PREFS,
+                aProject);
+        if (prefs.getCurationPageType() != INTEGRATED) {
+            return legacyCurationPageMenuItem.getUrl(aProject, aDocumentId);
+        }
+
+        var p = aProject.getSlug() != null ? aProject.getSlug() : String.valueOf(aProject.getId());
 
         return format("%s/p/%s%s/%d", servletContext.getContextPath(), p, getPath(), aDocumentId);
     }
@@ -84,8 +98,14 @@ public class CurationPageMenuItem
             return false;
         }
 
+        var prefs = preferencesService.loadDefaultTraitsForProject(KEY_CURATION_MANAGER_PREFS,
+                aProject);
+        if (prefs.getCurationPageType() != INTEGRATED) {
+            return false;
+        }
+
         // Visible if the current user is a curator
-        User user = userRepo.getCurrentUser();
+        var user = userRepo.getCurrentUser();
         return projectService.hasRole(user, aProject, CURATOR);
     }
 
