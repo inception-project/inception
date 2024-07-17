@@ -86,6 +86,10 @@ Application configuration
 {{- include "inception.fullname" .}}-oidc
 {{- end }}
 
+{{- define "inception.secret.saml2.name" -}}
+{{- include "inception.fullname" .}}-saml
+{{- end }}
+
 
 {{/*
 Persistence configuration

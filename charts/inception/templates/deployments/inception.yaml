@@ -51,12 +51,14 @@ spec:
               secretKeyRef:
                 name: {{ default (include "inception.secret.databaseAuth.name" .) .Values.config.database.auth.password.existingSecret.secretName }}
                 key: {{ default "password" .Values.config.database.auth.password.existingSecret.secretkey }}
+          {{- if .Values.auth.oauth2.enabled }}
           - name: OIDC_CLIENT_SECRET
             valueFrom:
               secretKeyRef:
                 name: {{ default (include "inception.secret.oauth2.name" .) .Values.auth.oauth2.clientSecret.existingSecret.secretName }}
                 key: {{ default "clientSecret" .Values.auth.oauth2.clientSecret.existingSecret.secretKey }}
-
+          {{- end }}
+          
           ports:
             - name: http
               containerPort: {{ .Values.service.port }}
@@ -87,7 +89,11 @@ spec:
             name: inception-data
           - mountPath: /tmp
             name: inception-tmp
-
+          {{- if .Values.auth.saml2.enabled }}
+          - mountPath: /srv/inception/saml-idp.crt
+            subPath: {{ default "saml-idp.crt" .Values.auth.saml2.assertingPartyCertificate.existingSecret.secretKey }}
+            name: saml-idp-cert
+          {{- end }}
       volumes:
       - name: inception-settings
         configMap:
@@ -98,6 +104,11 @@ spec:
       - name: inception-tmp
         emptyDir:
           sizeLimit: 1Gi
+      {{- if .Values.auth.saml2.enabled }}
+      - name: saml-idp-cert
+        secret:
+          secretName: {{ default (include "inception.secret.saml2.name" .) (.Values.auth.saml2.assertingPartyCertificate.existingSecret.secretName) }}
+      {{- end }}
 
       {{- with .Values.nodeSelector }}
       nodeSelector:

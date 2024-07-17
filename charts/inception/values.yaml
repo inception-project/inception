@@ -19,7 +19,7 @@ networkPolicies:
 
 config:
   baseUrl: "/"
-  logging: DEBUG
+  logging: TRACE
   security:
     acceptedOrigins: "localhost"
     allowHttp: true
@@ -39,10 +39,10 @@ config:
 
 auth:
   oauth2:
-    enabled: true
-    autoLogin: false 
-    clientName: Keycloak
-    clientID: inception-local
+    enabled: false
+    autoLogin: true 
+    clientName: Keycloak OIDC
+    clientID: inception-local-oidc
     clientSecret: 
       value: "Tn6yHpQ9kik6BFZPGXxTvqBJiQ54TxwS"
       existingSecret: 
@@ -50,21 +50,24 @@ auth:
         secretKey: ""
     scope: openid, profile
     authorizationGrantType: authorization_code
-    redirectURI: http://localhost/login/inception/oauth2/code/inception-local
+    redirectURI: http://localhost/login/oauth2/code/inception-client
     issuerURI: https://auth.workshop.eds-ovh.org/realms/datalab-workshop
     userNameAttribute: preferred_username
 
   saml2:
-    enabled: false
+    enabled: true
     autoLogin: false
     signRequest: false 
     assertingPartyCertificate:
-      value: ""
+      value: |
+        -----BEGIN CERTIFICATE-----
+        MIICrzCCAZcCBgGLfUUjxjANBgkqhkiG9w0BAQsFADAbMRkwFwYDVQQDDBBkYXRhbGFiLXdvcmtzaG9wMB4XDTIzMTAyOTIxMDc0NVoXDTMzMTAyOTIxMDkyNVowGzEZMBcGA1UEAwwQZGF0YWxhYi13b3Jrc2hvcDCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAN4crtQpxQom2Mj8RipMZnrB/Fkt2GIID1tg+3OeFhUWkAyRwD8HYeLsW3hfv0XJj6vUSqGTGh7KYq2nLhYHNeOVOG3sdujZeBjxhdoV0zfQaVK+R/9BdKlWKRpqx1DG5DDP3nKRe53zDwoh6xwA88ZCl3PkMa6SDXXlykQB9227vKbHjSj2wvRsm/cGxRLFIJ2UlyZdt0GIfgAKN/cSkw4Dqi+KLGGBOSQ4wYT1DT7dsiRZGTWxr80rln1ImXsrFPp/AFf2dnbUqP2QheCoPE9xX4YYlRKztuH7hpDLzw0LvHS6nJFUg2pkqM7wFX3enxx9wEJjjxusn8Jn8LxUE0ECAwEAATANBgkqhkiG9w0BAQsFAAOCAQEAoDvLXDj3Ha7BOzi4dTzDPi3mtOCqM/DWU2TaB2tg5Ww0JfXFO+FrnQ9xE6g6HSj05A80bzskk4d7eRpMIb3vpBAhUs4kq7m2HbSzceHlnKA2Z0ug18Dkp+GqbGR6yFSUiHu8didRTzmuabTq9EzFmfxkDjoCHLWhApElvsFariZtdQtPvy2ZbkXOcebx4mD9HsEQKOW1BfTWr6yGz6NVy7WmKEKKPkd/6H8O3Ju6ifpKSnkzejphqgX16M3TmMKsqDSVhIOw/HXU8Nu+oOqADF5F8sg/WbbKU5XAewVS1XaNztT9S78j/QtoE/pOO+rd9Wf5GYu11x/gGdbZvGRe/g==
+        -----END CERTIFICATE-----
       existingSecret: 
         secretName: ""
         secretKey: ""    
-    assertingPartyEntityID: 
-    assertingPartySSOUrl: 
+    assertingPartyEntityID: "https://auth.workshop.eds-ovh.org/realms/datalab-workshop"
+    assertingPartySSOUrl: "https://auth.workshop.eds-ovh.org/realms/datalab-workshop/protocol/saml"
 
 serviceAccount:
   # Specifies whether a service account should be created
@@ -100,7 +103,7 @@ ingress:
 
   hosts:
     - paths:
-      - path: /inception
+      - path: /
         pathType: Prefix
   tls: []
   #  - secretName: chart-example-tls
