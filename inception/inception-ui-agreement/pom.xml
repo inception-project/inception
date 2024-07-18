@@ -179,5 +179,11 @@
       <groupId>org.danekja</groupId>
       <artifactId>jdk-serializable-functional</artifactId>
     </dependency>
+    
+    <dependency>
+      <groupId>org.dkpro.core</groupId>
+      <artifactId>dkpro-core-api-ner-asl</artifactId>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 </project>
