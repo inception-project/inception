@@ -20,9 +20,11 @@ networkPolicies:
 config:
   baseUrl: "/"
   logging: TRACE
+
   security:
     acceptedOrigins: "localhost"
     allowHttp: true
+
   database:
     name: "inception"
     hostname: ""
@@ -36,6 +38,9 @@ config:
         existingSecret:
           secretName: ""
           secretKey: ""
+
+  extraConfig:
+    config.key: config-value
 
 auth:
   oauth2:
@@ -72,6 +77,13 @@ auth:
         secretKey: ""    
     assertingPartyEntityID: "https://auth.workshop.eds-ovh.org/realms/datalab-workshop"
     assertingPartySSOUrl: "https://auth.workshop.eds-ovh.org/realms/datalab-workshop/protocol/saml"
+
+  preAuthentication:
+    enabled: false
+    headerPrincipal:
+    newUserRole: ROLE_USER
+    customUserRoles: 
+      Franz: ROLE_ADMIN
 
 serviceAccount:
   # Specifies whether a service account should be created
