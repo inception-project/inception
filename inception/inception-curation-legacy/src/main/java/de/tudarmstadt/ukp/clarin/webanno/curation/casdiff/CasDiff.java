@@ -654,7 +654,7 @@ public class CasDiff
                 .collect(groupingBy(AnnotationFeature::getLayer));
 
         var adapters = new ArrayList<DiffAdapter>();
-        nextLayer: for (AnnotationLayer layer : aLayers) {
+        nextLayer: for (var layer : aLayers) {
             if (!layer.isEnabled()) {
                 continue nextLayer;
             }

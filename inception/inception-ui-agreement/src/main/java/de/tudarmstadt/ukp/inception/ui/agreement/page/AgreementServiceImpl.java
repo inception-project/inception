@@ -21,12 +21,13 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHA
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.AUTO_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.getDiffAdapters;
-import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.Tag.COMPLETE;
+import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.Tag.USED;
 import static java.lang.String.join;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toCollection;
 import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 import static org.apache.commons.csv.CSVFormat.RFC4180;
@@ -42,7 +43,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.io.output.CloseShieldOutputStream;
@@ -69,6 +69,9 @@ import de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil;
 public class AgreementServiceImpl
     implements AgreementService
 {
+    private static final String NO_ANNOTATION = "<no annotation>";
+    private static final String NO_LABEL = "<no label>";
+
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private final DocumentService documentService;
@@ -210,7 +213,7 @@ public class AgreementServiceImpl
         }
 
         var relevantSets = aAgreement.getRelevantSets();
-        var completeItemIterator = aAgreement.getStudy().getItems().iterator();
+        var usedItemIterator = aAgreement.getStudy().getItems().iterator();
         for (var cfgSet : relevantSets) {
             var row = new ArrayList<String>();
             var pos = cfgSet.getPosition();
@@ -221,26 +224,34 @@ public class AgreementServiceImpl
             row.add(pos.getType());
             row.add(aAgreement.getFeature());
             row.add(cfgSet.getPosition().toMinimalString());
-            row.add(cfgSet.getTags().stream().map(s -> s.toString())
-                    .collect(Collectors.joining(", ")));
+            row.add(cfgSet.getTags().stream().map(s -> s.toString()).collect(joining(", ")));
 
-            if (cfgSet.getTags().contains(COMPLETE)) {
-                // The study contains only the COMPLETE items
-                var item = completeItemIterator.next();
+            if (cfgSet.getTags().contains(USED)) {
+                // The study contains only the USED items
+                var item = usedItemIterator.next();
 
                 for (var unit : item.getUnits()) {
-                    row.add(String.valueOf(unit.getCategory()));
+                    if (unit.getCategory() == null) {
+                        row.add(NO_ANNOTATION);
+                    }
+                    else if ("".equals(unit.getCategory())) {
+                        row.add(NO_LABEL);
+                    }
+                    else {
+                        row.add(String.valueOf(unit.getCategory()));
+                    }
                 }
             }
             else {
                 for (var rater : aAgreement.getCasGroupIds()) {
                     var values = cfgSet.getValues(rater);
                     if (values != null) {
-                        row.add(join(", ", values.stream().map($ -> Objects.toString($, ""))
+                        row.add(join(", ", values.stream() //
+                                .map($ -> Objects.toString($, NO_LABEL)) //
                                 .sorted().toList()));
                     }
                     else {
-                        row.add("");
+                        row.add(NO_ANNOTATION);
                     }
                 }
             }
