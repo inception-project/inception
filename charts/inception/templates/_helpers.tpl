@@ -86,8 +86,12 @@ Application configuration
 {{- include "inception.fullname" .}}-oidc
 {{- end }}
 
-{{- define "inception.secret.saml2.name" -}}
-{{- include "inception.fullname" .}}-saml
+{{- define "inception.secret.saml2.idp-cert.name" -}}
+{{- include "inception.fullname" .}}-saml-idp
+{{- end }}
+
+{{- define "inception.secret.saml2.client-cert.name" -}}
+{{- include "inception.fullname" .}}-saml-client
 {{- end }}
 
 

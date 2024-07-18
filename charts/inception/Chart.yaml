@@ -21,12 +21,12 @@ version: 0.1.0
 # incremented each time you make changes to the application. Versions are not expected to
 # follow Semantic Versioning. They should reflect the version the application is using.
 # It is recommended to use it with quotes.
-appVersion: "32.3"
+appVersion: "33.2"
 
-# Using Bitnami MArioDB chart qs Inception's DB backend
+# Using Bitnami MariaDB chart as Inception's DB backend
 dependencies:
 - name: mariadb
   alias: mariadb
   condition: mariadb.enabled
-  version: "18.2.1"
+  version: "18.2.6"
   repository: "oci://registry-1.docker.io/bitnamicharts"

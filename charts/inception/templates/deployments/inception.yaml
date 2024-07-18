@@ -90,9 +90,13 @@ spec:
           - mountPath: /tmp
             name: inception-tmp
           {{- if .Values.auth.saml2.enabled }}
-          - mountPath: /srv/inception/saml-idp.crt
+          - mountPath: /var/run/secrets/saml/idp/saml-idp.crt
             subPath: {{ default "saml-idp.crt" .Values.auth.saml2.assertingPartyCertificate.existingSecret.secretKey }}
             name: saml-idp-cert
+          {{- if .Values.auth.saml2.signRequest.enabled }}
+          - mountPath: /var/run/secrets/saml/client
+            name: saml-client-cert
+          {{- end }}
           {{- end }}
       volumes:
       - name: inception-settings
@@ -107,7 +111,12 @@ spec:
       {{- if .Values.auth.saml2.enabled }}
       - name: saml-idp-cert
         secret:
-          secretName: {{ default (include "inception.secret.saml2.name" .) (.Values.auth.saml2.assertingPartyCertificate.existingSecret.secretName) }}
+          secretName: {{ default (include "inception.secret.saml2.idp-cert.name" .) (.Values.auth.saml2.assertingPartyCertificate.existingSecret.secretName) }}
+      {{- if .Values.auth.saml2.signRequest.enabled }}
+      - name: saml-client-cert
+        secret:
+          secretName: {{ default (include "inception.secret.saml2.client-cert.name" .) (.Values.auth.saml2.signRequest.existingTlsSecret) }}
+      {{- end }}
       {{- end }}
 
       {{- with .Values.nodeSelector }}

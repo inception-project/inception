@@ -56,8 +56,12 @@ auth:
 
   saml2:
     enabled: true
-    autoLogin: false
-    signRequest: false 
+    autoLogin: true
+    signRequest: 
+      enabled: false
+      certificateValue:
+      privateKeyValue:  
+      existingTlsSecret: ""
     assertingPartyCertificate:
       value: |
         -----BEGIN CERTIFICATE-----
