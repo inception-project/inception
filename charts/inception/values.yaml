@@ -39,6 +39,9 @@ config:
           secretName: ""
           secretKey: ""
 
+  extraEnv:
+    ENV_KEY: ENV-VALUE
+
   extraConfig:
     config.key: config-value
 

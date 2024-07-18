@@ -58,6 +58,11 @@ spec:
                 name: {{ default (include "inception.secret.oauth2.name" .) .Values.auth.oauth2.clientSecret.existingSecret.secretName }}
                 key: {{ default "clientSecret" .Values.auth.oauth2.clientSecret.existingSecret.secretKey }}
           {{- end }}
+          {{- range $name, $value := .Values.config.extraEnv }}
+          - name: {{ $name }}
+            value: {{ $value }}
+          {{- end }}
+
           
           ports:
             - name: http
