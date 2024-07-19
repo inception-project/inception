@@ -303,7 +303,7 @@ public class DiffResult
                     isAgreement(configurationSet) ? "AGREE" : "DISAGREE",
                     isComplete(configurationSet) ? "COMPLETE" : "INCOMPLETE");
             for (var cfg : configurationSet.getConfigurations()) {
-                aOut.printf("  %s", cfg);
+                aOut.printf("  %s%n", cfg);
             }
         }
     }
