@@ -22,9 +22,13 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.AU
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.getDiffAdapters;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.Tag.USED;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
 import static java.lang.String.join;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.joining;
@@ -60,6 +64,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
@@ -76,12 +81,14 @@ public class AgreementServiceImpl
 
     private final DocumentService documentService;
     private final AnnotationSchemaService schemaService;
+    private final UserDao userService;
 
     public AgreementServiceImpl(DocumentService aDocumentService,
-            AnnotationSchemaService aSchemaService)
+            AnnotationSchemaService aSchemaService, UserDao aUserService)
     {
         documentService = aDocumentService;
         schemaService = aSchemaService;
+        userService = aUserService;
     }
 
     @Override
@@ -100,7 +107,16 @@ public class AgreementServiceImpl
 
         if (isNotEmpty(documents)) {
             allAnnDocs.keySet().retainAll(documents);
+            for (var doc : documents) {
+                allAnnDocs.computeIfAbsent(doc, $ -> emptyList());
+            }
         }
+        else {
+            for (var doc : documentService.listSourceDocuments(aProject)) {
+                allAnnDocs.computeIfAbsent(doc, $ -> emptyList());
+            }
+        }
+
         return allAnnDocs;
     }
 
@@ -141,7 +157,8 @@ public class AgreementServiceImpl
                         new OutputStreamWriter(CloseShieldOutputStream.wrap(aOut), UTF_8),
                         RFC4180)) {
 
-                    configurationSetsWithItemsToCsv(printer, result, countWritten == 0);
+                    configurationSetsWithItemsToCsv(printer, result, countWritten == 0,
+                            userService);
                 }
 
                 countWritten++;
@@ -165,6 +182,14 @@ public class AgreementServiceImpl
             Map<SourceDocument, List<AnnotationDocument>> aAllAnnDocs)
         throws IOException
     {
+        if (CURATION_USER.equals(aDataOwner)) {
+            if (!asList(CURATION_IN_PROGRESS, CURATION_FINISHED).contains(aDocument.getState())) {
+                return Optional.empty();
+            }
+
+            return loadCas(aDocument, aDataOwner);
+        }
+
         var annDocs = aAllAnnDocs.get(aDocument);
 
         if (annDocs.stream().noneMatch(annDoc -> aDataOwner.equals(annDoc.getUser()))) {
@@ -175,6 +200,11 @@ public class AgreementServiceImpl
             Optional.empty();
         }
 
+        return loadCas(aDocument, aDataOwner);
+    }
+
+    private Optional<CAS> loadCas(SourceDocument aDocument, String aDataOwner) throws IOException
+    {
         var cas = documentService.readAnnotationCas(aDocument, aDataOwner, AUTO_CAS_UPGRADE,
                 SHARED_READ_ONLY_ACCESS);
 
@@ -205,10 +235,19 @@ public class AgreementServiceImpl
             FullCodingAgreementResult aAgreement, boolean aIncludeHeader)
         throws IOException
     {
+        configurationSetsWithItemsToCsv(aOut, aAgreement, aIncludeHeader, null);
+    }
+
+    private static void configurationSetsWithItemsToCsv(CSVPrinter aOut,
+            FullCodingAgreementResult aAgreement, boolean aIncludeHeader, UserDao aUserService)
+        throws IOException
+    {
         if (aIncludeHeader) {
             var headers = new ArrayList<>(asList("Type", "Collection", "Document", "Layer",
                     "Feature", "Position", "Flags"));
-            headers.addAll(aAgreement.getCasGroupIds());
+            aAgreement.getCasGroupIds().stream() //
+                    .map($ -> getUserName(aUserService, $)) //
+                    .forEach(headers::add);
             aOut.printRecord(headers);
         }
 
@@ -258,5 +297,19 @@ public class AgreementServiceImpl
 
             aOut.printRecord(row);
         }
+    }
+
+    private static String getUserName(UserDao aUserService, String aUserName)
+    {
+        if (aUserService == null) {
+            return aUserName;
+        }
+
+        var user = aUserService.getUserOrCurationUser(aUserName);
+        if (user != null) {
+            return user.getUiName();
+        }
+
+        return aUserName;
     }
 }
