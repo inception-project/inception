@@ -92,16 +92,92 @@ NOTE: The upper *Annotation* pane that the curator uses to edit annotations is n
 
 === Merge completely agreeing non-stacked annotations
 
-This merge strategy only considers annotations if all annotators made the same 
-annotation at the same location (i.e. complete and agreeing annotations) - i.e. it considers any 
-annotations not provided by all annotators as a disagreement between the annotators.
+This merge strategy merges an annotation if all annotators have created  an annotation and assigned the same label at a given position  (i.e. complete and agreeing annotations). 
+If any of the annotators did not create an annotation at the position or assigned a different label than any of the others, the annotation is not merged.
+
+[cols="1,1,1,2"]
+|===
+| *Annotator 1*
+| *Annotator 2*
+| *Merge result*
+| *Reason*
+
+| `foo`
+| `foo`
+| merged
+| agreement
+
+| _annotation without label_
+| _annotation without label_
+| merged
+| agreement
+
+| `foo`
+| _no annotation_
+| not merged
+| incomplete
+
+| `foo`
+| `bar`
+| not merged
+| disagreement
+
+| `foo`, `bar`
+| _anything_
+| _anything_
+| not merged
+| stacked
+|===
+
 
 === Merge incomplete agreeing non-stacked annotations
 
-There are situations where it is desirable to merge annotations from all annotators, even
-if some did not provide it. For example, if your project has two annotators, one working on POS
-tagging and another working on lemmatization, then as a curator, you might simply want to merge the
-annotators from the two.
+This merge strategy merges an annotation if all annotators assigned the same label at a given position  (i.e. annotations) even if not all annotators have created an annotation at that position.
+There are situations where it is desirable to merge annotations from all annotators for a given position, even if some did not provide it. 
+For example, if your project has two annotators, one working on POS tagging and another working on lemmatization, then as a curator, you might simply want to merge the annotators from the two.
+
+[cols="1,1,1,1,2"]
+|===
+| *Annotator 1*
+| *Annotator 2*
+| *Annotator 3*
+| *Merge result*
+| *Reason*
+
+| `foo`
+| `foo`
+| `foo`
+| merged
+| agreement
+
+| _annotation without label_
+| _annotation without label_
+| _annotation without label_
+| merged
+| agreement
+
+| `foo`
+| `foo`
+| _no annotation_
+| merge
+| incomplete agreement
+
+| `foo`
+| `bar`
+| _no annotation_
+| not merge
+| incomplete disagreement
+
+| `foo`
+| `bar`
+| `qux`
+| complete disagreement
+
+| `foo`, `bar`
+| _anything_
+| not merged
+| stacked
+|===
 
 === Merge using thresholds
 
@@ -109,11 +185,19 @@ This is the most powerful and flexible strategy. It is also the only strategy so
 
 The strategy is controlled by three parameters:
 
-* **User threshold:** the minimum amount of annotators that must have voted for a given 
-label for the label to be considered at all. If less then this number of annotators as 
-assigned the label, then it is completely ignored.
-* **Confidence threshold:** the minimum confidence of a label. The confidence for a label is calculated by counting the total number annotators (`all_votes`) that annotated a given position and dividing the number of annotators that provided a given label by the total number (i.e. `votes(label)  / all_votes`. Note that the user threshold is applied before counting votes to calculate confidence. Note how the confidence interacts with the number of valid labels you expect. E.g. if you expect that there could be four valid labels (and therefore set the **top-voted** parameter to `4`), then the best confidence that a single label can have is **25%** (`= 100% / 4``).
-* **Top-voted:** when set to `1`, only the single best label is pre-merged. If there is a tie on the best label, then nothing is merged. When set to `2` or higher, the respective `n` best labels are pre-merged. If there is any tie within the `n` best labels, then all labels that still meet the lowest score of the tie are merged as well. For example, if set to `2` and three annotators voted for label `X` and another two anotators voted for `Y` and `Z` respectively, then `Y` and `Z` have a tie at the second rank, so both of them are merged. Note that this setting only affects annotations on layers that allow stacking annotations. For other layers, an implicit setting of `1` is used here.
+* **User threshold:** the minimum amount of annotators that must have voted for a given label for the label to be considered at all. 
+If fewer annotators have voted for the label, then it is completely ignored.
+* **Confidence threshold:** the minimum confidence of a label. 
+The confidence for a label is calculated by counting the number of annotators that provided a given label
+dividing it by by the  the total number annotators that annotated a given position (`votes(label) / all_votes</code>`). 
+The user threshold is applied before counting votes to calculate confidence. The confidence interacts with the number of valid labels you expect. 
+E.g. if you expect that there could be four valid labels (and therefore set the **top-voted** parameter to `4`), then the best confidence that a single label can have achieve is `25%` (`= 100% / 4`).
+If you would set a higher threshold than this, it would never be possible to merge all four labels at a given position.
+* **Top-voted:** how many labels are merged. 
+When set to `1`, only the single most-voted label is merged. 
+If there is a tie on the most-voted label, then nothing is merged. When set to `2` or higher, the respective `n` most-voted labels are pre-merged. 
+If there is any tie within the `n` most-voted labels, then all labels that still meet the lowest score of the tie are merged as well. For example, if set to `2` and three annotators voted for label `X` and another two anotators voted for `Y` and `Z` respectively, then `Y` and `Z` have a tie at the second rank, so both of them are merged. 
+Note that this setting only affects annotations on layers that allow stacking annotations. For other layers, an implicit setting of `1` is used here.
 
 == Anonymized curation
 By default, the curator can see the annotators names on the curation page. However, in some cases,

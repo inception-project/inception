@@ -44,7 +44,6 @@ import java.util.Map;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.fit.factory.JCasFactory;
-import org.apache.uima.jcas.JCas;
 import org.dkpro.statistics.agreement.IAnnotationStudy;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -91,12 +90,12 @@ public class AgreementMeasureTestSuite_ImplBase
         layers = new ArrayList<>();
         features = new ArrayList<>();
 
-        FeatureSupportRegistryImpl featureSupportRegistry = new FeatureSupportRegistryImpl(
+        var featureSupportRegistry = new FeatureSupportRegistryImpl(
                 asList(new StringFeatureSupport(), new BooleanFeatureSupport(),
                         new NumberFeatureSupport(), new LinkFeatureSupport(annotationService)));
         featureSupportRegistry.init();
 
-        LayerBehaviorRegistryImpl layerBehaviorRegistry = new LayerBehaviorRegistryImpl(asList());
+        var layerBehaviorRegistry = new LayerBehaviorRegistryImpl(asList());
         layerBehaviorRegistry.init();
 
         layerRegistry = new LayerSupportRegistryImpl(asList(
@@ -113,12 +112,12 @@ public class AgreementMeasureTestSuite_ImplBase
     R multiLinkWithRoleLabelDifferenceTest(AgreementMeasureSupport<T, R, S> aSupport)
         throws Exception
     {
-        AnnotationLayer layer = new AnnotationLayer(HOST_TYPE, HOST_TYPE, SpanLayerSupport.TYPE,
-                project, false, SINGLE_TOKEN, NO_OVERLAP);
+        var layer = new AnnotationLayer(HOST_TYPE, HOST_TYPE, SpanLayerSupport.TYPE, project, false,
+                SINGLE_TOKEN, NO_OVERLAP);
         layer.setId(1l);
         layers.add(layer);
 
-        AnnotationFeature feature = new AnnotationFeature(project, layer, "links", "links",
+        var feature = new AnnotationFeature(project, layer, "links", "links",
                 Token.class.getName());
         feature.setId(1l);
         feature.setLinkMode(WITH_ROLE);
@@ -127,14 +126,14 @@ public class AgreementMeasureTestSuite_ImplBase
         feature.setLinkTypeTargetFeatureName("target");
         features.add(feature);
 
-        T traits = aSupport.createTraits();
+        var traits = aSupport.createTraits();
         traits.setLinkCompareBehavior(LINK_TARGET_AS_LABEL);
 
-        JCas jcasA = createJCas(createMultiLinkWithRoleTestTypeSystem());
+        var jcasA = createJCas(createMultiLinkWithRoleTestTypeSystem());
         jcasA.setDocumentText("This is a test.");
         makeLinkHostFS(jcasA, 0, 0, makeLinkFS(jcasA, "slot1", 0, 0));
 
-        JCas jcasB = createJCas(createMultiLinkWithRoleTestTypeSystem());
+        var jcasB = createJCas(createMultiLinkWithRoleTestTypeSystem());
         jcasB.setDocumentText("This is a test.");
         makeLinkHostFS(jcasB, 0, 0, makeLinkFS(jcasB, "slot2", 0, 0));
 
@@ -150,29 +149,29 @@ public class AgreementMeasureTestSuite_ImplBase
     public <R extends FullAgreementResult_ImplBase<S>, T extends DefaultAgreementTraits, S extends IAnnotationStudy> //
     R multiValueStringPartialAgreement(AgreementMeasureSupport<T, R, S> aSupport) throws Exception
     {
-        AnnotationLayer layer = new AnnotationLayer(MULTI_VALUE_SPAN_TYPE, MULTI_VALUE_SPAN_TYPE,
+        var layer = new AnnotationLayer(MULTI_VALUE_SPAN_TYPE, MULTI_VALUE_SPAN_TYPE,
                 SpanLayerSupport.TYPE, project, false, SINGLE_TOKEN, NO_OVERLAP);
         layer.setId(1l);
         layers.add(layer);
 
-        AnnotationFeature feature = new AnnotationFeature(project, layer, "values", "values",
+        var feature = new AnnotationFeature(project, layer, "values", "values",
                 CAS.TYPE_NAME_STRING_ARRAY);
         feature.setId(1l);
         feature.setLinkMode(NONE);
         feature.setMode(ARRAY);
         features.add(feature);
 
-        T traits = aSupport.createTraits();
+        var traits = aSupport.createTraits();
         traits.setLinkCompareBehavior(LINK_TARGET_AS_LABEL);
 
-        CAS user1 = createCas(createMultiValueStringTestTypeSystem());
+        var user1 = createCas(createMultiValueStringTestTypeSystem());
         user1.setDocumentText("This is a test.");
         AnnotationBuilder.buildAnnotation(user1, MULTI_VALUE_SPAN_TYPE) //
                 .at(0, 4) //
                 .withFeature("values", asList("a")) //
                 .buildAndAddToIndexes();
 
-        CAS user2 = createCas(createMultiValueStringTestTypeSystem());
+        var user2 = createCas(createMultiValueStringTestTypeSystem());
         user2.setDocumentText("This is a test.");
         AnnotationBuilder.buildAnnotation(user2, MULTI_VALUE_SPAN_TYPE) //
                 .at(0, 4) //
@@ -194,18 +193,18 @@ public class AgreementMeasureTestSuite_ImplBase
         layer.setId(1l);
         layers.add(layer);
 
-        AnnotationFeature feature = new AnnotationFeature(project, layer, "value", "value",
+        var feature = new AnnotationFeature(project, layer, "value", "value",
                 Token.class.getName());
         feature.setId(1l);
         features.add(feature);
 
-        T traits = aSupport.createTraits();
+        var traits = aSupport.createTraits();
 
-        String text = "";
+        var text = "";
 
-        CAS user1Cas = JCasFactory.createText(text).getCas();
+        var user1Cas = JCasFactory.createText(text).getCas();
 
-        CAS user2Cas = JCasFactory.createText(text).getCas();
+        var user2Cas = JCasFactory.createText(text).getCas();
 
         var casByUser = new LinkedHashMap<String, CAS>();
         casByUser.put("user1", user1Cas);
