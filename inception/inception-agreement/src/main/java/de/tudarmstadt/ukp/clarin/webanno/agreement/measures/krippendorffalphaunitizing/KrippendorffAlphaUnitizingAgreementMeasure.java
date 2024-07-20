@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.agreement.measures.krippendorffalphaunitizing;
 
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
@@ -27,6 +28,8 @@ import org.apache.uima.fit.util.FSUtil;
 import org.apache.uima.jcas.tcas.Annotation;
 import org.dkpro.statistics.agreement.unitizing.KrippendorffAlphaUnitizingAgreement;
 import org.dkpro.statistics.agreement.unitizing.UnitizingAnnotationStudy;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasure_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.DefaultAgreementTraits;
@@ -38,6 +41,8 @@ public class KrippendorffAlphaUnitizingAgreementMeasure
             FullUnitizingAgreementResult, //
             DefaultAgreementTraits>
 {
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
     public KrippendorffAlphaUnitizingAgreementMeasure(AnnotationFeature aFeature,
             DefaultAgreementTraits aTraits)
     {
@@ -89,6 +94,9 @@ public class KrippendorffAlphaUnitizingAgreementMeasure
                 }
             }
         }
+
+        LOG.trace("Units in study : {}", study.getUnitCount());
+        LOG.trace("Raters im study: {}", study.getRaterCount());
 
         var result = new FullUnitizingAgreementResult(typeName, getFeature().getName(), study,
                 new ArrayList<>(aCasMap.keySet()), getTraits().isExcludeIncomplete());
