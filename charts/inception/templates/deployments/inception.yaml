@@ -34,8 +34,17 @@ spec:
       serviceAccountName: {{ include "inception.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
+
+      {{- with .Values.initContainers }}
+      initContainers:
+        {{- . | toYaml | nindent 8 }}
+      {{- end }}
           
       containers:
+        {{- with .Values.extraContainers }}
+        {{- . | toYaml | nindent 8 }}
+        {{- end }}
+
         - name: {{ .Chart.Name }}
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
@@ -70,17 +79,18 @@ spec:
             value: {{ $value }}
           {{- end }}
 
-          
           ports:
             - name: http
               containerPort: {{ .Values.service.port }}
               protocol: TCP
+
           {{- if .Values.livenessProbe.enabled }}
           livenessProbe:
             httpGet:
               path: /actuator/health
               port: http
           {{- end }}
+
           {{- if .Values.readinessProbe.enabled }}
           readinessProbe:
             httpGet:
@@ -94,42 +104,49 @@ spec:
             {{- toYaml .Values.resources | nindent 12 }}
 
           volumeMounts:
-          - mountPath: /export/settings.properties
-            subPath: settings.properties
-            name: inception-settings
-          - mountPath: /export
-            name: inception-data
-          - mountPath: /tmp
-            name: inception-tmp
-          {{- if .Values.auth.saml2.enabled }}
-          - mountPath: /var/run/secrets/saml/idp/saml-idp.crt
-            subPath: {{ default "saml-idp.crt" .Values.auth.saml2.assertingPartyCertificate.existingSecret.secretKey }}
-            name: saml-idp-cert
-          {{- if .Values.auth.saml2.signRequest.enabled }}
-          - mountPath: /var/run/secrets/saml/client
-            name: saml-client-cert
-          {{- end }}
-          {{- end }}
+            - mountPath: /export/settings.properties
+              subPath: settings.properties
+              name: inception-settings
+            - mountPath: /export
+              name: inception-data
+            - mountPath: /tmp
+              name: inception-tmp
+            {{- if .Values.auth.saml2.enabled }}
+            - mountPath: /var/run/secrets/saml/idp/saml-idp.crt
+              subPath: {{ default "saml-idp.crt" .Values.auth.saml2.assertingPartyCertificate.existingSecret.secretKey }}
+              name: saml-idp-cert
+            {{- if .Values.auth.saml2.signRequest.enabled }}
+            - mountPath: /var/run/secrets/saml/client
+              name: saml-client-cert
+            {{- end }}
+            {{- end }}
+            {{- with .Values.extraVolumeMounts }}
+            {{- . | toYaml | nindent 12 }}
+            {{- end }}
+
       volumes:
-      - name: inception-settings
-        configMap:
-          name: {{ include "inception.configmap.appConf.name" . }}
-      - name: inception-data
-        persistentVolumeClaim:
-          claimName: {{ include "inception.persistence.pvc.name" . }}
-      - name: inception-tmp
-        emptyDir:
-          sizeLimit: 1Gi
-      {{- if .Values.auth.saml2.enabled }}
-      - name: saml-idp-cert
-        secret:
-          secretName: {{ default (include "inception.secret.saml2.idp-cert.name" .) (.Values.auth.saml2.assertingPartyCertificate.existingSecret.secretName) }}
-      {{- if .Values.auth.saml2.signRequest.enabled }}
-      - name: saml-client-cert
-        secret:
-          secretName: {{ default (include "inception.secret.saml2.client-cert.name" .) (.Values.auth.saml2.signRequest.existingTlsSecret) }}
-      {{- end }}
-      {{- end }}
+        - name: inception-settings
+          configMap:
+            name: {{ include "inception.configmap.appConf.name" . }}
+        - name: inception-data
+          persistentVolumeClaim:
+            claimName: {{ include "inception.persistence.pvc.name" . }}
+        - name: inception-tmp
+          emptyDir:
+            sizeLimit: 1Gi
+        {{- if .Values.auth.saml2.enabled }}
+        - name: saml-idp-cert
+          secret:
+            secretName: {{ default (include "inception.secret.saml2.idp-cert.name" .) (.Values.auth.saml2.assertingPartyCertificate.existingSecret.secretName) }}
+        {{- if .Values.auth.saml2.signRequest.enabled }}
+        - name: saml-client-cert
+          secret:
+            secretName: {{ default (include "inception.secret.saml2.client-cert.name" .) (.Values.auth.saml2.signRequest.existingTlsSecret) }}
+        {{- end }}
+        {{- end }}
+        {{- with .Values.extraVolumes }}
+        {{- . | toYaml | nindent 8 }}
+        {{- end }}
 
       {{- with .Values.nodeSelector }}
       nodeSelector:
