@@ -94,7 +94,6 @@ auth:
     customUserRoles: {}
 
 
-
 serviceAccount:
   # Specifies whether a service account should be created
   create: true
@@ -150,8 +149,14 @@ resources: {}
 
 livenessProbe:
   enabled: true
-readinessProbe:
+  initialDelaySeconds: 0
+  periodSeconds: 5
+  failureThreshold: 2
+startupProbe:
   enabled: true
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  failureThreshold: 5
 
 autoscaling:
   enabled: false

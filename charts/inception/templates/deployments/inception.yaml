@@ -89,17 +89,21 @@ spec:
             httpGet:
               path: /actuator/health
               port: http
+            initialDelaySeconds: {{ .Values.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.livenessProbe.periodSeconds }}
+            failureThreshold: {{ .Values.livenessProbe.failureThreshold }}
           {{- end }}
 
-          {{- if .Values.readinessProbe.enabled }}
-          readinessProbe:
+          {{- if .Values.startupProbe.enabled }}
+          startupProbe:
             httpGet:
               path: /actuator/health
               port: http
-            initialDelaySeconds: 5
-            periodSeconds: 5
-            failureThreshold: 2
+            initialDelaySeconds: {{ .Values.startupProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.startupProbe.periodSeconds }}
+            failureThreshold: {{ .Values.startupProbe.failureThreshold }}
           {{- end }}
+          
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
 
