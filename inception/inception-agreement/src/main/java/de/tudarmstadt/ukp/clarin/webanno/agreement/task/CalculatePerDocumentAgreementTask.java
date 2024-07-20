@@ -19,6 +19,10 @@ package de.tudarmstadt.ukp.clarin.webanno.agreement.task;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.AUTO_CAS_UPGRADE;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
+import static java.util.Arrays.asList;
 import static java.util.Comparator.comparing;
 
 import java.io.IOException;
@@ -106,7 +110,12 @@ public class CalculatePerDocumentAgreementTask
                     if (!annotators.contains(dataOwner)) {
                         continue;
                     }
+
                     casMap.put(dataOwner, loadCas(annDoc.getDocument(), dataOwner));
+                }
+
+                if (annotators.contains(CURATION_USER)) {
+                    casMap.put(CURATION_USER, loadCas(doc, CURATION_USER));
                 }
 
                 LOG.trace("Calculating agreement on {} for [{}] annotators", doc, casMap.size());
@@ -137,6 +146,12 @@ public class CalculatePerDocumentAgreementTask
 
     private CAS loadCas(SourceDocument aDocument, String aDataOwner) throws IOException
     {
+        if (CURATION_USER.equals(aDataOwner)) {
+            if (!asList(CURATION_IN_PROGRESS, CURATION_FINISHED).contains(aDocument.getState())) {
+                return loadInitialCas(aDocument);
+            }
+        }
+
         if (!documentService.existsCas(aDocument, aDataOwner)) {
             return loadInitialCas(aDocument);
         }
