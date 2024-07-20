@@ -46,9 +46,18 @@ config:
     config.key: config-value
 
 auth:
+  defaultAdmin:
+    enabled: true
+    username: "admin"
+    password: 
+      value: "admin123"
+      existingSecret: 
+        secretName: ""
+        secretKey: ""
+
   oauth2:
-    enabled: false
-    autoLogin: true 
+    enabled: true
+    autoLogin: false 
     clientName: Keycloak OIDC
     clientID: inception-local-oidc
     clientSecret: 
@@ -63,7 +72,7 @@ auth:
     userNameAttribute: preferred_username
 
   saml2:
-    enabled: true
+    enabled: false
     autoLogin: true
     signRequest: 
       enabled: false

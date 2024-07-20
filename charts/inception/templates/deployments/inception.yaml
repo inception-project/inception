@@ -58,6 +58,13 @@ spec:
                 name: {{ default (include "inception.secret.oauth2.name" .) .Values.auth.oauth2.clientSecret.existingSecret.secretName }}
                 key: {{ default "clientSecret" .Values.auth.oauth2.clientSecret.existingSecret.secretKey }}
           {{- end }}
+          {{- if .Values.auth.defaultAdmin.enabled }}
+          - name: DEFAULT_ADMIN_PHASH
+            valueFrom:
+              secretKeyRef:
+                name: {{ default (include "inception.secret.admin.name" .) .Values.auth.defaultAdmin.password.existingSecret.secretName }}
+                key: {{ default "passwordHash" .Values.auth.defaultAdmin.password.existingSecret.secretKey }}
+          {{- end }}
           {{- range $name, $value := .Values.config.extraEnv }}
           - name: {{ $name }}
             value: {{ $value }}

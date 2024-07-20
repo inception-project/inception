@@ -82,6 +82,10 @@ Application configuration
 {{- include "inception.fullname" .}}-application-configuration
 {{- end }}
 
+{{- define "inception.secret.admin.name" -}}
+{{- include "inception.fullname" .}}-admin
+{{- end }}
+
 {{- define "inception.secret.oauth2.name" -}}
 {{- include "inception.fullname" .}}-oidc
 {{- end }}
@@ -93,7 +97,6 @@ Application configuration
 {{- define "inception.secret.saml2.client-cert.name" -}}
 {{- include "inception.fullname" .}}-saml-client
 {{- end }}
-
 
 {{/*
 Persistence configuration
