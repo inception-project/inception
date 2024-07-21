@@ -127,7 +127,8 @@ ingress:
   className: "nginx"
 
   hosts:
-    - paths:
+    - host: localhost
+      paths:
       - path: /
         pathType: Prefix
   tls: []
