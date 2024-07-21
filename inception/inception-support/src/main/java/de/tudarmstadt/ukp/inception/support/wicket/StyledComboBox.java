@@ -22,10 +22,9 @@ import java.util.List;
 
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.model.IModel;
-
-import com.googlecode.wicket.jquery.core.renderer.IChoiceRenderer;
-import com.googlecode.wicket.jquery.core.template.IJQueryTemplate;
-import com.googlecode.wicket.kendo.ui.form.combobox.ComboBox;
+import org.wicketstuff.jquery.core.renderer.IChoiceRenderer;
+import org.wicketstuff.jquery.core.template.IJQueryTemplate;
+import org.wicketstuff.kendo.ui.form.combobox.ComboBox;
 
 public class StyledComboBox<T>
     extends ComboBox<T>

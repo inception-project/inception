@@ -34,7 +34,11 @@ Custom XML formats are based on the <<sect_formats_xml>> format support. They ar
   "name": "TTML format (external)",
   "stylesheets": [ 
     "styles.css"
-  ]
+  ],
+  "blockElements": [
+    "div", "p"
+  ],
+  "splitSentencesInBlockElements": true
 }
 ----
 

@@ -18,6 +18,8 @@
 package de.tudarmstadt.ukp.inception.kb.querybuilder;
 
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_RDF4J_LUCENE;
+import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder.convertToFuzzyMatchingQuery;
+import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder.convertToRequiredTokenPrefixMatchingQuery;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder.Priority.PRIMARY;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions.and;
@@ -38,6 +40,7 @@ import java.util.ArrayList;
 import org.eclipse.rdf4j.sparqlbuilder.constraint.Expression;
 import org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions;
 import org.eclipse.rdf4j.sparqlbuilder.core.Prefix;
+import org.eclipse.rdf4j.sparqlbuilder.core.Variable;
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPattern;
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Iri;
 
@@ -46,12 +49,21 @@ import de.tudarmstadt.ukp.inception.kb.IriConstants;
 public class FtsAdapterRdf4J
     implements FtsAdapter
 {
+    private static final String REQUIRED_PREFIX = "+";
+    private static final String VAR_LABEL_NAME = "label";
+    private static final Variable VAR_LABEL = var(VAR_LABEL_NAME);
+    private static final String VAR_SNIPPET_NAME = "snippet";
+    private static final Variable VAR_SNIPPET = var(VAR_SNIPPET_NAME);
+
     private static final Prefix PREFIX_RDF4J_LUCENE_SEARCH = prefix("search",
             iri(IriConstants.PREFIX_RDF4J_LUCENE_SEARCH));
     private static final Iri LUCENE_QUERY = PREFIX_RDF4J_LUCENE_SEARCH.iri("query");
     private static final Iri LUCENE_PROPERTY = PREFIX_RDF4J_LUCENE_SEARCH.iri("property");
     private static final Iri LUCENE_SCORE = PREFIX_RDF4J_LUCENE_SEARCH.iri("score");
-    private static final Iri LUCENE_SNIPPET = PREFIX_RDF4J_LUCENE_SEARCH.iri("snippet");
+    private static final Iri LUCENE_SNIPPET = PREFIX_RDF4J_LUCENE_SEARCH.iri(VAR_SNIPPET_NAME);
+
+    private static final String MULTI_CHAR_WILDCARD = "*";
+    private static final String FUZZY_SUFFIX = "~";
 
     private final SPARQLQueryBuilder builder;
 
@@ -67,8 +79,7 @@ public class FtsAdapterRdf4J
 
         var valuePatterns = new ArrayList<GraphPattern>();
         for (var value : aValues) {
-            // Strip single quotes and asterisks because they have special semantics
-            var sanitizedValue = SPARQLQueryBuilder.sanitizeQueryString_FTS(value);
+            var sanitizedValue = builder.sanitizeQueryString_FTS(value);
 
             if (isBlank(sanitizedValue)) {
                 continue;
@@ -84,6 +95,10 @@ public class FtsAdapterRdf4J
                             .equalsPattern(VAR_MATCH_TERM, value, builder.getKnowledgeBase())));
         }
 
+        if (valuePatterns.isEmpty()) {
+            builder.noResult();
+        }
+
         builder.addPattern(PRIMARY, and( //
                 builder.bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY), //
                 union(valuePatterns.toArray(GraphPattern[]::new))));
@@ -96,25 +111,49 @@ public class FtsAdapterRdf4J
 
         var valuePatterns = new ArrayList<GraphPattern>();
         for (var value : aValues) {
-            var sanitizedValue = SPARQLQueryBuilder.sanitizeQueryString_FTS(value);
+            // Strip single quotes and asterisks because they have special semantics
+            var sanitizedValue = builder.sanitizeQueryString_FTS(value);
 
-            if (isBlank(sanitizedValue)) {
+            var query = convertToRequiredTokenPrefixMatchingQuery(sanitizedValue, REQUIRED_PREFIX,
+                    MULTI_CHAR_WILDCARD);
+
+            if (isBlank(query)) {
                 continue;
             }
 
+            var labelFilterExpressions = new ArrayList<Expression<?>>();
+            labelFilterExpressions.add(Expressions.equals(str(VAR_LABEL), str(VAR_MATCH_TERM)));
+            labelFilterExpressions.add(builder.matchKbLanguage(VAR_MATCH_TERM));
+
             builder.addProjection(VAR_SCORE);
 
-            valuePatterns
-                    .add(VAR_SUBJECT
-                            .has(FTS_RDF4J_LUCENE,
-                                    bNode(LUCENE_QUERY, literalOf(sanitizedValue + "*")) //
-                                            .andHas(LUCENE_PROPERTY, VAR_MATCH_TERM_PROPERTY) //
-                                            .andHas(LUCENE_SCORE, VAR_SCORE))
-                            .andHas(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM)
-                            .filter(builder.containsPattern(VAR_MATCH_TERM, value)));
+            // If a KB item has multiple labels, we want to return only the ones which actually
+            // match the query term such that the user is not confused that the results contain
+            // items that don't match the query (even though they do through a label that is not
+            // returned). RDF4J only provides access to the matched term in a "highlighted" form
+            // where "<B>" and "</B>" match the search term. So we have to strip these markers
+            // out as part of the query.
+            valuePatterns.add(VAR_SUBJECT //
+                    .has(FTS_RDF4J_LUCENE, bNode(LUCENE_QUERY, literalOf(query)) //
+                            .andHas(LUCENE_PROPERTY, VAR_MATCH_TERM_PROPERTY) //
+                            .andHas(LUCENE_SCORE, VAR_SCORE) //
+                            .andHas(LUCENE_SNIPPET, VAR_SNIPPET))
+                    .and(bind(
+                            function(REPLACE,
+                                    function(REPLACE, VAR_SNIPPET, literalOf("</B>"),
+                                            literalOf("")),
+                                    literalOf("<B>"), literalOf("")),
+                            VAR_LABEL))
+                    .and(VAR_SUBJECT.has(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM))
+                    .filter(and(labelFilterExpressions.toArray(Expression[]::new))));
         }
 
-        builder.addPattern(PRIMARY, and(builder.bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY),
+        if (valuePatterns.isEmpty()) {
+            builder.noResult();
+        }
+
+        builder.addPattern(PRIMARY, and( //
+                builder.bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY),
                 union(valuePatterns.toArray(GraphPattern[]::new))));
     }
 
@@ -124,19 +163,17 @@ public class FtsAdapterRdf4J
         builder.addPrefix(PREFIX_RDF4J_LUCENE_SEARCH);
 
         // Strip single quotes and asterisks because they have special semantics
-        var sanitizedValue = SPARQLQueryBuilder.sanitizeQueryString_FTS(aPrefixQuery);
+        var queryString = builder.sanitizeQueryString_FTS(aPrefixQuery);
 
-        if (isBlank(sanitizedValue)) {
-            builder.setReturnEmptyResult(true);
+        if (isBlank(queryString)) {
+            builder.noResult();
         }
-
-        var queryString = sanitizedValue.trim();
 
         // If the query string entered by the user does not end with a space character, then
         // we assume that the user may not yet have finished writing the word and add a
         // wildcard
         if (!aPrefixQuery.endsWith(" ")) {
-            queryString += "*";
+            queryString += MULTI_CHAR_WILDCARD;
         }
 
         builder.addProjection(VAR_SCORE);
@@ -160,16 +197,16 @@ public class FtsAdapterRdf4J
         var valuePatterns = new ArrayList<GraphPattern>();
         for (var value : aValues) {
             // Strip single quotes and asterisks because they have special semantics
-            var sanitizedValue = SPARQLQueryBuilder.sanitizeQueryString_FTS(value);
+            var sanitizedValue = builder.sanitizeQueryString_FTS(value);
 
-            var fuzzyQuery = SPARQLQueryBuilder.convertToFuzzyMatchingQuery(sanitizedValue, "~");
+            var queryString = convertToFuzzyMatchingQuery(sanitizedValue, FUZZY_SUFFIX);
 
-            if (isBlank(sanitizedValue) || isBlank(fuzzyQuery)) {
+            if (isBlank(queryString)) {
                 continue;
             }
 
             var labelFilterExpressions = new ArrayList<Expression<?>>();
-            labelFilterExpressions.add(Expressions.equals(str(var("label")), str(VAR_MATCH_TERM)));
+            labelFilterExpressions.add(Expressions.equals(str(VAR_LABEL), str(VAR_MATCH_TERM)));
             labelFilterExpressions.add(builder.matchKbLanguage(VAR_MATCH_TERM));
 
             builder.addProjection(VAR_SCORE);
@@ -177,22 +214,26 @@ public class FtsAdapterRdf4J
             // If a KB item has multiple labels, we want to return only the ones which actually
             // match the query term such that the user is not confused that the results contain
             // items that don't match the query (even though they do through a label that is not
-            // returned). RDF4J only provides access to the matched term in a "highlighed" form
+            // returned). RDF4J only provides access to the matched term in a "highlighted" form
             // where "<B>" and "</B>" match the search term. So we have to strip these markers
             // out as part of the query.
             valuePatterns.add(VAR_SUBJECT //
-                    .has(FTS_RDF4J_LUCENE, bNode(LUCENE_QUERY, literalOf(fuzzyQuery)) //
+                    .has(FTS_RDF4J_LUCENE, bNode(LUCENE_QUERY, literalOf(queryString)) //
                             .andHas(LUCENE_PROPERTY, VAR_MATCH_TERM_PROPERTY) //
                             .andHas(LUCENE_SCORE, VAR_SCORE) //
-                            .andHas(LUCENE_SNIPPET, var("snippet")))
+                            .andHas(LUCENE_SNIPPET, VAR_SNIPPET))
                     .and(bind(
                             function(REPLACE,
-                                    function(REPLACE, var("snippet"), literalOf("</B>"),
+                                    function(REPLACE, VAR_SNIPPET, literalOf("</B>"),
                                             literalOf("")),
                                     literalOf("<B>"), literalOf("")),
-                            var("label")))
+                            VAR_LABEL))
                     .and(VAR_SUBJECT.has(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM))
                     .filter(and(labelFilterExpressions.toArray(Expression[]::new))));
+        }
+
+        if (valuePatterns.isEmpty()) {
+            builder.noResult();
         }
 
         builder.addPattern(PRIMARY, and( //

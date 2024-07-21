@@ -24,38 +24,50 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.uima.cas.FeatureStructure;
+
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ASTConstraintsSet;
 
-/***
- * Serialized Class containing objects after parsing and creating objects based on rules file.
- */
 public class ParsedConstraints
     implements Serializable
 {
     private static final long serialVersionUID = -2401965871743170805L;
 
-    private final Map<String, String> imports;
-    private final List<Scope> scopes;
+    private final Map<String, String> imports = new LinkedHashMap<>();
+    private final List<Scope> scopes = new ArrayList<>();
     private final Map<String, Scope> scopeMap;
     // Contains possible scenarios for which rules are available.
-    private final Set<FSFPair> rulesSet;
+    private final Set<FSFPair> pathsUsedInRestrictions;
+
+    public ParsedConstraints(Map<String, String> aAliases, Map<String, List<Rule>> aScopes)
+    {
+        imports.putAll(aAliases);
+
+        for (var e : aScopes.entrySet()) {
+            var scope = new Scope(e.getKey(), e.getValue());
+            scopes.add(scope);
+        }
+
+        pathsUsedInRestrictions = indexPathsUsedInRestrictions();
+        scopeMap = buildScopeMap();
+    }
 
     public ParsedConstraints(Map<String, String> aAliases, List<Scope> aScopes)
     {
-        imports = aAliases;
-        scopes = aScopes;
-        rulesSet = buildRulesSet();
+        imports.putAll(aAliases);
+        scopes.addAll(aScopes);
+        pathsUsedInRestrictions = indexPathsUsedInRestrictions();
         scopeMap = buildScopeMap();
     }
 
     public ParsedConstraints(ASTConstraintsSet astConstraintsSet)
     {
-        imports = astConstraintsSet.getImports();
-        scopes = new ArrayList<>();
+        imports.putAll(astConstraintsSet.getImports());
 
         for (var ruleGroup : astConstraintsSet.getScopes().entrySet()) {
             var rules = new ArrayList<Rule>();
@@ -66,7 +78,7 @@ public class ParsedConstraints
         }
 
         scopeMap = buildScopeMap();
-        rulesSet = buildRulesSet();
+        pathsUsedInRestrictions = indexPathsUsedInRestrictions();
     }
 
     public Map<String, String> getImports()
@@ -99,22 +111,30 @@ public class ParsedConstraints
     /**
      * @return if rules exists or not
      */
-    public boolean areThereRules(String aFS, String aFeature)
+    public boolean isPathUsedInAnyRestriction(FeatureStructure aContext, String aPath)
     {
-        if (rulesSet == null) {
-            buildRulesSet();
+        return isPathUsedInAnyRestriction(aContext.getType().getName(), aPath);
+    }
+
+    /**
+     * @return if rules exists or not
+     */
+    public boolean isPathUsedInAnyRestriction(String aContextTypeName, String aPath)
+    {
+        if (pathsUsedInRestrictions == null) {
+            indexPathsUsedInRestrictions();
         }
 
-        if (getShortName(aFS) == null) {
+        var shortTypeName = getShortName(aContextTypeName);
+        if (shortTypeName == null) {
             return false;
         }
 
-        if (getScopeByName(getShortName(aFS)) == null) {
+        if (getScopeByName(shortTypeName) == null) {
             return false;
         }
 
-        var _tempFsfPair = new FSFPair(getShortName(aFS), aFeature);
-        if (rulesSet.contains(_tempFsfPair)) {
+        if (pathsUsedInRestrictions.contains(new FSFPair(shortTypeName, aPath))) {
             // If it has rules satisfying with proper input FS and affecting feature
             return true;
         }
@@ -124,31 +144,32 @@ public class ParsedConstraints
 
     private Map<String, Scope> buildScopeMap()
     {
-        var scopeMap = new HashMap<String, Scope>();
-        for (Scope scope : scopes) {
-            scopeMap.put(scope.getScopeName(), scope);
+        var map = new HashMap<String, Scope>();
+        for (var scope : scopes) {
+            map.put(scope.getScopeName(), scope);
         }
-        return unmodifiableMap(scopeMap);
+        return unmodifiableMap(map);
     }
 
     /**
-     * @return Set with values of different conditions for which rules are available.
+     * @return set of pairs where the key of each pair is a scope and the value is a restriction
+     *         path
      */
-    private Set<FSFPair> buildRulesSet()
+    private Set<FSFPair> indexPathsUsedInRestrictions()
     {
-        var rulesSet = new HashSet<FSFPair>();
+        var rs = new HashSet<FSFPair>();
         FSFPair _temp;
         for (var scope : scopes) {
             for (var rule : scope.getRules()) {
                 for (var restriction : rule.getRestrictions()) {
                     _temp = new FSFPair(scope.getScopeName(), restriction.getPath());
-                    if (!rulesSet.contains(_temp)) {
-                        rulesSet.add(_temp);
+                    if (!rs.contains(_temp)) {
+                        rs.add(_temp);
                     }
                 }
             }
         }
-        return unmodifiableSet(rulesSet);
+        return unmodifiableSet(rs);
     }
 
     private String printImports()

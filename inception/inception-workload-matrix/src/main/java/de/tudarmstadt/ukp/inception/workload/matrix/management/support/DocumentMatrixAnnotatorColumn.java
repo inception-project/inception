@@ -59,7 +59,7 @@ public class DocumentMatrixAnnotatorColumn
         IModel<AnnotationDocument> annDocument = (IModel<AnnotationDocument>) getDataModel(
                 aRowModel);
 
-        aItem.add(
-                new DocumentMatrixAnnotatorStateCell(aComponentId, aRowModel, annDocument, selectedUsers, user));
+        aItem.add(new DocumentMatrixAnnotatorStateCell(aComponentId, aRowModel, annDocument,
+                selectedUsers, user));
     }
 }

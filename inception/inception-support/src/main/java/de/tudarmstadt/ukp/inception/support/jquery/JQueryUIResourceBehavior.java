@@ -21,8 +21,7 @@ import org.apache.wicket.Component;
 import org.apache.wicket.behavior.Behavior;
 import org.apache.wicket.markup.head.CssHeaderItem;
 import org.apache.wicket.markup.head.IHeaderResponse;
-
-import com.googlecode.wicket.jquery.ui.settings.JQueryUILibrarySettings;
+import org.wicketstuff.jquery.ui.settings.JQueryUILibrarySettings;
 
 public class JQueryUIResourceBehavior
     extends Behavior

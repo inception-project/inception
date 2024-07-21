@@ -28,6 +28,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
@@ -105,6 +106,9 @@ public class BulkRecommenderPanel
                 })) //
                 .add(visibleWhenNot(docMetaLayers.map(List::isEmpty))));
 
+        queue(new CheckBox("finishDocumentsWithoutRecommendations") //
+                .setOutputMarkupId(true));
+
         queue(new LambdaAjaxButton<>("startProcessing", this::actionStartProcessing));
     }
 
@@ -122,6 +126,8 @@ public class BulkRecommenderPanel
                 .withTrigger("User request") //
                 .withDataOwner(formData.user.getUsername()) //
                 .withProcessingMetadata(metadata) //
+                .withFinishDocumentsWithoutRecommendations(
+                        formData.finishDocumentsWithoutRecommendations) //
                 .build());
     }
 
@@ -132,8 +138,8 @@ public class BulkRecommenderPanel
 
     private List<AnnotationLayer> listDocumentMetadataLayers()
     {
-        return annotationSchemaService.listAnnotationLayer(getModelObject()) //
-                .stream().filter(l -> DocumentMetadataLayerSupport.TYPE.equals(l.getType())) //
+        return annotationSchemaService.listAnnotationLayer(getModelObject()).stream() //
+                .filter(l -> DocumentMetadataLayerSupport.TYPE.equals(l.getType())) //
                 .toList();
     }
 
@@ -197,5 +203,6 @@ public class BulkRecommenderPanel
         private User user;
         private Recommender recommender;
         private AnnotationLayer processingMetadataLayer;
+        private boolean finishDocumentsWithoutRecommendations;
     }
 }

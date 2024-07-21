@@ -15,21 +15,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.agreement;
+package de.tudarmstadt.ukp.inception.support.db;
 
-public enum AgreementReportExportFormat
+import org.hibernate.dialect.HSQLDialect;
+
+public class InceptionHSQLDialect
+    extends HSQLDialect
 {
-    CSV(".csv"), DEBUG(".txt");
-
-    private final String extension;
-
-    AgreementReportExportFormat(String aExtension)
+    @Override
+    public int getMaxVarcharCapacity()
     {
-        extension = aExtension;
-    }
-
-    public String getExtension()
-    {
-        return extension;
+        // Liquibase/HSQLDB treats LONGTEXT which we use e.g. for the project description as CLOB.
+        // But Hibernate will not accept a CLOB type if we use `@Column(length = 64000)`. To fix
+        // this, we claim that HSQLDB VARCHAR cannot carry more than 255 chars which will cause
+        // Hibernate to fall back to CLOB.
+        //
+        // This seems a hack but it is easier right now than updating/extending the Liquibase
+        // changesets.
+        return 255;
     }
 }

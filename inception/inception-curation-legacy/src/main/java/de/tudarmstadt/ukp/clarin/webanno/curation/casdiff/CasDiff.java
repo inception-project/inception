@@ -45,6 +45,7 @@ import org.apache.uima.cas.Type;
 import org.apache.uima.cas.TypeSystem;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.FSUtil;
+import org.apache.uima.jcas.cas.AnnotationBase;
 import org.apache.uima.jcas.tcas.Annotation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,6 +53,7 @@ import org.slf4j.LoggerFactory;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.DiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.DiffAdapter_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.Position;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.docmeta.DocumentMetadataDiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.internal.AID;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.relation.RelationDiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span.SpanDiffAdapter;
@@ -65,6 +67,7 @@ import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
 import de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil;
+import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerSupport;
 
 public class CasDiff
 {
@@ -229,7 +232,7 @@ public class CasDiff
 
         var adapter = getAdapter(aType);
 
-        Collection<Annotation> annotations;
+        Collection<? extends AnnotationBase> annotations;
         if (begin == -1 && end == -1) {
             annotations = aCas.<Annotation> select(type).asList();
         }
@@ -651,7 +654,7 @@ public class CasDiff
                 .collect(groupingBy(AnnotationFeature::getLayer));
 
         var adapters = new ArrayList<DiffAdapter>();
-        nextLayer: for (AnnotationLayer layer : aLayers) {
+        nextLayer: for (var layer : aLayers) {
             if (!layer.isEnabled()) {
                 continue nextLayer;
             }
@@ -680,6 +683,10 @@ public class CasDiff
                 var typeAdpt = (RelationAdapter) schemaService.getAdapter(layer);
                 adapter = new RelationDiffAdapter(layer.getName(), typeAdpt.getSourceFeatureName(),
                         typeAdpt.getTargetFeatureName(), labelFeatures);
+                break;
+            }
+            case DocumentMetadataLayerSupport.TYPE: {
+                adapter = new DocumentMetadataDiffAdapter(layer.getName(), labelFeatures);
                 break;
             }
             default:

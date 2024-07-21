@@ -26,8 +26,10 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.util.List;
 import java.util.zip.ZipFile;
+import java.util.zip.ZipOutputStream;
 
 import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.BeforeEach;
@@ -48,7 +50,6 @@ import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentStorageService;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryPropertiesImpl;
-import de.tudarmstadt.ukp.inception.support.io.ZipUtils;
 
 @ExtendWith(MockitoExtension.class)
 public class SourceDocumentExporterTest
@@ -99,15 +100,17 @@ public class SourceDocumentExporterTest
         var exportRequest = new FullProjectExportRequest(project, null, false);
         var monitor = mock(ProjectExportTaskMonitor.class);
         var exProject = new ExportedProject();
-        sut.exportData(exportRequest, monitor, exProject, stage);
-
-        var zipFile = File.createTempFile("test", ".zip");
-        ZipUtils.zipFolder(stage, zipFile);
+        var exportFile = new File(stage, "export.zip");
+        try (var zos = new ZipOutputStream(new FileOutputStream(exportFile))) {
+            sut.exportData(exportRequest, monitor, exProject, zos);
+        }
 
         // Import the project again
         repositoryProperties.setPath(targetWorkDir);
         var importRequest = new ProjectImportRequest(true);
-        sut.importData(importRequest, project, exProject, new ZipFile(zipFile));
+        try (var zipFile = new ZipFile(exportFile)) {
+            sut.importData(importRequest, project, exProject, zipFile);
+        }
 
         var sourceFiles = listFiles(sourceWorkDir, null, true).stream()
                 .map(f -> sourceWorkDir.toPath().relativize(f.toPath())).toList();

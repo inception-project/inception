@@ -50,7 +50,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.QuickProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
-import de.tudarmstadt.ukp.inception.preferences.Key;
+import de.tudarmstadt.ukp.inception.preferences.PreferenceKey;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.project.api.ProjectInitializationRequest;
 import de.tudarmstadt.ukp.inception.project.api.ProjectInitializer;
@@ -64,7 +64,7 @@ public class ProjectTemplateSelectionDialogPanel
 {
     private static final long serialVersionUID = 2112018755924139726L;
 
-    public static final Key<ProjectInitializationState> KEY_PROJECT_INITIALIZATION = new Key<>(
+    public static final PreferenceKey<ProjectInitializationState> KEY_PROJECT_INITIALIZATION = new PreferenceKey<>(
             ProjectInitializationState.class, "project-overview/project-initialization");
 
     private static final Logger LOG = getLogger(lookup().lookupClass());

@@ -24,8 +24,6 @@ import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 
-import javax.persistence.NoResultException;
-
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
@@ -37,6 +35,7 @@ import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationAdapter;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
+import jakarta.persistence.NoResultException;
 
 /**
  * Removes relations that were not properly cleaned up after deleting a source/target span. Such

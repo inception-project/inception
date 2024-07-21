@@ -28,12 +28,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
 import java.lang.invoke.MethodHandles;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Objects;
-
-import javax.persistence.EntityManager;
-import javax.persistence.NoResultException;
-import javax.persistence.PersistenceContext;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -52,10 +50,14 @@ import de.tudarmstadt.ukp.clarin.webanno.constraints.config.ConstraintsPropertie
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ConstraintsParser;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ParseException;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.model.ParsedConstraints;
+import de.tudarmstadt.ukp.clarin.webanno.constraints.model.Rule;
 import de.tudarmstadt.ukp.clarin.webanno.model.ConstraintSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
 import de.tudarmstadt.ukp.inception.project.api.event.AfterProjectRemovedEvent;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.NoResultException;
+import jakarta.persistence.PersistenceContext;
 
 public class ConstraintsServiceImpl
     implements ConstraintsService
@@ -241,52 +243,56 @@ public class ConstraintsServiceImpl
     private ParsedConstraints loadConstraints(Project aProject) throws IOException, ParseException
     {
         try (var logCtx = withProjectLogger(aProject)) {
-            ParsedConstraints merged = null;
-
+            var sets = new ArrayList<ParsedConstraints>();
             for (var set : listConstraintSets(aProject)) {
-                var script = readConstrainSet(set);
-                var parser = new ConstraintsParser(new StringReader(script));
-                var astConstraintsSet = parser.constraintsSet();
-                var constraints = new ParsedConstraints(astConstraintsSet);
-
-                if (merged == null) {
-                    merged = constraints;
-                }
-                else {
-                    // Merge imports
-                    for (var e : constraints.getImports().entrySet()) {
-                        // Check if the value already points to some other feature in previous
-                        // constraint file(s).
-                        if (merged.getImports().containsKey(e.getKey()) && !e.getValue()
-                                .equalsIgnoreCase(merged.getImports().get(e.getKey()))) {
-                            // If detected, notify user with proper message and abort merging
-                            var errorMessage = "Conflict detected in imports for key \""
-                                    + e.getKey() + "\", conflicting values are \"" + e.getValue()
-                                    + "\" & \"" + merged.getImports().get(e.getKey())
-                                    + "\". Please contact Project Admin for correcting this."
-                                    + "Constraints feature may not work."
-                                    + "\nAborting Constraint rules merge!";
-                            throw new ParseException(errorMessage);
-                        }
-                    }
-                    merged.getImports().putAll(constraints.getImports());
-
-                    // Merge scopes
-                    for (var scope : constraints.getScopes()) {
-                        var target = merged.getScopeByName(scope.getScopeName());
-                        if (target == null) {
-                            // Scope does not exist yet
-                            merged.getScopes().add(scope);
-                        }
-                        else {
-                            // Scope already exists
-                            target.getRules().addAll(scope.getRules());
-                        }
-                    }
-                }
+                sets.add(loadConstraints(set));
             }
 
-            return merged;
+            return mergeConstraintSets(sets);
         }
+    }
+
+    static ParsedConstraints mergeConstraintSets(List<ParsedConstraints> sets) throws ParseException
+    {
+        var allImports = new LinkedHashMap<String, String>();
+        var allScopes = new LinkedHashMap<String, List<Rule>>();
+
+        for (var constraints : sets) {
+
+            // Merge imports
+            for (var e : constraints.getImports().entrySet()) {
+                // Check if the value already points to some other feature in previous
+                // constraint file(s).
+                if (allImports.containsKey(e.getKey())
+                        && !e.getValue().equalsIgnoreCase(allImports.get(e.getKey()))) {
+                    // If detected, notify user with proper message and abort merging
+                    var errorMessage = "Conflict detected in imports for key \"" + e.getKey()
+                            + "\", conflicting values are \"" + e.getValue() + "\" & \""
+                            + allImports.get(e.getKey())
+                            + "\". Please contact a project manager to correct this."
+                            + "Constraint may not work." + "\nAborting Constraint rules merge!";
+                    throw new ParseException(errorMessage);
+                }
+            }
+            allImports.putAll(constraints.getImports());
+
+            // Merge scopes
+            for (var scope : constraints.getScopes()) {
+                var target = allScopes.computeIfAbsent(scope.getScopeName(),
+                        $ -> new ArrayList<Rule>());
+                target.addAll(scope.getRules());
+            }
+        }
+
+        return new ParsedConstraints(allImports, allScopes);
+    }
+
+    private ParsedConstraints loadConstraints(ConstraintSet set) throws IOException, ParseException
+    {
+        var script = readConstrainSet(set);
+        var parser = new ConstraintsParser(new StringReader(script));
+        var astConstraintsSet = parser.constraintsSet();
+        var constraints = new ParsedConstraints(astConstraintsSet);
+        return constraints;
     }
 }

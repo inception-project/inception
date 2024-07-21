@@ -17,12 +17,12 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.security;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.apache.wicket.protocol.http.servlet.ServletWebRequest;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.springframework.security.web.csrf.HttpSessionCsrfTokenRepository;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 public class WicketSecurityUtils
 {

@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.inception.ui.core.dashboard.admin;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
@@ -71,8 +70,8 @@ public class AdminDashboardPage
 
     private List<MenuItem> getMenuItems()
     {
-        return menuItemService.getMenuItems().stream()
-                .filter(item -> item.getPath().matches("/admin/[^/]+"))
-                .collect(Collectors.toList());
+        return menuItemService.getMenuItems().stream() //
+                .filter(item -> item.getPath().matches("/admin/[^/]+")) //
+                .toList();
     }
 }

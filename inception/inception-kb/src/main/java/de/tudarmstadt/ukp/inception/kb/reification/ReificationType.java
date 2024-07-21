@@ -15,23 +15,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.preferences;
+package de.tudarmstadt.ukp.inception.kb.reification;
 
-public class ClientSidePreferencesKey<T>
-    extends Key<T>
+import de.tudarmstadt.ukp.inception.support.db.PersistentEnumUserType;
+
+/**
+ * Implementation of {@link PersistentEnumUserType}
+ *
+ */
+public class ReificationType
+    extends PersistentEnumUserType<Reification>
 {
-    public static final String KEY_PREFIX_CLIENT_SIDE_ANNOTATION = "client-side/";
+    private static final long serialVersionUID = -5458676818846846515L;
 
-    private final String clientSideKey;
-
-    public ClientSidePreferencesKey(Class<T> aTraitClass, String aClientSideKey)
+    @Override
+    public Class<Reification> returnedClass()
     {
-        super(aTraitClass, KEY_PREFIX_CLIENT_SIDE_ANNOTATION + aClientSideKey);
-        clientSideKey = aClientSideKey;
-    }
-
-    public String getClientSideKey()
-    {
-        return clientSideKey;
+        return Reification.class;
     }
 }

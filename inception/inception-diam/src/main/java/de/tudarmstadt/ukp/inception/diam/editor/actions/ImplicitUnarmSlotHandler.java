@@ -56,7 +56,8 @@ public class ImplicitUnarmSlotHandler
     }
 
     @Override
-    public AjaxResponse handle(DiamAjaxBehavior aBehavior, AjaxRequestTarget aTarget, Request aRequest)
+    public AjaxResponse handle(DiamAjaxBehavior aBehavior, AjaxRequestTarget aTarget,
+            Request aRequest)
     {
         throw new IllegalStateException("This handler should never handle a request!");
     }

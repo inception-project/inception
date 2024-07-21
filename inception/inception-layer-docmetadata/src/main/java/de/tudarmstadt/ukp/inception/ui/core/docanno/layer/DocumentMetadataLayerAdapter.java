@@ -58,8 +58,8 @@ public class DocumentMetadataLayerAdapter
             Supplier<Collection<AnnotationFeature>> aFeatures,
             ConstraintsService aConstraintsService)
     {
-        super(aLayerSupportRegistry, aFeatureSupportRegistry, aConstraintsService, aEventPublisher, aLayer,
-                aFeatures);
+        super(aLayerSupportRegistry, aFeatureSupportRegistry, aConstraintsService, aEventPublisher,
+                aLayer, aFeatures);
     }
 
     @Override

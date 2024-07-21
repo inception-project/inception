@@ -70,16 +70,15 @@ import org.apache.wicket.resource.loader.NestedStringResourceLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.wicketstuff.kendo.ui.form.TextField;
+import org.wicketstuff.kendo.ui.form.autocomplete.AutoCompleteTextField;
+import org.wicketstuff.kendo.ui.form.combobox.ComboBox;
+import org.wicketstuff.kendo.ui.form.multiselect.MultiSelect;
 
 import com.giffing.wicket.spring.boot.starter.app.WicketBootSecuredWebApplication;
-import com.googlecode.wicket.kendo.ui.form.TextField;
-import com.googlecode.wicket.kendo.ui.form.autocomplete.AutoCompleteTextField;
-import com.googlecode.wicket.kendo.ui.form.combobox.ComboBox;
-import com.googlecode.wicket.kendo.ui.form.multiselect.MultiSelect;
 
 import de.agilecoders.wicket.core.Bootstrap;
 import de.agilecoders.wicket.core.settings.IBootstrapSettings;
-import de.agilecoders.wicket.webjars.WicketWebjars;
 import de.tudarmstadt.ukp.clarin.webanno.security.SpringAuthenticatedWebSession;
 import de.tudarmstadt.ukp.clarin.webanno.ui.config.FontAwesomeResourceBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
@@ -116,7 +115,7 @@ public abstract class WicketApplicationBase
     {
         super.init();
 
-        CompoundAuthorizationStrategy authorizationStrategy = new CompoundAuthorizationStrategy();
+        var authorizationStrategy = new CompoundAuthorizationStrategy();
         authorizationStrategy.add(new RoleAuthorizationStrategy(this));
         getSecuritySettings().setAuthorizationStrategy(authorizationStrategy);
 
@@ -272,8 +271,6 @@ public abstract class WicketApplicationBase
 
     protected void initBootstrap()
     {
-        WicketWebjars.install(this);
-
         Bootstrap.install(this);
 
         IBootstrapSettings settings = Bootstrap.getSettings(this);
@@ -321,7 +318,7 @@ public abstract class WicketApplicationBase
         getComponentInstantiationListeners().add(component -> {
             if (component instanceof ComboBox || component instanceof AutoCompleteTextField
                     || component instanceof TextField || component instanceof MultiSelect
-                    || component instanceof com.googlecode.wicket.kendo.ui.form.multiselect.lazy.MultiSelect) {
+                    || component instanceof org.wicketstuff.kendo.ui.form.multiselect.lazy.MultiSelect) {
                 component.add(new KendoFixDisabledInputComponentStylingBehavior());
             }
         });

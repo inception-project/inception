@@ -26,8 +26,6 @@ import static java.util.Arrays.asList;
 import java.io.IOException;
 import java.io.Serializable;
 
-import javax.servlet.ServletContext;
-
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -58,6 +56,7 @@ import de.tudarmstadt.ukp.inception.externaleditor.command.LoadAnnotationsComman
 import de.tudarmstadt.ukp.inception.externaleditor.command.QueuedEditorCommandsMetaDataKey;
 import de.tudarmstadt.ukp.inception.externaleditor.model.AnnotationEditorProperties;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import jakarta.servlet.ServletContext;
 
 /**
  * Brat annotator component.

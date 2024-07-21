@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.inception.ui.core.dashboard.settings;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.model.LoadableDetachableModel;
@@ -67,13 +66,12 @@ public class ProjectSettingsDashboardPageBase
         add(new DashboardMenu("menu", LoadableDetachableModel.of(this::getMenuItems)));
 
         add(new Label("projectName", LoadableDetachableModel.of(() -> getProject().getName())));
-
     }
 
     private List<MenuItem> getMenuItems()
     {
-        return menuItemService.getMenuItems().stream()
-                .filter(item -> item.getPath().matches("/settings/[^/]+"))
-                .collect(Collectors.toList());
+        return menuItemService.getMenuItems().stream() //
+                .filter(item -> item.getPath().matches("/settings/[^/]+")) //
+                .toList();
     }
 }

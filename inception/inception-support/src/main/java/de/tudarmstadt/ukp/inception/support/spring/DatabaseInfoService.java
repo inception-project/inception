@@ -26,9 +26,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.Session;
 import org.hibernate.dialect.Dialect;
@@ -43,6 +40,8 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.inception.support.logging.BaseLoggers;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 
 @Component
 public class DatabaseInfoService
@@ -91,8 +90,7 @@ public class DatabaseInfoService
         if (session != null) {
             Dialect dialect = null;
             try {
-                SessionFactoryImplementor sessionFactory = ((SessionFactoryImplementor) session
-                        .getSessionFactory());
+                var sessionFactory = ((SessionFactoryImplementor) session.getSessionFactory());
                 dialect = sessionFactory.getJdbcServices().getDialect();
                 settings.add(new Setting("Database dialect", dialect.getClass().getName(),
                         databaseDialect));

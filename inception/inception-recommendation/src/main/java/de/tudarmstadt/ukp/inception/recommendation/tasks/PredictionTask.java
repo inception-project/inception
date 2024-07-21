@@ -36,8 +36,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import javax.persistence.NoResultException;
-
 import org.apache.commons.lang3.Validate;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
@@ -73,6 +71,7 @@ import de.tudarmstadt.ukp.inception.support.StopWatch;
 import de.tudarmstadt.ukp.inception.support.WebAnnoConst;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 import de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil;
+import jakarta.persistence.NoResultException;
 
 public class PredictionTask
     extends RecommendationTask_ImplBase
@@ -102,7 +101,7 @@ public class PredictionTask
 
     public PredictionTask(Builder<? extends Builder<?>> aBuilder)
     {
-        super(aBuilder.withType(TYPE));
+        super(aBuilder.withType(TYPE).withCancellable(true));
 
         currentDocument = aBuilder.currentDocument;
         dataOwner = aBuilder.dataOwner;
@@ -223,6 +222,10 @@ public class PredictionTask
 
         try (var casHolder = new PredictionCasHolder()) {
             for (var document : aDocuments) {
+                if (monitor.isCancelled()) {
+                    break;
+                }
+
                 monitor.setProgressWithMessage(progress, maxProgress,
                         LogMessage.info(this, "%s", document.getName()));
                 applyAllRecommendersToDocument(activePredictions, incomingPredictions,

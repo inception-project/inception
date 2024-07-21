@@ -19,11 +19,10 @@ package de.tudarmstadt.ukp.inception.io.xml.dkprocore;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-
-import javax.xml.parsers.SAXParser;
+import java.util.Set;
 
 import org.apache.uima.collection.CollectionException;
+import org.apache.uima.fit.descriptor.ConfigurationParameter;
 import org.apache.uima.fit.descriptor.MimeTypeCapability;
 import org.apache.uima.fit.descriptor.ResourceMetaData;
 import org.apache.uima.fit.descriptor.TypeCapability;
@@ -51,31 +50,42 @@ import de.tudarmstadt.ukp.inception.support.xml.XmlParserUtils;
 // exclude = {
 // XmlDocumentReader.PARAM_SOURCE_LOCATION })
 @MimeTypeCapability({ MimeTypes.APPLICATION_XML, MimeTypes.TEXT_XML })
-@TypeCapability(outputs = { "de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData",
-        "org.dkpro.core.api.xml.type.XmlAttribute", "org.dkpro.core.api.xml.type.XmlDocument",
-        "org.dkpro.core.api.xml.type.XmlElement", "org.dkpro.core.api.xml.type.XmlNode",
+@TypeCapability(outputs = { //
+        "de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData", //
+        "org.dkpro.core.api.xml.type.XmlAttribute", //
+        "org.dkpro.core.api.xml.type.XmlDocument", //
+        "org.dkpro.core.api.xml.type.XmlElement", //
+        "org.dkpro.core.api.xml.type.XmlNode", //
         "org.dkpro.core.api.xml.type.XmlTextNode" })
 public class XmlDocumentReader
     extends JCasResourceCollectionReader_ImplBase
 {
+    public static final String PARAM_BLOCK_ELEMENTS = "blockElements";
+    @ConfigurationParameter(name = PARAM_BLOCK_ELEMENTS, mandatory = false)
+    private Set<String> blockElements;
+
+    public static final String PARAM_SPLIT_SENTENCES_IN_BLOCK_ELEMENTS = "splitSentencesInBlockElements";
+    @ConfigurationParameter(name = PARAM_SPLIT_SENTENCES_IN_BLOCK_ELEMENTS, defaultValue = "true")
+    private boolean splitSentencesInBlockElements;
+
     @Override
     public void getNext(JCas aJCas) throws IOException, CollectionException
     {
-        Resource res = nextFile();
+        var res = nextFile();
         initCas(aJCas, res);
 
-        try (InputStream is = new BufferedInputStream(
+        try (var is = new BufferedInputStream(
                 CompressionUtils.getInputStream(res.getLocation(), res.getInputStream()))) {
 
-            // Create handler
-            CasXmlHandler handler = new CasXmlHandler(aJCas);
-
-            // Parser XML
-            SAXParser parser = XmlParserUtils.newSaxParser();
-
-            InputSource source = new InputSource(is);
+            var source = new InputSource(is);
             source.setPublicId(res.getLocation());
             source.setSystemId(res.getLocation());
+
+            var handler = new CasXmlHandler(aJCas);
+            handler.setBlockElements(blockElements);
+            handler.setSplitSentencesInBlockElements(splitSentencesInBlockElements);
+
+            var parser = XmlParserUtils.newSaxParser();
             parser.parse(source, handler);
         }
         catch (IOException e) {

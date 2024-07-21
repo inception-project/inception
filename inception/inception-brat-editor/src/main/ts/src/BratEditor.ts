@@ -29,6 +29,7 @@ export class BratEditor implements AnnotationEditor {
   dispatcher: Dispatcher
   visualizer: Visualizer
   resizer: ResizeManager
+  resizeObserver: ResizeObserver
   popover: AnnotationDetailPopOver
 
   public constructor (element: Element, ajax: DiamAjax, props: AnnotationEditorProperties) {
@@ -46,10 +47,11 @@ export class BratEditor implements AnnotationEditor {
     // Ensure that the visualizer is resized when the container element size changes, e.g. when
     // the sidebars are opened or closed.
     if (element.parentElement) {
-      new ResizeObserver(() => {
+      this.resizeObserver = new ResizeObserver(() => {
         // console.log(`resize: ${element.id} ${element.clientWidth} ${element.clientHeight}`)
         this.dispatcher.post('resize')
-      }).observe(element.parentElement)
+      })
+      this.resizeObserver.observe(element.parentElement)
     }
 
     this.resizer = new ResizeManager(this.dispatcher, this.visualizer, ajax)
@@ -78,8 +80,12 @@ export class BratEditor implements AnnotationEditor {
   }
 
   destroy (): void {
+    console.log("Destroying BratEditor")
     if (this.popover?.$destroy) {
       this.popover.$destroy()
+    }
+    if (this.resizeObserver) { 
+      this.resizeObserver.disconnect()
     }
   }
 }

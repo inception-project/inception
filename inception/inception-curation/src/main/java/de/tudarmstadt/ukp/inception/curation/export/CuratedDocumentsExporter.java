@@ -25,23 +25,19 @@ import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
 import static java.lang.Math.ceil;
 import static java.util.Arrays.asList;
 import static org.apache.commons.io.FileUtils.forceDelete;
-import static org.apache.commons.io.FileUtils.forceMkdir;
 import static org.apache.commons.io.FilenameUtils.getExtension;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.Enumeration;
+import java.lang.invoke.MethodHandles;
+import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+import java.util.zip.ZipOutputStream;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -79,7 +75,7 @@ public class CuratedDocumentsExporter
     private static final String CURATION_AS_SERIALISED_CAS = "curation_ser";
     private static final String CURATION_CAS_FOLDER = "/" + CURATION_AS_SERIALISED_CAS + "/";
 
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private final DocumentService documentService;
     private final DocumentImportExportService importExportService;
@@ -108,75 +104,90 @@ public class CuratedDocumentsExporter
      */
     @Override
     public void exportData(FullProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
-            ExportedProject aExProject, File aStage)
+            ExportedProject aExProject, ZipOutputStream aStage)
         throws IOException, ProjectExportException
     {
-        Project project = aRequest.getProject();
+        var project = aRequest.getProject();
 
         // The export process may store project-related information in this context to ensure it
         // is looked up only once during the bulk operation and the DB is not hit too often.
-        Map<Pair<Project, String>, Object> bulkOperationContext = new HashMap<>();
+        var bulkOperationContext = new HashMap<Pair<Project, String>, Object>();
 
         // Get all the source documents from the project
-        List<SourceDocument> documents = documentService.listSourceDocuments(project);
+        var documents = documentService.listSourceDocuments(project);
 
-        int initProgress = aMonitor.getProgress() - 1;
-        int i = 1;
-        for (SourceDocument sourceDocument : documents) {
-            try (CasStorageSession session = CasStorageSession.openNested()) {
-                File curationCasDir = new File(aStage,
-                        CURATION_CAS_FOLDER + sourceDocument.getName());
-                forceMkdir(curationCasDir);
-
-                File curationDir = new File(aStage, CURATION_FOLDER + sourceDocument.getName());
-                forceMkdir(curationDir);
-
+        var initProgress = aMonitor.getProgress() - 1;
+        var i = 1;
+        for (var sourceDocument : documents) {
+            try (var session = CasStorageSession.openNested()) {
                 // If depending on aInProgress, include only the the curation documents that are
                 // finished or also the ones that are in progress
-                if (documentService.existsCas(sourceDocument, CURATION_USER)
-                        && (aRequest.isIncludeInProgress()
-                                && CURATION_IN_PROGRESS.equals(sourceDocument.getState()))
-                        || CURATION_FINISHED.equals(sourceDocument.getState())) {
-                    // Copy CAS - this is used when importing the project again
-                    exportSerializedCas(sourceDocument, curationCasDir);
+                var shouldExport = (aRequest.isIncludeInProgress()
+                        && CURATION_IN_PROGRESS == sourceDocument.getState())
+                        || CURATION_FINISHED == sourceDocument.getState();
+                if (!shouldExport) {
+                    aMonitor.setProgress(
+                            initProgress + (int) ceil(((double) i) / documents.size() * 10.0));
+                    i++;
+                    continue;
+                }
 
-                    // Determine which format to use for export
-                    if (aRequest.getFormat() != null) {
-                        String formatId = FORMAT_AUTO.equals(aRequest.getFormat())
-                                ? sourceDocument.getFormat()
-                                : aRequest.getFormat();
+                if (!documentService.existsCas(sourceDocument, CURATION_USER)) {
+                    aMonitor.addMessage(LogMessage.warn(this,
+                            "Curation CAS for document %s could not be found!", sourceDocument));
+                    LOG.warn("Curation CAS for document {} could not be found!", sourceDocument);
+                    aMonitor.setProgress(
+                            initProgress + (int) ceil(((double) i) / documents.size() * 10.0));
+                    i++;
+                    continue;
+                }
 
-                        FormatSupport format = importExportService.getWritableFormatById(formatId)
-                                .orElseGet(() -> {
-                                    var fallbackFormat = importExportService.getFallbackFormat();
-                                    aMonitor.addMessage(LogMessage.warn(this,
-                                            "Curation: %s No writer found for original format [%s] "
-                                                    + "- exporting as [%s] instead.",
-                                            sourceDocument, formatId, fallbackFormat.getName()));
-                                    return fallbackFormat;
-                                });
+                // Copy CAS - this is used when importing the project again
+                exportSerializedCas(sourceDocument, aStage);
 
-                        // Copy secondary export format for convenience - not used during import
-                        exportAdditionalFormat(bulkOperationContext, sourceDocument, curationDir,
-                                format);
-                    }
+                // Determine which format to use for export
+                if (aRequest.getFormat() != null) {
+                    var formatId = FORMAT_AUTO.equals(aRequest.getFormat())
+                            ? sourceDocument.getFormat()
+                            : aRequest.getFormat();
+
+                    var format = importExportService.getWritableFormatById(formatId)
+                            .orElseGet(() -> {
+                                var fallbackFormat = importExportService.getFallbackFormat();
+                                aMonitor.addMessage(LogMessage.warn(this,
+                                        "Curation: %s No writer found for original format [%s] "
+                                                + "- exporting as [%s] instead.",
+                                        sourceDocument, formatId, fallbackFormat.getName()));
+                                return fallbackFormat;
+                            });
+
+                    // Copy secondary export format for convenience - not used during import
+                    exportAdditionalFormat(bulkOperationContext, sourceDocument, aStage, format);
                 }
             }
+
             aMonitor.setProgress(initProgress + (int) ceil(((double) i) / documents.size() * 10.0));
             i++;
         }
     }
 
     private void exportAdditionalFormat(Map<Pair<Project, String>, Object> bulkOperationContext,
-            SourceDocument srcDoc, File curationDir, FormatSupport format)
+            SourceDocument srcDoc, ZipOutputStream aStage, FormatSupport format)
         throws ProjectExportException, IOException
     {
+
         File curationFile = null;
         try {
             curationFile = importExportService.exportAnnotationDocument(srcDoc, CURATION_USER,
                     format, CURATION_USER, CURATION, true, bulkOperationContext);
-            var filename = CURATION_USER + "." + getExtension(curationFile.getName());
-            FileUtils.copyFile(curationFile, new File(curationDir, filename));
+
+            var finalCurationFile = curationFile;
+            ProjectExporter.writeEntry(aStage, CURATION_FOLDER + srcDoc.getName() + "/"
+                    + CURATION_USER + "." + getExtension(curationFile.getName()), os -> {
+                        try (var is = Files.newInputStream(finalCurationFile.toPath())) {
+                            is.transferTo(os);
+                        }
+                    });
         }
         catch (UIMAException | IOException e) {
             throw new ProjectExportException("Error exporting annotations of " + srcDoc.getName()
@@ -190,13 +201,12 @@ public class CuratedDocumentsExporter
         }
     }
 
-    private void exportSerializedCas(SourceDocument sourceDocument, File curationCasDir)
+    private void exportSerializedCas(SourceDocument sourceDocument, ZipOutputStream aStage)
         throws IOException, FileNotFoundException
     {
-        try (OutputStream os = new FileOutputStream(
-                new File(curationCasDir, CURATION_USER + ".ser"))) {
-            documentService.exportCas(sourceDocument, CURATION_USER, os);
-        }
+        ProjectExporter.writeEntry(aStage,
+                CURATION_CAS_FOLDER + sourceDocument.getName() + "/" + CURATION_USER + ".ser",
+                os -> documentService.exportCas(sourceDocument, CURATION_USER, os));
     }
 
     /**
@@ -214,28 +224,27 @@ public class CuratedDocumentsExporter
             ExportedProject aExProject, ZipFile aZip)
         throws Exception
     {
-        for (Enumeration<? extends ZipEntry> zipEnumerate = aZip.entries(); zipEnumerate
-                .hasMoreElements();) {
-            ZipEntry entry = zipEnumerate.nextElement();
+        for (var zipEnumerate = aZip.entries(); zipEnumerate.hasMoreElements();) {
+            var entry = zipEnumerate.nextElement();
             if (entry.isDirectory()) {
-                log.trace("Skipping ZIP entry that is a directory: [{}]", entry.getName());
+                LOG.trace("Skipping ZIP entry that is a directory: [{}]", entry.getName());
                 continue;
             }
 
             // Strip leading "/" that we had in ZIP files prior to 2.0.8 (bug #985)
-            String entryName = ProjectExporter.normalizeEntryName(entry);
+            var entryName = ProjectExporter.normalizeEntryName(entry);
 
             if (!entryName.startsWith(CURATION_AS_SERIALISED_CAS + "/")) {
-                log.trace("Skipping ZIP entry that is not a curation CAS: [{}]", entry.getName());
+                LOG.trace("Skipping ZIP entry that is not a curation CAS: [{}]", entry.getName());
                 continue;
             }
 
-            log.trace("Importing curation CAS from: [{}]", entry.getName());
+            LOG.trace("Importing curation CAS from: [{}]", entry.getName());
 
-            String fileName = entryName.replace(CURATION_AS_SERIALISED_CAS + "/", "");
+            var fileName = entryName.replace(CURATION_AS_SERIALISED_CAS + "/", "");
             // the user annotated the document is file name minus extension
             // (anno1.ser)
-            String username = FilenameUtils.getBaseName(fileName).replace(".ser", "");
+            var username = FilenameUtils.getBaseName(fileName).replace(".ser", "");
 
             // COMPATIBILITY NOTE: One might ask oneself why we extract the filename when it should
             // always be CURATION_USER. The reason is compatibility:
@@ -251,13 +260,13 @@ public class CuratedDocumentsExporter
             if (fileName.trim().isEmpty()) {
                 continue;
             }
-            SourceDocument sourceDocument = documentService.getSourceDocument(aProject, fileName);
+            var sourceDocument = documentService.getSourceDocument(aProject, fileName);
 
-            try (InputStream is = aZip.getInputStream(entry)) {
+            try (var is = aZip.getInputStream(entry)) {
                 documentService.importCas(sourceDocument, username, is);
             }
 
-            log.info("Imported curation document content for user [" + username
+            LOG.info("Imported curation document content for user [" + username
                     + "] for source document [" + sourceDocument.getId() + "] in project ["
                     + aProject.getName() + "] with id [" + aProject.getId() + "]");
         }

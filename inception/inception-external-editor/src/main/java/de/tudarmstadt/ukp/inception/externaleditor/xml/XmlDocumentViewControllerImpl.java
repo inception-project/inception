@@ -27,8 +27,6 @@ import java.io.Writer;
 import java.security.Principal;
 import java.util.Optional;
 
-import javax.servlet.ServletContext;
-
 import org.apache.uima.cas.CAS;
 import org.dkpro.core.api.xml.type.XmlDocument;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,6 +50,7 @@ import de.tudarmstadt.ukp.inception.externaleditor.ExternalAnnotationEditorFacto
 import de.tudarmstadt.ukp.inception.externaleditor.XmlDocumentViewControllerImplBase;
 import de.tudarmstadt.ukp.inception.externaleditor.policy.DefaultHtmlDocumentPolicy;
 import de.tudarmstadt.ukp.inception.externaleditor.policy.SafetyNetDocumentPolicy;
+import jakarta.servlet.ServletContext;
 
 @ConditionalOnWebApplication
 @RestController

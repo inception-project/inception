@@ -442,8 +442,9 @@ public class SchedulingServiceImpl
         deletionPending.remove(aEvent.getProject());
     }
 
-    @EventListener
+    // Set order so this is handled before session info is removed from sessionRegistry
     @Order(Ordered.HIGHEST_PRECEDENCE)
+    @EventListener
     public void onSessionDestroyed(SessionDestroyedEvent event)
     {
         LOG.debug("Cleaning up tasks on session destroyed");
@@ -505,11 +506,26 @@ public class SchedulingServiceImpl
     public void destroy()
     {
         LOG.info("Shutting down scheduling service!");
-        enqueuedTasks.clear();
-        executor.getQueue().clear();
         watchdog.shutdownNow();
         executor.shutdownNow();
+
+        enqueuedTasks.clear();
+        executor.getQueue().clear();
         pendingAcknowledgement.clear();
+
+        try {
+            watchdog.awaitTermination(30, SECONDS);
+        }
+        catch (InterruptedException e) {
+            // Ignore
+        }
+
+        try {
+            executor.awaitTermination(30, SECONDS);
+        }
+        catch (InterruptedException e) {
+            // Ignore
+        }
     }
 
     private void logState()

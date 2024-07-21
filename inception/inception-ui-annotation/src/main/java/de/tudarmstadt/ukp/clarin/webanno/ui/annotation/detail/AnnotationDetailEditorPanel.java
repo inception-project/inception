@@ -46,8 +46,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-import javax.persistence.NoResultException;
-
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
@@ -112,6 +110,7 @@ import de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
 import de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.inception.support.wicket.input.InputBehavior;
+import jakarta.persistence.NoResultException;
 import wicket.contrib.input.events.key.KeyType;
 
 /**
@@ -1182,7 +1181,7 @@ public abstract class AnnotationDetailEditorPanel
             var evaluator = new ConstraintsEvaluator();
             // Only show indicator if this feature can be affected by Constraint rules!
             aModel.indicator.setAffected(evaluator
-                    .isAffectedByConstraints(state.getConstraints(), fs, aModel.feature));
+                    .isPathUsedInAnyRestriction(state.getConstraints(), fs, aModel.feature));
 
             possibleValues = evaluator.generatePossibleValues(state.getConstraints(), fs,
                     aModel.feature);

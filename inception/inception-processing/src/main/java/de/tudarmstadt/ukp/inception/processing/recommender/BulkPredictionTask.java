@@ -75,6 +75,7 @@ public class BulkPredictionTask
     private final String dataOwner;
     private final Recommender recommender;
     private final Map<AnnotationFeature, Serializable> processingMetadata;
+    private boolean finishDocumentsWithoutRecommendations;
 
     private @Autowired UserDao userService;
     private @Autowired DocumentService documentService;
@@ -89,6 +90,7 @@ public class BulkPredictionTask
         recommender = aBuilder.recommender;
         dataOwner = aBuilder.dataOwner;
         processingMetadata = aBuilder.processingMetadata;
+        finishDocumentsWithoutRecommendations = aBuilder.finishDocumentsWithoutRecommendations;
     }
 
     @Override
@@ -151,12 +153,18 @@ public class BulkPredictionTask
 
                 addProcessingMetadataAnnotation(doc, cas);
 
-                annotationsCount += autoAccept(doc, predictions, cas);
+                int autoAcceptedSuggestions = autoAccept(doc, predictions, cas);
+                annotationsCount += autoAcceptedSuggestions;
 
-                documentService.writeAnnotationCas(cas, doc, dataOwner,
-                        EXPLICIT_ANNOTATOR_USER_ACTION);
-                documentService.setAnnotationDocumentState(annDoc, FINISHED,
-                        EXPLICIT_ANNOTATOR_USER_ACTION);
+                if (autoAcceptedSuggestions > 0) {
+                    documentService.writeAnnotationCas(cas, doc, dataOwner,
+                            EXPLICIT_ANNOTATOR_USER_ACTION);
+                }
+
+                if (autoAcceptedSuggestions > 0 || finishDocumentsWithoutRecommendations) {
+                    documentService.setAnnotationDocumentState(annDoc, FINISHED,
+                            EXPLICIT_ANNOTATOR_USER_ACTION);
+                }
 
                 processedDocumentsCount++;
             }
@@ -256,6 +264,7 @@ public class BulkPredictionTask
         private Recommender recommender;
         private String dataOwner;
         private Map<AnnotationFeature, Serializable> processingMetadata;
+        private boolean finishDocumentsWithoutRecommendations;
 
         @SuppressWarnings("unchecked")
         public T withRecommender(Recommender aRecommender)
@@ -282,6 +291,13 @@ public class BulkPredictionTask
         public T withDataOwner(String aDataOwner)
         {
             dataOwner = aDataOwner;
+            return (T) this;
+        }
+
+        @SuppressWarnings("unchecked")
+        public T withFinishDocumentsWithoutRecommendations(boolean aValue)
+        {
+            finishDocumentsWithoutRecommendations = aValue;
             return (T) this;
         }
 

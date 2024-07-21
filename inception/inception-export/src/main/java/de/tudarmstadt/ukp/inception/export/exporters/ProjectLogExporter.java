@@ -17,9 +17,11 @@
  */
 package de.tudarmstadt.ukp.inception.export.exporters;
 
-import java.io.File;
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
+import java.nio.file.Files;
 import java.util.zip.ZipFile;
+import java.util.zip.ZipOutputStream;
 
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
@@ -47,7 +49,8 @@ public class ProjectLogExporter
     private static final String LOG = ProjectService.LOG_FOLDER;
     private static final String LOG_FOLDER = "/" + LOG;
 
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    private static final Logger LOGGER = LoggerFactory
+            .getLogger(MethodHandles.lookup().lookupClass());
 
     private final ProjectService projectService;
 
@@ -58,14 +61,17 @@ public class ProjectLogExporter
 
     @Override
     public void exportData(FullProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
-            ExportedProject aExProject, File aStage)
+            ExportedProject aExProject, ZipOutputStream aStage)
         throws IOException
     {
         var project = aRequest.getProject();
-        var logDir = new File(aStage + LOG_FOLDER);
-        FileUtils.forceMkdir(logDir);
-        if (projectService.getProjectLogFile(project).exists()) {
-            FileUtils.copyFileToDirectory(projectService.getProjectLogFile(project), logDir);
+        var logFile = projectService.getProjectLogFile(project);
+        if (logFile.exists()) {
+            ProjectExporter.writeEntry(aStage, LOG_FOLDER + "/project.log", os -> {
+                try (var is = Files.newInputStream(logFile.toPath())) {
+                    is.transferTo(os);
+                }
+            });
         }
     }
 
@@ -93,7 +99,7 @@ public class ProjectLogExporter
             if (entryName.startsWith(LOG + "/")) {
                 FileUtils.copyInputStreamToFile(aZip.getInputStream(entry),
                         projectService.getProjectLogFile(aProject));
-                log.info("Imported log for project [" + aProject.getName() + "] with id ["
+                LOGGER.info("Imported log for project [" + aProject.getName() + "] with id ["
                         + aProject.getId() + "]");
             }
         }

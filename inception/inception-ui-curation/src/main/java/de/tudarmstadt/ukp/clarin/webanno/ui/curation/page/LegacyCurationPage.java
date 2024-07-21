@@ -63,10 +63,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wicketstuff.annotation.mount.MountPath;
 import org.wicketstuff.event.annotation.OnEvent;
-
-import com.googlecode.wicket.jquery.core.Options;
-import com.googlecode.wicket.kendo.ui.widget.splitter.SplitterAdapter;
-import com.googlecode.wicket.kendo.ui.widget.splitter.SplitterBehavior;
+import org.wicketstuff.jquery.core.Options;
+import org.wicketstuff.kendo.ui.widget.splitter.SplitterAdapter;
+import org.wicketstuff.kendo.ui.widget.splitter.SplitterBehavior;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBar;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
@@ -96,7 +95,6 @@ import de.tudarmstadt.ukp.inception.curation.service.CurationMergeService;
 import de.tudarmstadt.ukp.inception.curation.service.CurationService;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorBase;
-import de.tudarmstadt.ukp.inception.editor.AnnotationEditorFactory;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorRegistry;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.editor.state.AnnotatorStateImpl;
@@ -116,13 +114,14 @@ import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
  * between user annotations for a specific document. The interface provides a tool for merging these
  * annotations and storing them as a new annotation.
  */
-@MountPath(NS_PROJECT + "/${" + PAGE_PARAM_PROJECT + "}/curate/#{" + PAGE_PARAM_DOCUMENT + "}")
-public class CurationPage
+@MountPath(NS_PROJECT + "/${" + PAGE_PARAM_PROJECT + "}/curate-split/#{" + PAGE_PARAM_DOCUMENT
+        + "}")
+public class LegacyCurationPage
     extends AnnotationPageBase
 {
     private static final String MID_NUMBER_OF_PAGES = "numberOfPages";
 
-    private final static Logger LOG = LoggerFactory.getLogger(CurationPage.class);
+    private final static Logger LOG = LoggerFactory.getLogger(LegacyCurationPage.class);
 
     private static final long serialVersionUID = 1378872465851908515L;
 
@@ -154,21 +153,21 @@ public class CurationPage
     private AnnotationEditorBase annotationEditor;
     private AnnotatorsPanel annotatorsPanel;
 
-    public CurationPage(final PageParameters aPageParameters)
+    public LegacyCurationPage(final PageParameters aPageParameters)
     {
         super(aPageParameters);
 
         LOG.debug("Setting up curation page with parameters: {}", aPageParameters);
 
-        AnnotatorState state = new AnnotatorStateImpl(Mode.CURATION);
+        var state = new AnnotatorStateImpl(Mode.CURATION);
         setModel(Model.of(state));
 
-        User user = userRepository.getCurrentUser();
+        var user = userRepository.getCurrentUser();
 
         requireProjectRole(user, CURATOR);
 
-        StringValue document = aPageParameters.get(PAGE_PARAM_DOCUMENT);
-        StringValue focus = aPageParameters.get(PAGE_PARAM_FOCUS);
+        var document = aPageParameters.get(PAGE_PARAM_DOCUMENT);
+        var focus = aPageParameters.get(PAGE_PARAM_FOCUS);
 
         handleParameters(document, focus, null);
 
@@ -201,9 +200,9 @@ public class CurationPage
         splitter.add(new SplitterBehavior("#" + splitter.getMarkupId(),
                 new Options("orientation", Options.asString("vertical")), new SplitterAdapter()));
 
-        List<AnnotatorSegmentState> segments = new LinkedList<>();
+        var segments = new LinkedList<AnnotatorSegmentState>();
 
-        AnnotatorSegmentState annotatorSegment = new AnnotatorSegmentState();
+        var annotatorSegment = new AnnotatorSegmentState();
         annotatorSegment.setAnnotatorState(getModelObject());
         segments.add(annotatorSegment);
 
@@ -230,11 +229,11 @@ public class CurationPage
 
     private AnnotationEditorBase createAnnotationEditor(String aId)
     {
-        String editorId = annotationService.isSentenceLayerEditable(getProject())
+        var editorId = annotationService.isSentenceLayerEditable(getProject())
                 ? BratLineOrientedAnnotationEditorFactory.ID
                 : BratSentenceOrientedAnnotationEditorFactory.ID;
-        AnnotatorState state = getModelObject();
-        AnnotationEditorFactory factory = editorRegistry.getEditorFactory(editorId);
+        var state = getModelObject();
+        var factory = editorRegistry.getEditorFactory(editorId);
         if (factory == null) {
             if (state.getDocument() != null) {
                 factory = editorRegistry.getPreferredEditorFactory(state.getProject(),
@@ -246,8 +245,7 @@ public class CurationPage
         }
 
         state.setEditorFactoryId(factory.getBeanName());
-        AnnotationEditorBase editor = factory.create(aId, getModel(), detailEditor,
-                this::getEditorCas);
+        var editor = factory.create(aId, getModel(), detailEditor, this::getEditorCas);
         editor.add(visibleWhen(getModel().map(AnnotatorState::getDocument).isPresent()));
         editor.setOutputMarkupPlaceholderTag(true);
 
@@ -314,13 +312,13 @@ public class CurationPage
             @Override
             public CAS getEditorCas() throws IOException
             {
-                return CurationPage.this.getEditorCas();
+                return LegacyCurationPage.this.getEditorCas();
             }
 
             @Override
             public void writeEditorCas() throws IOException, AnnotationException
             {
-                CurationPage.this.writeEditorCas(getEditorCas());
+                LegacyCurationPage.this.writeEditorCas(getEditorCas());
             }
         };
         panel.add(enabledWhen(() -> getModelObject() != null //
@@ -574,7 +572,7 @@ public class CurationPage
                     + "that only administrators can do).");
             var pageParameters = new PageParameters();
             setProjectPageParameter(pageParameters, getProject());
-            throw new RestartResponseException(CurationPage.class, pageParameters);
+            throw new RestartResponseException(LegacyCurationPage.class, pageParameters);
         }
 
         var casses = documentService.readAllCasesSharedNoUpgrade(state.getDocument(),
@@ -763,6 +761,7 @@ public class CurationPage
                     FORCE_CAS_UPGRADE, UNMANAGED_ACCESS);
             curationMergeService.mergeCasses(aState.getDocument(), aState.getUser().getUsername(),
                     mergeCas, aCasses, aMergeStrategy, aState.getAnnotationLayers(), true);
+            curationDocumentService.deleteCurationCas(aDocument);
             curationDocumentService.writeCurationCas(mergeCas, aDocument, false);
         }
         else {

@@ -36,8 +36,16 @@ import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.support.wicket.input.InputBehavior;
 import de.tudarmstadt.ukp.inception.ui.curation.actionbar.opendocument.CurationOpenDocumentDialog;
+import de.tudarmstadt.ukp.inception.ui.curation.page.CurationPage;
 import wicket.contrib.input.events.key.KeyType;
 
+/**
+ * @deprecated Can be removed when the sidebar curation mode on the annotation page goes away. On
+ *             the new {@link CurationPage}, this is not required anymore because the {link
+ *             CurationDocumentNavigatorActionBarExtension} is used.
+ * @forRemoval 35.0
+ */
+@Deprecated(forRemoval = true)
 public class CurationSidebarDocumentNavigator
     extends Panel
 {
@@ -84,8 +92,7 @@ public class CurationSidebarDocumentNavigator
      */
     public void actionShowPreviousDocument(AjaxRequestTarget aTarget)
     {
-        boolean documentChanged = page.getModelObject()
-                .moveToPreviousDocument(page.getListOfDocs());
+        var documentChanged = page.getModelObject().moveToPreviousDocument(page.getListOfDocs());
         if (!documentChanged) {
             info("There is no previous document");
             aTarget.addChildren(getPage(), IFeedback.class);
@@ -102,7 +109,7 @@ public class CurationSidebarDocumentNavigator
      */
     public void actionShowNextDocument(AjaxRequestTarget aTarget)
     {
-        boolean documentChanged = page.getModelObject().moveToNextDocument(page.getListOfDocs());
+        var documentChanged = page.getModelObject().moveToNextDocument(page.getListOfDocs());
         if (!documentChanged) {
             info("There is no next document");
             aTarget.addChildren(getPage(), IFeedback.class);

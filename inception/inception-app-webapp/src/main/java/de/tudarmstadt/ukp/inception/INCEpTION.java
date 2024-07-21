@@ -37,7 +37,6 @@ import org.springframework.boot.autoconfigure.AutoConfigurationPackage;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.autoconfigure.elasticsearch.ElasticsearchRestClientAutoConfiguration;
-import org.springframework.boot.autoconfigure.solr.SolrAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
 import org.springframework.cache.annotation.EnableCaching;
@@ -58,7 +57,7 @@ import de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeService;
 // @formatter:off
 @SpringBootApplication(
         scanBasePackages = { INCEPTION_BASE_PACKAGE, WEBANNO_BASE_PACKAGE },
-        exclude = { SolrAutoConfiguration.class, ElasticsearchRestClientAutoConfiguration.class} )
+        exclude = { ElasticsearchRestClientAutoConfiguration.class} )
 @AutoConfigurationPackage(basePackages = { INCEPTION_BASE_PACKAGE, WEBANNO_BASE_PACKAGE })
 @EntityScan(basePackages = { INCEPTION_BASE_PACKAGE, WEBANNO_BASE_PACKAGE })
 @EnableAsync
@@ -97,15 +96,17 @@ public class INCEpTION
             System.setProperty("wicket.core.settings.general.configuration-type", "development");
             System.setProperty("webanno.debug.enforce_cas_thread_lock", "true");
             aBuilder.profiles(DeploymentModeService.PROFILE_DEVELOPMENT_MODE);
+        }
+        else {
+            aBuilder.profiles(DeploymentModeService.PROFILE_PRODUCTION_MODE);
+        }
 
-            // Route JUL through log4j
+        // Route JUL through log4j
+        if (Boolean.getBoolean("inception.jul-logging")) {
             java.util.logging.LogManager.getLogManager().reset();
             SLF4JBridgeHandler.removeHandlersForRootLogger();
             SLF4JBridgeHandler.install();
             LogManager.getLogManager().getLogger("").setLevel(Level.ALL);
-        }
-        else {
-            aBuilder.profiles(DeploymentModeService.PROFILE_PRODUCTION_MODE);
         }
 
         // We rely on FS IDs being stable, so we need to enable this

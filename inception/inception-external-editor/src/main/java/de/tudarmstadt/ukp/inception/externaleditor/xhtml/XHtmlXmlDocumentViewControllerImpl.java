@@ -29,7 +29,6 @@ import java.util.Locale;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import javax.servlet.ServletContext;
 import javax.xml.XMLConstants;
 
 import org.apache.uima.cas.CAS;
@@ -63,6 +62,7 @@ import de.tudarmstadt.ukp.inception.externaleditor.policy.SafetyNetDocumentPolic
 import de.tudarmstadt.ukp.inception.externaleditor.xml.XmlCas2SaxEvents;
 import de.tudarmstadt.ukp.inception.io.xml.dkprocore.Cas2SaxEvents;
 import de.tudarmstadt.ukp.inception.support.wicket.ServletContextUtils;
+import jakarta.servlet.ServletContext;
 
 @ConditionalOnWebApplication
 @RestController
