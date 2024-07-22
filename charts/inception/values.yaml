@@ -2,8 +2,13 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
+nameOverride: ""
+fullnameOverride: ""
+
 replicaCount: 1
 
+podAnnotations: {}
+podLabels: {}
 initContainers: {}
 extraContainers: {}
 
@@ -14,11 +19,6 @@ image:
   tag: "33.2"
 
 imagePullSecrets: {}
-nameOverride: ""
-fullnameOverride: ""
-
-networkPolicies:
-  enabled: true
 
 config:
   baseUrl: "/"
@@ -94,20 +94,6 @@ auth:
     customUserRoles: {}
 
 
-serviceAccount:
-  # Specifies whether a service account should be created
-  create: true
-  # Automatically mount a ServiceAccount's API credentials?
-  automount: true
-  # Annotations to add to the service account
-  annotations: {}
-  # The name of the service account to use.
-  # If not set and create is true, a name is generated using the fullname template
-  name: ""
-
-podAnnotations: {}
-podLabels: {}
-
 podSecurityContext:
   runAsUser: 2000
   runAsGroup: 2000
@@ -117,24 +103,6 @@ podSecurityContext:
 securityContext:
   readOnlyRootFilesystem: true
   privileged: false
-
-service:
-  type: ClusterIP
-  port: 8080
-
-ingress:
-  enabled: true
-  className: "nginx"
-
-  hosts:
-    - host: localhost
-      paths:
-      - path: /
-        pathType: Prefix
-  tls: []
-  #  - secretName: chart-example-tls
-  #    hosts:
-  #      - chart-example.local
 
 resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious
@@ -167,12 +135,42 @@ autoscaling:
   targetMemoryUtilizationPercentage: 80
 
 storage: {}
-    
 nodeSelector: {}
-
 tolerations: []
-
 affinity: {}
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Automatically mount a ServiceAccount's API credentials?
+  automount: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+networkPolicies:
+  enabled: true
+
+service:
+  type: ClusterIP
+  port: 8080
+
+ingress:
+  enabled: true
+  className: "nginx"
+
+  hosts:
+    - host: localhost
+      paths:
+      - path: /
+        pathType: Prefix
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+
 
 mariadb:
   enabled: true
