@@ -5,7 +5,7 @@
 # -- Custom Helm Release name. 
 nameOverride: ""
 
-# Custom Helm Release full name.
+# -- Custom Helm Release full name.
 fullnameOverride: ""
 
 # -- Number of replicas fir INCEpTION deployment
@@ -45,6 +45,7 @@ image:
 imagePullSecrets: {}
 
 # -- INCEpTION configuration settings
+# @default -- A pre-configured development deployment (NOT RECOMMENDED FOR PRODUCTION!)
 config:
   # -- Base URL prefix on which INCEpTION is deployed
   baseUrl: "/"
