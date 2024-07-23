@@ -2,75 +2,136 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
+# -- Custom Helm Release name. 
 nameOverride: ""
+
+# Custom Helm Release full name.
 fullnameOverride: ""
 
+# -- Number of replicas fir INCEpTION deployment
 replicaCount: 1
 
+# Extra annotations for INCEpTION pod
 podAnnotations: {}
+
+# Extra labels for INCEpTION pod
 podLabels: {}
+
+# -- User-defined init-container to run before INCEpTION pod, as defined in [Kubernetes documentation](https://kubernetes.io/docs/concepts/workloads/pods/init-containers/)
 initContainers: {}
+
+# -- User-defined extra containers to run alongside INCEpTION pod, as defined in [Kubernetes documentation](https://kubernetes.io/docs/concepts/workloads/pods/#using-pods)
 extraContainers: {}
 
+# -- Extra environment variables for INCEpTION's container.
+extraEnv: {}
+
+# -- INCEpTION container image settings
 image:
+  # -- Image repository
   repository: ghcr.io/inception-project/inception
+  # -- Image Pull Policy
   pullPolicy: IfNotPresent
-  # Overrides the image tag whose default is the chart appVersion.
+  # -- Image tag
   tag: "33.2"
 
+# -- INCEpTION container image Pull Secret
 imagePullSecrets: {}
 
+# -- INCEpTION configuration settings
 config:
+  # -- Base URL prefix on which INCEpTION is deployed
   baseUrl: "/"
+  # -- INCEpTION log level (affects the application and Spring Security framework)
   logging: DEBUG
 
+  # -- INCEpTION security settings
   security:
+    # -- Accepted origin (see [dedicated INCEpTION documentation](https://inception-project.github.io/releases/33.2/docs/admin-guide.html#sect_reverse_proxy))
     acceptedOrigins: ""
+    # -- Allowing HTTP unsecure communications
     allowHttp: false
 
+  # -- INCEpTION database connection settings
   database:
+    # -- Database name
     name: "inception"
+    # -- Database hostname
     hostname: ""
+    # -- Database port
     port: 3306
+    # -- Database SSL communication
     useSSL: false
+    ## -- Database server timezone
     serverTimezone: "UTC"
+    # -- Database authentication settings
     auth: 
+      # -- INCEpTION username
       username: "inception"
+      # -- INCEpTION password
       password:
-        value: "Gre@tPwd465!*"
+        # -- Password in plain text (NOT RECOMMENDED FOR PRODUCTION!). Ignored if a reference to an external secret is specified.
+        value: ""
+        # -- Reference to an external Kubernetes secret in the same namespace holding the password's value.
         existingSecret:
+          # -- Secret name
           secretName: ""
+          # -- Secret key holding the password's value
           secretKey: ""
+  # -- Extra configuration added at the end of the `settings.properties` file, in `key: value` format.
+  extraConfig: {}
 
-  extraEnv: {}
-  extraConfig:
-    key: value
 
+# -- INCEpTION's authentication configuration
 auth:
+  # -- Default Administrator account configuration (see [dedicated INCEpTION documentation](https://inception-project.github.io/releases/33.2/docs/admin-guide.html#_unsupervised_installation))
   defaultAdmin:
+    # -- Enabling Default Administrator feature 
     enabled: true
+    # -- Default Administrator username
     username: "admin"
+    # -- Default Administrator password
     password: 
+      # -- Password in plain text (NOT RECOMMENDED FOR PRODUCTION!). `bcrypt` hash will be derived from that password and stored in the `settings.properties` file.
+      #    Ignored if a reference to an external secret is specified. 
       value: "admin123"
-      existingSecret: 
+      # -- Reference to an external Kubernetes secret in the same namespace holding the password's bcrypt hash's value, in the `{bcrypt}XXXXXX` format.
+      existingSecret:
+        # -- Secret name.
         secretName: ""
+        # -- Secret key holding the password's `bcrypt` hash.
         secretKey: ""
 
+  # -- OAuth2 settings
   oauth2:
+    # -- Enabling OAuth2 SSO connection
     enabled: false
+    # -- Enabling OAuth2 as default login method (skips INCEpTION's default login page)
     autoLogin: false 
+    # -- OAuth2 client name, to be displayed on INCEpTION's login page.
     clientName: ""
+    # -- OAUth2 client ID
     clientID: ""
-    clientSecret: 
+    # -- OAuth2 client secret
+    clientSecret:
+      # -- OAuth2 client secret in plain text (NOT RECOMMENDED FOR PRODUCTION!). Ignored if a reference to an external secret is specified.
       value: ""
+      # -- Reference to an external Kubernetes secret in the same namespace holding the OAuth2 secret's value.
       existingSecret: 
+        # -- Secret name
         secretName: ""
+        # -- Secret key holding the OAuth2 client secret's value. 
         secretKey: ""
+    # -- OAuth2 scope
     scope: ""
+    # -- OAuth2 grant type
     authorizationGrantType: ""
+    # -- OAuth2 redirect URI
     redirectURI: ""
+    # -- OAuth2 Issuer URI
     issuerURI: ""
-    userNameAttribute: ""
+    # -- OAuth2 claim holding the username attribute.
+    usernameAttribute: ""
 
   saml2:
     enabled: false

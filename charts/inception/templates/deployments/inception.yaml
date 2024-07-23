@@ -73,7 +73,7 @@ spec:
                 name: {{ default (include "inception.secret.admin.name" .) .Values.auth.defaultAdmin.password.existingSecret.secretName }}
                 key: {{ default "passwordHash" .Values.auth.defaultAdmin.password.existingSecret.secretKey }}
           {{- end }}
-          {{- range $name, $value := .Values.config.extraEnv }}
+          {{- range $name, $value := .Values.extraEnv }}
           - name: {{ $name }}
             value: {{ $value }}
           {{- end }}
