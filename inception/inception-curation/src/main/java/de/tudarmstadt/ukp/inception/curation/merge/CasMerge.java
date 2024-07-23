@@ -296,7 +296,8 @@ public class CasMerge
                 continue;
             }
 
-            LOG.debug("Processing {} span positions on layer {}", spanPositions.size(), layerName);
+            LOG.debug("Processing [{}] span positions on layer [{}]", spanPositions.size(),
+                    layerName);
 
             // First we merge the spans so that we can attach the relations to something later.
             // Slots are also excluded for the moment

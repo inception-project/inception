@@ -62,7 +62,7 @@ public class CasMergeLinkTest
     public void thatLinkIsCopiedFromSourceToTarget() throws Exception
     {
         // Set up source CAS
-        String role = "slot1";
+        var role = "slot1";
         var sourceFs = makeLinkHostFS(sourceCas, 0, 0, makeLinkFS(sourceCas, role, 0, 0));
 
         // Set up target CAS

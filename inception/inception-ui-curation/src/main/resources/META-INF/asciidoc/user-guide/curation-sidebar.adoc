@@ -47,7 +47,7 @@ Depending on the layer settings, once an annotation has been merged or an annota
 manually created in the curation target document, annotations from annotators might be hidden. This
 happens for example when at a given position in the curation target document an annotation exists
 and stacking is not enabled on the respective annotation layer. If you want to temporarily see all
-annotations from the selected annotators, use the **Show merged annotations** checkbox.
+annotations from the selected annotators, use the **Show all curatable annotations** checkbox.
 
 The curation session remains active for a given project, even if you leave the annotation page and
 come back at a later time. 
