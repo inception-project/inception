@@ -28,5 +28,5 @@ dependencies:
 - name: mariadb
   alias: mariadb
   condition: mariadb.enabled
-  version: "18.2.6"
+  version: "19.0.1"
   repository: "oci://registry-1.docker.io/bitnamicharts"

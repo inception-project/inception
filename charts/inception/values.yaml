@@ -22,7 +22,7 @@ imagePullSecrets: {}
 
 config:
   baseUrl: "/"
-  logging: INFO
+  logging: DEBUG
 
   security:
     acceptedOrigins: ""
@@ -43,7 +43,8 @@ config:
           secretKey: ""
 
   extraEnv: {}
-  extraConfig: {}
+  extraConfig:
+    key: value
 
 auth:
   defaultAdmin:
@@ -193,6 +194,7 @@ mariadb:
       default-character-set = utf8mb4
 
       [mysqld]
+      max_allowed_packet=500M
       character-set-client-handshake = FALSE
       character-set-server = utf8mb4
       collation-server = utf8mb4_bin

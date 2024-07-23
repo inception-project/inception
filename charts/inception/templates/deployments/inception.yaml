@@ -6,8 +6,6 @@ metadata:
   name: {{ include "inception.fullname" . }}
   labels:
     {{- include "inception.labels" . | nindent 4 }}
-  annotations:
-    checksum/config: {{ include (print $.Template.BasePath "/configmaps/inception.yaml") . | sha256sum }}
 spec:
   {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
@@ -17,10 +15,11 @@ spec:
       {{- include "inception.selectorLabels" . | nindent 6 }}
   template:
     metadata:
-      {{- with .Values.podAnnotations }}
       annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmaps/inception.yaml") . | sha256sum }}
+        {{- with .Values.podAnnotations }}
         {{- toYaml . | nindent 8 }}
-      {{- end }}
+        {{- end }}
       labels:
         {{- include "inception.labels" . | nindent 8 }}
         {{- with .Values.podLabels }}
