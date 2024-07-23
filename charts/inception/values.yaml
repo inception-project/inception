@@ -26,12 +26,18 @@ extraContainers: {}
 # -- Extra environment variables for INCEpTION's container.
 extraEnv: {}
 
+# -- Extra volume definition for INCEpTION's pod.
+extraVolumes: {}
+
+# -- Extra volume mounts for INCEpTION's pod.
+extraVolumeMounts: {}
+
 # -- INCEpTION container image settings
 image:
   # -- Image repository
-  repository: ghcr.io/inception-project/inception
+  repository: "ghcr.io/inception-project/inception"
   # -- Image Pull Policy
-  pullPolicy: IfNotPresent
+  pullPolicy: "IfNotPresent"
   # -- Image tag
   tag: "33.2"
 
@@ -43,7 +49,7 @@ config:
   # -- Base URL prefix on which INCEpTION is deployed
   baseUrl: "/"
   # -- INCEpTION log level (affects the application and Spring Security framework)
-  logging: DEBUG
+  logging: "INFO"
 
   # -- INCEpTION security settings
   security:
@@ -102,9 +108,9 @@ auth:
         # -- Secret key holding the password's `bcrypt` hash.
         secretKey: ""
 
-  # -- OAuth2 settings
+  # -- OAuth2 authentication settings (see [dedicated INCEpTION documentation](https://inception-project.github.io/releases/33.2/docs/admin-guide.html#sect_security_authentication_oauth2))
   oauth2:
-    # -- Enabling OAuth2 SSO connection
+    # -- Enabling OAuth2 SSO login
     enabled: false
     # -- Enabling OAuth2 as default login method (skips INCEpTION's default login page)
     autoLogin: false 
@@ -133,39 +139,90 @@ auth:
     # -- OAuth2 claim holding the username attribute.
     usernameAttribute: ""
 
+  # -- SAML2 Authentication settings (see [dedicated INCEpTION documentation](https://inception-project.github.io/releases/33.2/docs/admin-guide.html#sect_security_authentication_saml2)).
   saml2:
+    # -- Enabling SAML2 SSO login.
     enabled: false
+    # -- Enabling SAML2 as default login method (skips INCEpTION's default login page).
     autoLogin: false
+    # -- SAML2 requests signing with external key and certificate.
     signRequest: 
+      # -- Enabling SAML2 request signing.
       enabled: false
+      # -- Public certificate value un plain text. Ignored if a reference to an external TLS Secret is specified.
       certificateValue: ""
+      # -- Private Key value, in plain text (NOT RECOMMENDED FOR PRODUCTION!). Ignored if a reference to an external secret is specified. 
       privateKeyValue: ""
+      # -- Reference to an external Kubernetes TLS secret in the same namespace holding the certificate/private key pair to sign the SAML2 requests.
       existingTlsSecret: ""
+    # -- Certificate authenticating the Identity Provider in SAML2 connection.
     assertingPartyCertificate:
+      # -- Certificate in plain text. Ignored if a reference to an external Secret is specified.
       value: ""
+      # -- Reference to an external Kubernetes Secret in the same namespace holding the Identity Provider certificate.
       existingSecret: 
+        # -- Name of the Secret.
         secretName: ""
-        secretKey: ""    
+        # -- Secret key holding the Identity Provider certificate.
+        secretKey: ""
+    # -- Identity Provider's SAML2 Asserting ID
     assertingPartyEntityID: ""
+    # -- Identity Provider's SAML2 SSO URL
     assertingPartySSOUrl: ""
 
+  # -- PreAuthentication settings, not cumulative with OAuth2 and SAML2 authentication modes (see [dedicated INCEpTION documentation](https://inception-project.github.io/releases/33.2/docs/admin-guide.html#sect_security_authentication_preauth)).
   preAuthentication:
+    # -- Enabling the PreAuthentication feature.
     enabled: false
+    # -- Name of the header holding the remote user name.
     headerPrincipal: ""
+    # -- Role given to new pre-authenticated users.
     newUserRole: ""
+    # -- Roles to map to dedicated pre-authenticated users, in the `username: role` format.
     customUserRoles: {}
 
+# -- INCEpTION's pod liveness probe.
+livenessProbe:
+  # -- Enabling the liveness probe.
+  enabled: true
+  # -- Liveness probe initial startup delay.
+  initialDelaySeconds: 0
+  # -- Liveness probe check interval, in seconds.
+  periodSeconds: 5
+  # -- Liveness probe's number of accepted failures.
+  failureThreshold: 2
 
+# -- INCEpTION's pod startup probe.
+startupProbe:
+  # -- Enabling the startup probe.
+  enabled: true
+  # -- Startup probe initial startup delay.
+  initialDelaySeconds: 30
+  # -- Startup probe check interval, in seconds.
+  periodSeconds: 10
+  # -- Startup probe's number of accepted failures.
+  failureThreshold: 5
+
+
+# -- INCEpTION podSecurityContext.
 podSecurityContext:
+  # -- User ID to run as.
   runAsUser: 2000
+  # -- Group ID to run as.
   runAsGroup: 2000
+  # -- Group ID authorized to mount external PVCs.
   fsGroup: 2000
+  # -- Allowing container(s) to run as root.
   runAsNonRoot: true
 
+# -- INCEpTION's container securityContext.
 securityContext:
+  # -- Enforcing read-only root filesystem (`/`).
   readOnlyRootFilesystem: true
+  # -- Enabling running the pod as privileged.
   privileged: false
 
+# -- INCEpTION pod's resources
 resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious
   # choice for the user. This also increases chances charts run on environments with little
@@ -178,75 +235,102 @@ resources: {}
   #   cpu: 100m
   #   memory: 128Mi
 
-livenessProbe:
-  enabled: true
-  initialDelaySeconds: 0
-  periodSeconds: 5
-  failureThreshold: 2
-startupProbe:
-  enabled: true
-  initialDelaySeconds: 30
-  periodSeconds: 10
-  failureThreshold: 5
-
+# -- INCEpTION pod horizontal autoscaling feature (not recommended)
 autoscaling:
+  # -- Enabling horizontal pod autoscaling.
   enabled: false
+  # -- Minimum number of pod replicas.
   minReplicas: 1
+  # -- Maximum number of pod replicas.
   maxReplicas: 100
+  # -- Target CPU usage percentage to trigger the deployment of a new replica.
   targetCPUUtilizationPercentage: 80
+  # -- Target memory usage percentage to trigger the deployment of a new replica.
   targetMemoryUtilizationPercentage: 80
 
-storage: {}
-nodeSelector: {}
-tolerations: []
-affinity: {}
-
 serviceAccount:
-  # Specifies whether a service account should be created
+  # -- Specifies whether a service account should be created
   create: true
-  # Automatically mount a ServiceAccount's API credentials?
+  # -- Automatically mount a ServiceAccount's API credentials?
   automount: true
-  # Annotations to add to the service account
+  # -- Annotations to add to the service account
   annotations: {}
-  # The name of the service account to use.
-  # If not set and create is true, a name is generated using the fullname template
+  # -- The name of the service account to use.
+  #    If not set and create is true, a name is generated using the fullname template
   name: ""
 
+# -- INCEpTION pod node selector.
+nodeSelector: {}
+
+# -- INCEpTION pod tolerations.
+tolerations: []
+
+# -- INCEpTION pod affinities.
+affinity: {}
+
+# -- INCEpTION data persistence settings.
+persistence:
+  # Data volume settings.
+  data:
+    # -- Name of the Storage Class to use.
+    storageClassName: "standard"
+    # -- Requested volume size. 
+    size: "5Gi"
+    # -- Persistent Volume Claim Access Mode
+    accessMode: ReadWriteOnce
+
+# -- Network Policies settings.
 networkPolicies:
+  # -- Enabling the default Network Policies.
   enabled: true
 
+# -- INCEpTION service exposition settings
 service:
+  # -- Service Type 
   type: ClusterIP
+  # -- Service Port
   port: 8080
 
+# -- Ingress configuration
 ingress:
+  # -- Enabling Ingress
   enabled: true
+  # -- Ingress class name
   className: "nginx"
 
+  # -- Ingress host settings
   hosts:
     - host: localhost
       paths:
       - path: /
         pathType: Prefix
+
+  # -- Ingress TLS settings
   tls: []
   #  - secretName: chart-example-tls
   #    hosts:
   #      - chart-example.local
 
 
+# -- Embedded Bitnami MariaDB Chart settings (see [dedicated Chart documentation](https://artifacthub.io/packages/helm/bitnami/mariadb)) 
 mariadb:
+  # -- Enabling embedded MariaDB.
   enabled: true
+
+  # -- MariaDB container image settings.
   image:
-    debug: true
+    # -- Enabling debug logging.
+    debug: false
+    # -- MariaDB service exposition settings.
     service:
+      # -- Service ports settings
       ports:
+        # -- Mariadb `mysql`port
         mysql: 3306
-  networkPolicy:
-    allowExternal: false
-  auth:
-    database: "inception"
-    username: "inception"
-    password: "Gre@tPwd465!*"
+
+  # -- MariaDB primary server settingd
+  primary: 
+    # -- MariaDB Primary configuration to be injected as ConfigMap
     configuration: |-
       [client]
       default-character-set = utf8mb4
@@ -259,3 +343,23 @@ mariadb:
       character-set-client-handshake = FALSE
       character-set-server = utf8mb4
       collation-server = utf8mb4_bin
+
+
+  # -- MariaDB authentication settings for the custom database
+  auth:
+    # -- Name for a custom database to create
+    database: "inception"
+    # -- Name for a custom user to create
+    username: "inception"
+    # -- Password for the new user, in plain text (NOT RECOMMENDED FOR PRODUCTION!). Ignored if existing secret is provided.
+    password: "Gre@tPwd465!*"
+    # -- Use existing secret for password details (auth.rootPassword, auth.password, auth.replicationPassword will be ignored and picked up from this secret). 
+    #    The secret has to contain the keys `mariadb-root-password`, `mariadb-replication-password` and `mariadb-password`.
+    existingSecret: ""
+
+  # -- Network Policies settings.
+  networkPolicy:
+    # -- Enable creation of NetworkPolicy resources.
+    enabled: true
+    # -- The Policy model to apply.
+    allowExternal: false

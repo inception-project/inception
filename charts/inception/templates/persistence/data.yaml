@@ -3,9 +3,9 @@ apiVersion: v1
 metadata:
   name: {{ include "inception.persistence.pvc.name" . }}
 spec:
-  storageClassName: {{ .Values.storage.data.storageClassName }}
+  storageClassName: {{ .Values.persistence.data.storageClassName }}
   accessModes:
-    - {{ .Values.storage.data.accessMode }}
+    - {{ .Values.persistence.data.accessMode }}
   resources:
     requests:
-      storage: {{ .Values.storage.data.size }}
+      storage: {{ .Values.persistence.data.size }}
