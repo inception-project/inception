@@ -24,7 +24,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementTest
 import static de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementTestUtils.createMultiValueStringTestTypeSystem;
 import static de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementTestUtils.makeLinkFS;
 import static de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementTestUtils.makeLinkHostFS;
-import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior.LINK_TARGET_AS_LABEL;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SINGLE_TOKEN;
 import static de.tudarmstadt.ukp.clarin.webanno.model.LinkMode.NONE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.LinkMode.WITH_ROLE;
@@ -36,6 +35,8 @@ import static org.apache.uima.cas.CAS.TYPE_NAME_STRING;
 import static org.apache.uima.fit.factory.CasFactory.createCas;
 import static org.apache.uima.fit.factory.CasFactory.createText;
 import static org.apache.uima.fit.factory.JCasFactory.createJCas;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.lenient;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -106,28 +107,42 @@ public class AgreementMeasureTestSuite_ImplBase
                 new ChainLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry,
                         constraintsService)));
         layerRegistry.init();
+
+        lenient().when(annotationService.getAdapter(any())).thenAnswer(a -> {
+            var layer = a.getArgument(0, AnnotationLayer.class);
+            return layerRegistry.getLayerSupport(layer).createAdapter(layer,
+                    () -> features.stream().filter(f -> f.getLayer().equals(layer)).toList());
+        });
     }
 
     public <R extends FullAgreementResult_ImplBase<S>, T extends DefaultAgreementTraits, S extends IAnnotationStudy> //
     R multiLinkWithRoleLabelDifferenceTest(AgreementMeasureSupport<T, R, S> aSupport)
         throws Exception
     {
-        var layer = new AnnotationLayer(HOST_TYPE, HOST_TYPE, SpanLayerSupport.TYPE, project, false,
-                SINGLE_TOKEN, NO_OVERLAP);
-        layer.setId(1l);
+        var layer = AnnotationLayer.builder() //
+                .withId(1l) //
+                .withName(HOST_TYPE) //
+                .withType(SpanLayerSupport.TYPE) //
+                .withProject(project) //
+                .withAnchoringMode(SINGLE_TOKEN) //
+                .withOverlapMode(NO_OVERLAP) //
+                .build();
         layers.add(layer);
 
-        var feature = new AnnotationFeature(project, layer, "links", "links",
-                Token.class.getName());
-        feature.setId(1l);
-        feature.setLinkMode(WITH_ROLE);
-        feature.setLinkTypeName(LINK_TYPE);
-        feature.setLinkTypeRoleFeatureName("role");
-        feature.setLinkTypeTargetFeatureName("target");
+        var feature = AnnotationFeature.builder() //
+                .withId(1l) //
+                .withLayer(layer) //
+                .withName("links") //
+                .withType(Token.class.getName()) //
+                .withLinkMode(WITH_ROLE) //
+                .withLinkTypeName(LINK_TYPE) //
+                .withLinkTypeRoleFeatureName("role") //
+                .withLinkTypeTargetFeatureName("target") //
+                .withMultiValueMode(ARRAY) //
+                .build();
         features.add(feature);
 
         var traits = aSupport.createTraits();
-        traits.setLinkCompareBehavior(LINK_TARGET_AS_LABEL);
 
         var jcasA = createJCas(createMultiLinkWithRoleTestTypeSystem());
         jcasA.setDocumentText("This is a test.");
@@ -162,7 +177,6 @@ public class AgreementMeasureTestSuite_ImplBase
         features.add(feature);
 
         var traits = aSupport.createTraits();
-        traits.setLinkCompareBehavior(LINK_TARGET_AS_LABEL);
 
         var user1 = createCas(createMultiValueStringTestTypeSystem());
         user1.setDocumentText("This is a test.");

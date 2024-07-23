@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.annotation.feature.link;
 
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -67,7 +68,7 @@ import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
 public class LinkFeatureSupport
     implements FeatureSupport<LinkFeatureTraits>
 {
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private final AnnotationSchemaService annotationService;
 

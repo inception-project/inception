@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.inception.ui.agreement.page;
 
 import static de.tudarmstadt.ukp.clarin.webanno.agreement.AgreementUtils.makeCodingStudy;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
-import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior.LINK_TARGET_AS_LABEL;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span.SpanDiffAdapter.NER_DIFF_ADAPTER;
 import static java.util.Arrays.asList;
 import static org.apache.commons.csv.CSVFormat.RFC4180;
@@ -184,7 +183,7 @@ class AgreementServiceImplTest
         var type = NamedEntity._TypeName;
         var feature = NamedEntity._FeatName_value;
         var userCases = convert(aUserCount, data, type, feature);
-        var diff = doDiff(asList(NER_DIFF_ADAPTER), LINK_TARGET_AS_LABEL, userCases);
+        var diff = doDiff(asList(NER_DIFF_ADAPTER), userCases);
         Set<String> tagSet = null;
         var agreementResult = makeCodingStudy(diff, type, feature, tagSet, false, userCases);
 

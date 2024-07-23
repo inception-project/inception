@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.curation.component;
 
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.getDiffAdapters;
-import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior.LINK_ROLE_AS_LABEL;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotationState.ACCEPTED_BY_CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotationState.ANNOTATORS_AGREE;
@@ -454,7 +453,7 @@ public class AnnotatorsPanel
             Map<String, CAS> aCasses)
     {
         var adapters = getDiffAdapters(schemaService, aState.getAnnotationLayers());
-        var diff = doDiff(adapters, LINK_ROLE_AS_LABEL, aCasses, aState.getWindowBeginOffset(),
+        var diff = doDiff(adapters, aCasses, aState.getWindowBeginOffset(),
                 aState.getWindowEndOffset()).toResult();
 
         var differingSets = diff.getDifferingConfigurationSetsWithExceptions(CURATION_USER)

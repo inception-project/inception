@@ -392,11 +392,26 @@ only if the associated tagset does not allow annotators to add new tags.
 |====
 | Property | Description
 
+| Role labels
+| Allows users to add a role label to each slot when linking anntations. 
+  If disabled the UI labels of annotations will be displayed instead of role labels. 
+  This property is enabled by default.
+
+| Multiplicity
+| Determines how links are compared to each other e.g. when calulating agreement or when merging annotations during curation.
+  Use *Target can be linked in multiple different roles* if a link target can appear in multiple roles with respect to the same source span.
+  In this mode, if an annotator links multiple targets using the same role, the links will be considered stacked and not be not auto-merged by curation or used for agreement calculation.
+  Use *Target should be linked in only one role* if you expect that a link target should only appear in a single roles with respect to the same source span.
+  In this mode, if an annotator links the same target in multiple roles, the links will be considered stacked and not be auto-merged by curation or used for agreement calculation.
+  Use *Target can be linked in multiple roles (same or different)* if you expect that a link target should be linked multiple times with different roles as well as different targets can be linked with the same role.
+  In this mode, there is no stacking.
+
 | Tagset
 | The tagset controlling the possible values for the link roles.
 
-| Enable Role Labels
-| Allows users to add a role label to each slot when linking anntations. If disabled the UI labels of annotations will be displayed instead of role labels. This property is enabled by default.
+| Default slots
+| For each of the specificed roles, an empty slot will be visible in the UI. 
+  This can save the annotator time to create a slot for frequently used slots.
 |====
 
 === Key bindings

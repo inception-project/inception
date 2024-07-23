@@ -30,10 +30,11 @@ import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CurationTestUti
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CurationTestUtils.loadWebAnnoTsv3;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CurationTestUtils.makeLinkFS;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CurationTestUtils.makeLinkHostFS;
-import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior.LINK_ROLE_AS_LABEL;
-import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior.LINK_TARGET_AS_LABEL;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.relation.RelationDiffAdapter.DEPENDENCY_DIFF_ADAPTER;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span.SpanDiffAdapter.POS_DIFF_ADAPTER;
+import static de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureMultiplicityMode.MULTIPLE_TARGETS_MULTIPLE_ROLES;
+import static de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureMultiplicityMode.MULTIPLE_TARGETS_ONE_ROLE;
+import static de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureMultiplicityMode.ONE_TARGET_MULTIPLE_ROLES;
 import static de.tudarmstadt.ukp.inception.support.uima.AnnotationBuilder.buildAnnotation;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
@@ -95,7 +96,7 @@ public class CasDiffTest
     {
         var casByUser = new LinkedHashMap<String, CAS>();
 
-        var result = doDiff(emptyList(), LINK_TARGET_AS_LABEL, casByUser).toResult();
+        var result = doDiff(emptyList(), casByUser).toResult();
 
         // result.print(System.out);
 
@@ -110,7 +111,7 @@ public class CasDiffTest
     {
         var casByUser = Map.of("user1", createText(""));
 
-        var result = doDiff(asList(TOKEN_ADAPTER), LINK_TARGET_AS_LABEL, casByUser).toResult();
+        var result = doDiff(asList(TOKEN_ADAPTER), casByUser).toResult();
 
         assertThat(result.size()).isEqualTo(0);
         assertThat(result.getDifferingConfigurationSets()).isEmpty();
@@ -125,7 +126,7 @@ public class CasDiffTest
         casByUser.put("user1", null);
         casByUser.put("user2", createText(""));
 
-        var result = doDiff(asList(LEMMA_ADAPTER), LINK_TARGET_AS_LABEL, casByUser).toResult();
+        var result = doDiff(asList(LEMMA_ADAPTER), casByUser).toResult();
 
         assertThat(result.size()).isEqualTo(0);
         assertThat(result.getDifferingConfigurationSets()).isEmpty();
@@ -140,7 +141,7 @@ public class CasDiffTest
                 "casdiff/noDifferences/data.conll", //
                 "casdiff/noDifferences/data.conll");
 
-        var result = doDiff(asList(POS_DIFF_ADAPTER), LINK_TARGET_AS_LABEL, casByUser).toResult();
+        var result = doDiff(asList(POS_DIFF_ADAPTER), casByUser).toResult();
 
         assertThat(result.size()).isEqualTo(26);
         assertThat(result.getDifferingConfigurationSets()).isEmpty();
@@ -155,8 +156,8 @@ public class CasDiffTest
                 "casdiff/noDifferences/data.conll", //
                 "casdiff/noDifferences/data.conll");
 
-        var result = doDiff(asList(POS_DIFF_ADAPTER, DEPENDENCY_DIFF_ADAPTER), LINK_TARGET_AS_LABEL,
-                casByUser).toResult();
+        var result = doDiff(asList(POS_DIFF_ADAPTER, DEPENDENCY_DIFF_ADAPTER), casByUser)
+                .toResult();
 
         assertThat(result.size()).isEqualTo(52);
         assertThat(result.size(POS.class.getName())).isEqualTo(26);
@@ -173,7 +174,7 @@ public class CasDiffTest
                 "casdiff/singleSpanDifference/user1.conll", //
                 "casdiff/singleSpanDifference/user2.conll");
 
-        var result = doDiff(asList(POS_DIFF_ADAPTER), LINK_TARGET_AS_LABEL, casByUser).toResult();
+        var result = doDiff(asList(POS_DIFF_ADAPTER), casByUser).toResult();
 
         assertEquals(1, result.size());
         assertEquals(1, result.getDifferingConfigurationSets().size());
@@ -194,7 +195,7 @@ public class CasDiffTest
 
         var diffAdapters = asList(POS_DIFF_ADAPTER);
 
-        var result = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser).toResult();
+        var result = doDiff(diffAdapters, casByUser).toResult();
 
         assertThat(result.size()).isEqualTo(26);
         assertThat(result.getDifferingConfigurationSets()).hasSize(4);
@@ -212,7 +213,7 @@ public class CasDiffTest
 
         var casByUser = Map.of("user1", cas.getCas());
 
-        var result = doDiff(asList(POS_VALUE_ADAPTER), LINK_TARGET_AS_LABEL, casByUser).toResult();
+        var result = doDiff(asList(POS_VALUE_ADAPTER), casByUser).toResult();
 
         assertThat(result.size()).isEqualTo(1);
         assertThat(result.getDifferingConfigurationSets()).isEmpty();
@@ -227,7 +228,7 @@ public class CasDiffTest
                 "casdiff/singleSpanNoDifference/data.conll", //
                 "casdiff/singleSpanNoDifference/data.conll");
 
-        var result = doDiff(asList(POS_VALUE_ADAPTER), LINK_TARGET_AS_LABEL, casByUser).toResult();
+        var result = doDiff(asList(POS_VALUE_ADAPTER), casByUser).toResult();
 
         assertThat(result.size()).isEqualTo(1);
         assertThat(result.getDifferingConfigurationSets()).isEmpty();
@@ -242,7 +243,7 @@ public class CasDiffTest
                 "casdiff/spanLabel/user1.conll", //
                 "casdiff/spanLabel/user2.conll");
 
-        var result = doDiff(asList(POS_VALUE_ADAPTER), LINK_TARGET_AS_LABEL, casByUser).toResult();
+        var result = doDiff(asList(POS_VALUE_ADAPTER), casByUser).toResult();
 
         assertThat(result.size()).isEqualTo(26);
         assertThat(result.getDifferingConfigurationSets()).hasSize(1);
@@ -261,8 +262,7 @@ public class CasDiffTest
                     "casdiff/noDifferences/data.conll", //
                     "casdiff/noDifferences/data.conll");
 
-            var result = doDiff(asList(DEPENDENCY_DIFF_ADAPTER), LINK_TARGET_AS_LABEL, casByUser)
-                    .toResult();
+            var result = doDiff(asList(DEPENDENCY_DIFF_ADAPTER), casByUser).toResult();
 
             assertThat(result.size()).isEqualTo(26);
             assertThat(result.getDifferingConfigurationSets()).isEmpty();
@@ -280,7 +280,7 @@ public class CasDiffTest
             var diffAdapters = asList(new RelationDiffAdapter(Dependency.class.getName(),
                     "Dependent", "Governor", "DependencyType"));
 
-            var result = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser).toResult();
+            var result = doDiff(diffAdapters, casByUser).toResult();
 
             assertThat(result.size()).isEqualTo(27);
             assertThat(result.getDifferingConfigurationSets()).isEmpty();
@@ -297,7 +297,7 @@ public class CasDiffTest
 
             var diffAdapters = asList(DEPENDENCY_DIFF_ADAPTER);
 
-            var result = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser).toResult();
+            var result = doDiff(diffAdapters, casByUser).toResult();
 
             assertThat(result.size()).isEqualTo(26);
             assertThat(result.getDifferingConfigurationSets()).hasSize(1);
@@ -370,7 +370,7 @@ public class CasDiffTest
             var diffAdapters = asList(new RelationDiffAdapter("webanno.custom.Relation",
                     WebAnnoConst.FEAT_REL_TARGET, WebAnnoConst.FEAT_REL_SOURCE, "value"));
 
-            var result = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser).toResult();
+            var result = doDiff(diffAdapters, casByUser).toResult();
 
             assertThat(result.size()).isEqualTo(1);
             assertThat(result.getDifferingConfigurationSets()).isEmpty();
@@ -407,8 +407,7 @@ public class CasDiffTest
                     "user1", cas1, //
                     "user2", cas2);
 
-            var result = doDiff(asList(SPAN_MULTI_VALUE_ADAPTER), LINK_TARGET_AS_LABEL, casByUser)
-                    .toResult();
+            var result = doDiff(asList(SPAN_MULTI_VALUE_ADAPTER), casByUser).toResult();
 
             assertThat(result.size()).isEqualTo(1);
             assertThat(result.getDifferingConfigurationSets()).isEmpty();
@@ -433,8 +432,7 @@ public class CasDiffTest
                     "user1", cas1, //
                     "user2", cas2);
 
-            var result = doDiff(asList(SPAN_MULTI_VALUE_ADAPTER), LINK_TARGET_AS_LABEL, casByUser)
-                    .toResult();
+            var result = doDiff(asList(SPAN_MULTI_VALUE_ADAPTER), casByUser).toResult();
 
             assertThat(result.size()).isEqualTo(1);
             assertThat(result.getDifferingConfigurationSets()).hasSize(1);
@@ -458,8 +456,7 @@ public class CasDiffTest
                     "user1", cas1, //
                     "user2", cas2);
 
-            var result = doDiff(asList(SPAN_MULTI_VALUE_ADAPTER), LINK_TARGET_AS_LABEL, casByUser)
-                    .toResult();
+            var result = doDiff(asList(SPAN_MULTI_VALUE_ADAPTER), casByUser).toResult();
 
             assertThat(result.size()).isEqualTo(1);
             assertThat(result.getDifferingConfigurationSets()).hasSize(1);
@@ -481,8 +478,7 @@ public class CasDiffTest
                     "user1", cas1, //
                     "user2", cas2);
 
-            var result = doDiff(asList(SPAN_MULTI_VALUE_ADAPTER), LINK_TARGET_AS_LABEL, casByUser)
-                    .toResult();
+            var result = doDiff(asList(SPAN_MULTI_VALUE_ADAPTER), casByUser).toResult();
 
             assertThat(result.size()).isEqualTo(1);
             assertThat(result.getDifferingConfigurationSets()).isEmpty();
@@ -492,7 +488,7 @@ public class CasDiffTest
     }
 
     @Nested
-    class LinkFeatureTests
+    class MultipleTargetsMultipleRolesTests
     {
         private static final SpanDiffAdapter HOST_TYPE_ADAPTER;
         private static final SpanDiffAdapter FILLER_ADAPTER;
@@ -503,7 +499,8 @@ public class CasDiffTest
 
         static {
             HOST_TYPE_ADAPTER = new SpanDiffAdapter(HOST_TYPE);
-            HOST_TYPE_ADAPTER.addLinkFeature("links", "role", "target");
+            HOST_TYPE_ADAPTER.addLinkFeature("links", "role", "target",
+                    MULTIPLE_TARGETS_MULTIPLE_ROLES);
 
             FILLER_ADAPTER = new SpanDiffAdapter(SLOT_FILLER_TYPE, "value");
         }
@@ -520,29 +517,28 @@ public class CasDiffTest
         }
 
         @Test
-        public void one_annotator__role__link_role__agreement() throws Exception
+        public void one_annotator__redundant__agreement() throws Exception
         {
             makeLinkHostFS(jcasA, 0, 0, //
+                    makeLinkFS(jcasA, "slot1", 0, 0), //
                     makeLinkFS(jcasA, "slot1", 0, 0));
 
             casByUser.remove("user2");
 
-            var result = doDiff(asList(HOST_TYPE_ADAPTER, FILLER_ADAPTER), LINK_ROLE_AS_LABEL,
-                    casByUser).toResult();
+            var result = doDiff(asList(HOST_TYPE_ADAPTER, FILLER_ADAPTER), casByUser).toResult();
 
             assertSpanPositionConfigurations(result.getConfigurationSets()) //
                     .containsExactlyInAnyOrder( //
                             tuple("LinkHost", 0, 0, -1, -1, null, Set.of("user1")), //
                             tuple("SlotFiller", 0, 0, -1, -1, null, Set.of("user1")), //
                             tuple("LinkHost", 0, 0, 0, 0, "slot1", Set.of("user1")));
-            assertThat(result.getConfigurationSets()).hasSize(3);
             assertThat(result.getDifferingConfigurationSets()).isEmpty();
             assertThat(result.getIncompleteConfigurationSets()).isEmpty();
             assertThat(calculateState(result)).isEqualTo(AGREE);
         }
 
         @Test
-        public void one_annotator__role__link_role__stacked() throws Exception
+        public void one_annotator__different_labels__agreement() throws Exception
         {
             makeLinkHostFS(jcasA, 0, 0, //
                     makeLinkFS(jcasA, "slot1", 0, 0), //
@@ -550,122 +546,7 @@ public class CasDiffTest
 
             casByUser.remove("user2");
 
-            var result = doDiff(asList(HOST_TYPE_ADAPTER, FILLER_ADAPTER), LINK_ROLE_AS_LABEL,
-                    casByUser).toResult();
-
-            assertSpanPositionConfigurations(result.getConfigurationSets()) //
-                    .containsExactlyInAnyOrder( //
-                            tuple("LinkHost", 0, 0, -1, -1, null, Set.of("user1")), //
-                            tuple("SlotFiller", 0, 0, -1, -1, null, Set.of("user1")), //
-                            tuple("LinkHost", 0, 0, 0, 0, "slot1", Set.of("user1")));
-            assertSpanPositionConfigurations(result.getDifferingConfigurationSets().values()) //
-                    .containsExactlyInAnyOrder( //
-                            tuple("LinkHost", 0, 0, 0, 0, "slot1", Set.of("user1")));
-            assertThat(result.getIncompleteConfigurationSets()).isEmpty();
-            assertThat(calculateState(result)).isEqualTo(STACKED);
-        }
-
-        @Test
-        public void two_annotators__role__link_role__agreement() throws Exception
-        {
-            makeLinkHostFS(jcasA, 0, 0, //
-                    makeLinkFS(jcasA, "slot1", 0, 0));
-
-            makeLinkHostFS(jcasB, 0, 0, //
-                    makeLinkFS(jcasB, "slot1", 0, 0));
-
-            var result = doDiff(asList(HOST_TYPE_ADAPTER), LINK_ROLE_AS_LABEL, casByUser)
-                    .toResult();
-
-            assertSpanPositionConfigurations(result.getConfigurationSets()) //
-                    .containsExactlyInAnyOrder( //
-                            tuple("LinkHost", 0, 0, -1, -1, null, Set.of("user1", "user2")), //
-                            tuple("LinkHost", 0, 0, 0, 0, "slot1", Set.of("user1", "user2")));
-            assertThat(result.getDifferingConfigurationSets()).isEmpty();
-            assertThat(result.getIncompleteConfigurationSets()).isEmpty();
-            assertThat(calculateState(result)).isEqualTo(AGREE);
-        }
-
-        @Test
-        public void two_annotators__role__link_role__disagreement() throws Exception
-        {
-            makeLinkHostFS(jcasA, 0, 0, //
-                    makeLinkFS(jcasA, "slot1", 0, 0));
-
-            makeLinkHostFS(jcasB, 0, 0, //
-                    makeLinkFS(jcasB, "slot2", 0, 0));
-
-            var result = doDiff(asList(HOST_TYPE_ADAPTER), LINK_ROLE_AS_LABEL, casByUser)
-                    .toResult();
-
-            assertSpanPositionConfigurations(result.getConfigurationSets()) //
-                    .containsExactlyInAnyOrder( //
-                            tuple("LinkHost", 0, 0, -1, -1, null, Set.of("user1", "user2")), //
-                            tuple("LinkHost", 0, 0, 0, 0, "slot1", Set.of("user1", "user2")));
-            assertSpanPositionConfigurations(result.getDifferingConfigurationSets().values()) //
-                    .containsExactlyInAnyOrder( //
-                            tuple("LinkHost", 0, 0, 0, 0, "slot1", Set.of("user1", "user2")));
-            assertThat(result.getIncompleteConfigurationSets()).isEmpty();
-            assertThat(calculateState(result)).isEqualTo(DISAGREE);
-        }
-
-        @Test
-        public void two_annotators__role__link_role__incomplete() throws Exception
-        {
-            makeLinkHostFS(jcasA, 0, 0, //
-                    makeLinkFS(jcasA, "slot1", 0, 0));
-
-            var result = doDiff(asList(HOST_TYPE_ADAPTER), LINK_ROLE_AS_LABEL, casByUser)
-                    .toResult();
-
-            assertSpanPositionConfigurations(result.getConfigurationSets()) //
-                    .containsExactlyInAnyOrder( //
-                            tuple("LinkHost", 0, 0, -1, -1, null, Set.of("user1")), //
-                            tuple("LinkHost", 0, 0, 0, 0, "slot1", Set.of("user1")));
-            assertThat(result.getDifferingConfigurationSets()).isEmpty();
-            assertSpanPositionConfigurations(result.getIncompleteConfigurationSets().values()) //
-                    .containsExactlyInAnyOrder( //
-                            tuple("LinkHost", 0, 0, -1, -1, null, Set.of("user1")), //
-                            tuple("LinkHost", 0, 0, 0, 0, "slot1", Set.of("user1")));
-            assertThat(calculateState(result)).isEqualTo(INCOMPLETE);
-        }
-
-        @Test
-        public void two_annotators__role__link_role__stacked() throws Exception
-        {
-            makeLinkHostFS(jcasA, 0, 0, //
-                    makeLinkFS(jcasA, "slot1", 0, 0), //
-                    makeLinkFS(jcasA, "slot2", 0, 0));
-
-            makeLinkHostFS(jcasB, 0, 0, //
-                    makeLinkFS(jcasB, "slot1", 0, 0), //
-                    makeLinkFS(jcasB, "slot2", 0, 0));
-
-            var result = doDiff(asList(HOST_TYPE_ADAPTER), LINK_ROLE_AS_LABEL, casByUser)
-                    .toResult();
-
-            assertSpanPositionConfigurations(result.getConfigurationSets()) //
-                    .containsExactlyInAnyOrder( //
-                            tuple("LinkHost", 0, 0, -1, -1, null, Set.of("user1", "user2")), //
-                            tuple("LinkHost", 0, 0, 0, 0, "slot1", Set.of("user1", "user2")));
-            assertSpanPositionConfigurations(result.getDifferingConfigurationSets().values()) //
-                    .containsExactlyInAnyOrder( //
-                            tuple("LinkHost", 0, 0, 0, 0, "slot1", Set.of("user1", "user2")));
-            assertThat(result.getIncompleteConfigurationSets()).isEmpty();
-            assertThat(calculateState(result)).isEqualTo(STACKED);
-        }
-
-        @Test
-        public void one_annotator__role__link_target__agreement() throws Exception
-        {
-            makeLinkHostFS(jcasA, 0, 0, //
-                    makeLinkFS(jcasA, "slot1", 0, 0), //
-                    makeLinkFS(jcasA, "slot2", 0, 0));
-
-            casByUser.remove("user2");
-
-            var result = doDiff(asList(HOST_TYPE_ADAPTER, FILLER_ADAPTER), LINK_TARGET_AS_LABEL,
-                    casByUser).toResult();
+            var result = doDiff(asList(HOST_TYPE_ADAPTER, FILLER_ADAPTER), casByUser).toResult();
 
             assertSpanPositionConfigurations(result.getConfigurationSets()) //
                     .containsExactlyInAnyOrder( //
@@ -679,7 +560,233 @@ public class CasDiffTest
         }
 
         @Test
-        public void one_annotator__role__link_target__redundant__agreement() throws Exception
+        public void one_annotator__different_positions__agreement() throws Exception
+        {
+            makeLinkHostFS(jcasA, 0, 0, //
+                    makeLinkFS(jcasA, "slot1", 0, 0), //
+                    makeLinkFS(jcasA, "slot1", 10, 10));
+
+            casByUser.remove("user2");
+
+            var result = doDiff(asList(HOST_TYPE_ADAPTER, FILLER_ADAPTER), casByUser).toResult();
+
+            assertSpanPositionConfigurations(result.getConfigurationSets()) //
+                    .containsExactlyInAnyOrder( //
+                            tuple("LinkHost", 0, 0, -1, -1, null, Set.of("user1")), //
+                            tuple("SlotFiller", 0, 0, -1, -1, null, Set.of("user1")), //
+                            tuple("SlotFiller", 10, 10, -1, -1, null, Set.of("user1")), //
+                            tuple("LinkHost", 0, 0, 0, 0, "slot1", Set.of("user1")), //
+                            tuple("LinkHost", 0, 0, 10, 10, "slot1", Set.of("user1")));
+            assertThat(result.getDifferingConfigurationSets()).isEmpty();
+            assertThat(result.getIncompleteConfigurationSets()).isEmpty();
+            assertThat(calculateState(result)).isEqualTo(AGREE);
+        }
+
+        /**
+         * Both annotators have a link host that has two slots filled and the role labels and
+         * targets match. The user wants to consider these as two agreeing links.
+         */
+        @Test
+        public void two_annotators__multiple_slots__agreement()
+        {
+            makeLinkHostFS(jcasA, 0, 0, //
+                    makeLinkFS(jcasA, "slot1", 0, 0), //
+                    makeLinkFS(jcasA, "slot2", 0, 0));
+
+            makeLinkHostFS(jcasB, 0, 0, //
+                    makeLinkFS(jcasB, "slot1", 0, 0), //
+                    makeLinkFS(jcasB, "slot2", 0, 0));
+
+            var result = doDiff(asList(HOST_TYPE_ADAPTER), casByUser).toResult();
+
+            assertSpanPositionConfigurations(result.getConfigurationSets()) //
+                    .containsExactlyInAnyOrder( //
+                            tuple("LinkHost", 0, 0, -1, -1, null, Set.of("user1", "user2")), //
+                            tuple("LinkHost", 0, 0, 0, 0, "slot1", Set.of("user1", "user2")), //
+                            tuple("LinkHost", 0, 0, 0, 0, "slot2", Set.of("user1", "user2")));
+            assertThat(result.getDifferingConfigurationSets()).isEmpty();
+            assertThat(result.getIncompleteConfigurationSets()).isEmpty();
+            assertThat(calculateState(result)).isEqualTo(AGREE);
+        }
+
+        @Test
+        public void two_annotators__multiple_annotations__agreement() throws Exception
+        {
+            makeLinkHostFS(jcasA, 0, 0, //
+                    makeLinkFS(jcasA, "slot1", 0, 0));
+            makeLinkHostFS(jcasA, 10, 10, //
+                    makeLinkFS(jcasA, "slot1", 10, 10));
+
+            makeLinkHostFS(jcasB, 0, 0, //
+                    makeLinkFS(jcasB, "slot1", 0, 0));
+            makeLinkHostFS(jcasB, 10, 10, //
+                    makeLinkFS(jcasB, "slot1", 10, 10));
+
+            var result = doDiff(asList(HOST_TYPE_ADAPTER), casByUser).toResult();
+
+            assertSpanPositionConfigurations(result.getConfigurationSets()) //
+                    .containsExactlyInAnyOrder( //
+                            tuple("LinkHost", 0, 0, -1, -1, null, Set.of("user1", "user2")), //
+                            tuple("LinkHost", 10, 10, -1, -1, null, Set.of("user1", "user2")), //
+                            tuple("LinkHost", 0, 0, 0, 0, "slot1", Set.of("user1", "user2")), //
+                            tuple("LinkHost", 10, 10, 10, 10, "slot1", Set.of("user1", "user2")));
+            assertThat(result.getDifferingConfigurationSets()).isEmpty();
+            assertThat(result.getIncompleteConfigurationSets()).isEmpty();
+            assertThat(calculateState(result)).isEqualTo(AGREE);
+        }
+
+        @Test
+        public void two_annotators__disagreement() throws Exception
+        {
+            makeLinkHostFS(jcasA, 0, 0, //
+                    makeLinkFS(jcasA, "slot1", 0, 0));
+
+            makeLinkHostFS(jcasB, 0, 0, //
+                    makeLinkFS(jcasB, "slot1", 10, 10));
+
+            var result = doDiff(asList(HOST_TYPE_ADAPTER), casByUser).toResult();
+
+            assertSpanPositionConfigurations(result.getConfigurationSets()) //
+                    .containsExactlyInAnyOrder( //
+                            tuple("LinkHost", 0, 0, -1, -1, null, Set.of("user1", "user2")), //
+                            tuple("LinkHost", 0, 0, 0, 0, "slot1", Set.of("user1")), //
+                            tuple("LinkHost", 0, 0, 10, 10, "slot1", Set.of("user2")));
+            assertThat(result.getDifferingConfigurationSets()).isEmpty();
+            assertSpanPositionConfigurations(result.getIncompleteConfigurationSets().values()) //
+                    .containsExactlyInAnyOrder( //
+                            tuple("LinkHost", 0, 0, 0, 0, "slot1", Set.of("user1")), //
+                            tuple("LinkHost", 0, 0, 10, 10, "slot1", Set.of("user2")));
+            assertThat(calculateState(result)).isEqualTo(INCOMPLETE);
+        }
+
+        @Test
+        public void two_annotators__same_labels__incomplete() throws Exception
+        {
+            makeLinkHostFS(jcasA, 0, 0, //
+                    makeLinkFS(jcasA, "slot1", 0, 0), //
+                    makeLinkFS(jcasA, "slot1", 10, 10));
+
+            makeLinkHostFS(jcasB, 0, 0, //
+                    makeLinkFS(jcasB, "slot1", 10, 10));
+
+            var result = doDiff(asList(HOST_TYPE_ADAPTER), casByUser).toResult();
+
+            assertSpanPositionConfigurations(result.getConfigurationSets()) //
+                    .containsExactlyInAnyOrder( //
+                            tuple("LinkHost", 0, 0, -1, -1, null, Set.of("user1", "user2")), //
+                            tuple("LinkHost", 0, 0, 0, 0, "slot1", Set.of("user1")), //
+                            tuple("LinkHost", 0, 0, 10, 10, "slot1", Set.of("user1", "user2")));
+            assertThat(result.getDifferingConfigurationSets()).isEmpty();
+            assertSpanPositionConfigurations(result.getIncompleteConfigurationSets().values())
+                    .containsExactlyInAnyOrder( //
+                            tuple("LinkHost", 0, 0, 0, 0, "slot1", Set.of("user1")));
+            assertThat(calculateState(result)).isEqualTo(INCOMPLETE);
+        }
+
+        @Test
+        public void two_annotators__different_targets_and_labels_1__incomplete() throws Exception
+        {
+            makeLinkHostFS(jcasA, 0, 0, //
+                    makeLinkFS(jcasA, "slot1", 0, 0));
+
+            makeLinkHostFS(jcasB, 0, 0, //
+                    makeLinkFS(jcasB, "slot2", 10, 10));
+
+            var result = doDiff(asList(HOST_TYPE_ADAPTER), casByUser).toResult();
+
+            assertSpanPositionConfigurations(result.getConfigurationSets()) //
+                    .containsExactlyInAnyOrder( //
+                            tuple("LinkHost", 0, 0, -1, -1, null, Set.of("user1", "user2")), //
+                            tuple("LinkHost", 0, 0, 0, 0, "slot1", Set.of("user1")), //
+                            tuple("LinkHost", 0, 0, 10, 10, "slot2", Set.of("user2")));
+            assertThat(result.getDifferingConfigurationSets()).isEmpty();
+            assertSpanPositionConfigurations(result.getIncompleteConfigurationSets().values()) //
+                    .containsExactlyInAnyOrder( //
+                            tuple("LinkHost", 0, 0, 0, 0, "slot1", Set.of("user1")), //
+                            tuple("LinkHost", 0, 0, 10, 10, "slot2", Set.of("user2")));
+            assertThat(calculateState(result)).isEqualTo(INCOMPLETE);
+        }
+
+        @Test
+        public void two_annotators__different_targets_and_labels_2__incomplete() throws Exception
+        {
+            makeLinkHostFS(jcasA, 0, 0, //
+                    makeLinkFS(jcasA, "slot1", 0, 0), //
+                    makeLinkFS(jcasA, "slot1", 10, 10));
+
+            makeLinkHostFS(jcasB, 0, 0, //
+                    makeLinkFS(jcasB, "slot2", 10, 10));
+
+            var result = doDiff(asList(HOST_TYPE_ADAPTER), casByUser).toResult();
+
+            assertSpanPositionConfigurations(result.getConfigurationSets()) //
+                    .containsExactlyInAnyOrder( //
+                            tuple("LinkHost", 0, 0, -1, -1, null, Set.of("user1", "user2")), //
+                            tuple("LinkHost", 0, 0, 0, 0, "slot1", Set.of("user1")), //
+                            tuple("LinkHost", 0, 0, 10, 10, "slot1", Set.of("user1")), //
+                            tuple("LinkHost", 0, 0, 10, 10, "slot2", Set.of("user2")));
+            assertThat(result.getDifferingConfigurationSets()).isEmpty();
+            assertSpanPositionConfigurations(result.getIncompleteConfigurationSets().values()) //
+                    .containsExactlyInAnyOrder( //
+                            tuple("LinkHost", 0, 0, 0, 0, "slot1", Set.of("user1")), //
+                            tuple("LinkHost", 0, 0, 10, 10, "slot1", Set.of("user1")), //
+                            tuple("LinkHost", 0, 0, 10, 10, "slot2", Set.of("user2")));
+            assertThat(calculateState(result)).isEqualTo(INCOMPLETE);
+        }
+    }
+
+    @Nested
+    class OneTargetMultipleRolesTests
+    {
+        private static final SpanDiffAdapter HOST_TYPE_ADAPTER;
+        private static final SpanDiffAdapter FILLER_ADAPTER;
+
+        private JCas jcasA;
+        private JCas jcasB;
+        private Map<String, CAS> casByUser;
+
+        static {
+            HOST_TYPE_ADAPTER = new SpanDiffAdapter(HOST_TYPE);
+            HOST_TYPE_ADAPTER.addLinkFeature("links", "role", "target", ONE_TARGET_MULTIPLE_ROLES);
+
+            FILLER_ADAPTER = new SpanDiffAdapter(SLOT_FILLER_TYPE, "value");
+        }
+
+        @BeforeEach
+        void setup() throws Exception
+        {
+            jcasA = createJCas(createMultiLinkWithRoleTestTypeSystem());
+            jcasB = createJCas(createMultiLinkWithRoleTestTypeSystem());
+
+            casByUser = new LinkedHashMap<String, CAS>();
+            casByUser.put("user1", jcasA.getCas());
+            casByUser.put("user2", jcasB.getCas());
+        }
+
+        @Test
+        public void one_annotator__agreement() throws Exception
+        {
+            makeLinkHostFS(jcasA, 0, 0, //
+                    makeLinkFS(jcasA, "slot1", 0, 0), //
+                    makeLinkFS(jcasA, "slot2", 0, 0));
+
+            casByUser.remove("user2");
+
+            var result = doDiff(asList(HOST_TYPE_ADAPTER, FILLER_ADAPTER), casByUser).toResult();
+
+            assertSpanPositionConfigurations(result.getConfigurationSets()) //
+                    .containsExactlyInAnyOrder( //
+                            tuple("LinkHost", 0, 0, -1, -1, null, Set.of("user1")), //
+                            tuple("SlotFiller", 0, 0, -1, -1, null, Set.of("user1")), //
+                            tuple("LinkHost", 0, 0, 0, 0, "slot1", Set.of("user1")), //
+                            tuple("LinkHost", 0, 0, 0, 0, "slot2", Set.of("user1")));
+            assertThat(result.getDifferingConfigurationSets()).isEmpty();
+            assertThat(result.getIncompleteConfigurationSets()).isEmpty();
+            assertThat(calculateState(result)).isEqualTo(AGREE);
+        }
+
+        @Test
+        public void one_annotator__redundant__agreement() throws Exception
         {
             makeLinkHostFS(jcasA, 0, 0, //
                     makeLinkFS(jcasA, "slot1", 0, 0), //
@@ -687,8 +794,7 @@ public class CasDiffTest
 
             casByUser.remove("user2");
 
-            var result = doDiff(asList(HOST_TYPE_ADAPTER, FILLER_ADAPTER), LINK_TARGET_AS_LABEL,
-                    casByUser).toResult();
+            var result = doDiff(asList(HOST_TYPE_ADAPTER, FILLER_ADAPTER), casByUser).toResult();
 
             assertSpanPositionConfigurations(result.getConfigurationSets()) //
                     .containsExactlyInAnyOrder( //
@@ -706,7 +812,7 @@ public class CasDiffTest
          * targets match. The user wants to consider these as two agreeing links.
          */
         @Test
-        public void two_annotators__role__link_target__multiple_slots__agreement()
+        public void two_annotators__multiple_slots__agreement()
         {
             makeLinkHostFS(jcasA, 0, 0, //
                     makeLinkFS(jcasA, "slot1", 0, 0), //
@@ -716,8 +822,7 @@ public class CasDiffTest
                     makeLinkFS(jcasB, "slot1", 0, 0), //
                     makeLinkFS(jcasB, "slot2", 0, 0));
 
-            var result = doDiff(asList(HOST_TYPE_ADAPTER), LINK_TARGET_AS_LABEL, casByUser)
-                    .toResult();
+            var result = doDiff(asList(HOST_TYPE_ADAPTER), casByUser).toResult();
 
             assertSpanPositionConfigurations(result.getConfigurationSets()) //
                     .containsExactlyInAnyOrder( //
@@ -730,8 +835,7 @@ public class CasDiffTest
         }
 
         @Test
-        public void two_annotators__role__link_target__multiple_annotations__agreement()
-            throws Exception
+        public void two_annotators__multiple_annotations__agreement() throws Exception
         {
             makeLinkHostFS(jcasA, 0, 0, //
                     makeLinkFS(jcasA, "slot1", 0, 0));
@@ -743,8 +847,7 @@ public class CasDiffTest
             makeLinkHostFS(jcasB, 10, 10, //
                     makeLinkFS(jcasB, "slot1", 10, 10));
 
-            var result = doDiff(asList(HOST_TYPE_ADAPTER), LINK_TARGET_AS_LABEL, casByUser)
-                    .toResult();
+            var result = doDiff(asList(HOST_TYPE_ADAPTER), casByUser).toResult();
 
             assertSpanPositionConfigurations(result.getConfigurationSets()) //
                     .containsExactlyInAnyOrder( //
@@ -758,7 +861,7 @@ public class CasDiffTest
         }
 
         @Test
-        public void two_annotators__role__link_target__disagreement() throws Exception
+        public void two_annotators__disagreement() throws Exception
         {
             makeLinkHostFS(jcasA, 0, 0, //
                     makeLinkFS(jcasA, "slot1", 0, 0));
@@ -766,8 +869,7 @@ public class CasDiffTest
             makeLinkHostFS(jcasB, 0, 0, //
                     makeLinkFS(jcasB, "slot1", 10, 10));
 
-            var result = doDiff(asList(HOST_TYPE_ADAPTER), LINK_TARGET_AS_LABEL, casByUser)
-                    .toResult();
+            var result = doDiff(asList(HOST_TYPE_ADAPTER), casByUser).toResult();
 
             assertSpanPositionConfigurations(result.getConfigurationSets()) //
                     .containsExactlyInAnyOrder( //
@@ -781,7 +883,7 @@ public class CasDiffTest
         }
 
         @Test
-        public void two_annotators__role__link_target__incomplete() throws Exception
+        public void two_annotators__incomplete() throws Exception
         {
             makeLinkHostFS(jcasA, 0, 0, //
                     makeLinkFS(jcasA, "slot1", 0, 0));
@@ -789,8 +891,7 @@ public class CasDiffTest
             makeLinkHostFS(jcasB, 0, 0, //
                     makeLinkFS(jcasB, "slot2", 10, 10));
 
-            var result = doDiff(asList(HOST_TYPE_ADAPTER), LINK_TARGET_AS_LABEL, casByUser)
-                    .toResult();
+            var result = doDiff(asList(HOST_TYPE_ADAPTER), casByUser).toResult();
 
             assertSpanPositionConfigurations(result.getConfigurationSets()) //
                     .containsExactlyInAnyOrder( //
@@ -806,7 +907,7 @@ public class CasDiffTest
         }
 
         @Test
-        public void two_annotators__role__link_target__same_labels__stacked() throws Exception
+        public void two_annotators__same_labels__stacked() throws Exception
         {
             makeLinkHostFS(jcasA, 0, 0, //
                     makeLinkFS(jcasA, "slot1", 0, 0), //
@@ -815,8 +916,7 @@ public class CasDiffTest
             makeLinkHostFS(jcasB, 0, 0, //
                     makeLinkFS(jcasB, "slot1", 10, 10));
 
-            var result = doDiff(asList(HOST_TYPE_ADAPTER), LINK_TARGET_AS_LABEL, casByUser)
-                    .toResult();
+            var result = doDiff(asList(HOST_TYPE_ADAPTER), casByUser).toResult();
 
             assertSpanPositionConfigurations(result.getConfigurationSets()) //
                     .containsExactlyInAnyOrder( //
@@ -830,7 +930,7 @@ public class CasDiffTest
         }
 
         @Test
-        public void two_annotators__role__link_target__different_labels__stacked() throws Exception
+        public void two_annotators__different_labels__stacked() throws Exception
         {
             makeLinkHostFS(jcasA, 0, 0, //
                     makeLinkFS(jcasA, "slot1", 0, 0), //
@@ -839,8 +939,7 @@ public class CasDiffTest
             makeLinkHostFS(jcasB, 0, 0, //
                     makeLinkFS(jcasB, "slot2", 10, 10));
 
-            var result = doDiff(asList(HOST_TYPE_ADAPTER), LINK_TARGET_AS_LABEL, casByUser)
-                    .toResult();
+            var result = doDiff(asList(HOST_TYPE_ADAPTER), casByUser).toResult();
 
             assertSpanPositionConfigurations(result.getConfigurationSets()) //
                     .containsExactlyInAnyOrder( //
@@ -854,6 +953,165 @@ public class CasDiffTest
                     .containsExactlyInAnyOrder( //
                             tuple("LinkHost", 0, 0, 0, 0, "slot1", Set.of("user1")), //
                             tuple("LinkHost", 0, 0, 10, 10, "slot2", Set.of("user2")));
+            assertThat(calculateState(result)).isEqualTo(STACKED);
+        }
+    }
+
+    @Nested
+    class MultipleTargetsOneRoleTests
+    {
+        private static final SpanDiffAdapter HOST_TYPE_ADAPTER;
+        private static final SpanDiffAdapter FILLER_ADAPTER;
+
+        private JCas jcasA;
+        private JCas jcasB;
+        private Map<String, CAS> casByUser;
+
+        static {
+            HOST_TYPE_ADAPTER = new SpanDiffAdapter(HOST_TYPE);
+            HOST_TYPE_ADAPTER.addLinkFeature("links", "role", "target", MULTIPLE_TARGETS_ONE_ROLE);
+
+            FILLER_ADAPTER = new SpanDiffAdapter(SLOT_FILLER_TYPE, "value");
+        }
+
+        @BeforeEach
+        void setup() throws Exception
+        {
+            jcasA = createJCas(createMultiLinkWithRoleTestTypeSystem());
+            jcasB = createJCas(createMultiLinkWithRoleTestTypeSystem());
+
+            casByUser = new LinkedHashMap<String, CAS>();
+            casByUser.put("user1", jcasA.getCas());
+            casByUser.put("user2", jcasB.getCas());
+        }
+
+        @Test
+        public void one_annotator__agreement() throws Exception
+        {
+            makeLinkHostFS(jcasA, 0, 0, //
+                    makeLinkFS(jcasA, "slot1", 0, 0));
+
+            casByUser.remove("user2");
+
+            var result = doDiff(asList(HOST_TYPE_ADAPTER, FILLER_ADAPTER), casByUser).toResult();
+
+            assertSpanPositionConfigurations(result.getConfigurationSets()) //
+                    .containsExactlyInAnyOrder( //
+                            tuple("LinkHost", 0, 0, -1, -1, null, Set.of("user1")), //
+                            tuple("SlotFiller", 0, 0, -1, -1, null, Set.of("user1")), //
+                            tuple("LinkHost", 0, 0, 0, 0, "slot1", Set.of("user1")));
+            assertThat(result.getConfigurationSets()).hasSize(3);
+            assertThat(result.getDifferingConfigurationSets()).isEmpty();
+            assertThat(result.getIncompleteConfigurationSets()).isEmpty();
+            assertThat(calculateState(result)).isEqualTo(AGREE);
+        }
+
+        @Test
+        public void one_annotator__stacked() throws Exception
+        {
+            makeLinkHostFS(jcasA, 0, 0, //
+                    makeLinkFS(jcasA, "slot1", 0, 0), //
+                    makeLinkFS(jcasA, "slot2", 0, 0));
+
+            casByUser.remove("user2");
+
+            var result = doDiff(asList(HOST_TYPE_ADAPTER, FILLER_ADAPTER), casByUser).toResult();
+
+            assertSpanPositionConfigurations(result.getConfigurationSets()) //
+                    .containsExactlyInAnyOrder( //
+                            tuple("LinkHost", 0, 0, -1, -1, null, Set.of("user1")), //
+                            tuple("SlotFiller", 0, 0, -1, -1, null, Set.of("user1")), //
+                            tuple("LinkHost", 0, 0, 0, 0, "slot1", Set.of("user1")));
+            assertSpanPositionConfigurations(result.getDifferingConfigurationSets().values()) //
+                    .containsExactlyInAnyOrder( //
+                            tuple("LinkHost", 0, 0, 0, 0, "slot1", Set.of("user1")));
+            assertThat(result.getIncompleteConfigurationSets()).isEmpty();
+            assertThat(calculateState(result)).isEqualTo(STACKED);
+        }
+
+        @Test
+        public void two_annotators__agreement() throws Exception
+        {
+            makeLinkHostFS(jcasA, 0, 0, //
+                    makeLinkFS(jcasA, "slot1", 0, 0));
+
+            makeLinkHostFS(jcasB, 0, 0, //
+                    makeLinkFS(jcasB, "slot1", 0, 0));
+
+            var result = doDiff(asList(HOST_TYPE_ADAPTER), casByUser).toResult();
+
+            assertSpanPositionConfigurations(result.getConfigurationSets()) //
+                    .containsExactlyInAnyOrder( //
+                            tuple("LinkHost", 0, 0, -1, -1, null, Set.of("user1", "user2")), //
+                            tuple("LinkHost", 0, 0, 0, 0, "slot1", Set.of("user1", "user2")));
+            assertThat(result.getDifferingConfigurationSets()).isEmpty();
+            assertThat(result.getIncompleteConfigurationSets()).isEmpty();
+            assertThat(calculateState(result)).isEqualTo(AGREE);
+        }
+
+        @Test
+        public void two_annotators__disagreement() throws Exception
+        {
+            makeLinkHostFS(jcasA, 0, 0, //
+                    makeLinkFS(jcasA, "slot1", 0, 0));
+
+            makeLinkHostFS(jcasB, 0, 0, //
+                    makeLinkFS(jcasB, "slot2", 0, 0));
+
+            var result = doDiff(asList(HOST_TYPE_ADAPTER), casByUser).toResult();
+
+            assertSpanPositionConfigurations(result.getConfigurationSets()) //
+                    .containsExactlyInAnyOrder( //
+                            tuple("LinkHost", 0, 0, -1, -1, null, Set.of("user1", "user2")), //
+                            tuple("LinkHost", 0, 0, 0, 0, "slot1", Set.of("user1", "user2")));
+            assertSpanPositionConfigurations(result.getDifferingConfigurationSets().values()) //
+                    .containsExactlyInAnyOrder( //
+                            tuple("LinkHost", 0, 0, 0, 0, "slot1", Set.of("user1", "user2")));
+            assertThat(result.getIncompleteConfigurationSets()).isEmpty();
+            assertThat(calculateState(result)).isEqualTo(DISAGREE);
+        }
+
+        @Test
+        public void two_annotators__incomplete() throws Exception
+        {
+            makeLinkHostFS(jcasA, 0, 0, //
+                    makeLinkFS(jcasA, "slot1", 0, 0));
+
+            var result = doDiff(asList(HOST_TYPE_ADAPTER), casByUser).toResult();
+
+            assertSpanPositionConfigurations(result.getConfigurationSets()) //
+                    .containsExactlyInAnyOrder( //
+                            tuple("LinkHost", 0, 0, -1, -1, null, Set.of("user1")), //
+                            tuple("LinkHost", 0, 0, 0, 0, "slot1", Set.of("user1")));
+            assertThat(result.getDifferingConfigurationSets()).isEmpty();
+            assertSpanPositionConfigurations(result.getIncompleteConfigurationSets().values()) //
+                    .containsExactlyInAnyOrder( //
+                            tuple("LinkHost", 0, 0, -1, -1, null, Set.of("user1")), //
+                            tuple("LinkHost", 0, 0, 0, 0, "slot1", Set.of("user1")));
+            assertThat(calculateState(result)).isEqualTo(INCOMPLETE);
+        }
+
+        @Test
+        public void two_annotators__stacked() throws Exception
+        {
+            makeLinkHostFS(jcasA, 0, 0, //
+                    makeLinkFS(jcasA, "slot1", 0, 0), //
+                    makeLinkFS(jcasA, "slot2", 0, 0));
+
+            makeLinkHostFS(jcasB, 0, 0, //
+                    makeLinkFS(jcasB, "slot1", 0, 0), //
+                    makeLinkFS(jcasB, "slot2", 0, 0));
+
+            var result = doDiff(asList(HOST_TYPE_ADAPTER), casByUser).toResult();
+
+            assertSpanPositionConfigurations(result.getConfigurationSets()) //
+                    .containsExactlyInAnyOrder( //
+                            tuple("LinkHost", 0, 0, -1, -1, null, Set.of("user1", "user2")), //
+                            tuple("LinkHost", 0, 0, 0, 0, "slot1", Set.of("user1", "user2")));
+            assertSpanPositionConfigurations(result.getDifferingConfigurationSets().values()) //
+                    .containsExactlyInAnyOrder( //
+                            tuple("LinkHost", 0, 0, 0, 0, "slot1", Set.of("user1", "user2")));
+            assertThat(result.getIncompleteConfigurationSets()).isEmpty();
             assertThat(calculateState(result)).isEqualTo(STACKED);
         }
     }

@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.inception.ui.curation.sidebar.render;
 
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.getDiffAdapters;
-import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior.LINK_ROLE_AS_LABEL;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.ANNOTATION;
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.NO_OVERLAP;
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.STACKING_ONLY;
@@ -271,7 +270,7 @@ public class CurationSidebarRenderer
         }
 
         var adapters = getDiffAdapters(annotationService, aRequest.getVisibleLayers());
-        return doDiff(adapters, LINK_ROLE_AS_LABEL, casses, aRequest.getWindowBeginOffset(),
+        return doDiff(adapters, casses, aRequest.getWindowBeginOffset(),
                 aRequest.getWindowEndOffset());
     }
 

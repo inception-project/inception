@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.annotation.layer.behaviors;
 
 import static java.util.Collections.unmodifiableList;
 
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -44,7 +45,7 @@ import de.tudarmstadt.ukp.inception.support.logging.BaseLoggers;
 public class LayerBehaviorRegistryImpl
     implements LayerBehaviorRegistry
 {
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private final List<LayerBehavior> layerBehaviorsProxy;
 
@@ -70,8 +71,8 @@ public class LayerBehaviorRegistryImpl
             lsp.addAll(layerBehaviorsProxy);
             AnnotationAwareOrderComparator.sort(lsp);
 
-            for (LayerBehavior fs : lsp) {
-                log.debug("Found layer behavior: {}",
+            for (var fs : lsp) {
+                LOG.debug("Found layer behavior: {}",
                         ClassUtils.getAbbreviatedName(fs.getClass(), 20));
             }
         }

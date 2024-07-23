@@ -17,7 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.annotation.feature.link;
 
+import static de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureMultiplicityMode.DEFAULT_LINK_MULTIPLICITY;
+import static de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureMultiplicityMode.ONE_TARGET_MULTIPLE_ROLES;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
+import static java.util.Arrays.asList;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -27,6 +30,7 @@ import java.util.List;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
+import org.apache.wicket.markup.html.form.EnumChoiceRenderer;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
@@ -73,7 +77,7 @@ public class LinkFeatureTraitsEditor
 
         traits = Model.of(readTraits());
 
-        Form<Traits> form = new Form<Traits>(MID_FORM, CompoundPropertyModel.of(traits))
+        var form = new Form<Traits>(MID_FORM, CompoundPropertyModel.of(traits))
         {
             private static final long serialVersionUID = -3109239605783291123L;
 
@@ -91,7 +95,7 @@ public class LinkFeatureTraitsEditor
         form.setOutputMarkupPlaceholderTag(true);
         add(form);
 
-        MultiSelect<Tag> defaultSlots = new MultiSelect<Tag>("defaultSlots")
+        var defaultSlots = new MultiSelect<Tag>("defaultSlots")
         {
             private static final long serialVersionUID = 8231304829756188352L;
 
@@ -110,15 +114,14 @@ public class LinkFeatureTraitsEditor
                 && feature.getObject().getTagset() != null));
         form.add(defaultSlots);
 
-        CheckBox enableRoleLabels = new CheckBox("enableRoleLabels");
+        var enableRoleLabels = new CheckBox("enableRoleLabels");
         enableRoleLabels.setModel(PropertyModel.of(traits, "enableRoleLabels"));
         enableRoleLabels.add(
                 new LambdaAjaxFormComponentUpdatingBehavior("change", target -> target.add(form)));
         form.add(enableRoleLabels);
 
-        DropDownChoice<TagSet> tagset = new DropDownChoice<>("tagset");
+        var tagset = new DropDownChoice<TagSet>("tagset");
         tagset.setOutputMarkupPlaceholderTag(true);
-        tagset.setOutputMarkupId(true);
         tagset.setChoiceRenderer(new ChoiceRenderer<>("name"));
         tagset.setNullValid(true);
         tagset.setModel(PropertyModel.of(aFeatureModel, "tagset"));
@@ -128,8 +131,14 @@ public class LinkFeatureTraitsEditor
             traits.getObject().setDefaultSlots(new ArrayList<>());
             target.add(form);
         }));
-        tagset.add(visibleWhen(() -> traits.getObject().isEnableRoleLabels()));
+        tagset.add(visibleWhen(traits.map(Traits::isEnableRoleLabels)));
         form.add(tagset);
+
+        var compareMode = new DropDownChoice<LinkFeatureMultiplicityMode>("compareMode",
+                asList(LinkFeatureMultiplicityMode.values()), new EnumChoiceRenderer<>(this));
+        compareMode.setOutputMarkupPlaceholderTag(true);
+        compareMode.add(visibleWhen(traits.map(Traits::isEnableRoleLabels)));
+        form.add(compareMode);
     }
 
     private List<Tag> listTags()
@@ -148,15 +157,16 @@ public class LinkFeatureTraitsEditor
      */
     private Traits readTraits()
     {
-        Traits result = new Traits();
+        var result = new Traits();
 
-        LinkFeatureTraits t = getFeatureSupport().readTraits(feature.getObject());
+        var t = getFeatureSupport().readTraits(feature.getObject());
 
         // Add any tags from the tagset which are default slots to the traits editor model
         listTags().stream().filter(tag -> t.getDefaultSlots().contains(tag.getId()))
                 .forEach(result.getDefaultSlots()::add);
 
         result.setEnableRoleLabels(t.isEnableRoleLabels());
+        result.setCompareMode(t.getCompareMode());
 
         return result;
     }
@@ -167,9 +177,9 @@ public class LinkFeatureTraitsEditor
      */
     private void writeTraits()
     {
-        LinkFeatureTraits t = new LinkFeatureTraits();
+        var t = new LinkFeatureTraits();
 
-        boolean enableRoleLabels = traits.getObject().isEnableRoleLabels();
+        var enableRoleLabels = traits.getObject().isEnableRoleLabels();
 
         t.setEnableRoleLabels(enableRoleLabels);
 
@@ -177,6 +187,10 @@ public class LinkFeatureTraitsEditor
             // only set default slot values for tagsets if the role labels are enabled
             traits.getObject().getDefaultSlots().stream().map(tag -> tag.getId())
                     .forEach(t.getDefaultSlots()::add);
+            t.setCompareMode(traits.getObject().getCompareMode());
+        }
+        else {
+            t.setCompareMode(ONE_TARGET_MULTIPLE_ROLES);
         }
 
         getFeatureSupport().writeTraits(feature.getObject(), t);
@@ -199,15 +213,14 @@ public class LinkFeatureTraitsEditor
         private static final long serialVersionUID = 5804584375190949088L;
 
         private List<Tag> defaultSlots = new ArrayList<>();
-
         private boolean enableRoleLabels;
+        private LinkFeatureMultiplicityMode compareMode = DEFAULT_LINK_MULTIPLICITY;
 
         public List<Tag> getDefaultSlots()
         {
             return defaultSlots;
         }
 
-        @SuppressWarnings("unused")
         public void setDefaultSlots(List<Tag> aDefaultSlots)
         {
             defaultSlots = aDefaultSlots;
@@ -218,9 +231,19 @@ public class LinkFeatureTraitsEditor
             return enableRoleLabels;
         }
 
-        public void setEnableRoleLabels(boolean enableRoleLabels)
+        public void setEnableRoleLabels(boolean aEnableRoleLabels)
         {
-            this.enableRoleLabels = enableRoleLabels;
+            enableRoleLabels = aEnableRoleLabels;
+        }
+
+        public LinkFeatureMultiplicityMode getCompareMode()
+        {
+            return compareMode;
+        }
+
+        public void setCompareMode(LinkFeatureMultiplicityMode aCompareMode)
+        {
+            compareMode = aCompareMode;
         }
     }
 }
