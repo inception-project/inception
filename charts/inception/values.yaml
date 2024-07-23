@@ -346,12 +346,15 @@ ingress:
 mariadb:
   # -- Enabling embedded MariaDB.
   enabled: true
-
   # -- MariaDB container image settings.
   # @default -- Official MariaDB Bitnami image.
   image:
     # -- Enabling debug logging.
     debug: false
+
+  # -- MariaDB primary server settings.
+  # @default -- Setup according to [the dedicated INCEpTION documentation](https://inception-project.github.io/releases/33.0/docs/admin-guide.html#_prepare_database).
+  primary: 
     # -- MariaDB service exposition settings.
     # @default -- Exposing the default `3306` port.
     service:
@@ -361,23 +364,16 @@ mariadb:
         # -- Mariadb `mysql`port.
         mysql: 3306
 
-  # -- MariaDB primary server settings.
-  # @default -- Setup according to [the dedicated INCEpTION documentation](https://inception-project.github.io/releases/33.0/docs/admin-guide.html#_prepare_database).
-  primary: 
     # -- MariaDB Primary configuration to be injected as ConfigMap.
     # @default -- Enabled UTF8 character set.
     configuration: |-
-      [client]
-      default-character-set = utf8mb4
-
       [mysql]
-      default-character-set = utf8mb4
+      default-character-set=utf8mb4
 
       [mysqld]
-      max_allowed_packet=500M
-      character-set-client-handshake = FALSE
+      collation-server = utf8mb4_unicode_ci
+      init-connect='SET NAMES utf8mb4'
       character-set-server = utf8mb4
-      collation-server = utf8mb4_bin
 
 
   # -- MariaDB authentication settings for the custom database.
