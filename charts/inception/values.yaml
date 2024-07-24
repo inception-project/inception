@@ -83,7 +83,7 @@ config:
       # @default -- Plain text password (NOT RECOMMENDED FOR PRODUCTION!).
       password:
         # -- Password in plain text (NOT RECOMMENDED FOR PRODUCTION!). Ignored if a reference to an external secret is specified.
-        value: "inception"
+        value: "t0t4llYSecreT"
         # -- Reference to an external Kubernetes secret in the same namespace holding the password's value.
         # @default -- No reference to any external secret.
         existingSecret:
@@ -368,12 +368,38 @@ mariadb:
     # @default -- Enabled UTF8 character set.
     configuration: |-
       [mysql]
-      default-character-set=utf8mb4
+      default-character-set = utf8mb4
 
       [mysqld]
-      collation-server = utf8mb4_unicode_ci
-      init-connect='SET NAMES utf8mb4'
+      skip-name-resolve
+      explicit_defaults_for_timestamp
+      basedir=/opt/bitnami/mariadb
+      datadir=/bitnami/mariadb/data
+      plugin_dir=/opt/bitnami/mariadb/plugin
+      port=3306
+      socket=/opt/bitnami/mariadb/tmp/mysql.sock
+      tmpdir=/opt/bitnami/mariadb/tmp
+      max_allowed_packet=16M
+      bind-address=*
+      pid-file=/opt/bitnami/mariadb/tmp/mysqld.pid
+      log-error=/opt/bitnami/mariadb/logs/mysqld.log
+      slow_query_log=0
+      long_query_time=10.0
+
+      character-set-client-handshake = FALSE
       character-set-server = utf8mb4
+      collation-server = utf8mb4_bin
+
+      [client]
+      port=3306
+      socket=/opt/bitnami/mariadb/tmp/mysql.sock
+      default-character-set=UTF8
+      plugin_dir=/opt/bitnami/mariadb/plugin
+      default-character-set = utf8mb4
+
+      [manager]
+      port=3306
+      socket=/opt/bitnami/mariadb/tmp/mysql.sock
 
 
   # -- MariaDB authentication settings for the custom database.
@@ -384,7 +410,7 @@ mariadb:
     # -- Name for a custom user to create.
     username: "inception"
     # -- Password for the new user, in plain text (NOT RECOMMENDED FOR PRODUCTION!). Ignored if existing secret is provided.
-    password: "inception"
+    password: "t0t4llYSecreT"
     # -- Use existing secret for password details (auth.rootPassword, auth.password, auth.replicationPassword will be ignored and picked up from this secret). 
     #    The secret has to contain the keys `mariadb-root-password`, `mariadb-replication-password` and `mariadb-password`.
     existingSecret: ""
