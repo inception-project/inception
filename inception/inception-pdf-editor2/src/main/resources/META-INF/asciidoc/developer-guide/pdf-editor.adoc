@@ -1,0 +1,36 @@
+// Licensed to the Technische Universität Darmstadt under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The Technische Universität Darmstadt 
+// licenses this file to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.
+//  
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+[[sect_pdf_editor_dev]]
+# PDF Annotation Editor
+
+The PDF-Editor module allows the view and annotation of PDF documents. 
+
+The module consists of several parts:
+
+* the `VisualPdfReader` is using _pdfbox_  to extract the text from the PDF files. During this process,
+  it keeps track of the positions of each glyph (the "visual model") and also includes this 
+  information as annotations  in the CAS. The `org.dkpro.core.api.pdf.type.PdfPage` type encodes 
+  information about page boundaries while the `org.dkpro.core.api.pdf.type.PdfChunk` type encodes 
+  information about short sequences of glyphs that have the same orientation and script direction 
+  (typically belonging to the same word).
+
+* the `PdfDocumentFrameView` is using _pdf.js_ to display the PDF file in the browser. It provides
+  endpoints for the browser to access the PDF as well as for obtaining the visual model.
+  
+* the `PdfAnnotationEditor` which builds on the `PdfDocumentFrameView` and includes the client-side
+  JavaScript code (loosely based on _PDFAnno_). For the communication of the editor with the 
+  backend, the INCEpTION JS editor API (DIAM) is used.

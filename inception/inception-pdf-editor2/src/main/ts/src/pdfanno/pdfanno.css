@@ -1,0 +1,143 @@
+@charset "utf-8";
+
+/*
+  viewer.css
+ */
+.dropdown,
+.dropup {
+  z-index: 10000;
+}
+
+.row.anno-ui {
+  padding: 0 0 10px;
+}
+
+.textLayer {
+  pointer-events: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/*
+ * Text Layer.
+ */
+.pdfanno-text-layer {
+  position: absolute;
+  text-align: center;
+}
+
+/**
+ * Annotation Layer.
+ */
+.annoLayer>*.--hover,
+.annoLayer>*.--selected {
+  opacity: 1;
+}
+
+/**
+ * Annotation Knob for control.
+ */
+.anno-knob {
+  opacity: 0.5;
+  position: absolute;
+  background-color: blue;
+  border-radius: 50%;
+  transition: 0.2s;
+  transform-origin: center center;
+  cursor: pointer;
+}
+
+.--hover .anno-knob,
+.--selected .anno-knob {
+  box-shadow: rgba(113, 135, 164, .2) 1px 1px 1px;
+  transform: scale(2);
+}
+
+.anno-knob.is-readonly {
+  border-radius: 0;
+  transform: rotate(45deg) scale(0.7);
+}
+
+.--hover .anno-knob.is-readonly,
+.--selected .anno-knob.is-readonly {
+  transform: rotate(45deg) scale(1.4);
+}
+
+/*
+ * Span Annotation.
+ */
+.anno-span {
+  position: absolute;
+  top: 0;
+  left: 0;
+  visibility: visible;
+}
+
+.anno-span__area {
+  position: absolute;
+  border-bottom: 2px solid black;
+}
+
+.--hover .anno-span__area,
+.--selected .anno-span__area {
+  border: 1px dashed black !important;
+  box-sizing: border-box;
+}
+
+.anno-span__area.no-border,
+.--hover .anno-span__area.no-border,
+.--selected .anno-span__area.no-border {
+  border-width: 0 !important;
+}
+
+.anno-span__border {
+  position: absolute;
+  border: 1px solid black;
+}
+
+.anno-span rect {
+  /* Enable the hover event on circles and text even if they are overwraped other spans. */
+  pointer-events: none;
+}
+/**
+  Relation Annotation.
+*/
+.--hover .anno-relation,
+.--selected .anno-relation {
+  stroke-width: 2px;
+}
+
+.anno-relation-outline {
+  fill: none;
+  visibility: hidden;
+}
+
+.--selected .anno-relation-outline {
+  visibility: visible;
+  stroke: black;
+  stroke-width: 3px;
+  pointer-events: stroke;
+  stroke-dasharray: 5;
+}
+
+@keyframes ping-fade-animation {
+	0% {
+		background: rgba(255, 165, 0, 0);
+	}
+
+  50% {
+		background: rgba(255, 165, 0, 1);
+	}
+
+	100% {
+		background: rgba(255, 165, 0, 0);
+	}
+}
+.ping {
+  background: rgba(255, 165, 0, 0);
+  animation: ping-fade-animation 0.3s ease-in-out .2s 3 normal forwards;
+}

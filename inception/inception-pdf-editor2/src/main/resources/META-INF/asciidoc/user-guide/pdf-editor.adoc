@@ -1,0 +1,39 @@
+// Licensed to the Technische Universität Darmstadt under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The Technische Universität Darmstadt 
+// licenses this file to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.
+//  
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+[[sect_pdf_editor]]
+# PDF Annotation Editor
+
+The PDF annotation editor allows annotating text in PDF files. Usually, it opens automatically when
+opening a PDF file.
+
+To annotate a span, simply mark the span with the mouse. When you press the left mouse button and
+drag the mouse, a  highlight should appear. When you release the mouse button, the annotation
+should be created. 
+
+NOTE: If no highlight appears, then the PDF may not include text information at this location. You 
+      may try verifying if the text can be selected in other PDF-enabled tools like macOS Preview or Acrobat
+      Reader. {product-name} can only work with PDFs that include text information. If a PDF was OCRed, the
+      text may not always be at the same location as you see it on screen. Try marking a larger region to 
+      see if you can "catch" it.
+      
+A span annotation is rendered as a highlight with a small knob hovering above the start of the 
+highlight. To select the annotation click on that knob. If the knob overlaps with another 
+highlight, it might be hard to see. If you move the mouse over it, the knob reacts - that may help
+you find it. If there are multiple annotations starting at the same position, their knobs are stacked.
+
+To create a relation, press the left mouse button on the knob and drag the mouse over to the
+knob of another span annotation.

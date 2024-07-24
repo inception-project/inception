@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN">
+  <Appenders>
+    <Console name="ConsoleAppender" target="SYSTEM_OUT">
+      <PatternLayout pattern="%d{HH:mm:ss} %level{length=5} %25logger{1}:%-4L - [%thread] %msg%n" />
+    </Console>
+  </Appenders>
+  <Loggers>
+<!--     <Logger name="de.tudarmstadt" level="INFO"/> -->
+<!--     <Logger name="de.tudarmstadt.ukp.clarin.webanno.api.dao.CasMetadataUtils" level="TRACE"/> -->
+<!--     <logger name="de.tudarmstadt.ukp.clarin.webanno.api.dao.CasStorageServiceImpl" level="TRACE"/> -->
+<!--     <Logger name="de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession" level="TRACE"/> -->
+<!--     <Logger name="org.springframework.messaging.simp.broker.SimpleBrokerMessageHandler" level="DEBUG"/> -->
+<!--     <Logger name="org.springframework.web.socket" level="TRACE" /> -->
+<!--     <Logger name="org.springframework.security" level="TRACE" /> -->
+   
+    <Root level="WARN">
+      <AppenderRef ref="ConsoleAppender" />
+    </Root>
+  </Loggers>
+</Configuration>
