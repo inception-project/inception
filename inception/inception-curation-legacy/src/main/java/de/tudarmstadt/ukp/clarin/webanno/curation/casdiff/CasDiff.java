@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.curation.casdiff;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.LinkMode.NONE;
+import static de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureMultiplicityMode.ONE_TARGET_MULTIPLE_ROLES;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.groupingBy;
@@ -54,13 +55,13 @@ import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.DiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.DiffAdapter_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.Position;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.docmeta.DocumentMetadataDiffAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.internal.AID;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.relation.RelationDiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span.SpanDiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureTraits;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationAdapter;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
@@ -83,16 +84,12 @@ public class CasDiff
 
     private final Map<String, DiffAdapter> diffAdapters = new HashMap<>();
 
-    private final LinkCompareBehavior linkCompareBehavior;
-
     private boolean recurseIntoLinkFeatures = false;
 
-    private CasDiff(int aBegin, int aEnd, Iterable<? extends DiffAdapter> aAdapters,
-            LinkCompareBehavior aLinkCompareBehavior)
+    private CasDiff(int aBegin, int aEnd, Iterable<? extends DiffAdapter> aAdapters)
     {
         begin = aBegin;
         end = aEnd;
-        linkCompareBehavior = aLinkCompareBehavior;
 
         if (aAdapters != null) {
             for (var adapter : aAdapters) {
@@ -106,16 +103,14 @@ public class CasDiff
      * 
      * @param aAdapters
      *            a set of diff adapters how the diff algorithm should handle different features
-     * @param aLinkCompareBehavior
-     *            the link comparison mode
      * @param aCasMap
      *            a set of CASes, each associated with an ID
      * @return a diff result.
      */
     public static CasDiff doDiff(Iterable<? extends DiffAdapter> aAdapters,
-            LinkCompareBehavior aLinkCompareBehavior, Map<String, CAS> aCasMap)
+            Map<String, CAS> aCasMap)
     {
-        return doDiff(aAdapters, aLinkCompareBehavior, aCasMap, -1, -1);
+        return doDiff(aAdapters, aCasMap, -1, -1);
     }
 
     /**
@@ -125,8 +120,6 @@ public class CasDiff
      * @param aAdapters
      *            a set of diff adapters telling how the diff algorithm should handle different
      *            features
-     * @param aLinkCompareBehavior
-     *            the link comparison mode
      * @param aCasMap
      *            a set of CASes, each associated with an ID
      * @param aBegin
@@ -136,16 +129,15 @@ public class CasDiff
      * @return a diff.
      */
     public static CasDiff doDiff(Iterable<? extends DiffAdapter> aAdapters,
-            LinkCompareBehavior aLinkCompareBehavior, Map<String, CAS> aCasMap, int aBegin,
-            int aEnd)
+            Map<String, CAS> aCasMap, int aBegin, int aEnd)
     {
         if (aCasMap.isEmpty()) {
-            return new CasDiff(0, 0, aAdapters, aLinkCompareBehavior);
+            return new CasDiff(0, 0, aAdapters);
         }
 
         var startTime = System.currentTimeMillis();
 
-        var diff = new CasDiff(aBegin, aEnd, aAdapters, aLinkCompareBehavior);
+        var diff = new CasDiff(aBegin, aEnd, aAdapters);
 
         for (var e : aCasMap.entrySet()) {
             var cas = e.getValue();
@@ -259,7 +251,7 @@ public class CasDiff
             positions.add(adapter.getPosition(fs));
 
             // Generate secondary positions for multi-link features
-            positions.addAll(adapter.generateSubPositions(fs, linkCompareBehavior));
+            positions.addAll(adapter.generateSubPositions(fs));
 
             for (var pos : positions) {
                 var configSet = configSets.get(pos);
@@ -328,23 +320,23 @@ public class CasDiff
                 // Check if this configuration is already present
                 Configuration configuration = null;
                 switch (position.getLinkCompareBehavior()) {
-                case LINK_TARGET_AS_LABEL: {
-                    String role = link.getStringValue(
+                case ONE_TARGET_MULTIPLE_ROLES: {
+                    var role = link.getStringValue(
                             link.getType().getFeatureByBaseName(decl.getRoleFeature()));
                     if (!role.equals(position.getRole())) {
                         continue;
                     }
 
-                    AnnotationFS target = (AnnotationFS) link.getFeatureValue(
+                    var target = (AnnotationFS) link.getFeatureValue(
                             link.getType().getFeatureByBaseName(decl.getTargetFeature()));
 
                     cfgLoop: for (Configuration cfg : aSet.getConfigurations()) {
-                        FeatureStructure repFS = cfg.getRepresentative(cases);
-                        AID repAID = cfg.getRepresentativeAID();
-                        FeatureStructure repLink = FSUtil.getFeature(repFS,
+                        var repFS = cfg.getRepresentative(cases);
+                        var repAID = cfg.getRepresentativeAID();
+                        var repLink = FSUtil.getFeature(repFS,
                                 repFS.getType().getFeatureByBaseName(decl.getName()), ArrayFS.class)
                                 .get(repAID.index);
-                        AnnotationFS repTarget = (AnnotationFS) repLink.getFeatureValue(
+                        var repTarget = (AnnotationFS) repLink.getFeatureValue(
                                 repLink.getType().getFeatureByBaseName(decl.getTargetFeature()));
 
                         // Compare targets
@@ -355,24 +347,24 @@ public class CasDiff
                     }
                     break;
                 }
-                case LINK_ROLE_AS_LABEL: {
-                    AnnotationFS target = (AnnotationFS) link.getFeatureValue(
+                case MULTIPLE_TARGETS_ONE_ROLE: {
+                    var target = (AnnotationFS) link.getFeatureValue(
                             link.getType().getFeatureByBaseName(decl.getTargetFeature()));
                     if (!(target.getBegin() == position.getLinkTargetBegin()
                             && target.getEnd() == position.getLinkTargetEnd())) {
                         continue;
                     }
 
-                    String role = link.getStringValue(
+                    var role = link.getStringValue(
                             link.getType().getFeatureByBaseName(decl.getRoleFeature()));
 
                     cfgLoop: for (Configuration cfg : aSet.getConfigurations()) {
-                        FeatureStructure repFS = cfg.getRepresentative(cases);
-                        AID repAID = cfg.getRepresentativeAID();
-                        FeatureStructure repLink = FSUtil.getFeature(repFS,
+                        var repFS = cfg.getRepresentative(cases);
+                        var repAID = cfg.getRepresentativeAID();
+                        var repLink = FSUtil.getFeature(repFS,
                                 repFS.getType().getFeatureByBaseName(decl.getName()), ArrayFS.class)
                                 .get(repAID.index);
-                        String linkRole = repLink.getStringValue(
+                        var linkRole = repLink.getStringValue(
                                 repLink.getType().getFeatureByBaseName(decl.getRoleFeature()));
 
                         // Compare roles
@@ -383,9 +375,42 @@ public class CasDiff
                     }
                     break;
                 }
+                case MULTIPLE_TARGETS_MULTIPLE_ROLES: {
+                    var target = (AnnotationFS) link.getFeatureValue(
+                            link.getType().getFeatureByBaseName(decl.getTargetFeature()));
+                    if (!(target.getBegin() == position.getLinkTargetBegin()
+                            && target.getEnd() == position.getLinkTargetEnd())) {
+                        continue;
+                    }
+
+                    var role = link.getStringValue(
+                            link.getType().getFeatureByBaseName(decl.getRoleFeature()));
+                    if (!role.equals(position.getRole())) {
+                        continue;
+                    }
+
+                    cfgLoop: for (Configuration cfg : aSet.getConfigurations()) {
+                        var repFS = cfg.getRepresentative(cases);
+                        var repAID = cfg.getRepresentativeAID();
+                        var repLink = FSUtil.getFeature(repFS,
+                                repFS.getType().getFeatureByBaseName(decl.getName()), ArrayFS.class)
+                                .get(repAID.index);
+                        var linkRole = repLink.getStringValue(
+                                repLink.getType().getFeatureByBaseName(decl.getRoleFeature()));
+                        var repTarget = (AnnotationFS) repLink.getFeatureValue(
+                                repLink.getType().getFeatureByBaseName(decl.getTargetFeature()));
+
+                        // Compare role and target
+                        if (role.equals(linkRole) && equalsAnnotationFS(repTarget, target)) {
+                            configuration = cfg;
+                            break cfgLoop;
+                        }
+                    }
+                    break;
+                }
                 default:
-                    throw new IllegalStateException(
-                            "Unknown link target comparison mode [" + linkCompareBehavior + "]");
+                    throw new IllegalStateException("Unknown link target comparison mode ["
+                            + position.getLinkCompareBehavior() + "]");
                 }
 
                 // Not found, add new one
@@ -706,12 +731,17 @@ public class CasDiff
                     // Nothing to do here
                     break;
                 case SIMPLE:
-                    adapter.addLinkFeature(f.getName(), f.getLinkTypeRoleFeatureName(), null);
-                    break;
-                case WITH_ROLE:
                     adapter.addLinkFeature(f.getName(), f.getLinkTypeRoleFeatureName(),
-                            f.getLinkTypeTargetFeatureName());
+                            f.getLinkTypeTargetFeatureName(), ONE_TARGET_MULTIPLE_ROLES);
                     break;
+                case WITH_ROLE: {
+                    var typeAdpt = schemaService.getAdapter(layer);
+                    var traits = typeAdpt.getFeatureTraits(f, LinkFeatureTraits.class)
+                            .orElse(new LinkFeatureTraits());
+                    adapter.addLinkFeature(f.getName(), f.getLinkTypeRoleFeatureName(),
+                            f.getLinkTypeTargetFeatureName(), traits.getCompareMode());
+                    break;
+                }
                 default:
                     throw new IllegalStateException("Unknown link mode [" + f.getLinkMode() + "]");
                 }

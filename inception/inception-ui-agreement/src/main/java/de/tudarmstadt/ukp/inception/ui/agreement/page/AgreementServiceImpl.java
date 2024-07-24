@@ -148,7 +148,7 @@ public class AgreementServiceImpl
                     casMap.put(annotator, cas);
                 }
 
-                var diff = doDiff(adapters, traits.getLinkCompareBehavior(), casMap);
+                var diff = doDiff(adapters, casMap);
 
                 var result = AgreementUtils.makeCodingStudy(diff, aFeature.getLayer().getName(),
                         aFeature.getName(), tagset, traits.isExcludeIncomplete(), casMap);

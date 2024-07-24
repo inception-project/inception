@@ -20,7 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior;
+import de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureMultiplicityMode;
 
 public abstract class Position_ImplBase
     implements Position
@@ -36,14 +36,14 @@ public abstract class Position_ImplBase
     private final int linkTargetEnd;
     private final String linkTargetText;
 
-    private final LinkCompareBehavior linkCompareBehavior;
+    private final LinkFeatureMultiplicityMode linkCompareBehavior;
 
     private final String collectionId;
     private final String documentId;
 
     public Position_ImplBase(String aCollectionId, String aDocumentId, String aType,
             String aFeature, String aRole, int aLinkTargetBegin, int aLinkTargetEnd,
-            String aLinkTargetText, LinkCompareBehavior aBehavior)
+            String aLinkTargetText, LinkFeatureMultiplicityMode aBehavior)
     {
         type = aType;
         feature = aFeature;
@@ -107,7 +107,7 @@ public abstract class Position_ImplBase
     }
 
     @Override
-    public LinkCompareBehavior getLinkCompareBehavior()
+    public LinkFeatureMultiplicityMode getLinkCompareBehavior()
     {
         return linkCompareBehavior;
     }
@@ -139,11 +139,23 @@ public abstract class Position_ImplBase
             // check this, otherwise linkTargetBegin, linkTargetEnd, linkCompareBehavior,
             // feature and role are all unset.
             switch (linkCompareBehavior) {
-            case LINK_TARGET_AS_LABEL:
+            case ONE_TARGET_MULTIPLE_ROLES:
                 // Include role into position
                 return ObjectUtils.compare(role, aOther.getRole());
-            case LINK_ROLE_AS_LABEL:
+            case MULTIPLE_TARGETS_ONE_ROLE:
                 // Include target into position
+                if (linkTargetBegin != aOther.getLinkTargetBegin()) {
+                    return linkTargetBegin - aOther.getLinkTargetBegin();
+                }
+
+                return linkTargetEnd - aOther.getLinkTargetEnd();
+            case MULTIPLE_TARGETS_MULTIPLE_ROLES:
+                var roleCmp = ObjectUtils.compare(role, aOther.getRole());
+                if (roleCmp != 0) {
+                    return roleCmp;
+                }
+
+                // Include role and target into position
                 if (linkTargetBegin != aOther.getLinkTargetBegin()) {
                     return linkTargetBegin - aOther.getLinkTargetBegin();
                 }
@@ -180,11 +192,19 @@ public abstract class Position_ImplBase
             builder.append(", linkFeature=");
             builder.append(getFeature());
             switch (getLinkCompareBehavior()) {
-            case LINK_TARGET_AS_LABEL:
+            case ONE_TARGET_MULTIPLE_ROLES:
                 builder.append(", role=");
                 builder.append(getRole());
                 break;
-            case LINK_ROLE_AS_LABEL:
+            case MULTIPLE_TARGETS_ONE_ROLE:
+                builder.append(", linkTarget=(");
+                builder.append(getLinkTargetBegin()).append('-').append(getLinkTargetEnd());
+                builder.append(')');
+                builder.append('[').append(linkTargetText).append(']');
+                break;
+            case MULTIPLE_TARGETS_MULTIPLE_ROLES:
+                builder.append(", role=");
+                builder.append(getRole());
                 builder.append(", linkTarget=(");
                 builder.append(getLinkTargetBegin()).append('-').append(getLinkTargetEnd());
                 builder.append(')');

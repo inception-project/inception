@@ -19,7 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api;
 
 import java.io.Serializable;
 
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior;
+import de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureMultiplicityMode;
 
 /**
  * Represents a logical position in the text. All annotations considered to be at the same logical
@@ -48,7 +48,7 @@ public interface Position
     /**
      * @return the way in which links are compared and labels for links are generated.
      */
-    LinkCompareBehavior getLinkCompareBehavior();
+    LinkFeatureMultiplicityMode getLinkCompareBehavior();
 
     String getCollectionId();
 

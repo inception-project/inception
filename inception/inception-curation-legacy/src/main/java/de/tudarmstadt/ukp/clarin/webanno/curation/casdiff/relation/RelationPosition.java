@@ -17,9 +17,9 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.relation;
 
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.Position;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.Position_ImplBase;
+import de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureMultiplicityMode;
 
 /**
  * Represents a span position in the text.
@@ -39,7 +39,7 @@ public class RelationPosition
     public RelationPosition(String aCollectionId, String aDocumentId, String aType,
             int aSourceBegin, int aSourceEnd, String aSourceText, int aTargetBegin, int aTargetEnd,
             String aTargetText, String aFeature, String aRole, int aLinkTargetBegin,
-            int aLinkTargetEnd, String aLinkTargetText, LinkCompareBehavior aLinkCompareBehavior)
+            int aLinkTargetEnd, String aLinkTargetText, LinkFeatureMultiplicityMode aLinkCompareBehavior)
     {
         super(aCollectionId, aDocumentId, aType, aFeature, aRole, aLinkTargetBegin, aLinkTargetEnd,
                 aLinkTargetText, aLinkCompareBehavior);

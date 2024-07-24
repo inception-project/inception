@@ -24,9 +24,17 @@
         <div class="form-check">
           <input wicket:id="enableRoleLabels" class="form-check-input" type="checkbox"/>
           <label wicket:for="enableRoleLabels" class="form-check-label">
-            Enable Role Labels
+            Role Labels
           </label>
         </div>
+      </div>
+    </div>
+    <div class="row form-row" wicket:enclosure="compareMode">
+      <label wicket:for="compareMode" class="col-sm-4 col-form-label">
+        Multiplicity
+      </label>
+      <div class="col-sm-8">
+        <select wicket:id="compareMode" class="form-select"/>
       </div>
     </div>
     <div class="row form-row" wicket:enclosure="tagset">
@@ -34,7 +42,7 @@
         <wicket:label key="tagset"/>
       </label>
       <div class="col-sm-8">
-        <select wicket:id="tagset" class="form-select" data-container="body"/>
+        <select wicket:id="tagset" class="form-select"/>
       </div>
     </div>
     <div class="row form-row" wicket:enclosure="defaultSlots">
@@ -42,7 +50,7 @@
         Default slots
       </label>
       <div class="col-sm-8">
-        <select class="flex-content" wicket:id="defaultSlots" data-container="body"></select>
+        <select class="flex-content" wicket:id="defaultSlots"/>
       </div>
     </div>
   </form>
