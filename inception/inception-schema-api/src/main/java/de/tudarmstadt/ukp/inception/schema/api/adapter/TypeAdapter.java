@@ -235,6 +235,8 @@ public interface TypeAdapter
 
     <T> Optional<T> getTraits(Class<T> aInterface);
 
+    <T> Optional<T> getFeatureTraits(AnnotationFeature aFeature, Class<T> aInterface);
+
     default boolean equivalents(AnnotationFS aFs1, AnnotationFS aFs2)
     {
         return equivalents(aFs1, aFs2, null);

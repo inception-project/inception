@@ -29,8 +29,8 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.FSUtil;
 import org.apache.uima.jcas.cas.AnnotationBase;
 
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkFeatureDecl;
+import de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureMultiplicityMode;
 
 public abstract class DiffAdapter_ImplBase
     implements DiffAdapter
@@ -47,9 +47,11 @@ public abstract class DiffAdapter_ImplBase
         labelFeatures = Collections.unmodifiableSet(new HashSet<>(aLabelFeatures));
     }
 
-    public void addLinkFeature(String aName, String aRoleFeature, String aTargetFeature)
+    public void addLinkFeature(String aName, String aRoleFeature, String aTargetFeature,
+            LinkFeatureMultiplicityMode aCompareBehavior)
     {
-        linkFeatures.add(new LinkFeatureDecl(aName, aRoleFeature, aTargetFeature));
+        linkFeatures
+                .add(new LinkFeatureDecl(aName, aRoleFeature, aTargetFeature, aCompareBehavior));
     }
 
     @Override
@@ -67,7 +69,7 @@ public abstract class DiffAdapter_ImplBase
     @Override
     public LinkFeatureDecl getLinkFeature(String aFeature)
     {
-        for (LinkFeatureDecl decl : linkFeatures) {
+        for (var decl : linkFeatures) {
             if (decl.getName().equals(aFeature)) {
                 return decl;
             }
@@ -82,8 +84,7 @@ public abstract class DiffAdapter_ImplBase
     }
 
     @Override
-    public List<? extends Position> generateSubPositions(AnnotationBase aFs,
-            LinkCompareBehavior aLinkCompareBehavior)
+    public List<? extends Position> generateSubPositions(AnnotationBase aFs)
     {
         var subPositions = new ArrayList<Position>();
 
@@ -101,7 +102,7 @@ public abstract class DiffAdapter_ImplBase
                 var target = (AnnotationFS) linkFS.getFeatureValue(
                         linkFS.getType().getFeatureByBaseName(decl.getTargetFeature()));
                 var pos = getPosition(aFs, decl.getName(), role, target.getBegin(), target.getEnd(),
-                        aLinkCompareBehavior);
+                        decl.getCompareBehavior());
                 subPositions.add(pos);
             }
         }

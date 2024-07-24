@@ -22,7 +22,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.UNM
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.FORCE_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.getDiffAdapters;
-import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior.LINK_ROLE_AS_LABEL;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_CURATION_IN_PROGRESS;
@@ -715,8 +714,7 @@ public class LegacyCurationPage
                 LOG.debug("Processing differences: {} of {} units...", unitIndex, units.size());
             }
 
-            var diff = doDiff(adapters, LINK_ROLE_AS_LABEL, casses, unit.getBegin(), unit.getEnd())
-                    .toResult();
+            var diff = doDiff(adapters, casses, unit.getBegin(), unit.getEnd()).toResult();
 
             var curationUnit = new CurationUnit(unit.getBegin(), unit.getEnd(), unitIndex);
             curationUnit.setState(CasDiffSummaryState.calculateState(diff));
