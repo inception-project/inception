@@ -1,0 +1,33 @@
+{{ template "chart.header" . }}
+
+{{ template "chart.badgesSection" . }}
+
+{{ template "chart.description" . }}
+
+{{ template "chart.homepageLine" . }}
+
+{{ template "chart.maintainersSection" . }}
+
+{{ template "chart.sourcesSection" . }}
+
+{{ template "chart.requirementsSection" . }}
+
+## Deployment Architecture
+
+This Chart allows INCEpTION to be deployed as follows :
+
+![INCEpTION Chart's deployment architecture](./src/helmchart_inception.drawio.png)
+
+## Installing the Chart
+
+The default Chart values allows the deployment of a working (although unsecure) version of INCEpTION out-of-the-box.
+
+To install the chart, just type : 
+
+```sh
+helm upgrade --install inception ./chart/inception/ 
+```
+
+{{ template "chart.valuesSection" . }}
+
+{{ template "helm-docs.versionFooter" . }}
