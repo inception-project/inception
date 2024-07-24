@@ -5,6 +5,8 @@ home: https://inception-project.github.io
 sources: 
   - https://github.com/inception-project/inception
 
+kubeVersion: ">=v1.24.0-0"
+
 # A chart can be either an 'application' or a 'library' chart.
 #
 # Application charts are a collection of templates that can be packaged into versioned archives

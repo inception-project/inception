@@ -12,6 +12,8 @@ A semantic annotation platform offering intelligent assistance and knowledge man
 
 ## Requirements
 
+Kubernetes: `>=v1.24.0-0`
+
 | Repository | Name | Version |
 |------------|------|---------|
 | oci://registry-1.docker.io/bitnamicharts | mariadb(mariadb) | 19.0.1 |
