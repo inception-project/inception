@@ -11,9 +11,7 @@ nameOverride: ""
 
 fullnameOverride: ""
 
-# -- INCEpTION configuration settings.
-# @default -- A pre-configured development deployment (**NOT RECOMMENDED FOR PRODUCTION!**).
-# @section -- INCEpTION configuration settings
+# INCEpTION configuration settings.
 config:
   # -- Base URL prefix on which INCEpTION is deployed.
   # @section -- INCEpTION configuration settings
@@ -22,9 +20,7 @@ config:
   # @section -- INCEpTION configuration settings
   logging: "INFO"
 
-  # -- INCEpTION security settings.
-  # @default -- Unsecure connections to localhost allowed (**NOT RECOMMENDED FOR PRODUCTION!**).
-  # @section -- INCEpTION configuration settings
+  # INCEpTION security settings.
   security:
     # -- Accepted origin (see [dedicated INCEpTION documentation](https://inception-project.github.io/releases/33.2/docs/admin-guide.html#sect_reverse_proxy)).
     # @section -- INCEpTION configuration settings
@@ -33,9 +29,7 @@ config:
     # @section -- INCEpTION configuration settings
     allowHttp: false
 
-  # -- INCEpTION database connection settings.
-  # @default -- A pre-configured development database connection (**NOT RECOMMENDED FOR PRODUCTION!**).
-  # @section -- INCEpTION configuration settings
+  # INCEpTION database connection settings.
   database:
     # -- Database name.
     # @section -- INCEpTION configuration settings
@@ -52,23 +46,16 @@ config:
     # -- Database server timezone.
     # @section -- INCEpTION configuration settings
     serverTimezone: "UTC"
-    # -- Database authentication settings.
-    # @default -- A default insecure connection to the embedded MariaDB database (**NOT RECOMMENDED FOR PRODUCTION!**).
-    # @section -- INCEpTION configuration settings
+    # Database authentication settings.
     auth: 
-      # -- INCEpTION username.
-      # @section -- INCEpTION configuration settings
+      # INCEpTION username.
       username: "inception"
-      # -- INCEpTION password.
-      # @default -- Plain text password (**NOT RECOMMENDED FOR PRODUCTION!**).
-      # @section -- INCEpTION configuration settings
+      # INCEpTION password.
       password:
         # -- Password in plain text (**NOT RECOMMENDED FOR PRODUCTION!**). Ignored if a reference to an external secret is specified.
         # @section -- INCEpTION configuration settings
         value: "t0t4llYSecreT"
-        # -- Reference to an external Kubernetes secret in the same namespace holding the password's value.
-        # @default -- No reference to any external secret.
-        # @section -- INCEpTION configuration settings
+        # Reference to an external Kubernetes secret in the same namespace holding the password's value.
         existingSecret:
           # -- Secret name.
           # @section -- INCEpTION configuration settings
@@ -81,13 +68,9 @@ config:
   extraConfig: {}
 
 
-# -- INCEpTION authentication settings.
-# @default -- No default admin configured, the admin password will be asked when accessing INCEpTION for the first time.
-# @section -- INCEpTION authentication settings
+# INCEpTION authentication settings.
 auth:
-  # -- Default Administrator account configuration (see [dedicated INCEpTION documentation](https://inception-project.github.io/releases/33.2/docs/admin-guide.html#_unsupervised_installation)).
-  # @default -- Default Administrator account disabled.
-  # @section -- INCEpTION authentication settings
+  # Default Administrator account configuration (see [dedicated INCEpTION documentation](https://inception-project.github.io/releases/33.2/docs/admin-guide.html#_unsupervised_installation)).
   defaultAdmin:
     # -- Enabling Default Administrator feature.
     # @section -- INCEpTION authentication settings
@@ -95,28 +78,19 @@ auth:
     # -- Default Administrator username.
     # @section -- INCEpTION authentication settings
     username: "admin"
-    # -- Default Administrator password.
-    # @default -- A default plain-text password (**NOT RECOMMENDED FOR PRODUCTION!**).
-    # @section -- INCEpTION authentication settings
+    # Default Administrator password.
     password: 
-      # -- Password in plain text (**NOT RECOMMENDED FOR PRODUCTION!**). `bcrypt` hash will be derived from that password and stored in the `settings.properties` file.
-      #    Ignored if a reference to an external secret is specified.
-      # @section -- INCEpTION authentication settings
+      # Password in plain text (**NOT RECOMMENDED FOR PRODUCTION!**). `bcrypt` hash will be derived from that password and stored in the `settings.properties` file.
       value: "loc@lAdmin!*"
-      # -- Reference to an external Kubernetes secret in the same namespac.e holding the password's bcrypt hash's value, in the `{bcrypt}XXXXXX` format.
-      # @default -- No reference to an existong secret.
-      # @section -- INCEpTION authentication settings
+      # Reference to an external Kubernetes secret in the same namespace holding the password's bcrypt hash's value, in the `{bcrypt}XXXXXX` format.
       existingSecret:
-        # -- Secret name.
-        # @section -- INCEpTION authentication settings
+        # Secret name.
         secretName: ""
         # -- Secret key holding the password's `bcrypt` hash.
         # @section -- INCEpTION authentication settings
         secretKey: ""
 
-  # -- OAuth2 authentication settings (see [dedicated INCEpTION documentation](https://inception-project.github.io/releases/33.2/docs/admin-guide.html#sect_security_authentication_oauth2)).
-  # @default -- OAuth2 login disabled.
-  # @section -- INCEpTION authentication settings
+  # OAuth2 authentication settings (see [dedicated INCEpTION documentation](https://inception-project.github.io/releases/33.2/docs/admin-guide.html#sect_security_authentication_oauth2)).
   oauth2:
     # -- Enabling OAuth2 SSO login.
     # @section -- INCEpTION authentication settings
@@ -130,16 +104,12 @@ auth:
     # -- OAUth2 client ID.
     # @section -- INCEpTION authentication settings
     clientID: ""
-    # -- OAuth2 client secret.
-    # @default -- No client secret provided.
-    # @section -- INCEpTION authentication settings
+    # OAuth2 client secret.
     clientSecret:
       # -- OAuth2 client secret in plain text (**NOT RECOMMENDED FOR PRODUCTION!**). Ignored if a reference to an external secret is specified.
       # @section -- INCEpTION authentication settings
       value: ""
-      # -- Reference to an external Kubernetes secret in the same namespace holding the OAuth2 secret's value.
-      # @default -- No reference to an existing secret.
-      # @section -- INCEpTION authentication settings
+      # Reference to an external Kubernetes secret in the same namespace holding the OAuth2 secret's value.
       existingSecret: 
         # -- Secret name.
         # @section -- INCEpTION authentication settings
@@ -163,9 +133,7 @@ auth:
     # @section -- INCEpTION authentication settings
     usernameAttribute: ""
 
-  # -- SAML2 Authentication settings (see [dedicated INCEpTION documentation](https://inception-project.github.io/releases/33.2/docs/admin-guide.html#sect_security_authentication_saml2)).
-  # @default -- SAML2 login disabled.
-  # @section -- INCEpTION authentication settings
+  # SAML2 Authentication settings (see [dedicated INCEpTION documentation](https://inception-project.github.io/releases/33.2/docs/admin-guide.html#sect_security_authentication_saml2)).
   saml2:
     # -- Enabling SAML2 SSO login.
     # @section -- INCEpTION authentication settings
@@ -173,9 +141,7 @@ auth:
     # -- Enabling SAML2 as default login method (skips INCEpTION's default login page).
     # @section -- INCEpTION authentication settings
     autoLogin: false
-    # -- SAML2 requests signing with external key and certificate.
-    # @default -- SAML2 request signing is disabled.
-    # @section -- INCEpTION authentication settings
+    # SAML2 requests signing with external key and certificate.
     signRequest: 
       # -- Enabling SAML2 request signing.
       # @section -- INCEpTION authentication settings
@@ -189,16 +155,12 @@ auth:
       # -- Reference to an external Kubernetes TLS secret in the same namespace holding the certificate/private key pair to sign the SAML2 requests.
       # @section -- INCEpTION authentication settings
       existingTlsSecret: ""
-    # -- Certificate authenticating the Identity Provider in SAML2 connection.
-    # @default -- No certificate provided. 
-    # @section -- INCEpTION authentication settings
+    # Certificate authenticating the Identity Provider in SAML2 connection.
     assertingPartyCertificate:
       # -- Certificate in plain text. Ignored if a reference to an external Secret is specified.
       # @section -- INCEpTION authentication settings
       value: ""
-      # -- Reference to an external Kubernetes Secret in the same namespace holding the Identity Provider certificate.
-      # @default -- No reference to an existing secret.
-      # @section -- INCEpTION authentication settings
+      # Reference to an external Kubernetes Secret in the same namespace holding the Identity Provider certificate.
       existingSecret: 
         # -- Name of the Secret.
         # @section -- INCEpTION authentication settings
@@ -213,9 +175,7 @@ auth:
     # @section -- INCEpTION authentication settings
     assertingPartySSOUrl: ""
 
-  # -- PreAuthentication settings, not cumulative with OAuth2 and SAML2 authentication modes (see [dedicated INCEpTION documentation](https://inception-project.github.io/releases/33.2/docs/admin-guide.html#sect_security_authentication_preauth)).
-  # @default -- Pre-authentication disabled.
-  # @section -- INCEpTION authentication settings
+  # PreAuthentication settings, not cumulative with OAuth2 and SAML2 authentication modes (see [dedicated INCEpTION documentation](https://inception-project.github.io/releases/33.2/docs/admin-guide.html#sect_security_authentication_preauth)).
   preAuthentication:
     # -- Enabling the PreAuthentication feature.
     # @section -- INCEpTION authentication settings
@@ -263,9 +223,7 @@ extraVolumes: {}
 # @section -- INCEpTION deployment settings
 extraVolumeMounts: {}
 
-# -- INCEpTION container image settings.
-# @default -- Pulling INCEpTION Image from the official repository.
-# @section -- INCEpTION deployment settings
+# INCEpTION container image settings.
 image:
   # -- Image repository.
   # @section -- INCEpTION deployment settings
@@ -281,9 +239,7 @@ image:
 # @section -- INCEpTION deployment settings
 imagePullSecrets: {}
 
-# -- INCEpTION's pod startup probe.
-# @default -- Startup probe enabled.
-# @section -- INCEpTION deployment settings
+# INCEpTION's pod startup probe.
 startupProbe:
   # -- Enabling the startup probe.
   # @section -- INCEpTION deployment settings
@@ -298,9 +254,7 @@ startupProbe:
   # @section -- INCEpTION deployment settings
   failureThreshold: 5
 
-# -- INCEpTION's pod liveness probe.
-# @default -- Liveness probe enabled.
-# @section -- INCEpTION deployment settings
+# INCEpTION's pod liveness probe.
 livenessProbe:
   # -- Enabling the liveness probe.
   # @section -- INCEpTION deployment settings
@@ -315,9 +269,7 @@ livenessProbe:
   # @section -- INCEpTION deployment settings
   failureThreshold: 2
 
-# -- INCEpTION podSecurityContext.
-# @default -- Setup according to the [`baseline` Pod Security Standards](https://kubernetes.io/docs/concepts/security/pod-security-standards/#baseline).
-# @section -- INCEpTION deployment settings
+# INCEpTION podSecurityContext.
 podSecurityContext:
   # -- User ID to run as.
   # @section -- INCEpTION deployment settings
@@ -332,9 +284,7 @@ podSecurityContext:
   # @section -- INCEpTION deployment settings
   runAsNonRoot: true
 
-# -- INCEpTION's container securityContext.
-# @default -- Setup according to the [`baseline` Pod Security Standards](https://kubernetes.io/docs/concepts/security/pod-security-standards/#baseline).
-# @section -- INCEpTION deployment settings
+# INCEpTION's container securityContext.
 securityContext:
   # -- Enforcing read-only root filesystem (`/`).
   # @section -- INCEpTION deployment settings
@@ -357,9 +307,7 @@ resources: {}
   #   cpu: 100m
   #   memory: 128Mi
 
-# -- INCEpTION pod horizontal autoscaling feature (not recommended).
-# @default -- Horizontal pod autoscaling disabled.
-# @section -- INCEpTION deployment settings
+# INCEpTION pod horizontal autoscaling feature (not recommended).
 autoscaling:
   # -- Enabling horizontal pod autoscaling.
   # @section -- INCEpTION deployment settings
@@ -377,9 +325,7 @@ autoscaling:
   # @section -- INCEpTION deployment settings
   targetMemoryUtilizationPercentage: 80
 
-# -- Service Account used for INCEpTION's deployment.
-# @default -- Creates a dedicated Service Account for the deployment.
-# @section -- INCEpTION deployment settings
+# Service Account used for INCEpTION's deployment.
 serviceAccount:
   # -- Specifies whether a service account should be created.
   # @section -- INCEpTION deployment settings
@@ -407,13 +353,9 @@ tolerations: []
 # @section -- INCEpTION deployment settings
 affinity: {}
 
-# -- INCEpTION data persistence settings.
-# @default -- Requesting a PVC for the data directory.
-# @section -- INCEpTION deployment settings
+# INCEpTION data persistence settings.
 persistence:
   # Data volume settings.
-  # @default -- Requesting a 5Gi volume with the `standard` storage class.
-  # @section -- INCEpTION deployment settings
   data:
     # -- Name of the Storage Class to use.
     # @section -- INCEpTION deployment settings
@@ -425,17 +367,13 @@ persistence:
     # @section -- INCEpTION deployment settings
     accessMode: ReadWriteOnce
 
-# -- Network Policies settings.
-# @default -- Network Policies enabled for database and SSO (if Oauth2 or SAML2 login enabled) ingress and egress.
-# @section -- INCEpTION network settings
+# Network Policies settings.
 networkPolicies:
   # -- Enabling the default Network Policies.
   # @section -- INCEpTION network settings
   enabled: true
 
-# -- INCEpTION service exposition settings.
-# @default -- exposing INCEpTION pod on the `8080` port.
-# @section -- INCEpTION network settings
+# INCEpTION service exposition settings.
 service:
   # -- Service Type
   # @section -- INCEpTION network settings
@@ -444,9 +382,7 @@ service:
   # @section -- INCEpTION network settings
   port: 8080
 
-# -- Ingress configuration.
-# @default -- Ingress enabled on `localhost`.
-# @section -- INCEpTION network settings
+# Ingress configuration.
 ingress:
   # -- Enabling Ingress.
   # @section -- INCEpTION network settings
@@ -455,14 +391,10 @@ ingress:
   # @section -- INCEpTION network settings
   className: "nginx"
 
-  # -- Ingress host settings.
-  # @default -- Listening on `/` for `localhost`.
-  # @section -- INCEpTION network settings
+  # Ingress host settings.
   hosts:
     - host: localhost
-      # -- Path exposing INCEpTION
-      # @default -- This value will always be overridden according to `config.baseUrl` - changing it here will have no effect.
-      # @section -- INCEpTION network settings
+      # Path exposing INCEpTION
       paths:
       - path: /
         pathType: Prefix
@@ -475,32 +407,22 @@ ingress:
   #      - chart-example.local
 
 
-# -- Embedded Bitnami MariaDB Chart settings (see [dedicated Chart documentation](https://artifacthub.io/packages/helm/bitnami/mariadb)).
-# @default -- Database enabled with a default unsecure password (**NOT RECOMMENDED FOR PRODUCTION!**).
-# @section -- INCEpTION's database deployment settings
+# Embedded Bitnami MariaDB Chart settings (see [dedicated Chart documentation](https://artifacthub.io/packages/helm/bitnami/mariadb)).
 mariadb:
   # -- Enabling embedded MariaDB.
   # @section -- INCEpTION's database deployment settings
   enabled: true
-  # -- MariaDB container image settings.
-  # @default -- Official MariaDB Bitnami image.
-  # @section -- INCEpTION's database deployment settings
+  # MariaDB container image settings.
   image:
     # -- Enabling debug logging.
     # @section -- INCEpTION's database deployment settings
     debug: false
 
-  # -- MariaDB primary server settings.
-  # @default -- Setup according to [the dedicated INCEpTION documentation](https://inception-project.github.io/releases/33.0/docs/admin-guide.html#_prepare_database).
-  # @section -- INCEpTION's database deployment settings
+  # MariaDB primary server settings.
   primary: 
-    # -- MariaDB service exposition settings.
-    # @default -- Exposing the default `3306` port.
-    # @section -- INCEpTION's database deployment settings
+    # MariaDB service exposition settings.
     service:
-      # -- Service ports settings.
-      # @default -- setup to `3306`.
-      # @section -- INCEpTION's database deployment settings
+      # Service ports settings.
       ports:
         # -- Mariadb `mysql`port.
         # @section -- INCEpTION's database deployment settings
@@ -545,9 +467,7 @@ mariadb:
       socket=/opt/bitnami/mariadb/tmp/mysql.sock
 
 
-  # -- MariaDB authentication settings for the custom database.
-  # @default -- Plain-text default authentication settings (**NOT RECOMMENDED FOR PRODUCTION!**).
-  # @section -- INCEpTION's database deployment settings
+  # MariaDB authentication settings for the custom database.
   auth:
     # -- Name for a custom database to create.
     # @section -- INCEpTION's database deployment settings
@@ -563,9 +483,7 @@ mariadb:
     # @section -- INCEpTION's database deployment settings
     existingSecret: ""
 
-  # -- Network Policies settings.
-  # @default -- NetworkPolicies enabled.
-  # @section -- INCEpTION's database deployment settings
+  # Network Policies settings.
   networkPolicy:
     # -- Enable creation of NetworkPolicy resources.
     # @section -- INCEpTION's database deployment settings
