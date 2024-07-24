@@ -66,6 +66,7 @@ public abstract class TypeAdapter_ImplBase
     private Map<String, AnnotationFeature> features;
     private ApplicationEventPublisher applicationEventPublisher;
     private Map<AnnotationLayer, Object> layerTraitsCache;
+    private Map<AnnotationFeature, Object> featureTraitsCache;
 
     /**
      * Constructor.
@@ -315,6 +316,28 @@ public abstract class TypeAdapter_ImplBase
 
         Object trait = layerTraitsCache.computeIfAbsent(getLayer(),
                 feature -> layerSupportRegistry.getLayerSupport(feature).readTraits(feature));
+
+        if (trait != null && aInterface.isAssignableFrom(trait.getClass())) {
+            return Optional.of((T) trait);
+        }
+
+        return Optional.empty();
+    }
+
+    /**
+     * Decodes the traits for the given feature and returns them if they implement the requested
+     * interface. This method internally caches the decoded traits, so it can be called often.
+     */
+    @Override
+    @SuppressWarnings("unchecked")
+    public <T> Optional<T> getFeatureTraits(AnnotationFeature aFeature, Class<T> aInterface)
+    {
+        if (featureTraitsCache == null) {
+            featureTraitsCache = new HashMap<>();
+        }
+
+        Object trait = featureTraitsCache.computeIfAbsent(aFeature,
+                feature -> featureSupportRegistry.findExtension(feature).get().readTraits(feature));
 
         if (trait != null && aInterface.isAssignableFrom(trait.getClass())) {
             return Optional.of((T) trait);
