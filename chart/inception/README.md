@@ -50,48 +50,51 @@ helm upgrade --install inception ./chart/inception/
 | config.baseUrl | string | `"/"` | Base URL prefix on which INCEpTION is deployed. |
 | config.logging | string | `"INFO"` | INCEpTION log level (affects the application and Spring Security framework). |
 | config.security.acceptedOrigins | string | `"localhost"` | Accepted origin (see [dedicated INCEpTION documentation](https://inception-project.github.io/releases/33.2/docs/admin-guide.html#sect_reverse_proxy)). |
-| config.security.allowHttp | bool | `false` | Allowing HTTP unsecure communications. |
+| config.security.allowHttp | bool | `false` | Allows HTTP unsecure communications. |
 | config.database.name | string | `"inception"` | Database name. |
 | config.database.hostname | string | `""` | Database hostname. |
 | config.database.port | int | `3306` | Database port. |
 | config.database.useSSL | bool | `false` | Database SSL communication. |
 | config.database.serverTimezone | string | `"UTC"` | Database server timezone. |
-| config.database.auth.password.value | string | `"t0t4llYSecreT"` | Password in plain text (**NOT RECOMMENDED FOR PRODUCTION!**). Ignored if a reference to an external secret is specified. |
-| config.database.auth.password.existingSecret.secretName | string | `""` | Secret name. |
-| config.database.auth.password.existingSecret.secretKey | string | `""` | Secret key holding the password's value. |
+| config.database.auth.username | string | `"inception"` | INCEpTION user name. |
+| config.database.auth.password.value | string | `"t0t4llYSecreT"` | INCEpTION user password, in plain text (**NOT RECOMMENDED FOR PRODUCTION**).     Ignored if a reference to an external secret is specified. |
+| config.database.auth.password.existingSecret.secretName | string | `""` | Name of the secret holding holding INCEpTION user's password. |
+| config.database.auth.password.existingSecret.secretKey | string | `""` | Key inside the secret holding INCEpTION user's password. |
 | config.extraConfig | object | `{}` | Extra configuration added at the end of the `settings.properties` file, in `key: value` format. |
 
 ### INCEpTION authentication settings
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| auth.defaultAdmin.enabled | bool | `false` | Enabling Default Administrator feature. |
+| auth.defaultAdmin.enabled | bool | `false` | Enables the "Default Administrator" feature. |
 | auth.defaultAdmin.username | string | `"admin"` | Default Administrator username. |
-| auth.defaultAdmin.password.existingSecret.secretKey | string | `""` | Secret key holding the password's `bcrypt` hash. |
-| auth.oauth2.enabled | bool | `false` | Enabling OAuth2 SSO login. |
-| auth.oauth2.autoLogin | bool | `false` | Enabling OAuth2 as default login method (skips INCEpTION's default login page). |
+| auth.defaultAdmin.password.value | string | `"loc@lAdmin!*"` | Password in plain text (**NOT RECOMMENDED FOR PRODUCTION**).     `bcrypt` hash will be derived from that password and stored in the `settings.properties` file. |
+| auth.defaultAdmin.password.existingSecret.secretName | string | `""` | Name of the secret holding the password's bcrypt hash's value. |
+| auth.defaultAdmin.password.existingSecret.secretKey | string | `""` | Key inside the secret holding the password's bcrypt hash value, in `{bcrypt}XXXXXX` format. |
+| auth.oauth2.enabled | bool | `false` | Enabled OAuth2 SSO login. |
+| auth.oauth2.autoLogin | bool | `false` | Enables OAuth2 as default login method (skips INCEpTION's default login page). |
 | auth.oauth2.clientName | string | `""` | OAuth2 client name, to be displayed on INCEpTION's login page. |
 | auth.oauth2.clientID | string | `""` | OAUth2 client ID. |
-| auth.oauth2.clientSecret.value | string | `""` | OAuth2 client secret in plain text (**NOT RECOMMENDED FOR PRODUCTION!**). Ignored if a reference to an external secret is specified. |
-| auth.oauth2.clientSecret.existingSecret.secretName | string | `""` | Secret name. |
-| auth.oauth2.clientSecret.existingSecret.secretKey | string | `""` | Secret key holding the OAuth2 client secret's value.  |
+| auth.oauth2.clientSecret.value | string | `""` | OAuth2 client secret in plain text (**NOT RECOMMENDED FOR PRODUCTION**).    Ignored if a reference to an external secret is specified. |
+| auth.oauth2.clientSecret.existingSecret.secretName | string | `""` | Name of the secret holding the OAuth2 client secret value. |
+| auth.oauth2.clientSecret.existingSecret.secretKey | string | `""` | Key inside the secret holding the OAuth2 secret's value. |
 | auth.oauth2.scope | string | `""` | OAuth2 scope. |
 | auth.oauth2.authorizationGrantType | string | `""` | OAuth2 grant type. |
 | auth.oauth2.redirectURI | string | `""` | OAuth2 redirect URI. |
 | auth.oauth2.issuerURI | string | `""` | OAuth2 Issuer URI. |
 | auth.oauth2.usernameAttribute | string | `""` | OAuth2 claim holding the username attribute. |
-| auth.saml2.enabled | bool | `false` | Enabling SAML2 SSO login. |
-| auth.saml2.autoLogin | bool | `false` | Enabling SAML2 as default login method (skips INCEpTION's default login page). |
-| auth.saml2.signRequest.enabled | bool | `false` | Enabling SAML2 request signing. |
-| auth.saml2.signRequest.certificateValue | string | `""` | Public certificate value un plain text. Ignored if a reference to an external TLS Secret is specified. |
-| auth.saml2.signRequest.privateKeyValue | string | `""` | Private Key value, in plain text (**NOT RECOMMENDED FOR PRODUCTION!**). Ignored if a reference to an external secret is specified.  |
-| auth.saml2.signRequest.existingTlsSecret | string | `""` | Reference to an external Kubernetes TLS secret in the same namespace holding the certificate/private key pair to sign the SAML2 requests. |
-| auth.saml2.assertingPartyCertificate.value | string | `""` | Certificate in plain text. Ignored if a reference to an external Secret is specified. |
-| auth.saml2.assertingPartyCertificate.existingSecret.secretName | string | `""` | Name of the Secret. |
-| auth.saml2.assertingPartyCertificate.existingSecret.secretKey | string | `""` | Secret key holding the Identity Provider certificate. |
+| auth.saml2.enabled | bool | `false` | Enables SAML2 SSO login. |
+| auth.saml2.autoLogin | bool | `false` | Enables SAML2 as default login method (skips INCEpTION's default login page). |
+| auth.saml2.signRequest.enabled | bool | `false` | Enables SAML2 request signing. |
+| auth.saml2.signRequest.certificateValue | string | `""` | Public certificate value un plain text.    Ignored if a reference to an external TLS Secret is specified. |
+| auth.saml2.signRequest.privateKeyValue | string | `""` | Private Key value, in plain text (**NOT RECOMMENDED FOR PRODUCTION**).    Ignored if a reference to an external secret is specified.  |
+| auth.saml2.signRequest.existingTlsSecret | string | `""` | Reference to an external Kubernetes TLS secret in the same namespace holding the certificate/private key pair to sign SAML2 requests. |
+| auth.saml2.assertingPartyCertificate.value | string | `""` | Certificate in plain text.     Ignored if a reference to an external Secret is specified. |
+| auth.saml2.assertingPartyCertificate.existingSecret.secretName | string | `""` | Name of the secret holding the Identity Provider certificate. |
+| auth.saml2.assertingPartyCertificate.existingSecret.secretKey | string | `""` | Key inside the secret holding the Identity Provider certificate. |
 | auth.saml2.assertingPartyEntityID | string | `""` | Identity Provider's SAML2 Asserting ID. |
 | auth.saml2.assertingPartySSOUrl | string | `""` | Identity Provider's SAML2 SSO URL. |
-| auth.preAuthentication.enabled | bool | `false` | Enabling the PreAuthentication feature. |
+| auth.preAuthentication.enabled | bool | `false` | Enables the PreAuthentication feature. |
 | auth.preAuthentication.headerPrincipal | string | `""` | Name of the header holding the remote user name. |
 | auth.preAuthentication.newUserRole | string | `""` | Role given to new pre-authenticated users. |
 | auth.preAuthentication.customUserRoles | object | `{}` | Roles to map to dedicated pre-authenticated users, in the `username: role` format. |
@@ -112,11 +115,11 @@ helm upgrade --install inception ./chart/inception/
 | image.pullPolicy | string | `"IfNotPresent"` | Image Pull Policy. |
 | image.tag | string | `"33.3"` | Image tag. |
 | imagePullSecrets | object | `{}` | INCEpTION container image Pull Secret. |
-| startupProbe.enabled | bool | `true` | Enabling the startup probe. |
+| startupProbe.enabled | bool | `true` | Enables the startup probe. |
 | startupProbe.initialDelaySeconds | int | `30` | Startup probe initial startup delay. |
 | startupProbe.periodSeconds | int | `10` | Startup probe check interval, in seconds. |
 | startupProbe.failureThreshold | int | `5` | Startup probe's number of accepted failures. |
-| livenessProbe.enabled | bool | `true` | Enabling the liveness probe. |
+| livenessProbe.enabled | bool | `true` | Enables the liveness probe. |
 | livenessProbe.initialDelaySeconds | int | `0` | Liveness probe initial startup delay. |
 | livenessProbe.periodSeconds | int | `5` | Liveness probe check interval, in seconds. |
 | livenessProbe.failureThreshold | int | `2` | Liveness probe's number of accepted failures. |
@@ -125,9 +128,9 @@ helm upgrade --install inception ./chart/inception/
 | podSecurityContext.fsGroup | int | `2000` | Group ID authorized to mount external PVCs. |
 | podSecurityContext.runAsNonRoot | bool | `true` | Allowing container(s) to run as root. |
 | securityContext.readOnlyRootFilesystem | bool | `true` | Enforcing read-only root filesystem (`/`). |
-| securityContext.privileged | bool | `false` | Enabling running the pod as privileged. |
+| securityContext.privileged | bool | `false` | Enables running the pod as privileged. |
 | resources | object | `{}` | INCEpTION pod's resources. |
-| autoscaling.enabled | bool | `false` | Enabling horizontal pod autoscaling. |
+| autoscaling.enabled | bool | `false` | Enables horizontal pod autoscaling. |
 | autoscaling.minReplicas | int | `1` | Minimum number of pod replicas. |
 | autoscaling.maxReplicas | int | `3` | Maximum number of pod replicas. |
 | autoscaling.targetCPUUtilizationPercentage | int | `80` | Target CPU usage percentage to trigger the deployment of a new replica. |
@@ -147,38 +150,28 @@ helm upgrade --install inception ./chart/inception/
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| networkPolicies.enabled | bool | `true` | Enabling the default Network Policies. |
-| service.type | string | `"ClusterIP"` | Service Type |
-| service.port | int | `8080` | Service Port |
-| ingress.enabled | bool | `true` | Enabling Ingress. |
+| networkPolicies.enabled | bool | `true` | Enables the default Network Policies. |
+| service.type | string | `"ClusterIP"` | Service type. |
+| service.port | int | `8080` | Service port. |
+| ingress.enabled | bool | `true` | Enables Ingress. |
 | ingress.className | string | `"nginx"` | Ingress class name. |
+| ingress.hosts | list | Defined on `localhost:80`, listening on `/` | Ingress host settings. |
 | ingress.tls | list | `[]` | Ingress TLS settings. |
 
 ### INCEpTION's database deployment settings
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| mariadb.enabled | bool | `true` | Enabling embedded MariaDB. |
-| mariadb.image.debug | bool | `false` | Enabling debug logging. |
+| mariadb.enabled | bool | `true` | Enables embedded MariaDB. |
+| mariadb.image.debug | bool | `false` | Enables debug logging. |
 | mariadb.primary.service.ports.mysql | int | `3306` | Mariadb `mysql`port. |
-| mariadb.primary.configuration | string | Enabled UTF8 character set. | MariaDB Primary configuration to be injected as ConfigMap. |
+| mariadb.primary.configuration | string | Enforce UTF8 character set. | MariaDB Primary configuration to be injected as ConfigMap. |
 | mariadb.auth.database | string | `"inception"` | Name for a custom database to create. |
 | mariadb.auth.username | string | `"inception"` | Name for a custom user to create. |
-| mariadb.auth.password | string | `"t0t4llYSecreT"` | Password for the new user, in plain text (**NOT RECOMMENDED FOR PRODUCTION!**). Ignored if existing secret is provided. |
+| mariadb.auth.password | string | `"t0t4llYSecreT"` | Password for the new user, in plain text (**NOT RECOMMENDED FOR PRODUCTION**). Ignored if existing secret is provided. |
 | mariadb.auth.existingSecret | string | `""` | Use existing secret for password details (auth.rootPassword, auth.password, auth.replicationPassword will be ignored and picked up from this secret).     The secret has to contain the keys `mariadb-root-password`, `mariadb-replication-password` and `mariadb-password`. |
 | mariadb.networkPolicy.enabled | bool | `true` | Enable creation of NetworkPolicy resources. |
 | mariadb.networkPolicy.allowExternal | bool | `false` | The Policy model to apply. |
-
-### Other Values
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| config.database.auth.username | string | `"inception"` |  |
-| auth.defaultAdmin.password.value | string | `"loc@lAdmin!*"` |  |
-| auth.defaultAdmin.password.existingSecret.secretName | string | `""` |  |
-| ingress.hosts[0].host | string | `"localhost"` |  |
-| ingress.hosts[0].paths[0].path | string | `"/"` |  |
-| ingress.hosts[0].paths[0].pathType | string | `"Prefix"` |  |
 
 ----------------------------------------------
 Autogenerated from chart metadata using [helm-docs v1.14.2](https://github.com/norwoodj/helm-docs/releases/v1.14.2)
