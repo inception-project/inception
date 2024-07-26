@@ -256,6 +256,7 @@
     <!-- Knowledge base -->
     <module>inception-kb</module>
     <module>inception-kb-fact-linking</module>
+    <module>inception-kb-lucene-sail</module>
     <module>inception-ui-kb</module>
     <module>inception-concept-linking</module>
     <!-- Editor extensions -->
