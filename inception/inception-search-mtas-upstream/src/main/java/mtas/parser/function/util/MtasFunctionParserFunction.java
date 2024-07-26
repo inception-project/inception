@@ -50,7 +50,6 @@ public abstract class MtasFunctionParserFunction {
   /**
    * Gets the response.
    *
-   * @param args the args
    * @param n the n
    * @return the response
    */
@@ -79,7 +78,6 @@ public abstract class MtasFunctionParserFunction {
   /**
    * Gets the value double.
    *
-   * @param args the args
    * @param n the n
    * @return the value double
    * @throws IOException Signals that an I/O exception has occurred.
@@ -89,7 +87,6 @@ public abstract class MtasFunctionParserFunction {
   /**
    * Gets the value long.
    *
-   * @param args the args
    * @param n the n
    * @return the value long
    * @throws IOException Signals that an I/O exception has occurred.

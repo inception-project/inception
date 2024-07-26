@@ -405,7 +405,6 @@ public abstract class MtasDataCollector<T1 extends Number & Comparable<T1>, T2 e
    * Merge.
    *
    * @param newDataCollector the new data collector
-   * @param map the map
    * @param increaseSourceNumber the increase source number
    * @throws IOException Signals that an I/O exception has occurred.
    */

@@ -209,7 +209,6 @@ public class MtasExpandSpanQuery extends MtasSpanQuery {
      *
      * @param subWeight the sub weight
      * @param searcher the searcher
-     * @param needsScores the needs scores
      * @throws IOException Signals that an I/O exception has occurred.
      */
     public MtasExpandWeight(SpanWeight subWeight, IndexSearcher searcher,

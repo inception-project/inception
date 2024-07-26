@@ -27,6 +27,7 @@ import org.eclipse.rdf4j.query.TupleQueryResult;
 import org.eclipse.rdf4j.repository.sail.SailRepository;
 import org.eclipse.rdf4j.repository.sail.SailRepositoryConnection;
 import org.eclipse.rdf4j.sail.memory.MemoryStore;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -62,11 +63,10 @@ public class TypeSpecTest
                 VF.createLiteral(value));
     }
 
-    LuceneSail sail;
-    MemoryStore memoryStore;
-    SailRepository repository;
-    @TempDir
-    File dataDir;
+    private LuceneSail sail;
+    private MemoryStore memoryStore;
+    private SailRepository repository;
+    private @TempDir File dataDir;
 
     @BeforeEach
     public void setup() throws IOException
@@ -76,6 +76,14 @@ public class TypeSpecTest
         sail = new LuceneSail();
         sail.setParameter(LuceneSail.LUCENE_DIR_KEY, "lucene-index");
         sail.setParameter(LuceneSail.INDEX_CLASS_KEY, LuceneSail.DEFAULT_INDEX_CLASS);
+    }
+
+    @AfterEach
+    void shutdown()
+    {
+        if (sail != null) {
+            sail.shutDown();
+        }
     }
 
     private void initSail()
