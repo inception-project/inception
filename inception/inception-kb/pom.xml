@@ -336,11 +336,6 @@
     </dependency>
     <dependency>
       <groupId>org.apache.jena</groupId>
-      <artifactId>jena-tdb</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.jena</groupId>
       <artifactId>jena-core</artifactId>
       <scope>test</scope>
     </dependency>

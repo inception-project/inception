@@ -100,6 +100,7 @@
     <sentry.version>6.34.0</sentry.version>
 
     <tomcat.version>10.1.24</tomcat.version>
+    <jetty.version>12.0.11</jetty.version>
     <servlet-api.version>6.0.0</servlet-api.version>
 
     <mariadb.driver.version>2.7.12</mariadb.driver.version>
@@ -120,7 +121,7 @@
       - These are all interconnected - because they share the dependency on Lucene.
       -->
     <lucene.version>9.10.0</lucene.version>
-    <solr.version>9.6.0</solr.version>
+    <solr.version>9.6.1</solr.version>
     <!-- mtas.version>9.10.0.0</mtas.version --> 
     <!-- * 8.11.1.0 depends on Lucene 8.11.1 -->
     <!--   9.10.0.0  depends on Lucene 9.x -->
@@ -138,7 +139,7 @@
     <!-- * 4.3.x depends on Lucene 8.9.x -->
     <!-- * 5.x.x depends on Lucene 9.x.x -->
 
-    <jena.version>4.7.0</jena.version>
+    <jena.version>5.1.0</jena.version>
     <!-- * 4.6.1    depends on Lucene 8.11.1 -->
     <!--   4.7.0    depends on Lucene 9.4.2 -->
 
