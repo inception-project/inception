@@ -1,0 +1,292 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<mtas>
+
+	<!-- START MTAS INDEX CONFIGURATION -->
+	<index>
+		<!-- START GENERAL SETTINGS MTAS INDEX PROCESS -->
+		<payload index="false" />
+		<offset index="false" />
+		<realoffset index="false" />
+		<parent index="true" />
+		<!-- END GENERAL SETTINGS MTAS INDEX PROCESS -->
+	</index>
+	<!-- END MTAS INDEX CONFIGURATION -->
+
+
+
+	<!-- START CONFIGURATION MTAS FOLIA PARSER -->
+	<parser name="mtas.analysis.parser.MtasFoliaParser">
+
+		<!-- START GENERAL SETTINGS MTAS FOLIA PARSER -->
+		<autorepair value="true" />
+		<makeunique value="true" />
+        <!-- END GENERAL SETTINGS MTAS FOLIA PARSER -->
+
+		<!-- START REFERENCES -->
+		<references>
+			<reference name="wref" ref="id" />
+		</references>
+		<!-- END REFERENCES -->
+
+		<!-- START MAPPINGS -->
+		<mappings>
+
+			<!-- START WORDS -->
+			<mapping type="word" name="w">
+			</mapping>
+			<mapping type="word" name="w">
+				<token type="string" offset="false" realoffset="false" parent="false">
+					<pre>
+						<item type="name" />
+					</pre>
+					<post>
+						<item type="attribute" name="class" />
+					</post>
+				</token>
+				<condition>
+					<item type="attribute" name="class" />
+					<item type="attribute" name="class" not="true" condition="WORD" />
+				</condition>
+			</mapping>
+			<!-- END WORDS -->
+
+			<!-- START WORD ANNOTATIONS -->
+			<mapping type="wordAnnotation" name="t">
+				<token type="string" offset="false">
+					<pre>
+						<item type="name" />
+					</pre>
+					<post>
+						<item type="text" />
+					</post>
+				</token>
+				<token type="string" offset="false" realoffset="false" parent="false">
+					<pre>
+						<item type="name" />
+						<item type="string" value="_lc" />
+					</pre>
+					<post>
+						<item type="text" filter="ascii,lowercase" />
+					</post>
+				</token>
+				<condition>
+					<item type="ancestor" number="0" />
+					<item type="ancestorWord" number="1" />
+					<item type="unknownAncestor" number="0" />
+				</condition>
+			</mapping>
+			<mapping type="wordAnnotation" name="lemma">
+				<token type="string" offset="false" realoffset="false" parent="false">
+					<pre>
+						<item type="name" />
+					</pre>
+					<post>
+						<item type="attribute" name="class" />
+					</post>
+				</token>
+				<condition>
+					<item type="attribute" name="class" />
+					<item type="ancestor" number="0" />
+					<item type="unknownAncestor" number="0" />
+				</condition>
+			</mapping>
+			<mapping type="wordAnnotation" name="morphology">
+			</mapping>
+			<mapping type="wordAnnotation" name="morpheme">
+				<condition>
+					<item type="ancestor" number="1" />
+					<item type="ancestorName" condition="morphology" />
+				</condition>
+			</mapping>
+			<mapping type="wordAnnotation" name="t">
+				<token type="string" offset="false" realoffset="false" parent="false">
+					<pre>
+						<item type="ancestorName" />
+					</pre>
+					<post>
+						<item type="text" />
+					</post>
+				</token>
+				<condition>
+					<item type="ancestorName" distance="0" condition="morpheme" />
+				</condition>
+			</mapping>
+			<mapping type="wordAnnotation" name="pos">
+				<token type="string" offset="false" realoffset="false" parent="false">
+					<pre>
+						<item type="name" />
+					</pre>
+					<post>
+						<item type="attribute" name="head" />
+					</post>
+					<payload>
+						<item type="attribute" name="confidence" />
+					</payload>
+				</token>
+				<condition>
+					<item type="ancestor" number="0" />
+					<item type="unknownAncestor" number="0" />
+					<item type="attribute" name="class" />
+				</condition>
+			</mapping>
+			<mapping type="wordAnnotation" name="feat">
+				<token type="string" offset="false" realoffset="false" parent="false">
+					<pre>
+						<item type="name" />
+						<item type="attribute" name="subset" prefix="." />
+					</pre>
+					<post>
+						<item type="attribute" name="class" />
+					</post>
+					<payload>
+						<item type="ancestorAttribute" distance="0" name="confidence" />
+					</payload>
+				</token>
+				<condition>
+					<item type="ancestor" number="1" />
+					<item type="unknownAncestor" number="0" />
+					<item type="attribute" name="class" />
+					<item type="attribute" name="subset" />
+				</condition>
+			</mapping>
+			<!-- END WORD ANNOTATIONS -->
+
+			<!-- START RELATIONS -->
+			<mapping type="relation" name="chunk">
+				<token type="string" offset="false" realoffset="false" parent="false">
+					<pre>
+						<item type="name" />
+					</pre>
+					<post>
+						<item type="attribute" name="class" />
+					</post>
+					<payload>
+						<item type="attribute" name="confidence" />
+					</payload>
+				</token>
+				<condition>
+					<item type="attribute" name="class" />
+				</condition>
+			</mapping>
+			<mapping type="relation" name="dependency">
+				<token type="string" offset="false" realoffset="false" parent="false">
+					<pre>
+						<item type="name" />
+					</pre>
+					<post>
+						<item type="attribute" name="class" />
+					</post>
+				</token>
+				<condition>
+					<item type="attribute" name="class" />
+				</condition>
+			</mapping>
+			<mapping type="relation" name="hd">
+				<token type="string" offset="false" realoffset="false" parent="false">
+					<pre>
+						<item type="ancestorName" distance="0" />
+						<item type="name" prefix="." />
+					</pre>
+				</token>
+				<condition>
+					<item type="ancestorName" condition="dependency" />
+					<item type="ancestor" number="1" />
+				</condition>
+			</mapping>
+			<mapping type="relation" name="dep">
+				<token type="string" offset="false" realoffset="false" parent="false">
+					<pre>
+						<item type="ancestorName" distance="0" />
+						<item type="name" prefix="." />
+					</pre>
+				</token>
+				<condition>
+					<item type="ancestor" number="1" />
+					<item type="ancestorName" condition="dependency" />
+				</condition>
+			</mapping>
+			<mapping type="relation" name="entities">
+			</mapping>
+			<mapping type="relation" name="entity">
+				<token type="string" offset="false" realoffset="false" parent="false">
+					<pre>
+						<item type="name" />
+					</pre>
+					<post>
+						<item type="attribute" name="class" />
+					</post>
+					<payload>
+						<item type="attribute" name="confidence" />
+					</payload>
+				</token>
+				<condition>
+					<item type="ancestor" number="1" />
+					<item type="ancestorName" condition="entities" />
+				</condition>
+			</mapping>
+			<!-- END RELATIONS -->
+
+			<!-- START GROUPS -->
+			<mapping type="group" name="s">
+				<token type="string" offset="false">
+					<pre>
+						<item type="name" />
+					</pre>
+					<post>
+						<item type="attribute" name="class" />
+					</post>
+				</token>
+			</mapping>
+			<mapping type="group" name="p">
+				<token type="string" offset="false">
+					<pre>
+						<item type="name" />
+					</pre>
+					<post>
+						<item type="attribute" name="class" />
+					</post>
+				</token>
+			</mapping>
+			<mapping type="group" name="div">
+				<token type="string" offset="false">
+					<pre>
+						<item type="name" />
+					</pre>
+					<post>
+						<item type="attribute" name="class" />
+					</post>
+				</token>
+			</mapping>
+			<mapping type="group" name="head">
+				<token type="string" offset="false">
+					<pre>
+						<item type="name" />
+					</pre>
+					<post>
+						<item type="attribute" name="class" />
+					</post>
+				</token>
+			</mapping>
+			<!-- END GROUPS -->
+
+			<!-- START GROUP ANNOTATIONS -->
+			<mapping type="groupAnnotation" name="lang">
+				<token type="string" offset="false" realoffset="false" parent="false">
+					<pre>
+						<item type="name" />
+					</pre>
+					<post>
+						<item type="attribute" name="class" />
+					</post>
+				</token>
+			</mapping>
+			<!-- END GROUP ANNOTATIONS -->
+
+		</mappings>
+		<!-- END MAPPINGS -->
+
+	</parser>
+	<!-- END CONFIGURATION MTAS FOLIA PARSER -->
+
+
+</mtas>

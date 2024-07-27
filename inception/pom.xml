@@ -42,14 +42,14 @@
     <dependencies>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-        <artifactId>inception-bom</artifactId>
+        <artifactId>inception-dependencies</artifactId>
         <version>34.0-SNAPSHOT</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-        <artifactId>inception-dependencies</artifactId>
+        <artifactId>inception-bom</artifactId>
         <version>34.0-SNAPSHOT</version>
         <type>pom</type>
         <scope>import</scope>
@@ -243,10 +243,11 @@
     <!-- Internal search -->
     <module>inception-ui-search</module>
     <module>inception-search-core</module>
+    <module>inception-search-mtas-upstream</module>
     <module>inception-search-mtas</module>
     <!-- External search -->
     <module>inception-external-search-core</module>
-    <module>inception-external-search-elastic</module>
+    <!-- <module>inception-external-search-elastic</module>-->
     <module>inception-external-search-opensearch</module>
     <module>inception-external-search-solr</module>
     <module>inception-external-search-pubannotation</module>
@@ -255,6 +256,7 @@
     <!-- Knowledge base -->
     <module>inception-kb</module>
     <module>inception-kb-fact-linking</module>
+    <module>inception-kb-lucene-sail</module>
     <module>inception-ui-kb</module>
     <module>inception-concept-linking</module>
     <!-- Editor extensions -->

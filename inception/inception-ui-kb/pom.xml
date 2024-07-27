@@ -244,8 +244,9 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.textexploration.mtas</groupId>
-      <artifactId>mtas</artifactId>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-search-mtas-upstream</artifactId>
+      <version>${project.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
