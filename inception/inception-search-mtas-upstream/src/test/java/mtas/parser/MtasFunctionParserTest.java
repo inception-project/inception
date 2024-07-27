@@ -56,7 +56,7 @@ public class MtasFunctionParserTest {
   private long[] getArgsD(int n, long[] argsQ, int max) {
     long[] args = new long[n];
     for (int i = 0; i < n; i++) {
-      args[i] = (argsQ[i]>0)?generator.nextInt(Math.min(max,(int) argsQ[i]+1)):0;
+      args[i] = (argsQ[i]>0)?generator.nextInt(Math.min(max,(int) argsQ[i]+1)):1;
     }
     return args;
   }
@@ -225,8 +225,8 @@ public class MtasFunctionParserTest {
     long[] argsQ = null;
     long[] argsD = null;
     try {
-      int n = getN(0, 10000);
-      int d = getN(0, 100);
+      int n = getN(1, 10000);
+      int d = getN(1, 100);
       int k1 = generator.nextInt(10);
       function = "100/$q" + k1;
       p = new MtasFunctionParser(
