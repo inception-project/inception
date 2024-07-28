@@ -211,7 +211,7 @@ public class MtasDocumentIndex
             _indexWriter = createIndexWriter();
             return _indexWriter;
         }
-        catch (IOException e) {
+        catch (IOException | IllegalArgumentException e) {
             if (LOG.isDebugEnabled()) {
                 LOG.warn("Unable to read MTAS index: {}. Deleting index so it can be rebuilt.",
                         e.getMessage(), e);

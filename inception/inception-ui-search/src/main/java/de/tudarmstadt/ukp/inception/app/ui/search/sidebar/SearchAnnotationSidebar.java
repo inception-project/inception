@@ -585,7 +585,7 @@ public class SearchAnnotationSidebar
             return;
         }
         catch (Exception e) {
-            error("Error in the query: " + e.getMessage());
+            error("Query error: " + e.getMessage());
             aTarget.addChildren(getPage(), IFeedback.class);
             resultsProvider.emptyQuery();
             return;
