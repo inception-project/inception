@@ -129,8 +129,7 @@
               <jdkVersion>1.5</jdkVersion>
               <javadocFriendlyComments>true</javadocFriendlyComments>
               <packageName>mtas.parser.function</packageName>
-              <sourceDirectory>
-                ${project.basedir}/src/main/java/mtas/parser/function/</sourceDirectory>
+              <sourceDirectory>${project.basedir}/src/main/java/mtas/parser/function/</sourceDirectory>
             </configuration>
           </execution>
           <execution>
@@ -143,8 +142,7 @@
               <jdkVersion>1.5</jdkVersion>
               <javadocFriendlyComments>true</javadocFriendlyComments>
               <packageName>mtas.parser.simple</packageName>
-              <sourceDirectory>
-                ${project.basedir}/src/main/java/mtas/parser/simple</sourceDirectory>
+              <sourceDirectory>${project.basedir}/src/main/java/mtas/parser/simple</sourceDirectory>
             </configuration>
           </execution>
         </executions>
@@ -182,7 +180,6 @@
     <dependency>
       <groupId>org.apache.lucene</groupId>
       <artifactId>lucene-analysis-common</artifactId>
-      <version>${lucene.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.lucene</groupId>
@@ -195,7 +192,6 @@
     <dependency>
       <groupId>org.apache.lucene</groupId>
       <artifactId>lucene-sandbox</artifactId>
-      <version>${lucene.version}</version>
     </dependency>
     <dependency>
       <groupId>org.locationtech.spatial4j</groupId>

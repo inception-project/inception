@@ -281,6 +281,7 @@
     <module>inception-recommendation</module>
     <module>inception-active-learning</module>
     <module>inception-imls-azureai-openai</module>
+    <module>inception-imls-chatgpt</module>
     <module>inception-imls-opennlp</module>
     <module>inception-imls-stringmatch</module>
     <module>inception-imls-elg</module>
