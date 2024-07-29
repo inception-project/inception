@@ -247,7 +247,6 @@
     <module>inception-search-mtas</module>
     <!-- External search -->
     <module>inception-external-search-core</module>
-    <!-- <module>inception-external-search-elastic</module>-->
     <module>inception-external-search-opensearch</module>
     <module>inception-external-search-solr</module>
     <module>inception-external-search-pubannotation</module>
