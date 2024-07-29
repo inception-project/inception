@@ -15,36 +15,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.imls.ollama;
+package de.tudarmstadt.ukp.inception.recommendation.imls.chatgpt;
 
 import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CHANGE_EVENT;
 import static de.tudarmstadt.ukp.inception.support.wicket.WicketUtil.wrapInTryCatch;
 import static java.lang.String.format;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.feedback.IFeedback;
-import org.apache.wicket.markup.html.WebMarkupContainer;
-import org.apache.wicket.markup.html.basic.Label;
-import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.TextArea;
 import org.apache.wicket.markup.html.form.TextField;
-import org.apache.wicket.markup.html.list.ListItem;
-import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
-import org.apache.wicket.model.PropertyModel;
-import org.apache.wicket.model.util.ListModel;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.validation.validator.UrlValidator;
@@ -56,20 +47,18 @@ import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.AbstractTraitsEditor;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
-import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.client.OllamaClientImpl;
-import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.client.OllamaGenerateRequest;
-import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.client.OllamaModel;
-import de.tudarmstadt.ukp.inception.recommendation.imls.support.llm.option.Option;
-import de.tudarmstadt.ukp.inception.recommendation.imls.support.llm.option.OptionSetting;
+import de.tudarmstadt.ukp.inception.recommendation.imls.chatgpt.client.ChatGptClientImpl;
+import de.tudarmstadt.ukp.inception.recommendation.imls.chatgpt.client.ChatGptModel;
+import de.tudarmstadt.ukp.inception.recommendation.imls.chatgpt.client.ListModelsRequest;
 import de.tudarmstadt.ukp.inception.recommendation.imls.support.llm.prompt.PromptingModeSelect;
 import de.tudarmstadt.ukp.inception.recommendation.imls.support.llm.response.ExtractionModeSelect;
+import de.tudarmstadt.ukp.inception.security.client.auth.apikey.ApiKeyAuthenticationTraits;
+import de.tudarmstadt.ukp.inception.security.client.auth.apikey.ApiKeyAuthenticationTraitsEditor;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
-import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
-import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxSubmitLink;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.inception.support.markdown.MarkdownLabel;
 
-public class OllamaRecommenderTraitsEditor
+public class ChatGptRecommenderTraitsEditor
     extends AbstractTraitsEditor
 {
     private static final long serialVersionUID = 1677442652521110324L;
@@ -77,14 +66,13 @@ public class OllamaRecommenderTraitsEditor
     private static final String MID_FORM = "form";
 
     private @SpringBean RecommendationService recommendationService;
-    private @SpringBean RecommendationEngineFactory<OllamaRecommenderTraits> toolFactory;
+    private @SpringBean RecommendationEngineFactory<ChatGptRecommenderTraits> toolFactory;
 
-    private final CompoundPropertyModel<OllamaRecommenderTraits> traits;
+    private final CompoundPropertyModel<ChatGptRecommenderTraits> traits;
 
-    private final WebMarkupContainer optionSettingsContainer;
-    private final IModel<List<OptionSetting>> optionSettings;
+    private final ApiKeyAuthenticationTraitsEditor authenticationTraitsEditor;
 
-    public OllamaRecommenderTraitsEditor(String aId, IModel<Recommender> aRecommender,
+    public ChatGptRecommenderTraitsEditor(String aId, IModel<Recommender> aRecommender,
             IModel<List<Preset>> aPresets)
     {
         super(aId, aRecommender);
@@ -93,7 +81,7 @@ public class OllamaRecommenderTraitsEditor
 
         traits = CompoundPropertyModel.of(toolFactory.readTraits(aRecommender.getObject()));
 
-        var form = new Form<OllamaRecommenderTraits>(MID_FORM, traits)
+        var form = new Form<ChatGptRecommenderTraits>(MID_FORM, traits)
         {
             private static final long serialVersionUID = -1;
 
@@ -101,6 +89,7 @@ public class OllamaRecommenderTraitsEditor
             protected void onSubmit()
             {
                 super.onSubmit();
+                authenticationTraitsEditor.commit();
                 toolFactory.writeTraits(aRecommender.getObject(), traits.getObject());
             }
         };
@@ -130,10 +119,15 @@ public class OllamaRecommenderTraitsEditor
         model.setOutputMarkupId(true);
         form.add(model);
 
-        form.add(new TextField<String>("url").add(new LambdaAjaxFormComponentUpdatingBehavior(
-                CHANGE_EVENT, _target -> _target.add(model))));
+        if (!(traits.getObject().getAuthentication() instanceof ApiKeyAuthenticationTraits)) {
+            traits.getObject().setAuthentication(new ApiKeyAuthenticationTraits());
+        }
+
+        form.add(new TextField<String>("url"));
+        authenticationTraitsEditor = new ApiKeyAuthenticationTraitsEditor("authentication",
+                Model.of((ApiKeyAuthenticationTraits) traits.getObject().getAuthentication()));
+        form.add(authenticationTraitsEditor);
         form.add(new TextArea<String>("prompt"));
-        form.add(new CheckBox("raw").setOutputMarkupPlaceholderTag(true));
         var markdownLabel = new MarkdownLabel("promptHints",
                 LoadableDetachableModel.of(this::getPromptHints));
         markdownLabel.setOutputMarkupId(true);
@@ -143,31 +137,11 @@ public class OllamaRecommenderTraitsEditor
                         _target -> _target.add(markdownLabel))));
         form.add(new ExtractionModeSelect("extractionMode", traits.bind("extractionMode"),
                 getModel()));
-        form.add(new OllamaResponseFormatSelect("format"));
+        form.add(new ChatGptResponseFormatSelect("format"));
         add(form);
-
-        var optionSettingsForm = new Form<>("optionSettingsForm",
-                CompoundPropertyModel.of(new OptionSetting()));
-        optionSettingsForm.setVisibilityAllowed(false); // FIXME Not quite ready yet
-        form.add(optionSettingsForm);
-
-        optionSettingsForm.add(
-                new DropDownChoice<Option<?>>("option", OllamaGenerateRequest.getAllOptions()));
-        optionSettingsForm
-                .add(new LambdaAjaxSubmitLink<OptionSetting>("addOption", this::addOptionSetting));
-
-        optionSettingsContainer = new WebMarkupContainer("optionSettingsContainer");
-        optionSettingsContainer.setOutputMarkupPlaceholderTag(true);
-        optionSettingsForm.add(optionSettingsContainer);
-
-        optionSettings = new ListModel<>(traits.getObject().getOptions().entrySet().stream()
-                .map(e -> new OptionSetting(e.getKey(), String.valueOf(e.getValue())))
-                .collect(Collectors.toCollection(ArrayList::new)));
-
-        optionSettingsContainer.add(createOptionSettingsList("optionSettings", optionSettings));
     }
 
-    private void applyPreset(Form<OllamaRecommenderTraits> aForm, Preset aPreset,
+    private void applyPreset(Form<ChatGptRecommenderTraits> aForm, Preset aPreset,
             AjaxRequestTarget aTarget)
     {
         if (aPreset != null) {
@@ -176,44 +150,8 @@ public class OllamaRecommenderTraitsEditor
             settings.setExtractionMode(aPreset.getExtractionMode());
             settings.setFormat(aPreset.getFormat());
             settings.setPromptingMode(aPreset.getPromptingMode());
-            settings.setRaw(aPreset.isRaw());
         }
         aTarget.add(aForm);
-    }
-
-    private ListView<OptionSetting> createOptionSettingsList(String aId,
-            IModel<List<OptionSetting>> aOptionSettings)
-    {
-        return new ListView<OptionSetting>(aId, aOptionSettings)
-        {
-            private static final long serialVersionUID = 244305980337592760L;
-
-            @Override
-            protected void populateItem(ListItem<OptionSetting> aItem)
-            {
-                var optionSetting = aItem.getModelObject();
-
-                aItem.add(new Label("option", optionSetting.getOption()));
-                aItem.add(new TextField<>("value", PropertyModel.of(optionSetting, "value")));
-                aItem.add(new LambdaAjaxLink("removeOption",
-                        _target -> removeOptionSetting(_target, aItem.getModelObject())));
-            }
-        };
-    }
-
-    private void addOptionSetting(AjaxRequestTarget aTarget, Form<OptionSetting> aForm)
-    {
-        optionSettings.getObject()
-                .add(new OptionSetting(aForm.getModel().getObject().getOption(), ""));
-
-        aTarget.addChildren(getPage(), IFeedback.class);
-        aTarget.add(optionSettingsContainer);
-    }
-
-    private void removeOptionSetting(AjaxRequestTarget aTarget, OptionSetting aBinding)
-    {
-        optionSettings.getObject().remove(aBinding);
-        aTarget.add(optionSettingsContainer);
     }
 
     private String getPromptHints()
@@ -223,14 +161,22 @@ public class OllamaRecommenderTraitsEditor
 
     private List<String> listModels()
     {
-        var url = traits.map(OllamaRecommenderTraits::getUrl).orElse(null).getObject();
-        if (!new UrlValidator(new String[] { "http", "https" }).isValid(url)) {
+        var url = traits.map(ChatGptRecommenderTraits::getUrl).orElse(null).getObject();
+        var apiKey = ((ApiKeyAuthenticationTraits) traits
+                .map(ChatGptRecommenderTraits::getAuthentication).orElse(null).getObject())
+                        .getApiKey();
+
+        if (!new UrlValidator(new String[] { "http", "https" }).isValid(url) || isBlank(apiKey)) {
             return Collections.emptyList();
         }
 
-        var client = new OllamaClientImpl();
+        var client = new ChatGptClientImpl();
         try {
-            return client.listModels(url).stream().map(OllamaModel::getName).toList();
+            return client.listModels(url, ListModelsRequest.builder() //
+                    .withApiKey(apiKey) //
+                    .build()).stream() //
+                    .map(ChatGptModel::getId) //
+                    .toList();
         }
         catch (IOException e) {
             return Collections.emptyList();
