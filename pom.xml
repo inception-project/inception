@@ -68,7 +68,7 @@
 
   <properties>
     <build-ant-version>1.10.14</build-ant-version>
-    <build-groovy-version>4.0.21</build-groovy-version>
+    <build-groovy-version>4.0.22</build-groovy-version>
 
     <junit-jupiter.version>5.10.3</junit-jupiter.version>
     <junit-platform.version>1.10.3</junit-platform.version>
@@ -97,15 +97,15 @@
     <slf4j.version>2.0.13</slf4j.version>
     <log4j2.version>2.23.1</log4j2.version>
     <jboss.logging.version>3.6.0.Final</jboss.logging.version>
-    <sentry.version>6.34.0</sentry.version>
+    <sentry.version>7.12.1</sentry.version>
 
     <tomcat.version>10.1.26</tomcat.version>
     <jetty.version>12.0.12</jetty.version>
     <servlet-api.version>6.0.0</servlet-api.version>
 
-    <mariadb.driver.version>2.7.12</mariadb.driver.version>
+    <mariadb.driver.version>3.4.1</mariadb.driver.version>
     <mssql.driver.version>12.6.3.jre11</mssql.driver.version>
-    <mysql.driver.version>8.0.33</mysql.driver.version>
+    <mysql.driver.version>9.0.0</mysql.driver.version>
     <postgres.driver.version>42.7.3</postgres.driver.version>
     <hibernate.version>6.5.2.Final</hibernate.version>
     <hibernate.validator.version>8.0.1.Final</hibernate.validator.version>
@@ -120,7 +120,7 @@
     <!--
       - These are all interconnected - because they share the dependency on Lucene.
       -->
-    <lucene.version>9.11.1</lucene.version>
+    <lucene.version>9.10.0</lucene.version>
     <solr.version>9.6.1</solr.version>
     <opensearch.version>2.15.0</opensearch.version>
     <jena.version>5.1.0</jena.version>
@@ -134,20 +134,45 @@
 
     <json.version>20230227</json.version>
     <pf4j.version>2.6.0</pf4j.version>
+    <pf4j-spring.version>0.5.0</pf4j-spring.version>
     <jackson.version>2.17.2</jackson.version>
     <snakeyaml.version>2.2</snakeyaml.version>
     <okhttp.version>4.12.0</okhttp.version>
     <okio.version>3.9.0</okio.version>
     <byte-buddy.version>1.14.18</byte-buddy.version>
+    <caffeine.version>3.1.8</caffeine.version>
+    <commons-beanutils.version>1.9.4</commons-beanutils.version>
+    <commons-collections4.version>4.4</commons-collections4.version>
+    <commons-csv.version>1.11.0</commons-csv.version>
+    <commons-fileupload.version>1.5</commons-fileupload.version>
+    <commons-pool2.version>2.12.0</commons-pool2.version>
     <commons-lang3.version>3.15.0</commons-lang3.version>
     <commons-dbcp2.version>2.12.0</commons-dbcp2.version>
     <commons-codec.version>1.17.1</commons-codec.version>
+    <commons-compress.version>1.26.2</commons-compress.version>
+    <commons-text.version>1.12.0</commons-text.version>
+    <commons-validator.version>1.9.0</commons-validator.version>
+    <commons-io.version>2.16.1</commons-io.version>
+    <commons-logging.version>1.3.3</commons-logging.version>
+    <commons-logging-api.version>1.1</commons-logging-api.version>
+    <jinjava.version>2.7.2</jinjava.version>
     <fastutil.version>8.5.14</fastutil.version>
     <picocli.version>4.7.6</picocli.version>
     <woodstox-core.version>6.7.0</woodstox-core.version>
     <nimbus-jose-jwt.version>9.40</nimbus-jose-jwt.version>
     <json-schema-validator.version>1.5.1</json-schema-validator.version>
     <jgit.version>6.10.0.202406032230-r</jgit.version>
+    <jaxb.version>4.0.5</jaxb.version>
+    <snappy.version>1.1.10.5</snappy.version>
+    <jsonld-java.version>0.13.6</jsonld-java.version>
+    <jna.version>5.14.0</jna.version>
+    <jsoup.version>1.16.1</jsoup.version>
+    <mime4j.version>0.8.10</mime4j.version>
+    <hsqldb.version>2.7.3</hsqldb.version>
+    <opensaml.version>4.3.2</opensaml.version>
+    <oauth2-oidc-sdk.version>9.43.4</oauth2-oidc-sdk.version>
+    <javassist.version>3.30.2-GA</javassist.version>
+    <openjson.version>1.0.13</openjson.version>
 
     <node.version>20.12.2</node.version>
     <apache-annotator.version>0.2.0</apache-annotator.version>
@@ -166,6 +191,7 @@
     <eslint-plugin-svelte.version>^2.37.0</eslint-plugin-svelte.version>
     <events.version>^3.3.0</events.version>
     <fast-json-patch.version>^3.1.1</fast-json-patch.version>
+    <font-awesome.version>6.5.2</font-awesome.version>
     <fs-extra.version>^11.2.0</fs-extra.version>
     <jsdom.version>^20.0.0</jsdom.version>
     <jsdom-global.version>^3.0.2</jsdom-global.version>
