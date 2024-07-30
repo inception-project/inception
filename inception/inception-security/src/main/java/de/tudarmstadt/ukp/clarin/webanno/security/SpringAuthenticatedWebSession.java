@@ -177,12 +177,13 @@ public class SpringAuthenticatedWebSession
 
     public void signIn(Authentication aAuthentication)
     {
-        Request request = RequestCycle.get().getRequest();
+        var request = RequestCycle.get().getRequest();
         if (request instanceof ServletWebRequest) {
             var containerRequest = ((ServletWebRequest) request).getContainerRequest();
 
             // Kill current session and create a new one as part of the authentication
             containerRequest.getSession().invalidate();
+            containerRequest.getSession(true);
         }
 
         springSecuritySignIn(aAuthentication);
