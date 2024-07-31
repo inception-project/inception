@@ -59,7 +59,7 @@ config:
         value: "t0t4llYSecreT"
         # Reference to an external Kubernetes secret in the same namespace holding INCEpTION user's password.
         existingSecret:
-          # -- Name of the secret holding holding INCEpTION user's password.
+          # -- Name of the secret holding INCEpTION user's password.
           # @section -- INCEpTION configuration settings
           secretName: ""
           # -- Key inside the secret holding INCEpTION user's password.
@@ -115,7 +115,7 @@ auth:
       #    Ignored if a reference to an external secret is specified.
       # @section -- INCEpTION authentication settings
       value: ""
-      # Reference to an external Kubernetes secret in the same namespace holding the OAuth2 client secret'value.
+      # Reference to an external Kubernetes secret in the same namespace holding the OAuth2 client secret's value.
       existingSecret: 
         # -- Name of the secret holding the OAuth2 client secret value.
         # @section -- INCEpTION authentication settings
@@ -189,7 +189,7 @@ auth:
     # -- Enables the PreAuthentication feature.
     # @section -- INCEpTION authentication settings
     enabled: false
-    # -- Name of the header holding the remote user name.
+    # -- Name of the header holding the remote username.
     # @section -- INCEpTION authentication settings
     headerPrincipal: ""
     # -- Role given to new pre-authenticated users.
@@ -198,10 +198,6 @@ auth:
     # -- Roles to map to dedicated pre-authenticated users, in the `username: role` format.
     # @section -- INCEpTION authentication settings
     customUserRoles: {}
-
-# -- Number of replicas fir INCEpTION deployment.
-# @section -- INCEpTION deployment settings
-replicaCount: 1
 
 # -- Extra annotations for INCEpTION's pod.
 # @section -- INCEpTION deployment settings
@@ -315,24 +311,6 @@ resources: {}
   # requests:
   #   cpu: 100m
   #   memory: 128Mi
-
-# INCEpTION pod horizontal autoscaling feature (not recommended).
-autoscaling:
-  # -- Enables horizontal pod autoscaling.
-  # @section -- INCEpTION deployment settings
-  enabled: false
-  # -- Minimum number of pod replicas.
-  # @section -- INCEpTION deployment settings
-  minReplicas: 1
-  # -- Maximum number of pod replicas.
-  # @section -- INCEpTION deployment settings
-  maxReplicas: 3
-  # -- Target CPU usage percentage to trigger the deployment of a new replica.
-  # @section -- INCEpTION deployment settings
-  targetCPUUtilizationPercentage: 80
-  # -- Target memory usage percentage to trigger the deployment of a new replica.
-  # @section -- INCEpTION deployment settings
-  targetMemoryUtilizationPercentage: 80
 
 # Service Account used for INCEpTION's deployment.
 serviceAccount:
@@ -481,7 +459,7 @@ mariadb:
       socket=/opt/bitnami/mariadb/tmp/mysql.sock
 
 
-  # MariaDB authentication settings for the custom database.
+  # MariaDB's authentication settings for the custom database.
   auth:
     # -- Name for a custom database to create.
     # @section -- INCEpTION's database deployment settings

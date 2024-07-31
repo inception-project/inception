@@ -28,6 +28,11 @@ To install the chart, just type :
 helm upgrade --install inception ./chart/inception/ 
 ```
 
+### About replication
+
+INCEPTION's design doesn't allow its application to be scaled, nor does it provide a cluster mode. Consequently,
+replicas and automatic scaling have been disabled in the values section.
+
 {{ template "chart.valuesSection" . }}
 
 {{ template "helm-docs.versionFooter" . }}

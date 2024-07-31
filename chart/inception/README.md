@@ -34,6 +34,11 @@ To install the chart, just type :
 helm upgrade --install inception ./chart/inception/
 ```
 
+### About replication
+
+INCEPTION's design doesn't allow its application to be scaled, nor does it provide a cluster mode. Consequently,
+replicas and automatic scaling have been disabled in the values section.
+
 ## Values
 
 ### Helm Release settings
@@ -58,7 +63,7 @@ helm upgrade --install inception ./chart/inception/
 | config.database.serverTimezone | string | `"UTC"` | Database server timezone. |
 | config.database.auth.username | string | `"inception"` | INCEpTION user name. |
 | config.database.auth.password.value | string | `"t0t4llYSecreT"` | INCEpTION user password, in plain text (**NOT RECOMMENDED FOR PRODUCTION**).     Ignored if a reference to an external secret is specified. |
-| config.database.auth.password.existingSecret.secretName | string | `""` | Name of the secret holding holding INCEpTION user's password. |
+| config.database.auth.password.existingSecret.secretName | string | `""` | Name of the secret holding INCEpTION user's password. |
 | config.database.auth.password.existingSecret.secretKey | string | `""` | Key inside the secret holding INCEpTION user's password. |
 | config.extraConfig | object | `{}` | Extra configuration added at the end of the `settings.properties` file, in `key: value` format. |
 
@@ -95,7 +100,7 @@ helm upgrade --install inception ./chart/inception/
 | auth.saml2.assertingPartyEntityID | string | `""` | Identity Provider's SAML2 Asserting ID. |
 | auth.saml2.assertingPartySSOUrl | string | `""` | Identity Provider's SAML2 SSO URL. |
 | auth.preAuthentication.enabled | bool | `false` | Enables the PreAuthentication feature. |
-| auth.preAuthentication.headerPrincipal | string | `""` | Name of the header holding the remote user name. |
+| auth.preAuthentication.headerPrincipal | string | `""` | Name of the header holding the remote username. |
 | auth.preAuthentication.newUserRole | string | `""` | Role given to new pre-authenticated users. |
 | auth.preAuthentication.customUserRoles | object | `{}` | Roles to map to dedicated pre-authenticated users, in the `username: role` format. |
 
@@ -103,7 +108,6 @@ helm upgrade --install inception ./chart/inception/
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| replicaCount | int | `1` | Number of replicas fir INCEpTION deployment. |
 | podAnnotations | object | `{}` | Extra annotations for INCEpTION's pod. |
 | podLabels | object | `{}` | Extra labels for INCEpTION's pod. |
 | initContainers | object | `{}` | User-defined init-container to run before INCEpTION pod, as defined in [Kubernetes documentation](https://kubernetes.io/docs/concepts/workloads/pods/init-containers/). |
@@ -130,11 +134,6 @@ helm upgrade --install inception ./chart/inception/
 | securityContext.readOnlyRootFilesystem | bool | `true` | Enforcing read-only root filesystem (`/`). |
 | securityContext.privileged | bool | `false` | Enables running the pod as privileged. |
 | resources | object | `{}` | INCEpTION pod's resources. |
-| autoscaling.enabled | bool | `false` | Enables horizontal pod autoscaling. |
-| autoscaling.minReplicas | int | `1` | Minimum number of pod replicas. |
-| autoscaling.maxReplicas | int | `3` | Maximum number of pod replicas. |
-| autoscaling.targetCPUUtilizationPercentage | int | `80` | Target CPU usage percentage to trigger the deployment of a new replica. |
-| autoscaling.targetMemoryUtilizationPercentage | int | `80` | Target memory usage percentage to trigger the deployment of a new replica. |
 | serviceAccount.create | bool | `true` | Specifies whether a service account should be created. |
 | serviceAccount.automount | bool | `true` | Automatically mount a ServiceAccount's API credentials. |
 | serviceAccount.annotations | object | `{}` | Annotations to add to the service account. |
