@@ -67,6 +67,16 @@ public class SettingsUtil
     public static final String CFG_AUTH_MODE = "auth.mode";
     @Deprecated
     public static final String CFG_AUTH_PREAUTH_NEWUSER_ROLES = "auth.preauth.newuser.roles";
+    @Deprecated
+    public static final String CFG_AUTH_OAUTH2_GROUP_MAPPING_ENABLED = "auth.oauth2.groups.admin";
+    @Deprecated
+    public static final String CFG_AUTH_OAUTH2_GROUP_ADMIN = "auth.oauth2.groups.admin";
+    @Deprecated
+    public static final String CFG_AUTH_OAUTH2_GROUP_USER = "auth.oauth2.groups.user";
+    @Deprecated
+    public static final String CFG_AUTH_OAUTH2_GROUP_PROJECT_CREATOR = "auth.oauth2.groups.project-creator";
+    @Deprecated
+    public static final String CFG_AUTH_OAUTH2_GROUP_REMOTE = "auth.oauth2.groups.remote";
 
     /**
      * @deprecated Should introduce/use a Spring properties bean instead.

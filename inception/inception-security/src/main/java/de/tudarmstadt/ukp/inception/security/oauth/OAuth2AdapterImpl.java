@@ -161,7 +161,9 @@ public class OAuth2AdapterImpl
         u.setPassword(UserDao.EMPTY_PASSWORD);
         u.setEnabled(true);
         u.setRealm(realm);
-        u.setRoles(PreAuthUtils.getPreAuthenticationNewUserRoles(u));
+
+        ArrayList<String> oauth2groups = user.getAttribute("groups");
+        u.setRoles(OauthUtils.getOAuth2NewUSerRoles(u, oauth2groups));
 
         String email = user.getAttribute("email");
         if (email != null) {
