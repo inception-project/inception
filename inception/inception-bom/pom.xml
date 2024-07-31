@@ -21,7 +21,7 @@
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception</artifactId>
     <version>34.0-SNAPSHOT</version>
-    <relativePath>../..</relativePath>
+    <relativePath>../../pom.xml</relativePath>
   </parent>
 
   <artifactId>inception-bom</artifactId>
@@ -117,11 +117,6 @@
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-        <artifactId>inception-external-search-elastic</artifactId>
-        <version>34.0-SNAPSHOT</version>
-      </dependency>
-      <dependency>
-        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-external-search-opensearch</artifactId>
         <version>34.0-SNAPSHOT</version>
       </dependency>
@@ -153,6 +148,11 @@
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-kb-fact-linking</artifactId>
+        <version>34.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-kb-lucene-sail</artifactId>
         <version>34.0-SNAPSHOT</version>
       </dependency>
       <dependency>
@@ -243,6 +243,11 @@
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-imls-azureai-openai</artifactId>
+        <version>34.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-imls-chatgpt</artifactId>
         <version>34.0-SNAPSHOT</version>
       </dependency>
       <dependency>
@@ -355,6 +360,11 @@
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-search-mtas</artifactId>
+        <version>34.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-search-mtas-upstream</artifactId>
         <version>34.0-SNAPSHOT</version>
       </dependency>
       <dependency>

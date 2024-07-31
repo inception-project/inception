@@ -259,6 +259,10 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-imls-chatgpt</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-imls-opennlp</artifactId>
     </dependency>
     <dependency>
@@ -557,7 +561,7 @@
     <!-- SENTRY DEPENDENCIES -->
     <dependency>
       <groupId>io.sentry</groupId>
-      <artifactId>sentry-spring-boot-starter</artifactId>
+      <artifactId>sentry-spring-boot-starter-jakarta</artifactId>
     </dependency>
     <dependency>
       <groupId>io.sentry</groupId>
@@ -721,8 +725,8 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>mysql</groupId>
-      <artifactId>mysql-connector-java</artifactId>
+      <groupId>com.mysql</groupId>
+      <artifactId>mysql-connector-j</artifactId>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -962,11 +966,12 @@
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-plugin-manager</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-concept-linking</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-recommendation</usedDependency>
-              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-external</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-azureai-openai</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-chatgpt</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-elg</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-external</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-hf</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-ollama</usedDependency>
-              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-azureai-openai</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-opennlp</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-stringmatch</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-weblicht</usedDependency>
@@ -1039,8 +1044,8 @@
               <usedDependency>org.hsqldb:hsqldb</usedDependency>
               <usedDependency>org.mariadb.jdbc:mariadb-java-client</usedDependency>
               <usedDependency>com.microsoft.sqlserver:mssql-jdbc</usedDependency>
-              <usedDependency>mysql:mysql-connector-java</usedDependency>
               <usedDependency>org.postgresql:postgresql</usedDependency>
+              <usedDependency>com.mysql:mysql-connector-j</usedDependency>
               <!-- Logging - used via reflection / optional -->
               <usedDependency>com.mattbertolini:liquibase-slf4j</usedDependency>
               <usedDependency>org.slf4j:log4j-over-slf4j</usedDependency>
@@ -1048,7 +1053,7 @@
               <usedDependency>org.apache.logging.log4j:log4j-core</usedDependency>
               <usedDependency>org.apache.logging.log4j:log4j-layout-template-json</usedDependency>
               <!-- Monitoring - used via reflection / optional -->
-              <usedDependency>io.sentry:sentry-spring-boot-starter</usedDependency>
+              <usedDependency>io.sentry:sentry-spring-boot-starter-jakarta</usedDependency>
               <usedDependency>io.sentry:sentry-log4j2</usedDependency>
               <!-- Themes -->
               <usedDependency>org.wicketstuff:wicketstuff-kendo-ui-theme-bootstrap</usedDependency>
