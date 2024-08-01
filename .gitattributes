@@ -17,9 +17,9 @@
 *.dump binary
 *.xcas binary
 *.xmi binary
-*.gif
-*.pptx
-*.zip
+*.gif binary
+*.pptx binary
+*.zip binary
 #  next is probably the default
 *.pdf binary
 *.ser binary
