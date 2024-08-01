@@ -68,7 +68,7 @@ public class SettingsUtil
     @Deprecated
     public static final String CFG_AUTH_PREAUTH_NEWUSER_ROLES = "auth.preauth.newuser.roles";
     @Deprecated
-    public static final String CFG_AUTH_OAUTH2_GROUP_MAPPING_ENABLED = "auth.oauth2.groups.admin";
+    public static final String CFG_AUTH_OAUTH2_GROUP_MAPPING_ENABLED = "auth.oauth2.groups.enabled";
     @Deprecated
     public static final String CFG_AUTH_OAUTH2_GROUP_ADMIN = "auth.oauth2.groups.admin";
     @Deprecated

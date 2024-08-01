@@ -55,7 +55,6 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import de.tudarmstadt.ukp.clarin.webanno.security.OverridableUserDetailsManager;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.security.preauth.PreAuthUtils;
 
 public class OAuth2AdapterImpl
     implements OAuth2Adapter
@@ -148,6 +147,10 @@ public class OAuth2AdapterImpl
         if (u != null) {
             denyAccessToDeactivatedUsers(u);
             denyAccessOfRealmsDoNotMatch(realm, u);
+
+            u.setRoles(OauthUtils.getOAuth2UserRoles(u, user.getAttribute("groups")));
+            userRepository.update(u);
+
             return u;
         }
 
@@ -162,8 +165,7 @@ public class OAuth2AdapterImpl
         u.setEnabled(true);
         u.setRealm(realm);
 
-        ArrayList<String> oauth2groups = user.getAttribute("groups");
-        u.setRoles(OauthUtils.getOAuth2NewUSerRoles(u, oauth2groups));
+        u.setRoles(OauthUtils.getOAuth2UserRoles(u, user.getAttribute("groups")));
 
         String email = user.getAttribute("email");
         if (email != null) {
