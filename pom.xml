@@ -84,7 +84,7 @@
     <uimafit.version>3.5.0</uimafit.version>
     <uima-json.version>0.5.0</uima-json.version>
 
-    <pdfbox.version>2.0.30</pdfbox.version>
+    <pdfbox.version>3.0.2</pdfbox.version>
 
     <spring.version>6.1.11</spring.version>
     <spring.boot.version>3.3.2</spring.boot.version>
@@ -166,7 +166,7 @@
     <snappy.version>1.1.10.5</snappy.version>
     <jsonld-java.version>0.13.6</jsonld-java.version>
     <jna.version>5.14.0</jna.version>
-    <jsoup.version>1.16.1</jsoup.version>
+    <jsoup.version>1.18.1</jsoup.version>
     <mime4j.version>0.8.10</mime4j.version>
     <hsqldb.version>2.7.3</hsqldb.version>
     <opensaml.version>4.3.2</opensaml.version>

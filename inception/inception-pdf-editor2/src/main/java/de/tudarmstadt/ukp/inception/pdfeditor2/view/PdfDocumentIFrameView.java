@@ -22,7 +22,7 @@ import java.io.StringWriter;
 import java.time.Duration;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.Loader;
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.ajax.AbstractDefaultAjaxBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -143,13 +143,13 @@ public class PdfDocumentIFrameView
     private VModel visualModelFromPdfSource() throws IOException
     {
         LOG.trace("Loading visual model from source");
-        try (var is = documentStorageService.openSourceDocumentFile(getModel().getObject())) {
-            try (var doc = PDDocument.load(is)) {
-                var extractor = new VisualPDFTextStripper();
-                extractor.writeText(doc, new StringWriter());
-                return extractor.getVisualModel();
-            }
+        var pdfFile = documentStorageService.getSourceDocumentFile(getModel().getObject());
+        try (var doc = Loader.loadPDF(pdfFile)) {
+            var extractor = new VisualPDFTextStripper();
+            extractor.writeText(doc, new StringWriter());
+            return extractor.getVisualModel();
         }
+
     }
 
     @Override

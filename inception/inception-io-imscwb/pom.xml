@@ -22,8 +22,10 @@
     <artifactId>inception-app</artifactId>
     <version>34.0-SNAPSHOT</version>
   </parent>
+
   <artifactId>inception-io-imscwb</artifactId>
   <name>INCEpTION - IO - IMS CWB</name>
+
   <dependencies>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
