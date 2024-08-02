@@ -18,29 +18,80 @@
 
 package de.tudarmstadt.ukp.inception.security.oauth;
 
-import de.tudarmstadt.ukp.clarin.webanno.security.config.InceptionSecurityAutoConfiguration;
-import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityAutoConfiguration;
-import de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeService;
-import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
-import org.springframework.boot.autoconfigure.domain.EntityScan;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.transaction.annotation.Transactional;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@Transactional
-@ActiveProfiles(DeploymentModeService.PROFILE_AUTH_MODE_DATABASE)
-@DataJpaTest( //
-    showSql = false, //
-    properties = { //
-        "spring.liquibase.enabled=false", //
-        "spring.main.banner-mode=off" })
-@ImportAutoConfiguration({ //
-    SecurityAutoConfiguration.class, //
-    InceptionSecurityAutoConfiguration.class })
-@EntityScan(basePackages = { //
-    "de.tudarmstadt.ukp.clarin.webanno.security.model" })
-public class OAuthUtilsTest {
+import java.util.ArrayList;
+import java.util.Set;
 
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
+import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+
+public class OAuthUtilsTest
+{
+
+    private static final String USERNAME = "ThatGuy";
+    private static final String OAUTH2_GROUP_USER = "/INCEPTION_USER";
+    private static final String OAUTH2_GROUP_PROJECT_CREATOR = "/INCEPTION_PROJECT_CREATOR";
+    private static final String OAUTH2_GROUP_ADMIN = "/INCEPTION_ADMIN";
+    private static final String OAUTH2_GROUP_REMOTE = "/INCEPTION_REMOTE";
+
+    User testUser;
+    
+    @BeforeEach
+    void setup()
+    {
+        testUser = new User();
+        testUser.setUsername(USERNAME);
+        
+        System.setProperty("inception.home", "src/test/resources");
+        
+    }
+
+    @Test
+    void thatAdminRoleIsGivenIfMatchingGroupFound()
+    {
+        ArrayList<String> userOAuth2Groups = new ArrayList<>();
+        userOAuth2Groups.add(OAUTH2_GROUP_ADMIN);
+        
+        Set<Role> userRoles = OauthUtils.getOAuth2UserRoles(testUser, userOAuth2Groups);
+        
+        assertTrue(userRoles.contains(Role.ROLE_ADMIN));
+    }
+    
+    @Test
+    void thatUserRoleIsGivenIfMatchingGroupFound()
+    {
+        ArrayList<String> userOAuth2Groups = new ArrayList<>();
+        userOAuth2Groups.add(OAUTH2_GROUP_USER);
+        
+        Set<Role> userRoles = OauthUtils.getOAuth2UserRoles(testUser, userOAuth2Groups);
+        
+        assertTrue(userRoles.contains(Role.ROLE_USER));
+    }
+    
+    @Test
+    void thatProjectCreatorRoleIsGivenIfMatchingGroupFound()
+    {
+        ArrayList<String> userOAuth2Groups = new ArrayList<>();
+        userOAuth2Groups.add(OAUTH2_GROUP_PROJECT_CREATOR);
+        
+        Set<Role> userRoles = OauthUtils.getOAuth2UserRoles(testUser, userOAuth2Groups);
+        
+        assertTrue(userRoles.contains(Role.ROLE_PROJECT_CREATOR));
+    }
+    
+    @Test
+    void thatRemoteRoleIsGivenIfMatchingGroupFound()
+    {
+        ArrayList<String> userOAuth2Groups = new ArrayList<>();
+        userOAuth2Groups.add(OAUTH2_GROUP_REMOTE);
+        
+        Set<Role> userRoles = OauthUtils.getOAuth2UserRoles(testUser, userOAuth2Groups);
+        
+        assertTrue(userRoles.contains(Role.ROLE_REMOTE));
+    }
 
 }
