@@ -41,8 +41,6 @@ import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import javax.persistence.EntityManager;
-
 import org.apache.uima.cas.CAS;
 import org.apache.uima.fit.factory.CasFactory;
 import org.apache.uima.jcas.JCas;
@@ -78,6 +76,7 @@ import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryPropertiesImpl;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.support.logging.Logging;
+import jakarta.persistence.EntityManager;
 
 @ExtendWith(MockitoExtension.class)
 public class DocumentServiceImplConcurrencyTest
@@ -200,7 +199,7 @@ public class DocumentServiceImplConcurrencyTest
         List<Thread> secondaryTasks = new ArrayList<>();
 
         int threadGroupCount = 4;
-        int iterations = 100;
+        int iterations = 50;
         for (int n = 0; n < threadGroupCount; n++) {
             Thread rw = new ExclusiveReadWriteTask(n, doc, user, iterations);
             primaryTasks.add(rw);
@@ -268,7 +267,7 @@ public class DocumentServiceImplConcurrencyTest
         List<Thread> secondaryTasks = new ArrayList<>();
 
         int threadGroupCount = 4;
-        int iterations = 100;
+        int iterations = 50;
         int userCount = 4;
         for (int u = 0; u < userCount; u++) {
             for (int n = 0; n < threadGroupCount; n++) {

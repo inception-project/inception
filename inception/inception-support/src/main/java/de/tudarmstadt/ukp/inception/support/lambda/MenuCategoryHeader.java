@@ -20,9 +20,8 @@ package de.tudarmstadt.ukp.inception.support.lambda;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
-
-import com.googlecode.wicket.jquery.ui.JQueryIcon;
-import com.googlecode.wicket.jquery.ui.widget.menu.AbstractMenuItem;
+import org.wicketstuff.jquery.ui.JQueryIcon;
+import org.wicketstuff.jquery.ui.widget.menu.AbstractMenuItem;
 
 public class MenuCategoryHeader
     extends AbstractMenuItem

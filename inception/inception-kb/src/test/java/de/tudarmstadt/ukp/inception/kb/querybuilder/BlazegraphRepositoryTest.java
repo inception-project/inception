@@ -64,7 +64,8 @@ public class BlazegraphRepositoryTest
     @Container
     private static final GenericContainer<?> BLAZEGRAPH = new GenericContainer<>(
             "islandora/blazegraph:3.1.3") //
-                    .withExposedPorts(BLAZEGRAPH_PORT).withEnv("BLAZEGRAPH_HOST", "0.0.0.0")
+                    .withExposedPorts(BLAZEGRAPH_PORT) //
+                    .withEnv("BLAZEGRAPH_HOST", "0.0.0.0") //
                     .waitingFor(Wait.forHttp("/bigdata/sparql").forPort(BLAZEGRAPH_PORT)
                             .withStartupTimeout(ofMinutes(2)));
 

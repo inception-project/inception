@@ -17,9 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.weblicht.config;
 
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -31,6 +28,8 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.weblicht.WeblichtRecomme
 import de.tudarmstadt.ukp.inception.recommendation.imls.weblicht.chains.WeblichtChainService;
 import de.tudarmstadt.ukp.inception.recommendation.imls.weblicht.chains.WeblichtChainServiceImpl;
 import de.tudarmstadt.ukp.inception.recommendation.imls.weblicht.exporter.ChainExporter;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 
 /**
  * Provides support for calling out to CLARIN Weblicht for recommendations.

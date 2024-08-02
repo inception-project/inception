@@ -17,11 +17,11 @@
  */
 package de.tudarmstadt.ukp.inception.support.db;
 
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-
 import org.hibernate.Session;
 import org.springframework.stereotype.Component;
+
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 
 @Component
 public class DatabaseDriverServiceImpl

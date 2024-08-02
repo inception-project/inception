@@ -20,9 +20,9 @@ package de.tudarmstadt.ukp.inception.ui.curation.sidebar;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
+import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_USER;
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
-
-import java.util.ArrayList;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -44,7 +44,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.curation.service.CurationDocumentService;
 import de.tudarmstadt.ukp.inception.curation.service.CurationMergeService;
@@ -91,9 +90,9 @@ public class CurationSidebarServiceTest
                 curationMergeService, curationSidebarProperties, curationDocumentService);
 
         // create users
-        var current = new User("current", Role.ROLE_USER);
-        beate = new User("beate", Role.ROLE_USER);
-        kevin = new User("kevin", Role.ROLE_USER);
+        var current = new User("current", ROLE_USER);
+        beate = new User("beate", ROLE_USER);
+        kevin = new User("kevin", ROLE_USER);
         testEntityManager.persist(current);
         testEntityManager.persist(beate);
         testEntityManager.persist(kevin);
@@ -105,15 +104,11 @@ public class CurationSidebarServiceTest
         testEntityManager.persist(new ProjectPermission(testProject, "kevin", ANNOTATOR));
         testEntityManager.persist(new ProjectPermission(testProject, "beate", CURATOR));
 
-        // create sourcedocument
+        // create source document
         testDocument = new SourceDocument("testDoc", testProject, "text");
         testEntityManager.persist(testDocument);
 
-        // add selected users to sut
-        var selectedUsers = new ArrayList<User>();
-        selectedUsers.add(kevin);
-        selectedUsers.add(beate);
-        sut.setSelectedUsers("current", testProject.getId(), selectedUsers);
+        sut.setSelectedUsers("current", testProject.getId(), asList(kevin, beate));
     }
 
     @AfterEach

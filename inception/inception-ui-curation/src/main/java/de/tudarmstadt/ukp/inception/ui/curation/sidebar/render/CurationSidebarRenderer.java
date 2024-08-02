@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.inception.ui.curation.sidebar.render;
 
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.getDiffAdapters;
-import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior.LINK_ROLE_AS_LABEL;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.ANNOTATION;
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.NO_OVERLAP;
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.STACKING_ONLY;
@@ -105,6 +104,7 @@ public class CurationSidebarRenderer
     @Override
     public boolean accepts(RenderRequest aRequest)
     {
+        var project = aRequest.getProject();
         var state = aRequest.getState();
 
         // do not show predictions on the decicated curation page
@@ -116,6 +116,11 @@ public class CurationSidebarRenderer
             return false;
         }
 
+        var sessionOwner = userRepository.getCurrentUsername();
+        if (!curationService.existsSession(sessionOwner, project.getId())) {
+            return false;
+        }
+
         return true;
     }
 
@@ -124,10 +129,6 @@ public class CurationSidebarRenderer
     {
         var sessionOwner = userRepository.getCurrentUsername();
         var project = aRequest.getProject();
-
-        if (!curationService.existsSession(sessionOwner, project.getId())) {
-            return;
-        }
 
         var selectedUsers = curationService.listUsersReadyForCuration(sessionOwner, project,
                 aRequest.getSourceDocument());
@@ -153,7 +154,7 @@ public class CurationSidebarRenderer
 
         var generatedCurationVids = new HashSet<VID>();
         var showAll = curationService.isShowAll(sessionOwner, project.getId());
-        var curationTarget = curationService.getCurationTarget(sessionOwner, project.getId());
+        var curationTarget = aRequest.getAnnotationUser().getUsername();
         for (var cfgSet : diff.getConfigurationSets()) {
             if (!showAll && cfgSet.getCasGroupIds().contains(curationTarget)) {
                 // Hide configuration sets where the curator has already curated (likely)
@@ -269,7 +270,7 @@ public class CurationSidebarRenderer
         }
 
         var adapters = getDiffAdapters(annotationService, aRequest.getVisibleLayers());
-        return doDiff(adapters, LINK_ROLE_AS_LABEL, casses, aRequest.getWindowBeginOffset(),
+        return doDiff(adapters, casses, aRequest.getWindowBeginOffset(),
                 aRequest.getWindowEndOffset());
     }
 

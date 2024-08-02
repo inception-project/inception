@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>33.3</version>
+    <version>34.0-SNAPSHOT</version>
   </parent>
   <artifactId>inception-external-search-opensearch</artifactId>
   <name>INCEpTION - External Search - OpenSearch</name>
@@ -55,20 +55,10 @@
     <dependency>
       <groupId>org.opensearch</groupId>
       <artifactId>opensearch</artifactId>
-      <exclusions>
-        <exclusion>
-          <groupId>org.apache.lucene</groupId>
-          <artifactId>lucene-spatial</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.apache.lucene</groupId>
-          <artifactId>lucene-spatial-extras</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.apache.lucene</groupId>
-          <artifactId>lucene-spatial3d</artifactId>
-        </exclusion>
-      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.opensearch</groupId>
+      <artifactId>opensearch-core</artifactId>
     </dependency>
     <dependency>
       <groupId>org.opensearch.client</groupId>

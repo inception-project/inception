@@ -31,11 +31,10 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.wicketstuff.event.annotation.OnEvent;
-
-import com.googlecode.wicket.jquery.core.JQueryBehavior;
-import com.googlecode.wicket.jquery.core.template.IJQueryTemplate;
-import com.googlecode.wicket.kendo.ui.form.multiselect.lazy.MultiSelect;
-import com.googlecode.wicket.kendo.ui.renderer.ChoiceRenderer;
+import org.wicketstuff.jquery.core.JQueryBehavior;
+import org.wicketstuff.jquery.core.template.IJQueryTemplate;
+import org.wicketstuff.kendo.ui.form.multiselect.lazy.MultiSelect;
+import org.wicketstuff.kendo.ui.renderer.ChoiceRenderer;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.inception.bootstrap.BootstrapModalDialog;
@@ -138,7 +137,7 @@ public class MultiValueConceptFeatureEditor
     @SuppressWarnings({ "unchecked", "rawtypes" })
     private FormComponent<Collection<KBHandle>> createReadOnlyInput()
     {
-        var input = new com.googlecode.wicket.kendo.ui.form.multiselect. //
+        var input = new org.wicketstuff.kendo.ui.form.multiselect. //
                 MultiSelect<KBHandle>(CID_VALUE)
         {
             private static final long serialVersionUID = 1L;

@@ -17,9 +17,9 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span;
 
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.Position;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.Position_ImplBase;
+import de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureMultiplicityMode;
 
 /**
  * Represents a span position in the text.
@@ -35,7 +35,8 @@ public class SpanPosition
 
     public SpanPosition(String aCollectionId, String aDocumentId, String aType, int aBegin,
             int aEnd, String aText, String aFeature, String aRole, int aLinkTargetBegin,
-            int aLinkTargetEnd, String aLinkTargetText, LinkCompareBehavior aLinkCompareBehavior)
+            int aLinkTargetEnd, String aLinkTargetText,
+            LinkFeatureMultiplicityMode aLinkCompareBehavior)
     {
         super(aCollectionId, aDocumentId, aType, aFeature, aRole, aLinkTargetBegin, aLinkTargetEnd,
                 aLinkTargetText, aLinkCompareBehavior);
@@ -98,16 +99,21 @@ public class SpanPosition
     {
         StringBuilder builder = new StringBuilder();
         builder.append(begin).append('-').append(end).append(" [").append(text).append(']');
-        LinkCompareBehavior linkCompareBehavior = getLinkCompareBehavior();
+        LinkFeatureMultiplicityMode linkCompareBehavior = getLinkCompareBehavior();
         if (linkCompareBehavior != null) {
             switch (linkCompareBehavior) {
-            case LINK_TARGET_AS_LABEL:
+            case ONE_TARGET_MULTIPLE_ROLES:
                 builder.append(" role: [").append(getRole()).append(']');
                 break;
-            case LINK_ROLE_AS_LABEL:
+            case MULTIPLE_TARGETS_ONE_ROLE:
                 builder.append(" -> [").append(getLinkTargetBegin()).append('-')
                         .append(getLinkTargetEnd()).append(" [").append(getLinkTargetText())
                         .append(']');
+                break;
+            case MULTIPLE_TARGETS_MULTIPLE_ROLES:
+                builder.append(" -> ").append(getRole()).append("@[").append(getLinkTargetBegin())
+                        .append('-').append(getLinkTargetEnd()).append(" [")
+                        .append(getLinkTargetText()).append(']');
                 break;
             default:
                 throw new IllegalStateException(

@@ -17,8 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.processing.config;
 
-import javax.servlet.ServletContext;
-
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
@@ -28,6 +26,7 @@ import org.springframework.context.annotation.Configuration;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.processing.BulkProcessingPageMenuItem;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
+import jakarta.servlet.ServletContext;
 
 @ConditionalOnProperty(prefix = "bulk-processing", name = "enabled", havingValue = "true", matchIfMissing = false)
 @Configuration

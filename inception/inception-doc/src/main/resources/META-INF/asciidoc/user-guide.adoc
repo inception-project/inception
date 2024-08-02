@@ -147,6 +147,8 @@ include::{include-dir}projects_recommendation_opennlp.adoc[leveloffset=+2]
 
 include::{include-dir}projects_recommendation_ollama.adoc[leveloffset=+2]
 
+include::{include-dir}projects_recommendation_chatgpt.adoc[leveloffset=+2]
+
 include::{include-dir}projects_recommendation_azureai_openai.adoc[leveloffset=+2]
 
 include::{include-dir}projects_recommendation_conceptlinker.adoc[leveloffset=+2]
@@ -184,8 +186,6 @@ include::{include-dir}external-search-page.adoc[leveloffset=+2]
 include::{include-dir}external-search-sidebar.adoc[leveloffset=+2]
 
 include::{include-dir}external-search-repos.adoc[leveloffset=+2]
-
-// include::{include-dir}external-search-repos-elasticsearch.adoc[leveloffset=+3]
 
 include::{include-dir}external-search-repos-opensearch.adoc[leveloffset=+3]
 

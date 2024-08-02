@@ -67,8 +67,8 @@ public class SpanAdapter
             Supplier<Collection<AnnotationFeature>> aFeatures, List<SpanLayerBehavior> aBehaviors,
             ConstraintsService aConstraintsService)
     {
-        super(aLayerSupportRegistry, aFeatureSupportRegistry, aConstraintsService, aEventPublisher, aLayer,
-                aFeatures);
+        super(aLayerSupportRegistry, aFeatureSupportRegistry, aConstraintsService, aEventPublisher,
+                aLayer, aFeatures);
 
         if (aBehaviors == null) {
             behaviors = emptyList();

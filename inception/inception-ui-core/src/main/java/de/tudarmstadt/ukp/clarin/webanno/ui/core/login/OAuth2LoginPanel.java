@@ -27,8 +27,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.servlet.ServletContext;
-
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.link.ExternalLink;
 import org.apache.wicket.markup.html.list.ListItem;
@@ -40,6 +38,7 @@ import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 
 import de.tudarmstadt.ukp.clarin.webanno.security.config.LoginProperties;
 import de.tudarmstadt.ukp.inception.security.oauth.OAuth2Adapter;
+import jakarta.servlet.ServletContext;
 
 public class OAuth2LoginPanel
     extends Panel

@@ -138,7 +138,8 @@ public class EntityAnnotationProjectInitializer
         valueFeature.setEnabled(false);
         annotationService.createFeature(valueFeature);
 
-        var description = """
+        var description = //
+                """
                 This project comes pre-configured for **entity annotation**.
 
                 To annotate an entity, mark the text with the mouse, then assign a category in annotation detail
@@ -146,7 +147,8 @@ public class EntityAnnotationProjectInitializer
                 """;
 
         if (isSequenceClassifierRecommenderAvailable() || isStringRecommenderAvailable()) {
-            description += """
+            description += //
+                    """
 
                     The project includes recommenders that will learn from the annotations you make and suggest further
                     entities to annotate in the text. These suggestions will appear in gray. You can accept a
@@ -162,9 +164,9 @@ public class EntityAnnotationProjectInitializer
 
             description += """
 
-                    The project includes example documents.
-                    Open the **Annotation** page from the left sidbar menu to dive right in.
-                    """;
+                           The project includes example documents.
+                           Open the **Annotation** page from the left sidbar menu to dive right in.
+                           """;
         }
 
         project.setDescription(description);

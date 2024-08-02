@@ -63,7 +63,8 @@ public class LazyDetailsHandler
     }
 
     @Override
-    public AjaxResponse handle(DiamAjaxBehavior aBehavior, AjaxRequestTarget aTarget, Request aRequest)
+    public AjaxResponse handle(DiamAjaxBehavior aBehavior, AjaxRequestTarget aTarget,
+            Request aRequest)
     {
         try {
             var page = (AnnotationPageBase) aTarget.getPage();

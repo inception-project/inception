@@ -17,9 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.ui.curation.sidebar.config;
 
-import javax.persistence.EntityManager;
-
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
@@ -45,10 +42,10 @@ import de.tudarmstadt.ukp.inception.ui.curation.sidebar.CurationSidebarFactory;
 import de.tudarmstadt.ukp.inception.ui.curation.sidebar.CurationSidebarService;
 import de.tudarmstadt.ukp.inception.ui.curation.sidebar.CurationSidebarServiceImpl;
 import de.tudarmstadt.ukp.inception.ui.curation.sidebar.render.CurationSidebarRenderer;
+import jakarta.persistence.EntityManager;
 
 @ConditionalOnWebApplication
 @Configuration
-@ConditionalOnProperty(prefix = "curation.sidebar", name = "enabled", havingValue = "true")
 public class CurationSidebarAutoConfiguration
 {
     @Bean
@@ -80,9 +77,10 @@ public class CurationSidebarAutoConfiguration
 
     @Bean("curationSidebar")
     public CurationSidebarFactory curationSidebarFactory(ProjectService aProjectService,
-            UserDao aUserService)
+            UserDao aUserService, CurationSidebarProperties aCurationSidebarProperties)
     {
-        return new CurationSidebarFactory(aProjectService, aUserService);
+        return new CurationSidebarFactory(aProjectService, aUserService,
+                aCurationSidebarProperties);
     }
 
     @Bean
@@ -94,12 +92,14 @@ public class CurationSidebarAutoConfiguration
                 aDocumentService, aUserRepository, aAnnotationService);
     }
 
+    @Deprecated
     @Bean
     public CurationSidebarApplicationInitializer curationSidebarApplicationInitializer()
     {
         return new CurationSidebarApplicationInitializer();
     }
 
+    @Deprecated
     @Bean
     public CurationSidebarDocumentNavigatorActionBarExtension curationSidebarDocumentNavigatorActionBarExtension(
             CurationSidebarService aCurationSidebarService, UserDao aUserRepository)

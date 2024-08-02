@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>33.3</version>
+    <version>34.0-SNAPSHOT</version>
   </parent>
   <name>INCEpTION - Editor - PDF (pdfbox ${pdfbox.version}) (deprecated)</name>
   <artifactId>inception-pdf-editor</artifactId>
@@ -160,8 +160,8 @@
     </dependency>
     
     <dependency>
-      <groupId>javax.servlet</groupId>
-      <artifactId>javax.servlet-api</artifactId>
+      <groupId>jakarta.servlet</groupId>
+      <artifactId>jakarta.servlet-api</artifactId>
       <scope>provided</scope>
     </dependency>
 

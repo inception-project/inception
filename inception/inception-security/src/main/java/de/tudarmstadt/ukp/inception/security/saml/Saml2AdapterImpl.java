@@ -29,8 +29,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-import javax.servlet.ServletContext;
-
 import org.apache.wicket.validation.ValidationError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,6 +47,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.OverridableUserDetailsManager;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.security.preauth.PreAuthUtils;
+import jakarta.servlet.ServletContext;
 
 public class Saml2AdapterImpl
     implements Saml2Adapter
@@ -102,16 +101,6 @@ public class Saml2AdapterImpl
     @Override
     public Saml2Authentication process(ResponseToken aToken, Saml2Authentication aAuthentication)
     {
-        return process(aAuthentication,
-                aToken.getToken().getRelyingPartyRegistration().getRegistrationId());
-    }
-
-    @Override
-    public Saml2Authentication process(org.springframework.security.saml2.provider.service. //
-            authentication.OpenSamlAuthenticationProvider.ResponseToken aToken,
-            Saml2Authentication aAuthentication)
-    {
-
         return process(aAuthentication,
                 aToken.getToken().getRelyingPartyRegistration().getRegistrationId());
     }

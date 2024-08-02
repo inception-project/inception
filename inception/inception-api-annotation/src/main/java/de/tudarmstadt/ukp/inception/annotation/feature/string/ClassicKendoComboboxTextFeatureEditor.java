@@ -25,11 +25,10 @@ import org.apache.wicket.markup.html.form.AbstractTextComponent;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.request.cycle.RequestCycle;
-
-import com.googlecode.wicket.jquery.core.Options;
-import com.googlecode.wicket.jquery.ui.widget.tooltip.TooltipBehavior;
-import com.googlecode.wicket.kendo.ui.KendoUIBehavior;
-import com.googlecode.wicket.kendo.ui.form.combobox.ComboBoxBehavior;
+import org.wicketstuff.jquery.core.Options;
+import org.wicketstuff.jquery.ui.widget.tooltip.TooltipBehavior;
+import org.wicketstuff.kendo.ui.KendoUIBehavior;
+import org.wicketstuff.kendo.ui.form.combobox.ComboBoxBehavior;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;

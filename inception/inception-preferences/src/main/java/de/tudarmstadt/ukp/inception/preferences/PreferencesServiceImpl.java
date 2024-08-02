@@ -27,10 +27,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import javax.persistence.EntityManager;
-import javax.persistence.NoResultException;
-import javax.persistence.PersistenceContext;
-
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,6 +40,9 @@ import de.tudarmstadt.ukp.inception.preferences.model.UserPreference;
 import de.tudarmstadt.ukp.inception.preferences.model.UserProjectPreference;
 import de.tudarmstadt.ukp.inception.preferences.model.UserProjectPreference_;
 import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.NoResultException;
+import jakarta.persistence.PersistenceContext;
 
 /**
  * <p>
@@ -65,7 +64,7 @@ public class PreferencesServiceImpl
 
     @Override
     @Transactional
-    public <T> T loadTraitsForUser(Key<T> aKey, User aUser)
+    public <T extends PreferenceValue> T loadTraitsForUser(PreferenceKey<T> aKey, User aUser)
     {
         requireNonNull(aKey, "Parameter [key] must be specified");
         requireNonNull(aUser, "Parameter [user] must be specified");
@@ -91,7 +90,8 @@ public class PreferencesServiceImpl
 
     @Override
     @Transactional
-    public <T> void saveTraitsForUser(Key<T> aKey, User aUser, T aTraits)
+    public <T extends PreferenceValue> void saveTraitsForUser(PreferenceKey<T> aKey, User aUser,
+            T aTraits)
     {
         requireNonNull(aKey, "Parameter [key] must be specified");
         requireNonNull(aUser, "Parameter [user] must be specified");
@@ -111,7 +111,8 @@ public class PreferencesServiceImpl
         }
     }
 
-    private <T> Optional<UserPreference> getRawUserPreference(Key<T> aKey, User aUser)
+    private <T extends PreferenceValue> Optional<UserPreference> getRawUserPreference(
+            PreferenceKey<T> aKey, User aUser)
     {
         requireNonNull(aKey, "Parameter [key] must be specified");
         requireNonNull(aUser, "Parameter [user] must be specified");
@@ -137,8 +138,8 @@ public class PreferencesServiceImpl
 
     @Override
     @Transactional
-    public <T> Optional<T> loadOptionalTraitsForUserAndProject(Key<T> aKey, User aUser,
-            Project aProject)
+    public <T extends PreferenceValue> Optional<T> loadOptionalTraitsForUserAndProject(
+            PreferenceKey<T> aKey, User aUser, Project aProject)
     {
         requireNonNull(aKey, "Parameter [key] must be specified");
         requireNonNull(aUser, "Parameter [user] must be specified");
@@ -163,7 +164,8 @@ public class PreferencesServiceImpl
 
     @Override
     @Transactional
-    public <T> T loadTraitsForUserAndProject(Key<T> aKey, User aUser, Project aProject)
+    public <T extends PreferenceValue> T loadTraitsForUserAndProject(PreferenceKey<T> aKey,
+            User aUser, Project aProject)
     {
         requireNonNull(aKey, "Parameter [key] must be specified");
         requireNonNull(aUser, "Parameter [user] must be specified");
@@ -190,8 +192,8 @@ public class PreferencesServiceImpl
 
     @Override
     @Transactional
-    public <T> void saveTraitsForUserAndProject(Key<T> aKey, User aUser, Project aProject,
-            T aTraits)
+    public <T extends PreferenceValue> void saveTraitsForUserAndProject(PreferenceKey<T> aKey,
+            User aUser, Project aProject, T aTraits)
     {
         requireNonNull(aKey, "Parameter [key] must be specified");
         requireNonNull(aUser, "Parameter [user] must be specified");
@@ -215,8 +217,8 @@ public class PreferencesServiceImpl
         }
     }
 
-    private <T> Optional<UserProjectPreference> getUserProjectPreference(Key<T> aKey, User aUser,
-            Project aProject)
+    private <T extends PreferenceValue> Optional<UserProjectPreference> getUserProjectPreference(
+            PreferenceKey<T> aKey, User aUser, Project aProject)
     {
         requireNonNull(aKey, "Parameter [key] must be specified");
         requireNonNull(aUser, "Parameter [user] must be specified");
@@ -270,7 +272,8 @@ public class PreferencesServiceImpl
 
     @Override
     @Transactional
-    public <T> T loadDefaultTraitsForProject(Key<T> aKey, Project aProject)
+    public <T extends PreferenceValue> T loadDefaultTraitsForProject(PreferenceKey<T> aKey,
+            Project aProject)
     {
         requireNonNull(aKey, "Parameter [key] must be specified");
         requireNonNull(aProject, "Parameter [project] must be specified");
@@ -297,7 +300,8 @@ public class PreferencesServiceImpl
 
     @Override
     @Transactional
-    public <T> void saveDefaultTraitsForProject(Key<T> aKey, Project aProject, T aTraits)
+    public <T extends PreferenceValue> void saveDefaultTraitsForProject(PreferenceKey<T> aKey,
+            Project aProject, T aTraits)
     {
         requireNonNull(aKey, "Parameter [key] must be specified");
         requireNonNull(aProject, "Parameter [project] must be specified");
@@ -319,7 +323,8 @@ public class PreferencesServiceImpl
     }
 
     @Override
-    public <T> void clearDefaultTraitsForProject(Key<T> aKey, Project aProject)
+    public <T extends PreferenceValue> void clearDefaultTraitsForProject(PreferenceKey<T> aKey,
+            Project aProject)
     {
         requireNonNull(aKey, "Parameter [key] must be specified");
         requireNonNull(aProject, "Parameter [project] must be specified");
@@ -335,8 +340,8 @@ public class PreferencesServiceImpl
                 .executeUpdate();
     }
 
-    private <T> Optional<DefaultProjectPreference> getDefaultProjectPreference(Key<T> aKey,
-            Project aProject)
+    private <T extends PreferenceValue> Optional<DefaultProjectPreference> getDefaultProjectPreference(
+            PreferenceKey<T> aKey, Project aProject)
     {
         requireNonNull(aKey, "Parameter [key] must be specified");
         requireNonNull(aProject, "Parameter [project] must be specified");

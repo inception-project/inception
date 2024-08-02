@@ -25,11 +25,10 @@ import java.util.OptionalInt;
 
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
-
-import com.googlecode.wicket.jquery.ui.widget.menu.ContextMenuBehavior;
+import org.wicketstuff.jquery.ui.widget.menu.ContextMenuBehavior;
 
 public class ContextMenu
-    extends com.googlecode.wicket.jquery.ui.widget.menu.ContextMenu
+    extends org.wicketstuff.jquery.ui.widget.menu.ContextMenu
 {
     private static final long serialVersionUID = -1839334030165463085L;
 

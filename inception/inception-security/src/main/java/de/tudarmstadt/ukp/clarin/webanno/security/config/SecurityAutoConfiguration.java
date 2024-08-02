@@ -19,12 +19,8 @@ package de.tudarmstadt.ukp.clarin.webanno.security.config;
 
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-import javax.servlet.ServletContext;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -49,6 +45,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.OverridableUserDetailsManager;
 import de.tudarmstadt.ukp.clarin.webanno.security.PermissionExtension;
 import de.tudarmstadt.ukp.clarin.webanno.security.PermissionExtensionPoint;
 import de.tudarmstadt.ukp.clarin.webanno.security.PermissionExtensionPointImpl;
+import de.tudarmstadt.ukp.clarin.webanno.security.SuccessfulLoginListener;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserAccess;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserAccessImpl;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -57,6 +54,9 @@ import de.tudarmstadt.ukp.inception.security.oauth.OAuth2Adapter;
 import de.tudarmstadt.ukp.inception.security.oauth.OAuth2AdapterImpl;
 import de.tudarmstadt.ukp.inception.security.saml.Saml2Adapter;
 import de.tudarmstadt.ukp.inception.security.saml.Saml2AdapterImpl;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import jakarta.servlet.ServletContext;
 
 @Configuration
 @EnableConfigurationProperties({ //
@@ -89,11 +89,10 @@ public class SecurityAutoConfiguration
     {
         // Set up a DelegatingPasswordEncoder which decodes legacy passwords using the
         // StandardPasswordEncoder but encodes passwords using the modern BCryptPasswordEncoder
-        String encoderForEncoding = "bcrypt";
-        Map<String, PasswordEncoder> encoders = new HashMap<>();
+        var encoderForEncoding = "bcrypt";
+        var encoders = new HashMap<String, PasswordEncoder>();
         encoders.put(encoderForEncoding, new BCryptPasswordEncoder());
-        DelegatingPasswordEncoder delegatingEncoder = new DelegatingPasswordEncoder(
-                encoderForEncoding, encoders);
+        var delegatingEncoder = new DelegatingPasswordEncoder(encoderForEncoding, encoders);
         // Decode legacy passwords without encoder ID using the StandardPasswordEncoder
         delegatingEncoder.setDefaultPasswordEncoderForMatches(new StandardPasswordEncoder());
         return delegatingEncoder;
@@ -117,7 +116,7 @@ public class SecurityAutoConfiguration
     public MethodSecurityExpressionHandler defaultMethodSecurityExpressionHandler(
             ApplicationContext aContext, ExtensiblePermissionEvaluator aEvaluator)
     {
-        DefaultMethodSecurityExpressionHandler expressionHandler = new DefaultMethodSecurityExpressionHandler();
+        var expressionHandler = new DefaultMethodSecurityExpressionHandler();
         expressionHandler.setApplicationContext(aContext);
         expressionHandler.setPermissionEvaluator(aEvaluator);
         return expressionHandler;
@@ -145,5 +144,11 @@ public class SecurityAutoConfiguration
     public UserAccess userAccess(UserDao aUserService)
     {
         return new UserAccessImpl(aUserService);
+    }
+
+    @Bean
+    public SuccessfulLoginListener successfulLoginListener(UserDao aUserRepository)
+    {
+        return new SuccessfulLoginListener(aUserRepository);
     }
 }

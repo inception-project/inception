@@ -33,9 +33,8 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.validation.validator.UrlValidator;
-
-import com.googlecode.wicket.jquery.core.Options;
-import com.googlecode.wicket.kendo.ui.form.NumberTextField;
+import org.wicketstuff.jquery.core.Options;
+import org.wicketstuff.kendo.ui.form.NumberTextField;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.inception.feature.lookup.config.LookupServiceProperties;

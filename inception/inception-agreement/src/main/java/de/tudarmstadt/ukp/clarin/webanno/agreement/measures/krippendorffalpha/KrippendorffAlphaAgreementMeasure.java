@@ -59,7 +59,7 @@ public class KrippendorffAlphaAgreementMeasure
 
         var adapters = getDiffAdapters(annotationService, asList(feature.getLayer()));
 
-        var diff = doDiff(adapters, traits.getLinkCompareBehavior(), aCasMap);
+        var diff = doDiff(adapters, aCasMap);
 
         var tagset = annotationService.listTags(feature.getTagset()).stream() //
                 .map(Tag::getName) //

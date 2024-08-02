@@ -31,6 +31,7 @@ import static java.lang.System.currentTimeMillis;
 import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.toUnmodifiableSet;
+import static org.springframework.transaction.annotation.Propagation.REQUIRES_NEW;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -46,9 +47,6 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
-
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
 
 import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
@@ -92,6 +90,8 @@ import de.tudarmstadt.ukp.inception.search.scheduling.tasks.IndexSourceDocumentT
 import de.tudarmstadt.ukp.inception.search.scheduling.tasks.IndexingTask_ImplBase;
 import de.tudarmstadt.ukp.inception.search.scheduling.tasks.ReindexTask;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 
 /**
  * <p>
@@ -409,7 +409,6 @@ public class SearchServiceImpl
     }
 
     @TransactionalEventListener(fallbackExecution = true)
-    @Transactional
     public void onAfterDocumentCreated(AfterDocumentCreatedEvent aEvent)
     {
         LOG.trace("Starting afterDocumentCreate");
@@ -419,7 +418,6 @@ public class SearchServiceImpl
     }
 
     @TransactionalEventListener(fallbackExecution = true)
-    @Transactional
     public void onAfterCasWritten(AfterCasWrittenEvent aEvent)
     {
         LOG.trace("Starting afterAnnotationUpdate");
@@ -429,7 +427,7 @@ public class SearchServiceImpl
     }
 
     @TransactionalEventListener(fallbackExecution = true)
-    @Transactional
+    @Transactional(propagation = REQUIRES_NEW)
     public void onLayerConfigurationChanged(LayerConfigurationChangedEvent aEvent)
     {
         LOG.trace("Starting beforeLayerConfigurationChanged");

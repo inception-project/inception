@@ -48,8 +48,7 @@ import org.apache.wicket.util.string.StringValue;
 import org.apache.wicket.validation.validator.UrlValidator;
 import org.danekja.java.util.function.serializable.SerializableFunction;
 import org.wicketstuff.event.annotation.OnEvent;
-
-import com.googlecode.wicket.jquery.core.JQueryBehavior;
+import org.wicketstuff.jquery.core.JQueryBehavior;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.keybindings.KeyBindingsPanel;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;

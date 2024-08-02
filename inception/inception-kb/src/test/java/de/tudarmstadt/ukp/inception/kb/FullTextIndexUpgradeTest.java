@@ -27,9 +27,6 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.junit.jupiter.api.AfterEach;
@@ -51,6 +48,8 @@ import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBasePropertiesImpl;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 
 @Transactional
 @DataJpaTest( //
@@ -129,7 +128,7 @@ public class FullTextIndexUpgradeTest
     @Test
     void thatExistingKnowledgeBaseCanBeRead() throws Exception
     {
-        copyDirectory(new File(REF_DIR, "lucene-7.7.3"), temp);
+        copyDirectory(new File(REF_DIR, "lucene-8.11.3"), temp);
 
         sut = new KnowledgeBaseServiceImpl(repoProperties, kbProperties, entityManager);
 
@@ -154,7 +153,7 @@ public class FullTextIndexUpgradeTest
     @Test
     void thatExistingKnowledgeBaseCanBeUpdated() throws Exception
     {
-        copyDirectory(new File(REF_DIR, "lucene-7.7.3"), temp);
+        copyDirectory(new File(REF_DIR, "lucene-8.11.3"), temp);
 
         sut = new KnowledgeBaseServiceImpl(repoProperties, kbProperties, entityManager);
 

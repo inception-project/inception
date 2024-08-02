@@ -24,8 +24,6 @@ import java.security.Principal;
 import java.util.List;
 import java.util.Objects;
 
-import javax.servlet.ServletContext;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
@@ -44,6 +42,7 @@ import de.tudarmstadt.ukp.inception.scheduling.ProjectTask;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.scheduling.controller.SchedulerWebsocketController;
 import de.tudarmstadt.ukp.inception.scheduling.controller.model.MTaskStateUpdate;
+import jakarta.servlet.ServletContext;
 
 @Controller
 @RequestMapping(SchedulerWebsocketController.BASE_URL)

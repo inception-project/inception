@@ -27,6 +27,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SINGLE_TOKEN
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.NO_OVERLAP;
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.OVERLAP_ONLY;
+import static de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureMultiplicityMode.ONE_TARGET_MULTIPLE_ROLES;
 import static de.tudarmstadt.ukp.inception.curation.merge.CurationTestUtils.HOST_TYPE;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.RELATION_TYPE;
 import static java.util.Arrays.asList;
@@ -113,7 +114,7 @@ public class CasMergeTestBase
     public void setup() throws Exception
     {
         var slotHostDiffAdapter = new SpanDiffAdapter(HOST_TYPE);
-        slotHostDiffAdapter.addLinkFeature("links", "role", "target");
+        slotHostDiffAdapter.addLinkFeature("links", "role", "target", ONE_TARGET_MULTIPLE_ROLES);
 
         diffAdapters = new ArrayList<>();
         diffAdapters.add(TOKEN_DIFF_ADAPTER);

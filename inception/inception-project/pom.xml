@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>33.3</version>
+    <version>34.0-SNAPSHOT</version>
   </parent>
   <artifactId>inception-project</artifactId>
   <name>INCEpTION - Core - Project</name>
@@ -90,18 +90,18 @@
     </dependency>
 
     <dependency>
-      <groupId>javax.servlet</groupId>
-      <artifactId>javax.servlet-api</artifactId>
+      <groupId>jakarta.servlet</groupId>
+      <artifactId>jakarta.servlet-api</artifactId>
       <scope>provided</scope>
     </dependency>
 
     <!-- Hibernate dependencies -->
     <dependency>
-      <groupId>javax.persistence</groupId>
-      <artifactId>javax.persistence-api</artifactId>
+      <groupId>jakarta.persistence</groupId>
+      <artifactId>jakarta.persistence-api</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.hibernate</groupId>
+      <groupId>org.hibernate.orm</groupId>
       <artifactId>hibernate-core</artifactId>
     </dependency>
 
@@ -146,7 +146,7 @@
         <artifactId>maven-dependency-plugin</artifactId>
         <configuration>
           <ignoredDependencies>
-            <ignoredDependency>javax.servlet:javax.servlet-api</ignoredDependency>
+            <ignoredDependency>jakarta.servlet:jakarta.servlet-api</ignoredDependency>
             <ignoredDependency>org.hsqldb:hsqldb</ignoredDependency>
             <ignoredDependency>org.springframework.boot:spring-boot-starter-data-jpa</ignoredDependency>
           </ignoredDependencies>
