@@ -48,9 +48,9 @@ import java.util.List;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.fontbox.ttf.TrueTypeFont;
 import org.apache.fontbox.util.BoundingBox;
+import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.contentstream.PDFGraphicsStreamEngine;
 import org.apache.pdfbox.cos.COSName;
-import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDCIDFont;
@@ -79,7 +79,7 @@ public class PDFExtractor
 {
     public static String processFileToString(File file) throws IOException
     {
-        try (StringWriter w = new StringWriter(); PDDocument doc = PDDocument.load(file)) {
+        try (var w = new StringWriter(); var doc = Loader.loadPDF(file)) {
 
             for (int i = 0; i < doc.getNumberOfPages(); i++) {
                 PDFExtractor ext = new PDFExtractor(doc.getPage(i), i + 1, w);
