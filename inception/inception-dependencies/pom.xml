@@ -33,28 +33,29 @@
   <dependencyManagement>
     <dependencies>
       <dependency>
-        <groupId>org.apache.uima</groupId>
-        <artifactId>uimaj-bom</artifactId>
-        <version>${uima.version}</version>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-framework-bom</artifactId>
+        <version>${spring.version}</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
-      <dependency>
-        <groupId>org.apache.uima</groupId>
-        <artifactId>uimafit-bom</artifactId>
-        <version>${uimafit.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
+    
       <dependency>
         <groupId>org.apache.uima</groupId>
         <artifactId>uimaj-io-json</artifactId>
         <version>${uima-json.version}</version>
       </dependency>
+
       <dependency>
         <groupId>org.json</groupId>
         <artifactId>json</artifactId>
         <version>${json.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.apache.ivy</groupId>
+        <artifactId>ivy</artifactId>
+        <version>2.5.2</version>
       </dependency>
 
       <!-- JAXB DEPENDENCIES -->
@@ -491,6 +492,11 @@
       </dependency>
       <dependency>
         <groupId>org.apache.commons</groupId>
+        <artifactId>commons-math3</artifactId>
+        <version>${commons-math3.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.commons</groupId>
         <artifactId>commons-csv</artifactId>
         <version>${commons-csv.version}</version>
       </dependency>
@@ -518,6 +524,18 @@
         <groupId>com.google.code.findbugs</groupId>
         <artifactId>jsr305</artifactId>
         <version>3.0.2</version>
+      </dependency>
+      
+      <dependency>
+        <groupId>com.ibm.icu</groupId>
+        <artifactId>icu4j</artifactId>
+        <version>75.1</version>
+      </dependency>
+
+      <dependency>
+        <groupId>eu.openminted.share.annotations</groupId>
+        <artifactId>omtd-share-annotations-api</artifactId>
+        <version>3.0.2.7</version>
       </dependency>
 
       <dependency>
@@ -551,6 +569,13 @@
       <!-- Jena -->
       <dependency>
         <groupId>org.apache.jena</groupId>
+        <artifactId>jena-bom</artifactId>
+        <version>${jena.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.jena</groupId>
         <artifactId>jena-fuseki-main</artifactId>
         <version>${jena.version}</version>
         <exclusions>
@@ -559,11 +584,6 @@
             <artifactId>slf4j-log4j12</artifactId>
           </exclusion>
         </exclusions>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.jena</groupId>
-        <artifactId>jena-text</artifactId>
-        <version>${jena.version}</version>
       </dependency>
       <dependency>
         <groupId>org.apache.jena</groupId>
@@ -585,16 +605,6 @@
         </exclusions>
       </dependency>
       <dependency>
-        <groupId>org.apache.jena</groupId>
-        <artifactId>jena-tdb</artifactId>
-        <version>${jena.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.jena</groupId>
-        <artifactId>jena-core</artifactId>
-        <version>${jena.version}</version>
-      </dependency>
-      <dependency>
         <groupId>org.apache.thrift</groupId>
         <artifactId>libthrift</artifactId>
         <version>0.17.0</version>
@@ -613,14 +623,6 @@
         <groupId>org.jboss.logging</groupId>
         <artifactId>jboss-logging</artifactId>
         <version>${jboss.logging.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>io.sentry</groupId>
-        <artifactId>sentry-bom</artifactId>
-        <version>${sentry.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
       </dependency>
 
       <dependency>
@@ -707,15 +709,6 @@
         <groupId>org.wicketstuff</groupId>
         <artifactId>wicketstuff-clipboardjs</artifactId>
         <version>${wicketstuff.version}</version>
-      </dependency>
-
-      <!-- SPRING -->
-      <dependency>
-        <groupId>org.springframework</groupId>
-        <artifactId>spring-framework-bom</artifactId>
-        <version>${spring.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
       </dependency>
 
       <!-- SPRING DATA -->
@@ -1419,51 +1412,38 @@
       </dependency>
 
       <dependency>
-        <!-- Import dependency management from LOG4J -->
+        <groupId>io.sentry</groupId>
+        <artifactId>sentry-bom</artifactId>
+        <version>${sentry.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+
+      <dependency>
+        <groupId>org.apache.uima</groupId>
+        <artifactId>uimaj-bom</artifactId>
+        <version>${uima.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+
+      <dependency>
+        <groupId>org.apache.uima</groupId>
+        <artifactId>uimafit-bom</artifactId>
+        <version>${uimafit.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+
+      <dependency>
         <groupId>org.apache.logging.log4j</groupId>
         <artifactId>log4j-bom</artifactId>
         <version>${log4j2.version}</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
-      <dependency>
-        <groupId>org.apache.logging.log4j</groupId>
-        <artifactId>log4j-core</artifactId>
-        <version>${log4j2.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.logging.log4j</groupId>
-        <artifactId>log4j-api</artifactId>
-        <version>${log4j2.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.logging.log4j</groupId>
-        <artifactId>log4j-jmx-gui</artifactId>
-        <version>${log4j2.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.logging.log4j</groupId>
-        <artifactId>log4j-layout-template-json</artifactId>
-        <version>${log4j2.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.logging.log4j</groupId>
-        <artifactId>log4j-slf4j2-impl</artifactId>
-        <version>${log4j2.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.logging.log4j</groupId>
-        <artifactId>log4j-spring-boot</artifactId>
-        <version>${log4j2.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.logging.log4j</groupId>
-        <artifactId>log4j-to-slf4j</artifactId>
-        <version>${log4j2.version}</version>
-      </dependency>
 
       <dependency>
-        <!-- Import dependency management from Spring Boot -->
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-dependencies</artifactId>
         <version>${spring.boot.version}</version>
@@ -1472,7 +1452,6 @@
       </dependency>
 
       <dependency>
-        <!-- Import dependency management from Wicket -->
         <groupId>org.apache.wicket</groupId>
         <artifactId>wicket-parent</artifactId>
         <version>${wicket.version}</version>
@@ -1481,17 +1460,11 @@
       </dependency>
 
       <dependency>
-        <!-- Import dependency management from DKPro Core -->
         <groupId>org.dkpro.core</groupId>
-        <artifactId>dkpro-core-asl</artifactId>
+        <artifactId>dkpro-core-bom-asl</artifactId>
         <version>${dkpro.version}</version>
         <type>pom</type>
         <scope>import</scope>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.ivy</groupId>
-        <artifactId>ivy</artifactId>
-        <version>2.5.2</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
