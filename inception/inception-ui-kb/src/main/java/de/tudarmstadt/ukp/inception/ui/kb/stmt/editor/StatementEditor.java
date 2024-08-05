@@ -17,13 +17,14 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.stmt.editor;
 
+import static org.apache.wicket.event.Broadcast.BREADTH;
+
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.event.Broadcast;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
@@ -145,9 +146,8 @@ public class StatementEditor
     private void actionCancelNewStatement(AjaxRequestTarget aTarget)
     {
         // send a delete event to trigger the deletion in the UI
-        AjaxStatementChangedEvent deleteEvent = new AjaxStatementChangedEvent(aTarget,
-                statement.getObject(), this, true);
-        send(getPage(), Broadcast.BREADTH, deleteEvent);
+        var deleteEvent = new AjaxStatementChangedEvent(aTarget, statement.getObject(), this, true);
+        send(getPage(), BREADTH, deleteEvent);
     }
 
     private void actionSave(AjaxRequestTarget aTarget, Form<KBStatement> aForm)
@@ -167,7 +167,7 @@ public class StatementEditor
             statement.setObject(modifiedStatement);
             // switch back to ViewMode and send notification to listeners
             actionCancelExistingStatement(aTarget);
-            send(getPage(), Broadcast.BREADTH,
+            send(getPage(), BREADTH,
                     new AjaxStatementChangedEvent(aTarget, statement.getObject(), oldStatement));
         }
         catch (RepositoryException e) {
@@ -184,7 +184,7 @@ public class StatementEditor
 
             AjaxStatementChangedEvent deleteEvent = new AjaxStatementChangedEvent(aTarget,
                     statement.getObject(), this, true);
-            send(getPage(), Broadcast.BREADTH, deleteEvent);
+            send(getPage(), BREADTH, deleteEvent);
         }
         catch (RepositoryException e) {
             error("Unable to delete statement: " + e.getLocalizedMessage());
@@ -203,8 +203,7 @@ public class StatementEditor
             // KBStatement to false, so that's what's done here
             statement.getObject().setInferred(false);
             aTarget.add(this);
-            send(getPage(), Broadcast.BREADTH,
-                    new AjaxStatementChangedEvent(aTarget, statement.getObject()));
+            send(getPage(), BREADTH, new AjaxStatementChangedEvent(aTarget, statement.getObject()));
         }
         catch (RepositoryException e) {
             error("Unable to make statement explicit " + e.getLocalizedMessage());
