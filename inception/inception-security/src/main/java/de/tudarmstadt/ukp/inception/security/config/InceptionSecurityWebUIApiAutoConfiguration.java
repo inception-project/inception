@@ -71,14 +71,21 @@ public class InceptionSecurityWebUIApiAutoConfiguration
 
     private void commonConfiguration(HttpSecurity aHttp) throws Exception
     {
-        aHttp.authorizeHttpRequests() //
-                .requestMatchers("/**").hasAnyRole("USER") //
-                .anyRequest().denyAll();
-        aHttp.sessionManagement().sessionCreationPolicy(NEVER);
-        aHttp.exceptionHandling() //
-                .defaultAuthenticationEntryPointFor( //
-                        new Http403ForbiddenEntryPoint(), //
-                        new AntPathRequestMatcher("/**"));
+        aHttp.authorizeHttpRequests(authorizeHttpRequests -> {
+            authorizeHttpRequests //
+                    .requestMatchers("/**").hasAnyRole("USER") //
+                    .anyRequest().denyAll();
+        });
+
+        aHttp.sessionManagement(sessionManagement -> {
+            sessionManagement.sessionCreationPolicy(NEVER);
+        });
+
+        aHttp.exceptionHandling(exceptionHandling -> {
+            exceptionHandling.defaultAuthenticationEntryPointFor( //
+                    new Http403ForbiddenEntryPoint(), //
+                    new AntPathRequestMatcher("/**"));
+        });
 
     }
 }
