@@ -184,6 +184,26 @@
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-sharing</artifactId>
     </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-project-export</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-recommendation-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-api-annotation</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-export-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-schema-api</artifactId>
+    </dependency>
     <!--
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
@@ -957,6 +977,11 @@
               <dependency>de.tudarmstadt.ukp.inception.app:inception-project</dependency>
               <dependency>de.tudarmstadt.ukp.inception.app:inception-project-api</dependency>
               <dependency>de.tudarmstadt.ukp.inception.app:inception-project-initializers</dependency>
+              <dependency>de.tudarmstadt.ukp.inception.app:inception-project-export</dependency>
+              <dependency>de.tudarmstadt.ukp.inception.app:inception-recommendation-api</dependency>
+              <dependency>de.tudarmstadt.ukp.inception.app:inception-api-annotation</dependency>
+              <dependency>de.tudarmstadt.ukp.inception.app:inception-export-api</dependency>
+              <dependency>de.tudarmstadt.ukp.inception.app:inception-schema-api</dependency>
             </ignoredNonTestScopedDependencies>
             <usedDependencies>
               <!-- INCEpTION backend modules - used via Spring -->
