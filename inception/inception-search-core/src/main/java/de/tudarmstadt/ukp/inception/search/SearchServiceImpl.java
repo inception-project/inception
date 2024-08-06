@@ -176,7 +176,7 @@ public class SearchServiceImpl
         // all the indexes
         schedulingService.stopAllTasksMatching(task -> task instanceof IndexingTask_ImplBase);
         long t0 = currentTimeMillis();
-        while (isBusy() && currentTimeMillis() - t0 < 10_000) {
+        while (isBusy() && (currentTimeMillis() - t0) < 10_000) {
             try {
                 Thread.sleep(500);
             }
@@ -187,9 +187,15 @@ public class SearchServiceImpl
 
         while (!indexes.isEmpty()) {
             synchronized (indexes) {
-                List<PooledIndex> pooledIndexesSnapshot = new ArrayList<>(indexes.values());
+                var pooledIndexesSnapshot = indexes.values() //
+                        .stream().filter(i -> !i.isDead()) //
+                        .toList();
 
-                for (PooledIndex pooledIndex : pooledIndexesSnapshot) {
+                if (pooledIndexesSnapshot.isEmpty()) {
+                    break;
+                }
+
+                for (var pooledIndex : pooledIndexesSnapshot) {
                     unloadIndex(pooledIndex);
                 }
             }

@@ -23,6 +23,8 @@ import static de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeServ
 import static de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeService.PROFILE_PRODUCTION_MODE;
 import static java.util.Arrays.asList;
 
+import java.util.zip.ZipFile;
+
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -36,13 +38,22 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.webanno.StandardProjectInitializer;
 import de.tudarmstadt.ukp.inception.INCEpTION;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.app.config.InceptionApplicationContextInitializer;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
 import de.tudarmstadt.ukp.inception.project.api.ProjectInitializationRequest;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
+import de.tudarmstadt.ukp.inception.project.export.ProjectExportService;
+import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.logging.Logging;
 
 @ActiveProfiles({ //
@@ -59,10 +70,22 @@ public abstract class InceptionIntegrationTest_ImplBase
     ProjectService projectService;
 
     @Autowired
+    ProjectExportService projectExportService;
+
+    @Autowired
     StandardProjectInitializer standardProjectInitializer;
 
     @Autowired
     RepositoryProperties repositoryProperties;
+
+    @Autowired
+    DocumentService documentService;
+
+    @Autowired
+    AnnotationSchemaService schemaService;
+
+    @Autowired
+    LearningRecordService learningRecordService;
 
     @BeforeEach
     void setupClass()
@@ -89,7 +112,7 @@ public abstract class InceptionIntegrationTest_ImplBase
     }
 
     @Test
-    void testCreatingAndRemovingProject() throws Exception
+    void testCreatingAndDeletingProject() throws Exception
     {
         var project = Project.builder().withName("test").withSlug("test").build();
         projectService.createProject(project);
@@ -102,5 +125,55 @@ public abstract class InceptionIntegrationTest_ImplBase
         projectService.initializeProject(request, asList(standardProjectInitializer));
 
         projectService.removeProject(project);
+    }
+
+    @Test
+    void testImportingAndDeletingRemovingProject() throws Exception
+    {
+        var request = ProjectImportRequest.builder() //
+                .withCreateMissingUsers(true) //
+                .withImportPermissions(true) //
+                .build();
+
+        Project project;
+        try (var zipFile = new ZipFile("src/test/resources/test-project-with-recommenders.zip")) {
+            project = projectExportService.importProject(request, zipFile);
+        }
+
+        projectService.removeProject(project);
+    }
+
+    @Test
+    void testDeletingSourceDocumentWithLearningRecordAttached() throws Exception
+    {
+        var project = Project.builder() //
+                .withName("test") //
+                .build();
+        var layer = AnnotationLayer.builder() //
+                .withProject(project) //
+                .withName("Layer") //
+                .withUiName("Layer") //
+                .withType(SpanLayerSupport.TYPE) //
+                .build();
+        var doc = SourceDocument.builder() //
+                .withProject(project) //
+                .withName("Blah") //
+                .build();
+        var learningRecord = LearningRecord.builder() //
+                .withLayer(layer) //
+                .withSourceDocument(doc) //
+                .withSuggestionType(layer.getType()) //
+                .build();
+        try {
+            projectService.createProject(project);
+            schemaService.createOrUpdateLayer(layer);
+            documentService.createSourceDocument(doc);
+            learningRecordService.createLearningRecord(learningRecord);
+
+            documentService.removeSourceDocument(doc);
+        }
+        finally {
+            projectService.removeProject(project);
+        }
     }
 }
