@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.kb.querybuilder;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_ALLEGRO_GRAPH;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_BLAZEGRAPH;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_FUSEKI;
+import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_GRAPHDB;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_NONE;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_RDF4J_LUCENE;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_STARDOG;
@@ -799,6 +800,10 @@ public class SPARQLQueryBuilder
             return new FtsAdapterBlazegraph(this);
         }
 
+        if (FTS_GRAPHDB.equals(ftsMode)) {
+            return new FtsAdapterGraphDb(this);
+        }
+
         if (FTS_FUSEKI.equals(ftsMode)) {
             return new FtsAdapterFuseki(this);
         }
@@ -995,6 +1000,9 @@ public class SPARQLQueryBuilder
                 value = Stream.of(TOKENKIZER_PATTERN.split(aValue)) //
                         .map(t -> "(?=.*" + asRegexp(t) + ")") //
                         .collect(joining());
+                // value = Stream.of(TOKENKIZER_PATTERN.split(aValue)) //
+                // .map(t -> asRegexp(t)) //
+                // .collect(joining("|"));
                 break;
             default:
                 throw new IllegalArgumentException(
