@@ -19,44 +19,53 @@
 package de.tudarmstadt.ukp.inception.security.oauth;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.util.ArrayList;
 import java.util.Set;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.annotation.DirtiesContext.ClassMode;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
-public class OAuthUtilsTest
-{
 
-    private static final String USERNAME = "ThatGuy";
-    private static final String OAUTH2_GROUP_USER = "/INCEPTION_USER";
-    private static final String OAUTH2_GROUP_PROJECT_CREATOR = "/INCEPTION_PROJECT_CREATOR";
-    private static final String OAUTH2_GROUP_ADMIN = "/INCEPTION_ADMIN";
-    private static final String OAUTH2_GROUP_REMOTE = "/INCEPTION_REMOTE";
+@ExtendWith(SpringExtension.class)
+@ContextConfiguration(classes = OAuth2Utils.class)
+@DirtiesContext(classMode = ClassMode.AFTER_CLASS)
+@TestPropertySource("classpath:oauth2-groups.properties")
+public class OAuth2UtilsTest
+{
+   
+    String USERNAME = "ThatGuy";
+    String OAUTH2_GROUP_USER = "/INCEPTION_USER";
+    String OAUTH2_GROUP_PROJECT_CREATOR = "/INCEPTION_PROJECT_CREATOR";
+    String OAUTH2_GROUP_ADMIN = "/INCEPTION_ADMIN";
+    String OAUTH2_GROUP_REMOTE = "/INCEPTION_REMOTE";
 
     User testUser;
-    
+   
     @BeforeEach
-    void setup()
-    {
-        testUser = new User();
-        testUser.setUsername(USERNAME);
-        
-        System.setProperty("inception.home", "src/test/resources");
-        
+    void setup() {
+      testUser = new User();
+      testUser.setUsername(USERNAME);
     }
-
+    
     @Test
     void thatAdminRoleIsGivenIfMatchingGroupFound()
     {
         ArrayList<String> userOAuth2Groups = new ArrayList<>();
         userOAuth2Groups.add(OAUTH2_GROUP_ADMIN);
         
-        Set<Role> userRoles = OauthUtils.getOAuth2UserRoles(testUser, userOAuth2Groups);
+        Set<Role> userRoles = OAuth2Utils.getOAuth2UserRoles(testUser, userOAuth2Groups);
         
         assertTrue(userRoles.contains(Role.ROLE_ADMIN));
     }
@@ -67,7 +76,7 @@ public class OAuthUtilsTest
         ArrayList<String> userOAuth2Groups = new ArrayList<>();
         userOAuth2Groups.add(OAUTH2_GROUP_USER);
         
-        Set<Role> userRoles = OauthUtils.getOAuth2UserRoles(testUser, userOAuth2Groups);
+        Set<Role> userRoles = OAuth2Utils.getOAuth2UserRoles(testUser, userOAuth2Groups);
         
         assertTrue(userRoles.contains(Role.ROLE_USER));
     }
@@ -78,7 +87,7 @@ public class OAuthUtilsTest
         ArrayList<String> userOAuth2Groups = new ArrayList<>();
         userOAuth2Groups.add(OAUTH2_GROUP_PROJECT_CREATOR);
         
-        Set<Role> userRoles = OauthUtils.getOAuth2UserRoles(testUser, userOAuth2Groups);
+        Set<Role> userRoles = OAuth2Utils.getOAuth2UserRoles(testUser, userOAuth2Groups);
         
         assertTrue(userRoles.contains(Role.ROLE_PROJECT_CREATOR));
     }
@@ -89,9 +98,23 @@ public class OAuthUtilsTest
         ArrayList<String> userOAuth2Groups = new ArrayList<>();
         userOAuth2Groups.add(OAUTH2_GROUP_REMOTE);
         
-        Set<Role> userRoles = OauthUtils.getOAuth2UserRoles(testUser, userOAuth2Groups);
+        Set<Role> userRoles = OAuth2Utils.getOAuth2UserRoles(testUser, userOAuth2Groups);
         
         assertTrue(userRoles.contains(Role.ROLE_REMOTE));
     }
-
+    
+    @Test
+    void thatUnauthorizedExceptionIsThrownIfNoRoleIsMapped() {
+        
+        ArrayList<String> userOAuth2Groups = new ArrayList<>();
+        
+        try {
+            OAuth2Utils.getOAuth2UserRoles(testUser, userOAuth2Groups);
+        } catch (AccessDeniedException ade) {
+            System.out.println(ade.getClass().getSimpleName() + " was thrown");
+            return;
+        }
+        
+        fail("Expected Exception wasn't catched");
+    }
 }

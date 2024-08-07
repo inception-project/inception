@@ -148,7 +148,7 @@ public class OAuth2AdapterImpl
             denyAccessToDeactivatedUsers(u);
             denyAccessOfRealmsDoNotMatch(realm, u);
 
-            u.setRoles(OauthUtils.getOAuth2UserRoles(u, user.getAttribute("groups")));
+            u.setRoles(OAuth2Utils.getOAuth2UserRoles(u, user.getAttribute("groups")));
             userRepository.update(u);
 
             return u;
@@ -165,7 +165,7 @@ public class OAuth2AdapterImpl
         u.setEnabled(true);
         u.setRealm(realm);
 
-        u.setRoles(OauthUtils.getOAuth2UserRoles(u, user.getAttribute("groups")));
+        u.setRoles(OAuth2Utils.getOAuth2UserRoles(u, user.getAttribute("groups")));
 
         String email = user.getAttribute("email");
         if (email != null) {
