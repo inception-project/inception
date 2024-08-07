@@ -41,7 +41,14 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = OAuth2Utils.class)
 @DirtiesContext(classMode = ClassMode.AFTER_CLASS)
-@TestPropertySource("classpath:oauth2-groups.properties")
+@TestPropertySource(
+        properties = """
+            oauth2-groups.enabled=true
+            oauth2-groups.admin=/INCEPTION_ADMIN
+            oauth2-groups.user=/INCEPTION_USER
+            oauth2-groups.project-creator=/INCEPTION_PROJECT_CREATOR
+            oauth2-groups.remote=/INCEPTION_REMOTE
+        """)
 public class OAuth2UtilsTest
 {
    
