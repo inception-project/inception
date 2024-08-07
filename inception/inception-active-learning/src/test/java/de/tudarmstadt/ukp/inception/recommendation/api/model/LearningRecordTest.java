@@ -17,23 +17,21 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.api.model;
 
+import static java.util.Arrays.fill;
 import static org.assertj.core.api.Assertions.assertThat;
-
-import java.util.Arrays;
 
 import org.junit.jupiter.api.Test;
 
 public class LearningRecordTest
 {
-
     @Test
     public void thatTokenTextIsTruncated()
     {
-        char[] charArray = new char[300];
-        Arrays.fill(charArray, 'X');
-        String longTokenText = new String(charArray);
+        var charArray = new char[300];
+        fill(charArray, 'X');
+        var longTokenText = new String(charArray);
 
-        LearningRecord sut = new LearningRecord();
+        var sut = new LearningRecord();
         sut.setTokenText(longTokenText);
 
         assertThat(sut.getTokenText()).as("TokenText has been truncated").hasSize(255);

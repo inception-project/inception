@@ -13,6 +13,7 @@
 
 # Make sure that these files are treated as binary so that newlines are preserved.
 #   overrides GIT's determination if a file is text or not
+*.zip binary
 *.gz binary
 *.bin binary
 *.dump binary
