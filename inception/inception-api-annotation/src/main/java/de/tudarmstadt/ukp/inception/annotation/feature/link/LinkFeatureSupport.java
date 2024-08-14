@@ -17,6 +17,13 @@
  */
 package de.tudarmstadt.ukp.inception.annotation.feature.link;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.LinkMode.WITH_ROLE;
+import static de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode.ARRAY;
+import static org.apache.uima.cas.CAS.TYPE_NAME_FS_ARRAY;
+import static org.apache.uima.cas.CAS.TYPE_NAME_STRING;
+import static org.apache.uima.cas.CAS.TYPE_NAME_TOP;
+
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -24,9 +31,7 @@ import java.util.List;
 import org.apache.commons.text.WordUtils;
 import org.apache.uima.cas.ArrayFS;
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
-import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.resource.metadata.TypeDescription;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
@@ -39,8 +44,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
-import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
@@ -67,7 +70,10 @@ import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
 public class LinkFeatureSupport
     implements FeatureSupport<LinkFeatureTraits>
 {
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    public static final String FEATURE_NAME_TARGET = "target";
+    public static final String FEATURE_NAME_ROLE = "role";
+
+    private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private final AnnotationSchemaService annotationService;
 
@@ -148,7 +154,7 @@ public class LinkFeatureSupport
             AnnotationActionHandler aHandler, final IModel<AnnotatorState> aStateModel,
             final IModel<FeatureState> aFeatureStateModel)
     {
-        AnnotationFeature feature = aFeatureStateModel.getObject().feature;
+        var feature = aFeatureStateModel.getObject().feature;
         final FeatureEditor editor;
 
         switch (feature.getMultiValueMode()) {
@@ -175,10 +181,10 @@ public class LinkFeatureSupport
     public void configureFeature(AnnotationFeature aFeature)
     {
         // Set properties of link features since these are currently not configurable in the UI
-        aFeature.setMode(MultiValueMode.ARRAY);
-        aFeature.setLinkMode(LinkMode.WITH_ROLE);
-        aFeature.setLinkTypeRoleFeatureName("role");
-        aFeature.setLinkTypeTargetFeatureName("target");
+        aFeature.setMode(ARRAY);
+        aFeature.setLinkMode(WITH_ROLE);
+        aFeature.setLinkTypeRoleFeatureName(FEATURE_NAME_ROLE);
+        aFeature.setLinkTypeTargetFeatureName(FEATURE_NAME_TARGET);
         aFeature.setLinkTypeName(
                 aFeature.getLayer().getName() + WordUtils.capitalize(aFeature.getName()) + "Link");
     }
@@ -188,12 +194,12 @@ public class LinkFeatureSupport
             AnnotationFeature aFeature)
     {
         // Link type
-        var linkTD = aTSD.addType(aFeature.getLinkTypeName(), "", CAS.TYPE_NAME_TOP);
-        linkTD.addFeature(aFeature.getLinkTypeRoleFeatureName(), "", CAS.TYPE_NAME_STRING);
+        var linkTD = aTSD.addType(aFeature.getLinkTypeName(), "", TYPE_NAME_TOP);
+        linkTD.addFeature(aFeature.getLinkTypeRoleFeatureName(), "", TYPE_NAME_STRING);
         linkTD.addFeature(aFeature.getLinkTypeTargetFeatureName(), "", aFeature.getType());
 
         // Link feature
-        aTD.addFeature(aFeature.getName(), aFeature.getDescription(), CAS.TYPE_NAME_FS_ARRAY,
+        aTD.addFeature(aFeature.getName(), aFeature.getDescription(), TYPE_NAME_FS_ARRAY,
                 linkTD.getName(), false);
     }
 
@@ -221,7 +227,7 @@ public class LinkFeatureSupport
                                 + "] is not in the tag list. Please choose from the existing tags");
                     }
 
-                    Tag selectedTag = new Tag();
+                    var selectedTag = new Tag();
                     selectedTag.setName(link.role);
                     selectedTag.setTagSet(aFeature.getTagset());
                     annotationService.createTag(selectedTag);
@@ -275,13 +281,13 @@ public class LinkFeatureSupport
                     "Unable to handle value [" + aValue + "] of type [" + aValue.getClass() + "]");
         }
 
-        Type linkType = aCAS.getTypeSystem().getType(aFeature.getLinkTypeName());
-        Feature roleFeat = linkType.getFeatureByBaseName(aFeature.getLinkTypeRoleFeatureName());
-        Feature targetFeat = linkType.getFeatureByBaseName(aFeature.getLinkTypeTargetFeatureName());
+        var linkType = aCAS.getTypeSystem().getType(aFeature.getLinkTypeName());
+        var roleFeat = linkType.getFeatureByBaseName(aFeature.getLinkTypeRoleFeatureName());
+        var targetFeat = linkType.getFeatureByBaseName(aFeature.getLinkTypeTargetFeatureName());
 
-        ArrayList<LinkWithRoleModel> links = new ArrayList<>();
-        for (FeatureStructure link : values) {
-            LinkWithRoleModel m = new LinkWithRoleModel();
+        var links = new ArrayList<LinkWithRoleModel>(values.length);
+        for (var link : values) {
+            var m = new LinkWithRoleModel();
             m.role = link.getStringValue(roleFeat);
             m.targetAddr = ICasUtil.getAddr(link.getFeatureValue(targetFeat));
             m.label = ((AnnotationFS) link.getFeatureValue(targetFeat)).getCoveredText();
