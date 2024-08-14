@@ -11,6 +11,8 @@ nameOverride: ""
 
 fullnameOverride: ""
 
+autoscaling: {}
+
 # INCEpTION configuration settings.
 config:
   # -- Base URL prefix on which INCEpTION is deployed.
