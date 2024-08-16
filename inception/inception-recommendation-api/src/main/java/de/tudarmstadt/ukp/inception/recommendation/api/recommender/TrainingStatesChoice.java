@@ -43,7 +43,7 @@ public class TrainingStatesChoice
 
         // We need to invert the states in documentStates, as the recommender stores the
         // ones to ignore, not the ones to consider
-        IModel<Set<AnnotationDocumentState>> model = new IModel<Set<AnnotationDocumentState>>()
+        var model = new IModel<Set<AnnotationDocumentState>>()
         {
             private static final long serialVersionUID = 2894838629097952859L;
 
@@ -59,15 +59,14 @@ public class TrainingStatesChoice
             @Override
             public Set<AnnotationDocumentState> getObject()
             {
-                Set<AnnotationDocumentState> ignoredStates = recommenderModel.getObject()
-                        .getStatesIgnoredForTraining();
+                var ignoredStates = recommenderModel.getObject().getStatesIgnoredForTraining();
 
                 return invert(ignoredStates);
             }
 
             private Set<AnnotationDocumentState> invert(Set<AnnotationDocumentState> states)
             {
-                Set<AnnotationDocumentState> result = getAllPossibleDocumentStates();
+                var result = getAllPossibleDocumentStates();
 
                 if (states == null) {
                     return result;
@@ -88,7 +87,7 @@ public class TrainingStatesChoice
     @Override
     protected IValueMap getAdditionalAttributesForLabel(int aIndex, AnnotationDocumentState aChoice)
     {
-        AttributeMap attributes = new AttributeMap();
+        var attributes = new AttributeMap();
         attributes.put("class", "form-check-label");
         return attributes;
     }
@@ -96,7 +95,7 @@ public class TrainingStatesChoice
     @Override
     protected IValueMap getAdditionalAttributes(int aIndex, AnnotationDocumentState aChoice)
     {
-        AttributeMap attributes = new AttributeMap();
+        var attributes = new AttributeMap();
         attributes.put("class", "form-check-input");
         return attributes;
     }
