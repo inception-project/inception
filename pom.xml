@@ -70,23 +70,23 @@
     <build-ant-version>1.10.14</build-ant-version>
     <build-groovy-version>4.0.22</build-groovy-version>
 
-    <junit-jupiter.version>5.10.3</junit-jupiter.version>
-    <junit-platform.version>1.10.3</junit-platform.version>
+    <junit-jupiter.version>5.11.0</junit-jupiter.version>
+    <junit-platform.version>1.11.0</junit-platform.version>
     <mockito.version>5.12.0</mockito.version>
     <assertj.version>3.26.3</assertj.version>
     <xmlunit.version>2.10.0</xmlunit.version>
-    <testcontainers.version>1.20.0</testcontainers.version>
+    <testcontainers.version>1.20.1</testcontainers.version>
 
-    <awaitility.version>4.2.1</awaitility.version>
+    <awaitility.version>4.2.2</awaitility.version>
 
     <dkpro.version>2.5.0</dkpro.version>
     <uima.version>3.5.0</uima.version>
     <uimafit.version>3.5.0</uimafit.version>
     <uima-json.version>0.5.0</uima-json.version>
 
-    <pdfbox.version>3.0.2</pdfbox.version>
+    <pdfbox.version>3.0.3</pdfbox.version>
 
-    <spring.version>6.1.11</spring.version>
+    <spring.version>6.1.12</spring.version>
     <spring.boot.version>3.3.2</spring.boot.version>
     <spring.data.version>3.3.2</spring.data.version>
     <spring.security.version>6.3.1</spring.security.version>
@@ -94,12 +94,12 @@
     <swagger.version>2.2.22</swagger.version>
     <jjwt.version>0.12.6</jjwt.version>
 
-    <slf4j.version>2.0.13</slf4j.version>
+    <slf4j.version>2.0.16</slf4j.version>
     <log4j2.version>2.23.1</log4j2.version>
     <jboss.logging.version>3.6.0.Final</jboss.logging.version>
-    <sentry.version>7.12.1</sentry.version>
+    <sentry.version>7.14.0</sentry.version>
 
-    <tomcat.version>10.1.26</tomcat.version>
+    <tomcat.version>10.1.28</tomcat.version>
     <jetty.version>12.0.12</jetty.version>
     <servlet-api.version>6.0.0</servlet-api.version>
 
@@ -120,9 +120,9 @@
     <!--
       - These are all interconnected - because they share the dependency on Lucene.
       -->
-    <lucene.version>9.10.0</lucene.version>
+    <lucene.version>9.11.1</lucene.version>
     <solr.version>9.6.1</solr.version>
-    <opensearch.version>2.15.0</opensearch.version>
+    <opensearch.version>2.16.0</opensearch.version>
     <jena.version>5.1.0</jena.version>
     <rdf4j.version>4.3.13</rdf4j.version> 
     <owlapi-version>5.5.0</owlapi-version>
@@ -130,7 +130,7 @@
     <asciidoctor.plugin.version>2.2.3</asciidoctor.plugin.version>
     <asciidoctor.version>2.5.13</asciidoctor.version>
     <asciidoctor-diagram.version>2.3.1</asciidoctor-diagram.version>
-    <build-asciidoctorj-pdf-version>2.3.17</build-asciidoctorj-pdf-version>
+    <build-asciidoctorj-pdf-version>2.3.18</build-asciidoctorj-pdf-version>
 
     <json.version>20230227</json.version>
     <pf4j.version>2.6.0</pf4j.version>
@@ -139,17 +139,17 @@
     <snakeyaml.version>2.2</snakeyaml.version>
     <okhttp.version>4.12.0</okhttp.version>
     <okio.version>3.9.0</okio.version>
-    <byte-buddy.version>1.14.18</byte-buddy.version>
+    <byte-buddy.version>1.14.19</byte-buddy.version>
     <caffeine.version>3.1.8</caffeine.version>
     <commons-beanutils.version>1.9.4</commons-beanutils.version>
     <commons-collections4.version>4.4</commons-collections4.version>
     <commons-csv.version>1.11.0</commons-csv.version>
     <commons-fileupload.version>1.5</commons-fileupload.version>
     <commons-pool2.version>2.12.0</commons-pool2.version>
-    <commons-lang3.version>3.15.0</commons-lang3.version>
+    <commons-lang3.version>3.16.0</commons-lang3.version>
     <commons-dbcp2.version>2.12.0</commons-dbcp2.version>
     <commons-codec.version>1.17.1</commons-codec.version>
-    <commons-compress.version>1.26.2</commons-compress.version>
+    <commons-compress.version>1.27.0</commons-compress.version>
     <commons-math3.version>3.6.1</commons-math3.version>
     <commons-text.version>1.12.0</commons-text.version>
     <commons-validator.version>1.9.0</commons-validator.version>
@@ -164,11 +164,11 @@
     <json-schema-validator.version>1.5.1</json-schema-validator.version>
     <jgit.version>6.10.0.202406032230-r</jgit.version>
     <jaxb.version>4.0.5</jaxb.version>
-    <snappy.version>1.1.10.5</snappy.version>
+    <snappy.version>1.1.10.6</snappy.version>
     <jsonld-java.version>0.13.6</jsonld-java.version>
     <jna.version>5.14.0</jna.version>
     <jsoup.version>1.18.1</jsoup.version>
-    <mime4j.version>0.8.10</mime4j.version>
+    <mime4j.version>0.8.11</mime4j.version>
     <hsqldb.version>2.7.3</hsqldb.version>
     <opensaml.version>4.3.2</opensaml.version>
     <oauth2-oidc-sdk.version>9.43.4</oauth2-oidc-sdk.version>
