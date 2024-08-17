@@ -77,7 +77,7 @@ public class UndoPanel
     {
         // We keep the state in the page because the undo panel is part of the list view in the
         // action bar and looses its state when the page is reloaded
-        UndoRedoState state = getPage().getMetaData(UndoRedoStateKey.INSTANCE);
+        var state = getPage().getMetaData(UndoRedoStateKey.INSTANCE);
         if (state == null) {
             state = new UndoRedoState();
             getPage().setMetaData(UndoRedoStateKey.INSTANCE, state);
@@ -87,7 +87,7 @@ public class UndoPanel
 
     private long getRequestId()
     {
-        Long requestId = getRequestCycle().getMetaData(RequestIdKey.INSTANCE);
+        var requestId = getRequestCycle().getMetaData(RequestIdKey.INSTANCE);
         if (requestId == null) {
             requestId = NEXT_REQUEST_ID.getAndIncrement();
             getRequestCycle().setMetaData(RequestIdKey.INSTANCE, requestId);
@@ -223,7 +223,12 @@ public class UndoPanel
         if (handler.isPresent()) {
             getState().clearRedoableActions();
             long requestId = getRequestId();
-            getState().pushUndoable(handler.get().actionForEvent(requestId, aEvent));
+            try {
+                getState().pushUndoable(handler.get().actionForEvent(requestId, aEvent));
+            }
+            catch (IllegalArgumentException e) {
+                // Ignore - undo not supported for this action...
+            }
         }
     }
 }
