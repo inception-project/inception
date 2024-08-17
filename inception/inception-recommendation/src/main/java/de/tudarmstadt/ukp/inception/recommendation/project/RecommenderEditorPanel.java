@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.recommendation.project;
 
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.MAX_RECOMMENDATIONS_CAP;
 import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CHANGE_EVENT;
+import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.enabledWhenNot;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
@@ -159,6 +160,7 @@ public class RecommenderEditorPanel
             t.add(autoGenerateNameCheckBox, form.get(MID_TOOL), form.get(MID_FEATURE),
                     form.get(MID_MAX_RECOMMENDATIONS), activationContainer, traitsContainer);
         }));
+        layerChoice.add(enabledWhenNot(recommenderModel.map(Recommender::getId).isPresent()));
         form.add(layerChoice);
 
         featureChoice = new DropDownChoice<>(MID_FEATURE, this::listFeatures);
@@ -179,6 +181,7 @@ public class RecommenderEditorPanel
             t.add(autoGenerateNameCheckBox, form.get(MID_TOOL), form.get(MID_MAX_RECOMMENDATIONS),
                     activationContainer, traitsContainer);
         }));
+        featureChoice.add(enabledWhenNot(recommenderModel.map(Recommender::getId).isPresent()));
         form.add(featureChoice);
 
         var toolModel = LambdaModelAdapter.of(() -> {
@@ -219,6 +222,7 @@ public class RecommenderEditorPanel
             t.add(autoGenerateNameCheckBox, form.get(MID_MAX_RECOMMENDATIONS), activationContainer,
                     traitsContainer);
         }));
+        toolChoice.add(enabledWhenNot(recommenderModel.map(Recommender::getId).isPresent()));
         form.add(toolChoice);
 
         form.add(activationContainer = new WebMarkupContainer(MID_ACTIVATION_CONTAINER));
