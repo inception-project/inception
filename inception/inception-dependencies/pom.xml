@@ -31,6 +31,14 @@
   <dependencyManagement>
     <dependencies>
       <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-bom</artifactId>
+        <version>${slf4j.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    
+      <dependency>
         <groupId>org.springframework</groupId>
         <artifactId>spring-framework-bom</artifactId>
         <version>${spring.version}</version>
@@ -606,15 +614,6 @@
         <groupId>org.apache.thrift</groupId>
         <artifactId>libthrift</artifactId>
         <version>0.17.0</version>
-      </dependency>
-
-      <!-- SLF4J -->
-      <dependency>
-        <groupId>org.slf4j</groupId>
-        <artifactId>slf4j-bom</artifactId>
-        <version>${slf4j.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
       </dependency>
 
       <dependency>
