@@ -57,6 +57,7 @@ import de.tudarmstadt.ukp.inception.rendering.vmodel.VComment;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VCommentType;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VObject;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VSpan;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistry;
@@ -178,6 +179,12 @@ public class CurationSidebarRenderer
                     continue;
                 }
 
+                // Do not render configurations that belong only the the target user. Those are
+                // already rendered by the normal annotation rendering mechanism
+                if (cfg.getCasGroupIds().size() == 1 && cfg.getCasGroupIds().contains(targetUser)) {
+                    continue;
+                }
+
                 var user = cfg.getRepresentativeCasGroupId();
 
                 // We need to pass in *all* the annotation features here because we also to that in
@@ -191,27 +198,32 @@ public class CurationSidebarRenderer
 
                 for (var object : objects) {
                     if (cfg.getPosition() instanceof SpanPosition spanPosition) {
-                        if (spanPosition.getFeature() != null && object instanceof VSpan) {
+                        if (spanPosition.isLinkFeaturePosition() && object instanceof VSpan) {
                             // When processing a slot position, do not render the origin span
-                            // because that should be already rendered by a separate position
+                            // because that should be already when we encounter the base span
+                            // position
+                            continue;
+                        }
+
+                        if (!spanPosition.isLinkFeaturePosition() && object instanceof VArc) {
+                            // When processing a span position, do not render slot links
+                            // because these should be rendered when we encounter the slot position
                             continue;
                         }
                     }
 
-                    if (!showAll && object instanceof VSpan) {
+                    if (!showAll) {
                         // Check if the target already contains an annotation from this
                         // configuration
-                        var sourceConfiguration = diff.findConfiguration(
-                                cfg.getRepresentativeCasGroupId(), new AID(object.getVid()));
-                        if (sourceConfiguration.map($ -> $.getAID(targetUser) != null)
-                                .orElse(false)) {
+                        if (isCurationSuggestionHiddenByMergedAnnotation(targetUser, diff, cfg,
+                                object)) {
                             continue;
                         }
 
                         // Check if the position could be merged at all or if the merge is blocked
                         // by an overlapping annotation (which may not be contained in the
                         // configuration)
-                        if (noOverlap && fs instanceof Annotation ann) {
+                        if (object instanceof VSpan && noOverlap && fs instanceof Annotation ann) {
                             var cas = aRequest.getCas();
                             if (cas.<Annotation> select(ann.getType().getName())
                                     .anyMatch(f -> ann.overlapping(f))) {
@@ -220,6 +232,7 @@ public class CurationSidebarRenderer
                         }
                     }
 
+                    // Check if the object has already been rendered
                     var curationVid = new CurationVID(user, object.getVid());
                     if (generatedCurationVids.contains(curationVid)) {
                         continue;
@@ -232,12 +245,11 @@ public class CurationSidebarRenderer
                     aVdoc.add(object);
 
                     aVdoc.add(new VComment(object.getVid(), VCommentType.INFO,
-                            "Annotators: " + cfg.getCasGroupIds().stream().collect(joining(", "))));
+                            "Annotators: " + cfg.getCasGroupIds().stream()
+                                    .filter(a -> !targetUser.equals(a)).collect(joining(", "))));
 
                     if (object instanceof VArc arc) {
-                        // Currently works for relations but not for slots
-                        arc.setSource(getCurationVid(targetUser, diff, cfg, arc.getSource()));
-                        arc.setTarget(getCurationVid(targetUser, diff, cfg, arc.getTarget()));
+                        resolveArcEndpoints(targetUser, diff, showAll, cfg, arc);
                         LOG.trace("Rendering curation vid: {} source: {} target: {}", arc.getVid(),
                                 arc.getSource(), arc.getTarget());
                     }
@@ -247,6 +259,14 @@ public class CurationSidebarRenderer
                 }
             }
         }
+    }
+
+    private boolean isCurationSuggestionHiddenByMergedAnnotation(String targetUser, DiffResult diff,
+            Configuration cfg, VObject object)
+    {
+        var sourceConfiguration = diff.findConfiguration(cfg.getRepresentativeCasGroupId(),
+                new AID(object.getVid()));
+        return sourceConfiguration.map($ -> $.getAID(targetUser) != null).orElse(false);
     }
 
     private CasDiff createDiff(RenderRequest aRequest, List<User> selectedUsers)
@@ -273,17 +293,73 @@ public class CurationSidebarRenderer
                 aRequest.getWindowEndOffset());
     }
 
+    private void resolveArcEndpoints(String targetUser, DiffResult diff, boolean showAll,
+            Configuration cfg, VArc arc)
+    {
+        if (showAll) {
+            var representativeCasGroupId = cfg.getRepresentativeCasGroupId();
+            arc.setSource(new CurationVID(representativeCasGroupId, arc.getSource()));
+            arc.setTarget(resolveVisibleEndpoint(targetUser, diff, cfg, arc.getTarget()));
+            return;
+        }
+
+        if (cfg.getPosition() instanceof SpanPosition spanPosition
+                && spanPosition.isLinkFeaturePosition()) {
+            arc.setSource(resolveVisibleLinkHost(targetUser, diff, cfg, arc.getSource()));
+        }
+        else {
+            arc.setSource(resolveVisibleEndpoint(targetUser, diff, cfg, arc.getSource()));
+        }
+        arc.setTarget(resolveVisibleEndpoint(targetUser, diff, cfg, arc.getTarget()));
+    }
+
+    private VID resolveVisibleLinkHost(String aTargetUser, DiffResult aDiff, Configuration aCfg,
+            VID aVid)
+    {
+        var representativeCasGroupId = aCfg.getRepresentativeCasGroupId();
+
+        // If this is a link feature position, derive the base span position (i.e. the span
+        // which owns the link feature) and check if that has already been merged. If yes, we
+        // need to return the merged position instead of the curator's position.
+        if (aCfg.getPosition() instanceof SpanPosition spanPosition
+                && spanPosition.isLinkFeaturePosition()) {
+            var originalSpanPosition = spanPosition.getBasePosition();
+            var cfgSet = aDiff.getConfigurationSet(originalSpanPosition);
+            if (cfgSet != null) {
+                var targetConfigurations = cfgSet.getConfigurations(aTargetUser);
+                if (!targetConfigurations.isEmpty()) {
+                    // FIXME: This is probably sub-optimal. What if the target user has multiple
+                    // configurations at this position? Currently, we simply attach to the first
+                    // one - which may not be the best matching one.
+                    // In particular, it may not be the one onto which the link will eventually
+                    // be merged...
+                    var curatedAID = targetConfigurations.get(0).getAID(aTargetUser);
+                    if (curatedAID != null) {
+                        return new VID(curatedAID.addr);
+                    }
+                }
+            }
+        }
+
+        return new CurationVID(representativeCasGroupId, aVid);
+    }
+
     /**
      * Find and return the rendered VID which is equivalent to the given VID. E.g. if the given VID
      * belongs to an already curated annotation, then locate the VID for the rendered annotation of
      * the curation user by searching the diff for configuration set that contains the annotators
      * annotation and then switching over to the configuration containing the curators annotation.
      */
-    private VID getCurationVid(String aTargetUser, DiffResult aDiff, Configuration aCfg, VID aVid)
+    private VID resolveVisibleEndpoint(String aTargetUser, DiffResult aDiff, Configuration aCfg,
+            VID aVid)
     {
         var representativeCasGroupId = aCfg.getRepresentativeCasGroupId();
+
         var sourceConfiguration = aDiff.findConfiguration(representativeCasGroupId, new AID(aVid));
 
+        // This is for relation annotation endpoints and link targets. Here we can look for the
+        // configuration which contains the annotators annotation and find the corresponding
+        // curated version for it in the same configuration
         if (sourceConfiguration.isPresent()) {
             var curatedAID = sourceConfiguration.get().getAID(aTargetUser);
             if (curatedAID != null) {

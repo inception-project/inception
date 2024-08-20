@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span;
 
+import java.util.Objects;
+
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.Position;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.Position_ImplBase;
@@ -34,6 +36,15 @@ public class SpanPosition
     private final String text;
 
     public SpanPosition(String aCollectionId, String aDocumentId, String aType, int aBegin,
+            int aEnd, String aText)
+    {
+        super(aCollectionId, aDocumentId, aType, null, null, 0, 0, null, null);
+        begin = aBegin;
+        end = aEnd;
+        text = aText;
+    }
+
+    public SpanPosition(String aCollectionId, String aDocumentId, String aType, int aBegin,
             int aEnd, String aText, String aFeature, String aRole, int aLinkTargetBegin,
             int aLinkTargetEnd, String aLinkTargetText, LinkCompareBehavior aLinkCompareBehavior)
     {
@@ -42,6 +53,14 @@ public class SpanPosition
         begin = aBegin;
         end = aEnd;
         text = aText;
+    }
+
+    /**
+     * @return the span position that owns the link feature (if this is a link feature position).
+     */
+    public SpanPosition getBasePosition()
+    {
+        return new SpanPosition(getCollectionId(), getDocumentId(), getType(), begin, end, text);
     }
 
     /**
@@ -82,9 +101,28 @@ public class SpanPosition
     }
 
     @Override
+    public boolean equals(final Object other)
+    {
+        if (!(other instanceof SpanPosition)) {
+            return false;
+        }
+        if (!super.equals(other)) {
+            return false;
+        }
+        SpanPosition castOther = (SpanPosition) other;
+        return Objects.equals(begin, castOther.begin) && Objects.equals(end, castOther.end);
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return Objects.hash(super.hashCode(), begin, end);
+    }
+
+    @Override
     public String toString()
     {
-        StringBuilder builder = new StringBuilder();
+        var builder = new StringBuilder();
         builder.append("Span [");
         toStringFragment(builder);
         builder.append(", span=(").append(begin).append('-').append(end).append(')');
@@ -96,9 +134,10 @@ public class SpanPosition
     @Override
     public String toMinimalString()
     {
-        StringBuilder builder = new StringBuilder();
+        var builder = new StringBuilder();
         builder.append(begin).append('-').append(end).append(" [").append(text).append(']');
-        LinkCompareBehavior linkCompareBehavior = getLinkCompareBehavior();
+        var linkCompareBehavior = getLinkCompareBehavior();
+
         if (linkCompareBehavior != null) {
             switch (linkCompareBehavior) {
             case LINK_TARGET_AS_LABEL:
@@ -114,6 +153,7 @@ public class SpanPosition
                         "Unknown link target comparison mode [" + linkCompareBehavior + "]");
             }
         }
+
         return builder.toString();
     }
 }

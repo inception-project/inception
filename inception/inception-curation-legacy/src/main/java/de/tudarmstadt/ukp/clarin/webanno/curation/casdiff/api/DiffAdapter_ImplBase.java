@@ -17,8 +17,9 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api;
 
+import static java.util.Collections.unmodifiableSet;
+
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -44,7 +45,7 @@ public abstract class DiffAdapter_ImplBase
     public DiffAdapter_ImplBase(String aType, Set<String> aLabelFeatures)
     {
         type = aType;
-        labelFeatures = Collections.unmodifiableSet(new HashSet<>(aLabelFeatures));
+        labelFeatures = unmodifiableSet(new HashSet<>(aLabelFeatures));
     }
 
     public void addLinkFeature(String aName, String aRoleFeature, String aTargetFeature)

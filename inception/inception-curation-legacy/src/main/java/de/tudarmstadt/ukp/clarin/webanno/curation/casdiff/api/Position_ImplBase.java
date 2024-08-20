@@ -17,8 +17,11 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api;
 
+import java.util.Objects;
+
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior;
 
@@ -30,16 +33,18 @@ public abstract class Position_ImplBase
     private final String type;
     private final String feature;
 
+    private final LinkCompareBehavior linkCompareBehavior;
+
     private final String role;
 
     private final int linkTargetBegin;
     private final int linkTargetEnd;
-    private final String linkTargetText;
 
-    private final LinkCompareBehavior linkCompareBehavior;
-
+    // BEGIN: For debugging only - not included in compareTo/hashCode/equals!
     private final String collectionId;
     private final String documentId;
+    private final String linkTargetText;
+    // END: For debugging only - not included in compareTo/hashCode/equals!
 
     public Position_ImplBase(String aCollectionId, String aDocumentId, String aType,
             String aFeature, String aRole, int aLinkTargetBegin, int aLinkTargetEnd,
@@ -53,10 +58,10 @@ public abstract class Position_ImplBase
         role = aRole;
         linkTargetBegin = aLinkTargetBegin;
         linkTargetEnd = aLinkTargetEnd;
-        linkTargetText = aLinkTargetText;
 
         collectionId = aCollectionId;
         documentId = aDocumentId;
+        linkTargetText = aLinkTargetText;
     }
 
     @Override
@@ -75,6 +80,12 @@ public abstract class Position_ImplBase
     public String getRole()
     {
         return role;
+    }
+
+    @Override
+    public boolean isLinkFeaturePosition()
+    {
+        return getFeature() != null;
     }
 
     @Override
@@ -115,6 +126,16 @@ public abstract class Position_ImplBase
     @Override
     public int compareTo(Position aOther)
     {
+        // int collectionIdCmp = collectionId.compareTo(aOther.getCollectionId());
+        // if (collectionIdCmp != 0) {
+        // return collectionIdCmp;
+        // }
+        //
+        // int documentIdCmp = documentId.compareTo(aOther.getDocumentId());
+        // if (documentIdCmp != 0) {
+        // return documentIdCmp;
+        // }
+
         int typeCmp = type.compareTo(aOther.getType());
         if (typeCmp != 0) {
             return typeCmp;
@@ -157,6 +178,72 @@ public abstract class Position_ImplBase
         else {
             return linkCmpCmp;
         }
+    }
+
+    @Override
+    public boolean equals(final Object other)
+    {
+        if (!(other instanceof Position_ImplBase)) {
+            return false;
+        }
+
+        Position_ImplBase castOther = (Position_ImplBase) other;
+        var result = // Objects.equals(collectionId, castOther.collectionId) //
+                // && Objects.equals(documentId, castOther.documentId) //
+                Objects.equals(type, castOther.type) //
+                        && Objects.equals(feature, castOther.feature) //
+                        && Objects.equals(linkCompareBehavior, castOther.linkCompareBehavior);
+
+        // If the base properties are equal, then we have to continue only linkCompareBehavior if it
+        // is non-null.
+        if (!result && linkCompareBehavior == null) {
+            return false;
+        }
+
+        switch (linkCompareBehavior) {
+        case LINK_TARGET_AS_LABEL:
+            // Include role into position
+            return Objects.equals(role, castOther.role);
+        case LINK_ROLE_AS_LABEL:
+            // Include target into position
+            return Objects.equals(linkTargetBegin, castOther.linkTargetBegin) //
+                    && Objects.equals(linkTargetEnd, castOther.linkTargetEnd);
+        default:
+            throw new IllegalStateException(
+                    "Unknown link target comparison mode [" + linkCompareBehavior + "]");
+        }
+    }
+
+    @Override
+    public int hashCode()
+    {
+        var builder = new HashCodeBuilder() //
+                // .append(collectionId) //
+                // .append(documentId) //
+                .append(type) //
+                .append(feature) //
+                .append(linkCompareBehavior);
+
+        if (linkCompareBehavior == null) {
+            return builder.toHashCode();
+        }
+
+        switch (linkCompareBehavior) {
+        case LINK_TARGET_AS_LABEL:
+            // Include role into position
+            builder.append(role);
+            break;
+        case LINK_ROLE_AS_LABEL:
+            // Include target into position
+            builder.append(linkTargetBegin);
+            builder.append(linkTargetEnd);
+            break;
+        default:
+            throw new IllegalStateException(
+                    "Unknown link target comparison mode [" + linkCompareBehavior + "]");
+        }
+
+        return builder.toHashCode();
     }
 
     protected void toStringFragment(StringBuilder builder)

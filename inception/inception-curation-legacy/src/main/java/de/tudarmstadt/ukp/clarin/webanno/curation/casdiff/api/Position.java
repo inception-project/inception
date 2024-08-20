@@ -55,4 +55,6 @@ public interface Position
     String getDocumentId();
 
     String toMinimalString();
+
+    boolean isLinkFeaturePosition();
 }
