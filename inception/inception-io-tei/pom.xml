@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>33.5</version>
+    <version>33.6-SNAPSHOT</version>
   </parent>
   <artifactId>inception-io-tei</artifactId>
   <name>INCEpTION - IO - TEI</name>
