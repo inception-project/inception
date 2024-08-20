@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.relation;
 
+import java.util.Objects;
+
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.Position;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.Position_ImplBase;
@@ -108,6 +110,28 @@ public class RelationPosition
                 return otherSpan.targetEnd - targetEnd;
             }
         }
+    }
+
+    @Override
+    public boolean equals(final Object other)
+    {
+        if (!(other instanceof RelationPosition)) {
+            return false;
+        }
+        if (!super.equals(other)) {
+            return false;
+        }
+        RelationPosition castOther = (RelationPosition) other;
+        return Objects.equals(sourceBegin, castOther.sourceBegin)
+                && Objects.equals(sourceEnd, castOther.sourceEnd)
+                && Objects.equals(targetBegin, castOther.targetBegin)
+                && Objects.equals(targetEnd, castOther.targetEnd);
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return Objects.hash(super.hashCode(), sourceBegin, sourceEnd, targetBegin, targetEnd);
     }
 
     @Override
