@@ -76,20 +76,21 @@
                     if ($sortByScore && aIsRec && bIsRec) {
                         return b.score - a.score;
                     }
+
                     return (
                         compareSpanText(data, a, b) ||
                         compareOffsets(a.offsets[0], b.offsets[0])
-                    );
+                    )
                 }
 
                 if (a instanceof Relation && b instanceof Relation) {
                     if ($sortByScore && aIsRec && bIsRec) {
                         return b.score - a.score;
                     }
-                    return compareOffsets(
-                        (a.arguments[0].target as Span).offsets[0],
-                        (b.arguments[0].target as Span).offsets[0]
-                    );
+
+                    const targetA = a.arguments[0].target as Span
+                    const targetB = b.arguments[0].target as Span
+                    return compareOffsets(targetA.offsets[0], targetB.offsets[0]);
                 }
 
                 console.error("Unexpected annotation type combination", a, b);
