@@ -17,26 +17,35 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.util;
 
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CHAIN_TYPE;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.FEAT_REL_SOURCE;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.FEAT_REL_TARGET;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.RELATION_TYPE;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.SPAN_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.CHARACTERS;
+import static de.tudarmstadt.ukp.clarin.webanno.model.LinkMode.WITH_ROLE;
+import static de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode.ARRAY;
+import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.ANY_OVERLAP;
+import static de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureSupport.FEATURE_NAME_ROLE;
+import static de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureSupport.FEATURE_NAME_TARGET;
+import static de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainLayerSupport.FEATURE_NAME_FIRST;
+import static de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainLayerSupport.FEATURE_NAME_NEXT;
+import static de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainLayerSupport.TYPE_SUFFIX_CHAIN;
+import static de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainLayerSupport.TYPE_SUFFIX_LINK;
+import static de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport.FEAT_REL_SOURCE;
+import static de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport.FEAT_REL_TARGET;
 import static java.util.Arrays.asList;
-import static java.util.stream.Collectors.toList;
+import static java.util.Optional.empty;
 import static org.apache.commons.lang3.StringUtils.removeEnd;
 import static org.apache.commons.lang3.StringUtils.trimToNull;
 import static org.apache.uima.cas.CAS.TYPE_NAME_ANNOTATION;
 import static org.apache.uima.cas.CAS.TYPE_NAME_ANNOTATION_BASE;
+import static org.apache.uima.cas.CAS.TYPE_NAME_DOCUMENT_ANNOTATION;
+import static org.apache.uima.cas.CAS.TYPE_NAME_STRING_ARRAY;
 import static org.apache.uima.cas.CAS.TYPE_NAME_TOP;
+import static org.apache.uima.fit.util.FSUtil.isMultiValuedFeature;
 
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.ListValuedMap;
 import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
@@ -44,7 +53,6 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.TypeSystem;
-import org.apache.uima.fit.util.FSUtil;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.FeatureDescription;
 import org.apache.uima.resource.metadata.TypeDescription;
@@ -52,18 +60,18 @@ import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
-import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
-import de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode;
-import de.tudarmstadt.ukp.inception.support.WebAnnoConst;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil;
 
 public class TypeSystemAnalysis
 {
-    private Logger log = LoggerFactory.getLogger(getClass());
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private final List<AnnotationLayer> layers = new ArrayList<>();
     private final ListValuedMap<String, AnnotationFeature> features = new ArrayListValuedHashMap<>();
@@ -75,9 +83,11 @@ public class TypeSystemAnalysis
         // Nothing to do
     }
 
-    public AnnotationLayer getLayer(String aLayerName)
+    public Optional<AnnotationLayer> getLayer(String aLayerName)
     {
-        return layers.stream().filter(l -> aLayerName.equals(l.getName())).findFirst().get();
+        return layers.stream() //
+                .filter(l -> aLayerName.equals(l.getName())) //
+                .findFirst();
     }
 
     public List<AnnotationLayer> getLayers()
@@ -103,7 +113,7 @@ public class TypeSystemAnalysis
     public static TypeSystemAnalysis of(TypeSystemDescription aTSD)
         throws ResourceInitializationException
     {
-        TypeSystemAnalysis analyzer = new TypeSystemAnalysis();
+        var analyzer = new TypeSystemAnalysis();
         analyzer.analyzeTypeSystem(aTSD);
         return analyzer;
     }
@@ -113,88 +123,86 @@ public class TypeSystemAnalysis
     {
         // We create a CAS from which we can obtain an instantiated type system. With that, it
         // is easier to check type inheritance.
-        CAS cas = WebAnnoCasUtil.createCas(aTSD);
-        TypeSystem ts = cas.getTypeSystem();
+        var cas = WebAnnoCasUtil.createCas(aTSD);
+        var ts = cas.getTypeSystem();
 
-        for (TypeDescription td : aTSD.getTypes()) {
+        for (var td : aTSD.getTypes()) {
             analyzeType(ts, aTSD, td);
         }
 
-        log.debug("Recognized {} of {} types as layers ({}%)", getLayers().size(),
+        LOG.debug("Recognized {} of {} types as layers ({}%)", getLayers().size(),
                 aTSD.getTypes().length, getLayers().size() * 100 / aTSD.getTypes().length);
     }
 
     private void analyzeType(TypeSystem aTS, TypeSystemDescription aTSD, TypeDescription aTD)
     {
-        log.trace("Analyzing [{}]", aTD.getName());
+        LOG.trace("Analyzing [{}]", aTD.getName());
 
-        Type type = aTS.getType(aTD.getName());
+        var type = aTS.getType(aTD.getName());
 
         // Skip built-in UIMA types
         if (aTD.getName().startsWith("uima.tcas.")) {
-            log.debug("[{}] is a built-in UIMA type. Skipping.", aTD.getName());
+            LOG.debug("[{}] is a built-in UIMA type. Skipping.", aTD.getName());
             return;
         }
 
         // Skip document metadata types
-        if (aTS.subsumes(aTS.getType(CAS.TYPE_NAME_DOCUMENT_ANNOTATION), type)) {
-            log.debug("[{}] is a document-level annotation. Skipping.", type.getName());
+        if (aTS.subsumes(aTS.getType(TYPE_NAME_DOCUMENT_ANNOTATION), type)) {
+            LOG.debug("[{}] is a document-level annotation. Skipping.", type.getName());
             return;
         }
 
         // Skip DKPro Core Token and Sentence which as handled specially by WebAnno
-        if ("de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence".equals(aTD.getName())
-                || "de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token"
-                        .equals(aTD.getName())) {
-            log.debug("[{}] is a DKPro Core segmentation type. Skipping.", aTD.getName());
+        if (Sentence._TypeName.equals(aTD.getName()) || Token._TypeName.equals(aTD.getName())) {
+            LOG.debug("[{}] is a DKPro Core segmentation type. Skipping.", aTD.getName());
             return;
         }
 
-        Optional<RelationDetails> relationDetails = analyzeRelationLayer(aTS, type);
-        Optional<ChainDetails> chainDetails = analyzeChainLayer(aTS, type);
-        boolean isChain = chainDetails.isPresent();
+        var relationDetails = analyzeRelationLayer(aTS, type);
+        var chainDetails = analyzeChainLayer(aTS, type);
+        var isChain = chainDetails.isPresent();
 
         // Layers must be sub-types of Annotation (unless they are chains)
-        if (!isChain && !aTS.subsumes(aTS.getType(CAS.TYPE_NAME_ANNOTATION), type)) {
-            log.debug("[{}] is not an annotation type. Skipping.", aTD.getName());
+        if (!isChain && !aTS.subsumes(aTS.getType(TYPE_NAME_ANNOTATION), type)) {
+            LOG.debug("[{}] is not an annotation type. Skipping.", aTD.getName());
             return;
         }
 
         // Actually, layers must inherit directly from Annotation (unless they are chains)
         // because WebAnno presently does not support DKPro Core elevated types (e.g. NOUN).
         if (isElevatedType(aTS, type)) {
-            log.debug("[{}] looks like an elevated type. Skipping.", aTD.getName());
+            LOG.debug("[{}] looks like an elevated type. Skipping.", aTD.getName());
             return;
         }
 
-        AnnotationLayer layer = new AnnotationLayer();
+        var layer = new AnnotationLayer();
         Optional<? extends LayerDetails> details;
         if (isChain) {
             details = chainDetails;
-            layer.setName(removeEnd(aTD.getName(), "Chain"));
-            layer.setUiName(removeEnd(type.getShortName(), "Chain"));
-            layer.setType(CHAIN_TYPE);
+            layer.setName(removeEnd(aTD.getName(), TYPE_SUFFIX_CHAIN));
+            layer.setUiName(removeEnd(type.getShortName(), TYPE_SUFFIX_CHAIN));
+            layer.setType(ChainLayerSupport.TYPE);
             chainDetailMap.put(layer.getName(), chainDetails.get());
         }
         else if (relationDetails.isPresent()) {
             details = relationDetails;
             layer.setName(aTD.getName());
             layer.setUiName(type.getShortName());
-            layer.setType(RELATION_TYPE);
+            layer.setType(RelationLayerSupport.TYPE);
             relationDetailMap.put(layer.getName(), relationDetails.get());
         }
         else if (isSpanLayer(aTS, type)) {
-            details = Optional.empty();
+            details = empty();
             layer.setName(aTD.getName());
             layer.setUiName(type.getShortName());
-            layer.setType(SPAN_TYPE);
+            layer.setType(SpanLayerSupport.TYPE);
         }
         else {
-            log.debug("Unable to determine layer type for [{}]", type.getName());
+            LOG.debug("Unable to determine layer type for [{}]", type.getName());
             return;
         }
 
-        log.debug("[{}] seems to be a {}", aTD.getName(), layer.getType());
+        LOG.debug("[{}] seems to be a {}", aTD.getName(), layer.getType());
 
         layer.setDescription(trimToNull(aTD.getDescription()));
 
@@ -203,17 +211,17 @@ public class TypeSystemAnalysis
 
         // We cannot determine good values for these without looking at actual annotations, thus
         // we choose the most relaxed/permissive configuration here.
-        layer.setOverlapMode(OverlapMode.ANY_OVERLAP);
+        layer.setOverlapMode(ANY_OVERLAP);
         layer.setCrossSentence(true);
-        layer.setAnchoringMode(AnchoringMode.CHARACTERS);
+        layer.setAnchoringMode(CHARACTERS);
         layer.setLinkedListBehavior(false);
 
         layers.add(layer);
 
         // If the current layer is a chain layer (chain head), then we do not record
         // any features for it - instead we record the features of the link type.
-        if (CHAIN_TYPE.equals(layer.getType())) {
-            TypeDescription linkTypeDescription = aTSD.getType(layer.getName() + "Link");
+        if (ChainLayerSupport.TYPE.equals(layer.getType())) {
+            var linkTypeDescription = aTSD.getType(layer.getName() + TYPE_SUFFIX_LINK);
             analyzeFeatures(layer, aTS, linkTypeDescription, details);
         }
         else {
@@ -224,9 +232,9 @@ public class TypeSystemAnalysis
     private void analyzeFeatures(AnnotationLayer aLayer, TypeSystem aTS, TypeDescription aTD,
             Optional<? extends LayerDetails> aDetails)
     {
-        Type type = aTS.getType(aTD.getName());
-        for (FeatureDescription fd : aTD.getFeatures()) {
-            Feature feat = type.getFeatureByBaseName(fd.getName());
+        var type = aTS.getType(aTD.getName());
+        for (var fd : aTD.getFeatures()) {
+            var feat = type.getFeatureByBaseName(fd.getName());
             // We do not need to set up built-in features
             if (isBuiltInFeature(feat)) {
                 continue;
@@ -243,28 +251,28 @@ public class TypeSystemAnalysis
 
     private AnnotationFeature analyzeFeature(TypeSystem aTS, FeatureDescription aFD, Feature aFeat)
     {
-        AnnotationFeature feat = new AnnotationFeature();
+        var feat = new AnnotationFeature();
         feat.setType(aFeat.getRange().getName());
         feat.setName(aFeat.getShortName());
         feat.setUiName(aFeat.getShortName());
         feat.setDescription(trimToNull(aFD.getDescription()));
         feat.setEnabled(true);
 
-        if (CAS.TYPE_NAME_STRING_ARRAY.equals(aFeat.getRange().getName())) {
-            feat.setMode(MultiValueMode.ARRAY);
+        if (TYPE_NAME_STRING_ARRAY.equals(aFeat.getRange().getName())) {
+            feat.setMode(ARRAY);
         }
 
         if (isSlotFeature(aTS, aFeat)) {
-            feat.setType(aFeat.getRange().getComponentType().getFeatureByBaseName("target")
-                    .getRange().getName());
-            feat.setMode(MultiValueMode.ARRAY);
-            feat.setLinkMode(LinkMode.WITH_ROLE);
+            feat.setType(aFeat.getRange().getComponentType()
+                    .getFeatureByBaseName(FEATURE_NAME_TARGET).getRange().getName());
+            feat.setMode(ARRAY);
+            feat.setLinkMode(WITH_ROLE);
             // Need to strip the "[]" marking the type as multi-valued off the type name
             feat.setLinkTypeName(removeEnd(aFeat.getRange().getName(), "[]"));
             // FIXME Instead of hard-coding the feature names here, try to auto-detect them by
             // looking for a String feature and a feature whose type is subsumed by Annotation
-            feat.setLinkTypeRoleFeatureName("role");
-            feat.setLinkTypeTargetFeatureName("target");
+            feat.setLinkTypeRoleFeatureName(FEATURE_NAME_ROLE);
+            feat.setLinkTypeTargetFeatureName(FEATURE_NAME_TARGET);
         }
 
         return feat;
@@ -277,14 +285,9 @@ public class TypeSystemAnalysis
         // ... string arrays
         // ... slot features
 
-        List<Feature> unsupportedFeatures = aType.getFeatures().stream()
-                .filter(f -> !isBuiltInFeature(f)) //
-                .filter(f -> !(f.getRange().isPrimitive() || //
-                        isSlotFeature(aTS, f) || //
-                        isSupportedArrayType(f)))
-                .collect(toList());
-
-        return unsupportedFeatures.isEmpty();
+        return aType.getFeatures().stream() //
+                .allMatch(f -> isBuiltInFeature(f) || f.getRange().isPrimitive()
+                        || isSlotFeature(aTS, f) || isSupportedArrayType(f));
     }
 
     private Optional<RelationDetails> analyzeRelationLayer(TypeSystem aTS, Type aType)
@@ -294,44 +297,43 @@ public class TypeSystemAnalysis
         // ... both have the same range
         // ... the range is a span layer
 
-        List<Feature> nonPrimitiveFeatures = aType.getFeatures().stream()
-                .filter(f -> !isBuiltInFeature(f)) //
-                .filter(f -> !(f.getRange().isPrimitive() || //
-                        isSupportedArrayType(f))) //
-                .collect(Collectors.toList());
+        var nonPrimitiveFeatures = aType.getFeatures() //
+                .stream().filter(f -> !isBuiltInFeature(f)) //
+                .filter(f -> !(f.getRange().isPrimitive() || isSupportedArrayType(f))) //
+                .toList();
 
         // ... there are exactly two non-primitive features
         if (nonPrimitiveFeatures.size() != 2) {
-            return Optional.empty();
+            return empty();
         }
 
-        Feature ref1 = nonPrimitiveFeatures.get(0);
-        Feature ref2 = nonPrimitiveFeatures.get(1);
+        var ref1 = nonPrimitiveFeatures.get(0);
+        var ref2 = nonPrimitiveFeatures.get(1);
 
         // Relations must use the names "Governor" and "Dependent" for its references because
-        // these names are hardcoded throughout WebAnno.
-        List<String> validNames = asList(FEAT_REL_SOURCE, FEAT_REL_TARGET);
+        // these names are hard-coded throughout WebAnno.
+        var validNames = asList(FEAT_REL_SOURCE, FEAT_REL_TARGET);
         if (!validNames.contains(ref1.getShortName())
                 || !validNames.contains(ref2.getShortName())) {
-            return Optional.empty();
+            return empty();
         }
 
         // ... both have the same range
         if (!ref1.getRange().getName().equals(ref2.getRange().getName())) {
-            return Optional.empty();
+            return empty();
         }
 
         // ... the range is a span layer
         // Well, we will not test this in detail at the moment and assume that any sub-type of
         // Annotation should be fine.
-        if (!aTS.subsumes(aTS.getType(CAS.TYPE_NAME_ANNOTATION), ref1.getRange())) {
-            return Optional.empty();
+        if (!aTS.subsumes(aTS.getType(TYPE_NAME_ANNOTATION), ref1.getRange())) {
+            return empty();
         }
 
-        RelationDetails details = new RelationDetails();
+        var details = new RelationDetails();
         details.attachLayer = ref1.getRange().getName();
-        details.sourceFeature = WebAnnoConst.FEAT_REL_SOURCE;
-        details.targetFeature = WebAnnoConst.FEAT_REL_TARGET;
+        details.sourceFeature = FEAT_REL_SOURCE;
+        details.targetFeature = FEAT_REL_TARGET;
 
         // Hm, ok, so this looks like a relation layer.
         return Optional.of(details);
@@ -341,36 +343,36 @@ public class TypeSystemAnalysis
     {
         // Chains created within WebAnno always have the suffix "Chain", likewise does the
         // DKPro Core CoreferenceChain - we expect that all chains follow this convention.
-        if (!aType.getName().endsWith("Chain")) {
-            return Optional.empty();
+        if (!aType.getName().endsWith(TYPE_SUFFIX_CHAIN)) {
+            return empty();
         }
 
         // There must be an initial chain feature. The name of this feature is currently
         // hard-coded in WebAnno to the one used by the DKPro Core CoreferenceChain
-        Feature first = aType.getFeatureByBaseName("first");
+        var first = aType.getFeatureByBaseName(FEATURE_NAME_FIRST);
         if (first == null) {
-            return Optional.empty();
+            return empty();
         }
 
         // The initial chain features must be a non-primitive
         if (first.getRange().isPrimitive()) {
-            return Optional.empty();
+            return empty();
         }
 
         // The chain link must contain a feature named "next" used to connect to the next link
-        Feature next = first.getRange().getFeatureByBaseName("next");
+        var next = first.getRange().getFeatureByBaseName(FEATURE_NAME_NEXT);
         if (next == null || !next.getRange().equals(first.getRange())) {
-            return Optional.empty();
+            return empty();
         }
 
         // The chain head type is not an anchored annotations, thus it must inherit from
         // AnnotationBase
-        if (!aTS.getParent(aType).equals(aTS.getType(CAS.TYPE_NAME_ANNOTATION_BASE))) {
-            return Optional.empty();
+        if (!aTS.getParent(aType).equals(aTS.getType(TYPE_NAME_ANNOTATION_BASE))) {
+            return empty();
         }
 
-        ChainDetails details = new ChainDetails();
-        details.nextFeature = "next";
+        var details = new ChainDetails();
+        details.nextFeature = FEATURE_NAME_NEXT;
 
         // Hm, ok, so this looks like a chain layer.
         return Optional.of(details);
@@ -389,7 +391,7 @@ public class TypeSystemAnalysis
         }
 
         // Elevated types do not inherit from Annotation
-        if (aTS.getParent(aType).equals(aTS.getType(CAS.TYPE_NAME_ANNOTATION))) {
+        if (aTS.getParent(aType).equals(aTS.getType(TYPE_NAME_ANNOTATION))) {
             return false;
         }
 
@@ -399,25 +401,29 @@ public class TypeSystemAnalysis
 
     private boolean isBuiltInFeature(Feature aFeature)
     {
-        var builtInTypes = new HashSet<>(
-                asList(TYPE_NAME_TOP, TYPE_NAME_ANNOTATION_BASE, TYPE_NAME_ANNOTATION));
-        return builtInTypes.contains(aFeature.getDomain().getName());
+        return switch (aFeature.getDomain().getName()) {
+        case TYPE_NAME_TOP, TYPE_NAME_ANNOTATION_BASE, TYPE_NAME_ANNOTATION -> true;
+        default -> false;
+        };
     }
 
     private boolean isSupportedArrayType(Feature aFeature)
     {
-        return CAS.TYPE_NAME_STRING_ARRAY.equals(aFeature.getRange().getName());
+        return switch (aFeature.getRange().getName()) {
+        case TYPE_NAME_STRING_ARRAY -> true;
+        default -> false;
+        };
     }
 
     private boolean isSlotFeature(TypeSystem aTS, Feature aFeature)
     {
         // Slot features are multi-valued
-        if (!FSUtil.isMultiValuedFeature(aTS, aFeature)) {
+        if (!isMultiValuedFeature(aTS, aFeature)) {
             return false;
         }
 
         // The component type is the link type - it must be present
-        Type linkType = aFeature.getRange().getComponentType();
+        var linkType = aFeature.getRange().getComponentType();
         if (linkType == null) {
             return false;
         }
@@ -432,15 +438,14 @@ public class TypeSystemAnalysis
             return false;
         }
 
-        Optional<Feature> roleFeature = linkType.getFeatures().stream()
-                .filter(f -> f.getRange().getName().equals(CAS.TYPE_NAME_STRING)).findFirst();
-        if (!roleFeature.isPresent()) {
+        // Does any feature look like the role feature (i.e. a String feature)?
+        if (linkType.getFeatures().stream()
+                .noneMatch(f -> f.getRange().getName().equals(CAS.TYPE_NAME_STRING))) {
             return false;
         }
 
-        Optional<Feature> linkFeature = linkType.getFeatures().stream()
-                .filter(f -> !f.getRange().isPrimitive()).findFirst();
-        if (!linkFeature.isPresent()) {
+        // Does any feature look like the target feature (i.e. a non-primitive feature)?
+        if (linkType.getFeatures().stream().noneMatch(f -> !f.getRange().isPrimitive())) {
             return false;
         }
 

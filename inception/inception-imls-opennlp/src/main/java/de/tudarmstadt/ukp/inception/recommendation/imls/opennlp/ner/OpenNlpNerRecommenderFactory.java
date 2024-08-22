@@ -51,7 +51,7 @@ public class OpenNlpNerRecommenderFactory
     @Override
     public RecommendationEngine build(Recommender aRecommender)
     {
-        OpenNlpNerRecommenderTraits traits = new OpenNlpNerRecommenderTraits();
+        var traits = new OpenNlpNerRecommenderTraits();
         return new OpenNlpNerRecommender(aRecommender, traits);
     }
 
@@ -78,5 +78,17 @@ public class OpenNlpNerRecommenderFactory
     public OpenNlpNerRecommenderTraits createTraits()
     {
         return new OpenNlpNerRecommenderTraits();
+    }
+
+    @Override
+    public boolean isModelExportSupported()
+    {
+        return true;
+    }
+
+    @Override
+    public String getExportModelName(Recommender aRecommender)
+    {
+        return "model.bin";
     }
 }

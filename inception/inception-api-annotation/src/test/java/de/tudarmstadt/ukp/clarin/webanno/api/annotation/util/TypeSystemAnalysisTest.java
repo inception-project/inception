@@ -17,6 +17,10 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.util;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.CHARACTERS;
+import static de.tudarmstadt.ukp.clarin.webanno.model.LinkMode.WITH_ROLE;
+import static de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode.ARRAY;
+import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.ANY_OVERLAP;
 import static org.apache.commons.lang3.builder.ToStringStyle.SHORT_PREFIX_STYLE;
 import static org.apache.uima.cas.CAS.TYPE_NAME_ANNOTATION;
 import static org.apache.uima.cas.CAS.TYPE_NAME_BOOLEAN;
@@ -25,20 +29,22 @@ import static org.apache.uima.cas.CAS.TYPE_NAME_INTEGER;
 import static org.apache.uima.cas.CAS.TYPE_NAME_STRING;
 import static org.apache.uima.cas.CAS.TYPE_NAME_STRING_ARRAY;
 import static org.apache.uima.fit.factory.TypeSystemDescriptionFactory.createTypeSystemDescription;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
-import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.assertj.core.api.SoftAssertions;
+import org.assertj.core.api.junit.jupiter.SoftAssertionsExtension;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
-import de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode;
-import de.tudarmstadt.ukp.inception.support.WebAnnoConst;
+import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
 
+@ExtendWith(SoftAssertionsExtension.class)
 public class TypeSystemAnalysisTest
 {
     @BeforeEach
@@ -48,44 +54,42 @@ public class TypeSystemAnalysisTest
     }
 
     @Test
-    public void testSpanWithArrayFeature() throws Exception
+    public void testSpanWithArrayFeature(SoftAssertions softly) throws Exception
     {
-        TypeSystemDescription tsd = createTypeSystemDescription("tsd/spanWithArrayFeatures");
-        TypeSystemAnalysis analysis = TypeSystemAnalysis.of(tsd);
+        var tsd = createTypeSystemDescription("tsd/spanWithArrayFeatures");
+        var analysis = TypeSystemAnalysis.of(tsd);
 
-        AnnotationLayer spanLayer = new AnnotationLayer();
+        var spanLayer = new AnnotationLayer();
         spanLayer.setName("webanno.custom.Span");
         spanLayer.setUiName("Span");
-        spanLayer.setType(WebAnnoConst.SPAN_TYPE);
-        spanLayer.setAnchoringMode(AnchoringMode.CHARACTERS);
-        spanLayer.setOverlapMode(OverlapMode.ANY_OVERLAP);
+        spanLayer.setType(SpanLayerSupport.TYPE);
+        spanLayer.setAnchoringMode(CHARACTERS);
+        spanLayer.setOverlapMode(ANY_OVERLAP);
         spanLayer.setCrossSentence(true);
 
         var stringsFeature = new AnnotationFeature("stringsFeature", TYPE_NAME_STRING_ARRAY);
-        stringsFeature.setMode(MultiValueMode.ARRAY);
+        stringsFeature.setMode(ARRAY);
 
-        SoftAssertions softly = new SoftAssertions();
         softly.assertThat(analysis.getLayers()) //
-                .containsExactly(spanLayer) //
-                .usingRecursiveComparison();
+                .usingRecursiveFieldByFieldElementComparator() //
+                .containsExactly(spanLayer);
         softly.assertThat(analysis.getFeatures(spanLayer.getName()))
-                .containsExactlyInAnyOrder(stringsFeature) //
-                .usingRecursiveComparison();
-        softly.assertAll();
+                .usingRecursiveFieldByFieldElementComparator() //
+                .containsExactlyInAnyOrder(stringsFeature);
     }
 
     @Test
-    public void testSpanWithPrimitiveFeatures() throws Exception
+    public void testSpanWithPrimitiveFeatures(SoftAssertions softly) throws Exception
     {
-        TypeSystemDescription tsd = createTypeSystemDescription("tsd/spanWithPrimitiveFeatures");
-        TypeSystemAnalysis analysis = TypeSystemAnalysis.of(tsd);
+        var tsd = createTypeSystemDescription("tsd/spanWithPrimitiveFeatures");
+        var analysis = TypeSystemAnalysis.of(tsd);
 
-        AnnotationLayer spanLayer = new AnnotationLayer();
+        var spanLayer = new AnnotationLayer();
         spanLayer.setName("webanno.custom.Span");
         spanLayer.setUiName("Span");
-        spanLayer.setType(WebAnnoConst.SPAN_TYPE);
-        spanLayer.setAnchoringMode(AnchoringMode.CHARACTERS);
-        spanLayer.setOverlapMode(OverlapMode.ANY_OVERLAP);
+        spanLayer.setType(SpanLayerSupport.TYPE);
+        spanLayer.setAnchoringMode(CHARACTERS);
+        spanLayer.setOverlapMode(ANY_OVERLAP);
         spanLayer.setCrossSentence(true);
 
         var stringFeature = new AnnotationFeature("stringFeature", TYPE_NAME_STRING);
@@ -93,118 +97,158 @@ public class TypeSystemAnalysisTest
         var booleanFeature = new AnnotationFeature("booleanFeature", TYPE_NAME_BOOLEAN);
         var floatFeature = new AnnotationFeature("floatFeature", TYPE_NAME_FLOAT);
 
-        SoftAssertions softly = new SoftAssertions();
         softly.assertThat(analysis.getLayers()) //
-                .containsExactly(spanLayer) //
-                .usingRecursiveComparison();
+                .usingRecursiveFieldByFieldElementComparator() //
+                .containsExactly(spanLayer);
         softly.assertThat(analysis.getFeatures(spanLayer.getName()))
-                .containsExactlyInAnyOrder(stringFeature, intFeature, booleanFeature, floatFeature)
-                .usingRecursiveComparison();
-        softly.assertAll();
+                .usingRecursiveFieldByFieldElementComparator() //
+                .containsExactlyInAnyOrder(stringFeature, intFeature, booleanFeature, floatFeature);
     }
 
     @Test
     public void testSpanWithSlotFeatures() throws Exception
     {
-        TypeSystemDescription tsd = createTypeSystemDescription("tsd/spanWithSlotFeatures");
-        TypeSystemAnalysis analysis = TypeSystemAnalysis.of(tsd);
+        var tsd = createTypeSystemDescription("tsd/spanWithSlotFeatures");
+        var analysis = TypeSystemAnalysis.of(tsd);
 
-        AnnotationLayer slotSpanLayer = new AnnotationLayer();
+        var slotSpanLayer = new AnnotationLayer();
         slotSpanLayer.setName("webanno.custom.SlotSpan");
         slotSpanLayer.setUiName("SlotSpan");
-        slotSpanLayer.setType(WebAnnoConst.SPAN_TYPE);
-        slotSpanLayer.setAnchoringMode(AnchoringMode.CHARACTERS);
-        slotSpanLayer.setOverlapMode(OverlapMode.ANY_OVERLAP);
+        slotSpanLayer.setType(SpanLayerSupport.TYPE);
+        slotSpanLayer.setAnchoringMode(CHARACTERS);
+        slotSpanLayer.setOverlapMode(ANY_OVERLAP);
         slotSpanLayer.setCrossSentence(true);
 
-        AnnotationFeature freeSlot = new AnnotationFeature("freeSlot", TYPE_NAME_ANNOTATION);
+        var freeSlot = AnnotationFeature.builder() //
+                .withName("freeSlot") //
+                .withUiName("freeSlot") //
+                .withType(TYPE_NAME_ANNOTATION) //
+                .withLinkMode(WITH_ROLE) //
+                .withLinkTypeName("webanno.custom.SlotSpanFreeSlotLink") //
+                .withLinkTypeRoleFeatureName("role") //
+                .withLinkTypeTargetFeatureName("target") //
+                .withMultiValueMode(ARRAY) //
+                .build();
 
-        AnnotationFeature boundSlot = new AnnotationFeature("boundSlot", "webanno.custom.SlotSpan");
+        var boundSlot = AnnotationFeature.builder() //
+                .withName("boundSlot") //
+                .withUiName("boundSlot") //
+                .withType("webanno.custom.SlotSpan") //
+                .withLinkMode(WITH_ROLE) //
+                .withLinkTypeName("webanno.custom.SlotSpanBoundSlotLink") //
+                .withLinkTypeRoleFeatureName("role") //
+                .withLinkTypeTargetFeatureName("target") //
+                .withMultiValueMode(ARRAY) //
+                .build();
 
-        SoftAssertions softly = new SoftAssertions();
-        softly.assertThat(analysis.getLayers()) //
-                .containsExactly(slotSpanLayer) //
-                .usingRecursiveComparison();
-        softly.assertThat(analysis.getFeatures(slotSpanLayer.getName()))
-                .containsExactlyInAnyOrder(freeSlot, boundSlot).usingRecursiveComparison();
-        softly.assertAll();
+        assertThat(analysis.getLayers()) //
+                .usingRecursiveFieldByFieldElementComparator() //
+                .containsExactlyInAnyOrder(slotSpanLayer);
+        assertThat(analysis.getFeatures(slotSpanLayer.getName()))
+                .usingRecursiveFieldByFieldElementComparator() //
+                .containsExactlyInAnyOrder(freeSlot, boundSlot);
     }
 
     @Test
     public void testRelationWithPrimitiveFeatures() throws Exception
     {
-        TypeSystemDescription tsd = createTypeSystemDescription(
-                "tsd/relationWithPrimitiveFeatures");
-        TypeSystemAnalysis analysis = TypeSystemAnalysis.of(tsd);
+        var tsd = createTypeSystemDescription("tsd/relationWithPrimitiveFeatures");
+        var analysis = TypeSystemAnalysis.of(tsd);
 
-        AnnotationLayer relationLayer = new AnnotationLayer();
-        relationLayer.setName("webanno.custom.Relation");
-        relationLayer.setUiName("Relation");
-        relationLayer.setType(WebAnnoConst.RELATION_TYPE);
-        relationLayer.setAnchoringMode(AnchoringMode.CHARACTERS);
-        relationLayer.setOverlapMode(OverlapMode.ANY_OVERLAP);
-        relationLayer.setCrossSentence(true);
-
-        AnnotationLayer relationTargetLayer = new AnnotationLayer();
+        var relationTargetLayer = new AnnotationLayer();
         relationTargetLayer.setName("webanno.custom.RelationTarget");
         relationTargetLayer.setUiName("RelationTarget");
-        relationTargetLayer.setType(WebAnnoConst.SPAN_TYPE);
-        relationTargetLayer.setAnchoringMode(AnchoringMode.CHARACTERS);
-        relationTargetLayer.setOverlapMode(OverlapMode.ANY_OVERLAP);
+        relationTargetLayer.setType(SpanLayerSupport.TYPE);
+        relationTargetLayer.setAnchoringMode(CHARACTERS);
+        relationTargetLayer.setOverlapMode(ANY_OVERLAP);
         relationTargetLayer.setCrossSentence(true);
+
+        var relationLayer = new AnnotationLayer();
+        relationLayer.setName("webanno.custom.Relation");
+        relationLayer.setUiName("Relation");
+        relationLayer.setType(RelationLayerSupport.TYPE);
+        relationLayer.setAnchoringMode(CHARACTERS);
+        relationLayer.setOverlapMode(ANY_OVERLAP);
+        relationLayer.setCrossSentence(true);
+        // Layer attachment is handled in AnnotationSchemaServiceImpl!
+        relationLayer.setAttachType(null);
 
         var stringFeature = new AnnotationFeature("stringFeature", TYPE_NAME_STRING);
         var intFeature = new AnnotationFeature("intFeature", TYPE_NAME_INTEGER);
         var booleanFeature = new AnnotationFeature("booleanFeature", TYPE_NAME_BOOLEAN);
         var floatFeature = new AnnotationFeature("floatFeature", TYPE_NAME_FLOAT);
 
-        SoftAssertions softly = new SoftAssertions();
-        softly.assertThat(analysis.getLayers())
-                .containsExactlyInAnyOrder(relationLayer, relationTargetLayer)
-                .usingRecursiveComparison();
-        softly.assertThat(analysis.getFeatures(relationLayer.getName()))
-                .containsExactlyInAnyOrder(stringFeature, intFeature, booleanFeature, floatFeature)
-                .usingRecursiveComparison();
-        softly.assertAll();
+        assertThat(analysis.getLayers()) //
+                .usingRecursiveFieldByFieldElementComparator() //
+                .containsExactlyInAnyOrder(relationLayer, relationTargetLayer);
+        assertThat(analysis.getFeatures(relationLayer.getName()))
+                .usingRecursiveFieldByFieldElementComparator() //
+                .containsExactlyInAnyOrder(stringFeature, intFeature, booleanFeature, floatFeature);
     }
 
     @Test
-    public void testChain() throws Exception
+    public void testCrossLayerRelation() throws Exception
     {
-        TypeSystemDescription tsd = createTypeSystemDescription("tsd/chain");
-        TypeSystemAnalysis analysis = TypeSystemAnalysis.of(tsd);
+        var tsd = createTypeSystemDescription("tsd/crossLayerRelation");
+        var analysis = TypeSystemAnalysis.of(tsd);
 
-        AnnotationLayer chainLayer = new AnnotationLayer();
+        var relationLayer = new AnnotationLayer();
+        relationLayer.setName("webanno.custom.Relation");
+        relationLayer.setUiName("Relation");
+        relationLayer.setType(RelationLayerSupport.TYPE);
+        relationLayer.setAnchoringMode(CHARACTERS);
+        relationLayer.setOverlapMode(ANY_OVERLAP);
+        relationLayer.setCrossSentence(true);
+        // Layer attachment is handled in AnnotationSchemaServiceImpl!
+        relationLayer.setAttachType(null);
+
+        var stringFeature = new AnnotationFeature("stringFeature", TYPE_NAME_STRING);
+        var intFeature = new AnnotationFeature("intFeature", TYPE_NAME_INTEGER);
+        var booleanFeature = new AnnotationFeature("booleanFeature", TYPE_NAME_BOOLEAN);
+        var floatFeature = new AnnotationFeature("floatFeature", TYPE_NAME_FLOAT);
+
+        assertThat(analysis.getLayers()) //
+                .usingRecursiveFieldByFieldElementComparator() //
+                .containsExactlyInAnyOrder(relationLayer);
+
+        assertThat(analysis.getFeatures(relationLayer.getName()))
+                .usingRecursiveFieldByFieldElementComparator() //
+                .containsExactlyInAnyOrder(stringFeature, intFeature, booleanFeature, floatFeature);
+    }
+
+    @Test
+    public void testChain(SoftAssertions softly) throws Exception
+    {
+        var tsd = createTypeSystemDescription("tsd/chain");
+        var analysis = TypeSystemAnalysis.of(tsd);
+
+        var chainLayer = new AnnotationLayer();
         chainLayer.setName("webanno.custom.Chain");
         chainLayer.setUiName("Chain");
-        chainLayer.setType(WebAnnoConst.CHAIN_TYPE);
-        chainLayer.setAnchoringMode(AnchoringMode.CHARACTERS);
-        chainLayer.setOverlapMode(OverlapMode.ANY_OVERLAP);
+        chainLayer.setType(ChainLayerSupport.TYPE);
+        chainLayer.setAnchoringMode(CHARACTERS);
+        chainLayer.setOverlapMode(ANY_OVERLAP);
         chainLayer.setCrossSentence(true);
 
         var referenceRelationFeature = new AnnotationFeature("referenceRelation", TYPE_NAME_STRING);
         var referenceTypeFeature = new AnnotationFeature("referenceType", TYPE_NAME_STRING);
 
-        SoftAssertions softly = new SoftAssertions();
         softly.assertThat(analysis.getLayers()) //
-                .containsExactlyInAnyOrder(chainLayer) //
-                .usingRecursiveComparison();
+                .usingRecursiveFieldByFieldElementComparator() //
+                .containsExactlyInAnyOrder(chainLayer);
         softly.assertThat(analysis.getFeatures(chainLayer.getName()))
-                .containsExactlyInAnyOrder(referenceRelationFeature, referenceTypeFeature)
-                .usingRecursiveComparison();
-        softly.assertAll();
+                .usingRecursiveFieldByFieldElementComparator() //
+                .containsExactlyInAnyOrder(referenceRelationFeature, referenceTypeFeature);
     }
 
     @Test
     public void testTheFullMonty() throws Exception
     {
-        TypeSystemDescription tsd = createTypeSystemDescription("tsd/fullMonty");
-        TypeSystemAnalysis analysis = TypeSystemAnalysis.of(tsd);
+        var tsd = createTypeSystemDescription("tsd/fullMonty");
+        var analysis = TypeSystemAnalysis.of(tsd);
 
-        SoftAssertions softly = new SoftAssertions();
-        softly.assertThat(analysis.getLayers()) //
+        assertThat(analysis.getLayers()) //
                 .extracting(l -> l.getName() + ":" + l.getType()) //
-                .hasSize(27) //
                 .containsExactlyInAnyOrder(
                         "de.tudarmstadt.ukp.dkpro.core.api.coref.type.Coreference:chain",
                         "de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.morph.Morpheme:span",
@@ -233,20 +277,16 @@ public class TypeSystemAnalysisTest
                         "webanno.custom.Chain:chain", //
                         "webanno.custom.Relation:relation", //
                         "webanno.custom.SlotSpan:span");
-        softly.assertAll();
     }
 
     @Test
     public void testCTakes40() throws Exception
     {
-        TypeSystemDescription tsd = createTypeSystemDescription(
-                "3rd-party-tsd/ctakes-type-system-4_0");
-        TypeSystemAnalysis analysis = TypeSystemAnalysis.of(tsd);
+        var tsd = createTypeSystemDescription("3rd-party-tsd/ctakes-type-system-4_0");
+        var analysis = TypeSystemAnalysis.of(tsd);
 
-        SoftAssertions softly = new SoftAssertions();
-        softly.assertThat(analysis.getLayers()) //
+        assertThat(analysis.getLayers()) //
                 .extracting(l -> l.getName() + ":" + l.getType()) //
-                .hasSize(8) //
                 .containsExactlyInAnyOrder(
                         "org.apache.ctakes.typesystem.type.textspan.Segment:span",
                         "org.apache.ctakes.typesystem.type.textspan.Sentence:span",
@@ -256,48 +296,40 @@ public class TypeSystemAnalysisTest
                         "org.apache.ctakes.typesystem.type.textspan.Paragraph:span",
                         "org.apache.ctakes.typesystem.type.textspan.ListEntry:span",
                         "org.apache.ctakes.typesystem.type.textspan.LookupWindowAnnotation:span");
-        softly.assertAll();
     }
 
     @Test
     public void testCcpTypeSystem() throws Exception
     {
-        TypeSystemDescription tsd = createTypeSystemDescription("3rd-party-tsd/CcpTypeSystem");
-        TypeSystemAnalysis analysis = TypeSystemAnalysis.of(tsd);
+        var tsd = createTypeSystemDescription("3rd-party-tsd/CcpTypeSystem");
+        var analysis = TypeSystemAnalysis.of(tsd);
 
-        SoftAssertions softly = new SoftAssertions();
-        softly.assertThat(analysis.getLayers()).hasSize(0);
-        softly.assertAll();
+        assertThat(analysis.getLayers()).isEmpty();
     }
 
     @Test
     public void testTtcTermSuite() throws Exception
     {
-        TypeSystemDescription tsd = createTypeSystemDescription("3rd-party-tsd/ttc-term-suite");
-        TypeSystemAnalysis analysis = TypeSystemAnalysis.of(tsd);
+        var tsd = createTypeSystemDescription("3rd-party-tsd/ttc-term-suite");
+        var analysis = TypeSystemAnalysis.of(tsd);
 
-        SoftAssertions softly = new SoftAssertions();
-        softly.assertThat(analysis.getLayers()) //
+        assertThat(analysis.getLayers()) //
                 .extracting(l -> l.getName() + ":" + l.getType()) //
-                .hasSize(4) //
                 .containsExactlyInAnyOrder( //
                         "eu.project.ttc.types.WordAnnotation:span",
                         "eu.project.ttc.types.TermComponentAnnotation:span",
                         "eu.project.ttc.types.TranslationCandidateAnnotation:span",
                         "eu.project.ttc.types.FormAnnotation:span");
-        softly.assertAll();
     }
 
     @Test
     public void testCreta() throws Exception
     {
-        TypeSystemDescription tsd = createTypeSystemDescription("3rd-party-tsd/creta-typesystem");
-        TypeSystemAnalysis analysis = TypeSystemAnalysis.of(tsd);
+        var tsd = createTypeSystemDescription("3rd-party-tsd/creta-typesystem");
+        var analysis = TypeSystemAnalysis.of(tsd);
 
-        SoftAssertions softly = new SoftAssertions();
-        softly.assertThat(analysis.getLayers()) //
+        assertThat(analysis.getLayers()) //
                 .extracting(l -> l.getName() + ":" + l.getType()) //
-                .hasSize(58) //
                 .containsExactlyInAnyOrder(
                         "de.tudarmstadt.ukp.dkpro.core.api.coref.type.Coreference:chain",
                         "de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.morph.Morpheme:span",
@@ -357,6 +389,5 @@ public class TypeSystemAnalysisTest
                         "org.cleartk.timeml.type.Event:span",
                         "org.cleartk.token.type.Subtoken:span",
                         "org.cleartk.token.type.Token:span");
-        softly.assertAll();
     }
 }

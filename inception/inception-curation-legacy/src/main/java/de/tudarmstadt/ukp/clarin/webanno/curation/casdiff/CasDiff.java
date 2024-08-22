@@ -22,11 +22,11 @@ import static de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureMu
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.groupingBy;
-import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toCollection;
+import static java.util.stream.Stream.concat;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -34,7 +34,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.uima.cas.ArrayFS;
@@ -43,7 +42,6 @@ import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.SofaFS;
 import org.apache.uima.cas.Type;
-import org.apache.uima.cas.TypeSystem;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.FSUtil;
 import org.apache.uima.jcas.cas.AnnotationBase;
@@ -470,8 +468,8 @@ public class CasDiff
             return true;
         }
 
-        Type type1 = aFS1.getType();
-        Type type2 = aFS2.getType();
+        var type1 = aFS1.getType();
+        var type2 = aFS2.getType();
 
         // Types must be the same
         if (!type1.getName().equals(type2.getName())) {
@@ -489,14 +487,13 @@ public class CasDiff
         // such as begin, end, etc. Mind that the types may come from different CASes at different
         // levels of upgrading, so it could be that the types actually have slightly different
         // features.
-        Set<String> labelFeatures = adapter.getLabelFeatures();
-        List<String> sortedFeatures = Stream
-                .concat(type1.getFeatures().stream().map(Feature::getShortName),
-                        type2.getFeatures().stream().map(Feature::getShortName)) //
-                .filter(labelFeatures::contains) //
-                .sorted() //
-                .distinct() //
-                .collect(toList());
+        var labelFeatures = adapter.getLabelFeatures();
+        var sortedFeatures = concat(type1.getFeatures().stream().map(Feature::getShortName),
+                type2.getFeatures().stream().map(Feature::getShortName)) //
+                        .filter(labelFeatures::contains) //
+                        .sorted() //
+                        .distinct() //
+                        .collect(toCollection(ArrayList::new));
 
         if (!recurseIntoLinkFeatures) {
             // #1795 Chili REC: We can/should change CasDiff2 such that it does not recurse into
@@ -527,13 +524,13 @@ public class CasDiff
 
             switch (range.getName()) {
             case CAS.TYPE_NAME_STRING_ARRAY: {
-                var value1 = FSUtil.getFeature(aFS1, f1, Set.class);
+                var value1 = f1 != null ? FSUtil.getFeature(aFS1, f1, Set.class) : null;
                 if (value1 == null) {
-                    value1 = Collections.emptySet();
+                    value1 = emptySet();
                 }
-                var value2 = FSUtil.getFeature(aFS2, f2, Set.class);
+                var value2 = f2 != null ? FSUtil.getFeature(aFS2, f2, Set.class) : null;
                 if (value2 == null) {
-                    value2 = Collections.emptySet();
+                    value2 = emptySet();
                 }
                 if (!value1.equals(value2)) {
                     return false;
@@ -614,8 +611,8 @@ public class CasDiff
             }
             default: {
                 // Must be some kind of feature structure then
-                FeatureStructure valueFS1 = f1 != null ? aFS1.getFeatureValue(f1) : null;
-                FeatureStructure valueFS2 = f2 != null ? aFS2.getFeatureValue(f2) : null;
+                var valueFS1 = f1 != null ? aFS1.getFeatureValue(f1) : null;
+                var valueFS2 = f2 != null ? aFS2.getFeatureValue(f2) : null;
 
                 // Ignore the SofaFS - we already checked that the CAS is the same.
                 if (valueFS1 instanceof SofaFS) {
@@ -632,7 +629,7 @@ public class CasDiff
                 // Q: Why do we not check recursively?
                 // A: Because e.g. for chains, this would mean we consider the whole chain as a
                 // single annotation, but we want to consider each link as an annotation
-                TypeSystem ts1 = aFS1.getCAS().getTypeSystem();
+                var ts1 = aFS1.getCAS().getTypeSystem();
                 if (ts1.subsumes(ts1.getType(CAS.TYPE_NAME_ANNOTATION), type1)) {
                     if (!equalsAnnotationFS((AnnotationFS) aFS1, (AnnotationFS) aFS2)) {
                         return false;

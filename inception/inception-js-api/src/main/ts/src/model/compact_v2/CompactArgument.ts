@@ -25,13 +25,14 @@ export type CompactArgument = [
   label?: string
 ]
 
-export function unpackCompactArgument (doc: AnnotatedText, raw: CompactArgument): Argument {
+export function unpackCompactArgument (doc: AnnotatedText, raw: CompactArgument): Argument | undefined {
   const cooked = new Argument()
   cooked.targetId = raw[0]
+  cooked.label = raw[1]
   cooked.target = doc.spans.get(cooked.targetId)
   if (!cooked.target) {
     console.warn(`Target ${cooked.targetId} not found`)
+    return undefined
   }
-  cooked.label = raw[1]
   return cooked
 }
