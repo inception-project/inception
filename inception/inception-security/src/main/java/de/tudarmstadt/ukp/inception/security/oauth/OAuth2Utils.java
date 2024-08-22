@@ -18,8 +18,8 @@
 
 package de.tudarmstadt.ukp.inception.security.oauth;
 
-import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
@@ -27,64 +27,74 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
 @Configuration
-@ConfigurationProperties(prefix = "oauth2-groups")
+@ConfigurationProperties(prefix = "security.oauth.roles")
 public class OAuth2Utils {
     
-    private static boolean OAUTH2_GROUPS_ENABLED;
-    private static String OAUTH2_ADMIN_GROUP;
-    private static String OAUTH2_USER_GROUP;
-    private static String OAUTH2_PROJECT_CREATOR_GROUP;
-    private static String OAUTH2_REMOTE_GROUP;
+    private static boolean OAUTH2_ROLES_ENABLED;
+    private static String OAUTH2_ROLES_CLAIM;
+    private static String OAUTH2_ADMIN_ROLE;
+    private static String OAUTH2_USER_ROLE;
+    private static String OAUTH2_PROJECT_CREATOR_ROLE;
+    private static String OAUTH2_REMOTE_ROLE;
     
-    @Value("${oauth2-groups.enabled:false}")
-    public void setOAuth2GroupsEnabled(boolean oAuth2GroupsEnabled)
+    @Value("${security.oauth.roles.enabled:false}")
+    public void setOAuth2RolesEnabled(boolean oAuth2RolesEnabled)
     {
-        OAUTH2_GROUPS_ENABLED = oAuth2GroupsEnabled;
+        OAUTH2_ROLES_ENABLED = oAuth2RolesEnabled;
+    }
+    
+    @Value("${security.oauth.roles.claim:groups}")
+    public void setOAuth2RolesClaim(String oAuth2RolesClaim)
+    {
+        OAUTH2_ROLES_CLAIM = oAuth2RolesClaim;
     }
 
-    @Value("${oauth2-groups.admin:}")
-    public void setAdminGroup(String adminGroup)
+    @Value("${security.oauth.roles.admin:}")
+    public void setAdminRole(String adminRole)
     {
-        OAUTH2_ADMIN_GROUP = adminGroup;
+        OAUTH2_ADMIN_ROLE = adminRole;
     }
 
-    @Value("${oauth2-groups.user:}")
-    public void setUserGroup(String userGroup)
+    @Value("${security.oauth.roles.user:}")
+    public void setUserRole(String userRole)
     {
-        OAUTH2_USER_GROUP = userGroup;
+        OAUTH2_USER_ROLE = userRole;
     }
 
-    @Value("${oauth2-groups.project-creator:}")
-    public void setProjectCreatorGroup(String projectCreatorGroup)
+    @Value("${security.oauth.roles.project-creator:}")
+    public void setProjectCreatorRole(String projectCreatorRole)
     {
-        OAUTH2_PROJECT_CREATOR_GROUP = projectCreatorGroup;
+        OAUTH2_PROJECT_CREATOR_ROLE = projectCreatorRole;
     }
 
-    @Value("${oauth2-groups.remote:}")
-    public void setRemoteGroup(String remoteGroup)
+    @Value("${security.oauth.roles.remote:}")
+    public void setRemoteRole(String remoteRole)
     {
-        OAUTH2_REMOTE_GROUP = remoteGroup;
+        OAUTH2_REMOTE_ROLE = remoteRole;
     }
 
 
-    public static Set<Role> getOAuth2UserRoles(User aUser, ArrayList<String> oauth2groups)
+    public static Set<Role> getOAuth2UserRoles(User aUser, OAuth2User user)
         throws AccessDeniedException
     {
         Set<Role> roles = new HashSet<>();
 
-        if (!OAUTH2_GROUPS_ENABLED) {
+        if (!OAUTH2_ROLES_ENABLED) {
             roles.add(Role.ROLE_USER);
             return roles;
         }
+        
+        List<String> oauth2groups = user.getAttribute(OAUTH2_ROLES_CLAIM);
 
         if (oauth2groups == null || oauth2groups.isEmpty()) {
-            throw new AccessDeniedException("OAuth2 groups mapping is enabled, but user ["
-                + aUser.getUsername() + "] doesn't have any groups, or the corresponding claim is empty");
+            throw new AccessDeniedException("OAuth2 roles mapping is enabled, but user ["
+                + aUser.getUsername() + "] doesn't have any roles, or the corresponding claim is empty");
         }
 
         oauth2groups.forEach(group -> matchOauth2groupToRole(group, roles));
@@ -99,19 +109,19 @@ public class OAuth2Utils {
 
     private static void matchOauth2groupToRole(String oauth2group, Set<Role> userRoles) {
         
-        if (StringUtils.equals(oauth2group, OAUTH2_ADMIN_GROUP)) {
+        if (StringUtils.equals(oauth2group, OAUTH2_ADMIN_ROLE)) {
             userRoles.add(Role.ROLE_ADMIN);
         }
 
-        if (StringUtils.equals(oauth2group, OAUTH2_USER_GROUP)) {
+        if (StringUtils.equals(oauth2group, OAUTH2_USER_ROLE)) {
             userRoles.add(Role.ROLE_USER);
         }
 
-        if (StringUtils.equals(oauth2group, OAUTH2_PROJECT_CREATOR_GROUP)) {
+        if (StringUtils.equals(oauth2group, OAUTH2_PROJECT_CREATOR_ROLE)) {
             userRoles.add(Role.ROLE_PROJECT_CREATOR);
         }
 
-        if (StringUtils.equals(oauth2group, OAUTH2_REMOTE_GROUP)) {
+        if (StringUtils.equals(oauth2group, OAUTH2_REMOTE_ROLE)) {
             userRoles.add(Role.ROLE_REMOTE);
         }
     }

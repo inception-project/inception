@@ -20,6 +20,9 @@ package de.tudarmstadt.ukp.inception.security.oauth;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
 import java.util.Set;
@@ -28,6 +31,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.annotation.DirtiesContext.ClassMode;
 import org.springframework.test.context.ContextConfiguration;
@@ -43,11 +47,12 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 @DirtiesContext(classMode = ClassMode.AFTER_CLASS)
 @TestPropertySource(
         properties = """
-            oauth2-groups.enabled=true
-            oauth2-groups.admin=/INCEPTION_ADMIN
-            oauth2-groups.user=/INCEPTION_USER
-            oauth2-groups.project-creator=/INCEPTION_PROJECT_CREATOR
-            oauth2-groups.remote=/INCEPTION_REMOTE
+            security.oauth.roles.enabled=true
+            security.oauth.roles.claim=groups
+            security.oauth.roles.admin=/INCEPTION_ADMIN
+            security.oauth.roles.user=/INCEPTION_USER
+            security.oauth.roles.project-creator=/INCEPTION_PROJECT_CREATOR
+            security.oauth.roles.remote=/INCEPTION_REMOTE
         """)
 public class OAuth2UtilsTest
 {
@@ -59,11 +64,14 @@ public class OAuth2UtilsTest
     String OAUTH2_GROUP_REMOTE = "/INCEPTION_REMOTE";
 
     User testUser;
+    OAuth2User testRetievedOAuth2User;
    
     @BeforeEach
     void setup() {
       testUser = new User();
       testUser.setUsername(USERNAME);
+      
+      testRetievedOAuth2User = mock(OAuth2User.class);
     }
     
     @Test
@@ -71,8 +79,9 @@ public class OAuth2UtilsTest
     {
         ArrayList<String> userOAuth2Groups = new ArrayList<>();
         userOAuth2Groups.add(OAUTH2_GROUP_ADMIN);
+        when(testRetievedOAuth2User.getAttribute(anyString())).thenReturn(userOAuth2Groups);
         
-        Set<Role> userRoles = OAuth2Utils.getOAuth2UserRoles(testUser, userOAuth2Groups);
+        Set<Role> userRoles = OAuth2Utils.getOAuth2UserRoles(testUser, testRetievedOAuth2User);
         
         assertTrue(userRoles.contains(Role.ROLE_ADMIN));
     }
@@ -82,8 +91,9 @@ public class OAuth2UtilsTest
     {
         ArrayList<String> userOAuth2Groups = new ArrayList<>();
         userOAuth2Groups.add(OAUTH2_GROUP_USER);
+        when(testRetievedOAuth2User.getAttribute(anyString())).thenReturn(userOAuth2Groups);
         
-        Set<Role> userRoles = OAuth2Utils.getOAuth2UserRoles(testUser, userOAuth2Groups);
+        Set<Role> userRoles = OAuth2Utils.getOAuth2UserRoles(testUser, testRetievedOAuth2User);
         
         assertTrue(userRoles.contains(Role.ROLE_USER));
     }
@@ -93,9 +103,9 @@ public class OAuth2UtilsTest
     {
         ArrayList<String> userOAuth2Groups = new ArrayList<>();
         userOAuth2Groups.add(OAUTH2_GROUP_PROJECT_CREATOR);
+        when(testRetievedOAuth2User.getAttribute(anyString())).thenReturn(userOAuth2Groups);
         
-        Set<Role> userRoles = OAuth2Utils.getOAuth2UserRoles(testUser, userOAuth2Groups);
-        
+        Set<Role> userRoles = OAuth2Utils.getOAuth2UserRoles(testUser, testRetievedOAuth2User);        
         assertTrue(userRoles.contains(Role.ROLE_PROJECT_CREATOR));
     }
     
@@ -104,8 +114,9 @@ public class OAuth2UtilsTest
     {
         ArrayList<String> userOAuth2Groups = new ArrayList<>();
         userOAuth2Groups.add(OAUTH2_GROUP_REMOTE);
+        when(testRetievedOAuth2User.getAttribute(anyString())).thenReturn(userOAuth2Groups);
         
-        Set<Role> userRoles = OAuth2Utils.getOAuth2UserRoles(testUser, userOAuth2Groups);
+        Set<Role> userRoles = OAuth2Utils.getOAuth2UserRoles(testUser, testRetievedOAuth2User);
         
         assertTrue(userRoles.contains(Role.ROLE_REMOTE));
     }
@@ -114,9 +125,10 @@ public class OAuth2UtilsTest
     void thatUnauthorizedExceptionIsThrownIfNoRoleIsMapped() {
         
         ArrayList<String> userOAuth2Groups = new ArrayList<>();
+        when(testRetievedOAuth2User.getAttribute(anyString())).thenReturn(userOAuth2Groups);
         
         try {
-            OAuth2Utils.getOAuth2UserRoles(testUser, userOAuth2Groups);
+            OAuth2Utils.getOAuth2UserRoles(testUser, testRetievedOAuth2User);
         } catch (AccessDeniedException ade) {
             System.out.println(ade.getClass().getSimpleName() + " was thrown");
             return;
