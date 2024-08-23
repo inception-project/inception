@@ -66,7 +66,7 @@ public class LuceneFuzzinessPrefixTest
         sail.setParameter(LuceneSail.LUCENE_DIR_KEY, "lucene-index");
         sail.setParameter(LuceneSail.INDEX_CLASS_KEY, LuceneSail.DEFAULT_INDEX_CLASS);
     }
-    
+
     @AfterEach
     void shutdown()
     {
