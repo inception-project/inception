@@ -59,7 +59,8 @@ public class DocumentMetadataDiffAdapter
 
     @Override
     public Position getPosition(FeatureStructure aFS, String aFeature, String aRole,
-            int aLinkTargetBegin, int aLinkTargetEnd, LinkFeatureMultiplicityMode aLinkCompareBehavior)
+            int aLinkTargetBegin, int aLinkTargetEnd,
+            LinkFeatureMultiplicityMode aLinkCompareBehavior)
     {
         String collectionId = null;
         String documentId = null;

@@ -159,6 +159,15 @@ public abstract class TypeAdapter_ImplBase
     }
 
     @Override
+    public final boolean isFeatureValueEqual(AnnotationFeature aFeature, FeatureStructure aFS1,
+            FeatureStructure aFS2)
+    {
+        var featureSupport = featureSupportRegistry.findExtension(aFeature).orElseThrow();
+
+        return featureSupport.isFeatureValueEqual(aFeature, aFS1, aFS2);
+    }
+
+    @Override
     public final void setFeatureValue(SourceDocument aDocument, String aUsername, CAS aCas,
             int aAddress, AnnotationFeature aFeature, Object aValue)
         throws AnnotationException

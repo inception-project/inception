@@ -126,16 +126,6 @@ public abstract class Position_ImplBase
     @Override
     public int compareTo(Position aOther)
     {
-        // int collectionIdCmp = collectionId.compareTo(aOther.getCollectionId());
-        // if (collectionIdCmp != 0) {
-        // return collectionIdCmp;
-        // }
-        //
-        // int documentIdCmp = documentId.compareTo(aOther.getDocumentId());
-        // if (documentIdCmp != 0) {
-        // return documentIdCmp;
-        // }
-
         int typeCmp = type.compareTo(aOther.getType());
         if (typeCmp != 0) {
             return typeCmp;
@@ -199,11 +189,9 @@ public abstract class Position_ImplBase
         }
 
         Position_ImplBase castOther = (Position_ImplBase) other;
-        var result = // Objects.equals(collectionId, castOther.collectionId) //
-                // && Objects.equals(documentId, castOther.documentId) //
-                Objects.equals(type, castOther.type) //
-                        && Objects.equals(feature, castOther.feature) //
-                        && Objects.equals(linkCompareBehavior, castOther.linkCompareBehavior);
+        var result = Objects.equals(type, castOther.type) //
+                && Objects.equals(feature, castOther.feature) //
+                && Objects.equals(linkCompareBehavior, castOther.linkCompareBehavior);
 
         // If the base properties are equal, then we have to continue only linkCompareBehavior if it
         // is non-null.
@@ -233,8 +221,6 @@ public abstract class Position_ImplBase
     public int hashCode()
     {
         var builder = new HashCodeBuilder() //
-                // .append(collectionId) //
-                // .append(documentId) //
                 .append(type) //
                 .append(feature) //
                 .append(linkCompareBehavior);

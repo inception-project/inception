@@ -26,8 +26,10 @@ import static org.apache.uima.cas.CAS.TYPE_NAME_TOP;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.text.WordUtils;
 import org.apache.uima.cas.ArrayFS;
 import org.apache.uima.cas.CAS;
@@ -59,6 +61,7 @@ import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureEditor;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupport;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureType;
 import de.tudarmstadt.ukp.inception.schema.api.feature.LinkWithRoleModel;
+import de.tudarmstadt.ukp.inception.schema.api.feature.MaterializedLink;
 import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
 
 /**
@@ -215,6 +218,13 @@ public class LinkFeatureSupport
         return wrapFeatureValue(aFeature, aFS.getCAS(), aFS.getFeatureValue(linkFeature));
     }
 
+    @SuppressWarnings("unchecked")
+    @Override
+    public <V> V getDefaultFeatureValue(AnnotationFeature aFeature, FeatureStructure aFS)
+    {
+        return (V) Collections.emptyList();
+    }
+
     @Override
     public void setFeatureValue(CAS aCas, AnnotationFeature aFeature, int aAddress, Object aValue)
         throws AnnotationException
@@ -308,5 +318,27 @@ public class LinkFeatureSupport
     {
         // Never render link feature labels
         return null;
+    }
+
+    @Override
+    public boolean isCopyOnCurationMerge(AnnotationFeature aFeature)
+    {
+        // Links count as separate positions and should be merged separately
+        return false;
+    }
+
+    @Override
+    public boolean isFeatureValueEqual(AnnotationFeature aFeature, FeatureStructure aFS1,
+            FeatureStructure aFS2)
+    {
+        List<LinkWithRoleModel> links1 = getFeatureValue(aFeature, aFS1);
+        var matLinks1 = links1.stream()
+                .map(link -> MaterializedLink.toMaterializedLink(aFS1, aFeature, link)).toList();
+
+        List<LinkWithRoleModel> links2 = getFeatureValue(aFeature, aFS2);
+        var matLinks2 = links2.stream()
+                .map(link -> MaterializedLink.toMaterializedLink(aFS2, aFeature, link)).toList();
+
+        return CollectionUtils.disjunction(matLinks1, matLinks2).isEmpty();
     }
 }

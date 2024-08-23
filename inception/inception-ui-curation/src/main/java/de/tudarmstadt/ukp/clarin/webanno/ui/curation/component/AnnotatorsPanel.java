@@ -42,7 +42,6 @@ import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.commons.lang3.Validate;
 import org.apache.uima.UIMAException;
@@ -63,7 +62,6 @@ import org.slf4j.LoggerFactory;
 import org.wicketstuff.jquery.ui.widget.menu.IMenuItem;
 
 import de.tudarmstadt.ukp.clarin.webanno.brat.schema.BratSchemaGenerator;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.Configuration;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.ConfigurationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -241,22 +239,26 @@ public class AnnotatorsPanel
             AnnotationLayer aLayer)
         throws IOException
     {
-        CAS targetCas = readEditorCas(aSegment.getAnnotatorState());
-        CAS sourceCas = readAnnotatorCas(aSegment);
-        AnnotatorState sourceState = aSegment.getAnnotatorState();
-        TypeAdapter adapter = schemaService.getAdapter(aLayer);
+        var adapter = schemaService.getAdapter(aLayer);
+        var sourceCas = readAnnotatorCas(aSegment);
+        var maybeSourceType = adapter.getAnnotationType(sourceCas);
+        if (maybeSourceType.isEmpty()) {
+            return;
+        }
 
-        int mergeConflict = 0;
-        int alreadyMerged = 0;
-        int updated = 0;
-        int created = 0;
-        Set<String> otherErrors = new LinkedHashSet<>();
+        var targetCas = readEditorCas(aSegment.getAnnotatorState());
+        var sourceState = aSegment.getAnnotatorState();
 
-        CasMerge casMerge = new CasMerge(schemaService, applicationEventPublisher.get());
+        var mergeConflict = 0;
+        var alreadyMerged = 0;
+        var updated = 0;
+        var created = 0;
+        var otherErrors = new LinkedHashSet<String>();
+
+        var casMerge = new CasMerge(schemaService, applicationEventPublisher.get());
         casMerge.setSilenceEvents(true);
 
-        nextAnnotation: for (AnnotationFS ann : select(sourceCas,
-                adapter.getAnnotationType(sourceCas))) {
+        nextAnnotation: for (var ann : select(sourceCas, maybeSourceType.get())) {
             try {
                 CasMergeOperationResult result;
 
@@ -332,7 +334,7 @@ public class AnnotatorsPanel
                 aSourceVid.getId());
 
         return aCasMerge.mergeSpanAnnotation(aSourceDocument, aSourceUser, aLayer, aTargetCas,
-                sourceAnnotation, aLayer.isAllowStacking());
+                sourceAnnotation);
     }
 
     private void mergeSlot(CasMerge aCasMerge, CAS aCas, CAS aSourceCas, VID aSourceVid,
@@ -359,7 +361,7 @@ public class AnnotatorsPanel
                 aSourceVid.getId());
 
         return aCasMerge.mergeRelationAnnotation(aSourceDocument, aSourceUser, aLayer, aCas,
-                sourceAnnotation, aLayer.isAllowStacking());
+                sourceAnnotation);
     }
 
     private CAS readEditorCas(AnnotatorState aState) throws IOException
@@ -558,14 +560,14 @@ public class AnnotatorsPanel
 
                 Map<VID, AnnotationState> annotationStates = aAnnotationStatesForAllUsers.get(user);
 
-                for (Configuration configuration : configurationSet.getConfigurations(user)) {
+                for (var configuration : configurationSet.getConfigurations(user)) {
                     for (var fs : configuration.getFses(user, aCasMap)) {
                         VID vid;
                         // link FS
                         if (configuration.getPosition().getFeature() != null) {
-                            TypeAdapter typeAdapter = schemaService.findAdapter(aProject, fs);
+                            var typeAdapter = schemaService.findAdapter(aProject, fs);
                             int fi = 0;
-                            for (AnnotationFeature f : typeAdapter.listFeatures()) {
+                            for (var f : typeAdapter.listFeatures()) {
                                 if (f.getName().equals(configuration.getPosition().getFeature())) {
                                     break;
                                 }

@@ -17,12 +17,14 @@
  */
 package de.tudarmstadt.ukp.inception.annotation.feature.bool;
 
+import static java.lang.Boolean.FALSE;
 import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableList;
 
 import java.util.List;
 
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.FeatureStructure;
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.model.IModel;
 
@@ -104,5 +106,12 @@ public class BooleanFeatureSupport
         else {
             return "-" + aFeature.getUiName();
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public <V> V getDefaultFeatureValue(AnnotationFeature aFeature, FeatureStructure aFS)
+    {
+        return (V) FALSE;
     }
 }
