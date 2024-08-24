@@ -112,7 +112,7 @@ public class SpanAdapter
 
         // Adjust the creation request (e.g. adjust offsets to the configured granularity) or
         // reject the creation (e.g. reject cross-sentence annotations)
-        for (SpanLayerBehavior behavior : behaviors) {
+        for (var behavior : behaviors) {
             request = behavior.onCreate(this, request);
         }
 

@@ -54,7 +54,7 @@ public class DiffResult
     DiffResult(CasDiff aDiff)
     {
         data = Collections.unmodifiableMap(aDiff.configSets);
-        casGroupIds = new LinkedHashSet<>(aDiff.cases.keySet());
+        casGroupIds = new LinkedHashSet<>(aDiff.casses.keySet());
     }
 
     public Set<String> getCasGroupIds()

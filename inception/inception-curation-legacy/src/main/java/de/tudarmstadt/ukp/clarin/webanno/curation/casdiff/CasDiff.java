@@ -72,7 +72,7 @@ public class CasDiff
 {
     private final static Logger LOG = LoggerFactory.getLogger(CasDiff.class);
 
-    Map<String, CAS> cases = new LinkedHashMap<>();
+    Map<String, CAS> casses = new LinkedHashMap<>();
 
     final Map<Position, ConfigurationSet> configSets = new TreeMap<>();
 
@@ -169,7 +169,7 @@ public class CasDiff
 
     public Map<String, CAS> getCasMap()
     {
-        return cases;
+        return casses;
     }
 
     /**
@@ -187,7 +187,7 @@ public class CasDiff
     private void addCas(String aCasGroupId, CAS aCas, String aType)
     {
         // Remember that we have already seen this CAS.
-        cases.put(aCasGroupId, aCas);
+        casses.put(aCasGroupId, aCas);
 
         // null elements in the list can occur if a user has never worked on a CAS
         // We add these to the internal list above, but then we bail out here.
@@ -283,7 +283,7 @@ public class CasDiff
             Configuration configuration = null;
             for (var cfg : aSet.getConfigurations()) {
                 // Handle main positions
-                if (equalsFS(cfg.getRepresentative(cases), aFS)) {
+                if (equalsFS(cfg.getRepresentative(casses), aFS)) {
                     configuration = cfg;
                     break;
                 }
@@ -298,7 +298,7 @@ public class CasDiff
             configuration.add(aCasGroupId, aFS);
         }
         else {
-            Feature feat = aFS.getType().getFeatureByBaseName(position.getFeature());
+            var feat = aFS.getType().getFeatureByBaseName(position.getFeature());
 
             // If the CAS has not been upgraded yet to include the feature, then there are no
             // configurations for it.
@@ -328,8 +328,8 @@ public class CasDiff
                     var target = (AnnotationFS) link.getFeatureValue(
                             link.getType().getFeatureByBaseName(decl.getTargetFeature()));
 
-                    cfgLoop: for (Configuration cfg : aSet.getConfigurations()) {
-                        var repFS = cfg.getRepresentative(cases);
+                    cfgLoop: for (var cfg : aSet.getConfigurations()) {
+                        var repFS = cfg.getRepresentative(casses);
                         var repAID = cfg.getRepresentativeAID();
                         var repLink = FSUtil.getFeature(repFS,
                                 repFS.getType().getFeatureByBaseName(decl.getName()), ArrayFS.class)
@@ -357,7 +357,7 @@ public class CasDiff
                             link.getType().getFeatureByBaseName(decl.getRoleFeature()));
 
                     cfgLoop: for (Configuration cfg : aSet.getConfigurations()) {
-                        var repFS = cfg.getRepresentative(cases);
+                        var repFS = cfg.getRepresentative(casses);
                         var repAID = cfg.getRepresentativeAID();
                         var repLink = FSUtil.getFeature(repFS,
                                 repFS.getType().getFeatureByBaseName(decl.getName()), ArrayFS.class)
@@ -388,7 +388,7 @@ public class CasDiff
                     }
 
                     cfgLoop: for (Configuration cfg : aSet.getConfigurations()) {
-                        var repFS = cfg.getRepresentative(cases);
+                        var repFS = cfg.getRepresentative(casses);
                         var repAID = cfg.getRepresentativeAID();
                         var repLink = FSUtil.getFeature(repFS,
                                 repFS.getType().getFeatureByBaseName(decl.getName()), ArrayFS.class)

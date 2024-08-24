@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.annotation.feature.link;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.LinkMode.WITH_ROLE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode.ARRAY;
+import static org.apache.commons.collections4.CollectionUtils.disjunction;
 import static org.apache.uima.cas.CAS.TYPE_NAME_FS_ARRAY;
 import static org.apache.uima.cas.CAS.TYPE_NAME_STRING;
 import static org.apache.uima.cas.CAS.TYPE_NAME_TOP;
@@ -29,7 +30,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.text.WordUtils;
 import org.apache.uima.cas.ArrayFS;
 import org.apache.uima.cas.CAS;
@@ -210,11 +210,6 @@ public class LinkFeatureSupport
     public List<LinkWithRoleModel> getFeatureValue(AnnotationFeature aFeature, FeatureStructure aFS)
     {
         var linkFeature = aFS.getType().getFeatureByBaseName(aFeature.getName());
-
-        if (linkFeature == null) {
-            wrapFeatureValue(aFeature, aFS.getCAS(), null);
-        }
-
         return wrapFeatureValue(aFeature, aFS.getCAS(), aFS.getFeatureValue(linkFeature));
     }
 
@@ -339,6 +334,6 @@ public class LinkFeatureSupport
         var matLinks2 = links2.stream()
                 .map(link -> MaterializedLink.toMaterializedLink(aFS2, aFeature, link)).toList();
 
-        return CollectionUtils.disjunction(matLinks1, matLinks2).isEmpty();
+        return disjunction(matLinks1, matLinks2).isEmpty();
     }
 }

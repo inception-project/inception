@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.curation.merge;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.LinkMode.NONE;
 import static de.tudarmstadt.ukp.inception.curation.merge.CasMerge.copyFeatures;
 import static de.tudarmstadt.ukp.inception.curation.merge.CasMergeOperationResult.ResultState.CREATED;
 import static de.tudarmstadt.ukp.inception.curation.merge.CasMergeOperationResult.ResultState.UPDATED;
@@ -31,7 +32,6 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.tcas.Annotation;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanAdapter;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
@@ -98,7 +98,7 @@ public class CasMergeSpan
         return aTargetCas.<Annotation> select(targetType.get()) //
                 .at(aOriginal.getBegin(), aOriginal.getEnd()) //
                 .sorted((a, b) -> aAdapter.countNonEqualFeatures(a, b,
-                        (fs, f) -> f.getLinkMode() == LinkMode.NONE));
+                        (fs, f) -> f.getLinkMode() == NONE));
     }
 
     private static boolean existsEquivalentSpan(CAS aTargetCas, TypeAdapter aAdapter,
