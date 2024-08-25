@@ -20,11 +20,10 @@ package de.tudarmstadt.ukp.inception.ui.curation.sidebar.render;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.getDiffAdapters;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.ANNOTATION;
-import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.NO_OVERLAP;
-import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.STACKING_ONLY;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toMap;
+import static org.apache.uima.cas.text.AnnotationPredicates.colocated;
 
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
@@ -33,8 +32,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.FeatureStructure;
-import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.tcas.Annotation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -172,15 +169,14 @@ public class CurationSidebarRenderer
                     .filter(feature -> feature.getLayer().equals(layer)) //
                     .toList();
 
-            var noOverlap = layer.getOverlapMode() == NO_OVERLAP
-                    || layer.getOverlapMode() == STACKING_ONLY;
-
             for (var cfg : cfgSet.getConfigurations()) {
                 LOG.trace("Processing configuration: {}", cfg);
                 var fs = cfg.getRepresentative(casDiff.getCasMap());
                 if (!(fs instanceof Annotation)) {
                     continue;
                 }
+
+                var ann = (Annotation) fs;
 
                 // Do not render configurations that belong only the the target user. Those are
                 // already rendered by the normal annotation rendering mechanism
@@ -199,12 +195,11 @@ public class CurationSidebarRenderer
                 var layerSupport = layerSupportRegistry.getLayerSupport(layer);
                 var renderer = layerSupport.createRenderer(layer, () -> layerAllFeatures);
 
-                var objects = renderer.render(aRequest, layerSupportedFeatures, aVdoc,
-                        (AnnotationFS) fs);
+                var objects = renderer.render(aRequest, layerSupportedFeatures, aVdoc, ann);
 
                 for (var object : objects) {
-                    if (!showAll && shouldBeHidden(aRequest, diff, cfg, fs, object, targetUser,
-                            noOverlap)) {
+                    if (!showAll && shouldBeHidden(aRequest, diff, cfg, layer, ann, object,
+                            targetUser)) {
                         continue;
                     }
 
@@ -238,7 +233,7 @@ public class CurationSidebarRenderer
     }
 
     private boolean shouldBeHidden(RenderRequest aRequest, DiffResult diff, Configuration cfg,
-            FeatureStructure fs, VObject object, String targetUser, boolean noOverlap)
+            AnnotationLayer aLayer, Annotation aAnn, VObject object, String targetUser)
     {
         // if (cfg.getPosition() instanceof SpanPosition spanPosition) {
         // if (spanPosition.isLinkFeaturePosition() && object instanceof VSpan) {
@@ -265,13 +260,21 @@ public class CurationSidebarRenderer
 
         // Check if the position could be merged at all or if the merge is blocked by an overlapping
         // annotation (which may not be contained in the configuration)
-        if (object instanceof VSpan && noOverlap && fs instanceof Annotation ann) {
-            var cas = aRequest.getCas();
-            if (cas.<Annotation> select(ann.getType().getName())
-                    .anyMatch(f -> ann.overlapping(f))) {
-                LOG.trace("{} - skipping rendering due to overlap", object);
-                return true;
+        if (object instanceof VSpan) {
+            var anns = aRequest.getCas().<Annotation> select(aAnn.getType().getName());
+
+            var skip = switch (aLayer.getOverlapMode()) {
+            case NO_OVERLAP -> anns.anyMatch(f -> aAnn.overlapping(f));
+            case STACKING_ONLY -> anns.anyMatch(f -> aAnn.overlapping(f) && !colocated(f, aAnn));
+            case OVERLAP_ONLY -> anns.anyMatch(f -> aAnn.overlapping(f) && colocated(f, aAnn));
+            case ANY_OVERLAP -> false;
+            };
+
+            if (skip) {
+                LOG.trace("{} - skipping rendering due to {}", object, aLayer.getOverlapMode());
             }
+
+            return skip;
         }
 
         return false;

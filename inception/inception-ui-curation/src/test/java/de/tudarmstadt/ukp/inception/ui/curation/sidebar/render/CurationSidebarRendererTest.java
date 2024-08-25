@@ -233,7 +233,6 @@ class CurationSidebarRendererTest
                 .extracting(span -> span.getVid()) //
                 .containsExactlyInAnyOrder( //
                         curationVid(anno1, anchorB));
-
     }
 
     /**
@@ -264,7 +263,7 @@ class CurationSidebarRendererTest
     }
 
     /**
-     * An span annotation in the curator's CAS hides the spans from the annotators.
+     * A span annotation in the curator's CAS hides the spans from the annotators.
      */
     @ParameterizedTest
     @MethodSource("combinations")
@@ -283,13 +282,12 @@ class CurationSidebarRendererTest
 
         // Yes, empty because normally the curator's span would be rendered by the regular
         // rendering pipeline which we do not have here. The sidebar render only needs to
-        // suppress
-        // its own rendering in this case.
+        // suppress its own rendering in this case.
         assertThat(vdoc.spans()).isEmpty();
     }
 
     /**
-     * An span annotation in the curator's CAS hides the spans from the annotators.
+     * An overlapping span annotation in the curator's CAS hides the spans from the annotators.
      */
     @ParameterizedTest
     @MethodSource("combinations")
@@ -366,7 +364,7 @@ class CurationSidebarRendererTest
         sut.render(vdoc, request);
 
         switch (aOverlapMode) {
-        case NO_OVERLAP, STACKING_ONLY:
+        case NO_OVERLAP, OVERLAP_ONLY:
             assertThat(vdoc.spans()) //
                     .extracting(span -> span.getVid()) //
                     .containsExactlyInAnyOrder( //
@@ -378,7 +376,7 @@ class CurationSidebarRendererTest
                             curationVid(anno1, anno1AnchorA, 0, 0), //
                             curationVid(anno1, anno1AnchorB, 0, 0));
             break;
-        case OVERLAP_ONLY, ANY_OVERLAP:
+        case STACKING_ONLY, ANY_OVERLAP:
             assertThat(vdoc.spans()) //
                     .extracting(span -> span.getVid()) //
                     .containsExactlyInAnyOrder( //
@@ -402,7 +400,7 @@ class CurationSidebarRendererTest
         sut.render(vdoc, request);
 
         switch (aOverlapMode) {
-        case NO_OVERLAP, STACKING_ONLY:
+        case NO_OVERLAP, OVERLAP_ONLY:
             assertThat(vdoc.spans()) //
                     .extracting(span -> span.getVid()) //
                     .containsExactlyInAnyOrder( //
@@ -413,7 +411,7 @@ class CurationSidebarRendererTest
                             curationVid(anno1, anno1AnchorA, 0, 0), //
                             curationVid(anno1, anno1AnchorB, 0, 0));
             break;
-        case OVERLAP_ONLY, ANY_OVERLAP:
+        case STACKING_ONLY, ANY_OVERLAP:
             assertThat(vdoc.spans()) //
                     .extracting(span -> span.getVid()) //
                     .containsExactlyInAnyOrder( //
@@ -436,13 +434,13 @@ class CurationSidebarRendererTest
         sut.render(vdoc, request);
 
         switch (aOverlapMode) {
-        case NO_OVERLAP, STACKING_ONLY:
+        case NO_OVERLAP, OVERLAP_ONLY:
             assertThat(vdoc.spans()) //
                     .extracting(span -> span.getVid()) //
                     .containsExactlyInAnyOrder( //
                             curationVid(anno1, anno1Filler2));
             break;
-        case OVERLAP_ONLY, ANY_OVERLAP:
+        case STACKING_ONLY, ANY_OVERLAP:
             switch (aLinkFeatureMultiplicityMode) {
             case ONE_TARGET_MULTIPLE_ROLES:
                 assertThat(vdoc.spans()) //
@@ -482,11 +480,11 @@ class CurationSidebarRendererTest
         sut.render(vdoc, request);
 
         switch (aOverlapMode) {
-        case NO_OVERLAP, STACKING_ONLY:
+        case NO_OVERLAP, OVERLAP_ONLY:
             assertThat(vdoc.spans()) //
                     .isEmpty();
             break;
-        case OVERLAP_ONLY, ANY_OVERLAP:
+        case STACKING_ONLY, ANY_OVERLAP:
             switch (aLinkFeatureMultiplicityMode) {
             case ONE_TARGET_MULTIPLE_ROLES:
                 assertThat(vdoc.spans()) //
@@ -523,11 +521,11 @@ class CurationSidebarRendererTest
         sut.render(vdoc, request);
 
         switch (aOverlapMode) {
-        case NO_OVERLAP, STACKING_ONLY:
+        case NO_OVERLAP, OVERLAP_ONLY:
             assertThat(vdoc.spans()) //
                     .isEmpty();
             break;
-        case OVERLAP_ONLY, ANY_OVERLAP:
+        case STACKING_ONLY, ANY_OVERLAP:
             switch (aLinkFeatureMultiplicityMode) {
             case ONE_TARGET_MULTIPLE_ROLES:
                 assertThat(vdoc.spans()) //
