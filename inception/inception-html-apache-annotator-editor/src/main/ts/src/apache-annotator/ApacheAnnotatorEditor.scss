@@ -46,6 +46,7 @@ html > body {
 .iaa-split-pane {
   display: flex;
   flex-direction: row;
+  flex-grow: 1;
   overflow: hidden;
 
   .iaa-divider {

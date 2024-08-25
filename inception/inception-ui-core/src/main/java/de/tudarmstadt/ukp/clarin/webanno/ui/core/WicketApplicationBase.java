@@ -31,6 +31,7 @@ import static org.apache.wicket.csp.CSPDirective.FONT_SRC;
 import static org.apache.wicket.csp.CSPDirective.FRAME_SRC;
 import static org.apache.wicket.csp.CSPDirective.IMG_SRC;
 import static org.apache.wicket.csp.CSPDirective.MANIFEST_SRC;
+import static org.apache.wicket.csp.CSPDirective.MEDIA_SRC;
 import static org.apache.wicket.csp.CSPDirective.SCRIPT_SRC;
 import static org.apache.wicket.csp.CSPDirective.STYLE_SRC;
 import static org.apache.wicket.csp.CSPDirectiveSrcValue.NONCE;
@@ -86,6 +87,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.WebAnnoJavascriptBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.theme.CustomThemeCssResourceBehavior;
 import de.tudarmstadt.ukp.inception.bootstrap.InceptionBootstrapCssReference;
 import de.tudarmstadt.ukp.inception.bootstrap.InceptionBootstrapResourceReference;
+import de.tudarmstadt.ukp.inception.security.config.CspProperties;
 import de.tudarmstadt.ukp.inception.support.SettingsUtil;
 import de.tudarmstadt.ukp.inception.support.jquery.JQueryJavascriptBehavior;
 import de.tudarmstadt.ukp.inception.support.jquery.JQueryUIResourceBehavior;
@@ -97,7 +99,6 @@ import de.tudarmstadt.ukp.inception.support.wicket.WicketUtil;
 import de.tudarmstadt.ukp.inception.support.wicket.resource.ContextSensitivePackageStringResourceLoader;
 import de.tudarmstadt.ukp.inception.ui.core.ErrorListener;
 import de.tudarmstadt.ukp.inception.ui.core.ErrorTestPage;
-import de.tudarmstadt.ukp.inception.ui.core.config.CspProperties;
 
 /**
  * The Wicket application class. Sets up pages, authentication, theme, and other application-wide
@@ -124,12 +125,18 @@ public abstract class WicketApplicationBase
                 .map(FixedCSPValue::new) //
                 .forEachOrdered(imgSrcValue::add);
 
+        var mediaSrcValue = new ArrayList<CSPRenderable>(asList(SELF));
+        cspProperties.getAllowedMediaSources().stream() //
+                .map(FixedCSPValue::new) //
+                .forEachOrdered(mediaSrcValue::add);
+
         getCspSettings().blocking().clear() //
                 .add(DEFAULT_SRC, NONE) //
                 .add(SCRIPT_SRC, NONCE, STRICT_DYNAMIC, UNSAFE_EVAL) //
                 // .add(STYLE_SRC, NONCE) //
                 .add(STYLE_SRC, SELF, UNSAFE_INLINE) //
                 .add(IMG_SRC, imgSrcValue.toArray(CSPRenderable[]::new)) //
+                .add(MEDIA_SRC, mediaSrcValue.toArray(CSPRenderable[]::new)) //
                 .add(CONNECT_SRC, SELF) //
                 .add(FONT_SRC, SELF) //
                 .add(MANIFEST_SRC, SELF) //
