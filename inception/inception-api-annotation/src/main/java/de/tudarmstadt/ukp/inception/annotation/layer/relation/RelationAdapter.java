@@ -19,21 +19,23 @@ package de.tudarmstadt.ukp.inception.annotation.layer.relation;
 
 import static de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationEndpointFeatureSupport.PREFIX_SOURCE;
 import static de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationEndpointFeatureSupport.PREFIX_TARGET;
+import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.hasSameType;
 import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectByAddr;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Collections.emptyList;
+import static org.apache.uima.cas.text.AnnotationPredicates.colocated;
 import static org.apache.uima.fit.util.CasUtil.getType;
 
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Objects;
 import java.util.function.Supplier;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
+import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.FSUtil;
 import org.slf4j.Logger;
@@ -51,7 +53,6 @@ import de.tudarmstadt.ukp.inception.rendering.selection.Selection;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
-import de.tudarmstadt.ukp.inception.schema.api.adapter.FeatureFilter;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
@@ -191,22 +192,22 @@ public class RelationAdapter
         return fs;
     }
 
-    public AnnotationFS getSourceAnnotation(AnnotationFS aTargetFs)
+    public AnnotationFS getSourceAnnotation(AnnotationFS aRelationFS)
     {
-        var sourceFeature = aTargetFs.getType().getFeatureByBaseName(sourceFeatureName);
+        var sourceFeature = aRelationFS.getType().getFeatureByBaseName(sourceFeatureName);
         if (sourceFeature == null) {
             return null;
         }
-        return (AnnotationFS) aTargetFs.getFeatureValue(sourceFeature);
+        return (AnnotationFS) aRelationFS.getFeatureValue(sourceFeature);
     }
 
-    public AnnotationFS getTargetAnnotation(AnnotationFS aTargetFs)
+    public AnnotationFS getTargetAnnotation(AnnotationFS aRelationFS)
     {
-        var targetFeature = aTargetFs.getType().getFeatureByBaseName(targetFeatureName);
+        var targetFeature = aRelationFS.getType().getFeatureByBaseName(targetFeatureName);
         if (targetFeature == null) {
             return null;
         }
-        return (AnnotationFS) aTargetFs.getFeatureValue(targetFeature);
+        return (AnnotationFS) aRelationFS.getFeatureValue(targetFeature);
     }
 
     public String getSourceFeatureName()
@@ -216,7 +217,9 @@ public class RelationAdapter
 
     public Feature getSourceFeature(CAS aCas)
     {
-        return getAnnotationType(aCas).getFeatureByBaseName(getSourceFeatureName());
+        return getAnnotationType(aCas) //
+                .map(type -> type.getFeatureByBaseName(getSourceFeatureName())) //
+                .orElse(null);
     }
 
     public String getTargetFeatureName()
@@ -226,7 +229,9 @@ public class RelationAdapter
 
     public Feature getTargetFeature(CAS aCas)
     {
-        return getAnnotationType(aCas).getFeatureByBaseName(getTargetFeatureName());
+        return getAnnotationType(aCas) //
+                .map(type -> type.getFeatureByBaseName(getTargetFeatureName())) //
+                .orElse(null);
     }
 
     @Override
@@ -261,29 +266,44 @@ public class RelationAdapter
     }
 
     @Override
-    public boolean equivalents(AnnotationFS aFs1, AnnotationFS aFs2, FeatureFilter aFilter)
+    public boolean isSamePosition(FeatureStructure aFS1, FeatureStructure aFS2)
     {
-        if (!super.equivalents(aFs1, aFs2, aFilter)) {
+        if (aFS1 == null || aFS2 == null) {
             return false;
         }
 
-        // So if the basic span-oriented comparison returned true, we still must ensure that the
-        // relation endpoints are also equivalent. Here, we only consider the endpoint type and
-        // position but not any other features.
-        var fs1Source = getSourceAnnotation(aFs1);
-        var fs1Target = getTargetAnnotation(aFs1);
-        var fs2Source = getSourceAnnotation(aFs2);
-        var fs2Target = getTargetAnnotation(aFs2);
+        if (!aFS1.getType().getName().equals(getAnnotationTypeName())) {
+            throw new IllegalArgumentException("Expected [" + getAnnotationTypeName()
+                    + "] but got [" + aFS1.getType().getName() + "]");
+        }
 
-        return sameBeginEndAndType(fs1Source, fs2Source)
-                && sameBeginEndAndType(fs1Target, fs2Target);
+        if (!aFS2.getType().getName().equals(getAnnotationTypeName())) {
+            throw new IllegalArgumentException("Expected [" + getAnnotationTypeName()
+                    + "] but got [" + aFS2.getType().getName() + "]");
+        }
+
+        if (aFS1 instanceof AnnotationFS ann1 && aFS2 instanceof AnnotationFS ann2) {
+            if (aFS1 == aFS2) {
+                return true;
+            }
+
+            // So if the basic span-oriented comparison returned true, we still must ensure that the
+            // relation endpoints are also equivalent. Here, we only consider the endpoint type and
+            // position but not any other features.
+            var fs1Source = getSourceAnnotation(ann1);
+            var fs1Target = getTargetAnnotation(ann1);
+            var fs2Source = getSourceAnnotation(ann2);
+            var fs2Target = getTargetAnnotation(ann2);
+
+            return isSameEndpoint(fs1Source, fs2Source) && isSameEndpoint(fs1Target, fs2Target);
+        }
+
+        throw new IllegalArgumentException("Feature structures need to be annotations");
     }
 
-    private boolean sameBeginEndAndType(AnnotationFS aFs1, AnnotationFS aFs2)
+    private boolean isSameEndpoint(AnnotationFS aFs1, AnnotationFS aFs2)
     {
-        return aFs1.getBegin() == aFs2.getBegin() && //
-                aFs1.getEnd() == aFs2.getEnd() && //
-                Objects.equals(aFs1.getType().getName(), aFs2.getType().getName());
+        return hasSameType(aFs1, aFs2) && colocated(aFs1, aFs2);
     }
 
     @Override

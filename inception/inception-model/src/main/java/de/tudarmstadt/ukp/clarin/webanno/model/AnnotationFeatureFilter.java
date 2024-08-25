@@ -15,13 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.schema.api.adapter;
+package de.tudarmstadt.ukp.clarin.webanno.model;
 
-import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 
 @FunctionalInterface
-public interface FeatureFilter
+public interface AnnotationFeatureFilter
 {
-    boolean isAllowed(FeatureStructure aFS, Feature aFeature);
+    boolean isAllowed(FeatureStructure aFS, AnnotationFeature aFeature);
 }

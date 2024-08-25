@@ -11,7 +11,7 @@
       <AppenderRef ref="ConsoleAppender" />
     </Root>
     
-    <Logger name="de.tudarmstadt.ukp.inception.curation.merge.CasMergeLinkFeature" level="TRACE" />
-    <Logger name="de.tudarmstadt.ukp.inception.curation.merge.CasMergeLinkTest" level="TRACE" />
+<!--     <Logger name="de.tudarmstadt.ukp.clarin.webanno.curation.casdiff" level="TRACE" /> -->
+<!--     <Logger name="de.tudarmstadt.ukp.inception.ui.curation.sidebar.render" level="TRACE" /> -->
   </Loggers>
 </Configuration>

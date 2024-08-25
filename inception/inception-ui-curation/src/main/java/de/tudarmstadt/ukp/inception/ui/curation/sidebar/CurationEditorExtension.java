@@ -260,7 +260,7 @@ public class CurationEditorExtension
         var doc = aState.getDocument();
         var casMerge = new CasMerge(annotationService, applicationEventPublisher);
         var mergeResult = casMerge.mergeRelationAnnotation(doc, aSrcUser, layer, aTargetCas,
-                sourceAnnotation, layer.isAllowStacking());
+                sourceAnnotation);
 
         // open created/updates FS in annotation detail editor panel
         var mergedAnno = selectAnnotationByAddr(aTargetCas, mergeResult.getResultFSAddress());
@@ -274,7 +274,7 @@ public class CurationEditorExtension
         var doc = aState.getDocument();
         var casMerge = new CasMerge(annotationService, applicationEventPublisher);
         var mergeResult = casMerge.mergeSpanAnnotation(doc, aSrcUser, layer, aTargetCas,
-                sourceAnnotation, layer.isAllowStacking());
+                sourceAnnotation);
 
         // open created/updates FS in annotation detail editor panel
         var mergedAnno = selectAnnotationByAddr(aTargetCas, mergeResult.getResultFSAddress());

@@ -25,8 +25,10 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.uima.cas.CAS;
@@ -70,8 +72,7 @@ import de.tudarmstadt.ukp.inception.ui.kb.config.KnowledgeBaseServiceUIAutoConfi
 public class MultiValueConceptFeatureSupport
     implements FeatureSupport<MultiValueConceptFeatureTraits>
 {
-    private static final Logger LOG = LoggerFactory
-            .getLogger(MultiValueConceptFeatureSupport.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     public static final String PREFIX = "kb-multi:";
 
@@ -216,6 +217,13 @@ public class MultiValueConceptFeatureSupport
         }
 
         return editor;
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public <V> V getDefaultFeatureValue(AnnotationFeature aFeature, FeatureStructure aFS)
+    {
+        return (V) Collections.emptyList();
     }
 
     @SuppressWarnings("unchecked")
