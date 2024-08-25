@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.ui.core.config;
+package de.tudarmstadt.ukp.inception.security.config;
 
 import static java.util.Collections.emptyList;
 
@@ -28,6 +28,7 @@ public class CspPropertiesImpl
     implements CspProperties
 {
     private List<String> allowedImageSources;
+    private List<String> allowedMediaSources;
 
     @Override
     public List<String> getAllowedImageSources()
@@ -39,8 +40,23 @@ public class CspPropertiesImpl
         return allowedImageSources;
     }
 
-    public void setAllowedImageSources(List<String> aAllowedImageSources)
+    public void setAllowedImageSources(List<String> aAllowedSources)
     {
-        allowedImageSources = aAllowedImageSources;
+        allowedImageSources = aAllowedSources;
+    }
+
+    @Override
+    public List<String> getAllowedMediaSources()
+    {
+        if (allowedMediaSources == null) {
+            return emptyList();
+        }
+
+        return allowedMediaSources;
+    }
+
+    public void setAllowedMediaSources(List<String> aAllowedSources)
+    {
+        allowedMediaSources = aAllowedSources;
     }
 }

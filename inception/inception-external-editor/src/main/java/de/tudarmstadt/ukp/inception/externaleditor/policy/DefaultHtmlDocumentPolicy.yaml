@@ -77,5 +77,23 @@ policies:
     action: PASS
     attributes: ["src"]
     matching: "res[?]resId=.*" # Allow only access to embedded resources
-
-  
+  # Audio - depending on the security configurations, the safety net may block these
+  - action: PASS
+    elements: ["audio"]
+  - on_elements: ["audio"]
+    action: PASS
+    attributes: ["controls", "controlslist", "loop", "muted", "preload", "autoplay"]
+  - on_elements: ["audio"]
+    action: PASS
+    attributes: ["src"]
+    matching: "res[?]resId=.*" # Allow only access to embedded resources
+  # Video - depending on the security configurations, the safety net may block these
+  - action: PASS
+    elements: ["video", "source"]
+  - on_elements: ["video"]
+    action: PASS
+    attributes: ["autoplay", "controls", "height", "loop", "muted", "preload", "width"]
+  - on_elements: ["video"]
+    action: PASS
+    attributes: ["src"]
+    matching: "res[?]resId=.*" # Allow only access to embedded resources

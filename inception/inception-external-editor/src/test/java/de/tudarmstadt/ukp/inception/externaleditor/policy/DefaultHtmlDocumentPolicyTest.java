@@ -36,12 +36,12 @@ class DefaultHtmlDocumentPolicyTest
     @Test
     void thatOverrideFileIsPickedUp(@TempDir Path aTemp) throws Exception
     {
-        Path policyFile = aTemp.resolve(HTML_POLICY_OVERRIDE_YAML);
+        var policyFile = aTemp.resolve(HTML_POLICY_OVERRIDE_YAML);
         setProperty(getPropApplicationHome(), aTemp.toString());
 
         var sut = new DefaultHtmlDocumentPolicy();
 
-        assertThat(sut.getPolicy().getElementPolicies()).hasSize(152);
+        assertThat(sut.getPolicy().getElementPolicies()).hasSize(158);
 
         write(policyFile.toFile(), "policies: []", UTF_8);
         assertThat(policyFile).exists();
@@ -54,6 +54,6 @@ class DefaultHtmlDocumentPolicyTest
 
         Files.delete(policyFile);
         assertThat(policyFile).doesNotExist();
-        assertThat(sut.getPolicy().getElementPolicies()).hasSize(152);
+        assertThat(sut.getPolicy().getElementPolicies()).hasSize(158);
     }
 }

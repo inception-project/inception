@@ -18,11 +18,9 @@
 package de.tudarmstadt.ukp.inception.io.html;
 
 import java.io.IOException;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
-import org.apache.james.mime4j.dom.Message;
-import org.apache.james.mime4j.dom.Multipart;
-import org.apache.james.mime4j.dom.TextBody;
-import org.apache.james.mime4j.message.DefaultMessageBuilder;
 import org.apache.uima.collection.CollectionException;
 import org.apache.uima.fit.descriptor.ConfigurationParameter;
 import org.apache.uima.fit.descriptor.MimeTypeCapability;
@@ -37,9 +35,9 @@ import org.jsoup.select.NodeTraversor;
 import de.tudarmstadt.ukp.inception.io.html.dkprocore.CasXmlNodeVisitor;
 
 /**
- * Reads the contents of a given URL and strips the HTML. Returns the textual contents.
+ * Reads the contents of a given URL and strips the HTML from a ZIP. Returns the textual contents. v
  */
-@ResourceMetaData(name = "MHTML Reader")
+@ResourceMetaData(name = "HTML Archive Reader")
 @MimeTypeCapability({ MimeTypes.APPLICATION_XHTML, MimeTypes.TEXT_HTML })
 @TypeCapability(outputs = { //
         "de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData", //
@@ -48,7 +46,7 @@ import de.tudarmstadt.ukp.inception.io.html.dkprocore.CasXmlNodeVisitor;
         "org.dkpro.core.api.xml.type.XmlElement", //
         "org.dkpro.core.api.xml.type.XmlNode", //
         "org.dkpro.core.api.xml.type.XmlTextNode" })
-public class MHtmlDocumentReader
+public class HtmlArchiveDocumentReader
     extends JCasResourceCollectionReader_ImplBase
 {
     /**
@@ -61,45 +59,25 @@ public class MHtmlDocumentReader
     @Override
     public void getNext(JCas aJCas) throws IOException, CollectionException
     {
-        Resource res = nextFile();
+        var res = nextFile();
         initCas(aJCas, res);
 
-        try (var is = res.getInputStream()) {
-            var builder = new DefaultMessageBuilder();
-            var message = builder.parseMessage(is);
-            var htmlDocument = getDocument(message);
-            try (var docIs = htmlDocument.getInputStream()) {
-                var charset = htmlDocument.getMimeCharset();
-                if ("US-ASCII".equals(charset)) {
-                    // mime4j uses US_ASCII as default and we cannot override it. While it may be
-                    // technically correct, e.g. Chrome seems to use UTF-8 by default but does not
-                    // provide an encoding the MHTML files... *sigh*
-                    charset = "UTF-8";
+        try (var zipFile = new ZipFile(res.getResource().getFile())) {
+            for (var zipEnumerate = zipFile.entries(); zipEnumerate.hasMoreElements();) {
+                var entry = (ZipEntry) zipEnumerate.nextElement();
+                if (entry.getName().endsWith("index.html") && !entry.getName().contains("/")) {
+                    var doc = Jsoup.parse(zipFile.getInputStream(entry), "UTF-8", "");
+                    var visitor = new CasXmlNodeVisitor(aJCas, normalizeWhitespace);
+                    NodeTraversor.traverse(visitor, doc);
+                    break;
                 }
-                var doc = Jsoup.parse(docIs, charset, "");
-
-                var visitor = new CasXmlNodeVisitor(aJCas, normalizeWhitespace);
-
-                NodeTraversor.traverse(visitor, doc);
             }
         }
-    }
-
-    private static TextBody getDocument(Message message) throws IOException
-    {
-        var documentUrl = message.getHeader().getField("Snapshot-Content-Location").getBody();
-
-        if (message.getBody() instanceof Multipart body) {
-            var documentPart = body.getBodyParts().stream() //
-                    .filter(e -> documentUrl
-                            .equals(e.getHeader().getField("Content-Location").getBody()))
-                    .findFirst().get();
-
-            if (documentPart.getBody() instanceof TextBody documentBody) {
-                return documentBody;
-            }
+        catch (IOException e) {
+            throw e;
         }
-
-        throw new IOException("Unable to locate embedded HTML document");
+        catch (Exception e) {
+            throw new CollectionException(e);
+        }
     }
 }

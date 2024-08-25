@@ -87,6 +87,21 @@ public class SafetyNetDocumentPolicy
         if (properties.isBlockAudio()) {
             policy.disallowElements("audio");
         }
+        else {
+            switch (properties.getAllowAudioSource()) {
+            case NONE:
+                policy.disallowAttributes("src").onElements("audio");
+                break;
+            case LOCAL:
+                policy.disallowAttributes("src") //
+                        .matching(compile("(?!res[?]resId=).*")) //
+                        .onElements("audio");
+                break;
+            case ANY:
+                // No restriction in this case
+                break;
+            }
+        }
 
         if (properties.isBlockEmbed()) {
             policy.disallowElements("embed");
@@ -117,6 +132,21 @@ public class SafetyNetDocumentPolicy
 
         if (properties.isBlockVideo()) {
             policy.disallowElements("video");
+        }
+        else {
+            switch (properties.getAllowVideoSource()) {
+            case NONE:
+                policy.disallowAttributes("src").onElements("source");
+                break;
+            case LOCAL:
+                policy.disallowAttributes("src") //
+                        .matching(compile("(?!res[?]resId=).*")) //
+                        .onElements("video");
+                break;
+            case ANY:
+                // No restriction in this case
+                break;
+            }
         }
 
         policy.disallowAttributes(JAVASCRIPT_ACTIVE_ATTRIBUTES) //
