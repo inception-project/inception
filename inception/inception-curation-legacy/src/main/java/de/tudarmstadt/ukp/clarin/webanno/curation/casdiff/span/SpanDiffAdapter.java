@@ -81,7 +81,8 @@ public class SpanDiffAdapter
 
     @Override
     public Position getPosition(FeatureStructure aFS, String aFeature, String aRole,
-            int aLinkTargetBegin, int aLinkTargetEnd, LinkFeatureMultiplicityMode aLinkCompareBehavior)
+            int aLinkTargetBegin, int aLinkTargetEnd,
+            LinkFeatureMultiplicityMode aLinkCompareBehavior)
     {
         AnnotationFS annoFS = (AnnotationFS) aFS;
 

@@ -194,6 +194,13 @@ public class RelationEndpointFeatureSupport
     }
 
     @Override
+    public <V> V getDefaultFeatureValue(AnnotationFeature aFeature, FeatureStructure aFS)
+    {
+        throw new NotImplementedException(
+                "Relation endpoints do not support getDefaultFeatureValue");
+    }
+
+    @Override
     public void setFeatureValue(CAS aCas, AnnotationFeature aFeature, int aAddress, Object aValue)
         throws AnnotationException
     {
@@ -209,6 +216,13 @@ public class RelationEndpointFeatureSupport
     @Override
     public boolean isAccessible(AnnotationFeature aFeature)
     {
+        return false;
+    }
+
+    @Override
+    public boolean isCopyOnCurationMerge(AnnotationFeature aFeature)
+    {
+        // End-points are merged as part of copying the annotation position
         return false;
     }
 }

@@ -37,17 +37,16 @@ import org.jsoup.select.NodeTraversor;
 import de.tudarmstadt.ukp.inception.io.html.dkprocore.CasXmlNodeVisitor;
 
 /**
- * Reads the contents of a given URL and strips the HTML. Returns the textual contents. Also
- * recognizes headings and paragraphs.
+ * Reads the contents of a given URL and strips the HTML. Returns the textual contents.
  */
 @ResourceMetaData(name = "MHTML Reader")
 @MimeTypeCapability({ MimeTypes.APPLICATION_XHTML, MimeTypes.TEXT_HTML })
 @TypeCapability(outputs = { //
-        "de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData",
-        "de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Heading",
-        "de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Paragraph",
-        "org.dkpro.core.api.xml.type.XmlAttribute", "org.dkpro.core.api.xml.type.XmlDocument",
-        "org.dkpro.core.api.xml.type.XmlElement", "org.dkpro.core.api.xml.type.XmlNode",
+        "de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData", //
+        "org.dkpro.core.api.xml.type.XmlAttribute", //
+        "org.dkpro.core.api.xml.type.XmlDocument", //
+        "org.dkpro.core.api.xml.type.XmlElement", //
+        "org.dkpro.core.api.xml.type.XmlNode", //
         "org.dkpro.core.api.xml.type.XmlTextNode" })
 public class MHtmlDocumentReader
     extends JCasResourceCollectionReader_ImplBase

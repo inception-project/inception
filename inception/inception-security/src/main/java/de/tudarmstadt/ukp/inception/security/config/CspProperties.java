@@ -15,13 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.schema.api.adapter;
+package de.tudarmstadt.ukp.inception.security.config;
 
-import org.apache.uima.cas.Feature;
-import org.apache.uima.cas.FeatureStructure;
+import java.util.List;
 
-@FunctionalInterface
-public interface FeatureFilter
+public interface CspProperties
 {
-    boolean isAllowed(FeatureStructure aFS, Feature aFeature);
+    List<String> getAllowedImageSources();
+
+    List<String> getAllowedMediaSources();
 }

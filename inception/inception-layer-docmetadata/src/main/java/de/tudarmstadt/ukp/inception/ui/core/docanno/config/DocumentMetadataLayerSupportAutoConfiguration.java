@@ -26,6 +26,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
+import de.tudarmstadt.ukp.inception.annotation.layer.behaviors.LayerBehaviorRegistry;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
@@ -67,10 +68,10 @@ public class DocumentMetadataLayerSupportAutoConfiguration
             FeatureSupportRegistry aFeatureSupportRegistry,
             ApplicationEventPublisher aEventPublisher,
             DocumentMetadataLayerSupportProperties aProperties,
-            ConstraintsService aConstraintsService)
+            LayerBehaviorRegistry aLayerBehaviorRegistry, ConstraintsService aConstraintsService)
     {
         return new DocumentMetadataLayerSupport(aFeatureSupportRegistry, aEventPublisher,
-                aProperties, aConstraintsService);
+                aProperties, aLayerBehaviorRegistry, aConstraintsService);
     }
 
     @Bean

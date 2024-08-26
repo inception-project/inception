@@ -112,7 +112,7 @@ public class XHtmlXmlDocumentViewControllerImpl
 
     private void renderXmlStylesheet(ContentHandler ch, String aStylesheetUrl) throws SAXException
     {
-        AttributesImpl attr = new AttributesImpl();
+        var attr = new AttributesImpl();
         attr.addAttribute(null, null, "rel", null, "stylesheet");
         attr.addAttribute(null, null, "type", null, "text/css");
         attr.addAttribute(null, null, "href", null, aStylesheetUrl);

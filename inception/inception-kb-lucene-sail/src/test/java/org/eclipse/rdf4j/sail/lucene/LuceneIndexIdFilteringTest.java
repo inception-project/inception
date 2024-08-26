@@ -113,7 +113,7 @@ public class LuceneIndexIdFilteringTest
             sailType3.shutDown();
         }
     }
-    
+
     private void initSails()
     {
         repository = new SailRepository(sailType1);

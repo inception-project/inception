@@ -65,6 +65,7 @@ import org.apache.uima.cas.impl.TypeSystemUtils;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.factory.CasFactory;
 import org.apache.uima.fit.util.CasUtil;
+import org.apache.uima.jcas.tcas.Annotation;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.FeatureDescription;
 import org.apache.uima.resource.metadata.TypeDescription;
@@ -1518,9 +1519,13 @@ public class AnnotationSchemaServiceImpl
     {
         var cas = aFs.getCAS();
         var result = new ArrayList<AttachedAnnotation>();
-        for (var layer : listAttachedRelationLayers(aLayer)) {
+        nextLayer: for (var layer : listAttachedRelationLayers(aLayer)) {
             var adapter = (RelationAdapter) getAdapter(layer);
-            var type = adapter.getAnnotationType(cas);
+            var maybeType = adapter.getAnnotationType(cas);
+            if (maybeType.isEmpty()) {
+                continue nextLayer;
+            }
+
             var sourceFeature = adapter.getSourceFeature(cas);
             var targetFeature = adapter.getTargetFeature(cas);
 
@@ -1536,7 +1541,7 @@ public class AnnotationSchemaServiceImpl
                         .getFeatureByBaseName(adapter.getAttachFeatureName());
             }
 
-            for (var relationFS : CasUtil.select(cas, type)) {
+            for (var relationFS : cas.<Annotation> select(maybeType.get())) {
                 if (!(relationFS instanceof AnnotationFS)) {
                     continue;
                 }

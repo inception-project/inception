@@ -257,6 +257,12 @@ public class RenderRequest
             return this;
         }
 
+        public Builder withAllLayers(List<AnnotationLayer> aLayers)
+        {
+            allLayers = aLayers;
+            return this;
+        }
+
         public Builder withVisibleLayers(List<AnnotationLayer> aLayers)
         {
             visibleLayers = aLayers;

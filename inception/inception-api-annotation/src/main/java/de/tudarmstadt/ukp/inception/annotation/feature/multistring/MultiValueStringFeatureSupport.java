@@ -113,6 +113,13 @@ public class MultiValueStringFeatureSupport
 
     @SuppressWarnings("unchecked")
     @Override
+    public <V> V getDefaultFeatureValue(AnnotationFeature aFeature, FeatureStructure aFS)
+    {
+        return (V) Collections.emptyList();
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
     public List<String> unwrapFeatureValue(AnnotationFeature aFeature, CAS aCAS, Object aValue)
     {
         if (aValue == null) {
@@ -306,5 +313,28 @@ public class MultiValueStringFeatureSupport
             }
         }
         return asList(results);
+    }
+
+    @Override
+    public <V> V getFeatureValue(AnnotationFeature aFeature, FeatureStructure aFS)
+    {
+        Object value;
+
+        var f = aFS.getType().getFeatureByBaseName(aFeature.getName());
+
+        if (f == null) {
+            value = null;
+        }
+        else if (f.getRange().isPrimitive()) {
+            value = FSUtil.getFeature(aFS, aFeature.getName(), Object.class);
+        }
+        else if (FSUtil.isMultiValuedFeature(aFS, f)) {
+            value = FSUtil.getFeature(aFS, aFeature.getName(), List.class);
+        }
+        else {
+            value = FSUtil.getFeature(aFS, aFeature.getName(), FeatureStructure.class);
+        }
+
+        return (V) wrapFeatureValue(aFeature, aFS.getCAS(), value);
     }
 }
