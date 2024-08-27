@@ -23,21 +23,21 @@ import java.util.Optional;
 
 import javax.xml.namespace.QName;
 
-public class ElementPolicy
+public class QNameElementPolicy
 {
     private final QName qName;
     private final ElementAction action;
-    private final Map<QName, AttributePolicy> attributePolicies;
+    private final Map<QName, QNameAttributePolicy> attributePolicies;
 
-    public ElementPolicy(ElementAction aAction)
+    public QNameElementPolicy(ElementAction aAction)
     {
         qName = null;
         action = aAction;
         attributePolicies = Collections.emptyMap();
     }
 
-    public ElementPolicy(QName aQName, ElementAction aAction,
-            Map<QName, AttributePolicy> aAttributePolicies)
+    public QNameElementPolicy(QName aQName, ElementAction aAction,
+            Map<QName, QNameAttributePolicy> aAttributePolicies)
     {
         qName = aQName;
         action = aAction;
@@ -54,30 +54,30 @@ public class ElementPolicy
         return action;
     }
 
-    public Optional<AttributePolicy> forAttribute(QName aElement, QName aAttributeUri,
+    public Optional<QNameAttributePolicy> forAttribute(QName aElement, QName aAttributeUri,
             String aAttributeType, String aAttributeValue)
     {
         return Optional.ofNullable(attributePolicies.get(aAttributeUri));
     }
 
-    public static ElementPolicy drop()
+    public static QNameElementPolicy drop()
     {
-        return new ElementPolicy(ElementAction.DROP);
+        return new QNameElementPolicy(ElementAction.DROP);
     }
 
-    public static ElementPolicy skip()
+    public static QNameElementPolicy skip()
     {
-        return new ElementPolicy(ElementAction.SKIP);
+        return new QNameElementPolicy(ElementAction.SKIP);
     }
 
-    public static ElementPolicy prune()
+    public static QNameElementPolicy prune()
     {
-        return new ElementPolicy(ElementAction.PRUNE);
+        return new QNameElementPolicy(ElementAction.PRUNE);
     }
 
-    public static ElementPolicy pass()
+    public static QNameElementPolicy pass()
     {
-        return new ElementPolicy(ElementAction.PASS);
+        return new QNameElementPolicy(ElementAction.PASS);
     }
 
     @Override

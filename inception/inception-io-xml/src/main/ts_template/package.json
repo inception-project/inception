@@ -1,0 +1,26 @@
+{
+  "name": "@inception-project/${project.artifactId}",
+  "version": "${semver}",
+  "type": "module",
+  "author": "INCEpTION Team",
+  "license": "(MIT AND Apache-2.0)",
+  "homepage": "https://github.com/inception-project/inception#readme",
+  "scripts": {
+    "build": "node build.mjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/inception-project/inception.git"
+  },
+  "bugs": {
+    "url": "https://github.com/inception-project/issues"
+  },
+  "dependencies": {
+    "bootstrap": "${bootstrap.version}"
+  },
+  "devDependencies": {
+    "sass": "${sass.version}",
+    "uuid": "${uuid.version}",
+    "yargs": "${yargs.version}"
+  }
+}

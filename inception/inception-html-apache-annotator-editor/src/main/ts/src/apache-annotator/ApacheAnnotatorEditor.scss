@@ -34,7 +34,8 @@ html > body {
 
 .iaa-document-container {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
+  flex-grow: 1;
   overflow: hidden;
 }
 
@@ -130,7 +131,7 @@ html > body {
         // ------------------------------
         // These properties fine-tune the position of the label
         font-size: 70%;
-        line-height: 1.7;
+        line-height: 1.8;
         padding-top: 0.30em;
         padding-bottom: 0.30em;
         vertical-align: text-top;

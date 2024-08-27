@@ -27,7 +27,6 @@ import java.io.StringWriter;
 import java.security.Principal;
 import java.util.Locale;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import javax.xml.XMLConstants;
 
@@ -216,9 +215,8 @@ public class XHtmlXmlDocumentViewControllerImpl
     private void renderHead(SourceDocument doc, ContentHandler ch) throws SAXException
     {
         ch.startElement(null, null, HEAD, null);
-        for (String cssUrl : formatRegistry.getFormatCssStylesheets(doc).stream()
-                .map(css -> ServletContextUtils.referenceToUrl(servletContext, css))
-                .collect(Collectors.toList())) {
+        for (var cssUrl : formatRegistry.getFormatCssStylesheets(doc).stream()
+                .map(css -> ServletContextUtils.referenceToUrl(servletContext, css)).toList()) {
             renderXmlStylesheet(ch, cssUrl);
         }
         ch.endElement(null, null, HEAD);

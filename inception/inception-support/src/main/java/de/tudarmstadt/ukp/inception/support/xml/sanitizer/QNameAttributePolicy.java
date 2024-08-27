@@ -17,44 +17,23 @@
  */
 package de.tudarmstadt.ukp.inception.support.xml.sanitizer;
 
-import java.util.Optional;
-import java.util.regex.Pattern;
-
 import javax.xml.namespace.QName;
 
-public class PatternAttributePolicy
-    extends DelegatingAttributePolicy
+public class QNameAttributePolicy
+    extends AttributePolicy
 {
-    private final Pattern pattern;
+    public static final QNameAttributePolicy UNDEFINED = new QNameAttributePolicy(null, null);
 
-    public PatternAttributePolicy(QName aQName, AttributeAction aAction, Pattern aPattern)
+    private final QName qName;
+
+    public QNameAttributePolicy(QName aQName, AttributeAction aAction)
     {
-        super(aQName, aAction);
-        pattern = aPattern;
+        super(aAction);
+        qName = aQName;
     }
 
-    @Override
-    public Optional<AttributeAction> apply(String aValue)
+    public QName getQName()
     {
-        if (pattern.matcher(aValue).matches()) {
-            return super.apply(aValue);
-        }
-
-        return chain(aValue);
-    }
-
-    @Override
-    public String toString()
-    {
-        var sb = new StringBuilder();
-        sb.append("[");
-        sb.append(pattern);
-        sb.append("] -> ");
-        sb.append(getAction());
-        if (getDelegate() != null) {
-            sb.append(" :: ");
-            sb.append(getDelegate().toString());
-        }
-        return sb.toString();
+        return qName;
     }
 }

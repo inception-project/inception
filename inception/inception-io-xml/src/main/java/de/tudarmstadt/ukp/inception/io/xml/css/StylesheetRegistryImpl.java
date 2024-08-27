@@ -15,39 +15,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.support.xml.sanitizer;
+package de.tudarmstadt.ukp.inception.io.xml.css;
 
-import java.util.Optional;
+import static java.util.Arrays.asList;
 
-import javax.xml.namespace.QName;
+import java.util.List;
 
-public abstract class DelegatingAttributePolicy
-    extends AttributePolicy
+import org.apache.wicket.request.resource.CssResourceReference;
+import org.apache.wicket.request.resource.ResourceReference;
+
+public class StylesheetRegistryImpl
+    implements StylesheetRegistry
 {
-    private AttributePolicy delegate;
-
-    public DelegatingAttributePolicy(QName aQName, AttributeAction aAction)
+    @Override
+    public List<ResourceReference> listStylesheetReferences()
     {
-        super(aQName, aAction);
-    }
-
-    // FIXME Would be way better if this class would be immutable!!!
-    public void setDelegate(AttributePolicy aDelegate)
-    {
-        delegate = aDelegate;
-    }
-
-    protected Optional<AttributeAction> chain(String aValue)
-    {
-        if (delegate != null) {
-            return delegate.apply(aValue);
-        }
-
-        return Optional.empty();
-    }
-
-    protected AttributePolicy getDelegate()
-    {
-        return delegate;
+        return asList(new CssResourceReference(getClass(), "dialogue.min.css"));
     }
 }
