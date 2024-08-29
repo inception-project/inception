@@ -67,6 +67,10 @@ policies:
   - action: PASS
     attributes: ["class"]
     matching: "[a-zA-Z0-9\\s,\\-_]+"
+  # Data attributes
+  - action: PASS
+    attribute_patterns: ["data-.*"]
+    matching: "[a-zA-Z0-9\\s,\\-_]+"
   # Images - depending on the security configurations, the safety net may block these
   - action: PASS
     elements: ["img"]

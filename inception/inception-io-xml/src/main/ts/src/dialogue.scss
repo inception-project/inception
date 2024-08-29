@@ -1,0 +1,72 @@
+/*
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+ 
+ body.i7n-template-dialogue {
+   background-color: beige;
+ }
+
+.i7n-template-dialogue {
+  p {
+    margin-bottom: 0px;
+  }
+
+  .message {
+    color: #000;
+    clear: both;
+    line-height: 18px;
+    font-size: 15px;
+    padding: 8px;
+    position: relative;
+    margin: 8px 0;
+    max-width: 85%;
+    word-wrap: break-word;
+
+    &::before {
+      font-size: small;
+      content: attr(data-actor);
+    }
+
+    .message-body {
+      display: block;
+    }
+  
+    &.message-sent {
+      background: #e1ffc7;
+      border-radius: 5px 0px 5px 5px;
+      float: right;
+    }
+    
+    &.message-received {
+      background: #fff;
+      border-radius: 0px 5px 5px 5px;
+      float: left;
+      
+    }
+
+    &.message-system {
+      clear: both;
+      display: block;
+      width: 60%;
+      margin-left: auto;
+      margin-right: auto;
+      background-color: rgb(231, 231, 158);
+      border-radius: 0.25em;
+      text-align: center;
+    }
+  }
+}
