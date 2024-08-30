@@ -733,6 +733,7 @@
                     <exclude>.factorypath</exclude>
                     <exclude>.gitignore</exclude>
                     <exclude>.checkstyle</exclude>
+                    <exclude>**/.asciidoctorconfig.adoc</exclude>
                     <exclude>**/.vscode/**/*</exclude>
                     <exclude>suppressions.xml</exclude>
                     <exclude>marker-*</exclude>
@@ -845,7 +846,7 @@
             <plugin>
               <groupId>org.apache.maven.plugins</groupId>
               <artifactId>maven-checkstyle-plugin</artifactId>
-              <version>3.3.0</version>
+              <version>3.5.0</version>
               <inherited>true</inherited>
               <dependencies>
                 <dependency>
@@ -856,7 +857,7 @@
                 <dependency>
                   <groupId>com.puppycrawl.tools</groupId>
                   <artifactId>checkstyle</artifactId>
-                  <version>10.14.2</version>
+                  <version>10.18.1</version>
                 </dependency>
               </dependencies>
               <configuration>
