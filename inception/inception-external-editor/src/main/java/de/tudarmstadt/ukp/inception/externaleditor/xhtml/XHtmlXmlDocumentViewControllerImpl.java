@@ -18,8 +18,12 @@
 package de.tudarmstadt.ukp.inception.externaleditor.xhtml;
 
 import static java.lang.invoke.MethodHandles.lookup;
+import static java.util.Optional.ofNullable;
 import static org.slf4j.LoggerFactory.getLogger;
 import static org.springframework.http.HttpStatus.OK;
+import static org.springframework.http.MediaType.IMAGE_GIF;
+import static org.springframework.http.MediaType.IMAGE_JPEG;
+import static org.springframework.http.MediaType.IMAGE_PNG;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -30,6 +34,7 @@ import java.util.Optional;
 
 import javax.xml.XMLConstants;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.uima.cas.CAS;
 import org.dkpro.core.api.xml.type.XmlDocument;
 import org.dkpro.core.api.xml.type.XmlElement;
@@ -70,6 +75,8 @@ public class XHtmlXmlDocumentViewControllerImpl
     extends XmlDocumentViewControllerImplBase
     implements XHtmlXmlDocumentViewController
 {
+    private static final MediaType IMAGE_SVG = MediaType.parseMediaType("image/svg+xml");
+
     private static final Logger LOG = getLogger(lookup().lookupClass());
 
     private static final String GET_DOCUMENT_PATH = "/p/{projectId}/d/{documentId}/xml";
@@ -282,6 +289,9 @@ public class XHtmlXmlDocumentViewControllerImpl
         try {
             var inputStream = formatSupport.openResourceStream(srcDocFile, aResourceId);
             var httpHeaders = new HttpHeaders();
+
+            getContentType(aResourceId).ifPresent(httpHeaders::setContentType);
+
             return new ResponseEntity<>(new InputStreamResource(inputStream), httpHeaders, OK);
         }
         catch (FileNotFoundException e) {
@@ -292,6 +302,24 @@ public class XHtmlXmlDocumentViewControllerImpl
             LOG.debug("Unable to load resource [{}] for document {}", aResourceId, srcDoc, e);
             return ResponseEntity.notFound().build();
         }
+    }
+
+    private Optional<MediaType> getContentType(String aResourceId)
+    {
+        var suffix = StringUtils.substringAfterLast(aResourceId, ".");
+
+        if (suffix == null) {
+            return Optional.empty();
+        }
+
+        return ofNullable(switch (suffix) {
+        case "svg" -> IMAGE_SVG;
+        case "png" -> IMAGE_PNG;
+        case "gif" -> IMAGE_GIF;
+        case "jpg" -> IMAGE_JPEG;
+        case "jpeg" -> IMAGE_JPEG;
+        default -> null;
+        });
     }
 
     private ResponseEntity<String> toResponse(StringWriter aOut)

@@ -69,14 +69,7 @@ public class MHtmlDocumentReader
             var message = builder.parseMessage(is);
             var htmlDocument = getDocument(message);
             try (var docIs = htmlDocument.getInputStream()) {
-                var charset = htmlDocument.getMimeCharset();
-                if ("US-ASCII".equals(charset)) {
-                    // mime4j uses US_ASCII as default and we cannot override it. While it may be
-                    // technically correct, e.g. Chrome seems to use UTF-8 by default but does not
-                    // provide an encoding the MHTML files... *sigh*
-                    charset = "UTF-8";
-                }
-                var doc = Jsoup.parse(docIs, charset, "");
+                var doc = Jsoup.parse(docIs, null, "");
 
                 var visitor = new CasXmlNodeVisitor(aJCas, normalizeWhitespace);
 
