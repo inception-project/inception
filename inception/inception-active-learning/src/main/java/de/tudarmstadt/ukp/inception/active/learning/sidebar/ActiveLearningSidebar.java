@@ -43,8 +43,6 @@ import java.util.Objects;
 import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.Feature;
-import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.wicket.Component;
@@ -993,10 +991,11 @@ public class ActiveLearningSidebar
 
     private Optional<AnnotationFS> getMatchingAnnotation(CAS aCas, LearningRecord aRecord)
     {
-        Type type = CasUtil.getType(aCas, alStateModel.getObject().getLayer().getName());
-        Feature feature = type.getFeatureByBaseName(aRecord.getAnnotationFeature().getName());
+        var type = CasUtil.getType(aCas, alStateModel.getObject().getLayer().getName());
+        var feature = type.getFeatureByBaseName(aRecord.getAnnotationFeature().getName());
         return selectAt(aCas, type, aRecord.getOffsetBegin(), aRecord.getOffsetEnd()).stream()
-                .filter(fs -> aRecord.getAnnotation().equals(fs.getFeatureValueAsString(feature)))
+                .filter(fs -> Objects.equals(aRecord.getAnnotation(),
+                        fs.getFeatureValueAsString(feature)))
                 .findFirst();
     }
 

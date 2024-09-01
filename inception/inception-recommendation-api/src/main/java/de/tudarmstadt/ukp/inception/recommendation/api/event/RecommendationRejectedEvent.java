@@ -21,6 +21,7 @@ import org.springframework.context.ApplicationEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 
 public class RecommendationRejectedEvent
     extends ApplicationEvent
@@ -30,31 +31,18 @@ public class RecommendationRejectedEvent
 
     private final SourceDocument document;
     private final String user;
-    private final int begin;
-    private final int end;
-    private final String text;
+    private final AnnotationSuggestion suggestion;
     private final AnnotationFeature feature;
-    private final Object recommendedValue;
 
     public RecommendationRejectedEvent(Object aSource, SourceDocument aDocument, String aUser,
-            AnnotationFeature aFeature, Object aRecommendedValue)
-    {
-        this(aSource, aDocument, aUser, -1, -1, null, aFeature, aRecommendedValue);
-    }
-
-    public RecommendationRejectedEvent(Object aSource, SourceDocument aDocument, String aUser,
-            int aBegin, int aEnd, String aText, AnnotationFeature aFeature,
-            Object aRecommendedValue)
+            AnnotationFeature aFeature, AnnotationSuggestion aSuggestion)
     {
         super(aSource);
 
         document = aDocument;
         user = aUser;
-        begin = aBegin;
-        end = aEnd;
-        text = aText;
         feature = aFeature;
-        recommendedValue = aRecommendedValue;
+        suggestion = aSuggestion;
     }
 
     @Override
@@ -69,29 +57,14 @@ public class RecommendationRejectedEvent
         return user;
     }
 
-    public int getBegin()
+    public AnnotationSuggestion getSuggestion()
     {
-        return begin;
-    }
-
-    public int getEnd()
-    {
-        return end;
-    }
-
-    public String getText()
-    {
-        return text;
+        return suggestion;
     }
 
     public AnnotationFeature getFeature()
     {
         return feature;
-    }
-
-    public Object getRecommendedValue()
-    {
-        return recommendedValue;
     }
 
     @Override
@@ -106,16 +79,10 @@ public class RecommendationRejectedEvent
             builder.append(user);
             builder.append(", ");
         }
-        builder.append("begin=");
-        builder.append(begin);
-        builder.append("end=");
-        builder.append(end);
-        builder.append("text=");
-        builder.append(text);
         builder.append(", feature=");
         builder.append(feature.getName());
-        builder.append(", recommendedValue=");
-        builder.append(recommendedValue);
+        builder.append(", suggestion=");
+        builder.append(suggestion);
         builder.append("]");
         return builder.toString();
     }
