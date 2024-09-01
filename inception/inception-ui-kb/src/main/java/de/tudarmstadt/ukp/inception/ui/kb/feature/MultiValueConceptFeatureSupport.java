@@ -248,23 +248,23 @@ public class MultiValueConceptFeatureSupport
             return null;
         }
 
-        if (aValue instanceof List) {
-            var traits = readTraits(aFeature);
-            var wrapped = new ArrayList<KBHandle>();
+        var traits = readTraits(aFeature);
+        var wrapped = new ArrayList<KBHandle>();
 
-            for (Object item : (List<?>) aValue) {
+        if (aValue instanceof String identifier) {
+            wrapped.add(getConcept(aFeature, traits, identifier));
+            return wrapped;
+        }
+
+        if (aValue instanceof List) {
+            for (var item : (List<?>) aValue) {
                 if (item instanceof KBHandle) {
                     wrapped.add((KBHandle) item);
                     continue;
                 }
 
-                if (item instanceof String) {
-                    var identifier = (String) item;
-                    var chbk = labelCache.get(aFeature, traits.getRepositoryId(), identifier);
-                    var clone = new KBHandle(chbk.getIdentifier(), chbk.getUiLabel(),
-                            chbk.getDescription(), chbk.getLanguage());
-                    clone.setKB(chbk.getKB());
-                    wrapped.add(clone);
+                if (item instanceof String identifier) {
+                    wrapped.add(getConcept(aFeature, traits, identifier));
                     continue;
                 }
 
@@ -277,6 +277,16 @@ public class MultiValueConceptFeatureSupport
 
         throw new IllegalArgumentException(
                 "Unable to handle value [" + aValue + "] of type [" + aValue.getClass() + "]");
+    }
+
+    private KBHandle getConcept(AnnotationFeature aFeature, MultiValueConceptFeatureTraits traits,
+            String identifier)
+    {
+        var chbk = labelCache.get(aFeature, traits.getRepositoryId(), identifier);
+        var clone = new KBHandle(chbk.getIdentifier(), chbk.getUiLabel(), chbk.getDescription(),
+                chbk.getLanguage());
+        clone.setKB(chbk.getKB());
+        return clone;
     }
 
     @Override
