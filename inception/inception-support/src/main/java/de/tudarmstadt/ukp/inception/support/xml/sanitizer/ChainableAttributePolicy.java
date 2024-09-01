@@ -17,36 +17,22 @@
  */
 package de.tudarmstadt.ukp.inception.support.xml.sanitizer;
 
-import java.util.Map;
-import java.util.function.Supplier;
+import java.util.Optional;
 
-import javax.xml.namespace.QName;
-
-public class ElementPolicyBuilder
+public interface ChainableAttributePolicy
 {
-    private final QName qName;
-    private final ElementAction action;
+    // FIXME Would be way better if this class would be immutable!!!
+    void setDelegate(AttributePolicy aDelegate);
 
-    private final Map<QName, QNameAttributePolicy> attributePolicies;
+    AttributePolicy getDelegate();
 
-    @SuppressWarnings({ "rawtypes", "unchecked" })
-    public ElementPolicyBuilder(QName aQname, ElementAction aAction,
-            Supplier<? extends Map> aMapSupplier)
+    default Optional<AttributeAction> chain(String aValue)
     {
-        qName = aQname;
-        action = aAction;
-        attributePolicies = aMapSupplier.get();
-    }
-
-    public QNameElementPolicy build()
-    {
-        return new QNameElementPolicy(qName, action, attributePolicies);
-    }
-
-    public void attributePolicies(Map<QName, QNameAttributePolicy> aMap)
-    {
-        if (aMap != null) {
-            attributePolicies.putAll(aMap);
+        var delegate = getDelegate();
+        if (delegate != null) {
+            return delegate.apply(aValue);
         }
+
+        return Optional.empty();
     }
 }

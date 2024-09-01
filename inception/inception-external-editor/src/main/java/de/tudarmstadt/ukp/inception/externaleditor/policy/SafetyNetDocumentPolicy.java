@@ -94,7 +94,7 @@ public class SafetyNetDocumentPolicy
                 break;
             case LOCAL:
                 policy.disallowAttributes("src") //
-                        .matching(compile("(?!res[?]resId=).*")) //
+                        .matchingValue(compile("(?!res[?]resId=).*")) //
                         .onElements("audio");
                 break;
             case ANY:
@@ -117,7 +117,7 @@ public class SafetyNetDocumentPolicy
                 break;
             case LOCAL:
                 policy.disallowAttributes("src") //
-                        .matching(compile("(?!res[?]resId=).*")) //
+                        .matchingValue(compile("(?!res[?]resId=).*")) //
                         .onElements("img");
                 break;
             case ANY:
@@ -140,7 +140,7 @@ public class SafetyNetDocumentPolicy
                 break;
             case LOCAL:
                 policy.disallowAttributes("src") //
-                        .matching(compile("(?!res[?]resId=).*")) //
+                        .matchingValue(compile("(?!res[?]resId=).*")) //
                         .onElements("video");
                 break;
             case ANY:
@@ -150,7 +150,7 @@ public class SafetyNetDocumentPolicy
         }
 
         policy.disallowAttributes(JAVASCRIPT_ACTIVE_ATTRIBUTES) //
-                .matching(compile("\\s*javascript:.*")) //
+                .matchingValue(compile("\\s*javascript:.*")) //
                 .globally();
 
         policy.disallowAttributes(JAVASCRIPT_EVENT_ATTRIBUTES).globally();
