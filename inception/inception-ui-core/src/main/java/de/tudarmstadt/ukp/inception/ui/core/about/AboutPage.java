@@ -23,12 +23,11 @@ import static java.lang.String.join;
 import static java.util.Comparator.comparing;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.groupingBy;
-import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.defaultString;
+import static org.apache.wicket.RuntimeConfigurationType.DEVELOPMENT;
 
 import java.time.Year;
 
-import org.apache.wicket.Component;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.link.BookmarkablePageLink;
 import org.apache.wicket.model.StringResourceModel;
@@ -73,14 +72,15 @@ public class AboutPage
                 .forEach(l -> buf.append(l).append("\n"));
         buf.append("\n");
 
+        var developerMode = isDeveloper();
         var groupedBySource = dependencies.stream().collect(
                 groupingBy(d -> defaultString(d.getSource(), "UNKNOWN (no source declared)")));
-        for (var groupKey : groupedBySource.keySet().stream().sorted().collect(toList())) {
+        for (var groupKey : groupedBySource.keySet().stream().sorted().toList()) {
             buf.append("===== ").append(groupKey).append(" =====\n");
             for (var dep : groupedBySource.get(groupKey).stream()
-                    .sorted(comparing(Dependency::getName)).collect(toList())) {
+                    .sorted(comparing(Dependency::getName)).distinct().toList()) {
                 buf.append(dep.getName());
-                if (dep.getVersion() != null) {
+                if (dep.getVersion() != null && developerMode) {
                     buf.append(" ").append(dep.getVersion());
                 }
                 if (dep.getUrl() != null) {
@@ -96,10 +96,15 @@ public class AboutPage
         }
 
         add(new Label("dependencies", buf));
-        Component copyright = new Label("copyright", new StringResourceModel("copyright")
+        var copyright = new Label("copyright", new StringResourceModel("copyright")
                 .setParameters(Integer.toString(Year.now().getValue())));
         copyright.setEscapeModelStrings(false); // SAFE - I18N STRING WITH NO USER-CONTROLLABLE DATA
         add(copyright);
         add(new BookmarkablePageLink<>("home", getApplication().getHomePage()));
+    }
+
+    private boolean isDeveloper()
+    {
+        return DEVELOPMENT.equals(getApplication().getConfigurationType());
     }
 }
