@@ -43,6 +43,11 @@ The Content Security Policy (CSP) are sent to the browser and interpreted by the
 | URLs from which media (audio/video) can be loaded
 | *none*
 | `https://upload.wikimedia.org`
+
+| `security.csp.allowed-frame-ancestors`
+| URLs which can embed {product-name} in IFrames
+| *none*
+| `https://my-domain.com/embedding-application`
 |===
 
 Related to the CSP settings are the content policy setting for the HTML-based annotation editors and related formats such as MHTML or HTML (ZIP).

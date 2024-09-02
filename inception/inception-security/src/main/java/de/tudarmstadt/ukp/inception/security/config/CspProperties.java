@@ -24,4 +24,6 @@ public interface CspProperties
     List<String> getAllowedImageSources();
 
     List<String> getAllowedMediaSources();
+
+    List<String> getAllowedFrameAncestors();
 }
