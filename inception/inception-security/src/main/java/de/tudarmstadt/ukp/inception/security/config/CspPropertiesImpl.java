@@ -30,6 +30,8 @@ public class CspPropertiesImpl
     private List<String> allowedImageSources;
     private List<String> allowedMediaSources;
 
+    private List<String> allowedFrameAncestors;
+
     @Override
     public List<String> getAllowedImageSources()
     {
@@ -58,5 +60,20 @@ public class CspPropertiesImpl
     public void setAllowedMediaSources(List<String> aAllowedSources)
     {
         allowedMediaSources = aAllowedSources;
+    }
+
+    @Override
+    public List<String> getAllowedFrameAncestors()
+    {
+        if (allowedFrameAncestors == null) {
+            return emptyList();
+        }
+
+        return allowedFrameAncestors;
+    }
+
+    public void setAllowedFrameAncestors(List<String> aAllowedFrameAncestors)
+    {
+        allowedFrameAncestors = aAllowedFrameAncestors;
     }
 }

@@ -28,6 +28,7 @@ import static org.apache.wicket.csp.CSPDirective.CHILD_SRC;
 import static org.apache.wicket.csp.CSPDirective.CONNECT_SRC;
 import static org.apache.wicket.csp.CSPDirective.DEFAULT_SRC;
 import static org.apache.wicket.csp.CSPDirective.FONT_SRC;
+import static org.apache.wicket.csp.CSPDirective.FORM_ACTION;
 import static org.apache.wicket.csp.CSPDirective.FRAME_SRC;
 import static org.apache.wicket.csp.CSPDirective.IMG_SRC;
 import static org.apache.wicket.csp.CSPDirective.MANIFEST_SRC;
@@ -54,6 +55,7 @@ import org.apache.wicket.authorization.strategies.CompoundAuthorizationStrategy;
 import org.apache.wicket.authroles.authorization.strategies.role.RoleAuthorizationStrategy;
 import org.apache.wicket.coep.CrossOriginEmbedderPolicyConfiguration;
 import org.apache.wicket.coep.CrossOriginEmbedderPolicyRequestCycleListener;
+import org.apache.wicket.csp.CSPDirective;
 import org.apache.wicket.csp.CSPRenderable;
 import org.apache.wicket.csp.FixedCSPValue;
 import org.apache.wicket.devutils.stateless.StatelessChecker;
@@ -130,6 +132,11 @@ public abstract class WicketApplicationBase
                 .map(FixedCSPValue::new) //
                 .forEachOrdered(mediaSrcValue::add);
 
+        var frameAncestorsValue = new ArrayList<CSPRenderable>(asList(SELF));
+        cspProperties.getAllowedFrameAncestors().stream() //
+                .map(FixedCSPValue::new) //
+                .forEachOrdered(frameAncestorsValue::add);
+
         getCspSettings().blocking().clear() //
                 .add(DEFAULT_SRC, NONE) //
                 .add(SCRIPT_SRC, NONCE, STRICT_DYNAMIC, UNSAFE_EVAL) //
@@ -142,6 +149,9 @@ public abstract class WicketApplicationBase
                 .add(MANIFEST_SRC, SELF) //
                 .add(CHILD_SRC, SELF) //
                 .add(FRAME_SRC, SELF) //
+                .add(FORM_ACTION, SELF) //
+                .add(CSPDirective.FRAME_ANCESTORS,
+                        frameAncestorsValue.toArray(CSPRenderable[]::new))
                 .add(BASE_URI, SELF); //
 
         // CSRF
