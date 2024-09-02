@@ -22,7 +22,9 @@ import static org.apache.uima.cas.text.AnnotationPredicates.colocated;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.uima.cas.CAS;
@@ -92,6 +94,15 @@ public class NamedEntityLinker
         var predictedFeature = getPredictedFeature(aCas);
 
         var candidates = aCas.<Annotation> select(predictedType).coveredBy(aBegin, aEnd).asList();
+
+        var alreadyLinkedConcepts = new HashSet<String>();
+        for (var candidate : candidates) {
+            var conceptId = candidate.getFeatureValueAsString(predictedFeature);
+            if (conceptId != null) {
+                alreadyLinkedConcepts.add(conceptId);
+            }
+        }
+
         Annotation prevCandidate = null;
         for (var candidate : candidates) {
             if (prevCandidate != null && colocated(candidate, prevCandidate)) {
@@ -109,7 +120,7 @@ public class NamedEntityLinker
             }
 
             predictSingle(candidate.getCoveredText(), candidate.getBegin(), candidate.getEnd(),
-                    aCas);
+                    aCas, alreadyLinkedConcepts);
 
             prevCandidate = candidate;
         }
@@ -117,7 +128,8 @@ public class NamedEntityLinker
         return rangeCoveringAnnotations(candidates);
     }
 
-    private void predictSingle(String aCoveredText, int aBegin, int aEnd, CAS aCas)
+    private void predictSingle(String aCoveredText, int aBegin, int aEnd, CAS aCas,
+            Set<String> aAlreadyLinkedConcepts)
     {
         var handles = new ArrayList<KBHandle>();
 
@@ -144,12 +156,22 @@ public class NamedEntityLinker
         var predictedFeature = getPredictedFeature(aCas);
         var isPredictionFeature = getIsPredictionFeature(aCas);
 
-        for (var prediction : handles.stream().limit(recommender.getMaxRecommendations())
-                .toList()) {
+        var suggestionsCreated = 0;
+        for (var prediction : handles.stream().toList()) {
+            if (aAlreadyLinkedConcepts.contains(prediction.getIdentifier())) {
+                // If there concept has already been linked to another annotation, do not offer it
+                // again
+                continue;
+            }
+
             var annotation = aCas.createAnnotation(predictedType, aBegin, aEnd);
             annotation.setStringValue(predictedFeature, prediction.getIdentifier());
             annotation.setBooleanValue(isPredictionFeature, true);
             aCas.addFsToIndexes(annotation);
+            suggestionsCreated++;
+            if (suggestionsCreated >= recommender.getMaxRecommendations()) {
+                break;
+            }
         }
     }
 
