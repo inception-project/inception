@@ -15,20 +15,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.api.recommender;
+package de.tudarmstadt.ukp.inception.recommendation.config;
 
-import org.apache.wicket.markup.html.panel.GenericPanel;
-import org.apache.wicket.model.IModel;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 
-import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
-
-public class AbstractTraitsEditor
-    extends GenericPanel<Recommender>
+/**
+ * <p>
+ * This class is exposed as a Spring Component via {@link RecommenderServiceAutoConfiguration}.
+ * </p>
+ */
+@ConfigurationProperties("recommender.interactive")
+public class InteractiveRecommenderPropertiesImpl
+    implements InteractiveRecommenderProperties
 {
-    private static final long serialVersionUID = -5826029092354401342L;
+    private boolean enabled;
 
-    public AbstractTraitsEditor(String aId, IModel<Recommender> aRecommender)
+    @Override
+    public boolean isEnabled()
     {
-        super(aId, aRecommender);
+        return enabled;
+    }
+
+    public void setEnabled(boolean aEnabled)
+    {
+        enabled = aEnabled;
     }
 }

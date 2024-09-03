@@ -19,6 +19,8 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.chatgpt;
 
 import static de.tudarmstadt.ukp.inception.recommendation.imls.chatgpt.ChatGptRecommenderTraits.DEFAULT_CHATGPT_URL;
 import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CHANGE_EVENT;
+import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
+import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhenNot;
 import static de.tudarmstadt.ukp.inception.support.wicket.WicketUtil.wrapInTryCatch;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
@@ -29,6 +31,8 @@ import java.util.Collections;
 import java.util.List;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.markup.html.WebMarkupContainer;
+import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
@@ -48,6 +52,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.AbstractTraitsEditor;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
+import de.tudarmstadt.ukp.inception.recommendation.config.InteractiveRecommenderProperties;
 import de.tudarmstadt.ukp.inception.recommendation.imls.chatgpt.client.ChatGptClientImpl;
 import de.tudarmstadt.ukp.inception.recommendation.imls.chatgpt.client.ChatGptModel;
 import de.tudarmstadt.ukp.inception.recommendation.imls.chatgpt.client.ListModelsRequest;
@@ -68,6 +73,7 @@ public class ChatGptRecommenderTraitsEditor
 
     private @SpringBean RecommendationService recommendationService;
     private @SpringBean RecommendationEngineFactory<ChatGptRecommenderTraits> toolFactory;
+    private @SpringBean InteractiveRecommenderProperties properties;
 
     private final CompoundPropertyModel<ChatGptRecommenderTraits> traits;
 
@@ -95,14 +101,6 @@ public class ChatGptRecommenderTraitsEditor
             }
         };
         form.setOutputMarkupPlaceholderTag(true);
-
-        var presetSelect = new DropDownChoice<Preset>("preset");
-        presetSelect.setModel(Model.of());
-        presetSelect.setChoiceRenderer(new ChoiceRenderer<>("name"));
-        presetSelect.setChoices(aPresets);
-        presetSelect.add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT,
-                _target -> applyPreset(form, presetSelect.getModelObject(), _target)));
-        form.add(presetSelect);
 
         var modelsModel = LoadableDetachableModel.of(this::listModels);
         var model = new ComboBox<String>("model", modelsModel);
@@ -133,17 +131,38 @@ public class ChatGptRecommenderTraitsEditor
         authenticationTraitsEditor = new ApiKeyAuthenticationTraitsEditor("authentication",
                 Model.of((ApiKeyAuthenticationTraits) traits.getObject().getAuthentication()));
         form.add(authenticationTraitsEditor);
-        form.add(new TextArea<String>("prompt"));
+
+        var promptContainer = new WebMarkupContainer("promptContainer");
+        promptContainer.setOutputMarkupPlaceholderTag(true);
+        promptContainer.add(visibleWhenNot(traits.map(ChatGptRecommenderTraits::isInteractive)));
+        form.add(promptContainer);
+
+        var presetSelect = new DropDownChoice<Preset>("preset");
+        presetSelect.setModel(Model.of());
+        presetSelect.setChoiceRenderer(new ChoiceRenderer<>("name"));
+        presetSelect.setChoices(aPresets);
+        presetSelect.add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT,
+                _target -> applyPreset(form, presetSelect.getModelObject(), _target)));
+        promptContainer.add(presetSelect);
+
+        promptContainer.add(new TextArea<String>("prompt"));
         var markdownLabel = new MarkdownLabel("promptHints",
                 LoadableDetachableModel.of(this::getPromptHints));
         markdownLabel.setOutputMarkupId(true);
-        form.add(markdownLabel);
-        form.add(new PromptingModeSelect("promptingMode")
+        promptContainer.add(markdownLabel);
+        promptContainer.add(new PromptingModeSelect("promptingMode")
                 .add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT,
                         _target -> _target.add(markdownLabel))));
-        form.add(new ExtractionModeSelect("extractionMode", traits.bind("extractionMode"),
-                getModel()));
-        form.add(new ChatGptResponseFormatSelect("format"));
+        promptContainer.add(new ExtractionModeSelect("extractionMode",
+                traits.bind("extractionMode"), getModel()));
+        promptContainer.add(new ChatGptResponseFormatSelect("format"));
+
+        form.add(new CheckBox("interactive") //
+                .setOutputMarkupId(true) //
+                .add(visibleWhen(properties::isEnabled)) //
+                .add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT,
+                        $ -> $.add(promptContainer))));
+
         add(form);
     }
 

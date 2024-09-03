@@ -117,6 +117,12 @@ public class OllamaRecommenderFactory
         return false;
     }
 
+    @Override
+    public boolean isInteractive(Recommender aRecommender)
+    {
+        return readTraits(aRecommender).isInteractive();
+    }
+
     private List<Preset> getPresets()
     {
         try {

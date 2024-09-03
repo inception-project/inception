@@ -1554,8 +1554,8 @@ public class RecommendationServiceImpl
             var it = evaluatedRecommenders.mapIterator();
 
             while (it.hasNext()) {
-                AnnotationLayer layer = it.next();
-                EvaluatedRecommender rec = it.getValue();
+                var layer = it.next();
+                var rec = it.getValue();
                 if (!rec.getRecommender().equals(aRecommender)) {
                     newEvaluatedRecommenders.put(layer, rec);
                 }

@@ -74,6 +74,20 @@ public class OllamaRecommenderTraitsEditor
 {
     private static final long serialVersionUID = 1677442652521110324L;
 
+    private static final String MID_OPTION_SETTINGS = "optionSettings";
+    private static final String MID_OPTION_SETTINGS_CONTAINER = "optionSettingsContainer";
+    private static final String MID_PROMPT_HINTS = "promptHints";
+    private static final String MID_RAW = "raw";
+    private static final String MID_PROMPT = "prompt";
+    private static final String MID_OPTION_SETTINGS_FORM = "optionSettingsForm";
+    private static final String MID_ADD_OPTION = "addOption";
+    private static final String MID_OPTION = "option";
+    private static final String MID_FORMAT = "format";
+    private static final String MID_EXTRACTION_MODE = "extractionMode";
+    private static final String MID_PROMPTING_MODE = "promptingMode";
+    private static final String MID_URL = "url";
+    private static final String MID_MODEL = "model";
+    private static final String MID_PRESET = "preset";
     private static final String MID_FORM = "form";
 
     private @SpringBean RecommendationService recommendationService;
@@ -106,7 +120,7 @@ public class OllamaRecommenderTraitsEditor
         };
         form.setOutputMarkupPlaceholderTag(true);
 
-        var presetSelect = new DropDownChoice<Preset>("preset");
+        var presetSelect = new DropDownChoice<Preset>(MID_PRESET);
         presetSelect.setModel(Model.of());
         presetSelect.setChoiceRenderer(new ChoiceRenderer<>("name"));
         presetSelect.setChoices(aPresets);
@@ -115,7 +129,7 @@ public class OllamaRecommenderTraitsEditor
         form.add(presetSelect);
 
         var modelsModel = LoadableDetachableModel.of(this::listModels);
-        var model = new ComboBox<String>("model", modelsModel);
+        var model = new ComboBox<String>(MID_MODEL, modelsModel);
         model.add(LambdaBehavior.onConfigure(() -> {
             // Trigger a re-loading of the tagset from the server as constraints may have
             // changed the ordering
@@ -130,33 +144,33 @@ public class OllamaRecommenderTraitsEditor
         model.setOutputMarkupId(true);
         form.add(model);
 
-        form.add(new TextField<String>("url").add(new LambdaAjaxFormComponentUpdatingBehavior(
+        form.add(new TextField<String>(MID_URL).add(new LambdaAjaxFormComponentUpdatingBehavior(
                 CHANGE_EVENT, _target -> _target.add(model))));
-        form.add(new TextArea<String>("prompt"));
-        form.add(new CheckBox("raw").setOutputMarkupPlaceholderTag(true));
-        var markdownLabel = new MarkdownLabel("promptHints",
+        form.add(new TextArea<String>(MID_PROMPT));
+        form.add(new CheckBox(MID_RAW).setOutputMarkupPlaceholderTag(true));
+        var markdownLabel = new MarkdownLabel(MID_PROMPT_HINTS,
                 LoadableDetachableModel.of(this::getPromptHints));
         markdownLabel.setOutputMarkupId(true);
         form.add(markdownLabel);
-        form.add(new PromptingModeSelect("promptingMode")
+        form.add(new PromptingModeSelect(MID_PROMPTING_MODE)
                 .add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT,
                         _target -> _target.add(markdownLabel))));
-        form.add(new ExtractionModeSelect("extractionMode", traits.bind("extractionMode"),
+        form.add(new ExtractionModeSelect(MID_EXTRACTION_MODE, traits.bind(MID_EXTRACTION_MODE),
                 getModel()));
-        form.add(new OllamaResponseFormatSelect("format"));
+        form.add(new OllamaResponseFormatSelect(MID_FORMAT));
         add(form);
 
-        var optionSettingsForm = new Form<>("optionSettingsForm",
+        var optionSettingsForm = new Form<>(MID_OPTION_SETTINGS_FORM,
                 CompoundPropertyModel.of(new OptionSetting()));
         optionSettingsForm.setVisibilityAllowed(false); // FIXME Not quite ready yet
         form.add(optionSettingsForm);
 
         optionSettingsForm.add(
-                new DropDownChoice<Option<?>>("option", OllamaGenerateRequest.getAllOptions()));
-        optionSettingsForm
-                .add(new LambdaAjaxSubmitLink<OptionSetting>("addOption", this::addOptionSetting));
+                new DropDownChoice<Option<?>>(MID_OPTION, OllamaGenerateRequest.getAllOptions()));
+        optionSettingsForm.add(
+                new LambdaAjaxSubmitLink<OptionSetting>(MID_ADD_OPTION, this::addOptionSetting));
 
-        optionSettingsContainer = new WebMarkupContainer("optionSettingsContainer");
+        optionSettingsContainer = new WebMarkupContainer(MID_OPTION_SETTINGS_CONTAINER);
         optionSettingsContainer.setOutputMarkupPlaceholderTag(true);
         optionSettingsForm.add(optionSettingsContainer);
 
@@ -164,7 +178,7 @@ public class OllamaRecommenderTraitsEditor
                 .map(e -> new OptionSetting(e.getKey(), String.valueOf(e.getValue())))
                 .collect(Collectors.toCollection(ArrayList::new)));
 
-        optionSettingsContainer.add(createOptionSettingsList("optionSettings", optionSettings));
+        optionSettingsContainer.add(createOptionSettingsList(MID_OPTION_SETTINGS, optionSettings));
     }
 
     private void applyPreset(Form<OllamaRecommenderTraits> aForm, Preset aPreset,
@@ -193,7 +207,7 @@ public class OllamaRecommenderTraitsEditor
             {
                 var optionSetting = aItem.getModelObject();
 
-                aItem.add(new Label("option", optionSetting.getOption()));
+                aItem.add(new Label(MID_OPTION, optionSetting.getOption()));
                 aItem.add(new TextField<>("value", PropertyModel.of(optionSetting, "value")));
                 aItem.add(new LambdaAjaxLink("removeOption",
                         _target -> removeOptionSetting(_target, aItem.getModelObject())));
