@@ -54,7 +54,6 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Relation;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.SentenceComment;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.SentenceMarker;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.TextMarker;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.TrimUtils;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.inception.rendering.paging.Unit;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
@@ -66,6 +65,7 @@ import de.tudarmstadt.ukp.inception.rendering.vmodel.VMarker;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VSentenceMarker;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VTextMarker;
 import de.tudarmstadt.ukp.inception.support.text.TextUtils;
+import de.tudarmstadt.ukp.inception.support.text.TrimUtils;
 import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
 
 /**

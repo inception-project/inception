@@ -29,6 +29,7 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
 
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
+import de.tudarmstadt.ukp.inception.support.text.TrimUtils;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 
 public abstract class SegmentationUtils
@@ -98,7 +99,7 @@ public abstract class SegmentationUtils
             var cur = bi.next();
             while (cur != BreakIterator.DONE) {
                 var span = new int[] { last + begin, cur + begin };
-                trim(aCas.getDocumentText(), span);
+                TrimUtils.trim(aCas.getDocumentText(), span);
                 if (!isEmpty(span[0], span[1])) {
                     aCas.addFsToIndexes(createSentence(aCas, span[0], span[1]));
                 }
@@ -121,7 +122,7 @@ public abstract class SegmentationUtils
             int cur = bi.next();
             while (cur != BreakIterator.DONE) {
                 int[] span = new int[] { last, cur };
-                trim(s.getCoveredText(), span);
+                TrimUtils.trim(s.getCoveredText(), span);
                 if (!isEmpty(span[0], span[1])) {
                     aCas.addFsToIndexes(
                             createToken(aCas, span[0] + s.getBegin(), span[1] + s.getBegin()));
@@ -132,61 +133,8 @@ public abstract class SegmentationUtils
         }
     }
 
-    /**
-     * Remove trailing or leading whitespace from the annotation.
-     * 
-     * @param aText
-     *            the text.
-     * @param aSpan
-     *            the offsets.
-     */
-    public static void trim(String aText, int[] aSpan)
-    {
-        String data = aText;
-
-        int begin = aSpan[0];
-        int end = aSpan[1] - 1;
-
-        // Remove whitespace at end
-        while ((end > 0) && trimChar(data.charAt(end))) {
-            end--;
-        }
-        end++;
-
-        // Remove whitespace at start
-        while ((begin < end) && trimChar(data.charAt(begin))) {
-            begin++;
-        }
-
-        aSpan[0] = begin;
-        aSpan[1] = end;
-    }
-
     public static boolean isEmpty(int aBegin, int aEnd)
     {
         return aBegin >= aEnd;
     }
-
-    public static boolean trimChar(final char aChar)
-    {
-        switch (aChar) {
-        case '\n':
-            return true; // Line break
-        case '\r':
-            return true; // Carriage return
-        case '\t':
-            return true; // Tab
-        case '\u200E':
-            return true; // LEFT-TO-RIGHT MARK
-        case '\u200F':
-            return true; // RIGHT-TO-LEFT MARK
-        case '\u2028':
-            return true; // LINE SEPARATOR
-        case '\u2029':
-            return true; // PARAGRAPH SEPARATOR
-        default:
-            return Character.isWhitespace(aChar);
-        }
-    }
-
 }
