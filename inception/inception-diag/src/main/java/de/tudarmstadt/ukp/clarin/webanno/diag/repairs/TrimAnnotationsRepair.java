@@ -32,9 +32,9 @@ import org.apache.uima.cas.Type;
 import org.apache.uima.jcas.tcas.Annotation;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.TrimUtils;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
+import de.tudarmstadt.ukp.inception.support.text.TrimUtils;
 
 public class TrimAnnotationsRepair
     implements Repair
