@@ -41,6 +41,7 @@ public class EntityAttributes
     public static final String ATTR_HOVER_TEXT = "h";
     public static final String ATTR_ACTION_BUTTONS = "a";
     public static final String ATTR_CLIPPED = "cl";
+    public static final String ATTR_SCORE = "s";
 
     private @JsonProperty(ATTR_LABEL) String labelText;
     private @JsonProperty(ATTR_COLOR) String color;
@@ -48,6 +49,10 @@ public class EntityAttributes
     @JsonSerialize(using = NumericBooleanSerializer.class)
     private @JsonProperty(ATTR_ACTION_BUTTONS) boolean actionButtons;
     private @JsonProperty(ATTR_CLIPPED) String clipped;
+
+    @JsonInclude(Include.NON_DEFAULT)
+    @JsonSerialize(using = ScoreSerializer.class)
+    private @JsonProperty(ATTR_SCORE) double score;
 
     public void setLabelText(String aLabelText)
     {
@@ -151,5 +156,15 @@ public class EntityAttributes
     public void setClipped(String aClipped)
     {
         clipped = aClipped;
+    }
+
+    public void setScore(double aScore)
+    {
+        score = aScore;
+    }
+
+    public double getScore()
+    {
+        return score;
     }
 }

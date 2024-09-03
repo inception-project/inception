@@ -140,6 +140,9 @@ public class CurationSidebarRenderer
 
         var casDiff = createDiff(aRequest, selectedUsers);
         var diff = casDiff.toResult();
+        var totalAnnotatorCount = diff.getCasGroupIds().stream() //
+                .filter($ -> !$.equals(targetUser)) //
+                .count();
 
         // Listing the features once is faster than repeatedly hitting the DB to list features for
         // every layer.
@@ -148,12 +151,15 @@ public class CurationSidebarRenderer
 
         // Set up a cache for resolving type to layer to avoid hammering the DB as we process each
         // position
-        var type2layer = diff.getPositions().stream().map(Position::getType).distinct()
-                .map(type -> annotationService.findLayer(project, type))
+        var type2layer = diff.getPositions().stream() //
+                .map(Position::getType) //
+                .distinct() //
+                .map(type -> annotationService.findLayer(project, type)) //
                 .collect(toMap(AnnotationLayer::getName, identity()));
 
         var generatedCurationVids = new HashSet<VID>();
         var showAll = curationService.isShowAll(sessionOwner, project.getId());
+        var showScore = curationService.isShowScore(sessionOwner, project.getId());
         var curationTarget = curationService.getCurationTarget(sessionOwner, project.getId());
         for (var cfgSet : diff.getConfigurationSets()) {
             if (!showAll && cfgSet.getCasGroupIds().contains(curationTarget)) {
@@ -242,6 +248,14 @@ public class CurationSidebarRenderer
 
                     object.setVid(curationVid);
                     object.setColorHint(COLOR);
+                    if (showScore) {
+                        var localAnnotatorCount = cfg.getCasGroupIds().stream() //
+                                .filter($ -> !$.equals(targetUser)) //
+                                .count();
+
+                        var score = (double) localAnnotatorCount / (double) totalAnnotatorCount;
+                        object.setScore(score);
+                    }
                     aVdoc.add(object);
 
                     aVdoc.add(new VComment(object.getVid(), VCommentType.INFO,
