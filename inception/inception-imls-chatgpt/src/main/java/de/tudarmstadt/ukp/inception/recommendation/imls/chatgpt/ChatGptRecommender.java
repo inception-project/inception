@@ -36,6 +36,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.PredictionCon
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import de.tudarmstadt.ukp.inception.recommendation.imls.chatgpt.client.ChatCompletionRequest;
 import de.tudarmstadt.ukp.inception.recommendation.imls.chatgpt.client.ChatGptClient;
+import de.tudarmstadt.ukp.inception.recommendation.imls.chatgpt.client.ResponseFormat;
 import de.tudarmstadt.ukp.inception.recommendation.imls.support.llm.prompt.JinjaPromptRenderer;
 import de.tudarmstadt.ukp.inception.rendering.model.Range;
 import de.tudarmstadt.ukp.inception.security.client.auth.apikey.ApiKeyAuthenticationTraits;
@@ -80,8 +81,8 @@ public class ChatGptRecommender
                     }
                     catch (IOException e) {
                         aContext.log(LogMessage.warn(getRecommender().getName(),
-                                "ChatGPT failed to respond: %s", getRootCauseMessage(e)));
-                        LOG.error("ChatGPT failed to respond: {}", getRootCauseMessage(e));
+                                "Remote failed to respond: %s", getRootCauseMessage(e)));
+                        LOG.error("Remote failed to respond: {}", getRootCauseMessage(e));
                     }
                 });
 
@@ -90,15 +91,19 @@ public class ChatGptRecommender
 
     private String query(String aPrompt) throws IOException
     {
-        LOG.trace("Querying ChatGPT: [{}]", aPrompt);
+        LOG.trace("Query: [{}]", aPrompt);
         var request = ChatCompletionRequest.builder() //
                 .withApiKey(((ApiKeyAuthenticationTraits) traits.getAuthentication()).getApiKey()) //
                 .withPrompt(aPrompt) //
-                .withModel(traits.getModel()) //
-                .withFormat(traits.getFormat()) //
-                .build();
-        var response = client.generate(traits.getUrl(), request).trim();
-        LOG.trace("ChatGPT responds: [{}]", response);
+                .withModel(traits.getModel());
+
+        if (traits.getFormat() != null) {
+            request.withResponseFormat(
+                    ResponseFormat.builder().withType(traits.getFormat()).build());
+        }
+
+        var response = client.generate(traits.getUrl(), request.build()).trim();
+        LOG.trace("Response: [{}]", response);
         return response;
     }
 }

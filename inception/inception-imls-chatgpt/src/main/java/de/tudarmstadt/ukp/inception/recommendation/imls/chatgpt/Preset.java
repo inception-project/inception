@@ -21,7 +21,7 @@ import java.io.Serializable;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-import de.tudarmstadt.ukp.inception.recommendation.imls.chatgpt.client.GenerateResponseFormat;
+import de.tudarmstadt.ukp.inception.recommendation.imls.chatgpt.client.ResponseFormatType;
 import de.tudarmstadt.ukp.inception.recommendation.imls.support.llm.prompt.PromptingMode;
 import de.tudarmstadt.ukp.inception.recommendation.imls.support.llm.response.ExtractionMode;
 
@@ -39,7 +39,7 @@ public class Preset
 
     private boolean raw;
 
-    private GenerateResponseFormat format;
+    private ResponseFormatType format;
 
     private PromptingMode promptingMode = PromptingMode.PER_ANNOTATION;
 
@@ -95,12 +95,12 @@ public class Preset
         raw = aRaw;
     }
 
-    public GenerateResponseFormat getFormat()
+    public ResponseFormatType getFormat()
     {
         return format;
     }
 
-    public void setFormat(GenerateResponseFormat aFormat)
+    public void setFormat(ResponseFormatType aFormat)
     {
         format = aFormat;
     }

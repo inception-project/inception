@@ -18,7 +18,7 @@
 package de.tudarmstadt.ukp.inception.recommendation.imls.azureaiopenai.client;
 
 import static de.tudarmstadt.ukp.inception.recommendation.imls.chatgpt.ChatGptRecommenderTraits.DEFAULT_CHATGPT_URL;
-import static de.tudarmstadt.ukp.inception.recommendation.imls.chatgpt.client.GenerateResponseFormat.JSON;
+import static de.tudarmstadt.ukp.inception.recommendation.imls.chatgpt.client.ResponseFormatType.JSON_OBJECT;
 import static org.assertj.core.api.Assumptions.assumeThat;
 
 import java.lang.invoke.MethodHandles;
@@ -31,6 +31,7 @@ import org.slf4j.LoggerFactory;
 import de.tudarmstadt.ukp.inception.recommendation.imls.chatgpt.client.ChatCompletionRequest;
 import de.tudarmstadt.ukp.inception.recommendation.imls.chatgpt.client.ChatGptClientImpl;
 import de.tudarmstadt.ukp.inception.recommendation.imls.chatgpt.client.ListModelsRequest;
+import de.tudarmstadt.ukp.inception.recommendation.imls.chatgpt.client.ResponseFormat;
 
 class OpenAiClientTest
 {
@@ -65,7 +66,7 @@ class OpenAiClientTest
         var response = sut.generate(CHATGPT_BASE_URL, ChatCompletionRequest.builder() //
                 .withApiKey(CHATGPT_API_KEY) //
                 .withPrompt("Generate a JSON map with the key/value pairs `a = 1` and `b = 2`") //
-                .withFormat(JSON) //
+                .withResponseFormat(ResponseFormat.builder().withType(JSON_OBJECT).build()) //
                 .build());
         LOG.info("Response: [{}]", response.trim());
     }

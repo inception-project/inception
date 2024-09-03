@@ -27,7 +27,7 @@ import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
-import de.tudarmstadt.ukp.inception.recommendation.imls.chatgpt.client.GenerateResponseFormat;
+import de.tudarmstadt.ukp.inception.recommendation.imls.chatgpt.client.ResponseFormatType;
 import de.tudarmstadt.ukp.inception.recommendation.imls.support.llm.prompt.PromptingMode;
 import de.tudarmstadt.ukp.inception.recommendation.imls.support.llm.response.ExtractionMode;
 import de.tudarmstadt.ukp.inception.security.client.auth.AuthenticationTraits;
@@ -48,7 +48,7 @@ public class ChatGptRecommenderTraits
 
     private String model = "gpt-3.5-turbo";
 
-    private GenerateResponseFormat format;
+    private ResponseFormatType format;
 
     private PromptingMode promptingMode = PromptingMode.PER_ANNOTATION;
 
@@ -106,12 +106,12 @@ public class ChatGptRecommenderTraits
         promptingMode = aPromptingMode;
     }
 
-    public GenerateResponseFormat getFormat()
+    public ResponseFormatType getFormat()
     {
         return format;
     }
 
-    public void setFormat(GenerateResponseFormat aFormat)
+    public void setFormat(ResponseFormatType aFormat)
     {
         format = aFormat;
     }

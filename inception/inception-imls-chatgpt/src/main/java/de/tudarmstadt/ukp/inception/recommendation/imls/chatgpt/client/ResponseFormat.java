@@ -17,10 +17,47 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.chatgpt.client;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-
-public enum GenerateResponseFormat
+public class ResponseFormat
 {
-    @JsonProperty("json")
-    JSON
+    private ResponseFormatType type;
+
+    private ResponseFormat(Builder builder)
+    {
+        type = builder.type;
+    }
+
+    public ResponseFormatType getType()
+    {
+        return type;
+    }
+
+    public void setType(ResponseFormatType aType)
+    {
+        type = aType;
+    }
+
+    public static Builder builder()
+    {
+        return new Builder();
+    }
+
+    public static final class Builder
+    {
+        private ResponseFormatType type;
+
+        private Builder()
+        {
+        }
+
+        public Builder withType(ResponseFormatType aType)
+        {
+            type = aType;
+            return this;
+        }
+
+        public ResponseFormat build()
+        {
+            return new ResponseFormat(this);
+        }
+    }
 }
