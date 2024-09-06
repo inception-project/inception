@@ -606,7 +606,8 @@ class CurationSidebarRendererTest
                 .withCas(curatorCas) //
                 .withWindow(0, curatorCas.getDocumentText().length()) //
                 .withVisibleLayers(asList(spanLayer, relationLayer)) //
-                .withAllLayers(asList(spanLayer, relationLayer)).build();
+                .withAllLayers(asList(spanLayer, relationLayer)) //
+                .build();
     }
 
     private void resetVDoc()

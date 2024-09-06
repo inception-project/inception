@@ -32,6 +32,7 @@ import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import java.lang.invoke.MethodHandles;
 import java.util.List;
 
+import org.apache.uima.fit.util.FSUtil;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.jcas.tcas.Annotation;
 import org.junit.jupiter.api.BeforeEach;
@@ -87,7 +88,7 @@ public class CasMergeLinkTest
     }
 
     @Test
-    public void thatLinkIsAttachedToCorrectStackedTarget() throws Exception
+    public void thatLinkIsAttachedToCorrectStackedTargetWithoutLabel() throws Exception
     {
         var adapter = schemaService.getAdapter(slotLayer);
 
@@ -113,6 +114,51 @@ public class CasMergeLinkTest
 
         // Add stacked target to target CAS
         var target2 = makeLinkHostFS(targetCas, 0, 0);
+        var targetFiller2 = new Token(targetCas, 1, 1);
+        targetFiller2.addToIndexes();
+
+        // Perform another merge
+        LOG.trace("Merge 2");
+        sut.mergeSlotFeature(document, DUMMY_USER, slotLayer, targetCas.getCas(), sourceFs2,
+                slotFeature.getName(), 0);
+
+        List<LinkWithRoleModel> mergedLinks2 = adapter.getFeatureValue(slotFeature, target2);
+        assertThat(mergedLinks2) //
+                .as("Link has been copied from source to target 2")
+                .containsExactly(new LinkWithRoleModel(role, null, targetFiller2.getAddress()));
+    }
+
+    @Test
+    public void thatLinkIsAttachedToCorrectStackedTargetWithLabel() throws Exception
+    {
+        var adapter = schemaService.getAdapter(slotLayer);
+
+        // Set up source CAS
+        var role = "slot1";
+        var sourceFs1 = makeLinkHostFS(sourceCas, 0, 0, makeLinkFS(sourceCas, role, 0, 0));
+        FSUtil.setFeature(sourceFs1, "f1", "foo");
+        var sourceFs2 = makeLinkHostFS(sourceCas, 0, 0, makeLinkFS(sourceCas, role, 1, 1));
+        FSUtil.setFeature(sourceFs2, "f1", "bar");
+
+        // Set up target CAS
+        var target1 = makeLinkHostFS(targetCas, 0, 0);
+        FSUtil.setFeature(target1, "f1", "foo");
+        var targetFiller1 = new Token(targetCas, 0, 0);
+        targetFiller1.addToIndexes();
+
+        // Perform merge
+        LOG.trace("Merge 1");
+        sut.mergeSlotFeature(document, DUMMY_USER, slotLayer, targetCas.getCas(), sourceFs1,
+                slotFeature.getName(), 0);
+
+        List<LinkWithRoleModel> mergedLinks1 = adapter.getFeatureValue(slotFeature, target1);
+        assertThat(mergedLinks1) //
+                .as("Link has been copied from source to target 1")
+                .containsExactly(new LinkWithRoleModel(role, null, targetFiller1.getAddress()));
+
+        // Add stacked target to target CAS
+        var target2 = makeLinkHostFS(targetCas, 0, 0);
+        FSUtil.setFeature(target2, "f1", "bar");
         var targetFiller2 = new Token(targetCas, 1, 1);
         targetFiller2.addToIndexes();
 

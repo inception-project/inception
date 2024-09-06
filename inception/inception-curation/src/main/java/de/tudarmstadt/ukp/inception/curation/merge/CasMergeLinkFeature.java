@@ -184,7 +184,7 @@ public class CasMergeLinkFeature
 
         // If there is more than one candidate, we need to find the best fit
         // First we look at the other features of the annotation. If any of these are different, we
-        // discard the candiate.
+        // discard the candidate.
         var filteredCandidateTargets = allCandidateTargets.stream() //
                 .filter(candidate -> aAdapter.countNonEqualFeatures(candidate, aSourceFS,
                         (fs, f) -> f.getLinkMode() == LinkMode.NONE) == 0) //
@@ -197,7 +197,7 @@ public class CasMergeLinkFeature
 
         // If there is exactly one, return that.
         if (filteredCandidateTargets.size() == 1) {
-            return Optional.of(allCandidateTargets.get(0));
+            return Optional.of(filteredCandidateTargets.get(0));
         }
 
         // Still more than one, then we need to look at the slots...
