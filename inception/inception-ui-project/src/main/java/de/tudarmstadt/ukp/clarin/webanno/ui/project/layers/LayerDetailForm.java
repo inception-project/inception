@@ -114,7 +114,6 @@ public class LayerDetailForm
         super(id, CompoundPropertyModel.of(aSelectedLayer));
 
         add(new DocLink("propertiesHelpLink", "sect_projects_layers_properties"));
-        add(new DocLink("technicalPropertiesHelpLink", "sect_projects_layers_properties"));
         add(new DocLink("behavioursHelpLink", "sect_projects_layers_behaviours"));
 
         featureSelectionForm = aFeatureSelectionForm;
