@@ -138,6 +138,9 @@ public class CurationSidebarRenderer
 
         var casDiff = createDiff(aRequest, selectedUsers);
         var diff = casDiff.toResult();
+        var totalAnnotatorCount = diff.getCasGroupIds().stream() //
+                .filter($ -> !$.equals(targetUser)) //
+                .count();
 
         // Listing the features once is faster than repeatedly hitting the DB to list features for
         // every layer.
@@ -151,6 +154,7 @@ public class CurationSidebarRenderer
 
         var generatedCurationVids = new HashSet<VID>();
         var showAll = curationService.isShowAll(sessionOwner, project.getId());
+        var showScore = curationService.isShowScore(sessionOwner, project.getId());
         var curationTarget = aRequest.getAnnotationUser().getUsername();
         for (var cfgSet : diff.getConfigurationSets()) {
             LOG.trace("Processing set: {}", cfgSet);
@@ -213,6 +217,14 @@ public class CurationSidebarRenderer
 
                     object.setVid(curationVid);
                     object.setColorHint(COLOR);
+                    if (showScore) {
+                        var localAnnotatorCount = cfg.getCasGroupIds().stream() //
+                                .filter($ -> !$.equals(targetUser)) //
+                                .count();
+
+                        var score = (double) localAnnotatorCount / (double) totalAnnotatorCount;
+                        object.setScore(score);
+                    }
                     aVdoc.add(object);
 
                     aVdoc.add(new VComment(object.getVid(), VCommentType.INFO,
