@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.annotation.layer;
 
 import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectFsByAddr;
 
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -32,6 +33,8 @@ import java.util.function.Supplier;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
 
@@ -51,6 +54,8 @@ import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistry;
 public abstract class TypeAdapter_ImplBase
     implements TypeAdapter
 {
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
     private final LayerSupportRegistry layerSupportRegistry;
     private final FeatureSupportRegistry featureSupportRegistry;
     private final ConstraintsService constraintsService;
@@ -61,6 +66,7 @@ public abstract class TypeAdapter_ImplBase
     private Map<String, AnnotationFeature> features;
     private ApplicationEventPublisher applicationEventPublisher;
     private Map<AnnotationLayer, Object> layerTraitsCache;
+    private Map<AnnotationFeature, Object> featureTraitsCache;
 
     /**
      * Constructor.
@@ -153,6 +159,15 @@ public abstract class TypeAdapter_ImplBase
     }
 
     @Override
+    public final boolean isFeatureValueEqual(AnnotationFeature aFeature, FeatureStructure aFS1,
+            FeatureStructure aFS2)
+    {
+        var featureSupport = featureSupportRegistry.findExtension(aFeature).orElseThrow();
+
+        return featureSupport.isFeatureValueEqual(aFeature, aFS1, aFS2);
+    }
+
+    @Override
     public final void setFeatureValue(SourceDocument aDocument, String aUsername, CAS aCas,
             int aAddress, AnnotationFeature aFeature, Object aValue)
         throws AnnotationException
@@ -178,6 +193,8 @@ public abstract class TypeAdapter_ImplBase
     private void clearHiddenFeatures(SourceDocument aDocument, String aUsername,
             FeatureStructure aFS)
     {
+        LOG.trace("begin clear hidden");
+
         var constraints = constraintsService.getMergedConstraints(aDocument.getProject());
         if (constraints == null) {
             return;
@@ -200,6 +217,8 @@ public abstract class TypeAdapter_ImplBase
                 }
             }
         }
+
+        LOG.trace("end clear hidden");
     }
 
     @Override
@@ -306,6 +325,28 @@ public abstract class TypeAdapter_ImplBase
 
         Object trait = layerTraitsCache.computeIfAbsent(getLayer(),
                 feature -> layerSupportRegistry.getLayerSupport(feature).readTraits(feature));
+
+        if (trait != null && aInterface.isAssignableFrom(trait.getClass())) {
+            return Optional.of((T) trait);
+        }
+
+        return Optional.empty();
+    }
+
+    /**
+     * Decodes the traits for the given feature and returns them if they implement the requested
+     * interface. This method internally caches the decoded traits, so it can be called often.
+     */
+    @Override
+    @SuppressWarnings("unchecked")
+    public <T> Optional<T> getFeatureTraits(AnnotationFeature aFeature, Class<T> aInterface)
+    {
+        if (featureTraitsCache == null) {
+            featureTraitsCache = new HashMap<>();
+        }
+
+        Object trait = featureTraitsCache.computeIfAbsent(aFeature,
+                feature -> featureSupportRegistry.findExtension(feature).get().readTraits(feature));
 
         if (trait != null && aInterface.isAssignableFrom(trait.getClass())) {
             return Optional.of((T) trait);

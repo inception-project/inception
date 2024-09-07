@@ -206,19 +206,26 @@ public class SourceDocumentTable
         return dateFormat.format(aDate);
     }
 
-    private String renderDocumentSize(SourceDocument aDocumnent)
+    private String renderDocumentSize(SourceDocument aDocument)
     {
-        return FileUtils.byteCountToDisplaySize(
-                documentStorageService.getSourceDocumentFileSize(aDocumnent));
+        try {
+            return FileUtils.byteCountToDisplaySize(
+                    documentStorageService.getSourceDocumentFileSize(aDocument));
+        }
+        catch (Exception e) {
+            LOG.error("Unable to get size of source document file for {}", aDocument, e);
+            return "error";
+        }
     }
 
     private String renderInitialCasSize(SourceDocument aDocument)
     {
         try {
-            return documentService.getInitialCasFileSize(aDocument)
-                    .map(FileUtils::byteCountToDisplaySize).orElse("unknown");
+            return documentService.getInitialCasFileSize(aDocument) //
+                    .map(FileUtils::byteCountToDisplaySize) //
+                    .orElse("unknown");
         }
-        catch (IOException e) {
+        catch (Exception e) {
             LOG.error("Unable to get size of INITIAL CAS file for {}", aDocument, e);
             return "error";
         }

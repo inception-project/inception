@@ -129,6 +129,7 @@ public class OllamaRecommenderTraitsEditor
         }));
         model.setOutputMarkupId(true);
         form.add(model);
+
         form.add(new TextField<String>("url").add(new LambdaAjaxFormComponentUpdatingBehavior(
                 CHANGE_EVENT, _target -> _target.add(model))));
         form.add(new TextArea<String>("prompt"));

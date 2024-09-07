@@ -21,11 +21,8 @@ import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.selectOve
 import static org.apache.uima.fit.util.CasUtil.getType;
 
 import java.util.Arrays;
-import java.util.List;
 
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.Type;
-import org.apache.uima.cas.text.AnnotationFS;
 import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.IllegalPlacementException;
@@ -61,6 +58,7 @@ public class SpanAnchoringModeBehavior
         return onRequest(aAdapter, aRequest);
     }
 
+    @Override
     public MoveSpanAnnotationRequest onMove(TypeAdapter aAdapter,
             MoveSpanAnnotationRequest aRequest)
         throws AnnotationException
@@ -102,8 +100,8 @@ public class SpanAnchoringModeBehavior
             return aRange;
         }
         case SINGLE_TOKEN: {
-            Type tokenType = getType(aCas, Token.class);
-            List<AnnotationFS> tokens = selectOverlapping(aCas, tokenType, aRange[0], aRange[1]);
+            var tokenType = getType(aCas, Token.class);
+            var tokens = selectOverlapping(aCas, tokenType, aRange[0], aRange[1]);
 
             if (tokens.isEmpty()) {
                 throw new IllegalPlacementException(
@@ -113,8 +111,8 @@ public class SpanAnchoringModeBehavior
             return new int[] { tokens.get(0).getBegin(), tokens.get(0).getEnd() };
         }
         case TOKENS: {
-            Type tokenType = getType(aCas, Token.class);
-            List<AnnotationFS> tokens = selectOverlapping(aCas, tokenType, aRange[0], aRange[1]);
+            var tokenType = getType(aCas, Token.class);
+            var tokens = selectOverlapping(aCas, tokenType, aRange[0], aRange[1]);
 
             if (tokens.isEmpty()) {
                 throw new IllegalPlacementException(
@@ -128,9 +126,8 @@ public class SpanAnchoringModeBehavior
             return new int[] { begin, end };
         }
         case SENTENCES: {
-            Type sentenceType = getType(aCas, Sentence.class);
-            List<AnnotationFS> sentences = selectOverlapping(aCas, sentenceType, aRange[0],
-                    aRange[1]);
+            var sentenceType = getType(aCas, Sentence.class);
+            var sentences = selectOverlapping(aCas, sentenceType, aRange[0], aRange[1]);
 
             if (sentences.isEmpty()) {
                 throw new IllegalPlacementException(
@@ -138,8 +135,8 @@ public class SpanAnchoringModeBehavior
             }
 
             // update the begin and ends (no sub token selection)
-            int begin = sentences.get(0).getBegin();
-            int end = sentences.get(sentences.size() - 1).getEnd();
+            var begin = sentences.get(0).getBegin();
+            var end = sentences.get(sentences.size() - 1).getEnd();
 
             return new int[] { begin, end };
         }

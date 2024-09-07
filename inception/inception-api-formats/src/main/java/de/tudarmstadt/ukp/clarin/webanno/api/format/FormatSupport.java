@@ -62,7 +62,7 @@ public interface FormatSupport
 {
     Set<String> DEFAULT_PERMITTED_RESOURCE_EXTENSIONS = unmodifiableSet(
             Set.of("apng", "avif", "gif", "jpg", "jpeg", "jfif", "pjpeg", "pjp", "png", "svg",
-                    "webp", "bmp", "tif", "tiff"));
+                    "webp", "bmp", "tif", "tiff", "mp3", "mp4"));
 
     /**
      * Returns the format identifier which is stored in in {@link SourceDocument#setFormat(String)}.

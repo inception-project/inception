@@ -35,7 +35,6 @@ public class FullCodingAgreementResult
 
     protected final DiffResult diff;
     protected final List<ConfigurationSet> allSets;
-    protected final boolean excludeIncomplete;
 
     public FullCodingAgreementResult(String aType, String aFeature, DiffResult aDiff,
             ICodingAnnotationStudy aStudy, List<String> aCasGroupIds,
@@ -45,7 +44,6 @@ public class FullCodingAgreementResult
 
         allSets = aTaggedConfigurations;
         diff = aDiff;
-        excludeIncomplete = aExcludeIncomplete;
     }
 
     public boolean noPositions()

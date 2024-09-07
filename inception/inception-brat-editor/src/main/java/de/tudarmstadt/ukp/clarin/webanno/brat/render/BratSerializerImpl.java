@@ -22,6 +22,8 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.ScriptDirection.RTL;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.uima.cas.text.AnnotationPredicates.covering;
+import static org.apache.uima.cas.text.AnnotationPredicates.overlappingAtBegin;
+import static org.apache.uima.cas.text.AnnotationPredicates.overlappingAtEnd;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
 
@@ -52,18 +54,16 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Relation;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.SentenceComment;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.SentenceMarker;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.TextMarker;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.TrimUtils;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.inception.rendering.paging.Unit;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VAnnotationMarker;
-import de.tudarmstadt.ukp.inception.rendering.vmodel.VComment;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
-import de.tudarmstadt.ukp.inception.rendering.vmodel.VMarker;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VSentenceMarker;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VTextMarker;
 import de.tudarmstadt.ukp.inception.support.text.TextUtils;
+import de.tudarmstadt.ukp.inception.support.text.TrimUtils;
 import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
 
 /**
@@ -152,6 +152,7 @@ public class BratSerializerImpl
                         .setClippedAtStart(vspan.getRanges().get(0).isClippedAtBegin());
                 entity.getAttributes().setClippedAtEnd(
                         vspan.getRanges().get(vspan.getRanges().size() - 1).isClippedAtEnd());
+                entity.getAttributes().setScore(vspan.getScore());
 
                 aResponse.addEntity(entity);
             }
@@ -181,7 +182,7 @@ public class BratSerializerImpl
         }
 
         Map<AnnotationFS, Integer> sentenceIndexes = null;
-        for (VComment vcomment : aVDoc.comments()) {
+        for (var vcomment : aVDoc.comments()) {
             String type;
             switch (vcomment.getCommentType()) {
             case ERROR:
@@ -203,7 +204,7 @@ public class BratSerializerImpl
                 if (sentenceIndexes == null) {
                     sentenceIndexes = new HashMap<>();
                     int i = 1;
-                    for (AnnotationFS s : select(cas, getType(cas, Sentence.class))) {
+                    for (var s : select(cas, getType(cas, Sentence.class))) {
                         sentenceIndexes.put(s, i);
                         i++;
                     }
@@ -222,18 +223,14 @@ public class BratSerializerImpl
 
     private void renderMarkers(GetDocumentResponse aResponse, VDocument aVDoc)
     {
-        // Render markers
-        for (VMarker vmarker : aVDoc.getMarkers()) {
-            if (vmarker instanceof VAnnotationMarker) {
-                VAnnotationMarker marker = (VAnnotationMarker) vmarker;
+        for (var vmarker : aVDoc.getMarkers()) {
+            if (vmarker instanceof VAnnotationMarker marker) {
                 aResponse.addMarker(new AnnotationMarker(vmarker.getType(), marker.getVid()));
             }
-            else if (vmarker instanceof VSentenceMarker) {
-                VSentenceMarker marker = (VSentenceMarker) vmarker;
+            else if (vmarker instanceof VSentenceMarker marker) {
                 aResponse.addMarker(new SentenceMarker(vmarker.getType(), marker.getIndex()));
             }
-            else if (vmarker instanceof VTextMarker) {
-                var marker = (VTextMarker) vmarker;
+            else if (vmarker instanceof VTextMarker marker) {
                 var range = marker.getRange();
                 aResponse.addMarker(
                         new TextMarker(marker.getType(), range.getBegin(), range.getEnd()));
@@ -330,7 +327,7 @@ public class BratSerializerImpl
      *            (window-relative positions)
      * @return list of ranges.
      */
-    private List<Offsets> split(List<Offsets> aRows, String aText, int aWindowBegin, int aBegin,
+    static List<Offsets> split(List<Offsets> aRows, String aText, int aWindowBegin, int aBegin,
             int aEnd)
     {
         // Zero-width spans never need to be split
@@ -370,28 +367,31 @@ public class BratSerializerImpl
 
         var coveredRows = aRows.subList(aRows.indexOf(beginRow), aRows.indexOf(endRow) + 1);
 
-        var ranges = new ArrayList<Offsets>();
+        var segments = new ArrayList<Offsets>();
         for (var row : coveredRows) {
-            Offsets range;
+            Offsets segment;
 
-            if (row.getBegin() <= aBegin && aBegin < row.getEnd()) {
-                range = new Offsets(aBegin, row.getEnd());
+            if (covering(aBegin, aEnd, row.getBegin(), row.getEnd())) {
+                segment = new Offsets(row.getBegin(), row.getEnd());
             }
-            else if (row.getBegin() <= aEnd && aEnd <= row.getEnd()) {
-                range = new Offsets(row.getBegin(), aEnd);
+            else if (overlappingAtBegin(row.getBegin(), row.getEnd(), aBegin, aEnd)) {
+                segment = new Offsets(aBegin, row.getEnd());
+            }
+            else if (overlappingAtEnd(row.getBegin(), row.getEnd(), aBegin, aEnd)) {
+                segment = new Offsets(row.getBegin(), aEnd);
             }
             else {
-                range = new Offsets(row.getBegin(), row.getEnd());
+                continue;
             }
 
-            trim(aText, range);
+            trim(aText, segment);
 
-            if (!range.isEmpty()) {
-                ranges.add(range);
+            if (!segment.isEmpty()) {
+                segments.add(segment);
             }
         }
 
-        return ranges;
+        return segments;
     }
 
     public static String abbreviate(String aName)
@@ -440,7 +440,7 @@ public class BratSerializerImpl
      * @param aOffsets
      *            the offsets.
      */
-    static private void trim(CharSequence aText, Offsets aOffsets)
+    static void trim(CharSequence aText, Offsets aOffsets)
     {
         if (aOffsets.getBegin() == aOffsets.getEnd()) {
             // Nothing to do on empty spans
@@ -465,7 +465,7 @@ public class BratSerializerImpl
         aOffsets.setEnd(end);
     }
 
-    private static boolean trimChar(final char aChar)
+    static boolean trimChar(final char aChar)
     {
         switch (aChar) {
         case '\n': // Line break

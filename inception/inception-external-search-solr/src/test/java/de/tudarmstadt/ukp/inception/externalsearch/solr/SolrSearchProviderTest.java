@@ -34,13 +34,12 @@ import java.util.Properties;
 import org.apache.commons.io.FileUtils;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrServerException;
-import org.apache.solr.client.solrj.embedded.JettyConfig;
-import org.apache.solr.client.solrj.embedded.JettySolrRunner;
 import org.apache.solr.common.SolrInputDocument;
+import org.apache.solr.embedded.JettyConfig;
+import org.apache.solr.embedded.JettySolrRunner;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -54,7 +53,6 @@ import de.tudarmstadt.ukp.inception.externalsearch.solr.traits.SolrSearchProvide
  * collection, setup the name of the collection, names of the fields and provide an existing id for
  * the method 'thatDocumentTextCanBeRetrieved()'
  */
-@Disabled("Tests do not seem to run with Jakarta atm - needs investigation")
 class SolrSearchProviderTest
 {
     private static JettySolrRunner solrRunner;
@@ -66,16 +64,16 @@ class SolrSearchProviderTest
     @BeforeAll
     static void startServer(@TempDir Path aTemp) throws Exception
     {
-        File origSolrHome = new File("src/test/resources/solr");
-        File tempSolrHome = aTemp.toFile();
-        File tempSolrData = aTemp.resolve("data").toFile();
+        var origSolrHome = new File("src/test/resources/solr");
+        var tempSolrHome = aTemp.toFile();
+        var tempSolrData = aTemp.resolve("data").toFile();
         FileUtils.copyDirectory(origSolrHome, tempSolrHome);
-        JettyConfig jettyConfig = JettyConfig.builder() //
+        var jettyConfig = JettyConfig.builder() //
                 .setContext("") //
                 .setPort(0) //
                 .stopAtShutdown(true) //
                 .build();
-        Properties nodeProperties = new Properties();
+        var nodeProperties = new Properties();
         nodeProperties.setProperty("solr.data.dir", tempSolrData.getCanonicalPath());
         nodeProperties.setProperty("coreRootDirectory", tempSolrHome.toString());
         nodeProperties.setProperty("configSetBaseDir", tempSolrHome.toString());
@@ -127,7 +125,7 @@ class SolrSearchProviderTest
     @Test
     void thatQueryWorks() throws Exception
     {
-        String query = "document";
+        var query = "document";
 
         assertThat(sut.executeQuery(repo, traits, query)) //
                 .extracting(ExternalSearchResult::getDocumentId) //
@@ -144,18 +142,18 @@ class SolrSearchProviderTest
     @Test
     public void randomOrderWork() throws Exception
     {
-        String query = "*";
+        var query = "*";
         traits.setRandomOrder(true);
 
         traits.setSeed(2);
         List<ExternalSearchResult> results = sut.executeQuery(repo, traits, query);
         // System.out.println(results.get(0).getDocumentTitle());
-        String result1 = results.get(0).getDocumentTitle();
+        var result1 = results.get(0).getDocumentTitle();
 
         traits.setSeed(3);
         results = sut.executeQuery(repo, traits, query);
         // System.out.println(results.get(0).getDocumentTitle());
-        String result2 = results.get(0).getDocumentTitle();
+        var result2 = results.get(0).getDocumentTitle();
 
         assertThat(result1).isNotEqualTo(result2);
     }
@@ -163,10 +161,10 @@ class SolrSearchProviderTest
     @Test
     public void highlightingWork() throws Exception
     {
-        String query = "document";
+        var query = "document";
         traits.setResultSize(5);
 
-        List<ExternalSearchResult> results = sut.executeQuery(repo, traits, query);
+        var results = sut.executeQuery(repo, traits, query);
         // System.out.println(results.get(0).getHighlights().get(0).getHighlight());
 
         assertThat(results.get(0).getHighlights().get(0).getHighlight()).isNotNull();

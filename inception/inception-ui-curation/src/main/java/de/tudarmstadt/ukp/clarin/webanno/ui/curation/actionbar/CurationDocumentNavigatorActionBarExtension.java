@@ -25,8 +25,9 @@ import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBarExtension;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
-import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.CurationPage;
+import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.LegacyCurationPage;
 import de.tudarmstadt.ukp.inception.ui.curation.actionbar.opendocument.CurationOpenDocumentDialog;
+import de.tudarmstadt.ukp.inception.ui.curation.page.CurationPage;
 
 @Order(0)
 public class CurationDocumentNavigatorActionBarExtension
@@ -47,7 +48,7 @@ public class CurationDocumentNavigatorActionBarExtension
     @Override
     public boolean accepts(AnnotationPageBase aPage)
     {
-        return aPage instanceof CurationPage;
+        return aPage instanceof LegacyCurationPage || aPage instanceof CurationPage;
     }
 
     @Override

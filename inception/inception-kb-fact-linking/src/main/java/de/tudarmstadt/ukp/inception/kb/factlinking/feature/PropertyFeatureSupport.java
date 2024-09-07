@@ -148,6 +148,12 @@ public class PropertyFeatureSupport
         }
     }
 
+    @Override
+    public <V> V getDefaultFeatureValue(AnnotationFeature aFeature, FeatureStructure aFS)
+    {
+        return null;
+    }
+
     @SuppressWarnings("unchecked")
     @Override
     public String unwrapFeatureValue(AnnotationFeature aFeature, CAS aCAS, Object aValue)

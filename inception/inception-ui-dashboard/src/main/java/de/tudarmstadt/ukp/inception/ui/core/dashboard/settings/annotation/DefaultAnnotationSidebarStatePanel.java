@@ -37,7 +37,6 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebarFactory;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebarRegistry;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebarState;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.SidebarTabbedPanel;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
@@ -90,23 +89,16 @@ public class DefaultAnnotationSidebarStatePanel
 
     private void actionLoad()
     {
-        AnnotationSidebarState state = preferencesService.loadDefaultTraitsForProject(
+        var state = preferencesService.loadDefaultTraitsForProject(
                 SidebarTabbedPanel.KEY_SIDEBAR_STATE, getModel().getObject());
 
-        AnnotationSidebarFactory factory = annotationSidebarRegistry
-                .getSidebarFactory(state.getSelectedTab());
-
-        if (factory != null) {
-            defaultTab.setObject(new SidebarHandle(factory));
-        }
-        else {
-            defaultTab.setObject(null);
-        }
+        var factory = annotationSidebarRegistry.getExtension(state.getSelectedTab());
+        defaultTab.setObject(factory.map(SidebarHandle::new).orElse(null));
     }
 
     private void actionSave(AjaxRequestTarget aTarget, Form<Void> aDummy)
     {
-        AnnotationSidebarState state = preferencesService.loadDefaultTraitsForProject(
+        var state = preferencesService.loadDefaultTraitsForProject(
                 SidebarTabbedPanel.KEY_SIDEBAR_STATE, getModel().getObject());
 
         state.setSelectedTab(defaultTab.map(SidebarHandle::getId).orElse(null).getObject());

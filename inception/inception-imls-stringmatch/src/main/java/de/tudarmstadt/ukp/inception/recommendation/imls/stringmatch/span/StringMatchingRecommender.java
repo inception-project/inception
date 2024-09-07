@@ -17,7 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span;
 
-import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.CHARACTERS;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SENTENCES;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SINGLE_TOKEN;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
 import static de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult.toEvaluationResult;
 import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.selectOverlapping;
 import static java.util.Arrays.asList;
@@ -37,6 +39,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -236,8 +239,8 @@ public class StringMatchingRecommender
 
     private List<Sample> predict(CAS aCas, List<AnnotationFS> units, Trie<DictEntry> aDict)
     {
-        var requireEndAtTokenBoundary = !CHARACTERS
-                .equals(getRecommender().getLayer().getAnchoringMode());
+        var requireEndAtTokenBoundary = Set.of(SINGLE_TOKEN, TOKENS, SENTENCES)
+                .contains(getRecommender().getLayer().getAnchoringMode());
 
         var requireSingleSentence = !getRecommender().getLayer().isCrossSentence();
 

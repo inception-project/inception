@@ -548,6 +548,9 @@ export class Visualizer {
         if (Object.prototype.hasOwnProperty.call(attributes, 'a')) {
           span.actionButtons = !!(attributes.a)
         }
+        if (Object.prototype.hasOwnProperty.call(attributes, 's')) {
+          span.score = attributes.s
+        }
         if (Object.prototype.hasOwnProperty.call(attributes, 'cl') && attributes.cl) {
           span.clippedAtStart = attributes.cl.startsWith('s')
           span.clippedAtEnd = attributes.cl.endsWith('e')
@@ -817,7 +820,7 @@ export class Visualizer {
     let firstFrom: number | null = null
     let chunkNo = 0
     let space: string
-    let chunk: Chunk
+    let chunk: Chunk | null = null
     const chunks : Chunk[] = []
 
     for (const fragment of sortedFragments) {
@@ -831,9 +834,7 @@ export class Visualizer {
       }
     }
 
-    tokenOffsets.forEach(offset => {
-      const from = offset[0]
-      const to = offset[1]
+    for (const [from, to] of tokenOffsets) {
       if (firstFrom === null) {
         firstFrom = from
       }
@@ -850,7 +851,7 @@ export class Visualizer {
       }
       // if yes, the next token is in the same chunk
       if (currentFragmentId < numFragments && to > sortedFragments[currentFragmentId].from) {
-        return
+        continue
       }
 
       // otherwise, create the chunk found so far
@@ -866,7 +867,7 @@ export class Visualizer {
       chunks.push(chunk)
       lastTo = to
       firstFrom = null
-    })
+    }
 
     for (const fragment of sortedFragments) {
       if (fragment.span.id === 'rel:1-after') {
@@ -1140,6 +1141,7 @@ export class Visualizer {
   private updateFragmentLabelText (fragment: Fragment) {
     const spanLabels = Util.getSpanLabels(this.entityTypes, fragment.span.type)
     fragment.labelText = Util.spanDisplayForm(this.entityTypes, fragment.span.type)
+
     // Find the most appropriate label according to text width
     if (Configuration.abbrevsOn && spanLabels) {
       let labelIdx = 1 // first abbrev
@@ -1151,9 +1153,15 @@ export class Visualizer {
       }
     }
 
-    fragment.labelText = '(' + fragment.labelText + ')'
     if (fragment.span.labelText) {
       fragment.labelText = fragment.span.labelText
+    }
+    else {
+      fragment.labelText = '(' + fragment.labelText + ')'
+    }
+
+    if (fragment.span.score) {
+      fragment.labelText += ' [' + fragment.span.score.toFixed(2) + ']'
     }
   }
 

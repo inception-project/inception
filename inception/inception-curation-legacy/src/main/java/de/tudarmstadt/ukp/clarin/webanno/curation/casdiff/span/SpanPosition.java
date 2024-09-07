@@ -17,9 +17,11 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span;
 
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior;
+import java.util.Objects;
+
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.Position;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.Position_ImplBase;
+import de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureMultiplicityMode;
 
 /**
  * Represents a span position in the text.
@@ -34,14 +36,32 @@ public class SpanPosition
     private final String text;
 
     public SpanPosition(String aCollectionId, String aDocumentId, String aType, int aBegin,
+            int aEnd, String aText)
+    {
+        super(aCollectionId, aDocumentId, aType, null, null, 0, 0, null, null);
+        begin = aBegin;
+        end = aEnd;
+        text = aText;
+    }
+
+    public SpanPosition(String aCollectionId, String aDocumentId, String aType, int aBegin,
             int aEnd, String aText, String aFeature, String aRole, int aLinkTargetBegin,
-            int aLinkTargetEnd, String aLinkTargetText, LinkCompareBehavior aLinkCompareBehavior)
+            int aLinkTargetEnd, String aLinkTargetText,
+            LinkFeatureMultiplicityMode aLinkCompareBehavior)
     {
         super(aCollectionId, aDocumentId, aType, aFeature, aRole, aLinkTargetBegin, aLinkTargetEnd,
                 aLinkTargetText, aLinkCompareBehavior);
         begin = aBegin;
         end = aEnd;
         text = aText;
+    }
+
+    /**
+     * @return the span position that owns the link feature (if this is a link feature position).
+     */
+    public SpanPosition getBasePosition()
+    {
+        return new SpanPosition(getCollectionId(), getDocumentId(), getType(), begin, end, text);
     }
 
     /**
@@ -82,9 +102,28 @@ public class SpanPosition
     }
 
     @Override
+    public boolean equals(final Object other)
+    {
+        if (!(other instanceof SpanPosition)) {
+            return false;
+        }
+        if (!super.equals(other)) {
+            return false;
+        }
+        SpanPosition castOther = (SpanPosition) other;
+        return Objects.equals(begin, castOther.begin) && Objects.equals(end, castOther.end);
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return Objects.hash(super.hashCode(), begin, end);
+    }
+
+    @Override
     public String toString()
     {
-        StringBuilder builder = new StringBuilder();
+        var builder = new StringBuilder();
         builder.append("Span [");
         toStringFragment(builder);
         builder.append(", span=(").append(begin).append('-').append(end).append(')');
@@ -96,24 +135,31 @@ public class SpanPosition
     @Override
     public String toMinimalString()
     {
-        StringBuilder builder = new StringBuilder();
+        var builder = new StringBuilder();
         builder.append(begin).append('-').append(end).append(" [").append(text).append(']');
-        LinkCompareBehavior linkCompareBehavior = getLinkCompareBehavior();
+
+        var linkCompareBehavior = getLinkCompareBehavior();
         if (linkCompareBehavior != null) {
             switch (linkCompareBehavior) {
-            case LINK_TARGET_AS_LABEL:
+            case ONE_TARGET_MULTIPLE_ROLES:
                 builder.append(" role: [").append(getRole()).append(']');
                 break;
-            case LINK_ROLE_AS_LABEL:
+            case MULTIPLE_TARGETS_ONE_ROLE:
                 builder.append(" -> [").append(getLinkTargetBegin()).append('-')
                         .append(getLinkTargetEnd()).append(" [").append(getLinkTargetText())
                         .append(']');
+                break;
+            case MULTIPLE_TARGETS_MULTIPLE_ROLES:
+                builder.append(" -> ").append(getRole()).append("@[").append(getLinkTargetBegin())
+                        .append('-').append(getLinkTargetEnd()).append(" [")
+                        .append(getLinkTargetText()).append(']');
                 break;
             default:
                 throw new IllegalStateException(
                         "Unknown link target comparison mode [" + linkCompareBehavior + "]");
             }
         }
+
         return builder.toString();
     }
 }

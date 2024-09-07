@@ -42,6 +42,8 @@ import org.springframework.security.saml2.provider.service.web.authentication.Sa
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.security.web.util.matcher.AnyRequestMatcher;
+import org.springframework.security.web.util.matcher.NegatedRequestMatcher;
 
 import de.tudarmstadt.ukp.inception.security.oauth.OAuth2Adapter;
 import de.tudarmstadt.ukp.inception.security.saml.Saml2Adapter;
@@ -60,8 +62,20 @@ public class InceptionSecurityWebUIBuiltInAutoConfiguration
             Optional<RelyingPartyRegistrationRepository> aRelyingPartyRegistrationRepository)
         throws Exception
     {
-        aHttp.csrf().disable();
-        aHttp.headers().frameOptions().sameOrigin();
+        aHttp.csrf(csrf -> {
+            // Instead of disabling the Spring CSRF filter, we just disable the CSRF validation for
+            // the Wicket UI (Wicket has its own CSRF mechanism). This way, Spring will still
+            // populate the CSRF token attribute in the request which we will need later when we
+            // need to provide the token to the JavaScript code in the browser to make callbacks to
+            // Spring MVC controllers.
+            csrf.requireCsrfProtectionMatcher(
+                    new NegatedRequestMatcher(AnyRequestMatcher.INSTANCE));
+        });
+        aHttp.headers(headers -> {
+            headers.frameOptions(frameOptions -> {
+                frameOptions.sameOrigin();
+            });
+        });
 
         var authorizations = aHttp.authorizeHttpRequests();
         authorizations.requestMatchers("/login.html*").permitAll();

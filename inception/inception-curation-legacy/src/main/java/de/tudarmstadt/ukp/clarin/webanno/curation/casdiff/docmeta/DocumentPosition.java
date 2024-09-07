@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.docmeta;
 
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.Position_ImplBase;
+import de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureMultiplicityMode;
 
 /**
  * Represents a document position.
@@ -30,7 +30,7 @@ public class DocumentPosition
 
     public DocumentPosition(String aCollectionId, String aDocumentId, String aType, String aFeature,
             String aRole, int aLinkTargetBegin, int aLinkTargetEnd, String aLinkTargetText,
-            LinkCompareBehavior aLinkCompareBehavior)
+            LinkFeatureMultiplicityMode aLinkCompareBehavior)
     {
         super(aCollectionId, aDocumentId, aType, aFeature, aRole, aLinkTargetBegin, aLinkTargetEnd,
                 aLinkTargetText, aLinkCompareBehavior);

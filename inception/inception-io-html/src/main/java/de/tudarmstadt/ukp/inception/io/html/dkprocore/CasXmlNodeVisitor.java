@@ -17,9 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.io.html.dkprocore;
 
-import static de.tudarmstadt.ukp.dkpro.core.api.segmentation.TrimUtils.trim;
 import static de.tudarmstadt.ukp.inception.io.html.dkprocore.internal.JSoupUtil.appendNormalisedText;
 import static de.tudarmstadt.ukp.inception.io.html.dkprocore.internal.JSoupUtil.lastCharIsWhitespace;
+import static de.tudarmstadt.ukp.inception.support.text.TrimUtils.trim;
 
 import java.util.Map;
 

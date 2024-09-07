@@ -64,6 +64,8 @@ include::{include-dir}security-authentication-auto-login.adoc[leveloffset=+1]
 
 include::{include-dir}security-authentication-preauth.adoc[leveloffset=+1]
 
+include::{include-dir}settings_security-csp.adoc[]
+
 <<<
 
 include::{include-dir}logging.adoc[]

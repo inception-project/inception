@@ -199,10 +199,6 @@
       <artifactId>wicket-bootstrap-extensions</artifactId>
     </dependency>
     <dependency>
-      <groupId>de.agilecoders.wicket.webjars</groupId>
-      <artifactId>wicket-webjars</artifactId>
-    </dependency>
-    <dependency>
       <groupId>jakarta.persistence</groupId>
       <artifactId>jakarta.persistence-api</artifactId>
     </dependency>

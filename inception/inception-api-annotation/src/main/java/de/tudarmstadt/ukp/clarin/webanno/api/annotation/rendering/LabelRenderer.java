@@ -22,11 +22,9 @@ import static de.tudarmstadt.ukp.inception.schema.api.feature.TypeUtil.getUiLabe
 import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.AnnotationAutoConfiguration;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.rendering.pipeline.RenderStep;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
-import de.tudarmstadt.ukp.inception.rendering.vmodel.VObject;
 
 /**
  * <p>
@@ -49,8 +47,8 @@ public class LabelRenderer
     @Override
     public void render(VDocument aVDoc, RenderRequest aRequest)
     {
-        for (AnnotationLayer layer : aVDoc.getAnnotationLayers()) {
-            for (VObject vobj : aVDoc.objects(layer.getId())) {
+        for (var layer : aVDoc.getAnnotationLayers()) {
+            for (var vobj : aVDoc.objects(layer.getId())) {
                 if (vobj.getLabelHint() != null) {
                     // Label hint was already set earlier - do not overwrite it!
                     continue;

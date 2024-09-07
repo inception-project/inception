@@ -68,8 +68,8 @@
     </dependency>
 
     <dependency>
-      <groupId>org.textexploration.mtas</groupId>
-      <artifactId>mtas</artifactId>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-search-mtas-upstream</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.lucene</groupId>
@@ -77,7 +77,11 @@
     </dependency>
     <dependency>
       <groupId>org.apache.lucene</groupId>
-      <artifactId>lucene-analyzers-common</artifactId>
+      <artifactId>lucene-queries</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.lucene</groupId>
+      <artifactId>lucene-analysis-common</artifactId>
     </dependency>
 
     <dependency>

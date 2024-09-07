@@ -29,8 +29,7 @@ public class ServletContextUtils
     public static String referenceToUrl(ServletContext aServletContext,
             ResourceReference aResourceReference)
     {
-        ResourceReferenceRequestHandler handler = new ResourceReferenceRequestHandler(
-                aResourceReference, new PageParameters());
+        var handler = new ResourceReferenceRequestHandler(aResourceReference, new PageParameters());
 
         var contextPath = aServletContext.getContextPath();
         if (!contextPath.startsWith("/")) {

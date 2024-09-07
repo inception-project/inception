@@ -379,7 +379,7 @@ public abstract class AnnotationPageBase
         var constraints = getModelObject().getConstraints();
 
         // Check each feature structure of this layer
-        var layerType = aAdapter.getAnnotationType(editorCas);
+        var layerType = aAdapter.getAnnotationType(editorCas).get();
         var annotationFsType = editorCas.getAnnotationType();
         try (var fses = editorCas.select(layerType)) {
             for (var fs : fses) {

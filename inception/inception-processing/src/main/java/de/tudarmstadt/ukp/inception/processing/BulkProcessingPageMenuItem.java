@@ -35,7 +35,7 @@ import jakarta.servlet.ServletContext;
 import wicket.contrib.input.events.key.KeyType;
 
 @ConditionalOnWebApplication
-@Order(200)
+@Order(250)
 public class BulkProcessingPageMenuItem
     implements ProjectMenuItem
 {

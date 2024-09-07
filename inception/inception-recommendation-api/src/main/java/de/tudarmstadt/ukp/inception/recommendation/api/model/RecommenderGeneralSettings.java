@@ -27,6 +27,8 @@ public class RecommenderGeneralSettings
 {
     private static final long serialVersionUID = -1889889346307217345L;
 
+    private boolean annotatorAllowedToExportModel = true;
+
     private boolean waitForRecommendersOnOpenDocument = false;
 
     private boolean showRecommendationsWhenViewingOtherUser = true;
@@ -63,5 +65,15 @@ public class RecommenderGeneralSettings
             boolean aShowRecommendationsWhenViewingCurationUser)
     {
         showRecommendationsWhenViewingCurationUser = aShowRecommendationsWhenViewingCurationUser;
+    }
+
+    public void setAnnotatorAllowedToExportModel(boolean aAnnotatorAllowedToExportModel)
+    {
+        annotatorAllowedToExportModel = aAnnotatorAllowedToExportModel;
+    }
+
+    public boolean isAnnotatorAllowedToExportModel()
+    {
+        return annotatorAllowedToExportModel;
     }
 }

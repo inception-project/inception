@@ -86,4 +86,16 @@ public class OpenNlpDoccatMetadataRecommenderFactory
     {
         return new OpenNlpDoccatRecommenderTraitsEditor(aId, aModel);
     }
+
+    @Override
+    public boolean isModelExportSupported()
+    {
+        return true;
+    }
+
+    @Override
+    public String getExportModelName(Recommender aRecommender)
+    {
+        return "model.bin";
+    }
 }

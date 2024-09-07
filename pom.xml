@@ -21,7 +21,7 @@
   <parent>
     <groupId>org.dkpro</groupId>
     <artifactId>dkpro-parent-pom</artifactId>
-    <version>31</version>
+    <version>32</version>
   </parent>
 
   <groupId>de.tudarmstadt.ukp.inception.app</groupId>
@@ -56,7 +56,7 @@
     <connection>scm:git:https://github.com/inception-project/inception.git</connection>
     <developerConnection>scm:git:https://github.com/inception-project/inception.git</developerConnection>
     <url>https://github.com/inception-project/inception</url>
-    <tag>inception-33.0-beta-3</tag>
+    <tag>inception-34.0-beta-6</tag>
   </scm>
 
   <distributionManagement>
@@ -68,47 +68,50 @@
 
   <properties>
     <build-ant-version>1.10.14</build-ant-version>
-    <build-groovy-version>4.0.21</build-groovy-version>
+    <build-groovy-version>4.0.22</build-groovy-version>
 
-    <junit-jupiter.version>5.10.2</junit-jupiter.version>
-    <junit-platform.version>1.10.2</junit-platform.version>
+    <junit-jupiter.version>5.11.0</junit-jupiter.version>
+    <junit-platform.version>1.11.0</junit-platform.version>
     <mockito.version>5.12.0</mockito.version>
-    <assertj.version>3.26.0</assertj.version>
+    <assertj.version>3.26.3</assertj.version>
     <xmlunit.version>2.10.0</xmlunit.version>
-    <testcontainers.version>1.19.8</testcontainers.version>
+    <testcontainers.version>1.20.1</testcontainers.version>
 
-    <awaitility.version>4.2.1</awaitility.version>
+    <awaitility.version>4.2.2</awaitility.version>
 
-    <dkpro.version>2.4.0</dkpro.version>
+    <dkpro.version>2.5.0</dkpro.version>
     <uima.version>3.5.0</uima.version>
     <uimafit.version>3.5.0</uimafit.version>
     <uima-json.version>0.5.0</uima-json.version>
 
-    <pdfbox.version>2.0.30</pdfbox.version>
+    <pdfbox.version>3.0.3</pdfbox.version>
 
-    <spring.version>6.1.8</spring.version>
-    <spring.boot.version>3.3.0</spring.boot.version>
-    <spring.data.version>3.2.4</spring.data.version>
-    <spring.security.version>6.3.0</spring.security.version>
-    <springdoc.version>1.8.0</springdoc.version>
+    <spring.version>6.1.12</spring.version>
+    <spring.boot.version>3.3.2</spring.boot.version>
+    <spring.data.version>3.3.2</spring.data.version>
+    <spring.security.version>6.3.1</spring.security.version>
+    <springdoc.version>2.6.0</springdoc.version>
     <swagger.version>2.2.22</swagger.version>
-    <jjwt.version>0.12.5</jjwt.version>
+    <jjwt.version>0.12.6</jjwt.version>
 
-    <slf4j.version>2.0.13</slf4j.version>
+    <slf4j.version>2.0.16</slf4j.version>
     <log4j2.version>2.23.1</log4j2.version>
-    <jboss.logging.version>3.5.3.Final</jboss.logging.version>
-    <sentry.version>6.34.0</sentry.version>
+    <jboss.logging.version>3.6.0.Final</jboss.logging.version>
+    <sentry.version>7.14.0</sentry.version>
 
-    <tomcat.version>10.1.24</tomcat.version>
+    <tomcat.version>10.1.28</tomcat.version>
+    <jetty.version>12.0.12</jetty.version>
     <servlet-api.version>6.0.0</servlet-api.version>
 
-    <mariadb.driver.version>2.7.12</mariadb.driver.version>
+    <mariadb.driver.version>3.4.1</mariadb.driver.version>
+    <mssql.driver.version>12.6.3.jre11</mssql.driver.version>
+    <mysql.driver.version>9.0.0</mysql.driver.version>
     <postgres.driver.version>42.7.3</postgres.driver.version>
     <hibernate.version>6.5.2.Final</hibernate.version>
     <hibernate.validator.version>8.0.1.Final</hibernate.validator.version>
 
     <wicket.version>10.1.0</wicket.version>
-    <wicketstuff.version>10.1.0</wicketstuff.version>
+    <wicketstuff.version>10.1.1</wicketstuff.version>
     <wicket-bootstrap.version>7.0.5</wicket-bootstrap.version>
     <wicket-jquery-selectors.version>4.0.5</wicket-jquery-selectors.version>
     <wicket-webjars.version>4.0.4</wicket-webjars.version>
@@ -117,42 +120,60 @@
     <!--
       - These are all interconnected - because they share the dependency on Lucene.
       -->
-    <lucene.version>8.11.3</lucene.version>
-    <solr.version>8.11.3</solr.version>
-    <mtas.version>8.11.1.0</mtas.version> 
-    <!-- * 8.11.1.0 depends on Lucene 8.11.1 -->
-    <!--   no mtas  depends on Lucene 9.x -->
-
-    <elasticsearch.version>7.17.22</elasticsearch.version> 
-    <!--   7.10.x   depends on Lucene 8.7.0 - last ASL 2.0 version! -->
-    <!-- * 7.17.x   depends on Lucene 8.11.1 -->
-    <!--   8.1.x    depends on Lucene 9.0.0 -->
-
-    <opensearch.version>1.3.13</opensearch.version>
-    <!-- * 1.3.5    depends on Lucene 8.10.1 -->
-    <!--   2.x      depends on Lucene 9.x -->
-
-    <rdf4j.version>4.3.12</rdf4j.version> 
-    <!-- * 4.3.x depends on Lucene 8.9.x -->
-    <!-- * 5.x.x depends on Lucene 9.x.x -->
-
-    <jena.version>4.6.1</jena.version>
-    <!-- * 4.6.1    depends on Lucene 8.11.1 -->
-    <!--   4.7.0    depends on Lucene 9.4.2 -->
-
+    <lucene.version>9.11.1</lucene.version>
+    <solr.version>9.6.1</solr.version>
+    <opensearch.version>2.16.0</opensearch.version>
+    <jena.version>5.1.0</jena.version>
+    <rdf4j.version>4.3.13</rdf4j.version> 
     <owlapi-version>5.5.0</owlapi-version>
 
     <asciidoctor.plugin.version>2.2.3</asciidoctor.plugin.version>
-    <asciidoctor.version>2.5.12</asciidoctor.version>
-    <asciidoctor-diagram.version>2.3.0</asciidoctor-diagram.version>
-    <build-asciidoctorj-pdf-version>2.3.15</build-asciidoctorj-pdf-version>
+    <asciidoctor.version>2.5.13</asciidoctor.version>
+    <asciidoctor-diagram.version>2.3.1</asciidoctor-diagram.version>
+    <build-asciidoctorj-pdf-version>2.3.18</build-asciidoctorj-pdf-version>
 
     <json.version>20230227</json.version>
     <pf4j.version>2.6.0</pf4j.version>
-    <jackson.version>2.17.1</jackson.version>
+    <pf4j-spring.version>0.5.0</pf4j-spring.version>
+    <jackson.version>2.17.2</jackson.version>
     <snakeyaml.version>2.2</snakeyaml.version>
     <okhttp.version>4.12.0</okhttp.version>
     <okio.version>3.9.0</okio.version>
+    <byte-buddy.version>1.14.19</byte-buddy.version>
+    <caffeine.version>3.1.8</caffeine.version>
+    <commons-beanutils.version>1.9.4</commons-beanutils.version>
+    <commons-collections4.version>4.4</commons-collections4.version>
+    <commons-csv.version>1.11.0</commons-csv.version>
+    <commons-fileupload.version>1.5</commons-fileupload.version>
+    <commons-pool2.version>2.12.0</commons-pool2.version>
+    <commons-lang3.version>3.16.0</commons-lang3.version>
+    <commons-dbcp2.version>2.12.0</commons-dbcp2.version>
+    <commons-codec.version>1.17.1</commons-codec.version>
+    <commons-compress.version>1.27.0</commons-compress.version>
+    <commons-math3.version>3.6.1</commons-math3.version>
+    <commons-text.version>1.12.0</commons-text.version>
+    <commons-validator.version>1.9.0</commons-validator.version>
+    <commons-io.version>2.16.1</commons-io.version>
+    <commons-logging.version>1.3.3</commons-logging.version>
+    <commons-logging-api.version>1.1</commons-logging-api.version>
+    <jinjava.version>2.7.2</jinjava.version>
+    <fastutil.version>8.5.14</fastutil.version>
+    <picocli.version>4.7.6</picocli.version>
+    <woodstox-core.version>6.7.0</woodstox-core.version>
+    <nimbus-jose-jwt.version>9.40</nimbus-jose-jwt.version>
+    <json-schema-validator.version>1.5.1</json-schema-validator.version>
+    <jgit.version>6.10.0.202406032230-r</jgit.version>
+    <jaxb.version>4.0.5</jaxb.version>
+    <snappy.version>1.1.10.6</snappy.version>
+    <jsonld-java.version>0.13.6</jsonld-java.version>
+    <jna.version>5.14.0</jna.version>
+    <jsoup.version>1.18.1</jsoup.version>
+    <mime4j.version>0.8.11</mime4j.version>
+    <hsqldb.version>2.7.3</hsqldb.version>
+    <opensaml.version>4.3.2</opensaml.version>
+    <oauth2-oidc-sdk.version>9.43.4</oauth2-oidc-sdk.version>
+    <javassist.version>3.30.2-GA</javassist.version>
+    <openjson.version>1.0.13</openjson.version>
 
     <node.version>20.12.2</node.version>
     <apache-annotator.version>0.2.0</apache-annotator.version>
@@ -171,6 +192,7 @@
     <eslint-plugin-svelte.version>^2.37.0</eslint-plugin-svelte.version>
     <events.version>^3.3.0</events.version>
     <fast-json-patch.version>^3.1.1</fast-json-patch.version>
+    <font-awesome.version>6.5.2</font-awesome.version>
     <fs-extra.version>^11.2.0</fs-extra.version>
     <jsdom.version>^20.0.0</jsdom.version>
     <jsdom-global.version>^3.0.2</jsdom-global.version>
@@ -184,7 +206,7 @@
     <rollup.version>^4.16.0</rollup.version>
     <sass.version>^1.75.0</sass.version>
     <stomp-stompjs.version>^6.1.2</stomp-stompjs.version>
-    <svelte.version>^4.2.15</svelte.version>
+    <svelte.version>^4.2.19</svelte.version>
     <svelte-preprocess.version>^5.1.4</svelte-preprocess.version>
     <sveltejs-vite-plugin-svelte.version>^3.1.0</sveltejs-vite-plugin-svelte.version>
     <svgdotjs-svg-js.version>^3.2.0</svgdotjs-svg-js.version>

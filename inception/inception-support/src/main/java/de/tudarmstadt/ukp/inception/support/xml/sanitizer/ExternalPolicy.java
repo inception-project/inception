@@ -29,6 +29,7 @@ public class ExternalPolicy
 {
     private @JsonProperty("elements") List<String> elements;
     private @JsonProperty("attributes") List<String> attributes;
+    private @JsonProperty("attribute_patterns") List<String> attributePatterns;
     private @JsonProperty("on_elements") List<String> onElements;
     private @JsonProperty("action") String action;
     private @JsonProperty("matching") String pattern;
@@ -37,12 +38,14 @@ public class ExternalPolicy
     public ExternalPolicy( //
             @JsonProperty("elements") List<String> aElements,
             @JsonProperty("attributes") List<String> aAttributes,
+            @JsonProperty("attribute_patterns") List<String> aAttributePatterns,
             @JsonProperty("on_elements") List<String> aOnElements,
             @JsonProperty(value = "action", required = true) String aAction,
             @JsonProperty("matching") String aPattern)
     {
         elements = aElements;
         attributes = aAttributes;
+        attributePatterns = aAttributePatterns;
         onElements = aOnElements;
         action = aAction;
         pattern = aPattern;
@@ -96,5 +99,15 @@ public class ExternalPolicy
     public void setPattern(String aMatching)
     {
         pattern = aMatching;
+    }
+
+    public void setAttributePatterns(List<String> aPatterns)
+    {
+        attributePatterns = aPatterns;
+    }
+
+    public List<String> getAttributePatterns()
+    {
+        return attributePatterns;
     }
 }

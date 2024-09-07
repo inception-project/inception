@@ -35,13 +35,12 @@ import org.apache.jena.query.text.EntityDefinition;
 import org.apache.jena.query.text.TextDatasetFactory;
 import org.apache.jena.query.text.TextIndexConfig;
 import org.apache.jena.query.text.TextIndexLucene;
-import org.apache.jena.tdb.TDBFactory;
+import org.apache.jena.tdb2.TDB2Factory;
 import org.apache.lucene.store.MMapDirectory;
 import org.eclipse.rdf4j.repository.Repository;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -52,7 +51,6 @@ import de.tudarmstadt.ukp.inception.kb.RepositoryType;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderLocalTestScenarios.Scenario;
 
-@Disabled("Tests do not seem to run with Jakarta atm - needs investigation")
 public class FusekiRepositoryTest
 {
     private @TempDir Path temp;
@@ -63,7 +61,7 @@ public class FusekiRepositoryTest
     @BeforeEach
     public void setUp(TestInfo aTestInfo) throws Exception
     {
-        String methodName = aTestInfo.getTestMethod().map(Method::getName).orElse("<unknown>");
+        var methodName = aTestInfo.getTestMethod().map(Method::getName).orElse("<unknown>");
         System.out.printf("\n=== %s === %s =====================\n", methodName,
                 aTestInfo.getDisplayName());
 
@@ -130,7 +128,7 @@ public class FusekiRepositoryTest
      */
     Dataset createFusekiFTSDataset() throws IOException
     {
-        var ds1 = TDBFactory.createDataset();
+        var ds1 = TDB2Factory.createDataset();
         var dir = new MMapDirectory(temp);
         var eDef = new EntityDefinition("iri", "text");
         eDef.setPrimaryPredicate(org.apache.jena.vocabulary.RDFS.label);
