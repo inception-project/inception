@@ -24,7 +24,6 @@ import static de.tudarmstadt.ukp.inception.support.text.TrimUtils.trim;
 import java.util.Map;
 
 import org.apache.uima.jcas.JCas;
-import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
@@ -75,17 +74,19 @@ public class CasXmlNodeVisitor
                 handler.characters(text, 0, text.length);
             }
             else if (node instanceof Element element) {
+                // Insert a space character after <BR> elements to give the tokenizer an opportunity
+                // to insert a token here.
                 if (!handler.getText().isEmpty()
                         && (element.isBlock() || "br".equalsIgnoreCase(element.nodeName()))
                         && !lastCharIsWhitespace(handler.getText())) {
-                    char[] text = " ".toCharArray();
+                    var text = " ".toCharArray();
                     handler.characters(text, 0, text.length);
                 }
 
                 var attributes = new AttributesImpl();
 
                 if (element.attributes() != null) {
-                    for (Attribute attr : element.attributes()) {
+                    for (var attr : element.attributes()) {
                         attributes.addAttribute("", "", attr.getKey(), "CDATA", attr.getValue());
                     }
                 }

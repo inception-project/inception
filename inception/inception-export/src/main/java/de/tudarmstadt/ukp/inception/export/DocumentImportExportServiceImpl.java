@@ -335,8 +335,11 @@ public class DocumentImportExportServiceImpl
 
         // Create sentence / token annotations if they are missing - sentences first because
         // tokens are then generated inside the sentences
-        splitSenencesIfNecssaryAndCheckQuota(cas, format);
-        splitTokensIfNecssaryAndCheckQuota(cas, format);
+        splitSenencesIfNecssary(cas, format);
+        checkSentenceQuota(cas, format);
+
+        splitTokens(cas, format);
+        checkTokenQuota(cas, format);
 
         LOG.info("Imported CAS with [{}] tokens and [{}] sentences from file [{}] (size: {} bytes)",
                 cas.getAnnotationIndex(getType(cas, Token.class)).size(),
@@ -363,7 +366,7 @@ public class DocumentImportExportServiceImpl
         casDoctor.analyze(aDocument.getProject(), aCas, messages, true);
     }
 
-    private void splitTokensIfNecssaryAndCheckQuota(CAS cas, FormatSupport aFormat)
+    private void splitTokens(CAS cas, FormatSupport aFormat)
         throws IOException
     {
         var tokenType = getType(cas, Token.class);
@@ -371,6 +374,11 @@ public class DocumentImportExportServiceImpl
         if (!exists(cas, tokenType)) {
             SegmentationUtils.tokenize(cas);
         }
+    }
+
+    private void checkTokenQuota(CAS cas, FormatSupport aFormat) throws IOException
+    {
+        var tokenType = getType(cas, Token.class);
 
         if (properties.getMaxTokens() > 0) {
             var tokenCount = cas.getAnnotationIndex(tokenType).size();
@@ -388,7 +396,7 @@ public class DocumentImportExportServiceImpl
         }
     }
 
-    private void splitSenencesIfNecssaryAndCheckQuota(CAS cas, FormatSupport aFormat)
+    private void splitSenencesIfNecssary(CAS cas, FormatSupport aFormat)
         throws IOException
     {
         var sentenceType = getType(cas, Sentence.class);
@@ -396,6 +404,11 @@ public class DocumentImportExportServiceImpl
         if (!exists(cas, sentenceType)) {
             SegmentationUtils.splitSentences(cas);
         }
+    }
+
+    private void checkSentenceQuota(CAS cas, FormatSupport aFormat) throws IOException
+    {
+        var sentenceType = getType(cas, Sentence.class);
 
         if (properties.getMaxSentences() > 0) {
             var sentenceCount = cas.getAnnotationIndex(sentenceType).size();
