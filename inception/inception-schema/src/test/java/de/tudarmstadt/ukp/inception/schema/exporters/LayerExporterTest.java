@@ -31,14 +31,13 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.io.File;
 import java.util.List;
 import java.util.zip.ZipFile;
+import java.util.zip.ZipOutputStream;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.io.TempDir;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -55,25 +54,25 @@ import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 @ExtendWith(MockitoExtension.class)
 public class LayerExporterTest
 {
-    public @TempDir File tempFolder;
-
     private @Mock AnnotationSchemaService annotationService;
 
-    private Project project;
-    private File workFolder;
-
     private LayerExporter sut;
+
+    private Project sourceProject;
+    private Project targetProject;
 
     @BeforeEach
     public void setUp() throws Exception
     {
-        project = new Project();
-        project.setId(1l);
-        project.setName("Test Project");
+        sourceProject = Project.builder() //
+                .withId(1l) //
+                .withName("Test Project") //
+                .build();
 
-        workFolder = tempFolder;
-
-        when(annotationService.listAnnotationLayer(any())).thenReturn(layers());
+        targetProject = Project.builder() //
+                .withId(2l) //
+                .withName("Test Project") //
+                .build();
 
         sut = new LayerExporter(annotationService);
     }
@@ -81,48 +80,45 @@ public class LayerExporterTest
     @Test
     public void thatExportingWorks() throws Exception
     {
+        when(annotationService.listAnnotationLayer(any())).thenReturn(layers(sourceProject));
+
         // Export the project and import it again
-        ArgumentCaptor<AnnotationLayer> captor = runExportImportAndFetchLayers();
+        // Export the project
+        var exportRequest = new FullProjectExportRequest(sourceProject, null, false);
+        var monitor = new ProjectExportTaskMonitor(sourceProject, null, "test");
+        var exportedProject = new ExportedProject();
+        var stage = mock(ZipOutputStream.class);
+
+        sut.exportData(exportRequest, monitor, exportedProject, stage);
+
+        // Import the project again
+        var captor = ArgumentCaptor.forClass(AnnotationLayer.class);
+        doNothing().when(annotationService).createOrUpdateLayer(captor.capture());
+
+        var importRequest = new ProjectImportRequest(true);
+        var zipFile = mock(ZipFile.class);
+        sut.importData(importRequest, targetProject, exportedProject, zipFile);
 
         // Check that after re-importing the exported projects, they are identical to the original
         assertThat(captor.getAllValues()) //
                 .usingRecursiveFieldByFieldElementComparatorIgnoringFields("id")
-                .containsExactlyInAnyOrderElementsOf(layers());
+                .containsExactlyInAnyOrderElementsOf(layers(targetProject));
     }
 
-    private List<AnnotationLayer> layers()
+    private List<AnnotationLayer> layers(Project project)
     {
-        AnnotationLayer layer1 = new AnnotationLayer("webanno.custom.Span", "Span", SPAN_TYPE,
-                project, false, SINGLE_TOKEN, NO_OVERLAP);
+        var layer1 = new AnnotationLayer("webanno.custom.Span", "Span", SPAN_TYPE, project, false,
+                SINGLE_TOKEN, NO_OVERLAP);
         layer1.setValidationMode(ValidationMode.ALWAYS);
 
-        AnnotationLayer layer2 = new AnnotationLayer("webanno.custom.Span2", "Span2", SPAN_TYPE,
-                project, false, SENTENCES, NO_OVERLAP);
+        var layer2 = new AnnotationLayer("webanno.custom.Span2", "Span2", SPAN_TYPE, project, false,
+                SENTENCES, NO_OVERLAP);
         layer2.setValidationMode(ValidationMode.NEVER);
 
-        AnnotationLayer layer3 = new AnnotationLayer("webanno.custom.Relation", "Relation",
-                RELATION_TYPE, project, true, TOKENS, ANY_OVERLAP);
+        var layer3 = new AnnotationLayer("webanno.custom.Relation", "Relation", RELATION_TYPE,
+                project, true, TOKENS, ANY_OVERLAP);
 
         return asList(layer1, layer2, layer3);
     }
 
-    private ArgumentCaptor<AnnotationLayer> runExportImportAndFetchLayers() throws Exception
-    {
-        // Export the project
-        FullProjectExportRequest exportRequest = new FullProjectExportRequest(project, null, false);
-        ProjectExportTaskMonitor monitor = new ProjectExportTaskMonitor(project, null, "test");
-        ExportedProject exportedProject = new ExportedProject();
-
-        sut.exportData(exportRequest, monitor, exportedProject, workFolder);
-
-        // Import the project again
-        ArgumentCaptor<AnnotationLayer> captor = ArgumentCaptor.forClass(AnnotationLayer.class);
-        doNothing().when(annotationService).createOrUpdateLayer(captor.capture());
-
-        ProjectImportRequest importRequest = new ProjectImportRequest(true);
-        ZipFile zipFile = mock(ZipFile.class);
-        sut.importData(importRequest, project, exportedProject, zipFile);
-
-        return captor;
-    }
 }

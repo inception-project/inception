@@ -20,6 +20,10 @@ package de.tudarmstadt.ukp.inception.support.lambda;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.danekja.java.util.function.serializable.SerializableFunction;
 
+/**
+ * @deprecated Use {@link org.apache.wicket.markup.html.form.LambdaChoiceRenderer} instead.
+ */
+@Deprecated
 public class LambdaChoiceRenderer<T>
     extends ChoiceRenderer<T>
 {

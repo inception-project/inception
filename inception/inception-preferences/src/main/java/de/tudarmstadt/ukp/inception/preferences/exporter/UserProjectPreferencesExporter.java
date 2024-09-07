@@ -19,10 +19,10 @@ package de.tudarmstadt.ukp.inception.preferences.exporter;
 
 import static java.util.Arrays.asList;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.ZipFile;
+import java.util.zip.ZipOutputStream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,7 +36,6 @@ import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.project.exporters.ProjectPermissionsExporter;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.preferences.config.PreferencesServiceAutoConfig;
 import de.tudarmstadt.ukp.inception.preferences.model.UserProjectPreference;
@@ -72,14 +71,13 @@ public class UserProjectPreferencesExporter
 
     @Override
     public void exportData(FullProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
-            ExportedProject aExProject, File aFile)
+            ExportedProject aExProject, ZipOutputStream aFile)
     {
-        Project project = aRequest.getProject();
+        var project = aRequest.getProject();
 
-        List<ExportedUserProjectPreference> exportedDefaultPreferences = new ArrayList<>();
-        for (UserProjectPreference userPreference : preferencesService
-                .listUserPreferencesForProject(project)) {
-            ExportedUserProjectPreference exportedDefaultPreference = new ExportedUserProjectPreference();
+        var exportedDefaultPreferences = new ArrayList<ExportedUserProjectPreference>();
+        for (var userPreference : preferencesService.listUserPreferencesForProject(project)) {
+            var exportedDefaultPreference = new ExportedUserProjectPreference();
             exportedDefaultPreference.setUser(userPreference.getUser().getUsername());
             exportedDefaultPreference.setName(userPreference.getName());
             exportedDefaultPreference.setTraits(userPreference.getTraits());
@@ -87,27 +85,27 @@ public class UserProjectPreferencesExporter
         }
 
         aExProject.setProperty(KEY, exportedDefaultPreferences);
-        int n = exportedDefaultPreferences.size();
-        LOG.info("Exported [{}] user preferences for project [{}]", n, project.getName());
+        LOG.info("Exported [{}] user preferences for project [{}]",
+                exportedDefaultPreferences.size(), project.getName());
     }
 
     @Override
     public void importData(ProjectImportRequest aRequest, Project aProject,
             ExportedProject aExProject, ZipFile aZip)
     {
-        ExportedUserProjectPreference[] exportedDefaultPreferences = aExProject
-                .getArrayProperty(KEY, ExportedUserProjectPreference.class);
+        var exportedDefaultPreferences = aExProject.getArrayProperty(KEY,
+                ExportedUserProjectPreference.class);
 
-        int importedPreferences = 0;
-        int missingUsers = 0;
-        for (ExportedUserProjectPreference exportedDefaultPreference : exportedDefaultPreferences) {
-            User user = userRepository.get(exportedDefaultPreference.getUser());
+        var importedPreferences = 0;
+        var missingUsers = 0;
+        for (var exportedDefaultPreference : exportedDefaultPreferences) {
+            var user = userRepository.get(exportedDefaultPreference.getUser());
             if (user == null) {
                 missingUsers++;
                 continue;
             }
 
-            UserProjectPreference userPreference = new UserProjectPreference();
+            var userPreference = new UserProjectPreference();
             userPreference.setProject(aProject);
             userPreference.setUser(user);
             userPreference.setName(exportedDefaultPreference.getName());

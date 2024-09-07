@@ -15,7 +15,7 @@
 // limitations under the License.
 
 [[sect_settings_versioning]]
-= Versioning Settings
+= 🧪 Versioning Settings
 
 ====
 CAUTION: Experimental feature.
@@ -34,9 +34,9 @@ This git repository can also be used to push to a remote repository, e.g. saving
 | Default
 | Example
 
-| versioning.enabled
+| `versioning.enabled`
 | enable/disable versioning
-| false
-| true
+| `false`
+| `true`
 |===
 

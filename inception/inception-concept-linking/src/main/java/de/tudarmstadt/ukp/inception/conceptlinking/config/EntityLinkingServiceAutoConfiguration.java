@@ -31,7 +31,9 @@ import org.springframework.context.annotation.Lazy;
 import de.tudarmstadt.ukp.inception.conceptlinking.feature.CasingFeatureGenerator;
 import de.tudarmstadt.ukp.inception.conceptlinking.feature.EntityRankingFeatureGenerator;
 import de.tudarmstadt.ukp.inception.conceptlinking.feature.FrequencyFeatureGenerator;
+import de.tudarmstadt.ukp.inception.conceptlinking.feature.FtsScoreFeatureGenerator;
 import de.tudarmstadt.ukp.inception.conceptlinking.feature.LevenshteinFeatureGenerator;
+import de.tudarmstadt.ukp.inception.conceptlinking.feature.MatchingTokenOverlapFeatureGenerator;
 import de.tudarmstadt.ukp.inception.conceptlinking.feature.SemanticSignatureFeatureGenerator;
 import de.tudarmstadt.ukp.inception.conceptlinking.feature.WikidataIdRankFeatureGenerator;
 import de.tudarmstadt.ukp.inception.conceptlinking.recommender.NamedEntityLinkerFactory;
@@ -54,7 +56,6 @@ import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 public class EntityLinkingServiceAutoConfiguration
 {
     @Bean
-    @Autowired
     public ConceptLinkingService conceptLinkingService(KnowledgeBaseService aKbService,
             EntityLinkingPropertiesImpl aProperties, RepositoryProperties aRepoProperties,
             @Lazy @Autowired(required = false) List<EntityRankingFeatureGenerator> aFeatureGenerators)
@@ -82,16 +83,26 @@ public class EntityLinkingServiceAutoConfiguration
     }
 
     @Bean
-    @Autowired
+    public MatchingTokenOverlapFeatureGenerator matchingTokenOverlapFeatureGenerator()
+    {
+        return new MatchingTokenOverlapFeatureGenerator();
+    }
+
+    @Bean
     public WikidataIdRankFeatureGenerator wikidataIdRankFeatureGenerator(
             KnowledgeBaseService aKbService)
     {
         return new WikidataIdRankFeatureGenerator(aKbService);
     }
 
+    @Bean
+    public FtsScoreFeatureGenerator ftsScoreFeatureGenerator()
+    {
+        return new FtsScoreFeatureGenerator();
+    }
+
     @ConditionalOnBean(RecommendationService.class)
     @Bean
-    @Autowired
     public NamedEntityLinkerFactory namedEntityLinkerFactory(KnowledgeBaseService aKbService,
             ConceptLinkingService aClService, FeatureSupportRegistry aFsRegistry)
     {
@@ -99,14 +110,12 @@ public class EntityLinkingServiceAutoConfiguration
     }
 
     // @Bean
-    // @Autowired
     public FrequencyFeatureGenerator frequencyFeatureGenerator(RepositoryProperties aRepoProperties)
     {
         return new FrequencyFeatureGenerator(aRepoProperties);
     }
 
     // @Bean
-    // @Autowired
     public SemanticSignatureFeatureGenerator semanticSignatureFeatureGenerator(
             KnowledgeBaseService aKbService, RepositoryProperties aRepoProperties,
             EntityLinkingProperties aProperties)

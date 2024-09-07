@@ -30,9 +30,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.Feature;
-import org.apache.uima.cas.Type;
-import org.apache.uima.cas.TypeSystem;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.FSUtil;
 import org.apache.wicket.Component;
@@ -42,7 +39,6 @@ import org.apache.wicket.markup.html.image.ExternalImage;
 import org.apache.wicket.markup.html.link.ExternalLink;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
-import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
@@ -51,10 +47,8 @@ import org.wicketstuff.event.annotation.OnEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase2;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationAdapter;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
@@ -81,17 +75,16 @@ public class ImageSidebar
 
     final WebMarkupContainer mainContainer;
 
-    public ImageSidebar(String aId, IModel<AnnotatorState> aModel,
-            AnnotationActionHandler aActionHandler, CasProvider aCasProvider,
-            AnnotationPage aAnnotationPage)
+    public ImageSidebar(String aId, AnnotationActionHandler aActionHandler,
+            CasProvider aCasProvider, AnnotationPageBase2 aAnnotationPage)
     {
-        super(aId, aModel, aActionHandler, aCasProvider, aAnnotationPage);
+        super(aId, aActionHandler, aCasProvider, aAnnotationPage);
 
         mainContainer = new WebMarkupContainer("mainContainer");
         mainContainer.setOutputMarkupId(true);
         add(mainContainer);
 
-        ListView<ImageHandle> images = new ListView<ImageHandle>("images")
+        var images = new ListView<ImageHandle>("images")
         {
             private static final long serialVersionUID = -1203277069357712752L;
 
@@ -99,7 +92,7 @@ public class ImageSidebar
             protected void populateItem(ListItem<ImageHandle> item)
             {
                 item.add(new ExternalLink("open", item.getModelObject().getUrl()));
-                LambdaAjaxLink jumpToLink = new LambdaAjaxLink("jumpTo",
+                var jumpToLink = new LambdaAjaxLink("jumpTo",
                         _target -> actionJumpTo(_target, item.getModelObject()));
                 item.add(jumpToLink);
                 jumpToLink.add(new ExternalImage("image", item.getModelObject().getUrl()));
@@ -112,8 +105,8 @@ public class ImageSidebar
 
     private List<ImageHandle> listImageUrls()
     {
-        AnnotatorState state = getModelObject();
-        Project project = state.getProject();
+        var state = getModelObject();
+        var project = state.getProject();
 
         // Get the CAS
         CAS cas;
@@ -127,9 +120,9 @@ public class ImageSidebar
         }
 
         // Collect all image features
-        List<AnnotationFeature> imageFeatures = new ArrayList<>();
-        for (AnnotationLayer layer : annotationService.listAnnotationLayer(project)) {
-            for (AnnotationFeature feat : annotationService.listSupportedFeatures(layer)) {
+        var imageFeatures = new ArrayList<AnnotationFeature>();
+        for (var layer : annotationService.listAnnotationLayer(project)) {
+            for (var feat : annotationService.listSupportedFeatures(layer)) {
                 if (feat.getType().startsWith(ImageFeatureSupport.PREFIX)) {
                     imageFeatures.add(feat);
                 }
@@ -137,26 +130,26 @@ public class ImageSidebar
         }
 
         // Extract the URLs
-        List<ImageHandle> images = new ArrayList<>();
-        TypeSystem ts = cas.getTypeSystem();
-        for (AnnotationFeature feat : imageFeatures) {
-            Type t = getType(cas, feat.getLayer().getName());
+        var images = new ArrayList<ImageHandle>();
+        var ts = cas.getTypeSystem();
+        for (var feat : imageFeatures) {
+            var t = getType(cas, feat.getLayer().getName());
 
             // We only consider images that are annotated at the text level
             if (!ts.subsumes(cas.getAnnotationType(), t)) {
                 continue;
             }
 
-            Feature f = t.getFeatureByBaseName(feat.getName());
+            var f = t.getFeatureByBaseName(feat.getName());
 
-            List<AnnotationFS> annotations = selectCovered(cas, t, state.getWindowBeginOffset(),
+            var annotations = selectCovered(cas, t, state.getWindowBeginOffset(),
                     state.getWindowEndOffset());
 
-            for (AnnotationFS anno : annotations) {
-                String url = anno.getFeatureValueAsString(f);
+            for (var anno : annotations) {
+                var url = anno.getFeatureValueAsString(f);
 
                 if (isNotBlank(url)) {
-                    images.add(new ImageHandle(url, state.getDocument(), new VID(anno),
+                    images.add(new ImageHandle(url, state.getDocument(), VID.of(anno),
                             anno.getBegin(), anno.getEnd()));
                 }
             }
@@ -177,20 +170,20 @@ public class ImageSidebar
             AnnotatorState state = getModelObject();
 
             // Get the CAS
-            CAS cas = getCasProvider().get();
+            var cas = getCasProvider().get();
 
-            AnnotationFS fs = ICasUtil.selectAnnotationByAddr(cas, aHandle.getVid().getId());
+            var fs = ICasUtil.selectAnnotationByAddr(cas, aHandle.getVid().getId());
 
-            AnnotationLayer layer = annotationService.findLayer(state.getProject(), fs);
+            var layer = annotationService.findLayer(state.getProject(), fs);
             if (SPAN_TYPE.equals(layer.getType())) {
                 state.getSelection().selectSpan(aHandle.getVid(), cas, aHandle.getBegin(),
                         aHandle.getEnd());
             }
             else if (RELATION_TYPE.equals(layer.getType())) {
-                RelationAdapter adapter = (RelationAdapter) annotationService.getAdapter(layer);
-                AnnotationFS originFS = FSUtil.getFeature(fs, adapter.getSourceFeatureName(),
+                var adapter = (RelationAdapter) annotationService.getAdapter(layer);
+                var originFS = FSUtil.getFeature(fs, adapter.getSourceFeatureName(),
                         AnnotationFS.class);
-                AnnotationFS targetFS = FSUtil.getFeature(fs, adapter.getTargetFeatureName(),
+                var targetFS = FSUtil.getFeature(fs, adapter.getTargetFeatureName(),
                         AnnotationFS.class);
                 state.getSelection().selectArc(aHandle.getVid(), originFS, targetFS);
             }

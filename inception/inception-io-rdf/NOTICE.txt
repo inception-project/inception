@@ -1,0 +1,13 @@
+== DKPro Core RdfReader/RdfWriter
+
+The classes following classes were derived from their respective counterparts in the 
+DKPro Core RDF IO module (2.4.0).
+
+  de.tudarmstadt.ukp.inception.io.rdf.RdfReader
+  de.tudarmstadt.ukp.inception.io.rdf.RdfWriter
+  de.tudarmstadt.ukp.inception.io.rdf.internal.Rdf2Uima
+  de.tudarmstadt.ukp.inception.io.rdf.internal.RdfCas
+  de.tudarmstadt.ukp.inception.io.rdf.internal.Uima2Rdf
+
+Source: https://github.com/dkpro/dkpro-core
+License: Apache License 2.0

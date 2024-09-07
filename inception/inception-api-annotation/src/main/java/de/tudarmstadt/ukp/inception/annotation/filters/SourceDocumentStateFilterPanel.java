@@ -50,6 +50,8 @@ public class SourceDocumentStateFilterPanel
     {
         super(aId, aModel);
 
+        setOutputMarkupId(true);
+
         var listview = new ListView<>("stateFilter", asList(aStates))
         {
             private static final long serialVersionUID = -2292408105823066466L;
@@ -86,6 +88,8 @@ public class SourceDocumentStateFilterPanel
         else {
             selectedStates.add(aState);
         }
+
+        aTarget.add(this);
 
         send(this, BUBBLE, new SourceDocumentFilterStateChanged(aTarget, selectedStates));
     }

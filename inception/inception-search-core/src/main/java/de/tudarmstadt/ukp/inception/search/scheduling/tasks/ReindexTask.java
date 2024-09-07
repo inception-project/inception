@@ -23,36 +23,40 @@ package de.tudarmstadt.ukp.inception.search.scheduling.tasks;
 
 import static de.tudarmstadt.ukp.inception.scheduling.MatchResult.NO_MATCH;
 import static de.tudarmstadt.ukp.inception.scheduling.MatchResult.UNQUEUE_EXISTING_AND_QUEUE_THIS;
+import static de.tudarmstadt.ukp.inception.scheduling.TaskScope.PROJECT;
 
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.util.Objects;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.scheduling.MatchResult;
+import de.tudarmstadt.ukp.inception.scheduling.Progress;
+import de.tudarmstadt.ukp.inception.scheduling.ProjectTask;
 import de.tudarmstadt.ukp.inception.scheduling.Task;
 import de.tudarmstadt.ukp.inception.search.SearchService;
-import de.tudarmstadt.ukp.inception.search.model.Monitor;
-import de.tudarmstadt.ukp.inception.search.model.Progress;
 
 /**
  * Search indexer task. Runs the re-indexing process for a given project
  */
 public class ReindexTask
     extends IndexingTask_ImplBase
+    implements ProjectTask
 {
-    private Logger log = LoggerFactory.getLogger(getClass());
+    public static final String TYPE = "ReindexTask";
+
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private @Autowired SearchService searchService;
 
-    private Monitor monitor = new Monitor();
-
-    public ReindexTask(Project aProject, String aUser, String aTrigger)
+    public ReindexTask(Builder<? extends Builder<?>> aBuilder)
     {
-        super(aProject, aUser, aTrigger);
+        super(aBuilder.withType(TYPE) //
+                .withCancellable(false) //
+                .withScope(PROJECT));
     }
 
     @Override
@@ -62,21 +66,16 @@ public class ReindexTask
     }
 
     @Override
-    public void execute()
+    public void execute() throws IOException
     {
-        try {
-            searchService.reindex(super.getProject(), monitor);
-        }
-        catch (IOException e) {
-            log.error("Unable to reindex project [{}]({})", getProject().getName(),
-                    getProject().getId(), e);
-        }
+        searchService.reindex(super.getProject(), getMonitor());
     }
 
+    @Deprecated
     @Override
     public Progress getProgress()
     {
-        return monitor.toProgress();
+        return getMonitor().toProgress();
     }
 
     @Override
@@ -92,5 +91,19 @@ public class ReindexTask
         }
 
         return NO_MATCH;
+    }
+
+    public static Builder<Builder<?>> builder()
+    {
+        return new Builder<>();
+    }
+
+    public static class Builder<T extends Builder<?>>
+        extends IndexingTask_ImplBase.Builder<T>
+    {
+        public ReindexTask build()
+        {
+            return new ReindexTask(this);
+        }
     }
 }

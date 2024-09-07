@@ -30,20 +30,18 @@ import static de.tudarmstadt.ukp.inception.support.text.TextUtils.sortAndRemoveD
 import static de.tudarmstadt.ukp.inception.support.text.TextUtils.startsWithMatching;
 import static org.apache.commons.lang3.StringUtils.contains;
 import static org.apache.commons.lang3.StringUtils.containsAny;
-import static org.apache.commons.lang3.StringUtils.defaultString;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.startsWith;
 
+import java.security.Principal;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
 import java.util.regex.Pattern;
-
-import javax.persistence.EntityManager;
-import javax.persistence.NoResultException;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.Validate;
@@ -71,6 +69,8 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User_;
 import de.tudarmstadt.ukp.inception.support.SettingsUtil;
 import de.tudarmstadt.ukp.inception.support.spring.ApplicationContextProvider;
 import de.tudarmstadt.ukp.inception.support.text.TextUtils;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.NoResultException;
 
 /**
  * <p>
@@ -106,7 +106,7 @@ public class UserDaoImpl
             "^/\\&*?+$![]", FILESYSTEM_RESERVED_CHARACTERS);
 
     public static final Set<String> RESERVED_USERNAMES = Set.of(INITIAL_CAS_PSEUDO_USER,
-            CURATION_USER);
+            CURATION_USER, "anonymousUser");
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -149,8 +149,9 @@ public class UserDaoImpl
 
         new TransactionTemplate(transactionManager).executeWithoutResult(transactionStatus -> {
             if (list().isEmpty()) {
-                User admin = new User();
-                admin.setUsername(defaultString(defaultAdminUsername, ADMIN_DEFAULT_PASSWORD));
+                var admin = new User();
+                admin.setUsername(
+                        Objects.toString(defaultAdminUsername, UserDao.ADMIN_DEFAULT_USERNAME));
                 admin.setEncodedPassword(securityProperties.getDefaultAdminPassword());
                 admin.setEnabled(true);
                 if (securityProperties.isDefaultAdminRemoteAccess()) {
@@ -267,7 +268,9 @@ public class UserDaoImpl
     @Override
     public User getCurationUser()
     {
-        return new User(CURATION_USER);
+        var user = new User(CURATION_USER);
+        user.setUiName("Curator");
+        return user;
     }
 
     @Override
@@ -298,12 +301,12 @@ public class UserDaoImpl
     {
         Validate.notBlank(aUiName, "User must be specified");
 
-        String query = String.join("\n", //
+        var query = String.join("\n", //
                 "FROM " + User.class.getName(), //
                 "WHERE ((:realm is null and realm is null) or realm = :realm)", //
                 "AND   uiName = :uiName");
 
-        List<User> users = entityManager.createQuery(query, User.class) //
+        var users = entityManager.createQuery(query, User.class) //
                 .setParameter("realm", aRealm) //
                 .setParameter("uiName", aUiName) //
                 .getResultList();
@@ -321,6 +324,20 @@ public class UserDaoImpl
 
     @Override
     @Transactional
+    public boolean isEmpty()
+    {
+        var cb = entityManager.getCriteriaBuilder();
+        var query = cb.createQuery(Long.class);
+        var root = query.from(User.class);
+        query.select(cb.count(root));
+
+        var count = entityManager.createQuery(query).getSingleResult();
+
+        return count == 0;
+    }
+
+    @Override
+    @Transactional
     public List<User> list()
     {
         return entityManager.createQuery("FROM " + User.class.getName(), User.class)
@@ -331,7 +348,7 @@ public class UserDaoImpl
     @Transactional
     public List<User> listEnabledUsers()
     {
-        String query = "FROM " + User.class.getName() + " WHERE enabled = :enabled";
+        var query = "FROM " + User.class.getName() + " WHERE enabled = :enabled";
 
         return entityManager.createQuery(query, User.class) //
                 .setParameter("enabled", true) //
@@ -342,7 +359,7 @@ public class UserDaoImpl
     @Transactional
     public List<User> listDisabledUsers()
     {
-        String query = "FROM " + User.class.getName() + " WHERE enabled = :enabled";
+        var query = "FROM " + User.class.getName() + " WHERE enabled = :enabled";
 
         return entityManager.createQuery(query, User.class) //
                 .setParameter("enabled", false) //
@@ -364,10 +381,12 @@ public class UserDaoImpl
     @Transactional
     public User getCurrentUser()
     {
-        String username = getCurrentUsername();
+        var username = getCurrentUsername();
+
         if (username == null) {
             return null;
         }
+
         return get(username);
     }
 
@@ -411,34 +430,35 @@ public class UserDaoImpl
     @Override
     public boolean isCurrentUserAdmin()
     {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
 
         if (authentication == null) {
             return false;
         }
 
-        return authentication.getAuthorities().stream().map(GrantedAuthority::getAuthority)
-                .anyMatch(auth -> ROLE_ADMIN.toString().equals(auth));
+        return authentication.getAuthorities().stream() //
+                .map(GrantedAuthority::getAuthority) //
+                .anyMatch(auth -> ROLE_ADMIN.name().equals(auth));
     }
 
     @Override
     @Transactional
     public boolean isProjectCreator(User aUser)
     {
-        boolean roleAdmin = false;
-        for (String role : getRoles(aUser)) {
-            if (Role.ROLE_PROJECT_CREATOR.name().equals(role)) {
-                roleAdmin = true;
-                break;
-            }
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null) {
+            return false;
         }
-        return roleAdmin;
+
+        return authentication.getAuthorities().stream() //
+                .map(GrantedAuthority::getAuthority) //
+                .anyMatch(auth -> Role.ROLE_PROJECT_CREATOR.name().equals(auth));
     }
 
     @Override
     public List<ValidationError> validateEmail(String eMail)
     {
-
         var errors = new ArrayList<ValidationError>();
 
         var len = eMail.length();
@@ -488,8 +508,8 @@ public class UserDaoImpl
         }
 
         // Do not allow space
-        if (containsAnyCharacterMatching(aName, Character::isWhitespace)) {
-            errors.add(new ValidationError("Username cannot contain a space character") //
+        if (containsAnyCharacterMatching(aName, this::isWhitespaceIllegalInUsername)) {
+            errors.add(new ValidationError("Username cannot contain whitespace") //
                     .addKey(MSG_USERNAME_ERROR_ILLEGAL_SPACE));
             return errors;
         }
@@ -550,6 +570,15 @@ public class UserDaoImpl
         }
 
         return errors;
+    }
+
+    private boolean isWhitespaceIllegalInUsername(char ch)
+    {
+        if (securityProperties.isSpaceAllowedInUsername() && ch == ' ') {
+            return false;
+        }
+
+        return Character.isWhitespace((int) ch);
     }
 
     @Override
@@ -662,7 +691,7 @@ public class UserDaoImpl
     @Override
     public String getCurrentUsername()
     {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Principal authentication = SecurityContextHolder.getContext().getAuthentication();
 
         return authentication != null ? authentication.getName() : null;
     }
@@ -723,5 +752,11 @@ public class UserDaoImpl
         }
 
         return true;
+    }
+
+    @Override
+    public boolean isAdminAccountRecoveryMode()
+    {
+        return System.getProperty(PROP_RESTORE_DEFAULT_ADMIN_ACCOUNT) != null;
     }
 }

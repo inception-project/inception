@@ -46,7 +46,11 @@ RUN groupadd -g ${APP_GID} ${APP_GROUP} \
 # Set up application data folder
 RUN mkdir /export
 VOLUME /export
+VOLUME /tmp
+VOLUME /var/log
 
 # Launch application
-ENV JAVA_OPTS="-Xmx750m"
-CMD /opt/inception/launch.sh java ${JAVA_OPTS} -Djava.awt.headless=true -Dinception.home=/export -jar inception-app-standalone.jar
+ENV JAVA_OPTS=""
+ENV JAVA_MEM_OPTS="-XX:MaxRAMPercentage=80"
+ENV APP_ARGS=""
+CMD /opt/inception/launch.sh java ${JAVA_MEMORY_OPTS} ${JAVA_OPTS} -Djava.awt.headless=true -Dinception.home=/export -jar inception-app-standalone.jar ${INCEPTION_ARGUMENTS}

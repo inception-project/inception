@@ -1,0 +1,190 @@
+/*
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+@import 'typography';
+@import 'bibliography';
+@import 'layout';
+@import 'tables';
+@import 'notes';
+@import 'figures';
+@import 'linguistic-teitok';
+
+:root {
+  --section-padding: 8px;
+  --section-margin: 1em;
+}
+
+TEI {
+  teiHeader {
+    display: none;
+  }
+
+  body, front, back {
+    display: block;
+    font-family: sans-serif;
+    padding-bottom: var(--section-padding);
+    margin-bottom: var(--section-margin);
+  }
+
+  body {
+    counter-reset: act;
+    counter-reset: scene;
+    counter-reset: line;
+  }
+
+  castList {
+    display: block;
+    margin-left: 1em;
+  }
+
+  castList > head {
+    font-size: 1em;
+  }
+
+  castList > castItem {
+    display: block;
+  }
+
+  sp {
+    margin-top: 1em;
+    margin-left: 1em;
+    display: block;
+  }
+
+  sp > speaker {
+    font-family: sans-serif;
+    font-style: italic;
+    color: black;
+    background-color: #fff;
+    border: solid #ddd 2px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    margin-left: -1em;
+    margin-bottom: 0.3em;
+    padding-right: 0.5em;
+    border-radius: 16px;
+  }
+
+  sp > speaker::before {
+    content: "Speaker";
+    padding: 0 0.5em;
+    margin-right: 0.5em;
+    background-color: #ddd;
+    font-style: normal;
+    display: inline-block;
+    border-radius: 16px 0px 0px 16px;
+  }
+
+  lb:after {
+    content: ' ';
+    display: block;
+  }
+
+  lg {
+    display: block;
+    list-style-type: none;
+    margin-top: 0;
+    margin-bottom: 0;
+    margin-left: 0;
+    margin-right: 0;
+  }
+
+  l {
+    display: block;
+    counter-increment: line;
+    margin-left: 3.5em;
+  }
+
+  l::before {
+    content: counter(line);
+    color: #ddd;
+    width: 3em;
+    margin-left: -3.5em;
+    display: inline-block;
+    text-align: end;
+    margin-right: 0.5em;
+  }
+
+  sp l:hover:before {
+    color: #999;
+  }
+
+  head {
+    display: block; 
+    font-size: 180%; 
+    margin-bottom: 0.67em; 
+    margin-left: 0; 
+    margin-right: 0; 
+    font-weight: 400;
+    font-family: sans-serif;
+    color: black;
+    background-color: #fff;
+  }
+
+  div[type="act"] {
+    counter-increment: act;
+  }
+
+  div[type="act"] head::before {
+    content: "Act " counter(act);
+    padding: 0 0.5em;
+    margin-right: 0.5em;
+    background-color: #ddd;
+    font-style: normal;
+    border-radius: 16px;
+  }
+
+  div[type="scene"] {
+    counter-increment: scene;
+  }
+
+  div[type="scene"] head::before {
+    content: "Scene " counter(scene);
+    padding: 0 0.5em;
+    margin-right: 0.5em;
+    background-color: #ddd;
+    font-style: normal;
+  }
+
+  div[type="scene"] stage {
+    margin-top: 1em;
+    display: block;
+    font-family: sans-serif;
+    font-style: italic;
+    color: black;
+    background-color: #fff;
+    margin-bottom: 0.3em;
+  }
+
+  div[type="scene"] stage::before {
+    content: "Stage";
+    padding: 2px 0.5em;
+    margin-right: 0.5em;
+    background-color: #ddd;
+    font-style: normal;
+    border-radius: 16px;
+  }
+
+  rs {
+    font-style: italic;
+  }
+
+  ref {
+    font-style: italic;
+  }
+}

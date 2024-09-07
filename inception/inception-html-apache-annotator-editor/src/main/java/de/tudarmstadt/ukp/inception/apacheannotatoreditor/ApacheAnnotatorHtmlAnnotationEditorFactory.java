@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.inception.apacheannotatoreditor;
 
 import java.io.IOException;
-import java.util.Map;
 import java.util.Optional;
 
 import org.apache.wicket.model.IModel;
@@ -32,10 +31,14 @@ import de.tudarmstadt.ukp.inception.apacheannotatoreditor.config.ApacheAnnotator
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorBase;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorFactoryImplBase;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
+import de.tudarmstadt.ukp.inception.io.html.HtmlArchiveFormatSupport;
 import de.tudarmstadt.ukp.inception.io.html.HtmlFormatSupport;
+import de.tudarmstadt.ukp.inception.io.html.MHtmlFormatSupport;
+import de.tudarmstadt.ukp.inception.io.tei.TeiXmlDocumentFormatSupport;
 import de.tudarmstadt.ukp.inception.io.xml.CustomXmlFormatLoader;
 import de.tudarmstadt.ukp.inception.io.xml.XmlFormatSupport;
-import de.tudarmstadt.ukp.inception.preferences.ClientSidePreferencesKey;
+import de.tudarmstadt.ukp.inception.preferences.ClientSidePreferenceKey;
+import de.tudarmstadt.ukp.inception.preferences.ClientSidePreferenceMapValue;
 import de.tudarmstadt.ukp.inception.preferences.ClientSideUserPreferencesProvider;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.support.io.WatchedResourceFile;
@@ -53,7 +56,9 @@ public class ApacheAnnotatorHtmlAnnotationEditorFactory
     extends AnnotationEditorFactoryImplBase
     implements ClientSideUserPreferencesProvider
 {
-    public static final String PREF_KEY = "apache-annotator-editor";
+    private static final ClientSidePreferenceKey<ClientSidePreferenceMapValue> KEY_APACHE_ANNOTATOR_EDITOR_PREFS = //
+            new ClientSidePreferenceKey<>(ClientSidePreferenceMapValue.class,
+                    "annotation/apache-annotator-editor");
 
     private WatchedResourceFile<JsonSchema> userPreferencesSchema;
 
@@ -77,14 +82,17 @@ public class ApacheAnnotatorHtmlAnnotationEditorFactory
         if (aFormat.startsWith(CustomXmlFormatLoader.CUSTOM_XML_FORMAT_PREFIX)) {
             return PREFERRED;
         }
-        
-        switch (aFormat) {
-        case HtmlFormatSupport.ID: // fall-through
-        case XmlFormatSupport.ID:
-            return PREFERRED;
+
+        return switch (aFormat) {
+        case HtmlFormatSupport.ID, //
+                HtmlArchiveFormatSupport.ID, //
+                MHtmlFormatSupport.ID, //
+                XmlFormatSupport.ID, //
+                TeiXmlDocumentFormatSupport.ID:
+            yield PREFERRED;
         default:
-            return DEFAULT;
-        }
+            yield DEFAULT;
+        };
     }
 
     @Override
@@ -101,12 +109,11 @@ public class ApacheAnnotatorHtmlAnnotationEditorFactory
         aModelObject.setPagingStrategy(new NoPagingStrategy());
     }
 
-    @SuppressWarnings({ "unchecked", "rawtypes" })
+    @SuppressWarnings({ "unchecked" })
     @Override
-    public Optional<ClientSidePreferencesKey<Map>> getUserPreferencesKey()
+    public Optional<ClientSidePreferenceKey<ClientSidePreferenceMapValue>> getUserPreferencesKey()
     {
-        return Optional
-                .of(new ClientSidePreferencesKey<>(Map.class, "annotation/apache-annotator-editor"));
+        return Optional.of(KEY_APACHE_ANNOTATOR_EDITOR_PREFS);
     }
 
     @Override

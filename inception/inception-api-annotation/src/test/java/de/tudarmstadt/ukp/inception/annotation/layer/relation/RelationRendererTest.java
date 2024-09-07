@@ -42,8 +42,10 @@ import org.apache.uima.jcas.JCas;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -56,6 +58,7 @@ import de.tudarmstadt.ukp.inception.annotation.layer.behaviors.LayerBehaviorRegi
 import de.tudarmstadt.ukp.inception.annotation.layer.behaviors.LayerSupportRegistryImpl;
 import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainLayerSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
+import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VComment;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
@@ -64,6 +67,8 @@ import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 @ExtendWith(MockitoExtension.class)
 public class RelationRendererTest
 {
+    private @Mock ConstraintsService constraintsService;
+
     private FeatureSupportRegistry featureSupportRegistry;
     private LayerSupportRegistryImpl layerSupportRegistry;
     private Project project;
@@ -95,14 +100,13 @@ public class RelationRendererTest
         document.setProject(project);
 
         // Set up annotation schema with POS and Dependency
-        AnnotationLayer tokenLayer = new AnnotationLayer(Token.class.getName(), "Token", SPAN_TYPE,
-                project, true, SINGLE_TOKEN, NO_OVERLAP);
+        var tokenLayer = new AnnotationLayer(Token.class.getName(), "Token", SPAN_TYPE, project,
+                true, SINGLE_TOKEN, NO_OVERLAP);
         tokenLayer.setId(1l);
-        AnnotationFeature tokenLayerPos = new AnnotationFeature(1l, tokenLayer, "pos",
-                POS.class.getName());
+        var tokenLayerPos = new AnnotationFeature(1l, tokenLayer, "pos", POS.class.getName());
 
-        AnnotationLayer posLayer = new AnnotationLayer(POS.class.getName(), "POS", SPAN_TYPE,
-                project, true, SINGLE_TOKEN, NO_OVERLAP);
+        var posLayer = new AnnotationLayer(POS.class.getName(), "POS", SPAN_TYPE, project, true,
+                SINGLE_TOKEN, NO_OVERLAP);
         posLayer.setId(2l);
 
         depLayer = new AnnotationLayer(Dependency.class.getName(), "Dependency", RELATION_TYPE,
@@ -115,14 +119,17 @@ public class RelationRendererTest
         dependencyLayerDependent = new AnnotationFeature(3l, depLayer, "Dependent",
                 Token.class.getName());
 
-        LayerBehaviorRegistryImpl layerBehaviorRegistry = new LayerBehaviorRegistryImpl(asList());
+        var layerBehaviorRegistry = new LayerBehaviorRegistryImpl(asList());
         layerBehaviorRegistry.init();
 
         featureSupportRegistry = mock(FeatureSupportRegistry.class);
         layerSupportRegistry = new LayerSupportRegistryImpl(asList(
-                new SpanLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry),
-                new RelationLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry),
-                new ChainLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry)));
+                new SpanLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry,
+                        constraintsService),
+                new RelationLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry,
+                        constraintsService),
+                new ChainLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry,
+                        constraintsService)));
         layerSupportRegistry.init();
 
         behaviors = asList(new RelationAttachmentBehavior(), new RelationOverlapBehavior(),
@@ -145,7 +152,8 @@ public class RelationRendererTest
 
         var adapter = new RelationAdapter(layerSupportRegistry, featureSupportRegistry, null,
                 depLayer, FEAT_REL_TARGET, FEAT_REL_SOURCE,
-                () -> asList(dependencyLayerGovernor, dependencyLayerDependent), behaviors);
+                () -> asList(dependencyLayerGovernor, dependencyLayerDependent), behaviors,
+                constraintsService);
 
         var sut = new RelationRenderer(adapter, layerSupportRegistry, featureSupportRegistry,
                 asList(new RelationCrossSentenceBehavior()));
@@ -191,7 +199,8 @@ public class RelationRendererTest
 
         var adapter = new RelationAdapter(layerSupportRegistry, featureSupportRegistry, null,
                 depLayer, FEAT_REL_TARGET, FEAT_REL_SOURCE,
-                () -> asList(dependencyLayerGovernor, dependencyLayerDependent), behaviors);
+                () -> asList(dependencyLayerGovernor, dependencyLayerDependent), behaviors,
+                constraintsService);
 
         var posAnnotations = new ArrayList<>(select(jcas, POS.class));
 
@@ -205,8 +214,12 @@ public class RelationRendererTest
         var sut = new RelationRenderer(adapter, layerSupportRegistry, featureSupportRegistry,
                 asList(new RelationCrossSentenceBehavior()));
 
-        var vdoc = new VDocument();
-        sut.render(jcas.getCas(), asList(), vdoc, 0, jcas.getDocumentText().length());
+        var request = RenderRequest.builder() //
+                .withCas(jcas.getCas()) //
+                .withWindow(0, jcas.getCas().getDocumentText().length()) //
+                .build();
+        var vdoc = new VDocument(jcas.getCas().getDocumentText());
+        sut.render(request, asList(), vdoc);
 
         assertThat(vdoc.comments()) //
                 .usingRecursiveFieldByFieldElementComparator() //
@@ -228,7 +241,8 @@ public class RelationRendererTest
 
         var adapter = new RelationAdapter(layerSupportRegistry, featureSupportRegistry, null,
                 depLayer, FEAT_REL_TARGET, FEAT_REL_SOURCE,
-                () -> asList(dependencyLayerGovernor, dependencyLayerDependent), behaviors);
+                () -> asList(dependencyLayerGovernor, dependencyLayerDependent), behaviors,
+                constraintsService);
 
         var posAnnotations = new ArrayList<>(select(jcas, POS.class));
 
@@ -240,30 +254,34 @@ public class RelationRendererTest
 
         // Create two annotations stacked annotations
         depLayer.setOverlapMode(ANY_OVERLAP);
-        AnnotationFS dep1 = adapter.add(document, username, source, target, jcas.getCas());
-        AnnotationFS dep2 = adapter.add(document, username, source, target, jcas.getCas());
+        var dep1 = adapter.add(document, username, source, target, jcas.getCas());
+        var dep2 = adapter.add(document, username, source, target, jcas.getCas());
+
+        var request = RenderRequest.builder() //
+                .withCas(jcas.getCas()) //
+                .withWindow(0, jcas.getCas().getDocumentText().length()) //
+                .build();
 
         {
             depLayer.setOverlapMode(ANY_OVERLAP);
-            VDocument vdoc = new VDocument();
-            sut.render(jcas.getCas(), asList(), vdoc, 0, jcas.getDocumentText().length());
+            var vdoc = new VDocument(jcas.getCas().getDocumentText());
+            sut.render(request, asList(), vdoc);
 
             assertThat(vdoc.comments()).filteredOn(c -> ERROR.equals(c.getCommentType())).isEmpty();
         }
 
         {
             depLayer.setOverlapMode(STACKING_ONLY);
-            VDocument vdoc = new VDocument();
-            sut.render(jcas.getCas(), asList(), vdoc, 0, jcas.getDocumentText().length());
+            var vdoc = new VDocument(jcas.getCas().getDocumentText());
+            sut.render(request, asList(), vdoc);
 
             assertThat(vdoc.comments()).filteredOn(c -> ERROR.equals(c.getCommentType())).isEmpty();
-
         }
 
         {
             depLayer.setOverlapMode(OVERLAP_ONLY);
-            VDocument vdoc = new VDocument();
-            sut.render(jcas.getCas(), asList(), vdoc, 0, jcas.getDocumentText().length());
+            var vdoc = new VDocument(jcas.getCas().getDocumentText());
+            sut.render(request, asList(), vdoc);
 
             assertThat(vdoc.comments()) //
                     .filteredOn(c -> ERROR.equals(c.getCommentType()))
@@ -274,8 +292,8 @@ public class RelationRendererTest
 
         {
             depLayer.setOverlapMode(NO_OVERLAP);
-            VDocument vdoc = new VDocument();
-            sut.render(jcas.getCas(), asList(), vdoc, 0, jcas.getDocumentText().length());
+            VDocument vdoc = new VDocument(jcas.getCas().getDocumentText());
+            sut.render(request, asList(), vdoc);
 
             assertThat(vdoc.comments()) //
                     .filteredOn(c -> ERROR.equals(c.getCommentType()))
@@ -285,15 +303,14 @@ public class RelationRendererTest
         }
 
         // Remove the stacked annotation and introduce one that is purely overlapping
-        adapter.delete(document, username, jcas.getCas(), new VID(dep2));
+        adapter.delete(document, username, jcas.getCas(), VID.of(dep2));
         depLayer.setOverlapMode(ANY_OVERLAP);
-        AnnotationFS dep3 = adapter.add(document, username, source, posAnnotations.get(2),
-                jcas.getCas());
+        var dep3 = adapter.add(document, username, source, posAnnotations.get(2), jcas.getCas());
 
         {
             depLayer.setOverlapMode(NO_OVERLAP);
-            VDocument vdoc = new VDocument();
-            sut.render(jcas.getCas(), asList(), vdoc, 0, jcas.getDocumentText().length());
+            var vdoc = new VDocument(jcas.getCas().getDocumentText());
+            sut.render(request, asList(), vdoc);
 
             assertThat(vdoc.comments()) //
                     .filteredOn(c -> ERROR.equals(c.getCommentType()))

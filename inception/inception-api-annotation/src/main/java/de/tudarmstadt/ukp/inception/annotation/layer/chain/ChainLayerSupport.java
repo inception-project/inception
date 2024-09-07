@@ -21,20 +21,23 @@ import static java.util.Arrays.asList;
 
 import java.lang.invoke.MethodHandles;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Supplier;
 
 import org.apache.uima.cas.CAS;
-import org.apache.uima.resource.metadata.TypeDescription;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.validation.ValidationError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 
+import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.annotation.layer.behaviors.LayerBehaviorRegistry;
@@ -55,10 +58,21 @@ public class ChainLayerSupport
     extends LayerSupport_ImplBase<ChainAdapter, ChainLayerTraits>
     implements InitializingBean
 {
+    public static final String FEATURE_NAME_FIRST = "first";
+    public static final String FEATURE_NAME_NEXT = "next";
+    public static final String FEATURE_NAME_REFERENCE_RELATION = "referenceRelation";
+    public static final String FEATURE_NAME_REFERENCE = "referenceType";
+    public static final String TYPE_SUFFIX_LINK = "Link";
+    public static final String TYPE_SUFFIX_CHAIN = "Chain";
+
     private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
+    @SuppressWarnings("deprecation")
+    public static final String TYPE = WebAnnoConst.CHAIN_TYPE;
 
     private final ApplicationEventPublisher eventPublisher;
     private final LayerBehaviorRegistry layerBehaviorsRegistry;
+    private final ConstraintsService constraintsService;
 
     private String layerSupportId;
     private List<LayerType> types;
@@ -66,11 +80,12 @@ public class ChainLayerSupport
     @Autowired
     public ChainLayerSupport(FeatureSupportRegistry aFeatureSupportRegistry,
             ApplicationEventPublisher aEventPublisher,
-            LayerBehaviorRegistry aLayerBehaviorsRegistry)
+            LayerBehaviorRegistry aLayerBehaviorsRegistry, ConstraintsService aConstraintsService)
     {
         super(aFeatureSupportRegistry);
         eventPublisher = aEventPublisher;
         layerBehaviorsRegistry = aLayerBehaviorsRegistry;
+        constraintsService = aConstraintsService;
     }
 
     @Override
@@ -88,7 +103,7 @@ public class ChainLayerSupport
     @Override
     public void afterPropertiesSet() throws Exception
     {
-        types = asList(new LayerType(WebAnnoConst.CHAIN_TYPE, "Chain", layerSupportId));
+        types = asList(new LayerType(TYPE, TYPE_SUFFIX_CHAIN, layerSupportId));
     }
 
     @Override
@@ -100,42 +115,41 @@ public class ChainLayerSupport
     @Override
     public boolean accepts(AnnotationLayer aLayer)
     {
-        return WebAnnoConst.CHAIN_TYPE.equals(aLayer.getType());
+        return TYPE.equals(aLayer.getType());
     }
 
     @Override
     public ChainAdapter createAdapter(AnnotationLayer aLayer,
             Supplier<Collection<AnnotationFeature>> aFeatures)
     {
-        ChainAdapter adapter = new ChainAdapter(getLayerSupportRegistry(), featureSupportRegistry,
-                eventPublisher, aLayer, aFeatures,
-                layerBehaviorsRegistry.getLayerBehaviors(this, SpanLayerBehavior.class));
-
-        return adapter;
+        return new ChainAdapter(getLayerSupportRegistry(), featureSupportRegistry, eventPublisher,
+                aLayer, aFeatures,
+                layerBehaviorsRegistry.getLayerBehaviors(this, SpanLayerBehavior.class),
+                constraintsService);
     }
 
     @Override
     public void generateTypes(TypeSystemDescription aTsd, AnnotationLayer aLayer,
             List<AnnotationFeature> aAllFeaturesInProject)
     {
-        TypeDescription tdChains = aTsd.addType(aLayer.getName() + "Chain", aLayer.getDescription(),
+        var tdChain = aTsd.addType(aLayer.getName() + TYPE_SUFFIX_CHAIN, aLayer.getDescription(),
                 CAS.TYPE_NAME_ANNOTATION_BASE);
-        tdChains.addFeature("first", "", aLayer.getName() + "Link");
+        tdChain.addFeature(FEATURE_NAME_FIRST, "", aLayer.getName() + TYPE_SUFFIX_LINK);
 
         // Custom features on chain layers are currently not supported
         // generateFeatures(aTsd, tdChains, type);
 
-        TypeDescription tdLink = aTsd.addType(aLayer.getName() + "Link", "",
+        var tdLink = aTsd.addType(aLayer.getName() + TYPE_SUFFIX_LINK, "",
                 CAS.TYPE_NAME_ANNOTATION);
-        tdLink.addFeature("next", "", aLayer.getName() + "Link");
-        tdLink.addFeature("referenceType", "", CAS.TYPE_NAME_STRING);
-        tdLink.addFeature("referenceRelation", "", CAS.TYPE_NAME_STRING);
+        tdLink.addFeature(FEATURE_NAME_NEXT, "", aLayer.getName() + TYPE_SUFFIX_LINK);
+        tdLink.addFeature(FEATURE_NAME_REFERENCE, "", CAS.TYPE_NAME_STRING);
+        tdLink.addFeature(FEATURE_NAME_REFERENCE_RELATION, "", CAS.TYPE_NAME_STRING);
     }
 
     @Override
     public List<String> getGeneratedTypeNames(AnnotationLayer aLayer)
     {
-        return asList(aLayer.getName() + "Chain", aLayer.getName() + "Link");
+        return asList(aLayer.getName() + TYPE_SUFFIX_CHAIN, aLayer.getName() + TYPE_SUFFIX_LINK);
     }
 
     @Override
@@ -150,7 +164,7 @@ public class ChainLayerSupport
     @Override
     public Panel createTraitsEditor(String aId, IModel<AnnotationLayer> aLayerModel)
     {
-        AnnotationLayer layer = aLayerModel.getObject();
+        var layer = aLayerModel.getObject();
 
         if (!accepts(layer)) {
             throw unsupportedLayerTypeException(layer);
@@ -163,5 +177,30 @@ public class ChainLayerSupport
     public ChainLayerTraits createTraits()
     {
         return new ChainLayerTraits();
+    }
+
+    @Override
+    public List<ValidationError> validateFeatureName(AnnotationFeature aFeature)
+    {
+        var name = aFeature.getName();
+
+        if (Set.of(FEATURE_NAME_FIRST, FEATURE_NAME_NEXT, FEATURE_NAME_REFERENCE,
+                FEATURE_NAME_REFERENCE_RELATION).contains(name)) {
+            return asList(new ValidationError("[" + name + "] is a reserved feature name on "
+                    + "chain layers. Please use a different name for the feature."));
+        }
+
+        return Collections.emptyList();
+    }
+
+    @Override
+    public boolean isDeletable(AnnotationFeature aFeature)
+    {
+        if (Set.of(FEATURE_NAME_FIRST, FEATURE_NAME_NEXT, FEATURE_NAME_REFERENCE,
+                FEATURE_NAME_REFERENCE_RELATION).contains(aFeature.getName())) {
+            return false;
+        }
+
+        return true;
     }
 }

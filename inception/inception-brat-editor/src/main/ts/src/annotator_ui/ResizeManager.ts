@@ -60,7 +60,19 @@ export class ResizeManager {
     this.hide()
 
     // Event handlers for the resizer component
-    this.visualizer.svgContainer.addEventListener('mouseover', e => this.showResizer(e))
+    this.showResizer = this.showResizer.bind(this)
+    this.visualizer.svgContainer.addEventListener('mouseover', this.showResizer)
+  }
+
+  public destroy() {
+    this.hide()
+    this.visualizer.svgContainer.removeEventListener('mouseover', this.showResizer)
+    if (this.beginHandle?.$destroy) {
+      this.beginHandle.$destroy()
+    }
+    if (this.endHandle?.$destroy) {
+      this.endHandle.$destroy()
+    }
   }
 
   private showResizer (event: Event): void {

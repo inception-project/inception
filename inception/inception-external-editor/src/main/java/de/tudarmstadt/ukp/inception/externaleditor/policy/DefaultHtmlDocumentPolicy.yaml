@@ -19,21 +19,27 @@ version: 1.0
 case_sensitive: false
 default_attribute_action: DROP
 default_element_action: DROP
+default_namespace: http://www.w3.org/1999/xhtml
+match_without_namespace: true
 debug: true
 policies:
   - action: PASS
-    elements: ["html", "head", "body", "title"] 
+    elements: ["html", "head", "body", "title"]
   # Content sectioning
   - action: PASS
     elements: ["address", "article", "aside", "footer", "header", 
                "h1", "h2", "h3", "h4", "h5", "h6", "main", "section"]
+  # Navigaton sectioning (probably not relevant for annotation)
+  - action: PRUNE
+    elements: ["nav"]
   # Text content
   - action: PASS
     elements: ["blockquote", "dd", "div", "dl", "dt", "figcaption", "figure", "hr", "li", 
                "menu", "ol", "p", "pre", "ul"]
-  # Inline text semantics
+  # Links / anchors
   - action: SKIP
     elements: ["a"]
+  # Inline text semantics
   - action: PASS
     elements: ["abbr", "b", "bdi", "bdo", "br", "cite", "code", "data", "dfn",
                "em", "i", "kbd", "mark", "q", "rp", "rt", "ruby", "s", "samp", "small",
@@ -61,5 +67,37 @@ policies:
   - action: PASS
     attributes: ["class"]
     matching: "[a-zA-Z0-9\\s,\\-_]+"
-    
-  
+  # Data attributes
+  - action: PASS
+    attribute_patterns: ["data-.*"]
+    matching: "[a-zA-Z0-9\\s,\\-_]+"
+  # Images - depending on the security configurations, the safety net may block these
+  - action: PASS
+    elements: ["img"]
+  - on_elements: ["img"]
+    action: PASS
+    attributes: ["decoding", "alt", "width", "height"]
+  - on_elements: ["img"]
+    action: PASS
+    attributes: ["src"]
+    matching: "res[?]resId=.*" # Allow only access to embedded resources
+  # Audio - depending on the security configurations, the safety net may block these
+  - action: PASS
+    elements: ["audio"]
+  - on_elements: ["audio"]
+    action: PASS
+    attributes: ["controls", "controlslist", "loop", "muted", "preload", "autoplay"]
+  - on_elements: ["audio"]
+    action: PASS
+    attributes: ["src"]
+    matching: "res[?]resId=.*" # Allow only access to embedded resources
+  # Video - depending on the security configurations, the safety net may block these
+  - action: PASS
+    elements: ["video", "source"]
+  - on_elements: ["video"]
+    action: PASS
+    attributes: ["autoplay", "controls", "height", "loop", "muted", "preload", "width"]
+  - on_elements: ["video"]
+    action: PASS
+    attributes: ["src"]
+    matching: "res[?]resId=.*" # Allow only access to embedded resources

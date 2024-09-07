@@ -30,9 +30,9 @@ public class FeatureValueUpdatedEventAdapter
     implements EventLoggingAdapter<FeatureValueUpdatedEvent>
 {
     @Override
-    public boolean accepts(Object aEvent)
+    public boolean accepts(Class<?> aEvent)
     {
-        return aEvent instanceof FeatureValueUpdatedEvent;
+        return FeatureValueUpdatedEvent.class.isAssignableFrom(aEvent);
     }
 
     @Override
@@ -57,7 +57,7 @@ public class FeatureValueUpdatedEventAdapter
     public String getDetails(FeatureValueUpdatedEvent aEvent) throws IOException
     {
         // FIXME This may fail for slot features... let's see.
-        FeatureChangeDetails details = new FeatureChangeDetails(aEvent.getFS(), aEvent.getFeature(),
+        var details = new FeatureChangeDetails(aEvent.getFS(), aEvent.getFeature(),
                 aEvent.getNewValue(), aEvent.getOldValue());
         return JSONUtil.toJsonString(details);
     }

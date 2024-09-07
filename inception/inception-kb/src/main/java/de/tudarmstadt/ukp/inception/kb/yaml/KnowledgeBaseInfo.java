@@ -37,7 +37,13 @@ public class KnowledgeBaseInfo
     private String authorName;
 
     @JsonProperty("website-url")
-    private String websiteURL;
+    private String websiteUrl;
+
+    @JsonProperty("license-name")
+    private String licenseName;
+
+    @JsonProperty("license-url")
+    private String licenseUrl;
 
     public String getDescription()
     {
@@ -69,14 +75,34 @@ public class KnowledgeBaseInfo
         authorName = aAuthorName;
     }
 
-    public String getWebsiteURL()
+    public String getWebsiteUrl()
     {
-        return websiteURL;
+        return websiteUrl;
     }
 
-    public void setWebsiteURL(String aWebsiteURL)
+    public void setWebsiteUrl(String aWebsiteURL)
     {
-        websiteURL = aWebsiteURL;
+        websiteUrl = aWebsiteURL;
+    }
+
+    public String getLicenseName()
+    {
+        return licenseName;
+    }
+
+    public void setLicenseName(String aLicenseName)
+    {
+        licenseName = aLicenseName;
+    }
+
+    public String getLicenseUrl()
+    {
+        return licenseUrl;
+    }
+
+    public void setLicenseUrl(String aLicenseUrl)
+    {
+        licenseUrl = aLicenseUrl;
     }
 
     @Override
@@ -92,12 +118,15 @@ public class KnowledgeBaseInfo
         return Objects.equals(description, that.description)
                 && Objects.equals(hostInstitutionName, that.hostInstitutionName)
                 && Objects.equals(authorName, that.authorName)
-                && Objects.equals(websiteURL, that.websiteURL);
+                && Objects.equals(websiteUrl, that.websiteUrl)
+                && Objects.equals(licenseName, that.licenseName)
+                && Objects.equals(licenseUrl, that.licenseUrl);
     }
 
     @Override
     public int hashCode()
     {
-        return Objects.hash(description, hostInstitutionName, authorName, websiteURL);
+        return Objects.hash(description, hostInstitutionName, authorName, websiteUrl, licenseName,
+                licenseUrl);
     }
 }

@@ -1,0 +1,102 @@
+/*
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+:root {
+}
+
+TEI {
+  display: block;
+
+  text {
+    display: block;
+  }
+
+  front, back, body, div {
+    display: block;
+  }
+
+  titlePage, titlePart, byline, docImprint {
+    display: block;
+  }
+
+  figure {
+    display: block;
+  }
+  
+  p {
+    display: block;
+    margin-bottom: 0.3em;
+  }
+
+  // Page break
+  pb {
+    display: block;
+
+    &::before {
+      margin-top: 2em;
+      clear: both;
+      display: block;
+      width: 100%;
+      border-top: lightgray 1px solid;
+      content: ' ';
+    }
+
+    &::after {
+      clear: both;
+      float: right;
+      display: block;
+      text-align: right;
+      color: gray;
+      font-size: smaller;
+      background-color: lightgray;
+      padding-left: 0.25em;
+      padding-right: 0.25em;
+      margin-bottom: 0.25em;
+      border-radius: 0 0 0.5em 0.5em;
+      content: 'Page ' attr(n);
+    }
+  }
+
+  // Column break
+  cb {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+
+    &::before {
+      flex-grow: 1;
+      margin-top: 1em;
+      margin-top: 1em;
+      clear: both;
+      display: block;
+      border-top: lightgray 1px solid;
+      content: ' ';
+    }
+
+    &::after {
+      align-self: center;
+      color: gray;
+      background-color: white;
+      font-size: smaller;
+      content: 'Column ' attr(n);
+      position: absolute;
+      top: 0.3em;
+      padding-left: 1em;
+      padding-right: 1em;
+    }
+  }
+}

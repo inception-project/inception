@@ -42,7 +42,7 @@ public class TeiFormatSupport
     implements FormatSupport
 {
     public static final String ID = "dkpro-core-tei";
-    public static final String NAME = "TEI";
+    public static final String NAME = "TEI P5 XML (legacy)";
 
     @Override
     public String getId()

@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXCLUSIVE_WRITE_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.CHARACTERS;
 import static de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderTestHelper.getPredictions;
+import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
 import static org.apache.uima.fit.util.JCasUtil.select;
@@ -30,20 +31,17 @@ import static org.dkpro.core.api.datasets.DatasetValidationPolicy.CONTINUE;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.Feature;
-import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.fit.testing.factory.TokenBuilder;
 import org.apache.uima.fit.util.CasUtil;
-import org.apache.uima.jcas.JCas;
 import org.dkpro.core.api.datasets.Dataset;
 import org.dkpro.core.api.datasets.DatasetFactory;
 import org.dkpro.core.io.conll.Conll2002Reader;
@@ -51,6 +49,8 @@ import org.dkpro.core.io.conll.Conll2002Reader.ColumnSeparators;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -58,11 +58,10 @@ import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
-import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
-import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.IncrementalSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.PercentageBasedSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.PredictionContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.gazeteer.model.GazeteerEntry;
 import de.tudarmstadt.ukp.inception.support.test.recommendation.DkproTestHelper;
@@ -70,6 +69,8 @@ import de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderTestH
 
 public class StringMatchingRecommenderTest
 {
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
     private static final File cache = DkproTestHelper.getCacheFolder();
     private static final DatasetFactory loader = new DatasetFactory(cache);
 
@@ -96,8 +97,8 @@ public class StringMatchingRecommenderTest
     @Test
     public void thatTrainingWorks() throws Exception
     {
-        StringMatchingRecommender sut = new StringMatchingRecommender(recommender, traits);
-        List<CAS> casList = loadDevelopmentData();
+        var sut = new StringMatchingRecommender(recommender, traits);
+        var casList = loadDevelopmentData();
 
         sut.train(context, casList);
 
@@ -108,17 +109,17 @@ public class StringMatchingRecommenderTest
     @Test
     public void thatPredictionWorks() throws Exception
     {
-        StringMatchingRecommender sut = new StringMatchingRecommender(recommender, traits);
-        List<CAS> casList = loadDevelopmentData();
+        var sut = new StringMatchingRecommender(recommender, traits);
+        var casList = loadDevelopmentData();
 
-        CAS cas = casList.get(0);
-        RecommenderTestHelper.addScoreFeature(cas, NamedEntity.class, "value");
+        var cas = casList.get(0);
+        RecommenderTestHelper.addPredictionFeatures(cas, NamedEntity.class, "value");
 
         sut.train(context, Collections.singletonList(cas));
 
-        sut.predict(context, cas);
+        sut.predict(new PredictionContext(context), cas);
 
-        List<NamedEntity> predictions = getPredictions(cas, NamedEntity.class);
+        var predictions = getPredictions(cas, NamedEntity.class);
 
         assertThat(predictions).as("Predictions have been written to CAS").isNotEmpty();
 
@@ -135,15 +136,15 @@ public class StringMatchingRecommenderTest
     @Test
     public void thatPredictionForNoLabelAnnosWorks() throws Exception
     {
-        StringMatchingRecommender sut = new StringMatchingRecommender(recommender, traits);
-        CAS cas = getTestCasNoLabelLabels();
-        RecommenderTestHelper.addScoreFeature(cas, NamedEntity.class, "value");
+        var sut = new StringMatchingRecommender(recommender, traits);
+        var cas = getTestCasNoLabelLabels();
+        RecommenderTestHelper.addPredictionFeatures(cas, NamedEntity.class, "value");
 
         sut.train(context, Collections.singletonList(cas));
 
-        sut.predict(context, cas);
+        sut.predict(new PredictionContext(context), cas);
 
-        List<NamedEntity> predictions = getPredictions(cas, NamedEntity.class);
+        var predictions = getPredictions(cas, NamedEntity.class);
 
         assertThat(predictions).as("Has all null labels").extracting(NamedEntity::getValue)
                 .containsOnlyNulls();
@@ -154,28 +155,29 @@ public class StringMatchingRecommenderTest
     {
         recommender.getLayer().setAnchoringMode(CHARACTERS);
 
-        StringMatchingRecommender sut = new StringMatchingRecommender(recommender, traits);
+        var sut = new StringMatchingRecommender(recommender, traits);
 
-        JCas jcas = JCasFactory.createJCas();
-        TokenBuilder<Token, Sentence> builder = new TokenBuilder<>(Token.class, Sentence.class);
+        var jcas = JCasFactory.createJCas();
+        var builder = new TokenBuilder<>(Token.class, Sentence.class);
         builder.buildTokens(jcas, "John Smith. Peter Johnheim .");
-        CAS cas = jcas.getCas();
+        var cas = jcas.getCas();
         casStorageSession.add("cas", EXCLUSIVE_WRITE_ACCESS, cas);
 
-        RecommenderTestHelper.addScoreFeature(cas, NamedEntity.class, "value");
+        RecommenderTestHelper.addPredictionFeatures(cas, NamedEntity.class, "value");
 
-        List<GazeteerEntry> gazeteer = new ArrayList<>();
-        gazeteer.add(new GazeteerEntry("John Smith", "ORG"));
-        gazeteer.add(new GazeteerEntry("Peter John", "LOC"));
+        var gazeteer = asList( //
+                new GazeteerEntry("John Smith", "ORG"), //
+                new GazeteerEntry("Peter John", "LOC"));
 
         sut.pretrain(gazeteer, context);
 
-        sut.predict(context, cas);
+        sut.predict(new PredictionContext(context), cas);
 
-        List<NamedEntity> predictions = getPredictions(cas, NamedEntity.class);
+        var predictions = getPredictions(cas, NamedEntity.class);
 
-        assertThat(predictions).extracting(NamedEntity::getCoveredText).contains("John Smith",
-                "Peter John");
+        assertThat(predictions) //
+                .extracting(NamedEntity::getCoveredText)//
+                .contains("John Smith", "Peter John");
     }
 
     @Test
@@ -183,24 +185,23 @@ public class StringMatchingRecommenderTest
     {
         recommender.getLayer().setCrossSentence(true);
 
-        StringMatchingRecommender sut = new StringMatchingRecommender(recommender, traits);
+        var sut = new StringMatchingRecommender(recommender, traits);
 
-        JCas jcas = JCasFactory.createJCas();
-        TokenBuilder<Token, Sentence> builder = new TokenBuilder<>(Token.class, Sentence.class);
+        var jcas = JCasFactory.createJCas();
+        var builder = new TokenBuilder<>(Token.class, Sentence.class);
         builder.buildTokens(jcas, "John Smith .\nPeter Johnheim .");
-        CAS cas = jcas.getCas();
+        var cas = jcas.getCas();
         casStorageSession.add("cas", EXCLUSIVE_WRITE_ACCESS, cas);
 
-        RecommenderTestHelper.addScoreFeature(cas, NamedEntity.class, "value");
+        RecommenderTestHelper.addPredictionFeatures(cas, NamedEntity.class, "value");
 
-        List<GazeteerEntry> gazeteer = new ArrayList<>();
-        gazeteer.add(new GazeteerEntry("Smith . Peter", "ORG"));
+        var gazeteer = asList(new GazeteerEntry("Smith . Peter", "ORG"));
 
         sut.pretrain(gazeteer, context);
 
-        sut.predict(context, cas);
+        sut.predict(new PredictionContext(context), cas);
 
-        List<NamedEntity> predictions = getPredictions(cas, NamedEntity.class);
+        var predictions = getPredictions(cas, NamedEntity.class);
 
         assertThat(predictions).extracting(NamedEntity::getCoveredText).contains("Smith .\nPeter");
     }
@@ -208,10 +209,10 @@ public class StringMatchingRecommenderTest
     private CAS getTestCasNoLabelLabels() throws Exception
     {
         try {
-            Dataset ds = loader.load("germeval2014-de", CONTINUE);
-            CAS cas = loadData(ds, ds.getDataFiles()[0]).get(0);
-            Type neType = CasUtil.getAnnotationType(cas, NamedEntity.class);
-            Feature valFeature = neType.getFeatureByBaseName("value");
+            var ds = loader.load("germeval2014-de", CONTINUE);
+            var cas = loadData(ds, ds.getDataFiles()[0]).get(0);
+            var neType = CasUtil.getAnnotationType(cas, NamedEntity.class);
+            var valFeature = neType.getFeatureByBaseName("value");
             select(cas.getJCas(), NamedEntity.class)
                     .forEach(ne -> ne.setFeatureValueFromString(valFeature, null));
 
@@ -227,24 +228,24 @@ public class StringMatchingRecommenderTest
     @Test
     public void thatPredictionWithPretrainigWorks() throws Exception
     {
-        StringMatchingRecommender sut = new StringMatchingRecommender(recommender, traits);
-        List<CAS> casList = loadDevelopmentData();
+        var sut = new StringMatchingRecommender(recommender, traits);
+        var casList = loadDevelopmentData();
 
-        CAS cas = casList.get(0);
-        RecommenderTestHelper.addScoreFeature(cas, NamedEntity.class, "value");
+        var cas = casList.get(0);
+        RecommenderTestHelper.addPredictionFeatures(cas, NamedEntity.class, "value");
 
-        List<GazeteerEntry> gazeteer = new ArrayList<>();
-        gazeteer.add(new GazeteerEntry("Toyota", "ORG"));
-        gazeteer.add(new GazeteerEntry("Deutschland", "LOC"));
-        gazeteer.add(new GazeteerEntry("Deutschland", "GPE"));
+        var gazeteer = asList( //
+                new GazeteerEntry("Toyota", "ORG"), //
+                new GazeteerEntry("Deutschland", "LOC"), //
+                new GazeteerEntry("Deutschland", "GPE"));
 
         sut.pretrain(gazeteer, context);
 
         sut.train(context, emptyList());
 
-        sut.predict(context, cas);
+        sut.predict(new PredictionContext(context), cas);
 
-        List<NamedEntity> predictions = getPredictions(cas, NamedEntity.class);
+        var predictions = getPredictions(cas, NamedEntity.class);
 
         assertThat(predictions).as("Predictions have been written to CAS").isNotEmpty();
 
@@ -260,24 +261,24 @@ public class StringMatchingRecommenderTest
     {
         traits.setIgnoreCase(true);
 
-        StringMatchingRecommender sut = new StringMatchingRecommender(recommender, traits);
-        List<CAS> casList = loadDevelopmentData();
+        var sut = new StringMatchingRecommender(recommender, traits);
+        var casList = loadDevelopmentData();
 
-        CAS cas = casList.get(0);
-        RecommenderTestHelper.addScoreFeature(cas, NamedEntity.class, "value");
+        var cas = casList.get(0);
+        RecommenderTestHelper.addPredictionFeatures(cas, NamedEntity.class, "value");
 
-        List<GazeteerEntry> gazeteer = new ArrayList<>();
-        gazeteer.add(new GazeteerEntry("Toyota", "ORG"));
-        gazeteer.add(new GazeteerEntry("deutschland", "LOC"));
-        gazeteer.add(new GazeteerEntry("DEUTSCHLAND", "GPE"));
+        var gazeteer = asList( //
+                new GazeteerEntry("Toyota", "ORG"), //
+                new GazeteerEntry("deutschland", "LOC"), //
+                new GazeteerEntry("DEUTSCHLAND", "GPE"));
 
         sut.pretrain(gazeteer, context);
 
         sut.train(context, emptyList());
 
-        sut.predict(context, cas);
+        sut.predict(new PredictionContext(context), cas);
 
-        List<NamedEntity> predictions = getPredictions(cas, NamedEntity.class);
+        var predictions = getPredictions(cas, NamedEntity.class);
 
         assertThat(predictions).as("Predictions have been written to CAS").isNotEmpty();
 
@@ -291,21 +292,21 @@ public class StringMatchingRecommenderTest
     @Test
     public void thatEvaluationWorks() throws Exception
     {
-        DataSplitter splitStrategy = new PercentageBasedSplitter(0.8, 10);
-        StringMatchingRecommender sut = new StringMatchingRecommender(recommender, traits);
-        List<CAS> casList = loadDevelopmentData();
+        var splitStrategy = new PercentageBasedSplitter(0.8, 10);
+        var sut = new StringMatchingRecommender(recommender, traits);
+        var casList = loadDevelopmentData();
 
-        EvaluationResult result = sut.evaluate(casList, splitStrategy);
+        var result = sut.evaluate(casList, splitStrategy);
 
-        double fscore = result.computeF1Score();
-        double accuracy = result.computeAccuracyScore();
-        double precision = result.computePrecisionScore();
-        double recall = result.computeRecallScore();
+        var fscore = result.computeF1Score();
+        var accuracy = result.computeAccuracyScore();
+        var precision = result.computePrecisionScore();
+        var recall = result.computeRecallScore();
 
-        System.out.printf("F1-Score: %f%n", fscore);
-        System.out.printf("Accuracy: %f%n", accuracy);
-        System.out.printf("Precision: %f%n", precision);
-        System.out.printf("Recall: %f%n", recall);
+        LOG.info("F1-Score:  {}", fscore);
+        LOG.info("Accuracy:  {}", accuracy);
+        LOG.info("Precision: {}", precision);
+        LOG.info("Recall:    {}", recall);
 
         assertThat(fscore).isStrictlyBetween(0.0, 1.0);
         assertThat(precision).isStrictlyBetween(0.0, 1.0);
@@ -314,24 +315,53 @@ public class StringMatchingRecommenderTest
     }
 
     @Test
+    public void thatEvaluationWorksWithoutLabels() throws Exception
+    {
+        var splitStrategy = new PercentageBasedSplitter(0.8, 10);
+        var sut = new StringMatchingRecommender(recommender, traits);
+        var casList = loadDevelopmentData();
+
+        for (var cas : casList) {
+            cas.select(NamedEntity.class).forEach(ne -> ne.setValue(null));
+        }
+
+        var result = sut.evaluate(casList, splitStrategy);
+
+        var fscore = result.computeF1Score();
+        var accuracy = result.computeAccuracyScore();
+        var precision = result.computePrecisionScore();
+        var recall = result.computeRecallScore();
+
+        LOG.info("F1-Score:  {}", fscore);
+        LOG.info("Accuracy:  {}", accuracy);
+        LOG.info("Precision: {}", precision);
+        LOG.info("Recall:    {}", recall);
+
+        assertThat(fscore).isBetween(0.0, 1.0);
+        assertThat(precision).isBetween(0.0, 1.0);
+        assertThat(recall).isBetween(0.0, 1.0);
+        assertThat(accuracy).isBetween(0.0, 1.0);
+    }
+
+    @Test
     public void thatEvaluationProducesSpecificResults() throws Exception
     {
-        String text = "Hans Peter, Peter und Hans. Blabla Peter. Und so weiter Darmstadt, Darmstadt.";
-        String[] vals = new String[] { "PER", "PER", "PER", "PER", "LOC", "ORG" };
-        int[][] indices = new int[][] { { 0, 9 }, { 12, 16 }, { 22, 25 }, { 35, 39 }, { 56, 64 },
+        var text = "Hans Peter, Peter und Hans. Blabla Peter. Und so weiter Darmstadt, Darmstadt.";
+        var vals = new String[] { "PER", "PER", "PER", "PER", "LOC", "ORG" };
+        var indices = new int[][] { { 0, 9 }, { 12, 16 }, { 22, 25 }, { 35, 39 }, { 56, 64 },
                 { 67, 75 } };
-        int[][] sentIndices = new int[][] { { 0, 26 }, { 27, 40 }, { 41, 65 }, { 66, 76 } };
-        int[][] tokenIndices = new int[][] { { 0, 3 }, { 5, 9 }, { 10, 10 }, { 12, 16 }, { 18, 20 },
+        var sentIndices = new int[][] { { 0, 26 }, { 27, 40 }, { 41, 65 }, { 66, 76 } };
+        var tokenIndices = new int[][] { { 0, 3 }, { 5, 9 }, { 10, 10 }, { 12, 16 }, { 18, 20 },
                 { 22, 25 }, { 26, 26 }, { 28, 33 }, { 35, 39 }, { 40, 40 }, { 42, 44 }, { 46, 47 },
                 { 49, 54 }, { 56, 64 }, { 65, 65 }, { 67, 75 }, { 76, 76 } };
 
-        List<CAS> testCas = getTestNECas(text, vals, indices, sentIndices, tokenIndices);
+        var testCas = getTestNECas(text, vals, indices, sentIndices, tokenIndices);
 
         int expectedTestSize = 2;
         int expectedTrainSize = 2;
 
-        EvaluationResult result = new StringMatchingRecommender(buildRecommender(), null)
-                .evaluate(testCas, new PercentageBasedSplitter(0.5, 500));
+        var result = new StringMatchingRecommender(buildRecommender(), null).evaluate(testCas,
+                new PercentageBasedSplitter(0.5, 500));
 
         assertThat(result.getTestSetSize()).as("correct test size").isEqualTo(expectedTestSize);
         assertThat(result.getTrainingSetSize()).as("correct training size")
@@ -348,37 +378,34 @@ public class StringMatchingRecommenderTest
             int[][] aSentIndices, int[][] aTokenIndices)
         throws Exception
     {
-        JCas jcas = JCasFactory.createText(aText, "de");
+        var jcas = JCasFactory.createText(aText, "de");
 
-        for (int[] aSentIndex : aSentIndices) {
-            Sentence newSent = new Sentence(jcas, aSentIndex[0], aSentIndex[1]);
+        for (var aSentIndex : aSentIndices) {
+            var newSent = new Sentence(jcas, aSentIndex[0], aSentIndex[1]);
             newSent.addToIndexes();
         }
 
-        for (int[] aTokenIndex : aTokenIndices) {
-            Token newToken = new Token(jcas, aTokenIndex[0], aTokenIndex[1]);
+        for (var aTokenIndex : aTokenIndices) {
+            var newToken = new Token(jcas, aTokenIndex[0], aTokenIndex[1]);
             newToken.addToIndexes();
         }
 
         for (int i = 0; i < aVals.length; i++) {
-            NamedEntity newNE = new NamedEntity(jcas, aNEIndices[i][0], aNEIndices[i][1]);
+            var newNE = new NamedEntity(jcas, aNEIndices[i][0], aNEIndices[i][1]);
             newNE.setValue(aVals[i]);
             newNE.addToIndexes();
         }
 
-        List<CAS> casses = new ArrayList<>();
-        casses.add(jcas.getCas());
-
-        return casses;
+        return asList(jcas.getCas());
     }
 
     @Test
     public void thatEvaluationSkippingWorks() throws Exception
     {
-        DataSplitter splitStrategy = new PercentageBasedSplitter(0.8, 10);
-        StringMatchingRecommender sut = new StringMatchingRecommender(recommender, traits);
+        var splitStrategy = new PercentageBasedSplitter(0.8, 10);
+        var sut = new StringMatchingRecommender(recommender, traits);
 
-        double score = sut.evaluate(emptyList(), splitStrategy).computeF1Score();
+        var score = sut.evaluate(emptyList(), splitStrategy).computeF1Score();
 
         System.out.printf("Score: %f%n", score);
 
@@ -388,15 +415,15 @@ public class StringMatchingRecommenderTest
     @Test
     public void thatIncrementalNerEvaluationWorks() throws Exception
     {
-        IncrementalSplitter splitStrategy = new IncrementalSplitter(0.8, 5000, 10);
-        StringMatchingRecommender sut = new StringMatchingRecommender(recommender, traits);
-        List<CAS> casList = loadAllData();
+        var splitStrategy = new IncrementalSplitter(0.8, 5000, 10);
+        var sut = new StringMatchingRecommender(recommender, traits);
+        var casList = loadAllData();
 
-        int i = 0;
+        var i = 0;
         while (splitStrategy.hasNext() && i < 3) {
             splitStrategy.next();
 
-            double score = sut.evaluate(casList, splitStrategy).computeF1Score();
+            var score = sut.evaluate(casList, splitStrategy).computeF1Score();
 
             System.out.printf("Score: %f%n", score);
 
@@ -409,7 +436,7 @@ public class StringMatchingRecommenderTest
     private List<CAS> loadAllData() throws IOException, UIMAException
     {
         try {
-            Dataset ds = loader.load("germeval2014-de", CONTINUE);
+            var ds = loader.load("germeval2014-de", CONTINUE);
             return loadData(ds, ds.getDataFiles());
         }
         catch (Exception e) {
@@ -422,7 +449,7 @@ public class StringMatchingRecommenderTest
     private List<CAS> loadDevelopmentData() throws IOException, UIMAException
     {
         try {
-            Dataset ds = loader.load("germeval2014-de", CONTINUE);
+            var ds = loader.load("germeval2014-de", CONTINUE);
             return loadData(ds, ds.getDefaultSplit().getDevelopmentFiles());
         }
         catch (Exception e) {
@@ -434,7 +461,7 @@ public class StringMatchingRecommenderTest
 
     private List<CAS> loadData(Dataset ds, File... files) throws UIMAException, IOException
     {
-        CollectionReader reader = createReader( //
+        var reader = createReader( //
                 Conll2002Reader.class, //
                 Conll2002Reader.PARAM_PATTERNS, files, //
                 Conll2002Reader.PARAM_LANGUAGE, ds.getLanguage(), //
@@ -443,10 +470,10 @@ public class StringMatchingRecommenderTest
                 Conll2002Reader.PARAM_HAS_HEADER, true, //
                 Conll2002Reader.PARAM_HAS_EMBEDDED_NAMED_ENTITY, true);
 
-        List<CAS> casList = new ArrayList<>();
-        int n = 1;
+        var casList = new ArrayList<CAS>();
+        var n = 1;
         while (reader.hasNext()) {
-            JCas cas = JCasFactory.createJCas();
+            var cas = JCasFactory.createJCas();
             reader.getNext(cas.getCas());
             casList.add(cas.getCas());
             casStorageSession.add("testDataCas" + n, EXCLUSIVE_WRITE_ACCESS, cas.getCas());
@@ -457,13 +484,13 @@ public class StringMatchingRecommenderTest
 
     private static Recommender buildRecommender()
     {
-        AnnotationLayer layer = new AnnotationLayer();
+        var layer = new AnnotationLayer();
         layer.setName(NamedEntity.class.getName());
 
-        AnnotationFeature feature = new AnnotationFeature();
+        var feature = new AnnotationFeature();
         feature.setName("value");
 
-        Recommender recommender = new Recommender();
+        var recommender = new Recommender();
         recommender.setLayer(layer);
         recommender.setFeature(feature);
         recommender.setMaxRecommendations(3);

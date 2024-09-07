@@ -45,7 +45,6 @@ html, body {
   flex: none;
   min-height: $page-footer-height; 
   height: $page-footer-height;
-  overflow: hidden;
   margin-top: 0px; 
   margin-bottom: 0px; 
   text-align: center; 
@@ -244,6 +243,7 @@ a.disabled {
       color: $component-active-color;
       background-color: $component-active-bg;
       background-image: none;
+      font-weight: normal;
     }
   }
 }
@@ -267,7 +267,10 @@ a.disabled {
  */
 
 label.required {
-    color: red;
+  &:after {
+    color: var(--bs-secondary-color) !important;
+    content: "*" !important;
+  }
 }
 
 /* -------------------------------------------------------------------------------------------------

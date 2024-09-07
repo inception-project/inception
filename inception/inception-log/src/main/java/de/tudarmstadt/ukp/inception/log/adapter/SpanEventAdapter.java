@@ -30,9 +30,9 @@ public class SpanEventAdapter
     implements EventLoggingAdapter<SpanEvent>
 {
     @Override
-    public boolean accepts(Object aEvent)
+    public boolean accepts(Class<?> aEvent)
     {
-        return aEvent instanceof SpanEvent;
+        return SpanEvent.class.isAssignableFrom(aEvent);
     }
 
     @Override
@@ -56,7 +56,7 @@ public class SpanEventAdapter
     @Override
     public String getDetails(SpanEvent aEvent) throws IOException
     {
-        AnnotationDetails details = new AnnotationDetails(aEvent.getAnnotation());
+        var details = new AnnotationDetails(aEvent.getAnnotation());
         return JSONUtil.toJsonString(details);
     }
 }

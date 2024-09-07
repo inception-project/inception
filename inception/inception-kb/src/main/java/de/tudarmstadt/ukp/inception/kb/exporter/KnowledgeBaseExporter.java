@@ -17,19 +17,15 @@
  */
 package de.tudarmstadt.ukp.inception.kb.exporter;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExporter.getEntry;
 import static java.util.Arrays.asList;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+import java.util.zip.ZipOutputStream;
 
-import org.apache.commons.io.FileUtils;
 import org.eclipse.rdf4j.repository.config.RepositoryImplConfig;
 import org.eclipse.rdf4j.repository.sparql.config.SPARQLRepositoryConfig;
 import org.eclipse.rdf4j.rio.RDFFormat;
@@ -102,18 +98,18 @@ public class KnowledgeBaseExporter
 
     @Override
     public void exportData(FullProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
-            ExportedProject aExProject, File aFile)
+            ExportedProject aExProject, ZipOutputStream aStage)
         throws InterruptedException, IOException
     {
-        Project project = aRequest.getProject();
+        var project = aRequest.getProject();
         List<ExportedKnowledgeBase> exportedKnowledgeBases = new ArrayList<>();
-        for (KnowledgeBase kb : kbService.getKnowledgeBases(project)) {
+        for (var kb : kbService.getKnowledgeBases(project)) {
             // check if the export has been cancelled
             if (Thread.interrupted()) {
                 throw new InterruptedException();
             }
 
-            ExportedKnowledgeBase exportedKB = new ExportedKnowledgeBase();
+            var exportedKB = new ExportedKnowledgeBase();
             exportedKB.setId(kb.getRepositoryId());
             exportedKB.setName(kb.getName());
             exportedKB.setType(kb.getType().toString());
@@ -125,6 +121,7 @@ public class KnowledgeBaseExporter
             exportedKB.setPropertyTypeIri(kb.getPropertyTypeIri());
             exportedKB.setPropertyLabelIri(kb.getPropertyLabelIri());
             exportedKB.setPropertyDescriptionIri(kb.getPropertyDescriptionIri());
+            exportedKB.setDeprecationPropertyIri(kb.getDeprecationPropertyIri());
             exportedKB.setFullTextSearchIri(kb.getFullTextSearchIri());
             exportedKB.setReadOnly(kb.isReadOnly());
             exportedKB.setUseFuzzy(kb.isUseFuzzy());
@@ -145,13 +142,13 @@ public class KnowledgeBaseExporter
 
             if (kb.getType() == RepositoryType.REMOTE) {
                 // set url for remote KB
-                RepositoryImplConfig cfg = kbService.getKnowledgeBaseConfig(kb);
-                String url = ((SPARQLRepositoryConfig) cfg).getQueryEndpointUrl();
+                var cfg = kbService.getKnowledgeBaseConfig(kb);
+                var url = ((SPARQLRepositoryConfig) cfg).getQueryEndpointUrl();
                 exportedKB.setRemoteURL(url);
             }
             else {
                 // export local kb files
-                exportKnowledgeBaseFiles(aFile, kb);
+                exportKnowledgeBaseFiles(aStage, kb);
             }
 
         }
@@ -164,16 +161,12 @@ public class KnowledgeBaseExporter
      * exports the source files of local a knowledge base in the format specified in
      * {@link #knowledgeBaseFileExportFormat}
      */
-    private void exportKnowledgeBaseFiles(File aFile, KnowledgeBase kb) throws IOException
+    private void exportKnowledgeBaseFiles(ZipOutputStream aStage, KnowledgeBase kb)
+        throws IOException
     {
-        // create file with name "<knowledgebaseName>.<fileExtension>" in folder
-        // KB_FOLDER
-        File kbData = new File(aFile + getSourceFileName(kb));
-        FileUtils.forceMkdir(kbData.getParentFile());
-        kbData.createNewFile();
-        try (OutputStream os = new FileOutputStream(kbData)) {
+        ProjectExporter.writeEntry(aStage, getSourceFileName(kb), os -> {
             kbService.exportData(kb, knowledgeBaseFileExportFormat, os);
-        }
+        });
     }
 
     @Override
@@ -181,11 +174,10 @@ public class KnowledgeBaseExporter
             ExportedProject aExProject, ZipFile aZip)
         throws Exception
     {
-        ExportedKnowledgeBase[] knowledgeBases = aExProject.getArrayProperty(KEY,
-                ExportedKnowledgeBase.class);
+        var knowledgeBases = aExProject.getArrayProperty(KEY, ExportedKnowledgeBase.class);
 
-        for (ExportedKnowledgeBase exportedKB : knowledgeBases) {
-            KnowledgeBase kb = new KnowledgeBase();
+        for (var exportedKB : knowledgeBases) {
+            var kb = new KnowledgeBase();
             kb.setName(exportedKB.getName());
             kb.setType(RepositoryType.valueOf(exportedKB.getType()));
             // set default value for IRIs if no value is present in
@@ -217,15 +209,18 @@ public class KnowledgeBaseExporter
             kb.setSubPropertyIri(exportedKB.getSubPropertyIri() != null //
                     ? exportedKB.getSubPropertyIri() //
                     : DEFAULTPROFILE.getSubPropertyIri());
+            kb.setDeprecationPropertyIri(exportedKB.getDeprecationPropertyIri() != null //
+                    ? exportedKB.getDeprecationPropertyIri() //
+                    : DEFAULTPROFILE.getDeprecationPropertyIri());
+
             // The imported project may date from a time where we did not yet have the FTS IRI.
             // In that case we use concept linking support as an indicator that we dealt with a
             // remote Virtuoso.
             if (exportedKB.isSupportConceptLinking() && exportedKB.getFullTextSearchIri() == null) {
                 kb.setFullTextSearchIri(IriConstants.FTS_VIRTUOSO.stringValue());
             }
-            kb.setFullTextSearchIri(
-                    exportedKB.getFullTextSearchIri() != null ? exportedKB.getFullTextSearchIri() //
-                            : null);
+            kb.setFullTextSearchIri(exportedKB.getFullTextSearchIri() != null ? //
+                    exportedKB.getFullTextSearchIri() : null);
 
             kb.setEnabled(exportedKB.isEnabled());
             kb.setUseFuzzy(exportedKB.isUseFuzzy());
@@ -332,12 +327,9 @@ public class KnowledgeBaseExporter
      */
     private void importKnowledgeBaseFiles(ZipFile aZip, KnowledgeBase kb) throws IOException
     {
-        String sourceFileName = getSourceFileName(kb);
-        // remove leading "/"
-        ZipEntry entry = aZip.getEntry(sourceFileName.substring(1));
-
-        try (InputStream is = aZip.getInputStream(entry)) {
-            kbService.importData(kb, sourceFileName, is);
+        var entry = getEntry(aZip, getSourceFileName(kb));
+        try (var is = aZip.getInputStream(entry)) {
+            kbService.importData(kb, entry.getName(), is);
         }
     }
 

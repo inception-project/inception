@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.recommendation.api.model;
 import java.io.Serializable;
 
 import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.cas.text.AnnotationPredicates;
 
 public class Offset
     implements Comparable<Offset>, Serializable, Position
@@ -53,24 +54,6 @@ public class Offset
         return "[" + begin + "," + end + "]";
     }
 
-    @Deprecated
-    public int getBeginCharacter()
-    {
-        return getBegin();
-    }
-
-    @Deprecated
-    public int getEndCharacter()
-    {
-        return getEnd();
-    }
-
-    @Deprecated
-    public int getStart()
-    {
-        return getBegin();
-    }
-
     public int getBegin()
     {
         return begin;
@@ -81,21 +64,14 @@ public class Offset
         return end;
     }
 
+    public int length()
+    {
+        return end - begin;
+    }
+
     public boolean overlaps(final Offset i)
     {
-        // Cases:
-        //
-        // start end
-        // | |
-        // 1 ####### |
-        // 2 | #######
-        // 3 ####################################
-        // 4 | ####### |
-        // | |
-
-        return (((i.getStart() <= getStart()) && (getStart() < i.getEnd())) || // Case 1-3
-                ((i.getStart() < getEnd()) && (getEnd() <= i.getEnd())) || // Case 1-3
-                ((getStart() <= i.getStart()) && (i.getEnd() <= getEnd()))); // Case 4
+        return AnnotationPredicates.overlapping(getBegin(), getEnd(), i.getBegin(), i.getEnd());
     }
 
     @Override

@@ -18,46 +18,59 @@
 package de.tudarmstadt.ukp.clarin.webanno.curation.casdiff;
 
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
+import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiffSummaryState.AGREE;
+import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiffSummaryState.DISAGREE;
+import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiffSummaryState.INCOMPLETE;
+import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiffSummaryState.STACKED;
+import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiffSummaryState.calculateState;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CurationTestUtils.HOST_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CurationTestUtils.SLOT_FILLER_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CurationTestUtils.createMultiLinkWithRoleTestTypeSystem;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CurationTestUtils.load;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CurationTestUtils.loadWebAnnoTsv3;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CurationTestUtils.makeLinkFS;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CurationTestUtils.makeLinkHostFS;
-import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior.LINK_ROLE_AS_LABEL;
-import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior.LINK_TARGET_AS_LABEL;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.relation.RelationDiffAdapter.DEPENDENCY_DIFF_ADAPTER;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span.SpanDiffAdapter.POS_DIFF_ADAPTER;
+import static de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureMultiplicityMode.MULTIPLE_TARGETS_MULTIPLE_ROLES;
+import static de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureMultiplicityMode.MULTIPLE_TARGETS_ONE_ROLE;
+import static de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureMultiplicityMode.ONE_TARGET_MULTIPLE_ROLES;
 import static de.tudarmstadt.ukp.inception.support.uima.AnnotationBuilder.buildAnnotation;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static org.apache.uima.fit.factory.CasFactory.createText;
 import static org.apache.uima.fit.factory.JCasFactory.createJCas;
 import static org.apache.uima.fit.util.JCasUtil.select;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
+import static org.assertj.core.api.InstanceOfAssertFactories.collection;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.Type;
-import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.fit.factory.TypeSystemDescriptionFactory;
 import org.apache.uima.fit.testing.factory.TokenBuilder;
 import org.apache.uima.fit.util.FSUtil;
 import org.apache.uima.jcas.JCas;
-import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.uima.util.CasCreationUtils;
+import org.assertj.core.api.AbstractListAssert;
+import org.assertj.core.api.ObjectAssert;
+import org.assertj.core.groups.Tuple;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.DiffResult;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.DiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.relation.RelationDiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span.SpanDiffAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span.SpanPosition;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
@@ -68,664 +81,1053 @@ import de.tudarmstadt.ukp.inception.support.WebAnnoConst;
 
 public class CasDiffTest
 {
+    private static final SpanDiffAdapter POS_VALUE_ADAPTER;
+    private static final SpanDiffAdapter TOKEN_ADAPTER;
+    private static final SpanDiffAdapter LEMMA_ADAPTER;
+
+    static {
+        POS_VALUE_ADAPTER = new SpanDiffAdapter(POS.class.getName(), "PosValue");
+        TOKEN_ADAPTER = new SpanDiffAdapter(Token.class.getName());
+        LEMMA_ADAPTER = new SpanDiffAdapter(Lemma.class.getName());
+    }
+
     @Test
     public void noDataTest() throws Exception
     {
-        List<DiffAdapter> diffAdapters = new ArrayList<>();
+        var casByUser = new LinkedHashMap<String, CAS>();
 
-        Map<String, List<CAS>> casByUser = new LinkedHashMap<>();
-
-        DiffResult result = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser).toResult();
+        var result = doDiff(emptyList(), casByUser).toResult();
 
         // result.print(System.out);
 
-        assertEquals(0, result.size());
-        assertEquals(0, result.getDifferingConfigurationSets().size());
-        assertEquals(0, result.getIncompleteConfigurationSets().size());
+        assertThat(result.size()).isEqualTo(0);
+        assertThat(result.getDifferingConfigurationSets()).isEmpty();
+        assertThat(result.getIncompleteConfigurationSets()).isEmpty();
+        assertThat(calculateState(result)).isEqualTo(AGREE);
     }
 
     @Test
     public void singleEmptyCasTest() throws Exception
     {
-        String text = "";
+        var casByUser = Map.of("user1", createText(""));
 
-        CAS user1Cas = JCasFactory.createJCas().getCas();
-        user1Cas.setDocumentText(text);
+        var result = doDiff(asList(TOKEN_ADAPTER), casByUser).toResult();
 
-        Map<String, List<CAS>> casByUser = new LinkedHashMap<>();
-        casByUser.put("user1", asList(user1Cas));
-
-        List<SpanDiffAdapter> diffAdapters = asList(new SpanDiffAdapter(Token.class.getName()));
-
-        DiffResult result = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser).toResult();
-
-        // result.print(System.out);
-
-        assertEquals(0, result.size());
-        assertEquals(0, result.getDifferingConfigurationSets().size());
+        assertThat(result.size()).isEqualTo(0);
+        assertThat(result.getDifferingConfigurationSets()).isEmpty();
+        assertThat(result.getIncompleteConfigurationSets()).isEmpty();
+        assertThat(calculateState(result)).isEqualTo(AGREE);
     }
 
     @Test
     public void multipleEmptyCasWithMissingOnesTest() throws Exception
     {
-        String text = "";
+        var casByUser = new LinkedHashMap<String, CAS>();
+        casByUser.put("user1", null);
+        casByUser.put("user2", createText(""));
 
-        CAS user1Cas1 = null;
-        CAS user1Cas2 = null;
-        CAS user1Cas3 = createText(text);
-        CAS user1Cas4 = createText(text);
-        CAS user2Cas1 = createText(text);
-        CAS user2Cas2 = null;
-        CAS user2Cas3 = null;
-        CAS user2Cas4 = createText(text);
+        var result = doDiff(asList(LEMMA_ADAPTER), casByUser).toResult();
 
-        Map<String, List<CAS>> casByUser = new LinkedHashMap<>();
-        casByUser.put("user1", asList(user1Cas1, user1Cas2, user1Cas3, user1Cas4));
-        casByUser.put("user2", asList(user2Cas1, user2Cas2, user2Cas3, user2Cas4));
-
-        List<SpanDiffAdapter> diffAdapters = asList(new SpanDiffAdapter(Lemma.class.getName()));
-
-        CasDiff diff = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser);
-        DiffResult result = diff.toResult();
-
-        // result.print(System.out);
-
-        assertEquals(0, result.size());
-        assertEquals(0, result.getDifferingConfigurationSets().size());
-        assertEquals(0, result.getIncompleteConfigurationSets().size());
-
-        // Todo: Agreement has moved to separate project - should create agreement test there
-        // CodingAgreementResult agreement = AgreementUtils.getCohenKappaAgreement(diff,
-        // entryTypes.get(0), "value", casByUser);
-        // assertEquals(Double.NaN, agreement.getAgreement(), 0.000001d);
-        // assertEquals(0, agreement.getIncompleteSetsByPosition().size());
+        assertThat(result.size()).isEqualTo(0);
+        assertThat(result.getDifferingConfigurationSets()).isEmpty();
+        assertThat(result.getIncompleteConfigurationSets()).isEmpty();
+        assertThat(calculateState(result)).isEqualTo(AGREE);
     }
 
     @Test
     public void noDifferencesPosTest() throws Exception
     {
-        Map<String, List<CAS>> casByUser = load("casdiff/noDifferences/data.conll",
+        var casByUser = load( //
+                "casdiff/noDifferences/data.conll", //
                 "casdiff/noDifferences/data.conll");
 
-        List<SpanDiffAdapter> diffAdapters = asList(POS_DIFF_ADAPTER);
+        var result = doDiff(asList(POS_DIFF_ADAPTER), casByUser).toResult();
 
-        CasDiff diff = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser);
-        DiffResult result = diff.toResult();
-
-        // result.print(System.out);
-
-        assertEquals(26, result.size());
-        assertEquals(0, result.getDifferingConfigurationSets().size());
-        assertEquals(0, result.getIncompleteConfigurationSets().size());
-
-        // Todo: Agreement has moved to separate project - should create agreement test there
-        // CodingAgreementResult agreement = AgreementUtils.getCohenKappaAgreement(diff,
-        // entryTypes.get(0), "PosValue", casByUser);
-        // assertEquals(1.0d, agreement.getAgreement(), 0.000001d);
-        // assertEquals(0, agreement.getIncompleteSetsByPosition().size());
-    }
-
-    @Test
-    public void noDifferencesDependencyTest() throws Exception
-    {
-        Map<String, List<CAS>> casByUser = load("casdiff/noDifferences/data.conll",
-                "casdiff/noDifferences/data.conll");
-
-        List<? extends DiffAdapter> diffAdapters = asList(DEPENDENCY_DIFF_ADAPTER);
-
-        CasDiff diff = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser);
-        DiffResult result = diff.toResult();
-
-        // result.print(System.out);
-
-        assertEquals(26, result.size());
-        assertEquals(0, result.getDifferingConfigurationSets().size());
-        assertEquals(0, result.getIncompleteConfigurationSets().size());
-
-        // Todo: Agreement has moved to separate project - should create agreement test there
-        // CodingAgreementResult agreement = AgreementUtils.getCohenKappaAgreement(diff,
-        // entryTypes.get(0), "DependencyType", casByUser);
-        // assertEquals(1.0d, agreement.getAgreement(), 0.000001d);
-        // assertEquals(0, agreement.getIncompleteSetsByPosition().size());
+        assertThat(result.size()).isEqualTo(26);
+        assertThat(result.getDifferingConfigurationSets()).isEmpty();
+        assertThat(result.getIncompleteConfigurationSets()).isEmpty();
+        assertThat(calculateState(result)).isEqualTo(AGREE);
     }
 
     @Test
     public void noDifferencesPosDependencyTest() throws Exception
     {
-        Map<String, List<CAS>> casByUser = load("casdiff/noDifferences/data.conll",
+        var casByUser = load( //
+                "casdiff/noDifferences/data.conll", //
                 "casdiff/noDifferences/data.conll");
 
-        List<? extends DiffAdapter> diffAdapters = asList(POS_DIFF_ADAPTER,
-                DEPENDENCY_DIFF_ADAPTER);
+        var result = doDiff(asList(POS_DIFF_ADAPTER, DEPENDENCY_DIFF_ADAPTER), casByUser)
+                .toResult();
 
-        CasDiff diff = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser);
-        DiffResult result = diff.toResult();
-
-        // result.print(System.out);
-
-        assertEquals(52, result.size());
-        assertEquals(26, result.size(POS.class.getName()));
-        assertEquals(26, result.size(Dependency.class.getName()));
-        assertEquals(0, result.getDifferingConfigurationSets().size());
-        assertEquals(0, result.getIncompleteConfigurationSets().size());
-
-        // Todo: Agreement has moved to separate project - should create agreement test there
-        // CodingAgreementResult agreement = AgreementUtils.getCohenKappaAgreement(diff,
-        // entryTypes.get(0), "PosValue", casByUser);
-        // assertEquals(1.0d, agreement.getAgreement(), 0.000001d);
-        // assertEquals(0, agreement.getIncompleteSetsByPosition().size());
+        assertThat(result.size()).isEqualTo(52);
+        assertThat(result.size(POS.class.getName())).isEqualTo(26);
+        assertThat(result.size(Dependency.class.getName())).isEqualTo(26);
+        assertThat(result.getDifferingConfigurationSets()).isEmpty();
+        assertThat(result.getIncompleteConfigurationSets()).isEmpty();
+        assertThat(calculateState(result)).isEqualTo(AGREE);
     }
 
     @Test
     public void singleDifferencesTest() throws Exception
     {
-        Map<String, List<CAS>> casByUser = load("casdiff/singleSpanDifference/user1.conll",
+        var casByUser = load( //
+                "casdiff/singleSpanDifference/user1.conll", //
                 "casdiff/singleSpanDifference/user2.conll");
 
-        List<SpanDiffAdapter> diffAdapters = asList(SpanDiffAdapter.POS_DIFF_ADAPTER);
-
-        CasDiff diff = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser);
-        DiffResult result = diff.toResult();
-
-        // result.print(System.out);
+        var result = doDiff(asList(POS_DIFF_ADAPTER), casByUser).toResult();
 
         assertEquals(1, result.size());
         assertEquals(1, result.getDifferingConfigurationSets().size());
         assertEquals(0, result.getIncompleteConfigurationSets().size());
 
-        // Todo: Agreement has moved to separate project - should create agreement test there
-        // CodingAgreementResult agreement = AgreementUtils.getCohenKappaAgreement(diff,
-        // entryTypes.get(0), "PosValue", casByUser);
-        // assertEquals(0.0d, agreement.getAgreement(), 0.000001d);
-        // assertEquals(0, agreement.getIncompleteSetsByPosition().size());
+        assertThat(result.size()).isEqualTo(1);
+        assertThat(result.getDifferingConfigurationSets()).hasSize(1);
+        assertThat(result.getIncompleteConfigurationSets()).isEmpty();
+        assertThat(calculateState(result)).isEqualTo(DISAGREE);
     }
 
     @Test
     public void someDifferencesTest() throws Exception
     {
-        Map<String, List<CAS>> casByUser = load("casdiff/someDifferences/user1.conll",
+        var casByUser = load( //
+                "casdiff/someDifferences/user1.conll", //
                 "casdiff/someDifferences/user2.conll");
 
-        List<SpanDiffAdapter> diffAdapters = asList(POS_DIFF_ADAPTER);
+        var diffAdapters = asList(POS_DIFF_ADAPTER);
 
-        CasDiff diff = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser);
-        DiffResult result = diff.toResult();
+        var result = doDiff(diffAdapters, casByUser).toResult();
 
-        // result.print(System.out);
-
-        assertEquals(26, result.size());
-        assertEquals(4, result.getDifferingConfigurationSets().size());
-        assertEquals(0, result.getIncompleteConfigurationSets().size());
-
-        // Todo: Agreement has moved to separate project - should create agreement test there
-        // CodingAgreementResult agreement = getCohenKappaAgreement(diff, entryTypes.get(0),
-        // "PosValue", casByUser);
-        // assertEquals(0.836477987d, agreement.getAgreement(), 0.000001d);
-        // assertEquals(0, agreement.getIncompleteSetsByPosition().size());
+        assertThat(result.size()).isEqualTo(26);
+        assertThat(result.getDifferingConfigurationSets()).hasSize(4);
+        assertThat(result.getIncompleteConfigurationSets()).isEmpty();
+        assertThat(calculateState(result)).isEqualTo(DISAGREE);
     }
 
     @Test
     public void singleNoDifferencesTest() throws Exception
     {
-        Map<String, List<CAS>> casByUser = load("casdiff/singleSpanNoDifference/data.conll",
-                "casdiff/singleSpanNoDifference/data.conll");
+        var cas = createJCas();
+        var pos1 = new POS(cas, 0, 0);
+        var pos2 = new POS(cas, 0, 0);
+        asList(pos1, pos2).forEach(cas::addFsToIndexes);
 
-        List<? extends DiffAdapter> diffAdapters = asList(
-                new SpanDiffAdapter(POS.class.getName(), "PosValue"));
+        var casByUser = Map.of("user1", cas.getCas());
 
-        CasDiff diff = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser);
-        DiffResult result = diff.toResult();
+        var result = doDiff(asList(POS_VALUE_ADAPTER), casByUser).toResult();
 
-        // result.print(System.out);
-
-        assertEquals(1, result.size());
-        assertEquals(0, result.getDifferingConfigurationSets().size());
-        assertEquals(0, result.getIncompleteConfigurationSets().size());
-
-        // Todo: Agreement has moved to separate project - should create agreement test there
-        // CodingAgreementResult agreement = getCohenKappaAgreement(diff, entryTypes.get(0),
-        // "PosValue", casByUser);
-        // assertEquals(NaN, agreement.getAgreement(), 0.000001d);
-        // assertEquals(0, agreement.getIncompleteSetsByPosition().size());
+        assertThat(result.size()).isEqualTo(1);
+        assertThat(result.getDifferingConfigurationSets()).isEmpty();
+        assertThat(result.getIncompleteConfigurationSets()).isEmpty();
+        assertThat(calculateState(result)).isEqualTo(AGREE);
     }
 
     @Test
-    public void relationDistanceTest() throws Exception
+    public void singleNoDifferencesTestMoreData() throws Exception
     {
-        Map<String, List<CAS>> casByUser = load("casdiff/relationDistance/user1.conll",
-                "casdiff/relationDistance/user2.conll");
+        var casByUser = load( //
+                "casdiff/singleSpanNoDifference/data.conll", //
+                "casdiff/singleSpanNoDifference/data.conll");
 
-        List<? extends DiffAdapter> diffAdapters = asList(new RelationDiffAdapter(
-                Dependency.class.getName(), "Dependent", "Governor", "DependencyType"));
+        var result = doDiff(asList(POS_VALUE_ADAPTER), casByUser).toResult();
 
-        CasDiff diff = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser);
-        DiffResult result = diff.toResult();
-
-        // result.print(System.out);
-
-        assertEquals(27, result.size());
-        assertEquals(0, result.getDifferingConfigurationSets().size());
-        assertEquals(2, result.getIncompleteConfigurationSets().size());
-
-        // Todo: Agreement has moved to separate project - should create agreement test there
-        // CodingAgreementResult agreement = getCohenKappaAgreement(diff, entryTypes.get(0),
-        // "DependencyType", casByUser);
-        // assertEquals(1.0, agreement.getAgreement(), 0.000001d);
-        // assertEquals(2, agreement.getIncompleteSetsByPosition().size());
+        assertThat(result.size()).isEqualTo(1);
+        assertThat(result.getDifferingConfigurationSets()).isEmpty();
+        assertThat(result.getIncompleteConfigurationSets()).isEmpty();
+        assertThat(calculateState(result)).isEqualTo(AGREE);
     }
 
     @Test
     public void spanLabelLabelTest() throws Exception
     {
-        Map<String, List<CAS>> casByUser = load("casdiff/spanLabel/user1.conll",
+        var casByUser = load( //
+                "casdiff/spanLabel/user1.conll", //
                 "casdiff/spanLabel/user2.conll");
 
-        List<? extends DiffAdapter> diffAdapters = asList(
-                new SpanDiffAdapter(POS.class.getName(), "PosValue"));
+        var result = doDiff(asList(POS_VALUE_ADAPTER), casByUser).toResult();
 
-        CasDiff diff = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser);
-        DiffResult result = diff.toResult();
-
-        // result.print(System.out);
-
-        assertEquals(26, result.size());
-        assertEquals(1, result.getDifferingConfigurationSets().size());
-        assertEquals(0, result.getIncompleteConfigurationSets().size());
-
-        // Todo: Agreement has moved to separate project - should create agreement test there
-        // CodingAgreementResult agreement = getCohenKappaAgreement(diff, entryTypes.get(0),
-        // "PosValue", casByUser);
-        // assertEquals(0.958730d, agreement.getAgreement(), 0.000001d);
-        // assertEquals(0, agreement.getIncompleteSetsByPosition().size());
-    }
-
-    @Test
-    public void relationLabelTest() throws Exception
-    {
-        Map<String, List<CAS>> casByUser = new HashMap<>();
-        casByUser.put("user1",
-                asList(loadWebAnnoTsv3("casdiff/relationLabelTest/user1.tsv").getCas()));
-        casByUser.put("user2",
-                asList(loadWebAnnoTsv3("casdiff/relationLabelTest/user2.tsv").getCas()));
-
-        List<? extends DiffAdapter> diffAdapters = asList(new RelationDiffAdapter(
-                Dependency.class.getName(), "Dependent", "Governor", "DependencyType"));
-
-        CasDiff diff = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser);
-        DiffResult result = diff.toResult();
-
-        // result.print(System.out);
-
-        assertEquals(26, result.size());
-        assertEquals(1, result.getDifferingConfigurationSets().size());
-        assertEquals(0, result.getIncompleteConfigurationSets().size());
-
-        // Todo: Agreement has moved to separate project - should create agreement test there
-        // CodingAgreementResult agreement = getCohenKappaAgreement(diff, entryTypes.get(0),
-        // "DependencyType", casByUser);
-        // assertEquals(0.958199d, agreement.getAgreement(), 0.000001d);
-        // assertEquals(0, agreement.getIncompleteSetsByPosition().size());
-    }
-
-    @Test
-    public void relationStackedSpansTest() throws Exception
-    {
-        TypeSystemDescription global = TypeSystemDescriptionFactory.createTypeSystemDescription();
-        TypeSystemDescription local = TypeSystemDescriptionFactory
-                .createTypeSystemDescriptionFromPath(
-                        "src/test/resources/desc/type/webannoTestTypes.xml");
-
-        TypeSystemDescription merged = CasCreationUtils.mergeTypeSystems(asList(global, local));
-
-        TokenBuilder<Token, Sentence> tb = new TokenBuilder<>(Token.class, Sentence.class);
-
-        JCas jcasA = JCasFactory.createJCas(merged);
-        {
-            CAS casA = jcasA.getCas();
-            tb.buildTokens(jcasA, "This is a test .");
-
-            List<Token> tokensA = new ArrayList<>(select(jcasA, Token.class));
-            Token t1A = tokensA.get(0);
-            Token t2A = tokensA.get(tokensA.size() - 1);
-
-            NamedEntity govA = new NamedEntity(jcasA, t1A.getBegin(), t1A.getEnd());
-            govA.addToIndexes();
-            // Here we add a stacked named entity!
-            new NamedEntity(jcasA, t1A.getBegin(), t1A.getEnd()).addToIndexes();
-
-            NamedEntity depA = new NamedEntity(jcasA, t2A.getBegin(), t2A.getEnd());
-            depA.addToIndexes();
-
-            Type relationTypeA = casA.getTypeSystem().getType("webanno.custom.Relation");
-            AnnotationFS fs1A = casA.createAnnotation(relationTypeA, depA.getBegin(),
-                    depA.getEnd());
-            FSUtil.setFeature(fs1A, "Governor", govA);
-            FSUtil.setFeature(fs1A, "Dependent", depA);
-            FSUtil.setFeature(fs1A, "value", "REL");
-            casA.addFsToIndexes(fs1A);
-        }
-
-        JCas jcasB = JCasFactory.createJCas(merged);
-        {
-            CAS casB = jcasB.getCas();
-            tb.buildTokens(jcasB, "This is a test .");
-
-            List<Token> tokensB = new ArrayList<>(select(jcasB, Token.class));
-            Token t1B = tokensB.get(0);
-            Token t2B = tokensB.get(tokensB.size() - 1);
-
-            NamedEntity govB = new NamedEntity(jcasB, t1B.getBegin(), t1B.getEnd());
-            govB.addToIndexes();
-            NamedEntity depB = new NamedEntity(jcasB, t2B.getBegin(), t2B.getEnd());
-            depB.addToIndexes();
-
-            Type relationTypeB = casB.getTypeSystem().getType("webanno.custom.Relation");
-            AnnotationFS fs1B = casB.createAnnotation(relationTypeB, depB.getBegin(),
-                    depB.getEnd());
-            FSUtil.setFeature(fs1B, "Governor", govB);
-            FSUtil.setFeature(fs1B, "Dependent", depB);
-            FSUtil.setFeature(fs1B, "value", "REL");
-            casB.addFsToIndexes(fs1B);
-        }
-
-        Map<String, List<CAS>> casByUser = new LinkedHashMap<>();
-        casByUser.put("user1", asList(jcasA.getCas()));
-        casByUser.put("user2", asList(jcasB.getCas()));
-
-        List<? extends DiffAdapter> diffAdapters = asList(
-                new RelationDiffAdapter("webanno.custom.Relation", WebAnnoConst.FEAT_REL_TARGET,
-                        WebAnnoConst.FEAT_REL_SOURCE, "value"));
-
-        CasDiff diff = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser);
-        DiffResult result = diff.toResult();
-
-        // result.print(System.out);
-
-        assertEquals(1, result.size());
-        assertEquals(0, result.getDifferingConfigurationSets().size());
-        assertEquals(0, result.getIncompleteConfigurationSets().size());
-
-        // Todo: Agreement has moved to separate project - should create agreement test there
-        // CodingAgreementResult agreement = AgreementUtils.getCohenKappaAgreement(diff,
-        // "webanno.custom.Relation", "value", casByUser);
-        //
-        // // Asserts
-        // System.out.printf("Agreement: %s%n", agreement.toString());
-        // AgreementUtils.dumpAgreementStudy(System.out, agreement);
-        //
-        // assertEquals(1, agreement.getPluralitySets().size());
-    }
-
-    @Test
-    public void multiValueStringFeatureDifferenceTestWithNull() throws Exception
-    {
-        var cas1 = createText("");
-        buildAnnotation(cas1, "webanno.custom.SpanMultiValue") //
-                .withFeature("values", asList("a", "b")) //
-                .buildAndAddToIndexes();
-
-        var cas2 = createText("");
-        buildAnnotation(cas2, "webanno.custom.SpanMultiValue") //
-                .buildAndAddToIndexes();
-
-        var casByUser = Map.of( //
-                "user1", asList(cas1), //
-                "user2", asList(cas2));
-
-        SpanDiffAdapter adapter = new SpanDiffAdapter("webanno.custom.SpanMultiValue", "values");
-
-        CasDiff diff = doDiff(asList(adapter), LINK_TARGET_AS_LABEL, casByUser);
-        DiffResult result = diff.toResult();
-
-        // result.print(System.out);
-
-        assertThat(result.size()).isEqualTo(1);
+        assertThat(result.size()).isEqualTo(26);
         assertThat(result.getDifferingConfigurationSets()).hasSize(1);
         assertThat(result.getIncompleteConfigurationSets()).isEmpty();
+        assertThat(calculateState(result)).isEqualTo(DISAGREE);
     }
 
-    @Test
-    public void multiValueStringFeatureDifferenceTest() throws Exception
+    @Nested
+    class RelationLayerTests
     {
-        var cas1 = createText("");
-        buildAnnotation(cas1, "webanno.custom.SpanMultiValue") //
-                .withFeature("values", asList("a", "b")) //
-                .buildAndAddToIndexes();
 
-        var cas2 = createText("");
-        buildAnnotation(cas2, "webanno.custom.SpanMultiValue") //
-                .withFeature("values", asList("a")) //
-                .buildAndAddToIndexes();
+        @Test
+        public void noDifferencesDependencyTest() throws Exception
+        {
+            var casByUser = load( //
+                    "casdiff/noDifferences/data.conll", //
+                    "casdiff/noDifferences/data.conll");
 
-        var casByUser = Map.of( //
-                "user1", asList(cas1), //
-                "user2", asList(cas2));
+            var result = doDiff(asList(DEPENDENCY_DIFF_ADAPTER), casByUser).toResult();
 
-        SpanDiffAdapter adapter = new SpanDiffAdapter("webanno.custom.SpanMultiValue", "values");
+            assertThat(result.size()).isEqualTo(26);
+            assertThat(result.getDifferingConfigurationSets()).isEmpty();
+            assertThat(result.getIncompleteConfigurationSets()).isEmpty();
+            assertThat(calculateState(result)).isEqualTo(AGREE);
+        }
 
-        CasDiff diff = doDiff(asList(adapter), LINK_TARGET_AS_LABEL, casByUser);
-        DiffResult result = diff.toResult();
+        @Test
+        public void relationDistanceTest() throws Exception
+        {
+            var casByUser = load( //
+                    "casdiff/relationDistance/user1.conll", //
+                    "casdiff/relationDistance/user2.conll");
 
-        // result.print(System.out);
+            var diffAdapters = asList(new RelationDiffAdapter(Dependency.class.getName(),
+                    "Dependent", "Governor", "DependencyType"));
 
-        assertThat(result.size()).isEqualTo(1);
-        assertThat(result.getDifferingConfigurationSets()).hasSize(1);
-        assertThat(result.getIncompleteConfigurationSets()).isEmpty();
+            var result = doDiff(diffAdapters, casByUser).toResult();
+
+            assertThat(result.size()).isEqualTo(27);
+            assertThat(result.getDifferingConfigurationSets()).isEmpty();
+            assertThat(result.getIncompleteConfigurationSets()).hasSize(2);
+            assertThat(calculateState(result)).isEqualTo(INCOMPLETE);
+        }
+
+        @Test
+        public void relationLabelTest() throws Exception
+        {
+            var casByUser = new HashMap<String, CAS>();
+            casByUser.put("user1", loadWebAnnoTsv3("casdiff/relationLabelTest/user1.tsv").getCas());
+            casByUser.put("user2", loadWebAnnoTsv3("casdiff/relationLabelTest/user2.tsv").getCas());
+
+            var diffAdapters = asList(DEPENDENCY_DIFF_ADAPTER);
+
+            var result = doDiff(diffAdapters, casByUser).toResult();
+
+            assertThat(result.size()).isEqualTo(26);
+            assertThat(result.getDifferingConfigurationSets()).hasSize(1);
+            assertThat(result.getIncompleteConfigurationSets()).isEmpty();
+            assertThat(calculateState(result)).isEqualTo(DISAGREE);
+        }
+
+        @Test
+        public void relationStackedSpansTest() throws Exception
+        {
+            var global = TypeSystemDescriptionFactory.createTypeSystemDescription();
+            var local = TypeSystemDescriptionFactory.createTypeSystemDescriptionFromPath(
+                    "src/test/resources/desc/type/webannoTestTypes.xml");
+
+            var merged = CasCreationUtils.mergeTypeSystems(asList(global, local));
+
+            var tb = new TokenBuilder<>(Token.class, Sentence.class);
+
+            var jcasA = createJCas(merged);
+            {
+                var casA = jcasA.getCas();
+                tb.buildTokens(jcasA, "This is a test .");
+
+                var tokensA = new ArrayList<>(select(jcasA, Token.class));
+                var t1A = tokensA.get(0);
+                var t2A = tokensA.get(tokensA.size() - 1);
+
+                var govA = new NamedEntity(jcasA, t1A.getBegin(), t1A.getEnd());
+                govA.addToIndexes();
+                // Here we add a stacked named entity!
+                new NamedEntity(jcasA, t1A.getBegin(), t1A.getEnd()).addToIndexes();
+
+                var depA = new NamedEntity(jcasA, t2A.getBegin(), t2A.getEnd());
+                depA.addToIndexes();
+
+                var relationTypeA = casA.getTypeSystem().getType("webanno.custom.Relation");
+                var fs1A = casA.createAnnotation(relationTypeA, depA.getBegin(), depA.getEnd());
+                FSUtil.setFeature(fs1A, "Governor", govA);
+                FSUtil.setFeature(fs1A, "Dependent", depA);
+                FSUtil.setFeature(fs1A, "value", "REL");
+                casA.addFsToIndexes(fs1A);
+            }
+
+            var jcasB = createJCas(merged);
+            {
+                var casB = jcasB.getCas();
+                tb.buildTokens(jcasB, "This is a test .");
+
+                var tokensB = new ArrayList<>(select(jcasB, Token.class));
+                var t1B = tokensB.get(0);
+                var t2B = tokensB.get(tokensB.size() - 1);
+
+                var govB = new NamedEntity(jcasB, t1B.getBegin(), t1B.getEnd());
+                govB.addToIndexes();
+                var depB = new NamedEntity(jcasB, t2B.getBegin(), t2B.getEnd());
+                depB.addToIndexes();
+
+                var relationTypeB = casB.getTypeSystem().getType("webanno.custom.Relation");
+                var fs1B = casB.createAnnotation(relationTypeB, depB.getBegin(), depB.getEnd());
+                FSUtil.setFeature(fs1B, "Governor", govB);
+                FSUtil.setFeature(fs1B, "Dependent", depB);
+                FSUtil.setFeature(fs1B, "value", "REL");
+                casB.addFsToIndexes(fs1B);
+            }
+
+            var casByUser = new LinkedHashMap<String, CAS>();
+            casByUser.put("user1", jcasA.getCas());
+            casByUser.put("user2", jcasB.getCas());
+
+            var diffAdapters = asList(new RelationDiffAdapter("webanno.custom.Relation",
+                    WebAnnoConst.FEAT_REL_TARGET, WebAnnoConst.FEAT_REL_SOURCE, "value"));
+
+            var result = doDiff(diffAdapters, casByUser).toResult();
+
+            assertThat(result.size()).isEqualTo(1);
+            assertThat(result.getDifferingConfigurationSets()).isEmpty();
+            assertThat(result.getIncompleteConfigurationSets()).isEmpty();
+            assertThat(calculateState(result)).isEqualTo(AGREE);
+        }
+
     }
 
-    @Test
-    public void multiValueStringFeatureNoDifferenceTest() throws Exception
+    @Nested
+    class MultiValueFeatureTests
     {
-        var cas1 = createText("");
-        buildAnnotation(cas1, "webanno.custom.SpanMultiValue") //
-                .withFeature("values", asList("a", "b")) //
-                .buildAndAddToIndexes();
+        private static final String TYPE_SPAN_MULTI_VALUE = "webanno.custom.SpanMultiValue";
+        private static final SpanDiffAdapter SPAN_MULTI_VALUE_ADAPTER;
 
-        var cas2 = createText("");
-        buildAnnotation(cas2, "webanno.custom.SpanMultiValue") //
-                .withFeature("values", asList("b", "a")) //
-                .buildAndAddToIndexes();
+        static {
+            SPAN_MULTI_VALUE_ADAPTER = new SpanDiffAdapter(TYPE_SPAN_MULTI_VALUE, "values");
+        }
 
-        var casByUser = Map.of( //
-                "user1", asList(cas1), //
-                "user2", asList(cas2));
+        @Test
+        public void two_annotators__a_b__b_a__agreement() throws Exception
+        {
+            var cas1 = createText("");
+            buildAnnotation(cas1, TYPE_SPAN_MULTI_VALUE) //
+                    .withFeature("values", asList("a", "b")) //
+                    .buildAndAddToIndexes();
 
-        SpanDiffAdapter adapter = new SpanDiffAdapter("webanno.custom.SpanMultiValue", "values");
+            var cas2 = createText("");
+            buildAnnotation(cas2, TYPE_SPAN_MULTI_VALUE) //
+                    .withFeature("values", asList("b", "a")) //
+                    .buildAndAddToIndexes();
 
-        CasDiff diff = doDiff(asList(adapter), LINK_TARGET_AS_LABEL, casByUser);
-        DiffResult result = diff.toResult();
+            var casByUser = Map.of( //
+                    "user1", cas1, //
+                    "user2", cas2);
 
-        // result.print(System.out);
+            var result = doDiff(asList(SPAN_MULTI_VALUE_ADAPTER), casByUser).toResult();
 
-        assertThat(result.size()).isEqualTo(1);
-        assertThat(result.getDifferingConfigurationSets()).isEmpty();
-        assertThat(result.getIncompleteConfigurationSets()).isEmpty();
+            assertThat(result.size()).isEqualTo(1);
+            assertThat(result.getDifferingConfigurationSets()).isEmpty();
+            assertThat(result.getIncompleteConfigurationSets()).isEmpty();
+            assertThat(calculateState(result)).isEqualTo(AGREE);
+        }
+
+        @Test
+        public void two_annotators__a_b__a__disagreement() throws Exception
+        {
+            var cas1 = createText("");
+            buildAnnotation(cas1, TYPE_SPAN_MULTI_VALUE) //
+                    .withFeature("values", asList("a", "b")) //
+                    .buildAndAddToIndexes();
+
+            var cas2 = createText("");
+            buildAnnotation(cas2, TYPE_SPAN_MULTI_VALUE) //
+                    .withFeature("values", asList("a")) //
+                    .buildAndAddToIndexes();
+
+            var casByUser = Map.of( //
+                    "user1", cas1, //
+                    "user2", cas2);
+
+            var result = doDiff(asList(SPAN_MULTI_VALUE_ADAPTER), casByUser).toResult();
+
+            assertThat(result.size()).isEqualTo(1);
+            assertThat(result.getDifferingConfigurationSets()).hasSize(1);
+            assertThat(result.getIncompleteConfigurationSets()).isEmpty();
+            assertThat(calculateState(result)).isEqualTo(DISAGREE);
+        }
+
+        @Test
+        public void two_annotators__a_b__none__disagreement() throws Exception
+        {
+            var cas1 = createText("");
+            buildAnnotation(cas1, TYPE_SPAN_MULTI_VALUE) //
+                    .withFeature("values", asList("a", "b")) //
+                    .buildAndAddToIndexes();
+
+            var cas2 = createText("");
+            buildAnnotation(cas2, TYPE_SPAN_MULTI_VALUE) //
+                    .buildAndAddToIndexes();
+
+            var casByUser = Map.of( //
+                    "user1", cas1, //
+                    "user2", cas2);
+
+            var result = doDiff(asList(SPAN_MULTI_VALUE_ADAPTER), casByUser).toResult();
+
+            assertThat(result.size()).isEqualTo(1);
+            assertThat(result.getDifferingConfigurationSets()).hasSize(1);
+            assertThat(result.getIncompleteConfigurationSets()).isEmpty();
+            assertThat(calculateState(result)).isEqualTo(DISAGREE);
+        }
+
+        @Test
+        public void two_annotators__a_b__incomplete() throws Exception
+        {
+            var cas1 = createText("");
+            buildAnnotation(cas1, TYPE_SPAN_MULTI_VALUE) //
+                    .withFeature("values", asList("a", "b")) //
+                    .buildAndAddToIndexes();
+
+            var cas2 = createText("");
+
+            var casByUser = Map.of( //
+                    "user1", cas1, //
+                    "user2", cas2);
+
+            var result = doDiff(asList(SPAN_MULTI_VALUE_ADAPTER), casByUser).toResult();
+
+            assertThat(result.size()).isEqualTo(1);
+            assertThat(result.getDifferingConfigurationSets()).isEmpty();
+            assertThat(result.getIncompleteConfigurationSets()).hasSize(1);
+            assertThat(calculateState(result)).isEqualTo(INCOMPLETE);
+        }
     }
 
-    @Test
-    public void multiLinkWithRoleNoDifferenceTest() throws Exception
+    @Nested
+    class MultipleTargetsMultipleRolesTests
     {
-        JCas jcasA = createJCas(createMultiLinkWithRoleTestTypeSystem());
-        makeLinkHostFS(jcasA, 0, 0, makeLinkFS(jcasA, "slot1", 0, 0));
-        makeLinkHostFS(jcasA, 10, 10, makeLinkFS(jcasA, "slot1", 10, 10));
+        private static final SpanDiffAdapter HOST_TYPE_ADAPTER;
+        private static final SpanDiffAdapter FILLER_ADAPTER;
 
-        JCas jcasB = createJCas(createMultiLinkWithRoleTestTypeSystem());
-        makeLinkHostFS(jcasB, 0, 0, makeLinkFS(jcasB, "slot1", 0, 0));
-        makeLinkHostFS(jcasB, 10, 10, makeLinkFS(jcasB, "slot1", 10, 10));
+        private JCas jcasA;
+        private JCas jcasB;
+        private Map<String, CAS> casByUser;
 
-        Map<String, List<CAS>> casByUser = new LinkedHashMap<>();
-        casByUser.put("user1", asList(jcasA.getCas()));
-        casByUser.put("user2", asList(jcasB.getCas()));
+        static {
+            HOST_TYPE_ADAPTER = new SpanDiffAdapter(HOST_TYPE);
+            HOST_TYPE_ADAPTER.addLinkFeature("links", "role", "target",
+                    MULTIPLE_TARGETS_MULTIPLE_ROLES);
 
-        SpanDiffAdapter adapter = new SpanDiffAdapter(HOST_TYPE);
-        adapter.addLinkFeature("links", "role", "target");
-        CasDiff diff = doDiff(asList(adapter), LINK_TARGET_AS_LABEL, casByUser);
-        DiffResult result = diff.toResult();
+            FILLER_ADAPTER = new SpanDiffAdapter(SLOT_FILLER_TYPE, "value");
+        }
 
-        // result.print(System.out);
+        @BeforeEach
+        void setup() throws Exception
+        {
+            jcasA = createJCas(createMultiLinkWithRoleTestTypeSystem());
+            jcasB = createJCas(createMultiLinkWithRoleTestTypeSystem());
 
-        assertEquals(4, result.size());
-        assertEquals(0, result.getDifferingConfigurationSets().size());
-        assertEquals(0, result.getIncompleteConfigurationSets().size());
+            casByUser = new LinkedHashMap<String, CAS>();
+            casByUser.put("user1", jcasA.getCas());
+            casByUser.put("user2", jcasB.getCas());
+        }
 
-        // Todo: Agreement has moved to separate project - should create agreement test there
-        // CodingAgreementResult agreement = getCohenKappaAgreement(diff, HOST_TYPE, "links",
-        // casByUser);
-        //
-        // // Asserts
-        // System.out.printf("Agreement: %s%n", agreement.toString());
-        // AgreementUtils.dumpAgreementStudy(System.out, agreement);
-        //
-        // assertEquals(1.0d, agreement.getAgreement(), 0.00001d);
+        @Test
+        public void one_annotator__redundant__agreement() throws Exception
+        {
+            makeLinkHostFS(jcasA, 0, 0, //
+                    makeLinkFS(jcasA, "slot1", 0, 0), //
+                    makeLinkFS(jcasA, "slot1", 0, 0));
+
+            casByUser.remove("user2");
+
+            var result = doDiff(asList(HOST_TYPE_ADAPTER, FILLER_ADAPTER), casByUser).toResult();
+
+            assertSpanPositionConfigurations(result.getConfigurationSets()) //
+                    .containsExactlyInAnyOrder( //
+                            tuple("LinkHost", 0, 0, -1, -1, null, Set.of("user1")), //
+                            tuple("SlotFiller", 0, 0, -1, -1, null, Set.of("user1")), //
+                            tuple("LinkHost", 0, 0, 0, 0, "slot1", Set.of("user1")));
+            assertThat(result.getDifferingConfigurationSets()).isEmpty();
+            assertThat(result.getIncompleteConfigurationSets()).isEmpty();
+            assertThat(calculateState(result)).isEqualTo(AGREE);
+        }
+
+        @Test
+        public void one_annotator__different_labels__agreement() throws Exception
+        {
+            makeLinkHostFS(jcasA, 0, 0, //
+                    makeLinkFS(jcasA, "slot1", 0, 0), //
+                    makeLinkFS(jcasA, "slot2", 0, 0));
+
+            casByUser.remove("user2");
+
+            var result = doDiff(asList(HOST_TYPE_ADAPTER, FILLER_ADAPTER), casByUser).toResult();
+
+            assertSpanPositionConfigurations(result.getConfigurationSets()) //
+                    .containsExactlyInAnyOrder( //
+                            tuple("LinkHost", 0, 0, -1, -1, null, Set.of("user1")), //
+                            tuple("SlotFiller", 0, 0, -1, -1, null, Set.of("user1")), //
+                            tuple("LinkHost", 0, 0, 0, 0, "slot1", Set.of("user1")), //
+                            tuple("LinkHost", 0, 0, 0, 0, "slot2", Set.of("user1")));
+            assertThat(result.getDifferingConfigurationSets()).isEmpty();
+            assertThat(result.getIncompleteConfigurationSets()).isEmpty();
+            assertThat(calculateState(result)).isEqualTo(AGREE);
+        }
+
+        @Test
+        public void one_annotator__different_positions__agreement() throws Exception
+        {
+            makeLinkHostFS(jcasA, 0, 0, //
+                    makeLinkFS(jcasA, "slot1", 0, 0), //
+                    makeLinkFS(jcasA, "slot1", 10, 10));
+
+            casByUser.remove("user2");
+
+            var result = doDiff(asList(HOST_TYPE_ADAPTER, FILLER_ADAPTER), casByUser).toResult();
+
+            assertSpanPositionConfigurations(result.getConfigurationSets()) //
+                    .containsExactlyInAnyOrder( //
+                            tuple("LinkHost", 0, 0, -1, -1, null, Set.of("user1")), //
+                            tuple("SlotFiller", 0, 0, -1, -1, null, Set.of("user1")), //
+                            tuple("SlotFiller", 10, 10, -1, -1, null, Set.of("user1")), //
+                            tuple("LinkHost", 0, 0, 0, 0, "slot1", Set.of("user1")), //
+                            tuple("LinkHost", 0, 0, 10, 10, "slot1", Set.of("user1")));
+            assertThat(result.getDifferingConfigurationSets()).isEmpty();
+            assertThat(result.getIncompleteConfigurationSets()).isEmpty();
+            assertThat(calculateState(result)).isEqualTo(AGREE);
+        }
+
+        /**
+         * Both annotators have a link host that has two slots filled and the role labels and
+         * targets match. The user wants to consider these as two agreeing links.
+         */
+        @Test
+        public void two_annotators__multiple_slots__agreement()
+        {
+            makeLinkHostFS(jcasA, 0, 0, //
+                    makeLinkFS(jcasA, "slot1", 0, 0), //
+                    makeLinkFS(jcasA, "slot2", 0, 0));
+
+            makeLinkHostFS(jcasB, 0, 0, //
+                    makeLinkFS(jcasB, "slot1", 0, 0), //
+                    makeLinkFS(jcasB, "slot2", 0, 0));
+
+            var result = doDiff(asList(HOST_TYPE_ADAPTER), casByUser).toResult();
+
+            assertSpanPositionConfigurations(result.getConfigurationSets()) //
+                    .containsExactlyInAnyOrder( //
+                            tuple("LinkHost", 0, 0, -1, -1, null, Set.of("user1", "user2")), //
+                            tuple("LinkHost", 0, 0, 0, 0, "slot1", Set.of("user1", "user2")), //
+                            tuple("LinkHost", 0, 0, 0, 0, "slot2", Set.of("user1", "user2")));
+            assertThat(result.getDifferingConfigurationSets()).isEmpty();
+            assertThat(result.getIncompleteConfigurationSets()).isEmpty();
+            assertThat(calculateState(result)).isEqualTo(AGREE);
+        }
+
+        @Test
+        public void two_annotators__multiple_annotations__agreement() throws Exception
+        {
+            makeLinkHostFS(jcasA, 0, 0, //
+                    makeLinkFS(jcasA, "slot1", 0, 0));
+            makeLinkHostFS(jcasA, 10, 10, //
+                    makeLinkFS(jcasA, "slot1", 10, 10));
+
+            makeLinkHostFS(jcasB, 0, 0, //
+                    makeLinkFS(jcasB, "slot1", 0, 0));
+            makeLinkHostFS(jcasB, 10, 10, //
+                    makeLinkFS(jcasB, "slot1", 10, 10));
+
+            var result = doDiff(asList(HOST_TYPE_ADAPTER), casByUser).toResult();
+
+            assertSpanPositionConfigurations(result.getConfigurationSets()) //
+                    .containsExactlyInAnyOrder( //
+                            tuple("LinkHost", 0, 0, -1, -1, null, Set.of("user1", "user2")), //
+                            tuple("LinkHost", 10, 10, -1, -1, null, Set.of("user1", "user2")), //
+                            tuple("LinkHost", 0, 0, 0, 0, "slot1", Set.of("user1", "user2")), //
+                            tuple("LinkHost", 10, 10, 10, 10, "slot1", Set.of("user1", "user2")));
+            assertThat(result.getDifferingConfigurationSets()).isEmpty();
+            assertThat(result.getIncompleteConfigurationSets()).isEmpty();
+            assertThat(calculateState(result)).isEqualTo(AGREE);
+        }
+
+        @Test
+        public void two_annotators__disagreement() throws Exception
+        {
+            makeLinkHostFS(jcasA, 0, 0, //
+                    makeLinkFS(jcasA, "slot1", 0, 0));
+
+            makeLinkHostFS(jcasB, 0, 0, //
+                    makeLinkFS(jcasB, "slot1", 10, 10));
+
+            var result = doDiff(asList(HOST_TYPE_ADAPTER), casByUser).toResult();
+
+            assertSpanPositionConfigurations(result.getConfigurationSets()) //
+                    .containsExactlyInAnyOrder( //
+                            tuple("LinkHost", 0, 0, -1, -1, null, Set.of("user1", "user2")), //
+                            tuple("LinkHost", 0, 0, 0, 0, "slot1", Set.of("user1")), //
+                            tuple("LinkHost", 0, 0, 10, 10, "slot1", Set.of("user2")));
+            assertThat(result.getDifferingConfigurationSets()).isEmpty();
+            assertSpanPositionConfigurations(result.getIncompleteConfigurationSets().values()) //
+                    .containsExactlyInAnyOrder( //
+                            tuple("LinkHost", 0, 0, 0, 0, "slot1", Set.of("user1")), //
+                            tuple("LinkHost", 0, 0, 10, 10, "slot1", Set.of("user2")));
+            assertThat(calculateState(result)).isEqualTo(INCOMPLETE);
+        }
+
+        @Test
+        public void two_annotators__same_labels__incomplete() throws Exception
+        {
+            makeLinkHostFS(jcasA, 0, 0, //
+                    makeLinkFS(jcasA, "slot1", 0, 0), //
+                    makeLinkFS(jcasA, "slot1", 10, 10));
+
+            makeLinkHostFS(jcasB, 0, 0, //
+                    makeLinkFS(jcasB, "slot1", 10, 10));
+
+            var result = doDiff(asList(HOST_TYPE_ADAPTER), casByUser).toResult();
+
+            assertSpanPositionConfigurations(result.getConfigurationSets()) //
+                    .containsExactlyInAnyOrder( //
+                            tuple("LinkHost", 0, 0, -1, -1, null, Set.of("user1", "user2")), //
+                            tuple("LinkHost", 0, 0, 0, 0, "slot1", Set.of("user1")), //
+                            tuple("LinkHost", 0, 0, 10, 10, "slot1", Set.of("user1", "user2")));
+            assertThat(result.getDifferingConfigurationSets()).isEmpty();
+            assertSpanPositionConfigurations(result.getIncompleteConfigurationSets().values())
+                    .containsExactlyInAnyOrder( //
+                            tuple("LinkHost", 0, 0, 0, 0, "slot1", Set.of("user1")));
+            assertThat(calculateState(result)).isEqualTo(INCOMPLETE);
+        }
+
+        @Test
+        public void two_annotators__different_targets_and_labels_1__incomplete() throws Exception
+        {
+            makeLinkHostFS(jcasA, 0, 0, //
+                    makeLinkFS(jcasA, "slot1", 0, 0));
+
+            makeLinkHostFS(jcasB, 0, 0, //
+                    makeLinkFS(jcasB, "slot2", 10, 10));
+
+            var result = doDiff(asList(HOST_TYPE_ADAPTER), casByUser).toResult();
+
+            assertSpanPositionConfigurations(result.getConfigurationSets()) //
+                    .containsExactlyInAnyOrder( //
+                            tuple("LinkHost", 0, 0, -1, -1, null, Set.of("user1", "user2")), //
+                            tuple("LinkHost", 0, 0, 0, 0, "slot1", Set.of("user1")), //
+                            tuple("LinkHost", 0, 0, 10, 10, "slot2", Set.of("user2")));
+            assertThat(result.getDifferingConfigurationSets()).isEmpty();
+            assertSpanPositionConfigurations(result.getIncompleteConfigurationSets().values()) //
+                    .containsExactlyInAnyOrder( //
+                            tuple("LinkHost", 0, 0, 0, 0, "slot1", Set.of("user1")), //
+                            tuple("LinkHost", 0, 0, 10, 10, "slot2", Set.of("user2")));
+            assertThat(calculateState(result)).isEqualTo(INCOMPLETE);
+        }
+
+        @Test
+        public void two_annotators__different_targets_and_labels_2__incomplete() throws Exception
+        {
+            makeLinkHostFS(jcasA, 0, 0, //
+                    makeLinkFS(jcasA, "slot1", 0, 0), //
+                    makeLinkFS(jcasA, "slot1", 10, 10));
+
+            makeLinkHostFS(jcasB, 0, 0, //
+                    makeLinkFS(jcasB, "slot2", 10, 10));
+
+            var result = doDiff(asList(HOST_TYPE_ADAPTER), casByUser).toResult();
+
+            assertSpanPositionConfigurations(result.getConfigurationSets()) //
+                    .containsExactlyInAnyOrder( //
+                            tuple("LinkHost", 0, 0, -1, -1, null, Set.of("user1", "user2")), //
+                            tuple("LinkHost", 0, 0, 0, 0, "slot1", Set.of("user1")), //
+                            tuple("LinkHost", 0, 0, 10, 10, "slot1", Set.of("user1")), //
+                            tuple("LinkHost", 0, 0, 10, 10, "slot2", Set.of("user2")));
+            assertThat(result.getDifferingConfigurationSets()).isEmpty();
+            assertSpanPositionConfigurations(result.getIncompleteConfigurationSets().values()) //
+                    .containsExactlyInAnyOrder( //
+                            tuple("LinkHost", 0, 0, 0, 0, "slot1", Set.of("user1")), //
+                            tuple("LinkHost", 0, 0, 10, 10, "slot1", Set.of("user1")), //
+                            tuple("LinkHost", 0, 0, 10, 10, "slot2", Set.of("user2")));
+            assertThat(calculateState(result)).isEqualTo(INCOMPLETE);
+        }
     }
 
-    @Test
-    public void multiLinkWithRoleLabelDifferenceTest2() throws Exception
+    @Nested
+    class OneTargetMultipleRolesTests
     {
-        JCas jcasA = createJCas(createMultiLinkWithRoleTestTypeSystem());
-        makeLinkHostFS(jcasA, 0, 0, makeLinkFS(jcasA, "slot1", 0, 0));
+        private static final SpanDiffAdapter HOST_TYPE_ADAPTER;
+        private static final SpanDiffAdapter FILLER_ADAPTER;
 
-        JCas jcasB = createJCas(createMultiLinkWithRoleTestTypeSystem());
-        makeLinkHostFS(jcasB, 0, 0, makeLinkFS(jcasB, "slot2", 0, 0));
+        private JCas jcasA;
+        private JCas jcasB;
+        private Map<String, CAS> casByUser;
 
-        Map<String, List<CAS>> casByUser = new LinkedHashMap<>();
-        casByUser.put("user1", asList(jcasA.getCas()));
-        casByUser.put("user2", asList(jcasB.getCas()));
+        static {
+            HOST_TYPE_ADAPTER = new SpanDiffAdapter(HOST_TYPE);
+            HOST_TYPE_ADAPTER.addLinkFeature("links", "role", "target", ONE_TARGET_MULTIPLE_ROLES);
 
-        SpanDiffAdapter adapter = new SpanDiffAdapter(HOST_TYPE);
-        adapter.addLinkFeature("links", "role", "target");
-        List<? extends DiffAdapter> diffAdapters = asList(adapter);
+            FILLER_ADAPTER = new SpanDiffAdapter(SLOT_FILLER_TYPE, "value");
+        }
 
-        CasDiff diff = doDiff(diffAdapters, LINK_ROLE_AS_LABEL, casByUser);
-        DiffResult result = diff.toResult();
+        @BeforeEach
+        void setup() throws Exception
+        {
+            jcasA = createJCas(createMultiLinkWithRoleTestTypeSystem());
+            jcasB = createJCas(createMultiLinkWithRoleTestTypeSystem());
 
-        // result.print(System.out);
+            casByUser = new LinkedHashMap<String, CAS>();
+            casByUser.put("user1", jcasA.getCas());
+            casByUser.put("user2", jcasB.getCas());
+        }
 
-        assertEquals(2, result.size());
-        assertEquals(1, result.getDifferingConfigurationSets().size());
-        assertEquals(0, result.getIncompleteConfigurationSets().size());
+        @Test
+        public void one_annotator__agreement() throws Exception
+        {
+            makeLinkHostFS(jcasA, 0, 0, //
+                    makeLinkFS(jcasA, "slot1", 0, 0), //
+                    makeLinkFS(jcasA, "slot2", 0, 0));
 
-        // Todo: Agreement has moved to separate project - should create agreement test there
-        // CodingAgreementResult agreement = AgreementUtils.getCohenKappaAgreement(diff, HOST_TYPE,
-        // "links", casByUser);
-        //
-        // // Asserts
-        // System.out.printf("Agreement: %s%n", agreement.toString());
-        // AgreementUtils.dumpAgreementStudy(System.out, agreement);
-        //
-        // assertEquals(0.0d, agreement.getAgreement(), 0.00001d);
+            casByUser.remove("user2");
+
+            var result = doDiff(asList(HOST_TYPE_ADAPTER, FILLER_ADAPTER), casByUser).toResult();
+
+            assertSpanPositionConfigurations(result.getConfigurationSets()) //
+                    .containsExactlyInAnyOrder( //
+                            tuple("LinkHost", 0, 0, -1, -1, null, Set.of("user1")), //
+                            tuple("SlotFiller", 0, 0, -1, -1, null, Set.of("user1")), //
+                            tuple("LinkHost", 0, 0, 0, 0, "slot1", Set.of("user1")), //
+                            tuple("LinkHost", 0, 0, 0, 0, "slot2", Set.of("user1")));
+            assertThat(result.getDifferingConfigurationSets()).isEmpty();
+            assertThat(result.getIncompleteConfigurationSets()).isEmpty();
+            assertThat(calculateState(result)).isEqualTo(AGREE);
+        }
+
+        @Test
+        public void one_annotator__redundant__agreement() throws Exception
+        {
+            makeLinkHostFS(jcasA, 0, 0, //
+                    makeLinkFS(jcasA, "slot1", 0, 0), //
+                    makeLinkFS(jcasA, "slot1", 0, 0));
+
+            casByUser.remove("user2");
+
+            var result = doDiff(asList(HOST_TYPE_ADAPTER, FILLER_ADAPTER), casByUser).toResult();
+
+            assertSpanPositionConfigurations(result.getConfigurationSets()) //
+                    .containsExactlyInAnyOrder( //
+                            tuple("LinkHost", 0, 0, -1, -1, null, Set.of("user1")), //
+                            tuple("SlotFiller", 0, 0, -1, -1, null, Set.of("user1")), //
+                            tuple("LinkHost", 0, 0, 0, 0, "slot1", Set.of("user1")));
+            assertThat(result.getConfigurationSets()).hasSize(3);
+            assertThat(result.getDifferingConfigurationSets()).isEmpty();
+            assertThat(result.getIncompleteConfigurationSets()).isEmpty();
+            assertThat(calculateState(result)).isEqualTo(AGREE);
+        }
+
+        /**
+         * Both annotators have a link host that has two slots filled and the role labels and
+         * targets match. The user wants to consider these as two agreeing links.
+         */
+        @Test
+        public void two_annotators__multiple_slots__agreement()
+        {
+            makeLinkHostFS(jcasA, 0, 0, //
+                    makeLinkFS(jcasA, "slot1", 0, 0), //
+                    makeLinkFS(jcasA, "slot2", 0, 0));
+
+            makeLinkHostFS(jcasB, 0, 0, //
+                    makeLinkFS(jcasB, "slot1", 0, 0), //
+                    makeLinkFS(jcasB, "slot2", 0, 0));
+
+            var result = doDiff(asList(HOST_TYPE_ADAPTER), casByUser).toResult();
+
+            assertSpanPositionConfigurations(result.getConfigurationSets()) //
+                    .containsExactlyInAnyOrder( //
+                            tuple("LinkHost", 0, 0, -1, -1, null, Set.of("user1", "user2")), //
+                            tuple("LinkHost", 0, 0, 0, 0, "slot1", Set.of("user1", "user2")), //
+                            tuple("LinkHost", 0, 0, 0, 0, "slot2", Set.of("user1", "user2")));
+            assertThat(result.getDifferingConfigurationSets()).isEmpty();
+            assertThat(result.getIncompleteConfigurationSets()).isEmpty();
+            assertThat(calculateState(result)).isEqualTo(AGREE);
+        }
+
+        @Test
+        public void two_annotators__multiple_annotations__agreement() throws Exception
+        {
+            makeLinkHostFS(jcasA, 0, 0, //
+                    makeLinkFS(jcasA, "slot1", 0, 0));
+            makeLinkHostFS(jcasA, 10, 10, //
+                    makeLinkFS(jcasA, "slot1", 10, 10));
+
+            makeLinkHostFS(jcasB, 0, 0, //
+                    makeLinkFS(jcasB, "slot1", 0, 0));
+            makeLinkHostFS(jcasB, 10, 10, //
+                    makeLinkFS(jcasB, "slot1", 10, 10));
+
+            var result = doDiff(asList(HOST_TYPE_ADAPTER), casByUser).toResult();
+
+            assertSpanPositionConfigurations(result.getConfigurationSets()) //
+                    .containsExactlyInAnyOrder( //
+                            tuple("LinkHost", 0, 0, -1, -1, null, Set.of("user1", "user2")), //
+                            tuple("LinkHost", 10, 10, -1, -1, null, Set.of("user1", "user2")), //
+                            tuple("LinkHost", 0, 0, 0, 0, "slot1", Set.of("user1", "user2")), //
+                            tuple("LinkHost", 10, 10, 10, 10, "slot1", Set.of("user1", "user2")));
+            assertThat(result.getDifferingConfigurationSets()).isEmpty();
+            assertThat(result.getIncompleteConfigurationSets()).isEmpty();
+            assertThat(calculateState(result)).isEqualTo(AGREE);
+        }
+
+        @Test
+        public void two_annotators__disagreement() throws Exception
+        {
+            makeLinkHostFS(jcasA, 0, 0, //
+                    makeLinkFS(jcasA, "slot1", 0, 0));
+
+            makeLinkHostFS(jcasB, 0, 0, //
+                    makeLinkFS(jcasB, "slot1", 10, 10));
+
+            var result = doDiff(asList(HOST_TYPE_ADAPTER), casByUser).toResult();
+
+            assertSpanPositionConfigurations(result.getConfigurationSets()) //
+                    .containsExactlyInAnyOrder( //
+                            tuple("LinkHost", 0, 0, -1, -1, null, Set.of("user1", "user2")), //
+                            tuple("LinkHost", 0, 0, 0, 0, "slot1", Set.of("user1", "user2")));
+            assertSpanPositionConfigurations(result.getDifferingConfigurationSets().values()) //
+                    .containsExactlyInAnyOrder( //
+                            tuple("LinkHost", 0, 0, 0, 0, "slot1", Set.of("user1", "user2")));
+            assertThat(result.getIncompleteConfigurationSets()).isEmpty();
+            assertThat(calculateState(result)).isEqualTo(DISAGREE);
+        }
+
+        @Test
+        public void two_annotators__incomplete() throws Exception
+        {
+            makeLinkHostFS(jcasA, 0, 0, //
+                    makeLinkFS(jcasA, "slot1", 0, 0));
+
+            makeLinkHostFS(jcasB, 0, 0, //
+                    makeLinkFS(jcasB, "slot2", 10, 10));
+
+            var result = doDiff(asList(HOST_TYPE_ADAPTER), casByUser).toResult();
+
+            assertSpanPositionConfigurations(result.getConfigurationSets()) //
+                    .containsExactlyInAnyOrder( //
+                            tuple("LinkHost", 0, 0, -1, -1, null, Set.of("user1", "user2")), //
+                            tuple("LinkHost", 0, 0, 0, 0, "slot1", Set.of("user1")), //
+                            tuple("LinkHost", 0, 0, 10, 10, "slot2", Set.of("user2")));
+            assertThat(result.getDifferingConfigurationSets()).isEmpty();
+            assertSpanPositionConfigurations(result.getIncompleteConfigurationSets().values()) //
+                    .containsExactlyInAnyOrder( //
+                            tuple("LinkHost", 0, 0, 0, 0, "slot1", Set.of("user1")), //
+                            tuple("LinkHost", 0, 0, 10, 10, "slot2", Set.of("user2")));
+            assertThat(calculateState(result)).isEqualTo(INCOMPLETE);
+        }
+
+        @Test
+        public void two_annotators__same_labels__stacked() throws Exception
+        {
+            makeLinkHostFS(jcasA, 0, 0, //
+                    makeLinkFS(jcasA, "slot1", 0, 0), //
+                    makeLinkFS(jcasA, "slot1", 10, 10));
+
+            makeLinkHostFS(jcasB, 0, 0, //
+                    makeLinkFS(jcasB, "slot1", 10, 10));
+
+            var result = doDiff(asList(HOST_TYPE_ADAPTER), casByUser).toResult();
+
+            assertSpanPositionConfigurations(result.getConfigurationSets()) //
+                    .containsExactlyInAnyOrder( //
+                            tuple("LinkHost", 0, 0, -1, -1, null, Set.of("user1", "user2")), //
+                            tuple("LinkHost", 0, 0, 0, 0, "slot1", Set.of("user1", "user2")));
+            assertSpanPositionConfigurations(result.getDifferingConfigurationSets().values()) //
+                    .containsExactlyInAnyOrder( //
+                            tuple("LinkHost", 0, 0, 0, 0, "slot1", Set.of("user1", "user2")));
+            assertThat(result.getIncompleteConfigurationSets()).isEmpty();
+            assertThat(calculateState(result)).isEqualTo(STACKED);
+        }
+
+        @Test
+        public void two_annotators__different_labels__stacked() throws Exception
+        {
+            makeLinkHostFS(jcasA, 0, 0, //
+                    makeLinkFS(jcasA, "slot1", 0, 0), //
+                    makeLinkFS(jcasA, "slot1", 10, 10));
+
+            makeLinkHostFS(jcasB, 0, 0, //
+                    makeLinkFS(jcasB, "slot2", 10, 10));
+
+            var result = doDiff(asList(HOST_TYPE_ADAPTER), casByUser).toResult();
+
+            assertSpanPositionConfigurations(result.getConfigurationSets()) //
+                    .containsExactlyInAnyOrder( //
+                            tuple("LinkHost", 0, 0, -1, -1, null, Set.of("user1", "user2")), //
+                            tuple("LinkHost", 0, 0, 0, 0, "slot1", Set.of("user1")), //
+                            tuple("LinkHost", 0, 0, 10, 10, "slot2", Set.of("user2")));
+            assertSpanPositionConfigurations(result.getDifferingConfigurationSets().values()) //
+                    .containsExactlyInAnyOrder( //
+                            tuple("LinkHost", 0, 0, 0, 0, "slot1", Set.of("user1")));
+            assertSpanPositionConfigurations(result.getIncompleteConfigurationSets().values()) //
+                    .containsExactlyInAnyOrder( //
+                            tuple("LinkHost", 0, 0, 0, 0, "slot1", Set.of("user1")), //
+                            tuple("LinkHost", 0, 0, 10, 10, "slot2", Set.of("user2")));
+            assertThat(calculateState(result)).isEqualTo(STACKED);
+        }
     }
 
-    @Test
-    public void multiLinkWithRoleTargetDifferenceTest() throws Exception
+    @Nested
+    class MultipleTargetsOneRoleTests
     {
-        JCas jcasA = createJCas(createMultiLinkWithRoleTestTypeSystem());
-        makeLinkHostFS(jcasA, 0, 0, makeLinkFS(jcasA, "slot1", 0, 0));
+        private static final SpanDiffAdapter HOST_TYPE_ADAPTER;
+        private static final SpanDiffAdapter FILLER_ADAPTER;
 
-        JCas jcasB = createJCas(createMultiLinkWithRoleTestTypeSystem());
-        makeLinkHostFS(jcasB, 0, 0, makeLinkFS(jcasB, "slot1", 10, 10));
+        private JCas jcasA;
+        private JCas jcasB;
+        private Map<String, CAS> casByUser;
 
-        Map<String, List<CAS>> casByUser = new LinkedHashMap<>();
-        casByUser.put("user1", asList(jcasA.getCas()));
-        casByUser.put("user2", asList(jcasB.getCas()));
+        static {
+            HOST_TYPE_ADAPTER = new SpanDiffAdapter(HOST_TYPE);
+            HOST_TYPE_ADAPTER.addLinkFeature("links", "role", "target", MULTIPLE_TARGETS_ONE_ROLE);
 
-        SpanDiffAdapter adapter = new SpanDiffAdapter(HOST_TYPE);
-        adapter.addLinkFeature("links", "role", "target");
-        List<? extends DiffAdapter> diffAdapters = asList(adapter);
+            FILLER_ADAPTER = new SpanDiffAdapter(SLOT_FILLER_TYPE, "value");
+        }
 
-        CasDiff diff = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser);
-        DiffResult result = diff.toResult();
+        @BeforeEach
+        void setup() throws Exception
+        {
+            jcasA = createJCas(createMultiLinkWithRoleTestTypeSystem());
+            jcasB = createJCas(createMultiLinkWithRoleTestTypeSystem());
 
-        // result.print(System.out);
+            casByUser = new LinkedHashMap<String, CAS>();
+            casByUser.put("user1", jcasA.getCas());
+            casByUser.put("user2", jcasB.getCas());
+        }
 
-        assertEquals(2, result.size());
-        assertEquals(1, result.getDifferingConfigurationSets().size());
-        assertEquals(0, result.getIncompleteConfigurationSets().size());
+        @Test
+        public void one_annotator__agreement() throws Exception
+        {
+            makeLinkHostFS(jcasA, 0, 0, //
+                    makeLinkFS(jcasA, "slot1", 0, 0));
 
-        // Todo: Agreement has moved to separate project - should create agreement test there
-        // CodingAgreementResult agreement = getCohenKappaAgreement(diff, HOST_TYPE, "links",
-        // casByUser);
-        //
-        // // Asserts
-        // System.out.printf("Agreement: %s%n", agreement.toString());
-        // AgreementUtils.dumpAgreementStudy(System.out, agreement);
-        //
-        // assertEquals(0.0, agreement.getAgreement(), 0.00001d);
+            casByUser.remove("user2");
+
+            var result = doDiff(asList(HOST_TYPE_ADAPTER, FILLER_ADAPTER), casByUser).toResult();
+
+            assertSpanPositionConfigurations(result.getConfigurationSets()) //
+                    .containsExactlyInAnyOrder( //
+                            tuple("LinkHost", 0, 0, -1, -1, null, Set.of("user1")), //
+                            tuple("SlotFiller", 0, 0, -1, -1, null, Set.of("user1")), //
+                            tuple("LinkHost", 0, 0, 0, 0, "slot1", Set.of("user1")));
+            assertThat(result.getConfigurationSets()).hasSize(3);
+            assertThat(result.getDifferingConfigurationSets()).isEmpty();
+            assertThat(result.getIncompleteConfigurationSets()).isEmpty();
+            assertThat(calculateState(result)).isEqualTo(AGREE);
+        }
+
+        @Test
+        public void one_annotator__stacked() throws Exception
+        {
+            makeLinkHostFS(jcasA, 0, 0, //
+                    makeLinkFS(jcasA, "slot1", 0, 0), //
+                    makeLinkFS(jcasA, "slot2", 0, 0));
+
+            casByUser.remove("user2");
+
+            var result = doDiff(asList(HOST_TYPE_ADAPTER, FILLER_ADAPTER), casByUser).toResult();
+
+            assertSpanPositionConfigurations(result.getConfigurationSets()) //
+                    .containsExactlyInAnyOrder( //
+                            tuple("LinkHost", 0, 0, -1, -1, null, Set.of("user1")), //
+                            tuple("SlotFiller", 0, 0, -1, -1, null, Set.of("user1")), //
+                            tuple("LinkHost", 0, 0, 0, 0, "slot1", Set.of("user1")));
+            assertSpanPositionConfigurations(result.getDifferingConfigurationSets().values()) //
+                    .containsExactlyInAnyOrder( //
+                            tuple("LinkHost", 0, 0, 0, 0, "slot1", Set.of("user1")));
+            assertThat(result.getIncompleteConfigurationSets()).isEmpty();
+            assertThat(calculateState(result)).isEqualTo(STACKED);
+        }
+
+        @Test
+        public void two_annotators__agreement() throws Exception
+        {
+            makeLinkHostFS(jcasA, 0, 0, //
+                    makeLinkFS(jcasA, "slot1", 0, 0));
+
+            makeLinkHostFS(jcasB, 0, 0, //
+                    makeLinkFS(jcasB, "slot1", 0, 0));
+
+            var result = doDiff(asList(HOST_TYPE_ADAPTER), casByUser).toResult();
+
+            assertSpanPositionConfigurations(result.getConfigurationSets()) //
+                    .containsExactlyInAnyOrder( //
+                            tuple("LinkHost", 0, 0, -1, -1, null, Set.of("user1", "user2")), //
+                            tuple("LinkHost", 0, 0, 0, 0, "slot1", Set.of("user1", "user2")));
+            assertThat(result.getDifferingConfigurationSets()).isEmpty();
+            assertThat(result.getIncompleteConfigurationSets()).isEmpty();
+            assertThat(calculateState(result)).isEqualTo(AGREE);
+        }
+
+        @Test
+        public void two_annotators__disagreement() throws Exception
+        {
+            makeLinkHostFS(jcasA, 0, 0, //
+                    makeLinkFS(jcasA, "slot1", 0, 0));
+
+            makeLinkHostFS(jcasB, 0, 0, //
+                    makeLinkFS(jcasB, "slot2", 0, 0));
+
+            var result = doDiff(asList(HOST_TYPE_ADAPTER), casByUser).toResult();
+
+            assertSpanPositionConfigurations(result.getConfigurationSets()) //
+                    .containsExactlyInAnyOrder( //
+                            tuple("LinkHost", 0, 0, -1, -1, null, Set.of("user1", "user2")), //
+                            tuple("LinkHost", 0, 0, 0, 0, "slot1", Set.of("user1", "user2")));
+            assertSpanPositionConfigurations(result.getDifferingConfigurationSets().values()) //
+                    .containsExactlyInAnyOrder( //
+                            tuple("LinkHost", 0, 0, 0, 0, "slot1", Set.of("user1", "user2")));
+            assertThat(result.getIncompleteConfigurationSets()).isEmpty();
+            assertThat(calculateState(result)).isEqualTo(DISAGREE);
+        }
+
+        @Test
+        public void two_annotators__incomplete() throws Exception
+        {
+            makeLinkHostFS(jcasA, 0, 0, //
+                    makeLinkFS(jcasA, "slot1", 0, 0));
+
+            var result = doDiff(asList(HOST_TYPE_ADAPTER), casByUser).toResult();
+
+            assertSpanPositionConfigurations(result.getConfigurationSets()) //
+                    .containsExactlyInAnyOrder( //
+                            tuple("LinkHost", 0, 0, -1, -1, null, Set.of("user1")), //
+                            tuple("LinkHost", 0, 0, 0, 0, "slot1", Set.of("user1")));
+            assertThat(result.getDifferingConfigurationSets()).isEmpty();
+            assertSpanPositionConfigurations(result.getIncompleteConfigurationSets().values()) //
+                    .containsExactlyInAnyOrder( //
+                            tuple("LinkHost", 0, 0, -1, -1, null, Set.of("user1")), //
+                            tuple("LinkHost", 0, 0, 0, 0, "slot1", Set.of("user1")));
+            assertThat(calculateState(result)).isEqualTo(INCOMPLETE);
+        }
+
+        @Test
+        public void two_annotators__stacked() throws Exception
+        {
+            makeLinkHostFS(jcasA, 0, 0, //
+                    makeLinkFS(jcasA, "slot1", 0, 0), //
+                    makeLinkFS(jcasA, "slot2", 0, 0));
+
+            makeLinkHostFS(jcasB, 0, 0, //
+                    makeLinkFS(jcasB, "slot1", 0, 0), //
+                    makeLinkFS(jcasB, "slot2", 0, 0));
+
+            var result = doDiff(asList(HOST_TYPE_ADAPTER), casByUser).toResult();
+
+            assertSpanPositionConfigurations(result.getConfigurationSets()) //
+                    .containsExactlyInAnyOrder( //
+                            tuple("LinkHost", 0, 0, -1, -1, null, Set.of("user1", "user2")), //
+                            tuple("LinkHost", 0, 0, 0, 0, "slot1", Set.of("user1", "user2")));
+            assertSpanPositionConfigurations(result.getDifferingConfigurationSets().values()) //
+                    .containsExactlyInAnyOrder( //
+                            tuple("LinkHost", 0, 0, 0, 0, "slot1", Set.of("user1", "user2")));
+            assertThat(result.getIncompleteConfigurationSets()).isEmpty();
+            assertThat(calculateState(result)).isEqualTo(STACKED);
+        }
     }
 
-    @Test
-    public void multiLinkWithRoleMultiTargetDifferenceTest() throws Exception
+    private static AbstractListAssert<?, List<? extends Tuple>, Tuple, ObjectAssert<Tuple>> //
+            assertSpanPositionConfigurations(Collection<ConfigurationSet> aSet)
     {
-        JCas jcasA = JCasFactory.createJCas(createMultiLinkWithRoleTestTypeSystem());
-        makeLinkHostFS(jcasA, 0, 0, makeLinkFS(jcasA, "slot1", 0, 0),
-                makeLinkFS(jcasA, "slot1", 10, 10));
-
-        JCas jcasB = JCasFactory.createJCas(createMultiLinkWithRoleTestTypeSystem());
-        makeLinkHostFS(jcasB, 0, 0, makeLinkFS(jcasB, "slot1", 10, 10));
-
-        Map<String, List<CAS>> casByUser = new LinkedHashMap<>();
-        casByUser.put("user1", asList(jcasA.getCas()));
-        casByUser.put("user2", asList(jcasB.getCas()));
-
-        SpanDiffAdapter adapter = new SpanDiffAdapter(HOST_TYPE);
-        adapter.addLinkFeature("links", "role", "target");
-        List<? extends DiffAdapter> diffAdapters = asList(adapter);
-
-        DiffResult diff = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser).toResult();
-
-        // diff.print(System.out);
-
-        assertEquals(2, diff.size());
-        assertEquals(1, diff.getDifferingConfigurationSets().size());
-        assertEquals(0, diff.getIncompleteConfigurationSets().size());
-
-        // // Check against new impl
-        // AgreementResult agreement = AgreementUtils.getCohenKappaAgreement(diff, HOST_TYPE,
-        // "links",
-        // casByUser);
-        //
-        // // Asserts
-        // System.out.printf("Agreement: %s%n", agreement.toString());
-        // AgreementUtils.dumpAgreementStudy(System.out, agreement);
-        //
-        // assertEquals(0.0, agreement.getAgreement(), 0.00001d);
-    }
-
-    @Test
-    public void multiLinkWithRoleMultiTargetDifferenceTest2() throws Exception
-    {
-        JCas jcasA = JCasFactory.createJCas(createMultiLinkWithRoleTestTypeSystem());
-        makeLinkHostFS(jcasA, 0, 0, makeLinkFS(jcasA, "slot1", 0, 0),
-                makeLinkFS(jcasA, "slot1", 10, 10));
-
-        JCas jcasB = JCasFactory.createJCas(createMultiLinkWithRoleTestTypeSystem());
-        makeLinkHostFS(jcasB, 0, 0, makeLinkFS(jcasB, "slot2", 10, 10));
-
-        Map<String, List<CAS>> casByUser = new LinkedHashMap<>();
-        casByUser.put("user1", asList(jcasA.getCas()));
-        casByUser.put("user2", asList(jcasB.getCas()));
-
-        SpanDiffAdapter adapter = new SpanDiffAdapter(HOST_TYPE);
-        adapter.addLinkFeature("links", "role", "target");
-        List<? extends DiffAdapter> diffAdapters = asList(adapter);
-
-        DiffResult diff = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser).toResult();
-
-        // diff.print(System.out);
-
-        assertEquals(3, diff.size());
-        assertEquals(1, diff.getDifferingConfigurationSets().size());
-        assertEquals(2, diff.getIncompleteConfigurationSets().size());
-
-        // // Check against new impl
-        // AgreementResult agreement = AgreementUtils.getCohenKappaAgreement(diff, HOST_TYPE,
-        // "links",
-        // casByUser);
-        //
-        // // Asserts
-        // System.out.printf("Agreement: %s%n", agreement.toString());
-        // AgreementUtils.dumpAgreementStudy(System.out, agreement);
-        //
-        // assertEquals(0.0, agreement.getAgreement(), 0.00001d);
+        return assertThat(aSet) //
+                .asInstanceOf(collection(ConfigurationSet.class)) //
+                .extracting( //
+                        cfg -> StringUtils.substringAfterLast(cfg.getPosition().getType(), "."), //
+                        cfg -> ((SpanPosition) cfg.getPosition()).getBegin(), //
+                        cfg -> ((SpanPosition) cfg.getPosition()).getEnd(), //
+                        cfg -> cfg.getPosition().getLinkTargetBegin(), //
+                        cfg -> cfg.getPosition().getLinkTargetEnd(), //
+                        cfg -> cfg.getPosition().getRole(), //
+                        cfg -> cfg.getCasGroupIds());
     }
 }

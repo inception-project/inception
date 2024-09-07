@@ -30,6 +30,7 @@ public class InputStreamResourceStream
 
     private final InputStream inputStream;
     private final String name;
+    private String contentType;
 
     public InputStreamResourceStream(InputStream aInputStream)
     {
@@ -41,6 +42,13 @@ public class InputStreamResourceStream
     {
         inputStream = aInputStream;
         name = aName;
+    }
+
+    public InputStreamResourceStream(InputStream aInputStream, String aName, String aContentType)
+    {
+        inputStream = aInputStream;
+        name = aName;
+        contentType = aContentType;
     }
 
     @Override
@@ -58,5 +66,21 @@ public class InputStreamResourceStream
     public void close() throws IOException
     {
         inputStream.close();
+    }
+
+    public InputStreamResourceStream setContentType(String aContentType)
+    {
+        contentType = aContentType;
+        return this;
+    }
+
+    @Override
+    public String getContentType()
+    {
+        if (contentType != null) {
+            return contentType;
+        }
+
+        return super.getContentType();
     }
 }

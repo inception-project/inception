@@ -17,9 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.annotation.layer.span;
 
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.SPAN_TYPE;
 import static java.util.Arrays.asList;
-import static java.util.stream.Collectors.toList;
 import static org.apache.uima.cas.CAS.TYPE_NAME_ANNOTATION;
 
 import java.util.Collection;
@@ -33,12 +31,14 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 
+import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.annotation.layer.behaviors.LayerBehaviorRegistry;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupport_ImplBase;
 import de.tudarmstadt.ukp.inception.schema.api.layer.LayerType;
+import de.tudarmstadt.ukp.inception.support.WebAnnoConst;
 
 /**
  * <p>
@@ -50,8 +50,12 @@ public class SpanLayerSupport
     extends LayerSupport_ImplBase<SpanAdapter, SpanLayerTraits>
     implements InitializingBean
 {
+    @SuppressWarnings("deprecation")
+    public static final String TYPE = WebAnnoConst.SPAN_TYPE;
+
     private final ApplicationEventPublisher eventPublisher;
     private final LayerBehaviorRegistry layerBehaviorsRegistry;
+    private final ConstraintsService constraintsService;
 
     private String layerSupportId;
     private List<LayerType> types;
@@ -59,11 +63,12 @@ public class SpanLayerSupport
     @Autowired
     public SpanLayerSupport(FeatureSupportRegistry aFeatureSupportRegistry,
             ApplicationEventPublisher aEventPublisher,
-            LayerBehaviorRegistry aLayerBehaviorsRegistry)
+            LayerBehaviorRegistry aLayerBehaviorsRegistry, ConstraintsService aConstraintsService)
     {
         super(aFeatureSupportRegistry);
         eventPublisher = aEventPublisher;
         layerBehaviorsRegistry = aLayerBehaviorsRegistry;
+        constraintsService = aConstraintsService;
     }
 
     @Override
@@ -81,7 +86,7 @@ public class SpanLayerSupport
     @Override
     public void afterPropertiesSet() throws Exception
     {
-        types = asList(new LayerType(SPAN_TYPE, "Span", layerSupportId));
+        types = asList(new LayerType(TYPE, "Span", layerSupportId));
     }
 
     @Override
@@ -93,18 +98,17 @@ public class SpanLayerSupport
     @Override
     public boolean accepts(AnnotationLayer aLayer)
     {
-        return SPAN_TYPE.equals(aLayer.getType());
+        return TYPE.equals(aLayer.getType());
     }
 
     @Override
     public SpanAdapter createAdapter(AnnotationLayer aLayer,
             Supplier<Collection<AnnotationFeature>> aFeatures)
     {
-        SpanAdapter adapter = new SpanAdapter(getLayerSupportRegistry(), featureSupportRegistry,
-                eventPublisher, aLayer, aFeatures,
-                layerBehaviorsRegistry.getLayerBehaviors(this, SpanLayerBehavior.class));
-
-        return adapter;
+        return new SpanAdapter(getLayerSupportRegistry(), featureSupportRegistry, eventPublisher,
+                aLayer, aFeatures,
+                layerBehaviorsRegistry.getLayerBehaviors(this, SpanLayerBehavior.class),
+                constraintsService);
     }
 
     @Override
@@ -113,9 +117,10 @@ public class SpanLayerSupport
     {
         var td = aTsd.addType(aLayer.getName(), aLayer.getDescription(), TYPE_NAME_ANNOTATION);
 
-        List<AnnotationFeature> featureForLayer = aAllFeaturesInProject.stream()
+        var featureForLayer = aAllFeaturesInProject.stream()
                 .filter(feature -> aLayer.equals(feature.getLayer())) //
-                .collect(toList());
+                .toList();
+
         generateFeatures(aTsd, td, featureForLayer);
     }
 
@@ -131,7 +136,7 @@ public class SpanLayerSupport
     @Override
     public Panel createTraitsEditor(String aId, IModel<AnnotationLayer> aLayerModel)
     {
-        AnnotationLayer layer = aLayerModel.getObject();
+        var layer = aLayerModel.getObject();
 
         if (!accepts(layer)) {
             throw unsupportedLayerTypeException(layer);

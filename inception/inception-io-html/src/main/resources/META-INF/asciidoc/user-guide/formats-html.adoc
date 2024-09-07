@@ -15,7 +15,7 @@
 // limitations under the License.
 
 [[sect_formats_html]]
-= HTML (legacy)
+= 🪦 HTML (old)
 
 ====
 CAUTION: Legacy feature. To use this functionality, you need to enable it first by adding `format.html-legacy.enabled=true` to the `settings.properties` file. 

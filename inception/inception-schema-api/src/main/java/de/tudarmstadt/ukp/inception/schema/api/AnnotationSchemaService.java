@@ -27,7 +27,7 @@ import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
-import org.springframework.security.access.prepost.PreAuthorize;
+import org.apache.wicket.validation.ValidationError;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode;
 import de.tudarmstadt.ukp.clarin.webanno.api.type.CASMetadata;
@@ -63,7 +63,6 @@ public interface AnnotationSchemaService
      * @param tag
      *            the tag.
      */
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
     void createTag(Tag tag);
 
     /**
@@ -73,7 +72,6 @@ public interface AnnotationSchemaService
      * @param tag
      *            the tag.
      */
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
     void createTags(Tag... tag);
 
     void updateTagRanks(TagSet aTagSet, List<Tag> aTags);
@@ -86,7 +84,6 @@ public interface AnnotationSchemaService
      * @param tagset
      *            the tagset.
      */
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
     void createTagSet(TagSet tagset);
 
     /**
@@ -98,7 +95,6 @@ public interface AnnotationSchemaService
      * @param type
      *            the type.
      */
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
     void createOrUpdateLayer(AnnotationLayer type);
 
     void createFeature(AnnotationFeature feature);
@@ -155,6 +151,15 @@ public interface AnnotationSchemaService
     boolean existsTagSet(Project project);
 
     /**
+     * Check if any {@link AnnotationLayer} exists with this name in the given {@link Project}.
+     * 
+     * @param project
+     *            the project.
+     * @return if a layer exists.
+     */
+    boolean existsLayer(Project project);
+
+    /**
      * Check if an {@link AnnotationLayer} exists with this name in the given {@link Project}.
      * 
      * @param name
@@ -178,7 +183,7 @@ public interface AnnotationSchemaService
      */
     boolean existsLayer(String name, String type, Project project);
 
-    boolean existsEnabledLayerOfType(Project aProject, String aType);
+    boolean existsEnabledLayerOfType(Project project, String type);
 
     /**
      * Check if this {@link AnnotationFeature} already exists
@@ -368,9 +373,9 @@ public interface AnnotationSchemaService
     List<AnnotationFeature> listAnnotationFeature(Project project);
 
     /**
-     * List all supported features in the project. This includes disabled features. Supported
-     * features are features for which a {@link FeatureSupport} is available in the
-     * {@link FeatureSupportRegistry}.
+     * List all supported features in the project. This includes disabled and non-accessible
+     * features. Supported features are features for which a {@link FeatureSupport} is available in
+     * the {@link FeatureSupportRegistry}.
      * 
      * @param aProject
      *            the project.
@@ -379,8 +384,8 @@ public interface AnnotationSchemaService
     List<AnnotationFeature> listSupportedFeatures(Project aProject);
 
     /**
-     * List all supported features in the layer. This includes disabled features. Supported features
-     * are features for which a {@link FeatureSupport} is available in the
+     * List all supported features in the layer. This includes disabled and non-accessible features.
+     * Supported features are features for which a {@link FeatureSupport} is available in the
      * {@link FeatureSupportRegistry}.
      * 
      * @param aLayer
@@ -390,7 +395,8 @@ public interface AnnotationSchemaService
     List<AnnotationFeature> listSupportedFeatures(AnnotationLayer aLayer);
 
     /**
-     * List enabled features in a {@link AnnotationLayer} for this {@link Project}.
+     * List enabled features in a {@link AnnotationLayer} for this {@link Project}. Enabled features
+     * are also supported and accessible.
      * 
      * @param aLayer
      *            the layer.
@@ -434,7 +440,6 @@ public interface AnnotationSchemaService
      * @param tag
      *            the tag.
      */
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
     void removeTag(Tag tag);
 
     /**
@@ -661,4 +666,18 @@ public interface AnnotationSchemaService
 
     void createMissingTag(AnnotationFeature aFeature, String aValue)
         throws IllegalFeatureValueException;
+
+    List<ValidationError> validateFeatureName(AnnotationFeature aFeature);
+
+    boolean hasValidFeatureName(AnnotationFeature aFeature);
+
+    boolean hasValidLayerName(AnnotationLayer aLayer);
+
+    List<ValidationError> validateLayerName(AnnotationLayer aLayer);
+
+    List<AnnotationFeature> listEnabledFeatures(Project aProject);
+
+    List<AnnotationLayer> listEnabledLayers(Project aProject);
+
+    List<AnnotationLayer> getRelationLayersFor(AnnotationLayer aSpanLayer);
 }

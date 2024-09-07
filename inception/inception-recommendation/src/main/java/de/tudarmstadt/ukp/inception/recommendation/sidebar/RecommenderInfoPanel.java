@@ -17,18 +17,14 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.sidebar;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getDocumentTitle;
+import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.KEY_RECOMMENDER_GENERAL_SETTINGS;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
+import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.getDocumentTitle;
 import static java.util.stream.Collectors.groupingBy;
-import static org.apache.commons.lang3.StringUtils.repeat;
 
 import java.io.IOException;
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
 import java.util.TreeMap;
 
-import org.apache.uima.cas.CAS;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalDialog;
@@ -48,26 +44,20 @@ import de.agilecoders.wicket.core.markup.html.bootstrap.image.Icon;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanAdapter;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasMetadataUtils;
 import de.tudarmstadt.ukp.inception.bootstrap.BootstrapModalDialog;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
+import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
+import de.tudarmstadt.ukp.inception.recommendation.api.event.PredictionsSwitchedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.EvaluatedRecommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.Preferences;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.Progress;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup.GroupKey;
-import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
-import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
-import de.tudarmstadt.ukp.inception.recommendation.event.PredictionsSwitchedEvent;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
@@ -84,6 +74,7 @@ public class RecommenderInfoPanel
     private @SpringBean UserDao userService;
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean DocumentService documentService;
+    private @SpringBean PreferencesService preferencesService;
 
     private ModalDialog detailsDialog;
 
@@ -95,21 +86,17 @@ public class RecommenderInfoPanel
 
         var sessionOwner = userService.getCurrentUser();
 
+        var settings = preferencesService.loadDefaultTraitsForProject(
+                KEY_RECOMMENDER_GENERAL_SETTINGS, aModel.getObject().getProject());
+
         detailsDialog = new BootstrapModalDialog("detailsDialog").trapFocus().closeOnEscape()
                 .closeOnClick();
         add(detailsDialog);
 
-        add(new Label("progress", LoadableDetachableModel.of(() -> {
-            Progress p = recommendationService.getProgressTowardsNextEvaluation(sessionOwner,
-                    aModel.getObject().getProject());
-            return repeat("<i class=\"fas fa-circle\"></i>&nbsp;", p.getDone())
-                    + repeat("<i class=\"far fa-circle\"></i>&nbsp;", p.getTodo());
-        })).setEscapeModelStrings(false)); // SAFE - RENDERING ONLY SPECIFIC ICONS
-
         var recommenderContainer = new WebMarkupContainer("recommenderContainer");
         add(recommenderContainer);
 
-        ListView<Recommender> searchResultGroups = new ListView<Recommender>("recommender")
+        var searchResultGroups = new ListView<Recommender>("recommender")
         {
             private static final long serialVersionUID = -631500052426449048L;
 
@@ -179,14 +166,14 @@ public class RecommenderInfoPanel
                                 .setVisible(evalResult.map(r -> !r.isEvaluationSkipped())
                                         .orElse(evalResult.isPresent())));
 
-                AjaxDownloadLink exportModel = new AjaxDownloadLink("exportModel",
+                var exportModel = new AjaxDownloadLink("exportModel",
                         LoadableDetachableModel.of(() -> exportModelName(recommender)),
                         LoadableDetachableModel
                                 .of(() -> exportModel(sessionOwner.getUsername(), recommender)));
-                exportModel.add(visibleWhen(
-                        () -> recommendationService.getRecommenderFactory(recommender).isPresent()
-                                && recommendationService.getRecommenderFactory(recommender).get()
-                                        .isModelExportSupported()));
+                exportModel.add(
+                        visibleWhen(() -> recommendationService.getRecommenderFactory(recommender)
+                                .map(RecommendationEngineFactory::isModelExportSupported)
+                                .orElse(false) && settings.isAnnotatorAllowedToExportModel()));
                 item.add(exportModel);
 
                 item.add(new Label("noEvaluationMessage",
@@ -194,9 +181,8 @@ public class RecommenderInfoPanel
                                 .add(visibleWhen(() -> !resultsContainer.isVisible())));
             }
         };
-        IModel<List<Recommender>> recommenders = LoadableDetachableModel
-                .of(() -> recommendationService
-                        .listEnabledRecommenders(aModel.getObject().getProject()));
+        var recommenders = LoadableDetachableModel.of(() -> recommendationService
+                .listEnabledRecommenders(aModel.getObject().getProject()));
         searchResultGroups.setModel(recommenders);
 
         recommenderContainer.add(visibleWhen(() -> !recommenders.getObject().isEmpty()));
@@ -225,18 +211,16 @@ public class RecommenderInfoPanel
 
     private IResourceStream exportModel(String aSessionOwner, Recommender aRecommender)
     {
-        Optional<RecommendationEngineFactory<?>> maybeEngine = recommendationService
-                .getRecommenderFactory(aRecommender);
+        var maybeEngine = recommendationService.getRecommenderFactory(aRecommender);
 
         if (maybeEngine.isEmpty()) {
             error("No factory found for " + aRecommender.getName());
             return null;
         }
 
-        RecommendationEngine engine = maybeEngine.get().build(aRecommender);
+        var engine = maybeEngine.get().build(aRecommender);
 
-        Optional<RecommenderContext> context = recommendationService.getContext(aSessionOwner,
-                aRecommender);
+        var context = recommendationService.getContext(aSessionOwner, aRecommender);
 
         if (context.isEmpty()) {
             error("No model trained yet.");
@@ -269,41 +253,41 @@ public class RecommenderInfoPanel
     private void actionAcceptBest(AjaxRequestTarget aTarget, Recommender aRecommender)
         throws AnnotationException, IOException
     {
-        User sessionOwner = userService.getCurrentUser();
-        AnnotatorState state = getModelObject();
+        var sessionOwner = userService.getCurrentUser();
+        var state = getModelObject();
 
-        AnnotationPageBase page = findParent(AnnotationPageBase.class);
+        var page = findParent(AnnotationPageBase.class);
 
-        CAS cas = page.getEditorCas();
+        var cas = page.getEditorCas();
 
-        Predictions predictions = recommendationService.getPredictions(sessionOwner,
-                state.getProject());
+        var predictions = recommendationService.getPredictions(sessionOwner, state.getProject());
         if (predictions == null) {
             error("Recommenders did not yet provide any suggestions.");
             aTarget.addChildren(getPage(), IFeedback.class);
             return;
         }
 
-        Preferences pref = recommendationService.getPreferences(sessionOwner, state.getProject());
+        var pref = recommendationService.getPreferences(sessionOwner, state.getProject());
 
         // TODO #176 use the document Id once it it available in the CAS
         String sourceDocumentName = CasMetadataUtils.getSourceDocumentName(cas)
                 .orElse(getDocumentTitle(cas));
 
         // Extract all predictions for the current document / recommender
-        Collection<SuggestionGroup<SpanSuggestion>> suggestionGroups = predictions
-                .getPredictionsByRecommenderAndDocument(aRecommender, sourceDocumentName).stream()
-                .filter(f -> f instanceof SpanSuggestion).map(f -> (SpanSuggestion) f)
-                .filter(s -> s.isVisible() && s.getScore() >= pref.getScoreThreshold())
-                .collect(groupingBy(GroupKey::new, TreeMap::new, SuggestionGroup.collector()))
+        var suggestionGroups = predictions
+                .getPredictionsByRecommenderAndDocument(aRecommender, sourceDocumentName).stream() //
+                .filter(f -> f instanceof SpanSuggestion) //
+                .map(f -> (SpanSuggestion) f) //
+                .filter(s -> s.isVisible() && s.getScore() >= pref.getScoreThreshold()) //
+                .collect(groupingBy(GroupKey::new, TreeMap::new, SuggestionGroup.collector())) //
                 .values();
 
         int accepted = 0;
         int skippedDueToConflict = 0;
         int skippedDueToScoreTie = 0;
-        for (SuggestionGroup<SpanSuggestion> suggestionGroup : suggestionGroups) {
+        for (var suggestionGroup : suggestionGroups) {
             // We only want to accept the best suggestions
-            List<SpanSuggestion> suggestions = suggestionGroup.bestSuggestions(pref);
+            var suggestions = suggestionGroup.bestSuggestions(pref);
             if (suggestions.size() > 1
                     && suggestions.get(0).getScore() == suggestions.get(1).getScore()) {
                 skippedDueToScoreTie++;
@@ -314,13 +298,10 @@ public class RecommenderInfoPanel
 
             try {
                 // Upsert an annotation based on the suggestion
-                var layer = annotationService.getLayer(suggestion.getLayerId());
-                var feature = annotationService.getFeature(suggestion.getFeature(), layer);
-                var adapter = (SpanAdapter) annotationService.getAdapter(layer);
                 // int address =
                 recommendationService.acceptSuggestion(sessionOwner.getUsername(),
-                        state.getDocument(), state.getUser().getUsername(), cas, adapter, feature,
-                        suggestion, LearningRecordChangeLocation.REC_SIDEBAR);
+                        state.getDocument(), state.getUser().getUsername(), cas, suggestion,
+                        LearningRecordChangeLocation.REC_SIDEBAR);
 
                 // // Log the action to the learning record
                 // learningRecordService.logRecord(document, aState.getUser().getUsername(),

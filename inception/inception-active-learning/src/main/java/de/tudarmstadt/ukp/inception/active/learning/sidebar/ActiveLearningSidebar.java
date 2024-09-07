@@ -20,13 +20,14 @@ package de.tudarmstadt.ukp.inception.active.learning.sidebar;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.AUTO_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.inception.active.learning.sidebar.ActiveLearningUserStateMetaData.CURRENT_AL_USER_STATE;
+import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.KEY_RECOMMENDER_GENERAL_SETTINGS;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_REJECTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_SKIPPED;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType.ACCEPTED;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType.CORRECTED;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType.REJECTED;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.SPAN_TYPE;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.ACCEPTED;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.CORRECTED;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.REJECTED;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
+import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhenNot;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
@@ -42,8 +43,6 @@ import java.util.Objects;
 import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.Feature;
-import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.wicket.Component;
@@ -74,7 +73,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ReorderableTag;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase2;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
 import de.tudarmstadt.ukp.inception.active.learning.ActiveLearningService;
 import de.tudarmstadt.ukp.inception.active.learning.ActiveLearningServiceImpl;
@@ -89,22 +88,23 @@ import de.tudarmstadt.ukp.inception.annotation.events.FeatureValueUpdatedEvent;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationCreatedEvent;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanCreatedEvent;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanDeletedEvent;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.bootstrap.BootstrapModalDialog;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
+import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
+import de.tudarmstadt.ukp.inception.recommendation.api.event.AjaxRecommendationAcceptedEvent;
+import de.tudarmstadt.ukp.inception.recommendation.api.event.AjaxRecommendationRejectedEvent;
+import de.tudarmstadt.ukp.inception.recommendation.api.event.PredictionsSwitchedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Offset;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionDocumentGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup.Delta;
-import de.tudarmstadt.ukp.inception.recommendation.event.AjaxRecommendationAcceptedEvent;
-import de.tudarmstadt.ukp.inception.recommendation.event.AjaxRecommendationRejectedEvent;
-import de.tudarmstadt.ukp.inception.recommendation.event.PredictionsSwitchedEvent;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
 import de.tudarmstadt.ukp.inception.rendering.pipeline.RenderAnnotationsEvent;
@@ -172,13 +172,15 @@ public class ActiveLearningSidebar
     private @SpringBean ApplicationEventPublisherHolder applicationEventPublisherHolder;
     private @SpringBean UserDao userService;
     private @SpringBean FeatureSupportRegistry featureSupportRegistry;
+    private @SpringBean PreferencesService preferencesService;
 
+    private IModel<Boolean> recommendersAvailable;
     private IModel<List<LearningRecord>> learningRecords;
     private CompoundPropertyModel<ActiveLearningServiceImpl.ActiveLearningUserState> alStateModel;
 
     private final WebMarkupContainer alMainContainer;
 
-    private AnnotationPage annotationPage;
+    private AnnotationPageBase2 annotationPage;
     private BootstrapModalDialog dialog;
     private FeatureEditor editor;
     private Form<Void> recommendationForm;
@@ -195,11 +197,10 @@ public class ActiveLearningSidebar
         KEEP_SELECTED_ANNOTATION_AND_VIEW, CLEAR_SELECTED_ANNOTATION_AND_JUMP_TO_SUGGESTION
     }
 
-    public ActiveLearningSidebar(String aId, IModel<AnnotatorState> aModel,
-            AnnotationActionHandler aActionHandler, CasProvider aCasProvider,
-            AnnotationPage aAnnotationPage)
+    public ActiveLearningSidebar(String aId, AnnotationActionHandler aActionHandler,
+            CasProvider aCasProvider, AnnotationPageBase2 aAnnotationPage)
     {
-        super(aId, aModel, aActionHandler, aCasProvider, aAnnotationPage);
+        super(aId, aActionHandler, aCasProvider, aAnnotationPage);
 
         annotationPage = aAnnotationPage;
 
@@ -211,17 +212,26 @@ public class ActiveLearningSidebar
 
         // Set up the AL state in the page if it is not already there or if for some reason the
         // suggestions have completely disappeared (e.g. after a system restart)
-        AnnotatorState state = getModelObject();
-        Predictions predictions = state.getProject() != null
+        var state = getModelObject();
+        var predictions = state.getProject() != null
                 ? recommendationService.getPredictions(state.getUser(), state.getProject())
                 : null;
         if (aAnnotationPage.getMetaData(CURRENT_AL_USER_STATE) == null || predictions == null) {
-            ActiveLearningUserState alState = new ActiveLearningUserState();
+            var alState = new ActiveLearningUserState();
             alState.setStrategy(new UncertaintySamplingStrategy());
             alStateModel.setObject(alState);
         }
 
-        add(sessionControlForm = createSessionControlForm());
+        recommendersAvailable = LoadableDetachableModel.of(this::isRecommendersAvailable);
+
+        var notAvailableNotice = new WebMarkupContainer("notAvailableNotice");
+        notAvailableNotice.add(visibleWhenNot(recommendersAvailable));
+        add(notAvailableNotice);
+
+        sessionControlForm = createSessionControlForm();
+        sessionControlForm.add(visibleWhen(() -> alStateModel.getObject().isDoExistRecommenders()
+                && recommendersAvailable.getObject()));
+        add(sessionControlForm);
 
         alMainContainer = new WebMarkupContainer(CID_MAIN_CONTAINER);
         alMainContainer.setOutputMarkupId(true);
@@ -230,6 +240,7 @@ public class ActiveLearningSidebar
         alMainContainer.add(clearSkippedRecommendationForm());
         alMainContainer.add(createRecommendationOperationForm());
         alMainContainer.add(createLearningHistory());
+        alMainContainer.add(visibleWhen(recommendersAvailable));
         add(alMainContainer);
 
         dialog = new BootstrapModalDialog(CID_CONFIRMATION_DIALOG);
@@ -237,12 +248,40 @@ public class ActiveLearningSidebar
         add(dialog);
     }
 
+    @Override
+    protected void onDetach()
+    {
+        super.onDetach();
+        recommendersAvailable.detach();
+    }
+
+    private boolean isRecommendersAvailable()
+    {
+        var state = getModelObject();
+        var prefs = preferencesService.loadDefaultTraitsForProject(KEY_RECOMMENDER_GENERAL_SETTINGS,
+                state.getProject());
+
+        // Do not show predictions when viewing annotations of another user
+        if (!prefs.isShowRecommendationsWhenViewingOtherUser()
+                && !Objects.equals(state.getUser(), userService.getCurrentUser())) {
+            return false;
+        }
+
+        // Do not show predictions when viewing annotations of curation user
+        if (!prefs.isShowRecommendationsWhenViewingCurationUser()
+                && Objects.equals(state.getUser(), userService.getCurationUser())) {
+            return false;
+        }
+
+        return true;
+    }
+
     private Label createNoRecommendersMessage()
     {
         if (!alStateModel.getObject().isSessionActive()) {
             // Use the currently selected layer from the annotation detail editor panel as the
             // default choice in the active learning mode.
-            List<AnnotationLayer> layersWithRecommenders = listLayersWithRecommenders();
+            var layersWithRecommenders = listLayersWithRecommenders();
             if (layersWithRecommenders.contains(getModelObject().getDefaultAnnotationLayer())) {
                 alStateModel.getObject().setLayer(getModelObject().getDefaultAnnotationLayer());
             }
@@ -258,7 +297,7 @@ public class ActiveLearningSidebar
             }
         }
 
-        Label noRecommendersMessage = new Label(CID_NO_RECOMMENDERS, "None of the layers have any "
+        var noRecommendersMessage = new Label(CID_NO_RECOMMENDERS, "None of the layers have any "
                 + "recommenders configured. Please set the recommenders first in the Project "
                 + "Settings.");
         noRecommendersMessage
@@ -268,9 +307,9 @@ public class ActiveLearningSidebar
 
     private Form<Void> createSessionControlForm()
     {
-        Form<Void> form = new Form<>(CID_SESSION_CONTROL_FORM);
+        var form = new Form<Void>(CID_SESSION_CONTROL_FORM);
 
-        DropDownChoice<AnnotationLayer> layersDropdown = new DropDownChoice<>(CID_SELECT_LAYER);
+        var layersDropdown = new DropDownChoice<AnnotationLayer>(CID_SELECT_LAYER);
         layersDropdown.setModel(alStateModel.bind("layer"));
         layersDropdown.setChoices(LoadableDetachableModel.of(this::listLayersWithRecommenders));
         layersDropdown.setChoiceRenderer(new LambdaChoiceRenderer<>(AnnotationLayer::getUiName));
@@ -284,7 +323,6 @@ public class ActiveLearningSidebar
                 .add(visibleWhen(() -> !alStateModel.getObject().isSessionActive())));
         form.add(new LambdaAjaxLink(CID_STOP_SESSION_BUTTON, this::actionStopSession)
                 .add(visibleWhen(() -> alStateModel.getObject().isSessionActive())));
-        form.add(visibleWhen(() -> alStateModel.getObject().isDoExistRecommenders()));
 
         return form;
     }
@@ -295,7 +333,7 @@ public class ActiveLearningSidebar
         return recommendationService.listLayersWithEnabledRecommenders(getModelObject() //
                 .getProject()) //
                 .stream() //
-                .filter(layer -> layer.getType().equals(SPAN_TYPE)) //
+                .filter(layer -> layer.getType().equals(SpanLayerSupport.TYPE)) //
                 .collect(toList());
     }
 
@@ -564,7 +602,6 @@ public class ActiveLearningSidebar
 
     private FeatureEditor createFeatureEditor(SpanSuggestion aSuggestion)
     {
-        var state = ActiveLearningSidebar.this.getModelObject();
         var alState = alStateModel.getObject();
 
         // Obtain the feature state which serves as a model to the editor
@@ -702,12 +739,15 @@ public class ActiveLearningSidebar
 
         var sessionOwner = userService.getCurrentUsername();
 
-        alStateModel.getObject().getSuggestion().ifPresent(suggestion -> {
-            requestClearningSelectionAndJumpingToSuggestion();
-            activeLearningService.skipSpanSuggestion(sessionOwner, getModelObject().getUser(),
-                    alStateModel.getObject().getLayer(), suggestion);
-            moveToNextSuggestion(aTarget);
-        });
+        var maybeSuggestion = alStateModel.getObject().getSuggestion();
+        if (!maybeSuggestion.isPresent()) {
+            return;
+        }
+
+        requestClearningSelectionAndJumpingToSuggestion();
+        activeLearningService.skipSpanSuggestion(sessionOwner, getModelObject().getUser(),
+                alStateModel.getObject().getLayer(), maybeSuggestion.get());
+        moveToNextSuggestion(aTarget);
     }
 
     private void actionReject(AjaxRequestTarget aTarget) throws AnnotationException
@@ -716,12 +756,16 @@ public class ActiveLearningSidebar
 
         getAnnotationPage().ensureIsEditable();
 
-        alStateModel.getObject().getSuggestion().ifPresent(suggestion -> {
-            requestClearningSelectionAndJumpingToSuggestion();
-            activeLearningService.rejectSpanSuggestion(userService.getCurrentUsername(),
-                    getModelObject().getUser(), alStateModel.getObject().getLayer(), suggestion);
-            moveToNextSuggestion(aTarget);
-        });
+        var maybeSuggestion = alStateModel.getObject().getSuggestion();
+        if (!maybeSuggestion.isPresent()) {
+            return;
+        }
+
+        requestClearningSelectionAndJumpingToSuggestion();
+        activeLearningService.rejectSpanSuggestion(userService.getCurrentUsername(),
+                getModelObject().getUser(), alStateModel.getObject().getLayer(),
+                maybeSuggestion.get());
+        moveToNextSuggestion(aTarget);
     }
 
     private void moveToNextSuggestion(AjaxRequestTarget aTarget)
@@ -857,10 +901,7 @@ public class ActiveLearningSidebar
 
     private Form<?> createLearningHistory()
     {
-        Form<?> learningHistoryForm = new Form<Void>(CID_LEARNING_HISTORY_FORM)
-        {
-            private static final long serialVersionUID = -961690443085882064L;
-        };
+        var learningHistoryForm = new Form<Void>(CID_LEARNING_HISTORY_FORM);
         learningHistoryForm.add(LambdaBehavior.onConfigure(
                 component -> component.setVisible(alStateModel.getObject().isSessionActive())));
         learningHistoryForm.setOutputMarkupPlaceholderTag(true);
@@ -872,8 +913,7 @@ public class ActiveLearningSidebar
 
     private ListView<LearningRecord> createLearningHistoryListView()
     {
-        ListView<LearningRecord> learningHistory = new ListView<LearningRecord>(
-                CID_HISTORY_LISTVIEW)
+        var learningHistory = new ListView<LearningRecord>(CID_HISTORY_LISTVIEW)
         {
             private static final long serialVersionUID = 5594228545985423567L;
 
@@ -950,10 +990,11 @@ public class ActiveLearningSidebar
 
     private Optional<AnnotationFS> getMatchingAnnotation(CAS aCas, LearningRecord aRecord)
     {
-        Type type = CasUtil.getType(aCas, alStateModel.getObject().getLayer().getName());
-        Feature feature = type.getFeatureByBaseName(aRecord.getAnnotationFeature().getName());
+        var type = CasUtil.getType(aCas, alStateModel.getObject().getLayer().getName());
+        var feature = type.getFeatureByBaseName(aRecord.getAnnotationFeature().getName());
         return selectAt(aCas, type, aRecord.getOffsetBegin(), aRecord.getOffsetEnd()).stream()
-                .filter(fs -> aRecord.getAnnotation().equals(fs.getFeatureValueAsString(feature)))
+                .filter(fs -> Objects.equals(aRecord.getAnnotation(),
+                        fs.getFeatureValueAsString(feature)))
                 .findFirst();
     }
 
@@ -1082,7 +1123,7 @@ public class ActiveLearningSidebar
         CAS cas = this.getCasProvider().get();
         Optional<AnnotationFS> anno = getMatchingAnnotation(cas, aRecord);
         if (anno.isPresent()) {
-            state.getSelection().selectSpan(new VID(anno.get()), cas, aRecord.getOffsetBegin(),
+            state.getSelection().selectSpan(VID.of(anno.get()), cas, aRecord.getOffsetBegin(),
                     aRecord.getOffsetEnd());
             getActionHandler().actionDelete(aTarget);
         }
@@ -1206,7 +1247,7 @@ public class ActiveLearningSidebar
             var cas = documentService.readAnnotationCas(aDocument, dataOwner.getUsername());
             var group = SuggestionDocumentGroup.groupsOfType(SpanSuggestion.class,
                     predictions.getPredictionsByDocument(aDocument.getName()));
-            recommendationService.calculateSpanSuggestionVisibility(sessionOwner, aDocument, cas,
+            recommendationService.calculateSuggestionVisibility(sessionOwner, aDocument, cas,
                     dataOwner.getUsername(), aLayer, group, 0, cas.getDocumentText().length());
 
             moveToNextSuggestion(aTarget);
@@ -1379,7 +1420,7 @@ public class ActiveLearningSidebar
     public void onDocumentOpenedEvent(DocumentOpenedEvent aEvent)
     {
         // If active learning is not active, update the sidebar in case the session auto-terminated
-        ActiveLearningUserState alState = alStateModel.getObject();
+        var alState = alStateModel.getObject();
         if (!alState.isSessionActive()) {
             aEvent.getRequestTarget().ifPresent(target -> target.add(alMainContainer));
             return;

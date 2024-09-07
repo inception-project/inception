@@ -77,6 +77,10 @@ export class ViewportTracker {
       return false
     }
 
+    if (!element.textContent) {
+      return false;
+    }
+
     return style.display === 'block' || style.display === 'flex' || style.display === 'grid' ||
       style.display === 'table-row'
 

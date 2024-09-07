@@ -22,6 +22,8 @@ import de.tudarmstadt.ukp.clarin.webanno.security.AccessCheckingBean;
 public interface ProjectAccess
     extends AccessCheckingBean
 {
+    boolean canCreateProjects();
+
     boolean canManageProject(String aProjectId);
 
     boolean canAccessProject(String aProjectId);

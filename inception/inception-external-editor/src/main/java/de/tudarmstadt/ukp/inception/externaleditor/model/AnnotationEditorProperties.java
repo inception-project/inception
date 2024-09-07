@@ -28,6 +28,7 @@ public class AnnotationEditorProperties
     private String userPreferencesKey;
     private List<String> scriptSources;
     private List<String> stylesheetSources;
+    private List<String> sectionElements;
     private boolean loadingIndicatorDisabled = false;
 
     public String getEditorFactory()
@@ -108,5 +109,15 @@ public class AnnotationEditorProperties
     public String getUserPreferencesKey()
     {
         return userPreferencesKey;
+    }
+
+    public List<String> getSectionElements()
+    {
+        return sectionElements;
+    }
+
+    public void setSectionElements(List<String> aSectionElements)
+    {
+        sectionElements = aSectionElements;
     }
 }

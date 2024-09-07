@@ -31,7 +31,7 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.export.ExportDocumentDialog;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.inception.documents.DocumentAccess;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentAccess;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.support.wicket.input.InputBehavior;
@@ -85,8 +85,7 @@ public class CurationDocumentNavigator
      */
     public void actionShowPreviousDocument(AjaxRequestTarget aTarget)
     {
-        boolean documentChanged = page.getModelObject()
-                .moveToPreviousDocument(page.getListOfDocs());
+        var documentChanged = page.getModelObject().moveToPreviousDocument(page.getListOfDocs());
         if (!documentChanged) {
             info("There is no previous document");
             aTarget.addChildren(getPage(), IFeedback.class);
@@ -103,7 +102,7 @@ public class CurationDocumentNavigator
      */
     public void actionShowNextDocument(AjaxRequestTarget aTarget)
     {
-        boolean documentChanged = page.getModelObject().moveToNextDocument(page.getListOfDocs());
+        var documentChanged = page.getModelObject().moveToNextDocument(page.getListOfDocs());
         if (!documentChanged) {
             info("There is no next document");
             aTarget.addChildren(getPage(), IFeedback.class);

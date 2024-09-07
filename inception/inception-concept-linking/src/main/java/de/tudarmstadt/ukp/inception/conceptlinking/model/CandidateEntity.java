@@ -20,6 +20,8 @@ package de.tudarmstadt.ukp.inception.conceptlinking.model;
 import static java.lang.Integer.MAX_VALUE;
 import static java.util.Collections.emptySet;
 import static java.util.Collections.unmodifiableMap;
+import static java.util.Comparator.comparing;
+import static java.util.function.Function.identity;
 
 import java.util.IllformedLocaleException;
 import java.util.List;
@@ -28,6 +30,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
@@ -38,11 +42,23 @@ import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
  */
 public class CandidateEntity
 {
+    public static final Pattern TOKENKIZER_PATTERN = Pattern.compile("[\\s()\\-]+");
+
+    public static String[] sortedBagOfWords(String aString)
+    {
+        return Stream.of(TOKENKIZER_PATTERN.split(aString))
+                .sorted(comparing(String::length).reversed().thenComparing(identity())) //
+                .distinct() //
+                .toArray(String[]::new);
+    }
+
     /**
      * The query entered by the user.
      */
     public static final Key<String> KEY_QUERY = new Key<>("query");
     public static final Key<String> KEY_QUERY_NC = new Key<>("queryNC");
+    public static final Key<String[]> KEY_QUERY_BOW = new Key<>("queryBow");
+    public static final Key<String[]> KEY_QUERY_BOW_NC = new Key<>("queryBowNc");
 
     /**
      * The term which had the best match with query or mention. This should be displayed to the user
@@ -60,7 +76,9 @@ public class CandidateEntity
      * The mention in the text which is to be linked.
      */
     public static final Key<String> KEY_MENTION = new Key<>("mention");
-    public static final Key<String> KEY_MENTION_NC = new Key<>("mentionNC");
+    public static final Key<String> KEY_MENTION_NC = new Key<>("mentionNc");
+    public static final Key<String[]> KEY_MENTION_BOW = new Key<>("mentionBow");
+    public static final Key<String[]> KEY_MENTION_BOW_NC = new Key<>("mentionBowNc");
 
     public static final Key<String> KEY_LABEL_NC = new Key<>("labelNC");
 
@@ -76,10 +94,16 @@ public class CandidateEntity
      * the default value to ensure that candidates are ranked last on this feature if it could not
      * be calculated.
      */
-    public static final Key<Integer> KEY_LEVENSHTEIN_MENTION = new Key<>("levMention", MAX_VALUE);
+    public static final Key<Integer> SCORE_LEVENSHTEIN_MENTION = new Key<>("levMention", MAX_VALUE);
 
-    public static final Key<Integer> KEY_LEVENSHTEIN_MENTION_NC = new Key<>("levMentionNC",
+    public static final Key<Integer> SCORE_LEVENSHTEIN_MENTION_NC = new Key<>("levMentionNc",
             MAX_VALUE);
+
+    public static final Key<Integer> SCORE_TOKEN_OVERLAP_MENTION = new Key<>("tokenOverlapMention",
+            MAX_VALUE);
+
+    public static final Key<Integer> SCORE_TOKEN_OVERLAP_MENTION_NC = new Key<>(
+            "tokenOverlapMentionNc", MAX_VALUE);
 
     /**
      * Edit distance between mention + context and candidate entity label
@@ -88,8 +112,11 @@ public class CandidateEntity
      * the default value to ensure that candidates are ranked last on this feature if it could not
      * be calculated.
      */
-    public static final Key<Integer> KEY_LEVENSHTEIN_MENTION_CONTEXT = new Key<>("levContext",
+    public static final Key<Integer> SCORE_LEVENSHTEIN_MENTION_CONTEXT = new Key<>("levContext",
             MAX_VALUE);
+
+    public static final Key<Integer> SCORE_TOKEN_OVERLAP_MENTION_CONTEXT = new Key<>(
+            "tokenOverlapContext", MAX_VALUE);
 
     /**
      * Edit distance between typed string and candidate entity label
@@ -98,9 +125,16 @@ public class CandidateEntity
      * the default value to ensure that candidates are ranked last on this feature if it could not
      * be calculated.
      */
-    public static final Key<Integer> KEY_LEVENSHTEIN_QUERY = new Key<>("levQuery", MAX_VALUE);
+    public static final Key<Integer> SCORE_LEVENSHTEIN_QUERY = new Key<>("levQuery", MAX_VALUE);
 
-    public static final Key<Integer> KEY_LEVENSHTEIN_QUERY_NC = new Key<>("levQueryNC", MAX_VALUE);
+    public static final Key<Integer> SCORE_LEVENSHTEIN_QUERY_NC = new Key<>("levQueryNc",
+            MAX_VALUE);
+
+    public static final Key<Integer> SCORE_TOKEN_OVERLAP_QUERY = new Key<>("tokenOverlapQuery",
+            MAX_VALUE);
+
+    public static final Key<Integer> SCORE_TOKEN_OVERLAP_QUERY_NC = new Key<>("tokenOverlapQueryNc",
+            MAX_VALUE);
 
     /**
      * set of directly related entities as IRI Strings
@@ -117,13 +151,18 @@ public class CandidateEntity
      * number of related entities whose entity label occurs in <i>content tokens</i> <i>Content
      * tokens</i> consist of tokens in mention sentence annotated as nouns, verbs or adjectives
      */
-    public static final Key<Integer> KEY_SIGNATURE_OVERLAP_SCORE = new Key<>(
-            "signatureOverlapScore", 0);
+    public static final Key<Integer> SCORE_SIGNATURE_OVERLAP = new Key<>("signatureOverlapScore",
+            0);
 
     /**
      * logarithm of the wikidata ID - based on the assumption that lower IDs are more important
      */
     public static final Key<Double> KEY_ID_RANK = new Key<>("idRank", 0.0d);
+
+    /**
+     * FTS score - score assigned by the KB FTS (if any)
+     */
+    public static final Key<Double> SCORE_FTS = new Key<>("ftsScore", 0.0d);
 
     /**
      * in-link count of wikipedia article of IRI
@@ -149,6 +188,8 @@ public class CandidateEntity
                 locale = Locale.ENGLISH;
             }
         }
+
+        put(KEY_LABEL_NC, getLabel().toLowerCase(getLocale()));
     }
 
     public KBHandle getHandle()
@@ -188,6 +229,35 @@ public class CandidateEntity
     public String getLanguage()
     {
         return handle.getLanguage();
+    }
+
+    public boolean isDeprecated()
+    {
+        return handle.isDeprecated();
+    }
+
+    public CandidateEntity withQuery(String aQuery)
+    {
+        if (aQuery != null) {
+            put(KEY_QUERY, aQuery);
+            put(KEY_QUERY_BOW, sortedBagOfWords(aQuery));
+            var lowerCaseQuery = aQuery.toLowerCase(getLocale());
+            put(KEY_QUERY_NC, lowerCaseQuery);
+            put(KEY_QUERY_BOW_NC, sortedBagOfWords(lowerCaseQuery));
+        }
+        return this;
+    }
+
+    public CandidateEntity withMention(String aMention)
+    {
+        if (aMention != null) {
+            put(KEY_MENTION, aMention);
+            put(KEY_MENTION_BOW, sortedBagOfWords(aMention));
+            var lowerCaseMention = aMention.toLowerCase(getLocale());
+            put(KEY_MENTION_NC, lowerCaseMention);
+            put(KEY_MENTION_BOW_NC, sortedBagOfWords(lowerCaseMention));
+        }
+        return this;
     }
 
     @SuppressWarnings("unchecked")
@@ -235,6 +305,28 @@ public class CandidateEntity
     public Map<String, Object> getFeatures()
     {
         return unmodifiableMap(features);
+    }
+
+    public String getFeaturesAsString()
+    {
+        var sb = new StringBuilder();
+
+        for (var key : features.keySet().stream().sorted().toList()) {
+            var value = features.get(key);
+            if (value == null || value.getClass().isArray()) {
+                continue;
+            }
+
+            if (sb.length() > 0) {
+                sb.append(", ");
+            }
+
+            sb.append(key);
+            sb.append(":");
+            sb.append(value);
+        }
+
+        return sb.toString();
     }
 
     public static class Key<T>

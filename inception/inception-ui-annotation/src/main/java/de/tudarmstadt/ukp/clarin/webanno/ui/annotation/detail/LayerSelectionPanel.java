@@ -19,16 +19,15 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail;
 
 import static de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel.handleException;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
+import static org.apache.wicket.event.Broadcast.BUBBLE;
 
 import java.io.IOException;
-import java.util.List;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.event.Broadcast;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
-import org.apache.wicket.markup.html.panel.Panel;
+import org.apache.wicket.markup.html.panel.GenericPanel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
@@ -47,7 +46,7 @@ import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdati
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior;
 
 public class LayerSelectionPanel
-    extends Panel
+    extends GenericPanel<AnnotatorState>
 {
     private static final long serialVersionUID = 7056096841332575514L;
 
@@ -70,9 +69,10 @@ public class LayerSelectionPanel
         add(layerSelector = createDefaultAnnotationLayerSelector());
         // Visible if there is more than one selectable layer and if the document is editable
         // (meaning we need to be able to change the layer)
-        add(visibleWhen(
-                () -> layerSelector.getChoicesModel().map(layerChoices -> layerChoices.size() > 1)
-                        .orElse(false).getObject() && getEditorPage().isEditable()));
+        add(visibleWhen(() -> layerSelector.getChoicesModel() //
+                .map(layerChoices -> layerChoices.size() > 1) //
+                .orElse(false).getObject() //
+                && getEditorPage().isEditable()));
     }
 
     public AnnotationPageBase getEditorPage()
@@ -80,24 +80,13 @@ public class LayerSelectionPanel
         return (AnnotationPageBase) getPage();
     }
 
-    @SuppressWarnings("unchecked")
-    public IModel<AnnotatorState> getModel()
-    {
-        return (IModel<AnnotatorState>) getDefaultModel();
-    }
-
-    public AnnotatorState getModelObject()
-    {
-        return (AnnotatorState) getDefaultModelObject();
-    }
-
     private Label createRelationHint()
     {
-        Label label = new Label("relationHint", Model.of());
+        var label = new Label("relationHint", Model.of());
         label.setOutputMarkupPlaceholderTag(true);
         label.add(LambdaBehavior.onConfigure(_this -> {
             if (layerSelector.getModelObject() != null) {
-                List<AnnotationLayer> relLayers = annotationService
+                var relLayers = annotationService
                         .listAttachedRelationLayers(layerSelector.getModelObject());
                 if (relLayers.isEmpty()) {
                     _this.setVisible(false);
@@ -108,9 +97,7 @@ public class LayerSelectionPanel
                     _this.setVisible(true);
                 }
                 else {
-                    _this.setDefaultModelObject(
-                            "Whoops! Found more than one relation layer attaching to this span layer!");
-                    _this.setVisible(true);
+                    _this.setVisible(false);
                 }
             }
             else {
@@ -122,7 +109,7 @@ public class LayerSelectionPanel
 
     private DropDownChoice<AnnotationLayer> createDefaultAnnotationLayerSelector()
     {
-        DropDownChoice<AnnotationLayer> selector = new DropDownChoice<>("defaultAnnotationLayer");
+        var selector = new DropDownChoice<AnnotationLayer>("defaultAnnotationLayer");
         selector.setChoices(getModel().map(AnnotatorState::getSelectableLayers));
         selector.setChoiceRenderer(new ChoiceRenderer<>("uiName"));
         selector.setOutputMarkupId(true);
@@ -133,11 +120,11 @@ public class LayerSelectionPanel
 
     private void actionChangeDefaultLayer(AjaxRequestTarget aTarget)
     {
-        AnnotatorState state = getModelObject();
+        var state = getModelObject();
 
         aTarget.add(relationHint);
 
-        send(this, Broadcast.BUBBLE, new DefaultLayerChangedEvent(layerSelector.getModelObject()));
+        send(this, BUBBLE, new DefaultLayerChangedEvent(layerSelector.getModelObject()));
 
         // Save the currently selected layer as a user preference so it is remains active when a
         // user leaves the application and later comes back to continue annotating
@@ -148,6 +135,7 @@ public class LayerSelectionPanel
         else {
             state.getPreferences().setDefaultLayer(-1);
         }
+
         if (prevDefaultLayer != state.getPreferences().getDefaultLayer()) {
             try {
                 userPreferencesService.savePreferences(state.getProject(),

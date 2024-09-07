@@ -17,10 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.relation;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectOverlapping;
 import static de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult.toEvaluationResult;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.FEAT_REL_SOURCE;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.FEAT_REL_TARGET;
+import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.selectOverlapping;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.counting;
 import static java.util.stream.Collectors.groupingBy;
@@ -30,9 +30,7 @@ import static org.apache.uima.fit.util.CasUtil.select;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
 import org.apache.commons.collections4.MultiValuedMap;
@@ -50,6 +48,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.LabelPair;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.PredictionContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
@@ -84,10 +83,10 @@ public class StringMatchingRelationRecommender
 
     private MultiValuedMap<Pair<String, String>, String> trainModel(List<Triple> aData)
     {
-        MultiValuedMap<Pair<String, String>, String> model = new ArrayListValuedHashMap<>();
+        var model = new ArrayListValuedHashMap<Pair<String, String>, String>();
 
-        for (Triple t : aData) {
-            Pair<String, String> key = Pair.of(t.governor, t.dependent);
+        for (var t : aData) {
+            var key = Pair.of(t.governor, t.dependent);
             model.put(key, t.label);
         }
 
@@ -95,51 +94,56 @@ public class StringMatchingRelationRecommender
     }
 
     @Override
-    public Range predict(RecommenderContext aContext, CAS aCas, int aBegin, int aEnd)
+    public Range predict(PredictionContext aContext, CAS aCas, int aBegin, int aEnd)
         throws RecommendationException
     {
-        MultiValuedMap<Pair<String, String>, String> model = aContext.get(KEY_MODEL).orElseThrow(
+        var model = aContext.get(KEY_MODEL).orElseThrow(
                 () -> new RecommendationException("Key [" + KEY_MODEL + "] not found in context"));
 
-        Type sampleUnitType = getType(aCas, SAMPLE_UNIT);
+        var sampleUnitType = getType(aCas, SAMPLE_UNIT);
 
-        Type predictedType = getPredictedType(aCas);
-        Feature governorFeature = predictedType.getFeatureByBaseName(FEAT_REL_SOURCE);
-        Feature dependentFeature = predictedType.getFeatureByBaseName(FEAT_REL_TARGET);
-        Feature predictedFeature = getPredictedFeature(aCas);
-        Feature isPredictionFeature = getIsPredictionFeature(aCas);
-        Type attachType = getAttachType(aCas);
-        Feature attachFeature = getAttachFeature(aCas);
-        Feature scoreFeature = getScoreFeature(aCas);
+        var predictedType = getPredictedType(aCas);
+        var governorFeature = predictedType.getFeatureByBaseName(FEAT_REL_SOURCE);
+        var dependentFeature = predictedType.getFeatureByBaseName(FEAT_REL_TARGET);
+        var predictedFeature = getPredictedFeature(aCas);
+        var isPredictionFeature = getIsPredictionFeature(aCas);
+        var attachType = getAttachType(aCas);
+        var attachFeature = getAttachFeature(aCas);
+        var scoreFeature = getScoreFeature(aCas);
 
         // Relations are predicted only within the sample units - thus instead of looking at the
         // whole document for potential relations, we only need to look at those units that overlap
         // with the current prediction request area
         var units = selectOverlapping(aCas, sampleUnitType, aBegin, aEnd);
-        for (AnnotationFS sampleUnit : units) {
-            Collection<AnnotationFS> baseAnnotations = selectCovered(attachType, sampleUnit);
-            for (AnnotationFS governor : baseAnnotations) {
-                for (AnnotationFS dependent : baseAnnotations) {
+
+        if (model.isEmpty()) {
+            return Range.rangeCoveringAnnotations(units);
+        }
+
+        for (var sampleUnit : units) {
+            var baseAnnotations = selectCovered(attachType, sampleUnit);
+            for (var governor : baseAnnotations) {
+                for (var dependent : baseAnnotations) {
 
                     if (governor.equals(dependent)) {
                         continue;
                     }
 
-                    String governorLabel = governor.getStringValue(attachFeature);
-                    String dependentLabel = dependent.getStringValue(attachFeature);
+                    var governorLabel = governor.getStringValue(attachFeature);
+                    var dependentLabel = dependent.getStringValue(attachFeature);
 
-                    Pair<String, String> key = Pair.of(governorLabel, dependentLabel);
-                    Collection<String> occurrences = model.get(key);
-                    Map<String, Long> numberOfOccurrencesPerLabel = occurrences.stream() //
+                    var key = Pair.of(governorLabel, dependentLabel);
+                    var occurrences = model.get(key);
+                    var numberOfOccurrencesPerLabel = occurrences.stream() //
                             .collect(groupingBy(identity(), counting()));
 
-                    double totalNumberOfOccurrences = occurrences.size();
+                    var totalNumberOfOccurrences = occurrences.size();
 
-                    for (String relationLabel : occurrences) {
-                        double score = numberOfOccurrencesPerLabel.get(relationLabel)
+                    for (var relationLabel : occurrences) {
+                        var score = numberOfOccurrencesPerLabel.get(relationLabel)
                                 / totalNumberOfOccurrences;
-                        AnnotationFS prediction = aCas.createAnnotation(predictedType,
-                                governor.getBegin(), governor.getEnd());
+                        var prediction = aCas.createAnnotation(predictedType, governor.getBegin(),
+                                governor.getEnd());
                         prediction.setFeatureValue(governorFeature, governor);
                         prediction.setFeatureValue(dependentFeature, dependent);
                         prediction.setStringValue(predictedFeature, relationLabel);
@@ -151,7 +155,7 @@ public class StringMatchingRelationRecommender
             }
         }
 
-        return new Range(units);
+        return Range.rangeCoveringAnnotations(units);
     }
 
     @Override
@@ -218,22 +222,22 @@ public class StringMatchingRelationRecommender
 
     private List<Triple> getTrainingData(List<CAS> aCasses)
     {
-        List<Triple> data = new ArrayList<>();
+        var data = new ArrayList<Triple>();
 
-        for (CAS cas : aCasses) {
-            Type predictedType = getPredictedType(cas);
-            Feature governorFeature = predictedType.getFeatureByBaseName(FEAT_REL_SOURCE);
-            Feature dependentFeature = predictedType.getFeatureByBaseName(FEAT_REL_TARGET);
-            Feature predictedFeature = getPredictedFeature(cas);
-            Feature attachFeature = getAttachFeature(cas);
+        for (var cas : aCasses) {
+            var predictedType = getPredictedType(cas);
+            var governorFeature = predictedType.getFeatureByBaseName(FEAT_REL_SOURCE);
+            var dependentFeature = predictedType.getFeatureByBaseName(FEAT_REL_TARGET);
+            var predictedFeature = getPredictedFeature(cas);
+            var attachFeature = getAttachFeature(cas);
 
-            for (AnnotationFS relation : select(cas, predictedType)) {
-                AnnotationFS governor = (AnnotationFS) relation.getFeatureValue(governorFeature);
-                AnnotationFS dependent = (AnnotationFS) relation.getFeatureValue(dependentFeature);
+            for (var relation : select(cas, predictedType)) {
+                var governor = (AnnotationFS) relation.getFeatureValue(governorFeature);
+                var dependent = (AnnotationFS) relation.getFeatureValue(dependentFeature);
 
-                String relationLabel = relation.getStringValue(predictedFeature);
-                String governorLabel = governor.getStringValue(attachFeature);
-                String dependentLabel = dependent.getStringValue(attachFeature);
+                var relationLabel = relation.getStringValue(predictedFeature);
+                var governorLabel = governor.getStringValue(attachFeature);
+                var dependentLabel = dependent.getStringValue(attachFeature);
 
                 if (isBlank(governorLabel) || isBlank(dependentLabel) || isBlank(relationLabel)) {
                     continue;
@@ -268,7 +272,7 @@ public class StringMatchingRelationRecommender
 
     private Feature getAttachFeature(CAS aCas)
     {
-        Type attachType = getAttachType(aCas);
+        var attachType = getAttachType(aCas);
         return attachType.getFeatureByBaseName(traits.getAdjunctFeature());
     }
 

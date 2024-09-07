@@ -23,7 +23,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.UIMAException;
@@ -50,12 +49,12 @@ public interface DocumentImportExportService
 
     default List<FormatSupport> getReadableFormats()
     {
-        return getFormats().stream().filter(FormatSupport::isReadable).collect(Collectors.toList());
+        return getFormats().stream().filter(FormatSupport::isReadable).toList();
     }
 
     default List<FormatSupport> getWritableFormats()
     {
-        return getFormats().stream().filter(FormatSupport::isWritable).collect(Collectors.toList());
+        return getFormats().stream().filter(FormatSupport::isWritable).toList();
     }
 
     default Optional<FormatSupport> getReadableFormatById(String aFormatId)
@@ -98,6 +97,18 @@ public interface DocumentImportExportService
         FormatSupport formatSupport = maybeFormatSupport.get();
 
         return formatSupport.getCssStylesheets();
+    }
+
+    default List<String> getSectionElements(SourceDocument aDoc)
+    {
+        Optional<FormatSupport> maybeFormatSupport = getFormatById(aDoc.getFormat());
+        if (!maybeFormatSupport.isPresent()) {
+            return Collections.emptyList();
+        }
+
+        FormatSupport formatSupport = maybeFormatSupport.get();
+
+        return formatSupport.getSectionElements();
     }
 
     default Optional<PolicyCollection> getFormatPolicy(SourceDocument aDoc) throws IOException
@@ -155,6 +166,13 @@ public interface DocumentImportExportService
         throws UIMAException, IOException;
 
     CAS importCasFromFile(File aFile, SourceDocument aDocument, String aFormat,
+            TypeSystemDescription aFullProjectTypeSystem)
+        throws UIMAException, IOException;
+
+    CAS importCasFromFileNoChecks(File aFile, SourceDocument aDocument)
+        throws UIMAException, IOException;
+
+    CAS importCasFromFileNoChecks(File aFile, SourceDocument aDocument,
             TypeSystemDescription aFullProjectTypeSystem)
         throws UIMAException, IOException;
 

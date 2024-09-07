@@ -23,11 +23,17 @@ public interface ExternalEditorProperties
 
     boolean isBlockImg();
 
+    Source getAllowImgSource();
+
     boolean isBlockEmbed();
 
     boolean isBlockAudio();
 
+    Source getAllowAudioSource();
+
     boolean isBlockObject();
 
     boolean isBlockVideo();
+
+    Source getAllowVideoSource();
 }

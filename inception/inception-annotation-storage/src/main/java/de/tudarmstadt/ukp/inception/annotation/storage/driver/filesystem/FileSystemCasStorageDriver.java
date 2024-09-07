@@ -17,11 +17,11 @@
  */
 package de.tudarmstadt.ukp.inception.annotation.storage.driver.filesystem;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.setDocumentId;
 import static de.tudarmstadt.ukp.inception.project.api.ProjectService.ANNOTATION_FOLDER;
 import static de.tudarmstadt.ukp.inception.project.api.ProjectService.DOCUMENT_FOLDER;
 import static de.tudarmstadt.ukp.inception.project.api.ProjectService.PROJECT_FOLDER;
 import static de.tudarmstadt.ukp.inception.support.logging.BaseLoggers.BOOT_LOG;
+import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.setDocumentId;
 import static java.lang.System.currentTimeMillis;
 import static java.nio.file.Files.move;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
@@ -56,7 +56,6 @@ import org.slf4j.LoggerFactory;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.ConcurentCasModificationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.type.CASMetadata;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -66,6 +65,7 @@ import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageBackupPr
 import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageProperties;
 import de.tudarmstadt.ukp.inception.annotation.storage.driver.CasStorageDriver;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
+import de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.inception.support.wicket.WicketUtil;
 
 public class FileSystemCasStorageDriver
@@ -442,6 +442,17 @@ public class FileSystemCasStorageDriver
     }
 
     @Override
+    public Optional<Long> getCasFileSize(SourceDocument aDocument, String aUser) throws IOException
+    {
+        var file = getCasFile(aDocument, aUser);
+        if (file.exists()) {
+            return Optional.of(file.length());
+        }
+
+        return Optional.empty();
+    }
+
+    @Override
     public Optional<CasStorageMetadata> getCasMetadata(SourceDocument aDocument, String aUser)
         throws IOException
     {
@@ -475,7 +486,7 @@ public class FileSystemCasStorageDriver
                     lastWriteMsg.append("\n");
                     lastWriteMsg.append("Last known successful write was at ");
                     lastWriteMsg.append(formatTimestamp(meta.lastWriteSuccessTimestamp));
-                    lastWriteMsg.append("by:\n");
+                    lastWriteMsg.append(" by:\n");
                     for (StackTraceElement e : meta.lastWriteSuccessTrace) {
                         lastWriteMsg.append("    ");
                         lastWriteMsg.append(e);

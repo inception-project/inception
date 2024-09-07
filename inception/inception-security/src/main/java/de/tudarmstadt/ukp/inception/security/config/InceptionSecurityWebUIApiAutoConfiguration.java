@@ -18,9 +18,16 @@
 package de.tudarmstadt.ukp.inception.security.config;
 
 import static java.lang.String.join;
+import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.joining;
+import static org.apache.wicket.csp.CSPDirectiveSrcValue.SELF;
 import static org.springframework.security.config.http.SessionCreationPolicy.NEVER;
 
+import java.util.ArrayList;
+
+import org.apache.wicket.csp.FixedCSPValue;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -28,6 +35,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.Http403ForbiddenEntryPoint;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
+@EnableConfigurationProperties({ CspPropertiesImpl.class })
 @ConditionalOnWebApplication
 public class InceptionSecurityWebUIApiAutoConfiguration
 {
@@ -39,16 +47,27 @@ public class InceptionSecurityWebUIApiAutoConfiguration
     @Bean
     public SecurityFilterChain uiApiFilterChain(HttpSecurity aHttp) throws Exception
     {
-        aHttp.antMatcher(BASE_API_URL + "/**");
+        aHttp.securityMatcher(BASE_API_URL + "/**");
         commonConfiguration(aHttp);
         return aHttp.build();
     }
 
     @Order(1001)
     @Bean
-    public SecurityFilterChain uiViewFilterChain(HttpSecurity aHttp) throws Exception
+    public SecurityFilterChain uiViewFilterChain(HttpSecurity aHttp, CspProperties aCspProperties)
+        throws Exception
     {
-        aHttp.antMatcher(BASE_VIEW_URL + "/**");
+        var imgSrcValue = new ArrayList<>(asList(SELF, new FixedCSPValue("data:")));
+        aCspProperties.getAllowedImageSources().stream() //
+                .map(FixedCSPValue::new) //
+                .forEachOrdered(imgSrcValue::add);
+
+        var mediaSrcValue = new ArrayList<>(asList(SELF, new FixedCSPValue("data:")));
+        aCspProperties.getAllowedMediaSources().stream() //
+                .map(FixedCSPValue::new) //
+                .forEachOrdered(mediaSrcValue::add);
+
+        aHttp.securityMatcher(BASE_VIEW_URL + "/**");
         // Views render data that we generally want to display in an IFrame on the editor page
         aHttp.headers() //
                 .frameOptions().sameOrigin()//
@@ -57,7 +76,10 @@ public class InceptionSecurityWebUIApiAutoConfiguration
                             "default-src 'none'", //
                             "script-src 'strict-dynamic' 'unsafe-eval'", //
                             "style-src 'self' 'unsafe-inline'", //
-                            "img-src 'self' data:", //
+                            "img-src " + imgSrcValue.stream().map(t -> t.render(null, null))
+                                    .collect(joining(" ")), //
+                            "media-src " + mediaSrcValue.stream().map(t -> t.render(null, null))
+                                    .collect(joining(" ")), //
                             "connect-src 'self'", //
                             "font-src 'self'", //
                             "manifest-src 'self'", //
@@ -71,14 +93,21 @@ public class InceptionSecurityWebUIApiAutoConfiguration
 
     private void commonConfiguration(HttpSecurity aHttp) throws Exception
     {
-        aHttp.authorizeRequests() //
-                .antMatchers("/**").access("hasAnyRole('ROLE_USER')") //
-                .anyRequest().denyAll();
-        aHttp.sessionManagement().sessionCreationPolicy(NEVER);
-        aHttp.exceptionHandling() //
-                .defaultAuthenticationEntryPointFor( //
-                        new Http403ForbiddenEntryPoint(), //
-                        new AntPathRequestMatcher("/**"));
+        aHttp.authorizeHttpRequests(authorizeHttpRequests -> {
+            authorizeHttpRequests //
+                    .requestMatchers("/**").hasAnyRole("USER") //
+                    .anyRequest().denyAll();
+        });
+
+        aHttp.sessionManagement(sessionManagement -> {
+            sessionManagement.sessionCreationPolicy(NEVER);
+        });
+
+        aHttp.exceptionHandling(exceptionHandling -> {
+            exceptionHandling.defaultAuthenticationEntryPointFor( //
+                    new Http403ForbiddenEntryPoint(), //
+                    new AntPathRequestMatcher("/**"));
+        });
 
     }
 }

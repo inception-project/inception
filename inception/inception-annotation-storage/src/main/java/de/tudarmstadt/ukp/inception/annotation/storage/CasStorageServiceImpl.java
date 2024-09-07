@@ -17,8 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.annotation.storage;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getRealCas;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.transferCasOwnershipToCurrentThread;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXCLUSIVE_WRITE_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.UNMANAGED_ACCESS;
@@ -27,6 +25,8 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.AU
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.NO_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.inception.annotation.storage.CasStorageServiceImpl.RepairAndUpgradeFlags.ISOLATED_SESSION;
 import static de.tudarmstadt.ukp.inception.project.api.ProjectService.withProjectLogger;
+import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.getRealCas;
+import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.transferCasOwnershipToCurrentThread;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Collections.newSetFromMap;
 import static java.util.Collections.synchronizedSet;
@@ -58,7 +58,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataRetrievalFailureException;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionalEventListener;
 import org.springframework.util.ConcurrentReferenceHashMap;
 
@@ -155,7 +154,7 @@ public class CasStorageServiceImpl
         config.setTimeBetweenEvictionRuns(casStorageProperties.getIdleCasEvictionDelay());
         // Allow the evictor to drop idle CASes from pool after a short time. This should avoid that
         // CASes that are used regularly are dropped from the pool too quickly.
-        config.setMinEvictableIdleTime(casStorageProperties.getMinIdleCasTime());
+        config.setMinEvictableIdleDuration(casStorageProperties.getMinIdleCasTime());
         // Allow the evictor to drop all idle CASes on every eviction run
         config.setNumTestsPerEvictionRun(-1);
         // Allow viewing the pool in JMX
@@ -358,7 +357,7 @@ public class CasStorageServiceImpl
                             mLoaderCas.setReleaseOnClose(false);
 
                             cas = readOrCreateUnmanagedCas(aDocument, aUsername, aSupplier,
-                                    aUpgradeMode);
+                                    aUpgradeMode, aAccessMode);
                         }
 
                         holder.setCas(cas);
@@ -416,10 +415,12 @@ public class CasStorageServiceImpl
                 try (var access = new WithExclusiveAccess(aDocument, aUsername)) {
                     // Since we promise to only read the CAS, we don't have to worry about it being
                     // locked to a particular thread...
-                    casHolder = sharedAccessCache.get(new CasKey(aDocument, aUsername),
-                            (key) -> CasHolder.of(key,
-                                    () -> getRealCas(readOrCreateUnmanagedCas(aDocument, aUsername,
-                                            aSupplier, aUpgradeMode))));
+                    casHolder = sharedAccessCache
+                            .get(new CasKey(aDocument, aUsername),
+                                    (key) -> CasHolder.of(key,
+                                            () -> getRealCas(readOrCreateUnmanagedCas(aDocument,
+                                                    aUsername, aSupplier, aUpgradeMode,
+                                                    aAccessMode))));
                     var size = getSharedAccessCacheSize();
                     var max = casStorageProperties.getSharedCasCacheSize();
                     if (size > (max * 0.9)) {
@@ -434,7 +435,7 @@ public class CasStorageServiceImpl
                 try (var access = new WithExclusiveAccess(aDocument, aUsername)) {
                     casHolder = CasHolder.of(new CasKey(aDocument, aUsername),
                             () -> readOrCreateUnmanagedCas(aDocument, aUsername, aSupplier,
-                                    aUpgradeMode));
+                                    aUpgradeMode, aAccessMode));
                 }
             }
             // else if the special bypass mode is requested, then we fetch directly from disk
@@ -564,7 +565,7 @@ public class CasStorageServiceImpl
      *             if the CAS could not be obtained.
      */
     private CAS readOrCreateUnmanagedCas(SourceDocument aDocument, String aUsername,
-            CasProvider aSupplier, CasUpgradeMode aUpgradeMode)
+            CasProvider aSupplier, CasUpgradeMode aUpgradeMode, CasAccessMode aAccessMode)
         throws IOException
     {
         var start = currentTimeMillis();
@@ -585,30 +586,30 @@ public class CasStorageServiceImpl
 
         // If the CAS exists on disk already, load it from there
         if (driver.existsCas(aDocument, aUsername)) {
+            source = "disk";
             cas = driver.readCas(aDocument, aUsername);
             repairAndUpgradeCasIfRequired(aDocument, aUsername, cas, aUpgradeMode,
                     ISOLATED_SESSION);
-            source = "disk";
+
+            addOrUpdateCasMetadata(aDocument, aUsername, cas);
         }
         // If the CAS does NOT exist on disk, try obtaining it through the given CAS provider
         else if (aSupplier != null) {
+            source = "importer";
             cas = aSupplier.get();
             repairAndUpgradeCasIfRequired(aDocument, aUsername, cas, aUpgradeMode);
-            realWriteCas(aDocument, aUsername, cas);
-            source = "importer";
+
+            if (aAccessMode == EXCLUSIVE_WRITE_ACCESS) {
+                realWriteCas(aDocument, aUsername, cas);
+
+                addOrUpdateCasMetadata(aDocument, aUsername, cas);
+            }
         }
         // If no CAS provider is given, fail
         else {
             throw new FileNotFoundException("CAS file for [" + aDocument.getId() + "," + aUsername
                     + "] does not exist and no initializer is specified.");
         }
-
-        // Add/update the CAS metadata
-        CasMetadataUtils.addOrUpdateCasMetadata(cas, driver.getCasMetadata(aDocument, aUsername)
-                .orElseThrow(() -> new IOException(
-                        "Unable to obtain last modified data for annotation document [" + aDocument
-                                + "] of user [" + aUsername + "]"))
-                .getTimestamp(), aDocument, aUsername);
 
         var duration = currentTimeMillis() - start;
 
@@ -627,6 +628,16 @@ public class CasStorageServiceImpl
         }
 
         return cas;
+    }
+
+    private void addOrUpdateCasMetadata(SourceDocument aDocument, String aUsername, CAS cas)
+        throws IOException
+    {
+        CasMetadataUtils.addOrUpdateCasMetadata(cas, driver.getCasMetadata(aDocument, aUsername)
+                .orElseThrow(() -> new IOException(
+                        "Unable to obtain last modified data for annotation document [" + aDocument
+                                + "] of user [" + aUsername + "]"))
+                .getTimestamp(), aDocument, aUsername);
     }
 
     @Override
@@ -876,6 +887,25 @@ public class CasStorageServiceImpl
         }
     }
 
+    @Override
+    public Optional<Long> getCasFileSize(SourceDocument aDocument, String aUser) throws IOException
+    {
+        Validate.notNull(aDocument, "Source document must be specified");
+        Validate.notBlank(aUser, "User must be specified");
+
+        // Ensure that the CAS is not being re-written and temporarily unavailable while we check
+        // for its existence
+        try (var access = new WithExclusiveAccess(aDocument, aUser)) {
+            return driver.getCasFileSize(aDocument, aUser);
+        }
+        catch (IOException e) {
+            throw e;
+        }
+        catch (Exception e) {
+            throw new IOException(e);
+        }
+    }
+
     private class WithExclusiveAccess
         implements AutoCloseable
     {
@@ -1064,7 +1094,6 @@ public class CasStorageServiceImpl
     }
 
     @TransactionalEventListener(fallbackExecution = true)
-    @Transactional
     public void beforeLayerConfigurationChanged(LayerConfigurationChangedEvent aEvent)
     {
         // Tell the known CAS holders for the given project that their type system is outdated

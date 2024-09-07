@@ -19,6 +19,9 @@ package de.tudarmstadt.ukp.inception.schema.api.feature;
 
 import java.io.Serializable;
 
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
+
 public class FeatureType
     implements Serializable
 {
@@ -69,6 +72,15 @@ public class FeatureType
     public boolean isInternal()
     {
         return internal;
+    }
+
+    @Override
+    public String toString()
+    {
+        return new ToStringBuilder(this, ToStringStyle.JSON_STYLE) //
+                .append("name", name) //
+                .append("featureSupportId", featureSupportId) //
+                .toString();
     }
 
     @Override

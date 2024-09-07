@@ -19,8 +19,8 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar;
 
 import org.apache.wicket.Component;
 import org.apache.wicket.extensions.markup.html.tabs.AbstractTab;
+import org.apache.wicket.markup.html.panel.EmptyPanel;
 import org.apache.wicket.model.IModel;
-import org.springframework.context.ApplicationContext;
 
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.support.spring.ApplicationContextProvider;
@@ -49,13 +49,14 @@ public abstract class SidebarTab
             // We need to get the methods and services directly in here so
             // that the lambda doesn't have a dependency on the non-serializable
             // AnnotationSidebarFactory class.
-            ApplicationContext ctx = ApplicationContextProvider.getApplicationContext();
-            return ctx.getBean(AnnotationSidebarRegistry.class).getSidebarFactory(factoryId)
-                    .createIcon(aId, aState);
+            var ctx = ApplicationContextProvider.getApplicationContext();
+            return ctx.getBean(AnnotationSidebarRegistry.class) //
+                    .getExtension(factoryId) //
+                    .map($ -> $.createIcon(aId, aState)) //
+                    .orElseGet(() -> new EmptyPanel(aId));
         }
         catch (Exception e) {
             throw new RuntimeException(e);
         }
-
     }
 }

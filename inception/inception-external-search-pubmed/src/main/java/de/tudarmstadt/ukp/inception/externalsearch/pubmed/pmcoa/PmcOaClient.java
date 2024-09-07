@@ -17,10 +17,12 @@
  */
 package de.tudarmstadt.ukp.inception.externalsearch.pubmed.pmcoa;
 
+import java.io.IOException;
 import java.util.Map;
 
 import org.springframework.http.HttpMethod;
 import org.springframework.http.converter.xml.MappingJackson2XmlHttpMessageConverter;
+import org.springframework.web.client.HttpClientErrorException.NotFound;
 import org.springframework.web.client.RestTemplate;
 
 import de.tudarmstadt.ukp.inception.externalsearch.pubmed.traits.PubMedProviderTraits;
@@ -40,14 +42,25 @@ public class PmcOaClient
         restTemplate.getMessageConverters().add(new MappingJackson2XmlHttpMessageConverter());
     }
 
-    public byte[] bioc(PubMedProviderTraits aTraits, String aID)
+    public byte[] bioc(PubMedProviderTraits aTraits, String aID) throws IOException
     {
-        var variables = Map.of( //
-                PARAM_ID, aID);
+        try {
+            var variables = Map.of( //
+                    PARAM_ID, aID);
 
-        var response = restTemplate.exchange(BIOC_URL, HttpMethod.GET, null, byte[].class,
-                variables);
+            var response = restTemplate.exchange(BIOC_URL, HttpMethod.GET, null, byte[].class,
+                    variables);
 
-        return response.getBody();
+            return response.getBody();
+        }
+        catch (NotFound e) {
+            throw new IOException("BioC version of document [" + aID + "] not found at ["
+                    + BIOC_URL.replace("{id}", aID)
+                    + "]. The Open Access files and BioC versions are not updated  as "
+                    + "quickly as the PMC website itself is updated. It may take a couple of days until "
+                    + "a particular file is available as BioC. Another reason could be that the document you "
+                    + "are looking for is not included in the Open Access set. Try adding "
+                    + "`\"open access\"[filter]` without \"`\" to your search to filter by Open Access files.");
+        }
     }
 }

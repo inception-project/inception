@@ -17,11 +17,10 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.core.logout;
 
+import static de.tudarmstadt.ukp.clarin.webanno.security.WicketSecurityUtils.getAutoLogoutTime;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.enabledWhen;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-
-import javax.servlet.http.HttpSession;
 
 import org.apache.wicket.Component;
 import org.apache.wicket.devutils.stateless.StatelessComponent;
@@ -33,9 +32,6 @@ import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.link.BookmarkablePageLink;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.protocol.http.servlet.ServletWebRequest;
-import org.apache.wicket.request.Request;
-import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.request.flow.RedirectToUrlException;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
@@ -117,6 +113,13 @@ public class LogoutPanel
     public static void actionLogout(Component aOwner,
             PreauthenticationProperties aPreauthProperties, LoginProperties aSecProperties)
     {
+        // It would be nicer if we could just use the default Spring Security logout
+        // mechanism by making the logout button a link to `/logout`, but since
+        // we want to perform extra stuff afterwards, we currently use this way.
+        //
+        // The alternative would be to register a custom LogoutSuccessHandler with
+        // Spring Security which would do our special logout redirection behavior
+
         ApplicationSession.get().signOut();
 
         if (aPreauthProperties.getLogoutUrl().isPresent()) {
@@ -124,29 +127,12 @@ public class LogoutPanel
         }
 
         if (isNotBlank(aSecProperties.getAutoLogin())) {
-            PageParameters parameters = new PageParameters();
+            var parameters = new PageParameters();
             parameters.set(LoginPage.PARAM_SKIP_AUTO_LOGIN, true);
             aOwner.setResponsePage(LoginPage.class, parameters);
             return;
         }
 
         aOwner.setResponsePage(aOwner.getApplication().getHomePage());
-    }
-
-    /**
-     * Checks if auto-logout is enabled. For Winstone, we get a max session length of 0, so here it
-     * is disabled.
-     */
-    private int getAutoLogoutTime()
-    {
-        int duration = 0;
-        Request request = RequestCycle.get().getRequest();
-        if (request instanceof ServletWebRequest) {
-            HttpSession session = ((ServletWebRequest) request).getContainerRequest().getSession();
-            if (session != null) {
-                duration = session.getMaxInactiveInterval();
-            }
-        }
-        return duration;
     }
 }

@@ -18,23 +18,20 @@
 package de.tudarmstadt.ukp.clarin.webanno.diag.repairs;
 
 import static de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctorUtils.getNonIndexedFSesWithOwner;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.SPAN_TYPE;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
 import static org.apache.uima.fit.util.FSUtil.getFeature;
 import static org.apache.uima.fit.util.FSUtil.setFeature;
 
 import java.util.List;
-import java.util.Map;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
-import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.Repair.Safe;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 
@@ -53,20 +50,21 @@ public class RemoveDanglingFeatureAttachedSpanAnnotationsRepair
     @Override
     public void repair(Project aProject, CAS aCas, List<LogMessage> aMessages)
     {
-        Map<FeatureStructure, FeatureStructure> nonIndexed = getNonIndexedFSesWithOwner(aCas);
+        var nonIndexed = getNonIndexedFSesWithOwner(aCas);
 
-        for (AnnotationLayer layer : annotationService.listAnnotationLayer(aProject)) {
-            int count = 0;
+        for (var layer : annotationService.listAnnotationLayer(aProject)) {
+            var count = 0;
 
-            if (!(SPAN_TYPE.equals(layer.getType()) && layer.getAttachFeature() != null)) {
+            if (!(SpanLayerSupport.TYPE.equals(layer.getType())
+                    && layer.getAttachFeature() != null)) {
                 continue;
             }
 
-            Type attachType = getType(aCas, layer.getAttachType().getName());
-            String attachFeature = layer.getAttachFeature().getName();
+            var attachType = getType(aCas, layer.getAttachType().getName());
+            var attachFeature = layer.getAttachFeature().getName();
 
-            for (AnnotationFS anno : select(aCas, attachType)) {
-                AnnotationFS existing = getFeature(anno, attachFeature, AnnotationFS.class);
+            for (var anno : select(aCas, attachType)) {
+                var existing = getFeature(anno, attachFeature, AnnotationFS.class);
                 if (nonIndexed.containsKey(existing)) {
                     setFeature(anno, attachFeature, (FeatureStructure) null);
                     count++;

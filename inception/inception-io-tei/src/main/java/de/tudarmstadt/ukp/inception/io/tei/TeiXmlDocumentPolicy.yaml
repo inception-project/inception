@@ -1,0 +1,138 @@
+# Licensed to the Technische Universität Darmstadt under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The Technische Universität Darmstadt 
+# licenses this file to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.
+#  
+# http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+name: TEI XML policy
+version: 1.0
+case_sensitive: false
+default_attribute_action: DROP
+default_element_action: DROP
+default_namespace: http://www.tei-c.org/ns/1.0
+debug: true
+policies:
+  - elements: [ "teiHeader" ]
+    action: PRUNE
+  - elements: [
+      "TEI",
+      "head",
+      "front",
+      "back",
+      "body",
+      "div",
+      "text",
+      "titlePage"
+      ]
+    action: PASS
+  - elements: [
+      "l",
+      "lb",
+      "lg",
+      "s",
+      "p",
+      "sp",
+      "speaker",
+      "stage",
+      "castList",
+      "castItem"
+    ]
+    action: PASS
+  - elements: [
+      "row",
+      "cell",
+      "table",
+    ]
+    action: PASS
+  - elements: [
+      "b",
+      "i",
+      "ex"
+    ]
+    action: PASS
+  - elements: [
+      "pb",
+      "hi",
+      "fw",
+      "quote",
+      "sic",
+      "note",
+      "role",
+      "roleDesc",
+      "docTitle",
+      "titlePart",
+      "docImprint",
+      "docAuthor",
+      "pubPlace",
+      "publisher",
+      "docDate",
+      "dateLine",
+      "list",
+      "item",
+      "opener",
+      "closer",
+      "salute",
+      "supplied",
+      "gap",
+      "figure",
+      "cit",
+      "choice",
+      "corr",
+      "space",
+      "byline",
+      "cb",
+      "ref",
+      "milestone",
+      "formula",
+      "trailer",
+      "reg",
+      "orig",
+      "add",
+      "del",
+      "metamark",
+      "unclear",
+      "addrLine",
+      "address",
+      "date",
+      "figDesc",
+      "graphic",
+      "idno",
+      "label",
+      "org",
+      "rs",
+      "title",
+      "tok"
+    ]
+    action: PASS
+  - elements: [
+      "analytic",
+      "author",
+      "listBibl",
+      "listOrg",
+      "biblScope",
+      "biblStruct",
+      "forename",
+      "surname",
+      "orgName",
+      "persName",
+      "meeting",
+      "monogr",
+      "imprint"
+    ]
+    action: PASS
+  - { attributes: ["fform", "nform"],  on_elements: ["tok"], action: "PASS" }
+  - { attributes: ["class", "type"], action: "PASS" }
+  - { attributes: ["place", "n"], on_elements: ["note"], action: "PASS" }
+  - { attributes: ["n"], on_elements: ["pb"], action: "PASS" }
+  - { attributes: ["type", "place"], on_elements: ["fw"], action: "PASS" }
+  - { attributes: ["rendition", "unit"], on_elements: ["milestone"], action: "PASS" }
+  - { attributes: ["rendition", "rend"], on_elements: ["hi"], action: "PASS" }

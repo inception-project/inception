@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.diag.checks;
 
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.SPAN_TYPE;
 import static org.apache.uima.fit.util.CasUtil.getAnnotationType;
 import static org.apache.uima.fit.util.CasUtil.select;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
@@ -29,8 +28,8 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.logging.LogLevel;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
@@ -53,8 +52,9 @@ public class FeatureAttachedSpanAnnotationsTrulyAttachedCheck
     {
         boolean ok = true;
         int count = 0;
-        for (AnnotationLayer layer : annotationService.listAnnotationLayer(aProject)) {
-            if (!(SPAN_TYPE.equals(layer.getType()) && layer.getAttachFeature() != null)) {
+        for (var layer : annotationService.listAnnotationLayer(aProject)) {
+            if (!(SpanLayerSupport.TYPE.equals(layer.getType())
+                    && layer.getAttachFeature() != null)) {
                 continue;
             }
 

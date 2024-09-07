@@ -17,15 +17,14 @@
  */
 package de.tudarmstadt.ukp.inception.kb;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.Reader;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 
@@ -46,13 +45,13 @@ public class KnowledgeBaseProfileDeserializationTest
     @Test
     public void checkThatDeserializationWorks() throws IOException
     {
-        String name = "Test KB";
-        List<String> rootConcepts = new ArrayList<>();
-        RepositoryType type = RepositoryType.LOCAL;
-        Reification reification = Reification.WIKIDATA;
-        String defaultLanguage = "en";
+        var name = "Test KB";
+        var rootConcepts = new ArrayList<String>();
+        var type = RepositoryType.LOCAL;
+        var reification = Reification.WIKIDATA;
+        var defaultLanguage = "en";
 
-        KnowledgeBaseProfile referenceProfile = new KnowledgeBaseProfile();
+        var referenceProfile = new KnowledgeBaseProfile();
 
         referenceProfile.setName(name);
         referenceProfile.setType(type);
@@ -63,56 +62,52 @@ public class KnowledgeBaseProfileDeserializationTest
         referenceProfile.setAccess(createReferenceAccess());
         referenceProfile.setInfo(createReferenceInfo());
 
-        PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
+        var resolver = new PathMatchingResourcePatternResolver();
         Map<String, KnowledgeBaseProfile> profiles;
-        try (Reader r = new InputStreamReader(
+        try (var r = new InputStreamReader(
                 resolver.getResource(KNOWLEDGEBASE_TEST_PROFILES_YAML).getInputStream())) {
-            ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+            var mapper = new ObjectMapper(new YAMLFactory());
             profiles = mapper.readValue(r,
                     new TypeReference<HashMap<String, KnowledgeBaseProfile>>()
                     {
                     });
         }
-        KnowledgeBaseProfile testProfile = profiles.get("test_profile");
-        Assertions.assertThat(testProfile).usingRecursiveComparison().isEqualTo(referenceProfile);
+        var testProfile = profiles.get("test_profile");
+        assertThat(testProfile).usingRecursiveComparison().isEqualTo(referenceProfile);
     }
 
     private KnowledgeBaseInfo createReferenceInfo()
     {
-        String description = "This is a knowledge base for testing the kb profiles";
-        String host = "a host";
-        String author = "INCEpTION team";
-        String website = "https://inception-project.github.io/";
-        KnowledgeBaseInfo referenceInfo = new KnowledgeBaseInfo();
-        referenceInfo.setDescription(description);
-        referenceInfo.setAuthorName(author);
-        referenceInfo.setHostInstitutionName(host);
-        referenceInfo.setWebsiteURL(website);
+        var referenceInfo = new KnowledgeBaseInfo();
+        referenceInfo.setDescription("This is a knowledge base for testing the kb profiles");
+        referenceInfo.setAuthorName("INCEpTION team");
+        referenceInfo.setHostInstitutionName("a host");
+        referenceInfo.setWebsiteUrl("https://inception-project.github.io/");
         return referenceInfo;
     }
 
     private KnowledgeBaseMapping createReferenceMapping()
     {
-        String classIri = "http://www.w3.org/2000/01/rdf-schema#Class";
-        String subclassIri = "http://www.w3.org/2000/01/rdf-schema#subClassOf";
-        String typeIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
-        String subPropertyIri = "http://www.w3.org/2000/01/rdf-schema#subPropertyOf";
-        String label = "http://www.w3.org/2000/01/rdf-schema#label";
-        String propertyTypeIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#Property";
-        String descriptionIri = "http://www.w3.org/2000/01/rdf-schema#comment";
-        String propertyLabelIri = "http://www.w3.org/2000/01/rdf-schema#label";
-        String propertyDescriptionIri = "http://www.w3.org/2000/01/rdf-schema#comment";
-        KnowledgeBaseMapping referenceMapping = new KnowledgeBaseMapping(classIri, subclassIri,
-                typeIri, subPropertyIri, descriptionIri, label, propertyTypeIri, propertyLabelIri,
-                propertyDescriptionIri);
+        var classIri = "http://www.w3.org/2000/01/rdf-schema#Class";
+        var subclassIri = "http://www.w3.org/2000/01/rdf-schema#subClassOf";
+        var typeIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
+        var subPropertyIri = "http://www.w3.org/2000/01/rdf-schema#subPropertyOf";
+        var label = "http://www.w3.org/2000/01/rdf-schema#label";
+        var propertyTypeIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#Property";
+        var descriptionIri = "http://www.w3.org/2000/01/rdf-schema#comment";
+        var propertyLabelIri = "http://www.w3.org/2000/01/rdf-schema#label";
+        var propertyDescriptionIri = "http://www.w3.org/2000/01/rdf-schema#comment";
+        var deprecationPropertyIri = "http://www.w3.org/2002/07/owl#deprecated";
+        var referenceMapping = new KnowledgeBaseMapping(classIri, subclassIri, typeIri,
+                subPropertyIri, descriptionIri, label, propertyTypeIri, propertyLabelIri,
+                propertyDescriptionIri, deprecationPropertyIri);
         return referenceMapping;
     }
 
     private KnowledgeBaseAccess createReferenceAccess()
     {
-        String url = "http://someurl/sparql";
-        String fullTextSearchIri = "http://www.openrdf.org/contrib/lucenesail#matches";
-        KnowledgeBaseAccess referenceAccess = new KnowledgeBaseAccess(url, fullTextSearchIri);
-        return referenceAccess;
+        var url = "http://someurl/sparql";
+        var fullTextSearchIri = "http://www.openrdf.org/contrib/lucenesail#matches";
+        return new KnowledgeBaseAccess(url, fullTextSearchIri);
     }
 }

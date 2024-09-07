@@ -22,26 +22,36 @@ import static de.tudarmstadt.ukp.inception.externaleditor.policy.SafetyNetDocume
 import static de.tudarmstadt.ukp.inception.support.SettingsUtil.getPropApplicationHome;
 import static java.lang.System.setProperty;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Arrays.asList;
 import static org.apache.commons.io.FileUtils.write;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
+
+import javax.xml.namespace.QName;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+
+import de.tudarmstadt.ukp.inception.support.xml.sanitizer.AttributeAction;
 
 class DefaultHtmlDocumentPolicyTest
 {
     @Test
     void thatOverrideFileIsPickedUp(@TempDir Path aTemp) throws Exception
     {
-        Path policyFile = aTemp.resolve(HTML_POLICY_OVERRIDE_YAML);
+        var policyFile = aTemp.resolve(HTML_POLICY_OVERRIDE_YAML);
         setProperty(getPropApplicationHome(), aTemp.toString());
 
         var sut = new DefaultHtmlDocumentPolicy();
 
-        assertThat(sut.getPolicy().getElementPolicies()).hasSize(74);
+        assertThat(sut.getPolicy().getElementPolicies()).hasSize(158);
 
         write(policyFile.toFile(), "policies: []", UTF_8);
         assertThat(policyFile).exists();
@@ -54,6 +64,38 @@ class DefaultHtmlDocumentPolicyTest
 
         Files.delete(policyFile);
         assertThat(policyFile).doesNotExist();
-        assertThat(sut.getPolicy().getElementPolicies()).hasSize(74);
+        assertThat(sut.getPolicy().getElementPolicies()).hasSize(158);
     }
+
+    static List<Arguments> attributeActionDataSet()
+    {
+        return asList( //
+                arguments("some-element", "data-value", "some value", AttributeAction.PASS),
+                arguments("some-element", "style", "some value", null),
+                arguments("some-element", "title", "some value", AttributeAction.PASS),
+                arguments("img", "src", "http://foo.bar/image.png", null),
+                arguments("img", "src", "res?resId=image.png", AttributeAction.PASS),
+                arguments("some-element", "title", "\u0011", null));
+    }
+
+    @ParameterizedTest
+    @MethodSource("attributeActionDataSet")
+    void thatAttributesActionsWork(String aElement, String aAttribute, String aValue,
+            AttributeAction aExpected)
+        throws Exception
+    {
+        var sut = new DefaultHtmlDocumentPolicy();
+
+        var forAttribute = sut.getPolicy().forAttribute(new QName(aElement), new QName(aAttribute),
+                "CDATA", aValue);
+        if (aExpected != null) {
+            assertThat(forAttribute) //
+                    .isPresent().get() //
+                    .isEqualTo(aExpected);
+        }
+        else {
+            assertThat(forAttribute).isEmpty();
+        }
+    }
+
 }

@@ -20,9 +20,11 @@
   <div class="flex-content card">
     <div class="card-header">
       <wicket:message key="agreement" />
-      <span class="float-end btn btn-link">
-        <a wicket:id="legend" ><wicket:message key="legend"/></a> 
-      </span>
+      <div class="actions">
+        <button wicket:id="legend" class="btn btn-secondary btn-action" type="button">
+          <wicket:message key="legend" />
+        </button>
+      </div>
     </div>
     <div class="scrolling card-body fit-child-snug" style="padding: 0px;">
       <table style="width: 100%;">
@@ -33,12 +35,10 @@
         </tr>
       </table>
     </div>
-    <div class="card-footer flex-h-container">
-      <div class="flex-content flex-h-container flex-gutter flex-only-internal-gutter">
-        <label wicket:for="exportFormat" class="col-form-label text-nowrap" style="margin-right: 10px;">
-            <wicket:label key="exportFormat"/></label>
-        <select wicket:id="exportFormat" class="form-select" data-container="body"/>
-        <input wicket:id="exportAll" type="submit" class="btn btn-default" wicket:message="value:exportAll"/>
+    <div class="card-footer">
+      <div class="form-text text-center">
+        <i class="fas fa-info-circle"></i> Hover the mouse cursor over the table cells for more
+        information.
       </div>
     </div>
   </div>
@@ -48,7 +48,20 @@
   <wicket:fragment wicket:id="th-right">
     <th class="headers text-end"><div wicket:id="label"></div></th>
   </wicket:fragment>
-  <wicket:fragment wicket:id="td">
-    <td class="text-center"><div wicket:id="label"></div></td>
+  <wicket:fragment wicket:id="td-upper-ok">
+    <td class="text-center">
+      <div wicket:id="label"></div>
+    </td>
+  </wicket:fragment>
+  <wicket:fragment wicket:id="td-upper-warn">
+    <td class="text-center small fw-light"><i class="fas fa-exclamation-triangle text-warning"></i>
+      <span wicket:id="label" /></td>
+  </wicket:fragment>
+  <wicket:fragment wicket:id="td-lower-ok">
+    <td class="text-center small fw-light"><span wicket:id="label" /></td>
+  </wicket:fragment>
+  <wicket:fragment wicket:id="td-lower-warn">
+    <td class="text-center small text-nowrap fw-light"><i
+      class="fas fa-exclamation-triangle text-warning"></i> <span wicket:id="label" /></td>
   </wicket:fragment>
 </wicket:panel>

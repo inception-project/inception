@@ -23,11 +23,8 @@ import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visible
 import static java.util.Collections.emptyMap;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMessage;
 
-import java.io.File;
 import java.io.FileInputStream;
-import java.io.InputStream;
 
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.form.Form;
@@ -147,7 +144,7 @@ public class KnowledgeBaseDetailsPanel
         aTarget.add(this);
 
         try {
-            KnowledgeBaseWrapper kbw = kbwModel.getObject();
+            var kbw = kbwModel.getObject();
 
             // if dealing with a remote repository and a non-empty URL, get a new
             // RepositoryImplConfig for the new URL; otherwise keep using the existing config
@@ -167,8 +164,8 @@ public class KnowledgeBaseDetailsPanel
 
             if (kb.getType() == LOCAL) {
                 kbService.defineBaseProperties(kb);
-                for (Pair<String, File> f : kbw.getFiles()) {
-                    try (InputStream is = new FileInputStream(f.getValue())) {
+                for (var f : kbw.getFiles()) {
+                    try (var is = new FileInputStream(f.getValue())) {
                         kbService.importData(kb, f.getValue().getName(), is);
                         success("Imported: " + f.getKey());
                     }

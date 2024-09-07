@@ -42,7 +42,6 @@ import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 
-import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseInfo;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 import de.tudarmstadt.ukp.inception.security.client.auth.AuthenticationTraitsEditor;
@@ -219,11 +218,11 @@ public class RemoteRepositorySettingsPanel
     private void actionPopulate(AjaxRequestTarget aTarget, KnowledgeBaseProfile aProfile)
     {
         // set all the fields according to the chosen profile
-        KnowledgeBaseWrapper kbw = getModel().getObject();
+        var kbw = getModel().getObject();
         kbw.setUrl(aProfile.getAccess().getAccessUrl());
         // sets root concepts list - if null then an empty list otherwise change the
         // values to IRI and populate the list
-        KnowledgeBase kb = kbw.getKb();
+        var kb = kbw.getKb();
         kb.applyRootConcepts(aProfile);
         kb.applyAdditionalMatchingProperties(aProfile);
         kb.applyMapping(aProfile.getMapping());

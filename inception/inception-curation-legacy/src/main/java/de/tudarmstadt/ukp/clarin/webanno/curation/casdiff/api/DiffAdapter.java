@@ -23,10 +23,10 @@ import java.util.Set;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
-import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.jcas.cas.AnnotationBase;
 
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkFeatureDecl;
+import de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureMultiplicityMode;
 
 public interface DiffAdapter
 {
@@ -35,17 +35,17 @@ public interface DiffAdapter
      */
     String getType();
 
-    Collection<? extends Position> generateSubPositions(int aCasId, AnnotationFS aFs,
-            LinkCompareBehavior aLinkCompareBehavior);
+    Collection<? extends Position> generateSubPositions(AnnotationBase aFs);
 
     LinkFeatureDecl getLinkFeature(String aFeature);
 
     Set<String> getLabelFeatures();
 
-    Position getPosition(int aCasId, FeatureStructure aFS);
+    Position getPosition(FeatureStructure aFS);
 
-    Position getPosition(int aCasId, FeatureStructure aFS, String aFeature, String aRole,
-            int aLinkTargetBegin, int aLinkTargetEnd, LinkCompareBehavior aLinkCompareBehavior);
+    Position getPosition(FeatureStructure aFS, String aFeature, String aRole, int aLinkTargetBegin,
+            int aLinkTargetEnd, LinkFeatureMultiplicityMode aLinkCompareBehavior);
 
-    List<AnnotationFS> selectAnnotationsInWindow(CAS aCas, int aWindowBegin, int aWindowEnd);
+    List<? extends AnnotationBase> selectAnnotationsInWindow(CAS aCas, int aWindowBegin,
+            int aWindowEnd);
 }

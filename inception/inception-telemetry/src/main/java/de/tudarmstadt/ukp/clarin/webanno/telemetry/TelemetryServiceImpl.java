@@ -22,6 +22,7 @@ import static de.tudarmstadt.ukp.inception.support.deployment.DeploymentMode.SER
 import static de.tudarmstadt.ukp.inception.support.deployment.DeploymentMode.SERVER_JAR_DOCKER;
 import static de.tudarmstadt.ukp.inception.support.deployment.DeploymentMode.SERVER_WAR;
 import static de.tudarmstadt.ukp.inception.support.deployment.DeploymentMode.SERVER_WAR_DOCKER;
+import static de.tudarmstadt.ukp.inception.support.logging.BaseLoggers.BOOT_LOG;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Objects.isNull;
@@ -32,9 +33,6 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,6 +54,8 @@ import de.tudarmstadt.ukp.clarin.webanno.telemetry.event.TelemetrySettingsSavedE
 import de.tudarmstadt.ukp.clarin.webanno.telemetry.model.TelemetrySettings;
 import de.tudarmstadt.ukp.inception.support.deployment.DeploymentMode;
 import de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeServiceImpl;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 
 /**
  * <p>
@@ -123,7 +123,7 @@ public class TelemetryServiceImpl
             }
         }
 
-        log.info("Found [{}] telemetry supports", tsp.size());
+        BOOT_LOG.info("Found [{}] telemetry supports", tsp.size());
 
         telemetrySupports = unmodifiableList(tsp);
 

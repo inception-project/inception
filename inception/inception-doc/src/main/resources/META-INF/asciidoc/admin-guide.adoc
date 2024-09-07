@@ -32,6 +32,8 @@ include::{include-dir}installation_database.adoc[leveloffset=+1]
 
 include::{include-dir}installation_database_mariadb.adoc[leveloffset=+2]
 
+include::{include-dir}installation_database_mysql.adoc[leveloffset=+2]
+
 include::{include-dir}installation_database_hsqldb.adoc[leveloffset=+2]
 
 include::{include-dir}installation_jar.adoc[leveloffset=+1]
@@ -46,7 +48,23 @@ include::{include-dir}installation_ssl_caddy.adoc[leveloffset=+2]
 
 include::{include-dir}installation_docker.adoc[leveloffset=+1]
 
+include::{include-dir}installation_kubernetes.adoc[leveloffset=+1]
+
+include::{include-dir}installation_azure.adoc[leveloffset=+1]
+
 include::{include-dir}installation_unsupervised.adoc[leveloffset=+1]
+
+include::{include-dir}security-authentication.adoc[]
+
+include::{include-dir}security-authentication-oauth2.adoc[leveloffset=+1]
+
+include::{include-dir}security-authentication-saml2.adoc[leveloffset=+1]
+
+include::{include-dir}security-authentication-auto-login.adoc[leveloffset=+1]
+
+include::{include-dir}security-authentication-preauth.adoc[leveloffset=+1]
+
+include::{include-dir}settings_security-csp.adoc[]
 
 <<<
 
@@ -78,16 +96,11 @@ include::{include-dir}settings.adoc[]
 
 include::{include-dir}settings_general.adoc[leveloffset=+1]
 
+include::{include-dir}settings_security-policy.adoc[leveloffset=+1]
+
 include::{include-dir}settings_database.adoc[leveloffset=+1]
 
 include::{include-dir}settings_server.adoc[leveloffset=+1]
-
-include::{include-dir}security-authentication.adoc[leveloffset=+1]
-include::{include-dir}security-authentication-oauth2.adoc[leveloffset=+2]
-include::{include-dir}security-authentication-saml2.adoc[leveloffset=+2]
-include::{include-dir}security-authentication-auto-login.adoc[leveloffset=+2]
-include::{include-dir}security-authentication-preauth.adoc[leveloffset=+2]
-include::{include-dir}security-authentication-policy.adoc[leveloffset=+2]
 
 include::{include-dir}settings_internal-backup.adoc[leveloffset=+1]
 
@@ -104,6 +117,7 @@ include::{include-dir}settings_theming.adoc[leveloffset=+1]
 include::{include-dir}settings_annotation-editor.adoc[leveloffset=+1]
 include::{include-dir}settings_annotation-editor_pdf.adoc[leveloffset=+2]
 include::{include-dir}settings_annotation-editor_pdf_legacy.adoc[leveloffset=+2]
+include::{include-dir}settings_cross-layer-relations.adoc[leveloffset=+2]
 include::{include-dir}settings_segmentation.adoc[leveloffset=+2]
 
 include::{include-dir}settings_documentmetadata.adoc[leveloffset=+1]
@@ -119,6 +133,8 @@ include::{include-dir}settings_external-search.adoc[leveloffset=+1]
 include::{include-dir}settings_recommender.adoc[leveloffset=+1]
 include::{include-dir}settings_string_relation_recommender.adoc[leveloffset=+2]
 include::{include-dir}settings_recommendation_external.adoc[leveloffset=+2]
+
+include::{include-dir}settings_bulk_processing.adoc[leveloffset=+1]
 
 include::{include-dir}settings_sharing.adoc[leveloffset=+1]
 

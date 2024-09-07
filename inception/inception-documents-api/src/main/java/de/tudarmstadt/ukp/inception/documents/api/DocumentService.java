@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.documents.api;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -26,13 +25,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import javax.persistence.NoResultException;
-
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.wicket.validation.ValidationError;
-import org.springframework.security.access.prepost.PreAuthorize;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode;
@@ -45,18 +41,10 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import jakarta.persistence.NoResultException;
 
 public interface DocumentService
 {
-    /**
-     * The Directory where the {@link SourceDocument}s and {@link AnnotationDocument}s stored
-     *
-     * @return the directory.
-     * @deprecated Use {@link RepositoryProperties#getPath()} instead.
-     */
-    @Deprecated
-    File getDir();
-
     // --------------------------------------------------------------------------------------------
     // Methods related to SourceDocuments
     // --------------------------------------------------------------------------------------------
@@ -71,7 +59,6 @@ public interface DocumentService
      *            {@link SourceDocument} to be created
      * @return the source document
      */
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER','ROLE_REMOTE')")
     SourceDocument createSourceDocument(SourceDocument document);
 
     /**
@@ -120,17 +107,6 @@ public interface DocumentService
     SourceDocument getSourceDocument(long projectId, long documentId);
 
     /**
-     * Return the Master TCF file Directory path. For the first time, all available TCF layers will
-     * be read and converted to CAS object. subsequent accesses will be to the annotated document
-     * unless and otherwise the document is removed from the project.
-     *
-     * @param document
-     *            The {@link SourceDocument} to be examined
-     * @return the Directory path of the source document
-     */
-    File getSourceDocumentFile(SourceDocument document);
-
-    /**
      * List all source documents in a project. The source documents are the original TCF documents
      * imported.
      *
@@ -152,7 +128,6 @@ public interface DocumentService
      * @throws IOException
      *             If the source document searched for deletion is not available
      */
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER', 'ROLE_REMOTE')")
     void removeSourceDocument(SourceDocument document) throws IOException;
 
     /**
@@ -168,7 +143,6 @@ public interface DocumentService
      * @throws UIMAException
      *             if a conversion error occurs.
      */
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER','ROLE_REMOTE')")
     void uploadSourceDocument(InputStream file, SourceDocument document)
         throws IOException, UIMAException;
 
@@ -188,24 +162,28 @@ public interface DocumentService
      * @throws UIMAException
      *             if a conversion error occurs.
      */
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER','ROLE_REMOTE')")
     void uploadSourceDocument(InputStream file, SourceDocument document,
             TypeSystemDescription aFullProjectTypeSystem)
         throws IOException, UIMAException;
-
-    /**
-     * Get the directory of this {@link SourceDocument} usually to read the content of the document
-     *
-     * @param aDocument
-     *            the source document.
-     * @return the source document folder.
-     */
-    File getSourceDocumentFolder(SourceDocument aDocument);
 
     SourceDocumentState transitionSourceDocumentState(SourceDocument aDocument,
             SourceDocumentStateTransition aTransition);
 
     SourceDocumentState setSourceDocumentState(SourceDocument aDocument,
+            SourceDocumentState aState);
+
+    /**
+     * Sets the state of multiple source documents at once. This method does not generate
+     * {@code DocumentStateChangeEvent} events. This means in particular that webhooks for
+     * annotation document changes will not fire and that workload managers will not know that they
+     * need to recalculate the document and project states.
+     * 
+     * @param aDocuments
+     *            the documents to update
+     * @param aState
+     *            the state to update the documents to
+     */
+    void bulkSetSourceDocumentState(Iterable<SourceDocument> aDocuments,
             SourceDocumentState aState);
 
     // --------------------------------------------------------------------------------------------
@@ -221,8 +199,7 @@ public interface DocumentService
      *            and id of {@link User}
      * @return the annotation document.
      */
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
-    AnnotationDocument createAnnotationDocument(AnnotationDocument annotationDocument);
+    AnnotationDocument createOrUpdateAnnotationDocument(AnnotationDocument annotationDocument);
 
     /**
      * Saves the annotations from the CAS to the storage.
@@ -231,15 +208,14 @@ public interface DocumentService
      *            the CAS.
      * @param aAnnotationDocument
      *            the annotation document.
-     * @param aExplicitAnnotatorUserAction
+     * @param aFlags
      *            indicate that the CAS is written as the result of an explicit annotator user
      *            action (i.e. not as a result of a third person or implicitly by the system).
      * @throws IOException
      *             if an I/O error occurs.
      */
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
     void writeAnnotationCas(CAS aCas, AnnotationDocument aAnnotationDocument,
-            boolean aExplicitAnnotatorUserAction)
+            AnnotationDocumentStateChangeFlag... aFlags)
         throws IOException;
 
     /**
@@ -247,19 +223,16 @@ public interface DocumentService
      *
      * @param aCas
      *            the CAS.
-     * @param aDocument
-     *            the source document.
-     * @param aUser
-     *            The User who perform this operation
-     * @param aExplicitAnnotatorUserAction
+     * @param aAnnotationDocument
+     *            the annotation document.
+     * @param aFlags
      *            indicate that the CAS is written as the result of an explicit annotator user
      *            action (i.e. not as a result of a third person or implicitly by the system).
      * @throws IOException
      *             if an I/O error occurs.
      */
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
-    void writeAnnotationCas(CAS aCas, SourceDocument aDocument, User aUser,
-            boolean aExplicitAnnotatorUserAction)
+    void writeAnnotationCasSilently(CAS aCas, AnnotationDocument aAnnotationDocument,
+            AnnotationDocumentStateChangeFlag... aFlags)
         throws IOException;
 
     /**
@@ -271,14 +244,33 @@ public interface DocumentService
      *            the source document.
      * @param aUser
      *            The User who perform this operation
-     * @param aExplicitAnnotatorUserAction
+     * @param aFlags
+     *            indicate that the CAS is written as the result of an explicit annotator user
+     *            action (i.e. not as a result of a third person or implicitly by the system).
+     * @throws IOException
+     *             if an I/O error occurs.
+     */
+    void writeAnnotationCas(CAS aCas, SourceDocument aDocument, User aUser,
+            AnnotationDocumentStateChangeFlag... aFlags)
+        throws IOException;
+
+    /**
+     * Saves the annotations from the CAS to the storage.
+     *
+     * @param aCas
+     *            the CAS.
+     * @param aDocument
+     *            the source document.
+     * @param aUser
+     *            The User who perform this operation
+     * @param aFlags
      *            indicate that the CAS is written as the result of an explicit annotator user
      *            action (i.e. not as a result of a third person or implicitly by the system).
      * @throws IOException
      *             if an I/O error occurs.
      */
     void writeAnnotationCas(CAS aCas, SourceDocument aDocument, String aUser,
-            boolean aExplicitAnnotatorUserAction)
+            AnnotationDocumentStateChangeFlag... aFlags)
         throws IOException;
 
     /**
@@ -295,7 +287,6 @@ public interface DocumentService
      * @throws IOException
      *             if an I/O error occurs.
      */
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
     void resetAnnotationCas(SourceDocument aDocument, User aUser,
             AnnotationDocumentStateChangeFlag... aFlags)
         throws UIMAException, IOException;
@@ -538,6 +529,15 @@ public interface DocumentService
         throws IOException;
 
     /**
+     * @param document
+     *            The {@link SourceDocument} to be examined
+     * @return the file size of the initial CAS for the given source document.
+     * @throws IOException
+     *             accessing the file.
+     */
+    Optional<Long> getInitialCasFileSize(SourceDocument document) throws IOException;
+
+    /**
      * List all the {@link AnnotationDocument annotation documents} in a given project.
      * <p>
      * Note that this method does may not return an {@link AnnotationDocument annotation document}
@@ -674,10 +674,14 @@ public interface DocumentService
      *
      * @param annotationDocument
      *            the {@link AnnotationDocument} to be removed
+     * @throws IOException
+     *             if there was a problem deleting
      */
-    void removeAnnotationDocument(AnnotationDocument annotationDocument);
+    void removeAnnotationDocument(AnnotationDocument annotationDocument) throws IOException;
 
     AnnotationDocument createOrGetAnnotationDocument(SourceDocument aDocument, User aUser);
+
+    AnnotationDocument createOrGetAnnotationDocument(SourceDocument aDocument, String aUser);
 
     List<AnnotationDocument> createOrGetAnnotationDocuments(SourceDocument aDocument,
             Collection<User> aUsers);
@@ -721,6 +725,9 @@ public interface DocumentService
     Map<SourceDocument, AnnotationDocument> listAllDocuments(Project aProject, String aUser);
 
     AnnotationDocumentState setAnnotationDocumentState(AnnotationDocument aDocument,
+            AnnotationDocumentState aState, AnnotationDocumentStateChangeFlag... aFlags);
+
+    AnnotationDocumentState setAnnotationDocumentState(SourceDocument aDocument, String aUser,
             AnnotationDocumentState aState, AnnotationDocumentStateChangeFlag... aFlags);
 
     /**

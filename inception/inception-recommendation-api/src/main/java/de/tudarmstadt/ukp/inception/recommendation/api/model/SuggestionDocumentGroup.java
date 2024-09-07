@@ -17,14 +17,16 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.api.model;
 
-import static java.util.stream.Collectors.toList;
 import static org.apache.commons.collections4.IteratorUtils.unmodifiableIterator;
 
 import java.util.AbstractCollection;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.lang3.Validate;
 
@@ -41,14 +43,13 @@ public class SuggestionDocumentGroup<T extends AnnotationSuggestion>
     private Collection<SuggestionGroup<T>> groups;
     private String documentName;
 
-    public SuggestionDocumentGroup()
+    /**
+     * Use {@ink #groupByType(List)} or {@link #groupsOfType(Class, List)} instead to ensure that
+     * never empty groups are created.
+     */
+    private SuggestionDocumentGroup(List<T> aSuggestions)
     {
         groups = new ArrayList<>();
-    }
-
-    public SuggestionDocumentGroup(List<T> aSuggestions)
-    {
-        this();
         addAll(SuggestionGroup.group(aSuggestions));
     }
 
@@ -63,12 +64,39 @@ public class SuggestionDocumentGroup<T extends AnnotationSuggestion>
      */
     @SuppressWarnings("unchecked")
     public static <V extends AnnotationSuggestion> SuggestionDocumentGroup<V> groupsOfType(
-            Class<V> type, List<AnnotationSuggestion> aSuggestions)
+            Class<V> type, List<? extends AnnotationSuggestion> aSuggestions)
     {
-        List<AnnotationSuggestion> filteredSuggestions = aSuggestions.stream()
-                .filter(type::isInstance) //
-                .collect(toList());
+        var filteredSuggestions = aSuggestions.stream().filter(type::isInstance) //
+                .toList();
         return new SuggestionDocumentGroup<V>((List<V>) filteredSuggestions);
+    }
+
+    /**
+     * @param aSuggestions
+     *            the list to retrieve suggestions from
+     * @return suggestions grouped by suggestion type. There will not be any empty groups in the
+     *         result.
+     */
+    public static Map<Class<? extends AnnotationSuggestion>, SuggestionDocumentGroup<? extends AnnotationSuggestion>> //
+            groupByType(List<AnnotationSuggestion> aSuggestions)
+    {
+        if (aSuggestions == null || aSuggestions.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        var groups = new LinkedHashMap<Class<? extends AnnotationSuggestion>, List<AnnotationSuggestion>>();
+
+        for (var suggestion : aSuggestions) {
+            var group = groups.computeIfAbsent(suggestion.getClass(), $ -> new ArrayList<>());
+            group.add(suggestion);
+        }
+
+        var groupsMap = new LinkedHashMap<Class<? extends AnnotationSuggestion>, SuggestionDocumentGroup<?>>();
+        for (var entry : groups.entrySet()) {
+            groupsMap.put(entry.getKey(), new SuggestionDocumentGroup<>(entry.getValue()));
+        }
+
+        return groupsMap;
     }
 
     @Override

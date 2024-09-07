@@ -31,7 +31,6 @@ import java.util.Set;
 
 import org.apache.commons.lang3.Validate;
 import org.slf4j.MDC;
-import org.springframework.security.access.prepost.PreAuthorize;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
@@ -66,7 +65,6 @@ public interface ProjectService
      * @deprecated Use {@link #assignRole(Project, User, PermissionLevel...)} instead.
      */
     @Deprecated
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER', 'ROLE_REMOTE')")
     void createProjectPermission(ProjectPermission aPermission);
 
     /**
@@ -349,7 +347,6 @@ public interface ProjectService
      * @throws IOException
      *             if the project to be deleted is not available in the file system
      */
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
     void removeProject(Project aProject) throws IOException;
 
     /**
@@ -379,29 +376,6 @@ public interface ProjectService
      * @return list of projects manageable by the user.
      */
     List<Project> listManageableProjects(User aUser);
-
-    /**
-     * List projects in which the given user is curator or manager
-     *
-     * @return list of projects manageable by the user.
-     * @deprecated Use
-     *             {{@link #listProjectsWithUserHavingRole(User, PermissionLevel, PermissionLevel...)}}
-     *             instead.
-     */
-    @SuppressWarnings("javadoc")
-    @Deprecated
-    List<Project> listManageableCuratableProjects(User aUser);
-
-    /**
-     * @return list of projects that allow calculation of pairwise agreement. That means it lists
-     *         all projects where there are at least two annotators.
-     * 
-     * @deprecated To be removed without replacement
-     */
-    @Deprecated
-    List<Project> listProjectsForAgreement();
-
-    File getProjectFolder(Project aProject);
 
     /**
      * Export the associated project log for this {@link Project} while copying a project
@@ -442,45 +416,6 @@ public interface ProjectService
      *         user would then manage.
      */
     public boolean managesAnyProject(User aUser);
-
-    /**
-     * Determine if the user is allowed to update a project.
-     *
-     * @param aProject
-     *            the project
-     * @param aUser
-     *            the user.
-     * @return if the user may update a project.
-     * @deprecated Use {@link #hasRole(User, Project, PermissionLevel, PermissionLevel...)}
-     */
-    @Deprecated
-    boolean isManager(Project aProject, User aUser);
-
-    /**
-     * Determine if the user is a curator or not.
-     *
-     * @param aProject
-     *            the project.
-     * @param aUser
-     *            the user.
-     * @return if the user is a curator.
-     * @deprecated Use {@link #hasRole(User, Project, PermissionLevel, PermissionLevel...)}
-     */
-    @Deprecated
-    boolean isCurator(Project aProject, User aUser);
-
-    /**
-     * Determine if the User is member of a project
-     *
-     * @param aProject
-     *            the project.
-     * @param aUser
-     *            the user.
-     * @return if the user is a member.
-     * @deprecated Use {@link #hasRole(User, Project, PermissionLevel, PermissionLevel...)}
-     */
-    @Deprecated
-    boolean isAnnotator(Project aProject, User aUser);
 
     /**
      * Check whether the given user has any role at all in the given project.
@@ -571,15 +506,29 @@ public interface ProjectService
      * Initialize the project with default {@link AnnotationLayer}, {@link TagSet}s, and {@link Tag}
      * s. This is done per Project.
      * 
-     * @param aProject
-     *            the project.
+     * @param aRequest
+     *            the project initialization request.
      * @throws IOException
      *             if an I/O error occurs.
      */
-    void initializeProject(Project aProject) throws IOException;
+    void initializeProject(ProjectInitializationRequest aRequest) throws IOException;
 
-    void initializeProject(Project aProject, List<ProjectInitializer> aInitializers)
+    void initializeProject(ProjectInitializationRequest aRequest,
+            List<ProjectInitializer> aInitializers)
         throws IOException;
+
+    default void initializeProject(Project aProject) throws IOException
+    {
+        var request = ProjectInitializationRequest.builder().withProject(aProject).build();
+        initializeProject(request);
+    }
+
+    default void initializeProject(Project aProject, List<ProjectInitializer> aInitializers)
+        throws IOException
+    {
+        var request = ProjectInitializationRequest.builder().withProject(aProject).build();
+        initializeProject(request, aInitializers);
+    }
 
     List<ProjectInitializer> listProjectInitializers();
 

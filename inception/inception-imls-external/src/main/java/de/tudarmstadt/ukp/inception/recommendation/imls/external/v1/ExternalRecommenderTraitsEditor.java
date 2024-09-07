@@ -17,9 +17,14 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.external.v1;
 
+import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapability.TRAINING_NOT_SUPPORTED;
+import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CHANGE_EVENT;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
+import static java.util.Arrays.asList;
 
 import org.apache.wicket.markup.html.form.CheckBox;
+import org.apache.wicket.markup.html.form.DropDownChoice;
+import org.apache.wicket.markup.html.form.EnumChoiceRenderer;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.model.CompoundPropertyModel;
@@ -31,6 +36,7 @@ import org.apache.wicket.validation.validator.UrlValidator;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.DefaultTrainableRecommenderTraitsEditor;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapability;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 
 public class ExternalRecommenderTraitsEditor
@@ -72,13 +78,20 @@ public class ExternalRecommenderTraitsEditor
         verifyCertificates.setOutputMarkupId(true);
         form.add(verifyCertificates);
 
-        var trainable = new CheckBox("trainable");
-        trainable.setOutputMarkupId(true);
-        trainable.add(new LambdaAjaxFormComponentUpdatingBehavior("change",
+        var trainingCapability = new DropDownChoice<TrainingCapability>("trainingCapability");
+        trainingCapability.setOutputMarkupId(true);
+        trainingCapability.setChoiceRenderer(new EnumChoiceRenderer<>(trainingCapability));
+        trainingCapability.setChoices(asList(TrainingCapability.values()));
+        trainingCapability.add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT,
                 _target -> _target.add(getTrainingStatesChoice())));
-        form.add(trainable);
+        form.add(trainingCapability);
 
-        getTrainingStatesChoice().add(visibleWhen(() -> trainable.getModelObject() == true));
+        getTrainingStatesChoice().add(
+                visibleWhen(() -> trainingCapability.getModelObject() != TRAINING_NOT_SUPPORTED));
+
+        var ranker = new CheckBox("ranker");
+        ranker.setOutputMarkupId(true);
+        form.add(ranker);
 
         add(form);
     }

@@ -24,12 +24,13 @@ import javax.sql.DataSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Profile;
+import org.springframework.security.authentication.AuthenticationEventPublisher;
 import org.springframework.security.authentication.AuthenticationProvider;
-import org.springframework.security.authentication.DefaultAuthenticationEventPublisher;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.authentication.configuration.GlobalAuthenticationConfigurerAdapter;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.userdetails.UserDetailsByNameServiceWrapper;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -42,6 +43,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.OverridableUserDetailsManager;
 import de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeService;
 
 @EnableWebSecurity
+@EnableMethodSecurity
 public class InceptionSecurityAutoConfiguration
 {
     @Bean
@@ -54,7 +56,8 @@ public class InceptionSecurityAutoConfiguration
 
     @Bean
     public GlobalAuthenticationConfigurerAdapter globalAuthenticationConfigurerAdapter(
-            AuthenticationProvider authenticationProvider)
+            AuthenticationProvider authenticationProvider,
+            AuthenticationEventPublisher aAuthenticationEventPublisher)
     {
         return new GlobalAuthenticationConfigurerAdapter()
         {
@@ -62,7 +65,7 @@ public class InceptionSecurityAutoConfiguration
             public void configure(AuthenticationManagerBuilder aAuth) throws Exception
             {
                 aAuth.authenticationProvider(authenticationProvider);
-                aAuth.authenticationEventPublisher(new DefaultAuthenticationEventPublisher());
+                aAuth.authenticationEventPublisher(aAuthenticationEventPublisher);
             }
         };
     }

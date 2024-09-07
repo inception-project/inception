@@ -31,9 +31,9 @@ public class ChainLinkEventAdapter
     implements EventLoggingAdapter<ChainLinkEvent>
 {
     @Override
-    public boolean accepts(Object aEvent)
+    public boolean accepts(Class<?> aEvent)
     {
-        return aEvent instanceof ChainLinkEvent;
+        return ChainLinkEvent.class.isAssignableFrom(aEvent);
     }
 
     @Override
@@ -57,9 +57,9 @@ public class ChainLinkEventAdapter
     @Override
     public String getDetails(ChainLinkEvent aEvent) throws IOException
     {
-        AnnotationDetails annotation = new AnnotationDetails(aEvent.getAnnotation());
-        AnnotationDetails nextLink = new AnnotationDetails(aEvent.getNextLink());
-        ChainLinkDetails details = new ChainLinkDetails(annotation, nextLink);
+        var annotation = new AnnotationDetails(aEvent.getAnnotation());
+        var nextLink = new AnnotationDetails(aEvent.getNextLink());
+        var details = new ChainLinkDetails(annotation, nextLink);
         return JSONUtil.toJsonString(details);
     }
 }

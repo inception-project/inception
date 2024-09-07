@@ -17,14 +17,23 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.api.model;
 
-import java.io.Serializable;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+import de.tudarmstadt.ukp.inception.preferences.PreferenceValue;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class RecommenderGeneralSettings
-    implements Serializable
+    implements PreferenceValue
 {
     private static final long serialVersionUID = -1889889346307217345L;
 
+    private boolean annotatorAllowedToExportModel = true;
+
     private boolean waitForRecommendersOnOpenDocument = false;
+
+    private boolean showRecommendationsWhenViewingOtherUser = true;
+
+    private boolean showRecommendationsWhenViewingCurationUser = true;
 
     public boolean isWaitForRecommendersOnOpenDocument()
     {
@@ -34,5 +43,37 @@ public class RecommenderGeneralSettings
     public void setWaitForRecommendersOnOpenDocument(boolean aWaitForRecommendersOnOpenDocument)
     {
         waitForRecommendersOnOpenDocument = aWaitForRecommendersOnOpenDocument;
+    }
+
+    public boolean isShowRecommendationsWhenViewingOtherUser()
+    {
+        return showRecommendationsWhenViewingOtherUser;
+    }
+
+    public void setShowRecommendationsWhenViewingOtherUser(
+            boolean aShowRecommendationsWhenViewingOtherUser)
+    {
+        showRecommendationsWhenViewingOtherUser = aShowRecommendationsWhenViewingOtherUser;
+    }
+
+    public boolean isShowRecommendationsWhenViewingCurationUser()
+    {
+        return showRecommendationsWhenViewingCurationUser;
+    }
+
+    public void setShowRecommendationsWhenViewingCurationUser(
+            boolean aShowRecommendationsWhenViewingCurationUser)
+    {
+        showRecommendationsWhenViewingCurationUser = aShowRecommendationsWhenViewingCurationUser;
+    }
+
+    public void setAnnotatorAllowedToExportModel(boolean aAnnotatorAllowedToExportModel)
+    {
+        annotatorAllowedToExportModel = aAnnotatorAllowedToExportModel;
+    }
+
+    public boolean isAnnotatorAllowedToExportModel()
+    {
+        return annotatorAllowedToExportModel;
     }
 }

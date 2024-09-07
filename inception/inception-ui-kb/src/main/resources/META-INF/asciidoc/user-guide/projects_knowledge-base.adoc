@@ -80,10 +80,10 @@ user can choose one of the pre-configured mapping or provide a custom mapping.
 [source,turtle,role="small"]
 ----
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
-@prefix owl: <http://www.w3.org/2002/07/owl#>.
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
 
 <http://my-kb/foo> 
-  rdf:type owl:Class.
+  rdf:type owl:Class .
 ----
 ====
 
@@ -97,10 +97,10 @@ user can choose one of the pre-configured mapping or provide a custom mapping.
 [source,turtle,role="small"]
 ----
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
-@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 
 <http://my-kb/foo> 
-  rdfs:subClassOf <http://my-bb/bar>.
+  rdfs:subClassOf <http://my-bb/bar> .
 ----
 ====
 
@@ -113,10 +113,10 @@ user can choose one of the pre-configured mapping or provide a custom mapping.
 .`http://my-kb/foo` is an instance of `http://my-bb/bar`
 [source,turtle,role="small"]
 ----
-@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 
 <http://my-kb/foo> 
-  rdf:type <http://my-bb/bar>.
+  rdf:type <http://my-bb/bar> .
 ----
 ====
 
@@ -129,11 +129,10 @@ user can choose one of the pre-configured mapping or provide a custom mapping.
 .`http://my-kb/foo` has a name
 [source,turtle,role="small"]
 ----
-@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
-@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 
 <http://my-kb/foo> 
-  rdfs:label "Foo".
+  rdfs:label "Foo" .
 ----
 ====
 
@@ -146,11 +145,10 @@ user can choose one of the pre-configured mapping or provide a custom mapping.
 .`http://my-kb/foo` has a description
 [source,turtle,role="small"]
 ----
-@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
-@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 
 <http://my-kb/foo> 
-  rdfs:comment "This entry describes a Foo".
+  rdfs:comment "This entry describes a Foo" .
 ----
 ====
 
@@ -163,11 +161,10 @@ user can choose one of the pre-configured mapping or provide a custom mapping.
 .`http://my-kb/foo` is marked as being a property
 [source,turtle,role="small"]
 ----
-@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
-@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 
 <http://my-kb/foo> 
-  rdf:type rdf:Property.
+  rdf:type rdf:Property .
 ----
 ====
 
@@ -180,8 +177,7 @@ user can choose one of the pre-configured mapping or provide a custom mapping.
 .`http://my-kb/foo` is a sub-property of `http://my-bb/bar`
 [source,turtle,role="small"]
 ----
-@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
-@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 
 <http://my-kb/foo> 
   rdf:subPropertyOf <http://my-kb/bar> .
@@ -197,11 +193,10 @@ user can choose one of the pre-configured mapping or provide a custom mapping.
 .`http://my-kb/foo` has a name
 [source,turtle,role="small"]
 ----
-@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
-@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 
 <http://my-kb/foo> 
-  rdfs:label "Foo".
+  rdfs:label "Foo" .
 ----
 ====
 
@@ -214,21 +209,42 @@ user can choose one of the pre-configured mapping or provide a custom mapping.
 .`http://my-kb/foo` has a description
 [source,turtle,role="small"]
 ----
-@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
 
 <http://my-kb/foo> 
-  rdfs:comment "This entry describes a Foo".
+  rdfs:comment "This entry describes a Foo" .
+----
+====
+| Deprecation property IRI (property)
+| Description of the property. The marked item is not deprecated if the property value is `false` or `0`.
+| 
+`http://www.w3.org/2002/07/owl#deprecated`
+[%collapsible]
+====
+.`http://my-kb/foo` is deprecated
+[source,turtle,role="small"]
+----
+@prefix owl: <http://www.w3.org/2002/07/owl#>.
+
+<http://my-kb/foo> 
+  owl:deprecated true .
 ----
 ====
 |====
 
 === Root Concepts
 
-In the advanced settings, the user can leverage this feature of KB settings when one doesn't want the entire knowledge base to be used and rather choose to identify some specific root concepts. This feature specially helps in case of large knowledge bases such as Wikidata.
+The knowledge base browser displays a class tree. By default, it tries to automatically determine the root classes of
+this tree. However, for very large KBs this can be slow. Also you might not be interested in browsing the entire KB
+but would rather focus on specific subtrees. In such cases, you can define the root concepts explicitly here.
+
+NOTE: This setting currently affects **only class tree in the knowledge base browser**. You can still search for concepts
+      that are outside of the subtrees induced by the root concepts using the search field on the knowledge-base page and you
+      can also still link concept features. to concepts outside the subtrees. In order to limit a concept feature to a particular
+      subtree, use the **Scope** setting in the <<sect_concept_features,concept feature settings>>.
 
 
-=== Additional Matching Properties
+=== Additional Matching Properties (Synonyms)
 
 When searching for a concept e.g. in the annotation editor, by default the search terms are matched only against the concept name (label). There should only be one label for each concept
 (although there can be multiple label entries for a concept in the knowledge base, but theses
@@ -243,14 +259,20 @@ NOTE: Not all remote SPARQL knowledge bases may support additional matching prop
  
 === Full text search
 
-Full text search in knowledge bases enables searching for entities by their textual context, e.g. their label. This is a prerequisite for some advanced features such as re-ranking linking candidates during entity linking. Two full text search modes are supported:
+Full text search in knowledge bases enables searching for entities by their textual context, e.g. their label. This is a prerequisite for some advanced features such as re-ranking linking candidates during entity linking. 
 
-* `http://www.openrdf.org/contrib/lucenesail#matches`: use with local knowledge bases or possibly with remote knowledge bases using the link:https://rdf4j.org/documentation/programming/lucene/[RDF4J Lucene SAIL].
-* `bif:contains`: use with remote link:https://virtuoso.openlinksw.com[Virtuoso SPARQL] endpoints.
-* `text:query`: use with remote link:https://jena.apache.org/documentation/fuseki2/[Apache Jena Fuseki] SPARQL endpoints.
-* `tag:stardog:api:search:textMatch`: use with link:https://www.stardog.com[Stardog].
-* `https://www.mediawiki.org/ontology#API/`: use with the link:https://www.wikidata.org/wiki/Wikidata:SPARQL_query_service/queries[official Wikidata SPARQL endpoint].
-* `FTS:NONE`: use if there is no full text search support in the triple store - this will be very slow in particular for large KBs.
+Unfortunately, the SPARQL standard does not define a uniform way to perform full text searches. {product-name} offers support for full text search in a broad range of backend servers supporting the SPARQL protocol.
+
+.Supported full text search backends
+* link:https://franz.com/agraph/support/documentation/current/text-index.html[AllegroGraph]
+* link:https://jena.apache.org/documentation/query/text-query.html[Apache Jena Fuseki]
+* link:https://github.com/blazegraph/database/wiki/FullTextSearch[Blazegraph DB]
+* link:https://rdf4j.org/documentation/programming/lucene/[RDF4J Lucene]
+* link:https://docs.stardog.com/query-stardog/full-text-search[Stardog]
+* link:https://docs.openlinksw.com/virtuoso/rdfsparqlrulefulltext/[Virtuoso]
+* link:https://www.mediawiki.org/wiki/Wikidata_Query_Service/User_Manual/MWAPI[Wikidata (MediaWiki API Query Service EntitySearch)]
+
+If you select an FTS support that does not match the SPARQL server you are connecting to, you will likely get errors. If you are not sure, select **Unknown** to fall back to using standard SPARQL operations only - this will be very slow though and unviable for larger knowledge bases.
 
 ==== Apache Jena Fuseki
 
@@ -310,14 +332,20 @@ KBs can be populated by importing RDF files. Several formats are supported. The 
 |====
 | Format | Extension
 
-| RDF
+| RDF (XML)
 | `.rdf`
 
-| RDF Schema
+| RDF Schema (XML)
 | `.rdfs`
 
-| OWL
+| OBO
+| `.obo`
+
+| OWL (XML)
 | `.owl`
+
+| OWL Functional Syntax
+| `.ofn`
 
 | N-Triples
 | `.nt`

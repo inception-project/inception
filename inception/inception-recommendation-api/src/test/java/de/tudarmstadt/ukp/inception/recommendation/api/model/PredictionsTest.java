@@ -37,12 +37,14 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
-import de.tudarmstadt.ukp.inception.export.DocumentImportExportServiceImpl;
+import de.tudarmstadt.ukp.inception.support.uima.SegmentationUtils;
 
 @ExtendWith(MockitoExtension.class)
 class PredictionsTest
@@ -63,8 +65,8 @@ class PredictionsTest
         layer = AnnotationLayer.builder().withId(1l).withName("Entity").build();
 
         cas = createText(contentOf(getClass().getResource("/text/lorem.txt"), UTF_8), "en");
-        DocumentImportExportServiceImpl.splitSentences(cas);
-        DocumentImportExportServiceImpl.tokenize(cas);
+        SegmentationUtils.splitSentences(cas);
+        SegmentationUtils.tokenize(cas);
 
         sut = new Predictions(user, user.getUsername(), project);
     }
@@ -76,7 +78,7 @@ class PredictionsTest
         var winBegin = sentences.get(Math.round(sentences.size() * 0.25f)).getBegin();
         var winEnd = sentences.get(Math.round(sentences.size() * 0.75f)).getEnd();
 
-        sut.putPredictions(generatePredictions(100, 1, 100));
+        sut.inheritSuggestions(generatePredictions(100, 1, 100));
         assertThat(sut.size()).isEqualTo(10000);
 
         var groups = sut.getGroupedPredictions(SpanSuggestion.class, "doc10", layer, winBegin,
@@ -93,7 +95,7 @@ class PredictionsTest
 
         sut = new Predictions(user, user.getUsername(), project);
         var generatedPredictions = generatePredictions(10_000, 1, 1_000);
-        sut.putPredictions(generatedPredictions);
+        sut.inheritSuggestions(generatedPredictions);
         var documents = generatedPredictions.stream() //
                 .map(AnnotationSuggestion::getDocumentName) //
                 .distinct() //
@@ -112,12 +114,12 @@ class PredictionsTest
     @Test
     void thatIdsAreAssigned() throws Exception
     {
-        var doc = "doc";
+        var doc = SourceDocument.builder().withName("doc").build();
         sut = new Predictions(user, user.getUsername(), project);
-        sut.putPredictions(asList( //
+        sut.putSuggestions(1, 0, 0, asList( //
                 SpanSuggestion.builder() //
                         .withId(AnnotationSuggestion.NEW_ID) //
-                        .withDocumentName(doc) //
+                        .withDocument(doc) //
                         .build()));
 
         assertThat(sut.getPredictionsByDocument(doc)) //
@@ -126,12 +128,12 @@ class PredictionsTest
 
         var inheritedPredictions = sut.getPredictionsByDocument(doc);
         sut = new Predictions(sut);
-        sut.putPredictions(asList( //
+        sut.putSuggestions(1, 0, 0, asList( //
                 SpanSuggestion.builder() //
                         .withId(AnnotationSuggestion.NEW_ID) //
-                        .withDocumentName(doc) //
+                        .withDocument(doc) //
                         .build()));
-        sut.putPredictions(inheritedPredictions);
+        sut.inheritSuggestions(inheritedPredictions);
 
         assertThat(sut.getPredictionsByDocument(doc)) //
                 .extracting(AnnotationSuggestion::getId) //
@@ -148,25 +150,24 @@ class PredictionsTest
         var tokens = cas.select(Token.class).asList();
 
         var result = new ArrayList<AnnotationSuggestion>();
-        for (int docId = 0; docId < aDocs; docId++) {
-            var docName = "doc" + docId;
-            for (var recId = 0; recId < aRecommenders; recId++) {
-                var recName = "rec" + recId;
-                var featName = "feat" + recId;
+        for (var docId = 0l; docId < aDocs; docId++) {
+            var doc = SourceDocument.builder().withId(docId).withName("doc" + docId).build();
+            for (var recId = 0l; recId < aRecommenders; recId++) {
+                var feature = AnnotationFeature.builder().withId(recId).withName("feat" + recId)
+                        .build();
+                var rec = Recommender.builder().withId(recId).withName("rec" + recId)
+                        .withLayer(layer).withFeature(feature).build();
                 for (int annId = 0; annId < aSuggestions; annId++) {
                     var label = labels.get(rng.nextInt(labels.size()));
                     var token = tokens.get(rng.nextInt(tokens.size()));
                     var ann = SpanSuggestion.builder() //
                             .withId(annId) //
-                            .withDocumentName(docName) //
-                            .withRecommenderName(recName) //
-                            .withRecommenderId(recId) //
-                            .withLayerId(layer.getId()) //
+                            .withDocument(doc) //
+                            .withRecommender(rec) //
                             .withScore(rng.nextDouble()) //
                             .withScoreExplanation(null) //
                             .withLabel(label) //
                             .withUiLabel(label) //
-                            .withFeature(featName) //
                             .withPosition(new Offset(token.getBegin(), token.getEnd())) //
                             .withCoveredText(token.getCoveredText()) //
                             .build();

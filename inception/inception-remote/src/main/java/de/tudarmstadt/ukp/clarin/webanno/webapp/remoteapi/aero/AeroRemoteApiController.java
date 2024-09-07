@@ -17,13 +17,14 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSentences;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectTokens;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RMessageLevel.ERROR;
 import static de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RMessageLevel.INFO;
+import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.forceOverwriteSofa;
+import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.selectSentences;
+import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.selectTokens;
 import static java.io.File.createTempFile;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.io.FilenameUtils.getExtension;
@@ -43,8 +44,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.lang.invoke.MethodHandle;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -54,23 +53,18 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.zip.ZipFile;
 
-import javax.persistence.NoResultException;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.reflect.FieldUtils;
-import org.apache.commons.lang3.reflect.MethodUtils;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.jcas.cas.Sofa;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
@@ -78,6 +72,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -105,7 +100,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.tsv.WebAnnoTsv3FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.exception.AccessForbiddenException;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.exception.IllegalNameException;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.exception.IllegalObjectStateException;
@@ -122,6 +116,7 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RResponse;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.config.RemoteApiAutoConfiguration;
 import de.tudarmstadt.ukp.inception.curation.service.CurationDocumentService;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentStorageService;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.project.export.ProjectExportService;
 import de.tudarmstadt.ukp.inception.project.export.ProjectImportExportUtils;
@@ -132,6 +127,7 @@ import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import jakarta.persistence.NoResultException;
 
 /**
  * <p>
@@ -139,7 +135,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
  * {@link RemoteApiAutoConfiguration#aeroRemoteApiController}.
  * </p>
  */
-@ConditionalOnWebApplication
+@ConditionalOnExpression("false") // Auto-configured - avoid package scanning
+@Controller
 @RequestMapping(AeroRemoteApiController.API_BASE)
 public class AeroRemoteApiController
 {
@@ -180,6 +177,7 @@ public class AeroRemoteApiController
     private final Logger LOG = LoggerFactory.getLogger(getClass());
 
     private @Autowired DocumentService documentService;
+    private @Autowired DocumentStorageService documentStorageService;
     private @Autowired CurationDocumentService curationService;
     private @Autowired ProjectService projectService;
     private @Autowired DocumentImportExportService importExportService;
@@ -459,10 +457,8 @@ public class AeroRemoteApiController
                                     .toString()));
         }
 
-        FullProjectExportRequest request = new FullProjectExportRequest(project,
-                aFormat.orElse(WebAnnoTsv3FormatSupport.ID), true);
-        ProjectExportTaskMonitor monitor = new ProjectExportTaskMonitor(project, null,
-                "report-export");
+        var request = new FullProjectExportRequest(project, aFormat.orElse(null), true);
+        var monitor = new ProjectExportTaskMonitor(project, null, "report-export");
         File exportedFile = exportService.exportProject(request, monitor);
 
         // Turn the file into a resource and auto-delete the file when the resource closes the
@@ -611,9 +607,9 @@ public class AeroRemoteApiController
         if (originalFile) {
             // Export the original file - no temporary file created here, we export directly from
             // the file system
-            File docFile = documentService.getSourceDocumentFile(doc);
-            FileSystemResource resource = new FileSystemResource(docFile);
-            HttpHeaders httpHeaders = new HttpHeaders();
+            var docFile = documentStorageService.getSourceDocumentFile(doc);
+            var resource = new FileSystemResource(docFile);
+            var httpHeaders = new HttpHeaders();
             httpHeaders.setContentLength(resource.contentLength());
             httpHeaders.set("Content-Disposition",
                     "attachment; filename=\"" + doc.getName() + "\"");
@@ -720,7 +716,7 @@ public class AeroRemoteApiController
         AnnotationDocument anno = getAnnotation(document, aAnnotatorId, false);
         documentService.setAnnotationDocumentState(anno,
                 parseAnnotationDocumentState(aState.get()));
-        documentService.createAnnotationDocument(anno);
+        documentService.createOrUpdateAnnotationDocument(anno);
 
         RResponse<RAnnotation> response = new RResponse<>(new RAnnotation(anno));
         response.addMessage(INFO,
@@ -754,12 +750,12 @@ public class AeroRemoteApiController
         CAS annotationCas = createCompatibleCas(aProjectId, aDocumentId, aFile, aFormat);
 
         // If they are compatible, then we can store the new annotations
-        documentService.writeAnnotationCas(annotationCas, document, annotator, false);
+        documentService.writeAnnotationCas(annotationCas, document, annotator);
 
         // Set state if one was provided
         if (aState.isPresent()) {
             anno.setState(parseAnnotationDocumentState(aState.get()));
-            documentService.createAnnotationDocument(anno);
+            documentService.createOrUpdateAnnotationDocument(anno);
         }
 
         RResponse<RAnnotation> response = new RResponse<>(new RAnnotation(anno));
@@ -992,7 +988,7 @@ public class AeroRemoteApiController
         var document = getDocument(project, aDocumentId);
 
         // Check if the format is supported
-        String format = aFormatId.orElse(FORMAT_DEFAULT);
+        var format = aFormatId.orElse(FORMAT_DEFAULT);
         if (!importExportService.getReadableFormatById(format).isPresent()) {
             throw new UnsupportedFormatException(
                     "Format [%s] not supported. Acceptable formats are %s.", format,
@@ -1000,7 +996,7 @@ public class AeroRemoteApiController
                             .sorted().collect(toList()));
         }
 
-        String originalFilename = isNotBlank(aFile.getOriginalFilename())
+        var originalFilename = isNotBlank(aFile.getOriginalFilename()) //
                 ? aFile.getOriginalFilename()
                 : document.getName();
         if (!documentService.isValidDocumentName(originalFilename)) {
@@ -1098,29 +1094,6 @@ public class AeroRemoteApiController
                         as.getBegin(), as.getEnd());
             }
             unitIndex++;
-        }
-    }
-
-    private static void forceOverwriteSofa(CAS aCas, String aValue)
-    {
-        try {
-            Sofa sofa = (Sofa) aCas.getSofa();
-            MethodHandle _FH_sofaString = (MethodHandle) FieldUtils.readField(sofa,
-                    "_FH_sofaString", true);
-            Method method = MethodUtils.getMatchingMethod(Sofa.class, "wrapGetIntCatchException",
-                    MethodHandle.class);
-            int adjOffset;
-            try {
-                method.setAccessible(true);
-                adjOffset = (int) method.invoke(null, _FH_sofaString);
-            }
-            finally {
-                method.setAccessible(false);
-            }
-            sofa._setStringValueNcWj(adjOffset, aValue);
-        }
-        catch (Exception e) {
-            throw new IllegalStateException("Cannot force-update SofA string", e);
         }
     }
 

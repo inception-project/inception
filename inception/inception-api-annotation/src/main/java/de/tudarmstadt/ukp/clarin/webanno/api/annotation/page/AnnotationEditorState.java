@@ -17,19 +17,18 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.page;
 
-import java.io.Serializable;
-
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-import de.tudarmstadt.ukp.inception.preferences.Key;
+import de.tudarmstadt.ukp.inception.preferences.PreferenceKey;
+import de.tudarmstadt.ukp.inception.preferences.PreferenceValue;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class AnnotationEditorState
-    implements Serializable
+    implements PreferenceValue
 {
     private static final long serialVersionUID = -1637731874872789592L;
 
-    public static final Key<AnnotationEditorState> KEY_EDITOR_STATE = new Key<>(
+    public static final PreferenceKey<AnnotationEditorState> KEY_EDITOR_STATE = new PreferenceKey<>(
             AnnotationEditorState.class, "annotation/editor");
 
     private String defaultEditor;

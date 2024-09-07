@@ -30,7 +30,7 @@
     }
     .template-card {
       transition: box-shadow .3s;
-      border-color: var(--bs-secondary-color);
+      border-color: var(--bs-secondary-color) !important;
     }
 
     .template-card:hover {
@@ -49,7 +49,7 @@
     <div class="container">
       <div wicket:id="container" class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3">
         <div wicket:id="templates" class="col d-flex">
-          <button wicket:id="create" class="card template-card d-flex flex-grow-1 p-0">
+          <button wicket:id="create" class="card template-card d-flex flex-grow-1 p-0 overflow-hidden">
             <div class="bg-light card-img-top d-flex align-content-center justify-content-center thumbnail-wrapper">
               <img wicket:id="thumbnail" type="button" class="thumbnail">
             </div>
@@ -62,10 +62,17 @@
       </div>
     </div>
   </div>
-  <div class="modal-footer flex-column small">
-    The chosen template is only a starting point for your new project. Can you fully customize the project
-    after it has been created.
+  <div class="modal-footer flex-row small justify-content-between p-1">
+    <div class="form-check form-switch">
+      <input wicket:id="includeSampleData" class="form-check-input" type="checkbox"> 
+      <label wicket:for="includeSampleData" class="form-check-label" >
+        Include example documents (if available)
+      </label>
+    </div>
+    <div>
+      The chosen template is only a starting point for your new project. Can you fully customize the project
+      after it has been created.
+    </div>
   </div>
-  
 </wicket:panel>
 </html>

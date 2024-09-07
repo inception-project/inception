@@ -72,12 +72,13 @@ public class PubMedProviderTest
     public void thatGetDocumentTextWorks() throws Exception
     {
         when(annotationService.getFullProjectTypeSystem(any()))
-            .thenReturn(createTypeSystemDescription());
-        
-        String results = sut.getDocumentText(repo, traits, "PMC", "PMC7096989");
+                .thenReturn(createTypeSystemDescription());
+
+        String results = sut.getDocumentText(repo, traits, "PMC", "7096989");
 
         // System.out.println(results);
 
-        assertThat(results).contains("Asthma is the most common inflammatory disease of the lungs.");
+        assertThat(results)
+                .contains("Asthma is the most common inflammatory disease of the lungs.");
     }
 }

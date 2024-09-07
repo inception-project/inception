@@ -27,9 +27,9 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SINGLE_TOKEN
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.NO_OVERLAP;
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.OVERLAP_ONLY;
+import static de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureMultiplicityMode.ONE_TARGET_MULTIPLE_ROLES;
 import static de.tudarmstadt.ukp.inception.curation.merge.CurationTestUtils.HOST_TYPE;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.RELATION_TYPE;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.SPAN_TYPE;
 import static java.util.Arrays.asList;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.lenient;
@@ -43,6 +43,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.DiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.relation.RelationDiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span.SpanDiffAdapter;
@@ -72,6 +73,7 @@ import de.tudarmstadt.ukp.inception.schema.service.FeatureSupportRegistryImpl;
 @ExtendWith(MockitoExtension.class)
 public class CasMergeTestBase
 {
+    protected @Mock ConstraintsService constraintsService;
     protected @Mock AnnotationSchemaService schemaService;
 
     protected CasMerge sut;
@@ -111,8 +113,8 @@ public class CasMergeTestBase
     @BeforeEach
     public void setup() throws Exception
     {
-        SpanDiffAdapter slotHostDiffAdapter = new SpanDiffAdapter(HOST_TYPE);
-        slotHostDiffAdapter.addLinkFeature("links", "role", "target");
+        var slotHostDiffAdapter = new SpanDiffAdapter(HOST_TYPE);
+        slotHostDiffAdapter.addLinkFeature("links", "role", "target", ONE_TARGET_MULTIPLE_ROLES);
 
         diffAdapters = new ArrayList<>();
         diffAdapters.add(TOKEN_DIFF_ADAPTER);
@@ -130,11 +132,11 @@ public class CasMergeTestBase
         document.setProject(project);
         document.setName("document");
 
-        sentenceLayer = new AnnotationLayer(Sentence.class.getName(), "Sentence", SPAN_TYPE, null,
-                true, CHARACTERS, NO_OVERLAP);
+        sentenceLayer = new AnnotationLayer(Sentence.class.getName(), "Sentence",
+                SpanLayerSupport.TYPE, null, true, CHARACTERS, NO_OVERLAP);
 
-        tokenLayer = new AnnotationLayer(Token.class.getName(), "Token", SPAN_TYPE, null, true,
-                CHARACTERS, NO_OVERLAP);
+        tokenLayer = new AnnotationLayer(Token.class.getName(), "Token", SpanLayerSupport.TYPE,
+                null, true, CHARACTERS, NO_OVERLAP);
 
         tokenPosFeature = new AnnotationFeature();
         tokenPosFeature.setName("pos");
@@ -146,8 +148,8 @@ public class CasMergeTestBase
         tokenPosFeature.setVisible(true);
         tokenPosFeature.setCuratable(true);
 
-        posLayer = new AnnotationLayer(POS.class.getName(), "POS", SPAN_TYPE, project, true,
-                SINGLE_TOKEN, NO_OVERLAP);
+        posLayer = new AnnotationLayer(POS.class.getName(), "POS", SpanLayerSupport.TYPE, project,
+                true, SINGLE_TOKEN, NO_OVERLAP);
         posLayer.setAttachType(tokenLayer);
         posLayer.setAttachFeature(tokenPosFeature);
 
@@ -171,8 +173,8 @@ public class CasMergeTestBase
         posCoarseFeature.setVisible(true);
         posCoarseFeature.setCuratable(true);
 
-        neLayer = new AnnotationLayer(NamedEntity.class.getName(), "Named Entity", SPAN_TYPE,
-                project, true, TOKENS, OVERLAP_ONLY);
+        neLayer = new AnnotationLayer(NamedEntity.class.getName(), "Named Entity",
+                SpanLayerSupport.TYPE, project, true, TOKENS, OVERLAP_ONLY);
 
         neFeature = new AnnotationFeature();
         neFeature.setName("value");
@@ -219,7 +221,7 @@ public class CasMergeTestBase
         depFlavorFeature.setVisible(true);
         depFlavorFeature.setCuratable(true);
 
-        slotLayer = new AnnotationLayer(HOST_TYPE, HOST_TYPE, SPAN_TYPE, project, false,
+        slotLayer = new AnnotationLayer(HOST_TYPE, HOST_TYPE, SpanLayerSupport.TYPE, project, false,
                 SINGLE_TOKEN, NO_OVERLAP);
 
         slotFeature = new AnnotationFeature();
@@ -247,8 +249,8 @@ public class CasMergeTestBase
         stringFeature.setVisible(true);
         stringFeature.setCuratable(true);
 
-        multiValSpan = new AnnotationLayer("webanno.custom.Multivalspan", "Multivalspan", SPAN_TYPE,
-                project, true, TOKENS, OVERLAP_ONLY);
+        multiValSpan = new AnnotationLayer("webanno.custom.Multivalspan", "Multivalspan",
+                SpanLayerSupport.TYPE, project, true, TOKENS, OVERLAP_ONLY);
 
         multiValSpanF1 = new AnnotationFeature();
         multiValSpanF1.setName("f1");
@@ -369,13 +371,16 @@ public class CasMergeTestBase
                         new NumberFeatureSupport(), new LinkFeatureSupport(schemaService)));
         featureSupportRegistry.init();
 
-        LayerBehaviorRegistryImpl layerBehaviorRegistry = new LayerBehaviorRegistryImpl(asList());
+        var layerBehaviorRegistry = new LayerBehaviorRegistryImpl(asList());
         layerBehaviorRegistry.init();
 
         layerSupportRegistry = new LayerSupportRegistryImpl(asList(
-                new SpanLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry),
-                new RelationLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry),
-                new ChainLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry)));
+                new SpanLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry,
+                        constraintsService),
+                new RelationLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry,
+                        constraintsService),
+                new ChainLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry,
+                        constraintsService)));
         layerSupportRegistry.init();
 
         sut = new CasMerge(schemaService, null);

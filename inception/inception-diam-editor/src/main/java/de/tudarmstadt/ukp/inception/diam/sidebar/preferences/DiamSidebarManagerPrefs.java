@@ -17,18 +17,21 @@
  */
 package de.tudarmstadt.ukp.inception.diam.sidebar.preferences;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-import de.tudarmstadt.ukp.inception.preferences.Key;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+import de.tudarmstadt.ukp.inception.preferences.PreferenceKey;
+import de.tudarmstadt.ukp.inception.preferences.PreferenceValue;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class DiamSidebarManagerPrefs
-    implements Serializable
+    implements PreferenceValue
 {
     private static final long serialVersionUID = 8420554954400084375L;
 
-    public static final Key<DiamSidebarManagerPrefs> KEY_DIAM_SIDEBAR_MANAGER_PREFS = new Key<>(
+    public static final PreferenceKey<DiamSidebarManagerPrefs> KEY_DIAM_SIDEBAR_MANAGER_PREFS = new PreferenceKey<>(
             DiamSidebarManagerPrefs.class, "annotation/editor/annotation-sidebar/manager");
 
     private final List<String> pinnedGroups = new ArrayList<>();

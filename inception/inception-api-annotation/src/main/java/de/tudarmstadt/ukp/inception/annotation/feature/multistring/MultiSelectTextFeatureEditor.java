@@ -33,11 +33,10 @@ import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-
-import com.googlecode.wicket.jquery.core.JQueryBehavior;
-import com.googlecode.wicket.jquery.core.template.IJQueryTemplate;
-import com.googlecode.wicket.kendo.ui.form.multiselect.lazy.MultiSelect;
-import com.googlecode.wicket.kendo.ui.renderer.ChoiceRenderer;
+import org.wicketstuff.jquery.core.JQueryBehavior;
+import org.wicketstuff.jquery.core.template.IJQueryTemplate;
+import org.wicketstuff.kendo.ui.form.multiselect.lazy.MultiSelect;
+import org.wicketstuff.kendo.ui.renderer.ChoiceRenderer;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.ReorderableTag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
@@ -98,7 +97,7 @@ public class MultiSelectTextFeatureEditor
             super.addFeatureUpdateBehavior();
             featureUpdateBehaviorAdded = true;
         }
-        
+
         // Hides feature if "Hide un-constraint feature" is enabled and constraint rules are applied
         // and feature doesn't match any constraint rule
         // if enabled and constraints rule execution returns anything other than green
@@ -128,7 +127,7 @@ public class MultiSelectTextFeatureEditor
     @SuppressWarnings({ "unchecked", "rawtypes" })
     private FormComponent<String> createReadOnlyInput()
     {
-        var input = new com.googlecode.wicket.kendo.ui.form.multiselect. //
+        var input = new org.wicketstuff.kendo.ui.form.multiselect. //
                 MultiSelect<String>(CID_VALUE)
         {
             private static final long serialVersionUID = 1L;

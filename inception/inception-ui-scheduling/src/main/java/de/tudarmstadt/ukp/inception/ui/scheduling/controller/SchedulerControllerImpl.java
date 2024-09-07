@@ -17,52 +17,71 @@
  */
 package de.tudarmstadt.ukp.inception.ui.scheduling.controller;
 
-import static java.util.stream.Collectors.toList;
+import static org.springframework.http.MediaType.ALL_VALUE;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
-import java.security.Principal;
-import java.util.List;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.messaging.handler.annotation.MessageExceptionHandler;
-import org.springframework.messaging.simp.annotation.SendToUser;
-import org.springframework.messaging.simp.annotation.SubscribeMapping;
-import org.springframework.security.access.AccessDeniedException;
-import org.springframework.stereotype.Controller;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
+import de.tudarmstadt.ukp.clarin.webanno.project.ProjectAccess;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.scheduling.ProjectTask;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
+import de.tudarmstadt.ukp.inception.scheduling.Task;
 import de.tudarmstadt.ukp.inception.scheduling.controller.SchedulerController;
-import de.tudarmstadt.ukp.inception.scheduling.controller.model.MTaskStateUpdate;
 
-@Controller
+@ConditionalOnWebApplication
+@RestController
 @RequestMapping(SchedulerController.BASE_URL)
-@ConditionalOnProperty(prefix = "websocket", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class SchedulerControllerImpl
     implements SchedulerController
 {
     private final SchedulingService schedulingService;
+    private final UserDao userService;
+    private final ProjectAccess projectAccess;
 
-    @Autowired
-    public SchedulerControllerImpl(SchedulingService aSchedulingService)
+    public SchedulerControllerImpl(SchedulingService aSchedulingService, UserDao aUserDao,
+            ProjectAccess aProjectAccess)
     {
         schedulingService = aSchedulingService;
+        userService = aUserDao;
+        projectAccess = aProjectAccess;
     }
 
-    @SubscribeMapping(SchedulerController.BASE_TOPIC + "/tasks")
-    public List<MTaskStateUpdate> getCurrentTaskStates(Principal user) throws AccessDeniedException
+    @PostMapping(//
+            value = TASKS + "/{" + PARAM_TASK_ID + "}/" + CANCEL, //
+            consumes = { ALL_VALUE }, //
+            produces = APPLICATION_JSON_VALUE)
+    public void cancelTask(@PathVariable(PARAM_TASK_ID) int aTaskId)
     {
-        return schedulingService.getAllTasks().stream() //
-                .map(t -> t.getMonitor()) //
-                .filter(t -> t.getUser().equals(user.getName())) //
-                .map(MTaskStateUpdate::new) //
-                .collect(toList());
+        var sessionOwner = userService.getCurrentUser();
+
+        schedulingService.stopAllTasksMatching(
+                t -> t.getId() == aTaskId && canPerformActionOnTask(t, sessionOwner));
     }
 
-    @MessageExceptionHandler
-    @SendToUser("/queue/errors")
-    public String handleException(Throwable exception)
+    @PostMapping(//
+            value = TASKS + "/{" + PARAM_TASK_ID + "}/" + ACKNOWLEDGE, //
+            consumes = { ALL_VALUE }, //
+            produces = APPLICATION_JSON_VALUE)
+    public void acknowledgeResult(@PathVariable(PARAM_TASK_ID) int aTaskId)
     {
-        return exception.getMessage();
+        var sessionOwner = userService.getCurrentUser();
+
+        schedulingService.stopAllTasksMatching(
+                t -> t.getId() == aTaskId && canPerformActionOnTask(t, sessionOwner));
+    }
+
+    private boolean canPerformActionOnTask(Task aTask, User aUser)
+    {
+        if (aTask instanceof ProjectTask) {
+            return projectAccess.canManageProject(String.valueOf(aTask.getProject().getId()));
+        }
+
+        return aTask.getUser().filter(aUser::equals).isPresent();
     }
 }

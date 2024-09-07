@@ -38,6 +38,7 @@ import de.tudarmstadt.ukp.clarin.webanno.project.initializers.SurfaceFormLayerIn
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.TokenLayerInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.config.ProjectInitializersAutoConfiguration;
 import de.tudarmstadt.ukp.inception.project.api.ProjectInitializer;
+import de.tudarmstadt.ukp.inception.support.wicket.resource.Strings;
 
 /**
  * <p>
@@ -50,12 +51,18 @@ public class UniversalDependenciesProjectInitializer
     implements QuickProjectInitializer
 {
     private static final PackageResourceReference THUMBNAIL = new PackageResourceReference(
-            MethodHandles.lookup().lookupClass(), "thumbnail.svg");
+            MethodHandles.lookup().lookupClass(), "UniversalDependenciesProjectInitializer.svg");
 
     @Override
     public String getName()
     {
         return "Universal Dependencies";
+    }
+
+    @Override
+    public Optional<String> getDescription()
+    {
+        return Optional.of(Strings.getString("ud-project.description"));
     }
 
     @Override
@@ -87,16 +94,5 @@ public class UniversalDependenciesProjectInitializer
     public void configure(Project aProject) throws IOException
     {
         // Nothing to do - all initialization is already done by the dependencies
-    }
-
-    @Override
-    public Optional<String> getDescription()
-    {
-        return Optional
-                .of("""
-                        Comes pre-configured for linguistic annotation tasks according to the Universal Dependencies
-                        guidelines. These include part-of-speech  tagging, dependency parsing, morphological features,
-                        lemmas, and surface forms. Importing and exporting these layers in the CoNLL-U format is
-                        possible.""");
     }
 }

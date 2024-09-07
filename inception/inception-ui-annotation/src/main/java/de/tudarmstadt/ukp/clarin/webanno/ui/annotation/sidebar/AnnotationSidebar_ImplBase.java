@@ -20,32 +20,32 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar;
 import java.io.IOException;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.markup.html.panel.Panel;
+import org.apache.wicket.markup.html.panel.GenericPanel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase2;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 
 public abstract class AnnotationSidebar_ImplBase
-    extends Panel
+    extends GenericPanel<AnnotatorState>
 {
     private static final long serialVersionUID = 8637373389151630602L;
 
     private final AnnotationActionHandler actionHandler;
     private final CasProvider casProvider;
-    private final AnnotationPage annotationPage;
+    private final AnnotationPageBase2 annotationPage;
     private @SpringBean DocumentService documentService;
 
-    public AnnotationSidebar_ImplBase(final String aId, final IModel<AnnotatorState> aModel,
+    public AnnotationSidebar_ImplBase(final String aId,
             final AnnotationActionHandler aActionHandler, final CasProvider aCasProvider,
-            AnnotationPage aAnnotationPage)
+            AnnotationPageBase2 aAnnotationPage)
     {
-        super(aId, aModel);
+        super(aId, aAnnotationPage.getModel());
 
         actionHandler = aActionHandler;
         casProvider = aCasProvider;
@@ -59,22 +59,14 @@ public abstract class AnnotationSidebar_ImplBase
         setOutputMarkupPlaceholderTag(true);
     }
 
-    public void setModel(IModel<AnnotatorState> aModel)
-    {
-        setDefaultModel(aModel);
-    }
-
+    @Override
     @SuppressWarnings("unchecked")
     public IModel<AnnotatorState> getModel()
     {
         return (IModel<AnnotatorState>) getDefaultModel();
     }
 
-    public void setModelObject(AnnotatorState aModel)
-    {
-        setDefaultModelObject(aModel);
-    }
-
+    @Override
     public AnnotatorState getModelObject()
     {
         return (AnnotatorState) getDefaultModelObject();
@@ -90,7 +82,7 @@ public abstract class AnnotationSidebar_ImplBase
         return casProvider;
     }
 
-    public AnnotationPage getAnnotationPage()
+    public AnnotationPageBase2 getAnnotationPage()
     {
         return annotationPage;
     }

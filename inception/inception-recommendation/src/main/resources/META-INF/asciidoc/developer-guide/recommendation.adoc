@@ -15,7 +15,7 @@
 // limitations under the License.
 
 [[sect_recommendation]]
-= Recommendation
+= Recommenders system
 
 For information on the different recommenders, please refer to <<user-guide.adoc#sect_projects_recommendation,user guide>>.
 
@@ -31,3 +31,26 @@ For information on the different recommenders, please refer to <<user-guide.adoc
 // 
 // DocumentService -- LearningRecordService : AfterDocuemntResetEvent
 // ....
+
+== Recommenders
+
+Recommenders provide the ability to generate annotation suggestions. Optionally, they can be trained based on existing annotations. Also optionally, they can be evaluated.
+
+* The `RecommendationEngineFactory` interface provides the API for implementing recommender types.
+* The `RecommendationEngine` interface provides the API for the actual recommenders produced by the factory.
+* The `RecommenderFactoryRegistry` interface and its default implementation `RecommenderFactoryRegistryImpl` serve as an access point to the different recommender types.
+
+== Suggestion supports
+
+Suggestion supports provide everything necessary to handle annotation suggestions. This includes: 
+
+* extracting suggestions from the predicted annotations that the recommenders
+* rendering these suggestions
+* handling actions like accepting/correting, rejecting, or skipping suggestions
+
+The subsystem is made up of the following main APIs:
+
+* The `SuggestionSupport` interface provides the API for handling different kinds of suggestions.
+* The `SuggestionSupportRegistry` interface and its default implementation `SuggestionSupportRegistryImpl` serve as an access point to the different recommender types.
+* The `SuggestionRenderer` interface provides the API for rendering suggestions into a `VDoc`.
+

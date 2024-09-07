@@ -24,13 +24,14 @@ package de.tudarmstadt.ukp.inception.ui.curation.sidebar;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
 
-import org.apache.uima.cas.CAS;
+import org.apache.uima.UIMAException;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.curation.merge.MergeStrategyFactory;
+import de.tudarmstadt.ukp.inception.curation.model.CurationWorkflow;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 
 public interface CurationSidebarService
@@ -42,30 +43,10 @@ public interface CurationSidebarService
     List<User> getSelectedUsers(String aCurrentUser, long aProjectId);
 
     /**
-     * @return CAS associated with curation doc for the given user
-     */
-    @SuppressWarnings("javadoc")
-    Optional<CAS> retrieveCurationCAS(String aUser, long aProjectId, SourceDocument aDoc)
-        throws IOException;
-
-    /**
-     * Write to CAS associated with curation doc for the given user and update timestamp
-     */
-    @SuppressWarnings("javadoc")
-    void writeCurationCas(CAS aTargetCas, AnnotatorState aState, long aProjectId)
-        throws IOException;
-
-    /**
      * Store the users that were selected to be shown for curation by the given user.
      */
     @SuppressWarnings("javadoc")
     void setSelectedUsers(String aCurrentUser, long aProjectId, Collection<User> aUsers);
-
-    /**
-     * Store which name the curated document should be associated with
-     */
-    @SuppressWarnings("javadoc")
-    void setCurationTarget(String aCurrentUser, Project aProject, boolean aOwnDocument);
 
     /**
      * Start a new curation session.
@@ -105,12 +86,6 @@ public interface CurationSidebarService
     List<User> listUsersReadyForCuration(String aUsername, Project aProject,
             SourceDocument aDocument);
 
-    /**
-     * @return list of users that have finished the given document
-     */
-    @SuppressWarnings("javadoc")
-    List<User> listCuratableUsers(SourceDocument aSourceDocument);
-
     List<User> listCuratableUsers(String aSessionOwner, SourceDocument aDocument);
 
     /**
@@ -127,5 +102,13 @@ public interface CurationSidebarService
 
     boolean isShowAll(String aUsername, Long aProjectId);
 
+    void setShowScore(String aUsername, Long aProjectId, boolean aValue);
+
+    boolean isShowScore(String aUsername, Long aProjectId);
+
     void setDefaultSelectedUsersForDocument(String aSessionOwner, SourceDocument aDocument);
+
+    MergeStrategyFactory<?> merge(AnnotatorState aState, CurationWorkflow aWorkflow,
+            String aCurator, Collection<User> aUsers, boolean aClearTargetCas)
+        throws IOException, UIMAException;
 }

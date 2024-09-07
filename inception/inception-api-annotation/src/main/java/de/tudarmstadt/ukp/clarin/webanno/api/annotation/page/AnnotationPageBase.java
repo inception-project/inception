@@ -17,9 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.page;
 
-import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.CURATION;
-import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
-import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
+import static de.tudarmstadt.ukp.clarin.webanno.model.ValidationMode.NEVER;
 import static de.tudarmstadt.ukp.inception.rendering.selection.FocusPosition.CENTERED;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
 import static java.lang.String.format;
@@ -31,8 +29,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.persistence.NoResultException;
 
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -49,6 +45,7 @@ import org.apache.wicket.util.string.StringValue;
 import org.apache.wicket.util.string.StringValueConversionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.access.AccessDeniedException;
 import org.wicketstuff.urlfragment.UrlFragment;
 import org.wicketstuff.urlfragment.UrlParametersReceivingBehavior;
 
@@ -56,12 +53,13 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.NotEditableExc
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.ValidationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.NoPagingStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.UserPreferencesService;
+import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.ConstraintsEvaluator;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.ValidationMode;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentAccess;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
@@ -71,9 +69,9 @@ import de.tudarmstadt.ukp.inception.rendering.vmodel.VRange;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
-import de.tudarmstadt.ukp.inception.schema.api.validation.ValidationUtils;
 import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
 import de.tudarmstadt.ukp.inception.support.wicket.DecoratedObject;
+import jakarta.persistence.NoResultException;
 
 public abstract class AnnotationPageBase
     extends ProjectPageBase
@@ -88,6 +86,7 @@ public abstract class AnnotationPageBase
 
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean DocumentService documentService;
+    private @SpringBean DocumentAccess documentAccess;
     private @SpringBean UserPreferencesService userPreferenceService;
     private @SpringBean UserDao userRepository;
     private @SpringBean ProjectService projectService;
@@ -303,9 +302,9 @@ public abstract class AnnotationPageBase
     {
         boolean switched = actionShowSelectedDocument(aTarget, aDocument);
 
-        AnnotatorState state = getModelObject();
+        var state = getModelObject();
 
-        CAS cas = getEditorCas();
+        var cas = getEditorCas();
         state.getPagingStrategy().moveToOffset(state, cas, aBegin, new VRange(aBegin, aEnd),
                 CENTERED);
 
@@ -318,9 +317,9 @@ public abstract class AnnotationPageBase
 
     protected void handleException(AjaxRequestTarget aTarget, Exception aException)
     {
-        if (aException instanceof ReplaceHandlerException) {
+        if (aException instanceof ReplaceHandlerException replaceHandlerException) {
             // Let Wicket redirects still work
-            throw (ReplaceHandlerException) aException;
+            throw replaceHandlerException;
         }
 
         LoggerFactory.getLogger(getClass()).error("Error: " + aException.getMessage(), aException);
@@ -376,24 +375,35 @@ public abstract class AnnotationPageBase
             return;
         }
 
+        var evaluator = new ConstraintsEvaluator();
+        var constraints = getModelObject().getConstraints();
+
         // Check each feature structure of this layer
-        var layerType = aAdapter.getAnnotationType(editorCas);
+        var layerType = aAdapter.getAnnotationType(editorCas).get();
         var annotationFsType = editorCas.getAnnotationType();
         try (var fses = editorCas.select(layerType)) {
             for (var fs : fses) {
                 for (var f : features) {
-                    if (ValidationUtils.isRequiredFeatureMissing(f, fs)) {
-                        // If it is an annotation, then we jump to it if it has required empty
-                        // features
-                        if (editorCas.getTypeSystem().subsumes(annotationFsType, layerType)) {
-                            getAnnotationActionHandler().actionSelectAndJump(aTarget, VID.of(fs));
-                        }
-
-                        // Inform the user
-                        throw new ValidationException("Annotation with ID [" + ICasUtil.getAddr(fs)
-                                + "] on layer [" + layer.getUiName()
-                                + "] is missing value for feature [" + f.getUiName() + "].");
+                    if (!f.isRequired()) {
+                        continue;
                     }
+                    if (evaluator.isHiddenConditionalFeature(constraints, fs, f)) {
+                        continue;
+                    }
+
+                    if (aAdapter.isFeatureValueValid(f, fs)) {
+                        continue;
+                    }
+
+                    // Jump to invalid annotation if possible
+                    if (editorCas.getTypeSystem().subsumes(annotationFsType, layerType)) {
+                        getAnnotationActionHandler().actionSelectAndJump(aTarget, VID.of(fs));
+                    }
+
+                    // Inform the user
+                    throw new ValidationException("Annotation with ID [" + ICasUtil.getAddr(fs)
+                            + "] on layer [" + layer.getUiName()
+                            + "] has invalid feature value in [" + f.getUiName() + "].");
                 }
             }
         }
@@ -410,7 +420,7 @@ public abstract class AnnotationPageBase
                 continue;
             }
 
-            if (ValidationMode.NEVER.equals(layer.getValidationMode())) {
+            if (layer.getValidationMode() == NEVER) {
                 // If validation is disabled, then skip it
                 continue;
             }
@@ -446,36 +456,20 @@ public abstract class AnnotationPageBase
 
     public void ensureIsEditable() throws NotEditableException
     {
-        AnnotatorState state = getModelObject();
+        var state = getModelObject();
 
         if (state.getDocument() == null) {
             throw new NotEditableException("No document selected");
         }
 
-        // If curating (check mode for curation page and user for curation sidebar),
-        // then it is editable unless the curation is finished
-        if (state.getMode() == CURATION || CURATION_USER.equals(state.getUser().getUsername())) {
-            if (state.getDocument().getState().equals(CURATION_FINISHED)) {
-                throw new NotEditableException("Curation is already finished. You can put it back "
-                        + "into progress via the monitoring page.");
-            }
+        var sessionOwner = userRepository.getCurrentUser();
 
-            return;
+        try {
+            documentAccess.assertCanEditAnnotationDocument(sessionOwner, state.getDocument(),
+                    state.getUser().getUsername());
         }
-
-        if (getModelObject().isUserViewingOthersWork(userRepository.getCurrentUsername())) {
-            throw new NotEditableException(
-                    "Viewing another users annotations - document is read-only!");
-        }
-
-        if (isAnnotationFinished()) {
-            throw new NotEditableException("This document is already closed for user ["
-                    + state.getUser().getUsername() + "]. Please ask your "
-                    + "project manager to re-open it via the monitoring page.");
-        }
-
-        if (!projectService.hasRole(userRepository.getCurrentUsername(), getProject(), ANNOTATOR)) {
-            throw new NotEditableException("You are not an annotator in this project.");
+        catch (AccessDeniedException e) {
+            throw new NotEditableException(e.getMessage());
         }
     }
 

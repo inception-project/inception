@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception</artifactId>
-    <version>31.0-SNAPSHOT</version>
+    <version>34.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>inception-app</artifactId>
@@ -28,6 +28,7 @@
 
   <properties>
     <maven.surefire.heap>6g</maven.surefire.heap>
+    <maven.surefire.argLine>-XX:+EnableDynamicAgentLoading</maven.surefire.argLine>
     <maven.compiler.release>17</maven.compiler.release>
     <maven.compiler.target>${maven.compiler.release}</maven.compiler.target>
     <maven.compiler.source>${maven.compiler.release}</maven.compiler.source>
@@ -36,20 +37,20 @@
     <excludedTestCategories>slow</excludedTestCategories>
     <npm-install-command>ci</npm-install-command>
   </properties>
-  
+
   <dependencyManagement>
     <dependencies>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-        <artifactId>inception-bom</artifactId>
-        <version>31.0-SNAPSHOT</version>
+        <artifactId>inception-dependencies</artifactId>
+        <version>34.0-SNAPSHOT</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-        <artifactId>inception-dependencies</artifactId>
-        <version>31.0-SNAPSHOT</version>
+        <artifactId>inception-bom</artifactId>
+        <version>34.0-SNAPSHOT</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -83,9 +84,9 @@
       <scope>runtime</scope>
     </dependency>
     <dependency>
-      <!-- Route Java Commons Logging over SLF4J -->
+      <!-- Route Java Util Logging over SLF4J -->
       <groupId>org.slf4j</groupId>
-      <artifactId>jcl-over-slf4j</artifactId>
+      <artifactId>jul-to-slf4j</artifactId>
       <scope>runtime</scope>
     </dependency>
     <dependency>
@@ -94,10 +95,9 @@
       <artifactId>log4j-layout-template-json</artifactId>
     </dependency>
     <dependency>
-      <!-- Avoid Commons Logging -->
-      <groupId>commons-logging</groupId>
-      <artifactId>commons-logging</artifactId>
-      <scope>provided</scope>
+      <!-- Route Java Commons Logging over SLF4J -->
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-jcl</artifactId>
     </dependency>
     
     <!-- Dev aids -->
@@ -115,10 +115,15 @@
     </dependency>
     
     <!-- JAXB is no longer included with Java 9+ by default -->
+    <!-- Old javax JAXB -->
+    <dependency>
+      <groupId>org.glassfish.jaxb</groupId>
+      <artifactId>jaxb-runtime</artifactId>
+      <scope>runtime</scope>
+    </dependency>
     <dependency>
       <groupId>javax.xml.bind</groupId>
       <artifactId>jaxb-api</artifactId>
-      <scope>runtime</scope>
     </dependency>
     <dependency>
       <groupId>com.sun.xml.bind</groupId>
@@ -126,14 +131,26 @@
       <scope>runtime</scope>
     </dependency>
     <dependency>
+      <groupId>javax.activation</groupId>
+      <artifactId>javax.activation-api</artifactId>
+      <scope>runtime</scope>
+    </dependency>
+    <!-- New jakarta JAXB -->
+    <dependency>
+      <groupId>jakarta.xml.bind</groupId>
+      <artifactId>jakarta.xml.bind-api</artifactId>
+    </dependency>
+    <dependency>
       <groupId>com.sun.xml.bind</groupId>
       <artifactId>jaxb-impl</artifactId>
       <scope>runtime</scope>
     </dependency>
+    
+    <!-- Java Servlet API -->
     <dependency>
-      <groupId>javax.activation</groupId>
-      <artifactId>javax.activation-api</artifactId>
-      <scope>runtime</scope>
+      <groupId>jakarta.servlet</groupId>
+      <artifactId>jakarta.servlet-api</artifactId>
+      <scope>provided</scope>
     </dependency>
     
     <dependency>
@@ -170,6 +187,7 @@
     <module>inception-telemetry</module>
     <module>inception-ui-core</module>
     <module>inception-log</module>
+    <module>inception-log-ui</module>
     <module>inception-scheduling</module>
     <module>inception-js-api</module>
     <module>inception-annotation-storage</module>
@@ -197,10 +215,12 @@
     <module>inception-ui-tagsets</module>
     <module>inception-sharing</module>
     <module>inception-preferences</module>
+    <module>inception-processing</module>
     <module>inception-guidelines</module>
     <module>inception-schema</module>
     <!-- IO -->
     <module>inception-io-bioc</module>
+    <module>inception-io-brat</module>
     <module>inception-io-conll</module>
     <module>inception-io-json</module>
     <module>inception-io-html</module>
@@ -209,6 +229,7 @@
     <module>inception-io-perseus</module>
     <module>inception-io-imscwb</module>
     <module>inception-io-intertext</module>
+    <module>inception-io-rdf</module>
     <module>inception-io-tcf</module>
     <module>inception-io-tei</module>
     <module>inception-io-text</module>
@@ -222,10 +243,10 @@
     <!-- Internal search -->
     <module>inception-ui-search</module>
     <module>inception-search-core</module>
+    <module>inception-search-mtas-upstream</module>
     <module>inception-search-mtas</module>
     <!-- External search -->
     <module>inception-external-search-core</module>
-    <module>inception-external-search-elastic</module>
     <module>inception-external-search-opensearch</module>
     <module>inception-external-search-solr</module>
     <module>inception-external-search-pubannotation</module>
@@ -234,6 +255,7 @@
     <!-- Knowledge base -->
     <module>inception-kb</module>
     <module>inception-kb-fact-linking</module>
+    <module>inception-kb-lucene-sail</module>
     <module>inception-ui-kb</module>
     <module>inception-concept-linking</module>
     <!-- Editor extensions -->
@@ -253,16 +275,20 @@
     <module>inception-layer-docmetadata</module>
     <module>inception-feature-lookup</module>
     <module>inception-image</module>
-    <!-- Recommendation system -->
+    <!-- Recommender system -->
     <module>inception-recommendation-api</module>
     <module>inception-recommendation</module>
     <module>inception-active-learning</module>
+    <module>inception-imls-azureai-openai</module>
+    <module>inception-imls-chatgpt</module>
     <module>inception-imls-opennlp</module>
     <module>inception-imls-stringmatch</module>
     <module>inception-imls-elg</module>
     <module>inception-imls-hf</module>
     <module>inception-imls-external</module>
     <module>inception-imls-lapps</module>
+    <module>inception-imls-ollama</module>
+    <module>inception-imls-support-llm</module>
     <module>inception-imls-weblicht</module>
     <!-- Documentation -->
     <module>inception-doc</module>
@@ -317,7 +343,7 @@
         <configuration>
           <annotationProcessorPaths>
             <path>
-              <groupId>org.hibernate</groupId>
+              <groupId>org.hibernate.orm</groupId>
               <artifactId>hibernate-jpamodelgen</artifactId>
               <version>${hibernate.version}</version>
             </path>
@@ -364,13 +390,17 @@
               <name>modifiable</name>
               <placement>X</placement>
             </tag>
+            <tag>
+              <name>forRemoval</name>
+              <placement>X</placement>
+            </tag>
           </tags>
         </configuration>
       </plugin>
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>buildnumber-maven-plugin</artifactId>
-        <version>3.0.0</version>
+        <version>3.2.0</version>
         <executions>
           <execution>
             <phase>validate</phase>
@@ -408,15 +438,23 @@
             <dependency>org.apache.logging.log4j:log4j-layout-template-json</dependency>
             <dependency>org.apache.logging.log4j:log4j-core</dependency>
             <dependency>org.slf4j:log4j-over-slf4j</dependency>
-            <dependency>org.slf4j:jcl-over-slf4j</dependency>
+            <dependency>org.slf4j:jul-to-slf4j</dependency>
             <dependency>commons-logging:commons-logging</dependency>
+            <dependency>org.springframework:spring-jcl</dependency>
             <!--
               - JAXB is used via reflection and cannot be detected by Maven
             -->
+            <dependency>jakarta.xml.bind:jakarta.xml.bind-api</dependency>
+            <dependency>org.glassfish.jaxb</dependency>
             <dependency>javax.xml.bind:jaxb-api</dependency>
             <dependency>com.sun.xml.bind:jaxb-core</dependency>
             <dependency>com.sun.xml.bind:jaxb-impl</dependency>
             <dependency>javax.activation:javax.activation-api</dependency>
+            <!--
+              - Servlet API
+            -->
+            <dependency>jakarta.servlet:jakarta.servlet-api</dependency>
+
             <!--
               - hsqldb and data-jpa, used via reflection in tests in search-mtas,
               - cannot be detected by Maven
@@ -479,13 +517,13 @@
                 <requireJavaVersion>
                   <version>[${maven.compiler.release},)</version>
                 </requireJavaVersion>
-                <!--
                 <bannedDependencies>
                   <excludes>
-                    <exclude>junit:junit</exclude>
+                    <exclude>commons-logging:commons-logging</exclude>
+                    <exclude>commons-logging:commons-logging-api</exclude>
+                    <exclude>org.slf4j:jcl-over-slf4j</exclude>
                   </excludes>
                 </bannedDependencies>
-                -->
               </rules>
             </configuration>
           </execution>
@@ -536,7 +574,7 @@
         <plugin>
           <groupId>com.github.eirslett</groupId>
           <artifactId>frontend-maven-plugin</artifactId>
-          <version>1.13.4</version>
+          <version>1.15.0</version>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
@@ -707,6 +745,7 @@
                     <exclude>.factorypath</exclude>
                     <exclude>.gitignore</exclude>
                     <exclude>.checkstyle</exclude>
+                    <exclude>**/.asciidoctorconfig.adoc</exclude>
                     <exclude>**/.vscode/**/*</exclude>
                     <exclude>suppressions.xml</exclude>
                     <exclude>marker-*</exclude>
@@ -819,7 +858,7 @@
             <plugin>
               <groupId>org.apache.maven.plugins</groupId>
               <artifactId>maven-checkstyle-plugin</artifactId>
-              <version>3.3.0</version>
+              <version>3.5.0</version>
               <inherited>true</inherited>
               <dependencies>
                 <dependency>
@@ -830,7 +869,7 @@
                 <dependency>
                   <groupId>com.puppycrawl.tools</groupId>
                   <artifactId>checkstyle</artifactId>
-                  <version>10.12.3</version>
+                  <version>10.18.1</version>
                 </dependency>
               </dependencies>
               <configuration>
@@ -1081,6 +1120,7 @@
               <artifactId>apache-rat-plugin</artifactId>
               <configuration>
                 <excludes combine.children="append">
+                  <exclude>src/main/ts/.sass-cache/**</exclude>
                   <exclude>src/main/ts/.eslintrc.yml</exclude>
                   <exclude>src/main/ts/*.json</exclude>
                   <exclude>src/main/ts_template/*.json</exclude>

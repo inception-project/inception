@@ -25,30 +25,31 @@ import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseMapping;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 
-public class KnwoledgeBaseSchemaProfileTest
+class KnwoledgeBaseSchemaProfileTest
 {
     @Test
-    public void checkKBProfileAndKBObject_ShouldReturnMatchingSchemaProfile()
+    void checkKBProfileAndKBObject_ShouldReturnMatchingSchemaProfile()
     {
-        String name = "Test KB";
-        String classIri = "http://www.w3.org/2002/07/owl#Class";
-        String subclassIri = "http://www.w3.org/2000/01/rdf-schema#subClassOf";
-        String typeIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
-        String subPropertyIri = "http://www.w3.org/2000/01/rdf-schema#subPropertyOf";
-        String label = "http://www.w3.org/2000/01/rdf-schema#label";
-        String propertyTypeIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#Property";
-        String descriptionIri = "http://www.w3.org/2000/01/rdf-schema#comment";
-        String propertyLabelIri = "http://www.w3.org/2000/01/rdf-schema#label";
-        String propertyDescriptionIri = "http://www.w3.org/2000/01/rdf-schema#comment";
+        var name = "Test KB";
+        var classIri = "http://www.w3.org/2002/07/owl#Class";
+        var subclassIri = "http://www.w3.org/2000/01/rdf-schema#subClassOf";
+        var typeIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
+        var subPropertyIri = "http://www.w3.org/2000/01/rdf-schema#subPropertyOf";
+        var label = "http://www.w3.org/2000/01/rdf-schema#label";
+        var propertyTypeIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#Property";
+        var descriptionIri = "http://www.w3.org/2000/01/rdf-schema#comment";
+        var propertyLabelIri = "http://www.w3.org/2000/01/rdf-schema#label";
+        var propertyDescriptionIri = "http://www.w3.org/2000/01/rdf-schema#comment";
+        var deprecationPropertyIri = "http://www.w3.org/2002/07/owl#deprecated";
 
-        KnowledgeBaseMapping testMapping = new KnowledgeBaseMapping(classIri, subclassIri, typeIri,
-                subPropertyIri, descriptionIri, label, propertyTypeIri, propertyLabelIri,
-                propertyDescriptionIri);
-        KnowledgeBaseProfile testProfile = new KnowledgeBaseProfile();
+        var testMapping = new KnowledgeBaseMapping(classIri, subclassIri, typeIri, subPropertyIri,
+                descriptionIri, label, propertyTypeIri, propertyLabelIri, propertyDescriptionIri,
+                deprecationPropertyIri);
+        var testProfile = new KnowledgeBaseProfile();
         testProfile.setName(name);
         testProfile.setMapping(testMapping);
 
-        KnowledgeBase testKb = new KnowledgeBase();
+        var testKb = new KnowledgeBase();
         testKb.applyMapping(testMapping);
 
         assertThat(SchemaProfile.checkSchemaProfile(testProfile))

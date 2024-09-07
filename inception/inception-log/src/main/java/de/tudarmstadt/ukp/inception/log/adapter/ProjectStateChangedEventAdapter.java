@@ -31,9 +31,9 @@ public class ProjectStateChangedEventAdapter
     implements EventLoggingAdapter<ProjectStateChangedEvent>
 {
     @Override
-    public boolean accepts(Object aEvent)
+    public boolean accepts(Class<?> aEvent)
     {
-        return aEvent instanceof ProjectStateChangedEvent;
+        return ProjectStateChangedEvent.class.isAssignableFrom(aEvent);
     }
 
     @Override
@@ -45,7 +45,7 @@ public class ProjectStateChangedEventAdapter
     @Override
     public String getDetails(ProjectStateChangedEvent aEvent) throws IOException
     {
-        StateChangeDetails details = new StateChangeDetails();
+        var details = new StateChangeDetails();
         details.setState(Objects.toString(aEvent.getNewState(), null));
         details.setPreviousState(Objects.toString(aEvent.getPreviousState(), null));
         return JSONUtil.toJsonString(details);

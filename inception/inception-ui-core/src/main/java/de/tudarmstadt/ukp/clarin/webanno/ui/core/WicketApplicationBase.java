@@ -28,9 +28,11 @@ import static org.apache.wicket.csp.CSPDirective.CHILD_SRC;
 import static org.apache.wicket.csp.CSPDirective.CONNECT_SRC;
 import static org.apache.wicket.csp.CSPDirective.DEFAULT_SRC;
 import static org.apache.wicket.csp.CSPDirective.FONT_SRC;
+import static org.apache.wicket.csp.CSPDirective.FORM_ACTION;
 import static org.apache.wicket.csp.CSPDirective.FRAME_SRC;
 import static org.apache.wicket.csp.CSPDirective.IMG_SRC;
 import static org.apache.wicket.csp.CSPDirective.MANIFEST_SRC;
+import static org.apache.wicket.csp.CSPDirective.MEDIA_SRC;
 import static org.apache.wicket.csp.CSPDirective.SCRIPT_SRC;
 import static org.apache.wicket.csp.CSPDirective.STYLE_SRC;
 import static org.apache.wicket.csp.CSPDirectiveSrcValue.NONCE;
@@ -53,6 +55,7 @@ import org.apache.wicket.authorization.strategies.CompoundAuthorizationStrategy;
 import org.apache.wicket.authroles.authorization.strategies.role.RoleAuthorizationStrategy;
 import org.apache.wicket.coep.CrossOriginEmbedderPolicyConfiguration;
 import org.apache.wicket.coep.CrossOriginEmbedderPolicyRequestCycleListener;
+import org.apache.wicket.csp.CSPDirective;
 import org.apache.wicket.csp.CSPRenderable;
 import org.apache.wicket.csp.FixedCSPValue;
 import org.apache.wicket.devutils.stateless.StatelessChecker;
@@ -70,16 +73,15 @@ import org.apache.wicket.resource.loader.NestedStringResourceLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.wicketstuff.kendo.ui.form.TextField;
+import org.wicketstuff.kendo.ui.form.autocomplete.AutoCompleteTextField;
+import org.wicketstuff.kendo.ui.form.combobox.ComboBox;
+import org.wicketstuff.kendo.ui.form.multiselect.MultiSelect;
 
 import com.giffing.wicket.spring.boot.starter.app.WicketBootSecuredWebApplication;
-import com.googlecode.wicket.kendo.ui.form.TextField;
-import com.googlecode.wicket.kendo.ui.form.autocomplete.AutoCompleteTextField;
-import com.googlecode.wicket.kendo.ui.form.combobox.ComboBox;
-import com.googlecode.wicket.kendo.ui.form.multiselect.MultiSelect;
 
 import de.agilecoders.wicket.core.Bootstrap;
 import de.agilecoders.wicket.core.settings.IBootstrapSettings;
-import de.agilecoders.wicket.webjars.WicketWebjars;
 import de.tudarmstadt.ukp.clarin.webanno.security.SpringAuthenticatedWebSession;
 import de.tudarmstadt.ukp.clarin.webanno.ui.config.FontAwesomeResourceBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
@@ -87,6 +89,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.WebAnnoJavascriptBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.theme.CustomThemeCssResourceBehavior;
 import de.tudarmstadt.ukp.inception.bootstrap.InceptionBootstrapCssReference;
 import de.tudarmstadt.ukp.inception.bootstrap.InceptionBootstrapResourceReference;
+import de.tudarmstadt.ukp.inception.security.config.CspProperties;
 import de.tudarmstadt.ukp.inception.support.SettingsUtil;
 import de.tudarmstadt.ukp.inception.support.jquery.JQueryJavascriptBehavior;
 import de.tudarmstadt.ukp.inception.support.jquery.JQueryUIResourceBehavior;
@@ -94,10 +97,10 @@ import de.tudarmstadt.ukp.inception.support.kendo.KendoFixDisabledInputComponent
 import de.tudarmstadt.ukp.inception.support.kendo.KendoResourceBehavior;
 import de.tudarmstadt.ukp.inception.support.kendo.WicketJQueryFocusPatchBehavior;
 import de.tudarmstadt.ukp.inception.support.wicket.PatternMatchingCrossOriginEmbedderPolicyRequestCycleListener;
+import de.tudarmstadt.ukp.inception.support.wicket.WicketUtil;
 import de.tudarmstadt.ukp.inception.support.wicket.resource.ContextSensitivePackageStringResourceLoader;
 import de.tudarmstadt.ukp.inception.ui.core.ErrorListener;
 import de.tudarmstadt.ukp.inception.ui.core.ErrorTestPage;
-import de.tudarmstadt.ukp.inception.ui.core.config.CspProperties;
 
 /**
  * The Wicket application class. Sets up pages, authentication, theme, and other application-wide
@@ -115,7 +118,7 @@ public abstract class WicketApplicationBase
     {
         super.init();
 
-        CompoundAuthorizationStrategy authorizationStrategy = new CompoundAuthorizationStrategy();
+        var authorizationStrategy = new CompoundAuthorizationStrategy();
         authorizationStrategy.add(new RoleAuthorizationStrategy(this));
         getSecuritySettings().setAuthorizationStrategy(authorizationStrategy);
 
@@ -124,23 +127,39 @@ public abstract class WicketApplicationBase
                 .map(FixedCSPValue::new) //
                 .forEachOrdered(imgSrcValue::add);
 
+        var mediaSrcValue = new ArrayList<CSPRenderable>(asList(SELF));
+        cspProperties.getAllowedMediaSources().stream() //
+                .map(FixedCSPValue::new) //
+                .forEachOrdered(mediaSrcValue::add);
+
+        var frameAncestorsValue = new ArrayList<CSPRenderable>(asList(SELF));
+        cspProperties.getAllowedFrameAncestors().stream() //
+                .map(FixedCSPValue::new) //
+                .forEachOrdered(frameAncestorsValue::add);
+
         getCspSettings().blocking().clear() //
                 .add(DEFAULT_SRC, NONE) //
                 .add(SCRIPT_SRC, NONCE, STRICT_DYNAMIC, UNSAFE_EVAL) //
                 // .add(STYLE_SRC, NONCE) //
                 .add(STYLE_SRC, SELF, UNSAFE_INLINE) //
                 .add(IMG_SRC, imgSrcValue.toArray(CSPRenderable[]::new)) //
+                .add(MEDIA_SRC, mediaSrcValue.toArray(CSPRenderable[]::new)) //
                 .add(CONNECT_SRC, SELF) //
                 .add(FONT_SRC, SELF) //
                 .add(MANIFEST_SRC, SELF) //
                 .add(CHILD_SRC, SELF) //
                 .add(FRAME_SRC, SELF) //
+                .add(FORM_ACTION, SELF) //
+                .add(CSPDirective.FRAME_ANCESTORS,
+                        frameAncestorsValue.toArray(CSPRenderable[]::new))
                 .add(BASE_URI, SELF); //
 
         // CSRF
         getRequestCycleListeners().add(new ResourceIsolationRequestCycleListener());
 
         installSpringSecurityContextPropagationRequestCycleListener();
+
+        installTimingListener();
 
         // Enforce COEP while inheriting any exemptions that might already have been set e.g. via
         // WicketApplicationInitConfiguration beans
@@ -152,6 +171,17 @@ public abstract class WicketApplicationBase
         initStatelessChecker();
 
         initOnce();
+    }
+
+    private void installTimingListener()
+    {
+        var settings = SettingsUtil.getSettings();
+        if (!"true".equalsIgnoreCase(settings.getProperty("debug.sendServerSideTimings"))) {
+            return;
+        }
+
+        WicketUtil.installTimingListeners(this);
+
     }
 
     @Override
@@ -258,8 +288,6 @@ public abstract class WicketApplicationBase
 
     protected void initBootstrap()
     {
-        WicketWebjars.install(this);
-
         Bootstrap.install(this);
 
         IBootstrapSettings settings = Bootstrap.getSettings(this);
@@ -307,7 +335,7 @@ public abstract class WicketApplicationBase
         getComponentInstantiationListeners().add(component -> {
             if (component instanceof ComboBox || component instanceof AutoCompleteTextField
                     || component instanceof TextField || component instanceof MultiSelect
-                    || component instanceof com.googlecode.wicket.kendo.ui.form.multiselect.lazy.MultiSelect) {
+                    || component instanceof org.wicketstuff.kendo.ui.form.multiselect.lazy.MultiSelect) {
                 component.add(new KendoFixDisabledInputComponentStylingBehavior());
             }
         });
@@ -380,8 +408,7 @@ public abstract class WicketApplicationBase
     protected void initServerTimeReporting()
     {
         Properties settings = SettingsUtil.getSettings();
-        if (DEVELOPMENT != getConfigurationType()
-                && !"true".equalsIgnoreCase(settings.getProperty("debug.sendServerSideTimings"))) {
+        if (!"true".equalsIgnoreCase(settings.getProperty("debug.sendServerSideTimings"))) {
             return;
         }
 

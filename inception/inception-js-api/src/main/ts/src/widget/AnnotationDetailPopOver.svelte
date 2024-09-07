@@ -81,11 +81,6 @@
     function onMouseMove(e: MouseEvent) {
         if (!annotation) return;
 
-        // if (!popoverTimeoutId && annotation) {
-        //     annotation = undefined
-        //     return
-        // }
-
         movePopover(e);
     }
 
@@ -146,6 +141,8 @@
     }
 
     function movePopover(e: MouseEvent) {
+        if (!popover) return
+
         const rect = popover.getBoundingClientRect();
 
         const x = e.clientX;
@@ -187,14 +184,17 @@
         <div class="text-body-secondary px-1">ID: {annotation?.vid}</div>
     </div>
     {#if annotation}
-        <div class="popover-body p-1">
+        <div class="popover-body p-0">
             {#if annotation.comments}
-                {#each annotation.comments as comment}
-                    <div class="i7n-marker-{comment.type}">{comment.comment}</div>
-                {/each}
+                <div class="p-1">
+                    {#each annotation.comments as comment}
+                        <div class="i7n-marker-{comment.type}">{comment.comment}</div>
+                    {/each}
+                </div>
             {/if}
+
             {#if loading}
-                <div class="d-flex flex-column justify-content-center">
+                <div class="d-flex flex-column justify-content-center" class:border-top={annotation.comments}>
                     <div class="d-flex flex-row justify-content-center">
                         <div class="spinner-border spinner-border-sm text-muted" role="status">
                             <span class="visually-hidden">Loading...</span>
@@ -202,17 +202,21 @@
                     </div>
                 </div>
             {:else if detailGroups}
-                {#each detailGroups as detailGroup}
-                    {#if detailGroup.title}
-                        <div class="fw-bold">{detailGroup.title}</div>
-                    {/if}
-                    {#each detailGroup.details as detail}
-                        <div>
-                            <span class="fw-semibold">{detail.label}:</span>
-                            {detail.value}
-                        </div>
+                <ul class="list-group list-group-flush" class:border-top={annotation.comments}>
+                    {#each detailGroups as detailGroup}
+                        <li class="list-group-item p-1">
+                            {#if detailGroup.title}
+                                <div class="fw-bold">{detailGroup.title}</div>
+                            {/if}
+                            {#each detailGroup.details as detail}
+                                <div class:ps-2={detailGroup.title}>
+                                    <span class="fw-semibold">{detail.label}:</span>
+                                    {detail.value}
+                                </div>
+                            {/each}
+                        </li>
                     {/each}
-                {/each}
+               </ul>
             {/if}
         </div>
     {/if}
@@ -220,7 +224,7 @@
 
 <!-- svelte-ignore css-unused-selector -->
 <style lang="scss">
-    @import "../../node_modules/bootstrap/scss/bootstrap.scss";
+    @import "bootstrap/scss/bootstrap.scss";
     @import "../style/InceptionEditorIcons.scss";
     @import "../style/InceptionEditorColors.scss";
 

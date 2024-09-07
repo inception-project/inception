@@ -17,23 +17,25 @@
  */
 package de.tudarmstadt.ukp.inception.ui.scheduling;
 
+import static de.tudarmstadt.ukp.clarin.webanno.security.WicketSecurityUtils.getCsrfTokenFromSession;
+import static de.tudarmstadt.ukp.inception.support.wicket.WicketUtil.constructEndpointUrl;
+import static de.tudarmstadt.ukp.inception.support.wicket.WicketUtil.constructWsEndpointUrl;
 import static de.tudarmstadt.ukp.inception.websocket.config.WebsocketConfig.WS_ENDPOINT;
-import static java.lang.String.format;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import java.util.Map;
-
-import javax.servlet.ServletContext;
 
 import org.apache.wicket.authorization.Action;
 import org.apache.wicket.authroles.authorization.strategies.role.annotations.AuthorizeAction;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.model.Model;
-import org.apache.wicket.request.Url;
-import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.scheduling.controller.SchedulerController;
+import de.tudarmstadt.ukp.inception.scheduling.controller.SchedulerWebsocketController;
 import de.tudarmstadt.ukp.inception.support.svelte.SvelteBehavior;
+import jakarta.servlet.ServletContext;
 
 @AuthorizeAction(action = Action.RENDER, roles = "ROLE_USER")
 public class TaskMonitorPanel
@@ -42,11 +44,68 @@ public class TaskMonitorPanel
     private static final long serialVersionUID = -9006607500867612027L;
 
     private @SpringBean ServletContext servletContext;
+    private @SpringBean SchedulerWebsocketController schedulerWebsocketController;
 
+    private final String taskStatusTopic;
+    private final String taskUpdatesTopic;
+    private boolean popupMode = true;
+    private boolean showFinishedTasks = true;
+    private String typePattern = "";
+
+    /**
+     * Create a monitoring panel that subscribes to all events for the current user.
+     * 
+     * @param aId
+     *            The non-null id of this component
+     */
     public TaskMonitorPanel(String aId)
     {
         super(aId);
         setOutputMarkupPlaceholderTag(true);
+        taskStatusTopic = "/app" + SchedulerWebsocketController.getUserTaskUpdatesTopic();
+        taskUpdatesTopic = "/user/queue" + SchedulerWebsocketController.getUserTaskUpdatesTopic();
+    }
+
+    /**
+     * Create a monitoring panel that subscribes to all events for the given project.
+     * 
+     * @param aId
+     *            The non-null id of this component
+     * @param aProject
+     *            The project to monitor.
+     */
+    public TaskMonitorPanel(String aId, Project aProject)
+    {
+        super(aId);
+        setOutputMarkupPlaceholderTag(true);
+        taskStatusTopic = "/app"
+                + SchedulerWebsocketController.getProjectTaskUpdatesTopic(aProject);
+        taskUpdatesTopic = "/topic"
+                + SchedulerWebsocketController.getProjectTaskUpdatesTopic(aProject);
+    }
+
+    public TaskMonitorPanel setPopupMode(boolean aPopupMode)
+    {
+        popupMode = aPopupMode;
+        return this;
+    }
+
+    public TaskMonitorPanel setShowFinishedTasks(boolean aKeepRemovedTasks)
+    {
+        showFinishedTasks = aKeepRemovedTasks;
+        return this;
+    }
+
+    public TaskMonitorPanel setTypePattern(String aTypePattern)
+    {
+        if (isBlank(aTypePattern)) {
+            typePattern = "";
+        }
+        else {
+            typePattern = aTypePattern;
+        }
+
+        return this;
     }
 
     @Override
@@ -55,17 +114,15 @@ public class TaskMonitorPanel
         super.onConfigure();
 
         setDefaultModel(Model.ofMap(Map.of( //
-                "wsEndpointUrl", constructEndpointUrl(), //
-                "topicChannel", SchedulerController.BASE_TOPIC)));
+                "csrfToken", getCsrfTokenFromSession(), //
+                "popupMode", popupMode, //
+                "showFinishedTasks", showFinishedTasks, //
+                "typePattern", typePattern, //
+                "endpointUrl", constructEndpointUrl(SchedulerController.BASE_URL), //
+                "wsEndpointUrl", constructWsEndpointUrl(WS_ENDPOINT), //
+                "taskStatusTopic", taskStatusTopic, //
+                "taskUpdatesTopic", taskUpdatesTopic)));
 
         add(new SvelteBehavior());
-    }
-
-    private String constructEndpointUrl()
-    {
-        Url endPointUrl = Url.parse(format("%s%s", servletContext.getContextPath(), WS_ENDPOINT));
-        endPointUrl.setProtocol("ws");
-        String fullUrl = RequestCycle.get().getUrlRenderer().renderFullUrl(endPointUrl);
-        return fullUrl;
     }
 }

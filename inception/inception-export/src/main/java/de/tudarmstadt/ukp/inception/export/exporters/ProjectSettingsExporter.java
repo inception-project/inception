@@ -17,9 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.export.exporters;
 
-import java.io.File;
 import java.io.IOException;
+import java.util.Date;
 import java.util.zip.ZipFile;
+import java.util.zip.ZipOutputStream;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.export.FullProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
@@ -49,9 +50,9 @@ public class ProjectSettingsExporter
 
     @Override
     public void exportData(FullProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
-            ExportedProject aExProject, File aStage)
+            ExportedProject aExProject, ZipOutputStream aStage)
     {
-        Project project = aRequest.getProject();
+        var project = aRequest.getProject();
         aExProject.setDescription(project.getDescription());
         // In older versions of WebAnno, the mode was an enum which was serialized as upper-case
         // during export but as lower-case in the database. This is compensating for this case.
@@ -87,6 +88,15 @@ public class ProjectSettingsExporter
         aProject.setCreated(aExProject.getCreated());
         aProject.setUpdated(aExProject.getUpdated());
         aProject.setAnonymousCuration(aExProject.isAnonymousCuration());
+
+        // Set dates to now if no dates are set in the exported project
+        var now = new Date();
+        if (aProject.getCreated() == null || aProject.getCreated().getTime() == 0) {
+            aProject.setCreated(now);
+        }
+        if (aProject.getUpdated() == null || aProject.getUpdated().getTime() == 0) {
+            aProject.setUpdated(now);
+        }
 
         // Set default to LTR on import from old WebAnno versions
         if (aExProject.getScriptDirection() == null) {

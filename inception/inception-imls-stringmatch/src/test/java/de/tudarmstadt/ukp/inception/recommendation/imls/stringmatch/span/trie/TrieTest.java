@@ -54,7 +54,9 @@ public class TrieTest
             assertThat(sut.getNode(key)).isNotNull();
         }
 
-        assertThat(sut.getNode("029332")).isNull();
+        assertThat(sut.getNode("asf sadf", 0)) //
+                .extracting($ -> $.matchLength) //
+                .isEqualTo(8);
     }
 
     @Test

@@ -20,15 +20,19 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.open;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.NEW;
+import static de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.open.AnnotationDocumentTableSortKeys.CREATED;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.open.AnnotationDocumentTableSortKeys.NAME;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.open.AnnotationDocumentTableSortKeys.STATE;
+import static de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.open.AnnotationDocumentTableSortKeys.UPDATED;
 import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.INPUT_EVENT;
 import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.KEYDOWN_EVENT;
 import static de.tudarmstadt.ukp.inception.support.lambda.KeyCodes.ENTER;
 import static java.time.Duration.ofMillis;
 import static org.apache.wicket.event.Broadcast.BUBBLE;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -36,6 +40,7 @@ import org.apache.wicket.extensions.ajax.markup.html.repeater.data.table.AjaxFal
 import org.apache.wicket.extensions.ajax.markup.html.repeater.data.table.AjaxNavigationToolbar;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.DataTable;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.IColumn;
+import org.apache.wicket.extensions.markup.html.repeater.data.table.LambdaColumn;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.panel.Panel;
@@ -74,6 +79,10 @@ public class AnnotationDocumentTable
                 item -> item.getState()));
         columns.add(new AnnotationDocumentOpenActionColumn(this, new ResourceModel("DocumentName"),
                 NAME));
+        columns.add(new LambdaColumn<>(new ResourceModel("DocumentCreated"), CREATED,
+                $ -> renderDate($.getDocument().getCreated())));
+        columns.add(new LambdaColumn<>(new ResourceModel("AnnotationsUpdated"), UPDATED,
+                $ -> renderDate($.getUpdated())));
 
         table = new DataTable<>(CID_DATA_TABLE, columns, dataProvider, 100);
         table.setOutputMarkupId(true);
@@ -125,5 +134,15 @@ public class AnnotationDocumentTable
     public void onAnnotationDocumentFilterStateChanged(AnnotationDocumentFilterStateChanged aEvent)
     {
         aEvent.getTarget().add(this);
+    }
+
+    private String renderDate(Date aDate)
+    {
+        if (aDate == null) {
+            return "";
+        }
+
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        return dateFormat.format(aDate);
     }
 }

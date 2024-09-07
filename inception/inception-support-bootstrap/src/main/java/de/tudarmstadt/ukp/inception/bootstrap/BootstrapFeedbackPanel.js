@@ -16,7 +16,7 @@
  * limitations under the License.
  */
  function bootstrapFeedbackPanelCloseAll() {
-  $('.alert').each((i, e) => {
+  $('.feedbackPanel .alert').each((i, e) => {
     console.log("Closing", e);
     bootstrap.Alert.getOrCreateInstance(e).close();
    });
@@ -24,10 +24,10 @@
  
 function bootstrapFeedbackPanelFade() {
   setTimeout(function() {
-    $(".alert.alert-success").fadeTo(600, 0, function(){
+    $(".feedbackPanel .alert.alert-success").fadeTo(600, 0, function(){
       $(".alert.alert-success").each((i, e) => bootstrap.Alert.getOrCreateInstance(e).close());
     });
-    $(".alert.alert-info").fadeTo(600, 0, function(){
+    $(".feedbackPanel .alert.alert-info").fadeTo(600, 0, function(){
       $(".alert.alert-info").each((i, e) => bootstrap.Alert.getOrCreateInstance(e).close());
     });
   }, 2000);

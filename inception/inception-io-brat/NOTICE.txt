@@ -1,0 +1,7 @@
+== DKPro Core RdfReader/RdfWriter
+
+The code in de.tudarmstadt.ukp.inception.io.brat.dkprocore and subpackages was copied from the
+DKPro Core 2.4.0 brat IO module
+
+Source: https://github.com/dkpro/dkpro-core
+License: Apache License 2.0

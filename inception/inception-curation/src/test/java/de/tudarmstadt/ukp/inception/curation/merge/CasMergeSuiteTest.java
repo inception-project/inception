@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.inception.curation.merge;
 
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
-import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior.LINK_TARGET_AS_LABEL;
 import static de.tudarmstadt.ukp.inception.curation.merge.CurationTestUtils.loadWebAnnoTsv3;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.factory.AnalysisEngineFactory.createEngineDescription;
@@ -29,10 +28,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import java.io.File;
 import java.io.FilenameFilter;
-import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.RegexFileFilter;
@@ -41,7 +37,6 @@ import org.apache.uima.cas.CAS;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.DiffResult;
 import de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoTsv3XWriter;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 
@@ -59,55 +54,44 @@ public class CasMergeSuiteTest
     @MethodSource("tsvFiles")
     public void runTest(File aReferenceFolder) throws Exception
     {
-        Map<String, List<CAS>> casByUser = new HashMap<>();
+        var casByUser = new HashMap<String, CAS>();
 
-        File[] inputFiles = aReferenceFolder
+        var inputFiles = aReferenceFolder
                 .listFiles((FilenameFilter) new RegexFileFilter("user.*\\.tsv"));
 
-        for (File inputFile : inputFiles) {
-            casByUser.put(inputFile.getName(), List.of(loadWebAnnoTsv3(inputFile).getCas()));
+        for (var inputFile : inputFiles) {
+            casByUser.put(inputFile.getName(), loadWebAnnoTsv3(inputFile).getCas());
         }
 
-        CAS curatorCas = createText(casByUser.values().stream().flatMap(Collection::stream)
-                .findFirst().get().getDocumentText());
+        var curatorCas = createText(
+                casByUser.values().stream().findFirst().get().getDocumentText());
 
-        DiffResult result = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser).toResult();
+        var result = doDiff(diffAdapters, casByUser).toResult();
 
-        sut.reMergeCas(result, document, "dummyTargetUser", curatorCas,
-                getSingleCasByUser(casByUser));
+        sut.clearAndMergeCas(result, document, "dummyTargetUser", curatorCas, casByUser);
 
         writeAndAssertEquals(curatorCas, aReferenceFolder);
     }
 
-    private Map<String, CAS> getSingleCasByUser(Map<String, List<CAS>> aCasByUserSingle)
-    {
-        Map<String, CAS> casByUserSingle = new HashMap<>();
-        for (String user : aCasByUserSingle.keySet()) {
-            casByUserSingle.put(user, aCasByUserSingle.get(user).get(0));
-        }
-
-        return casByUserSingle;
-    }
-
     private void writeAndAssertEquals(CAS curatorCas, File aReferenceFolder) throws Exception
     {
-        String targetFolder = "target/test-output/" + getClass().getSimpleName() + "/"
+        var targetFolder = "target/test-output/" + getClass().getSimpleName() + "/"
                 + aReferenceFolder.getName();
 
-        DocumentMetaData dmd = DocumentMetaData.get(curatorCas);
+        var dmd = DocumentMetaData.get(curatorCas);
         dmd.setDocumentId("curator");
-        runPipeline(curatorCas,
-                createEngineDescription(WebannoTsv3XWriter.class,
-                        WebannoTsv3XWriter.PARAM_TARGET_LOCATION, targetFolder,
-                        WebannoTsv3XWriter.PARAM_OVERWRITE, true));
+        runPipeline(curatorCas, createEngineDescription( //
+                WebannoTsv3XWriter.class, //
+                WebannoTsv3XWriter.PARAM_TARGET_LOCATION, targetFolder, //
+                WebannoTsv3XWriter.PARAM_OVERWRITE, true));
 
-        File referenceFile = new File(aReferenceFolder, "curator.tsv");
+        var referenceFile = new File(aReferenceFolder, "curator.tsv");
         assumeTrue(referenceFile.exists(), "No reference data available for this test.");
 
-        File actualFile = new File(targetFolder, "curator.tsv");
+        var actualFile = new File(targetFolder, "curator.tsv");
 
-        String reference = FileUtils.readFileToString(referenceFile, "UTF-8");
-        String actual = FileUtils.readFileToString(actualFile, "UTF-8");
+        var reference = FileUtils.readFileToString(referenceFile, "UTF-8");
+        var actual = FileUtils.readFileToString(actualFile, "UTF-8");
 
         assertThat(actual).isEqualToNormalizingNewlines(reference);
     }

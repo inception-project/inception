@@ -24,8 +24,6 @@ import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import java.io.File;
 import java.util.List;
 
-import javax.persistence.EntityManager;
-
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.RDFWriter;
 import org.eclipse.rdf4j.rio.Rio;
@@ -44,6 +42,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
+import de.tudarmstadt.ukp.inception.documents.api.RepositoryPropertiesImpl;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBasePropertiesImpl;
 import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
@@ -54,6 +53,7 @@ import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.kb.reification.Reification;
 import de.tudarmstadt.ukp.inception.kb.util.TestFixtures;
+import jakarta.persistence.EntityManager;
 
 @Transactional
 @DataJpaTest( //
@@ -90,7 +90,7 @@ public class KnowledgeBaseServiceImplQualifierIntegrationTest
     @BeforeEach
     public void setUp() throws Exception
     {
-        RepositoryProperties repoProps = new RepositoryProperties();
+        RepositoryProperties repoProps = new RepositoryPropertiesImpl();
         repoProps.setPath(temporaryFolder);
         KnowledgeBaseProperties kbProperties = new KnowledgeBasePropertiesImpl();
         EntityManager entityManager = testEntityManager.getEntityManager();

@@ -31,17 +31,17 @@ public class RelationEventAdapter
     implements EventLoggingAdapter<RelationEvent>
 {
     @Override
-    public boolean accepts(Object aEvent)
+    public boolean accepts(Class<?> aEvent)
     {
-        return aEvent instanceof RelationEvent;
+        return RelationEvent.class.isAssignableFrom(aEvent);
     }
 
     @Override
     public String getDetails(RelationEvent aEvent) throws IOException
     {
-        AnnotationDetails source = new AnnotationDetails(aEvent.getSourceAnnotation());
-        AnnotationDetails target = new AnnotationDetails(aEvent.getTargetAnnotation());
-        RelationDetails details = new RelationDetails(aEvent.getAnnotation(), source, target);
+        var source = new AnnotationDetails(aEvent.getSourceAnnotation());
+        var target = new AnnotationDetails(aEvent.getTargetAnnotation());
+        var details = new RelationDetails(aEvent.getAnnotation(), source, target);
         return JSONUtil.toJsonString(details);
     }
 

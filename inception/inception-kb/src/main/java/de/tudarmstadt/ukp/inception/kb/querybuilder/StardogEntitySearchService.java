@@ -26,7 +26,6 @@ import static org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.literalOf;
 import org.eclipse.rdf4j.sparqlbuilder.core.Prefix;
 import org.eclipse.rdf4j.sparqlbuilder.core.Variable;
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPattern;
-import org.eclipse.rdf4j.sparqlbuilder.graphpattern.TriplePattern;
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Iri;
 
 @SuppressWarnings("unused")
@@ -77,12 +76,12 @@ public class StardogEntitySearchService
     @Override
     public String getQueryString()
     {
-        StringBuilder sb = new StringBuilder();
+        var sb = new StringBuilder();
         sb.append("SERVICE ");
         sb.append(FTS_TEXT_MATCH.getQueryString());
         sb.append(" { \n");
 
-        TriplePattern pattern = bNode() //
+        var pattern = bNode() //
                 .has(FTS_QUERY, literalOf(query)) //
                 .andHas(FTS_RESULT, result);
 

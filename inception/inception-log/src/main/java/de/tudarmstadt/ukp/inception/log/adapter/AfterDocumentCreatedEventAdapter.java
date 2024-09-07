@@ -30,9 +30,9 @@ public class AfterDocumentCreatedEventAdapter
     implements EventLoggingAdapter<AfterDocumentCreatedEvent>
 {
     @Override
-    public boolean accepts(Object aEvent)
+    public boolean accepts(Class<?> aEvent)
     {
-        return aEvent instanceof AfterDocumentCreatedEvent;
+        return AfterDocumentCreatedEvent.class.isAssignableFrom(aEvent);
     }
 
     @Override
@@ -50,7 +50,7 @@ public class AfterDocumentCreatedEventAdapter
     @Override
     public String getDetails(AfterDocumentCreatedEvent aEvent) throws IOException
     {
-        Details details = new Details();
+        var details = new Details();
         details.documentName = aEvent.getDocument().getName();
         details.format = aEvent.getDocument().getFormat();
         details.state = aEvent.getDocument().getState();

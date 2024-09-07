@@ -27,7 +27,7 @@ export type CompactRelation = [
   attributes?: CompactRelationAttributes
 ]
 
-export function unpackCompactRelation (doc: AnnotatedText, raw: CompactRelation): Relation {
+export function unpackCompactRelation (doc: AnnotatedText, raw: CompactRelation): Relation | undefined {
   const cooked = new Relation()
   cooked.document = doc
   cooked.layer = doc.__getOrCreateLayer(raw[0])
@@ -36,6 +36,14 @@ export function unpackCompactRelation (doc: AnnotatedText, raw: CompactRelation)
   cooked.color = raw[3]?.c
   cooked.label = raw[3]?.l
   cooked.score = raw[3]?.s
+  cooked.hideScore = raw[3]?.hs ? true : false
   cooked.comments = unpackCompactComments(doc, cooked, raw[3]?.cm)
+
+  // Check if all arguments are defined
+  if (cooked.arguments.some(arg => arg === undefined)) {
+    console.warn(`Not decoding invalid relation relation ${cooked.vid}: undefined arguments`, cooked)
+    return undefined
+  }
+
   return cooked
 }

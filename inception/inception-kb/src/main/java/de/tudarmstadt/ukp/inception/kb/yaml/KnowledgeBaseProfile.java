@@ -17,13 +17,12 @@
  */
 package de.tudarmstadt.ukp.inception.kb.yaml;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.emptyList;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.Reader;
 import java.io.Serializable;
-import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -47,7 +46,7 @@ public class KnowledgeBaseProfile
     private String name;
 
     @JsonProperty("disabled")
-    private boolean disabled;
+    private boolean disabled = false;
 
     @JsonProperty("type")
     private RepositoryType type;
@@ -56,7 +55,7 @@ public class KnowledgeBaseProfile
     private KnowledgeBaseAccess access;
 
     @JsonProperty("mapping")
-    private KnowledgeBaseMapping mapping;
+    private KnowledgeBaseMapping mapping = new KnowledgeBaseMapping();
 
     @JsonProperty("root-concepts")
     private List<String> rootConcepts;
@@ -68,7 +67,7 @@ public class KnowledgeBaseProfile
     private KnowledgeBaseInfo info;
 
     @JsonProperty("reification")
-    private Reification reification;
+    private Reification reification = Reification.NONE;
 
     @JsonProperty("default-language")
     private String defaultLanguage;
@@ -97,8 +96,11 @@ public class KnowledgeBaseProfile
         mapping = aMapping;
         rootConcepts = aRootConcepts;
         info = aInfo;
-        reification = aReification;
         defaultLanguage = aDefaultLanguage;
+
+        if (aReification != null) {
+            reification = aReification;
+        }
 
         if (aDefaultDataset != null) {
             defaultDataset = aDefaultDataset;
@@ -187,6 +189,10 @@ public class KnowledgeBaseProfile
 
     public Reification getReification()
     {
+        if (reification == null) {
+            return Reification.NONE;
+        }
+
         return reification;
     }
 
@@ -217,9 +223,9 @@ public class KnowledgeBaseProfile
 
     public static Map<String, KnowledgeBaseProfile> readKnowledgeBaseProfiles() throws IOException
     {
-        try (Reader r = new InputStreamReader(
+        try (var r = new InputStreamReader(
                 KnowledgeBaseProfile.class.getResourceAsStream(KNOWLEDGEBASE_PROFILES_YAML),
-                StandardCharsets.UTF_8)) {
+                UTF_8)) {
             ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
             return mapper.readValue(r, new TypeReference<HashMap<String, KnowledgeBaseProfile>>()
             {

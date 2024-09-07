@@ -17,13 +17,18 @@
  */
 package de.tudarmstadt.ukp.inception.annotation.feature.link;
 
+import static de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureMultiplicityMode.DEFAULT_LINK_MULTIPLICITY;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 /**
  * Traits for link features.
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class LinkFeatureTraits
     implements Serializable
 {
@@ -31,6 +36,7 @@ public class LinkFeatureTraits
 
     private List<Long> defaultSlots = new ArrayList<>();
     private boolean enableRoleLabels = true;
+    private LinkFeatureMultiplicityMode compareMode = DEFAULT_LINK_MULTIPLICITY;
 
     public LinkFeatureTraits()
     {
@@ -52,8 +58,18 @@ public class LinkFeatureTraits
         return enableRoleLabels;
     }
 
-    public void setEnableRoleLabels(boolean enableRoleLabels)
+    public void setEnableRoleLabels(boolean aEnableRoleLabels)
     {
-        this.enableRoleLabels = enableRoleLabels;
+        enableRoleLabels = aEnableRoleLabels;
+    }
+
+    public LinkFeatureMultiplicityMode getCompareMode()
+    {
+        return compareMode;
+    }
+
+    public void setCompareMode(LinkFeatureMultiplicityMode aCompareMode)
+    {
+        compareMode = aCompareMode;
     }
 }

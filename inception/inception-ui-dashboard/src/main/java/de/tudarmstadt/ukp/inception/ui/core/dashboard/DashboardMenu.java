@@ -41,11 +41,10 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.Icon;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.ProjectMenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
-import de.tudarmstadt.ukp.inception.preferences.Key;
+import de.tudarmstadt.ukp.inception.preferences.PreferenceKey;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior;
@@ -66,14 +65,14 @@ public class DashboardMenu
     private IModel<Boolean> pinState;
     private LambdaAjaxLink pin;
 
-    public static final Key<PinState> KEY_PINNED = new Key<>(PinState.class,
+    public static final PreferenceKey<PinState> KEY_PINNED = new PreferenceKey<>(PinState.class,
             "dashboard-menus/pinned");
 
     public DashboardMenu(String aId, final IModel<List<MenuItem>> aModel)
     {
         this(aId, aModel, true);
 
-        User user = userRepository.getCurrentUser();
+        var user = userRepository.getCurrentUser();
         pinState = new LambdaModelAdapter.Builder<Boolean>() //
                 .getting(() -> userPrefService.loadTraitsForUser(KEY_PINNED, user).isPinned)
                 .setting(v -> userPrefService.saveTraitsForUser(KEY_PINNED, user, new PinState(v)))

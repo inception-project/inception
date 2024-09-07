@@ -19,8 +19,11 @@ package de.tudarmstadt.ukp.inception.annotation.layer;
 
 import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectFsByAddr;
 
+import java.lang.invoke.MethodHandles;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
@@ -30,9 +33,13 @@ import java.util.function.Supplier;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
 
+import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
+import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.ConstraintsEvaluator;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -47,19 +54,19 @@ import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistry;
 public abstract class TypeAdapter_ImplBase
     implements TypeAdapter
 {
-    private final LayerSupportRegistry layerSupportRegistry;
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
+    private final LayerSupportRegistry layerSupportRegistry;
     private final FeatureSupportRegistry featureSupportRegistry;
+    private final ConstraintsService constraintsService;
 
     private final AnnotationLayer layer;
-
     private final Supplier<Collection<AnnotationFeature>> featureSupplier;
 
     private Map<String, AnnotationFeature> features;
-
     private ApplicationEventPublisher applicationEventPublisher;
-
     private Map<AnnotationLayer, Object> layerTraitsCache;
+    private Map<AnnotationFeature, Object> featureTraitsCache;
 
     /**
      * Constructor.
@@ -81,12 +88,13 @@ public abstract class TypeAdapter_ImplBase
      *            {@link AnnotationSchemaService}.
      */
     public TypeAdapter_ImplBase(LayerSupportRegistry aLayerSupportRegistry,
-            FeatureSupportRegistry aFeatureSupportRegistry,
+            FeatureSupportRegistry aFeatureSupportRegistry, ConstraintsService aConstraintsService,
             ApplicationEventPublisher aEventPublisher, AnnotationLayer aLayer,
             Supplier<Collection<AnnotationFeature>> aFeatures)
     {
         layerSupportRegistry = aLayerSupportRegistry;
         featureSupportRegistry = aFeatureSupportRegistry;
+        constraintsService = aConstraintsService;
         applicationEventPublisher = aEventPublisher;
         layer = aLayer;
         featureSupplier = aFeatures;
@@ -119,8 +127,9 @@ public abstract class TypeAdapter_ImplBase
         if (!feature.isPresent()) {
             return null;
         }
-        return featureSupportRegistry.findExtension(feature.get())
-                .map(fs -> fs.renderFeatureValue(feature.get(), aFS)).orElse(null);
+        return featureSupportRegistry.findExtension(feature.get()) //
+                .map(fs -> fs.renderFeatureValue(feature.get(), aFS)) //
+                .orElse(null);
     }
 
     @Override
@@ -135,24 +144,95 @@ public abstract class TypeAdapter_ImplBase
             // Using a sorted map here so we have reliable positions in the map when iterating. We
             // use these positions to remember the armed slots!
             features = new TreeMap<>();
-            for (AnnotationFeature f : featureSupplier.get()) {
-                features.put(f.getName(), f);
+            for (var feature : featureSupplier.get()) {
+                features.put(feature.getName(), feature);
             }
         }
     }
 
     @Override
-    public void setFeatureValue(SourceDocument aDocument, String aUsername, CAS aCas, int aAddress,
-            AnnotationFeature aFeature, Object aValue)
+    public final boolean isFeatureValueValid(AnnotationFeature aFeature, FeatureStructure aFS)
+    {
+        var featureSupport = featureSupportRegistry.findExtension(aFeature).orElseThrow();
+
+        return featureSupport.isFeatureValueValid(aFeature, aFS);
+    }
+
+    @Override
+    public final boolean isFeatureValueEqual(AnnotationFeature aFeature, FeatureStructure aFS1,
+            FeatureStructure aFS2)
+    {
+        var featureSupport = featureSupportRegistry.findExtension(aFeature).orElseThrow();
+
+        return featureSupport.isFeatureValueEqual(aFeature, aFS1, aFS2);
+    }
+
+    @Override
+    public final void setFeatureValue(SourceDocument aDocument, String aUsername, CAS aCas,
+            int aAddress, AnnotationFeature aFeature, Object aValue)
         throws AnnotationException
     {
         var featureSupport = featureSupportRegistry.findExtension(aFeature).orElseThrow();
 
-        FeatureStructure fs = selectFsByAddr(aCas, aAddress);
+        var fs = selectFsByAddr(aCas, aAddress);
 
         var oldValue = featureSupport.getFeatureValue(aFeature, fs);
 
         featureSupport.setFeatureValue(aCas, aFeature, aAddress, aValue);
+
+        var newValue = featureSupport.getFeatureValue(aFeature, fs);
+
+        if (!Objects.equals(oldValue, newValue)) {
+            publishEvent(() -> new FeatureValueUpdatedEvent(this, aDocument, aUsername, getLayer(),
+                    fs, aFeature, newValue, oldValue));
+        }
+
+        clearHiddenFeatures(aDocument, aUsername, fs);
+    }
+
+    private void clearHiddenFeatures(SourceDocument aDocument, String aUsername,
+            FeatureStructure aFS)
+    {
+        LOG.trace("begin clear hidden");
+
+        var constraints = constraintsService.getMergedConstraints(aDocument.getProject());
+        if (constraints == null) {
+            return;
+        }
+
+        var evaluator = new ConstraintsEvaluator();
+        for (var feature : listFeatures()) {
+            if (evaluator.isHiddenConditionalFeature(constraints, aFS, feature)) {
+                var featureSupport = featureSupportRegistry.findExtension(feature).orElseThrow();
+
+                var oldValue = featureSupport.getFeatureValue(feature, aFS);
+
+                featureSupport.clearFeatureValue(feature, aFS);
+
+                var newValue = featureSupport.getFeatureValue(feature, aFS);
+
+                if (!Objects.equals(oldValue, newValue)) {
+                    publishEvent(() -> new FeatureValueUpdatedEvent(this, aDocument, aUsername,
+                            getLayer(), aFS, feature, newValue, oldValue));
+                }
+            }
+        }
+
+        LOG.trace("end clear hidden");
+    }
+
+    @Override
+    public final void pushFeatureValue(SourceDocument aDocument, String aUsername, CAS aCas,
+            int aAddress, AnnotationFeature aFeature, Object aValue)
+        throws AnnotationException
+    {
+        var featureSupport = featureSupportRegistry.findExtension(aFeature).orElseThrow();
+
+        var fs = selectFsByAddr(aCas, aAddress);
+
+        var oldValue = featureSupport.getFeatureValue(aFeature, fs);
+
+        featureSupport.pushFeatureValue(aCas, aFeature, aAddress, aValue);
 
         var newValue = featureSupport.getFeatureValue(aFeature, fs);
 
@@ -209,7 +289,9 @@ public abstract class TypeAdapter_ImplBase
     @Override
     public String getAttachTypeName()
     {
-        return getLayer().getAttachType() == null ? null : getLayer().getAttachType().getName();
+        return getLayer().getAttachType() == null //
+                ? CAS.TYPE_NAME_ANNOTATION //
+                : getLayer().getAttachType().getName();
     }
 
     @Override
@@ -222,6 +304,11 @@ public abstract class TypeAdapter_ImplBase
     public boolean isSilenced()
     {
         return applicationEventPublisher == null;
+    }
+
+    public EventCollector batchEvents()
+    {
+        return new EventCollector();
     }
 
     /**
@@ -244,5 +331,65 @@ public abstract class TypeAdapter_ImplBase
         }
 
         return Optional.empty();
+    }
+
+    /**
+     * Decodes the traits for the given feature and returns them if they implement the requested
+     * interface. This method internally caches the decoded traits, so it can be called often.
+     */
+    @Override
+    @SuppressWarnings("unchecked")
+    public <T> Optional<T> getFeatureTraits(AnnotationFeature aFeature, Class<T> aInterface)
+    {
+        if (featureTraitsCache == null) {
+            featureTraitsCache = new HashMap<>();
+        }
+
+        Object trait = featureTraitsCache.computeIfAbsent(aFeature,
+                feature -> featureSupportRegistry.findExtension(feature).get().readTraits(feature));
+
+        if (trait != null && aInterface.isAssignableFrom(trait.getClass())) {
+            return Optional.of((T) trait);
+        }
+
+        return Optional.empty();
+    }
+
+    public class EventCollector
+        implements ApplicationEventPublisher, AutoCloseable
+    {
+        private final ApplicationEventPublisher delegate;
+        private List<Object> events = new ArrayList<>();
+        private boolean committed = false;
+
+        public EventCollector()
+        {
+            delegate = TypeAdapter_ImplBase.this.applicationEventPublisher;
+            TypeAdapter_ImplBase.this.applicationEventPublisher = this;
+        }
+
+        @Override
+        public void publishEvent(Object aEvent)
+        {
+            events.add(aEvent);
+        }
+
+        public void commit()
+        {
+            committed = true;
+        }
+
+        @Override
+        public void close()
+        {
+            try {
+                if (committed && delegate != null) {
+                    events.forEach(delegate::publishEvent);
+                }
+            }
+            finally {
+                TypeAdapter_ImplBase.this.applicationEventPublisher = delegate;
+            }
+        }
     }
 }

@@ -21,10 +21,12 @@ import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.RELATION_TYPE;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.enabledWhen;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
+import static java.lang.Character.isJavaIdentifierStart;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Objects.isNull;
+import static java.util.stream.Collectors.toCollection;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import java.io.ByteArrayInputStream;
@@ -32,7 +34,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.wicket.Component;
@@ -57,15 +58,15 @@ import org.apache.wicket.util.resource.IResourceStream;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.ui.project.layers.ProjectLayersPanel.FeatureSelectionForm;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport;
 import de.tudarmstadt.ukp.inception.bootstrap.BootstrapModalDialog;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.export.LayerImportExportUtils;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.inception.schema.api.config.AnnotationSchemaProperties;
 import de.tudarmstadt.ukp.inception.schema.api.event.LayerConfigurationChangedEvent;
 import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupport;
 import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistry;
@@ -91,6 +92,7 @@ public class LayerDetailForm
 
     private @SpringBean LayerSupportRegistry layerSupportRegistry;
     private @SpringBean AnnotationSchemaService annotationService;
+    private @SpringBean AnnotationSchemaProperties annotationSchemaProperties;
     private @SpringBean DocumentService documentService;
     private @SpringBean CasStorageService casStorageService;
     private @SpringBean ApplicationEventPublisherHolder applicationEventPublisherHolder;
@@ -112,7 +114,6 @@ public class LayerDetailForm
         super(id, CompoundPropertyModel.of(aSelectedLayer));
 
         add(new DocLink("propertiesHelpLink", "sect_projects_layers_properties"));
-        add(new DocLink("technicalPropertiesHelpLink", "sect_projects_layers_properties"));
         add(new DocLink("behavioursHelpLink", "sect_projects_layers_behaviours"));
 
         featureSelectionForm = aFeatureSelectionForm;
@@ -176,7 +177,20 @@ public class LayerDetailForm
 
         attachTypeSelect = new DropDownChoice<AnnotationLayer>("attachType",
                 LoadableDetachableModel.of(this::getAttachLayerChoices),
-                new ChoiceRenderer<>("uiName"));
+                new ChoiceRenderer<>("uiName"))
+        {
+            private static final long serialVersionUID = -7022036247442205106L;
+
+            @Override
+            protected String getNullValidKey()
+            {
+                if (annotationSchemaProperties.isCrossLayerRelationsEnabled()) {
+                    return getId() + ".any";
+                }
+
+                return super.getNullValidKey();
+            };
+        };
         attachTypeSelect.setNullValid(true);
         attachTypeSelect.add(visibleWhen(() -> isNull(getModelObject().getId())
                 && RELATION_TYPE.equals(getModelObject().getType())));
@@ -184,7 +198,7 @@ public class LayerDetailForm
         add(attachTypeSelect);
 
         effectiveAttachType = new Label("effectiveAttachType",
-                LoadableDetachableModel.of(this::getEffectiveAttachTypeName));
+                LoadableDetachableModel.of(this::getEffectiveAttachTypeUiName));
         effectiveAttachType.setOutputMarkupPlaceholderTag(true);
         effectiveAttachType.add(visibleWhen(() -> !isNull(getModelObject().getId())
                 && RELATION_TYPE.equals(getModelObject().getType())));
@@ -209,24 +223,27 @@ public class LayerDetailForm
         queue(confirmationDialog = new BootstrapModalDialog("confirmationDialog").trapFocus());
     }
 
-    private String getEffectiveAttachTypeName()
+    private String getEffectiveAttachTypeUiName()
     {
-        AnnotationLayer layer = LayerDetailForm.this.getModelObject();
+        var layer = LayerDetailForm.this.getModelObject();
 
         if (layer.getAttachType() == null) {
+            if (RelationLayerSupport.TYPE.equals(layer.getType())) {
+                return "Any span";
+            }
+
             return null;
         }
 
         if (layer.getAttachFeature() != null) {
-            Project project = getModelObject().getProject();
-            AnnotationLayer actualAttachLayer = annotationService.findLayer(project,
+            var project = getModelObject().getProject();
+            var actualAttachLayer = annotationService.findLayer(project,
                     layer.getAttachFeature().getType());
             return String.format("%s :: %s -> %s", layer.getAttachType().getUiName(),
                     layer.getAttachFeature().getUiName(), actualAttachLayer.getUiName());
         }
-        else {
-            return layer.getAttachType().getUiName();
-        }
+
+        return layer.getAttachType().getUiName();
     }
 
     /**
@@ -234,8 +251,8 @@ public class LayerDetailForm
      */
     private List<AnnotationLayer> getAttachLayerChoices()
     {
-        Project project = getModelObject().getProject();
-        AnnotationLayer layer = LayerDetailForm.this.getModelObject();
+        var project = getModelObject().getProject();
+        var layer = LayerDetailForm.this.getModelObject();
 
         // If the layer has already been created, the attach layer cannot be changed anymore.
         // So in this case, we return either an empty list of a list with exactly the configured
@@ -246,13 +263,12 @@ public class LayerDetailForm
             }
 
             if (layer.getAttachFeature() != null) {
-                AnnotationLayer actualAttachLayer = annotationService.findLayer(project,
+                var actualAttachLayer = annotationService.findLayer(project,
                         layer.getAttachFeature().getType());
                 return asList(actualAttachLayer);
             }
-            else {
-                return asList(layer.getAttachType());
-            }
+
+            return asList(layer.getAttachType());
         }
 
         // Attach layers are only valid for relation layers.
@@ -261,23 +277,22 @@ public class LayerDetailForm
         }
 
         // Get all the layers
-        List<AnnotationLayer> allLayers = annotationService.listAnnotationLayer(project);
+        var allLayers = annotationService.listAnnotationLayer(project);
 
         // Candidates for attach-layers are only span layers, so lets filter these
-        List<AnnotationLayer> candidateLayers = allLayers.stream()
-                .filter(l -> SPAN_TYPE.equals(l.getType()))
-                .filter(l -> !Token.class.getName().equals(l.getName())
-                        && !Sentence.class.getName().equals(l.getName()))
-                .collect(Collectors.toCollection(ArrayList::new));
+        var candidateLayers = allLayers.stream().filter(l -> SPAN_TYPE.equals(l.getType()))
+                .filter(l -> !Token._TypeName.equals(l.getName())
+                        && !Sentence._TypeName.equals(l.getName()))
+                .collect(toCollection(ArrayList::new));
 
         // Further narrow down the candidates by removing all layers which are already the target
         // of an attachment
-        for (AnnotationLayer l : allLayers) {
+        for (var l : allLayers) {
             if (l.getAttachType() != null) {
                 // If an attach-feature is configured, then remove the layer to which this feature
                 // points from the candidate list
                 if (l.getAttachFeature() != null) {
-                    AnnotationLayer actualAttachLayer = annotationService.findLayer(project,
+                    var actualAttachLayer = annotationService.findLayer(project,
                             l.getAttachFeature().getType());
                     candidateLayers.remove(actualAttachLayer);
                 }
@@ -311,7 +326,7 @@ public class LayerDetailForm
     private void actionDeleteLayerConfirmed(AjaxRequestTarget _target) throws IOException
     {
         annotationService.removeLayer(getModelObject());
-        Project project = getModelObject().getProject();
+        var project = getModelObject().getProject();
         setModelObject(null);
         documentService.upgradeAllAnnotationDocuments(project);
         // Trigger LayerConfigurationChangedEvent
@@ -325,44 +340,47 @@ public class LayerDetailForm
         aTarget.add(getParent());
         aTarget.addChildren(getPage(), IFeedback.class);
 
-        AnnotationLayer layer = aForm.getModelObject();
+        var layer = aForm.getModelObject();
 
-        final Project project = layer.getProject();
+        final var project = layer.getProject();
 
         // Set type name only when the layer is initially created. After that, only the UI
         // name may be updated. Also any validation related to the type name only needs to
         // happen on the initial creation.
-        boolean isNewLayer = isNull(layer.getId());
+        var isNewLayer = isNull(layer.getId());
         if (isNewLayer) {
-            String layerName = StringUtils.capitalize(layer.getUiName());
-            layerName = layerName.replaceAll("\\W", "");
+            var shortLayerName = StringUtils.capitalize(layer.getUiName());
+            shortLayerName = shortLayerName.replaceAll("\\W", "");
+            var layerName = TYPE_PREFIX + shortLayerName;
 
-            if (layerName.isEmpty()) {
+            if (shortLayerName.isEmpty()) {
                 error("Unable to derive internal name from [" + layer.getUiName()
                         + "]. Please choose a different initial name and rename after the "
                         + "layer has been created.");
                 return;
             }
 
-            if (!Character.isJavaIdentifierStart(layerName.charAt(0))) {
-                error("Initial layer name cannot start with [" + layerName.charAt(0)
+            if (!isJavaIdentifierStart(shortLayerName.charAt(0))) {
+                error("Initial layer name cannot start with [" + shortLayerName.charAt(0)
                         + "]. Please choose a different initial name and rename after the "
                         + "layer has been created.");
                 return;
             }
 
-            if (annotationService.existsLayer(TYPE_PREFIX + layerName, project)) {
-                error("A layer with the name [" + TYPE_PREFIX + layerName
-                        + "] already exists in this project.");
+            if (annotationService.existsLayer(layerName, project)) {
+                error("A layer with the name [" + layerName + "] already exists in this project.");
                 return;
             }
 
-            layer.setName(TYPE_PREFIX + layerName);
+            layer.setName(layerName);
         }
 
-        if (layer.getType().equals(RELATION_TYPE) && layer.getAttachType() == null) {
-            error("A relation layer needs to attach to a span layer.");
-            return;
+        if (!annotationSchemaProperties.isCrossLayerRelationsEnabled()) {
+            if (RelationLayerSupport.TYPE.equals(layer.getType())
+                    && layer.getAttachType() == null) {
+                error("A relation layer needs to attach to a span layer.");
+                return;
+            }
         }
 
         annotationService.createOrUpdateLayer(layer);
@@ -370,12 +388,11 @@ public class LayerDetailForm
         // Initialize default features if necessary but only after the layer has actually been
         // persisted in the database.
         if (isNewLayer) {
-            TypeAdapter adapter = annotationService.getAdapter(layer);
+            var adapter = annotationService.getAdapter(layer);
             adapter.initializeLayerConfiguration(annotationService);
         }
 
         success("Settings for layer [" + layer.getUiName() + "] saved.");
-        aTarget.addChildren(getPage(), IFeedback.class);
         aTarget.add(findParent(ProjectLayersPanel.class));
         aTarget.add(featureDetailForm);
         aTarget.add(featureSelectionForm);
@@ -396,7 +413,7 @@ public class LayerDetailForm
 
     private IResourceStream exportFullTypeSystemAsUimaXml()
     {
-        try (ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
+        try (var bos = new ByteArrayOutputStream()) {
             var tsd = annotationService.getFullProjectTypeSystem(getModelObject().getProject(),
                     false);
             tsd.toXML(bos);

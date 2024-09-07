@@ -38,6 +38,13 @@ data in a particular format. The **feature flag** column shows which flags you c
 | `bioc`
 | `format.bioc.enabled`
 
+| <<sect_formats_brat_basic>>
+| `brat-basic`
+| `format.brat-basic.enabled`
+
+| <<sect_formats_brat_custom>>
+| `brat-custom`
+| `format.brat-custom.enabled`
 
 | <<sect_formats_conll2000>>
 | `conll2000`
@@ -74,6 +81,10 @@ data in a particular format. The **feature flag** column shows which flags you c
 | <<sect_formats_htmldoc>>
 | `htmldoc`
 | `format.html.enabled`
+
+| <<sect_formats_mhtml>>
+| `mhtml`
+| `format.mhtml.enabled`
 
 | <<sect_formats_html>>
 | `html`
@@ -130,6 +141,10 @@ data in a particular format. The **feature flag** column shows which flags you c
 | <<sect_formats_uimajson_legacy>>
 | `json`
 | `format.json-cas-legacy.enabled`
+
+| <<sect_formats_rdfcas,UIMA CAS RDF>>
+| `rdfcas`
+| `format.rdf-cas.enabled`
 
 | <<sect_formats_uimaxmi,UIMA XMI CAS (XML 1.0)>>
 | `xmi`

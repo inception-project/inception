@@ -21,21 +21,20 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.ner;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SENTENCES;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SINGLE_TOKEN;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.SPAN_TYPE;
 import static java.util.Arrays.asList;
 
 import org.apache.uima.cas.CAS;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactoryImplBase;
 
-@Component
 public class OpenNlpNerRecommenderFactory
     extends RecommendationEngineFactoryImplBase<OpenNlpNerRecommenderTraits>
 {
@@ -52,7 +51,7 @@ public class OpenNlpNerRecommenderFactory
     @Override
     public RecommendationEngine build(Recommender aRecommender)
     {
-        OpenNlpNerRecommenderTraits traits = new OpenNlpNerRecommenderTraits();
+        var traits = new OpenNlpNerRecommenderTraits();
         return new OpenNlpNerRecommender(aRecommender, traits);
     }
 
@@ -69,14 +68,27 @@ public class OpenNlpNerRecommenderFactory
             return false;
         }
 
-        return (asList(SINGLE_TOKEN, TOKENS).contains(aLayer.getAnchoringMode()))
-                && !aLayer.isCrossSentence() && SPAN_TYPE.equals(aLayer.getType())
-                && (CAS.TYPE_NAME_STRING.equals(aFeature.getType()) || aFeature.isVirtualFeature());
+        return (asList(SINGLE_TOKEN, TOKENS, SENTENCES).contains(aLayer.getAnchoringMode()))
+                && SpanLayerSupport.TYPE.equals(aLayer.getType())
+                && (asList(CAS.TYPE_NAME_STRING, CAS.TYPE_NAME_BOOLEAN).contains(aFeature.getType())
+                        || aFeature.isVirtualFeature());
     }
 
     @Override
     public OpenNlpNerRecommenderTraits createTraits()
     {
         return new OpenNlpNerRecommenderTraits();
+    }
+
+    @Override
+    public boolean isModelExportSupported()
+    {
+        return true;
+    }
+
+    @Override
+    public String getExportModelName(Recommender aRecommender)
+    {
+        return "model.bin";
     }
 }

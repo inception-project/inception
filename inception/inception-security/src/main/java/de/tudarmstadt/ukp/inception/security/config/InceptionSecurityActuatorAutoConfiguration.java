@@ -34,9 +34,9 @@ public class InceptionSecurityActuatorAutoConfiguration
     @Bean
     public SecurityFilterChain actuatorFilterChain(HttpSecurity aHttp) throws Exception
     {
-        aHttp.antMatcher(BASE_URL + "/**");
-        aHttp.authorizeRequests() //
-                .antMatchers(BASE_URL + "/health").permitAll() //
+        aHttp.securityMatcher(BASE_URL + "/**");
+        aHttp.authorizeHttpRequests() //
+                .requestMatchers(BASE_URL + "/health").permitAll() //
                 .anyRequest().denyAll();
         aHttp.sessionManagement() //
                 .sessionCreationPolicy(STATELESS);

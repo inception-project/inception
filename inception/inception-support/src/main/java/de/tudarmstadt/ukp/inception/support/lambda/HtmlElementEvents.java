@@ -38,4 +38,8 @@ public interface HtmlElementEvents
     public static final String KEYUP_EVENT = "keyup";
 
     public static final String KEYPRESS_EVENT = "keypress";
+
+    public static final String CLICK_EVENT = "click";
+
+    public static final String CONTEXTMENU_EVENT = "contextmenu";
 }

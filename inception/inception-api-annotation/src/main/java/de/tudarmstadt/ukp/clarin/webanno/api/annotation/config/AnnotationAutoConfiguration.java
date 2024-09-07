@@ -33,6 +33,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.LabelRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRendererImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderNotificationRenderStep;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationEndpointFeatureSupport;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.rendering.coloring.ColoringService;
@@ -89,10 +91,16 @@ public class AnnotationAutoConfiguration
             AnnotationSchemaService aAnnotationService, RepositoryProperties aRepositoryProperties,
             ColoringService aColoringService,
             AnnotationSchemaProperties aAnnotationEditorProperties,
-            PreferencesService aPreferencesService)
+            PreferencesService aPreferencesService, UserDao aUserService)
     {
         return new UserPreferencesServiceImpl(aDefaultPreferences, aAnnotationService,
                 aRepositoryProperties, aColoringService, aAnnotationEditorProperties,
-                aPreferencesService);
+                aPreferencesService, aUserService);
+    }
+
+    @Bean
+    public RelationEndpointFeatureSupport relationEndpointFeatureSupport()
+    {
+        return new RelationEndpointFeatureSupport();
     }
 }

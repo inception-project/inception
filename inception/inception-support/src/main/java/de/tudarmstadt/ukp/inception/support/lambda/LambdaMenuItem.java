@@ -24,8 +24,7 @@ import org.apache.wicket.request.RequestHandlerExecutor.ReplaceHandlerException;
 import org.apache.wicket.request.cycle.PageRequestHandlerTracker;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.slf4j.LoggerFactory;
-
-import com.googlecode.wicket.jquery.ui.widget.menu.MenuItem;
+import org.wicketstuff.jquery.ui.widget.menu.MenuItem;
 
 import de.tudarmstadt.ukp.inception.support.wicket.CommonException;
 

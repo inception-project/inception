@@ -23,8 +23,6 @@ import static java.util.stream.Collectors.joining;
 
 import java.util.stream.Stream;
 
-import javax.persistence.NoResultException;
-
 import org.apache.wicket.Page;
 import org.apache.wicket.RestartResponseException;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -34,7 +32,6 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.apache.wicket.util.string.StringValue;
 import org.apache.wicket.util.string.StringValueConversionException;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
@@ -44,6 +41,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.ui.core.AccessDeniedPage;
 import de.tudarmstadt.ukp.inception.ui.core.config.DashboardProperties;
+import jakarta.persistence.NoResultException;
 
 public abstract class ProjectPageBase
     extends ApplicationPageBase
@@ -72,7 +70,7 @@ public abstract class ProjectPageBase
 
     protected final void requireAnyProjectRole(User aUser)
     {
-        Project project = getProjectModel().getObject();
+        var project = getProjectModel().getObject();
 
         if (aUser == null || !projectService.hasAnyRole(aUser, project)) {
             getSession().error(format("To access the [%s] you need to be a member of the project",
@@ -85,7 +83,7 @@ public abstract class ProjectPageBase
     protected final void requireProjectRole(User aUser, PermissionLevel aRole,
             PermissionLevel... aMoreRoles)
     {
-        Project project = getProjectModel().getObject();
+        var project = getProjectModel().getObject();
 
         // Check access to project
         if (aUser == null || !projectService.hasRole(aUser, project, aRole, aMoreRoles)) {
@@ -142,7 +140,7 @@ public abstract class ProjectPageBase
 
     public static Project getProjectFromParameters(Page aPage, ProjectService aProjectService)
     {
-        StringValue projectParameter = aPage.getPageParameters().get(PAGE_PARAM_PROJECT);
+        var projectParameter = aPage.getPageParameters().get(PAGE_PARAM_PROJECT);
 
         if (projectParameter.isEmpty()) {
             return null;

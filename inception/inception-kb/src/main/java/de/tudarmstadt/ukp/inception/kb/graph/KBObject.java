@@ -26,9 +26,7 @@ import java.io.Serializable;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
 /**
- * A {@code KnowledgeGraphItem} represents any element (entity, type, relation, etc.) in the
- * knowledge graph. {@code KnowledgeGraphItem}s can be identified by a {@code String} identifier.
- * {@code KnowledgeGraphItem}s feature a label, a human-readable {@code String}.
+ * Represents any element (class, instance, property, etc.) in the knowledge base.
  */
 public interface KBObject
     extends Serializable
@@ -68,6 +66,8 @@ public interface KBObject
     String getDescription();
 
     void setDescription(String label);
+
+    boolean isDeprecated();
 
     /**
      * @return the language (e.g. of label and description) of this element.
@@ -122,6 +122,8 @@ public interface KBObject
         handle.setName(getName());
         handle.setLanguage(getLanguage());
         handle.setDescription(getDescription());
+        handle.setDeprecated(isDeprecated());
+        handle.setKB(getKB());
         return handle;
     }
 }

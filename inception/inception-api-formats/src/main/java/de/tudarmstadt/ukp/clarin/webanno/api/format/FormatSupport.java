@@ -19,9 +19,13 @@ package de.tudarmstadt.ukp.clarin.webanno.api.format;
 
 import static de.tudarmstadt.ukp.inception.support.io.ZipUtils.zipFolder;
 import static java.io.File.createTempFile;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableSet;
+import static java.util.Optional.empty;
 import static org.apache.commons.io.FileUtils.copyFile;
+import static org.apache.commons.io.FilenameUtils.getBaseName;
 import static org.apache.commons.io.FilenameUtils.getExtension;
+import static org.apache.commons.lang3.StringUtils.rightPad;
 import static org.apache.uima.fit.factory.AnalysisEngineFactory.createEngine;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
 import static org.apache.uima.fit.factory.ConfigurationParameterFactory.addConfigurationParameters;
@@ -30,17 +34,12 @@ import static org.apache.uima.fit.util.LifeCycleUtil.destroy;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.zip.ZipFile;
 
-import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.uima.analysis_engine.AnalysisEngine;
 import org.apache.uima.analysis_engine.AnalysisEngineDescription;
 import org.apache.uima.analysis_engine.AnalysisEngineProcessException;
@@ -57,13 +56,14 @@ import org.dkpro.core.api.io.ResourceCollectionReaderBase;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.inception.support.io.ZipUtils;
 import de.tudarmstadt.ukp.inception.support.xml.sanitizer.PolicyCollection;
 
 public interface FormatSupport
 {
     Set<String> DEFAULT_PERMITTED_RESOURCE_EXTENSIONS = unmodifiableSet(
             Set.of("apng", "avif", "gif", "jpg", "jpeg", "jfif", "pjpeg", "pjp", "png", "svg",
-                    "webp", "bmp", "tif", "tiff"));
+                    "webp", "bmp", "tif", "tiff", "mp3", "mp4"));
 
     /**
      * Returns the format identifier which is stored in in {@link SourceDocument#setFormat(String)}.
@@ -110,50 +110,14 @@ public interface FormatSupport
         return false;
     }
 
-    default boolean isAccessibelResource(File aDocFile, String aResourcePath)
+    default boolean isAccessibleResource(File aDocFile, String aResourcePath)
     {
         return DEFAULT_PERMITTED_RESOURCE_EXTENSIONS.contains(getExtension(aResourcePath));
     }
 
     default InputStream openResourceStream(File aDocFile, String aResourcePath) throws IOException
     {
-        if (!hasResources() || !isAccessibelResource(aDocFile, aResourcePath)) {
-            throw new FileNotFoundException("Resource not found [" + aResourcePath + "]");
-        }
-
-        if (aResourcePath.contains("..") || aResourcePath.contains("//")) {
-            throw new FileNotFoundException("Resource not found [" + aResourcePath + "]");
-        }
-
-        // var path = prependIfMissing(normalize(aResourcePath, true), "/");
-
-        ZipFile zipFile = null;
-        var success = false;
-        try {
-            zipFile = new ZipFile(aDocFile);
-            var entry = zipFile.getEntry(aResourcePath);
-            if (entry == null) {
-                throw new FileNotFoundException("Resource not found [" + aResourcePath + "]");
-            }
-
-            var finalZipFile = zipFile;
-            var is = new FilterInputStream(zipFile.getInputStream(entry))
-            {
-                @Override
-                public void close() throws IOException
-                {
-                    super.close();
-                    finalZipFile.close();
-                }
-            };
-            success = true;
-            return is;
-        }
-        finally {
-            if (!success && zipFile != null) {
-                zipFile.close();
-            }
-        }
+        return ZipUtils.openResourceStream(aDocFile, aResourcePath);
     }
 
     /**
@@ -161,12 +125,20 @@ public interface FormatSupport
      */
     default List<ResourceReference> getCssStylesheets()
     {
-        return Collections.emptyList();
+        return emptyList();
+    }
+
+    /**
+     * @return format-specific section elements
+     */
+    default List<String> getSectionElements()
+    {
+        return emptyList();
     }
 
     default Optional<PolicyCollection> getPolicy() throws IOException
     {
-        return Optional.empty();
+        return empty();
     }
 
     /**
@@ -206,7 +178,7 @@ public interface FormatSupport
     default void read(Project aProject, CAS cas, File aFile)
         throws ResourceInitializationException, IOException, CollectionException
     {
-        CollectionReaderDescription readerDescription = getReaderDescription(aProject, null);
+        var readerDescription = getReaderDescription(aProject, null);
         addConfigurationParameters(readerDescription,
                 ResourceCollectionReaderBase.PARAM_SOURCE_LOCATION,
                 aFile.getParentFile().getAbsolutePath(),
@@ -232,7 +204,7 @@ public interface FormatSupport
             boolean aStripExtension)
         throws ResourceInitializationException, AnalysisEngineProcessException, IOException
     {
-        AnalysisEngineDescription writer = getWriterDescription(aDocument.getProject(), null, aCas);
+        var writer = getWriterDescription(aDocument.getProject(), null, aCas);
         addConfigurationParameters(writer, //
                 JCasFileWriter_ImplBase.PARAM_USE_DOCUMENT_ID, true,
                 JCasFileWriter_ImplBase.PARAM_ESCAPE_FILENAME, false,
@@ -254,21 +226,18 @@ public interface FormatSupport
 
         // If the writer produced more than one file, we package it up as a ZIP file
         if (aTargetFolder.listFiles().length > 1) {
-            File exportFile = createTempFile("inception-document", ".zip");
-            // File exportFile = new File(aTargetFolder.getAbsolutePath() + ".zip");
+            var exportFile = createTempFile("inception-document", ".zip");
             zipFolder(aTargetFolder, exportFile);
             return exportFile;
         }
 
         // If the writer produced only a single file, then that is the result
-        String filename = FilenameUtils.getBaseName(aTargetFolder.listFiles()[0].getName());
+        var exportedFile = aTargetFolder.listFiles()[0];
         // temp-file prefix must be at least 3 chars
-        filename = StringUtils.rightPad(filename, 3, "_");
-        File exportFile = createTempFile(filename,
-                "." + FilenameUtils.getExtension(aTargetFolder.listFiles()[0].getName()));
-        // File exportFile = new File(aTargetFolder.getParent(),
-        // aTargetFolder.listFiles()[0].getName());
-        copyFile(aTargetFolder.listFiles()[0], exportFile);
+        var baseName = rightPad(getBaseName(exportedFile.getName()), 3, "_");
+        var extension = getExtension(exportedFile.getName());
+        var exportFile = createTempFile(baseName, "." + extension);
+        copyFile(exportedFile, exportFile);
         return exportFile;
     }
 }

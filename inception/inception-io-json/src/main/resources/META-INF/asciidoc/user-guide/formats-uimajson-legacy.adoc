@@ -15,7 +15,7 @@
 // limitations under the License.
 
 [[sect_formats_uimajson_legacy]]
-= UIMA CAS JSON (legacy)
+= 🪦 UIMA CAS JSON
 
 ====
 CAUTION: Legacy feature. To use this functionality, you need to enable it first by adding `format.json-cas-legacy.enabled=true` to the `settings.properties` file. 

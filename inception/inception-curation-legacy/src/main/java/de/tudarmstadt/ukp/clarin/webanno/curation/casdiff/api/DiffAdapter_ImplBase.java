@@ -17,20 +17,21 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api;
 
+import static java.util.Collections.unmodifiableSet;
+
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import org.apache.uima.cas.ArrayFS;
-import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.FSUtil;
+import org.apache.uima.jcas.cas.AnnotationBase;
 
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkFeatureDecl;
+import de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureMultiplicityMode;
 
 public abstract class DiffAdapter_ImplBase
     implements DiffAdapter
@@ -44,12 +45,14 @@ public abstract class DiffAdapter_ImplBase
     public DiffAdapter_ImplBase(String aType, Set<String> aLabelFeatures)
     {
         type = aType;
-        labelFeatures = Collections.unmodifiableSet(new HashSet<>(aLabelFeatures));
+        labelFeatures = unmodifiableSet(new HashSet<>(aLabelFeatures));
     }
 
-    public void addLinkFeature(String aName, String aRoleFeature, String aTargetFeature)
+    public void addLinkFeature(String aName, String aRoleFeature, String aTargetFeature,
+            LinkFeatureMultiplicityMode aCompareBehavior)
     {
-        linkFeatures.add(new LinkFeatureDecl(aName, aRoleFeature, aTargetFeature));
+        linkFeatures
+                .add(new LinkFeatureDecl(aName, aRoleFeature, aTargetFeature, aCompareBehavior));
     }
 
     @Override
@@ -67,7 +70,7 @@ public abstract class DiffAdapter_ImplBase
     @Override
     public LinkFeatureDecl getLinkFeature(String aFeature)
     {
-        for (LinkFeatureDecl decl : linkFeatures) {
+        for (var decl : linkFeatures) {
             if (decl.getName().equals(aFeature)) {
                 return decl;
             }
@@ -76,32 +79,31 @@ public abstract class DiffAdapter_ImplBase
     }
 
     @Override
-    public Position getPosition(int aCasId, FeatureStructure aFS)
+    public Position getPosition(FeatureStructure aFS)
     {
-        return getPosition(aCasId, aFS, null, null, -1, -1, null);
+        return getPosition(aFS, null, null, -1, -1, null);
     }
 
     @Override
-    public List<? extends Position> generateSubPositions(int aCasId, AnnotationFS aFs,
-            LinkCompareBehavior aLinkCompareBehavior)
+    public List<? extends Position> generateSubPositions(AnnotationBase aFs)
     {
-        List<Position> subPositions = new ArrayList<>();
+        var subPositions = new ArrayList<Position>();
 
-        for (LinkFeatureDecl decl : linkFeatures) {
-            Feature linkFeature = aFs.getType().getFeatureByBaseName(decl.getName());
+        for (var decl : linkFeatures) {
+            var linkFeature = aFs.getType().getFeatureByBaseName(decl.getName());
             var array = FSUtil.getFeature(aFs, linkFeature, ArrayFS.class);
 
             if (array == null) {
                 continue;
             }
 
-            for (FeatureStructure linkFS : array.toArray()) {
-                String role = linkFS.getStringValue(
+            for (var linkFS : array.toArray()) {
+                var role = linkFS.getStringValue(
                         linkFS.getType().getFeatureByBaseName(decl.getRoleFeature()));
-                AnnotationFS target = (AnnotationFS) linkFS.getFeatureValue(
+                var target = (AnnotationFS) linkFS.getFeatureValue(
                         linkFS.getType().getFeatureByBaseName(decl.getTargetFeature()));
-                Position pos = getPosition(aCasId, aFs, decl.getName(), role, target.getBegin(),
-                        target.getEnd(), aLinkCompareBehavior);
+                var pos = getPosition(aFs, decl.getName(), role, target.getBegin(), target.getEnd(),
+                        decl.getCompareBehavior());
                 subPositions.add(pos);
             }
         }

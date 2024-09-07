@@ -97,4 +97,11 @@ public class ExternalRecommenderFactory
     {
         return false;
     }
+
+    @Override
+    public boolean isRanker(Recommender aRecommender)
+    {
+        var traits = readTraits(aRecommender);
+        return traits.isRanker();
+    }
 }

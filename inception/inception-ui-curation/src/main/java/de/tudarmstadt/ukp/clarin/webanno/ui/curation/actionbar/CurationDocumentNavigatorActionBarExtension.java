@@ -22,15 +22,14 @@ import static java.lang.Integer.MAX_VALUE;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.springframework.core.annotation.Order;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBarExtension;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
-import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.CurationPage;
+import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.LegacyCurationPage;
 import de.tudarmstadt.ukp.inception.ui.curation.actionbar.opendocument.CurationOpenDocumentDialog;
+import de.tudarmstadt.ukp.inception.ui.curation.page.CurationPage;
 
 @Order(0)
-@Component
 public class CurationDocumentNavigatorActionBarExtension
     implements ActionBarExtension
 {
@@ -49,7 +48,7 @@ public class CurationDocumentNavigatorActionBarExtension
     @Override
     public boolean accepts(AnnotationPageBase aPage)
     {
-        return aPage instanceof CurationPage;
+        return aPage instanceof LegacyCurationPage || aPage instanceof CurationPage;
     }
 
     @Override
@@ -76,8 +75,7 @@ public class CurationDocumentNavigatorActionBarExtension
     private CurationOpenDocumentDialog createOpenDocumentsDialog(String aId,
             AnnotationPageBase aPage)
     {
-        CurationPage page = (CurationPage) aPage;
-        return new CurationOpenDocumentDialog(aId, aPage.getModel(), aPage.getAllowedProjects(),
-                LoadableDetachableModel.of(page::getListOfDocs));
+        return new CurationOpenDocumentDialog(aId, aPage.getModel(),
+                LoadableDetachableModel.of(aPage::getListOfDocs));
     }
 }

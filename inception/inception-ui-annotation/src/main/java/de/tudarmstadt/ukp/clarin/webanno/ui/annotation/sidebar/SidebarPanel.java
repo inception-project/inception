@@ -23,17 +23,16 @@ import java.util.List;
 import org.apache.commons.lang3.Validate;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.AttributeAppender;
+import org.apache.wicket.markup.html.panel.EmptyPanel;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.springframework.context.ApplicationContext;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase2;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
-import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.support.spring.ApplicationContextProvider;
 
 public class SidebarPanel
@@ -45,13 +44,12 @@ public class SidebarPanel
 
     private AnnotationActionHandler actionHandler;
     private CasProvider casProvider;
-    private AnnotationPage annotationPage;
-    private IModel<AnnotatorState> stateModel;
+    private AnnotationPageBase2 annotationPage;
     private SidebarTabbedPanel<SidebarTab> tabsPanel;
 
-    public SidebarPanel(String aId, IModel<AnnotatorState> aModel, IModel<Integer> aWidthModel,
+    public SidebarPanel(String aId, IModel<Integer> aWidthModel,
             final AnnotationActionHandler aActionHandler, final CasProvider aCasProvider,
-            AnnotationPage aAnnotationPage)
+            AnnotationPageBase2 aAnnotationPage)
     {
         super(aId);
 
@@ -62,9 +60,9 @@ public class SidebarPanel
         actionHandler = aActionHandler;
         casProvider = aCasProvider;
         annotationPage = aAnnotationPage;
-        stateModel = aModel;
 
-        tabsPanel = new SidebarTabbedPanel<>("leftSidebarContent", makeTabs(), stateModel);
+        tabsPanel = new SidebarTabbedPanel<>("leftSidebarContent", makeTabs(),
+                annotationPage.getModel());
         add(tabsPanel);
 
         add(new AttributeAppender("class",
@@ -82,7 +80,9 @@ public class SidebarPanel
         super.onConfigure();
 
         // Only show sidebar if a document is selected
-        setVisible(stateModel.getObject() != null && stateModel.getObject().getDocument() != null);
+        setVisible(annotationPage.getModel() //
+                .map(state -> state.getDocument() != null) //
+                .orElse(false).getObject());
     }
 
     public void refreshTabs(AjaxRequestTarget aTarget)
@@ -96,30 +96,31 @@ public class SidebarPanel
 
     private List<SidebarTab> makeTabs()
     {
-        List<SidebarTab> tabs = new ArrayList<>();
-        for (AnnotationSidebarFactory factory : sidebarRegistry.getSidebarFactories()) {
+        var tabs = new ArrayList<SidebarTab>();
+        for (var factory : sidebarRegistry.getSidebarFactories()) {
 
-            if (!factory.applies(stateModel.getObject())) {
+            if (!factory.accepts(annotationPage)) {
                 continue;
             }
 
-            String factoryId = factory.getBeanName();
-            SidebarTab tab = new SidebarTab(Model.of(factory.getDisplayName()),
-                    factory.getBeanName())
+            var factoryId = factory.getBeanName();
+            var tab = new SidebarTab(Model.of(factory.getDisplayName()), factory.getBeanName())
             {
                 private static final long serialVersionUID = 2144644282070158783L;
 
                 @Override
-                public Panel getPanel(String Id)
+                public Panel getPanel(String aId)
                 {
                     try {
                         // We need to get the methods and services directly in here so
                         // that the lambda doesn't have a dependency on the non-serializable
                         // AnnotationSidebarFactory class.
-                        ApplicationContext ctx = ApplicationContextProvider.getApplicationContext();
-                        return ctx.getBean(AnnotationSidebarRegistry.class)
-                                .getSidebarFactory(factoryId)
-                                .create(Id, stateModel, actionHandler, casProvider, annotationPage);
+                        var ctx = ApplicationContextProvider.getApplicationContext();
+                        return ctx.getBean(AnnotationSidebarRegistry.class) //
+                                .getExtension(factoryId) //
+                                .map($ -> (Panel) $.create(aId, actionHandler, casProvider,
+                                        annotationPage))
+                                .orElseGet(() -> new EmptyPanel(aId));
                     }
                     catch (Exception e) {
                         throw new RuntimeException(e);

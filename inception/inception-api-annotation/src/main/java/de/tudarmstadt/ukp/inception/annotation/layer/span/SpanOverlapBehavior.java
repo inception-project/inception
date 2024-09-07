@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.annotation.layer.span;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectOverlapping;
 import static de.tudarmstadt.ukp.inception.rendering.vmodel.VCommentType.ERROR;
+import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.selectOverlapping;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
 import static org.apache.uima.fit.util.CasUtil.selectAt;
@@ -134,7 +134,7 @@ public class SpanOverlapBehavior
 
     @Override
     public void onRender(TypeAdapter aAdapter, VDocument aResponse,
-            Map<AnnotationFS, VSpan> aAnnoToSpanIdx, int aPageBegin, int aPageEnd)
+            Map<AnnotationFS, VSpan> aAnnoToSpanIdx)
     {
         if (aAnnoToSpanIdx.isEmpty()) {
             return;
@@ -157,20 +157,20 @@ public class SpanOverlapBehavior
             overlappingOrStackingSpans(sortedSpans, stacking, overlapping);
 
             overlapping.forEach(fs -> aResponse
-                    .add(new VComment(new VID(fs), ERROR, "Overlap is not permitted.")));
+                    .add(new VComment(VID.of(fs), ERROR, "Overlap is not permitted.")));
 
             stacking.forEach(fs -> aResponse
-                    .add(new VComment(new VID(fs), ERROR, "Stacking is not permitted.")));
+                    .add(new VComment(VID.of(fs), ERROR, "Stacking is not permitted.")));
             break;
         }
         case STACKING_ONLY:
             // Here, we must find all overlapping relations because they are not permitted
             overlappingNonStackingSpans(sortedSpans).forEach(fs -> aResponse
-                    .add(new VComment(new VID(fs), ERROR, "Only stacking is permitted.")));
+                    .add(new VComment(VID.of(fs), ERROR, "Only stacking is permitted.")));
             break;
         case OVERLAP_ONLY:
             stackingSpans(sortedSpans).forEach(fs -> aResponse
-                    .add(new VComment(new VID(fs), ERROR, "Stacking is not permitted.")));
+                    .add(new VComment(VID.of(fs), ERROR, "Stacking is not permitted.")));
             break;
         }
     }

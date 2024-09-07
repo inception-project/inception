@@ -30,7 +30,12 @@ public interface EventLoggingAdapter<T>
     public static final String SYSTEM_USER = "<SYSTEM>";
     public static final String ANONYMOUS_USER = "anonymousUser";
 
-    boolean accepts(Object aEvent);
+    boolean accepts(Class<?> aEvent);
+
+    default boolean isLoggable(T aEvent)
+    {
+        return true;
+    }
 
     default String getDetails(T aEvent) throws Exception
     {
@@ -54,12 +59,11 @@ public interface EventLoggingAdapter<T>
 
     default Date getCreated(T aEvent)
     {
-        if (aEvent instanceof ApplicationEvent) {
-            return new Date(((ApplicationEvent) aEvent).getTimestamp());
+        if (aEvent instanceof ApplicationEvent event) {
+            return new Date(event.getTimestamp());
         }
-        else {
-            return new Date();
-        }
+
+        return new Date();
     }
 
     default String getEvent(T aEvent)

@@ -20,14 +20,15 @@ package de.tudarmstadt.ukp.inception.ui.curation.sidebar;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
+import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_USER;
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
-
-import java.util.ArrayList;
-import java.util.List;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -35,14 +36,21 @@ import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.security.core.session.SessionRegistry;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.curation.service.CurationDocumentService;
+import de.tudarmstadt.ukp.inception.curation.service.CurationMergeService;
+import de.tudarmstadt.ukp.inception.curation.service.CurationService;
+import de.tudarmstadt.ukp.inception.curation.sidebar.CurationSidebarProperties;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
+import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 
 @DataJpaTest(excludeAutoConfiguration = LiquibaseAutoConfiguration.class, showSql = false, //
         properties = { //
@@ -52,12 +60,22 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
         "de.tudarmstadt.ukp.inception.curation", //
         "de.tudarmstadt.ukp.clarin.webanno.model", //
         "de.tudarmstadt.ukp.clarin.webanno.security.model" })
+@ExtendWith(MockitoExtension.class)
 public class CurationSidebarServiceTest
 {
     private CurationSidebarService sut;
 
-    @Autowired
-    private TestEntityManager testEntityManager;
+    private @Autowired TestEntityManager testEntityManager;
+
+    private @MockBean DocumentService documentService;
+    private @MockBean SessionRegistry sessionRegistry;
+    private @MockBean ProjectService projectService;
+    private @MockBean UserDao userRegistry;
+    private @MockBean CasStorageService casStorageService;
+    private @MockBean CurationService curationService;
+    private @MockBean CurationMergeService curationMergeService;
+    private @MockBean CurationSidebarProperties curationSidebarProperties;
+    private @MockBean CurationDocumentService curationDocumentService;
 
     private Project testProject;
     private SourceDocument testDocument;
@@ -67,13 +85,14 @@ public class CurationSidebarServiceTest
     @BeforeEach
     public void setUp() throws Exception
     {
-        sut = new CurationSidebarServiceImpl(testEntityManager.getEntityManager(), null, null, null,
-                null, null);
+        sut = new CurationSidebarServiceImpl(testEntityManager.getEntityManager(), documentService,
+                sessionRegistry, projectService, userRegistry, casStorageService, curationService,
+                curationMergeService, curationSidebarProperties, curationDocumentService);
 
         // create users
-        User current = new User("current", Role.ROLE_USER);
-        beate = new User("beate", Role.ROLE_USER);
-        kevin = new User("kevin", Role.ROLE_USER);
+        var current = new User("current", ROLE_USER);
+        beate = new User("beate", ROLE_USER);
+        kevin = new User("kevin", ROLE_USER);
         testEntityManager.persist(current);
         testEntityManager.persist(beate);
         testEntityManager.persist(kevin);
@@ -85,15 +104,11 @@ public class CurationSidebarServiceTest
         testEntityManager.persist(new ProjectPermission(testProject, "kevin", ANNOTATOR));
         testEntityManager.persist(new ProjectPermission(testProject, "beate", CURATOR));
 
-        // create sourcedocument
+        // create source document
         testDocument = new SourceDocument("testDoc", testProject, "text");
         testEntityManager.persist(testDocument);
 
-        // add selected users to sut
-        List<User> selectedUsers = new ArrayList<>();
-        selectedUsers.add(kevin);
-        selectedUsers.add(beate);
-        sut.setSelectedUsers("current", testProject.getId(), selectedUsers);
+        sut.setSelectedUsers("current", testProject.getId(), asList(kevin, beate));
     }
 
     @AfterEach
@@ -103,42 +118,9 @@ public class CurationSidebarServiceTest
     }
 
     @Test
-    public void listCuratableUsers_ShouldReturnFinishedUsers()
-    {
-        // create finished annotation documents
-        AnnotationDocument annoDoc1 = new AnnotationDocument("beate", testDocument);
-        annoDoc1.setState(AnnotationDocumentState.FINISHED);
-        AnnotationDocument annoDoc2 = new AnnotationDocument("kevin", testDocument);
-        annoDoc2.setAnnotatorState(AnnotationDocumentState.IGNORE);
-        testEntityManager.persist(annoDoc1);
-        testEntityManager.persist(annoDoc2);
-
-        List<User> finishedUsers = sut.listCuratableUsers(testDocument);
-
-        assertThat(finishedUsers).containsExactly(beate, kevin);
-    }
-
-    @Test
-    public void listFinishedUsers_ShouldReturnFinishedUsers()
-    {
-        // create finished annotation documents
-        AnnotationDocument annoDoc1 = new AnnotationDocument("beate", testDocument);
-        annoDoc1.setState(AnnotationDocumentState.FINISHED);
-        AnnotationDocument annoDoc2 = new AnnotationDocument("kevin", testDocument);
-        annoDoc2.setState(AnnotationDocumentState.FINISHED);
-        testEntityManager.persist(annoDoc1);
-        testEntityManager.persist(annoDoc2);
-
-        List<User> finishedUsers = sut.listCuratableUsers(testDocument);
-
-        assertThat(finishedUsers).containsExactly(beate, kevin);
-    }
-
-    @Test
     public void listUsersReadyForCuration_NoFinishedUsers()
     {
-        List<User> finishedUsers = sut.listUsersReadyForCuration("current", testProject,
-                testDocument);
+        var finishedUsers = sut.listUsersReadyForCuration("current", testProject, testDocument);
 
         assertThat(finishedUsers).isEmpty();
     }

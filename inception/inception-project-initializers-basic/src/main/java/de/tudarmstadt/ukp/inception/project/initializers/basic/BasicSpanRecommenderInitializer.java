@@ -59,7 +59,7 @@ public class BasicSpanRecommenderInitializer
     @Override
     public String getName()
     {
-        return "Basic span recommender";
+        return "Generic span recommender";
     }
 
     @Override

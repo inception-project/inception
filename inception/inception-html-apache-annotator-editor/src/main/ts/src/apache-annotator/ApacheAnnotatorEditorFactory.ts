@@ -46,23 +46,33 @@ export class ApacheAnnotatorEditorFactory implements AnnotationEditorFactory {
     // we use the child as the target element. This is to support the case where the body is
     // used as a container for the additional editor functionality.
     const body = element.ownerDocument?.body
-    if (body && body === targetElement) {
-      // Add a (scrolling) wrapper around the target element
+    if (body) {
+      // Add a (scrolling) wrapper in the body
       const wrapper = element.ownerDocument.createElement('div')
       wrapper.classList.add('i7n-wrapper')
-      Array.from(body.childNodes).forEach((child) => wrapper.appendChild(child))
-      body.appendChild(wrapper)
       wrapper.style.overflow = 'auto'
-      targetElement = wrapper
+
+      if (body === targetElement) {
+        Array.from(targetElement.childNodes).forEach((child) => wrapper.appendChild(child))
+        targetElement = wrapper
+      }
+      else  {
+        Array.from(body.childNodes).forEach((child) => wrapper.appendChild(child))
+      }
+
+      body.appendChild(wrapper)
 
       // Configure a "full screen" flex layout on the body
       body.style.display = 'flex'
       body.style.flexDirection = 'column'
       body.style.height = '100vh'
       body.style.width = '100vw'
+      body.style.overflow = 'hidden'
     }
 
-    element[PROP_EDITOR] = new ApacheAnnotatorEditor(targetElement, ajax, props.userPreferencesKey)
+    const sectionElementLocalNames = new Set<string>(props.sectionElements || [])
+
+    element[PROP_EDITOR] = new ApacheAnnotatorEditor(targetElement, ajax, props.userPreferencesKey, sectionElementLocalNames)
     return element[PROP_EDITOR]
   }
 

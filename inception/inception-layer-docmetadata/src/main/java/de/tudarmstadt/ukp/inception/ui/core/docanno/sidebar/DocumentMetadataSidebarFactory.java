@@ -19,12 +19,13 @@ package de.tudarmstadt.ukp.inception.ui.core.docanno.sidebar;
 
 import org.apache.wicket.Component;
 import org.apache.wicket.model.IModel;
+import org.springframework.core.annotation.Order;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.Icon;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase2;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebarFactory_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
@@ -40,6 +41,7 @@ import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerS
  * {@link DocumentMetadataLayerSupportAutoConfiguration#documentMetadataSidebarFactory}.
  * </p>
  */
+@Order(1500)
 public class DocumentMetadataSidebarFactory
     extends AnnotationSidebarFactory_ImplBase
 {
@@ -81,11 +83,9 @@ public class DocumentMetadataSidebarFactory
     }
 
     @Override
-    public AnnotationSidebar_ImplBase create(String aId, IModel<AnnotatorState> aModel,
-            AnnotationActionHandler aActionHandler, CasProvider aCasProvider,
-            AnnotationPage aAnnotationPage)
+    public AnnotationSidebar_ImplBase create(String aId, AnnotationActionHandler aActionHandler,
+            CasProvider aCasProvider, AnnotationPageBase2 aAnnotationPage)
     {
-        return new DocumentMetadataSidebar(aId, aModel, aActionHandler, aCasProvider,
-                aAnnotationPage);
+        return new DocumentMetadataSidebar(aId, aActionHandler, aCasProvider, aAnnotationPage);
     }
 }

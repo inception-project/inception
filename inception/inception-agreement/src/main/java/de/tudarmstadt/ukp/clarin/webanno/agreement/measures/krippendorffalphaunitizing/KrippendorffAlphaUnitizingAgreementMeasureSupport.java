@@ -17,41 +17,35 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.agreement.measures.krippendorffalphaunitizing;
 
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.SPAN_TYPE;
-
-import java.util.List;
-import java.util.Map;
-
-import org.apache.uima.cas.CAS;
+import org.apache.wicket.markup.html.panel.EmptyPanel;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
-import org.danekja.java.util.function.serializable.SerializableSupplier;
 import org.dkpro.statistics.agreement.unitizing.IUnitizingAnnotationStudy;
-import org.springframework.stereotype.Component;
 
-import de.tudarmstadt.ukp.clarin.webanno.agreement.PairwiseAnnotationResult;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.AgreementResult_ImplBase;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.PairwiseAgreementResult;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.PerDocumentAgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasure;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasureSupport_ImplBase;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.DefaultAgreementTraits;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.results.perdoc.PerDocumentAgreementTable;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.results.unitizing.FullUnitizingAgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.results.unitizing.PairwiseUnitizingAgreementTable;
-import de.tudarmstadt.ukp.clarin.webanno.agreement.results.unitizing.UnitizingAgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
 
-@Component
 public class KrippendorffAlphaUnitizingAgreementMeasureSupport
     extends AgreementMeasureSupport_ImplBase<//
-            KrippendorffAlphaUnitizingAgreementTraits, //
-            PairwiseAnnotationResult<UnitizingAgreementResult>, //
+            DefaultAgreementTraits, //
+            FullUnitizingAgreementResult, //
             IUnitizingAnnotationStudy>
 {
-    private final AnnotationSchemaService annotationService;
+    public static final String ID = "KrippendorffAlphaUnitizing";
 
-    public KrippendorffAlphaUnitizingAgreementMeasureSupport(
-            AnnotationSchemaService aAnnotationService)
+    @Override
+    public String getId()
     {
-        super();
-        annotationService = aAnnotationService;
+        return ID;
     }
 
     @Override
@@ -63,9 +57,9 @@ public class KrippendorffAlphaUnitizingAgreementMeasureSupport
     @Override
     public boolean accepts(AnnotationFeature aFeature)
     {
-        AnnotationLayer layer = aFeature.getLayer();
+        var layer = aFeature.getLayer();
 
-        if (SPAN_TYPE.equals(layer.getType())) {
+        if (SpanLayerSupport.TYPE.equals(layer.getType())) {
             return true;
         }
 
@@ -73,30 +67,43 @@ public class KrippendorffAlphaUnitizingAgreementMeasureSupport
     }
 
     @Override
-    public AgreementMeasure<PairwiseAnnotationResult<UnitizingAgreementResult>> createMeasure(
-            AnnotationFeature aFeature, KrippendorffAlphaUnitizingAgreementTraits aTraits)
+    public AgreementMeasure<FullUnitizingAgreementResult> createMeasure(AnnotationFeature aFeature,
+            DefaultAgreementTraits aTraits)
     {
-        return new KrippendorffAlphaUnitizingAgreementMeasure(aFeature, aTraits, annotationService);
+        return new KrippendorffAlphaUnitizingAgreementMeasure(aFeature, aTraits);
     }
 
     @Override
     public Panel createTraitsEditor(String aId, IModel<AnnotationFeature> aFeature,
-            IModel<KrippendorffAlphaUnitizingAgreementTraits> aModel)
+            IModel<DefaultAgreementTraits> aModel)
     {
         return new KrippendorffAlphaUnitizingAgreementTraitsEditor(aId, aFeature, aModel);
     }
 
     @Override
-    public KrippendorffAlphaUnitizingAgreementTraits createTraits()
+    public DefaultAgreementTraits createTraits()
     {
-        return new KrippendorffAlphaUnitizingAgreementTraits();
+        return new DefaultAgreementTraits();
     }
 
     @Override
-    public Panel createResultsPanel(String aId,
-            IModel<PairwiseAnnotationResult<UnitizingAgreementResult>> aResults,
-            SerializableSupplier<Map<String, List<CAS>>> aCasMapSupplier)
+    public Panel createResultsPanel(String aId, IModel<? extends AgreementResult_ImplBase> aResults,
+            DefaultAgreementTraits aTraits)
     {
-        return new PairwiseUnitizingAgreementTable(aId, aResults);
+        if (aResults.getObject() instanceof PairwiseAgreementResult) {
+            return new PairwiseUnitizingAgreementTable(aId, (IModel) aResults, aTraits);
+        }
+
+        if (aResults.getObject() instanceof PerDocumentAgreementResult) {
+            return new PerDocumentAgreementTable(aId, (IModel) aResults, aTraits);
+        }
+
+        return new EmptyPanel(aId);
+    }
+
+    @Override
+    public boolean isSupportingMoreThanTwoRaters()
+    {
+        return true;
     }
 }

@@ -24,7 +24,11 @@
       <div class="card-header">
         <wicket:message key="activeLearning"/>
       </div>
-      <div class="card-body flex-v-container">
+      <div class="scrolling card-body flex-v-container">
+      
+        <span wicket:id="notAvailableNotice" class="flex-content no-data-notice">
+          <wicket:message key="notAvailableNotice"/>
+        </span>
       
         <form wicket:id="sessionControlForm">
           <div class="input-group">
@@ -41,9 +45,9 @@
         <div wicket:id="mainContainer" class="flex-content flex-v-container flex-gutter flex-only-internal-gutter">
           <span class="flex-content no-data-notice" wicket:id="noRecommenders">no Recommenders</span>
         
-          <div class="card mt-3" wicket:enclosure="noRecommendationLabel">
-            <div class="card-body">
-              <span class="no-data-notice" wicket:id="noRecommendationLabel"></span>
+          <div class="card flex-content mt-3" wicket:enclosure="noRecommendationLabel">
+            <div class="card-body d-flex">
+              <span class="no-data-notice flex-fill" wicket:id="noRecommendationLabel"></span>
             </div>
           </div>
   
@@ -54,7 +58,7 @@
             </div>
           </form>
           
-          <form class="card" wicket:id="recommendationForm">
+          <form class="card flex-content" wicket:id="recommendationForm">
             <div class="card-header small">
               <wicket:message key="recommendation"/>
             </div>
@@ -111,7 +115,7 @@
             </div>
           </form>
   
-          <form class="card flex-content"
+          <form class="card flex-content" style="min-height: 10em;"
             wicket:id="learningHistoryForm">
             <div class="card-header small">
               <wicket:message key="history"/>

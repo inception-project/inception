@@ -44,7 +44,8 @@ import de.tudarmstadt.ukp.inception.support.text.TextUtils;
 
 /**
  * <p>
- * This class is exposed as a Spring Component via {@link DiamCompactV2AutoConfig#compactSerializerV2}.
+ * This class is exposed as a Spring Component via
+ * {@link DiamCompactV2AutoConfig#compactSerializerV2}.
  * </p>
  */
 public class CompactSerializerV2Impl
@@ -98,7 +99,7 @@ public class CompactSerializerV2Impl
                 continue;
             }
 
-            layers.add(new CompactLayer(layer.getId(), layer.getUiName()));
+            layers.add(new CompactLayer(layer.getId(), layer.getUiName(), layer.getType()));
 
             for (VSpan vspan : aVDoc.spans(layer.getId())) {
                 var cspan = renderSpan(aRequest, vspan);
@@ -125,6 +126,7 @@ public class CompactSerializerV2Impl
                 getArgument(varc.getSource(), varc.getTarget()), varc.getLabelHint(),
                 varc.getColorHint());
         carc.getAttributes().setScore(varc.getScore());
+        carc.getAttributes().setHideScore(varc.isHideScore());
         return carc;
     }
 
@@ -151,6 +153,7 @@ public class CompactSerializerV2Impl
                     vspan.getColorHint());
         }
         cspan.getAttributes().setScore(vspan.getScore());
+        cspan.getAttributes().setHideScore(vspan.isHideScore());
         return cspan;
     }
 

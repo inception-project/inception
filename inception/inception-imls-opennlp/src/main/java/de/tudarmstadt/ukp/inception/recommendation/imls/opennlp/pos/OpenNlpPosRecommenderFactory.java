@@ -26,7 +26,6 @@ import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.SPAN_TYPE;
 
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.model.IModel;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -35,7 +34,6 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.AbstractTrait
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactoryImplBase;
 
-@Component
 public class OpenNlpPosRecommenderFactory
     extends RecommendationEngineFactoryImplBase<OpenNlpPosRecommenderTraits>
 {
@@ -88,5 +86,17 @@ public class OpenNlpPosRecommenderFactory
     public boolean isMultipleRecommendationProvider()
     {
         return true;
+    }
+
+    @Override
+    public boolean isModelExportSupported()
+    {
+        return true;
+    }
+
+    @Override
+    public String getExportModelName(Recommender aRecommender)
+    {
+        return "model.bin";
     }
 }

@@ -44,7 +44,6 @@ export type Message = 'dispatchAsynchError' | 'collectionLoaded' | 'requestRende
   | 'svgWidth' | 'configurationUpdated' | 'newSourceData' | 'init' | 'click'
   | 'contextmenu' | 'isReloadOkay' | 'spanAndAttributeTypesLoaded'
   | 'keydown' | 'dragstart' | 'mousedown' | 'mouseup' | 'mousemove'
-  | 'displaySpanComment' | 'displayArcComment' | 'displaySentComment' | 'hideComment'
   | 'resize' | 'displaySpanButtons' | 'configurationChanged'
   | 'mouseover' | 'mouseout' | 'dblclick' | 'keypress' | 'touchstart' | 'touchend'
   | 'collectionChanged' | 'renderData' | 'renderDataPatch' | 'triggerRender'
@@ -95,7 +94,7 @@ export class Dispatcher {
   }
 
   post (message: Message, args?, returnType?: 'any' | 'all') {
-    // console.debug(`brat dispacher processing ${message}`)
+    // console.trace(`brat dispacher processing ${message}`)
 
     if (args === undefined) {
       args = []

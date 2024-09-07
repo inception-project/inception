@@ -32,7 +32,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 public abstract class RecommendationEngineFactoryImplBase<T>
     implements RecommendationEngineFactory<T>
 {
-    private Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     @Override
     public AbstractTraitsEditor createTraitsEditor(String aId, IModel<Recommender> aModel)
@@ -65,7 +65,7 @@ public abstract class RecommendationEngineFactoryImplBase<T>
             traits = fromJsonString((Class<T>) createTraits().getClass(), aRecommender.getTraits());
         }
         catch (IOException e) {
-            log.error("Error while reading traits", e);
+            LOG.error("Error while reading traits", e);
         }
 
         if (traits == null) {
@@ -83,7 +83,7 @@ public abstract class RecommendationEngineFactoryImplBase<T>
             aRecommender.setTraits(json);
         }
         catch (IOException e) {
-            log.error("Error while writing traits", e);
+            LOG.error("Error while writing traits", e);
         }
     }
 }

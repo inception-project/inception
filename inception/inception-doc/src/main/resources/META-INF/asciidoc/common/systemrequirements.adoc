@@ -20,8 +20,11 @@
 [cols="2*"]
 |===
 | Browser
-| Chrome or Safari
+| Chrome or Safari (latest versions)
 |===
+
+[.small]
+You should also be able to use {product-name} with other browsers such as Firefox, Brave, etc. However, those are less regularly tested by the developers. It is recommended to always use the latest version of any browser product you may be using to ensure best compatibility.
 
 .Requirements to run the standalone version
 [cols="2*"]
@@ -30,8 +33,11 @@
 | Linux (64bit), macOS (64bit), Windows (64bit)
 
 | Java Runtime Environment
-| version 11 or higher
+| version 17 or higher
 |===
+
+[.small]
+The examples in this guide are based on a recent Debian Linux. Most of them should apply quite directly to Debian-based distributions like e.g. Ubuntu. {product-name} will run on other distributions as well, but you may have to use different commands for managing users, installing software, etc.
 
 .Requirements run the server version
 [cols="2*"]
@@ -40,11 +46,15 @@
 | Linux (64bit), macOS (64bit), Windows (64bit)
 
 | Java Runtime Environment
-| version 11 or higher
+| version 17 or higher
 
 | MariaDB Server (or compatible)
-| version 10.5 or higher 
+| MariaDB version 10.6 or higher +
+  MySQL version 8.0 or higher
 |===
+
+[.small]
+You may be able to run {product-name} on older database server versions but it may require extra configuration that is not included in this documentation. You may consider referring to older versions of this administrators guide included with older versions of {product-name}.
 
 .Requirements for a Docker-based deployment
 [cols="2*"]
@@ -52,5 +62,3 @@
 | Docker
 | version 24 or higher (arm64 or amd64)
 |===
-
-NOTE: link:https://mariadb.org[MariaDB] is an open source drop-in replacement for link:https://www.mysql.com[MySQL]. So generally, you can also use MySQL instead of MariaDB. Also, as far as we know, we do not use any fancy features of MariaDB 10.5 and did in fact until recently always use MySQL 5. So you can probably also use an older version of MariaDB or MySQL... but why should you? Think of all the unfixed bugs and consider also upgrading your database if you do a fresh installation of {product-name} - or use <<admin_guide.adoc#sect_docker,Docker>>.

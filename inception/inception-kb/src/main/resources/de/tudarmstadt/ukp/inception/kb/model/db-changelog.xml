@@ -3,7 +3,7 @@
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="
     http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd 
-    http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+    http://www.liquibase.org/xml/ns/dbchangelog https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.27.xsd">
 
   <changeSet author="INCEpTION Team" id="1512303750846-7">
     <preConditions onFail="MARK_RAN">
@@ -471,6 +471,22 @@
     <addColumn tableName="knowledgebase">
       <column name="traits" type="LONGTEXT">
         <constraints nullable="true" />
+      </column>
+    </addColumn>
+  </changeSet>
+
+  <changeSet author="INCEpTION Team" id="20240128-1">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="knowledgebase" columnName="deprecationPropertyIri"/>
+      </not>
+    </preConditions>
+
+    <addColumn tableName="knowledgebase">
+      <column name="deprecationPropertyIri"
+              type="VARCHAR(255)"
+              defaultValue="http://www.w3.org/2002/07/owl#deprecated">
+        <constraints nullable="false" />
       </column>
     </addColumn>
   </changeSet>

@@ -25,7 +25,7 @@ import de.tudarmstadt.ukp.inception.active.learning.config.ActiveLearningAutoCon
 import de.tudarmstadt.ukp.inception.active.learning.event.ActiveLearningRecommendationEvent;
 import de.tudarmstadt.ukp.inception.log.adapter.EventLoggingAdapter;
 import de.tudarmstadt.ukp.inception.log.model.AnnotationDetails;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
 import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 
 /**
@@ -38,9 +38,9 @@ public class ActiveLearningRecommendationEventAdapter
     implements EventLoggingAdapter<ActiveLearningRecommendationEvent>
 {
     @Override
-    public boolean accepts(Object aEvent)
+    public boolean accepts(Class<?> aEvent)
     {
-        return aEvent instanceof ActiveLearningRecommendationEvent;
+        return ActiveLearningRecommendationEvent.class.isAssignableFrom(aEvent);
     }
 
     @Override
@@ -80,7 +80,7 @@ public class ActiveLearningRecommendationEventAdapter
     {
         public AnnotationDetails ann;
         public String annotationFeature;
-        public LearningRecordType userAction;
+        public LearningRecordUserAction userAction;
         public String currentLabel;
         public double score;
         public long recommenderId;

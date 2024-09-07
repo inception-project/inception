@@ -23,7 +23,7 @@ import java.util.List;
 import opennlp.tools.namefind.NameSample;
 import opennlp.tools.util.ObjectStream;
 
-public class NameSampleStream
+class NameSampleStream
     implements ObjectStream<NameSample>, AutoCloseable
 {
     private List<NameSample> samples;
@@ -41,6 +41,7 @@ public class NameSampleStream
         if (iterator != null && iterator.hasNext()) {
             return iterator.next();
         }
+
         return null;
     }
 
@@ -56,5 +57,4 @@ public class NameSampleStream
         samples = null;
         iterator = null;
     }
-
 }

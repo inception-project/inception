@@ -25,7 +25,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.active.learning.ActiveLearningServiceImpl.ActiveLearningUserState;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup.Delta;
@@ -44,8 +44,8 @@ public interface ActiveLearningService
     List<SuggestionGroup<SpanSuggestion>> getSuggestions(User aDataOwner, AnnotationLayer aLayer);
 
     /**
-     * @return if the are any records of type {@link LearningRecordType#SKIPPED} in the history of
-     *         the given layer for the given user.
+     * @return if the are any records of type {@link LearningRecordUserAction#SKIPPED} in the
+     *         history of the given layer for the given user.
      * 
      * @param aDataOwner
      *            annotator user to check suggestions for
@@ -66,8 +66,10 @@ public interface ActiveLearningService
         throws IOException, AnnotationException;
 
     void rejectSpanSuggestion(String aSessionOwner, User aDataOwner, AnnotationLayer aLayer,
-            SpanSuggestion aSuggestion);
+            SpanSuggestion aSuggestion)
+        throws AnnotationException;
 
     void skipSpanSuggestion(String aSessionOwner, User aDataOwner, AnnotationLayer aLayer,
-            SpanSuggestion aSuggestion);
+            SpanSuggestion aSuggestion)
+        throws AnnotationException;
 }

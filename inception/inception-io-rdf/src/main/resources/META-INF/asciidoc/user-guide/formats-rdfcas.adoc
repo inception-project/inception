@@ -1,0 +1,72 @@
+// Licensed to the Technische Universität Darmstadt under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The Technische Universität Darmstadt 
+// licenses this file to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.
+//  
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+[[sect_formats_rdfcas]]
+= 🧪 UIMA CAS RDF
+
+====
+CAUTION: Experimental feature. To use this functionality, you need to enable it first by adding `format.rdf-cas.enabled=true` to the `settings.properties` file (see the <<admin-guide.adoc#sect_settings, Admin Guide>>).
+====
+
+This format provides a representation of the annotated document in RDF using the design model of the UIMA CAS. This format is not an official Apache UIMA file format but rather a facility provided by {product-name} for the benefit of users who want to interact with thier annotated data using Semantic Web technology.
+
+[cols="2,1,1,1,3"]
+|====
+| Format | Read | Write | Custom Layers | Description
+
+| UIMA CAS RDF (`rdfcas`)
+| yes
+| yes
+| yes
+| 
+|====
+
+.Example
+[source,turtle]
+----
+{
+<doc:fi-orig.conll#6>
+        a                    cas:Sofa , rdfcas:View ;
+        cas:Sofa-mimeType    "text" ;
+        cas:Sofa-sofaID      "_InitialView" ;
+        cas:Sofa-sofaNum     "1"^^xsd:int ;
+        cas:Sofa-sofaString  "... here be document text ..." .
+
+<doc:fi-orig.conll#1182>
+        a                         rdfcas:FeatureStructure , segmentation:Token ;
+        rdfcas:indexedIn          <doc:fi-orig.conll#6> ;
+        segmentation:Token-lemma  <doc:fi-orig.conll#1362> ;
+        segmentation:Token-morph  <doc:fi-orig.conll#213> ;
+        segmentation:Token-pos    <doc:fi-orig.conll#1780> ;
+        cas:AnnotationBase-sofa   <doc:fi-orig.conll#6> ;
+        tcas:Annotation-begin     "173"^^xsd:int ;
+        tcas:Annotation-end       "183"^^xsd:int .
+
+<doc:fi-orig.conll#470>
+        a                        syntax-dependency:Dependency , rdfcas:FeatureStructure ;
+        rdfcas:indexedIn         <doc:fi-orig.conll#6> ;
+        syntax-dependency:Dependency-DependencyType
+                "obj" ;
+        syntax-dependency:Dependency-Dependent
+                <doc:fi-orig.conll#1182> ;
+        syntax-dependency:Dependency-Governor
+                <doc:fi-orig.conll#123> ;
+        syntax-dependency:Dependency-flavor
+                "basic" ;
+        cas:AnnotationBase-sofa  <doc:fi-orig.conll#6> ;
+        tcas:Annotation-begin    "173"^^xsd:int ;
+        tcas:Annotation-end      "183"^^xsd:int .
+----

@@ -24,8 +24,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.OVERLAP_ONLY;
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.STACKING_ONLY;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.FEAT_REL_SOURCE;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.FEAT_REL_TARGET;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.RELATION_TYPE;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.SPAN_TYPE;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.util.JCasUtil.select;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -45,9 +43,11 @@ import org.apache.uima.jcas.JCas;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.MultipleSentenceCoveredException;
+import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -57,6 +57,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 import de.tudarmstadt.ukp.inception.annotation.layer.behaviors.LayerSupportRegistryImpl;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
@@ -66,6 +67,8 @@ import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 @ExtendWith(MockitoExtension.class)
 public class RelationAdapterTest
 {
+    private @Mock ConstraintsService constraintsService;
+
     private LayerSupportRegistry layerSupportRegistry;
     private FeatureSupportRegistry featureSupportRegistry;
     private Project project;
@@ -97,18 +100,18 @@ public class RelationAdapterTest
         document.setProject(project);
 
         // Set up annotation schema with POS and Dependency
-        AnnotationLayer tokenLayer = new AnnotationLayer(Token.class.getName(), "Token", SPAN_TYPE,
-                project, true, SINGLE_TOKEN, NO_OVERLAP);
+        AnnotationLayer tokenLayer = new AnnotationLayer(Token.class.getName(), "Token",
+                SpanLayerSupport.TYPE, project, true, SINGLE_TOKEN, NO_OVERLAP);
         tokenLayer.setId(1l);
         AnnotationFeature tokenLayerPos = new AnnotationFeature(1l, tokenLayer, "pos",
                 POS.class.getName());
 
-        AnnotationLayer posLayer = new AnnotationLayer(POS.class.getName(), "POS", SPAN_TYPE,
-                project, true, SINGLE_TOKEN, NO_OVERLAP);
+        AnnotationLayer posLayer = new AnnotationLayer(POS.class.getName(), "POS",
+                SpanLayerSupport.TYPE, project, true, SINGLE_TOKEN, NO_OVERLAP);
         posLayer.setId(2l);
 
-        depLayer = new AnnotationLayer(Dependency.class.getName(), "Dependency", RELATION_TYPE,
-                project, true, SINGLE_TOKEN, OVERLAP_ONLY);
+        depLayer = new AnnotationLayer(Dependency.class.getName(), "Dependency",
+                RelationLayerSupport.TYPE, project, true, SINGLE_TOKEN, OVERLAP_ONLY);
         depLayer.setId(3l);
         depLayer.setAttachType(tokenLayer);
         depLayer.setAttachFeature(tokenLayerPos);
@@ -138,7 +141,8 @@ public class RelationAdapterTest
 
         RelationAdapter sut = new RelationAdapter(layerSupportRegistry, featureSupportRegistry,
                 null, depLayer, FEAT_REL_TARGET, FEAT_REL_SOURCE,
-                () -> asList(dependencyLayerGovernor, dependencyLayerDependent), behaviors);
+                () -> asList(dependencyLayerGovernor, dependencyLayerDependent), behaviors,
+                constraintsService);
 
         List<POS> posAnnotations = new ArrayList<>(select(jcas, POS.class));
         List<Token> tokens = new ArrayList<>(select(jcas, Token.class));
@@ -168,7 +172,8 @@ public class RelationAdapterTest
 
         RelationAdapter sut = new RelationAdapter(layerSupportRegistry, featureSupportRegistry,
                 null, depLayer, FEAT_REL_TARGET, FEAT_REL_SOURCE,
-                () -> asList(dependencyLayerGovernor, dependencyLayerDependent), behaviors);
+                () -> asList(dependencyLayerGovernor, dependencyLayerDependent), behaviors,
+                constraintsService);
 
         List<POS> posAnnotations = new ArrayList<>(select(jcas, POS.class));
 
@@ -194,7 +199,8 @@ public class RelationAdapterTest
 
         RelationAdapter sut = new RelationAdapter(layerSupportRegistry, featureSupportRegistry,
                 null, depLayer, FEAT_REL_TARGET, FEAT_REL_SOURCE,
-                () -> asList(dependencyLayerGovernor, dependencyLayerDependent), behaviors);
+                () -> asList(dependencyLayerGovernor, dependencyLayerDependent), behaviors,
+                constraintsService);
 
         List<POS> posAnnotations = new ArrayList<>(select(jcas, POS.class));
 
@@ -224,7 +230,8 @@ public class RelationAdapterTest
 
         RelationAdapter sut = new RelationAdapter(layerSupportRegistry, featureSupportRegistry,
                 null, depLayer, FEAT_REL_TARGET, FEAT_REL_SOURCE,
-                () -> asList(dependencyLayerGovernor, dependencyLayerDependent), behaviors);
+                () -> asList(dependencyLayerGovernor, dependencyLayerDependent), behaviors,
+                constraintsService);
 
         List<POS> posAnnotations = new ArrayList<>(select(jcas, POS.class));
         List<Token> tokens = new ArrayList<>(select(jcas, Token.class));
@@ -252,7 +259,8 @@ public class RelationAdapterTest
 
         RelationAdapter sut = new RelationAdapter(layerSupportRegistry, featureSupportRegistry,
                 null, depLayer, FEAT_REL_TARGET, FEAT_REL_SOURCE,
-                () -> asList(dependencyLayerGovernor, dependencyLayerDependent), behaviors);
+                () -> asList(dependencyLayerGovernor, dependencyLayerDependent), behaviors,
+                constraintsService);
 
         List<POS> posAnnotations = new ArrayList<>(select(jcas, POS.class));
 
@@ -298,7 +306,8 @@ public class RelationAdapterTest
 
         RelationAdapter sut = new RelationAdapter(layerSupportRegistry, featureSupportRegistry,
                 null, depLayer, FEAT_REL_TARGET, FEAT_REL_SOURCE,
-                () -> asList(dependencyLayerGovernor, dependencyLayerDependent), behaviors);
+                () -> asList(dependencyLayerGovernor, dependencyLayerDependent), behaviors,
+                constraintsService);
 
         List<POS> posAnnotations = new ArrayList<>(select(jcas, POS.class));
 
@@ -333,7 +342,7 @@ public class RelationAdapterTest
                         LogMessage.error(null, "Stacked relation at [5-7]"));
 
         // Remove the stacked annotation and introduce one that is purely overlapping
-        sut.delete(document, username, jcas.getCas(), new VID(rel2));
+        sut.delete(document, username, jcas.getCas(), VID.of(rel2));
         depLayer.setOverlapMode(ANY_OVERLAP);
         sut.add(document, username, source, posAnnotations.get(2), jcas.getCas());
 

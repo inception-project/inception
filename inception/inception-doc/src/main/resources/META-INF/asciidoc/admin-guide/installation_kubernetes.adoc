@@ -1,0 +1,64 @@
+// Licensed to the Technische Universität Darmstadt under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The Technische Universität Darmstadt 
+// licenses this file to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.
+//  
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+[[sect_kubernetes]]
+= Running via Kubernetes
+
+CAUTION: This is a **very rough** guide on how {product-name} could be deployed using
+      Kubernetes. If you are familiar with Kubernetes and cloud deployment, you will
+      probably find a lot here that can be improved. Great! Best help us improving this
+      guide by sending us your improvement suggestions through 
+      link:https://github.com/inception-project/inception[GitHub].
+      
+The following Kubernetes file sets up {product-name} along with a few volumes.
+It does currently **NOT** set up a database container but instead uses the built-in
+database **which is not recommended for production environments**. Also, it uses
+folders on the host system for volumes. It is only meant as an illustration.
+**Be sure to adjust this to your environment and to use a proper database!**
+
+[source,text,subs="+attributes"]
+.Kubernetes deployment descriptor
+----
+include::scripts/kubernetes.yml[]
+----
+
+To deploy an {product-name} service copy this to a file called `inception.yml` and then run it using
+
+[source,text]
+.Create Kubernetes environment
+----
+$ kubectl create -f inception.yml
+----
+
+To delete the service again, use
+
+[source,text]
+.Delete Kubernetes environment
+----
+$ kubectl delete -f inception.yml 
+----
+
+This can be tested e.g. using the Kubernetes support built into recent Docker Desktop. If you experience problems, make sure you run the latest version of Docker Desktop.
+
+[[sect_errors]]
+= Common issues and solution
+[source,text]
+.The default Ingress configuration of Kubernetes sets a limit on the file uploads which can cause an error when trying to import a large file.This can be fixed by adding the following annotation to the Ingress configuration to increase the maximum allowed file upload size. In annotations under metadata add the following and change the value according to your preference.
+----
+$ nginx.ingress.kubernetes.io/proxy-body-size: <value>m
+example:
+$ nginx.ingress.kubernetes.io/proxy-body-size: 3m
+----

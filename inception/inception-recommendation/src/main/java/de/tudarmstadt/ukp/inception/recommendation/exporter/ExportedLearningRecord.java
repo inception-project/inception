@@ -19,16 +19,14 @@ package de.tudarmstadt.ukp.inception.recommendation.exporter;
 
 import java.util.Date;
 
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
-
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionType;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
+import jakarta.persistence.Temporal;
+import jakarta.persistence.TemporalType;
 
 @JsonPropertyOrder(alphabetic = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -62,7 +60,7 @@ public class ExportedLearningRecord
     private String annotation;
 
     @JsonProperty("action")
-    private LearningRecordType userAction;
+    private LearningRecordUserAction userAction;
 
     @JsonProperty("user")
     private String user;
@@ -71,7 +69,7 @@ public class ExportedLearningRecord
     private LearningRecordChangeLocation changeLocation;
 
     @JsonProperty("type")
-    private SuggestionType suggestionType;
+    private String suggestionType;
 
     @JsonProperty("timestamp")
     @Temporal(TemporalType.TIMESTAMP)
@@ -167,12 +165,12 @@ public class ExportedLearningRecord
         annotation = aAnnotation;
     }
 
-    public LearningRecordType getUserAction()
+    public LearningRecordUserAction getUserAction()
     {
         return userAction;
     }
 
-    public void setUserAction(LearningRecordType aUserAction)
+    public void setUserAction(LearningRecordUserAction aUserAction)
     {
         userAction = aUserAction;
     }
@@ -197,12 +195,12 @@ public class ExportedLearningRecord
         changeLocation = aChangeLocation;
     }
 
-    public SuggestionType getSuggestionType()
+    public String getSuggestionType()
     {
         return suggestionType;
     }
 
-    public void setSuggestionType(SuggestionType aSuggestionType)
+    public void setSuggestionType(String aSuggestionType)
     {
         suggestionType = aSuggestionType;
     }

@@ -41,8 +41,6 @@ import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import javax.persistence.EntityManager;
-
 import org.apache.uima.cas.CAS;
 import org.apache.uima.fit.factory.CasFactory;
 import org.apache.uima.jcas.JCas;
@@ -73,9 +71,12 @@ import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageProperti
 import de.tudarmstadt.ukp.inception.annotation.storage.driver.CasStorageDriver;
 import de.tudarmstadt.ukp.inception.annotation.storage.driver.filesystem.FileSystemCasStorageDriver;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentStorageService;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
+import de.tudarmstadt.ukp.inception.documents.api.RepositoryPropertiesImpl;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.support.logging.Logging;
+import jakarta.persistence.EntityManager;
 
 @ExtendWith(MockitoExtension.class)
 public class DocumentServiceImplConcurrencyTest
@@ -102,7 +103,8 @@ public class DocumentServiceImplConcurrencyTest
     private DocumentService sut;
 
     private RepositoryProperties repositoryProperties;
-    private CasStorageService storageService;
+    private CasStorageService casStorageService;
+    private DocumentStorageService docStorageService;
 
     @BeforeEach
     public void setup() throws Exception
@@ -115,18 +117,20 @@ public class DocumentServiceImplConcurrencyTest
         deleteCounter.set(0);
         deleteInitialCounter.set(0);
 
-        repositoryProperties = new RepositoryProperties();
+        repositoryProperties = new RepositoryPropertiesImpl();
         repositoryProperties.setPath(testFolder);
         MDC.put(Logging.KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
 
         CasStorageDriver driver = new FileSystemCasStorageDriver(repositoryProperties,
                 new CasStorageBackupProperties(), new CasStoragePropertiesImpl());
 
-        storageService = new CasStorageServiceImpl(driver, new CasStorageCachePropertiesImpl(),
+        casStorageService = new CasStorageServiceImpl(driver, new CasStorageCachePropertiesImpl(),
                 null, null);
+        docStorageService = new DocumentStorageServiceImpl(repositoryProperties);
 
-        var realSut = new DocumentServiceImpl(repositoryProperties, storageService,
-                importExportService, projectService, applicationEventPublisher, entityManager);
+        var realSut = new DocumentServiceImpl(repositoryProperties, casStorageService,
+                importExportService, projectService, applicationEventPublisher, entityManager,
+                docStorageService);
         sut = Mockito.mock(DocumentServiceImpl.class, Mockito.withSettings().spiedInstance(realSut)
                 .stubOnly().defaultAnswer(Answers.CALLS_REAL_METHODS));
 
@@ -137,7 +141,7 @@ public class DocumentServiceImplConcurrencyTest
         }).when(sut).getAnnotationDocument(any(), any(String.class));
 
         lenient()
-                .when(importExportService.importCasFromFile(any(File.class),
+                .when(importExportService.importCasFromFileNoChecks(any(File.class),
                         any(SourceDocument.class), any()))
                 .thenReturn(CasFactory.createText("Test"));
     }
@@ -146,13 +150,13 @@ public class DocumentServiceImplConcurrencyTest
     public void thatCreatingOrReadingInitialCasForNewDocumentCreatesNewCas() throws Exception
     {
         try (CasStorageSession session = CasStorageSession.open()) {
-            SourceDocument doc = makeSourceDocument(1l, 1l, "test");
+            var doc = makeSourceDocument(1l, 1l, "test");
 
-            JCas cas = sut.createOrReadInitialCas(doc).getJCas();
+            var cas = sut.createOrReadInitialCas(doc).getJCas();
 
             assertThat(cas).isNotNull();
             assertThat(cas.getDocumentText()).isEqualTo("Test");
-            assertThat(storageService.existsCas(doc, INITIAL_CAS_PSEUDO_USER)).isTrue();
+            assertThat(casStorageService.existsCas(doc, INITIAL_CAS_PSEUDO_USER)).isTrue();
         }
     }
 
@@ -167,7 +171,7 @@ public class DocumentServiceImplConcurrencyTest
 
             assertThat(cas).isNotNull();
             assertThat(cas.getDocumentText()).isEqualTo("Test");
-            assertThat(storageService.existsCas(sourceDocument, user.getUsername())).isTrue();
+            assertThat(casStorageService.existsCas(sourceDocument, user.getUsername())).isTrue();
         }
     }
 
@@ -178,8 +182,8 @@ public class DocumentServiceImplConcurrencyTest
         var typeSystem = mergeTypeSystems(
                 asList(createTypeSystemDescription(), getInternalTypeSystem()));
 
-        when(importExportService.importCasFromFile(any(File.class), any(SourceDocument.class),
-                any())).then(_invocation -> {
+        when(importExportService.importCasFromFileNoChecks(any(File.class),
+                any(SourceDocument.class), any())).then(_invocation -> {
                     CAS cas = createCas(typeSystem);
                     cas.setDocumentText(docText);
                     return cas;
@@ -195,7 +199,7 @@ public class DocumentServiceImplConcurrencyTest
         List<Thread> secondaryTasks = new ArrayList<>();
 
         int threadGroupCount = 4;
-        int iterations = 100;
+        int iterations = 50;
         for (int n = 0; n < threadGroupCount; n++) {
             Thread rw = new ExclusiveReadWriteTask(n, doc, user, iterations);
             primaryTasks.add(rw);
@@ -246,8 +250,8 @@ public class DocumentServiceImplConcurrencyTest
         var typeSystem = mergeTypeSystems(
                 asList(createTypeSystemDescription(), getInternalTypeSystem()));
 
-        when(importExportService.importCasFromFile(any(File.class), any(SourceDocument.class),
-                any())).then(_invocation -> {
+        when(importExportService.importCasFromFileNoChecks(any(File.class),
+                any(SourceDocument.class), any())).then(_invocation -> {
                     CAS cas = createCas(typeSystem);
                     cas.setDocumentText(docText);
                     return cas;
@@ -263,7 +267,7 @@ public class DocumentServiceImplConcurrencyTest
         List<Thread> secondaryTasks = new ArrayList<>();
 
         int threadGroupCount = 4;
-        int iterations = 100;
+        int iterations = 50;
         int userCount = 4;
         for (int u = 0; u < userCount; u++) {
             for (int n = 0; n < threadGroupCount; n++) {
@@ -343,10 +347,10 @@ public class DocumentServiceImplConcurrencyTest
                     return;
                 }
 
-                try (CasStorageSession session = openNested()) {
-                    CAS cas = sut.readAnnotationCas(doc, user);
+                try (var session = openNested()) {
+                    var cas = sut.readAnnotationCas(doc, user);
                     Thread.sleep(50);
-                    sut.writeAnnotationCas(cas, doc, user, false);
+                    sut.writeAnnotationCas(cas, doc, user);
                     writeCounter.incrementAndGet();
                 }
                 catch (Exception e) {

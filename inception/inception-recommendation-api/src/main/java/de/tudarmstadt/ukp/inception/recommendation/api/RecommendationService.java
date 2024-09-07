@@ -21,32 +21,28 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
+import org.apache.uima.cas.AnnotationBaseFS;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationAdapter;
-import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanAdapter;
-import de.tudarmstadt.ukp.inception.preferences.Key;
+import de.tudarmstadt.ukp.inception.preferences.PreferenceKey;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.EvaluatedRecommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Preferences;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Progress;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.RecommenderGeneralSettings;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionDocumentGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
-import de.tudarmstadt.ukp.inception.scheduling.TaskMonitor;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessageGroup;
 
@@ -56,7 +52,7 @@ import de.tudarmstadt.ukp.inception.support.logging.LogMessageGroup;
  */
 public interface RecommendationService
 {
-    Key<RecommenderGeneralSettings> KEY_RECOMMENDER_GENERAL_SETTINGS = new Key<>(
+    PreferenceKey<RecommenderGeneralSettings> KEY_RECOMMENDER_GENERAL_SETTINGS = new PreferenceKey<>(
             RecommenderGeneralSettings.class, "recommendation/general");
 
     String FEATURE_NAME_IS_PREDICTION = "inception_internal_predicted";
@@ -72,6 +68,8 @@ public interface RecommendationService
     void deleteRecommender(Recommender aRecommender);
 
     Recommender getRecommender(long aId);
+
+    Recommender getRecommender(AnnotationSuggestion aSuggestion);
 
     Optional<Recommender> getRecommender(Project aProject, String aName);
 
@@ -129,7 +127,18 @@ public interface RecommendationService
 
     void putIncomingPredictions(User aSessionOwner, Project aProject, Predictions aPredictions);
 
+    /**
+     * Replace the current predictions with the pending predictions if any are available.
+     * 
+     * @param aSessionOwner
+     *            the owner of the session.
+     * @param aProject
+     *            the project.
+     * @return whether the current predictions where replaced or not.
+     */
     boolean switchPredictions(String aSessionOwner, Project aProject);
+
+    boolean forceSwitchPredictions(String aSessionOwner, Project aProject);
 
     /**
      * Returns the {@code RecommenderContext} for the given recommender if it exists.
@@ -154,125 +163,138 @@ public interface RecommendationService
      */
     void putContext(User aSessionOwner, Recommender aRecommender, RecommenderContext aContext);
 
+    /**
+     * Uses the given suggestion to create a new annotation or to update a feature in an existing
+     * annotation. However, the given suggestion is not the one actually produced by a recommender
+     * but a suggestion adjusted by the user. The original one is marked as rejected.
+     * 
+     * @param aSessionOwner
+     *            the session owner
+     * @param aDocument
+     *            the source document to which the annotations belong
+     * @param aDataOwner
+     *            the annotator user to whom the annotations belong
+     * @param aCas
+     *            the CAS containing the annotations
+     * @param aOriginalSuggestion
+     *            the original suggestion by the recommender
+     * @param aCorrectedSuggestion
+     *            the corrected suggestion by the user
+     * @param aLocation
+     *            the location from where the change was triggered
+     * 
+     * @return the created/updated annotation.
+     * @throws AnnotationException
+     *             if there was an annotation-level problem
+     */
     AnnotationFS correctSuggestion(String aSessionOwner, SourceDocument aDocument,
-            String aDataOwner, CAS aCas, SpanAdapter aAdapter, AnnotationFeature aFeature,
-            SpanSuggestion aOriginalSuggestion, SpanSuggestion aCorrectedSuggestion,
-            LearningRecordChangeLocation aLocation)
+            String aDataOwner, CAS aCas, SpanSuggestion aOriginalSuggestion,
+            SpanSuggestion aCorrectedSuggestion, LearningRecordChangeLocation aLocation)
         throws AnnotationException;
 
     /**
      * Uses the given annotation suggestion to create a new annotation or to update a feature in an
      * existing annotation.
      * 
+     * @param aSessionOwner
+     *            the session owner
      * @param aDocument
      *            the source document to which the annotations belong
      * @param aDataOwner
      *            the annotator user to whom the annotations belong
      * @param aCas
      *            the CAS containing the annotations
-     * @param aAdapter
-     *            an adapter for the layer to upsert
-     * @param aFeature
-     *            the feature on the layer that should be upserted
      * @param aSuggestion
      *            the suggestion
      * @param aLocation
      *            the location from where the change was triggered
+     * 
      * @return the created/updated annotation.
      * @throws AnnotationException
      *             if there was an annotation-level problem
      */
-    AnnotationFS acceptSuggestion(String aSessionOwner, SourceDocument aDocument, String aDataOwner,
-            CAS aCas, SpanAdapter aAdapter, AnnotationFeature aFeature, SpanSuggestion aSuggestion,
+    AnnotationBaseFS acceptSuggestion(String aSessionOwner, SourceDocument aDocument,
+            String aDataOwner, CAS aCas, AnnotationSuggestion aSuggestion,
             LearningRecordChangeLocation aLocation)
         throws AnnotationException;
 
     /**
-     * Uses the given annotation suggestion to create a new annotation or to update a feature in an
-     * existing annotation.
+     * Mark the given suggestion as rejected.
      * 
+     * @param aSessionOwner
+     *            the session owner
      * @param aDocument
      *            the source document to which the annotations belong
      * @param aDataOwner
      *            the annotator user to whom the annotations belong
-     * @param aCas
-     *            the CAS containing the annotations
-     * @param aAdapter
-     *            an adapter for the layer to upsert
-     * @param aFeature
-     *            the feature on the layer that should be upserted
      * @param aSuggestion
      *            the suggestion
      * @param aLocation
      *            the location from where the change was triggered
-     * @param aAction
-     *            TODO
-     * @return the created/updated annotation.
+     * 
      * @throws AnnotationException
      *             if there was an annotation-level problem
      */
-    AnnotationFS acceptSuggestion(String aSessionOwner, SourceDocument aDocument, String aDataOwner,
-            CAS aCas, RelationAdapter aAdapter, AnnotationFeature aFeature,
-            RelationSuggestion aSuggestion, LearningRecordChangeLocation aLocation,
-            LearningRecordType aAction)
-        throws AnnotationException;
-
     void rejectSuggestion(String aSessionOwner, SourceDocument aDocument, String aDataOwner,
-            AnnotationSuggestion suggestion, LearningRecordChangeLocation aAction);
+            AnnotationSuggestion aSuggestion, LearningRecordChangeLocation aLocation)
+        throws AnnotationException;
 
+    /**
+     * Mark the given suggestion as skipped.
+     * 
+     * @param aSessionOwner
+     *            the session owner
+     * @param aDocument
+     *            the source document to which the annotations belong
+     * @param aDataOwner
+     *            the annotator user to whom the annotations belong
+     * @param aSuggestion
+     *            the suggestion
+     * @param aLocation
+     *            the location from where the change was triggered
+     * 
+     * @throws AnnotationException
+     *             if there was an annotation-level problem
+     */
     void skipSuggestion(String aSessionOwner, SourceDocument aDocument, String aDataOwner,
-            AnnotationSuggestion suggestion, LearningRecordChangeLocation aAction);
+            AnnotationSuggestion aSuggestion, LearningRecordChangeLocation aLocation)
+        throws AnnotationException;
 
     /**
-     * Compute predictions.
-     *
+     * Determine the visibility of suggestions.
+     * 
+     * @param <T>
+     *            type of suggestions to inspect.
      * @param aSessionOwner
-     *            the user to compute the predictions for.
-     * @param aProject
-     *            the project to compute the predictions for.
-     * @param aDocuments
-     *            the documents to compute the predictions for.
+     *            session owner.
+     * @param aDocument
+     *            the document to which the suggestions belong.
+     * @param aCas
+     *            the CAS for the document.
      * @param aDataOwner
-     *            the owner of the annotations.
-     * @return the new predictions.
+     *            the user to whom the CAS belongs.
+     * @param aLayer
+     *            the layer to which the suggestions belong.
+     * @param aRecommendations
+     *            the suggestions which must all be of the same type, e.g. all
+     *            {@link SpanSuggestion}s. Use e.g.
+     *            {@link SuggestionDocumentGroup#groupsOfType(Class, List)} to generate them.
+     * @param aWindowBegin
+     *            the range of the document for which to update the suggestions.
+     * @param aWindowEnd
+     *            the range of the document for which to update the suggestions.
      */
-    Predictions computePredictions(User aSessionOwner, Project aProject,
-            List<SourceDocument> aDocuments, String aDataOwner, TaskMonitor aMonitor);
+    <T extends AnnotationSuggestion> void calculateSuggestionVisibility(String aSessionOwner,
+            SourceDocument aDocument, CAS aCas, String aDataOwner, AnnotationLayer aLayer,
+            Collection<SuggestionGroup<T>> aRecommendations, int aWindowBegin, int aWindowEnd);
 
     /**
-     * Compute predictions.
-     *
+     * Discards all predictions in all states belonging to the owner. Flags are retained.
+     * 
      * @param aSessionOwner
-     *            the user to compute the predictions for.
-     * @param aProject
-     *            the project to compute the predictions for.
-     * @param aCurrentDocument
-     *            the document to compute the predictions for.
-     * @param aDataOwner
-     *            the owner of the annotations.
-     * @param aInherit
-     *            any documents for which to inherit the predictions from a previous run
-     * @param aPredictionBegin
-     *            begin of the prediction range (negative to predict from 0)
-     * @param aPredictionEnd
-     *            end of the prediction range (negative to predict until the end of the document)
-     * @return the new predictions.
+     *            the user owning the session.
      */
-    Predictions computePredictions(User aSessionOwner, Project aProject,
-            SourceDocument aCurrentDocument, String aDataOwner, List<SourceDocument> aInherit,
-            int aPredictionBegin, int aPredictionEnd, TaskMonitor aMonitor);
-
-    void calculateSpanSuggestionVisibility(String aSessionOwner, SourceDocument aDocument, CAS aCas,
-            String aUser, AnnotationLayer aLayer,
-            Collection<SuggestionGroup<SpanSuggestion>> aRecommendations, int aWindowBegin,
-            int aWindowEnd);
-
-    void calculateRelationSuggestionVisibility(String aSessionOwner, CAS aCas, String aUser,
-            AnnotationLayer aLayer,
-            Collection<SuggestionGroup<RelationSuggestion>> aRecommendations, int aWindowBegin,
-            int aWindowEnd);
-
-    void clearState(String aSessionOwner);
+    void resetState(String aSessionOwner);
 
     void triggerPrediction(String aSessionOwner, String aEventName, SourceDocument aDocument,
             String aDocumentOwner);
@@ -296,4 +318,17 @@ public interface RecommendationService
     long countEnabledRecommenders();
 
     Progress getProgressTowardsNextEvaluation(User aSessionOwner, Project aProject);
+
+    boolean isSuspended(String aUser, Project aProject);
+
+    void setSuspended(String aUser, Project aProject, boolean aState);
+
+    /**
+     * @return if the curation sidebar mode is available.
+     * @deprecated This obviously shouldn't be here, but this is the easiest way to access this
+     *             information from the recommender settings. Should be removed when the curation
+     *             sidebar leaves experimental mode.
+     */
+    @Deprecated
+    boolean isCurationSidebarEnabled();
 }

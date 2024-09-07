@@ -26,7 +26,8 @@ public enum ProjectListSortStrategy
 {
     NAME(ProjectListSortKeys.NAME, ASCENDING),
     CREATED_OLDEST(ProjectListSortKeys.CREATED, ASCENDING),
-    CREATED_NEWEST(ProjectListSortKeys.CREATED, DESCENDING);
+    CREATED_NEWEST(ProjectListSortKeys.CREATED, DESCENDING),
+    RECENTLY_UPDATED(ProjectListSortKeys.UPDATED, DESCENDING);
 
     final ProjectListSortKeys key;
     final SortOrder order;

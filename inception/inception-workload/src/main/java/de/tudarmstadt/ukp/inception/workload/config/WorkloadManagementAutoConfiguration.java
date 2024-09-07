@@ -19,8 +19,6 @@ package de.tudarmstadt.ukp.inception.workload.config;
 
 import java.util.List;
 
-import javax.persistence.EntityManager;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -34,6 +32,7 @@ import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtensionP
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementServiceImpl;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManager;
+import jakarta.persistence.EntityManager;
 
 @Configuration
 public class WorkloadManagementAutoConfiguration<T>

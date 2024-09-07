@@ -19,9 +19,6 @@ package de.tudarmstadt.ukp.inception.schema.config;
 
 import java.util.List;
 
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationEventPublisher;
@@ -30,6 +27,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
+import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.annotation.feature.bool.BooleanFeatureSupport;
 import de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureSupport;
@@ -66,6 +64,8 @@ import de.tudarmstadt.ukp.inception.schema.exporters.TagSetExporter;
 import de.tudarmstadt.ukp.inception.schema.service.AnnotationSchemaServiceEventAdapter;
 import de.tudarmstadt.ukp.inception.schema.service.AnnotationSchemaServiceImpl;
 import de.tudarmstadt.ukp.inception.schema.service.FeatureSupportRegistryImpl;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 
 @Configuration
 @EnableConfigurationProperties({ //
@@ -136,28 +136,28 @@ public class AnnotationSchemaServiceAutoConfiguration
     @Bean
     public SpanLayerSupport spanLayerSupport(FeatureSupportRegistry aFeatureSupportRegistry,
             ApplicationEventPublisher aEventPublisher,
-            LayerBehaviorRegistry aLayerBehaviorsRegistry)
+            LayerBehaviorRegistry aLayerBehaviorsRegistry, ConstraintsService aConstraintsService)
     {
         return new SpanLayerSupport(aFeatureSupportRegistry, aEventPublisher,
-                aLayerBehaviorsRegistry);
+                aLayerBehaviorsRegistry, aConstraintsService);
     }
 
     @Bean
     public RelationLayerSupport relationLayerSupport(FeatureSupportRegistry aFeatureSupportRegistry,
             ApplicationEventPublisher aEventPublisher,
-            LayerBehaviorRegistry aLayerBehaviorsRegistry)
+            LayerBehaviorRegistry aLayerBehaviorsRegistry, ConstraintsService aConstraintsService)
     {
         return new RelationLayerSupport(aFeatureSupportRegistry, aEventPublisher,
-                aLayerBehaviorsRegistry);
+                aLayerBehaviorsRegistry, aConstraintsService);
     }
 
     @Bean
     public ChainLayerSupport chainLayerSupport(FeatureSupportRegistry aFeatureSupportRegistry,
             ApplicationEventPublisher aEventPublisher,
-            LayerBehaviorRegistry aLayerBehaviorsRegistry)
+            LayerBehaviorRegistry aLayerBehaviorsRegistry, ConstraintsService aConstraintsService)
     {
         return new ChainLayerSupport(aFeatureSupportRegistry, aEventPublisher,
-                aLayerBehaviorsRegistry);
+                aLayerBehaviorsRegistry, aConstraintsService);
     }
 
     @Bean

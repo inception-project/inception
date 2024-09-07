@@ -20,15 +20,13 @@ package de.tudarmstadt.ukp.inception.guidelines;
 import static de.tudarmstadt.ukp.inception.project.api.ProjectService.PROJECT_FOLDER;
 import static de.tudarmstadt.ukp.inception.project.api.ProjectService.withProjectLogger;
 import static java.nio.file.Files.newDirectoryStream;
-import static org.apache.commons.io.IOUtils.copyLarge;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.DirectoryStream;
-import java.nio.file.Path;
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -49,7 +47,7 @@ import de.tudarmstadt.ukp.inception.guidelines.config.GuidelinesServiceAutoConfi
 public class GuidelinesServiceImpl
     implements GuidelinesService
 {
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private final RepositoryProperties repositoryProperties;
 
@@ -77,7 +75,7 @@ public class GuidelinesServiceImpl
     public void createGuideline(Project aProject, File aContent, String aFileName)
         throws IOException
     {
-        try (InputStream is = new FileInputStream(aContent)) {
+        try (var is = new FileInputStream(aContent)) {
             createGuideline(aProject, is, aFileName);
         }
     }
@@ -87,12 +85,14 @@ public class GuidelinesServiceImpl
         throws IOException
     {
         try (var logCtx = withProjectLogger(aProject)) {
-            String guidelinePath = repositoryProperties.getPath().getAbsolutePath() + "/"
+            var guidelinePath = repositoryProperties.getPath().getAbsolutePath() + "/"
                     + PROJECT_FOLDER + "/" + aProject.getId() + "/" + GUIDELINES_FOLDER + "/";
             FileUtils.forceMkdir(new File(guidelinePath));
-            copyLarge(aIS, new FileOutputStream(new File(guidelinePath + aFileName)));
+            try (var os = new FileOutputStream(new File(guidelinePath, aFileName))) {
+                aIS.transferTo(os);
+            }
 
-            log.info("Created guidelines file [{}] in project {}", aFileName, aProject);
+            LOG.info("Created guidelines file [{}] in project {}", aFileName, aProject);
         }
     }
 
@@ -100,12 +100,12 @@ public class GuidelinesServiceImpl
     public List<String> listGuidelines(Project aProject)
     {
         // list all guideline files
-        File[] files = getGuidelinesFolder(aProject).listFiles();
+        var files = getGuidelinesFolder(aProject).listFiles();
 
         // Name of the guideline files
-        List<String> annotationGuidelineFiles = new ArrayList<>();
+        var annotationGuidelineFiles = new ArrayList<String>();
         if (files != null) {
-            for (File file : files) {
+            for (var file : files) {
                 annotationGuidelineFiles.add(file.getName());
             }
         }
@@ -116,7 +116,7 @@ public class GuidelinesServiceImpl
     @Override
     public boolean hasGuidelines(Project aProject)
     {
-        try (DirectoryStream<Path> d = newDirectoryStream(getGuidelinesFolder(aProject).toPath())) {
+        try (var d = newDirectoryStream(getGuidelinesFolder(aProject).toPath())) {
             return d.iterator().hasNext();
         }
         catch (IOException e) {
@@ -134,7 +134,7 @@ public class GuidelinesServiceImpl
                     new File(repositoryProperties.getPath().getAbsolutePath() + "/" + PROJECT_FOLDER
                             + "/" + aProject.getId() + "/" + GUIDELINES_FOLDER + "/" + aFileName));
 
-            log.info("Removed guidelines file [{}] from project {}", aFileName, aProject.getName());
+            LOG.info("Removed guidelines file [{}] from project {}", aFileName, aProject.getName());
         }
     }
 }

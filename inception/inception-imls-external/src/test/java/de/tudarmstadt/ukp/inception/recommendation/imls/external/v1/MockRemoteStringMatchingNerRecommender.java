@@ -40,6 +40,7 @@ import org.apache.uima.util.XMLInputSource;
 import org.xml.sax.SAXException;
 
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.PredictionContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.messages.PredictionRequest;
@@ -93,7 +94,7 @@ public class MockRemoteStringMatchingNerRecommender
             }
         }
 
-        recommendationEngine.predict(context, cas);
+        recommendationEngine.predict(new PredictionContext(context), cas);
 
         return buildPredictionResponse(cas);
     }

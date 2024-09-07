@@ -17,7 +17,7 @@
  */
 import type { AnnotationEditor, DiamAjax, Offsets } from '@inception-project/inception-js-api'
 import './PdfAnnotationEditor.css'
-import { initPdfAnno, getAnnotations as doLoadAnnotations, scrollTo } from './pdfanno/pdfanno'
+import { initPdfAnno, getAnnotations as doLoadAnnotations, scrollTo, destroy as destroyPdfAnno } from './pdfanno/pdfanno'
 import AbstractAnnotation from './pdfanno/core/src/model/AbstractAnnotation'
 
 export class PdfAnnotationEditor implements AnnotationEditor {
@@ -28,10 +28,16 @@ export class PdfAnnotationEditor implements AnnotationEditor {
     this.ajax = ajax
     this.root = element
 
-    element.addEventListener('annotationSelected', ev => this.onAnnotationSelected(ev))
-    element.addEventListener('createSpanAnnotation', ev => this.onCreateSpanAnnotation(ev))
-    element.addEventListener('createRelationAnnotation', ev => this.onCreateRelationAnnotation(ev))
-    element.addEventListener('doubleClickAnnotation', ev => this.onDoubleClickAnnotation(ev))
+    // Prevent right-click from triggering a selection event
+    this.root.addEventListener('mousedown', e => this.cancelRightClick(e), { capture: true })
+    this.root.addEventListener('mouseup', e => this.cancelRightClick(e), { capture: true })
+    this.root.addEventListener('mouseclick', e => this.cancelRightClick(e), { capture: true })
+
+    this.root.addEventListener('annotationSelected', ev => this.onAnnotationSelected(ev))
+    this.root.addEventListener('createSpanAnnotation', ev => this.onCreateSpanAnnotation(ev))
+    this.root.addEventListener('createRelationAnnotation', ev => this.onCreateRelationAnnotation(ev))
+    this.root.addEventListener('doubleClickAnnotation', ev => this.onDoubleClickAnnotation(ev))
+    this.root.addEventListener('openContextMenu', ev => this.onOpenContextMenu(ev))
   }
 
   async init (): Promise<void> {
@@ -45,6 +51,27 @@ export class PdfAnnotationEditor implements AnnotationEditor {
   scrollTo (args: { offset: number, position?: string, pingRanges?: Offsets[] }): void {
     // console.log(`SCROLLING! ${args.offset} ${args.position}`)
     scrollTo(args)
+  }
+
+  private cancelRightClick (e: Event): void {
+    if (e instanceof MouseEvent) {
+      if (e.button === 2) {
+        console.log("cancelled")
+        e.preventDefault()
+        e.stopPropagation()
+      }
+    }
+  }
+
+  onOpenContextMenu (ev: Event) {
+    if (ev instanceof CustomEvent) {
+      const ann = ev.detail.ann as AbstractAnnotation
+      const oev = ev.detail.originalEvent
+
+      if (!(oev instanceof MouseEvent) || !(oev.target instanceof Node)) return
+
+      if (ann.vid) this.ajax.openContextMenu(ann.vid, oev)
+    }
   }
 
   onAnnotationSelected (ev: Event) {
@@ -74,12 +101,12 @@ export class PdfAnnotationEditor implements AnnotationEditor {
 
   onCreateRelationAnnotation (ev: Event) {
     if (ev instanceof CustomEvent) {
-      const { origin, target } = ev.detail
-      this.ajax.createRelationAnnotation(origin, target)
+      const { origin, target, originalEvent } = ev.detail
+      this.ajax.createRelationAnnotation(origin, target, originalEvent)
     }
   }
 
   destroy (): void {
-    console.log('Destroy not implemented yet')
+    destroyPdfAnno()
   }
 }

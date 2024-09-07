@@ -17,9 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.external.v1;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getRealCas;
-import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapability.TRAINING_NOT_SUPPORTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapability.TRAINING_REQUIRED;
+import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.getRealCas;
 import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.stream;
@@ -60,11 +59,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
 import org.xml.sax.SAXException;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.type.CASMetadata;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.PredictionContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
@@ -78,6 +77,7 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.model.Docume
 import de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.model.Metadata;
 import de.tudarmstadt.ukp.inception.rendering.model.Range;
 import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
+import de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.inception.support.xml.sanitizer.IllegalXmlCharacterSanitizingContentHandler;
 
 public class ExternalRecommender
@@ -157,7 +157,7 @@ public class ExternalRecommender
     @Override
     public boolean isReadyForPrediction(RecommenderContext aContext)
     {
-        if (traits.isTrainable()) {
+        if (traits.getTrainingCapability() == TRAINING_REQUIRED) {
             return aContext.get(KEY_TRAINING_COMPLETE).orElse(false);
         }
 
@@ -216,7 +216,7 @@ public class ExternalRecommender
     }
 
     @Override
-    public Range predict(RecommenderContext aContext, CAS aCas, int aBegin, int aEnd)
+    public Range predict(PredictionContext aContext, CAS aCas, int aBegin, int aEnd)
         throws RecommendationException
     {
         var client = getClient();
@@ -385,12 +385,6 @@ public class ExternalRecommender
     @Override
     public TrainingCapability getTrainingCapability()
     {
-        if (!traits.isTrainable()) {
-            return TRAINING_NOT_SUPPORTED;
-        }
-
-        // return TRAINING_SUPPORTED;
-        // We need to get at least one training CAS because we need to extract the type system
-        return TRAINING_REQUIRED;
+        return traits.getTrainingCapability();
     }
 }

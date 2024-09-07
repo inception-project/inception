@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.conceptlinking.util;
 
 import java.util.ArrayList;
 
+import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
@@ -57,10 +58,11 @@ public class TestFixtures
         kb.setLabelIri(RDFS.LABEL.stringValue());
         kb.setPropertyTypeIri(RDF.PROPERTY.stringValue());
         kb.setDescriptionIri(RDFS.COMMENT.stringValue());
-        kb.setFullTextSearchIri(IriConstants.FTS_LUCENE.stringValue());
+        kb.setFullTextSearchIri(IriConstants.FTS_RDF4J_LUCENE.stringValue());
         kb.setPropertyLabelIri(RDFS.LABEL.stringValue());
         kb.setPropertyDescriptionIri(RDFS.COMMENT.stringValue());
         kb.setSubPropertyIri(RDFS.SUBPROPERTYOF.stringValue());
+        kb.setDeprecationPropertyIri(OWL.DEPRECATED.stringValue());
         kb.setRootConcepts(new ArrayList<>());
         kb.setReification(reification);
         kb.setMaxResults(1000);

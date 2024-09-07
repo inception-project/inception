@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.kb.querybuilder;
 
+import java.util.Collection;
+
 public interface SPARQLQueryPrimaryConditions
     extends SPARQLQuery, SPARQLQueryOptionalElements
 {
@@ -158,4 +160,7 @@ public interface SPARQLQueryPrimaryConditions
      */
     SPARQLQueryPrimaryConditions matchingDomain(String aItemIri);
 
+    SPARQLQueryPrimaryConditions withFallbackLanguages(String... aLanguages);
+
+    SPARQLQueryPrimaryConditions withFallbackLanguages(Collection<String> aString);
 }

@@ -31,9 +31,9 @@ public class AuthenticationSuccessEventAdapter
     implements EventLoggingAdapter<AuthenticationSuccessEvent>
 {
     @Override
-    public boolean accepts(Object aEvent)
+    public boolean accepts(Class<?> aEvent)
     {
-        return aEvent instanceof AuthenticationSuccessEvent;
+        return AuthenticationSuccessEvent.class.isAssignableFrom(aEvent);
     }
 
     @Override
@@ -51,10 +51,8 @@ public class AuthenticationSuccessEventAdapter
     @Override
     public String getDetails(AuthenticationSuccessEvent aEvent) throws IOException
     {
-        String sessionId;
-
         try {
-            sessionId = RequestContextHolder.currentRequestAttributes().getSessionId();
+            var sessionId = RequestContextHolder.currentRequestAttributes().getSessionId();
 
             SessionDetails details = new SessionDetails(sessionId);
 

@@ -79,5 +79,5 @@ The CoNLL 2006 (aka CoNLL-X) format targets dependency parsing. Columns are tab-
 .Example
 [source,text,tabsize=0]
 ----
-Heutzutage	heutzutage	ADV	_	_	ADV	_	_
+1	Heutzutage	heutzutage	ADV	_	_	ADV	_	_
 ----

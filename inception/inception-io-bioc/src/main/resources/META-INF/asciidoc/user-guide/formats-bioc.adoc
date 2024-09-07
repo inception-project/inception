@@ -15,7 +15,7 @@
 // limitations under the License.
 
 [[sect_formats_bioc]]
-= BioC (experimental)
+= 🧪 BioC
 
 ====
 CAUTION: Experimental feature. To use this functionality, you need to enable it first by adding `format.bioc.enabled=true` to the `settings.properties` file (see the <<admin-guide.adoc#sect_settings, Admin Guide>>).
@@ -46,6 +46,12 @@ NOTE: This format dynamically maps information from the imported files to the la
 * If a document has not been imported from a BioC file containing passages and does not contain
   `Div` annotations from any other source either, then on export a single passage containing the
   entire document is created.
+* Multi-value features are supported. They are serialized as a sequence of infons using the same key
+  (but different values). They can also be deserialized from those infons. When there are multiple
+  infons with the same key during deserialization but the target feature is not multi-valued, then
+  only the first infon is considered and the others are ignored.
+
+.Unsupported features  
 * Cross-passage relations are not supported.
 * Sentence-level infons are not supported.
 * Passage-level infons are not supported.

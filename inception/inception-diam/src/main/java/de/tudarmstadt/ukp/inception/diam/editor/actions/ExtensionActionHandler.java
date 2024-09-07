@@ -17,16 +17,14 @@
  */
 package de.tudarmstadt.ukp.inception.diam.editor.actions;
 
-import org.apache.uima.cas.CAS;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.request.Request;
 import org.springframework.core.annotation.Order;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
+import de.tudarmstadt.ukp.inception.diam.editor.DiamAjaxBehavior;
 import de.tudarmstadt.ukp.inception.diam.editor.config.DiamAutoConfig;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.DefaultAjaxResponse;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorExtensionRegistry;
-import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 
 /**
  * <p>
@@ -59,13 +57,16 @@ public class ExtensionActionHandler
     }
 
     @Override
-    public DefaultAjaxResponse handle(AjaxRequestTarget aTarget, Request aRequest)
+    public DefaultAjaxResponse handle(DiamAjaxBehavior aBehavior, AjaxRequestTarget aTarget,
+            Request aRequest)
     {
         try {
-            AnnotationPageBase page = getPage();
-            String action = getAction(aRequest);
-            VID paramId = getVid(aRequest);
-            CAS cas = page.getEditorCas();
+            var page = getPage();
+            page.ensureIsEditable();
+
+            var action = getAction(aRequest);
+            var paramId = getVid(aRequest);
+            var cas = page.getEditorCas();
 
             extensionRegistry.fireAction(page.getAnnotationActionHandler(), page.getModelObject(),
                     aTarget, cas, paramId, action);

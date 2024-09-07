@@ -20,12 +20,13 @@ package de.tudarmstadt.ukp.inception.feature.lookup;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.FeatureStructure;
+import org.apache.uima.fit.util.FSUtil;
 import org.apache.uima.resource.metadata.TypeDescription;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.wicket.MarkupContainer;
@@ -46,7 +47,6 @@ import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetailGroup;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureEditor;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupport;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureType;
-import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 
 /**
  * <p>
@@ -116,6 +116,16 @@ public class LookupFeatureSupport
     }
 
     @Override
+    public boolean isFeatureValueValid(AnnotationFeature aFeature, FeatureStructure aFS)
+    {
+        if (aFeature.isRequired()) {
+            return isNotBlank(FSUtil.getFeature(aFS, aFeature.getName(), String.class));
+        }
+
+        return true;
+    }
+
+    @Override
     public String renderFeatureValue(AnnotationFeature aFeature, String aId)
     {
         if (aId == null) {
@@ -124,6 +134,12 @@ public class LookupFeatureSupport
 
         LookupFeatureTraits traits = readTraits(aFeature);
         return labelCache.get(aFeature, traits, aId).getUiLabel();
+    }
+
+    @Override
+    public <V> V getDefaultFeatureValue(AnnotationFeature aFeature, FeatureStructure aFS)
+    {
+        return null;
     }
 
     @SuppressWarnings("unchecked")
@@ -198,33 +214,11 @@ public class LookupFeatureSupport
     }
 
     @Override
-    public LookupFeatureTraits readTraits(AnnotationFeature aFeature)
+    public LookupFeatureTraits createDefaultTraits()
     {
-        LookupFeatureTraits traits = null;
-        try {
-            traits = JSONUtil.fromJsonString(LookupFeatureTraits.class, aFeature.getTraits());
-        }
-        catch (IOException e) {
-            LOG.error("Unable to read traits", e);
-        }
-
-        if (traits == null) {
-            traits = new LookupFeatureTraits();
-            traits.setLimit(properties.getDefaultMaxResults());
-        }
-
+        var traits = new LookupFeatureTraits();
+        traits.setLimit(properties.getDefaultMaxResults());
         return traits;
-    }
-
-    @Override
-    public void writeTraits(AnnotationFeature aFeature, LookupFeatureTraits aTraits)
-    {
-        try {
-            aFeature.setTraits(JSONUtil.toJsonString(aTraits));
-        }
-        catch (IOException e) {
-            LOG.error("Unable to write traits", e);
-        }
     }
 
     @Override
@@ -233,13 +227,13 @@ public class LookupFeatureSupport
     {
         aTD.addFeature(aFeature.getName(), "", CAS.TYPE_NAME_STRING);
     }
-    
+
     @Override
     public List<VLazyDetailGroup> lookupLazyDetails(AnnotationFeature aFeature, Object aValue)
     {
         if (aValue instanceof LookupEntry) {
             var handle = (LookupEntry) aValue;
-            
+
             var result = new VLazyDetailGroup();
             result.addDetail(new VLazyDetail("Label", handle.getUiLabel()));
 
@@ -249,7 +243,7 @@ public class LookupFeatureSupport
 
             return asList(result);
         }
-        
+
         return Collections.emptyList();
     }
 }

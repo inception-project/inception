@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.preferences;
 
 import java.util.List;
+import java.util.Optional;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
@@ -26,23 +27,32 @@ import de.tudarmstadt.ukp.inception.preferences.model.UserProjectPreference;
 
 public interface PreferencesService
 {
-    <T> T loadTraitsForUser(Key<T> aKey, User aUser);
+    <T extends PreferenceValue> T loadTraitsForUser(PreferenceKey<T> aKey, User aUser);
 
-    <T> void saveTraitsForUser(Key<T> aKey, User aUser, T aTraits);
+    <T extends PreferenceValue> void saveTraitsForUser(PreferenceKey<T> aKey, User aUser,
+            T aTraits);
 
-    <T> T loadTraitsForUserAndProject(Key<T> aKey, User aUser, Project aProject);
+    <T extends PreferenceValue> T loadTraitsForUserAndProject(PreferenceKey<T> aKey, User aUser,
+            Project aProject);
 
-    <T> void saveTraitsForUserAndProject(Key<T> aKey, User aUser, Project aProject, T aTraits);
+    <T extends PreferenceValue> Optional<T> loadOptionalTraitsForUserAndProject(
+            PreferenceKey<T> aKey, User aUser, Project aProject);
+
+    <T extends PreferenceValue> void saveTraitsForUserAndProject(PreferenceKey<T> aKey, User aUser,
+            Project aProject, T aTraits);
 
     List<UserProjectPreference> listUserPreferencesForProject(Project aProject);
 
     void saveUserProjectPreference(UserProjectPreference aPreference);
 
-    <T> T loadDefaultTraitsForProject(Key<T> aKey, Project aProject);
+    <T extends PreferenceValue> T loadDefaultTraitsForProject(PreferenceKey<T> aKey,
+            Project aProject);
 
-    <T> void saveDefaultTraitsForProject(Key<T> aKey, Project aProject, T aTraits);
+    <T extends PreferenceValue> void saveDefaultTraitsForProject(PreferenceKey<T> aKey,
+            Project aProject, T aTraits);
 
-    <T> void clearDefaultTraitsForProject(Key<T> aKey, Project aProject);
+    <T extends PreferenceValue> void clearDefaultTraitsForProject(PreferenceKey<T> aKey,
+            Project aProject);
 
     List<DefaultProjectPreference> listDefaultTraitsForProject(Project aProject);
 

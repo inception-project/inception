@@ -25,33 +25,50 @@ import javax.xml.namespace.QName;
 public class AttributePolicyBuilder
 {
     private final PolicyCollectionBuilder parent;
+    private final Pattern[] qnamePatterns;
     private final QName[] attributeNames;
     private final AttributeAction action;
 
-    private Pattern pattern;
+    private Pattern valuePattern;
+
+    public AttributePolicyBuilder(PolicyCollectionBuilder aParent, AttributeAction aAction,
+            Pattern[] aQNamePattern)
+    {
+        parent = aParent;
+        qnamePatterns = aQNamePattern;
+        attributeNames = null;
+        action = aAction;
+    }
 
     public AttributePolicyBuilder(PolicyCollectionBuilder aParent, AttributeAction aAction,
             QName... aAttributeNames)
     {
         parent = aParent;
+        qnamePatterns = null;
         attributeNames = aAttributeNames;
         action = aAction;
     }
 
-    public AttributePolicyBuilder matching(Pattern aPattern)
+    public AttributePolicyBuilder matchingValue(Pattern aPattern)
     {
         if (aPattern == null) {
             throw new IllegalArgumentException("matching requires a pattern");
         }
 
-        this.pattern = aPattern;
+        valuePattern = aPattern;
         return this;
     }
 
     public PolicyCollectionBuilder globally()
     {
+        if (qnamePatterns != null) {
+            var policy = makePolicy(qnamePatterns);
+            parent.globalAttributePolicy(policy);
+            return parent;
+        }
+
         for (var attributeName : attributeNames) {
-            AttributePolicy policy = makePolicy(attributeName);
+            var policy = makePolicy(attributeName);
             parent.globalAttributePolicy(policy);
         }
 
@@ -70,9 +87,9 @@ public class AttributePolicyBuilder
             throw new IllegalArgumentException("onElements does not accept an empty list");
         }
 
-        for (var elementName : aElementNames) {
-            for (var attributeName : attributeNames) {
-                AttributePolicy policy = makePolicy(attributeName);
+        for (var attributeName : attributeNames) {
+            var policy = makePolicy(attributeName);
+            for (var elementName : aElementNames) {
                 parent.attributePolicy(elementName, attributeName, policy);
             }
         }
@@ -82,13 +99,15 @@ public class AttributePolicyBuilder
 
     private AttributePolicy makePolicy(QName attributeName)
     {
-        AttributePolicy policy;
-        if (pattern != null) {
-            policy = new PatternAttributePolicy(attributeName, action, pattern);
+        if (valuePattern != null) {
+            return new AttributeValueMatchingPolicy(attributeName, action, valuePattern);
         }
-        else {
-            policy = new AttributePolicy(attributeName, action);
-        }
-        return policy;
+
+        return new QNameAttributePolicy(attributeName, action);
+    }
+
+    private AttributePolicy makePolicy(Pattern[] aQnamePattern)
+    {
+        return new QNameMatchingAttributePolicy(aQnamePattern, action, valuePattern);
     }
 }

@@ -18,8 +18,12 @@
 package de.tudarmstadt.ukp.inception.externaleditor.xhtml;
 
 import static java.lang.invoke.MethodHandles.lookup;
+import static java.util.Optional.ofNullable;
 import static org.slf4j.LoggerFactory.getLogger;
 import static org.springframework.http.HttpStatus.OK;
+import static org.springframework.http.MediaType.IMAGE_GIF;
+import static org.springframework.http.MediaType.IMAGE_JPEG;
+import static org.springframework.http.MediaType.IMAGE_PNG;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -27,10 +31,10 @@ import java.io.StringWriter;
 import java.security.Principal;
 import java.util.Locale;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
-import javax.servlet.ServletContext;
+import javax.xml.XMLConstants;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.uima.cas.CAS;
 import org.dkpro.core.api.xml.type.XmlDocument;
 import org.dkpro.core.api.xml.type.XmlElement;
@@ -54,6 +58,7 @@ import org.xml.sax.helpers.AttributesImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentStorageService;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorRegistry;
 import de.tudarmstadt.ukp.inception.externaleditor.XmlDocumentViewControllerImplBase;
 import de.tudarmstadt.ukp.inception.externaleditor.policy.DefaultHtmlDocumentPolicy;
@@ -61,6 +66,7 @@ import de.tudarmstadt.ukp.inception.externaleditor.policy.SafetyNetDocumentPolic
 import de.tudarmstadt.ukp.inception.externaleditor.xml.XmlCas2SaxEvents;
 import de.tudarmstadt.ukp.inception.io.xml.dkprocore.Cas2SaxEvents;
 import de.tudarmstadt.ukp.inception.support.wicket.ServletContextUtils;
+import jakarta.servlet.ServletContext;
 
 @ConditionalOnWebApplication
 @RestController
@@ -69,6 +75,8 @@ public class XHtmlXmlDocumentViewControllerImpl
     extends XmlDocumentViewControllerImplBase
     implements XHtmlXmlDocumentViewController
 {
+    private static final MediaType IMAGE_SVG = MediaType.parseMediaType("image/svg+xml");
+
     private static final Logger LOG = getLogger(lookup().lookupClass());
 
     private static final String GET_DOCUMENT_PATH = "/p/{projectId}/d/{documentId}/xml";
@@ -81,11 +89,13 @@ public class XHtmlXmlDocumentViewControllerImpl
     private static final String P = "p";
 
     private final DocumentService documentService;
+    private final DocumentStorageService documentStorageService;
     private final DocumentImportExportService formatRegistry;
     private final ServletContext servletContext;
 
     @Autowired
     public XHtmlXmlDocumentViewControllerImpl(DocumentService aDocumentService,
+            DocumentStorageService aDocumentStorageService,
             AnnotationEditorRegistry aAnnotationEditorRegistry, ServletContext aServletContext,
             DocumentImportExportService aFormatRegistry, DefaultHtmlDocumentPolicy aDefaultPolicy,
             SafetyNetDocumentPolicy aSafetyNetPolicy)
@@ -93,6 +103,7 @@ public class XHtmlXmlDocumentViewControllerImpl
         super(aDefaultPolicy, aSafetyNetPolicy, aFormatRegistry, aAnnotationEditorRegistry);
 
         documentService = aDocumentService;
+        documentStorageService = aDocumentStorageService;
         servletContext = aServletContext;
         formatRegistry = aFormatRegistry;
     }
@@ -107,7 +118,7 @@ public class XHtmlXmlDocumentViewControllerImpl
 
     private void renderXmlStylesheet(ContentHandler ch, String aStylesheetUrl) throws SAXException
     {
-        AttributesImpl attr = new AttributesImpl();
+        var attr = new AttributesImpl();
         attr.addAttribute(null, null, "rel", null, "stylesheet");
         attr.addAttribute(null, null, "type", null, "text/css");
         attr.addAttribute(null, null, "href", null, aStylesheetUrl);
@@ -123,11 +134,11 @@ public class XHtmlXmlDocumentViewControllerImpl
             @RequestParam("editor") Optional<String> aEditor, Principal principal)
         throws Exception
     {
-        SourceDocument doc = documentService.getSourceDocument(aProjectId, aDocumentId);
+        var doc = documentService.getSourceDocument(aProjectId, aDocumentId);
 
-        CAS cas = documentService.createOrReadInitialCas(doc);
+        var cas = documentService.createOrReadInitialCas(doc);
 
-        try (StringWriter out = new StringWriter()) {
+        try (var out = new StringWriter()) {
             Optional<XmlDocument> maybeXmlDocument;
             if (cas.getTypeSystem().getType(XmlDocument._TypeName) != null) {
                 maybeXmlDocument = cas.select(XmlDocument.class).findFirst();
@@ -143,14 +154,16 @@ public class XHtmlXmlDocumentViewControllerImpl
 
             var rawHandler = XmlCas2SaxEvents.makeSerializer(out);
             var sanitizingHandler = applySanitizers(aEditor, doc, rawHandler);
+            var resourceFilteringHandler = applyHtmlResourceUrlFilter(doc, sanitizingHandler);
+            var finalHandler = resourceFilteringHandler;
 
             // If the CAS contains an actual HTML structure, then we send that. Mind that we do
             // not inject format-specific CSS then!
             if (casContainsHtml) {
-                XmlDocument xml = maybeXmlDocument.get();
+                var xml = maybeXmlDocument.get();
                 startXHtmlDocument(rawHandler);
 
-                var serializer = new XmlCas2SaxEvents(xml, sanitizingHandler);
+                var serializer = new XmlCas2SaxEvents(xml, finalHandler);
                 serializer.process(xml.getRoot());
 
                 endXHtmlDocument(rawHandler);
@@ -167,10 +180,22 @@ public class XHtmlXmlDocumentViewControllerImpl
             if (maybeXmlDocument.isEmpty()) {
                 // Gracefully handle the case that the CAS does not contain any XML structure at all
                 // and show only the document text in this case.
-                renderTextContent(cas, sanitizingHandler);
+                renderTextContent(cas, finalHandler);
             }
             else {
-                renderXmlContent(doc, sanitizingHandler, aEditor, maybeXmlDocument.get());
+                var formatPolicy = formatRegistry.getFormatPolicy(doc);
+                var defaultNamespace = formatPolicy.flatMap(policy -> policy.getDefaultNamespace());
+
+                if (defaultNamespace.isPresent()) {
+                    finalHandler.startPrefixMapping(XMLConstants.DEFAULT_NS_PREFIX,
+                            defaultNamespace.get());
+                }
+
+                renderXmlContent(doc, finalHandler, aEditor, maybeXmlDocument.get());
+
+                if (defaultNamespace.isPresent()) {
+                    finalHandler.endPrefixMapping(XMLConstants.DEFAULT_NS_PREFIX);
+                }
             }
             rawHandler.endElement(null, null, BODY);
 
@@ -197,9 +222,8 @@ public class XHtmlXmlDocumentViewControllerImpl
     private void renderHead(SourceDocument doc, ContentHandler ch) throws SAXException
     {
         ch.startElement(null, null, HEAD, null);
-        for (String cssUrl : formatRegistry.getFormatCssStylesheets(doc).stream()
-                .map(css -> ServletContextUtils.referenceToUrl(servletContext, css))
-                .collect(Collectors.toList())) {
+        for (var cssUrl : formatRegistry.getFormatCssStylesheets(doc).stream()
+                .map(css -> ServletContextUtils.referenceToUrl(servletContext, css)).toList()) {
             renderXmlStylesheet(ch, cssUrl);
         }
         ch.endElement(null, null, HEAD);
@@ -248,27 +272,54 @@ public class XHtmlXmlDocumentViewControllerImpl
         var srcDoc = documentService.getSourceDocument(aProjectId, aDocumentId);
 
         var maybeFormatSupport = formatRegistry.getFormatById(srcDoc.getFormat());
-        if (!maybeFormatSupport.isPresent()) {
+        if (maybeFormatSupport.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
 
-        var srcDocFile = documentService.getSourceDocumentFile(srcDoc);
+        var srcDocFile = documentStorageService.getSourceDocumentFile(srcDoc);
 
         var formatSupport = maybeFormatSupport.get();
 
+        if (!formatSupport.hasResources()
+                || !formatSupport.isAccessibleResource(srcDocFile, aResourceId)) {
+            LOG.debug("Resource [{}] for document {} not found", aResourceId, srcDoc);
+            return ResponseEntity.notFound().build();
+        }
+
         try {
             var inputStream = formatSupport.openResourceStream(srcDocFile, aResourceId);
-            HttpHeaders httpHeaders = new HttpHeaders();
+            var httpHeaders = new HttpHeaders();
+
+            getContentType(aResourceId).ifPresent(httpHeaders::setContentType);
+
             return new ResponseEntity<>(new InputStreamResource(inputStream), httpHeaders, OK);
         }
         catch (FileNotFoundException e) {
-            LOG.error("Resource [{}] for document {} not found", aResourceId, srcDoc);
+            LOG.debug("Resource [{}] for document {} not found", aResourceId, srcDoc);
             return ResponseEntity.notFound().build();
         }
         catch (Exception e) {
-            LOG.error("Unable to load resource [{}] for document {}", aResourceId, srcDoc, e);
+            LOG.debug("Unable to load resource [{}] for document {}", aResourceId, srcDoc, e);
             return ResponseEntity.notFound().build();
         }
+    }
+
+    private Optional<MediaType> getContentType(String aResourceId)
+    {
+        var suffix = StringUtils.substringAfterLast(aResourceId, ".");
+
+        if (suffix == null) {
+            return Optional.empty();
+        }
+
+        return ofNullable(switch (suffix) {
+        case "svg" -> IMAGE_SVG;
+        case "png" -> IMAGE_PNG;
+        case "gif" -> IMAGE_GIF;
+        case "jpg" -> IMAGE_JPEG;
+        case "jpeg" -> IMAGE_JPEG;
+        default -> null;
+        });
     }
 
     private ResponseEntity<String> toResponse(StringWriter aOut)

@@ -17,22 +17,18 @@
  */
 package de.tudarmstadt.ukp.inception.app.config;
 
-import static javax.servlet.DispatcherType.ASYNC;
-import static javax.servlet.DispatcherType.FORWARD;
-import static javax.servlet.DispatcherType.REQUEST;
+import static jakarta.servlet.DispatcherType.ASYNC;
+import static jakarta.servlet.DispatcherType.FORWARD;
+import static jakarta.servlet.DispatcherType.REQUEST;
+import static java.util.Arrays.asList;
 
 import java.io.IOException;
-import java.util.EnumSet;
-
-import javax.servlet.FilterChain;
-import javax.servlet.FilterRegistration;
-import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import java.util.EventListener;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.web.servlet.ServletContextInitializer;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
+import org.springframework.boot.web.servlet.ServletListenerRegistrationBean;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.orm.jpa.support.OpenEntityManagerInViewFilter;
 import org.springframework.security.web.session.HttpSessionEventPublisher;
@@ -40,48 +36,55 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
 import de.tudarmstadt.ukp.inception.support.logging.LoggingFilter;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 @Configuration
 public class InceptionServletContextInitializer
-    implements ServletContextInitializer
 {
     private @Autowired RepositoryProperties repoProperties;
 
-    @Override
-    public void onStartup(ServletContext aServletContext) throws ServletException
+    @Bean
+    public ServletListenerRegistrationBean<EventListener> springSessionLookup()
     {
-        configureCoep(aServletContext);
-        configureLogging(aServletContext);
-        configurePerRequestJpaSession(aServletContext);
-        configureSpringSessionLookup(aServletContext);
+        var registration = new ServletListenerRegistrationBean<EventListener>();
+        registration.setListener(new HttpSessionEventPublisher());
+        registration.setOrder(0);
+        return registration;
     }
 
-    private void configureSpringSessionLookup(ServletContext aServletContext)
-    {
-        // Provide Spring with access to the HTTP sessions
-        aServletContext.addListener(HttpSessionEventPublisher.class);
-    }
-
-    private void configurePerRequestJpaSession(ServletContext aServletContext)
+    @Bean
+    public FilterRegistrationBean<OpenEntityManagerInViewFilter> perRequestJpaSession()
     {
         // Make sure we have one JPA session/transaction per request. Closes session at the
         // end, without this, changed data may not be automatically saved to the DB.
-        FilterRegistration openSessionInViewFilter = aServletContext.addFilter("opensessioninview",
-                OpenEntityManagerInViewFilter.class);
-        openSessionInViewFilter.addMappingForUrlPatterns(EnumSet.of(REQUEST), false, "/*");
+        var registration = new FilterRegistrationBean<>(new OpenEntityManagerInViewFilter());
+        registration.setName("opensessioninview");
+        registration.setDispatcherTypes(REQUEST);
+        registration.setUrlPatterns(asList("/*"));
+        registration.setOrder(0);
+        return registration;
     }
 
-    private void configureLogging(ServletContext aServletContext)
+    @Bean
+    public FilterRegistrationBean<LoggingFilter> loggingFilter()
     {
         // Make username / repository accessible to logging framework
-        FilterRegistration loggingFilter = aServletContext.addFilter("logging",
+        var registration = new FilterRegistrationBean<>(
                 new LoggingFilter(repoProperties.getPath().getAbsolutePath().toString()));
-        loggingFilter.addMappingForUrlPatterns(EnumSet.of(REQUEST, FORWARD, ASYNC), false, "/*");
+        registration.setName("logging");
+        registration.setDispatcherTypes(REQUEST, FORWARD, ASYNC);
+        registration.setUrlPatterns(asList("/*"));
+        registration.setOrder(0);
+        return registration;
     }
 
-    private void configureCoep(ServletContext aServletContext)
+    @Bean
+    public FilterRegistrationBean<OncePerRequestFilter> coepFilter()
     {
-        FilterRegistration coepFilter = aServletContext.addFilter("coep", new OncePerRequestFilter()
+        OncePerRequestFilter filter = new OncePerRequestFilter()
         {
             @Override
             protected void doFilterInternal(HttpServletRequest aRequest,
@@ -95,7 +98,12 @@ public class InceptionServletContextInitializer
                 response.setHeader("Cross-Origin-Opener-Policy", "same-origin");
                 aFilterChain.doFilter(aRequest, aResponse);
             }
-        });
-        coepFilter.addMappingForUrlPatterns(EnumSet.of(REQUEST, FORWARD, ASYNC), false, "/*");
+        };
+        var registration = new FilterRegistrationBean<>(filter);
+        registration.setName("coep");
+        registration.setDispatcherTypes(REQUEST, FORWARD, ASYNC);
+        registration.setUrlPatterns(asList("/*"));
+        registration.setOrder(0);
+        return registration;
     }
 }

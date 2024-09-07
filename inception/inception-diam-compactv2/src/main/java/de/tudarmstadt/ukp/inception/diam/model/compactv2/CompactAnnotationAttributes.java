@@ -20,6 +20,8 @@ package de.tudarmstadt.ukp.inception.diam.model.compactv2;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonFormat.Shape;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -32,11 +34,13 @@ public class CompactAnnotationAttributes
     public static final String ATTR_COLOR = "c";
     public static final String ATTR_COMMENTS = "cm";
     public static final String ATTR_SCORE = "s";
+    public static final String ATTR_HIDE_SCORE = "hs";
 
     private @JsonProperty(ATTR_LABEL) String labelText;
     private @JsonProperty(ATTR_COLOR) String color;
     private @JsonProperty(ATTR_COMMENTS) List<CompactComment> comments;
     private @JsonProperty(ATTR_SCORE) double score;
+    private @JsonProperty(ATTR_HIDE_SCORE) boolean hideScore;
 
     @JsonInclude(Include.NON_DEFAULT)
     @JsonSerialize(using = ScoreSerializer.class)
@@ -48,6 +52,18 @@ public class CompactAnnotationAttributes
     public void setScore(double aScore)
     {
         score = aScore;
+    }
+
+    @JsonFormat(shape = Shape.NUMBER)
+    @JsonInclude(Include.NON_DEFAULT)
+    public boolean isHideScore()
+    {
+        return hideScore;
+    }
+
+    public void setHideScore(boolean aHideScore)
+    {
+        hideScore = aHideScore;
     }
 
     public void setLabelText(String aLabelText)

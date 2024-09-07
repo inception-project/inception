@@ -1,0 +1,142 @@
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: inception-data-pv
+  labels:
+    type: local
+spec:
+  storageClassName: standard
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/srv/inception-kubernetes/data"
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: inception-log-pv
+  labels:
+    type: local
+spec:
+  storageClassName: standard
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/srv/inception-kubernetes/data"
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: inception-tmp-pv
+  labels:
+    type: local
+spec:
+  storageClassName: standard
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/srv/inception-kubernetes/data"
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: inception-data-pvc
+spec:
+  storageClassName: standard
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: inception-tmp-pvc
+spec:
+  storageClassName: standard
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: inception-log-pvc
+spec:
+  storageClassName: standard
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+   name: inception-svc
+   labels:
+     app: inception
+spec:
+   type: NodePort
+   ports:
+   - protocol: TCP
+     port: 8080
+     targetPort: 8080
+     nodePort: 32000
+   selector:
+     app: inception
+---     
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: inception
+spec:
+  selector:
+    matchLabels:
+      app: inception
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: inception
+    spec:
+      securityContext:
+        runAsUser: 2000
+        runAsGroup: 2000
+        fsGroup: 2000
+        runAsNonRoot: true
+      containers:
+      - name: inception
+        image: "ghcr.io/inception-project/inception-snapshots:{revnumber}"
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+        securityContext:
+          readOnlyRootFilesystem: true
+          privileged: false
+        volumeMounts:
+        - mountPath: /export
+          name: inception-data-pv
+        - mountPath: /tmp
+          name: inception-tmp-pv
+        - mountPath: /var/log
+          name: inception-log-pv
+      volumes:
+      - name: inception-data-pv
+        persistentVolumeClaim:
+          claimName: inception-data-pvc
+      - name: inception-tmp-pv
+        persistentVolumeClaim:
+          claimName: inception-tmp-pvc
+      - name: inception-log-pv
+        persistentVolumeClaim:
+          claimName: inception-log-pvc

@@ -28,7 +28,6 @@ import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.zip.ZipFile;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -45,19 +44,17 @@ import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.diag.ChecksRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.diag.RepairsRegistry;
-import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageServiceImpl;
 import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageBackupProperties;
 import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageCachePropertiesImpl;
 import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStoragePropertiesImpl;
-import de.tudarmstadt.ukp.inception.annotation.storage.driver.CasStorageDriver;
 import de.tudarmstadt.ukp.inception.annotation.storage.driver.filesystem.FileSystemCasStorageDriver;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
+import de.tudarmstadt.ukp.inception.documents.api.RepositoryPropertiesImpl;
 import de.tudarmstadt.ukp.inception.export.DocumentImportExportServiceImpl;
-import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceProperties;
 import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServicePropertiesImpl;
 import de.tudarmstadt.ukp.inception.io.xmi.XmiFormatSupport;
 import de.tudarmstadt.ukp.inception.io.xmi.config.UimaFormatsPropertiesImpl.XmiFormatProperties;
@@ -67,8 +64,6 @@ import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 @ExtendWith(MockitoExtension.class)
 public class CuratedDocumentsExporterTest
 {
-    public @TempDir File tempFolder;
-
     private RepositoryProperties repositoryProperties;
     private DocumentImportExportService importExportSerivce;
     private CasStorageService casStorageService;
@@ -78,8 +73,9 @@ public class CuratedDocumentsExporterTest
     private @Mock ChecksRegistry checksRegistry;
     private @Mock RepairsRegistry repairsRegistry;
 
-    private Project project;
-    private File workFolder;
+    private Project targetProject;
+
+    private @TempDir File tempDir;
     private long nextDocId = 1;
 
     private CuratedDocumentsExporter sut;
@@ -87,36 +83,30 @@ public class CuratedDocumentsExporterTest
     @BeforeEach
     public void setUp() throws Exception
     {
-        workFolder = tempFolder;
+        targetProject = Project.builder() //
+                .withId(2l) //
+                .withName("Test Project") //
+                .build();
 
-        project = new Project();
-        project.setId(1l);
-        project.setName("Test Project");
+        var properties = new DocumentImportExportServicePropertiesImpl();
 
-        DocumentImportExportServiceProperties properties = new DocumentImportExportServicePropertiesImpl();
+        repositoryProperties = new RepositoryPropertiesImpl();
+        repositoryProperties.setPath(tempDir);
 
-        repositoryProperties = new RepositoryProperties();
-        repositoryProperties.setPath(workFolder);
-
-        CasStorageDriver driver = new FileSystemCasStorageDriver(repositoryProperties,
+        var driver = new FileSystemCasStorageDriver(repositoryProperties,
                 new CasStorageBackupProperties(), new CasStoragePropertiesImpl());
 
         casStorageService = spy(new CasStorageServiceImpl(driver,
                 new CasStorageCachePropertiesImpl(), null, schemaService));
 
         var xmiFormatSupport = new XmiFormatSupport(new XmiFormatProperties());
-        importExportSerivce = new DocumentImportExportServiceImpl(repositoryProperties,
-                asList(xmiFormatSupport), casStorageService, schemaService, properties,
-                checksRegistry, repairsRegistry, xmiFormatSupport);
+        importExportSerivce = new DocumentImportExportServiceImpl(asList(xmiFormatSupport),
+                casStorageService, schemaService, properties, checksRegistry, repairsRegistry,
+                xmiFormatSupport);
 
         // Dynamically generate a SourceDocument with an incrementing ID when asked for one
-        when(documentService.getSourceDocument(any(), any())).then(invocation -> {
-            SourceDocument doc = new SourceDocument();
-            doc.setId(nextDocId++);
-            doc.setProject(invocation.getArgument(0, Project.class));
-            doc.setName(invocation.getArgument(1, String.class));
-            return doc;
-        });
+        when(documentService.getSourceDocument(any(), any()))
+                .then(call -> sourceDocument(call.getArgument(0), call.getArgument(1)));
 
         sut = new CuratedDocumentsExporter(documentService, importExportSerivce);
     }
@@ -124,38 +114,43 @@ public class CuratedDocumentsExporterTest
     @Test
     public void thatImportingAnnotationProjectWorks_3_6_1() throws Exception
     {
-        // Export the project and import it again
-        List<Pair<SourceDocument, String>> imported = runImportAndFetchDocuments(new ZipFile(
-                "src/test/resources/exports/Export+Test+-+Curated+annotation+project_3_6_1.zip"));
-
-        // Check that the curation for the document in the project is imported
-        assertThat(imported).extracting(p -> p.getKey().getName())
-                .containsExactlyInAnyOrder("example_sentence.txt");
-        assertThat(imported).extracting(Pair::getValue).containsExactlyInAnyOrder(CURATION_USER);
-    }
-
-    private List<Pair<SourceDocument, String>> runImportAndFetchDocuments(ZipFile aZipFile)
-        throws Exception
-    {
-        ArgumentCaptor<SourceDocument> sourceDocCaptor = ArgumentCaptor
-                .forClass(SourceDocument.class);
-        ArgumentCaptor<String> usernameCaptor = ArgumentCaptor.forClass(String.class);
+        // Project is already exported
+        var zipFile = new ZipFile(
+                "src/test/resources/exports/Export+Test+-+Curated+annotation+project_3_6_1.zip");
+        var sourceDocCaptor = ArgumentCaptor.forClass(SourceDocument.class);
+        var usernameCaptor = ArgumentCaptor.forClass(String.class);
 
         // Import the project again
-        ExportedProject exProject = ProjectExportServiceImpl.loadExportedProject(aZipFile);
-        ProjectImportRequest importRequest = new ProjectImportRequest(true);
-        sut.importData(importRequest, project, exProject, aZipFile);
+        var exProject = ProjectExportServiceImpl.loadExportedProject(zipFile);
+        var importRequest = new ProjectImportRequest(true);
+        sut.importData(importRequest, targetProject, exProject, zipFile);
 
         verify(documentService, atLeastOnce()).importCas(sourceDocCaptor.capture(),
                 usernameCaptor.capture(), any());
 
-        List<Pair<SourceDocument, String>> importedCases = new ArrayList<>();
-        List<SourceDocument> docs = sourceDocCaptor.getAllValues();
-        List<String> users = usernameCaptor.getAllValues();
-        for (int i = 0; i < docs.size(); i++) {
+        var importedCases = new ArrayList<Pair<SourceDocument, String>>();
+        var docs = sourceDocCaptor.getAllValues();
+        var users = usernameCaptor.getAllValues();
+        for (var i = 0; i < docs.size(); i++) {
             importedCases.add(Pair.of(docs.get(i), users.get(i)));
         }
+        var imported = importedCases;
 
-        return importedCases;
+        // Check that the curation for the document in the project is imported
+        assertThat(imported) //
+                .extracting(p -> p.getKey().getName()) //
+                .containsExactlyInAnyOrder("example_sentence.txt");
+        assertThat(imported) //
+                .extracting(Pair::getValue) //
+                .containsExactlyInAnyOrder(CURATION_USER);
+    }
+
+    private Object sourceDocument(Project aProject, String aName)
+    {
+        var doc = new SourceDocument();
+        doc.setId(nextDocId++);
+        doc.setProject(aProject);
+        doc.setName(aName);
+        return doc;
     }
 }

@@ -17,10 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.preferences.exporter;
 
-import java.io.File;
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.zip.ZipFile;
+import java.util.zip.ZipOutputStream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,8 +46,7 @@ public class DefaultProjectPreferencesExporter
     implements ProjectExporter
 {
     private static final String KEY = "default-preferences";
-    private static final Logger LOG = LoggerFactory
-            .getLogger(DefaultProjectPreferencesExporter.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private final PreferencesService preferencesService;
 
@@ -59,14 +58,13 @@ public class DefaultProjectPreferencesExporter
 
     @Override
     public void exportData(FullProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
-            ExportedProject aExProject, File aFile)
+            ExportedProject aExProject, ZipOutputStream aStage)
     {
-        Project project = aRequest.getProject();
+        var project = aRequest.getProject();
 
-        List<ExportedDefaultProjectPreference> exportedDefaultPreferences = new ArrayList<>();
-        for (DefaultProjectPreference defaultPreference : preferencesService
-                .listDefaultTraitsForProject(project)) {
-            ExportedDefaultProjectPreference exportedDefaultPreference = new ExportedDefaultProjectPreference();
+        var exportedDefaultPreferences = new ArrayList<>();
+        for (var defaultPreference : preferencesService.listDefaultTraitsForProject(project)) {
+            var exportedDefaultPreference = new ExportedDefaultProjectPreference();
             exportedDefaultPreference.setName(defaultPreference.getName());
             exportedDefaultPreference.setTraits(defaultPreference.getTraits());
             exportedDefaultPreferences.add(exportedDefaultPreference);
@@ -81,11 +79,11 @@ public class DefaultProjectPreferencesExporter
     public void importData(ProjectImportRequest aRequest, Project aProject,
             ExportedProject aExProject, ZipFile aZip)
     {
-        ExportedDefaultProjectPreference[] exportedDefaultPreferences = aExProject
-                .getArrayProperty(KEY, ExportedDefaultProjectPreference.class);
+        var exportedDefaultPreferences = aExProject.getArrayProperty(KEY,
+                ExportedDefaultProjectPreference.class);
 
-        for (ExportedDefaultProjectPreference exportedDefaultPreference : exportedDefaultPreferences) {
-            DefaultProjectPreference defaultPreference = new DefaultProjectPreference();
+        for (var exportedDefaultPreference : exportedDefaultPreferences) {
+            var defaultPreference = new DefaultProjectPreference();
             defaultPreference.setProject(aProject);
             defaultPreference.setName(exportedDefaultPreference.getName());
             defaultPreference.setTraits(exportedDefaultPreference.getTraits());

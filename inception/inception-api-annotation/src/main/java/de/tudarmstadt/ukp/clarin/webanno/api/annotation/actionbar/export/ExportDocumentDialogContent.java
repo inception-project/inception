@@ -17,12 +17,10 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.export;
 
-import static java.util.stream.Collectors.toList;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.Serializable;
-import java.util.List;
+import java.lang.invoke.MethodHandles;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -58,7 +56,7 @@ public class ExportDocumentDialogContent
 {
     private static final long serialVersionUID = -2102136855109258306L;
 
-    private static final Logger LOG = LoggerFactory.getLogger(ExportDocumentDialogContent.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private @SpringBean DocumentImportExportService importExportService;
     private @SpringBean DocumentService documentService;
@@ -73,19 +71,19 @@ public class ExportDocumentDialogContent
         super(aId);
         state = aModel;
 
-        List<String> writeableFormats = importExportService.getWritableFormats().stream()
+        var writeableFormats = importExportService.getWritableFormats().stream()
                 .map(FormatSupport::getName) //
-                .sorted() //
-                .collect(toList());
+                .sorted(String.CASE_INSENSITIVE_ORDER) //
+                .toList();
 
-        Preferences prefs = new Preferences();
+        var prefs = new Preferences();
         prefs.format = writeableFormats.get(0);
 
         preferences = Model.of(prefs);
 
         queue(new Form<>("form", CompoundPropertyModel.of(preferences)));
 
-        DropDownChoice<String> format = new DropDownChoice<>("format", writeableFormats);
+        var format = new DropDownChoice<String>("format", writeableFormats);
         format.add(new LambdaAjaxFormComponentUpdatingBehavior("change"));
         queue(format);
 
@@ -103,9 +101,8 @@ public class ExportDocumentDialogContent
     {
         File exportedFile = null;
         try {
-            AnnotatorState s = state.getObject();
-            FormatSupport format = importExportService
-                    .getFormatByName(preferences.getObject().format).get();
+            var s = state.getObject();
+            var format = importExportService.getFormatByName(preferences.getObject().format).get();
             exportedFile = importExportService.exportAnnotationDocument(s.getDocument(),
                     s.getUser().getUsername(), format, s.getMode());
 

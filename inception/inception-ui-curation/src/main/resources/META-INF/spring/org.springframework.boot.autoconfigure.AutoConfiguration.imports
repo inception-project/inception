@@ -1,0 +1,3 @@
+de.tudarmstadt.ukp.clarin.webanno.ui.curation.config.LegacyCurationUIAutoConfiguration
+de.tudarmstadt.ukp.inception.ui.curation.config.CurationUIAutoConfiguration
+de.tudarmstadt.ukp.inception.ui.curation.sidebar.config.CurationSidebarAutoConfiguration

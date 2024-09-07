@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<!--
+  Licensed to the Technische Universität Darmstadt under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The Technische Universität Darmstadt 
+  licenses this file to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.
+   
+  http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<html xmlns:wicket="http://wicket.apache.org">
+<head>
+  <wicket:head>
+  <style type="text/css">
+    .page-content {
+      flex-direction: column !important;
+    }
+    
+    .curation-unit-number {
+      border: 1px solid white;
+      border-radius: 4px 4px 4px 4px;
+      -moz-border-radius: 4px 4px 4px 4px;
+      -webkit-border-radius: 4px 4px 4px 4px;
+      margin: 1px 1px;
+      padding: 1px 1px;
+      display: inline-block;
+      min-width: 4em;
+      max-width: 7.9em;
+      text-align: center;
+    }
+
+    .curation-unit-number a {
+      display: block;
+      text-decoration: none !important;
+      border-radius: 4px 4px 4px 4px;
+      -moz-border-radius: 4px 4px 4px 4px;
+      -webkit-border-radius: 4px 4px 4px 4px;
+    }
+    
+    .hidden-view {
+      background-color: #DFDFDF;
+    }
+    
+    .in-range {
+      border: 1px solid black;
+    }
+    
+    .out-range {
+      border: 1px solid white;
+    }
+    
+    .agree {
+      color: black !important;
+      background-color: #FFFFFF;
+    }
+
+    .curated {
+      color: black !important;
+      background-color: #77dd77;
+    }
+    
+    .disagree {
+      color: black !important;
+      background-color: #FF9999;
+    }
+
+    .stacked {
+      color: white !important;
+      background-color: #800080;
+    }
+
+    .incomplete {
+      color: black !important;
+      background-color: #DDA0DD;
+    }
+    
+    .current {
+      box-shadow: 0px 0px 5px 1px rgba(231,166,26,1);
+      border: 1px solid rgba(231,166,26,1);
+    }
+  </style>
+</wicket:head>
+</head>
+<body>
+  <wicket:extend>
+    <div class="annotation-editor-container flex-content flex-h-container flex-gutter">
+      <div wicket:id="leftSidebar" class="flex-sidebar flex-v-container flex-gutter">
+        <div class="flex-content card">
+          <div class="card-header">
+            Units
+            <div class="actions">
+              <button wicket:id="refresh" class="btn btn-action btn-secondary">
+                <i class="fas fa-redo"></i>
+                <span class="d-none d-lg-inline">
+                  &nbsp;<wicket:message key="refresh" />
+                </span>
+              </button>
+              <span class="dropdown" aria-haspopup="true" aria-expanded="false">
+                <span class="btn-group" role="group">
+                  <button class="btn btn-secondary btn-action" type="button">
+                    <wicket:message key="legend"/>
+                  </button>
+                  <button class="btn btn-secondary btn-action dropdown-toggle flex-content border-start" type="button" data-bs-toggle="dropdown"></button>
+                  <ul class="dropdown-menu shadow-lg" role="menu" style="min-width: 20em;">
+                    <li class="dropdown-item-text agree">
+                      <span class="badge badge-pill border border-secondary">&nbsp;</span>
+                      Agreement
+                      <div class="small text-muted ms-4">
+                        There is no disagreement between annotators. There is nothing to
+                        curate.
+                      </div>
+                    </li>
+                    <li class="dropdown-item-text">
+                      <span class="badge badge-pill curated">&nbsp;</span>
+                      Curated
+                      <div class="small text-muted ms-4">
+                        For every position any annotator has annotated, the is a corresponding 
+                        annotation at the same position in the curator's document.
+                      </div>
+                    </li>
+                    <li class="dropdown-item-text">
+                      <span class="badge badge-pill stacked">&nbsp;</span>
+                      Stacked annotations
+                      <div class="small text-muted ms-4">
+                        A single annotator has made multiple annotations of the same layer at a
+                        given position.
+                      </div>
+                    </li>
+                    <li class="dropdown-item-text">
+                      <span class="badge badge-pill incomplete">&nbsp;</span>
+                      Incomplete annotation
+                      <div class="small text-muted ms-4">
+                        A position has been annoated by some annotators but not by all.
+                      </div>
+                    </li>
+                    <li class="dropdown-item-text">
+                      <span class="badge badge-pill disagree">&nbsp;</span>
+                      Disagreement
+                      <div class="small text-muted ms-4">
+                        Multiple annotators have annotated a position, but different labels were
+                        assigned.
+                      </div>
+                    </li>
+                  </ul>
+                </span>
+              </span>
+            </div>
+          </div>
+          <div class="scrolling card-body">
+            <div wicket:id="unitOverview" style="border-collapse: collapse;">
+              <span wicket:id="unit" class="curation-unit-number">
+                <a wicket:id="label"></a>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div wicket:id="centerArea" class="flex-content flex-v-container pt-3 pb-3">
+        <div wicket:id="splitter" class="flex-content border-0 shadow-none">
+          <div class="pb-2 flex-content flex-v-container">
+            <div class="card flex-content">
+              <div class="card-header border-bottom-0">
+                <span wicket:id="documentNamePanel"/> 
+                <span wicket:id="numberOfPages" class="small text-muted float-end"/>
+              </div>
+              <div class="card-body flex-v-container" style="padding: 0px;">
+                <nav wicket:id="actionBar" class="action-bar"/>
+                <div wicket:id="editor" class="text-center flex-content flex-v-container"/>
+              </div>
+            </div>
+          </div>
+          <div wicket:id="annotatorsPanel" class="pt-2"/>
+        </div>
+      </div>
+
+      <div wicket:id="rightSidebar" class="flex-sidebar flex-v-container">
+        <wicket:container wicket:id="annotationDetailEditorPanel"/>
+      </div>
+    </div>
+  </wicket:extend>
+</body>
+</html>

@@ -53,12 +53,22 @@ public class PolicyCollectionIOUtils
             policyCollectionBuilder
                     .defaultAttributeAction(externalCollection.getDefaultAttributeAction());
         }
+        if (externalCollection.getDefaultNamespace() != null) {
+            policyCollectionBuilder.defaultNamespace(externalCollection.getDefaultNamespace());
+        }
+        if (externalCollection.isMatchWithoutNamespace()) {
+            policyCollectionBuilder.matchWithoutNamespace();
+        }
+        if (externalCollection.isUseDefaultNamespaceForAttributes()) {
+            policyCollectionBuilder.useDefaultNamespaceForAttributes();
+        }
 
-        for (ExternalPolicy policy : externalCollection.getPolicies()) {
+        for (var policy : externalCollection.getPolicies()) {
             var isElementPolicy = policy.getElements() != null;
             var isAttributesPolicy = policy.getAttributes() != null;
+            var isAttributePatternPolicy = policy.getAttributePatterns() != null;
 
-            if (isElementPolicy && isAttributesPolicy) {
+            if (isElementPolicy && isAttributesPolicy && !isAttributePatternPolicy) {
                 throw new IOException(
                         "Policy must contain either [elements] or [attributes] but not both");
             }
@@ -68,9 +78,15 @@ public class PolicyCollectionIOUtils
             }
 
             if (isAttributesPolicy) {
-                attributesPolicy(policyCollectionBuilder, policy);
+                qnameAttributesPolicy(policyCollectionBuilder, policy);
+            }
+
+            if (isAttributePatternPolicy) {
+                qnameAttributePatternsPolicy(policyCollectionBuilder, policy);
             }
         }
+
+        policyCollectionBuilder.allowAttributes("data-capture-root").globally();
 
         var policies = policyCollectionBuilder.build();
         policies.setDebug(externalCollection.isDebug());
@@ -82,7 +98,32 @@ public class PolicyCollectionIOUtils
 
     }
 
-    private static void attributesPolicy(PolicyCollectionBuilder policyCollectionBuilder,
+    private static void qnameAttributePatternsPolicy(
+            PolicyCollectionBuilder policyCollectionBuilder, ExternalPolicy policy)
+    {
+        var attributePatterns = policy.getAttributePatterns().stream() //
+                .map(s -> Pattern.compile(s)) //
+                .toArray(Pattern[]::new);
+        var action = AttributeAction.valueOf(policy.getAction());
+        var attrBuilder = new AttributePolicyBuilder(policyCollectionBuilder, action,
+                attributePatterns);
+
+        if (StringUtils.isNotBlank(policy.getPattern())) {
+            attrBuilder.matchingValue(Pattern.compile(policy.getPattern()));
+        }
+
+        if (policy.getOnElements() != null) {
+            var elements = policy.getOnElements().stream() //
+                    .map(s -> QName.valueOf(s)) //
+                    .toArray(QName[]::new);
+            attrBuilder.onElements(elements);
+        }
+        else {
+            attrBuilder.globally();
+        }
+    }
+
+    private static void qnameAttributesPolicy(PolicyCollectionBuilder policyCollectionBuilder,
             ExternalPolicy policy)
     {
         var attributes = policy.getAttributes().stream() //
@@ -92,7 +133,7 @@ public class PolicyCollectionIOUtils
         var attrBuilder = new AttributePolicyBuilder(policyCollectionBuilder, action, attributes);
 
         if (StringUtils.isNotBlank(policy.getPattern())) {
-            attrBuilder.matching(Pattern.compile(policy.getPattern()));
+            attrBuilder.matchingValue(Pattern.compile(policy.getPattern()));
         }
 
         if (policy.getOnElements() != null) {

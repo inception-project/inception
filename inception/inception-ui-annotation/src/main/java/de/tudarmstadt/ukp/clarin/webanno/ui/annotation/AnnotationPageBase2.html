@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<!--
+  Licensed to the Technische Universität Darmstadt under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The Technische Universität Darmstadt 
+  licenses this file to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.
+   
+  http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<html xmlns:wicket="http://wicket.apache.org">
+<body>
+  <wicket:extend>
+    <div class="flex-content flex-v-container annotation-editor-container">
+      <div wicket:id="splitter-right" class="flex-content">
+        <div class="fit-child-snug">
+          <div wicket:id="splitter-left">
+            <div wicket:id="leftSidebarContainer">
+              <div wicket:id="leftSidebar" class="flex-v-container flex-gutter"></div>
+            </div>
+            <div wicket:id="centerAreaContainer">
+              <div wicket:id="centerArea" class="flex-content flex-v-container flex-gutter">
+                <div class="flex-content card overflow-hidden">
+                  <div class="card-header border-bottom-0">
+                    <span wicket:id="documentNamePanel"/> 
+                    <span wicket:id="numberOfPages" class="small text-muted float-end"/>
+                  </div>
+                  <div class="card-body flex-v-container" style="padding: 0px;">
+                    <nav wicket:id="actionBar" class="action-bar"/>
+                    <div wicket:id="editor" class="flex-content flex-v-container" style="padding: 0px;"/>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="fit-child-snug">
+          <div wicket:id="rightSidebar" class="flex-sidebar flex-v-container">
+            <wicket:container wicket:id="annotationDetailEditorPanel"/>
+          </div>
+        </div>
+      </div>
+    </div>
+  </wicket:extend>
+</body>
+</html>

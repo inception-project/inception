@@ -19,36 +19,19 @@ package de.tudarmstadt.ukp.inception.recommendation.service;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.ANY_OVERLAP;
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.NO_OVERLAP;
-import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_AUTO_ACCEPT_MODE_SUFFIX;
-import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_IS_PREDICTION;
-import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_SCORE_EXPLANATION_SUFFIX;
-import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_SCORE_SUFFIX;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.AutoAcceptMode.NEVER;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation.DETAIL_EDITOR;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation.MAIN_EDITOR;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType.ACCEPTED;
-import static de.tudarmstadt.ukp.inception.recommendation.service.RecommendationServiceImpl.getOffsetsAnchoredOnTokens;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.ACCEPTED;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.factory.JCasFactory.createJCas;
-import static org.apache.uima.fit.factory.JCasFactory.createText;
-import static org.apache.uima.util.TypeSystemUtil.typeSystem2TypeSystemDescription;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doCallRealMethod;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.util.Optional;
-
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.Feature;
-import org.apache.uima.cas.Type;
-import org.apache.uima.fit.testing.factory.TokenBuilder;
-import org.apache.uima.fit.util.CasUtil;
-import org.apache.uima.jcas.JCas;
-import org.apache.uima.jcas.tcas.Annotation;
-import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -62,30 +45,31 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.transaction.annotation.Transactional;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode;
+import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.annotation.feature.string.StringFeatureSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanAdapter;
-import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
+import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommenderFactoryRegistry;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Offset;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationPosition;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionType;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
+import de.tudarmstadt.ukp.inception.recommendation.relation.RelationSuggestionSupport;
+import de.tudarmstadt.ukp.inception.recommendation.span.SpanSuggestionSupport;
 import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.inception.schema.service.AnnotationSchemaServiceImpl;
 import de.tudarmstadt.ukp.inception.schema.service.FeatureSupportRegistryImpl;
-import de.tudarmstadt.ukp.inception.support.WebAnnoConst;
 
 @ExtendWith(MockitoExtension.class)
 @ContextConfiguration(classes = SpringConfig.class)
@@ -103,34 +87,44 @@ public class RecommendationServiceImplIntegrationTest
 
     private @Autowired TestEntityManager testEntityManager;
 
+    private @Mock ConstraintsService constraintsService;
     private @Mock RecommenderFactoryRegistry recommenderFactoryRegistry;
     private @Mock AnnotationSchemaServiceImpl schemaService;
     private @Mock LayerSupportRegistry layerSupportRegistry;
+    private @Mock LearningRecordService learningRecordService;
 
     private RecommendationServiceImpl sut;
 
     private FeatureSupportRegistryImpl featureSupportRegistry;
+    private SuggestionSupportRegistryImpl suggestionSupportRegistry;
     private Project project;
-    private AnnotationLayer layer;
-    private Recommender rec;
-    private AnnotationFeature feature;
+    private AnnotationLayer spanLayer;
+    private Recommender spanLayerRecommender;
+    private AnnotationFeature spanLayerFeature;
 
     @BeforeEach
     public void setUp() throws Exception
     {
+        suggestionSupportRegistry = new SuggestionSupportRegistryImpl(asList( //
+                new SpanSuggestionSupport(null, learningRecordService, null, schemaService, null,
+                        null),
+                new RelationSuggestionSupport(null, learningRecordService, null, schemaService,
+                        null)));
+
         sut = new RecommendationServiceImpl(null, null, null, recommenderFactoryRegistry, null,
-                schemaService, null, testEntityManager.getEntityManager());
+                schemaService, suggestionSupportRegistry, testEntityManager.getEntityManager());
+
+        suggestionSupportRegistry.init();
 
         featureSupportRegistry = new FeatureSupportRegistryImpl(asList(new StringFeatureSupport()));
         featureSupportRegistry.init();
 
         project = createProject(PROJECT_NAME);
-        layer = createAnnotationLayer();
-        layer.setProject(project);
-        feature = createAnnotationFeature(layer, "value");
+        spanLayer = createSpanLayer(NamedEntity._TypeName);
+        spanLayerFeature = createAnnotationFeature(spanLayer, "value");
 
-        rec = buildRecommender(project, feature);
-        sut.createOrUpdateRecommender(rec);
+        spanLayerRecommender = buildRecommender(spanLayerFeature);
+        sut.createOrUpdateRecommender(spanLayerRecommender);
     }
 
     @AfterEach
@@ -147,13 +141,13 @@ public class RecommendationServiceImplIntegrationTest
     @Test
     public void listRecommenders_WithOneEnabledRecommender_ShouldReturnStoredRecommender()
     {
-        sut.createOrUpdateRecommender(rec);
+        sut.createOrUpdateRecommender(spanLayerRecommender);
 
-        var enabledRecommenders = sut.listEnabledRecommenders(rec.getLayer());
+        var enabledRecommenders = sut.listEnabledRecommenders(spanLayerRecommender.getLayer());
 
         assertThat(enabledRecommenders) //
                 .as("Check that the previously created recommender is found") //
-                .containsExactly(rec);
+                .containsExactly(spanLayerRecommender);
     }
 
     @SuppressWarnings("unchecked")
@@ -166,17 +160,16 @@ public class RecommendationServiceImplIntegrationTest
 
         assertThat(recommenderFactoryRegistry.getFactory("nummy")).isNotNull();
 
-        sut.createOrUpdateRecommender(rec);
+        sut.createOrUpdateRecommender(spanLayerRecommender);
 
-        long numOfRecommenders = sut.countEnabledRecommenders();
-        assertThat(numOfRecommenders).isEqualTo(1);
+        assertThat(sut.countEnabledRecommenders()).isEqualTo(1);
     }
 
     @Test
     public void getNumOfEnabledRecommenders_WithNoEnabledRecommender()
     {
-        rec.setEnabled(false);
-        testEntityManager.persist(rec);
+        spanLayerRecommender.setEnabled(false);
+        testEntityManager.persist(spanLayerRecommender);
 
         assertThat(sut.countEnabledRecommenders()).isEqualTo(0);
     }
@@ -184,18 +177,18 @@ public class RecommendationServiceImplIntegrationTest
     @Test
     public void getRecommenders_WithOneEnabledRecommender_ShouldReturnStoredRecommender()
     {
-        assertThat(sut.getEnabledRecommender(rec.getId()))
+        assertThat(sut.getEnabledRecommender(spanLayerRecommender.getId()))
                 .as("Check that only the previously created recommender is found").isPresent()
-                .contains(rec);
+                .contains(spanLayerRecommender);
     }
 
     @Test
     public void getRecommenders_WithOnlyDisabledRecommender_ShouldReturnEmptyList()
     {
-        rec.setEnabled(false);
-        testEntityManager.persist(rec);
+        spanLayerRecommender.setEnabled(false);
+        testEntityManager.persist(spanLayerRecommender);
 
-        assertThat(sut.getEnabledRecommender(rec.getId())) //
+        assertThat(sut.getEnabledRecommender(spanLayerRecommender.getId())) //
                 .as("Check that no recommender is found") //
                 .isEmpty();
     }
@@ -203,70 +196,10 @@ public class RecommendationServiceImplIntegrationTest
     @Test
     public void getRecommenders_WithOtherRecommenderId_ShouldReturnEmptyList()
     {
-        long otherId = 9999L;
-        Optional<Recommender> enabledRecommenders = sut.getEnabledRecommender(otherId);
+        var otherId = 9999L;
+        var enabledRecommenders = sut.getEnabledRecommender(otherId);
 
         assertThat(enabledRecommenders).as("Check that no recommender is found").isEmpty();
-    }
-
-    @Test
-    public void monkeyPatchTypeSystem_WithNer_CreatesScoreFeatures() throws Exception
-    {
-        try (CasStorageSession session = CasStorageSession.open()) {
-            JCas jCas = createText("I am text CAS", "de");
-            session.add("jCas", CasAccessMode.EXCLUSIVE_WRITE_ACCESS, jCas.getCas());
-
-            when(schemaService.getFullProjectTypeSystem(project))
-                    .thenReturn(typeSystem2TypeSystemDescription(jCas.getTypeSystem()));
-            when(schemaService.listAnnotationFeature(project)).thenReturn(asList(feature));
-            doCallRealMethod().when(schemaService).upgradeCas(any(CAS.class), any(CAS.class),
-                    any(TypeSystemDescription.class));
-
-            sut.cloneAndMonkeyPatchCAS(project, jCas.getCas(), jCas.getCas());
-
-            Type type = CasUtil.getType(jCas.getCas(), layer.getName());
-
-            assertThat(type.getFeatures()) //
-                    .extracting(Feature::getShortName) //
-                    .containsExactlyInAnyOrder( //
-                            "sofa", //
-                            "begin", //
-                            "end", //
-                            "value", //
-                            feature.getName() + FEATURE_NAME_SCORE_SUFFIX, //
-                            feature.getName() + FEATURE_NAME_SCORE_EXPLANATION_SUFFIX, //
-                            feature.getName() + FEATURE_NAME_AUTO_ACCEPT_MODE_SUFFIX, //
-                            "identifier", //
-                            FEATURE_NAME_IS_PREDICTION);
-        }
-    }
-
-    @Test
-    void thatZeroWithAnnotationsAreCorrectlyAnchoredOnTokens() throws Exception
-    {
-        JCas jCas = createJCas();
-        TokenBuilder.create(Token.class, Sentence.class).buildTokens(jCas, "  This is  a test.  ");
-        var textLength = jCas.getDocumentText().length();
-        var tokens = jCas.select(Token.class).asList();
-        var firstTokenBegin = tokens.get(0).getBegin();
-        var lastTokenEnd = tokens.get(tokens.size() - 1).getEnd();
-
-        assertThat(getOffsetsAnchoredOnTokens(jCas.getCas(), new Annotation(jCas, 0, 0))).get()
-                .as("Zero-width annotation before first token snaps to first token start")
-                .isEqualTo(new Offset(firstTokenBegin, firstTokenBegin));
-
-        assertThat(getOffsetsAnchoredOnTokens(jCas.getCas(),
-                new Annotation(jCas, textLength, textLength))).get()
-                        .as("Zero-width annotation after last token snaps to last token end")
-                        .isEqualTo(new Offset(lastTokenEnd, lastTokenEnd));
-
-        assertThat(getOffsetsAnchoredOnTokens(jCas.getCas(), new Annotation(jCas, 4, 4))).get()
-                .as("Zero-width annotation within token remains") //
-                .isEqualTo(new Offset(4, 4));
-
-        assertThat(getOffsetsAnchoredOnTokens(jCas.getCas(), new Annotation(jCas, 10, 10))).get()
-                .as("Zero-width annotation between tokens snaps to end of previous") //
-                .isEqualTo(new Offset(9, 9));
     }
 
     @Test
@@ -274,45 +207,41 @@ public class RecommendationServiceImplIntegrationTest
     {
         var docOwner = "dummy";
         var doc = SourceDocument.builder() //
+                .withId(1l) //
                 .withProject(project) //
                 .build();
-        var feature = AnnotationFeature.builder() //
-                .withName(NamedEntity._FeatName_value) //
-                .withType(CAS.TYPE_NAME_STRING) //
-                .build();
-        var layer = AnnotationLayer.builder() //
-                .forJCasClass(NamedEntity.class) //
-                .build();
-        var adapter = new SpanAdapter(layerSupportRegistry, featureSupportRegistry, null, layer,
-                () -> asList(), asList());
+        var adapter = new SpanAdapter(layerSupportRegistry, featureSupportRegistry, null, spanLayer,
+                () -> asList(), asList(), constraintsService);
 
-        layer.setOverlapMode(NO_OVERLAP);
+        when(schemaService.getLayer(anyLong())).thenReturn(spanLayer);
+        when(schemaService.getAdapter(any())).thenReturn(adapter);
+        when(schemaService.getFeature(any(), any())).thenReturn(spanLayerFeature);
+
+        spanLayer.setOverlapMode(NO_OVERLAP);
         var cas = createJCas();
         var targetFS = new NamedEntity(cas, 0, 10);
         targetFS.addToIndexes();
         assertThat(targetFS.getValue()).isNull();
 
-        var s1 = SpanSuggestion.builder().withLabel("V1").withPosition(new Offset(targetFS))
-                .build();
-        sut.acceptSuggestion(USER_NAME, doc, docOwner, cas.getCas(), adapter, feature, s1,
-                MAIN_EDITOR);
+        var s1 = SpanSuggestion.builder().withLabel("V1").withRecommender(spanLayerRecommender)
+                .withPosition(new Offset(targetFS)).build();
+        sut.acceptSuggestion(USER_NAME, doc, docOwner, cas.getCas(), s1, MAIN_EDITOR);
 
         assertThat(targetFS.getValue()) //
                 .as("Label was merged into existing annotation replacing unset label") //
                 .isEqualTo("V1");
 
-        var s2 = SpanSuggestion.builder().withLabel("V2").withPosition(new Offset(targetFS))
-                .build();
-        sut.acceptSuggestion(USER_NAME, doc, docOwner, cas.getCas(), adapter, feature, s2,
-                MAIN_EDITOR);
+        var s2 = SpanSuggestion.builder().withLabel("V2").withRecommender(spanLayerRecommender)
+                .withPosition(new Offset(targetFS)).build();
+        sut.acceptSuggestion(USER_NAME, doc, docOwner, cas.getCas(), s2, MAIN_EDITOR);
 
         assertThat(targetFS.getValue()) //
                 .as("Label was merged into existing annotation replacing previous label") //
                 .isEqualTo("V2");
 
-        var s3 = SpanSuggestion.builder().withLabel("V3").withPosition(new Offset(10, 20)).build();
-        sut.acceptSuggestion(USER_NAME, doc, docOwner, cas.getCas(), adapter, feature, s3,
-                MAIN_EDITOR);
+        var s3 = SpanSuggestion.builder().withLabel("V3").withRecommender(spanLayerRecommender)
+                .withPosition(new Offset(10, 20)).build();
+        sut.acceptSuggestion(USER_NAME, doc, docOwner, cas.getCas(), s3, MAIN_EDITOR);
 
         assertThat(cas.select(NamedEntity.class).asList()) //
                 .as("Label was merged as new annotation") //
@@ -321,25 +250,23 @@ public class RecommendationServiceImplIntegrationTest
                         tuple(0, 10, "V2"), //
                         tuple(10, 20, "V3"));
 
-        layer.setOverlapMode(ANY_OVERLAP);
+        spanLayer.setOverlapMode(ANY_OVERLAP);
         cas.reset();
         targetFS = new NamedEntity(cas, 0, 10);
         targetFS.addToIndexes();
         assertThat(targetFS.getValue()).isNull();
 
-        var s4 = SpanSuggestion.builder().withLabel("V1").withPosition(new Offset(targetFS))
-                .build();
-        sut.acceptSuggestion(USER_NAME, doc, docOwner, cas.getCas(), adapter, feature, s4,
-                MAIN_EDITOR);
+        var s4 = SpanSuggestion.builder().withLabel("V1").withRecommender(spanLayerRecommender)
+                .withPosition(new Offset(targetFS)).build();
+        sut.acceptSuggestion(USER_NAME, doc, docOwner, cas.getCas(), s4, MAIN_EDITOR);
 
         assertThat(targetFS.getValue()) //
                 .as("Label was merged into existing annotation replacing unset label") //
                 .isEqualTo("V1");
 
-        var s5 = SpanSuggestion.builder().withLabel("V2").withPosition(new Offset(targetFS))
-                .build();
-        sut.acceptSuggestion(USER_NAME, doc, docOwner, cas.getCas(), adapter, feature, s5,
-                MAIN_EDITOR);
+        var s5 = SpanSuggestion.builder().withLabel("V2").withRecommender(spanLayerRecommender)
+                .withPosition(new Offset(targetFS)).build();
+        sut.acceptSuggestion(USER_NAME, doc, docOwner, cas.getCas(), s5, MAIN_EDITOR);
 
         assertThat(cas.select(NamedEntity.class).asList()) //
                 .as("Label was merged as new annotation") //
@@ -348,9 +275,9 @@ public class RecommendationServiceImplIntegrationTest
                         tuple(0, 10, "V1"), //
                         tuple(0, 10, "V2"));
 
-        var s6 = SpanSuggestion.builder().withLabel("V3").withPosition(new Offset(10, 20)).build();
-        sut.acceptSuggestion(USER_NAME, doc, docOwner, cas.getCas(), adapter, feature, s6,
-                MAIN_EDITOR);
+        var s6 = SpanSuggestion.builder().withLabel("V3").withRecommender(spanLayerRecommender)
+                .withPosition(new Offset(10, 20)).build();
+        sut.acceptSuggestion(USER_NAME, doc, docOwner, cas.getCas(), s6, MAIN_EDITOR);
 
         assertThat(cas.select(NamedEntity.class).asList()) //
                 .as("Label was merged as new annotation") //
@@ -363,9 +290,9 @@ public class RecommendationServiceImplIntegrationTest
         new NamedEntity(cas, 0, 10).addToIndexes();
         new NamedEntity(cas, 0, 10).addToIndexes();
 
-        var s7 = SpanSuggestion.builder().withLabel("V4").withPosition(new Offset(0, 10)).build();
-        sut.acceptSuggestion(USER_NAME, doc, docOwner, cas.getCas(), adapter, feature, s7,
-                MAIN_EDITOR);
+        var s7 = SpanSuggestion.builder().withLabel("V4").withRecommender(spanLayerRecommender)
+                .withPosition(new Offset(0, 10)).build();
+        sut.acceptSuggestion(USER_NAME, doc, docOwner, cas.getCas(), s7, MAIN_EDITOR);
 
         assertThat(cas.select(NamedEntity.class).asList()) //
                 .as("Label was merged again into one of the entities without a label") //
@@ -381,37 +308,32 @@ public class RecommendationServiceImplIntegrationTest
     @Test
     public void thatSpanSuggestionsCanBeRecorded()
     {
-        SourceDocument sourceDoc = createSourceDocument("doc");
-        AnnotationLayer layer = createAnnotationLayer("layer");
-        AnnotationFeature feature = createAnnotationFeature(layer, FEATURE_NAME);
+        var sourceDoc = createSourceDocument("doc");
 
         var suggestion = SpanSuggestion.builder() //
                 .withId(42) //
-                .withRecommenderId(1337) //
-                .withRecommenderName("testRecommender") //
-                .withLayerId(layer.getId()) //
-                .withFeature(feature.getName()) //
-                .withDocumentName(sourceDoc.getName()) //
-                .withPosition(new Offset(7, 14)) //
+                .withRecommender(spanLayerRecommender) //
+                .withDocument(sourceDoc) //
+                .withPosition(7, 14) //
                 .withCoveredText("aCoveredText") //
                 .withLabel("testLabel") //
                 .withUiLabel("testUiLabel") //
                 .withScore(0.42) //
                 .withScoreExplanation("Test confidence") //
-                .withAutoAcceptMode(NEVER) //
                 .build();
 
-        sut.logRecord(USER_NAME, sourceDoc, USER_NAME, suggestion, feature, ACCEPTED, MAIN_EDITOR);
+        sut.logRecord(USER_NAME, sourceDoc, USER_NAME, suggestion, spanLayerFeature, ACCEPTED,
+                MAIN_EDITOR);
 
-        var records = sut.listLearningRecords(USER_NAME, USER_NAME, layer);
+        var records = sut.listLearningRecords(USER_NAME, USER_NAME, spanLayer);
         assertThat(records).hasSize(1);
 
         LearningRecord record = records.get(0);
         assertThat(record).hasFieldOrProperty("id") //
                 .hasFieldOrPropertyWithValue("sourceDocument", sourceDoc) //
                 .hasFieldOrPropertyWithValue("user", USER_NAME) //
-                .hasFieldOrPropertyWithValue("layer", layer) //
-                .hasFieldOrPropertyWithValue("annotationFeature", feature) //
+                .hasFieldOrPropertyWithValue("layer", spanLayer) //
+                .hasFieldOrPropertyWithValue("annotationFeature", spanLayerFeature) //
                 .hasFieldOrPropertyWithValue("offsetBegin", 7) //
                 .hasFieldOrPropertyWithValue("offsetEnd", 14) //
                 .hasFieldOrPropertyWithValue("offsetBegin2", -1) //
@@ -420,27 +342,29 @@ public class RecommendationServiceImplIntegrationTest
                 .hasFieldOrPropertyWithValue("annotation", "testLabel") //
                 .hasFieldOrPropertyWithValue("changeLocation", MAIN_EDITOR) //
                 .hasFieldOrPropertyWithValue("userAction", ACCEPTED) //
-                .hasFieldOrPropertyWithValue("suggestionType", SuggestionType.SPAN);
+                .hasFieldOrPropertyWithValue("suggestionType", SpanSuggestionSupport.TYPE);
     }
 
     @Test
     public void thatRelationSuggestionsCanBeRecorded()
     {
-        SourceDocument sourceDoc = createSourceDocument("doc");
-        AnnotationLayer layer = createAnnotationLayer("layer");
-        AnnotationFeature feature = createAnnotationFeature(layer, FEATURE_NAME);
+        var sourceDoc = createSourceDocument("doc");
+        var layer = createRelationLayer("layer");
+        var feature = createAnnotationFeature(layer, FEATURE_NAME);
+        var rec = buildRecommender(feature);
 
-        RelationSuggestion suggestion = new RelationSuggestion(42, 1337, "testRecommender",
-                layer.getId(), feature.getName(), sourceDoc.getName(), 7, 14, 21, 28, "testLabel",
-                "testUiLabel", 0.42, "Test confidence", NEVER);
+        var suggestion = RelationSuggestion.builder().withId(42).withRecommender(rec)
+                .withDocument(sourceDoc).withPosition(new RelationPosition(7, 14, 21, 28))
+                .withLabel("testLabel").withUiLabel("testUiLabel").withScore(0.42)
+                .withScoreExplanation("Test confidence").build();
 
         sut.logRecord(USER_NAME, sourceDoc, USER_NAME, suggestion, feature,
-                LearningRecordType.REJECTED, DETAIL_EDITOR);
+                LearningRecordUserAction.REJECTED, DETAIL_EDITOR);
 
         var records = sut.listLearningRecords(USER_NAME, USER_NAME, layer);
         assertThat(records).hasSize(1);
 
-        LearningRecord record = records.get(0);
+        var record = records.get(0);
         assertThat(record).hasFieldOrProperty("id") //
                 .hasFieldOrPropertyWithValue("sourceDocument", sourceDoc) //
                 .hasFieldOrPropertyWithValue("user", USER_NAME) //
@@ -453,8 +377,8 @@ public class RecommendationServiceImplIntegrationTest
                 .hasFieldOrPropertyWithValue("tokenText", "") //
                 .hasFieldOrPropertyWithValue("annotation", "testLabel") //
                 .hasFieldOrPropertyWithValue("changeLocation", DETAIL_EDITOR) //
-                .hasFieldOrPropertyWithValue("userAction", LearningRecordType.REJECTED) //
-                .hasFieldOrPropertyWithValue("suggestionType", SuggestionType.RELATION);
+                .hasFieldOrPropertyWithValue("userAction", LearningRecordUserAction.REJECTED) //
+                .hasFieldOrPropertyWithValue("suggestionType", RelationSuggestionSupport.TYPE);
     }
 
     @Test
@@ -462,33 +386,36 @@ public class RecommendationServiceImplIntegrationTest
     {
         var sourceDoc1 = createSourceDocument("doc1");
         var sourceDoc2 = createSourceDocument("doc2");
-        var layer1 = createAnnotationLayer("layer1");
-        var layer2 = createAnnotationLayer("layer2");
+        var layer1 = createSpanLayer("layer1");
+        var layer2 = createSpanLayer("layer2");
         var feature1 = createAnnotationFeature(layer1, "feat1");
         var feature2 = createAnnotationFeature(layer2, "feat1");
+        var rec1 = buildRecommender(feature1);
+        var rec2 = buildRecommender(feature2);
 
+        Offset position = new Offset(7, 14);
         sut.logRecord(USER_NAME, sourceDoc1, USER_NAME,
-                new SpanSuggestion(42, 1337, "testRecommender", layer1.getId(), feature1.getName(),
-                        sourceDoc1.getName(), 7, 14, "aCoveredText", "testLabel", "testUiLabel",
-                        0.42, "Test confidence", NEVER),
+                SpanSuggestion.builder().withRecommender(rec1).withDocument(sourceDoc1)
+                        .withPosition(position).withLabel("testLabel")
+                        .withCoveredText("aCoveredText").build(),
                 feature1, ACCEPTED, MAIN_EDITOR);
 
         sut.logRecord(USER_NAME, sourceDoc1, USER_NAME,
-                new SpanSuggestion(42, 1337, "testRecommender2", layer2.getId(), feature2.getName(),
-                        sourceDoc1.getName(), 7, 14, "aCoveredText", "testLabel", "testUiLabel",
-                        0.42, "Test confidence", NEVER),
+                SpanSuggestion.builder().withRecommender(rec2).withDocument(sourceDoc1)
+                        .withPosition(position).withLabel("testLabel")
+                        .withCoveredText("aCoveredText").build(),
                 feature2, ACCEPTED, MAIN_EDITOR);
 
         sut.logRecord(USER_NAME, sourceDoc2, USER_NAME,
-                new SpanSuggestion(42, 1337, "testRecommender", layer1.getId(), feature1.getName(),
-                        sourceDoc2.getName(), 7, 14, "aCoveredText", "testLabel", "testUiLabel",
-                        0.42, "Test confidence", NEVER),
+                SpanSuggestion.builder().withRecommender(rec1).withDocument(sourceDoc1)
+                        .withPosition(position).withLabel("testLabel")
+                        .withCoveredText("aCoveredText").build(),
                 feature1, ACCEPTED, MAIN_EDITOR);
 
         sut.logRecord(USER_NAME, sourceDoc2, USER_NAME,
-                new SpanSuggestion(42, 1337, "testRecommender2", layer2.getId(), feature2.getName(),
-                        sourceDoc2.getName(), 7, 14, "aCoveredText", "testLabel", "testUiLabel",
-                        0.42, "Test confidence", NEVER),
+                SpanSuggestion.builder().withRecommender(rec2).withDocument(sourceDoc1)
+                        .withPosition(position).withLabel("testLabel")
+                        .withCoveredText("aCoveredText").build(),
                 feature2, ACCEPTED, MAIN_EDITOR);
 
         assertThat(sut.listLearningRecords(USER_NAME, sourceDoc1, USER_NAME, feature1)).hasSize(1);
@@ -503,20 +430,32 @@ public class RecommendationServiceImplIntegrationTest
 
     private SourceDocument createSourceDocument(String aName)
     {
-        var doc = new SourceDocument();
-        doc.setProject(project);
-        doc.setName(aName);
+        var doc = SourceDocument.builder().withProject(project).withName(aName).build();
         return testEntityManager.persist(doc);
     }
 
-    private AnnotationLayer createAnnotationLayer(String aType)
+    private AnnotationLayer createSpanLayer(String aType)
     {
         var l = new AnnotationLayer();
         l.setProject(project);
         l.setEnabled(true);
         l.setName(aType);
         l.setReadonly(false);
-        l.setType(WebAnnoConst.SPAN_TYPE);
+        l.setType(SpanLayerSupport.TYPE);
+        l.setUiName(aType);
+        l.setAnchoringMode(false, false);
+
+        return testEntityManager.persist(l);
+    }
+
+    private AnnotationLayer createRelationLayer(String aType)
+    {
+        var l = new AnnotationLayer();
+        l.setProject(project);
+        l.setEnabled(true);
+        l.setName(aType);
+        l.setReadonly(false);
+        l.setType(RelationLayerSupport.TYPE);
         l.setUiName(aType);
         l.setAnchoringMode(false, false);
 
@@ -542,22 +481,17 @@ public class RecommendationServiceImplIntegrationTest
         return testEntityManager.persist(l);
     }
 
-    private AnnotationLayer createAnnotationLayer()
-    {
-        return createAnnotationLayer(NamedEntity._TypeName);
-    }
-
-    private Recommender buildRecommender(Project aProject, AnnotationFeature aFeature)
+    private Recommender buildRecommender(AnnotationFeature aFeature)
     {
         var r = new Recommender();
         r.setLayer(aFeature.getLayer());
         r.setFeature(aFeature);
-        r.setProject(aProject);
+        r.setProject(aFeature.getProject());
         r.setAlwaysSelected(true);
         r.setSkipEvaluation(false);
         r.setMaxRecommendations(3);
         r.setTool("dummyRecommenderTool");
 
-        return r;
+        return testEntityManager.persist(r);
     }
 }

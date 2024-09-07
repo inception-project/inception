@@ -20,6 +20,9 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.external.v1;
 import java.io.Serializable;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapability;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ExternalRecommenderTraits
@@ -28,8 +31,18 @@ public class ExternalRecommenderTraits
     private static final long serialVersionUID = -3109239605741337123L;
 
     private String remoteUrl;
-    private boolean trainable;
     private boolean verifyCertificates = true;
+    private boolean ranker;
+    private TrainingCapability trainingCapability;
+
+    @Deprecated
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    private boolean trainable;
+
+    public ExternalRecommenderTraits()
+    {
+        setTrainable(false);
+    }
 
     public String getRemoteUrl()
     {
@@ -41,23 +54,51 @@ public class ExternalRecommenderTraits
         remoteUrl = aRemoteUrl;
     }
 
+    @Deprecated
     public boolean isTrainable()
     {
         return trainable;
     }
 
+    @Deprecated
     public void setTrainable(boolean aTrainable)
     {
         trainable = aTrainable;
+        if (aTrainable) {
+            trainingCapability = TrainingCapability.TRAINING_REQUIRED;
+        }
+        else {
+            trainingCapability = TrainingCapability.TRAINING_NOT_SUPPORTED;
+        }
     }
-    
+
     public void setVerifyCertificates(boolean aVerifyCertificates)
     {
         verifyCertificates = aVerifyCertificates;
     }
-    
+
     public boolean isVerifyCertificates()
     {
         return verifyCertificates;
+    }
+
+    public void setRanker(boolean aRanker)
+    {
+        ranker = aRanker;
+    }
+
+    public boolean isRanker()
+    {
+        return ranker;
+    }
+
+    public TrainingCapability getTrainingCapability()
+    {
+        return trainingCapability;
+    }
+
+    public void setTrainingCapability(TrainingCapability aTrainingCapability)
+    {
+        trainingCapability = aTrainingCapability;
     }
 }

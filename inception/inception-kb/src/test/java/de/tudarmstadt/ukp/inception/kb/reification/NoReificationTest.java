@@ -26,11 +26,11 @@ import java.util.List;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.eclipse.rdf4j.model.vocabulary.SKOS;
 import org.eclipse.rdf4j.repository.Repository;
-import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.eclipse.rdf4j.repository.sail.SailRepository;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.sail.lucene.LuceneSail;
@@ -105,7 +105,7 @@ public class NoReificationTest
         importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX,
                 DATA_LABELS_AND_DESCRIPTIONS_WITH_LANGUAGE);
 
-        List<KBStatement> result = listStatements(rdf4jLocalRepo,
+        var result = listStatements(rdf4jLocalRepo,
                 new KBHandle("http://example.org/#green-goblin"));
 
         assertThat(result) //
@@ -116,10 +116,10 @@ public class NoReificationTest
 
     public List<KBStatement> listStatements(Repository aRepo, KBHandle aItem) throws Exception
     {
-        try (RepositoryConnection conn = aRepo.getConnection()) {
-            long startTime = System.currentTimeMillis();
+        try (var conn = aRepo.getConnection()) {
+            var startTime = System.currentTimeMillis();
 
-            List<KBStatement> results = sut.listStatements(conn, kb, aItem, true);
+            var results = sut.listStatements(conn, kb, aItem, true);
 
             System.out.printf("Results : %d in %dms%n", results.size(),
                     System.currentTimeMillis() - startTime);
@@ -131,21 +131,21 @@ public class NoReificationTest
 
     private void importDataFromString(RDFFormat aFormat, String... aRdfData) throws IOException
     {
-        String data = String.join("\n", aRdfData);
+        var data = String.join("\n", aRdfData);
 
         // Load files into the repository
-        try (InputStream is = IOUtils.toInputStream(data, UTF_8)) {
+        try (var is = IOUtils.toInputStream(data, UTF_8)) {
             importData(aFormat, is);
         }
     }
 
     private void importData(RDFFormat aFormat, InputStream aIS) throws IOException
     {
-        try (RepositoryConnection conn = rdf4jLocalRepo.getConnection()) {
+        try (var conn = rdf4jLocalRepo.getConnection()) {
             // If the RDF file contains relative URLs, then they probably start with a hash.
             // To avoid having two hashes here, we drop the hash from the base prefix configured
             // by the user.
-            String prefix = StringUtils.removeEnd(kb.getBasePrefix(), "#");
+            var prefix = StringUtils.removeEnd(kb.getBasePrefix(), "#");
             conn.add(aIS, prefix, aFormat);
         }
     }
@@ -164,6 +164,7 @@ public class NoReificationTest
         // We are intentionally not using RDFS.COMMENT here to ensure we can test the description
         // and property description separately
         kb.setPropertyDescriptionIri("http://schema.org/description");
+        kb.setDeprecationPropertyIri(OWL.DEPRECATED.stringValue());
         kb.setSubPropertyIri(RDFS.SUBPROPERTYOF.stringValue());
     }
 }

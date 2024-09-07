@@ -22,7 +22,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAG
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.apache.wicket.Component;
 import org.apache.wicket.RestartResponseException;
@@ -37,7 +36,6 @@ import org.wicketstuff.annotation.mount.MountPath;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
@@ -76,7 +74,7 @@ public class ProjectDashboardPage
         setStatelessHint(true);
         setVersioned(false);
 
-        User currentUser = userRepository.getCurrentUser();
+        var currentUser = userRepository.getCurrentUser();
 
         if (!userRepository.isAdministrator(currentUser)) {
             requireProjectRole(currentUser, PermissionLevel.MANAGER,
@@ -123,7 +121,8 @@ public class ProjectDashboardPage
 
     private List<MenuItem> getMenuItems()
     {
-        return menuItemService.getMenuItems().stream()
-                .filter(item -> item.getPath().matches("/[^/]+")).collect(Collectors.toList());
+        return menuItemService.getMenuItems().stream() //
+                .filter(item -> item.getPath().matches("/[^/]+")) //
+                .toList();
     }
 }

@@ -60,6 +60,9 @@ public class ExportedKnowledgeBase
     @JsonProperty("property_description_iri")
     private String propertyDescriptionIri;
 
+    @JsonProperty("deprecation_property_iri")
+    private String deprecationPropertyIri;
+
     @JsonProperty("full_text_search_iri")
     private String fullTextSearchIri;
 
@@ -227,6 +230,16 @@ public class ExportedKnowledgeBase
     public void setFullTextSearchIri(String aFullTextSearchIri)
     {
         fullTextSearchIri = aFullTextSearchIri;
+    }
+
+    public String getDeprecationPropertyIri()
+    {
+        return deprecationPropertyIri;
+    }
+
+    public void setDeprecationPropertyIri(String aDeprecationPropertyIri)
+    {
+        deprecationPropertyIri = aDeprecationPropertyIri;
     }
 
     public boolean isReadOnly()

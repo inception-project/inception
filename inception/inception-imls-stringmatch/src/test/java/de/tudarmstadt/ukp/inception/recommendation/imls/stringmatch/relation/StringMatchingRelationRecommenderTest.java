@@ -45,6 +45,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.PredictionContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderTestHelper;
 
@@ -94,7 +95,7 @@ public class StringMatchingRelationRecommenderTest
         CAS cas = loadSimpleCas();
         sut.train(context, Collections.singletonList(cas));
 
-        sut.predict(context, cas);
+        sut.predict(new PredictionContext(context), cas);
 
         List<AnnotationFS> predictions = getPredictions(cas, RELATION_LAYER);
 
@@ -157,7 +158,7 @@ public class StringMatchingRelationRecommenderTest
         try (InputStream is = Files.newInputStream(root.resolve("relation_test.xmi"))) {
             XmlCasDeserializer.deserialize(is, cas);
             casStorageSession.add("testDataCas", EXCLUSIVE_WRITE_ACCESS, cas);
-            RecommenderTestHelper.addScoreFeature(cas, RELATION_LAYER, "value");
+            RecommenderTestHelper.addPredictionFeatures(cas, RELATION_LAYER, "value");
 
             return cas;
         }

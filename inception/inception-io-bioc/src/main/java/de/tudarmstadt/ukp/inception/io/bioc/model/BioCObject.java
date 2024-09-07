@@ -17,9 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.io.bioc.model;
 
-import static java.util.stream.Collectors.toMap;
-
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -63,8 +62,15 @@ public abstract class BioCObject
                 .map(BioCInfon::getValue);
     }
 
-    public Map<String, String> infonMap()
+    public Map<String, List<String>> infonMap()
     {
-        return infons.stream().collect(toMap(BioCInfon::getKey, BioCInfon::getValue));
+        var map = new LinkedHashMap<String, List<String>>();
+
+        for (var infon : infons) {
+            var list = map.computeIfAbsent(infon.getKey(), $ -> new ArrayList<>());
+            list.add(infon.getValue());
+        }
+
+        return map;
     }
 }

@@ -22,10 +22,12 @@ import org.junit.platform.suite.api.Suite;
 
 @Suite
 @SelectClasses({ //
+        AllegroGraphRepositoryTest.class, //
+        BlazegraphRepositoryTest.class, //
         FusekiRepositoryTest.class, //
         Rdf4JRepositoryTest.class, //
-        StardogRepositoryTest.class //
-})
+        StardogRepositoryTest.class, //
+        VirtuosoRepositoryTest.class })
 public class RepositoryTestSuite
 {
 

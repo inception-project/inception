@@ -25,9 +25,6 @@ import static java.util.Arrays.asList;
 import java.io.Serializable;
 import java.util.List;
 
-import javax.persistence.EntityManager;
-import javax.persistence.NoResultException;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,6 +37,8 @@ import de.tudarmstadt.ukp.inception.workload.config.WorkloadManagementAutoConfig
 import de.tudarmstadt.ukp.inception.workload.event.RecalculateProjectStateTask;
 import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtension;
 import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtensionPoint;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.NoResultException;
 
 /**
  * <p>
@@ -131,8 +130,10 @@ public class WorkloadManagementServiceImpl
                 .setParameter("projectID", aManager.getProject()) //
                 .executeUpdate();
 
-        schedulingService.enqueue(new RecalculateProjectStateTask(aManager.getProject(),
-                "Workload configuration changed"));
+        schedulingService.enqueue(RecalculateProjectStateTask.builder() //
+                .withProject(aManager.getProject()) //
+                .withTrigger("Workload configuration changed") //
+                .build());
     }
 
     /**

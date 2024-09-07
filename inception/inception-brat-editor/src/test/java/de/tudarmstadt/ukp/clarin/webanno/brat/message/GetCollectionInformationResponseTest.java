@@ -30,7 +30,7 @@ import org.junit.jupiter.api.Test;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
-import de.tudarmstadt.ukp.inception.support.WebAnnoConst;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 
 public class GetCollectionInformationResponseTest
@@ -54,7 +54,7 @@ public class GetCollectionInformationResponseTest
         layer.setId(1l);
         layer.setDescription("span annoattion");
         layer.setName("pos");
-        layer.setType(WebAnnoConst.SPAN_TYPE);
+        layer.setType(SpanLayerSupport.TYPE);
 
         TagSet tagset = new TagSet();
         tagset.setId(1l);

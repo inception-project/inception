@@ -21,15 +21,20 @@
     import { onMount, onDestroy } from "svelte"
     import { Client, Stomp, IFrame } from "@stomp/stompjs"
 
+    export let csrfToken: string
+    export let endpointUrl: string // should this be full http://... url
     export let wsEndpointUrl: string // should this be full ws://... url
-    export let topicChannel: string
+    export let taskStatusTopic: string
+    export let taskUpdatesTopic: string
     export let tasks: MTaskStateUpdate[] = []
     export let connected = false
+    export let popupMode = true
+    export let showFinishedTasks = true
+    export let typePattern: string = null
 
     let socket: WebSocket = null
     let stompClient: Client = null
     let connectionError = null
-    let popupContent: HTMLElement = null
     let popupOpen = false
 
     export function connect(): void {
@@ -52,15 +57,25 @@
                 );
             });
             stompClient.subscribe(
-                "/app" + topicChannel + "/tasks",
+                taskStatusTopic,
                 function (msg) {
                     tasks = JSON.parse(msg.body) || []
+                    if (!showFinishedTasks) {
+                        tasks = tasks.filter((e, i) => e.state === 'NOT_STARTED' || e.state === 'RUNNING');
+                    }
                 }
             );
             stompClient.subscribe(
-                "/user/queue" + topicChannel + "/tasks",
+                taskUpdatesTopic,
                 function (msg) {
-                    var msgBody = JSON.parse(msg.body);
+                    var msgBody = JSON.parse(msg.body) as MTaskStateUpdate;
+
+                    // console.log(msgBody)
+
+                    if (typePattern && msgBody.type && !msgBody.type.match(typePattern)) {
+                        return;
+                    }
+
                     var index = tasks.findIndex(
                         (item) => item.id === msgBody.id
                     );
@@ -70,9 +85,7 @@
                         }
                     } else {
                         if (!msgBody.removed) {
-                            tasks = tasks.map((e, i) =>
-                                i !== index ? e : msgBody
-                            );
+                            tasks = tasks.map((e, i) => i !== index ? e : msgBody)
                         } else {
                             tasks = tasks.filter((e, i) => i !== index);
                         }
@@ -101,6 +114,26 @@
         item.messages = null;
     }
 
+    function cancelTask(item) {
+        console.log("Canceling task " + item.id);
+        fetch(endpointUrl + "/tasks/" + item.id + "/cancel", {
+            headers: {
+                "X-CSRF-TOKEN": csrfToken,
+            },
+            method: 'POST'
+        })
+    }
+
+    function acknowledgeResult(item) {
+        console.log("Acknowledging task result " + item.id);
+        fetch(endpointUrl + "/tasks/" + item.id + "/acknowledge", {
+            headers: {
+                "X-CSRF-TOKEN": csrfToken,
+            },
+            method: 'POST'
+        })
+    }
+
     onMount(async () => {
         connect();
     });
@@ -110,24 +143,35 @@
     });
 </script>
 
-<div class="ms-3 float-start" on:click={() => (popupOpen = !popupOpen)}>
-    <!-- svelte-ignore a11y-missing-attribute -->
-    <a role="button" tabindex="0" title="Background tasks">
-        {#if tasks?.find((t) => t.state === "RUNNING")}
-            Processing...
-            <div class="spinner-border spinner-border-sm" role="status" />
-        {:else}
-            Idle
-        {/if}
-    </a>
-</div>
+{#if popupMode}
+    <!-- svelte-ignore a11y-click-events-have-key-events -->
+    <div class="ms-3 float-start" on:click={() => (popupOpen = !popupOpen)}>
+        <!-- svelte-ignore a11y-missing-attribute -->
+        <a role="button" tabindex="0" title="Background tasks">
+            {#if tasks?.find((t) => t.state === "RUNNING")}
+                <div class="spinner-border spinner-border-sm" role="status" />
+                Processing...
+            {:else if tasks?.length > 0}
+                <i class="far fa-dot-circle"></i>
+                Idle
+            {:else}
+                <i class="far fa-circle"></i>
+                Idle
+            {/if}
+        </a>
+    </div>
+{/if}
 <div
-    bind:this={popupContent}
-    class:d-flex={popupOpen}
-    class:d-none={!popupOpen}
-    class="popup border rounded-3 bg-body d-flex shadow"
+    class:d-flex={!popupMode || popupOpen}
+    class:flex-grow-1={!popupMode}
+    class:d-none={popupMode && !popupOpen}
+    class:popup={popupMode}
+    class:border={popupMode}
+    class:rounded-3={popupMode}
+    class:bg-body={popupMode}
+    class:shadow={popupMode}
 >
-    <div class="popup-body flex-grow-1 d-flex">
+    <div class:popup-body={popupMode} class="flex-grow-1 d-flex">
         {#if connectionError}
             <div class="flex-content flex-h-container no-data-notice">
                 {connectionError}
@@ -146,43 +190,57 @@
         {#if tasks?.length}
             <ul class="list-group list-group-flush flex-grow-1">
                 {#each tasks as item}
-                    <li class="list-group-item p-1">
+                    <li class="list-group-item py-1 px-3">
                         <div
-                            class="d-flex w-100 justify-content-between fw-bold"
+                            class="d-flex w-100 justify-content-between"
                         >
                             {item.title}
+                            <span class="d-flex">
                             {#if item.state === 'FAILED'}
                               <i class="text-danger fas fa-exclamation-triangle" />
                             {:else if item.state === 'CANCELLED'}
                               <i class="text-secondary fas fa-ban"></i>
                             {:else if item.state === 'RUNNING'}
-                              <div class="spinner-border spinner-border-sm" role="status" />
+                              <div class="spinner spinner-border spinner-border-sm flex-shrink-0" role="status"/>
                             {:else if item.state === 'COMPLETED'}
                               <i class="text-success fas fa-check-circle"></i>
                             {/if}
-                        </div>
-                        {#if item.state === "RUNNING"}
-                            {#if item.maxProgress}
-                                <progress
-                                    max={item.maxProgress}
-                                    value={item.progress}
-                                    class="w-100"
-                                />
-                            {:else}
-                                <progress class="w-100" />
+                            {#if endpointUrl && item.state !== 'RUNNING' && item.state !== 'NOT_STARTED'}
+                                <!-- svelte-ignore a11y-click-events-have-key-events -->
+                                <i class="fas fa-times-circle ms-2 text-secondary" style="cursor: pointer;" on:click={() => acknowledgeResult(item)} />
                             {/if}
+                            </span>
+                        </div>
+                        {#if item.state === "RUNNING" || item.state === 'NOT_STARTED'}
+                            <div class="d-flex flex-row">
+                                {#if item.maxProgress}
+                                    <progress
+                                        max={item.maxProgress}
+                                        value={item.progress}
+                                        class="flex-grow-1"
+                                    />
+                                {:else}
+                                    <progress class="flex-grow-1" />
+                                {/if}
+                                {#if item.cancellable && endpointUrl}
+                                    <!-- svelte-ignore a11y-click-events-have-key-events -->
+                                    <i class="far fa-stop-circle ms-3 text-secondary" style="cursor: pointer;" on:click={() => cancelTask(item)} />
+                                {/if}
+                            </div>
                         {/if}
                         {#if item.latestMessage}
-                            {#if item.latestMessage.level === "ERROR"}
-                                <i
-                                    class="text-danger fas fa-exclamation-triangle"
-                                />
-                            {:else if item.latestMessage.level === "WARN"}
-                                <i
-                                    class="text-warning fas fa-exclamation-triangle"
-                                />
-                            {/if}
-                            {item.latestMessage.message}
+                            <div class="text-muted small">
+                                {#if item.latestMessage.level === "ERROR"}
+                                    <i
+                                        class="text-danger fas fa-exclamation-triangle"
+                                    />
+                                {:else if item.latestMessage.level === "WARN"}
+                                    <i
+                                        class="text-warning fas fa-exclamation-triangle"
+                                    />
+                                {/if}
+                                {item.latestMessage.message}
+                            </div>
                         {/if}
                     </li>
                 {/each}

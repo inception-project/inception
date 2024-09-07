@@ -87,37 +87,59 @@ public class LazyDetailsLookupServiceImpl
 
         var cas = aCas.get();
 
-        var detailGroups = new ArrayList<VLazyDetailGroup>();
-        if (isSentence(cas, aVid)) {
-            var fs = selectFsByAddr(cas, aVid.getId());
-            var id = FSUtil.getFeature(fs, Sentence._FeatName_id, String.class);
-            if (StringUtils.isNotBlank(id)) {
-                var group = new VLazyDetailGroup();
-                group.addDetail(new VLazyDetail(Sentence._FeatName_id, id));
-                detailGroups.add(group);
-            }
-        }
-        else {
-            var layer = findLayer(aVid, cas, layerParam, aDocument.getProject());
-
-            lookupLayerLevelDetails(aVid, cas, windowBeginOffset, windowEndOffset, layer)
-                    .forEach(detailGroups::add);
-
-            for (var feature : annotationService.listAnnotationFeature(layer)) {
-                lookupExtensionLevelDetails(aVid, aDocument, cas, aUser, feature)
-                        .forEach(detailGroups::add);
-
-                // FIXME: We would like to get feature-level lazy details for the annotation label
-                // provided by the extension or said otherwise, we want to e.g. get KB details for a
-                // concept feature suggestion... this worked when we used the "query", but now is
-                // broken!
-                lookupFeatureLevelDetail(aVid, cas, feature).forEach(detailGroups::add);
-            }
-        }
+        var detailGroups = lookLazyDetails(aVid, aDocument, aUser, layerParam, cas);
 
         return detailGroups.stream() //
                 .map(this::toExternalForm) //
                 .collect(toList());
+    }
+
+    private List<VLazyDetailGroup> lookLazyDetails(VID aVid, SourceDocument aDocument, User aUser,
+            StringValue aLayerParam, CAS aCas)
+        throws AnnotationException, IOException
+    {
+        if (isSentence(aCas, aVid)) {
+            return lookupSentenceLevelLazyDetails(aVid, aCas);
+        }
+
+        var layer = findLayer(aVid, aCas, aLayerParam, aDocument.getProject());
+        return lookupAnnotationLevelDetails(aVid, aDocument, aUser, layer, aCas);
+    }
+
+    @Override
+    public List<VLazyDetailGroup> lookupAnnotationLevelDetails(VID aVid, SourceDocument aDocument,
+            User aUser, AnnotationLayer aLayer, CAS aCas)
+        throws AnnotationException, IOException
+    {
+        var detailGroups = new ArrayList<VLazyDetailGroup>();
+
+        lookupLayerLevelDetails(aVid, aCas, aLayer).forEach(detailGroups::add);
+
+        if (aVid.isSynthetic()) {
+            lookupExtensionLevelDetails(aVid, aDocument, aCas, aUser, aLayer)
+                    .forEach(detailGroups::add);
+        }
+        else {
+            for (var feature : annotationService.listSupportedFeatures(aLayer)) {
+                lookupFeatureLevelDetails(aVid, aCas, feature).forEach(detailGroups::add);
+            }
+        }
+
+        return detailGroups;
+    }
+
+    private List<VLazyDetailGroup> lookupSentenceLevelLazyDetails(VID aVid, CAS cas)
+    {
+        var detailGroups = new ArrayList<VLazyDetailGroup>();
+        var fs = selectFsByAddr(cas, aVid.getId());
+        var id = FSUtil.getFeature(fs, Sentence._FeatName_id, String.class);
+        if (StringUtils.isNotBlank(id)) {
+            var group = new VLazyDetailGroup();
+            group.addDetail(new VLazyDetail(Sentence._FeatName_id, id));
+            detailGroups.add(group);
+        }
+
+        return detailGroups;
     }
 
     private boolean isSentence(CAS aCas, VID aVid)
@@ -153,7 +175,8 @@ public class LazyDetailsLookupServiceImpl
         return annotationService.findLayer(project, fs);
     }
 
-    private List<VLazyDetailGroup> lookupFeatureLevelDetail(VID aVid, CAS aCas,
+    @Override
+    public List<VLazyDetailGroup> lookupFeatureLevelDetails(VID aVid, CAS aCas,
             AnnotationFeature aFeature)
     {
         if (aVid.isSynthetic()) {
@@ -162,11 +185,16 @@ public class LazyDetailsLookupServiceImpl
 
         var fs = selectFsByAddr(aCas, aVid.getId());
         var ext = featureSupportRegistry.findExtension(aFeature).orElseThrow();
+        if (!ext.isAccessible(aFeature)) {
+            return emptyList();
+        }
+
         return ext.lookupLazyDetails(aFeature, ext.getFeatureValue(aFeature, fs));
     }
 
-    private List<VLazyDetailGroup> lookupLayerLevelDetails(VID aVid, CAS aCas,
-            int windowBeginOffset, int windowEndOffset, AnnotationLayer aLayer)
+    @Override
+    public List<VLazyDetailGroup> lookupLayerLevelDetails(VID aVid, CAS aCas,
+            AnnotationLayer aLayer)
     {
         if (aVid.isSynthetic()) {
             return emptyList();
@@ -174,24 +202,23 @@ public class LazyDetailsLookupServiceImpl
 
         return layerSupportRegistry.getLayerSupport(aLayer)
                 .createRenderer(aLayer, () -> annotationService.listAnnotationFeature(aLayer))
-                .lookupLazyDetails(aCas, aVid, windowBeginOffset, windowEndOffset);
+                .lookupLazyDetails(aCas, aVid);
 
     }
 
     private List<VLazyDetailGroup> lookupExtensionLevelDetails(VID aVid, SourceDocument aDocument,
-            CAS aCas, User aUser, AnnotationFeature aFeature)
+            CAS aCas, User aUser, AnnotationLayer aLayer)
         throws IOException
     {
         if (!aVid.isSynthetic()) {
             return emptyList();
         }
 
-        var result = new ArrayList<VLazyDetailGroup>();
         var extension = extensionRegistry.getExtension(aVid.getExtensionId());
-        var value = extension.getFeatureValue(aDocument, aUser, aCas, aVid, aFeature);
-        featureSupportRegistry.findExtension(aFeature).orElseThrow()
-                .lookupLazyDetails(aFeature, value).forEach(result::add);
-        extension.lookupLazyDetails(aDocument, aUser, aVid, aFeature).forEach(result::add);
-        return result;
+        if (extension == null) {
+            return emptyList();
+        }
+
+        return extension.lookupLazyDetails(aDocument, aUser, aCas, aVid, aLayer);
     }
 }

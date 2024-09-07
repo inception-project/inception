@@ -17,15 +17,12 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.tasks;
 
-import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapability.TRAINING_NOT_SUPPORTED;
 import static de.tudarmstadt.ukp.inception.support.logging.LogLevel.ERROR;
 import static java.lang.System.currentTimeMillis;
 
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
-
-import javax.persistence.NoResultException;
 
 import org.apache.commons.lang3.concurrent.ConcurrentException;
 import org.slf4j.Logger;
@@ -33,8 +30,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.EvaluatedRecommender;
@@ -46,6 +41,7 @@ import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderEvaluationRe
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderTaskNotificationEvent;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
+import jakarta.persistence.NoResultException;
 
 /**
  * This task activates all non-trainable recommenders.
@@ -53,15 +49,17 @@ import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 public class NonTrainableRecommenderActivationTask
     extends RecommendationTask_ImplBase
 {
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    public static final String TYPE = "NonTrainableRecommenderActivationTask";
+
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private @Autowired AnnotationSchemaService annoService;
     private @Autowired RecommendationService recommendationService;
     private @Autowired ApplicationEventPublisher appEventPublisher;
 
-    public NonTrainableRecommenderActivationTask(User aUser, Project aProject, String aTrigger)
+    public NonTrainableRecommenderActivationTask(Builder<? extends Builder<?>> aBuilder)
     {
-        super(aUser, aProject, aTrigger);
+        super(aBuilder.withType(TYPE));
     }
 
     @Override
@@ -73,32 +71,32 @@ public class NonTrainableRecommenderActivationTask
     @Override
     public void execute()
     {
-        User user = getUser().orElseThrow();
+        var user = getUser().orElseThrow();
 
-        for (AnnotationLayer layer : annoService.listAnnotationLayer(getProject())) {
+        for (var layer : annoService.listAnnotationLayer(getProject())) {
             if (!layer.isEnabled()) {
                 continue;
             }
 
-            List<Recommender> recommenders = recommendationService.listRecommenders(layer);
+            var recommenders = recommendationService.listRecommenders(layer);
             if (recommenders == null || recommenders.isEmpty()) {
                 continue;
             }
 
-            List<EvaluatedRecommender> evaluatedRecommenders = new ArrayList<>();
-            for (Recommender r : recommenders) {
+            var evaluatedRecommenders = new ArrayList<EvaluatedRecommender>();
+            for (var r : recommenders) {
                 // Make sure we have the latest recommender config from the DB - the one from
                 // the active recommenders list may be outdated
-                Optional<Recommender> optRecommender = freshenRecommender(user, r);
+                var optRecommender = freshenRecommender(user, r);
                 if (optRecommender.isEmpty()) {
                     continue;
                 }
 
-                Recommender recommender = optRecommender.get();
-                String recommenderName = recommender.getName();
+                var recommender = optRecommender.get();
+                var recommenderName = recommender.getName();
 
                 try {
-                    long start = System.currentTimeMillis();
+                    long start = currentTimeMillis();
 
                     considerRecommender(user, recommender).ifPresent(evaluatedRecommender -> {
                         var result = evaluatedRecommender.getEvaluationResult();
@@ -112,7 +110,7 @@ public class NonTrainableRecommenderActivationTask
                 catch (Throwable e) {
                     // Catching Throwable is intentional here as we want to continue the execution
                     // even if a particular recommender fails.
-                    log.error("[{}][{}]: Failed", user.getUsername(), recommenderName, e);
+                    LOG.error("[{}][{}]: Failed", user.getUsername(), recommenderName, e);
                     appEventPublisher.publishEvent(RecommenderTaskNotificationEvent
                             .builder(this, getProject(), user.getUsername()) //
                             .withMessage(new LogMessage(this, ERROR, e.getMessage())) //
@@ -146,26 +144,29 @@ public class NonTrainableRecommenderActivationTask
             return Optional.of(skipRecommenderWithInvalidSettings(user, recommender));
         }
 
-        RecommendationEngine engine = factory.build(recommender);
-        if (TRAINING_NOT_SUPPORTED == engine.getTrainingCapability()) {
-            return Optional.of(activateNonTrainableRecommender(user, recommender, engine));
-        }
+        var engine = factory.build(recommender);
 
-        return Optional.of(skipTrainableRecommender(user, recommender));
+        return switch (engine.getTrainingCapability()) {
+        case TRAINING_NOT_SUPPORTED, TRAINING_SUPPORTED -> Optional
+                .of(activateNonTrainableRecommender(user, recommender, engine));
+        case TRAINING_REQUIRED -> Optional.of(skipTrainableRecommender(user, recommender));
+        default -> throw new IllegalStateException(
+                "Unsupported training capability: [" + engine.getTrainingCapability() + "]");
+        };
     }
 
     private EvaluatedRecommender activateNonTrainableRecommender(User user, Recommender recommender,
             RecommendationEngine aEngine)
     {
-        RecommenderContext ctx = aEngine
+        var ctx = aEngine
                 .newContext(recommendationService.getContext(user.getUsername(), recommender)
                         .orElse(RecommenderContext.emptyContext()));
         ctx.setUser(user);
         ctx.close();
         recommendationService.putContext(user, recommender, ctx);
 
-        String recommenderName = recommender.getName();
-        log.debug("[{}][{}]: Activating [{}] non-trainable recommender", user.getUsername(),
+        var recommenderName = recommender.getName();
+        LOG.debug("[{}][{}]: Activating [{}] non-trainable recommender", user.getUsername(),
                 recommenderName, recommenderName);
         info("Recommender [%s] activated because it is not trainable", recommenderName);
         return EvaluatedRecommender.makeActiveWithoutEvaluation(recommender);
@@ -174,7 +175,7 @@ public class NonTrainableRecommenderActivationTask
     private EvaluatedRecommender skipTrainableRecommender(User user, Recommender recommender)
     {
         String recommenderName = recommender.getName();
-        log.debug(
+        LOG.debug(
                 "[{}][{}]: Recommender requires training - deferring activation to selection task",
                 user.getUsername(), recommenderName);
         info("Recommender [%s] requires training - deferring activation to selection task",
@@ -186,7 +187,7 @@ public class NonTrainableRecommenderActivationTask
             Recommender recommender)
     {
         String recommenderName = recommender.getName();
-        log.info("[{}][{}]: Recommender configured with invalid layer or feature "
+        LOG.info("[{}][{}]: Recommender configured with invalid layer or feature "
                 + "- skipping recommender", user.getUsername(), recommenderName);
         info("Recommender [%s] configured with invalid layer or feature - skipping recommender",
                 recommenderName);
@@ -196,7 +197,7 @@ public class NonTrainableRecommenderActivationTask
 
     private void sendMissingFactoryNotification(User user, Recommender recommender)
     {
-        log.error("[{}][{}]: No recommender factory available for [{}]", user.getUsername(),
+        LOG.error("[{}][{}]: No recommender factory available for [{}]", user.getUsername(),
                 recommender.getName(), recommender.getTool());
         appEventPublisher.publishEvent(
                 RecommenderTaskNotificationEvent.builder(this, getProject(), user.getUsername()) //
@@ -214,17 +215,33 @@ public class NonTrainableRecommenderActivationTask
             recommender = recommendationService.getRecommender(r.getId());
         }
         catch (NoResultException e) {
-            log.info("[{}][{}]: Recommender no longer available - skipping", aUser.getUsername(),
+            LOG.info("[{}][{}]: Recommender no longer available - skipping", aUser.getUsername(),
                     r.getName());
             return Optional.empty();
         }
 
         if (!recommender.isEnabled()) {
-            log.debug("[{}][{}]: Recommender is disabled - skipping", aUser.getUsername(),
+            LOG.debug("[{}][{}]: Recommender is disabled - skipping", aUser.getUsername(),
                     recommender.getName());
             return Optional.empty();
         }
 
         return Optional.of(recommender);
+    }
+
+    public static Builder<Builder<?>> builder()
+    {
+        return new Builder<>();
+    }
+
+    public static class Builder<T extends Builder<?>>
+        extends RecommendationTask_ImplBase.Builder<T>
+    {
+        private Recommender recommender;
+
+        public NonTrainableRecommenderActivationTask build()
+        {
+            return new NonTrainableRecommenderActivationTask(this);
+        }
     }
 }

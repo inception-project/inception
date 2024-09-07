@@ -33,9 +33,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
 import org.apache.wicket.request.Url;
@@ -54,6 +51,8 @@ import de.tudarmstadt.ukp.inception.sharing.config.InviteServiceAutoConfiguratio
 import de.tudarmstadt.ukp.inception.sharing.config.InviteServiceProperties;
 import de.tudarmstadt.ukp.inception.sharing.model.ProjectInvite;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 
 /**
  * <p>
@@ -373,7 +372,7 @@ public class InviteServiceImpl
         u.setUsername(generateRandomUsername());
         u.setUiName(aUsername);
         u.setPassword(EMPTY_PASSWORD);
-        u.setRealm(REALM_PROJECT_PREFIX + aProject.getId());
+        u.setRealm(realm);
         u.setEnabled(true);
         u.setRoles(Set.of(ROLE_USER));
         userRepository.create(u);

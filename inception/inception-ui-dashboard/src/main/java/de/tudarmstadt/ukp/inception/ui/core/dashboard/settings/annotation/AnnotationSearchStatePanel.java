@@ -79,7 +79,7 @@ public class AnnotationSearchStatePanel
 
     private void actionRebuildIndex(AjaxRequestTarget aTarget)
     {
-        searchService.enqueueReindexTask(getModel().getObject(), userService.getCurrentUsername(),
+        searchService.enqueueReindexTask(getModel().getObject(), userService.getCurrentUser(),
                 "Project settings");
         info("Starting index rebuild... this may take a while. You can work as usual but search "
                 + "results will only become available once the process is complete.");

@@ -19,9 +19,9 @@
 <databaseChangeLog 
   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.27.xsd">
 
-  <changeSet author="INCEpTION Team" id="20210420-1">
+  <changeSet author="INCEpTION Team" id="20210420-1a">
     <preConditions onFail="MARK_RAN">
       <not>
         <tableExists tableName="user_preference" />
@@ -47,13 +47,9 @@
       referencedTableName="users" referencedColumnNames="username"
       deferrable="false" initiallyDeferred="false"
       onDelete="CASCADE" onUpdate="CASCADE"/>
-    <addUniqueConstraint 
-      constraintName="UK_user_preference_user_name"
-      tableName="user_preference"
-      columnNames="user, name" />
   </changeSet>
 
-  <changeSet author="INCEpTION Team" id="20210420-2">
+  <changeSet author="INCEpTION Team" id="20210420-2a">
     <preConditions onFail="MARK_RAN">
       <not>
         <tableExists tableName="user_project_preference" />
@@ -80,12 +76,9 @@
       referencedTableName="project" referencedColumnNames="id"
       deferrable="false" initiallyDeferred="false"
       onDelete="CASCADE" onUpdate="CASCADE"/>
-    <addUniqueConstraint
-      constraintName="UK_user_project_preference_user_name_project"
-      tableName="user_project_preference" columnNames="user, project, name" />
   </changeSet>
 
-  <changeSet author="INCEpTION Team" id="20210925-1">
+  <changeSet author="INCEpTION Team" id="20210925-1a">
     <preConditions onFail="MARK_RAN">
       <not>
         <tableExists tableName="default_project_preference" />
@@ -111,6 +104,74 @@
       referencedTableName="project" referencedColumnNames="id"
       deferrable="false" initiallyDeferred="false"
       onDelete="CASCADE" onUpdate="CASCADE"/>
+  </changeSet>
+
+  <changeSet author="INCEpTION Team" id="20240307-1">
+    <preConditions onFail="MARK_RAN">
+      <tableExists tableName="user_project_preference" />
+    </preConditions>
+    <delete tableName="user_project_preference">
+      <where>user IS NULL</where>
+    </delete>
+    <delete tableName="user_project_preference">
+      <where>project IS NULL</where>
+    </delete>
+    <addNotNullConstraint tableName="user_project_preference" columnName="user" columnDataType="VARCHAR(255)"/>
+    <addNotNullConstraint tableName="user_project_preference" columnName="project" columnDataType="BIGINT"/>
+  </changeSet>
+  
+  <changeSet author="INCEpTION Team" id="20240307-1a">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <changeSetExecuted author="INCEpTION Team" id="20210420-2" 
+          changeLogFile="de/tudarmstadt/ukp/inception/preferences/model/db-changelog.xml"/>
+      </not>
+    </preConditions>
+    <addUniqueConstraint
+      constraintName="UK_user_project_preference_user_name_project"
+      tableName="user_project_preference" columnNames="user, project, name" />
+  </changeSet>
+
+  <changeSet author="INCEpTION Team" id="20240307-2a">
+    <preConditions onFail="MARK_RAN">
+      <tableExists tableName="user_preference" />
+    </preConditions>
+    <delete tableName="user_preference">
+      <where>user IS NULL</where>
+    </delete>
+    <addNotNullConstraint tableName="user_preference" columnName="user" columnDataType="VARCHAR(255)"/>
+  </changeSet>
+
+  <changeSet author="INCEpTION Team" id="20240307-2b">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <changeSetExecuted author="INCEpTION Team" id="20210420-1" 
+          changeLogFile="de/tudarmstadt/ukp/inception/preferences/model/db-changelog.xml"/>
+      </not>
+    </preConditions>
+    <addUniqueConstraint 
+      constraintName="UK_user_preference_user_name"
+      tableName="user_preference"
+      columnNames="user, name" />
+  </changeSet>
+
+  <changeSet author="INCEpTION Team" id="20240307-3">
+    <preConditions onFail="MARK_RAN">
+      <tableExists tableName="default_project_preference" />
+    </preConditions>
+    <delete tableName="default_project_preference">
+      <where>project IS NULL</where>
+    </delete>
+    <addNotNullConstraint tableName="default_project_preference" columnName="project" columnDataType="BIGINT"/>
+  </changeSet>
+
+  <changeSet author="INCEpTION Team" id="20240307-3a">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <changeSetExecuted author="INCEpTION Team" id="20210925-1" 
+          changeLogFile="de/tudarmstadt/ukp/inception/preferences/model/db-changelog.xml"/>
+      </not>
+    </preConditions>
     <addUniqueConstraint
       constraintName="UK_default_project_preference_name_project"
       tableName="default_project_preference" columnNames="project, name" />

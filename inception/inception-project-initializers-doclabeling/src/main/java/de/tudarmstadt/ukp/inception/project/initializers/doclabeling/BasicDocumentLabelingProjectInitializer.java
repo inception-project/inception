@@ -32,15 +32,14 @@ import org.springframework.core.annotation.Order;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.QuickProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.TokenLayerInitializer;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebarState;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
+import de.tudarmstadt.ukp.inception.project.api.ProjectInitializationRequest;
 import de.tudarmstadt.ukp.inception.project.api.ProjectInitializer;
 import de.tudarmstadt.ukp.inception.project.initializers.doclabeling.config.InceptionDocumentLabelingProjectInitializersAutoConfiguration;
+import de.tudarmstadt.ukp.inception.support.wicket.resource.Strings;
 import de.tudarmstadt.ukp.inception.ui.core.docanno.sidebar.DocumentMetadataSidebarFactory;
 import de.tudarmstadt.ukp.inception.workload.matrix.MatrixWorkloadExtension;
-import de.tudarmstadt.ukp.inception.workload.matrix.trait.MatrixWorkloadTraits;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
-import de.tudarmstadt.ukp.inception.workload.model.WorkloadManager;
 
 /**
  * <p>
@@ -53,7 +52,7 @@ public class BasicDocumentLabelingProjectInitializer
     implements QuickProjectInitializer
 {
     private static final PackageResourceReference THUMBNAIL = new PackageResourceReference(
-            MethodHandles.lookup().lookupClass(), "thumbnail.svg");
+            MethodHandles.lookup().lookupClass(), "BasicDocumentLabelingProjectInitializer.svg");
 
     private final PreferencesService prefService;
     private final DocumentMetadataSidebarFactory docMetaSidebar;
@@ -78,6 +77,12 @@ public class BasicDocumentLabelingProjectInitializer
     }
 
     @Override
+    public Optional<String> getDescription()
+    {
+        return Optional.of(Strings.getString("document-labeling-project.description"));
+    }
+
+    @Override
     public Optional<ResourceReference> getThumbnail()
     {
         return Optional.of(THUMBNAIL);
@@ -99,9 +104,10 @@ public class BasicDocumentLabelingProjectInitializer
     }
 
     @Override
-    public void configure(Project aProject) throws IOException
+    public void configure(ProjectInitializationRequest aRequest) throws IOException
     {
-        aProject.setDescription(String.join("\n",
+        var project = aRequest.getProject();
+        project.setDescription(String.join("\n",
                 // Empty line to avoid the this text showing up in the short description of the
                 // project overview
                 "", //
@@ -117,23 +123,15 @@ public class BasicDocumentLabelingProjectInitializer
                 "this projects and annotators may also re-open a document for annotation if they", //
                 "want. You can change this setting in the settings on the **Montoring** page."));
 
-        AnnotationSidebarState sidebarState = prefService
-                .loadDefaultTraitsForProject(KEY_SIDEBAR_STATE, aProject);
+        var sidebarState = prefService.loadDefaultTraitsForProject(KEY_SIDEBAR_STATE, project);
         sidebarState.setExpanded(true);
         sidebarState.setSelectedTab(docMetaSidebar.getBeanName());
-        prefService.saveDefaultTraitsForProject(KEY_SIDEBAR_STATE, aProject, sidebarState);
+        prefService.saveDefaultTraitsForProject(KEY_SIDEBAR_STATE, project, sidebarState);
 
-        WorkloadManager manager = workloadManagementService
-                .loadOrCreateWorkloadManagerConfiguration(aProject);
-        MatrixWorkloadTraits traits = matrixWorkloadExtension.readTraits(manager);
+        var manager = workloadManagementService.loadOrCreateWorkloadManagerConfiguration(project);
+        var traits = matrixWorkloadExtension.readTraits(manager);
         traits.setReopenableByAnnotator(true);
-        matrixWorkloadExtension.writeTraits(traits, aProject);
+        matrixWorkloadExtension.writeTraits(traits, project);
         workloadManagementService.saveConfiguration(manager);
-    }
-
-    @Override
-    public Optional<String> getDescription()
-    {
-        return Optional.of("Create document-classification annotations.");
     }
 }

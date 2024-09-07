@@ -27,8 +27,12 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 
+import com.giffing.wicket.spring.boot.starter.configuration.extensions.core.csrf.CsrfAttacksPreventionProperties;
+
 import de.tudarmstadt.ukp.inception.ui.core.config.DashboardPropertiesImpl;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.admin.AdminDashboardPageMenuBarItemSupport;
+import de.tudarmstadt.ukp.inception.ui.core.dashboard.admin.dashlet.SystemStatusService;
+import de.tudarmstadt.ukp.inception.ui.core.dashboard.admin.dashlet.SystemStatusServiceImpl;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.dashlet.ProjectDashboardDashletExtension;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.dashlet.ProjectDashboardDashletExtensionPoint;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.dashlet.ProjectDashboardDashletExtensionPointImpl;
@@ -87,5 +91,12 @@ public class DashboardAutoConfiguration
     public AdminDashboardPageMenuBarItemSupport adminDashboardPageMenuBarItemSupport()
     {
         return new AdminDashboardPageMenuBarItemSupport();
+    }
+
+    @Bean
+    public SystemStatusService systemStatusService(
+            CsrfAttacksPreventionProperties aCsrfAttacksPreventionProperties)
+    {
+        return new SystemStatusServiceImpl(aCsrfAttacksPreventionProperties);
     }
 }

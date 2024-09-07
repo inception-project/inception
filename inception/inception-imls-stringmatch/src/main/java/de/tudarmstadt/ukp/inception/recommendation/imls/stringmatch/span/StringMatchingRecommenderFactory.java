@@ -22,9 +22,9 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SINGLE_TOKEN
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.SPAN_TYPE;
 import static java.util.Arrays.asList;
-import static org.apache.uima.cas.CAS.TYPE_NAME_STRING;
 import static org.apache.uima.cas.CAS.TYPE_NAME_STRING_ARRAY;
 
+import org.apache.uima.cas.CAS;
 import org.apache.wicket.model.IModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -65,7 +65,7 @@ public class StringMatchingRecommenderFactory
     @Override
     public RecommendationEngine build(Recommender aRecommender)
     {
-        StringMatchingRecommenderTraits traits = readTraits(aRecommender);
+        var traits = readTraits(aRecommender);
         return new StringMatchingRecommender(aRecommender, traits, gazeteerService);
     }
 
@@ -86,7 +86,11 @@ public class StringMatchingRecommenderFactory
         // generate quite large dictionaries...
         return (asList(CHARACTERS, SINGLE_TOKEN, TOKENS).contains(aLayer.getAnchoringMode()))
                 && SPAN_TYPE.equals(aLayer.getType())
-                && (asList(TYPE_NAME_STRING, TYPE_NAME_STRING_ARRAY).contains(aFeature.getType())
+                && (TYPE_NAME_STRING_ARRAY.equals(aFeature.getType())
+                        // not all are supported/tested yet ||
+                        // ICasUtil.isPrimitive(aFeature.getType())
+                        || asList(CAS.TYPE_NAME_STRING, CAS.TYPE_NAME_BOOLEAN)
+                                .contains(aFeature.getType())
                         || aFeature.isVirtualFeature());
     }
 

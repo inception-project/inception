@@ -17,26 +17,22 @@
  */
 package de.tudarmstadt.ukp.inception.scheduling;
 
-import static de.tudarmstadt.ukp.inception.scheduling.controller.SchedulerController.BASE_TOPIC;
-import static de.tudarmstadt.ukp.inception.scheduling.controller.SchedulerController.TASKS_TOPIC;
-
-import org.springframework.messaging.simp.SimpMessagingTemplate;
-
+import de.tudarmstadt.ukp.inception.scheduling.controller.SchedulerWebsocketController;
 import de.tudarmstadt.ukp.inception.scheduling.controller.model.MTaskStateUpdate;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 
 public class NotifyingTaskMonitor
     extends TaskMonitor
 {
-    private final SimpMessagingTemplate msgTemplate;
+    private final SchedulerWebsocketController schedulerWebsocketController;
 
     private MTaskStateUpdate lastUpdate;
 
-    public NotifyingTaskMonitor(TaskHandle aHandle, String aUser, String aTitle,
-            SimpMessagingTemplate aMsgTemplate)
+    public NotifyingTaskMonitor(Task aTask,
+            SchedulerWebsocketController aSchedulerWebsocketController)
     {
-        super(aHandle, aUser, aTitle);
-        msgTemplate = aMsgTemplate;
+        super(aTask);
+        schedulerWebsocketController = aSchedulerWebsocketController;
     }
 
     @Override
@@ -50,6 +46,14 @@ public class NotifyingTaskMonitor
     public void addMessage(LogMessage aMessage)
     {
         super.addMessage(aMessage);
+        sendNotification();
+    }
+
+    @Override
+    public synchronized void setProgressWithMessage(int aProgress, int aMaxProgress,
+            LogMessage aMessage)
+    {
+        super.setProgressWithMessage(aProgress, aMaxProgress, aMessage);
         sendNotification();
     }
 
@@ -69,15 +73,24 @@ public class NotifyingTaskMonitor
     }
 
     @Override
+    public synchronized void setStateAndProgress(TaskState aState, int aProgress, int aMaxProgress)
+    {
+        super.setState(aState);
+        super.setProgress(aProgress);
+        super.setMaxProgress(aMaxProgress);
+        sendNotification();
+    }
+
+    @Override
     protected void onDestroy()
     {
         var msg = new MTaskStateUpdate(this, true);
         if (getUser() != null) {
-            msgTemplate.convertAndSendToUser(getUser(), "/queue" + BASE_TOPIC + TASKS_TOPIC, msg);
+            schedulerWebsocketController.dispatch(msg);
         }
     }
 
-    private void sendNotification()
+    protected void sendNotification()
     {
         if (isDestroyed()) {
             return;
@@ -86,8 +99,7 @@ public class NotifyingTaskMonitor
         var msg = new MTaskStateUpdate(this);
         if (lastUpdate == null || !lastUpdate.equals(msg)) {
             if (getUser() != null) {
-                msgTemplate.convertAndSendToUser(getUser(), "/queue" + BASE_TOPIC + TASKS_TOPIC,
-                        msg);
+                schedulerWebsocketController.dispatch(msg);
             }
             lastUpdate = msg;
         }

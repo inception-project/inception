@@ -17,35 +17,31 @@
  */
 package de.tudarmstadt.ukp.inception.ui.core.docanno.sidebar;
 
-import org.apache.wicket.model.IModel;
-import org.apache.wicket.model.LoadableDetachableModel;
+import org.wicketstuff.event.annotation.OnEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase2;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
-import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.recommendation.api.event.PredictionsSwitchedEvent;
 
 public class DocumentMetadataSidebar
     extends AnnotationSidebar_ImplBase
 {
     private static final long serialVersionUID = 2085197932148384096L;
 
-    public DocumentMetadataSidebar(String aId, IModel<AnnotatorState> aModel,
-            AnnotationActionHandler aActionHandler, CasProvider aCasProvider,
-            AnnotationPage aAnnotationPage)
+    public DocumentMetadataSidebar(String aId, AnnotationActionHandler aActionHandler,
+            CasProvider aCasProvider, AnnotationPageBase2 aAnnotationPage)
     {
-        super(aId, aModel, aActionHandler, aCasProvider, aAnnotationPage);
+        super(aId, aActionHandler, aCasProvider, aAnnotationPage);
 
-        IModel<Project> project = LoadableDetachableModel.of(() -> aModel.getObject().getProject());
-        IModel<SourceDocument> sourceDocument = LoadableDetachableModel
-                .of(() -> aModel.getObject().getDocument());
-        IModel<String> username = LoadableDetachableModel
-                .of(() -> aModel.getObject().getUser().getUsername());
+        add(new DocumentMetadataAnnotationSelectionPanel("annotations", aCasProvider,
+                aAnnotationPage, aActionHandler));
+    }
 
-        add(new DocumentMetadataAnnotationSelectionPanel("annotations", project, sourceDocument,
-                username, aCasProvider, aAnnotationPage, aActionHandler, getModelObject()));
+    @OnEvent
+    public void onPredictionsSwitched(PredictionsSwitchedEvent aEvent)
+    {
+        aEvent.getRequestTarget().ifPresent(target -> target.add(this));
     }
 }

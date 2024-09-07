@@ -20,12 +20,10 @@ package de.tudarmstadt.ukp.inception.search.scheduling.tasks;
 import java.util.Objects;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.scheduling.MatchableTask;
+import de.tudarmstadt.ukp.inception.scheduling.Progress;
 import de.tudarmstadt.ukp.inception.scheduling.Task;
-import de.tudarmstadt.ukp.inception.search.model.Progress;
 
 /**
  * Abstract search task
@@ -37,28 +35,12 @@ public abstract class IndexingTask_ImplBase
     private final SourceDocument sourceDocument;
     private final AnnotationDocument annotationDocument;
 
-    public IndexingTask_ImplBase(Project aProject, String aUser, String aTrigger)
+    protected IndexingTask_ImplBase(Builder<? extends Builder<?>> aBuilder)
     {
-        super(new User(aUser), aProject, aTrigger);
+        super(aBuilder);
 
-        sourceDocument = null;
-        annotationDocument = null;
-    }
-
-    public IndexingTask_ImplBase(SourceDocument aSourceDocument, String aTrigger)
-    {
-        super(aSourceDocument.getProject(), aTrigger);
-
-        sourceDocument = aSourceDocument;
-        annotationDocument = null;
-    }
-
-    public IndexingTask_ImplBase(AnnotationDocument aAnnotationDocument, String aTrigger)
-    {
-        super(new User(aAnnotationDocument.getUser()), aAnnotationDocument.getProject(), aTrigger);
-
-        sourceDocument = null;
-        annotationDocument = aAnnotationDocument;
+        sourceDocument = aBuilder.sourceDocument;
+        annotationDocument = aBuilder.annotationDocument;
     }
 
     public SourceDocument getSourceDocument()
@@ -71,17 +53,20 @@ public abstract class IndexingTask_ImplBase
         return annotationDocument;
     }
 
+    @Deprecated
     public abstract Progress getProgress();
 
     @Override
     public String toString()
     {
-        StringBuilder builder = new StringBuilder();
+        var builder = new StringBuilder();
         builder.append(getClass().getSimpleName());
         builder.append(" [project=");
         builder.append(getProject().getName());
-        builder.append(", user=");
-        builder.append((getUser().isPresent()) ? " " : getUser().get());
+        if (getUser().isPresent()) {
+            builder.append(", user=");
+            builder.append(getUser().get());
+        }
         builder.append(", sourceDocument=");
         builder.append(sourceDocument == null ? "null" : sourceDocument.getName());
         builder.append(", annotationDocument=");
@@ -110,5 +95,30 @@ public abstract class IndexingTask_ImplBase
     public int hashCode()
     {
         return Objects.hash(super.hashCode(), sourceDocument, annotationDocument);
+    }
+
+    public static abstract class Builder<T extends Builder<?>>
+        extends Task.Builder<T>
+    {
+        protected SourceDocument sourceDocument;
+        protected AnnotationDocument annotationDocument;
+
+        protected Builder()
+        {
+        }
+
+        @SuppressWarnings("unchecked")
+        public T withSourceDocument(SourceDocument aSourceDocument)
+        {
+            this.sourceDocument = aSourceDocument;
+            return (T) this;
+        }
+
+        @SuppressWarnings("unchecked")
+        public T withAnnotationDocument(AnnotationDocument aAnnotationDocument)
+        {
+            this.annotationDocument = aAnnotationDocument;
+            return (T) this;
+        }
     }
 }

@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.schema.api.layer;
 import static java.util.Arrays.asList;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -28,6 +29,7 @@ import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.wicket.markup.html.panel.EmptyPanel;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.validation.ValidationError;
 import org.springframework.beans.factory.BeanNameAware;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -36,10 +38,12 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.rendering.Renderer;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.inception.support.extensionpoint.Extension;
 
 public interface LayerSupport<A extends TypeAdapter, T>
-    extends BeanNameAware
+    extends BeanNameAware, Extension<AnnotationLayer>
 {
+    @Override
     String getId();
 
     /**
@@ -49,6 +53,7 @@ public interface LayerSupport<A extends TypeAdapter, T>
      *            a layer definition.
      * @return whether the given layer is provided by the current layer support.
      */
+    @Override
     boolean accepts(AnnotationLayer aLayer);
 
     /**
@@ -174,4 +179,14 @@ public interface LayerSupport<A extends TypeAdapter, T>
     void setLayerSupportRegistry(LayerSupportRegistry aLayerSupportRegistry);
 
     LayerSupportRegistry getLayerSupportRegistry();
+
+    default List<ValidationError> validateFeatureName(AnnotationFeature aFeature)
+    {
+        return Collections.emptyList();
+    }
+
+    default boolean isDeletable(AnnotationFeature aFeature)
+    {
+        return true;
+    }
 }

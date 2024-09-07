@@ -22,14 +22,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import javax.persistence.EntityManager;
 
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.junit.jupiter.api.AfterEach;
@@ -46,11 +40,9 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
-import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
+import de.tudarmstadt.ukp.inception.documents.api.RepositoryPropertiesImpl;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBasePropertiesImpl;
 import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
-import de.tudarmstadt.ukp.inception.kb.graph.KBInstance;
 import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
@@ -73,11 +65,9 @@ public class KnowledgeBaseServiceImplImportExportIntegrationTest
     private static final String PROJECT_NAME = "Test project";
     private static final String KB_NAME = "Test knowledge base";
 
-    @TempDir
-    File temporaryFolder;
+    private @TempDir File temporaryFolder;
 
-    @Autowired
-    private TestEntityManager testEntityManager;
+    private @Autowired TestEntityManager testEntityManager;
     private TestFixtures testFixtures;
 
     private KnowledgeBaseServiceImpl sut;
@@ -93,10 +83,12 @@ public class KnowledgeBaseServiceImplImportExportIntegrationTest
     @BeforeEach
     public void setUp()
     {
-        RepositoryProperties repoProps = new RepositoryProperties();
+        var repoProps = new RepositoryPropertiesImpl();
         repoProps.setPath(temporaryFolder);
-        KnowledgeBaseProperties kbProperties = new KnowledgeBasePropertiesImpl();
-        EntityManager entityManager = testEntityManager.getEntityManager();
+
+        var kbProperties = new KnowledgeBasePropertiesImpl();
+        var entityManager = testEntityManager.getEntityManager();
+
         testFixtures = new TestFixtures(testEntityManager);
         sut = new KnowledgeBaseServiceImpl(repoProps, kbProperties, entityManager);
         project = createProject(PROJECT_NAME);
@@ -153,14 +145,12 @@ public class KnowledgeBaseServiceImplImportExportIntegrationTest
     {
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         String[] resourceNames = { "data/pets.ttl", "data/more_pets.ttl" };
-        for (String resourceName : resourceNames) {
+        for (var resourceName : resourceNames) {
             importKnowledgeBase(resourceName);
         }
 
-        Stream<String> conceptLabels = sut.listAllConcepts(kb, false).stream()
-                .map(KBObject::getName);
-        Stream<String> propertyLabels = sut.listProperties(kb, false).stream()
-                .map(KBObject::getName);
+        var conceptLabels = sut.listAllConcepts(kb, false).stream().map(KBObject::getName);
+        var propertyLabels = sut.listProperties(kb, false).stream().map(KBObject::getName);
 
         assertThat(conceptLabels).as("Check that concepts all have been imported")
                 .containsExactlyInAnyOrder("Animal", "Character", "Cat", "Dog", "Manatee", "Turtle",
@@ -173,22 +163,19 @@ public class KnowledgeBaseServiceImplImportExportIntegrationTest
     @Test
     public void importData_WithMisTypedStatements_ShouldImportWithoutError() throws Exception
     {
-        ClassLoader classLoader = getClass().getClassLoader();
-        String resourceName = "turtle/mismatching_literal_statement.ttl";
-        String fileName = classLoader.getResource(resourceName).getFile();
+        var classLoader = getClass().getClassLoader();
+        var resourceName = "turtle/mismatching_literal_statement.ttl";
+        var fileName = classLoader.getResource(resourceName).getFile();
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
 
-        try (InputStream is = classLoader.getResourceAsStream(resourceName)) {
+        try (var is = classLoader.getResourceAsStream(resourceName)) {
             sut.importData(kb, fileName, is);
         }
 
-        KBInstance kahmi = sut.readInstance(kb, "http://mbugert.de/pets#kahmi").get();
-        Stream<String> conceptLabels = sut.listAllConcepts(kb, false).stream()
-                .map(KBObject::getName);
-        Stream<String> propertyLabels = sut.listProperties(kb, false).stream()
-                .map(KBObject::getName);
-        Stream<Object> kahmiValues = sut.listStatements(kb, kahmi, false).stream()
-                .map(KBStatement::getValue);
+        var kahmi = sut.readInstance(kb, "http://mbugert.de/pets#kahmi").get();
+        var conceptLabels = sut.listAllConcepts(kb, false).stream().map(KBObject::getName);
+        var propertyLabels = sut.listProperties(kb, false).stream().map(KBObject::getName);
+        var kahmiValues = sut.listStatements(kb, kahmi, false).stream().map(KBStatement::getValue);
         assertThat(conceptLabels).as("Check that all concepts have been imported")
                 .containsExactlyInAnyOrder("Cat", "Character");
         assertThat(propertyLabels).as("Check that all properties have been imported")
@@ -200,28 +187,28 @@ public class KnowledgeBaseServiceImplImportExportIntegrationTest
     @Test
     public void exportData_WithLocalKnowledgeBase_ShouldExportKnowledgeBase() throws Exception
     {
-        KBConcept concept = new KBConcept();
+        var concept = new KBConcept();
         concept.setName("TestConcept");
-        KBProperty property = new KBProperty();
+        var property = new KBProperty();
         property.setName("TestProperty");
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         sut.createConcept(kb, concept);
         sut.createProperty(kb, property);
 
-        File kbFile = temporaryFolder.toPath().resolve("exported_kb.ttl").toFile();
-        try (OutputStream os = new FileOutputStream(kbFile)) {
+        var kbFile = temporaryFolder.toPath().resolve("exported_kb.ttl").toFile();
+        try (var os = new FileOutputStream(kbFile)) {
             sut.exportData(kb, RDFFormat.TURTLE, os);
         }
 
-        KnowledgeBase importedKb = buildKnowledgeBase(project, "Imported knowledge base");
+        var importedKb = buildKnowledgeBase(project, "Imported knowledge base");
         sut.registerKnowledgeBase(importedKb, sut.getNativeConfig());
-        try (InputStream is = new FileInputStream(kbFile)) {
+        try (var is = new FileInputStream(kbFile)) {
             sut.importData(importedKb, kbFile.getAbsolutePath(), is);
         }
-        List<String> conceptLabels = sut.listAllConcepts(importedKb, false).stream()
-                .map(KBObject::getName).collect(Collectors.toList());
-        List<String> propertyLabels = sut.listProperties(importedKb, false).stream()
-                .map(KBObject::getName).filter(Objects::nonNull).collect(Collectors.toList());
+        var conceptLabels = sut.listAllConcepts(importedKb, false).stream().map(KBObject::getName)
+                .toList();
+        var propertyLabels = sut.listProperties(importedKb, false).stream().map(KBObject::getName)
+                .filter(Objects::nonNull).toList();
         assertThat(conceptLabels).as("Check that concepts all have been exported")
                 .containsExactlyInAnyOrder("TestConcept");
         assertThat(propertyLabels).as("Check that properties all have been exported")
@@ -231,12 +218,12 @@ public class KnowledgeBaseServiceImplImportExportIntegrationTest
     @Test
     public void exportData_WithRemoteKnowledgeBase_ShouldDoNothing() throws Exception
     {
-        File outputFile = temporaryFolder.toPath().resolve("outputfile").toFile();
+        var outputFile = temporaryFolder.toPath().resolve("outputfile").toFile();
         kb.setType(RepositoryType.REMOTE);
         sut.registerKnowledgeBase(kb, sut.getRemoteConfig(KnowledgeBaseProfile
                 .readKnowledgeBaseProfiles().get("babel_net").getAccess().getAccessUrl()));
 
-        try (OutputStream os = new FileOutputStream(outputFile)) {
+        try (var os = new FileOutputStream(outputFile)) {
             sut.exportData(kb, RDFFormat.TURTLE, os);
         }
 
@@ -248,7 +235,7 @@ public class KnowledgeBaseServiceImplImportExportIntegrationTest
 
     private Project createProject(String name)
     {
-        Project p = new Project();
+        var p = new Project();
         p.setName(name);
         return testEntityManager.persist(p);
     }
@@ -260,9 +247,9 @@ public class KnowledgeBaseServiceImplImportExportIntegrationTest
 
     private void importKnowledgeBase(String resourceName) throws Exception
     {
-        ClassLoader classLoader = getClass().getClassLoader();
-        String fileName = classLoader.getResource(resourceName).getFile();
-        try (InputStream is = classLoader.getResourceAsStream(resourceName)) {
+        var classLoader = getClass().getClassLoader();
+        var fileName = classLoader.getResource(resourceName).getFile();
+        try (var is = classLoader.getResourceAsStream(resourceName)) {
             sut.importData(kb, fileName, is);
         }
     }

@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.inception.curation.service;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
-import static java.util.stream.Collectors.toList;
 
 import java.io.IOException;
 import java.sql.Timestamp;
@@ -27,8 +26,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
-
-import javax.persistence.EntityManager;
 
 import org.apache.commons.lang3.Validate;
 import org.apache.uima.UIMAException;
@@ -38,7 +35,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.ConcurentCasModificationException;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -47,6 +43,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.curation.config.CurationDocumentServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import jakarta.persistence.EntityManager;
 
 /**
  * <p>
@@ -106,33 +103,29 @@ public class CurationDocumentServiceImpl
 
     @Override
     @Transactional
-    public List<AnnotationDocument> listCuratableAnnotationDocuments(SourceDocument aDocument)
+    public List<User> listCuratableUsers(SourceDocument aSourceDocument)
     {
-        Validate.notNull(aDocument, "Document must be specified");
+        Validate.notNull(aSourceDocument, "Document must be specified");
 
-        // Get all annotators in the project
-        List<User> users = projectService.listProjectUsersWithPermissions(aDocument.getProject(),
-                ANNOTATOR);
-        // Bail out already. HQL doesn't seem to like queries with an empty parameter right of "in"
-        if (users.isEmpty()) {
-            return new ArrayList<>();
-        }
+        var query = String.join("\n", //
+                "SELECT u FROM User u", //
+                " JOIN AnnotationDocument as d", //
+                "   ON d.user = u.username", //
+                " JOIN ProjectPermission AS perm", //
+                "   ON d.project = perm.project AND d.user = perm.user", //
+                "WHERE u.username = d.user", //
+                "  AND perm.level = :level", //
+                "  AND d.document = :document", //
+                "  AND (d.state = :state or d.annotatorState = :ignore)", //
+                "ORDER BY u.username ASC");
 
-        String query = String.join("\n", //
-                "SELECT DISTINCT adoc", //
-                "FROM AnnotationDocument AS adoc", //
-                "WHERE adoc.document = :document", //
-                "AND adoc.user in (:users)", //
-                "AND (adoc.state = :state or adoc.annotatorState = :ignore)");
-
-        List<AnnotationDocument> docs = entityManager.createQuery(query, AnnotationDocument.class) //
-                .setParameter("document", aDocument) //
-                .setParameter("users", users.stream().map(User::getUsername).collect(toList())) //
+        return new ArrayList<>(entityManager //
+                .createQuery(query, User.class) //
+                .setParameter("document", aSourceDocument) //
+                .setParameter("level", ANNOTATOR) //
                 .setParameter("state", AnnotationDocumentState.FINISHED) //
                 .setParameter("ignore", AnnotationDocumentState.IGNORE) //
-                .getResultList();
-
-        return docs;
+                .getResultList());
     }
 
     @Override
@@ -142,7 +135,7 @@ public class CurationDocumentServiceImpl
         Validate.notNull(aProject, "Project must be specified");
 
         // Get all annotators in the project
-        List<User> users = projectService.listProjectUsersWithPermissions(aProject, ANNOTATOR);
+        var users = projectService.listProjectUsersWithPermissions(aProject, ANNOTATOR);
         // Bail out already. HQL doesn't seem to like queries with an empty parameter right of "in"
         if (users.isEmpty()) {
             return new ArrayList<>();
@@ -158,7 +151,7 @@ public class CurationDocumentServiceImpl
 
         List<SourceDocument> docs = entityManager.createQuery(query, SourceDocument.class) //
                 .setParameter("project", aProject) //
-                .setParameter("users", users.stream().map(User::getUsername).collect(toList())) //
+                .setParameter("users", users.stream().map(User::getUsername).toList()) //
                 .setParameter("state", AnnotationDocumentState.FINISHED) //
                 .setParameter("ignore", AnnotationDocumentState.IGNORE) //
                 .getResultList();

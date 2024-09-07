@@ -69,6 +69,7 @@ export class RecogitoEditor implements AnnotationEditor {
   private showInlineLabels: boolean
   private toolbar: RecogitoEditorToolbar
   private popover: AnnotationDetailPopOver
+  private laskMouseMoveEvent: MouseEvent | undefined
 
   public constructor (element: Element, ajax: DiamAjax, userPreferencesKey: string) {
     this.ajax = ajax
@@ -123,6 +124,7 @@ export class RecogitoEditor implements AnnotationEditor {
 
       element.addEventListener('contextmenu', e => this.openContextMenu(e))
       // Prevent right-click from triggering a selection event
+      element.addEventListener('mousemove', e => this.trackMousePosition(e), { capture: true })
       element.addEventListener('mousedown', e => this.cancelRightClick(e), { capture: true })
       element.addEventListener('mouseup', e => this.cancelRightClick(e), { capture: true })
       element.addEventListener('mouseclick', e => this.cancelRightClick(e), { capture: true })
@@ -239,10 +241,24 @@ export class RecogitoEditor implements AnnotationEditor {
             }
           }
         }
+
+        this.removeWhitepaceOnlyHighlights()
       })
     }
   }
 
+  /**
+   * Some highlights may only contain whitepace. This method removes such highlights.
+   */
+    private removeWhitepaceOnlyHighlights (selector: string = '.iaa-highlighted') {
+      this.root.querySelectorAll(selector).forEach(e => {
+        if (!e.classList.contains('iaa-zero-width') && !e.textContent?.trim()) {
+          e.after(...e.childNodes)
+          e.remove()
+        }
+      })
+    }
+  
   /**
    * Recogito does not support rendering annotations with a custom color. This is a workaround.
    */
@@ -272,6 +288,12 @@ export class RecogitoEditor implements AnnotationEditor {
     }
   }
 
+  private trackMousePosition (e: Event): void {
+    if (e instanceof MouseEvent) {
+      this.laskMouseMoveEvent = e;
+    }
+  }
+  
   /**
    * Prevent right click from triggering a selection event.
    */
@@ -320,6 +342,9 @@ export class RecogitoEditor implements AnnotationEditor {
       const options: DiamLoadAnnotationsOptions = {
         range,
         includeText: false,
+        clipSpans: true,
+        clipArcs: false,
+        longArcs: true,
         format: 'compact_v2'
       }
 
@@ -377,7 +402,9 @@ export class RecogitoEditor implements AnnotationEditor {
       // console.log(`From ${span[1][0][0]}-${span[1][0][1]} +${offset}`, this.root)
 
       const classList = ['iaa-highlighted']
-      
+
+      if (begin === end) classList.push('iaa-zero-width')
+
       const ms = doc.annotationMarkers.get(span.vid) || []
       ms.forEach(m => classList.push(`i7n-marker-${m[0]}`))
 
@@ -463,6 +490,9 @@ export class RecogitoEditor implements AnnotationEditor {
   }
 
   public destroy (): void {
+    if (this.popover?.$destroy) {
+      this.popover.$destroy()
+    }
     this.connections.destroy()
     this.recogito.destroy()
   }
@@ -482,13 +512,15 @@ export class RecogitoEditor implements AnnotationEditor {
   }
 
   private createRelation (annotation): void {
+    if (!this.laskMouseMoveEvent) return
+
     const target = annotation.target
 
     // The RecogitoJS annotation IDs start with a hash `#` which we need to remove
     const sourceId = target[0].id?.substring(1) as VID
     const targetId = target[1].id?.substring(1) as VID
 
-    this.ajax.createRelationAnnotation(sourceId, targetId)
+    this.ajax.createRelationAnnotation(sourceId, targetId, this.laskMouseMoveEvent)
   }
 
   private selectAnnotation (annotation): void {
