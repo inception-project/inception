@@ -124,8 +124,8 @@
     <solr.version>9.6.1</solr.version>
     <opensearch.version>2.16.0</opensearch.version>
     <jena.version>5.1.0</jena.version>
-    <rdf4j.version>4.3.13</rdf4j.version> 
-    <owlapi-version>5.5.0</owlapi-version>
+    <rdf4j.version>5.0.2</rdf4j.version> 
+    <owlapi-version>5.5.1</owlapi-version>
 
     <asciidoctor.plugin.version>2.2.3</asciidoctor.plugin.version>
     <asciidoctor.version>2.5.13</asciidoctor.version>
