@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.support.uima;
 
+import static java.util.Collections.emptySet;
 import static org.apache.uima.fit.util.FSCollectionFactory.createStringArrayFS;
 import static org.apache.uima.fit.util.FSCollectionFactory.createStringList;
 
@@ -122,6 +123,8 @@ public class ICasUtil
     public static Object getDefaultFeatureValue(Feature aFeature)
     {
         switch (aFeature.getRange().getName()) {
+        case CAS.TYPE_NAME_STRING_ARRAY:
+            return emptySet();
         case CAS.TYPE_NAME_STRING:
             return null;
         case CAS.TYPE_NAME_BOOLEAN:
@@ -226,5 +229,29 @@ public class ICasUtil
         catch (Exception e) {
             throw new IllegalStateException("Cannot force-update SofA string", e);
         }
+    }
+
+    public static boolean hasSameType(AnnotationFS aFs1, AnnotationFS aFs2)
+    {
+        // Null check
+        if (aFs1 == null || aFs2 == null) {
+            return false;
+        }
+
+        // Trivial case: same instance
+        if (aFs1 == aFs2) {
+            return true;
+        }
+
+        // Trivial case: same address
+        if (aFs1.getCAS() == aFs1.getCAS() && getAddr(aFs1) == getAddr(aFs1)) {
+            return true;
+        }
+
+        var type1 = aFs1.getType();
+        var type2 = aFs2.getType();
+
+        // Types must be the same
+        return type1.getName().equals(type2.getName());
     }
 }

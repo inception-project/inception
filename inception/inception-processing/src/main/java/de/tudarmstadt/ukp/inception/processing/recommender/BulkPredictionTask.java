@@ -21,19 +21,22 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXC
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.AUTO_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IN_PROGRESS;
-import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.NEW;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateChangeFlag.EXPLICIT_ANNOTATOR_USER_ACTION;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation.AUTO_ACCEPT;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.ACCEPTED;
 import static de.tudarmstadt.ukp.inception.scheduling.TaskScope.PROJECT;
+import static de.tudarmstadt.ukp.inception.scheduling.TaskState.CANCELLED;
 
 import java.io.IOException;
 import java.io.Serializable;
 import java.lang.invoke.MethodHandles;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
 import org.apache.commons.lang3.Validate;
 import org.apache.uima.cas.AnnotationBaseFS;
@@ -42,6 +45,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -56,7 +61,6 @@ import de.tudarmstadt.ukp.inception.recommendation.tasks.PredictionTask;
 import de.tudarmstadt.ukp.inception.recommendation.tasks.RecommendationTask_ImplBase;
 import de.tudarmstadt.ukp.inception.scheduling.ProjectTask;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
-import de.tudarmstadt.ukp.inception.scheduling.TaskState;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.support.WebAnnoConst;
@@ -75,7 +79,8 @@ public class BulkPredictionTask
     private final String dataOwner;
     private final Recommender recommender;
     private final Map<AnnotationFeature, Serializable> processingMetadata;
-    private boolean finishDocumentsWithoutRecommendations;
+    private final boolean finishDocumentsWithoutRecommendations;
+    private final Set<AnnotationDocumentState> statesToProcess;
 
     private @Autowired UserDao userService;
     private @Autowired DocumentService documentService;
@@ -89,8 +94,9 @@ public class BulkPredictionTask
 
         recommender = aBuilder.recommender;
         dataOwner = aBuilder.dataOwner;
-        processingMetadata = aBuilder.processingMetadata;
         finishDocumentsWithoutRecommendations = aBuilder.finishDocumentsWithoutRecommendations;
+        processingMetadata = new HashMap<>(aBuilder.processingMetadata);
+        statesToProcess = new HashSet<>(aBuilder.statesToProcess);
     }
 
     @Override
@@ -105,38 +111,39 @@ public class BulkPredictionTask
     {
         var dataOwnerUser = userService.get(dataOwner);
         var monitor = getMonitor();
+        var visitedDocuments = new HashSet<SourceDocument>();
         var processedDocumentsCount = 0;
         var annotationsCount = 0;
         var suggestionsCount = 0;
-        int maxProgress;
+        var maxProgress = 0;
 
         while (true) {
-            // Find all documents currently in the document (which may have changed since the last
+            // Find all documents currently in the project (which may have changed since the last
             // iteration)
             var annotatableDocuments = documentService.listAnnotatableDocuments(getProject(),
                     dataOwnerUser);
 
-            // Find all documents that still need processing (i.e. which are in state NEW explicitly
-            // or implicitly).
-            var processableDocuments = annotatableDocuments.entrySet().stream() //
-                    .filter(e -> e.getValue() == null || e.getValue().getState() == NEW) //
+            var documentsToProcess = annotatableDocuments.entrySet().stream() //
+                    .filter(e -> isInProcessableState(e.getKey(), e.getValue())) //
+                    .filter(e -> !visitedDocuments.contains(e.getKey())) //
                     .map(e -> e.getKey()) //
                     .toList();
 
             maxProgress = annotatableDocuments.size();
-            var progress = maxProgress - processableDocuments.size();
-            if (processableDocuments.isEmpty() || monitor.isCancelled()) {
+            var progress = maxProgress - documentsToProcess.size();
+            if (documentsToProcess.isEmpty() || monitor.isCancelled()) {
                 monitor.setProgressWithMessage(progress, maxProgress,
                         LogMessage.info(this,
                                 "%d annotations generated from %d suggestions in %d documents",
                                 annotationsCount, suggestionsCount, processedDocumentsCount));
                 if (monitor.isCancelled()) {
-                    monitor.setState(TaskState.CANCELLED);
+                    monitor.setState(CANCELLED);
                 }
                 break;
             }
 
-            var doc = processableDocuments.get(0);
+            var doc = documentsToProcess.get(0);
+            visitedDocuments.add(doc);
             var annDoc = documentService.createOrGetAnnotationDocument(doc, dataOwnerUser);
 
             monitor.setProgressWithMessage(progress, maxProgress,
@@ -177,7 +184,18 @@ public class BulkPredictionTask
         }
 
         monitor.setProgressWithMessage(processedDocumentsCount, maxProgress,
-                LogMessage.info(this, "Prediction complete"));
+                LogMessage.info(this,
+                        "%d annotations generated from %d suggestions in %d documents",
+                        annotationsCount, suggestionsCount, processedDocumentsCount));
+    }
+
+    private boolean isInProcessableState(SourceDocument aSourceDocument,
+            AnnotationDocument aAnnotationDocument)
+    {
+        var effectiveState = aAnnotationDocument == null //
+                ? AnnotationDocumentState.NEW //
+                : aAnnotationDocument.getState();
+        return statesToProcess.contains(effectiveState);
     }
 
     private void addProcessingMetadataAnnotation(SourceDocument doc, CAS cas)
@@ -265,6 +283,7 @@ public class BulkPredictionTask
         private String dataOwner;
         private Map<AnnotationFeature, Serializable> processingMetadata;
         private boolean finishDocumentsWithoutRecommendations;
+        private final Set<AnnotationDocumentState> statesToProcess = new HashSet<>();
 
         @SuppressWarnings("unchecked")
         public T withRecommender(Recommender aRecommender)
@@ -277,6 +296,17 @@ public class BulkPredictionTask
         public T withProcessingMetadata(Map<AnnotationFeature, Serializable> aProcessingMetadata)
         {
             processingMetadata = aProcessingMetadata;
+            return (T) this;
+        }
+
+        @SuppressWarnings("unchecked")
+        public T withStatesToProcess(Collection<AnnotationDocumentState> aStates)
+        {
+            statesToProcess.clear();
+
+            if (aStates != null) {
+                statesToProcess.addAll(aStates);
+            }
             return (T) this;
         }
 

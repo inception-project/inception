@@ -17,9 +17,11 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.chatgpt;
 
+import static de.tudarmstadt.ukp.inception.recommendation.imls.chatgpt.ChatGptRecommenderTraits.DEFAULT_CHATGPT_URL;
 import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CHANGE_EVENT;
 import static de.tudarmstadt.ukp.inception.support.wicket.WicketUtil.wrapInTryCatch;
 import static java.lang.String.format;
+import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import java.io.IOException;
@@ -31,7 +33,6 @@ import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.TextArea;
-import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
@@ -123,7 +124,12 @@ public class ChatGptRecommenderTraitsEditor
             traits.getObject().setAuthentication(new ApiKeyAuthenticationTraits());
         }
 
-        form.add(new TextField<String>("url"));
+        var comboBox = new ComboBox<String>("url", asList(DEFAULT_CHATGPT_URL,
+                "https://api.cerebras.ai/v1", "https://api.groq.com/openai/v1"));
+        comboBox.setOutputMarkupId(true);
+        comboBox.setRequired(true);
+        form.add(comboBox);
+
         authenticationTraitsEditor = new ApiKeyAuthenticationTraitsEditor("authentication",
                 Model.of((ApiKeyAuthenticationTraits) traits.getObject().getAuthentication()));
         form.add(authenticationTraitsEditor);

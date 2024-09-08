@@ -15,11 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.ui.core.config;
+package de.tudarmstadt.ukp.clarin.webanno.model;
 
-import java.util.List;
+import org.apache.uima.cas.FeatureStructure;
 
-public interface CspProperties
+@FunctionalInterface
+public interface AnnotationFeatureFilter
 {
-    List<String> getAllowedImageSources();
+    boolean isAllowed(FeatureStructure aFS, AnnotationFeature aFeature);
 }

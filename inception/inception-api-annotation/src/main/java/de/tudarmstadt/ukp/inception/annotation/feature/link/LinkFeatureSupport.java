@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.annotation.feature.link;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.LinkMode.WITH_ROLE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode.ARRAY;
+import static org.apache.commons.collections4.CollectionUtils.disjunction;
 import static org.apache.uima.cas.CAS.TYPE_NAME_FS_ARRAY;
 import static org.apache.uima.cas.CAS.TYPE_NAME_STRING;
 import static org.apache.uima.cas.CAS.TYPE_NAME_TOP;
@@ -26,6 +27,7 @@ import static org.apache.uima.cas.CAS.TYPE_NAME_TOP;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.text.WordUtils;
@@ -59,6 +61,7 @@ import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureEditor;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupport;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureType;
 import de.tudarmstadt.ukp.inception.schema.api.feature.LinkWithRoleModel;
+import de.tudarmstadt.ukp.inception.schema.api.feature.MaterializedLink;
 import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
 
 /**
@@ -207,12 +210,14 @@ public class LinkFeatureSupport
     public List<LinkWithRoleModel> getFeatureValue(AnnotationFeature aFeature, FeatureStructure aFS)
     {
         var linkFeature = aFS.getType().getFeatureByBaseName(aFeature.getName());
-
-        if (linkFeature == null) {
-            wrapFeatureValue(aFeature, aFS.getCAS(), null);
-        }
-
         return wrapFeatureValue(aFeature, aFS.getCAS(), aFS.getFeatureValue(linkFeature));
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public <V> V getDefaultFeatureValue(AnnotationFeature aFeature, FeatureStructure aFS)
+    {
+        return (V) Collections.emptyList();
     }
 
     @Override
@@ -308,5 +313,27 @@ public class LinkFeatureSupport
     {
         // Never render link feature labels
         return null;
+    }
+
+    @Override
+    public boolean isCopyOnCurationMerge(AnnotationFeature aFeature)
+    {
+        // Links count as separate positions and should be merged separately
+        return false;
+    }
+
+    @Override
+    public boolean isFeatureValueEqual(AnnotationFeature aFeature, FeatureStructure aFS1,
+            FeatureStructure aFS2)
+    {
+        List<LinkWithRoleModel> links1 = getFeatureValue(aFeature, aFS1);
+        var matLinks1 = links1.stream()
+                .map(link -> MaterializedLink.toMaterializedLink(aFS1, aFeature, link)).toList();
+
+        List<LinkWithRoleModel> links2 = getFeatureValue(aFeature, aFS2);
+        var matLinks2 = links2.stream()
+                .map(link -> MaterializedLink.toMaterializedLink(aFS2, aFeature, link)).toList();
+
+        return disjunction(matLinks1, matLinks2).isEmpty();
     }
 }

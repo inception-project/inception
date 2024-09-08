@@ -17,20 +17,25 @@
  */
 package de.tudarmstadt.ukp.inception.externaleditor.config;
 
+import static de.tudarmstadt.ukp.inception.externaleditor.config.Source.LOCAL;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @ConfigurationProperties("ui.external")
 public class ExternalEditorPropertiesImpl
     implements ExternalEditorProperties
 {
-    private boolean blockStyle = true;
+    private boolean blockImg = false;
+    private Source allowImgSource = LOCAL;
+    private boolean blockAudio = false;
+    private Source allowAudioSource = LOCAL;
+    private boolean blockVideo = false;
+    private Source allowVideoSource = LOCAL;
 
-    private boolean blockImg = true;
-    private Source allowImgSource = Source.NONE;
-    private boolean blockEmbed = true;
-    private boolean blockAudio = true;
+    // Experimental / undocumented properties
+    private boolean blockStyle = true;
     private boolean blockObject = true;
-    private boolean blockVideo = true;
+    private boolean blockEmbed = true;
 
     @Override
     public boolean isBlockStyle()
@@ -82,6 +87,17 @@ public class ExternalEditorPropertiesImpl
         return blockAudio;
     }
 
+    public void setAllowAudioSource(Source aAllowAudioSource)
+    {
+        allowAudioSource = aAllowAudioSource;
+    }
+
+    @Override
+    public Source getAllowAudioSource()
+    {
+        return allowAudioSource;
+    }
+
     public void setBlockAudio(boolean aBlockAudio)
     {
         blockAudio = aBlockAudio;
@@ -107,5 +123,16 @@ public class ExternalEditorPropertiesImpl
     public void setBlockVideo(boolean aBlockVideo)
     {
         blockVideo = aBlockVideo;
+    }
+
+    public void setAllowVideoSource(Source aAllowVideoSource)
+    {
+        allowVideoSource = aAllowVideoSource;
+    }
+
+    @Override
+    public Source getAllowVideoSource()
+    {
+        return allowVideoSource;
     }
 }

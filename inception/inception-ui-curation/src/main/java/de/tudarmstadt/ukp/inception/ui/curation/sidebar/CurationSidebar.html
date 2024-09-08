@@ -42,12 +42,21 @@
           </div>
         </form>
       
-        <div class="row form-row" wicket:enclosure="showMerged">
-          <div class="col-sm-12">
-            <div class="form-check">
+        <div class="row form-row" >
+          <div class="col-sm-12" wicket:enclosure="showMerged">
+            <div class="form-check form-switch">
               <input class="form-check-input" type="checkbox" wicket:id="showMerged">
               <label class="form-check-label" wicket:for="showMerged">
                 <wicket:label key="showMerged"/>
+              </label>
+            </div>
+          </div>
+
+          <div class="col-sm-12" wicket:enclosure="showScore">
+            <div class="form-check form-switch">
+              <input class="form-check-input" type="checkbox" wicket:id="showScore">
+              <label class="form-check-label" wicket:for="showScore">
+                <wicket:label key="showScore"/>
               </label>
             </div>
           </div>

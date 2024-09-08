@@ -18,43 +18,21 @@
 package de.tudarmstadt.ukp.inception.support.xml.sanitizer;
 
 import java.util.Optional;
-import java.util.regex.Pattern;
 
-import javax.xml.namespace.QName;
-
-public class PatternAttributePolicy
-    extends DelegatingAttributePolicy
+public interface ChainableAttributePolicy
 {
-    private final Pattern pattern;
+    // FIXME Would be way better if this class would be immutable!!!
+    void setDelegate(AttributePolicy aDelegate);
 
-    public PatternAttributePolicy(QName aQName, AttributeAction aAction, Pattern aPattern)
-    {
-        super(aQName, aAction);
-        pattern = aPattern;
-    }
+    AttributePolicy getDelegate();
 
-    @Override
-    public Optional<AttributeAction> apply(String aValue)
+    default Optional<AttributeAction> chain(String aValue)
     {
-        if (pattern.matcher(aValue).matches()) {
-            return super.apply(aValue);
+        var delegate = getDelegate();
+        if (delegate != null) {
+            return delegate.apply(aValue);
         }
 
-        return chain(aValue);
-    }
-
-    @Override
-    public String toString()
-    {
-        var sb = new StringBuilder();
-        sb.append("[");
-        sb.append(pattern);
-        sb.append("] -> ");
-        sb.append(getAction());
-        if (getDelegate() != null) {
-            sb.append(" :: ");
-            sb.append(getDelegate().toString());
-        }
-        return sb.toString();
+        return Optional.empty();
     }
 }

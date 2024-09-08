@@ -19,24 +19,13 @@ package de.tudarmstadt.ukp.inception.support.xml.sanitizer;
 
 import java.util.Optional;
 
-import javax.xml.namespace.QName;
-
 public class AttributePolicy
 {
-    public static final AttributePolicy UNDEFINED = new AttributePolicy(null, null);
+    protected final AttributeAction action;
 
-    private final AttributeAction action;
-    private final QName qName;
-
-    public AttributePolicy(QName aQName, AttributeAction aAction)
+    public AttributePolicy(AttributeAction aAction)
     {
         action = aAction;
-        qName = aQName;
-    }
-
-    public QName getQName()
-    {
-        return qName;
     }
 
     public AttributeAction getAction()
@@ -47,16 +36,6 @@ public class AttributePolicy
     public Optional<AttributeAction> apply(String aValue)
     {
         return Optional.ofNullable(action);
-    }
-
-    @Override
-    public String toString()
-    {
-        if (action == null) {
-            return "UNDEFINED";
-        }
-
-        return action.toString();
     }
 
     public static boolean isUndefined(AttributePolicy aPolicy)
@@ -72,20 +51,13 @@ public class AttributePolicy
         return false;
     }
 
-    // public static AttributePolicy forAction(AttributeAction aAction)
-    // {
-    // if (aAction == null) {
-    // return UNDEFINED;
-    // }
-    //
-    // if (aAction == AttributeAction.PASS) {
-    // return PASS;
-    // }
-    //
-    // if (aAction == AttributeAction.DROP) {
-    // return DROP;
-    // }
-    //
-    // throw new IllegalArgumentException("Unsupported attribute action [" + aAction + "]");
-    // }
+    @Override
+    public String toString()
+    {
+        if (action == null) {
+            return "UNDEFINED";
+        }
+
+        return action.toString();
+    }
 }

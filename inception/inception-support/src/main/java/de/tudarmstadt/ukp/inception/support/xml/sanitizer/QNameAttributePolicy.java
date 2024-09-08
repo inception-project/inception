@@ -15,13 +15,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.schema.api.adapter;
+package de.tudarmstadt.ukp.inception.support.xml.sanitizer;
 
-import org.apache.uima.cas.Feature;
-import org.apache.uima.cas.FeatureStructure;
+import javax.xml.namespace.QName;
 
-@FunctionalInterface
-public interface FeatureFilter
+public class QNameAttributePolicy
+    extends AttributePolicy
 {
-    boolean isAllowed(FeatureStructure aFS, Feature aFeature);
+    public static final QNameAttributePolicy UNDEFINED = new QNameAttributePolicy(null, null);
+
+    private final QName qName;
+
+    public QNameAttributePolicy(QName aQName, AttributeAction aAction)
+    {
+        super(aAction);
+        qName = aQName;
+    }
+
+    public QName getQName()
+    {
+        return qName;
+    }
 }

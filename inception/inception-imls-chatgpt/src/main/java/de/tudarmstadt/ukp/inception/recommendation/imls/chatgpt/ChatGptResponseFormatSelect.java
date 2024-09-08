@@ -23,10 +23,10 @@ import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.EnumChoiceRenderer;
 import org.apache.wicket.model.IModel;
 
-import de.tudarmstadt.ukp.inception.recommendation.imls.chatgpt.client.GenerateResponseFormat;
+import de.tudarmstadt.ukp.inception.recommendation.imls.chatgpt.client.ResponseFormatType;
 
 public class ChatGptResponseFormatSelect
-    extends DropDownChoice<GenerateResponseFormat>
+    extends DropDownChoice<ResponseFormatType>
 {
     private static final long serialVersionUID = 3115872987735239823L;
 
@@ -35,7 +35,7 @@ public class ChatGptResponseFormatSelect
         super(aId);
     }
 
-    public ChatGptResponseFormatSelect(String aId, IModel<GenerateResponseFormat> aModel)
+    public ChatGptResponseFormatSelect(String aId, IModel<ResponseFormatType> aModel)
     {
         super(aId);
         setModel(aModel);
@@ -47,7 +47,7 @@ public class ChatGptResponseFormatSelect
         super.onInitialize();
 
         setChoiceRenderer(new EnumChoiceRenderer<>(this));
-        setChoices(asList(GenerateResponseFormat.values()));
+        setChoices(asList(ResponseFormatType.JSON_OBJECT));
         setNullValid(true);
     }
 }

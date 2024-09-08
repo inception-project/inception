@@ -17,8 +17,11 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api;
 
+import java.util.Objects;
+
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 import de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureMultiplicityMode;
 
@@ -30,16 +33,18 @@ public abstract class Position_ImplBase
     private final String type;
     private final String feature;
 
+    private final LinkFeatureMultiplicityMode linkCompareBehavior;
+
     private final String role;
 
     private final int linkTargetBegin;
     private final int linkTargetEnd;
-    private final String linkTargetText;
 
-    private final LinkFeatureMultiplicityMode linkCompareBehavior;
-
+    // BEGIN: For debugging only - not included in compareTo/hashCode/equals!
     private final String collectionId;
     private final String documentId;
+    private final String linkTargetText;
+    // END: For debugging only - not included in compareTo/hashCode/equals!
 
     public Position_ImplBase(String aCollectionId, String aDocumentId, String aType,
             String aFeature, String aRole, int aLinkTargetBegin, int aLinkTargetEnd,
@@ -53,10 +58,10 @@ public abstract class Position_ImplBase
         role = aRole;
         linkTargetBegin = aLinkTargetBegin;
         linkTargetEnd = aLinkTargetEnd;
-        linkTargetText = aLinkTargetText;
 
         collectionId = aCollectionId;
         documentId = aDocumentId;
+        linkTargetText = aLinkTargetText;
     }
 
     @Override
@@ -75,6 +80,12 @@ public abstract class Position_ImplBase
     public String getRole()
     {
         return role;
+    }
+
+    @Override
+    public boolean isLinkFeaturePosition()
+    {
+        return getFeature() != null;
     }
 
     @Override
@@ -134,41 +145,111 @@ public abstract class Position_ImplBase
 
         // If linkCompareBehavior is equal, then we still only have to continue if it is non-
         // null.
-        else if (linkCompareBehavior != null) {
-            // If we are dealing with sub-positions generated for link features, then we need to
-            // check this, otherwise linkTargetBegin, linkTargetEnd, linkCompareBehavior,
-            // feature and role are all unset.
-            switch (linkCompareBehavior) {
-            case ONE_TARGET_MULTIPLE_ROLES:
-                // Include role into position
-                return ObjectUtils.compare(role, aOther.getRole());
-            case MULTIPLE_TARGETS_ONE_ROLE:
-                // Include target into position
-                if (linkTargetBegin != aOther.getLinkTargetBegin()) {
-                    return linkTargetBegin - aOther.getLinkTargetBegin();
-                }
-
-                return linkTargetEnd - aOther.getLinkTargetEnd();
-            case MULTIPLE_TARGETS_MULTIPLE_ROLES:
-                var roleCmp = ObjectUtils.compare(role, aOther.getRole());
-                if (roleCmp != 0) {
-                    return roleCmp;
-                }
-
-                // Include role and target into position
-                if (linkTargetBegin != aOther.getLinkTargetBegin()) {
-                    return linkTargetBegin - aOther.getLinkTargetBegin();
-                }
-
-                return linkTargetEnd - aOther.getLinkTargetEnd();
-            default:
-                throw new IllegalStateException(
-                        "Unknown link target comparison mode [" + linkCompareBehavior + "]");
-            }
-        }
-        else {
+        if (linkCompareBehavior == null) {
             return linkCmpCmp;
         }
+
+        // If we are dealing with sub-positions generated for link features, then we need to
+        // check this, otherwise linkTargetBegin, linkTargetEnd, linkCompareBehavior,
+        // feature and role are all unset.
+        switch (linkCompareBehavior) {
+        case ONE_TARGET_MULTIPLE_ROLES:
+            // Include role into position
+            return ObjectUtils.compare(role, aOther.getRole());
+        case MULTIPLE_TARGETS_ONE_ROLE:
+            // Include target into position
+            if (linkTargetBegin != aOther.getLinkTargetBegin()) {
+                return linkTargetBegin - aOther.getLinkTargetBegin();
+            }
+
+            return linkTargetEnd - aOther.getLinkTargetEnd();
+        case MULTIPLE_TARGETS_MULTIPLE_ROLES:
+            var roleCmp = ObjectUtils.compare(role, aOther.getRole());
+            if (roleCmp != 0) {
+                return roleCmp;
+            }
+
+            // Include role and target into position
+            if (linkTargetBegin != aOther.getLinkTargetBegin()) {
+                return linkTargetBegin - aOther.getLinkTargetBegin();
+            }
+
+            return linkTargetEnd - aOther.getLinkTargetEnd();
+        default:
+            throw new IllegalStateException(
+                    "Unknown link target comparison mode [" + linkCompareBehavior + "]");
+        }
+    }
+
+    @Override
+    public boolean equals(final Object other)
+    {
+        if (!(other instanceof Position_ImplBase)) {
+            return false;
+        }
+
+        Position_ImplBase castOther = (Position_ImplBase) other;
+        var result = Objects.equals(type, castOther.type) //
+                && Objects.equals(feature, castOther.feature) //
+                && Objects.equals(linkCompareBehavior, castOther.linkCompareBehavior);
+
+        // If the base properties are equal, then we have to continue only linkCompareBehavior if it
+        // is non-null.
+        if (!result && linkCompareBehavior == null) {
+            return false;
+        }
+
+        switch (linkCompareBehavior) {
+        case ONE_TARGET_MULTIPLE_ROLES:
+            // Include role into position
+            return Objects.equals(role, castOther.role);
+        case MULTIPLE_TARGETS_ONE_ROLE:
+            // Include target into position
+            return Objects.equals(linkTargetBegin, castOther.linkTargetBegin) //
+                    && Objects.equals(linkTargetEnd, castOther.linkTargetEnd);
+        case MULTIPLE_TARGETS_MULTIPLE_ROLES:
+            return Objects.equals(role, castOther.role) //
+                    && Objects.equals(linkTargetBegin, castOther.linkTargetBegin) //
+                    && Objects.equals(linkTargetEnd, castOther.linkTargetEnd);
+        default:
+            throw new IllegalStateException(
+                    "Unknown link target comparison mode [" + linkCompareBehavior + "]");
+        }
+    }
+
+    @Override
+    public int hashCode()
+    {
+        var builder = new HashCodeBuilder() //
+                .append(type) //
+                .append(feature) //
+                .append(linkCompareBehavior);
+
+        if (linkCompareBehavior == null) {
+            return builder.toHashCode();
+        }
+
+        switch (linkCompareBehavior) {
+        case ONE_TARGET_MULTIPLE_ROLES:
+            // Include role into position
+            builder.append(role);
+            break;
+        case MULTIPLE_TARGETS_ONE_ROLE:
+            // Include target into position
+            builder.append(linkTargetBegin);
+            builder.append(linkTargetEnd);
+            break;
+        case MULTIPLE_TARGETS_MULTIPLE_ROLES:
+            builder.append(role);
+            builder.append(linkTargetBegin);
+            builder.append(linkTargetEnd);
+            break;
+        default:
+            throw new IllegalStateException(
+                    "Unknown link target comparison mode [" + linkCompareBehavior + "]");
+        }
+
+        return builder.toHashCode();
     }
 
     protected void toStringFragment(StringBuilder builder)

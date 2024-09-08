@@ -41,7 +41,6 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestio
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AutoAcceptMode;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
@@ -146,7 +145,7 @@ public abstract class SuggestionSupport_ImplBase
             AnnotationSuggestion aSuggestion, LearningRecordChangeLocation aLocation)
         throws AnnotationException
     {
-        var suggestion = (SpanSuggestion) aSuggestion;
+        var suggestion = aSuggestion;
 
         // Hide the suggestion. This is faster than having to recalculate the visibility status
         // for the entire document or even for the part visible on screen.
@@ -160,9 +159,8 @@ public abstract class SuggestionSupport_ImplBase
         learningRecordService.logRecord(aSessionOwner, record);
 
         // Send an application event that the suggestion has been rejected
-        applicationEventPublisher.publishEvent(new RecommendationRejectedEvent(this, aDocument,
-                aDataOwner, suggestion.getBegin(), suggestion.getEnd(), suggestion.getCoveredText(),
-                feature, suggestion.getLabel()));
+        applicationEventPublisher.publishEvent(
+                new RecommendationRejectedEvent(this, aDocument, aDataOwner, feature, suggestion));
     }
 
     @Override

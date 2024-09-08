@@ -15,12 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.imls.chatgpt.client;
+package de.tudarmstadt.ukp.inception.io.xml.css;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.List;
 
-public enum GenerateResponseFormat
+import org.apache.wicket.request.resource.ResourceReference;
+
+public interface StylesheetRegistry
 {
-    @JsonProperty("json")
-    JSON
+    List<ResourceReference> listStylesheetReferences();
 }

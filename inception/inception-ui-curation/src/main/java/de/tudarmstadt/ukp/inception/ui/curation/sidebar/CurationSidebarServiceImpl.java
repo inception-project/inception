@@ -480,6 +480,24 @@ public class CurationSidebarServiceImpl
 
     @Transactional
     @Override
+    public boolean isShowScore(String aSessionOwner, Long aProjectId)
+    {
+        synchronized (sessions) {
+            return getSession(aSessionOwner, aProjectId).isShowScore();
+        }
+    }
+
+    @Transactional
+    @Override
+    public void setShowScore(String aSessionOwner, Long aProjectId, boolean aValue)
+    {
+        synchronized (sessions) {
+            getSession(aSessionOwner, aProjectId).setShowScore(aValue);
+        }
+    }
+
+    @Transactional
+    @Override
     public String getCurationTarget(String aSessionOwner, long aProjectId)
     {
         String curationUser;
@@ -563,6 +581,7 @@ public class CurationSidebarServiceImpl
         // the curationdoc can be retrieved from user (CURATION or current) and projectId
         private String curationTarget;
         private boolean showAll;
+        private boolean showScore;
 
         public CurationSession(String aUser)
         {
@@ -603,6 +622,16 @@ public class CurationSidebarServiceImpl
         public void setShowAll(boolean aShowAll)
         {
             showAll = aShowAll;
+        }
+
+        public boolean isShowScore()
+        {
+            return showScore;
+        }
+
+        public void setShowScore(boolean aShowScore)
+        {
+            showScore = aShowScore;
         }
     }
 }

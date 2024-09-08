@@ -26,6 +26,7 @@ import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import de.tudarmstadt.ukp.inception.recommendation.imls.support.llm.option.Option;
 
@@ -44,7 +45,7 @@ public class ChatCompletionRequest
     private final @JsonIgnore String apiKey;
     private final String model;
     private final List<ChatCompletionMessage> messages;
-    private final @JsonInclude(NON_NULL) GenerateResponseFormat format;
+    private final @JsonProperty("response_format") @JsonInclude(NON_NULL) ResponseFormat format;
 
     private ChatCompletionRequest(Builder builder)
     {
@@ -64,7 +65,7 @@ public class ChatCompletionRequest
         return model;
     }
 
-    public GenerateResponseFormat getFormat()
+    public ResponseFormat getFormat()
     {
         return format;
     }
@@ -84,7 +85,7 @@ public class ChatCompletionRequest
         private String model;
         private String apiKey;
         private String prompt;
-        private GenerateResponseFormat format;
+        private ResponseFormat format;
         private Map<String, Object> options = new HashMap<>();
 
         private Builder()
@@ -109,7 +110,7 @@ public class ChatCompletionRequest
             return this;
         }
 
-        public Builder withFormat(GenerateResponseFormat aFormat)
+        public Builder withResponseFormat(ResponseFormat aFormat)
         {
             this.format = aFormat;
             return this;

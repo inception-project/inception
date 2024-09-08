@@ -31,6 +31,14 @@
   <dependencyManagement>
     <dependencies>
       <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-bom</artifactId>
+        <version>${slf4j.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    
+      <dependency>
         <groupId>org.springframework</groupId>
         <artifactId>spring-framework-bom</artifactId>
         <version>${spring.version}</version>
@@ -608,15 +616,6 @@
         <version>0.17.0</version>
       </dependency>
 
-      <!-- SLF4J -->
-      <dependency>
-        <groupId>org.slf4j</groupId>
-        <artifactId>slf4j-bom</artifactId>
-        <version>${slf4j.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
-
       <dependency>
         <groupId>org.jboss.logging</groupId>
         <artifactId>jboss-logging</artifactId>
@@ -1183,37 +1182,15 @@
 
       <dependency>
         <groupId>net.sourceforge.owlapi</groupId>
-        <artifactId>owlapi-api</artifactId>
+        <artifactId>owlapi-bom</artifactId>
         <version>${owlapi-version}</version>
+        <type>pom</type>
+        <scope>import</scope>
       </dependency>
       <dependency>
+        <!-- See https://github.com/owlcs/owlapi/issues/1154 -->
         <groupId>net.sourceforge.owlapi</groupId>
         <artifactId>owlapi-apibinding</artifactId>
-        <version>${owlapi-version}</version>
-      </dependency>
-      <dependency>
-        <groupId>net.sourceforge.owlapi</groupId>
-        <artifactId>owlapi-impl</artifactId>
-        <version>${owlapi-version}</version>
-      </dependency>
-      <dependency>
-        <groupId>net.sourceforge.owlapi</groupId>
-        <artifactId>owlapi-oboformat</artifactId>
-        <version>${owlapi-version}</version>
-      </dependency>
-      <dependency>
-        <groupId>net.sourceforge.owlapi</groupId>
-        <artifactId>owlapi-parsers</artifactId>
-        <version>${owlapi-version}</version>
-      </dependency>
-      <dependency>
-        <groupId>net.sourceforge.owlapi</groupId>
-        <artifactId>owlapi-rio</artifactId>
-        <version>${owlapi-version}</version>
-      </dependency>
-      <dependency>
-        <groupId>net.sourceforge.owlapi</groupId>
-        <artifactId>owlapi-tools</artifactId>
         <version>${owlapi-version}</version>
       </dependency>
 

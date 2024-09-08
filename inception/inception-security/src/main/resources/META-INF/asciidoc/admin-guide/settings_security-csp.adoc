@@ -1,0 +1,107 @@
+// Licensed to the Technische Universität Darmstadt under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The Technische Universität Darmstadt 
+// licenses this file to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.
+//  
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+[[sect_security_csp]]
+= Content Security Policy (CSP)
+
+This section describes how to adjust the Content Security Policy (CSP) of {product-name}.
+This may be necessary to enable/disable the ability to display images or media (audio/video) embedded to or referenced
+from documents.
+
+{product-name} by default allows loading content from its own host (`'self'`) and content embedded into the documents themselves (`data:`).
+Additional sources can be added using the properties described below.
+
+The Content Security Policy (CSP) are sent to the browser and interpreted by the browser.
+
+.Content Security Policy (CSP) properties
+[cols="4*", options="header"]
+|===
+| Setting
+| Description
+| Default
+| Example
+  
+| `security.csp.allowed-image-sources`
+| URLs from which images can be loaded
+| *none*
+| `https://upload.wikimedia.org`
+
+| `security.csp.allowed-media-sources`
+| URLs from which media (audio/video) can be loaded
+| *none*
+| `https://upload.wikimedia.org`
+
+| `security.csp.allowed-frame-ancestors`
+| URLs which can embed {product-name} in IFrames
+| *none*
+| `https://my-domain.com/embedding-application`
+|===
+
+Related to the CSP settings are the content policy setting for the HTML-based annotation editors and related formats such as MHTML or HTML (ZIP).
+These allow enabling/disabling the filtering of images, audio, video and other related HTML tags.
+
+* `NONE` configures the content filter to strip out the respective element while rendering. It will not reach the browser.
+* `LOCAL` configures the content filter to allow the element to only access content embedded in the document. This allows
+  accessing content embedded in MHTML or HTML (ZIP) files.
+* `ANY` disables the filter for this element and allows any content to be loaded (CORS still applies).
+
+Note that the `src` attribute of the `img`, `audio` and `video` elements must be used to reference the content.
+Child `source` elements inside `img`, `audio` and `video` are not supported.
+
+These filters are applied on the server side.
+
+NOTE: By default, loading content embedded in documents is allowed so that users of {product-name} can easily get started
+      working with multi-modal documents. However, security-conscious system administrators may wish to enable all the 
+      `block-XXX` properties and to set the allowed sources to `NONE`.
+
+.Editor content policy properties
+[cols="4*", options="header"]
+|===
+| Setting
+| Description
+| Default
+| Example
+  
+| `ui.external.block-img`
+| Whether to remove HTML `<img>` tags during rendering.
+| `false`
+| `true`
+
+| `ui.external.allow-img-source`
+| Where to allow loading images from.
+| `LOCAL`
+| `NONE`, `ANY`
+
+| `ui.external.block-audio`
+| Whether to remove HTML `<audio>` tags during rendering.
+| `false`
+| `true`
+
+| `ui.external.allow-audio-sources`
+| Where to allow loading audio files from.
+| `LOCAL`
+| `NONE`, `ANY`
+
+| `ui.external.block-video`
+| Whether to remove HTML `<video>` tags during rendering.
+| `false`
+| `true`
+
+| `ui.external.allow-video-sources`
+| Where to allow loading video files from.
+| `LOCAL`
+| `NONE`, `ANY`
+|===
