@@ -21,11 +21,13 @@ import { Layer } from '../Layer'
 export type CompactLayer = {
   id: number,
   name: string
+  type: string
 }
 
 export function unpackCompactLayer (raw: CompactLayer): Layer {
   const cooked = new Layer()
   cooked.id = raw.id
   cooked.name = raw.name
+  cooked.type = raw.type
   return cooked
 }

@@ -88,7 +88,9 @@
                         return b.score - a.score;
                     }
 
-                    return compareOffsets(targetA.offsets[0], targetB.offsets[0])
+                    const targetA = a.arguments[0].target as Span
+                    const targetB = b.arguments[0].target as Span
+                    return compareOffsets(targetA.offsets[0], targetB.offsets[0]);
                 }
 
                 console.error("Unexpected annotation type combination", a, b);

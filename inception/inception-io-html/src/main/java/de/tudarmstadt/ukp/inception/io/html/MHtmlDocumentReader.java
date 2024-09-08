@@ -61,7 +61,7 @@ public class MHtmlDocumentReader
     @Override
     public void getNext(JCas aJCas) throws IOException, CollectionException
     {
-        Resource res = nextFile();
+        var res = nextFile();
         initCas(aJCas, res);
 
         try (var is = res.getInputStream()) {
