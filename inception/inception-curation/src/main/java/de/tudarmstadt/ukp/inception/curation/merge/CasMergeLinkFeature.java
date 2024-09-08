@@ -70,19 +70,14 @@ public class CasMergeLinkFeature
         List<LinkWithRoleModel> sourceLinks = adapter.getFeatureValue(slotFeature, aSourceFs);
         var sourceLink = sourceLinks.get(aSourceSlotIndex);
 
-        var candidateHosts = selectBestCandidateSlotHost(aTargetCas, adapter, aSourceFs,
+        var targetLinkSource = findLinkSourceInTargetCas(aTargetCas, aSourceFs, adapter,
                 slotFeature, sourceLink);
-        if (candidateHosts.isEmpty()) {
-            throw new UnfulfilledPrerequisitesException(
-                    "There is no suitable [" + adapter.getLayer().getUiName() + "] annotation at ["
-                            + aSourceFs.getBegin() + "," + aSourceFs.getEnd()
-                            + "] into which the link could be merged. Please add one first.");
-        }
-        var targetFS = candidateHosts.get();
-        List<LinkWithRoleModel> targetLinks = adapter.getFeatureValue(slotFeature, targetFS);
-
         var targetLinkTarget = findLinkTargetInTargetCas(aContext, adapter, aSourceFs.getCAS(),
                 sourceLink, slotFeature, aSourceSlotIndex, aTargetCas);
+
+        List<LinkWithRoleModel> targetLinks = adapter.getFeatureValue(slotFeature,
+                targetLinkSource);
+
         var newLink = new LinkWithRoleModel(sourceLink);
         newLink.targetAddr = getAddr(targetLinkTarget);
 
@@ -115,10 +110,26 @@ public class CasMergeLinkFeature
             throw new AnnotationException("Feature [" + aSourceFeature + "] is not a slot feature");
         }
 
-        adapter.setFeatureValue(aDocument, aUsername, aTargetCas, getAddr(targetFS), slotFeature,
-                targetLinks);
+        adapter.setFeatureValue(aDocument, aUsername, aTargetCas, getAddr(targetLinkSource),
+                slotFeature, targetLinks);
 
-        return new CasMergeOperationResult(UPDATED, getAddr(targetFS));
+        return new CasMergeOperationResult(UPDATED, getAddr(targetLinkSource));
+    }
+
+    private static Annotation findLinkSourceInTargetCas(CAS aTargetCas, AnnotationFS aSourceFs,
+            TypeAdapter adapter, AnnotationFeature slotFeature, LinkWithRoleModel sourceLink)
+        throws UnfulfilledPrerequisitesException
+    {
+        var candidateHosts = selectBestCandidateSlotHost(aTargetCas, adapter, aSourceFs,
+                slotFeature, sourceLink);
+        if (candidateHosts.isEmpty()) {
+            throw new UnfulfilledPrerequisitesException(
+                    "There is no suitable [" + adapter.getLayer().getUiName() + "] annotation at ["
+                            + aSourceFs.getBegin() + "," + aSourceFs.getEnd()
+                            + "] into which the link could be merged. Please add one first.");
+        }
+        var targetFS = candidateHosts.get();
+        return targetFS;
     }
 
     private static AnnotationFS findLinkTargetInTargetCas(CasMergeContext aContext,
@@ -184,7 +195,7 @@ public class CasMergeLinkFeature
 
         // If there is more than one candidate, we need to find the best fit
         // First we look at the other features of the annotation. If any of these are different, we
-        // discard the candiate.
+        // discard the candidate.
         var filteredCandidateTargets = allCandidateTargets.stream() //
                 .filter(candidate -> aAdapter.countNonEqualFeatures(candidate, aSourceFS,
                         (fs, f) -> f.getLinkMode() == LinkMode.NONE) == 0) //
@@ -197,7 +208,7 @@ public class CasMergeLinkFeature
 
         // If there is exactly one, return that.
         if (filteredCandidateTargets.size() == 1) {
-            return Optional.of(allCandidateTargets.get(0));
+            return Optional.of(filteredCandidateTargets.get(0));
         }
 
         // Still more than one, then we need to look at the slots...

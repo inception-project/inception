@@ -40,7 +40,7 @@
     <span>{text.substring(0, 50)}</span>
     <span class="text-muted trailing-text">…</span>
 {:else}
-    {text}
+    <span style="overflow-wrap: normal;">{text}</span>
     {#if textAfter.length > 0}
         <span class="text-muted trailing-text">{textAfter}</span>
     {/if}

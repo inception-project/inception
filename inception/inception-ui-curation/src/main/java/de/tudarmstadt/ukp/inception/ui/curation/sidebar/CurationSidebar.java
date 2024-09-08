@@ -103,6 +103,7 @@ public class CurationSidebar
     private ListView<User> users;
     private final Form<Void> usersForm;
     private CheckBox showMerged;
+    private CheckBox showScore;
     private final IModel<CurationWorkflow> curationWorkflowModel;
     private final IModel<Boolean> isTargetFinished;
 
@@ -120,8 +121,10 @@ public class CurationSidebar
         queue(createSessionControlForm(CID_SESSION_CONTROL_FORM)
                 .add(visibleWhen(() -> getPage() instanceof AnnotationPage)));
 
-        isTargetFinished = LambdaModel.of(() -> curationSidebarService.isCurationFinished(state,
-                userRepository.getCurrentUsername()));
+        isTargetFinished = LambdaModel.of(() -> {
+            var sessionOwner = userRepository.getCurrentUsername();
+            return curationSidebarService.isCurationFinished(state, sessionOwner);
+        });
 
         noDocsLabel = new Label("noDocumentsLabel", new ResourceModel("noDocuments"));
         noDocsLabel.add(visibleWhen(() -> isSessionActive() && !isTargetFinished.getObject()
@@ -136,9 +139,19 @@ public class CurationSidebar
                 this::actionToggleShowMerged));
         queue(showMerged);
 
+        showScore = new CheckBox("showScore", Model.of());
+        showScore.add(visibleWhen(this::isSessionActive));
+        showScore.add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT,
+                this::actionToggleShowScore));
+        queue(showScore);
+
         if (isSessionActive()) {
-            showMerged.setModelObject(curationSidebarService
-                    .isShowAll(userRepository.getCurrentUsername(), state.getProject().getId()));
+            var sessionOwner = userRepository.getCurrentUsername();
+            var project = state.getProject();
+            showMerged.setModelObject(
+                    curationSidebarService.isShowAll(sessionOwner, project.getId()));
+            showScore.setModelObject(
+                    curationSidebarService.isShowScore(sessionOwner, project.getId()));
         }
 
         curationWorkflowModel = Model
@@ -157,6 +170,14 @@ public class CurationSidebar
         var sessionOwner = userRepository.getCurrentUsername();
         curationSidebarService.setShowAll(sessionOwner, getModelObject().getProject().getId(),
                 showMerged.getModelObject());
+        getAnnotationPage().actionRefreshDocument(aTarget);
+    }
+
+    private void actionToggleShowScore(AjaxRequestTarget aTarget)
+    {
+        var sessionOwner = userRepository.getCurrentUsername();
+        curationSidebarService.setShowScore(sessionOwner, getModelObject().getProject().getId(),
+                showScore.getModelObject());
         getAnnotationPage().actionRefreshDocument(aTarget);
     }
 

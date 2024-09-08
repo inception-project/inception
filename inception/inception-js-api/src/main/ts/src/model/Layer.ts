@@ -18,4 +18,5 @@
 export class Layer {
   id: number
   name: string
+  type: string
 }
