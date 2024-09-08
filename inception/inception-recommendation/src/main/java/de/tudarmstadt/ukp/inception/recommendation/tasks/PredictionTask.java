@@ -212,8 +212,7 @@ public class PredictionTask
         var monitor = getMonitor();
         var sessionOwner = getSessionOwner();
         var project = getProject();
-        var activePredictions = isolated ? null
-                : recommendationService.getPredictions(sessionOwner, project);
+        var activePredictions = getPredecessorPredictions(sessionOwner, project);
         var incomingPredictions = activePredictions != null ? new Predictions(activePredictions)
                 : new Predictions(sessionOwner, dataOwner, project);
 
@@ -259,14 +258,14 @@ public class PredictionTask
     {
         var sessionOwner = getSessionOwner();
         var project = getProject();
-        var activePredictions = isolated ? null
-                : recommendationService.getPredictions(sessionOwner, project);
-        var incomingPredictions = activePredictions != null ? new Predictions(activePredictions)
+        var predecessorPredictions = getPredecessorPredictions(sessionOwner, project);
+        var incomingPredictions = predecessorPredictions != null
+                ? new Predictions(predecessorPredictions)
                 : new Predictions(sessionOwner, dataOwner, project);
 
         aMonitor.setMaxProgress(1);
 
-        if (activePredictions != null) {
+        if (predecessorPredictions != null) {
             // Limit prediction to a single document and inherit the rest
             var documentsToInheritSuggestionsFor = aDocuments.stream() //
                     .filter(d -> !d.equals(currentDocument)) //
@@ -275,7 +274,7 @@ public class PredictionTask
             logPredictionStartedForOneDocumentWithInheritance(documentsToInheritSuggestionsFor);
 
             for (var document : documentsToInheritSuggestionsFor) {
-                inheritSuggestionsAtDocumentLevel(project, document, activePredictions,
+                inheritSuggestionsAtDocumentLevel(project, document, predecessorPredictions,
                         incomingPredictions);
             }
         }
@@ -286,8 +285,8 @@ public class PredictionTask
         try (var casHolder = new PredictionCasHolder()) {
 
             final CAS predictionCas = casHolder.cas;
-            applyAllRecommendersToDocument(activePredictions, incomingPredictions, predictionCas,
-                    aCurrentDocument, predictionBegin, predictionEnd);
+            applyAllRecommendersToDocument(predecessorPredictions, incomingPredictions,
+                    predictionCas, aCurrentDocument, predictionBegin, predictionEnd);
         }
         catch (ResourceInitializationException e) {
             logErrorCreationPredictionCas(incomingPredictions);
@@ -296,6 +295,21 @@ public class PredictionTask
         aMonitor.setProgress(1);
 
         return incomingPredictions;
+    }
+
+    private Predictions getPredecessorPredictions(User sessionOwner, Project project)
+    {
+        if (isolated) {
+            return null;
+        }
+
+        var incomingPredictions = recommendationService.getIncomingPredictions(sessionOwner,
+                project);
+        if (incomingPredictions != null) {
+            return incomingPredictions;
+        }
+
+        return recommendationService.getPredictions(sessionOwner, project);
     }
 
     /**

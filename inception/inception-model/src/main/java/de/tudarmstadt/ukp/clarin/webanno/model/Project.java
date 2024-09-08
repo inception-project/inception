@@ -33,7 +33,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.Lob;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
@@ -62,11 +61,10 @@ public class Project
     @Column(nullable = false)
     private String name;
 
-    @Column(nullable = true)
+    @Column
     private String slug;
 
-    @Lob
-    @Column(length = 16_777_216)
+    @Column(length = 64000)
     private String description;
 
     /**

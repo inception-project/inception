@@ -87,4 +87,16 @@ public class OpenNlpPosRecommenderFactory
     {
         return true;
     }
+
+    @Override
+    public boolean isModelExportSupported()
+    {
+        return true;
+    }
+
+    @Override
+    public String getExportModelName(Recommender aRecommender)
+    {
+        return "model.bin";
+    }
 }

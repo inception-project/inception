@@ -18,10 +18,11 @@
 package de.tudarmstadt.ukp.inception.security.saml;
 
 import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.REALM_EXTERNAL_PREFIX;
+import static java.util.Collections.emptyMap;
 import static java.util.stream.Collectors.joining;
+import static org.apache.commons.lang3.StringUtils.removeEnd;
 
 import java.lang.invoke.MethodHandles;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -46,22 +47,25 @@ import de.tudarmstadt.ukp.clarin.webanno.security.OverridableUserDetailsManager;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.security.preauth.PreAuthUtils;
+import jakarta.servlet.ServletContext;
 
 public class Saml2AdapterImpl
     implements Saml2Adapter
 {
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
-    private static final String authenticationRequestUri = "/saml2/authenticate/";
+    private static final String AUTHENTICATION_REQUEST_URI = "/saml2/authenticate/";
 
+    private final ServletContext context;
     private final UserDao userRepository;
     private final OverridableUserDetailsManager userDetailsManager;
     private final Optional<RelyingPartyRegistrationRepository> relyingPartyRegistrationRepository;
 
-    public Saml2AdapterImpl(@Lazy UserDao aUserRepository,
+    public Saml2AdapterImpl(@Lazy ServletContext aContext, @Lazy UserDao aUserRepository,
             @Lazy OverridableUserDetailsManager aUserDetailsManager,
             @Lazy Optional<RelyingPartyRegistrationRepository> aRelyingPartyRegistrationRepository)
     {
+        context = aContext;
         userRepository = aUserRepository;
         userDetailsManager = aUserDetailsManager;
         relyingPartyRegistrationRepository = aRelyingPartyRegistrationRepository;
@@ -77,15 +81,18 @@ public class Saml2AdapterImpl
     public Map<String, String> getSamlRelyingPartyRegistrations()
     {
         if (relyingPartyRegistrationRepository.isEmpty()) {
-            return Collections.emptyMap();
+            return emptyMap();
         }
 
-        Map<String, String> idps = new LinkedHashMap<>();
-        if (relyingPartyRegistrationRepository.get() instanceof Iterable) {
-            Iterable<RelyingPartyRegistration> repo = (Iterable<RelyingPartyRegistration>) //
-            relyingPartyRegistrationRepository.get();
-            repo.forEach((p) -> idps.put(authenticationRequestUri + p.getRegistrationId(),
-                    p.getRegistrationId()));
+        var idps = new LinkedHashMap<String, String>();
+
+        if (relyingPartyRegistrationRepository.get() instanceof Iterable repo) {
+            var base = removeEnd(context.getContextPath(), "/") + AUTHENTICATION_REQUEST_URI;
+            repo.forEach(it -> {
+                if (it instanceof RelyingPartyRegistration p) {
+                    idps.put(base + p.getRegistrationId(), p.getRegistrationId());
+                }
+            });
         }
 
         return idps;
@@ -150,7 +157,7 @@ public class Saml2AdapterImpl
             String messages = userNameValidationResult.stream() //
                     .map(ValidationError::getMessage) //
                     .collect(joining("\n- ", "\n- ", ""));
-            LOG.info("Prevented login of user [{}] with illegal username: {}", aUsername, messages);
+            LOG.warn("Prevented login of user [{}] with illegal username: {}", aUsername, messages);
             throw new BadCredentialsException("Illegal username");
         }
     }
@@ -158,7 +165,7 @@ public class Saml2AdapterImpl
     private void denyAccessOfRealmsDoNotMatch(String aExpectedRealm, User aUser)
     {
         if (!aExpectedRealm.equals(aUser.getRealm())) {
-            LOG.info("Prevented login of user {} from realm [{}] via realm [{}]", aUser,
+            LOG.warn("Prevented login of user {} from realm [{}] via realm [{}]", aUser,
                     aUser.getRealm(), aExpectedRealm);
             throw new BadCredentialsException("Realm mismatch");
         }
@@ -167,7 +174,7 @@ public class Saml2AdapterImpl
     private void denyAccessToDeactivatedUsers(User aUser)
     {
         if (!aUser.isEnabled()) {
-            LOG.info("Prevented login of locally deactivated user {}", aUser);
+            LOG.warn("Prevented login of locally deactivated user {}", aUser);
             throw new DisabledException("User deactivated");
         }
     }

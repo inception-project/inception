@@ -27,7 +27,7 @@ public class ElementPolicyBuilder
     private final QName qName;
     private final ElementAction action;
 
-    private final Map<QName, AttributePolicy> attributePolicies;
+    private final Map<QName, QNameAttributePolicy> attributePolicies;
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
     public ElementPolicyBuilder(QName aQname, ElementAction aAction,
@@ -38,12 +38,12 @@ public class ElementPolicyBuilder
         attributePolicies = aMapSupplier.get();
     }
 
-    public ElementPolicy build()
+    public QNameElementPolicy build()
     {
-        return new ElementPolicy(qName, action, attributePolicies);
+        return new QNameElementPolicy(qName, action, attributePolicies);
     }
 
-    public void attributePolicies(Map<QName, AttributePolicy> aMap)
+    public void attributePolicies(Map<QName, QNameAttributePolicy> aMap)
     {
         if (aMap != null) {
             attributePolicies.putAll(aMap);

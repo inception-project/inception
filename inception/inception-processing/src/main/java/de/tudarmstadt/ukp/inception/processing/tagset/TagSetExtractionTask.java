@@ -25,14 +25,18 @@ import static java.util.Arrays.asList;
 import static org.apache.uima.cas.CAS.TYPE_NAME_STRING_ARRAY;
 
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import org.apache.commons.lang3.Validate;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.fit.util.FSUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -51,6 +55,8 @@ public class TagSetExtractionTask
     extends Task
     implements ProjectTask
 {
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
     public static final String TYPE = "TagsetExtractionTask";
 
     private static final List<String> supportedTypes = asList(CAS.TYPE_NAME_STRING,
@@ -133,7 +139,6 @@ public class TagSetExtractionTask
             monitor.setStateAndProgress(RUNNING, processedDocumentsCount, totalDocumentsCount);
 
             extractTagsFromDocument(tags, srcDoc);
-
         }
 
         monitor.setProgressWithMessage(processedDocumentsCount, totalDocumentsCount,
@@ -144,6 +149,8 @@ public class TagSetExtractionTask
 
     private void extractTagsFromDocument(HashSet<String> tags, SourceDocument srcDoc)
     {
+        LOG.trace("Extracting tags from document {}", srcDoc);
+
         var annDocs = documentService.listAnnotationDocuments(srcDoc);
 
         try (var session = CasStorageSession.openNested()) {
@@ -168,7 +175,7 @@ public class TagSetExtractionTask
         }
     }
 
-    private void extractTagsFromCas(CAS aCas, HashSet<String> aTags)
+    private void extractTagsFromCas(CAS aCas, Set<String> aTags)
     {
         var adapter = schemaService.getAdapter(feature.getLayer());
 
@@ -187,11 +194,19 @@ public class TagSetExtractionTask
             if (isMultiValue) {
                 var labels = FSUtil.getFeature(ann, uimaFeature, String[].class);
                 if (labels != null) {
-                    aTags.addAll(asList(labels));
+                    Stream.of(labels) //
+                            .filter(label -> label != null) //
+                            .forEach(aTags::add);
                 }
             }
             else {
-                aTags.add(ann.getFeatureValueAsString(uimaFeature));
+                var label = ann.getFeatureValueAsString(uimaFeature);
+                if (label != null) {
+                    var added = aTags.add(label);
+                    if (added) {
+                        LOG.trace("Found new tag: [{}]", label);
+                    }
+                }
             }
         }
     }

@@ -50,7 +50,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase2;
 import de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureDeletedEvent;
 import de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureEditor;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
@@ -83,7 +83,7 @@ public class DocumentMetadataAnnotationDetailPanel
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean FeatureSupportRegistry featureSupportRegistry;
 
-    private final AnnotationPage annotationPage;
+    private final AnnotationPageBase2 annotationPage;
     private final CasProvider jcasProvider;
     private final IModel<Project> project;
     private final IModel<SourceDocument> sourceDocument;
@@ -93,7 +93,7 @@ public class DocumentMetadataAnnotationDetailPanel
     private final IModel<AnnotatorState> state;
 
     public DocumentMetadataAnnotationDetailPanel(String aId, IModel<VID> aModel,
-            CasProvider aCasProvider, AnnotationPage aAnnotationPage,
+            CasProvider aCasProvider, AnnotationPageBase2 aAnnotationPage,
             AnnotationActionHandler aActionHandler, IModel<AnnotatorState> aState)
     {
         super(aId, aModel);

@@ -114,5 +114,4 @@ public abstract class ArcPosition_ImplBase<T extends ArcPosition_ImplBase<?>>
                 .append(getTargetBegin(), o.getTargetBegin()) //
                 .append(getTargetEnd(), o.getTargetEnd()).toComparison();
     }
-
 }

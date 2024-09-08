@@ -43,7 +43,8 @@ public class AssignWorkDialogContentPanel
 
         queue(new Form<>("form", CompoundPropertyModel.of(new AssignWorkRequest())));
 
-        queue(new NumberTextField<Integer>("annotatorsPerDocument").setMinimum(1).setMaximum(100));
+        queue(new NumberTextField<Integer>("annotatorsPerDocument").setMinimum(1).setMaximum(100)
+                .setOutputMarkupId(true));
 
         queue(new CheckBox("override").setOutputMarkupId(true));
 

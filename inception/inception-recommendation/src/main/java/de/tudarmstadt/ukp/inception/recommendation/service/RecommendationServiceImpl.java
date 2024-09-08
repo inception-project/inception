@@ -853,6 +853,7 @@ public class RecommendationServiceImpl
     public void onDocumentRemoval(BeforeDocumentRemovedEvent aEvent)
     {
         resetState(aEvent.getDocument().getProject());
+        deleteLearningRecords(aEvent.getDocument());
     }
 
     @EventListener
@@ -1605,6 +1606,13 @@ public class RecommendationServiceImpl
             }
         }
 
+        public void removeLearningRecords(SourceDocument aDocument)
+        {
+            for (var records : learningRecords.values()) {
+                records.removeIf(r -> Objects.equals(r.getSourceDocument(), aDocument));
+            }
+        }
+
         public void removeLearningRecords(LearningRecord aRecord)
         {
             var records = learningRecords.get(aRecord.getLayer());
@@ -1947,6 +1955,20 @@ public class RecommendationServiceImpl
         if (aRecords.length > 0 && !LOG.isTraceEnabled()) {
             LOG.debug("... {} learning records stored ... ({}ms)", aRecords.length, duration);
         }
+    }
+
+    private void deleteLearningRecords(SourceDocument aDocument)
+    {
+        synchronized (states) {
+            for (var state : states.values()) {
+                state.removeLearningRecords(aDocument);
+            }
+        }
+
+        var sql = "DELETE FROM LearningRecord l where l.sourceDocument = :document";
+        entityManager.createQuery(sql) //
+                .setParameter("document", aDocument) //
+                .executeUpdate();
     }
 
     private void deleteLearningRecords(SourceDocument aDocument, String aDataOwner)

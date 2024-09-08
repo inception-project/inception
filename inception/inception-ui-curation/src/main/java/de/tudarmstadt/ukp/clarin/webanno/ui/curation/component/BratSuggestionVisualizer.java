@@ -66,7 +66,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotatorSegmentState;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.render.CurationRenderer;
-import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.CurationPage;
+import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.LegacyCurationPage;
 import de.tudarmstadt.ukp.inception.bootstrap.BootstrapModalDialog;
 import de.tudarmstadt.ukp.inception.diam.editor.DiamAjaxBehavior;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.EditorAjaxRequestHandlerBase;
@@ -209,7 +209,7 @@ public abstract class BratSuggestionVisualizer
             break;
         }
 
-        ((CurationPage) getPage()).actionLoadDocument(aTarget);
+        ((LegacyCurationPage) getPage()).actionLoadDocument(aTarget);
     }
 
     private AnnotationDocument getAnnotationDocument()

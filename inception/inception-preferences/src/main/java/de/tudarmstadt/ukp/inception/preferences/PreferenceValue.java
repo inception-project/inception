@@ -19,6 +19,9 @@ package de.tudarmstadt.ukp.inception.preferences;
 
 import java.io.Serializable;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
 public interface PreferenceValue
     extends Serializable
 {

@@ -21,7 +21,7 @@
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception</artifactId>
     <version>34.0-SNAPSHOT</version>
-    <relativePath>../..</relativePath>
+    <relativePath>../../pom.xml</relativePath>
   </parent>
 
   <artifactId>inception-dependencies</artifactId>
@@ -31,35 +31,44 @@
   <dependencyManagement>
     <dependencies>
       <dependency>
-        <groupId>org.apache.uima</groupId>
-        <artifactId>uimaj-bom</artifactId>
-        <version>${uima.version}</version>
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-bom</artifactId>
+        <version>${slf4j.version}</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
+    
       <dependency>
-        <groupId>org.apache.uima</groupId>
-        <artifactId>uimafit-bom</artifactId>
-        <version>${uimafit.version}</version>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-framework-bom</artifactId>
+        <version>${spring.version}</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
+    
       <dependency>
         <groupId>org.apache.uima</groupId>
         <artifactId>uimaj-io-json</artifactId>
         <version>${uima-json.version}</version>
       </dependency>
+
       <dependency>
         <groupId>org.json</groupId>
         <artifactId>json</artifactId>
         <version>${json.version}</version>
       </dependency>
 
+      <dependency>
+        <groupId>org.apache.ivy</groupId>
+        <artifactId>ivy</artifactId>
+        <version>2.5.2</version>
+      </dependency>
+
       <!-- JAXB DEPENDENCIES -->
       <dependency>
         <groupId>org.glassfish.jaxb</groupId>
         <artifactId>jaxb-bom</artifactId>
-        <version>2.3.9</version>
+        <version>${jaxb.version}</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -86,7 +95,7 @@
       <dependency>
         <groupId>org.glassfish.jaxb</groupId>
         <artifactId>jaxb-runtime</artifactId>
-        <version>2.3.9</version>
+        <version>${jaxb.version}</version>
       </dependency>
       <dependency>
         <groupId>javax.activation</groupId>
@@ -200,7 +209,7 @@
       <dependency>
         <groupId>com.nimbusds</groupId>
         <artifactId>nimbus-jose-jwt</artifactId>
-        <version>9.39.3</version>
+        <version>${nimbus-jose-jwt.version}</version>
       </dependency>
       <dependency>
         <groupId>org.awaitility</groupId>
@@ -398,7 +407,7 @@
       <dependency>
         <groupId>org.webjars</groupId>
         <artifactId>font-awesome</artifactId>
-        <version>5.15.4</version>
+        <version>${font-awesome.version}</version>
       </dependency>
       <dependency>
         <groupId>org.webjars.npm</groupId>
@@ -462,7 +471,7 @@
       <dependency>
         <groupId>com.hubspot.jinjava</groupId>
         <artifactId>jinjava</artifactId>
-        <version>2.7.2</version>
+        <version>${jinjava.version}</version>
       </dependency>
 
       <dependency>
@@ -474,7 +483,7 @@
       <dependency>
         <groupId>commons-beanutils</groupId>
         <artifactId>commons-beanutils</artifactId>
-        <version>1.9.4</version>
+        <version>${commons-beanutils.version}</version>
         <exclusions>
           <exclusion>
             <groupId>commons-logging</groupId>
@@ -485,27 +494,32 @@
       <dependency>
         <groupId>org.apache.commons</groupId>
         <artifactId>commons-collections4</artifactId>
-        <version>4.4</version>
+        <version>${commons-collections4.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.commons</groupId>
+        <artifactId>commons-math3</artifactId>
+        <version>${commons-math3.version}</version>
       </dependency>
       <dependency>
         <groupId>org.apache.commons</groupId>
         <artifactId>commons-csv</artifactId>
-        <version>1.11.0</version>
+        <version>${commons-csv.version}</version>
       </dependency>
       <dependency>
         <groupId>commons-fileupload</groupId>
         <artifactId>commons-fileupload</artifactId>
-        <version>1.5</version>
+        <version>${commons-fileupload.version}</version>
       </dependency>
       <dependency>
         <groupId>org.apache.commons</groupId>
         <artifactId>commons-pool2</artifactId>
-        <version>2.12.0</version>
+        <version>${commons-pool2.version}</version>
       </dependency>
       <dependency>
         <groupId>org.apache.commons</groupId>
         <artifactId>commons-dbcp2</artifactId>
-        <version>2.11.0</version>
+        <version>${commons-dbcp2.version}</version>
       </dependency>
       <dependency>
         <groupId>org.dom4j</groupId>
@@ -517,6 +531,18 @@
         <artifactId>jsr305</artifactId>
         <version>3.0.2</version>
       </dependency>
+      
+      <dependency>
+        <groupId>com.ibm.icu</groupId>
+        <artifactId>icu4j</artifactId>
+        <version>75.1</version>
+      </dependency>
+
+      <dependency>
+        <groupId>eu.openminted.share.annotations</groupId>
+        <artifactId>omtd-share-annotations-api</artifactId>
+        <version>3.0.2.7</version>
+      </dependency>
 
       <dependency>
         <groupId>org.pf4j</groupId>
@@ -526,7 +552,7 @@
       <dependency>
         <groupId>org.pf4j</groupId>
         <artifactId>pf4j-spring</artifactId>
-        <version>0.5.0</version>
+        <version>${pf4j-spring.version}</version>
         <exclusions>
           <exclusion>
             <groupId>org.slf4j</groupId>
@@ -538,15 +564,22 @@
       <dependency>
         <groupId>commons-logging</groupId>
         <artifactId>commons-logging-api</artifactId>
-        <version>1.1</version>
+        <version>${commons-logging-api.version}</version>
       </dependency>
       <dependency>
         <groupId>commons-logging</groupId>
         <artifactId>commons-logging</artifactId>
-        <version>1.3.2</version>
+        <version>${commons-logging.version}</version>
       </dependency>
-      
+
       <!-- Jena -->
+      <dependency>
+        <groupId>org.apache.jena</groupId>
+        <artifactId>jena-bom</artifactId>
+        <version>${jena.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
       <dependency>
         <groupId>org.apache.jena</groupId>
         <artifactId>jena-fuseki-main</artifactId>
@@ -557,11 +590,6 @@
             <artifactId>slf4j-log4j12</artifactId>
           </exclusion>
         </exclusions>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.jena</groupId>
-        <artifactId>jena-text</artifactId>
-        <version>${jena.version}</version>
       </dependency>
       <dependency>
         <groupId>org.apache.jena</groupId>
@@ -576,45 +604,22 @@
             <groupId>org.glassfish</groupId>
             <artifactId>jakarta.json</artifactId>
           </exclusion>
+          <exclusion>
+            <groupId>org.slf4j</groupId>
+            <artifactId>jcl-over-slf4j</artifactId>
+          </exclusion>
         </exclusions>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.jena</groupId>
-        <artifactId>jena-tdb</artifactId>
-        <version>${jena.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.jena</groupId>
-        <artifactId>jena-core</artifactId>
-        <version>${jena.version}</version>
       </dependency>
       <dependency>
         <groupId>org.apache.thrift</groupId>
         <artifactId>libthrift</artifactId>
         <version>0.17.0</version>
-      </dependency>      
-
-      <!-- SLF4J -->
-      <dependency>
-        <groupId>org.slf4j</groupId>
-        <artifactId>slf4j-bom</artifactId>
-        <version>${slf4j.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
       </dependency>
 
       <dependency>
         <groupId>org.jboss.logging</groupId>
         <artifactId>jboss-logging</artifactId>
         <version>${jboss.logging.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>io.sentry</groupId>
-        <artifactId>sentry-bom</artifactId>
-        <version>${sentry.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
       </dependency>
 
       <dependency>
@@ -626,7 +631,7 @@
       <dependency>
         <groupId>com.fasterxml.woodstox</groupId>
         <artifactId>woodstox-core</artifactId>
-        <version>6.6.2</version>
+        <version>${woodstox-core.version}</version>
       </dependency>
       <dependency>
         <groupId>org.codehaus.woodstox</groupId>
@@ -637,13 +642,13 @@
       <dependency>
         <groupId>com.github.openjson</groupId>
         <artifactId>openjson</artifactId>
-        <version>1.0.13</version>
+        <version>${openjson.version}</version>
       </dependency>
 
       <dependency>
         <groupId>it.unimi.dsi</groupId>
         <artifactId>fastutil</artifactId>
-        <version>8.5.13</version>
+        <version>${fastutil.version}</version>
       </dependency>
 
       <dependency>
@@ -685,31 +690,22 @@
       <dependency>
         <groupId>org.javassist</groupId>
         <artifactId>javassist</artifactId>
-        <version>3.30.2-GA</version>
+        <version>${javassist.version}</version>
       </dependency>
       <dependency>
         <groupId>net.bytebuddy</groupId>
         <artifactId>byte-buddy</artifactId>
-        <version>1.14.17</version>
+        <version>${byte-buddy.version}</version>
       </dependency>
       <dependency>
         <groupId>net.bytebuddy</groupId>
         <artifactId>byte-buddy-agent</artifactId>
-        <version>1.14.17</version>
+        <version>${byte-buddy.version}</version>
       </dependency>
       <dependency>
         <groupId>org.wicketstuff</groupId>
         <artifactId>wicketstuff-clipboardjs</artifactId>
         <version>${wicketstuff.version}</version>
-      </dependency>
-
-      <!-- SPRING -->
-      <dependency>
-        <groupId>org.springframework</groupId>
-        <artifactId>spring-framework-bom</artifactId>
-        <version>${spring.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
       </dependency>
 
       <!-- SPRING DATA -->
@@ -737,13 +733,13 @@
         <artifactId>jackson-databind</artifactId>
         <version>${jackson.version}.2</version>
       </dependency>
-      
+
       <dependency>
         <groupId>com.networknt</groupId>
         <artifactId>json-schema-validator</artifactId>
-        <version>1.4.0</version>
+        <version>${json-schema-validator.version}</version>
       </dependency>
-      
+
       <!-- SPRING SECURITY -->
       <dependency>
         <groupId>org.springframework.security</groupId>
@@ -755,7 +751,7 @@
       <dependency>
         <groupId>com.nimbusds</groupId>
         <artifactId>oauth2-oidc-sdk</artifactId>
-        <version>9.43.4</version>
+        <version>${oauth2-oidc-sdk.version}</version>
       </dependency>
       <dependency>
         <groupId>io.jsonwebtoken</groupId>
@@ -775,30 +771,30 @@
       <dependency>
         <groupId>org.opensaml</groupId>
         <artifactId>opensaml-bom</artifactId>
-        <version>4.3.2</version>
+        <version>${opensaml.version}</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
-      
+
       <!-- Springdoc -->
       <dependency>
         <groupId>org.springdoc</groupId>
-        <artifactId>springdoc-openapi-ui</artifactId>
+        <artifactId>springdoc-openapi-starter-common</artifactId>
         <version>${springdoc.version}</version>
       </dependency>
       <dependency>
         <groupId>org.springdoc</groupId>
-        <artifactId>springdoc-openapi-common</artifactId>
+        <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
         <version>${springdoc.version}</version>
       </dependency>
       <dependency>
         <groupId>io.swagger.core.v3</groupId>
-        <artifactId>swagger-annotations</artifactId>
+        <artifactId>swagger-annotations-jakarta</artifactId>
         <version>${swagger.version}</version>
       </dependency>
       <dependency>
         <groupId>io.swagger.core.v3</groupId>
-        <artifactId>swagger-models</artifactId>
+        <artifactId>swagger-models-jakarta</artifactId>
         <version>${swagger.version}</version>
       </dependency>
 
@@ -839,10 +835,19 @@
         <version>${tomcat.version}</version>
       </dependency>
 
+      <!-- Jetty -->
+      <dependency>
+        <groupId>org.eclipse.jetty</groupId>
+        <artifactId>jetty-bom</artifactId>
+        <version>${jetty.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+
       <dependency>
         <groupId>org.hsqldb</groupId>
         <artifactId>hsqldb</artifactId>
-        <version>2.7.3</version>
+        <version>${hsqldb.version}</version>
       </dependency>
 
       <dependency>
@@ -857,7 +862,7 @@
         <artifactId>snakeyaml</artifactId>
         <version>${snakeyaml.version}</version>
       </dependency>
-    
+
       <!-- Weblicht -->
 
       <dependency>
@@ -882,7 +887,7 @@
       <dependency>
         <groupId>org.jsoup</groupId>
         <artifactId>jsoup</artifactId>
-        <version>1.16.1</version>
+        <version>${jsoup.version}</version>
       </dependency>
 
       <!-- MIME4J -->
@@ -890,12 +895,12 @@
       <dependency>
         <groupId>org.apache.james</groupId>
         <artifactId>apache-mime4j-core</artifactId>
-        <version>0.8.10</version>
+        <version>${mime4j.version}</version>
       </dependency>
       <dependency>
         <groupId>org.apache.james</groupId>
         <artifactId>apache-mime4j-dom</artifactId>
-        <version>0.8.10</version>
+        <version>${mime4j.version}</version>
       </dependency>
 
       <!-- LUCENE MTAS -->
@@ -937,6 +942,11 @@
       </dependency>
       <dependency>
         <groupId>org.apache.lucene</groupId>
+        <artifactId>lucene-sandbox</artifactId>
+        <version>${lucene.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.lucene</groupId>
         <artifactId>lucene-misc</artifactId>
         <version>${lucene.version}</version>
       </dependency>
@@ -947,7 +957,7 @@
       </dependency>
       <dependency>
         <groupId>org.apache.lucene</groupId>
-        <artifactId>lucene-analyzers-common</artifactId>
+        <artifactId>lucene-analysis-common</artifactId>
         <version>${lucene.version}</version>
       </dependency>
       <dependency>
@@ -969,11 +979,23 @@
         <groupId>org.apache.solr</groupId>
         <artifactId>solr-solrj</artifactId>
         <version>${solr.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.slf4j</groupId>
+            <artifactId>jcl-over-slf4j</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.apache.solr</groupId>
         <artifactId>solr-core</artifactId>
         <version>${solr.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.slf4j</groupId>
+            <artifactId>jcl-over-slf4j</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.apache.solr</groupId>
@@ -981,59 +1003,52 @@
         <version>${solr.version}</version>
         <scope>test</scope>
       </dependency>
-      <dependency>
-        <groupId>org.textexploration.mtas</groupId>
-        <artifactId>mtas</artifactId>
-        <version>${mtas.version}</version>
-        <exclusions>
-          <!-- We do not use MTAS with Solr -->
-          <!-- Solr depends on jdk.tools via Hadoop which is not available on recent JDKs -->
-          <exclusion>
-            <groupId>org.apache.solr</groupId>
-            <artifactId>solr-core</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
 
       <dependency>
         <groupId>commons-io</groupId>
         <artifactId>commons-io</artifactId>
-        <version>2.16.1</version>
+        <version>${commons-io.version}</version>
       </dependency>
       <dependency>
         <groupId>org.apache.commons</groupId>
         <artifactId>commons-text</artifactId>
-        <version>1.12.0</version>
+        <version>${commons-text.version}</version>
       </dependency>
       <dependency>
         <groupId>org.apache.commons</groupId>
         <artifactId>commons-lang3</artifactId>
-        <version>3.14.0</version>
+        <version>${commons-lang3.version}</version>
       </dependency>
       <dependency>
         <groupId>org.apache.commons</groupId>
         <artifactId>commons-compress</artifactId>
-        <version>1.26.2</version>
+        <version>${commons-compress.version}</version>
       </dependency>
       <dependency>
         <groupId>commons-codec</groupId>
         <artifactId>commons-codec</artifactId>
-        <version>1.17.0</version>
+        <version>${commons-codec.version}</version>
       </dependency>
       <dependency>
         <groupId>commons-validator</groupId>
         <artifactId>commons-validator</artifactId>
-        <version>1.9.0</version>
+        <version>${commons-validator.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>com.github.ben-manes.caffeine</groupId>
         <artifactId>caffeine</artifactId>
-        <version>3.1.8</version>
+        <version>${caffeine.version}</version>
       </dependency>
       <dependency>
         <groupId>org.xerial.snappy</groupId>
         <artifactId>snappy-java</artifactId>
-        <version>1.1.10.5</version>
+        <version>${snappy.version}</version>
       </dependency>
 
       <dependency>
@@ -1048,6 +1063,17 @@
           <exclusion>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.dkpro.core</groupId>
+        <artifactId>dkpro-core-api-datasets-asl</artifactId>
+        <version>${dkpro.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging-api</artifactId>
           </exclusion>
         </exclusions>
       </dependency>
@@ -1073,6 +1099,28 @@
           </exclusion>
         </exclusions>
       </dependency>
+      <dependency>
+        <groupId>org.dkpro.core</groupId>
+        <artifactId>dkpro-core-api-resources-asl</artifactId>
+        <version>${dkpro.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging-api</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.dkpro.core</groupId>
+        <artifactId>dkpro-core-io-pdf-asl</artifactId>
+        <version>${dkpro.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging-api</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
 
       <dependency>
         <groupId>org.eclipse.rdf4j</groupId>
@@ -1092,53 +1140,64 @@
           </exclusion>
         </exclusions>
       </dependency>
+      <dependency>
+        <groupId>org.eclipse.rdf4j</groupId>
+        <artifactId>rdf4j-rio-jsonld</artifactId>
+        <version>${rdf4j.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.slf4j</groupId>
+            <artifactId>jcl-over-slf4j</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.eclipse.rdf4j</groupId>
+        <artifactId>rdf4j-http-client</artifactId>
+        <version>${rdf4j.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.slf4j</groupId>
+            <artifactId>jcl-over-slf4j</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.eclipse.rdf4j</groupId>
+        <artifactId>rdf4j-rio-api</artifactId>
+        <version>${rdf4j.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.slf4j</groupId>
+            <artifactId>jcl-over-slf4j</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
 
       <dependency>
         <groupId>org.cyberborean</groupId>
         <artifactId>rdfbeans</artifactId>
         <version>2.2</version>
       </dependency>
-      
+
       <dependency>
         <groupId>net.sourceforge.owlapi</groupId>
-        <artifactId>owlapi-api</artifactId>
+        <artifactId>owlapi-bom</artifactId>
         <version>${owlapi-version}</version>
+        <type>pom</type>
+        <scope>import</scope>
       </dependency>
       <dependency>
+        <!-- See https://github.com/owlcs/owlapi/issues/1154 -->
         <groupId>net.sourceforge.owlapi</groupId>
         <artifactId>owlapi-apibinding</artifactId>
         <version>${owlapi-version}</version>
       </dependency>
-      <dependency>
-        <groupId>net.sourceforge.owlapi</groupId>
-        <artifactId>owlapi-impl</artifactId>
-        <version>${owlapi-version}</version>
-      </dependency>
-      <dependency>
-        <groupId>net.sourceforge.owlapi</groupId>
-        <artifactId>owlapi-oboformat</artifactId>
-        <version>${owlapi-version}</version>
-      </dependency>
-      <dependency>
-        <groupId>net.sourceforge.owlapi</groupId>
-        <artifactId>owlapi-parsers</artifactId>
-        <version>${owlapi-version}</version>
-      </dependency>
-      <dependency>
-        <groupId>net.sourceforge.owlapi</groupId>
-        <artifactId>owlapi-rio</artifactId>
-        <version>${owlapi-version}</version>
-      </dependency>
-      <dependency>
-        <groupId>net.sourceforge.owlapi</groupId>
-        <artifactId>owlapi-tools</artifactId>
-        <version>${owlapi-version}</version>
-      </dependency>
-      
+
       <dependency>
         <groupId>com.github.jsonld-java</groupId>
         <artifactId>jsonld-java</artifactId>
-        <version>0.13.6</version>
+        <version>${jsonld-java.version}</version>
         <exclusions>
           <exclusion>
             <groupId>org.apache.httpcomponents</groupId>
@@ -1152,30 +1211,42 @@
       </dependency>
 
       <dependency>
-        <groupId>org.elasticsearch</groupId>
-        <artifactId>elasticsearch</artifactId>
-        <version>${elasticsearch.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.elasticsearch.client</groupId>
-        <artifactId>transport</artifactId>
-        <version>${elasticsearch.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.elasticsearch.client</groupId>
-        <artifactId>elasticsearch-rest-client</artifactId>
-        <version>${elasticsearch.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.elasticsearch.client</groupId>
-        <artifactId>elasticsearch-rest-high-level-client</artifactId>
-        <version>${elasticsearch.version}</version>
-      </dependency>
-
-      <dependency>
         <groupId>org.opensearch</groupId>
         <artifactId>opensearch</artifactId>
         <version>${opensearch.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.apache.lucene</groupId>
+            <artifactId>lucene-spatial</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.apache.lucene</groupId>
+            <artifactId>lucene-spatial-extras</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.apache.lucene</groupId>
+            <artifactId>lucene-spatial3d</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.opensearch</groupId>
+        <artifactId>opensearch-core</artifactId>
+        <version>${opensearch.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.apache.lucene</groupId>
+            <artifactId>lucene-spatial</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.apache.lucene</groupId>
+            <artifactId>lucene-spatial-extras</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.apache.lucene</groupId>
+            <artifactId>lucene-spatial3d</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.opensearch.client</groupId>
@@ -1186,6 +1257,12 @@
         <groupId>org.opensearch.client</groupId>
         <artifactId>opensearch-rest-client</artifactId>
         <version>${opensearch.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.opensearch.client</groupId>
@@ -1200,13 +1277,13 @@
       <dependency>
         <groupId>net.java.dev.jna</groupId>
         <artifactId>jna</artifactId>
-        <version>5.13.0</version>
+        <version>${jna.version}</version>
       </dependency>
-      
+
       <dependency>
         <groupId>org.eclipse.jgit</groupId>
         <artifactId>org.eclipse.jgit</artifactId>
-        <version>6.9.0.202403050737-r</version>
+        <version>${jgit.version}</version>
       </dependency>
 
       <dependency>
@@ -1238,11 +1315,27 @@
         <groupId>org.mariadb.jdbc</groupId>
         <artifactId>mariadb-java-client</artifactId>
         <version>${mariadb.driver.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.slf4j</groupId>
+            <artifactId>jcl-over-slf4j</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.postgresql</groupId>
         <artifactId>postgresql</artifactId>
         <version>${postgres.driver.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.microsoft.sqlserver</groupId>
+        <artifactId>mssql-jdbc</artifactId>
+        <version>${mssql.driver.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.mysql</groupId>
+        <artifactId>mysql-connector-j</artifactId>
+        <version>${mysql.driver.version}</version>
       </dependency>
 
       <dependency>
@@ -1285,60 +1378,47 @@
       <dependency>
         <groupId>info.picocli</groupId>
         <artifactId>picocli</artifactId>
-        <version>4.7.6</version>
+        <version>${picocli.version}</version>
       </dependency>
       <dependency>
         <groupId>info.picocli</groupId>
         <artifactId>picocli-spring-boot-starter</artifactId>
-        <version>4.7.5</version>
+        <version>${picocli.version}</version>
       </dependency>
 
       <dependency>
-        <!-- Import dependency management from LOG4J -->
+        <groupId>io.sentry</groupId>
+        <artifactId>sentry-bom</artifactId>
+        <version>${sentry.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+
+      <dependency>
+        <groupId>org.apache.uima</groupId>
+        <artifactId>uimaj-bom</artifactId>
+        <version>${uima.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+
+      <dependency>
+        <groupId>org.apache.uima</groupId>
+        <artifactId>uimafit-bom</artifactId>
+        <version>${uimafit.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+
+      <dependency>
         <groupId>org.apache.logging.log4j</groupId>
         <artifactId>log4j-bom</artifactId>
         <version>${log4j2.version}</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
-      <dependency>
-        <groupId>org.apache.logging.log4j</groupId>
-        <artifactId>log4j-core</artifactId>
-        <version>${log4j2.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.logging.log4j</groupId>
-        <artifactId>log4j-api</artifactId>
-        <version>${log4j2.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.logging.log4j</groupId>
-        <artifactId>log4j-jmx-gui</artifactId>
-        <version>${log4j2.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.logging.log4j</groupId>
-        <artifactId>log4j-layout-template-json</artifactId>
-        <version>${log4j2.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.logging.log4j</groupId>
-        <artifactId>log4j-slf4j2-impl</artifactId>
-        <version>${log4j2.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.logging.log4j</groupId>
-        <artifactId>log4j-spring-boot</artifactId>
-        <version>${log4j2.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.logging.log4j</groupId>
-        <artifactId>log4j-to-slf4j</artifactId>
-        <version>${log4j2.version}</version>
-      </dependency>
 
       <dependency>
-        <!-- Import dependency management from Spring Boot -->
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-dependencies</artifactId>
         <version>${spring.boot.version}</version>
@@ -1347,7 +1427,6 @@
       </dependency>
 
       <dependency>
-        <!-- Import dependency management from Wicket -->
         <groupId>org.apache.wicket</groupId>
         <artifactId>wicket-parent</artifactId>
         <version>${wicket.version}</version>
@@ -1356,42 +1435,11 @@
       </dependency>
 
       <dependency>
-        <!-- Import dependency management from DKPro Core -->
         <groupId>org.dkpro.core</groupId>
-        <artifactId>dkpro-core-asl</artifactId>
+        <artifactId>dkpro-core-bom-asl</artifactId>
         <version>${dkpro.version}</version>
         <type>pom</type>
         <scope>import</scope>
-      </dependency>
-      <dependency>
-        <groupId>org.dkpro.core</groupId>
-        <artifactId>dkpro-core-api-resources-asl</artifactId>
-        <version>${dkpro.version}</version>
-        <exclusions>
-          <!-- We do not use DKPro Core model-downloading -->
-          <!--  
-          <exclusion>
-            <groupId>org.apache.maven</groupId>
-            <artifactId>maven-model</artifactId>
-          </exclusion>
-          -->
-          <!--  
-          Cannot exclude until https://github.com/dkpro/dkpro-core/issues/1511 is fixed
-          <exclusion>
-            <groupId>org.codehaus.plexus</groupId>
-            <artifactId>plexus-utils</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>org.apache.ivy</groupId>
-            <artifactId>ivy</artifactId>
-          </exclusion>
-          -->
-        </exclusions>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.ivy</groupId>
-        <artifactId>ivy</artifactId>
-        <version>2.5.2</version>
       </dependency>
     </dependencies>
   </dependencyManagement>

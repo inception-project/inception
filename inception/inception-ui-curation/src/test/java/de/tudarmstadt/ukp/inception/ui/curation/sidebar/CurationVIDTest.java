@@ -52,8 +52,8 @@ public class CurationVIDTest
     private void assertParseVid(VID aVID, String aExtensionId, String aUsername, String aPayload,
             int aLayerId, int aAnnotationID, int aSubAnnotationId, int aAttribute, int aSlot)
     {
-        CurationVID a = CurationVID.parse(aVID.getExtensionPayload());
-        VID b = VID.parse(a.getExtensionPayload());
+        var a = CurationVID.parse(aVID.getExtensionPayload());
+        var b = VID.parse(a.getExtensionPayload());
 
         assertThat(a.getExtensionId()).isEqualTo(aExtensionId);
         assertThat(a.getExtensionPayload()).isEqualTo(aPayload);

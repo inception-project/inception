@@ -40,7 +40,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
@@ -89,8 +88,7 @@ public class AnnotationFeature
     @Column(nullable = false)
     private String uiName;
 
-    @Lob
-    @Column(length = 16_777_216)
+    @Column(length = 64000)
     private String description;
 
     private boolean enabled = true;
@@ -127,8 +125,7 @@ public class AnnotationFeature
     @Column(name = "link_type_target_feature_name")
     private String linkTypeTargetFeatureName;
 
-    @Lob
-    @Column(length = 16_777_216)
+    @Column(length = 64000)
     private String traits;
 
     private boolean curatable = true;
