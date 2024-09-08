@@ -102,4 +102,14 @@ public class AgreementMeasureSupportRegistryImpl
                 .sorted(comparing(AgreementMeasureSupport::getName)) //
                 .collect(toList());
     }
+
+    @Override
+    public AgreementMeasure getMeasure(AnnotationFeature aFeature, String aMeasure,
+            DefaultAgreementTraits traits)
+    {
+        AgreementMeasureSupport ams = getAgreementMeasureSupport(aMeasure);
+
+        var measure = ams.createMeasure(aFeature, traits);
+        return measure;
+    }
 }

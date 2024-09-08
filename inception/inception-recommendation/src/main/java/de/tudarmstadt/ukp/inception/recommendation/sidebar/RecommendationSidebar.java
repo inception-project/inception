@@ -17,12 +17,14 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.sidebar;
 
+import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.KEY_RECOMMENDER_GENERAL_SETTINGS;
 import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CHANGE_EVENT;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhenNot;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -34,19 +36,20 @@ import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.NumberTextField;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.model.util.ListModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.wicketstuff.event.annotation.OnEvent;
-
-import com.googlecode.wicket.jquery.core.Options;
-import com.googlecode.wicket.kendo.ui.widget.tooltip.TooltipBehavior;
+import org.wicketstuff.jquery.core.Options;
+import org.wicketstuff.kendo.ui.widget.tooltip.TooltipBehavior;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase2;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
+import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Preferences;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
@@ -67,25 +70,32 @@ public class RecommendationSidebar
     private @SpringBean RecommendationService recommendationService;
     private @SpringBean AnnotationSchemaService annoService;
     private @SpringBean UserDao userRepository;
+    private @SpringBean PreferencesService preferencesService;
 
+    private IModel<Boolean> recommendersAvailable;
     private WebMarkupContainer warning;
     private StringResourceModel tipModel;
     private Form<Preferences> form;
     private RecommenderInfoPanel recommenderInfos;
     private LogDialog logDialog;
 
-    public RecommendationSidebar(String aId, IModel<AnnotatorState> aModel,
-            AnnotationActionHandler aActionHandler, CasProvider aCasProvider,
-            AnnotationPage aAnnotationPage)
+    public RecommendationSidebar(String aId, AnnotationActionHandler aActionHandler,
+            CasProvider aCasProvider, AnnotationPageBase2 aAnnotationPage)
     {
-        super(aId, aModel, aActionHandler, aCasProvider, aAnnotationPage);
+        super(aId, aActionHandler, aCasProvider, aAnnotationPage);
+
+        recommendersAvailable = LoadableDetachableModel.of(this::isRecommendersAvailable);
+
+        var mainContainer = new WebMarkupContainer("mainContainer");
+        mainContainer.add(visibleWhen(recommendersAvailable));
+        add(mainContainer);
 
         var sessionOwner = userRepository.getCurrentUser();
         var modelPreferences = LambdaModelAdapter.of(
                 () -> recommendationService.getPreferences(sessionOwner,
-                        aModel.getObject().getProject()),
+                        aAnnotationPage.getModelObject().getProject()),
                 (v) -> recommendationService.setPreferences(sessionOwner,
-                        aModel.getObject().getProject(), v));
+                        aAnnotationPage.getModelObject().getProject(), v));
 
         warning = new WebMarkupContainer("warning");
         warning.setOutputMarkupPlaceholderTag(true);
@@ -98,9 +108,13 @@ public class RecommendationSidebar
         var noRecommendersLabel = new Label("noRecommendersLabel",
                 new StringResourceModel("noRecommenders"));
         var recommenders = recommendationService
-                .listEnabledRecommenders(aModel.getObject().getProject());
+                .listEnabledRecommenders(aAnnotationPage.getModelObject().getProject());
         noRecommendersLabel.add(visibleWhen(() -> recommenders.isEmpty()));
         add(noRecommendersLabel);
+
+        var notAvailableNotice = new WebMarkupContainer("notAvailableNotice");
+        notAvailableNotice.add(visibleWhenNot(recommendersAvailable));
+        add(notAvailableNotice);
 
         add(new LambdaAjaxLink("showLog", this::actionShowLog)
                 .add(visibleWhenNot(recommenders::isEmpty)));
@@ -110,12 +124,13 @@ public class RecommendationSidebar
 
         var modelEnabled = LambdaModelAdapter.of(
                 () -> !recommendationService.isSuspended(sessionOwner.getUsername(),
-                        aModel.getObject().getProject()),
+                        aAnnotationPage.getModelObject().getProject()),
                 (v) -> recommendationService.setSuspended(sessionOwner.getUsername(),
-                        aModel.getObject().getProject(), !v));
-        add(new CheckBox("enabled", modelEnabled).setOutputMarkupId(true)
+                        aAnnotationPage.getModelObject().getProject(), !v));
+        mainContainer.add(new CheckBox("enabled", modelEnabled).setOutputMarkupId(true)
                 .add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT)));
-        add(new EvaluationProgressPanel("progress", aModel.map(AnnotatorState::getProject)));
+        mainContainer.add(new EvaluationProgressPanel("progress",
+                aAnnotationPage.getModel().map(AnnotatorState::getProject)));
 
         form = new Form<>("form", CompoundPropertyModel.of(modelPreferences));
         form.setOutputMarkupId(true);
@@ -140,12 +155,19 @@ public class RecommendationSidebar
 
         add(form);
 
-        recommenderInfos = new RecommenderInfoPanel("recommenders", aModel);
+        recommenderInfos = new RecommenderInfoPanel("recommenders", aAnnotationPage.getModel());
         recommenderInfos.add(visibleWhen(() -> !recommenders.isEmpty()));
-        add(recommenderInfos);
+        mainContainer.add(recommenderInfos);
 
         logDialog = new LogDialog("logDialog");
         add(logDialog);
+    }
+
+    @Override
+    protected void onDetach()
+    {
+        super.onDetach();
+        recommendersAvailable.detach();
     }
 
     @Override
@@ -157,6 +179,27 @@ public class RecommendationSidebar
         var enabled = getModelObject().getUser().equals(userRepository.getCurrentUser());
         form.setEnabled(enabled);
         recommenderInfos.setEnabled(enabled);
+    }
+
+    private boolean isRecommendersAvailable()
+    {
+        var state = getModelObject();
+        var prefs = preferencesService.loadDefaultTraitsForProject(KEY_RECOMMENDER_GENERAL_SETTINGS,
+                state.getProject());
+
+        // Do not show predictions when viewing annotations of another user
+        if (!prefs.isShowRecommendationsWhenViewingOtherUser()
+                && !Objects.equals(state.getUser(), userRepository.getCurrentUser())) {
+            return false;
+        }
+
+        // Do not show predictions when viewing annotations of curation user
+        if (!prefs.isShowRecommendationsWhenViewingCurationUser()
+                && Objects.equals(state.getUser(), userRepository.getCurationUser())) {
+            return false;
+        }
+
+        return true;
     }
 
     protected void configureMismatched()

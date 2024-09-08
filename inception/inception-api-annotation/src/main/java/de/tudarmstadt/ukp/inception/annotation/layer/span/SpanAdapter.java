@@ -20,9 +20,11 @@ package de.tudarmstadt.ukp.inception.annotation.layer.span;
 import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectByAddr;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Collections.emptyList;
+import static org.apache.uima.cas.text.AnnotationPredicates.colocated;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
 
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -30,8 +32,7 @@ import java.util.function.Supplier;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.Feature;
-import org.apache.uima.cas.Type;
+import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
 import org.slf4j.Logger;
@@ -40,6 +41,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.IllegalPlacementException;
+import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -57,24 +59,26 @@ import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 public class SpanAdapter
     extends TypeAdapter_ImplBase
 {
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private final List<SpanLayerBehavior> behaviors;
 
     public SpanAdapter(LayerSupportRegistry aLayerSupportRegistry,
             FeatureSupportRegistry aFeatureSupportRegistry,
             ApplicationEventPublisher aEventPublisher, AnnotationLayer aLayer,
-            Supplier<Collection<AnnotationFeature>> aFeatures, List<SpanLayerBehavior> aBehaviors)
+            Supplier<Collection<AnnotationFeature>> aFeatures, List<SpanLayerBehavior> aBehaviors,
+            ConstraintsService aConstraintsService)
     {
-        super(aLayerSupportRegistry, aFeatureSupportRegistry, aEventPublisher, aLayer, aFeatures);
+        super(aLayerSupportRegistry, aFeatureSupportRegistry, aConstraintsService, aEventPublisher,
+                aLayer, aFeatures);
 
         if (aBehaviors == null) {
             behaviors = emptyList();
         }
         else {
-            List<SpanLayerBehavior> temp = new ArrayList<>(aBehaviors);
-            AnnotationAwareOrderComparator.sort(temp);
-            behaviors = temp;
+            behaviors = aBehaviors.stream() //
+                    .sorted(AnnotationAwareOrderComparator.INSTANCE) //
+                    .toList();
         }
     }
 
@@ -99,8 +103,7 @@ public class SpanAdapter
             int aEnd)
         throws AnnotationException
     {
-        return handle(
-                new CreateSpanAnnotationRequest(aDocument, aDataOwner, aCas, aBegin, aEnd));
+        return handle(new CreateSpanAnnotationRequest(aDocument, aDataOwner, aCas, aBegin, aEnd));
     }
 
     public AnnotationFS handle(CreateSpanAnnotationRequest aRequest) throws AnnotationException
@@ -109,7 +112,7 @@ public class SpanAdapter
 
         // Adjust the creation request (e.g. adjust offsets to the configured granularity) or
         // reject the creation (e.g. reject cross-sentence annotations)
-        for (SpanLayerBehavior behavior : behaviors) {
+        for (var behavior : behaviors) {
             request = behavior.onCreate(this, request);
         }
 
@@ -152,16 +155,16 @@ public class SpanAdapter
 
     public AnnotationFS handle(MoveSpanAnnotationRequest aRequest) throws AnnotationException
     {
-        MoveSpanAnnotationRequest request = aRequest;
+        var request = aRequest;
 
         // Adjust the move request (e.g. adjust offsets to the configured granularity) or
         // reject the request (e.g. reject cross-sentence annotations)
-        for (SpanLayerBehavior behavior : behaviors) {
+        for (var behavior : behaviors) {
             request = behavior.onMove(this, request);
         }
 
-        int oldBegin = request.getAnnotation().getBegin();
-        int oldEnd = request.getAnnotation().getEnd();
+        var oldBegin = request.getAnnotation().getBegin();
+        var oldEnd = request.getAnnotation().getEnd();
         moveSpanAnnotation(request.getCas(), request.getAnnotation(), request.getBegin(),
                 request.getEnd());
 
@@ -176,10 +179,10 @@ public class SpanAdapter
     private AnnotationFS createSpanAnnotation(CAS aCas, int aBegin, int aEnd)
         throws AnnotationException
     {
-        Type type = CasUtil.getType(aCas, getAnnotationTypeName());
-        AnnotationFS newAnnotation = aCas.createAnnotation(type, aBegin, aEnd);
+        var type = CasUtil.getType(aCas, getAnnotationTypeName());
+        var newAnnotation = aCas.createAnnotation(type, aBegin, aEnd);
 
-        log.trace("Created span annotation {}-{} [{}]", newAnnotation.getBegin(),
+        LOG.trace("Created span annotation {}-{} [{}]", newAnnotation.getBegin(),
                 newAnnotation.getEnd(), newAnnotation.getCoveredText());
 
         // If if the layer attaches to a feature, then set the attach-feature to the newly
@@ -204,7 +207,7 @@ public class SpanAdapter
         aAnnotation.setBegin(aBegin);
         aAnnotation.setEnd(aEnd);
 
-        log.trace("Moved span annotation from {}-{} [{}] to {}-{} [{}]", oldBegin, oldEnd,
+        LOG.trace("Moved span annotation from {}-{} [{}] to {}-{} [{}]", oldBegin, oldEnd,
                 oldCoveredText, aAnnotation.getBegin(), aAnnotation.getEnd(),
                 aAnnotation.getCoveredText());
 
@@ -216,7 +219,7 @@ public class SpanAdapter
     @Override
     public void delete(SourceDocument aDocument, String aDocumentOwner, CAS aCas, VID aVid)
     {
-        AnnotationFS fs = selectByAddr(aCas, AnnotationFS.class, aVid.getId());
+        var fs = selectByAddr(aCas, AnnotationFS.class, aVid.getId());
         aCas.removeFsFromIndexes(fs);
 
         // delete associated attachFeature
@@ -230,7 +233,7 @@ public class SpanAdapter
     public AnnotationFS restore(SourceDocument aDocument, String aDocumentOwner, CAS aCas, VID aVid)
         throws AnnotationException
     {
-        AnnotationFS fs = selectByAddr(aCas, AnnotationFS.class, aVid.getId());
+        var fs = selectByAddr(aCas, AnnotationFS.class, aVid.getId());
 
         if (getAttachFeatureName() != null) {
             attach(aCas, fs.getBegin(), fs.getEnd(), fs);
@@ -246,8 +249,8 @@ public class SpanAdapter
     private void attach(CAS aCas, int aBegin, int aEnd, AnnotationFS newAnnotation)
         throws IllegalPlacementException
     {
-        Type theType = getType(aCas, getAttachTypeName());
-        Feature attachFeature = theType.getFeatureByBaseName(getAttachFeatureName());
+        var theType = getType(aCas, getAttachTypeName());
+        var attachFeature = theType.getFeatureByBaseName(getAttachFeatureName());
         if (selectCovered(aCas, theType, aBegin, aEnd).isEmpty()) {
             throw new IllegalPlacementException("No annotation of type [" + getAttachTypeName()
                     + "] to attach to at location [" + aBegin + "-" + aEnd + "].");
@@ -258,8 +261,8 @@ public class SpanAdapter
 
     private void detatch(CAS aCas, AnnotationFS fs)
     {
-        Type theType = getType(aCas, getAttachTypeName());
-        Feature attachFeature = theType.getFeatureByBaseName(getAttachFeatureName());
+        var theType = getType(aCas, getAttachTypeName());
+        var attachFeature = theType.getFeatureByBaseName(getAttachFeatureName());
         if (attachFeature != null) {
             selectCovered(aCas, theType, fs.getBegin(), fs.getEnd()).get(0)
                     .setFeatureValue(attachFeature, null);
@@ -269,21 +272,51 @@ public class SpanAdapter
     @Override
     public List<Pair<LogMessage, AnnotationFS>> validate(CAS aCas)
     {
-        List<Pair<LogMessage, AnnotationFS>> messages = new ArrayList<>();
-        for (SpanLayerBehavior behavior : behaviors) {
-            long startTime = currentTimeMillis();
+        var messages = new ArrayList<Pair<LogMessage, AnnotationFS>>();
+
+        for (var behavior : behaviors) {
+            var startTime = currentTimeMillis();
             messages.addAll(behavior.onValidate(this, aCas));
-            log.trace("Validation for [{}] on [{}] took {}ms", behavior.getClass().getSimpleName(),
+            LOG.trace("Validation for [{}] on [{}] took {}ms", behavior.getClass().getSimpleName(),
                     getLayer().getUiName(), currentTimeMillis() - startTime);
         }
+
         return messages;
     }
 
     @Override
     public Selection select(VID aVid, AnnotationFS aAnno)
     {
-        Selection selection = new Selection();
+        var selection = new Selection();
         selection.selectSpan(aAnno);
         return selection;
+    }
+
+    @Override
+    public boolean isSamePosition(FeatureStructure aFS1, FeatureStructure aFS2)
+    {
+        if (aFS1 == null || aFS2 == null) {
+            return false;
+        }
+
+        if (!aFS1.getType().getName().equals(getAnnotationTypeName())) {
+            throw new IllegalArgumentException("Expected [" + getAnnotationTypeName()
+                    + "] but got [" + aFS1.getType().getName() + "]");
+        }
+
+        if (!aFS2.getType().getName().equals(getAnnotationTypeName())) {
+            throw new IllegalArgumentException("Expected [" + getAnnotationTypeName()
+                    + "] but got [" + aFS2.getType().getName() + "]");
+        }
+
+        if (aFS1 instanceof AnnotationFS ann1 && aFS2 instanceof AnnotationFS ann2) {
+            if (aFS1 == aFS2) {
+                return true;
+            }
+
+            return colocated(ann1, ann2);
+        }
+
+        throw new IllegalArgumentException("Feature structures need to be annotations");
     }
 }

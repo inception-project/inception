@@ -22,6 +22,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplicat
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import de.tudarmstadt.ukp.clarin.webanno.project.ProjectAccess;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.scheduling.controller.SchedulerController;
@@ -40,8 +41,9 @@ public class SchedulingUiAutoConfiguration
     }
 
     @Bean
-    SchedulerController schedulerController(SchedulingService aSchedulingService, UserDao aUserDao)
+    SchedulerController schedulerController(SchedulingService aSchedulingService, UserDao aUserDao,
+            ProjectAccess aProjectAccess)
     {
-        return new SchedulerControllerImpl(aSchedulingService, aUserDao);
+        return new SchedulerControllerImpl(aSchedulingService, aUserDao, aProjectAccess);
     }
 }

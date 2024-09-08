@@ -20,7 +20,7 @@
 {product-name} can authenticate a user against a OAuth2/OIDC-compatible identity provider. OAuth2/OIDC providers can be configured alongside the usual form-based login and SAML2. 
 It is **not** compatible with the <<sect_security_authentication_preauth,external pre-authentication>> and does not require setting the `auth.mode` property.
 
-The following example configuration declares an OAuth2 service connection named `inception-client`
+The following example configuration declares an OAuth2 service connection named `inception-client-oauth`
 which uses a Keycloak instance configured for OAuth2 running at 
 `http://localhost:8180/realms/inception-demo`. The OAuth2 support of {product-name} should work with
 any OAuth2/OIDC-compatible identity provider. For more details, please
@@ -28,14 +28,14 @@ refer to the link:https://docs.spring.io/spring-security/reference/servlet/oauth
 
 .Example: Authenticate against a local Keycloak
 ----
-spring.security.oauth2.client.registration.inception-client.client-name=Keycloak
-spring.security.oauth2.client.registration.inception-client.client-id=inception-client
-spring.security.oauth2.client.registration.inception-client.client-secret=ENCRYPTED_CLIENT_SECRET
-spring.security.oauth2.client.registration.inception-client.scope=openid, profile
-spring.security.oauth2.client.registration.inception-client.authorization-grant-type=authorization_code
-spring.security.oauth2.client.registration.inception-client.redirect-uri=http://localhost:8080/login/oauth2/code/inception-client
-spring.security.oauth2.client.provider.inception-client.issuer-uri=http://localhost:8180/realms/inception-demo 
-spring.security.oauth2.client.provider.inception-client.user-name-attribute=preferred_username
+spring.security.oauth2.client.registration.inception-client-oauth.client-name=Keycloak
+spring.security.oauth2.client.registration.inception-client-oauth.client-id=inception-client-oauth
+spring.security.oauth2.client.registration.inception-client-oauth.client-secret=ENCRYPTED_CLIENT_SECRET
+spring.security.oauth2.client.registration.inception-client-oauth.scope=openid, profile
+spring.security.oauth2.client.registration.inception-client-oauth.authorization-grant-type=authorization_code
+spring.security.oauth2.client.registration.inception-client-oauth.redirect-uri=http://localhost:8080/login/oauth2/code/inception-client-oauth
+spring.security.oauth2.client.provider.inception-client-oauth.issuer-uri=http://localhost:8180/realms/inception-demo 
+spring.security.oauth2.client.provider.inception-client-oauth.user-name-attribute=preferred_username
 ----
 
 NOTE: The following instructions run Keycloak in development mode. This is **not** meant for
@@ -47,11 +47,11 @@ If you want to try this with a local testing instance of Keycloak, you can do th
 * Download link:https://www.keycloak.org[Keycloak]
 * Run it using `./kc.sh start-dev --http-port 8180`
 * Configure a new realm called `inception-demo`
-* Define a new client `inception-client` and set the *Valid redirection URI* to `http://localhost:8080/login/oauth2/code/inception-client`.
+* Define a new client `inception-client-oauth` and set the *Valid redirection URI* to `http://localhost:8080/login/oauth2/code/inception-client-oauth`.
 * Replace the `ENCRYPTED_CLIENT_SECRET` in the example configuration above with the client secret from 
   the *Credentials* tab of the client in Keycloak.
 * Add a new user in the *Manage users* area in Keycloak.
 
 When you restart {product-name} and access the login page now, it should offer a login option called
 *Keycloak*. You can change the label of that option by changing the 
-`security.oauth2.client.registration.inception-client.client-name` setting.
+`security.oauth2.client.registration.inception-client-oauth.client-name` setting.

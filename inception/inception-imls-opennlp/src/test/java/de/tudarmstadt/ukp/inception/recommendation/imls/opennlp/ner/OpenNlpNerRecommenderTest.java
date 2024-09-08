@@ -102,10 +102,10 @@ public class OpenNlpNerRecommenderTest
     {
         var cas = JCasFactory.createJCas();
         cas.setDocumentText("""
-                I like noodles.
-                I guess St. John is good.
-                Does St. John like noodles?
-                """);
+                            I like noodles.
+                            I guess St. John is good.
+                            Does St. John like noodles?
+                            """);
 
         SegmentationUtils.segment(cas.getCas());
 
@@ -215,10 +215,10 @@ public class OpenNlpNerRecommenderTest
         var precision = result.computePrecisionScore();
         var recall = result.computeRecallScore();
 
-        System.out.printf("F1-Score: %f%n", fscore);
-        System.out.printf("Accuracy: %f%n", accuracy);
-        System.out.printf("Precision: %f%n", precision);
-        System.out.printf("Recall: %f%n", recall);
+        LOG.info("F1-Score:  {}", fscore);
+        LOG.info("Accuracy:  {}", accuracy);
+        LOG.info("Precision: {}", precision);
+        LOG.info("Recall:    {}", recall);
 
         assertThat(fscore).isBetween(0.0, 1.0);
         assertThat(precision).isBetween(0.0, 1.0);
@@ -243,10 +243,10 @@ public class OpenNlpNerRecommenderTest
         var precision = result.computePrecisionScore();
         var recall = result.computeRecallScore();
 
-        System.out.printf("F1-Score: %f%n", fscore);
-        System.out.printf("Accuracy: %f%n", accuracy);
-        System.out.printf("Precision: %f%n", precision);
-        System.out.printf("Recall: %f%n", recall);
+        LOG.info("F1-Score:  {}", fscore);
+        LOG.info("Accuracy:  {}", accuracy);
+        LOG.info("Precision: {}", precision);
+        LOG.info("Recall:    {}", recall);
 
         assertThat(fscore).isBetween(0.0, 1.0);
         assertThat(precision).isBetween(0.0, 1.0);

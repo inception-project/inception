@@ -19,7 +19,7 @@ package de.tudarmstadt.ukp.inception.support.kendo;
 
 import static java.lang.String.join;
 
-import com.googlecode.wicket.jquery.core.JQueryBehavior;
+import org.wicketstuff.jquery.core.JQueryBehavior;
 
 public class KendoStyleUtils
 {

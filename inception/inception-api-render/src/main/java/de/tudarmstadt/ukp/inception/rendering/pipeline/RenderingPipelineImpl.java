@@ -52,10 +52,10 @@ public class RenderingPipelineImpl
         LOG.trace("Rendering [{}-{}]", aRequest.getWindowBeginOffset(),
                 aRequest.getWindowEndOffset());
 
-        VDocument vdoc = new VDocument();
+        var vdoc = new VDocument();
 
-        for (RenderStep step : renderStepExtensionPoint.getExtensions(aRequest)) {
-            long start = currentTimeMillis();
+        for (var step : renderStepExtensionPoint.getExtensions(aRequest)) {
+            var start = currentTimeMillis();
             step.render(vdoc, aRequest);
             serverTiming("Rendering", "Rendering (" + step.getId() + ")",
                     currentTimeMillis() - start);

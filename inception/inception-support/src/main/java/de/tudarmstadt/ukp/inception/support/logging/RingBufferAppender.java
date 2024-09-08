@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.support.logging;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import java.util.Collection;
 import java.util.Collections;
 
@@ -31,14 +33,24 @@ import org.apache.logging.log4j.core.config.plugins.Plugin;
 import org.apache.logging.log4j.core.config.plugins.PluginAttribute;
 import org.apache.logging.log4j.core.config.plugins.PluginElement;
 import org.apache.logging.log4j.core.config.plugins.PluginFactory;
+import org.apache.logging.log4j.core.layout.PatternLayout;
 import org.apache.uima.util.Level;
 
 @Plugin(name = "RingBufferAppender", category = Core.CATEGORY_NAME, elementType = Appender.ELEMENT_TYPE)
 public class RingBufferAppender
     extends AbstractAppender
 {
-    private static final Collection<LogMessage> events = Collections
+    private static final Collection<LogEvent> events = Collections
             .synchronizedCollection(new CircularFifoQueue<>(1000));
+
+    private static PatternLayout layout;
+
+    {
+        var pattern = "%d{yyyy-MM-dd HH:mm:ss} %c{1} - %m%n%throwable";
+        layout = PatternLayout.newBuilder() //
+                .withPattern(pattern) //
+                .build();
+    }
 
     public RingBufferAppender(String name, Filter filter)
     {
@@ -55,6 +67,11 @@ public class RingBufferAppender
     @Override
     public void append(LogEvent aEvent)
     {
+        events.add(aEvent);
+    }
+
+    private static LogMessage eventToMessage(LogEvent aEvent)
+    {
         LogLevel level;
         if (aEvent.getLevel().intLevel() >= Level.ERROR_INT) {
             level = LogLevel.ERROR;
@@ -66,11 +83,16 @@ public class RingBufferAppender
             level = LogLevel.INFO;
         }
 
-        events.add(new LogMessage(null, level, aEvent.getMessage().getFormattedMessage()));
+        return new LogMessage(null, level, new String(layout.toByteArray(aEvent), UTF_8));
     }
 
-    public static Collection<LogMessage> events()
+    public static Collection<LogEvent> events()
     {
         return events;
+    }
+
+    public static Collection<LogMessage> messages()
+    {
+        return events.stream().map(RingBufferAppender::eventToMessage).toList();
     }
 }

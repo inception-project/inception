@@ -19,7 +19,6 @@
   "devDependencies": {
     "esbuild": "${esbuild.version}",
     "esbuild-svelte": "${esbuild-svelte.version}",
-    "esbuild-runner-plugins": "${esbuild-runner-plugins.version}",
     "esbuild-sass-plugin": "${esbuild-sass-plugin.version}",
     "eslint": "${eslint.version}",
     "eslint-plugin-import": "${eslint-plugin-import.version}",

@@ -22,26 +22,33 @@ import static de.tudarmstadt.ukp.inception.support.logging.Logging.KEY_REPOSITOR
 import static de.tudarmstadt.ukp.inception.support.logging.Logging.KEY_USERNAME;
 import static org.apache.commons.lang3.Validate.notNull;
 
+import java.lang.invoke.MethodHandles;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
+import de.tudarmstadt.ukp.inception.scheduling.controller.SchedulerWebsocketController;
+import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 
 public abstract class Task
     implements Runnable, InitializingBean
 {
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
     private final static AtomicInteger nextId = new AtomicInteger(1);
 
     private @Autowired RepositoryProperties repositoryProperties;
-    private @Autowired(required = false) SimpMessagingTemplate msgTemplate;
+    private @Autowired(required = false) SchedulerWebsocketController schedulerController;
 
     private final TaskHandle handle;
     private final User sessionOwner;
@@ -73,18 +80,23 @@ public abstract class Task
         cancellable = builder.cancellable;
         parentTask = builder.parentTask;
         scope = builder.scope;
+        if (builder.monitor != null) {
+            monitor = builder.monitor.apply(this);
+        }
     }
 
     @Override
     public void afterPropertiesSet()
     {
-        // For tasks that have a parent task, we use a non-notifying monitor. Also, we do not report
-        // such subtasks ia the SchedulerControllerImpl - they are internal.
-        if (msgTemplate != null && sessionOwner != null && parentTask == null) {
-            monitor = new NotifyingTaskMonitor(handle, this, msgTemplate);
-        }
-        else {
-            monitor = new TaskMonitor(handle, this);
+        if (monitor == null) {
+            // For tasks that have a parent task, we use a non-notifying monitor. Also, we do not
+            // report such subtasks ia the SchedulerControllerImpl - they are internal.
+            if (schedulerController != null && sessionOwner != null && parentTask == null) {
+                monitor = new NotifyingTaskMonitor(this, schedulerController);
+            }
+            else {
+                monitor = new TaskMonitor(this);
+            }
         }
     }
 
@@ -101,6 +113,11 @@ public abstract class Task
     public String getType()
     {
         return type;
+    }
+
+    public TaskHandle getHandle()
+    {
+        return handle;
     }
 
     public String getTitle()
@@ -181,14 +198,27 @@ public abstract class Task
 
     public void runSync()
     {
-        monitor.setState(TaskState.RUNNING);
-        execute();
-        if (monitor.getState() == TaskState.RUNNING) {
-            monitor.setState(TaskState.COMPLETED);
+        try {
+            monitor.setState(TaskState.RUNNING);
+            execute();
+            if (monitor.getState() == TaskState.RUNNING) {
+                monitor.setState(TaskState.COMPLETED);
+            }
+        }
+        catch (Exception e) {
+            monitor.addMessage(LogMessage.error(this, "Task failed."));
+            monitor.setState(TaskState.FAILED);
+            LOG.error("Task [{}] failed (trigger: [{}])", getTitle(), getTrigger(), e);
+        }
+        catch (Throwable e) {
+            monitor.addMessage(LogMessage.error(this, "Task failed with a serious error."));
+            monitor.setState(TaskState.FAILED);
+            LOG.error("Task [{}] failed with a serious error (trigger: [{}])", getTitle(),
+                    getTrigger(), e);
         }
     }
 
-    public abstract void execute();
+    public abstract void execute() throws Exception;
 
     @Override
     public String toString()
@@ -223,6 +253,7 @@ public abstract class Task
 
     public static abstract class Builder<T extends Builder<?>>
     {
+        protected Function<Task, TaskMonitor> monitor;
         protected User sessionOwner;
         protected Project project;
         protected String trigger;
@@ -290,6 +321,17 @@ public abstract class Task
         public T withParentTask(Task aParentTask)
         {
             this.parentTask = aParentTask;
+            return (T) this;
+        }
+
+        /**
+         * @param aMonitorFactory
+         *            function to create monitor for this task.
+         */
+        @SuppressWarnings("unchecked")
+        public T withMonitor(Function<Task, TaskMonitor> aMonitorFactory)
+        {
+            this.monitor = aMonitorFactory;
             return (T) this;
         }
 

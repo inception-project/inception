@@ -17,9 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.documents.exporters;
 
-import static de.tudarmstadt.ukp.inception.project.api.ProjectService.DOCUMENT_FOLDER;
-import static de.tudarmstadt.ukp.inception.project.api.ProjectService.PROJECT_FOLDER;
-import static de.tudarmstadt.ukp.inception.project.api.ProjectService.SOURCE_FOLDER;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static org.apache.commons.io.FileUtils.listFiles;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -28,10 +26,12 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.io.File;
-import java.nio.file.Files;
+import java.io.FileOutputStream;
 import java.util.List;
 import java.util.zip.ZipFile;
+import java.util.zip.ZipOutputStream;
 
+import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -45,10 +45,11 @@ import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.inception.documents.DocumentStorageServiceImpl;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentStorageService;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryPropertiesImpl;
-import de.tudarmstadt.ukp.inception.support.io.ZipUtils;
 
 @ExtendWith(MockitoExtension.class)
 public class SourceDocumentExporterTest
@@ -56,6 +57,7 @@ public class SourceDocumentExporterTest
     private RepositoryProperties repositoryProperties;
 
     private @Mock DocumentService documentService;
+    private DocumentStorageService documentStorageService;
 
     private Project project;
 
@@ -70,24 +72,14 @@ public class SourceDocumentExporterTest
                 .build();
 
         repositoryProperties = new RepositoryPropertiesImpl();
+        documentStorageService = new DocumentStorageServiceImpl(repositoryProperties);
 
         when(documentService.listSourceDocuments(any())).then(invocation -> {
             return sourceDocuments();
         });
 
-        when(documentService.getSourceDocumentFile(any())).then(invocation -> {
-            var doc = invocation.getArgument(0, SourceDocument.class);
-            return repositoryProperties.getPath().toPath() //
-                    .resolve(PROJECT_FOLDER) //
-                    .resolve(String.valueOf(doc.getProject().getId())) //
-                    .resolve(DOCUMENT_FOLDER) //
-                    .resolve(String.valueOf(doc.getId())) //
-                    .resolve(SOURCE_FOLDER) //
-                    .resolve(doc.getName()) //
-                    .toFile();
-        });
-
-        sut = new SourceDocumentExporter(documentService, repositoryProperties);
+        sut = new SourceDocumentExporter(documentService, documentStorageService,
+                repositoryProperties);
     }
 
     @Test
@@ -99,24 +91,26 @@ public class SourceDocumentExporterTest
 
         // Prepare some source files
         for (var doc : sourceDocuments()) {
-            var file = documentService.getSourceDocumentFile(doc).toPath();
-            Files.createDirectories(file.getParent());
-            Files.writeString(file, doc.getName());
+            try (var is = IOUtils.toInputStream(doc.getName(), UTF_8)) {
+                documentStorageService.writeSourceDocumentFile(doc, is);
+            }
         }
 
         // Export the source files
         var exportRequest = new FullProjectExportRequest(project, null, false);
         var monitor = mock(ProjectExportTaskMonitor.class);
         var exProject = new ExportedProject();
-        sut.exportData(exportRequest, monitor, exProject, stage);
-
-        var zipFile = File.createTempFile("test", ".zip");
-        ZipUtils.zipFolder(stage, zipFile);
+        var exportFile = new File(stage, "export.zip");
+        try (var zos = new ZipOutputStream(new FileOutputStream(exportFile))) {
+            sut.exportData(exportRequest, monitor, exProject, zos);
+        }
 
         // Import the project again
         repositoryProperties.setPath(targetWorkDir);
         var importRequest = new ProjectImportRequest(true);
-        sut.importData(importRequest, project, exProject, new ZipFile(zipFile));
+        try (var zipFile = new ZipFile(exportFile)) {
+            sut.importData(importRequest, project, exProject, zipFile);
+        }
 
         var sourceFiles = listFiles(sourceWorkDir, null, true).stream()
                 .map(f -> sourceWorkDir.toPath().relativize(f.toPath())).toList();

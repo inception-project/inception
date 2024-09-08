@@ -50,13 +50,13 @@ import { Row } from './Row'
 import { RectBox } from './RectBox'
 import { AttributeType, ValType } from './AttributeType'
 import { CollectionLoadedResponse } from './CollectionLoadedResponse'
-import { RelationTypeDto, EntityTypeDto, EntityDto, CommentDto, NormalizationDto, SourceData, TriggerDto, AttributeDto, EquivDto, ColorCode, MarkerType, MarkerDto, RelationDto, EDITED, FOCUS, MATCH_FOCUS, MATCH, RoleDto, VID } from '../protocol/Protocol'
+import { RelationTypeDto, EntityTypeDto, EntityDto, CommentDto, SourceData, TriggerDto, AttributeDto, EquivDto, ColorCode, MarkerType, MarkerDto, RelationDto, EDITED, FOCUS, MATCH_FOCUS, MATCH, RoleDto, VID } from '../protocol/Protocol'
 import type { Dispatcher, Message } from '../dispatcher/Dispatcher'
 import * as jsonpatch from 'fast-json-patch'
 import { Operation } from 'fast-json-patch'
 import { scrollbarWidth } from '../util/ScrollbarWidth'
 import '@svgdotjs/svg.filter.js'
-import { SVG, Element as SVGJSElement, Svg, Container, Text as SVGText, PathCommand, Rect, ArrayXY, SVGTypeMapping, Defs } from '@svgdotjs/svg.js'
+import { SVG, Element as SVGJSElement, Svg, Container, Text as SVGText, PathCommand, Rect, ArrayXY, SVGTypeMapping, Defs, G } from '@svgdotjs/svg.js'
 import { INSTANCE as Configuration } from '../configuration/Configuration'
 import { INSTANCE as Util } from '../util/Util'
 import { AnnotationOutEvent, AnnotationOverEvent, Offsets, Relation, Span } from '@inception-project/inception-js-api'
@@ -134,7 +134,7 @@ export class Visualizer {
 
   data?: DocumentData
   private sourceData?: SourceData
-  private requestedData: SourceData = null // FIXME Do we really need requestedData AND sourceData?
+  private requestedData: SourceData | null = null // FIXME Do we really need requestedData AND sourceData?
 
   private args: Partial<Record<MarkerType, MarkerDto>> = {}
 
@@ -281,7 +281,7 @@ export class Visualizer {
   }
 
   scrollTo (args: { offset: number, position?: string, pingRanges?: Offsets[] }): void {
-    const chunk = this.getChunkAtOffset(args.offset - (this.sourceData?.windowBegin || 0))
+    const chunk = this.findChunkClosestToOffset(args.offset - (this.sourceData?.windowBegin || 0))
 
     if (!chunk) {
       console.warn('Could not find chunk at offset', args.offset)
@@ -547,6 +547,9 @@ export class Visualizer {
         }
         if (Object.prototype.hasOwnProperty.call(attributes, 'a')) {
           span.actionButtons = !!(attributes.a)
+        }
+        if (Object.prototype.hasOwnProperty.call(attributes, 's')) {
+          span.score = attributes.s
         }
         if (Object.prototype.hasOwnProperty.call(attributes, 'cl') && attributes.cl) {
           span.clippedAtStart = attributes.cl.startsWith('s')
@@ -817,17 +820,26 @@ export class Visualizer {
     let firstFrom: number | null = null
     let chunkNo = 0
     let space: string
-    let chunk: Chunk
+    let chunk: Chunk | null = null
     const chunks : Chunk[] = []
 
-    tokenOffsets.forEach(offset => {
-      const from = offset[0]
-      const to = offset[1]
+    for (const fragment of sortedFragments) {
+      if (fragment.span.id === 'rel:0-before') {
+        chunk = new Chunk(chunkNo++, '', fragment.from, fragment.to, '')
+        chunk.virtual = true
+        fragment.chunk = chunk
+        chunk.fragments.push(fragment)
+        chunks.push(chunk)
+        break;
+      }
+    }
+
+    for (const [from, to] of tokenOffsets) {
       if (firstFrom === null) {
         firstFrom = from
       }
 
-      // Is the token end inside a span?
+      // Is the token end inside a span annotation / fragment?
       if (startFragmentId && to > sortedFragments[startFragmentId - 1].to) {
         while (startFragmentId < numFragments && to > sortedFragments[startFragmentId].from) {
           startFragmentId++
@@ -839,7 +851,7 @@ export class Visualizer {
       }
       // if yes, the next token is in the same chunk
       if (currentFragmentId < numFragments && to > sortedFragments[currentFragmentId].from) {
-        return
+        continue
       }
 
       // otherwise, create the chunk found so far
@@ -848,13 +860,25 @@ export class Visualizer {
       if (chunk) {
         chunk.nextSpace = space
       }
+
       //               (index,     text, from,      to, space) {
       chunk = new Chunk(chunkNo++, text, firstFrom, to, space)
       chunk.lastSpace = space
       chunks.push(chunk)
       lastTo = to
       firstFrom = null
-    })
+    }
+
+    for (const fragment of sortedFragments) {
+      if (fragment.span.id === 'rel:1-after') {
+        chunk = new Chunk(chunkNo++, '', fragment.from, fragment.to, '')
+        chunk.virtual = true
+        fragment.chunk = chunk
+        chunk.fragments.push(fragment)
+        chunks.push(chunk)
+        break;
+      }
+    }
 
     return chunks
   }
@@ -868,13 +892,10 @@ export class Visualizer {
     let chunkNo = 0
     let sentenceNo = firstSentence
 
-    for (const offset of sentenceOffsets) {
-      const from = offset[0]
-      const to = offset[1]
-
+    for (const [sentFrom, sentTo] of sentenceOffsets) {
       // Skip all chunks that belonged to the previous sentence
       let chunk : Chunk | undefined
-      while (chunkNo < numChunks && (chunk = chunks[chunkNo]).from < from) {
+      while (chunkNo < numChunks && (chunk = chunks[chunkNo]).from < sentFrom) {
         chunkNo++
       }
 
@@ -884,7 +905,7 @@ export class Visualizer {
       }
 
       // If the current chunk is not within the current sentence, then it was an empty sentence
-      if (chunks[chunkNo].from >= to) {
+      if (!covering(sentFrom, sentTo, chunks[chunkNo].from, chunks[chunkNo].to)) {
         sentenceNo++
         continue
       }
@@ -902,12 +923,21 @@ export class Visualizer {
       return
     }
 
-    let currentChunkId = 0
-    let chunk: Chunk
+    // Avoid assigining fragments to virtual chunks link those created for rel:0-before and rel:1-after
+    chunks = chunks.filter(chunk => !chunk.virtual)
+
     for (const fragment of sortedFragments) {
-      while (fragment.to > (chunk = chunks[currentChunkId]).to) {
-        currentChunkId++
+      // The before and after fragments have already been assigned to their own chunks in 
+      // buildChunksFromTokenOffsets
+      if (fragment.span.id === 'rel:0-before' || fragment.span.id === 'rel:1-after') continue
+
+      let chunk = chunks.find(c => overlapping(c.from, c.to, fragment.from, fragment.to));
+
+      if (!chunk) {
+        console.warn('Could not find chunk for fragment', fragment);
+        continue
       }
+
       chunk.fragments.push(fragment)
       fragment.text = chunk.text.substring(fragment.from - chunk.from, fragment.to - chunk.from)
       fragment.chunk = chunk
@@ -987,7 +1017,7 @@ export class Visualizer {
     const triggerHash = this.buildSpansFromTriggers(this.sourceData.triggers)
     this.buildEventDescsFromTriggers(this.data, this.sourceData, triggerHash)
 
-    // split spans into span fragments (for discontinuous spans)
+    // split span annotations into span fragments (for discontinuous spans)
     this.splitSpansIntoFragments(Object.values(this.data.spans))
     this.buildEventDescsFromEquivs(this.sourceData.equivs, this.data.spans, this.data.eventDescs)
     this.buildEventDescsFromRelations(this.sourceData.relations, this.data.eventDescs)
@@ -1111,6 +1141,7 @@ export class Visualizer {
   private updateFragmentLabelText (fragment: Fragment) {
     const spanLabels = Util.getSpanLabels(this.entityTypes, fragment.span.type)
     fragment.labelText = Util.spanDisplayForm(this.entityTypes, fragment.span.type)
+
     // Find the most appropriate label according to text width
     if (Configuration.abbrevsOn && spanLabels) {
       let labelIdx = 1 // first abbrev
@@ -1122,9 +1153,15 @@ export class Visualizer {
       }
     }
 
-    fragment.labelText = '(' + fragment.labelText + ')'
     if (fragment.span.labelText) {
       fragment.labelText = fragment.span.labelText
+    }
+    else {
+      fragment.labelText = '(' + fragment.labelText + ')'
+    }
+
+    if (fragment.span.score) {
+      fragment.labelText += ' [' + fragment.span.score.toFixed(2) + ']'
     }
   }
 
@@ -1243,6 +1280,9 @@ export class Visualizer {
         textsHash[text].map(object => callback(object, svgText.node))
       }
     }
+
+    // Add dummy element used only to get the text height even if we have no chunks
+    this.svg.plain("TEXT").addTo(textMeasureGroup)
 
     const bbox = textMeasureGroup.bbox()
     textMeasureGroup.remove()
@@ -1477,16 +1517,22 @@ export class Visualizer {
   }
 
   private calculateSubstringWidthFast (text: SVGTextContentElement, firstChar: number, lastChar: number) {
-    let startPos: number
-    if (firstChar < text.getNumberOfChars()) {
-      startPos = text.getStartPositionOfChar(firstChar).x
-    } else {
-      startPos = text.getComputedTextLength()
+    try {
+{      let startPos: number
+      if (firstChar < text.getNumberOfChars()) {
+        startPos = text.getStartPositionOfChar(firstChar).x
+      } else {
+        startPos = text.getComputedTextLength()
+      }
+      const endPos = (lastChar < firstChar)
+        ? startPos
+        : text.getEndPositionOfChar(lastChar).x
+      return [startPos, endPos]
+}    }
+    catch (e) {
+      console.error(`Unable to calculate width of range ${firstChar}-${lastChar} on [${text}]`, e)
+      return [0, 0]
     }
-    const endPos = (lastChar < firstChar)
-      ? startPos
-      : text.getEndPositionOfChar(lastChar).x
-    return [startPos, endPos]
   }
 
   /**
@@ -1797,13 +1843,14 @@ export class Visualizer {
       let chunkTo = 0
       let chunkHeight = 0
       let spacing = 0
-      let spacingChunkId: number
+      let spacingChunkId: number | undefined = undefined
       let spacingRowBreak = 0
 
+      // Render the fragments for the current chunk
       chunk.fragments.forEach(fragment => {
         const span = fragment.span
 
-        if (span.hidden) {
+        if (span.hidden || span.id === "rel:0-before" || span.id === "rel:1-after") {
           return
         }
 
@@ -1918,7 +1965,7 @@ export class Visualizer {
         if (fragment === span.headFragment) {
           const checkLeftRightArcs = (arc: Arc, refSpan: Entity, leftSpan: Entity) => {
             const refChunk = leftSpan.headFragment.chunk
-            if (!refChunk.row) {
+            if (!refChunk || !refChunk.row) {
               hasRightArcs = true
               return
             }
@@ -1974,7 +2021,7 @@ export class Visualizer {
 
           for (const arc of span.incoming) {
             const origin = docData.spans[arc.origin].headFragment.chunk
-            if (chunk.index === origin.index) {
+            if (origin && chunk.index === origin.index) {
               hasInternalArcs = true
             }
           }
@@ -1995,7 +2042,7 @@ export class Visualizer {
       // If chunkFrom becomes negative (LTR) or chunkTo becomes positive (RTL), then boxX becomes positive
       const boxX = this.rtlmode ? chunkTo : -Math.min(chunkFrom, 0)
 
-      let boxWidth
+      let boxWidth : number
       if (this.rtlmode) {
         boxWidth = Math.max(textWidth, -chunkFrom) - Math.min(0, -chunkTo)
       } else {
@@ -2030,7 +2077,7 @@ export class Visualizer {
         // row is added
       }
 
-      let chunkDoesNotFit
+      let chunkDoesNotFit : boolean
       if (this.rtlmode) {
         chunkDoesNotFit = currentX - boxWidth - leftBorderForArcs <=
           2 * Configuration.visual.margin.x
@@ -2039,13 +2086,14 @@ export class Visualizer {
           this.canvasWidth - 2 * Configuration.visual.margin.x
       }
 
+      // Check if a new row needs to be started and if so start it
       if (chunk.sentence > sourceData.sentence_number_offset || chunkDoesNotFit) {
         // the chunk does not fit
         row.arcs = this.svg.group().addTo(row.group).addClass('arcs')
         let indent = 0
         if (chunk.lastSpace) {
           const spaceLen = chunk.lastSpace.length || 0
-          let spacePos
+          let spacePos : number
           if (chunk.sentence) {
             // If this is line-initial spacing, fetch the sentence to which the chunk belongs
             // so we can determine where it begins
@@ -2083,23 +2131,24 @@ export class Visualizer {
           spacing = 0 // do not center intervening elements
         }
 
-        // new row
+        // Finish up current row
         rows.push(row)
-
         chunk.group.remove()
+
+        // Start new row
         row = new Row(this.svg)
-        // Change row background color if a new sentence is starting
         if (chunk.sentence) {
+          // Change row background color if a new sentence is starting
           sentenceToggle = 1 - sentenceToggle
         }
         row.backgroundIndex = sentenceToggle
         row.index = ++rowIndex
         chunk.group.addTo(row.group)
         chunk.group = SVG(row.group.node.lastElementChild as SVGGElement)
-        $(chunk.group).children("g[class='span']").each((index, element) => {
+        chunk.group.node.querySelectorAll("g.span").forEach((element, index) => {
           chunk.fragments[index].group = SVG(element as SVGGElement)
         })
-        $(chunk.group).find('rect[data-span-id]').each((index, element) => {
+        chunk.group.node.querySelectorAll('rect[data-span-id]').forEach((element, index) => {
           chunk.fragments[index].rect = SVG(element as SVGElement)
         })
       }
@@ -2143,8 +2192,8 @@ export class Visualizer {
         row.sentence = ++sentenceNumber
       }
 
-      if (spacing > 0) {
-        // if we added a gap, center the intervening elements
+      // if we added a gap, center the intervening elements
+      if (spacing > 0 && spacingChunkId !== undefined) {
         spacing /= 2
         const firstChunkInRow = row.chunks[row.chunks.length - 1]
         if (firstChunkInRow === undefined) {
@@ -2161,6 +2210,7 @@ export class Visualizer {
         }
       }
 
+      // Assign chunk to row
       row.chunks.push(chunk)
       chunk.row = row
 
@@ -2347,7 +2397,7 @@ export class Visualizer {
 
         for (let i = 0; i < chunk.fragments.length; i++) {
           const fragment = chunk.fragments[orderedIdx[i]]
-          if (fragment.span.hidden) {
+          if (fragment.span.hidden || fragment.span.id === "rel:0-before" || fragment.span.id === "rel:1-after") {
             continue
           }
 
@@ -2588,8 +2638,8 @@ export class Visualizer {
 
     const leftBox = left.rowBBox()
     const rightBox = right.rowBBox()
-    const leftRow = left.chunk.row.index
-    const rightRow = right.chunk.row.index
+    const leftRow = left.chunk.row.index // row with the left end of the arc?
+    const rightRow = right.chunk.row.index // row with the right end of the arc?
 
     if (!arrows[arrowHead]) {
       const arrow = this.makeArrow(arrowHead)
@@ -2656,8 +2706,9 @@ export class Visualizer {
         .attr('data-id', arc.eventDescId)
         .addTo(row.arcs)
 
+      // Calculate x position of left side of the arc in current row  
       let from: number
-      if (rowIndex === leftRow) {
+      if (rowIndex === leftRow && left.span.id !== "rel:0-before") {
         if (this.rtlmode) {
           from = leftBox.x + (chunkReverse ? leftBox.width : 0)
         } else {
@@ -2667,8 +2718,9 @@ export class Visualizer {
         from = this.rtlmode ? this.canvasWidth - 2 * Configuration.visual.margin.y - this.sentNumMargin : this.sentNumMargin
       }
 
+      // Calculate x position of right side of the arc in current row  
       let to: number
-      if (rowIndex === rightRow) {
+      if (rowIndex === rightRow && right.span.id !== "rel:1-after") {
         if (this.rtlmode) {
           to = rightBox.x + (chunkReverse ? 0 : rightBox.width)
         } else {
@@ -2701,88 +2753,12 @@ export class Visualizer {
         height += 0.5
       }
 
-      const originType = docData.spans[arc.origin].type
-      const arcLabels = Util.getArcLabels(this.entityTypes, originType, arc.type, this.relationTypes)
-      let labelText = Util.arcDisplayForm(this.entityTypes, originType, arc.type, this.relationTypes)
-      // if (Configuration.abbrevsOn && !ufoCatcher && arcLabels) {
-      if (Configuration.abbrevsOn && arcLabels) {
-        let labelIdx = 1 // first abbreviation
-
-        // strictly speaking 2*arcSlant would be needed to allow for
-        // the full-width arcs to fit, but judged abbreviated text
-        // to be more important than the space for arcs.
-        const maxLength = (to - from) - (this.arcSlant)
-        while (docData.sizes.arcs.widths[labelText] > maxLength && arcLabels[labelIdx]) {
-          labelText = arcLabels[labelIdx]
-          labelIdx++
-        }
-      }
-
-      if (arc.eventDescId && docData.eventDescs[arc.eventDescId]) {
-        if (docData.eventDescs[arc.eventDescId].labelText) {
-          labelText = docData.eventDescs[arc.eventDescId].labelText
-        }
-      }
-
       let shadowGroup: SVGTypeMapping<SVGGElement> | undefined
       if (arc.shadowClass || arc.marked) {
         shadowGroup = this.svg.group().addTo(arcGroup)
       }
 
-      // guess at the correct baseline shift to get vertical centering.
-      // (CSS dominant-baseline can't be used as not all SVG renders support it.)
-      const baselineShift = docData.sizes.arcs.height / 4
-      this.svg.plain(labelText)
-        .amove((from + to) / 2, -height + baselineShift)
-        .attr({
-          // 'fill': color,
-          fill: '#000000',
-          'data-arc-role': arc.type,
-          'data-arc-origin': arc.origin,
-          'data-arc-target': arc.target,
-          // TODO: confirm this is unused and remove.
-          // 'data-arc-id': arc.id,
-          'data-arc-ed': arc.eventDescId
-        })
-        .addTo(arcGroup)
-
-      const width = docData.sizes.arcs.widths[labelText]
-      const textBox = {
-        x: (from + to - width) / 2,
-        width,
-        y: -height - docData.sizes.arcs.height / 2,
-        height: docData.sizes.arcs.height
-      }
-
-      if (arc.marked && shadowGroup) {
-        this.svg.rect()
-          .move(textBox.x - this.markedArcSize, textBox.y - this.markedArcSize)
-          .width(textBox.width + 2 * this.markedArcSize)
-          .height(textBox.height + 2 * this.markedArcSize)
-          .attr({
-            filter: 'url(#Gaussian_Blur)',
-            class: 'shadow_EditHighlight',
-            rx: this.markedArcSize,
-            ry: this.markedArcSize
-          })
-          .addTo(shadowGroup)
-      }
-
-      if (arc.shadowClass && shadowGroup) {
-        this.renderArcShadow(arc, shadowGroup, textBox)
-      }
-      let textStart = textBox.x
-      let textEnd = textBox.x + textBox.width
-
-      // adjust by margin for arc drawing
-      textStart -= Configuration.visual.arcTextMargin * (this.fontZoom / 100.0)
-      textEnd += Configuration.visual.arcTextMargin * (this.fontZoom / 100.0)
-
-      if (from > to) {
-        const tmp = textStart
-        textStart = textEnd
-        textEnd = tmp
-      }
+      let { textStart, textEnd } = this.renderArcLabel(docData, arc, to, from, height, arcGroup, shadowGroup)
 
       if (this.roundCoordinates) {
         // don't ask
@@ -2812,7 +2788,7 @@ export class Visualizer {
         }
       }
 
-      const renderCurlyPath = (path: PathCommand[]) => {
+      const renderArcSegmentPath = (path: PathCommand[]) => {
         this.svg.path(path)
           .css('stroke', color)
           .stroke({ dasharray: dashArray })
@@ -2843,56 +2819,8 @@ export class Visualizer {
         }
       }
 
-      const arrowStart = textStart - arrowAtLabelAdjust
-      let path: PathCommand[] = [['M', arrowStart, -height]]
-      if (rowIndex === leftRow) {
-        let cornerx = from + (this.rtlmode ? -1 : 1) * ufoCatcherMod * this.arcSlant
-        if (this.rtlmode) {
-          if (!ufoCatcher && cornerx < arrowStart + 1) {
-            cornerx = arrowStart + 1
-          }
-        } else {
-          if (!ufoCatcher && cornerx > arrowStart - 1) {
-            cornerx = arrowStart - 1
-          }
-        }
-
-        if (this.smoothArcCurves) {
-          let controlx: number
-          let endy: number
-          if (this.rtlmode) {
-            controlx = ufoCatcher
-              ? cornerx - 2 * ufoCatcherMod * this.reverseArcControlx
-              : this.smoothArcSteepness * from + (1 - this.smoothArcSteepness) * cornerx
-            endy = leftBox.y + (leftToRight && !arc.equiv
-              ? Configuration.visual.margin.y
-              : leftBox.height / 2)
-          } else {
-            controlx = ufoCatcher
-              ? cornerx + 2 * ufoCatcherMod * this.reverseArcControlx
-              : this.smoothArcSteepness * from + (1 - this.smoothArcSteepness) * cornerx
-            endy = leftBox.y + (leftToRight || arc.equiv
-              ? leftBox.height / 2
-              : Configuration.visual.margin.y)
-          }
-
-          // no curving for short lines covering short vertical
-          // distances, the arrowheads can go off (#925)
-          if (Math.abs(-height - endy) < 2 &&
-            Math.abs(cornerx - from) < 5) {
-            endy = -height
-          }
-          path.push(['L', cornerx, -height])
-          path.push(['Q', controlx, -height, from, endy])
-        } else {
-          path.push(['L', cornerx, -height])
-          path.push(['L', from, leftBox.y + (leftToRight || arc.equiv ? leftBox.height / 2 : Configuration.visual.margin.y)])
-        }
-      } else {
-        path.push(['L', from, -height])
-      }
-
-      renderCurlyPath(path)
+      let pathLeft = this.makeLeftArcSegmentPath(left, textStart, arrowAtLabelAdjust, height, rowIndex, leftRow, from, ufoCatcherMod, ufoCatcher, leftBox, leftToRight, arc)
+      renderArcSegmentPath(pathLeft)
 
       if (!symmetric) {
         myArrowHead = (arcDesc && arcDesc.arrowHead)
@@ -2904,61 +2832,208 @@ export class Visualizer {
       arrowType = arrows[arrowName]
       arrowDecl = arrowType && ('url(#' + arrowType + ')')
 
-      const arrowEnd = textEnd + arrowAtLabelAdjust
-      path = [['M', arrowEnd, -height]]
-      if (rowIndex === rightRow) {
-        let cornerx = to - (this.rtlmode ? -1 : 1) * ufoCatcherMod * this.arcSlant
+      let pathRight = this.makeRightArcSegmentPath(right, textEnd, arrowAtLabelAdjust, height, rowIndex, rightRow, to, ufoCatcherMod, ufoCatcher, rightBox, leftToRight, arc)
+      renderArcSegmentPath(pathRight)
+    } // arc rows
+  }
 
-        // TODO: duplicates above in part, make funcs
-        // for normal cases, should not be past textEnd even if narrow
-        if (this.rtlmode) {
-          if (!ufoCatcher && cornerx > arrowEnd - 1) {
-            cornerx = arrowEnd - 1
-          }
-        } else {
-          if (!ufoCatcher && cornerx < arrowEnd + 1) {
-            cornerx = arrowEnd + 1
-          }
-        }
+  private makeRightArcSegmentPath(right: Fragment, textEnd: number, arrowAtLabelAdjust: number, height: number, rowIndex: number, rightRow: number, to: number, ufoCatcherMod: number, ufoCatcher: boolean, rightBox: RectBox, leftToRight: boolean, arc: Arc) {
+    const arrowEnd = textEnd + arrowAtLabelAdjust
+    let path: PathCommand[] = [['M', arrowEnd, -height]]
+    if (rowIndex !== rightRow || right.span.id === "rel:1-after") {
+      // Render straight line pointing to the end of the row
+      path.push(['L', to, -height])
+      return path
+    }
 
-        if (this.smoothArcCurves) {
-          let controlx: number
-          let endy: number
-          if (this.rtlmode) {
-            controlx = ufoCatcher
-              ? cornerx + 2 * ufoCatcherMod * this.reverseArcControlx
-              : this.smoothArcSteepness * to + (1 - this.smoothArcSteepness) * cornerx
-            endy = rightBox.y + (leftToRight && !arc.equiv
-              ? Configuration.visual.margin.y
-              : rightBox.height / 2)
-          } else {
-            controlx = ufoCatcher
-              ? cornerx - 2 * ufoCatcherMod * this.reverseArcControlx
-              : this.smoothArcSteepness * to + (1 - this.smoothArcSteepness) * cornerx
-            endy = rightBox.y + (leftToRight && !arc.equiv
-              ? Configuration.visual.margin.y
-              : rightBox.height / 2)
-          }
+    // Render curve pointing to the rught annotation endpoint
+    let cornerx = to - (this.rtlmode ? -1 : 1) * ufoCatcherMod * this.arcSlant
 
-          // no curving for short lines covering short vertical
-          // distances, the arrowheads can go off (#925)
-          if (Math.abs(-height - endy) < 2 &&
-            Math.abs(cornerx - to) < 5) {
-            endy = -height
-          }
+    // TODO: duplicates above in part, make funcs
+    // for normal cases, should not be past textEnd even if narrow
+    if (this.rtlmode) {
+      if (!ufoCatcher && cornerx > arrowEnd - 1) {
+        cornerx = arrowEnd - 1
+      }
+    } else {
+      if (!ufoCatcher && cornerx < arrowEnd + 1) {
+        cornerx = arrowEnd + 1
+      }
+    }
 
-          path.push(['L', cornerx, -height])
-          path.push(['Q', controlx, -height, to, endy])
-        } else {
-          path.push(['L', cornerx, -height])
-          path.push(['L', to, rightBox.y + (leftToRight && !arc.equiv ? Configuration.visual.margin.y : rightBox.height / 2)])
-        }
+    if (this.smoothArcCurves) {
+      let controlx: number
+      let endy: number
+      if (this.rtlmode) {
+        controlx = ufoCatcher
+          ? cornerx + 2 * ufoCatcherMod * this.reverseArcControlx
+          : this.smoothArcSteepness * to + (1 - this.smoothArcSteepness) * cornerx
+        endy = rightBox.y + (leftToRight && !arc.equiv
+          ? Configuration.visual.margin.y
+          : rightBox.height / 2)
       } else {
-        path.push(['L', to, -height])
+        controlx = ufoCatcher
+          ? cornerx - 2 * ufoCatcherMod * this.reverseArcControlx
+          : this.smoothArcSteepness * to + (1 - this.smoothArcSteepness) * cornerx
+        endy = rightBox.y + (leftToRight && !arc.equiv
+          ? Configuration.visual.margin.y
+          : rightBox.height / 2)
       }
 
-      renderCurlyPath(path)
-    } // arc rows
+      // no curving for short lines covering short vertical
+      // distances, the arrowheads can go off (#925)
+      if (Math.abs(-height - endy) < 2 &&
+        Math.abs(cornerx - to) < 5) {
+        endy = -height
+      }
+
+      path.push(['L', cornerx, -height])
+      path.push(['Q', controlx, -height, to, endy])
+    } else {
+      path.push(['L', cornerx, -height])
+      path.push(['L', to, rightBox.y + (leftToRight && !arc.equiv ? Configuration.visual.margin.y : rightBox.height / 2)])
+    }
+    return path
+  }
+
+  private makeLeftArcSegmentPath(left: Fragment, textStart: number, arrowAtLabelAdjust: number, height: number, rowIndex: number, leftRow: number, from: number, ufoCatcherMod: number, ufoCatcher: boolean, leftBox: RectBox, leftToRight: boolean, arc: Arc) {
+    const arrowStart = textStart - arrowAtLabelAdjust
+    if (isNaN(arrowStart)) {
+      debugger
+    }
+    let path: PathCommand[] = [['M', arrowStart, -height]]
+    if (rowIndex !== leftRow || left.span.id === "rel:0-before") {
+      // Render straight line pointing to the start of the row
+      path.push(['L', from, -height])
+      return path
+    }
+
+    // Render curve pointing to the left annotation endpoint
+    let cornerx = from + (this.rtlmode ? -1 : 1) * ufoCatcherMod * this.arcSlant
+    if (this.rtlmode) {
+      if (!ufoCatcher && cornerx < arrowStart + 1) {
+        cornerx = arrowStart + 1
+      }
+    } else {
+      if (!ufoCatcher && cornerx > arrowStart - 1) {
+        cornerx = arrowStart - 1
+      }
+    }
+
+    if (this.smoothArcCurves) {
+      let controlx: number
+      let endy: number
+      if (this.rtlmode) {
+        controlx = ufoCatcher
+          ? cornerx - 2 * ufoCatcherMod * this.reverseArcControlx
+          : this.smoothArcSteepness * from + (1 - this.smoothArcSteepness) * cornerx
+        endy = leftBox.y + (leftToRight && !arc.equiv
+          ? Configuration.visual.margin.y
+          : leftBox.height / 2)
+      } else {
+        controlx = ufoCatcher
+          ? cornerx + 2 * ufoCatcherMod * this.reverseArcControlx
+          : this.smoothArcSteepness * from + (1 - this.smoothArcSteepness) * cornerx
+        endy = leftBox.y + (leftToRight || arc.equiv
+          ? leftBox.height / 2
+          : Configuration.visual.margin.y)
+      }
+
+      // no curving for short lines covering short vertical
+      // distances, the arrowheads can go off (#925)
+      if (Math.abs(-height - endy) < 2 &&
+        Math.abs(cornerx - from) < 5) {
+        endy = -height
+      }
+      path.push(['L', cornerx, -height])
+      path.push(['Q', controlx, -height, from, endy])
+    } else {
+      path.push(['L', cornerx, -height])
+      path.push(['L', from, leftBox.y + (leftToRight || arc.equiv ? leftBox.height / 2 : Configuration.visual.margin.y)])
+    }
+    return path
+  }
+
+  private renderArcLabel(docData: DocumentData, arc: Arc, to: number, from: number, height: number, arcGroup: G, shadowGroup: import("@svgdotjs/svg.js").G | undefined) {
+    const originType = docData.spans[arc.origin].type
+    const arcLabels = Util.getArcLabels(this.entityTypes, originType, arc.type, this.relationTypes)
+    let labelText = Util.arcDisplayForm(this.entityTypes, originType, arc.type, this.relationTypes)
+    // if (Configuration.abbrevsOn && !ufoCatcher && arcLabels) {
+    if (Configuration.abbrevsOn && arcLabels) {
+      let labelIdx = 1 // first abbreviation
+
+      // strictly speaking 2*arcSlant would be needed to allow for
+      // the full-width arcs to fit, but judged abbreviated text
+      // to be more important than the space for arcs.
+      const maxLength = (to - from) - (this.arcSlant)
+      while (docData.sizes.arcs.widths[labelText] > maxLength && arcLabels[labelIdx]) {
+        labelText = arcLabels[labelIdx]
+        labelIdx++
+      }
+    }
+
+    if (arc.eventDescId && docData.eventDescs[arc.eventDescId]) {
+      if (docData.eventDescs[arc.eventDescId].labelText) {
+        labelText = docData.eventDescs[arc.eventDescId].labelText
+      }
+    }
+
+    // guess at the correct baseline shift to get vertical centering.
+    // (CSS dominant-baseline can't be used as not all SVG renders support it.)
+    const baselineShift = docData.sizes.arcs.height / 4
+    this.svg.plain(labelText)
+      .amove((from + to) / 2, -height + baselineShift)
+      .attr({
+        // 'fill': color,
+        fill: '#000000',
+        'data-arc-role': arc.type,
+        'data-arc-origin': arc.origin,
+        'data-arc-target': arc.target,
+        // TODO: confirm this is unused and remove.
+        // 'data-arc-id': arc.id,
+        'data-arc-ed': arc.eventDescId
+      })
+      .addTo(arcGroup)
+
+    const width = docData.sizes.arcs.widths[labelText]
+    const textBox = {
+      x: (from + to - width) / 2,
+      width,
+      y: -height - docData.sizes.arcs.height / 2,
+      height: docData.sizes.arcs.height
+    }
+
+    if (arc.marked && shadowGroup) {
+      this.svg.rect()
+        .move(textBox.x - this.markedArcSize, textBox.y - this.markedArcSize)
+        .width(textBox.width + 2 * this.markedArcSize)
+        .height(textBox.height + 2 * this.markedArcSize)
+        .attr({
+          filter: 'url(#Gaussian_Blur)',
+          class: 'shadow_EditHighlight',
+          rx: this.markedArcSize,
+          ry: this.markedArcSize
+        })
+        .addTo(shadowGroup)
+    }
+
+    if (arc.shadowClass && shadowGroup) {
+      this.renderArcShadow(arc, shadowGroup, textBox)
+    }
+    let textStart = textBox.x
+    let textEnd = textBox.x + textBox.width
+
+    // adjust by margin for arc drawing
+    textStart -= Configuration.visual.arcTextMargin * (this.fontZoom / 100.0)
+    textEnd += Configuration.visual.arcTextMargin * (this.fontZoom / 100.0)
+
+    if (from > to) {
+      const tmp = textStart
+      textStart = textEnd
+      textEnd = tmp
+    }
+
+    return { textStart, textEnd }
   }
 
   renderFragmentConnectors (docData: DocumentData, rows: Row[]) {
@@ -3060,7 +3135,7 @@ export class Visualizer {
     let currentSent = 0
     for (const row of rows) {
       // find the maximum fragment height
-      row.updateFragmentHeight()
+      row.updateFragmentHeight(docData.sizes.texts.height)
       row.updateRowBoxHeight(this.rowSpacing, this.rowPadding)
 
       if (row.sentence) {
@@ -3373,7 +3448,7 @@ export class Visualizer {
       this.renderAssignFragmentsToRows(rows, fragmentHeights)
       Util.profileEnd('arcsPrep')
 
-      Util.profileStart('arcsPrep')
+      Util.profileStart('arcs')
       this.renderArcs(this.data, rows, fragmentHeights)
       Util.profileEnd('arcs')
 
@@ -3526,7 +3601,6 @@ export class Visualizer {
     if (span.hidden) { return }
 
     if (evt.target) {
-      console.log(span)
       evt.target.dispatchEvent(new AnnotationOutEvent({ vid: id, layer: { id: span.type, name: Util.spanDisplayForm(this.entityTypes, span.type) } }, evt.originalEvent))
     }
   }
@@ -4106,8 +4180,28 @@ export class Visualizer {
       .addTo(fragment.group)
   }
 
-  getChunkAtOffset (offset: number) : Chunk | null {
-    return this.data?.chunks?.find(chunk => chunk.from <= offset && offset < chunk.to) || null
+  findChunkClosestToOffset (offset: number) : Chunk | null {
+    let closestChunk : Chunk | null = null
+    let closestNonVirtualChunk : Chunk | null = null
+    let minDiff = Infinity
+    let nonVirtualMinDiff = Infinity
+    for (const chunk of this.data?.chunks || []) {
+      const diff = Math.min(Math.abs(chunk.from - offset), Math.abs(chunk.to - offset))
+
+      if (!chunk.virtual && diff < nonVirtualMinDiff) {
+        closestNonVirtualChunk = chunk
+        nonVirtualMinDiff = diff
+      }
+
+      if (diff < minDiff) {
+        closestChunk = chunk
+        minDiff = diff
+      }
+    }
+
+    // Try to return a non-virtual chunk because we can highlight that with a ping.
+    // Only if no non-virtual chunk is found, return the closest chunk.
+    return closestNonVirtualChunk || closestChunk;
   }
 
   getChunkElementWithId (id: VID): Element | null {
@@ -4363,4 +4457,12 @@ function sentenceSplit (text: string): Array<Offsets> {
   }
 
   return sentenceOffsets
+}
+
+function overlapping(aXBegin: number, aXEnd: number, aYBegin: number, aYEnd: number): boolean {
+  return aYBegin === aXBegin || aYEnd === aXEnd || (aXBegin < aYEnd && aYBegin < aXEnd);
+} 
+
+function covering(aXBegin: number, aXEnd: number, aYBegin: number, aYEnd: number): boolean {
+  return aXBegin <= aYBegin && aYEnd <= aXEnd;
 }

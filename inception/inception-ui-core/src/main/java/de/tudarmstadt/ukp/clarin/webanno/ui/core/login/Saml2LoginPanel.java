@@ -76,7 +76,7 @@ public class Saml2LoginPanel
             return;
         }
 
-        List<LoginLink> loginLinks = getLoginLinks();
+        var loginLinks = getLoginLinks();
         var maybeAutoLoginTarget = loginLinks.stream() //
                 .filter(link -> loginProperties.getAutoLogin().equals(link.getRegistrationId()))
                 .findFirst();
@@ -96,7 +96,7 @@ public class Saml2LoginPanel
         try {
             var registrations = saml2Adapter.getSamlRelyingPartyRegistrations();
 
-            List<LoginLink> loginLinkList = new ArrayList<>();
+            var loginLinkList = new ArrayList<LoginLink>();
             registrations.forEach((url, label) -> {
                 loginLinkList.add(new LoginLink(label, label, url));
             });

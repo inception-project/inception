@@ -115,8 +115,11 @@ have have been included in the files are ignored on import.
 |====
 | Property | Description
 
-| Layer name
+| Name
 | The name of the layer (obligatory)
+
+| Type
+| The type of the layer (see below)
 
 | Description
 | A description of the layer. This information will be shown in a tooltip when the mouse hovers over the layer name in the annotation detail editor panel.
@@ -127,29 +130,6 @@ have have been included in the files are ignored on import.
 
 NOTE: When a layer is first created, only ASCII characters are allowed for the layer name because the internal UIMA type name is derived from the initial layer name. After the layer has been created, the name can be changed arbitrarily. The internal UIMA type name will not be updated. The internal UIMA name is
 e.g. used when exporting data or in constraint rules.
-
-image::layer_details.png[align="center"]
-
-[[sect_projects_layers_technical_properties]]
-== Technical Properties 
-
-In the frame *Technical Properties*, the user may select the type of annation that will be made with this layer: span, relation, or chain.
-
-.Technical Properites
-[cols="1v,2", options="header"]
-|====
-| Property | Description
-
-| Internal name
-| Internal UIMA type name
-
-| Type
-| The type of the layer (obligatory, see below)
-
-| Attach to layer
-_(Relations)_
-| Determines which span layer a relation attaches to. Relations can only be created between annotations of this span layer.
-|====
 
 The layer type defines the structure of the layer. Three different types are supported: spans, relations, and chains.
 
@@ -165,7 +145,8 @@ The layer type defines the structure of the layer. Three different types are sup
 | image:project_layer_type_span.png[]
 
 | Relation
-| Binary relation between two spans visualized as an arc between spans. The example shows a relation between two spans.
+| Binary relation between two spans visualized as an arc between spans. The example shows a relation between two spans. For relation annotations the type of the spans which are to be connected can be chosen in the field *Attach to layer*. Here, only non-default layers are displayed. To create a relation, first the span annotation needs to be created.
+
 | image:project_layer_type_relation.png[]
 
 | Chain
@@ -173,11 +154,7 @@ The layer type defines the structure of the layer. Three different types are sup
 | image:project_layer_type_chain.png[]
 |====
 
-For relation annotations the type of the spans which are to be connected can be chosen in the field *Attach to layer*. Here, only non-default layers are displayed. To create a relation, first the span annotation needs to be created.
-
-NOTE: Currently for each span layer there can be at most one relation layer attaching to it.
-
-NOTE: It is currently not possible to create relations between spans in different layers. For example if you define span layers called *Men* and *Women*, it is impossible to define a relation layer *Married to* between the two. To work around this limitation, create a single span layer *Person* with a feature *Gender* instead. You can now set the feature *Gender* to *Man* or *Woman* and eventually define a relation layer *Married to* attaching to the *Person* layer.
+image::layer_properties.png[align="center"]
 
 [[sect_projects_layers_behaviours]]
 == Behaviours
@@ -193,8 +170,11 @@ NOTE: It is currently not possible to create relations between spans in differen
 | Show text on hover
 | Whether the text covered by the annotation is shown in the popup panel that appears when hovering with the mouse over an annotation label. Note that this popup may not be supported by all annotation editors.
 
+| Render mode (relation)
+| Determines when to render relations as arcs. Possible settings are **Always** (always render arcs), **Never** (never render arcs), and **When selected** (render arcs only when one of the relation endpoints or the relation itself is selected). Note that this setting is only available for relation layers.
+
 | Validation
-| When pre-annotated data is imported or when the  behaviors settings are changed, it is possible that annotations exist which are not conforming to the current behavior settings. This setting controls when a validation of annotations is performed. Possible settings are **Never** (no validation when a user marks a document as finished) and **Always** (validation is performed when a user marks a document as finished). Mind that changing the document state via the Monitoring page does not trigger a validation. Also, problematic annotations are highlighted using an error marker in the annotation interface. **NOTE:** the default setting for new projects/layers is **Always**, but for any existing projects or for projects imported from versions of {product-name} where this setting did not exist yet, the setting is initialized with **Never**.
+| When pre-annotated data is imported or when the  behaviors settings are changed, it is possible that annotations exist which are not conforming to the current behavior settings. This setting controls when a validation of annotations is performed. Possible settings are **Never** (no validation when a user marks a document as finished) and **Always** (validation is performed when a user marks a document as finished). Mind that changing the document state via the Monitoring page does not trigger a validation. Also, problematic annotations are highlighted using an error marker in the annotation interface. **NOTE:** the default setting for new projects/layers is **Always**, but for any existing projects or for projects imported from versions of {product-name} where this setting did not exist yet, the setting is initialized with **Never**.
 
 | Granularity
 _(span, chain)_
@@ -213,6 +193,8 @@ can be annotated.
 _(chain)_
 | Controls what happens when two chains are connected with each other. If this option is *disabled*, then the two entire chains will be merged into one large chain. Links between spans will be changed so that each span connects to the closest following span -  no arc labels are displayed. If this option is *enabled*, then the chains will be split if necessary at the source and target points, reconnecting the spans such that exactly the newly created connection is made - arc labels are available.
 |====
+
+image::layer_behaviours.png[align="center"]
 
 [[sect_projects_layers_features]]
 == Features
@@ -233,19 +215,19 @@ The following feature types are supported.
 |====
 | Type | Description
 
-| uima.cas.String
+| `uima.cas.String`
 | Textual feature that can optionally be controlled by a tagset. It is rendered as a text field or as a combobox if a tagset is defined.
 
-| uima.cas.Boolean
+| `uima.cas.Boolean`
 | Boolean feature that can be true or false and is rendered as a checkbox.
 
-| uima.cas.Integer
+| `uima.cas.Integer`
 | Numeric feature for integer numbers.
 
-| uima.cas.Float
+| `uima.cas.Float`
 | Numeric feature for decimal numbers.
 
-| uima.tcas.Annotation
+| `uima.tcas.Annotation`
 _(Span layers)_
 | Link feature that can point to any arbitrary span annotation
 
@@ -389,11 +371,26 @@ only if the associated tagset does not allow annotators to add new tags.
 |====
 | Property | Description
 
+| Role labels
+| Allows users to add a role label to each slot when linking anntations. 
+  If disabled the UI labels of annotations will be displayed instead of role labels. 
+  This property is enabled by default.
+
+| Multiplicity
+| Determines how links are compared to each other e.g. when calulating agreement or when merging annotations during curation.
+  Use *Target can be linked in multiple different roles* if a link target can appear in multiple roles with respect to the same source span.
+  In this mode, if an annotator links multiple targets using the same role, the links will be considered stacked and not be not auto-merged by curation or used for agreement calculation.
+  Use *Target should be linked in only one role* if you expect that a link target should only appear in a single roles with respect to the same source span.
+  In this mode, if an annotator links the same target in multiple roles, the links will be considered stacked and not be auto-merged by curation or used for agreement calculation.
+  Use *Target can be linked in multiple roles (same or different)* if you expect that a link target should be linked multiple times with different roles as well as different targets can be linked with the same role.
+  In this mode, there is no stacking.
+
 | Tagset
 | The tagset controlling the possible values for the link roles.
 
-| Enable Role Labels
-| Allows users to add a role label to each slot when linking anntations. If disabled the UI labels of annotations will be displayed instead of role labels. This property is enabled by default.
+| Default slots
+| For each of the specificed roles, an empty slot will be visible in the UI. 
+  This can save the annotator time to create a slot for frequently used slots.
 |====
 
 === Key bindings

@@ -1,0 +1,71 @@
+﻿<!DOCTYPE html>
+<!--
+  Licensed to the Technische Universität Darmstadt under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The Technische Universität Darmstadt 
+  licenses this file to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.
+   
+  http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<html xmlns:wicket="http://wicket.apache.org">
+<wicket:head>
+  <style>
+    .log-table thead { background: var(--bs-body-bg); position: sticky; top: 0; z-index: 1; }
+    .log-table thead td, .document-table thead th{ border-bottom-width: 0 !important; }
+    .log-table tr td:nth-child(1), .log-table tr th:nth-child(1) { text-align: center; }
+    .log-table tr td:nth-child(2), .log-table tr th:nth-child(2) { white-space: nowrap; }
+    .log-table tr td:nth-child(3), .log-table tr th:nth-child(3) { text-align: left; width: 100% }
+  </style>
+</wicket:head>
+<body>
+  <wicket:extend>
+    <div class="flex-content flex-v-container">
+      <div class="m-3 d-flex flex-row align-items-center">
+        <button wicket:id="refresh" class="btn btn-primary">
+          <i class="fas fa-sync-alt me-2"></i> Refresh
+        </button>
+        
+        <div class="form-check form-switch ms-3">
+          <input class="form-check-input" type="checkbox" role="switch" wicket:id="autoRefresh">
+          <label class="form-check-label" wicket:for="autoRefresh">Auto-refresh</label>
+        </div>
+      </div>
+      <div wicket:id="messagesContainer" class="flex-content scrolling ">
+        <table class="table table-sm table-hover table-striped log-table">
+          <thead>
+            <tr class="headers">
+              <td></td>
+              <td>Time</td>
+              <td>Message</td>
+            </tr>
+          </thead>
+          <tbody>
+            <tr wicket:id="messages">
+              <td><i wicket:id="level"/></td>
+              <td><span wicket:id="timestamp" class="badge text-bg-secondary"/></td>
+              <td>
+                <div wicket:id="message"></div>
+                <details wicket:enclosure="stackTrace">
+                  <summary><span wicket:id="errorMessage"/></summary>
+                  <div class="fit-child-snug scrolling">
+                    <small wicket:id="stackTrace" class="font-monospace"/>
+                  </div>
+                </details>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </wicket:extend>
+</body>
+</html>

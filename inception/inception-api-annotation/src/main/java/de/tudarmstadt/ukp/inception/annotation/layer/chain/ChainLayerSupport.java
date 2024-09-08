@@ -37,6 +37,7 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 
+import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.annotation.layer.behaviors.LayerBehaviorRegistry;
@@ -61,8 +62,8 @@ public class ChainLayerSupport
     public static final String FEATURE_NAME_NEXT = "next";
     public static final String FEATURE_NAME_REFERENCE_RELATION = "referenceRelation";
     public static final String FEATURE_NAME_REFERENCE = "referenceType";
-    private static final String TYPE_SUFFIX_LINK = "Link";
-    private static final String TYPE_SUFFIX_CHAIN = "Chain";
+    public static final String TYPE_SUFFIX_LINK = "Link";
+    public static final String TYPE_SUFFIX_CHAIN = "Chain";
 
     private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
@@ -71,6 +72,7 @@ public class ChainLayerSupport
 
     private final ApplicationEventPublisher eventPublisher;
     private final LayerBehaviorRegistry layerBehaviorsRegistry;
+    private final ConstraintsService constraintsService;
 
     private String layerSupportId;
     private List<LayerType> types;
@@ -78,11 +80,12 @@ public class ChainLayerSupport
     @Autowired
     public ChainLayerSupport(FeatureSupportRegistry aFeatureSupportRegistry,
             ApplicationEventPublisher aEventPublisher,
-            LayerBehaviorRegistry aLayerBehaviorsRegistry)
+            LayerBehaviorRegistry aLayerBehaviorsRegistry, ConstraintsService aConstraintsService)
     {
         super(aFeatureSupportRegistry);
         eventPublisher = aEventPublisher;
         layerBehaviorsRegistry = aLayerBehaviorsRegistry;
+        constraintsService = aConstraintsService;
     }
 
     @Override
@@ -121,7 +124,8 @@ public class ChainLayerSupport
     {
         return new ChainAdapter(getLayerSupportRegistry(), featureSupportRegistry, eventPublisher,
                 aLayer, aFeatures,
-                layerBehaviorsRegistry.getLayerBehaviors(this, SpanLayerBehavior.class));
+                layerBehaviorsRegistry.getLayerBehaviors(this, SpanLayerBehavior.class),
+                constraintsService);
     }
 
     @Override
@@ -187,5 +191,16 @@ public class ChainLayerSupport
         }
 
         return Collections.emptyList();
+    }
+
+    @Override
+    public boolean isDeletable(AnnotationFeature aFeature)
+    {
+        if (Set.of(FEATURE_NAME_FIRST, FEATURE_NAME_NEXT, FEATURE_NAME_REFERENCE,
+                FEATURE_NAME_REFERENCE_RELATION).contains(aFeature.getName())) {
+            return false;
+        }
+
+        return true;
     }
 }

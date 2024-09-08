@@ -14,7 +14,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-== Ollama
+[[sect_imls_ollama]]
+== 🧪 Ollama
 
 ====
 CAUTION: Experimental feature. To use this functionality, you need to enable it first by adding `recommender.ollama.enabled=true` to the `settings.properties` file (see the <<admin-guide.adoc#sect_settings, Admin Guide>>).
@@ -22,15 +23,15 @@ CAUTION: Experimental feature. To use this functionality, you need to enable it 
 
 This recommender allows to obtain annotation suggestions using large language models (LLMs) supported by link:https://ollama.ai[Ollama]. In order to use it, you first need to install Ollama and run it. 
 
-.Installing and running Ollama on macOS using homebrew
+.Installing and running Mistral using Ollama on macOS via homebrew
 [source,sh]
 ----
 $ brew install ollama
 $ ollama pull mistral
-$ ollama serve mistral
+$ ollama serve
 ----
 
-By default, Ollama runs on `http://localhost:11434/` and {product-name} uses this as the default endpoint for communicating with it. If you run Ollama on a different host (e.g. one that has a more powerful GPU) or port, you can adjust this URL in the recommdener settings.
+By default, Ollama runs on `http://localhost:11434/` and {product-name} uses this as the default endpoint for communicating with it. If you run Ollama on a different host (e.g. one that has a more powerful GPU) or port, you can adjust this URL in the recommender settings.
 
 If {product-name} can successfully connect to Ollama, the **model** combo-box will offer all models that are available on the respective endpoint. If you want to use a model that is not listed here, you first need to `ollama pull` it.
 

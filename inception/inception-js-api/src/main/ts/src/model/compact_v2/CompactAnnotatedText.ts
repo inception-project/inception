@@ -41,12 +41,16 @@ export function unpackCompactAnnotatedText (raw: CompactAnnotatedText): Annotate
 
   for (const span of raw.spans || []) {
     const cookedSpan = unpackCompactSpan(cooked, span)
-    cooked.spans.set(cookedSpan.vid, cookedSpan)
+    if (cookedSpan) {
+      cooked.spans.set(cookedSpan.vid, cookedSpan)
+    }
   }
 
   for (const rel of raw.relations || []) {
     const cookedRel = unpackCompactRelation(cooked, rel)
-    cooked.relations.set(cookedRel.vid, cookedRel)
+    if (cookedRel) {
+      cooked.relations.set(cookedRel.vid, cookedRel)
+    }
   }
 
   const annotationMarkers = raw.annotationMarkers?.map(unpackCompactAnnotationMarker)

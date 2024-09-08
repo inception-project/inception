@@ -36,14 +36,12 @@ import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.revieweditor.event.SelectAnnotationEvent;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
@@ -135,22 +133,17 @@ public class SpanAnnotationPanel
 
     private List<FeatureState> listFeatures(FeatureStructure aFs, AnnotationLayer aLayer, VID aVid)
     {
-
-        TypeAdapter adapter = annotationService.getAdapter(aLayer);
+        var adapter = annotationService.getAdapter(aLayer);
 
         // Populate from feature structure
         List<FeatureState> featureStates = new ArrayList<>();
-        for (AnnotationFeature feature : annotationService.listAnnotationFeature(aLayer)) {
-            if (!feature.isEnabled()) {
-                continue;
-            }
-
+        for (var feature : annotationService.listEnabledFeatures(aLayer)) {
             Serializable value = null;
             if (aFs != null) {
                 value = adapter.getFeatureValue(feature, aFs);
             }
 
-            FeatureState featureState = new FeatureState(aVid, feature, value);
+            var featureState = new FeatureState(aVid, feature, value);
             featureStates.add(featureState);
             featureState.tagset = annotationService
                     .listTagsReorderable(featureState.feature.getTagset());

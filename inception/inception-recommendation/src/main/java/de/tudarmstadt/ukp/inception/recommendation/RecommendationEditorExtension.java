@@ -34,7 +34,6 @@ import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.jcas.tcas.Annotation;
-import org.apache.wicket.Page;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
 import org.slf4j.Logger;
@@ -63,7 +62,6 @@ import de.tudarmstadt.ukp.inception.recommendation.api.event.AjaxRecommendationA
 import de.tudarmstadt.ukp.inception.recommendation.api.event.AjaxRecommendationRejectedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.api.event.PredictionsSwitchedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAutoConfiguration;
@@ -202,6 +200,7 @@ public class RecommendationEditorExtension
 
         // Set selection to the accepted annotation and select it and load it into the detail editor
         aState.getSelection().set(adapter.select(VID.of(annotation), annotation));
+        page.getAnnotationActionHandler().actionSelect(aTarget);
 
         // Send a UI event that the suggestion has been accepted
         page.send(page, BREADTH, new AjaxRecommendationAcceptedEvent(aTarget, aState, aVID));
@@ -209,10 +208,10 @@ public class RecommendationEditorExtension
 
     private Optional<AnnotationSuggestion> getPrediction(AnnotatorState aState, VID aRecVid)
     {
-        Predictions predictions = recommendationService.getPredictions(aState.getUser(),
+        var predictions = recommendationService.getPredictions(aState.getUser(),
                 aState.getProject());
-        SourceDocument document = aState.getDocument();
-        Optional<AnnotationSuggestion> prediction = predictions //
+        var document = aState.getDocument();
+        var prediction = predictions //
                 .getPredictionByVID(document, aRecVid);
         return prediction;
     }
@@ -254,7 +253,7 @@ public class RecommendationEditorExtension
                 new AjaxRecommendationRejectedEvent(aTarget, aState, aVID));
 
         // Trigger a re-rendering of the document
-        Page page = aTarget.getPage();
+        var page = aTarget.getPage();
         page.send(page, BREADTH, new SelectionChangedEvent(aTarget));
     }
 
@@ -264,8 +263,8 @@ public class RecommendationEditorExtension
         log.trace("renderRequested()");
 
         // do not show predictions during curation or when viewing others' work
-        String sessionOwner = userService.getCurrentUsername();
-        if (!aState.getMode().equals(ANNOTATION)) {
+        var sessionOwner = userService.getCurrentUsername();
+        if (aState.getMode() != ANNOTATION) {
             return;
         }
 
@@ -273,8 +272,7 @@ public class RecommendationEditorExtension
         // at the moment. For another, even if we had it, it would be quite annoying to the user
         // if the UI kept updating itself without any the user expecting an update. The user does
         // expect an update when she makes some interaction, so we piggy-back on this expectation.
-        boolean switched = recommendationService.switchPredictions(sessionOwner,
-                aState.getProject());
+        var switched = recommendationService.switchPredictions(sessionOwner, aState.getProject());
         log.trace("switchPredictions() returned {}", switched);
 
         if (!switched) {
@@ -283,8 +281,8 @@ public class RecommendationEditorExtension
 
         // Notify other UI components on the page about the prediction switch such that they can
         // also update their state to remain in sync with the new predictions
-        applicationEventPublisher
-                .publishEvent(new PredictionsSwitchedEvent(this, sessionOwner, aState));
+        applicationEventPublisher.publishEvent(
+                new PredictionsSwitchedEvent(this, sessionOwner, aState.getDocument()));
 
         aTarget.appendJavaScript("document.body.classList.remove('"
                 + RecommenderActionBarPanel.STATE_PREDICTIONS_AVAILABLE + "')");
@@ -324,14 +322,14 @@ public class RecommendationEditorExtension
         var detailGroups = new ArrayList<VLazyDetailGroup>();
         for (var aFeature : annotationService.listAnnotationFeature(aLayer)) {
             if (aFeature.getLinkMode() == LinkMode.WITH_ROLE) {
-                return emptyList();
+                continue;
             }
 
             var vid = VID.parse(aVid.getExtensionPayload());
             var representative = predictions.getPredictionByVID(aDocument, vid);
             if (representative.isEmpty()
                     || !representative.get().getFeature().equals(aFeature.getName())) {
-                return emptyList();
+                continue;
             }
 
             var sao = representative.get();
@@ -343,7 +341,7 @@ public class RecommendationEditorExtension
                     .findFirst();
 
             if (group.isEmpty()) {
-                return emptyList();
+                continue;
             }
 
             var pref = recommendationService.getPreferences(aUser, aDocument.getProject());

@@ -17,8 +17,16 @@
  */
 package de.tudarmstadt.ukp.inception.ui.core.dashboard.projectlist;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+import de.tudarmstadt.ukp.inception.preferences.PreferenceValue;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ProjectListSortState
+    implements PreferenceValue
 {
+    private static final long serialVersionUID = -847204448379428601L;
+
     public final ProjectListSortStrategy strategy;
 
     public ProjectListSortState()

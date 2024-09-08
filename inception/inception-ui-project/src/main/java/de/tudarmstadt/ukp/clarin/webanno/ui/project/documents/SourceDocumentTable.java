@@ -26,6 +26,7 @@ import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visible
 import static java.time.Duration.ofMillis;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
+import static org.apache.wicket.RuntimeConfigurationType.DEVELOPMENT;
 
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
@@ -67,6 +68,7 @@ import de.tudarmstadt.ukp.inception.annotation.filters.SourceDocumentFilterState
 import de.tudarmstadt.ukp.inception.annotation.filters.SourceDocumentStateFilterPanel;
 import de.tudarmstadt.ukp.inception.bootstrap.BootstrapModalDialog;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentStorageService;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.support.wicket.AjaxDownloadLink;
@@ -90,6 +92,7 @@ public class SourceDocumentTable
     private static final String CID_TOGGLE_BULK_CHANGE = "toggleBulkChange";
 
     private @SpringBean DocumentService documentService;
+    private @SpringBean DocumentStorageService documentStorageService;
     private @SpringBean DocumentImportExportService importExportService;
 
     private SourceDocumentTableDataProvider dataProvider;
@@ -101,7 +104,7 @@ public class SourceDocumentTable
     private WebMarkupContainer bulkActionDropdownButton;
 
     private boolean bulkChangeMode = false;
-    private SourceDocumentSelectColumn selectColumns;
+    private SourceDocumentSelectColumn selectColumn;
 
     public SourceDocumentTable(String aId, IModel<List<SourceDocument>> aModel)
     {
@@ -113,8 +116,8 @@ public class SourceDocumentTable
                 .map(docs -> docs.stream().map(SourceDocumentTableRow::new).collect(toList())));
 
         var columns = new ArrayList<IColumn<SourceDocumentTableRow, SourceDocumentTableSortKeys>>();
-        selectColumns = new SourceDocumentSelectColumn(this, dataProvider);
-        columns.add(selectColumns);
+        selectColumn = new SourceDocumentSelectColumn(this, dataProvider);
+        columns.add(selectColumn);
         columns.add(new SymbolLambdaColumn<>(new ResourceModel("DocumentState"), STATE,
                 $ -> $.getDocument().getState()));
         columns.add(new LambdaColumn<>(new ResourceModel("DocumentName"), NAME,
@@ -129,6 +132,10 @@ public class SourceDocumentTable
                 $ -> renderDate($.getDocument().getCreated())));
         columns.add(new SourceDocumentTableDeleteActionColumn(this));
         columns.add(new SourceDocumentTableExportActionColumn(this));
+        if (getApplication().getConfigurationType() == DEVELOPMENT) {
+            columns.add(new LambdaColumn<>(new ResourceModel("id"), FORMAT,
+                    $ -> $.getDocument().getId()));
+        }
 
         table = new DataTable<>(CID_DATA_TABLE, columns, dataProvider, 100);
         table.setOutputMarkupId(true);
@@ -178,7 +185,7 @@ public class SourceDocumentTable
     private void actionToggleBulkChange(AjaxRequestTarget aTarget)
     {
         bulkChangeMode = !bulkChangeMode;
-        selectColumns.setVisible(bulkChangeMode);
+        selectColumn.setVisible(bulkChangeMode);
         dataProvider.refresh();
         aTarget.add(this);
     }
@@ -199,19 +206,26 @@ public class SourceDocumentTable
         return dateFormat.format(aDate);
     }
 
-    private String renderDocumentSize(SourceDocument aDocumnent)
+    private String renderDocumentSize(SourceDocument aDocument)
     {
-        return FileUtils.byteCountToDisplaySize(
-                FileUtils.sizeOf(documentService.getSourceDocumentFile(aDocumnent)));
+        try {
+            return FileUtils.byteCountToDisplaySize(
+                    documentStorageService.getSourceDocumentFileSize(aDocument));
+        }
+        catch (Exception e) {
+            LOG.error("Unable to get size of source document file for {}", aDocument, e);
+            return "error";
+        }
     }
 
     private String renderInitialCasSize(SourceDocument aDocument)
     {
         try {
-            return documentService.getInitialCasFileSize(aDocument)
-                    .map(FileUtils::byteCountToDisplaySize).orElse("unknown");
+            return documentService.getInitialCasFileSize(aDocument) //
+                    .map(FileUtils::byteCountToDisplaySize) //
+                    .orElse("unknown");
         }
-        catch (IOException e) {
+        catch (Exception e) {
             LOG.error("Unable to get size of INITIAL CAS file for {}", aDocument, e);
             return "error";
         }
@@ -371,5 +385,10 @@ public class SourceDocumentTable
     DocumentService getDocumentService()
     {
         return documentService;
+    }
+
+    DocumentStorageService getDocumentStorageService()
+    {
+        return documentStorageService;
     }
 }

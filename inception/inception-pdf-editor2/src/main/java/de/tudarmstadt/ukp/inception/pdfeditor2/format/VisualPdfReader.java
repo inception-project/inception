@@ -18,12 +18,12 @@
 package de.tudarmstadt.ukp.inception.pdfeditor2.format;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.commons.io.IOUtils;
+import org.apache.pdfbox.Loader;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.collection.CollectionException;
 import org.apache.uima.fit.descriptor.ConfigurationParameter;
@@ -58,14 +58,14 @@ public class VisualPdfReader
     @Override
     public void getNext(JCas aJCas) throws IOException, CollectionException
     {
-        Resource resource = nextFile();
+        var resource = nextFile();
         initCas(aJCas, resource, null);
 
-        StringWriter textBuffer = new StringWriter();
+        var textBuffer = new StringWriter();
         VModel vModel;
 
-        try (InputStream is = resource.getInputStream()) {
-            try (PDDocument doc = PDDocument.load(is)) {
+        try (var is = resource.getInputStream()) {
+            try (var doc = Loader.loadPDF(IOUtils.toByteArray(is))) {
                 var stripper = new VisualPDFTextStripper();
                 stripper.setSortByPosition(sortByPosition);
                 stripper.writeText(doc, textBuffer);
@@ -80,25 +80,25 @@ public class VisualPdfReader
 
     public static void visualModelToCas(VModel aVModel, JCas aJCas)
     {
-        for (VPage vPage : aVModel.getPages()) {
-            PdfPage pdfPage = new PdfPage(aJCas, vPage.getBegin(), vPage.getEnd());
+        for (var vPage : aVModel.getPages()) {
+            var pdfPage = new PdfPage(aJCas, vPage.getBegin(), vPage.getEnd());
             pdfPage.setPageNumber(vPage.getIndex());
             pdfPage.setWidth(vPage.getWidth());
             pdfPage.setHeight(vPage.getHeight());
             pdfPage.addToIndexes();
 
-            for (VChunk vChunk : vPage.getChunks()) {
-                FloatArray glyphArray = new FloatArray(aJCas, vChunk.getGlyphs().size());
-                IntegerArray charArray = new IntegerArray(aJCas, vChunk.getGlyphs().size());
+            for (var vChunk : vPage.getChunks()) {
+                var glyphArray = new FloatArray(aJCas, vChunk.getGlyphs().size());
+                var charArray = new IntegerArray(aJCas, vChunk.getGlyphs().size());
 
                 int i = 0;
-                for (VGlyph vGlyph : vChunk.getGlyphs()) {
+                for (var vGlyph : vChunk.getGlyphs()) {
                     charArray.set(i, vGlyph.getEnd() - vGlyph.getBegin());
                     glyphArray.set(i, vGlyph.getBase());
                     i++;
                 }
 
-                PdfChunk pdfChunk = new PdfChunk(aJCas, vChunk.getBegin(), vChunk.getEnd());
+                var pdfChunk = new PdfChunk(aJCas, vChunk.getBegin(), vChunk.getEnd());
                 pdfChunk.setD(vChunk.getDir());
                 pdfChunk.setX(vChunk.getX());
                 pdfChunk.setY(vChunk.getY());
@@ -114,8 +114,8 @@ public class VisualPdfReader
     public static VModel visualModelFromCas(CAS cas, List<PdfPage> pdfPages)
     {
         VModel vModel;
-        List<VPage> vPages = new ArrayList<>();
-        for (PdfPage pdfPage : pdfPages) {
+        var vPages = new ArrayList<VPage>();
+        for (var pdfPage : pdfPages) {
             var vChunks = new ArrayList<VChunk>();
             var coveredBy = cas.select(PdfChunk.class).coveredBy(pdfPage);
             for (var pdfChunk : coveredBy) {

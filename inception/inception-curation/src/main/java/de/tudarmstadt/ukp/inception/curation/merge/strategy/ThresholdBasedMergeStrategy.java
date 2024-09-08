@@ -22,7 +22,6 @@ import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.builder.ToStringStyle.SHORT_PREFIX_STYLE;
 
-import java.lang.invoke.MethodHandles;
 import java.util.Collections;
 import java.util.List;
 
@@ -30,15 +29,16 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.Configuration;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.ConfigurationSet;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.DiffResult;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.Configuration;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.ConfigurationSet;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.DiffResult;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.inception.curation.merge.CasMerge;
 
 public class ThresholdBasedMergeStrategy
     implements MergeStrategy
 {
-    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+    private static final Logger LOG = LoggerFactory.getLogger(CasMerge.class);
 
     public static final String BEAN_NAME = "thresholdBased";
 
@@ -72,25 +72,25 @@ public class ThresholdBasedMergeStrategy
     public List<Configuration> chooseConfigurationsToMerge(DiffResult aDiff, ConfigurationSet aCfgs,
             AnnotationLayer aLayer)
     {
-        int topRanksToConsider = aLayer.isAllowStacking() ? topRanks : 1;
+        var topRanksToConsider = aLayer.isAllowStacking() ? topRanks : 1;
 
-        List<Configuration> cfgsAboveUserThreshold = aCfgs.getConfigurations().stream() //
+        var cfgsAboveUserThreshold = aCfgs.getConfigurations().stream() //
                 .filter(cfg -> cfg.getCasGroupIds().size() >= userThreshold) //
                 .sorted(comparing((Configuration cfg) -> cfg.getCasGroupIds().size()).reversed()) //
-                .collect(toList());
+                .toList();
 
         if (cfgsAboveUserThreshold.isEmpty()) {
-            LOG.trace(" `-> Not merging as no configuration meets the user threshold [{}]",
-                    userThreshold);
+            LOG.trace(" `-> Not merging as no configuration meets the user threshold [{}] ({})",
+                    userThreshold, getClass().getSimpleName());
             return emptyList();
         }
 
-        double totalVotes = cfgsAboveUserThreshold.stream() //
+        var totalVotes = cfgsAboveUserThreshold.stream() //
                 .mapToDouble(cfg -> cfg.getCasGroupIds().size()) //
                 .sum();
 
-        double cutOffVotesByConfidence = confidenceThreshold * totalVotes;
-        double cutOffVotesByRank = cfgsAboveUserThreshold.get(
+        var cutOffVotesByConfidence = confidenceThreshold * totalVotes;
+        var cutOffVotesByRank = cfgsAboveUserThreshold.get(
                 (topRanksToConsider - 1) < cfgsAboveUserThreshold.size() ? (topRanksToConsider - 1)
                         : cfgsAboveUserThreshold.size() - 1)
                 .getCasGroupIds().size();

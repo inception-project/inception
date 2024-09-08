@@ -48,6 +48,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.util.FileSystemUtils;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
+import de.tudarmstadt.ukp.clarin.webanno.constraints.config.ConstraintsServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -83,6 +84,7 @@ import de.tudarmstadt.ukp.inception.workload.model.WorkloadManager;
         "de.tudarmstadt.ukp.inception", //
         "de.tudarmstadt.ukp.clarin.webanno" })
 @Import({ //
+        ConstraintsServiceAutoConfiguration.class, //
         TextFormatsAutoConfiguration.class, //
         DocumentServiceAutoConfiguration.class, //
         ProjectServiceAutoConfiguration.class, //
@@ -187,7 +189,7 @@ public class DynamicWorkloadExtensionImplTest
         ann.setState(AnnotationDocumentState.IN_PROGRESS);
         ann = documentService.getAnnotationDocument(ann.getDocument(), ann.getUser());
         ann.setTimestamp(new Date(Instant.now().plus(1, ChronoUnit.HOURS).toEpochMilli()));
-        documentService.createAnnotationDocument(ann);
+        documentService.createOrUpdateAnnotationDocument(ann);
 
         Optional<SourceDocument> nextDoc = dynamicWorkloadExtension.nextDocumentToAnnotate(project,
                 annotator);
@@ -227,7 +229,7 @@ public class DynamicWorkloadExtensionImplTest
         SourceDocument doc = createSourceDocument(aName);
         AnnotationDocument ann = new AnnotationDocument(annotator.getUsername(), doc);
         ann.setState(aState);
-        return documentService.createAnnotationDocument(ann);
+        return documentService.createOrUpdateAnnotationDocument(ann);
     }
 
     @SpringBootConfiguration

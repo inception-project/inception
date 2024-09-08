@@ -51,7 +51,7 @@ public class ActiveLearningSidebarIcon
 
         setOutputMarkupId(true);
 
-        queue(new Icon("icon", FontAwesome5IconType.robot_s));
+        queue(new Icon("icon", FontAwesome5IconType.font_s));
         queue(new Icon("badge", LoadableDetachableModel.of(this::getStateIcon))
                 .add(new ClassAttributeModifier()
                 {

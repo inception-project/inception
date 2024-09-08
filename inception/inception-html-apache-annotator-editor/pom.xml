@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>32.0-SNAPSHOT</version>
+    <version>34.0-SNAPSHOT</version>
   </parent>
   <artifactId>inception-html-apache-annotator-editor</artifactId>
   <name>INCEpTION - Editor - HTML + Apache Annotator (v${apache-annotator.version})</name>
@@ -71,11 +71,19 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-io-tei</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-io-xml</artifactId>
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-preferences</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-export-api</artifactId>
     </dependency>
     
     <dependency>
@@ -106,8 +114,8 @@
     </dependency>
 
     <dependency>
-      <groupId>javax.servlet</groupId>
-      <artifactId>javax.servlet-api</artifactId>
+      <groupId>jakarta.servlet</groupId>
+      <artifactId>jakarta.servlet-api</artifactId>
       <scope>provided</scope>
     </dependency>
   </dependencies>
@@ -123,6 +131,7 @@
               <!-- Inlined constants are required for building but cannot be detected afterwards  -->
               <ignoredDependency>de.tudarmstadt.ukp.inception.app:inception-io-html</ignoredDependency>
               <ignoredDependency>de.tudarmstadt.ukp.inception.app:inception-io-xml</ignoredDependency>
+              <ignoredDependency>de.tudarmstadt.ukp.inception.app:inception-io-tei</ignoredDependency>
             </ignoredDependencies>
           </configuration>
         </plugin>

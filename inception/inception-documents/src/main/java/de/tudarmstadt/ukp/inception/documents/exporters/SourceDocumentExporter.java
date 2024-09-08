@@ -20,22 +20,20 @@ package de.tudarmstadt.ukp.inception.documents.exporters;
 import static de.tudarmstadt.ukp.inception.project.api.ProjectService.DOCUMENT_FOLDER;
 import static de.tudarmstadt.ukp.inception.project.api.ProjectService.PROJECT_FOLDER;
 import static de.tudarmstadt.ukp.inception.project.api.ProjectService.SOURCE_FOLDER;
-import static de.tudarmstadt.ukp.inception.support.io.FastIOUtils.copy;
 import static java.lang.System.currentTimeMillis;
 import static java.nio.file.Files.createDirectories;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
-import static org.apache.commons.io.FileUtils.copyFileToDirectory;
-import static org.apache.commons.io.FileUtils.forceMkdir;
 import static org.apache.commons.lang3.time.DurationFormatUtils.formatDurationWords;
 
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
+import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.zip.ZipFile;
+import java.util.zip.ZipOutputStream;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -52,6 +50,7 @@ import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedSourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentStorageService;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
 import de.tudarmstadt.ukp.inception.documents.config.DocumentServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
@@ -69,18 +68,21 @@ public class SourceDocumentExporter
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private final DocumentService documentService;
+    private final DocumentStorageService documentStorageService;
     private final RepositoryProperties repositoryProperties;
 
     public SourceDocumentExporter(DocumentService aDocumentService,
+            DocumentStorageService aDocumentStorageService,
             RepositoryProperties aRepositoryProperties)
     {
         documentService = aDocumentService;
         repositoryProperties = aRepositoryProperties;
+        documentStorageService = aDocumentStorageService;
     }
 
     @Override
     public void exportData(FullProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
-            ExportedProject aExProject, File aStage)
+            ExportedProject aExProject, ZipOutputStream aStage)
         throws IOException, ProjectExportException, InterruptedException
     {
         exportSourceDocuments(aRequest.getProject(), aExProject);
@@ -109,12 +111,10 @@ public class SourceDocumentExporter
     }
 
     private void exportSourceDocumentContents(FullProjectExportRequest aRequest,
-            ProjectExportTaskMonitor aMonitor, ExportedProject aExProject, File aStage)
+            ProjectExportTaskMonitor aMonitor, ExportedProject aExProject, ZipOutputStream aStage)
         throws IOException, ProjectExportException, InterruptedException
     {
         var project = aRequest.getProject();
-        var sourceDocumentDir = new File(aStage, SOURCE_FOLDER);
-        forceMkdir(sourceDocumentDir);
         // Get all the source documents from the project
         var documents = documentService.listSourceDocuments(project);
         int i = 1;
@@ -125,8 +125,14 @@ public class SourceDocumentExporter
             }
 
             try {
-                var documentFile = documentService.getSourceDocumentFile(sourceDocument);
-                copyFileToDirectory(documentFile, sourceDocumentDir);
+                ProjectExporter.writeEntry(aStage, SOURCE_FOLDER + "/" + sourceDocument.getName(),
+                        os -> {
+                            try (var is = Files.newInputStream(documentStorageService
+                                    .getSourceDocumentFile(sourceDocument).toPath())) {
+                                is.transferTo(os);
+                            }
+                        });
+
                 aMonitor.setProgress((int) Math.ceil(((double) i) / documents.size() * 10.0));
                 LOG.info("Exported content for source document {}/{}: {} in {}", i,
                         documents.size(), sourceDocument, project);
@@ -232,8 +238,8 @@ public class SourceDocumentExporter
                 }
 
                 var sourceDocument = docs.get(fileName);
-                var sourceFilePath = documentService.getSourceDocumentFile(sourceDocument);
-                copy(zip.getInputStream(entry), sourceFilePath);
+                documentStorageService.writeSourceDocumentFile(sourceDocument,
+                        zip.getInputStream(entry));
 
                 n++;
                 LOG.info("Imported content for source document {}/{}: {} in {}", n, docs.size(),

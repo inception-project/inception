@@ -22,6 +22,7 @@ import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.RELATION_TYPE;
 import static de.tudarmstadt.ukp.inception.support.uima.AnnotationBuilder.buildAnnotation;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
+import static org.apache.uima.util.CasCreationUtils.mergeTypeSystems;
 
 import java.io.File;
 import java.io.IOException;
@@ -34,16 +35,12 @@ import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
-import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.fit.factory.TypeSystemDescriptionFactory;
 import org.apache.uima.jcas.JCas;
-import org.apache.uima.resource.metadata.TypeDescription;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.uima.resource.metadata.impl.TypeSystemDescription_impl;
-import org.apache.uima.util.CasCreationUtils;
 import org.dkpro.core.io.conll.Conll2006Reader;
 import org.dkpro.core.io.xmi.XmiReader;
 
@@ -63,18 +60,20 @@ public class CurationTestUtils
 
     public static JCas loadWebAnnoTsv3(String aPath) throws UIMAException, IOException
     {
-        CollectionReader reader = createReader(WebannoTsv3XReader.class,
+        var reader = createReader( //
+                WebannoTsv3XReader.class, //
                 WebannoTsv3XReader.PARAM_SOURCE_LOCATION, "src/test/resources/" + aPath);
-        JCas jcas = JCasFactory.createJCas();
+        var jcas = JCasFactory.createJCas();
         reader.getNext(jcas.getCas());
         return jcas;
     }
 
     public static JCas loadWebAnnoTsv3(File aPath) throws UIMAException, IOException
     {
-        CollectionReader reader = createReader(WebannoTsv3XReader.class,
+        var reader = createReader( //
+                WebannoTsv3XReader.class, //
                 WebannoTsv3XReader.PARAM_SOURCE_LOCATION, aPath);
-        JCas jcas = JCasFactory.createJCas();
+        var jcas = JCasFactory.createJCas();
         reader.getNext(jcas.getCas());
         return jcas;
     }
@@ -98,7 +97,7 @@ public class CurationTestUtils
         Map<String, List<CAS>> casByUser = new LinkedHashMap<>();
         int n = 1;
         for (String path : aPaths) {
-            CAS cas = readWebAnnoTSV(path, aTypes);
+            var cas = readWebAnnoTSV(path, aTypes);
             casByUser.put("user" + n, asList(cas));
             n++;
         }
@@ -110,8 +109,8 @@ public class CurationTestUtils
     {
         Map<String, CAS> casByUser = new LinkedHashMap<>();
         int n = 1;
-        for (String path : aPaths) {
-            CAS cas = readXMI(path, aTypes);
+        for (var path : aPaths) {
+            var cas = readXMI(path, aTypes);
             casByUser.put("user" + n, cas);
             n++;
         }
@@ -120,10 +119,11 @@ public class CurationTestUtils
 
     public static CAS readConll2006(String aPath) throws UIMAException, IOException
     {
-        CollectionReader reader = createReader(Conll2006Reader.class,
+        var reader = createReader( //
+                Conll2006Reader.class, //
                 Conll2006Reader.PARAM_SOURCE_LOCATION, "src/test/resources/" + aPath);
 
-        CAS jcas = JCasFactory.createJCas().getCas();
+        var jcas = JCasFactory.createJCas().getCas();
 
         reader.getNext(jcas);
 
@@ -133,16 +133,16 @@ public class CurationTestUtils
     public static CAS readWebAnnoTSV(String aPath, TypeSystemDescription aType)
         throws UIMAException, IOException
     {
-        CollectionReader reader = createReader(WebannoTsv2Reader.class,
+        var reader = createReader( //
+                WebannoTsv2Reader.class, //
                 WebannoTsv2Reader.PARAM_SOURCE_LOCATION, "src/test/resources/" + aPath);
         CAS cas;
         if (aType != null) {
-            TypeSystemDescription builtInTypes = TypeSystemDescriptionFactory
-                    .createTypeSystemDescription();
+            var builtInTypes = TypeSystemDescriptionFactory.createTypeSystemDescription();
             List<TypeSystemDescription> allTypes = new ArrayList<>();
             allTypes.add(builtInTypes);
             allTypes.add(aType);
-            cas = JCasFactory.createJCas(CasCreationUtils.mergeTypeSystems(allTypes)).getCas();
+            cas = JCasFactory.createJCas(mergeTypeSystems(allTypes)).getCas();
         }
         else {
             cas = JCasFactory.createJCas().getCas();
@@ -156,8 +156,9 @@ public class CurationTestUtils
     public static CAS readXMI(String aPath, TypeSystemDescription aType)
         throws UIMAException, IOException
     {
-        CollectionReader reader = createReader(XmiReader.class, XmiReader.PARAM_SOURCE_LOCATION,
-                "src/test/resources/" + aPath);
+        var reader = createReader( //
+                XmiReader.class, //
+                XmiReader.PARAM_SOURCE_LOCATION, "src/test/resources/" + aPath);
         CAS jcas;
         if (aType != null) {
             TypeSystemDescription builtInTypes = TypeSystemDescriptionFactory
@@ -165,7 +166,7 @@ public class CurationTestUtils
             List<TypeSystemDescription> allTypes = new ArrayList<>();
             allTypes.add(builtInTypes);
             allTypes.add(aType);
-            jcas = JCasFactory.createJCas(CasCreationUtils.mergeTypeSystems(allTypes)).getCas();
+            jcas = JCasFactory.createJCas(mergeTypeSystems(allTypes)).getCas();
         }
         else {
             jcas = JCasFactory.createJCas().getCas();
@@ -180,67 +181,67 @@ public class CurationTestUtils
     {
         List<TypeSystemDescription> typeSystems = new ArrayList<>();
 
-        TypeSystemDescription tsd = new TypeSystemDescription_impl();
+        var tsd = new TypeSystemDescription_impl();
 
         // Link type
-        TypeDescription linkTD = tsd.addType(LINK_TYPE, "", CAS.TYPE_NAME_TOP);
+        var linkTD = tsd.addType(LINK_TYPE, "", CAS.TYPE_NAME_TOP);
         linkTD.addFeature(ROLE_FEATURE, "", CAS.TYPE_NAME_STRING);
         linkTD.addFeature(TARGET_FEATURE, "", CAS.TYPE_NAME_ANNOTATION);
 
         // Link host
-        TypeDescription hostTD = tsd.addType(HOST_TYPE, "", CAS.TYPE_NAME_ANNOTATION);
+        var hostTD = tsd.addType(HOST_TYPE, "", CAS.TYPE_NAME_ANNOTATION);
         hostTD.addFeature(LINKS_FEATURE, "", CAS.TYPE_NAME_FS_ARRAY, linkTD.getName(), false);
 
         typeSystems.add(tsd);
         typeSystems.add(TypeSystemDescriptionFactory.createTypeSystemDescription());
 
-        return CasCreationUtils.mergeTypeSystems(typeSystems);
+        return mergeTypeSystems(typeSystems);
     }
 
     public static TypeSystemDescription createMultiLinkWithRoleTestTypeSystem(String... aFeatures)
         throws Exception
     {
-        List<TypeSystemDescription> typeSystems = new ArrayList<>();
+        var typeSystems = new ArrayList<TypeSystemDescription>();
 
-        TypeSystemDescription tsd = new TypeSystemDescription_impl();
+        var tsd = new TypeSystemDescription_impl();
 
         // Link type
-        TypeDescription linkTD = tsd.addType(LINK_TYPE, "", CAS.TYPE_NAME_TOP);
+        var linkTD = tsd.addType(LINK_TYPE, "", CAS.TYPE_NAME_TOP);
         linkTD.addFeature(ROLE_FEATURE, "", CAS.TYPE_NAME_STRING);
         linkTD.addFeature(TARGET_FEATURE, "", CAS.TYPE_NAME_ANNOTATION);
 
         // Link host
-        TypeDescription hostTD = tsd.addType(HOST_TYPE, "", CAS.TYPE_NAME_ANNOTATION);
+        var hostTD = tsd.addType(HOST_TYPE, "", CAS.TYPE_NAME_ANNOTATION);
         hostTD.addFeature(LINKS_FEATURE, "", CAS.TYPE_NAME_FS_ARRAY, linkTD.getName(), false);
-        for (String feature : aFeatures) {
+        for (var feature : aFeatures) {
             hostTD.addFeature(feature, "", CAS.TYPE_NAME_STRING);
         }
 
         typeSystems.add(tsd);
         typeSystems.add(TypeSystemDescriptionFactory.createTypeSystemDescription());
 
-        return CasCreationUtils.mergeTypeSystems(typeSystems);
+        return mergeTypeSystems(typeSystems);
     }
 
     public static TypeSystemDescription createCustomTypeSystem(String aType, String aTypeName,
             List<String> aFeatures, String aAttacheType)
         throws Exception
     {
-        TypeSystemDescription type = new TypeSystemDescription_impl();
+        var type = new TypeSystemDescription_impl();
         if (SpanLayerSupport.TYPE.equals(aType)) {
-            TypeDescription td = type.addType(aTypeName, "", CAS.TYPE_NAME_ANNOTATION);
-            for (String feature : aFeatures) {
+            var td = type.addType(aTypeName, "", CAS.TYPE_NAME_ANNOTATION);
+            for (var feature : aFeatures) {
                 td.addFeature(feature, "", CAS.TYPE_NAME_STRING);
             }
 
         }
         else if (aType.equals(RELATION_TYPE)) {
-            TypeDescription td = type.addType(aTypeName, "", CAS.TYPE_NAME_ANNOTATION);
+            var td = type.addType(aTypeName, "", CAS.TYPE_NAME_ANNOTATION);
 
             td.addFeature(WebAnnoConst.FEAT_REL_TARGET, "", aAttacheType);
             td.addFeature(WebAnnoConst.FEAT_REL_SOURCE, "", aAttacheType);
 
-            for (String feature : aFeatures) {
+            for (var feature : aFeatures) {
                 td.addFeature(feature, "", "uima.cas.String");
             }
         }
@@ -270,11 +271,11 @@ public class CurationTestUtils
     public static FeatureStructure makeLinkFS(JCas aCas, String aRole, int aTargetBegin,
             int aTargetEnd)
     {
-        Token token1 = new Token(aCas, aTargetBegin, aTargetEnd);
+        var token1 = new Token(aCas, aTargetBegin, aTargetEnd);
         token1.addToIndexes();
 
-        Type linkType = aCas.getTypeSystem().getType(LINK_TYPE);
-        FeatureStructure linkA1 = aCas.getCas().createFS(linkType);
+        var linkType = aCas.getTypeSystem().getType(LINK_TYPE);
+        var linkA1 = aCas.getCas().createFS(linkType);
         linkA1.setStringValue(linkType.getFeatureByBaseName(ROLE_FEATURE), aRole);
         linkA1.setFeatureValue(linkType.getFeatureByBaseName(TARGET_FEATURE), token1);
         aCas.getCas().addFsToIndexes(linkA1);

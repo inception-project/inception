@@ -17,12 +17,18 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.agreement.results.unitizing;
 
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
+import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CLICK_EVENT;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
+import static java.lang.String.format;
+import static org.apache.wicket.event.Broadcast.BUBBLE;
 
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.wicket.ajax.AjaxEventBehavior;
+import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.AttributeAppender;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
@@ -41,7 +47,9 @@ import org.slf4j.LoggerFactory;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.components.PopoverConfig;
 import de.agilecoders.wicket.core.markup.html.bootstrap.components.TooltipConfig.Placement;
-import de.tudarmstadt.ukp.clarin.webanno.agreement.PairwiseAnnotationResult;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.PairwiseAgreementResult;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.DefaultAgreementTraits;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.event.PairwiseAgreementScoreClickedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.bootstrap.PopoverBehavior;
@@ -52,7 +60,7 @@ import de.tudarmstadt.ukp.inception.support.wicket.DefaultRefreshingView;
 import de.tudarmstadt.ukp.inception.support.wicket.DescriptionTooltipBehavior;
 
 public class PairwiseUnitizingAgreementTable
-    extends GenericPanel<PairwiseAnnotationResult>
+    extends GenericPanel<PairwiseAgreementResult>
 {
     private static final long serialVersionUID = 571396822546125376L;
 
@@ -65,7 +73,8 @@ public class PairwiseUnitizingAgreementTable
 
     private final RefreshingView<User> rows;
 
-    public PairwiseUnitizingAgreementTable(String aId, IModel<PairwiseAnnotationResult> aModel)
+    public PairwiseUnitizingAgreementTable(String aId, IModel<PairwiseAgreementResult> aModel,
+            DefaultAgreementTraits aTraits)
     {
         super(aId, aModel);
 
@@ -83,11 +92,16 @@ public class PairwiseUnitizingAgreementTable
             var raters = new ArrayList<User>();
             if (getModelObject() != null) {
                 raters.add(null);
+
                 for (var rater : getModelObject().getRaters()) {
                     var user = userRepository.get(rater);
                     if (user != null) {
                         raters.add(user);
                     }
+                }
+
+                if (getModelObject().getRaters().contains(CURATION_USER)) {
+                    raters.add(userRepository.getCurationUser());
                 }
             }
             return raters;
@@ -175,8 +189,14 @@ public class PairwiseUnitizingAgreementTable
     {
         var result = getModelObject().getResult(aRater1.getUsername(), aRater2.getUsername());
 
-        if (result == null) {
+        if (result == null || result.getCasGroupIds().isEmpty()) {
             return new Label("label", "no data");
+        }
+
+        if (result.getCasGroupIds().size() != 2) {
+            throw new IllegalStateException(
+                    "Pairwise agreeement always requires two annotators, but got: "
+                            + result.getCasGroupIds());
         }
 
         var casGroupId1 = result.getCasGroupIds().get(0);
@@ -198,26 +218,36 @@ public class PairwiseUnitizingAgreementTable
             label = "no labels from " + aRater2.getUiName();
         }
         else {
-            label = String.format("%.2f", result.getAgreement());
+            label = format("%.2f", result.getAgreement());
         }
 
         var tooltipTitle = aRater1.getUiName() + " ↔ " + aRater2.getUiName();
 
-        var tooltipContent = String.format("Documents counted: %d/%d%n",
-                result.getUsableAgreementsCount(), result.getTotalAgreementsCount())
+        var tooltipContent = format("Documents counted: %d/%d%n", result.getUsableAgreementsCount(),
+                result.getTotalAgreementsCount())
                 + "Positions annotated:\n"
-                + String.format("- %s: %d/%d%n", aRater1.getUiName(),
-                        result.getNonNullCount(casGroupId1), result.getItemCount(casGroupId1))
-                + String.format("- %s: %d/%d%n", aRater2.getUiName(),
-                        result.getNonNullCount(casGroupId2), result.getItemCount(casGroupId2))
-                + String.format("Distinct labels: %d%n", result.getCategoryCount());
+                + format("- %s: %d/%d%n", aRater1.getUiName(), result.getNonNullCount(casGroupId1),
+                        result.getItemCount(casGroupId1))
+                + format("- %s: %d/%d%n", aRater2.getUiName(), result.getNonNullCount(casGroupId2),
+                        result.getItemCount(casGroupId2))
+                + format("Distinct labels: %d%n", result.getCategoryCount())
+                + "Click to download pairwise diff as CSV file.";
 
         var l = new Label("label", Model.of(label));
         var tooltip = new DescriptionTooltipBehavior(tooltipTitle, tooltipContent);
         tooltip.setOption("position", (Object) null);
         l.add(tooltip);
-        l.add(new AttributeAppender("style", "cursor: help", ";"));
+        l.add(new AttributeAppender("style", "cursor: pointer", ";"));
+
+        l.add(AjaxEventBehavior.onEvent(CLICK_EVENT,
+                _target -> actionScoreClicked(_target, aRater1, aRater2)));
 
         return l;
+    }
+
+    private void actionScoreClicked(AjaxRequestTarget aTarget, User aRater1, User aRater2)
+    {
+        send(this, BUBBLE, new PairwiseAgreementScoreClickedEvent(aTarget, aRater1.getUsername(),
+                aRater2.getUsername()));
     }
 }

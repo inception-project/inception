@@ -17,6 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.annotation.layer.relation;
 
+import static de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationRenderMode.ALWAYS;
+import static de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationRenderMode.NEVER;
+
 import java.io.Serializable;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -32,6 +35,7 @@ public class RelationLayerTraits
 
     private ColoringRules coloringRules = new ColoringRules();
     private boolean renderArcs = true;
+    private RelationRenderMode renderMode;
 
     public RelationLayerTraits()
     {
@@ -50,13 +54,29 @@ public class RelationLayerTraits
         coloringRules = aColoringRules;
     }
 
+    @Deprecated
     public boolean isRenderArcs()
     {
         return renderArcs;
     }
 
+    @Deprecated
     public void setRenderArcs(boolean aRenderArcs)
     {
         renderArcs = aRenderArcs;
+    }
+
+    public RelationRenderMode getRenderMode()
+    {
+        if (renderMode == null) {
+            return renderArcs ? ALWAYS : NEVER;
+        }
+
+        return renderMode;
+    }
+
+    public void setRenderMode(RelationRenderMode aRenderMode)
+    {
+        renderMode = aRenderMode;
     }
 }

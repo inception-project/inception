@@ -17,6 +17,18 @@
  */
 // https://www.deutschestextarchiv.de/doku/basisformat/typogrAllg.html
 TEI {
+  i {
+    font-style: italic;
+  }
+
+  b, hi[rend='bold'] {
+    font-weight: bold;
+  }
+
+  ex {
+    font-style: oblique;
+  }
+
   milestone[rendition='#hr'] {
     display: block;
     border-top: 1px solid black;
@@ -88,7 +100,7 @@ TEI {
     font-size: larger;
   }
 
-  hi[rendition='#red'] {
+  hi[rendition='#red'], hi[rend='red'] {
     color: red;
   }
 
@@ -121,5 +133,10 @@ TEI {
 
   hi[rendition='#uu'] {
     border-bottom: double 3px #000;
+  }
+
+  hi[type='dropcap'] {
+    font-size: 1.5em;
+    font-weight: bold;
   }
 }

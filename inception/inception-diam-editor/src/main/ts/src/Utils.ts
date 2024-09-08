@@ -113,6 +113,27 @@ export function groupSpansByLabel (data: AnnotatedText): Record<string, Span[]> 
   return groups
 }
 
+export function filterAnnotations (data: AnnotatedText, items: Annotation[], filter: string) {
+  const normalizedFilter = filter.toLowerCase().replace(/\s+/g, ' ')
+
+  if (!normalizedFilter) return items
+
+  return items.filter(item => {
+    if (item instanceof Relation) {
+      return getCoveredText(data, item.arguments[0].target).replace(/\s+/g, ' ').toLowerCase().includes(normalizedFilter)
+    }
+    if (item instanceof Span) {
+      return getCoveredText(data, item).replace(/\s+/g, ' ').toLowerCase().includes(normalizedFilter)
+    }
+    return false
+  })
+}
+
+export function getCoveredText (data: AnnotatedText, a: Span | undefined): string {
+  if (a === undefined) return ''
+  return data.text?.substring(a.offsets[0][0], a.offsets[0][1]) || ''
+}
+
 export function compareSpanText (data: AnnotatedText, a: Span, b: Span): number {
   const textA = data.text?.substring(a.offsets[0][0], a.offsets[0][1]) || ''
   const textB = data.text?.substring(b.offsets[0][0], b.offsets[0][1]) || ''
@@ -150,10 +171,25 @@ export function groupRelationsByPosition (data: AnnotatedText): Record<string, R
   return groupBy(data?.relations.values(), (r) => `${(r.arguments[0].target as Span).offsets}`)
 }
 
+export function groupRelationsBySource (data: AnnotatedText): Record<string, Relation[]> {
+  return groupBy(data?.relations.values(), (r) => `${r.arguments[0].target?.vid}`)
+}
+
 export function highlightClasses (vid: VID, data: AnnotatedText): string {
   const classes: string[] = []
   for (const marker of data.annotationMarkers.get(vid) || []) {
     classes.push(`marker-${marker.type}`)
   }
   return classes.join(' ')
+}
+
+export function debounce (func, delay: number) {
+  let timeoutId
+
+  return function (...args) {
+    clearTimeout(timeoutId)
+    timeoutId = setTimeout(() => {
+      func.apply(this, args)
+    }, delay)
+  }
 }

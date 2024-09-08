@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.export;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.Serializable;
+import java.lang.invoke.MethodHandles;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -55,7 +56,7 @@ public class ExportDocumentDialogContent
 {
     private static final long serialVersionUID = -2102136855109258306L;
 
-    private static final Logger LOG = LoggerFactory.getLogger(ExportDocumentDialogContent.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private @SpringBean DocumentImportExportService importExportService;
     private @SpringBean DocumentService documentService;
@@ -100,9 +101,8 @@ public class ExportDocumentDialogContent
     {
         File exportedFile = null;
         try {
-            AnnotatorState s = state.getObject();
-            FormatSupport format = importExportService
-                    .getFormatByName(preferences.getObject().format).get();
+            var s = state.getObject();
+            var format = importExportService.getFormatByName(preferences.getObject().format).get();
             exportedFile = importExportService.exportAnnotationDocument(s.getDocument(),
                     s.getUser().getUsername(), format, s.getMode());
 

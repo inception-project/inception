@@ -21,7 +21,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>32.0-SNAPSHOT</version>
+    <version>34.0-SNAPSHOT</version>
     <relativePath>..</relativePath>
   </parent>
 
@@ -30,12 +30,16 @@
   <packaging>war</packaging>
   <dependencies>
     <dependency>
-      <groupId>javax.servlet</groupId>
-      <artifactId>javax.servlet-api</artifactId>
+      <groupId>jakarta.servlet</groupId>
+      <artifactId>jakarta.servlet-api</artifactId>
       <scope>provided</scope>
     </dependency>
   
     <!-- INCEPTION - CORE DEPENDENCIES -->
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-model</artifactId>
+    </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-documents</artifactId>
@@ -63,10 +67,6 @@
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-ui-scheduling</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-project</artifactId>
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
@@ -111,6 +111,10 @@
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-processing</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-project-api</artifactId>
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
@@ -179,6 +183,26 @@
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-sharing</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-project-export</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-recommendation-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-api-annotation</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-export-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-schema-api</artifactId>
     </dependency>
     <!--
     <dependency>
@@ -251,6 +275,14 @@
     -->
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-imls-azureai-openai</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-imls-chatgpt</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-imls-opennlp</artifactId>
     </dependency>
     <dependency>
@@ -304,6 +336,10 @@
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-log</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-log-ui</artifactId>
     </dependency>
 
     <!-- INCEPTION - EDITORS -->
@@ -442,12 +478,12 @@
       <artifactId>rhino-runtime</artifactId>
     </dependency>
     <dependency>
-      <groupId>com.googlecode.wicket-jquery-ui</groupId>
-      <artifactId>wicket-jquery-ui-theme-uilightness</artifactId>
+      <groupId>org.wicketstuff</groupId>
+      <artifactId>wicketstuff-jquery-ui-theme-uilightness</artifactId>
     </dependency>
     <dependency>
-      <groupId>com.googlecode.wicket-jquery-ui</groupId>
-      <artifactId>wicket-kendo-ui-theme-bootstrap</artifactId>
+      <groupId>org.wicketstuff</groupId>
+      <artifactId>wicketstuff-kendo-ui-theme-bootstrap</artifactId>
     </dependency>
 
     <!-- Spring dependencies -->
@@ -521,7 +557,7 @@
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
-      <artifactId>jcl-over-slf4j</artifactId>
+      <artifactId>jul-to-slf4j</artifactId>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
@@ -542,17 +578,10 @@
       <artifactId>log4j-layout-template-json</artifactId>
     </dependency>
 
-    <!-- LOGGING DEPENDENCIES - Avoid Commons Logging -->
-    <dependency>
-      <groupId>commons-logging</groupId>
-      <artifactId>commons-logging</artifactId>
-      <scope>provided</scope>
-    </dependency>
-    
     <!-- SENTRY DEPENDENCIES -->
     <dependency>
       <groupId>io.sentry</groupId>
-      <artifactId>sentry-spring-boot-starter</artifactId>
+      <artifactId>sentry-spring-boot-starter-jakarta</artifactId>
     </dependency>
     <dependency>
       <groupId>io.sentry</groupId>
@@ -565,10 +594,15 @@
       <groupId>org.liquibase</groupId>
       <artifactId>liquibase-core</artifactId>
     </dependency>
+    <dependency>
+      <groupId>com.mattbertolini</groupId>
+      <artifactId>liquibase-slf4j</artifactId>
+      <version>5.0.0</version>
+    </dependency>
 
     <dependency>
-      <groupId>org.hibernate</groupId>
-      <artifactId>hibernate-entitymanager</artifactId>
+      <groupId>org.hibernate.orm</groupId>
+      <artifactId>hibernate-core</artifactId>
     </dependency>
 
     <dependency>
@@ -582,6 +616,10 @@
     <dependency>
       <groupId>org.postgresql</groupId>
       <artifactId>postgresql</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.microsoft.sqlserver</groupId>
+      <artifactId>mssql-jdbc</artifactId>
     </dependency>
 
     <!-- JAXB DEPENDENCIES -->
@@ -679,6 +717,36 @@
     <dependency>
       <groupId>no.nav.security</groupId>
       <artifactId>mock-oauth2-server</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>mariadb</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>mysql</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>postgresql</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>mssqlserver</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.mysql</groupId>
+      <artifactId>mysql-connector-j</artifactId>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -894,6 +962,7 @@
                uber-JAR and we get ClassNotFoundExceptions at runtime.
                -->
               <ignoredDependency>com.nimbusds:nimbus-jose-jwt</ignoredDependency>
+              <ignoredDependency>org.apache.logging.log4j:log4j-api</ignoredDependency>
               <!-- 
                 - Detection of this dependency is flickering. We need it for a menu-item. So
                 - for the moment, completely ignore it in the dependency checking.
@@ -903,17 +972,29 @@
             <ignoredUsedUndeclaredDependencies>
               <ignoredUsedUndeclaredDependency>org.apache.tomcat.embed:tomcat-embed-core</ignoredUsedUndeclaredDependency>
             </ignoredUsedUndeclaredDependencies>
+            <ignoredNonTestScopedDependencies>
+              <dependency>de.tudarmstadt.ukp.inception.app:inception-model</dependency>
+              <dependency>de.tudarmstadt.ukp.inception.app:inception-project</dependency>
+              <dependency>de.tudarmstadt.ukp.inception.app:inception-project-api</dependency>
+              <dependency>de.tudarmstadt.ukp.inception.app:inception-project-initializers</dependency>
+              <dependency>de.tudarmstadt.ukp.inception.app:inception-project-export</dependency>
+              <dependency>de.tudarmstadt.ukp.inception.app:inception-recommendation-api</dependency>
+              <dependency>de.tudarmstadt.ukp.inception.app:inception-api-annotation</dependency>
+              <dependency>de.tudarmstadt.ukp.inception.app:inception-export-api</dependency>
+              <dependency>de.tudarmstadt.ukp.inception.app:inception-schema-api</dependency>
+            </ignoredNonTestScopedDependencies>
             <usedDependencies>
               <!-- INCEpTION backend modules - used via Spring -->
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-guidelines</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-documents</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-image</usedDependency>
-              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-project</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-plugin-manager</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-concept-linking</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-recommendation</usedDependency>
-              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-external</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-azureai-openai</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-chatgpt</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-elg</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-external</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-hf</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-ollama</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-opennlp</usedDependency>
@@ -928,6 +1009,7 @@
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-external-search-pubmed</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-active-learning</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-log</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-log-ui</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-curation</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-workload-ui</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-workload-dynamic</usedDependency>
@@ -947,7 +1029,6 @@
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-layer-docmetadata</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-feature-lookup</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-processing</usedDependency>
-              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-project-initializers</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-project-initializers-basic</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-project-initializers-doclabeling</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-project-initializers-sentencelabeling</usedDependency>
@@ -984,23 +1065,24 @@
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-remote</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-telemetry</usedDependency>
               <!-- JDBC drivers and database stuff - used via reflection -->
-              <usedDependency>org.hibernate:hibernate-entitymanager</usedDependency>
-              <usedDependency>org.mariadb.jdbc:mariadb-java-client</usedDependency>
-              <usedDependency>org.postgresql:postgresql</usedDependency>
+              <usedDependency>org.hibernate.orm:hibernate-core</usedDependency>
               <usedDependency>org.hsqldb:hsqldb</usedDependency>
+              <usedDependency>org.mariadb.jdbc:mariadb-java-client</usedDependency>
+              <usedDependency>com.microsoft.sqlserver:mssql-jdbc</usedDependency>
+              <usedDependency>org.postgresql:postgresql</usedDependency>
+              <usedDependency>com.mysql:mysql-connector-j</usedDependency>
               <!-- Logging - used via reflection / optional -->
+              <usedDependency>com.mattbertolini:liquibase-slf4j</usedDependency>
               <usedDependency>org.slf4j:log4j-over-slf4j</usedDependency>
-              <usedDependency>org.slf4j:jcl-over-slf4j</usedDependency>
               <usedDependency>org.apache.logging.log4j:log4j-slf4j2-impl</usedDependency>
               <usedDependency>org.apache.logging.log4j:log4j-core</usedDependency>
               <usedDependency>org.apache.logging.log4j:log4j-layout-template-json</usedDependency>
-              <usedDependency>commons-logging:commons-logging</usedDependency>
               <!-- Monitoring - used via reflection / optional -->
-              <usedDependency>io.sentry:sentry-spring-boot-starter</usedDependency>
+              <usedDependency>io.sentry:sentry-spring-boot-starter-jakarta</usedDependency>
               <usedDependency>io.sentry:sentry-log4j2</usedDependency>
               <!-- Themes -->
-              <usedDependency>com.googlecode.wicket-jquery-ui:wicket-kendo-ui-theme-bootstrap</usedDependency>
-              <usedDependency>com.googlecode.wicket-jquery-ui:wicket-jquery-ui-theme-uilightness</usedDependency>
+              <usedDependency>org.wicketstuff:wicketstuff-kendo-ui-theme-bootstrap</usedDependency>
+              <usedDependency>org.wicketstuff:wicketstuff-jquery-ui-theme-uilightness</usedDependency>
               <!-- Wicket plugins -->
               <usedDependency>org.wicketstuff:wicketstuff-htmlcompressor</usedDependency>
               <usedDependency>org.mozilla:rhino-runtime</usedDependency>
@@ -1137,6 +1219,16 @@
                   -->
                   <attach>false</attach>
                   <classifier>standalone</classifier>
+                  <excludes>
+                    <exclude>
+                      <groupId>org.slf4j</groupId>
+                      <artifactId>jcl-over-slf4j</artifactId>
+                    </exclude>
+                    <exclude>
+                      <groupId>commons-logging</groupId>
+                      <artifactId>commons-logging</artifactId>
+                    </exclude>
+                  </excludes>
                 </configuration>
               </execution>
             </executions>

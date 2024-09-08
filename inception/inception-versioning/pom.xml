@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>32.0-SNAPSHOT</version>
+    <version>34.0-SNAPSHOT</version>
   </parent>
   <artifactId>inception-versioning</artifactId>
   <name>INCEpTION - Versioning</name>
@@ -99,8 +99,8 @@
     </dependency>
 
     <dependency>
-      <groupId>javax.persistence</groupId>
-      <artifactId>javax.persistence-api</artifactId>
+      <groupId>jakarta.persistence</groupId>
+      <artifactId>jakarta.persistence-api</artifactId>
     </dependency>
 
     <!-- Spring -->
@@ -205,6 +205,11 @@
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-documents</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-constraints</artifactId>
       <scope>test</scope>
     </dependency>
   </dependencies>

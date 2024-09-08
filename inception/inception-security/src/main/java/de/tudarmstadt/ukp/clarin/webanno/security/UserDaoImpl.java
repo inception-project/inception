@@ -43,9 +43,6 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.regex.Pattern;
 
-import javax.persistence.EntityManager;
-import javax.persistence.NoResultException;
-
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.Validate;
 import org.apache.commons.validator.routines.EmailValidator;
@@ -72,6 +69,8 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User_;
 import de.tudarmstadt.ukp.inception.support.SettingsUtil;
 import de.tudarmstadt.ukp.inception.support.spring.ApplicationContextProvider;
 import de.tudarmstadt.ukp.inception.support.text.TextUtils;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.NoResultException;
 
 /**
  * <p>
@@ -107,7 +106,7 @@ public class UserDaoImpl
             "^/\\&*?+$![]", FILESYSTEM_RESERVED_CHARACTERS);
 
     public static final Set<String> RESERVED_USERNAMES = Set.of(INITIAL_CAS_PSEUDO_USER,
-            CURATION_USER);
+            CURATION_USER, "anonymousUser");
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -150,9 +149,9 @@ public class UserDaoImpl
 
         new TransactionTemplate(transactionManager).executeWithoutResult(transactionStatus -> {
             if (list().isEmpty()) {
-                User admin = new User();
-                final String str = defaultAdminUsername;
-                admin.setUsername(Objects.toString(str, ADMIN_DEFAULT_PASSWORD));
+                var admin = new User();
+                admin.setUsername(
+                        Objects.toString(defaultAdminUsername, UserDao.ADMIN_DEFAULT_USERNAME));
                 admin.setEncodedPassword(securityProperties.getDefaultAdminPassword());
                 admin.setEnabled(true);
                 if (securityProperties.isDefaultAdminRemoteAccess()) {
@@ -269,7 +268,9 @@ public class UserDaoImpl
     @Override
     public User getCurationUser()
     {
-        return new User(CURATION_USER);
+        var user = new User(CURATION_USER);
+        user.setUiName("Curator");
+        return user;
     }
 
     @Override
@@ -319,6 +320,20 @@ public class UserDaoImpl
             throw new IllegalStateException(
                     "UI name [" + aUiName + "] is not unique within realm [" + aRealm + "]");
         }
+    }
+
+    @Override
+    @Transactional
+    public boolean isEmpty()
+    {
+        var cb = entityManager.getCriteriaBuilder();
+        var query = cb.createQuery(Long.class);
+        var root = query.from(User.class);
+        query.select(cb.count(root));
+
+        var count = entityManager.createQuery(query).getSingleResult();
+
+        return count == 0;
     }
 
     @Override
@@ -737,5 +752,11 @@ public class UserDaoImpl
         }
 
         return true;
+    }
+
+    @Override
+    public boolean isAdminAccountRecoveryMode()
+    {
+        return System.getProperty(PROP_RESTORE_DEFAULT_ADMIN_ACCOUNT) != null;
     }
 }

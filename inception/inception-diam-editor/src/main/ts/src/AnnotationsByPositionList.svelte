@@ -29,6 +29,7 @@
     import LabelBadge from "./LabelBadge.svelte";
     import SpanText from "./SpanText.svelte";
     import {
+        debounce,
         groupRelationsByPosition,
         groupSpansByPosition,
         uniqueOffsets,
@@ -40,10 +41,18 @@
     let groupedSpans: Record<string, Span[]>;
     let groupedRelations: Record<string, Relation[]>;
     let sortedSpanOffsets: Offsets[];
+    let filter = '';
 
     $: groupedSpans = groupSpansByPosition(data);
     $: groupedRelations = groupRelationsByPosition(data);
-    $: sortedSpanOffsets = uniqueOffsets(data);
+    $: { 
+        sortedSpanOffsets = uniqueOffsets(data);
+        const normalizedFilter = filter.replace(/\s+/g, ' ').toLowerCase()
+        sortedSpanOffsets = sortedSpanOffsets.filter(offset => {
+            let coveredText = data.text?.substring(offset[0], offset[1]) || '';
+            return coveredText.replace(/\s+/g, ' ').toLowerCase().includes(normalizedFilter)
+        })
+    }
 
     function scrollToSpan(span: Span) {
         ajaxClient.scrollTo({ id: span.vid, offset: span.offsets[0] });
@@ -60,6 +69,13 @@
     function mouseOutAnnotation(event: MouseEvent, annotation: Annotation) {
         event.target.dispatchEvent(new AnnotationOutEvent(annotation, event));
     }
+
+    const updateFilter = debounce(newFilter => { filter = newFilter }, 300);
+
+    // Function to handle input changes
+    function handleFilterChange(event) {
+        updateFilter(event.target.value)
+    }
 </script>
 
 {#if !data}
@@ -71,6 +87,9 @@
         </div>
     </div>
 {:else}
+    <div class="d-flex flex-row flex-wrap">
+        <input type="text" class="form-control rounded-0" on:input={handleFilterChange} placeholder="Filter"/>
+    </div>
     <div class="flex-content fit-child-snug">
         {#if sortedSpanOffsets || sortedSpanOffsets?.length}
             <ul class="scrolling flex-content list-group list-group-flush">
@@ -84,7 +103,7 @@
                             class="flex-grow-1 my-1 mx-2 overflow-hidden"
                             on:click={() => scrollToSpan(firstSpan)}
                         >
-                            <div class="float-end labels">
+                            <div class="float-end labels me-1">
                                 {#each spans as span}
                                     <span
                                         on:mouseover={(ev) =>
@@ -125,7 +144,7 @@
                                     class="flex-grow-1 my-1 mx-2 overflow-hidden"
                                     on:click={() => scrollToRelation(relation)}
                                 >
-                                    <div class="float-end labels">
+                                    <div class="float-end labels me-1">
                                         <LabelBadge
                                             annotation={relation}
                                             {ajaxClient}

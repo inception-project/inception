@@ -19,9 +19,6 @@ package de.tudarmstadt.ukp.inception.recommendation.config;
 
 import java.util.List;
 
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
@@ -65,6 +62,8 @@ import de.tudarmstadt.ukp.inception.recommendation.span.SpanSuggestionSupport;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 
 /**
  * Provides all back-end Spring beans for the recommendation functionality.
@@ -145,7 +144,8 @@ public class RecommenderServiceAutoConfiguration
             havingValue = "true", matchIfMissing = true)
     @Bean
     public RecommendationSidebarFactory recommendationSidebarFactory(
-            RecommendationService aRecommendationService)
+            RecommendationService aRecommendationService, PreferencesService aPreferencesService,
+            UserDao aUserService)
     {
         return new RecommendationSidebarFactory(aRecommendationService);
     }
@@ -188,12 +188,13 @@ public class RecommenderServiceAutoConfiguration
     }
 
     @Bean
-    public RecommendationRenderer recommendationRenderer(AnnotationSchemaService aAnnotationService,
+    public RecommendationRenderer recommendationRenderer(
             RecommendationService aRecommendationService,
-            SuggestionSupportRegistry aSuggestionSupportRegistry)
+            SuggestionSupportRegistry aSuggestionSupportRegistry,
+            PreferencesService aPreferencesService, UserDao aUserService)
     {
-        return new RecommendationRenderer(aAnnotationService, aRecommendationService,
-                aSuggestionSupportRegistry);
+        return new RecommendationRenderer(aRecommendationService, aSuggestionSupportRegistry,
+                aPreferencesService, aUserService);
     }
 
     @Bean

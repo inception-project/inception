@@ -17,9 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.documents.config;
 
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -29,11 +26,15 @@ import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.documents.DocumentAccessImpl;
 import de.tudarmstadt.ukp.inception.documents.DocumentServiceImpl;
+import de.tudarmstadt.ukp.inception.documents.DocumentStorageServiceImpl;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentAccess;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentStorageService;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
 import de.tudarmstadt.ukp.inception.documents.exporters.SourceDocumentExporter;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 
 @Configuration
 public class DocumentServiceAutoConfiguration
@@ -43,10 +44,12 @@ public class DocumentServiceAutoConfiguration
     @Bean
     public DocumentService documentService(RepositoryProperties aRepositoryProperties,
             CasStorageService aCasStorageService, DocumentImportExportService aImportExportService,
-            ProjectService aProjectService, ApplicationEventPublisher aApplicationEventPublisher)
+            ProjectService aProjectService, ApplicationEventPublisher aApplicationEventPublisher,
+            DocumentStorageService aDocumentStorageService)
     {
         return new DocumentServiceImpl(aRepositoryProperties, aCasStorageService,
-                aImportExportService, aProjectService, aApplicationEventPublisher, entityManager);
+                aImportExportService, aProjectService, aApplicationEventPublisher, entityManager,
+                aDocumentStorageService);
     }
 
     @Bean
@@ -58,8 +61,16 @@ public class DocumentServiceAutoConfiguration
 
     @Bean
     public SourceDocumentExporter sourceDocumentExporter(DocumentService aDocumentService,
-            RepositoryProperties aRepositoryProperties)
+            RepositoryProperties aRepositoryProperties,
+            DocumentStorageService aDocumentStorageService)
     {
-        return new SourceDocumentExporter(aDocumentService, aRepositoryProperties);
+        return new SourceDocumentExporter(aDocumentService, aDocumentStorageService,
+                aRepositoryProperties);
+    }
+
+    @Bean
+    public DocumentStorageService documentStorageService(RepositoryProperties aRepositoryProperties)
+    {
+        return new DocumentStorageServiceImpl(aRepositoryProperties);
     }
 }

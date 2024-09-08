@@ -28,12 +28,13 @@ public class FullUnitizingAgreementResult
 {
     private static final long serialVersionUID = 2092691057728349705L;
 
-    public FullUnitizingAgreementResult(String aType, String aFeature, IUnitizingAnnotationStudy aStudy,
-            List<String> aCasGroupIds, boolean aExcludeIncomplete)
+    public FullUnitizingAgreementResult(String aType, String aFeature,
+            IUnitizingAnnotationStudy aStudy, List<String> aCasGroupIds, boolean aExcludeIncomplete)
     {
         super(aType, aFeature, aStudy, aCasGroupIds, aExcludeIncomplete);
     }
 
+    @Override
     public boolean isAllNull(String aRater)
     {
         var raterIdx = getCasGroupIds().indexOf(aRater);
@@ -42,6 +43,7 @@ public class FullUnitizingAgreementResult
                 .noneMatch(u -> u.getRaterIdx() == raterIdx && u.getCategory() != null);
     }
 
+    @Override
     public long getNonNullCount(String aRater)
     {
         var raterIdx = getCasGroupIds().indexOf(aRater);

@@ -33,12 +33,14 @@ public class HttpSessionDestroyedEventAdapter
     private static final Set<String> IGNORE_USERS = Set.of(ANONYMOUS_USER, SYSTEM_USER);
 
     @Override
-    public boolean accepts(Object aEvent)
+    public boolean accepts(Class<?> aEvent)
     {
-        if (!(aEvent instanceof HttpSessionDestroyedEvent)) {
-            return false;
-        }
+        return HttpSessionDestroyedEvent.class.isAssignableFrom(aEvent);
+    }
 
+    @Override
+    public boolean isLoggable(HttpSessionDestroyedEvent aEvent)
+    {
         var user = getUser((HttpSessionDestroyedEvent) aEvent);
         if (IGNORE_USERS.contains(user)) {
             return false;

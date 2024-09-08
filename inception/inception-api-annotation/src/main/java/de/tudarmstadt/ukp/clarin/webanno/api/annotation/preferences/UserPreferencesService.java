@@ -32,18 +32,19 @@ public interface UserPreferencesService
      * 
      * @param aState
      *            The {@link AnnotatorState} that will be populated with preferences from the file
-     * @param aUsername
+     * @param aSessionOwner
      *            The user for whom we need to read the preference (preferences are stored per user)
      * @throws IOException
      *             hum?
      */
-    void loadPreferences(AnnotatorState aState, String aUsername) throws IOException;
+    void loadPreferences(AnnotatorState aState, String aSessionOwner) throws IOException;
 
-    AnnotationPreference loadPreferences(Project aProject, String aUsername, Mode aMode)
+    AnnotationPreference loadPreferences(Project aProject, String aSessionOwner, Mode aMode)
         throws IOException;
 
-    void savePreferences(AnnotatorState aState, String aUsername) throws IOException;
+    void savePreferences(AnnotatorState aState, String aSessionOwner) throws IOException;
 
-    void savePreferences(Project aProject, String aUsername, Mode aMode, AnnotationPreference aPref)
+    void savePreferences(Project aProject, String aSessionOwner, Mode aMode,
+            AnnotationPreference aPref)
         throws IOException;
 }

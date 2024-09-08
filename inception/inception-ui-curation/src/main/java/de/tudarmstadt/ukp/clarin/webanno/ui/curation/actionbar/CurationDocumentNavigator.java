@@ -85,8 +85,7 @@ public class CurationDocumentNavigator
      */
     public void actionShowPreviousDocument(AjaxRequestTarget aTarget)
     {
-        boolean documentChanged = page.getModelObject()
-                .moveToPreviousDocument(page.getListOfDocs());
+        var documentChanged = page.getModelObject().moveToPreviousDocument(page.getListOfDocs());
         if (!documentChanged) {
             info("There is no previous document");
             aTarget.addChildren(getPage(), IFeedback.class);
@@ -103,7 +102,7 @@ public class CurationDocumentNavigator
      */
     public void actionShowNextDocument(AjaxRequestTarget aTarget)
     {
-        boolean documentChanged = page.getModelObject().moveToNextDocument(page.getListOfDocs());
+        var documentChanged = page.getModelObject().moveToNextDocument(page.getListOfDocs());
         if (!documentChanged) {
             info("There is no next document");
             aTarget.addChildren(getPage(), IFeedback.class);

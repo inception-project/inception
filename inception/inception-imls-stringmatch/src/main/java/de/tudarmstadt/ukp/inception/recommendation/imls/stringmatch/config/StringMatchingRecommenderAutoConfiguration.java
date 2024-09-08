@@ -21,9 +21,6 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.config;
 
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -41,6 +38,8 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.gazetee
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.gazeteer.exporter.GazeteerExporter;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.ner.StringMatchingNerClassificationToolFactory;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.pos.StringMatchingPosClassificationToolFactory;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 
 @Configuration
 @AutoConfigureAfter(RecommenderServiceAutoConfiguration.class)

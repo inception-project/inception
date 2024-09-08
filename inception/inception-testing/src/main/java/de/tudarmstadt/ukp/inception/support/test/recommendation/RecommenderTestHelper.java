@@ -31,36 +31,29 @@ import java.util.stream.Collectors;
 
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
-import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
-import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.tcas.Annotation;
-import org.apache.uima.resource.metadata.TypeDescription;
-import org.apache.uima.resource.metadata.TypeSystemDescription;
 
-import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.service.AnnotationSchemaServiceImpl;
 
 public class RecommenderTestHelper
 {
-
     public static void addPredictionFeatures(CAS aCas, String aTypeName, String aFeatureName)
         throws IOException, UIMAException
     {
-        String scoreFeatureName = aFeatureName + FEATURE_NAME_SCORE_SUFFIX;
-        String scoreExplanationFeatureName = aFeatureName + FEATURE_NAME_SCORE_EXPLANATION_SUFFIX;
+        var scoreFeatureName = aFeatureName + FEATURE_NAME_SCORE_SUFFIX;
+        var scoreExplanationFeatureName = aFeatureName + FEATURE_NAME_SCORE_EXPLANATION_SUFFIX;
 
-        TypeSystemDescription tsd = typeSystem2TypeSystemDescription(aCas.getTypeSystem());
-        TypeDescription typeDescription = tsd.getType(aTypeName);
+        var tsd = typeSystem2TypeSystemDescription(aCas.getTypeSystem());
+        var typeDescription = tsd.getType(aTypeName);
         typeDescription.addFeature(scoreFeatureName, "Score feature", TYPE_NAME_DOUBLE);
         typeDescription.addFeature(scoreExplanationFeatureName, "Score explanation feature",
                 TYPE_NAME_STRING);
         typeDescription.addFeature(FEATURE_NAME_IS_PREDICTION, "Is prediction", TYPE_NAME_BOOLEAN);
 
-        AnnotationSchemaService schemaService = new AnnotationSchemaServiceImpl();
+        var schemaService = new AnnotationSchemaServiceImpl();
         schemaService.upgradeCas(aCas, tsd);
     }
 
@@ -73,14 +66,14 @@ public class RecommenderTestHelper
 
     public static double getScore(AnnotationFS aAnnotationFS, String aFeatureName)
     {
-        Feature feature = aAnnotationFS.getType()
+        var feature = aAnnotationFS.getType()
                 .getFeatureByBaseName(aFeatureName + FEATURE_NAME_SCORE_SUFFIX);
         return aAnnotationFS.getDoubleValue(feature);
     }
 
     public static String getScoreExplanation(AnnotationFS aAnnotationFS, String aFeatureName)
     {
-        Feature feature = aAnnotationFS.getType()
+        var feature = aAnnotationFS.getType()
                 .getFeatureByBaseName(aFeatureName + FEATURE_NAME_SCORE_EXPLANATION_SUFFIX);
         return aAnnotationFS.getStringValue(feature);
     }
@@ -88,29 +81,32 @@ public class RecommenderTestHelper
     public static <T extends Annotation> List<T> getPredictions(CAS aCas, Class<T> aClass)
         throws Exception
     {
-        Type type = CasUtil.getType(aCas, aClass);
-        Feature feature = type.getFeatureByBaseName(FEATURE_NAME_IS_PREDICTION);
+        var type = CasUtil.getType(aCas, aClass);
+        var feature = type.getFeatureByBaseName(FEATURE_NAME_IS_PREDICTION);
 
-        return JCasUtil.select(aCas.getJCas(), aClass).stream()
-                .filter(fs -> fs.getBooleanValue(feature)).collect(Collectors.toList());
+        return aCas.select(aClass) //
+                .filter(fs -> fs.getBooleanValue(feature)) //
+                .collect(Collectors.toList());
     }
 
     public static List<AnnotationFS> getPredictions(CAS aCas, String aTypeName) throws Exception
     {
-        Type type = CasUtil.getType(aCas, aTypeName);
-        Feature feature = type.getFeatureByBaseName(FEATURE_NAME_IS_PREDICTION);
+        var type = CasUtil.getType(aCas, aTypeName);
+        var feature = type.getFeatureByBaseName(FEATURE_NAME_IS_PREDICTION);
 
-        return CasUtil.select(aCas, type).stream().filter(fs -> fs.getBooleanValue(feature))
+        return aCas.<Annotation> select(type) //
+                .filter(fs -> fs.getBooleanValue(feature)) //
                 .collect(Collectors.toList());
     }
 
     public static List<FeatureStructure> getPredictionFSes(CAS aCas, String aTypeName)
         throws Exception
     {
-        Type type = CasUtil.getType(aCas, aTypeName);
-        Feature feature = type.getFeatureByBaseName(FEATURE_NAME_IS_PREDICTION);
+        var type = CasUtil.getType(aCas, aTypeName);
+        var feature = type.getFeatureByBaseName(FEATURE_NAME_IS_PREDICTION);
 
-        return aCas.select(type).filter(fs -> fs.getBooleanValue(feature))
+        return aCas.select(type) //
+                .filter(fs -> fs.getBooleanValue(feature)) //
                 .collect(Collectors.toList());
     }
 }

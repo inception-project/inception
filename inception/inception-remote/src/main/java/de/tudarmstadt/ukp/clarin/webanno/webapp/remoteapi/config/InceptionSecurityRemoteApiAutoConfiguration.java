@@ -18,14 +18,15 @@
 package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.config;
 
 import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.REALM_EXTERNAL_PREFIX;
+import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.SPEL_IS_ADMIN_ACCOUNT_RECOVERY_MODE;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
 
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.annotation.Order;
-import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.JwtClaimNames;
@@ -36,6 +37,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import de.tudarmstadt.ukp.clarin.webanno.security.InceptionDaoAuthenticationProvider;
 import de.tudarmstadt.ukp.inception.security.oauth.OAuth2Adapter;
 
+@ConditionalOnExpression("!" + SPEL_IS_ADMIN_ACCOUNT_RECOVERY_MODE)
 @ConditionalOnWebApplication
 public class InceptionSecurityRemoteApiAutoConfiguration
 {
@@ -48,7 +50,7 @@ public class InceptionSecurityRemoteApiAutoConfiguration
     {
         // The remote API should always authenticate against the built-in user-database and
         // not e.g. against the external pre-authentication
-        DaoAuthenticationProvider authProvider = new InceptionDaoAuthenticationProvider();
+        var authProvider = new InceptionDaoAuthenticationProvider();
         authProvider.setUserDetailsService(aUserDetailsService);
         authProvider.setPasswordEncoder(aPasswordEncoder);
 

@@ -19,8 +19,6 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.config;
 
 import java.util.List;
 
-import javax.servlet.ServletContext;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.context.annotation.Bean;
@@ -39,6 +37,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions.Un
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions.UndoableAnnotationActionSupport;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.layer.LayerVisibilitySidebarFactory;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
+import jakarta.servlet.ServletContext;
 
 @ConditionalOnWebApplication
 @Configuration

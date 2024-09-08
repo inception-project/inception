@@ -17,68 +17,68 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.constraints.model;
 
+import static java.util.Collections.unmodifiableMap;
+import static java.util.Collections.unmodifiableSet;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 
-import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ASTConstraintsSet;
-import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ASTRule;
+import org.apache.uima.cas.FeatureStructure;
 
-/***
- * Serialized Class containing objects after parsing and creating objects based on rules file.
- */
+import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ASTConstraintsSet;
+
 public class ParsedConstraints
     implements Serializable
 {
     private static final long serialVersionUID = -2401965871743170805L;
 
-    private final Map<String, String> imports;
-    private final List<Scope> scopes;
-    private Map<String, Scope> scopeMap = null;
+    private final Map<String, String> imports = new LinkedHashMap<>();
+    private final List<Scope> scopes = new ArrayList<>();
+    private final Map<String, Scope> scopeMap;
     // Contains possible scenarios for which rules are available.
-    private Set<FSFPair> rulesSet = null;
+    private final Set<FSFPair> pathsUsedInRestrictions;
+
+    public ParsedConstraints(Map<String, String> aAliases, Map<String, List<Rule>> aScopes)
+    {
+        imports.putAll(aAliases);
+
+        for (var e : aScopes.entrySet()) {
+            var scope = new Scope(e.getKey(), e.getValue());
+            scopes.add(scope);
+        }
+
+        pathsUsedInRestrictions = indexPathsUsedInRestrictions();
+        scopeMap = buildScopeMap();
+    }
 
     public ParsedConstraints(Map<String, String> aAliases, List<Scope> aScopes)
     {
-        imports = aAliases;
-        scopes = aScopes;
+        imports.putAll(aAliases);
+        scopes.addAll(aScopes);
+        pathsUsedInRestrictions = indexPathsUsedInRestrictions();
+        scopeMap = buildScopeMap();
     }
 
     public ParsedConstraints(ASTConstraintsSet astConstraintsSet)
     {
-        imports = astConstraintsSet.getImports();
-        scopes = new ArrayList<>();
+        imports.putAll(astConstraintsSet.getImports());
 
-        for (Entry<String, List<ASTRule>> ruleGroup : astConstraintsSet.getScopes().entrySet()) {
-            List<Rule> rules = new ArrayList<Rule>();
-            for (ASTRule astRule : ruleGroup.getValue()) {
+        for (var ruleGroup : astConstraintsSet.getScopes().entrySet()) {
+            var rules = new ArrayList<Rule>();
+            for (var astRule : ruleGroup.getValue()) {
                 rules.add(new Rule(astRule));
             }
             scopes.add(new Scope(ruleGroup.getKey(), rules));
         }
-    }
 
-    @Override
-    public String toString()
-    {
-        return "Imports\n[" + printImports() + "]\n" + scopes.toString() + "]\n]";
-    }
-
-    private String printImports()
-    {
-        StringBuilder output = new StringBuilder();
-        for (Entry<String, String> e : imports.entrySet()) {
-            output.append(e.getKey());
-            output.append(" is short for ");
-            output.append(e.getValue());
-            output.append(System.lineSeparator());
-        }
-        return output.toString();
+        scopeMap = buildScopeMap();
+        pathsUsedInRestrictions = indexPathsUsedInRestrictions();
     }
 
     public Map<String, String> getImports()
@@ -88,7 +88,7 @@ public class ParsedConstraints
 
     public String getShortName(String aLongName)
     {
-        for (Entry<String, String> e : imports.entrySet()) {
+        for (var e : imports.entrySet()) {
             if (e.getValue().equals(aLongName)) {
                 return e.getKey();
             }
@@ -103,55 +103,90 @@ public class ParsedConstraints
 
     public Scope getScopeByName(String scopeName)
     {
-
         if (scopeMap == null) { // initialize map if not set already
-            scopeMap = new HashMap<>();
-            for (Scope scope : scopes) {
-                scopeMap.put(scope.getScopeName(), scope);
-            }
         }
         return scopeMap.get(scopeName);
     }
 
     /**
-     * Checks if rules exists or not
+     * @return if rules exists or not
      */
-    public boolean areThereRules(String featureStructure, String feature)
+    public boolean isPathUsedInAnyRestriction(FeatureStructure aContext, String aPath)
     {
-        if (rulesSet == null) {
-            buildRulesSet();
-        }
-
-        if (getShortName(featureStructure) == null) {
-            return false;
-        }
-        if (getScopeByName(getShortName(featureStructure)) == null) {
-            return false;
-        }
-        FSFPair _tempFsfPair = new FSFPair(getShortName(featureStructure), feature);
-        if (rulesSet.contains(_tempFsfPair)) {
-            // If it has rules satisfying with proper input FS and affecting feature
-            return true;
-        }
-        return false;
+        return isPathUsedInAnyRestriction(aContext.getType().getName(), aPath);
     }
 
     /**
-     * Fill Set with values of different conditions for which rules are available.
+     * @return if rules exists or not
      */
-    private void buildRulesSet()
+    public boolean isPathUsedInAnyRestriction(String aContextTypeName, String aPath)
     {
-        rulesSet = new HashSet<>();
+        if (pathsUsedInRestrictions == null) {
+            indexPathsUsedInRestrictions();
+        }
+
+        var shortTypeName = getShortName(aContextTypeName);
+        if (shortTypeName == null) {
+            return false;
+        }
+
+        if (getScopeByName(shortTypeName) == null) {
+            return false;
+        }
+
+        if (pathsUsedInRestrictions.contains(new FSFPair(shortTypeName, aPath))) {
+            // If it has rules satisfying with proper input FS and affecting feature
+            return true;
+        }
+
+        return false;
+    }
+
+    private Map<String, Scope> buildScopeMap()
+    {
+        var map = new HashMap<String, Scope>();
+        for (var scope : scopes) {
+            map.put(scope.getScopeName(), scope);
+        }
+        return unmodifiableMap(map);
+    }
+
+    /**
+     * @return set of pairs where the key of each pair is a scope and the value is a restriction
+     *         path
+     */
+    private Set<FSFPair> indexPathsUsedInRestrictions()
+    {
+        var rs = new HashSet<FSFPair>();
         FSFPair _temp;
-        for (Scope scope : scopes) {
-            for (Rule rule : scope.getRules()) {
-                for (Restriction restriction : rule.getRestrictions()) {
+        for (var scope : scopes) {
+            for (var rule : scope.getRules()) {
+                for (var restriction : rule.getRestrictions()) {
                     _temp = new FSFPair(scope.getScopeName(), restriction.getPath());
-                    if (!rulesSet.contains(_temp)) {
-                        rulesSet.add(_temp);
+                    if (!rs.contains(_temp)) {
+                        rs.add(_temp);
                     }
                 }
             }
         }
+        return unmodifiableSet(rs);
+    }
+
+    private String printImports()
+    {
+        var output = new StringBuilder();
+        for (var e : imports.entrySet()) {
+            output.append(e.getKey());
+            output.append(" is short for ");
+            output.append(e.getValue());
+            output.append(System.lineSeparator());
+        }
+        return output.toString();
+    }
+
+    @Override
+    public String toString()
+    {
+        return "Imports\n[" + printImports() + "]\n" + scopes.toString() + "]\n]";
     }
 }

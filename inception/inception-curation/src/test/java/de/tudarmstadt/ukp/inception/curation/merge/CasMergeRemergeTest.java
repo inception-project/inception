@@ -21,9 +21,9 @@ import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiffSummaryState.AGREE;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiffSummaryState.INCOMPLETE;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiffSummaryState.calculateState;
-import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior.LINK_TARGET_AS_LABEL;
 import static de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS._FeatName_PosValue;
 import static de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token._FeatName_pos;
+import static de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureMultiplicityMode.ONE_TARGET_MULTIPLE_ROLES;
 import static de.tudarmstadt.ukp.inception.curation.merge.CurationTestUtils.HOST_TYPE;
 import static de.tudarmstadt.ukp.inception.curation.merge.CurationTestUtils.createMultiLinkWithRoleTestTypeSystem;
 import static de.tudarmstadt.ukp.inception.curation.merge.CurationTestUtils.makeLinkFS;
@@ -48,10 +48,8 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.factory.CasFactory;
-import org.apache.uima.jcas.JCas;
 import org.junit.jupiter.api.Test;
 
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.DiffResult;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span.SpanDiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span.SpanPosition;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
@@ -72,23 +70,23 @@ public class CasMergeRemergeTest
     @Test
     public void thatIncompleteAnnotationIsNotMerged() throws Exception
     {
-        CAS user1 = CasFactory.createText("word");
+        var user1 = CasFactory.createText("word");
         createTokenAndOptionalPos(user1, 0, 4, "X");
 
-        CAS user2 = CasFactory.createText("word");
+        var user2 = CasFactory.createText("word");
         createTokenAndOptionalPos(user2, 0, 4, null);
 
         var casByUser = new LinkedHashMap<String, CAS>();
         casByUser.put("user1", user1);
         casByUser.put("user2", user2);
 
-        JCas curatorCas = createText(casByUser.values().stream() //
+        var curatorCas = createText(casByUser.values().stream() //
                 .findFirst().get() //
                 .getDocumentText());
 
-        DiffResult result = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser).toResult();
+        var result = doDiff(diffAdapters, casByUser).toResult();
 
-        sut.reMergeCas(result, document, DUMMY_USER, curatorCas.getCas(), casByUser);
+        sut.clearAndMergeCas(result, document, DUMMY_USER, curatorCas.getCas(), casByUser);
 
         assertThat(result.getDifferingConfigurationSets()).isEmpty();
         assertThat(result.getIncompleteConfigurationSets().values())
@@ -110,23 +108,23 @@ public class CasMergeRemergeTest
     @Test
     public void thatIncompleteAnnotationIsMerged() throws Exception
     {
-        CAS user1 = CasFactory.createText("word");
+        var user1 = CasFactory.createText("word");
         createTokenAndOptionalPos(user1, 0, 4, "X");
 
-        CAS user2 = CasFactory.createText("word");
+        var user2 = CasFactory.createText("word");
         createTokenAndOptionalPos(user2, 0, 4, null);
 
         var casByUser = new LinkedHashMap<String, CAS>();
         casByUser.put("user1", user1);
         casByUser.put("user2", user2);
 
-        JCas curatorCas = createText(
+        var curatorCas = createText(
                 casByUser.values().stream().findFirst().get().getDocumentText());
 
-        DiffResult result = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser).toResult();
+        var result = doDiff(diffAdapters, casByUser).toResult();
 
         sut.setMergeStrategy(new MergeIncompleteStrategy());
-        sut.reMergeCas(result, document, DUMMY_USER, curatorCas.getCas(), casByUser);
+        sut.clearAndMergeCas(result, document, DUMMY_USER, curatorCas.getCas(), casByUser);
 
         assertThat(result.getDifferingConfigurationSets()).isEmpty();
         assertThat(result.getIncompleteConfigurationSets().values())
@@ -158,17 +156,17 @@ public class CasMergeRemergeTest
         var curatorCas = createJCas(createMultiLinkWithRoleTestTypeSystem("f1"));
         curatorCas.setDocumentText(casByUser.values().stream().findFirst().get().getDocumentText());
 
-        var result = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser).toResult();
+        var result = doDiff(diffAdapters, casByUser).toResult();
 
         // result.print(System.out);
 
-        sut.reMergeCas(result, document, DUMMY_USER, curatorCas.getCas(), casByUser);
+        sut.clearAndMergeCas(result, document, DUMMY_USER, curatorCas.getCas(), casByUser);
 
         casByUser = new HashMap<String, CAS>();
         casByUser.put("actual", jcasA.getCas());
         casByUser.put("merge", curatorCas.getCas());
 
-        result = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser).toResult();
+        result = doDiff(diffAdapters, casByUser).toResult();
 
         assertEquals(0, result.getDifferingConfigurationSets().size());
         assertEquals(0, result.getIncompleteConfigurationSets().size());
@@ -178,26 +176,26 @@ public class CasMergeRemergeTest
     @Test
     public void multiLinkWithRoleLabelDifferenceTest() throws Exception
     {
-        JCas jcasA = createJCas(createMultiLinkWithRoleTestTypeSystem("f1"));
+        var jcasA = createJCas(createMultiLinkWithRoleTestTypeSystem("f1"));
         makeLinkHostFS(jcasA, 0, 0, makeLinkFS(jcasA, "slot1", 0, 0));
 
-        JCas jcasB = createJCas(createMultiLinkWithRoleTestTypeSystem("f1"));
+        var jcasB = createJCas(createMultiLinkWithRoleTestTypeSystem("f1"));
         makeLinkHostFS(jcasB, 0, 0, makeLinkFS(jcasB, "slot2", 0, 0));
 
         var casByUser = new LinkedHashMap<String, CAS>();
         casByUser.put("user1", jcasA.getCas());
         casByUser.put("user2", jcasB.getCas());
 
-        JCas curatorCas = createJCas(createMultiLinkWithRoleTestTypeSystem("f1"));
+        var curatorCas = createJCas(createMultiLinkWithRoleTestTypeSystem("f1"));
         curatorCas.setDocumentText(casByUser.values().stream().findFirst().get().getDocumentText());
 
-        DiffResult result = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser).toResult();
+        var result = doDiff(diffAdapters, casByUser).toResult();
 
         // result.print(System.out);
 
-        sut.reMergeCas(result, document, DUMMY_USER, curatorCas.getCas(), casByUser);
+        sut.clearAndMergeCas(result, document, DUMMY_USER, curatorCas.getCas(), casByUser);
 
-        Type hostType = curatorCas.getCas().getTypeSystem().getType(HOST_TYPE);
+        var hostType = curatorCas.getCas().getTypeSystem().getType(HOST_TYPE);
         FeatureSupport<?> slotSupport = featureSupportRegistry.findExtension(slotFeature)
                 .orElseThrow();
 
@@ -225,11 +223,11 @@ public class CasMergeRemergeTest
         var curatorCas = createJCas(createMultiLinkWithRoleTestTypeSystem("f1"));
         curatorCas.setDocumentText(casByUser.values().stream().findFirst().get().getDocumentText());
 
-        var result = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser).toResult();
+        var result = doDiff(diffAdapters, casByUser).toResult();
 
         // result.print(System.out);
 
-        sut.reMergeCas(result, document, DUMMY_USER, curatorCas.getCas(), casByUser);
+        sut.clearAndMergeCas(result, document, DUMMY_USER, curatorCas.getCas(), casByUser);
 
         var hostType = curatorCas.getCas().getTypeSystem().getType(HOST_TYPE);
         FeatureSupport<?> slotSupport = featureSupportRegistry.findExtension(slotFeature)
@@ -262,13 +260,13 @@ public class CasMergeRemergeTest
         curatorCas.setDocumentText(casByUser.values().stream().findFirst().get().getDocumentText());
 
         var adapter = new SpanDiffAdapter(HOST_TYPE);
-        adapter.addLinkFeature("links", "role", "target");
+        adapter.addLinkFeature("links", "role", "target", ONE_TARGET_MULTIPLE_ROLES);
 
-        var result = doDiff(asList(adapter), LINK_TARGET_AS_LABEL, casByUser).toResult();
+        var result = doDiff(asList(adapter), casByUser).toResult();
 
         // result.print(System.out);
 
-        sut.reMergeCas(result, document, DUMMY_USER, curatorCas, casByUser);
+        sut.clearAndMergeCas(result, document, DUMMY_USER, curatorCas, casByUser);
 
         assertThat(select(curatorCas, getType(curatorCas, HOST_TYPE))).isEmpty();
         assertThat(calculateState(result)).isEqualTo(AGREE);
@@ -293,11 +291,11 @@ public class CasMergeRemergeTest
         var curatorCas = createJCas(createMultiLinkWithRoleTestTypeSystem("f1"));
         curatorCas.setDocumentText(casByUser.values().stream().findFirst().get().getDocumentText());
 
-        var result = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser).toResult();
+        var result = doDiff(diffAdapters, casByUser).toResult();
 
         // result.print(System.out);
 
-        sut.reMergeCas(result, document, DUMMY_USER, curatorCas.getCas(), casByUser);
+        sut.clearAndMergeCas(result, document, DUMMY_USER, curatorCas.getCas(), casByUser);
 
         Type hostType = curatorCas.getTypeSystem().getType(HOST_TYPE);
 

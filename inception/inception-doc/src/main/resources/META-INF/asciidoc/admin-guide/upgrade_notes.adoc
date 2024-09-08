@@ -16,11 +16,29 @@
 
 = Upgrade notes
 
-This section summarizes important upgrade notes from the release history of INCEpTION. If you upgrade from any version `X`, carefully read all the upgrade notes for versions later than `X`. In particular, if any of the upgrade notes mentions that an intermediate upgrade to that version must be made before going to a higher version, then first perform all required intermediate upgrades in order. 
+This section summarizes important upgrade notes from the release history of {product-name}. If you upgrade from any version `X`, carefully read all the upgrade notes for versions later than `X`. In particular, if any of the upgrade notes mentions that an intermediate upgrade to that version must be made before going to a higher version, then first perform all required intermediate upgrades in order. 
 
 NOTE: It is a good idea to back up your installation and data before an upgrade. Also make sure that
       you can actually re-create a working installation by restoring your backup. A backup which cannot be
       successfully restored is worthless.
+
+== INCEpTION 33.0
+
+=== MariaDB upgrade in the Docker Compose file
+
+The MariaDB container that is configured in the example file will now set the environment
+variable `MARIADB_AUTO_UPGRADE` to `1` to have MariaDB automatically upgrade its internal tables when encountering a database
+produced with an earlier version of MariaDB (see link:https://hub.docker.com/_/mariadb[MariaDB Environment Variables].
+If you do not want this behavior, be sure to remove this settings from the compose file.
+
+The MariaDB container is also upgraded to the current LTS version 11.4 in the compose file. If you are not using the
+auto-upgrade behavior mentioned above, you need to manually perform the link:https://mariadb.com/kb/en/upgrading/[MariaDB upgrade] procedure.
+
+== INCEpTION 32.0
+
+If you are using Docker and override the memory usage of {product-name} via the `JAVA_OPTS` environment
+variable, then you should remove the memory settings from that variable an instead add them to `JAVA_MEM_OPTS`
+to ensure that you actually override the default memory settings provided by {product-name}.
 
 == INCEpTION 25.0
 

@@ -9,18 +9,18 @@ networks:
 
 services:
   db:
-    image: "mariadb:10.11"
+    image: "mariadb:11.4"
     environment:
-      - MYSQL_RANDOM_ROOT_PASSWORD=yes
-      - MYSQL_DATABASE=inception
-      - MYSQL_USER=${DBUSER:-inception}
-      - MYSQL_PORT=3306
-      - MYSQL_PASSWORD=${DBPASSWORD:-inception}
+      - MARIADB_RANDOM_ROOT_PASSWORD=yes
+      - MARIADB_DATABASE=inception
+      - MARIADB_USER=${DBUSER:-inception}
+      - MARIADB_PASSWORD=${DBPASSWORD:-inception}
+      - MARIADB_AUTO_UPGRADE=1
     volumes:
       - ${INCEPTION_DB_HOME:-db-data}:/var/lib/mysql
     command: ["--character-set-server=utf8mb4", "--collation-server=utf8mb4_bin"]
     healthcheck:
-      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost", "-p${DBPASSWORD:-inception}", "-u${DBUSER:-inception}"]
+      test: ["CMD", "mariadb-admin" ,"ping", "-h", "localhost", "-p${DBPASSWORD:-inception}", "-u${DBUSER:-inception}"]
       interval: 20s
       timeout: 10s
       retries: 10
@@ -32,8 +32,7 @@ services:
     ports:
       - "${INCEPTION_PORT:-8080}:8080"
     environment:
-      - INCEPTION_DB_DIALECT=org.hibernate.dialect.MariaDB103Dialect 
-      - INCEPTION_DB_DRIVER=org.mariadb.jdbc.Driver
+      - INCEPTION_DB_DIALECT=org.hibernate.dialect.MariaDB106Dialect
       - INCEPTION_DB_URL=jdbc:mariadb://db:3306/inception?useSSL=false&useUnicode=true&characterEncoding=UTF-8
       - INCEPTION_DB_USERNAME=${DBUSER:-inception}
       - INCEPTION_DB_PASSWORD=${DBPASSWORD:-inception}

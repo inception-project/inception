@@ -30,7 +30,7 @@ class DocumentServiceImplTest
     @BeforeEach
     void setup()
     {
-        sut = new DocumentServiceImpl(null, null, null, null, null, null);
+        sut = new DocumentServiceImpl(null, null, null, null, null, null, null);
     }
 
     @Test

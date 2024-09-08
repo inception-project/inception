@@ -32,7 +32,6 @@ public class GazeteerEntry
 
     public GazeteerEntry(String aText, String aLabel)
     {
-        super();
         text = aText;
         label = aLabel;
     }
@@ -44,19 +43,27 @@ public class GazeteerEntry
             return false;
         }
         GazeteerEntry castOther = (GazeteerEntry) other;
-        return new EqualsBuilder().append(text, castOther.text).append(label, castOther.label)
+        return new EqualsBuilder() //
+                .append(text, castOther.text) //
+                .append(label, castOther.label) //
                 .isEquals();
     }
 
     @Override
     public int hashCode()
     {
-        return new HashCodeBuilder().append(text).append(label).toHashCode();
+        return new HashCodeBuilder() //
+                .append(text) //
+                .append(label) //
+                .toHashCode();
     }
 
     @Override
     public String toString()
     {
-        return new ToStringBuilder(this).append("text", text).append("label", label).toString();
+        return new ToStringBuilder(this) //
+                .append("text", text) //
+                .append("label", label) //
+                .toString();
     }
 }

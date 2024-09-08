@@ -21,14 +21,14 @@ import static de.tudarmstadt.ukp.inception.support.wicket.WicketUtil.wrapInTryCa
 import static java.lang.String.format;
 import static java.util.Locale.ROOT;
 
+import java.util.OptionalInt;
+
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.request.IRequestParameters;
-
-import com.googlecode.wicket.jquery.ui.widget.menu.ContextMenuBehavior;
+import org.wicketstuff.jquery.ui.widget.menu.ContextMenuBehavior;
 
 public class ContextMenu
-    extends com.googlecode.wicket.jquery.ui.widget.menu.ContextMenu
+    extends org.wicketstuff.jquery.ui.widget.menu.ContextMenu
 {
     private static final long serialVersionUID = -1839334030165463085L;
 
@@ -45,17 +45,16 @@ public class ContextMenu
      */
     public void onOpen(AjaxRequestTarget target)
     {
-        onContextMenu(target, null);
-
-        final IRequestParameters request = getRequest().getPostParameters();
-
-        int clientX = request.getParameterValue("clientX").toInt();
-        int clientY = request.getParameterValue("clientY").toInt();
+        var clientX = getClientX();
+        var clientY = getClientY();
+        if (clientX.isEmpty() || clientY.isEmpty()) {
+            return;
+        }
 
         target.add(this);
         target.appendJavaScript(wrapInTryCatch(format(ROOT,
                 "jQuery('%s').show().css({position:'fixed', left:'%dpx', top:'%dpx'});",
-                JQueryWidget.getSelector(this), clientX, clientY)));
+                JQueryWidget.getSelector(this), clientX.getAsInt(), clientY.getAsInt())));
     }
 
     /**
@@ -73,5 +72,35 @@ public class ContextMenu
         target.add(this);
         target.appendJavaScript(wrapInTryCatch(format(ROOT, "jQuery('%s').show().position(%s);",
                 JQueryWidget.getSelector(this), this.getPositionOption(aComponent))));
+    }
+
+    public void onOpen(AjaxRequestTarget target, int aClientX, int aClientY)
+    {
+        onContextMenu(target, null);
+
+        target.add(this);
+        target.appendJavaScript(wrapInTryCatch(format(ROOT,
+                "jQuery('%s').show().css({position:'fixed', left:'%dpx', top:'%dpx'});",
+                JQueryWidget.getSelector(this), aClientX, aClientY)));
+    }
+
+    public OptionalInt getClientX()
+    {
+        var request = getRequest().getPostParameters();
+        var value = request.getParameterValue("clientX");
+        if (value.isEmpty()) {
+            return OptionalInt.empty();
+        }
+        return OptionalInt.of(Math.round(value.toInt()));
+    }
+
+    public OptionalInt getClientY()
+    {
+        var request = getRequest().getPostParameters();
+        var value = request.getParameterValue("clientY");
+        if (value.isEmpty()) {
+            return OptionalInt.empty();
+        }
+        return OptionalInt.of(Math.round(value.toInt()));
     }
 }

@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.inception.ui.core.dashboard.admin;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
@@ -32,7 +31,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.DashboardMenu;
-import de.tudarmstadt.ukp.inception.ui.core.dashboard.dashlet.SystemStatusDashlet;
+import de.tudarmstadt.ukp.inception.ui.core.dashboard.admin.dashlet.SystemStatusDashlet;
 
 /**
  * Admin menu page.
@@ -71,8 +70,8 @@ public class AdminDashboardPage
 
     private List<MenuItem> getMenuItems()
     {
-        return menuItemService.getMenuItems().stream()
-                .filter(item -> item.getPath().matches("/admin/[^/]+"))
-                .collect(Collectors.toList());
+        return menuItemService.getMenuItems().stream() //
+                .filter(item -> item.getPath().matches("/admin/[^/]+")) //
+                .toList();
     }
 }

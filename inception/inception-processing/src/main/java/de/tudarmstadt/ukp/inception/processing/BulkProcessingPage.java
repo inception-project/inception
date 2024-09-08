@@ -27,7 +27,9 @@ import org.wicketstuff.annotation.mount.MountPath;
 
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
+import de.tudarmstadt.ukp.inception.processing.curation.BulkCurationPanel;
 import de.tudarmstadt.ukp.inception.processing.recommender.BulkRecommenderPanel;
+import de.tudarmstadt.ukp.inception.processing.tagset.TagSetExtractionPanel;
 import de.tudarmstadt.ukp.inception.ui.scheduling.TaskMonitorPanel;
 
 @MountPath(NS_PROJECT + "/${" + PAGE_PARAM_PROJECT + "}/process")
@@ -46,9 +48,14 @@ public class BulkProcessingPage
 
         requireProjectRole(user, MANAGER);
 
-        queue(new BulkRecommenderPanel("processingPanel", getProjectModel()));
+        queue(new BulkRecommenderPanel("bulkRecommenderPanel", getProjectModel()));
 
-        queue(new TaskMonitorPanel("runningProcesses").setPopupMode(false)
+        queue(new TagSetExtractionPanel("tagSetExtractionPanel", getProjectModel()));
+
+        queue(new BulkCurationPanel("bulkCurationPanel", getProjectModel()));
+
+        queue(new TaskMonitorPanel("runningProcesses", getProject()) //
+                .setPopupMode(false) //
                 .setShowFinishedTasks(true));
     }
 }

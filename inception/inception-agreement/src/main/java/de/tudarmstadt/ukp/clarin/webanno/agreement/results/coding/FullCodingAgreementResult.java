@@ -17,20 +17,16 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding;
 
-import static java.util.Collections.unmodifiableList;
-
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.dkpro.statistics.agreement.IAnnotationUnit;
-import org.dkpro.statistics.agreement.coding.ICodingAnnotationItem;
 import org.dkpro.statistics.agreement.coding.ICodingAnnotationStudy;
 
 import de.tudarmstadt.ukp.clarin.webanno.agreement.FullAgreementResult_ImplBase;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.ConfigurationSet;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.DiffResult;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.ConfigurationSet;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.DiffResult;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.Tag;
 
 public class FullCodingAgreementResult
     extends FullAgreementResult_ImplBase<ICodingAnnotationStudy>
@@ -38,29 +34,16 @@ public class FullCodingAgreementResult
     private static final long serialVersionUID = -1262324752699430461L;
 
     protected final DiffResult diff;
-    protected final List<ConfigurationSet> setsWithDifferences;
-    protected final List<ConfigurationSet> completeSets;
-    protected final List<ConfigurationSet> irrelevantSets;
-    protected final List<ConfigurationSet> incompleteSetsByPosition;
-    protected final List<ConfigurationSet> incompleteSetsByLabel;
-    protected final List<ConfigurationSet> pluralitySets;
+    protected final List<ConfigurationSet> allSets;
 
     public FullCodingAgreementResult(String aType, String aFeature, DiffResult aDiff,
             ICodingAnnotationStudy aStudy, List<String> aCasGroupIds,
-            List<ConfigurationSet> aComplete, List<ConfigurationSet> aIrrelevantSets,
-            List<ConfigurationSet> aSetsWithDifferences,
-            List<ConfigurationSet> aIncompleteByPosition, List<ConfigurationSet> aIncompleteByLabel,
-            List<ConfigurationSet> aPluralitySets, boolean aExcludeIncomplete)
+            List<ConfigurationSet> aTaggedConfigurations, boolean aExcludeIncomplete)
     {
         super(aType, aFeature, aStudy, aCasGroupIds, aExcludeIncomplete);
 
+        allSets = aTaggedConfigurations;
         diff = aDiff;
-        setsWithDifferences = aSetsWithDifferences;
-        completeSets = unmodifiableList(new ArrayList<>(aComplete));
-        irrelevantSets = aIrrelevantSets;
-        incompleteSetsByPosition = unmodifiableList(new ArrayList<>(aIncompleteByPosition));
-        incompleteSetsByLabel = unmodifiableList(new ArrayList<>(aIncompleteByLabel));
-        pluralitySets = unmodifiableList(new ArrayList<>(aPluralitySets));
     }
 
     public boolean noPositions()
@@ -69,24 +52,30 @@ public class FullCodingAgreementResult
     }
 
     /**
-     * Positions that were not seen in all CAS groups.
+     * @return Positions that were not seen in all CAS groups.
      */
     public List<ConfigurationSet> getIncompleteSetsByPosition()
     {
-        return incompleteSetsByPosition;
+        return allSets.stream() //
+                .filter(s -> s.hasTag(Tag.INCOMPLETE_POSITION)) //
+                .toList();
     }
 
     /**
-     * Positions that were seen in all CAS groups, but labels are unset (null).
+     * @return Positions that were seen in all CAS groups, but labels are unset (null).
      */
     public List<ConfigurationSet> getIncompleteSetsByLabel()
     {
-        return incompleteSetsByLabel;
+        return allSets.stream() //
+                .filter(s -> s.hasTag(Tag.INCOMPLETE_LABEL)) //
+                .toList();
     }
 
     public List<ConfigurationSet> getPluralitySets()
     {
-        return pluralitySets;
+        return allSets.stream() //
+                .filter(s -> s.hasTag(Tag.STACKED)) //
+                .toList();
     }
 
     /**
@@ -94,43 +83,43 @@ public class FullCodingAgreementResult
      */
     public List<ConfigurationSet> getSetsWithDifferences()
     {
-        return setsWithDifferences;
+        return allSets.stream() //
+                .filter(s -> s.hasTag(Tag.DIFFERENCE)) //
+                .toList();
     }
 
     public List<ConfigurationSet> getCompleteSets()
     {
-        return completeSets;
+        return allSets.stream() //
+                .filter(s -> s.hasTag(Tag.COMPLETE)) //
+                .toList();
     }
 
     public List<ConfigurationSet> getIrrelevantSets()
     {
-        return irrelevantSets;
+        return allSets.stream() //
+                .filter(s -> s.hasTag(Tag.IRRELEVANT)) //
+                .toList();
     }
 
-    public int getDiffSetCount()
+    public List<ConfigurationSet> getRelevantSets()
     {
-        return setsWithDifferences.size();
+        return allSets.stream() //
+                .filter(s -> !s.hasTag(Tag.IRRELEVANT)) //
+                .toList();
+
     }
 
-    public int getUnusableSetCount()
+    public List<ConfigurationSet> getUsedSets()
     {
-        return incompleteSetsByPosition.size() + incompleteSetsByLabel.size()
-                + pluralitySets.size();
+        return allSets.stream() //
+                .filter(s -> !s.hasTag(Tag.USED)) //
+                .toList();
     }
 
-    public int getCompleteSetCount()
+    public List<ConfigurationSet> getAllSets()
     {
-        return completeSets.size();
-    }
-
-    public int getTotalSetCount()
-    {
-        return diff.getPositions().size();
-    }
-
-    public int getRelevantSetCount()
-    {
-        return diff.getPositions().size() - irrelevantSets.size();
+        return allSets;
     }
 
     public DiffResult getDiff()
@@ -140,10 +129,10 @@ public class FullCodingAgreementResult
 
     public Set<Object> getObservedCategories()
     {
-        Set<Object> observedCategories = new HashSet<>();
-        for (ICodingAnnotationItem item : study.getItems()) {
-            for (IAnnotationUnit unit : item.getUnits()) {
-                Object category = unit.getCategory();
+        var observedCategories = new HashSet<Object>();
+        for (var item : study.getItems()) {
+            for (var unit : item.getUnits()) {
+                var category = unit.getCategory();
                 if (category != null) {
                     observedCategories.add(category);
                 }
@@ -155,7 +144,7 @@ public class FullCodingAgreementResult
     @Override
     public boolean isAllNull(String aCasGroupId)
     {
-        for (ICodingAnnotationItem item : study.getItems()) {
+        for (var item : study.getItems()) {
             if (item.getUnit(getCasGroupIds().indexOf(aCasGroupId)).getCategory() != null) {
                 return false;
             }
@@ -166,7 +155,7 @@ public class FullCodingAgreementResult
     @Override
     public long getNonNullCount(String aCasGroupId)
     {
-        long i = 0;
+        var i = 0;
         for (var item : study.getItems()) {
             if (item.getUnit(getCasGroupIds().indexOf(aCasGroupId)).getCategory() != null) {
                 i++;
@@ -190,8 +179,7 @@ public class FullCodingAgreementResult
     @Override
     public String toString()
     {
-        return "CodingAgreementResult [type=" + type + ", feature=" + feature + ", diffs="
-                + getDiffSetCount() + ", unusableSets=" + getUnusableSetCount() + ", agreement="
+        return "CodingAgreementResult [type=" + type + ", feature=" + feature + ", agreement="
                 + agreement + "]";
     }
 }

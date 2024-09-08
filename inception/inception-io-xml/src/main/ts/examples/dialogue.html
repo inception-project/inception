@@ -1,0 +1,90 @@
+<!--
+  Licensed to the Technische Universität Darmstadt under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The Technische Universität Darmstadt 
+  licenses this file to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.
+   
+  http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<html i7n-templates="dialogue">
+  <body class="i7n-template-dialogue">
+    <div class="message message-sent" data-actor="Prince">
+      <div class="message-body">
+        <p>
+          Good day! I seem to have lost my way. 
+          Could you perhaps guide me to the lavatory?
+        </p>
+      </div>
+    </div>
+    <div class="message message-received" data-actor="CastleGuide">
+      <div class="message-body">
+        <p>
+          Greetings, Your Highness! 
+          I'd be delighted to assist you. 
+          Could you tell me where you were last within the castle?
+        </p>
+      </div>
+    </div>
+    <div class="message message-sent" data-actor="Prince">
+      <div class="message-body">
+        <p>
+          I was last in the grand hall, near the tapestry of the great battle.
+        </p>
+      </div>
+    </div>
+    <div class="message message-system" data-actor="Router">
+      <div class="message-body">
+        <p>Redirecting to Castle Attendant for further assistance.</p>
+      </div>
+    </div>
+    <div class="message message-received" data-actor="CastleGuide">
+      <div class="message-body">
+        <p>
+          Thank you, Your Highness. 
+          I see that the lavatory is indeed a bit of a distance from the grand hall. 
+          I shall connect you with a Castle Attendant who can guide you there directly. 
+          Is that agreeable?
+        </p>
+      </div>
+    </div>
+    <div class="message message-sent" data-actor="Prince">
+      <div class="message-body">
+        <p>
+          Yes, that would be most helpful.
+        </p>
+      </div>
+    </div>
+    <div class="message message-received" data-actor="CastleGuide">
+      <div class="message-body">
+        <p>
+          Excellent. 
+          Please hold for a moment while I summon a Castle Attendant to guide you. 
+          They will be with you shortly.
+        </p>
+      </div>
+    </div>
+    <div class="message message-sent" data-actor="Prince">
+      <div class="message-body">
+        <p>
+          Thank you.
+        </p>
+      </div>
+    </div>
+    <div class="message message-system" data-actor="Router">
+      <div class="message-body">
+        <p>
+          Castle Attendant now en route to guide the Prince.
+        </p>
+      </div>
+    </div>
+  </body>
+</html>

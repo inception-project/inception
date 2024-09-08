@@ -15,18 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- :root {
-  --page-margin: 10em;
+:root {
 }
 
 TEI {
   display: block;
-  margin: 15px;
 
   text {
     display: block;
-    margin-left: var(--page-margin);
-    margin-right: var(--page-margin);
   }
 
   front, back, body, div {

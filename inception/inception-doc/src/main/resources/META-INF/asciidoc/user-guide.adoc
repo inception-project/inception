@@ -147,6 +147,10 @@ include::{include-dir}projects_recommendation_opennlp.adoc[leveloffset=+2]
 
 include::{include-dir}projects_recommendation_ollama.adoc[leveloffset=+2]
 
+include::{include-dir}projects_recommendation_chatgpt.adoc[leveloffset=+2]
+
+include::{include-dir}projects_recommendation_azureai_openai.adoc[leveloffset=+2]
+
 include::{include-dir}projects_recommendation_conceptlinker.adoc[leveloffset=+2]
 
 include::{include-dir}projects_recommendation_external.adoc[leveloffset=+2]
@@ -183,8 +187,6 @@ include::{include-dir}external-search-sidebar.adoc[leveloffset=+2]
 
 include::{include-dir}external-search-repos.adoc[leveloffset=+2]
 
-// include::{include-dir}external-search-repos-elasticsearch.adoc[leveloffset=+3]
-
 include::{include-dir}external-search-repos-opensearch.adoc[leveloffset=+3]
 
 include::{include-dir}external-search-repos-solr.adoc[leveloffset=+3]
@@ -215,6 +217,10 @@ include::{include-dir}pdf-editor-legacy.adoc[leveloffset=+1]
 
 <<<
 
+include::{include-dir}cross-layer-relations.adoc[leveloffset=+1]
+
+<<<
+
 include::{include-dir}editable-segmentation.adoc[leveloffset=+1]
 
 <<<
@@ -235,6 +241,10 @@ include::{include-dir}editors.adoc[leveloffset=+1]
 include::{include-dir}formats.adoc[leveloffset=+1]
 
 include::{include-dir}formats-bioc.adoc[leveloffset=+2]
+
+include::{include-dir}formats-brat-basic.adoc[leveloffset=+2]
+
+include::{include-dir}formats-brat-custom.adoc[leveloffset=+2]
 
 include::{include-dir}formats-conll2000.adoc[leveloffset=+2]
 
@@ -258,6 +268,8 @@ include::{include-dir}formats-htmldoc.adoc[leveloffset=+2]
 
 include::{include-dir}formats-mhtml.adoc[leveloffset=+2]
 
+include::{include-dir}formats-html-zip.adoc[leveloffset=+2]
+
 include::{include-dir}formats-imscwb.adoc[leveloffset=+2]
 
 // include::{include-dir}formats-lif.adoc[leveloffset=+2]
@@ -274,6 +286,8 @@ include::{include-dir}formats-tcf.adoc[leveloffset=+2]
 
 include::{include-dir}formats-tei.adoc[leveloffset=+2]
 
+include::{include-dir}formats-tei-legacy.adoc[leveloffset=+2]
+
 include::{include-dir}formats-text.adoc[leveloffset=+2]
 
 include::{include-dir}formats-uimabinarycas.adoc[leveloffset=+2]
@@ -284,7 +298,7 @@ include::{include-dir}formats-uimajson.adoc[leveloffset=+2]
 
 include::{include-dir}formats-uimajson-legacy.adoc[leveloffset=+2]
 
-include::{include-dir}formats-rdfcas.adoc.adoc[leveloffset=+2]
+include::{include-dir}formats-rdfcas.adoc[leveloffset=+2]
 
 include::{include-dir}formats-uimaxmi.adoc[leveloffset=+2]
 

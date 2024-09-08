@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.app.ui.search.sidebar;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.AUTO_CAS_UPGRADE;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateChangeFlag.EXPLICIT_ANNOTATOR_USER_ACTION;
 import static de.tudarmstadt.ukp.inception.rendering.vmodel.VMarker.MATCH_FOCUS;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.enabledWhen;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
@@ -84,7 +85,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase2;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
 import de.tudarmstadt.ukp.inception.annotation.events.BulkAnnotationEvent;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanAdapter;
@@ -187,11 +188,10 @@ public class SearchAnnotationSidebar
     private final LambdaAjaxLink deleteOptionsLink;
     private final Form<Void> annotationForm;
 
-    public SearchAnnotationSidebar(String aId, IModel<AnnotatorState> aModel,
-            AnnotationActionHandler aActionHandler, CasProvider aCasProvider,
-            AnnotationPage aAnnotationPage)
+    public SearchAnnotationSidebar(String aId, AnnotationActionHandler aActionHandler,
+            CasProvider aCasProvider, AnnotationPageBase2 aAnnotationPage)
     {
-        super(aId, aModel, aActionHandler, aCasProvider, aAnnotationPage);
+        super(aId, aActionHandler, aCasProvider, aAnnotationPage);
 
         resultsProvider = new SearchResultsProviderWrapper(
                 new SearchResultsProvider(searchService, groupedResults),
@@ -210,8 +210,9 @@ public class SearchAnnotationSidebar
                 .setUncheckedTitle(Model.of("Search in all documents"))
                 .setModel(searchOptions.bind(MID_LIMITED_TO_CURRENT_DOCUMENT))
                 .add(visibleWhen(() -> workloadService
-                        .getWorkloadManagerExtension(aModel.getObject().getProject())
-                        .isDocumentRandomAccessAllowed(aModel.getObject().getProject())))
+                        .getWorkloadManagerExtension(aAnnotationPage.getModelObject().getProject())
+                        .isDocumentRandomAccessAllowed(
+                                aAnnotationPage.getModelObject().getProject())))
                 .add(new LambdaAjaxFormComponentUpdatingBehavior()));
 
         resultsProvider.emptyQuery();
@@ -464,7 +465,7 @@ public class SearchAnnotationSidebar
             @Override
             protected void onUpdate(AjaxRequestTarget target)
             {
-                for (ResultsGroup resultsGroup : groupedResults.getObject().allResultsGroups()) {
+                for (var resultsGroup : groupedResults.getObject().allResultsGroups()) {
                     if (resultsGroup.getGroupKey().equals(aGroupKey)) {
                         resultsGroup.getResults().stream() //
                                 .filter(r -> !r.isReadOnly()) //
@@ -584,7 +585,7 @@ public class SearchAnnotationSidebar
             return;
         }
         catch (Exception e) {
-            error("Error in the query: " + e.getMessage());
+            error("Query error: " + e.getMessage());
             aTarget.addChildren(getPage(), IFeedback.class);
             resultsProvider.emptyQuery();
             return;
@@ -806,7 +807,8 @@ public class SearchAnnotationSidebar
             return;
         }
 
-        documentService.writeAnnotationCas(aCas, aSourceDoc, state.getUser().getUsername(), true);
+        documentService.writeAnnotationCas(aCas, aSourceDoc, state.getUser().getUsername(),
+                EXPLICIT_ANNOTATOR_USER_ACTION);
     }
 
     private boolean featureValuesMatchCurrentState(AnnotationFS aAnnotationFS)

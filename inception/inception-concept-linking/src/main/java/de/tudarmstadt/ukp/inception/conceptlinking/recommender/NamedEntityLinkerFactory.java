@@ -18,6 +18,7 @@
 
 package de.tudarmstadt.ukp.inception.conceptlinking.recommender;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.CHARACTERS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SINGLE_TOKEN;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
 import static java.util.Arrays.asList;
@@ -73,10 +74,16 @@ public class NamedEntityLinkerFactory
     }
 
     @Override
+    public boolean isSynchronous(Recommender aRecommender)
+    {
+        return readTraits(aRecommender).isSynchronous();
+    }
+
+    @Override
     public RecommendationEngine build(Recommender aRecommender)
     {
-        NamedEntityLinkerTraits linkerTraits = readTraits(aRecommender);
-        ConceptFeatureTraits featureTraits = fsRegistry.readTraits(aRecommender.getFeature(),
+        var linkerTraits = readTraits(aRecommender);
+        var featureTraits = fsRegistry.readTraits(aRecommender.getFeature(),
                 ConceptFeatureTraits::new);
 
         return new NamedEntityLinker(aRecommender, linkerTraits, kbService, clService, fsRegistry,
@@ -95,8 +102,8 @@ public class NamedEntityLinkerFactory
         if (aLayer == null || aFeature == null) {
             return false;
         }
-        return asList(SINGLE_TOKEN, TOKENS).contains(aLayer.getAnchoringMode())
-                && !aLayer.isCrossSentence() && SpanLayerSupport.TYPE.equals(aLayer.getType())
+        return asList(SINGLE_TOKEN, TOKENS, CHARACTERS).contains(aLayer.getAnchoringMode())
+                && SpanLayerSupport.TYPE.equals(aLayer.getType())
                 && aFeature.getType().startsWith(PREFIX);
     }
 

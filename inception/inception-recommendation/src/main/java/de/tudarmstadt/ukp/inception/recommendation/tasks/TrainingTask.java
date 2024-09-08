@@ -25,8 +25,6 @@ import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMess
 import java.lang.invoke.MethodHandles;
 import java.util.List;
 
-import javax.persistence.NoResultException;
-
 import org.apache.commons.lang3.Validate;
 import org.apache.commons.lang3.concurrent.ConcurrentException;
 import org.apache.uima.cas.CAS;
@@ -48,6 +46,7 @@ import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderTaskNotifica
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.support.WebAnnoConst;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
+import jakarta.persistence.NoResultException;
 
 public class TrainingTask
     extends RecommendationTask_ImplBase
@@ -238,6 +237,7 @@ public class TrainingTask
                 .withTrigger(String.format("TrainingTask %s complete", getId())) //
                 .withCurrentDocument(currentDocument) //
                 .withDataOwner(dataOwner) //
+                .withSynchronousRecommenders(false) // ;
                 .build();
 
         predictionTask.inheritLog(this);
@@ -245,10 +245,10 @@ public class TrainingTask
         schedulingService.enqueue(predictionTask);
     }
 
-    private void commitContext(User user, Recommender recommender, RecommenderContext ctx)
+    private void commitContext(User aSessionOwner, Recommender recommender, RecommenderContext ctx)
     {
         ctx.close();
-        recommenderService.putContext(user, recommender, ctx);
+        recommenderService.putContext(aSessionOwner, recommender, ctx);
     }
 
     private void logTrainingOverallEnd(long overallStartTime)
@@ -258,6 +258,8 @@ public class TrainingTask
 
     private void logUnsupportedRecommenderType(Recommender aRecommender)
     {
+        warn("Recommender [%s] uses unsupported tool [%s] - skipping", aRecommender.getName(),
+                aRecommender.getTool());
         LOG.warn("[{}][{}]: No factory found - skipping recommender",
                 getSessionOwner().getUsername(), aRecommender.getName());
     }
@@ -270,18 +272,22 @@ public class TrainingTask
 
     private void logRecommenderDisabled(Recommender aRecommender)
     {
-        LOG.debug("[{}][{}][{}]: Recommenderdisabled - skipping", getSessionOwner().getUsername(),
+        LOG.debug("[{}][{}][{}]: Recommender disabled - skipping", getSessionOwner().getUsername(),
                 getId(), aRecommender.getName());
     }
 
     private void logLayerDisabled(Recommender aRecommender)
     {
+        warn("Recommender [%s] uses disabled layer [%s] disabled - skipping recommender.",
+                aRecommender.getName(), aRecommender.getLayer().getUiName());
         LOG.debug("[{}][{}][{}]: Layer disabled - skipping", getSessionOwner().getUsername(),
                 getId(), aRecommender.getLayer().getUiName());
     }
 
     private void logFeatureDisabled(Recommender aRecommender)
     {
+        warn("Recommender [%s] uses disabled feature [%s] - skipping recommender.",
+                aRecommender.getName(), aRecommender.getFeature().getUiName());
         LOG.debug("[{}][{}][{}]: Feature disabled - skipping", getSessionOwner().getUsername(),
                 getId(), aRecommender.getFeature().getUiName());
     }
@@ -372,9 +378,10 @@ public class TrainingTask
 
     private void logTrainingOverallStart()
     {
-        LOG.debug("[{}][{}]: Starting training for project {} triggered by [{}]...", getId(),
-                getSessionOwner().getUsername(), getProject(), getTrigger());
-        info("Starting training triggered by [%s]...", getTrigger());
+        LOG.debug(
+                "[{}][{}]: Starting training for project {} on data from [{}] triggered by [{}]...",
+                getId(), getSessionOwner().getUsername(), getProject(), dataOwner, getTrigger());
+        info("Starting training on data from [%s] triggered by [%s]...", dataOwner, getTrigger());
     }
 
     private void logTrainingRecommenderStart(LazyCasLoader aLoader, Recommender recommender,

@@ -42,9 +42,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 
-import javax.persistence.NoResultException;
-import javax.servlet.ServletContext;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -57,7 +54,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageMenuItem;
-import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.CurationPageMenuItem;
 import de.tudarmstadt.ukp.inception.annotation.events.FeatureValueUpdatedEvent;
 import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainLinkCreatedEvent;
 import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainLinkDeletedEvent;
@@ -76,6 +72,9 @@ import de.tudarmstadt.ukp.inception.ui.core.dashboard.activity.panel.ActivityOve
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.activity.panel.ActivityOverviewItem;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.activity.panel.ActivitySummary;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.activity.panel.ActivitySummaryItem;
+import de.tudarmstadt.ukp.inception.ui.curation.page.CurationPageMenuItem;
+import jakarta.persistence.NoResultException;
+import jakarta.servlet.ServletContext;
 
 @ConditionalOnWebApplication
 @RestController
@@ -85,7 +84,7 @@ public class ActivitiesDashletControllerImpl
 {
     private final EventRepository eventRepository;
     private final DocumentService documentService;
-    private final CurationDocumentService curationService;
+    private final CurationDocumentService curationDocumentService;
     private final ProjectService projectRepository;
     private final UserDao userRepository;
     private final AnnotationPageMenuItem annotationPageMenuItem;
@@ -107,14 +106,14 @@ public class ActivitiesDashletControllerImpl
 
     @Autowired
     public ActivitiesDashletControllerImpl(EventRepository aEventRepository,
-            DocumentService aDocumentService, CurationDocumentService aCurationService,
+            DocumentService aDocumentService, CurationDocumentService aCurationDocumentService,
             ProjectService aProjectRepository, UserDao aUserRepository,
             AnnotationPageMenuItem aAnnotationPageMenuItem,
             CurationPageMenuItem aCurationPageMenuItem, ServletContext aServletContext)
     {
         eventRepository = aEventRepository;
         documentService = aDocumentService;
-        curationService = aCurationService;
+        curationDocumentService = aCurationDocumentService;
         projectRepository = aProjectRepository;
         userRepository = aUserRepository;
         annotationPageMenuItem = aAnnotationPageMenuItem;
@@ -267,7 +266,7 @@ public class ActivitiesDashletControllerImpl
                 .keySet().stream() //
                 .collect(toMap(SourceDocument::getId, identity()));
 
-        var curatableSourceDocuments = curationService.listCuratableSourceDocuments(project)
+        var curatableSourceDocuments = curationDocumentService.listCuratableSourceDocuments(project)
                 .stream() //
                 .collect(toMap(SourceDocument::getId, identity()));
 

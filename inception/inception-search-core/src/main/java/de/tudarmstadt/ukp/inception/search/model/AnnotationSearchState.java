@@ -17,14 +17,16 @@
  */
 package de.tudarmstadt.ukp.inception.search.model;
 
-import java.io.Serializable;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-import de.tudarmstadt.ukp.inception.preferences.Key;
+import de.tudarmstadt.ukp.inception.preferences.PreferenceKey;
+import de.tudarmstadt.ukp.inception.preferences.PreferenceValue;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class AnnotationSearchState
-    implements Serializable
+    implements PreferenceValue
 {
-    public static final Key<AnnotationSearchState> KEY_SEARCH_STATE = new Key<>(
+    public static final PreferenceKey<AnnotationSearchState> KEY_SEARCH_STATE = new PreferenceKey<>(
             AnnotationSearchState.class, "annotation/search");
 
     private static final long serialVersionUID = 6273739145955045285L;

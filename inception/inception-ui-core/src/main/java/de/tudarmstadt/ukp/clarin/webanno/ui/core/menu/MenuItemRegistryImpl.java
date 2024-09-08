@@ -59,13 +59,13 @@ public class MenuItemRegistryImpl
 
     /* package private */ void init()
     {
-        List<MenuItem> exts = new ArrayList<>();
+        var exts = new ArrayList<MenuItem>();
 
         if (extensionsProxy != null) {
             exts.addAll(extensionsProxy);
             AnnotationAwareOrderComparator.sort(exts);
 
-            for (MenuItem fs : exts) {
+            for (var fs : exts) {
                 log.debug("Found menu item: {}", ClassUtils.getAbbreviatedName(fs.getClass(), 20));
 
                 if (fs.getPageClass() == null) {

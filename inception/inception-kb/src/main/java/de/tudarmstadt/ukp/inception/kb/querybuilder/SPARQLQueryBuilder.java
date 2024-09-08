@@ -35,6 +35,7 @@ import static java.lang.String.CASE_INSENSITIVE_ORDER;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Collections.emptyList;
 import static java.util.Comparator.comparing;
+import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Stream.concat;
 import static org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions.and;
@@ -62,15 +63,17 @@ import static org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.literalOf;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.IllformedLocaleException;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.StringJoiner;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.rdf4j.model.IRI;
@@ -85,7 +88,6 @@ import org.eclipse.rdf4j.query.TupleQuery;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.eclipse.rdf4j.sparqlbuilder.constraint.Expression;
 import org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions;
-import org.eclipse.rdf4j.sparqlbuilder.constraint.Operand;
 import org.eclipse.rdf4j.sparqlbuilder.constraint.SparqlFunction;
 import org.eclipse.rdf4j.sparqlbuilder.constraint.propertypath.builder.PropertyPathBuilder;
 import org.eclipse.rdf4j.sparqlbuilder.core.Prefix;
@@ -104,9 +106,11 @@ import org.eclipse.rdf4j.sparqlbuilder.util.SparqlBuilderUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
+import de.tudarmstadt.ukp.inception.support.spring.ApplicationContextProvider;
 
 /**
  * Build queries against the KB.
@@ -124,6 +128,8 @@ public class SPARQLQueryBuilder
 {
     private final static Logger LOG = LoggerFactory.getLogger(SPARQLQueryBuilder.class);
 
+    public static final Pattern TOKENKIZER_PATTERN = Pattern.compile("\\s+");
+
     public static final int DEFAULT_LIMIT = 0;
 
     private static final RdfValue EMPTY_STRING = () -> "\"\"";
@@ -135,6 +141,8 @@ public class SPARQLQueryBuilder
     private final List<GraphPattern> secondaryPatterns = new ArrayList<>();
 
     private boolean labelImplicitlyRetrieved = false;
+
+    private boolean filterUsingRegex = true;
 
     enum Priority
     {
@@ -150,6 +158,8 @@ public class SPARQLQueryBuilder
 
     private final KnowledgeBase kb;
     private final Mode mode;
+
+    private List<String> fallbackLanguages = emptyList();
 
     /**
      * Case-insensitive mode is a best-effort approach. Depending on the underlying FTS, it may or
@@ -186,7 +196,7 @@ public class SPARQLQueryBuilder
      * @see #reduceRedundantResults(List)
      */
 
-    private static enum Mode
+    static enum Mode
     {
         ITEM, CLASS, INSTANCE, PROPERTY;
 
@@ -504,7 +514,7 @@ public class SPARQLQueryBuilder
         return builder;
     }
 
-    private SPARQLQueryBuilder(KnowledgeBase aKB, Mode aMode)
+    SPARQLQueryBuilder(KnowledgeBase aKB, Mode aMode)
     {
         kb = aKB;
         mode = aMode;
@@ -514,6 +524,12 @@ public class SPARQLQueryBuilder
         if (Mode.PROPERTY.equals(mode)
                 && FTS_WIKIDATA.stringValue().equals(aKB.getFullTextSearchIri())) {
             forceDisableFTS.add("Wikidata property query");
+        }
+
+        var appCtx = ApplicationContextProvider.getApplicationContext();
+        if (appCtx != null) {
+            var props = appCtx.getBean(KnowledgeBaseProperties.class);
+            withFallbackLanguages(props.getDefaultFallbackLanguages());
         }
     }
 
@@ -552,6 +568,27 @@ public class SPARQLQueryBuilder
     private Projectable getDeprecationProjection()
     {
         return VAR_DEPRECATION;
+    }
+
+    boolean noResult()
+    {
+        return returnEmptyResult = true;
+    }
+
+    @Override
+    public SPARQLQueryPrimaryConditions withFallbackLanguages(String... aString)
+    {
+        fallbackLanguages = Stream.of(aString).distinct().toList();
+
+        return this;
+    }
+
+    @Override
+    public SPARQLQueryPrimaryConditions withFallbackLanguages(Collection<String> aString)
+    {
+        fallbackLanguages = aString.stream().distinct().toList();
+
+        return this;
     }
 
     @Override
@@ -738,7 +775,7 @@ public class SPARQLQueryBuilder
                 .toArray(String[]::new);
 
         if (values.length == 0) {
-            returnEmptyResult = true;
+            noResult();
             return this;
         }
 
@@ -752,7 +789,7 @@ public class SPARQLQueryBuilder
 
     private FtsAdapter getAdapter()
     {
-        IRI ftsMode = getFtsMode();
+        var ftsMode = getFtsMode();
 
         if (FTS_RDF4J_LUCENE.equals(ftsMode)) {
             return new FtsAdapterRdf4J(this);
@@ -840,7 +877,7 @@ public class SPARQLQueryBuilder
                 .toArray(String[]::new);
 
         if (values.length == 0) {
-            returnEmptyResult = true;
+            noResult();
             return this;
         }
 
@@ -861,7 +898,7 @@ public class SPARQLQueryBuilder
                 .toArray(String[]::new);
 
         if (values.length == 0) {
-            returnEmptyResult = true;
+            noResult();
             return this;
         }
 
@@ -879,7 +916,7 @@ public class SPARQLQueryBuilder
         var value = trimQueryString(aPrefixQuery);
 
         if (value == null || value.length() == 0) {
-            returnEmptyResult = true;
+            noResult();
             return this;
         }
 
@@ -938,32 +975,36 @@ public class SPARQLQueryBuilder
 
     private Expression<?> matchString(SparqlFunction aFunction, Variable aVariable, String aValue)
     {
-        Operand variable = aVariable;
-
-        var regexFlags = "";
-        if (caseInsensitive) {
-            regexFlags += "i";
-        }
-
-        String value;
-        switch (aFunction) {
-        // Match using REGEX to be resilient against extra whitespace
-        case STRSTARTS:
-            // Match at start
-            value = "^" + asRegexp(aValue);
-            break;
-        case CONTAINS:
-            // Match anywhere
-            value = ".*" + asRegexp(aValue) + ".*";
-            break;
-        default:
-            throw new IllegalArgumentException(
-                    "Only STRSTARTS and CONTAINS are supported, but got [" + aFunction + "]");
-        }
-
         var expressions = new ArrayList<Expression<?>>();
-        expressions.add(
-                function(REGEX, function(STR, variable), literalOf(value), literalOf(regexFlags)));
+
+        if (filterUsingRegex) {
+            var regexFlags = "";
+            if (caseInsensitive) {
+                regexFlags += "i";
+            }
+
+            String value;
+            switch (aFunction) {
+            // Match using REGEX to be resilient against extra whitespace
+            case STRSTARTS:
+                // Match at start
+                value = "^" + asRegexp(aValue) + ".*";
+                break;
+            case CONTAINS:
+                // Match anywhere
+                value = Stream.of(TOKENKIZER_PATTERN.split(aValue)) //
+                        .map(t -> "(?=.*" + asRegexp(t) + ")") //
+                        .collect(joining());
+                break;
+            default:
+                throw new IllegalArgumentException(
+                        "Only STRSTARTS and CONTAINS are supported, but got [" + aFunction + "]");
+            }
+
+            expressions.add(function(REGEX, function(STR, aVariable), literalOf(value),
+                    literalOf(regexFlags)));
+        }
+
         expressions.add(matchKbLanguage(aVariable));
 
         return and(expressions.toArray(Expression[]::new)).parenthesize();
@@ -971,26 +1012,22 @@ public class SPARQLQueryBuilder
 
     Expression<?> matchKbLanguage(Variable aVariable)
     {
-        String language = kb.getDefaultLanguage();
+        var defaultLang = kb.getDefaultLanguage();
 
-        if (language != null) {
-            return matchWithOrWithoutLanguage(aVariable, language);
+        var languages = new ArrayList<Expression<?>>();
+        if (defaultLang != null) {
+            // Match with default language
+            languages.add(function(LANGMATCHES, function(LANG, aVariable), literalOf(defaultLang)));
         }
 
-        return matchWithoutLanguage(aVariable);
-    }
+        for (var lang : fallbackLanguages) {
+            languages.add(function(LANGMATCHES, function(LANG, aVariable), literalOf(lang)));
+        }
 
-    private Expression<?> matchWithOrWithoutLanguage(Variable aVariable, String language)
-    {
-        return or(// Match with default language
-                function(LANGMATCHES, function(LANG, aVariable), literalOf(language)),
-                // Match without language
-                matchWithoutLanguage(aVariable)).parenthesize(); //
-    }
+        // Match without language
+        languages.add(Expressions.equals(function(LANG, aVariable), EMPTY_STRING));
 
-    private Expression<?> matchWithoutLanguage(Variable aVariable)
-    {
-        return Expressions.equals(function(LANG, aVariable), EMPTY_STRING);
+        return or(languages.toArray(Expression[]::new));
     }
 
     @Override
@@ -1020,7 +1057,7 @@ public class SPARQLQueryBuilder
     {
         forceDisableFTS.add("descendantsOf query");
 
-        Iri contextIri = iri(aClassIri);
+        var contextIri = iri(aClassIri);
 
         addPattern(PRIMARY, mode.descendentsPattern(kb, contextIri));
 
@@ -1032,7 +1069,7 @@ public class SPARQLQueryBuilder
     {
         forceDisableFTS.add("childrenOf query");
 
-        Iri contextIri = iri(aClassIri);
+        var contextIri = iri(aClassIri);
 
         addPattern(PRIMARY, mode.childrenPattern(kb, contextIri));
 
@@ -1044,7 +1081,7 @@ public class SPARQLQueryBuilder
     {
         forceDisableFTS.add("parentsOf query");
 
-        Iri contextIri = iri(aClassIri);
+        var contextIri = iri(aClassIri);
 
         addPattern(PRIMARY, mode.parentsPattern(kb, contextIri));
 
@@ -1053,11 +1090,11 @@ public class SPARQLQueryBuilder
 
     private void limitToClasses()
     {
-        Iri classIri = iri(kb.getClassIri());
-        Iri subClassProperty = iri(kb.getSubclassIri());
-        Iri typeOfProperty = iri(kb.getTypeIri());
+        var classIri = iri(kb.getClassIri());
+        var subClassProperty = iri(kb.getSubclassIri());
+        var typeOfProperty = iri(kb.getTypeIri());
 
-        List<GraphPattern> classPatterns = new ArrayList<>();
+        var classPatterns = new ArrayList<GraphPattern>();
 
         // An item is a class if ...
         // ... it is explicitly defined as being a class
@@ -1080,9 +1117,9 @@ public class SPARQLQueryBuilder
 
     private void limitToInstances()
     {
-        Iri classIri = iri(kb.getClassIri());
-        Iri subClassProperty = iri(kb.getSubclassIri());
-        Iri typeOfProperty = iri(kb.getTypeIri());
+        var classIri = iri(kb.getClassIri());
+        var subClassProperty = iri(kb.getSubclassIri());
+        var typeOfProperty = iri(kb.getTypeIri());
 
         // An item is an instance if ... (make sure to add the LiftableExistsFilter
         // directly to the PRIMARY_RESTRICTIONS and not nested in another pattern
@@ -1436,9 +1473,16 @@ public class SPARQLQueryBuilder
      */
     private List<KBHandle> reduceRedundantResults(List<KBHandle> aHandles)
     {
-        Map<String, KBHandle> cMap = new LinkedHashMap<>();
-        for (KBHandle handle : aHandles) {
-            KBHandle current = cMap.get(handle.getIdentifier());
+        var langPrio = new ArrayList<>();
+        if (kb.getDefaultLanguage() != null) {
+            langPrio.add(kb.getDefaultLanguage());
+        }
+        langPrio.addAll(fallbackLanguages);
+        langPrio.add(null);
+
+        var cMap = new LinkedHashMap<String, KBHandle>();
+        for (var handle : aHandles) {
+            var current = cMap.get(handle.getIdentifier());
 
             // Not recorded yet -> add it
             if (current == null) {
@@ -1453,8 +1497,8 @@ public class SPARQLQueryBuilder
             }
             // Found an exact language match -> use that one instead
             // Note that having a language implies that there is a label!
-            else if (kb.getDefaultLanguage() != null
-                    && kb.getDefaultLanguage().equals(handle.getLanguage())) {
+            else if (langPrio.indexOf(current.getLanguage()) > langPrio
+                    .indexOf(handle.getLanguage())) {
                 replace = true;
             }
 
@@ -1613,14 +1657,24 @@ public class SPARQLQueryBuilder
         return aQuery;
     }
 
-    static String sanitizeQueryString_FTS(String aQuery)
+    public String sanitizeQueryString_FTS(String aQuery)
     {
-        return aQuery
+        var sanitizedValue = aQuery
                 // character classes to replace with a simple space
                 .replaceAll("[\\p{Punct}\\p{Space}\\p{Cntrl}[~+*(){}\\[\\]]]+", " ")
                 // character classes to remove from the query string
                 // \u00AD : SOFT HYPHEN
-                .replaceAll("[\\u00AD]", "").trim();
+                .replaceAll("[\\u00AD]", "") //
+                .trim();
+
+        // We assume that the FTS is case insensitive and found that some FTSes (i.e.
+        // Fuseki) can have trouble matching if they get upper-case query when they
+        // internally lower-cased
+        if (isCaseInsensitive()) {
+            sanitizedValue = toLowerCase(getKnowledgeBase(), sanitizedValue);
+        }
+
+        return sanitizedValue.trim();
     }
 
     public static String convertToFuzzyMatchingQuery(String aQuery, String aOperator)
@@ -1639,6 +1693,26 @@ public class SPARQLQueryBuilder
             else if (term.length() >= 3) {
                 joiner.add(term);
             }
+            else {
+                // Terms shorter than 3 are ignored
+            }
+        }
+
+        return joiner.toString();
+    }
+
+    public static String convertToRequiredTokenPrefixMatchingQuery(String aQuery,
+            String aPrefixOperator, String aSuffixOperator)
+    {
+        var terms = aQuery.split("\\s");
+        var joiner = new StringJoiner(" ");
+        for (var term : terms) {
+            if (term.length() >= 3) {
+                joiner.add(aPrefixOperator + term + aSuffixOperator);
+            }
+            else {
+                // Terms shorter than 3 are ignored
+            }
         }
 
         return joiner.toString();
@@ -1646,9 +1720,21 @@ public class SPARQLQueryBuilder
 
     public static String toLowerCase(KnowledgeBase kb, String aValue)
     {
-        var language = kb.getDefaultLanguage() != null ? kb.getDefaultLanguage() : "en";
-        aValue = aValue.toLowerCase(Locale.forLanguageTag(language));
-        return aValue;
+        if (aValue == null) {
+            return null;
+        }
+
+        var locale = Locale.ROOT;
+        if (kb != null && kb.getDefaultLanguage() != null) {
+            try {
+                locale = Locale.forLanguageTag(kb.getDefaultLanguage());
+            }
+            catch (IllformedLocaleException e) {
+                // Ignore
+            }
+        }
+
+        return aValue.toLowerCase(locale);
     }
 
     @Override

@@ -23,11 +23,11 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.zip.ZipFile;
+import java.util.zip.ZipOutputStream;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -82,7 +82,7 @@ public class UserProjectPreferenceExporterTest
         when(userRepository.get("b")).thenReturn(userB);
 
         // Export the project and import it again
-        ArgumentCaptor<UserProjectPreference> captor = runExportImportAndFetchRecommenders();
+        var captor = runExportImportAndFetchRecommenders();
 
         // Check that after re-importing the exported projects, they are identical to the original
         assertThat(captor.getAllValues()) //
@@ -94,19 +94,18 @@ public class UserProjectPreferenceExporterTest
         throws Exception
     {
         // Export the project
-        FullProjectExportRequest exportRequest = new FullProjectExportRequest(project, null, false);
-        ProjectExportTaskMonitor monitor = new ProjectExportTaskMonitor(project, null, "test");
-        ExportedProject exportedProject = new ExportedProject();
-        File file = mock(File.class);
+        var exportRequest = new FullProjectExportRequest(project, null, false);
+        var monitor = new ProjectExportTaskMonitor(project, null, "test");
+        var exportedProject = new ExportedProject();
+        var file = mock(ZipOutputStream.class);
 
         sut.exportData(exportRequest, monitor, exportedProject, file);
 
         // Import the project again
-        ArgumentCaptor<UserProjectPreference> captor = ArgumentCaptor
-                .forClass(UserProjectPreference.class);
+        var captor = ArgumentCaptor.forClass(UserProjectPreference.class);
         doNothing().when(preferencesService).saveUserProjectPreference(captor.capture());
 
-        ProjectImportRequest importRequest = new ProjectImportRequest(true);
+        var importRequest = new ProjectImportRequest(true);
         sut.importData(importRequest, project, exportedProject, mock(ZipFile.class));
 
         return captor;
@@ -123,7 +122,7 @@ public class UserProjectPreferenceExporterTest
     private UserProjectPreference buildUserPreference(User aUser, String aKey, Object aTraits)
         throws IOException
     {
-        UserProjectPreference userPreference = new UserProjectPreference();
+        var userPreference = new UserProjectPreference();
         userPreference.setProject(project);
         userPreference.setUser(aUser);
         userPreference.setName(aKey);

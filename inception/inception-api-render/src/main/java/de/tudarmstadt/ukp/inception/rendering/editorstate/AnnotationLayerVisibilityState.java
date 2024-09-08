@@ -17,22 +17,25 @@
  */
 package de.tudarmstadt.ukp.inception.rendering.editorstate;
 
-import java.io.Serializable;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import de.tudarmstadt.ukp.inception.preferences.Key;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+import de.tudarmstadt.ukp.inception.preferences.PreferenceKey;
+import de.tudarmstadt.ukp.inception.preferences.PreferenceValue;
 import de.tudarmstadt.ukp.inception.rendering.coloring.ColoringStrategyType;
 import de.tudarmstadt.ukp.inception.rendering.coloring.ReadonlyColoringStrategy;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class AnnotationLayerVisibilityState
-    implements Serializable
+    implements PreferenceValue
 {
     private static final long serialVersionUID = -4171872631523263892L;
 
-    public static final Key<AnnotationLayerVisibilityState> KEY_LAYERS_STATE = new Key<>(
+    public static final PreferenceKey<AnnotationLayerVisibilityState> KEY_LAYERS_STATE = new PreferenceKey<>(
             AnnotationLayerVisibilityState.class, "annotation/layers");
 
     private Map<Long, ColoringStrategyType> layerColoringStrategy = new HashMap<>();

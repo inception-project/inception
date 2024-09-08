@@ -37,6 +37,7 @@ export type EntityAttributesDto = {
   c: ColorCode;
   h: string;
   a: boolean;
+  s: number;
   cl: ClippedState;
 }
 

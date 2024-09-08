@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.support.wicket;
 
+import static java.lang.String.format;
+
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.List;
@@ -29,8 +31,10 @@ import org.apache.wicket.WicketRuntimeException;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.OnDomReadyHeaderItem;
+import org.apache.wicket.protocol.http.WebApplication;
 import org.apache.wicket.request.IRequestHandler;
 import org.apache.wicket.request.Response;
+import org.apache.wicket.request.Url;
 import org.apache.wicket.request.cycle.IRequestCycleListener;
 import org.apache.wicket.request.cycle.PageRequestHandlerTracker;
 import org.apache.wicket.request.cycle.RequestCycle;
@@ -247,5 +251,20 @@ public final class WicketUtil
         // timing headers latest then
         aApplication.getRequestCycleSettings()
                 .addResponseFilter(new WicketUtil.TimingResponseFilter());
+    }
+
+    public static String constructEndpointUrl(String aUrl)
+    {
+        var contextPath = WebApplication.get().getServletContext().getContextPath();
+        var endPointUrl = Url.parse(format("%s%s", contextPath, aUrl));
+        return RequestCycle.get().getUrlRenderer().renderFullUrl(endPointUrl);
+    }
+
+    public static String constructWsEndpointUrl(String aUrl)
+    {
+        var contextPath = WebApplication.get().getServletContext().getContextPath();
+        var endPointUrl = Url.parse(format("%s%s", contextPath, aUrl));
+        endPointUrl.setProtocol("ws");
+        return RequestCycle.get().getUrlRenderer().renderFullUrl(endPointUrl);
     }
 }

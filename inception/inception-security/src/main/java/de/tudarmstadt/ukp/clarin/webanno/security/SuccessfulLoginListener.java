@@ -19,30 +19,32 @@ package de.tudarmstadt.ukp.clarin.webanno.security;
 
 import java.util.Date;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.security.authentication.event.AuthenticationSuccessEvent;
-import org.springframework.stereotype.Component;
 
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityAutoConfiguration;
 
-@Component(SuccessfulLoginListener.SERVICE_NAME)
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link SecurityAutoConfiguration#successfulLoginListener}.
+ * </p>
+ */
 public class SuccessfulLoginListener
-    implements ApplicationListener<ApplicationEvent>
+    implements ApplicationListener<AuthenticationSuccessEvent>
 {
-    public static final String SERVICE_NAME = "successfulLoginListener";
+    private final UserDao userRepository;
 
-    private @Autowired UserDao userRepository;
+    public SuccessfulLoginListener(UserDao aUserRepository)
+    {
+        userRepository = aUserRepository;
+    }
 
     @Override
-    public void onApplicationEvent(ApplicationEvent aEvent)
+    public void onApplicationEvent(AuthenticationSuccessEvent aEvent)
     {
-        if (aEvent instanceof AuthenticationSuccessEvent) {
-            AuthenticationSuccessEvent event = (AuthenticationSuccessEvent) aEvent;
-            User user = userRepository.get(event.getAuthentication().getName());
-            user.setLastLogin(new Date(event.getTimestamp()));
-            userRepository.update(user);
-        }
+        var user = userRepository.get(aEvent.getAuthentication().getName());
+        user.setLastLogin(new Date(aEvent.getTimestamp()));
+        userRepository.update(user);
     }
 }

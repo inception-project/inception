@@ -110,14 +110,14 @@ For example, to set the available memory (RAM) to e.g. 4GB, append `-Xmx4g`.
 
 [source,shell,subs="+attributes"]
 ----
-$ docker run -it -e JAVA_OPTS=-Xmx4g ghcr.io/inception-project/inception:{revnumber}
+$ docker run -it -e JAVA_MEM_OPTS=-Xmx4g ghcr.io/inception-project/inception:{revnumber}
 ----
 
 Be sure to leave some memory for the operating system inside the Docker container as well. Instead of setting a fixed value for the memory, you might consider allocating a percentage of the container's memory to {product-name} using `-XX:MaxRAMPercentage=80`.
 
 [source,shell,subs="+attributes"]
 ----
-$ docker run -it -e JAVA_OPTS=-XX:MaxRAMPercentage=80 ghcr.io/inception-project/inception:{revnumber}
+$ docker run -it -e JAVA_MEM_OPTS=-XX:MaxRAMPercentage=80 ghcr.io/inception-project/inception:{revnumber}
 ----
 
 The applications logs the amount of memory it will use during startup. Check this value to validate that your memory setting takes effect.
@@ -140,6 +140,13 @@ NOTE: If the container is already started using a non-root UID, then `APP_UID` a
       no changes to the file ownerships in `/export` will be performed. This is e.g. the case when running a container using 
       `-u` parameter or using the Kubernetes `runAsUser` setting. 
 
+== Application arguments
+
+If it becomes necessary to pass command line arguments to {product-name} running in Docker, this can be done using the
+`APP_ARGS` environment variable. Note, this is specifically for application parameters, not for parameters for the Java
+Virtual Machine.
+
+[[sect_docker_compose]]
 == Docker Compose
 
 Using Docker Compose, you can manage multiple related containers. This section illustrates how to use
@@ -216,3 +223,11 @@ NOTE: Mind that you cannot arbitrarily switch between volume-managed and host-st
 
 There is a lot more that you can do using Docker and Docker Compose. Please see the link:https://docs.docker.com/compose/[docker-compose reference] for details.
 
+=== Upgrading with Docker Compose
+
+When new versions of {product-name} are released, they may at times include an updated Docker Compose example file.
+
+Starting with {product-name} 33.0, the MariaDB container that is configured in the example file will set the environment
+variable `MARIADB_AUTO_UPGRADE` to `1` to have MariaDB automatically upgrade its internal tables when encountering a database
+produced with an earlier version of MariaDB (see link:https://hub.docker.com/_/mariadb[MariaDB Environment Variables].
+If you do not want this behavior, be sure to remove this settings from the compose file.

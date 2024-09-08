@@ -33,7 +33,9 @@ import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Bean;
+import org.springframework.security.authentication.AuthenticationEventPublisher;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DefaultAuthenticationEventPublisher;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
@@ -69,6 +71,17 @@ class Saml2AdapterImplTest
 
     @Autowired
     Saml2Adapter sut;
+
+    static {
+        try {
+            var c = Saml2AdapterImplTest.class.getClassLoader()
+                    .loadClass("jakarta.xml.bind.JAXBException");
+        }
+        catch (ClassNotFoundException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+    }
 
     @BeforeEach
     void setup()
@@ -164,6 +177,12 @@ class Saml2AdapterImplTest
         ApplicationContextProvider applicationContextProvider()
         {
             return new ApplicationContextProvider();
+        }
+
+        @Bean
+        AuthenticationEventPublisher authenticationEventPublisher()
+        {
+            return new DefaultAuthenticationEventPublisher();
         }
     }
 }

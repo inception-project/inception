@@ -31,6 +31,7 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 
+import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.annotation.layer.behaviors.LayerBehaviorRegistry;
@@ -54,6 +55,7 @@ public class SpanLayerSupport
 
     private final ApplicationEventPublisher eventPublisher;
     private final LayerBehaviorRegistry layerBehaviorsRegistry;
+    private final ConstraintsService constraintsService;
 
     private String layerSupportId;
     private List<LayerType> types;
@@ -61,11 +63,12 @@ public class SpanLayerSupport
     @Autowired
     public SpanLayerSupport(FeatureSupportRegistry aFeatureSupportRegistry,
             ApplicationEventPublisher aEventPublisher,
-            LayerBehaviorRegistry aLayerBehaviorsRegistry)
+            LayerBehaviorRegistry aLayerBehaviorsRegistry, ConstraintsService aConstraintsService)
     {
         super(aFeatureSupportRegistry);
         eventPublisher = aEventPublisher;
         layerBehaviorsRegistry = aLayerBehaviorsRegistry;
+        constraintsService = aConstraintsService;
     }
 
     @Override
@@ -104,7 +107,8 @@ public class SpanLayerSupport
     {
         return new SpanAdapter(getLayerSupportRegistry(), featureSupportRegistry, eventPublisher,
                 aLayer, aFeatures,
-                layerBehaviorsRegistry.getLayerBehaviors(this, SpanLayerBehavior.class));
+                layerBehaviorsRegistry.getLayerBehaviors(this, SpanLayerBehavior.class),
+                constraintsService);
     }
 
     @Override

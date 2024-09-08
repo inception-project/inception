@@ -22,8 +22,6 @@ import static java.util.stream.Collectors.joining;
 
 import java.lang.invoke.MethodHandles;
 
-import javax.servlet.http.HttpServletRequest;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.wicket.validation.ValidationError;
 import org.slf4j.Logger;
@@ -33,6 +31,7 @@ import org.springframework.security.web.authentication.preauth.RequestHeaderAuth
 
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import jakarta.servlet.http.HttpServletRequest;
 
 public class ShibbolethRequestHeaderAuthenticationFilter
     extends RequestHeaderAuthenticationFilter

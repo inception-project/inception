@@ -47,18 +47,7 @@ public class Realm
     public Realm(String aId, String aName)
     {
         id = aId;
-
-        if (aName != null) {
-            name = aName;
-        }
-        else {
-            if (aId == null) {
-                name = "<LOCAL>";
-            }
-            else {
-                name = "<" + aId + ">";
-            }
-        }
+        name = aName;
     }
 
     public String getId()
@@ -68,7 +57,15 @@ public class Realm
 
     public String getName()
     {
-        return name;
+        if (name != null) {
+            return name;
+        }
+
+        if (id == null) {
+            return "<LOCAL>";
+        }
+
+        return "<" + id + ">";
     }
 
     @Override
@@ -89,15 +86,15 @@ public class Realm
 
     public static int compareRealms(Realm aOne, Realm aOther)
     {
-        if (aOne.getId() == null && aOther.getId() == null) {
+        if (aOne.id == null && aOther.id == null) {
             return 0;
         }
 
-        if (aOne.getId() == null) {
+        if (aOne.id == null) {
             return -1;
         }
 
-        if (aOther.getId() == null) {
+        if (aOther.id == null) {
             return 1;
         }
 
@@ -106,18 +103,18 @@ public class Realm
 
     public static Realm forProject(long aProjectId, String aProjectName)
     {
-        return new Realm(REALM_PROJECT_PREFIX + aProjectId, aProjectName);
+        return new Realm(REALM_PROJECT_PREFIX + aProjectId, "<Project>" + aProjectName);
     }
 
     public static Realm forExternalOAuth(ClientRegistration aClientRegistration)
     {
         return new Realm(REALM_EXTERNAL_PREFIX + aClientRegistration.getRegistrationId(),
-                aClientRegistration.getClientName());
+                "<External> " + aClientRegistration.getClientName());
     }
 
     public static Realm forExternalSaml(String aAuthenticationUri, String aRegistrationId)
     {
-        return new Realm(REALM_EXTERNAL_PREFIX + aRegistrationId, aRegistrationId);
+        return new Realm(REALM_EXTERNAL_PREFIX + aRegistrationId, "<External> " + aRegistrationId);
     }
 
     public static Realm local()

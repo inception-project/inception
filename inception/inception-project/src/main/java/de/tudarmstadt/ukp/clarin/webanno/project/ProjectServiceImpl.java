@@ -17,8 +17,6 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.project;
 
-import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
-import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Project.MAX_PROJECT_SLUG_LENGTH;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Project.MIN_PROJECT_SLUG_LENGTH;
@@ -64,13 +62,11 @@ import java.util.Random;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.persistence.EntityManager;
-import javax.persistence.NoResultException;
-
 import org.apache.commons.collections4.SetUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.ClassUtils;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -86,13 +82,16 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
+import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission_;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectState;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectUserPermissions;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project_;
 import de.tudarmstadt.ukp.clarin.webanno.project.config.ProjectServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.security.Realm;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
+import de.tudarmstadt.ukp.inception.project.api.ProjectInitializationRequest;
 import de.tudarmstadt.ukp.inception.project.api.ProjectInitializer;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.project.api.event.AfterProjectCreatedEvent;
@@ -102,6 +101,8 @@ import de.tudarmstadt.ukp.inception.project.api.event.ProjectPermissionsChangedE
 import de.tudarmstadt.ukp.inception.project.api.event.ProjectStateChangedEvent;
 import de.tudarmstadt.ukp.inception.support.io.FastIOUtils;
 import de.tudarmstadt.ukp.inception.support.logging.BaseLoggers;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.NoResultException;
 
 /**
  * <p>
@@ -233,13 +234,6 @@ public class ProjectServiceImpl
     }
 
     @Override
-    public File getProjectFolder(Project aProject)
-    {
-        return new File(repositoryProperties.getPath().getAbsolutePath() + "/" + PROJECT_FOLDER
-                + "/" + aProject.getId());
-    }
-
-    @Override
     public File getProjectLogFile(Project aProject)
     {
         return new File(repositoryProperties.getPath().getAbsolutePath() + "/" + PROJECT_FOLDER
@@ -348,7 +342,25 @@ public class ProjectServiceImpl
                             .collect(toCollection(LinkedHashSet::new));
                     return new ProjectUserPermissions(aProject, username, user, roles);
                 }) //
-                .collect(toList());
+                .sorted(this::compareProjectUserPermissions).collect(toList());
+    }
+
+    private int compareProjectUserPermissions(ProjectUserPermissions a, ProjectUserPermissions b)
+    {
+        if (a.getUser().isPresent() && b.getUser().isPresent()) {
+            return ObjectUtils.compare(a.getUser().get().getUiName(),
+                    b.getUser().get().getUiName());
+        }
+
+        if (a.getUser().isPresent() && !b.getUser().isPresent()) {
+            return -1;
+        }
+
+        if (!a.getUser().isPresent() && b.getUser().isPresent()) {
+            return 1;
+        }
+
+        return ObjectUtils.compare(a.getUsername(), b.getUsername());
     }
 
     @Override
@@ -783,30 +795,6 @@ public class ProjectServiceImpl
         return false;
     }
 
-    @Deprecated
-    @Transactional
-    @Override
-    public boolean isManager(Project aProject, User aUser)
-    {
-        return hasRole(aUser, aProject, MANAGER);
-    }
-
-    @Deprecated
-    @Transactional
-    @Override
-    public boolean isCurator(Project aProject, User aUser)
-    {
-        return hasRole(aUser, aProject, CURATOR);
-    }
-
-    @Deprecated
-    @Transactional
-    @Override
-    public boolean isAnnotator(Project aProject, User aUser)
-    {
-        return hasRole(aUser, aProject, ANNOTATOR);
-    }
-
     @EventListener
     @Transactional
     public void onContextRefreshedEvent(ContextRefreshedEvent aEvent)
@@ -878,9 +866,9 @@ public class ProjectServiceImpl
 
     @Override
     @Transactional
-    public void initializeProject(Project aProject) throws IOException
+    public void initializeProject(ProjectInitializationRequest aRequest) throws IOException
     {
-        initializeProject(aProject, initializers.stream() //
+        initializeProject(aRequest, initializers.stream() //
                 .filter(ProjectInitializer::applyByDefault) //
                 .collect(Collectors.toList()));
     }
@@ -917,23 +905,24 @@ public class ProjectServiceImpl
 
     @Override
     @Transactional
-    public void initializeProject(Project aProject, List<ProjectInitializer> aInitializers)
+    public void initializeProject(ProjectInitializationRequest aRequest,
+            List<ProjectInitializer> aInitializers)
         throws IOException
     {
-        Set<Class<? extends ProjectInitializer>> allInits = new HashSet<>();
-        Set<Class<? extends ProjectInitializer>> applied = new HashSet<>();
-        for (ProjectInitializer initializer : initializers) {
+        var allInits = new HashSet<Class<? extends ProjectInitializer>>();
+        var applied = new HashSet<Class<? extends ProjectInitializer>>();
+        for (var initializer : initializers) {
             allInits.add(initializer.getClass());
-            if (initializer.alreadyApplied(aProject)) {
+            if (initializer.alreadyApplied(aRequest.getProject())) {
                 applied.add(initializer.getClass());
             }
         }
 
-        Deque<ProjectInitializer> toApply = new LinkedList<>(collectDependencies(aInitializers));
+        var toApply = new LinkedList<ProjectInitializer>(collectDependencies(aInitializers));
         Set<ProjectInitializer> initsDeferred = SetUtils.newIdentityHashSet();
         while (!toApply.isEmpty()) {
-            ProjectInitializer initializer = toApply.pop();
-            String initializerName = initializer.getName();
+            var initializer = toApply.pop();
+            var initializerName = initializer.getName();
 
             if (applied.contains(initializer.getClass())) {
                 log.debug("Skipping project initializer that was already applied: [{}]",
@@ -955,7 +944,7 @@ public class ProjectServiceImpl
 
             if (applied.containsAll(initializer.getDependencies())) {
                 log.debug("Applying project initializer: [{}]", initializerName);
-                initializer.configure(aProject);
+                initializer.configure(aRequest);
                 applied.add(initializer.getClass());
                 initsDeferred.clear();
             }
@@ -966,31 +955,6 @@ public class ProjectServiceImpl
                 initsDeferred.add(initializer);
             }
         }
-    }
-
-    @Override
-    @Transactional
-    @Deprecated
-    public List<Project> listProjectsForAgreement()
-    {
-        String query = String.join("\n", //
-                "SELECT DISTINCT p FROM Project p, ProjectPermission pp ", //
-                "WHERE pp.project = p.id ", //
-                "AND pp.level = :annotator ", //
-                "GROUP BY p.id HAVING count(*) > 1 ", //
-                "ORDER BY p.name ASC");
-        List<Project> projects = entityManager.createQuery(query, Project.class)
-                .setParameter("annotator", ANNOTATOR) //
-                .getResultList();
-        return projects;
-    }
-
-    @Override
-    @Transactional
-    @Deprecated
-    public List<Project> listManageableCuratableProjects(User aUser)
-    {
-        return listProjectsWithUserHavingRole(aUser, CURATOR, MANAGER);
     }
 
     @Override
@@ -1007,17 +971,28 @@ public class ProjectServiceImpl
             roles.addAll(asList(aMoreRoles));
         }
 
-        String query = String.join("\n", //
-                "SELECT DISTINCT p FROM Project p, ProjectPermission pp ", //
-                "WHERE pp.project = p.id ", //
-                "AND pp.user = :username ", //
-                "AND pp.level IN (:roles) ", //
-                "ORDER BY p.name ASC");
-        List<Project> projects = entityManager.createQuery(query, Project.class)
-                .setParameter("username", aUser.getUsername()) //
-                .setParameter("roles", roles) //
-                .getResultList();
-        return projects;
+        var cb = entityManager.getCriteriaBuilder();
+        var cq = cb.createQuery(Project.class);
+        var permission = cq.from(ProjectPermission.class);
+        var project = permission.join(ProjectPermission_.project);
+        cq.select(project).distinct(true);
+        cq.where(cb.and( //
+                cb.equal(permission.get(ProjectPermission_.user), aUser.getUsername()), //
+                permission.get(ProjectPermission_.level).in(roles)));
+        cq.orderBy(cb.asc(project.get(Project_.name)));
+        return entityManager.createQuery(cq).getResultList();
+
+        // String query = String.join("\n", //
+        // "SELECT DISTINCT p FROM Project p, ProjectPermission pp ", //
+        // "WHERE pp.project = p.id ", //
+        // "AND pp.user = :username ", //
+        // "AND pp.level IN (:roles) ", //
+        // "ORDER BY p.name ASC");
+        // List<Project> projects = entityManager.createQuery(query, Project.class)
+        // .setParameter("username", aUser.getUsername()) //
+        // .setParameter("roles", roles) //
+        // .getResultList();
+        // return projects;
     }
 
     @Override
@@ -1136,10 +1111,10 @@ public class ProjectServiceImpl
         long projectId = Long.valueOf(substringAfter(aRealmId, REALM_PROJECT_PREFIX));
         Project project = getProject(projectId);
         if (project != null) {
-            return new Realm(aRealmId, project.getName());
+            return new Realm(aRealmId, "<Project> " + project.getName());
         }
         else {
-            return new Realm(aRealmId, "<Deleted project: " + projectId + ">");
+            return new Realm(aRealmId, "<Project (deleted)>: " + projectId + ">");
         }
     }
 }

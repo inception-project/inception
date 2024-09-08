@@ -43,10 +43,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import javax.persistence.EntityManager;
-import javax.persistence.NoResultException;
-import javax.persistence.TypedQuery;
-
 import org.apache.commons.collections4.MapIterator;
 import org.apache.commons.collections4.MultiValuedMap;
 import org.apache.commons.collections4.multimap.HashSetValuedHashMap;
@@ -64,6 +60,7 @@ import org.apache.wicket.request.cycle.RequestCycle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.Ordered;
@@ -98,6 +95,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommenderFactoryRegistry;
 import de.tudarmstadt.ukp.inception.recommendation.api.SuggestionSupport;
 import de.tudarmstadt.ukp.inception.recommendation.api.SuggestionSupportRegistry;
+import de.tudarmstadt.ukp.inception.recommendation.api.event.PredictionsSwitchedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AutoAcceptMode;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.EvaluatedRecommender;
@@ -116,6 +114,8 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderCo
 import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderDeletedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderUpdatedEvent;
+import de.tudarmstadt.ukp.inception.recommendation.event.RecommendersResumedEvent;
+import de.tudarmstadt.ukp.inception.recommendation.event.RecommendersSuspendedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.model.DirtySpot;
 import de.tudarmstadt.ukp.inception.recommendation.tasks.NonTrainableRecommenderActivationTask;
 import de.tudarmstadt.ukp.inception.recommendation.tasks.PredictionTask;
@@ -128,6 +128,9 @@ import de.tudarmstadt.ukp.inception.schema.api.event.LayerConfigurationChangedEv
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessageGroup;
 import de.tudarmstadt.ukp.inception.support.wicket.WicketExceptionUtil;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.NoResultException;
+import jakarta.persistence.TypedQuery;
 
 /**
  * The implementation of the RecommendationService.
@@ -176,6 +179,9 @@ public class RecommendationServiceImpl
     {
     };
 
+    @Value("${curation.sidebar.enabled:false}")
+    private boolean curationSidebarEnabled;
+
     @Autowired
     public RecommendationServiceImpl(PreferencesService aPreferencesService,
             SessionRegistry aSessionRegistry, UserDao aUserRepository,
@@ -210,6 +216,13 @@ public class RecommendationServiceImpl
         this(aPreferencesService, aSessionRegistry, aUserRepository, aRecommenderFactoryRegistry,
                 aSchedulingService, aAnnoService, (ProjectService) null, aEntityManager, null,
                 aLayerRecommendtionSupportRegistry);
+    }
+
+    @Deprecated
+    @Override
+    public boolean isCurationSidebarEnabled()
+    {
+        return curationSidebarEnabled;
     }
 
     @Override
@@ -477,6 +490,11 @@ public class RecommendationServiceImpl
     {
         var project = aEvent.getDocument().getProject();
         var sessionOwnerName = aEvent.getSessionOwner();
+
+        if (isSuspended(sessionOwnerName, project)) {
+            return;
+        }
+
         var dataOwner = aEvent.getDocumentOwner();
         var doc = aEvent.getDocument();
         var predictions = getState(sessionOwnerName, project).getActivePredictions();
@@ -511,6 +529,13 @@ public class RecommendationServiceImpl
                     .build());
         }
 
+        // Check if there are any synchronous recommenders we need to run
+        var recommenders = listEnabledRecommenders(aEvent.getDocument().getProject());
+        if (!recommenders.isEmpty()) {
+            runSynchronousRecommenders(aEvent.getDocument(), aEvent.getDocumentOwner(),
+                    recommenders, "onDocumentOpened");
+        }
+
         // Check if we need to wait for the initial recommender run before displaying the document
         // to the user
         var predictionTriggered = nonTrainableRecommenderRunSync(doc, predictions, sessionOwner,
@@ -540,7 +565,13 @@ public class RecommendationServiceImpl
         // start the predictions so that the user gets recommendations as quickly as possible
         // without any interaction needed
         if (!predictionTriggered) {
-            triggerPrediction(sessionOwnerName, trigger, doc, dataOwner);
+            schedulingService.enqueue(PredictionTask.builder() //
+                    .withSessionOwner(sessionOwner) //
+                    .withTrigger("onDocumentOpened") //
+                    .withCurrentDocument(doc) //
+                    .withDataOwner(dataOwner) //
+                    .withSynchronousRecommenders(false) //
+                    .build());
         }
     }
 
@@ -571,6 +602,7 @@ public class RecommendationServiceImpl
                 .withTrigger(trigger) //
                 .withCurrentDocument(doc) //
                 .withDataOwner(aDataOwner) //
+                .withSynchronousRecommenders(false) //
                 .build());
         switchPredictions(aSessionOwner.getUsername(), doc.getProject());
 
@@ -710,9 +742,13 @@ public class RecommendationServiceImpl
             return;
         }
 
-        if (!existsEnabledRecommender(aEvent.getDocument().getProject())) {
+        var recommenders = listEnabledRecommenders(aEvent.getDocument().getProject());
+        if (recommenders.isEmpty()) {
             return;
         }
+
+        runSynchronousRecommenders(aEvent.getDocument().getDocument(),
+                aEvent.getDocument().getUser(), recommenders, "onAfterCasWritten");
 
         var committed = requestCycle.getMetaData(COMMITTED);
         if (committed == null) {
@@ -755,6 +791,43 @@ public class RecommendationServiceImpl
         }
     }
 
+    private void runSynchronousRecommenders(SourceDocument aDocument, String aDataOwner,
+            List<Recommender> recommenders, String aTrigger)
+    {
+        var sessionOwner = userRepository.getCurrentUser();
+
+        if (isSuspended(sessionOwner.getUsername(), aDocument.getProject())) {
+            return;
+        }
+
+        var anySyncRan = false;
+        for (var recommender : recommenders) {
+            var factory = getRecommenderFactory(recommender);
+            if (factory.map($ -> $.isSynchronous(recommender)).orElse(false)) {
+                schedulingService.executeSync(PredictionTask.builder() //
+                        .withSessionOwner(sessionOwner) //
+                        .withTrigger(aTrigger) //
+                        .withCurrentDocument(aDocument) //
+                        .withDataOwner(aDataOwner) //
+                        .withRecommender(recommender) //
+                        .build());
+
+                anySyncRan = true;
+            }
+        }
+
+        if (anySyncRan) {
+            var switched = forceSwitchPredictions(sessionOwner.getUsername(),
+                    aDocument.getProject());
+            if (switched) {
+                // Notify other UI components on the page about the prediction switch such that they
+                // can also update their state to remain in sync with the new predictions
+                applicationEventPublisher.publishEvent(
+                        new PredictionsSwitchedEvent(this, sessionOwner.getUsername(), aDocument));
+            }
+        }
+    }
+
     @EventListener
     public void onRecommenderUpdated(RecommenderUpdatedEvent aEvent)
     {
@@ -780,6 +853,7 @@ public class RecommendationServiceImpl
     public void onDocumentRemoval(BeforeDocumentRemovedEvent aEvent)
     {
         resetState(aEvent.getDocument().getProject());
+        deleteLearningRecords(aEvent.getDocument());
     }
 
     @EventListener
@@ -953,11 +1027,27 @@ public class RecommendationServiceImpl
     @Override
     public void setSuspended(String aSessionOwner, Project aProject, boolean aState)
     {
+        var suspended = isSuspended(aSessionOwner, aProject);
+        if (suspended == aState) {
+            return;
+        }
+
         getState(aSessionOwner, aProject).setSuspended(aState);
+        if (aState) {
+            applicationEventPublisher
+                    .publishEvent(new RecommendersSuspendedEvent(this, aProject, aSessionOwner));
+            ;
+        }
+        else {
+            applicationEventPublisher
+                    .publishEvent(new RecommendersResumedEvent(this, aProject, aSessionOwner));
+            ;
+        }
     }
 
-    @EventListener
+    // Set order so this is handled before session info is removed from sessionRegistry
     @Order(Ordered.HIGHEST_PRECEDENCE)
+    @EventListener
     public void onSessionDestroyed(SessionDestroyedEvent event)
     {
         var info = sessionRegistry.getSessionInformation(event.getId());
@@ -1083,6 +1173,15 @@ public class RecommendationServiceImpl
         var state = getState(aSessionOwner, aProject);
         synchronized (state) {
             return state.switchPredictions();
+        }
+    }
+
+    @Override
+    public boolean forceSwitchPredictions(String aSessionOwner, Project aProject)
+    {
+        var state = getState(aSessionOwner, aProject);
+        synchronized (state) {
+            return state.forceSwitchPredictions();
         }
     }
 
@@ -1378,10 +1477,20 @@ public class RecommendationServiceImpl
 
         public boolean switchPredictions()
         {
+            return switchPredictions(false);
+        }
+
+        public boolean forceSwitchPredictions()
+        {
+            return switchPredictions(true);
+        }
+
+        private boolean switchPredictions(boolean aForce)
+        {
             // If the predictions have already been switched, do not switch again
-            RequestCycle requestCycle = RequestCycle.get();
-            if (requestCycle != null) {
-                Boolean switched = requestCycle.getMetaData(PredictionSwitchPerformedKey.INSTANCE);
+            var requestCycle = RequestCycle.get();
+            if (!aForce && requestCycle != null) {
+                var switched = requestCycle.getMetaData(PredictionSwitchPerformedKey.INSTANCE);
                 if (switched != null && switched) {
                     return false;
                 }
@@ -1494,6 +1603,13 @@ public class RecommendationServiceImpl
             for (var records : learningRecords.values()) {
                 records.removeIf(r -> Objects.equals(r.getUser(), aDataOwner) && //
                         Objects.equals(r.getSourceDocument(), aDocument));
+            }
+        }
+
+        public void removeLearningRecords(SourceDocument aDocument)
+        {
+            for (var records : learningRecords.values()) {
+                records.removeIf(r -> Objects.equals(r.getSourceDocument(), aDocument));
             }
         }
 
@@ -1823,6 +1939,36 @@ public class RecommendationServiceImpl
     {
         entityManager.persist(aLearningRecord);
         entityManager.flush();
+    }
+
+    @Override
+    @Transactional
+    public void createLearningRecords(LearningRecord... aRecords)
+    {
+        var start = System.currentTimeMillis();
+        for (var record : aRecords) {
+            LOG.trace("{}", record);
+            entityManager.persist(record);
+        }
+        var duration = System.currentTimeMillis() - start;
+
+        if (aRecords.length > 0 && !LOG.isTraceEnabled()) {
+            LOG.debug("... {} learning records stored ... ({}ms)", aRecords.length, duration);
+        }
+    }
+
+    private void deleteLearningRecords(SourceDocument aDocument)
+    {
+        synchronized (states) {
+            for (var state : states.values()) {
+                state.removeLearningRecords(aDocument);
+            }
+        }
+
+        var sql = "DELETE FROM LearningRecord l where l.sourceDocument = :document";
+        entityManager.createQuery(sql) //
+                .setParameter("document", aDocument) //
+                .executeUpdate();
     }
 
     private void deleteLearningRecords(SourceDocument aDocument, String aDataOwner)

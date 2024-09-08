@@ -19,13 +19,13 @@ package de.tudarmstadt.ukp.inception.annotation.feature.number;
 
 import static java.util.Arrays.asList;
 
-import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.FeatureStructure;
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
@@ -41,7 +41,6 @@ import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureEditor;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureType;
-import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 
 /**
  * <p>
@@ -95,13 +94,13 @@ public class NumberFeatureSupport
             AnnotationActionHandler aHandler, final IModel<AnnotatorState> aStateModel,
             final IModel<FeatureState> aFeatureStateModel)
     {
-        AnnotationFeature feature = aFeatureStateModel.getObject().feature;
+        var feature = aFeatureStateModel.getObject().feature;
 
         if (!accepts(feature)) {
             throw unsupportedFeatureTypeException(feature);
         }
 
-        NumberFeatureTraits traits = readTraits(feature);
+        var traits = readTraits(feature);
 
         switch (feature.getType()) {
         case CAS.TYPE_NAME_INTEGER: {
@@ -134,33 +133,20 @@ public class NumberFeatureSupport
         aFeature.setRequired(true);
     }
 
-    // TODO: trait reading/writing needs to be handled in another way to avoid duplicate code
     @Override
-    public NumberFeatureTraits readTraits(AnnotationFeature aFeature)
+    public NumberFeatureTraits createDefaultTraits()
     {
-        NumberFeatureTraits traits = null;
-        try {
-            traits = JSONUtil.fromJsonString(NumberFeatureTraits.class, aFeature.getTraits());
-        }
-        catch (IOException e) {
-            log.error("Unable to read traits", e);
-        }
-
-        if (traits == null) {
-            traits = new NumberFeatureTraits();
-        }
-
-        return traits;
+        return new NumberFeatureTraits();
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    public void writeTraits(AnnotationFeature aFeature, NumberFeatureTraits aTraits)
+    public <V> V getDefaultFeatureValue(AnnotationFeature aFeature, FeatureStructure aFS)
     {
-        try {
-            aFeature.setTraits(JSONUtil.toJsonString(aTraits));
-        }
-        catch (IOException e) {
-            log.error("Unable to write traits", e);
-        }
+        return switch (aFeature.getType()) {
+        case CAS.TYPE_NAME_INTEGER -> (V) (Object) 0;
+        case CAS.TYPE_NAME_FLOAT -> (V) (Object) 0.0f;
+        default -> throw unsupportedFeatureTypeException(aFeature);
+        };
     }
 }

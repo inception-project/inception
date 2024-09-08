@@ -23,6 +23,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.uima.fit.util.CasUtil.getType;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -187,7 +188,7 @@ public class OpenNlpNerRecommender
                 var end = tokens.get(prediction.getEnd() - 1).getEnd();
                 var annotation = aCas.createAnnotation(predictedType, begin, end);
 
-                annotation.setStringValue(predictedFeature, label);
+                annotation.setFeatureValueFromString(predictedFeature, label);
                 if (scoreFeature != null) {
                     annotation.setDoubleValue(scoreFeature, prediction.getProb());
                 }
@@ -559,5 +560,14 @@ public class OpenNlpNerRecommender
             LOG.error("Exception during training the OpenNLP Named Entity Recognizer model.", e);
             throw new RecommendationException("Error while training OpenNLP pos", e);
         }
+    }
+
+    @Override
+    public void exportModel(RecommenderContext aContext, OutputStream aOutput) throws IOException
+    {
+        var model = aContext.get(KEY_MODEL)
+                .orElseThrow(() -> new IOException("No model trained yet."));
+
+        model.serialize(aOutput);
     }
 }

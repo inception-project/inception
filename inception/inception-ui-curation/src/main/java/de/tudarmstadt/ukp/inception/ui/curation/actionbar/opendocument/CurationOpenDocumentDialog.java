@@ -23,11 +23,9 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalDialog;
 import org.apache.wicket.model.IModel;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.bootstrap.BootstrapModalDialog;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
-import de.tudarmstadt.ukp.inception.support.wicket.DecoratedObject;
 
 public class CurationOpenDocumentDialog
     extends BootstrapModalDialog
@@ -38,7 +36,6 @@ public class CurationOpenDocumentDialog
     private final IModel<AnnotatorState> state;
 
     public CurationOpenDocumentDialog(String aId, IModel<AnnotatorState> aModel,
-            IModel<List<DecoratedObject<Project>>> aProjects,
             IModel<List<SourceDocument>> aDocumentList)
     {
         super(aId);

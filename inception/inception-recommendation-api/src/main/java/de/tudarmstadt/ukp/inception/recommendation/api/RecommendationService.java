@@ -29,7 +29,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.inception.preferences.Key;
+import de.tudarmstadt.ukp.inception.preferences.PreferenceKey;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.EvaluatedRecommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation;
@@ -52,7 +52,7 @@ import de.tudarmstadt.ukp.inception.support.logging.LogMessageGroup;
  */
 public interface RecommendationService
 {
-    Key<RecommenderGeneralSettings> KEY_RECOMMENDER_GENERAL_SETTINGS = new Key<>(
+    PreferenceKey<RecommenderGeneralSettings> KEY_RECOMMENDER_GENERAL_SETTINGS = new PreferenceKey<>(
             RecommenderGeneralSettings.class, "recommendation/general");
 
     String FEATURE_NAME_IS_PREDICTION = "inception_internal_predicted";
@@ -137,6 +137,8 @@ public interface RecommendationService
      * @return whether the current predictions where replaced or not.
      */
     boolean switchPredictions(String aSessionOwner, Project aProject);
+
+    boolean forceSwitchPredictions(String aSessionOwner, Project aProject);
 
     /**
      * Returns the {@code RecommenderContext} for the given recommender if it exists.
@@ -320,4 +322,13 @@ public interface RecommendationService
     boolean isSuspended(String aUser, Project aProject);
 
     void setSuspended(String aUser, Project aProject, boolean aState);
+
+    /**
+     * @return if the curation sidebar mode is available.
+     * @deprecated This obviously shouldn't be here, but this is the easiest way to access this
+     *             information from the recommender settings. Should be removed when the curation
+     *             sidebar leaves experimental mode.
+     */
+    @Deprecated
+    boolean isCurationSidebarEnabled();
 }

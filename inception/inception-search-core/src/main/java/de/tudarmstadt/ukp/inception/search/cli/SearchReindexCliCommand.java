@@ -17,6 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.search.cli;
 
+import static java.util.Arrays.asList;
+
+import java.lang.invoke.MethodHandles;
 import java.util.List;
 import java.util.concurrent.Callable;
 
@@ -26,10 +29,14 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnNotWebAppli
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
+import de.tudarmstadt.ukp.inception.scheduling.LoggingTaskMonitor;
+import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.search.SearchService;
-import de.tudarmstadt.ukp.inception.search.model.Monitor;
+import de.tudarmstadt.ukp.inception.search.scheduling.tasks.ReindexTask;
 import picocli.CommandLine.Command;
+import picocli.CommandLine.Option;
 
 @ConditionalOnNotWebApplication
 @Component
@@ -41,42 +48,49 @@ import picocli.CommandLine.Command;
 public class SearchReindexCliCommand
     implements Callable<Integer>
 {
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
+    @Option(names = { "--project-slug" }, description = "Re-index only the given project")
+    private String slug;
 
     private final ProjectService projectService;
     private final SearchService searchService;
+    private final SchedulingService schedulingService;
+    private final UserDao userService;
 
-    public SearchReindexCliCommand(ProjectService aProjectService, SearchService aSearchService)
+    public SearchReindexCliCommand(ProjectService aProjectService, SearchService aSearchService,
+            SchedulingService aSchedulingService, UserDao aUserService)
     {
         projectService = aProjectService;
         searchService = aSearchService;
+        schedulingService = aSchedulingService;
+        userService = aUserService;
     }
 
     @Override
     public Integer call() throws Exception
     {
-        List<Project> projects = projectService.listProjects();
+        var projects = selectProjects();
 
-        for (Project project : projects) {
-            Monitor monitor = new Monitor()
-            {
-                private long lastLog = 0;
+        for (var project : projects) {
 
-                @Override
-                public synchronized void incDone()
-                {
-                    super.incDone();
-
-                    if (isDone() || System.currentTimeMillis() - lastLog > 5_000) {
-                        log.info("{}: Documents processed: {}", project, this);
-                        lastLog = System.currentTimeMillis();
-                    }
-                }
-            };
-
-            searchService.reindex(project, monitor);
+            schedulingService.executeSync(ReindexTask.builder() //
+                    .withProject(project) //
+                    .withSessionOwner(userService.getCurationUser()) //
+                    .withTrigger("CLI") //
+                    .withMonitor(LoggingTaskMonitor::new) //
+                    .build());
         }
 
         return 0;
+    }
+
+    private List<Project> selectProjects()
+    {
+        if (slug != null) {
+            return asList(projectService.getProjectBySlug(slug));
+        }
+
+        return projectService.listProjects();
     }
 }

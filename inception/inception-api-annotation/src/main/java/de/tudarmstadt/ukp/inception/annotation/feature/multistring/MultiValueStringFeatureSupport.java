@@ -18,10 +18,10 @@
 package de.tudarmstadt.ukp.inception.annotation.feature.multistring;
 
 import static java.util.Arrays.asList;
+import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.uima.cas.CAS.TYPE_NAME_STRING_ARRAY;
 
-import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -58,7 +58,6 @@ import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.IllegalFeatureValueException;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureEditor;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureType;
-import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 
 /**
  * <p>
@@ -110,6 +109,13 @@ public class MultiValueStringFeatureSupport
     {
         return MultiValueMode.ARRAY.equals(aFeature.getMultiValueMode())
                 && CAS.TYPE_NAME_STRING_ARRAY.equals(aFeature.getType());
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public <V> V getDefaultFeatureValue(AnnotationFeature aFeature, FeatureStructure aFS)
+    {
+        return (V) Collections.emptyList();
     }
 
     @SuppressWarnings("unchecked")
@@ -227,6 +233,17 @@ public class MultiValueStringFeatureSupport
     }
 
     @Override
+    public boolean isFeatureValueValid(AnnotationFeature aFeature, FeatureStructure aFS)
+    {
+        if (aFeature.isRequired()) {
+            var value = FSUtil.getFeature(aFS, aFeature.getName(), List.class);
+            return isNotEmpty(value);
+        }
+
+        return true;
+    }
+
+    @Override
     public Panel createTraitsEditor(String aId, IModel<AnnotationFeature> aFeatureModel)
     {
         return new MultiValueStringFeatureTraitsEditor(aId, this, aFeatureModel);
@@ -253,33 +270,9 @@ public class MultiValueStringFeatureSupport
     }
 
     @Override
-    public MultiValueStringFeatureTraits readTraits(AnnotationFeature aFeature)
+    public MultiValueStringFeatureTraits createDefaultTraits()
     {
-        MultiValueStringFeatureTraits traits = null;
-        try {
-            traits = JSONUtil.fromJsonString(MultiValueStringFeatureTraits.class,
-                    aFeature.getTraits());
-        }
-        catch (IOException e) {
-            log.error("Unable to read traits", e);
-        }
-
-        if (traits == null) {
-            traits = new MultiValueStringFeatureTraits();
-        }
-
-        return traits;
-    }
-
-    @Override
-    public void writeTraits(AnnotationFeature aFeature, MultiValueStringFeatureTraits aTraits)
-    {
-        try {
-            aFeature.setTraits(JSONUtil.toJsonString(aTraits));
-        }
-        catch (IOException e) {
-            log.error("Unable to write traits", e);
-        }
+        return new MultiValueStringFeatureTraits();
     }
 
     @Override
@@ -320,5 +313,28 @@ public class MultiValueStringFeatureSupport
             }
         }
         return asList(results);
+    }
+
+    @Override
+    public <V> V getFeatureValue(AnnotationFeature aFeature, FeatureStructure aFS)
+    {
+        Object value;
+
+        var f = aFS.getType().getFeatureByBaseName(aFeature.getName());
+
+        if (f == null) {
+            value = null;
+        }
+        else if (f.getRange().isPrimitive()) {
+            value = FSUtil.getFeature(aFS, aFeature.getName(), Object.class);
+        }
+        else if (FSUtil.isMultiValuedFeature(aFS, f)) {
+            value = FSUtil.getFeature(aFS, aFeature.getName(), List.class);
+        }
+        else {
+            value = FSUtil.getFeature(aFS, aFeature.getName(), FeatureStructure.class);
+        }
+
+        return (V) wrapFeatureValue(aFeature, aFS.getCAS(), value);
     }
 }

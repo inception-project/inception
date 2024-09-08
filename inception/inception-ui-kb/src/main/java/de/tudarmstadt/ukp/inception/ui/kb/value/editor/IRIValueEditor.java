@@ -35,9 +35,8 @@ import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.util.URIUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.googlecode.wicket.jquery.core.renderer.ITextRenderer;
-import com.googlecode.wicket.jquery.core.renderer.TextRenderer;
+import org.wicketstuff.jquery.core.renderer.ITextRenderer;
+import org.wicketstuff.jquery.core.renderer.TextRenderer;
 
 import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService;
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureValueType;

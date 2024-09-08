@@ -25,19 +25,14 @@ import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.enabled
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhenNot;
 import static de.tudarmstadt.ukp.inception.support.wicket.WicketUtil.refreshPage;
-import static java.util.Arrays.asList;
 
-import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.uima.UIMAException;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
-import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.Check;
 import org.apache.wicket.markup.html.form.CheckBox;
@@ -53,7 +48,6 @@ import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.model.ResourceModel;
-import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,18 +56,18 @@ import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase2;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.MergeDialog;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.MergeDialog.State;
-import de.tudarmstadt.ukp.inception.curation.merge.MergeStrategyFactory;
 import de.tudarmstadt.ukp.inception.curation.model.CurationWorkflow;
 import de.tudarmstadt.ukp.inception.curation.service.CurationMergeService;
 import de.tudarmstadt.ukp.inception.curation.service.CurationService;
+import de.tudarmstadt.ukp.inception.curation.sidebar.CurationSidebarProperties;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorExtensionRegistry;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
-import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormChoiceComponentUpdatingBehavior;
@@ -102,42 +96,35 @@ public class CurationSidebar
     private @SpringBean CurationMergeService curationMergeService;
     private @SpringBean DocumentService documentService;
     private @SpringBean AnnotationSchemaService annotationService;
+    private @SpringBean CurationSidebarProperties curationSidebarProperties;
 
     private CheckGroup<User> selectedUsers;
     private DropDownChoice<String> curationTargetChoice;
     private ListView<User> users;
     private final Form<Void> usersForm;
     private CheckBox showMerged;
+    private CheckBox showScore;
     private final IModel<CurationWorkflow> curationWorkflowModel;
+    private final IModel<Boolean> isTargetFinished;
 
     private final Label noDocsLabel;
-    private final Label finishedLabel;
 
     private final MergeDialog mergeConfirm;
 
-    public CurationSidebar(String aId, IModel<AnnotatorState> aModel,
-            AnnotationActionHandler aActionHandler, CasProvider aCasProvider,
-            AnnotationPage aAnnotationPage)
+    public CurationSidebar(String aId, AnnotationActionHandler aActionHandler,
+            CasProvider aCasProvider, AnnotationPageBase2 aAnnotationPage)
     {
-        super(aId, aModel, aActionHandler, aCasProvider, aAnnotationPage);
+        super(aId, aActionHandler, aCasProvider, aAnnotationPage);
 
-        var state = aModel.getObject();
+        var state = aAnnotationPage.getModelObject();
 
-        var notCuratableNotice = new WebMarkupContainer("notCuratableNotice");
-        notCuratableNotice.setOutputMarkupId(true);
-        notCuratableNotice.add(visibleWhen(() -> !isViewingPotentialCurationTarget()));
-        add(notCuratableNotice);
+        queue(createSessionControlForm(CID_SESSION_CONTROL_FORM)
+                .add(visibleWhen(() -> getPage() instanceof AnnotationPage)));
 
-        queue(createSessionControlForm(CID_SESSION_CONTROL_FORM));
-
-        var isTargetFinished = LambdaModel.of(() -> curationSidebarService.isCurationFinished(state,
-                userRepository.getCurrentUsername()));
-
-        finishedLabel = new Label("finishedLabel", new StringResourceModel("finished", this,
-                LoadableDetachableModel.of(state::getUser)));
-        finishedLabel.setOutputMarkupPlaceholderTag(true);
-        finishedLabel.add(visibleWhen(() -> isSessionActive() && isTargetFinished.getObject()));
-        queue(finishedLabel);
+        isTargetFinished = LambdaModel.of(() -> {
+            var sessionOwner = userRepository.getCurrentUsername();
+            return curationSidebarService.isCurationFinished(state, sessionOwner);
+        });
 
         noDocsLabel = new Label("noDocumentsLabel", new ResourceModel("noDocuments"));
         noDocsLabel.add(visibleWhen(() -> isSessionActive() && !isTargetFinished.getObject()
@@ -152,9 +139,19 @@ public class CurationSidebar
                 this::actionToggleShowMerged));
         queue(showMerged);
 
+        showScore = new CheckBox("showScore", Model.of());
+        showScore.add(visibleWhen(this::isSessionActive));
+        showScore.add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT,
+                this::actionToggleShowScore));
+        queue(showScore);
+
         if (isSessionActive()) {
-            showMerged.setModelObject(curationSidebarService
-                    .isShowAll(userRepository.getCurrentUsername(), state.getProject().getId()));
+            var sessionOwner = userRepository.getCurrentUsername();
+            var project = state.getProject();
+            showMerged.setModelObject(
+                    curationSidebarService.isShowAll(sessionOwner, project.getId()));
+            showScore.setModelObject(
+                    curationSidebarService.isShowScore(sessionOwner, project.getId()));
         }
 
         curationWorkflowModel = Model
@@ -168,19 +165,19 @@ public class CurationSidebar
                 documentNameModel, curationWorkflowModel));
     }
 
-    private boolean isViewingPotentialCurationTarget()
-    {
-        // Curation sidebar is not allowed when viewing another users annotations
-        var currentUsername = userRepository.getCurrentUsername();
-        var state = getModelObject();
-        return asList(CURATION_USER, currentUsername).contains(state.getUser().getUsername());
-    }
-
     private void actionToggleShowMerged(AjaxRequestTarget aTarget)
     {
-        String sessionOwner = userRepository.getCurrentUsername();
+        var sessionOwner = userRepository.getCurrentUsername();
         curationSidebarService.setShowAll(sessionOwner, getModelObject().getProject().getId(),
                 showMerged.getModelObject());
+        getAnnotationPage().actionRefreshDocument(aTarget);
+    }
+
+    private void actionToggleShowScore(AjaxRequestTarget aTarget)
+    {
+        var sessionOwner = userRepository.getCurrentUsername();
+        curationSidebarService.setShowScore(sessionOwner, getModelObject().getProject().getId(),
+                showScore.getModelObject());
         getAnnotationPage().actionRefreshDocument(aTarget);
     }
 
@@ -193,52 +190,27 @@ public class CurationSidebar
     private void actionMerge(AjaxRequestTarget aTarget, Form<State> aForm)
     {
         var state = getModelObject();
+        var dataOwner = state.getUser();
+        var curationWorkflow = curationWorkflowModel.getObject();
 
         if (aForm.getModelObject().isSaveSettingsAsDefault()) {
-            curationService.createOrUpdateCurationWorkflow(curationWorkflowModel.getObject());
+            curationService.createOrUpdateCurationWorkflow(curationWorkflow);
             success("Updated project merge strategy settings");
         }
 
+        aTarget.addChildren(getPage(), IFeedback.class);
+
         try {
-            doMerge(state, state.getUser().getUsername(), selectedUsers.getModelObject());
+            var mergeStrategyFactory = curationSidebarService.merge(state, curationWorkflow,
+                    dataOwner.getUsername(), selectedUsers.getModelObject(),
+                    aForm.getModelObject().isClearTargetCas());
+            success("Re-merge using [" + mergeStrategyFactory.getLabel() + "] finished!");
+            refreshPage(aTarget, getPage());
         }
         catch (Exception e) {
             error("Unable to merge: " + e.getMessage());
-            LOG.error("Unable to merge document {} to user {}", state.getUser(),
-                    state.getDocument(), e);
-            aTarget.addChildren(getPage(), IFeedback.class);
-            return;
+            LOG.error("Unable to merge document {} to user {}", dataOwner, state.getDocument(), e);
         }
-
-        MergeStrategyFactory<?> mergeStrategyFactory = curationService
-                .getMergeStrategyFactory(curationWorkflowModel.getObject());
-        success("Re-merge using [" + mergeStrategyFactory.getLabel() + "] finished!");
-        refreshPage(aTarget, getPage());
-    }
-
-    private void doMerge(AnnotatorState aState, String aCurator, Collection<User> aUsers)
-        throws IOException, UIMAException
-    {
-        var doc = aState.getDocument();
-        var aTargetCas = curationSidebarService
-                .retrieveCurationCAS(aCurator, aState.getProject().getId(), doc)
-                .orElseThrow(() -> new IllegalArgumentException(
-                        "No target CAS configured in curation state"));
-
-        var userCases = documentService.readAllCasesSharedNoUpgrade(doc, aUsers);
-
-        // FIXME: should merging not overwrite the current users annos? (can result in
-        // deleting the users annotations!!!), currently fixed by warn message to user
-        // prepare merged CAS
-        curationMergeService.mergeCasses(aState.getDocument(), aState.getUser().getUsername(),
-                aTargetCas, userCases,
-                curationService.getMergeStrategy(curationWorkflowModel.getObject()),
-                aState.getAnnotationLayers());
-
-        // write back and update timestamp
-        curationSidebarService.writeCurationCas(aTargetCas, aState, aState.getProject().getId());
-
-        LOG.debug("Merge done");
     }
 
     private Form<Void> createSessionControlForm(String aId)
@@ -252,8 +224,8 @@ public class CurationSidebar
 
         var curationTargets = new ArrayList<String>();
         curationTargets.add(CURATION_USER);
-        if (projectService.hasRole(userRepository.getCurrentUsername(),
-                getModelObject().getProject(), ANNOTATOR)) {
+        if (curationSidebarProperties.isOwnUserCurationTargetEnabled() && projectService.hasRole(
+                userRepository.getCurrentUsername(), getModelObject().getProject(), ANNOTATOR)) {
             curationTargets.add(userRepository.getCurrentUsername());
         }
 
@@ -268,6 +240,7 @@ public class CurationSidebar
         curationTargetChoice.setChoices(curationTargets);
         curationTargetChoice.setChoiceRenderer(targetChoiceRenderer);
         curationTargetChoice.add(enabledWhenNot(this::isSessionActive));
+        curationTargetChoice.add(visibleWhen(() -> curationTargets.size() > 1));
         curationTargetChoice.setOutputMarkupId(true);
         curationTargetChoice.setRequired(true);
         form.add(curationTargetChoice);
@@ -325,11 +298,10 @@ public class CurationSidebar
 
         var form = new Form<Void>(aId);
         form.setOutputMarkupPlaceholderTag(true);
-        form.add(visibleWhen(() -> isSessionActive()
-                && !curationSidebarService.isCurationFinished(getModelObject(), sessionOwner)
-                && !users.getModelObject().isEmpty()));
+        form.add(visibleWhen(() -> isSessionActive() && !users.getModelObject().isEmpty()));
 
-        form.add(new LambdaAjaxButton<>("merge", this::actionOpenMergeDialog));
+        form.add(new LambdaAjaxButton<>("merge", this::actionOpenMergeDialog)
+                .add(visibleWhenNot(isTargetFinished)));
 
         users = new ListView<User>("users", LoadableDetachableModel.of(this::listCuratableUsers))
         {

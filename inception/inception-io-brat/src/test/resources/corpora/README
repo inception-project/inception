@@ -1,0 +1,6 @@
+This directory contains example datasets compatible with brat.
+
+Unpack these in your DATA directory and set permissions appropriately
+to visualize and/or annotate.
+
+Source: https://github.com/nlplab/brat/tree/master/example-data/corpora

@@ -20,13 +20,14 @@ package de.tudarmstadt.ukp.inception.schema.api.feature;
 import static de.tudarmstadt.ukp.inception.schema.api.feature.FeatureUtil.setFeature;
 import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectFsByAddr;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.fit.util.FSUtil;
 import org.apache.uima.resource.metadata.TypeDescription;
@@ -35,6 +36,7 @@ import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.markup.html.panel.EmptyPanel;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.BeanNameAware;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -46,6 +48,7 @@ import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetailGroup;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.inception.support.extensionpoint.Extension;
+import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 
 /**
  * Extension point for new types of annotation features.
@@ -145,25 +148,52 @@ public interface FeatureSupport<T>
     }
 
     /**
-     * Read the traits for the given {@link AnnotationFeature}. If traits are supported, then this
-     * method must be overwritten. A typical implementation would read the traits from a JSON string
-     * stored in {@link AnnotationFeature#getTraits}, but it would also possible to load the traits
-     * from a database table.
-     * 
-     * @param aFeature
-     *            the feature whose traits should be obtained.
-     * @return the traits.
+     * @return a traits object with default values. If traits are supported, then this method must
+     *         be overwritten.
      */
-    default T readTraits(AnnotationFeature aFeature)
+    default T createDefaultTraits()
     {
         return null;
     }
 
     /**
-     * Write the traits for the given {@link AnnotationFeature}. If traits are supported, then this
-     * method must be overwritten. A typical implementation would write the traits from to JSON
-     * string stored in {@link AnnotationFeature#setTraits}, but it would also possible to store the
-     * traits from a database table.
+     * Read the traits for the given {@link AnnotationFeature}. The default implementation reads the
+     * traits from a JSON string stored in {@link AnnotationFeature#getTraits}, but it would also
+     * possible to load the traits from a database table.
+     * 
+     * @param aFeature
+     *            the feature whose traits should be obtained.
+     * @return the traits.
+     */
+    @SuppressWarnings("unchecked")
+    default T readTraits(AnnotationFeature aFeature)
+    {
+        // Obtain a template traits object from which we can obtain the class
+        var traits = createDefaultTraits();
+        if (traits == null) {
+            return null;
+        }
+
+        // Try loading the traits from the feature
+        try {
+            traits = (T) JSONUtil.fromJsonString(traits.getClass(), aFeature.getTraits());
+        }
+        catch (IOException e) {
+            LoggerFactory.getLogger(getClass()).error("Unable to read traits", e);
+        }
+
+        // If there were no traits or there was an error loading them, use the default traits
+        if (traits == null) {
+            traits = createDefaultTraits();
+        }
+
+        return traits;
+    }
+
+    /**
+     * Write the traits for the given {@link AnnotationFeature}. The default implementation writes
+     * the traits from to JSON string stored in {@link AnnotationFeature#setTraits}, but it would
+     * also possible to store the traits from a database table.
      * 
      * @param aFeature
      *            the feature whose traits should be written.
@@ -172,7 +202,17 @@ public interface FeatureSupport<T>
      */
     default void writeTraits(AnnotationFeature aFeature, T aTraits)
     {
-        aFeature.setTraits(null);
+        var traitsTemplate = createDefaultTraits();
+        if (traitsTemplate == null) {
+            return;
+        }
+
+        try {
+            aFeature.setTraits(JSONUtil.toJsonString(aTraits));
+        }
+        catch (IOException e) {
+            LoggerFactory.getLogger(getClass()).error("Unable to write traits", e);
+        }
     }
 
     /**
@@ -268,9 +308,9 @@ public interface FeatureSupport<T>
             throw unsupportedFeatureTypeException(aFeature);
         }
 
-        FeatureStructure fs = selectFsByAddr(aCas, aAddress);
+        var fs = selectFsByAddr(aCas, aAddress);
 
-        Object value = unwrapFeatureValue(aFeature, fs.getCAS(), aValue);
+        var value = unwrapFeatureValue(aFeature, fs.getCAS(), aValue);
         setFeature(fs, aFeature, value);
     }
 
@@ -285,10 +325,10 @@ public interface FeatureSupport<T>
     {
         Object value;
 
-        Feature f = aFS.getType().getFeatureByBaseName(aFeature.getName());
+        var f = aFS.getType().getFeatureByBaseName(aFeature.getName());
 
         if (f == null) {
-            value = null;
+            value = getDefaultFeatureValue(aFeature, aFS);
         }
         else if (f.getRange().isPrimitive()) {
             value = FSUtil.getFeature(aFS, aFeature.getName(), Object.class);
@@ -301,6 +341,26 @@ public interface FeatureSupport<T>
         }
 
         return (V) wrapFeatureValue(aFeature, aFS.getCAS(), value);
+    }
+
+    <V> V getDefaultFeatureValue(AnnotationFeature aFeature, FeatureStructure aFS);
+
+    default boolean isFeatureValueEqual(AnnotationFeature aFeature, FeatureStructure aFS1,
+            FeatureStructure aFS2)
+    {
+        var value1 = getFeatureValue(aFeature, aFS1);
+        var value2 = getFeatureValue(aFeature, aFS2);
+        return Objects.equals(value1, value2);
+    }
+
+    default void clearFeatureValue(AnnotationFeature aFeature, FeatureStructure aFS)
+    {
+        setFeature(aFS, aFeature, null);
+    }
+
+    default boolean isFeatureValueValid(AnnotationFeature aFeature, FeatureStructure aFS)
+    {
+        return true;
     }
 
     /**
@@ -400,13 +460,40 @@ public interface FeatureSupport<T>
 
     default FeatureStructure getFS(CAS aCas, AnnotationFeature aFeature, int aAddress)
     {
-        FeatureStructure fs = selectFsByAddr(aCas, aAddress);
-        Feature feature = fs.getType().getFeatureByBaseName(aFeature.getName());
+        var fs = selectFsByAddr(aCas, aAddress);
+        var feature = fs.getType().getFeatureByBaseName(aFeature.getName());
 
         if (feature == null) {
             throw new IllegalArgumentException("On [" + fs.getType().getName() + "] the feature ["
                     + aFeature.getName() + "] does not exist.");
         }
         return fs;
+    }
+
+    default boolean isUsingDefaultOptions(AnnotationFeature aFeature)
+    {
+        return true;
+    }
+
+    /**
+     * @return Whether the given feature is accessible. Non-accessible feature do not need to
+     *         support {@link #getFeatureValue}, {@link #setFeatureValue}, {@link #wrapFeatureValue}
+     *         and {@link #unwrapFeatureValue}.
+     * @param aFeature
+     *            the feature
+     * @see FeatureSupportRegistry#isAccessible(AnnotationFeature)
+     */
+    default boolean isAccessible(AnnotationFeature aFeature)
+    {
+        return true;
+    }
+
+    /**
+     * @return whether the feature value should be copied when the owning annotation is merged into
+     *         another CAS.
+     */
+    default boolean isCopyOnCurationMerge(AnnotationFeature aFeature)
+    {
+        return true;
     }
 }

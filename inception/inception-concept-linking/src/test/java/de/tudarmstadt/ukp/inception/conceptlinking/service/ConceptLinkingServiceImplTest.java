@@ -23,10 +23,6 @@ import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.File;
-import java.io.InputStream;
-import java.util.List;
-
-import javax.persistence.EntityManager;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -40,14 +36,11 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.transaction.annotation.Transactional;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.conceptlinking.config.EntityLinkingPropertiesImpl;
 import de.tudarmstadt.ukp.inception.conceptlinking.util.TestFixtures;
-import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryPropertiesImpl;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseServiceImpl;
-import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBasePropertiesImpl;
 import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
@@ -80,17 +73,20 @@ public class ConceptLinkingServiceImplTest
     @BeforeEach
     public void setUp() throws Exception
     {
-        RepositoryProperties repoProps = new RepositoryPropertiesImpl();
-        KnowledgeBaseProperties kbProperties = new KnowledgeBasePropertiesImpl();
+        var repoProps = new RepositoryPropertiesImpl();
+        var kbProperties = new KnowledgeBasePropertiesImpl();
         repoProps.setPath(temporaryFolder);
-        EntityManager entityManager = testEntityManager.getEntityManager();
-        TestFixtures testFixtures = new TestFixtures(testEntityManager);
+
+        var entityManager = testEntityManager.getEntityManager();
+        var testFixtures = new TestFixtures(testEntityManager);
         kbService = new KnowledgeBaseServiceImpl(repoProps, kbProperties, entityManager);
+
         sut = new ConceptLinkingServiceImpl(kbService, new EntityLinkingPropertiesImpl(), repoProps,
                 emptyList());
         sut.afterPropertiesSet();
         sut.init();
-        Project project = testFixtures.createProject(PROJECT_NAME);
+
+        var project = testFixtures.createProject(PROJECT_NAME);
         kb = testFixtures.buildKnowledgeBase(project, KB_NAME, Reification.NONE);
     }
 
@@ -100,7 +96,7 @@ public class ConceptLinkingServiceImplTest
         kbService.registerKnowledgeBase(kb, kbService.getNativeConfig());
         importKnowledgeBase("data/pets.ttl");
 
-        List<KBHandle> handles = sut.disambiguate(kb, null, ANY_OBJECT, "soc", null, 0, null);
+        var handles = sut.disambiguate(kb, null, ANY_OBJECT, "soc", null, 0, null);
 
         assertThat(handles.stream().map(KBHandle::getName))
                 .as("Check whether \"Socke\" has been retrieved.") //
@@ -115,10 +111,11 @@ public class ConceptLinkingServiceImplTest
         kbService.registerKnowledgeBase(kb, kbService.getNativeConfig());
         importKnowledgeBase("data/pets.ttl");
 
-        KBConcept concept = new KBConcept();
+        var concept = new KBConcept();
         concept.setName("manatee");
         kbService.createConcept(kb, concept);
-        List<KBHandle> handles = sut.disambiguate(kb, null, ANY_OBJECT, "man", null, 0, null);
+
+        var handles = sut.disambiguate(kb, null, ANY_OBJECT, "man", null, 0, null);
 
         assertThat(handles.stream().map(KBHandle::getName))
                 .as("Check whether \"manatee\" has been retrieved.") //
@@ -129,9 +126,9 @@ public class ConceptLinkingServiceImplTest
 
     private void importKnowledgeBase(String resourceName) throws Exception
     {
-        ClassLoader classLoader = getClass().getClassLoader();
-        String fileName = classLoader.getResource(resourceName).getFile();
-        try (InputStream is = classLoader.getResourceAsStream(resourceName)) {
+        var classLoader = getClass().getClassLoader();
+        var fileName = classLoader.getResource(resourceName).getFile();
+        try (var is = classLoader.getResourceAsStream(resourceName)) {
             kbService.importData(kb, fileName, is);
         }
     }

@@ -17,25 +17,22 @@
  */
 package de.tudarmstadt.ukp.inception.scheduling;
 
-import static de.tudarmstadt.ukp.inception.scheduling.controller.SchedulerWebsocketController.BASE_TOPIC;
-import static de.tudarmstadt.ukp.inception.scheduling.controller.SchedulerWebsocketController.TASKS_TOPIC;
-
-import org.springframework.messaging.simp.SimpMessagingTemplate;
-
+import de.tudarmstadt.ukp.inception.scheduling.controller.SchedulerWebsocketController;
 import de.tudarmstadt.ukp.inception.scheduling.controller.model.MTaskStateUpdate;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 
 public class NotifyingTaskMonitor
     extends TaskMonitor
 {
-    private final SimpMessagingTemplate msgTemplate;
+    private final SchedulerWebsocketController schedulerWebsocketController;
 
     private MTaskStateUpdate lastUpdate;
 
-    public NotifyingTaskMonitor(TaskHandle aHandle, Task aTask, SimpMessagingTemplate aMsgTemplate)
+    public NotifyingTaskMonitor(Task aTask,
+            SchedulerWebsocketController aSchedulerWebsocketController)
     {
-        super(aHandle, aTask);
-        msgTemplate = aMsgTemplate;
+        super(aTask);
+        schedulerWebsocketController = aSchedulerWebsocketController;
     }
 
     @Override
@@ -89,11 +86,11 @@ public class NotifyingTaskMonitor
     {
         var msg = new MTaskStateUpdate(this, true);
         if (getUser() != null) {
-            msgTemplate.convertAndSendToUser(getUser(), "/queue" + BASE_TOPIC + TASKS_TOPIC, msg);
+            schedulerWebsocketController.dispatch(msg);
         }
     }
 
-    private void sendNotification()
+    protected void sendNotification()
     {
         if (isDestroyed()) {
             return;
@@ -102,8 +99,7 @@ public class NotifyingTaskMonitor
         var msg = new MTaskStateUpdate(this);
         if (lastUpdate == null || !lastUpdate.equals(msg)) {
             if (getUser() != null) {
-                msgTemplate.convertAndSendToUser(getUser(), "/queue" + BASE_TOPIC + TASKS_TOPIC,
-                        msg);
+                schedulerWebsocketController.dispatch(msg);
             }
             lastUpdate = msg;
         }

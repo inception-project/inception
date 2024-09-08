@@ -21,6 +21,8 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.doccat;
 
+import static java.util.Arrays.asList;
+
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.model.IModel;
 
@@ -66,8 +68,8 @@ public class OpenNlpDoccatMetadataRecommenderFactory
 
         var compatibleSpanLayer = DocumentMetadataLayerSupport.TYPE.equals(aLayer.getType());
 
-        var compatibleFeature = CAS.TYPE_NAME_STRING.equals(aFeature.getType())
-                || aFeature.isVirtualFeature();
+        var compatibleFeature = asList(CAS.TYPE_NAME_STRING, CAS.TYPE_NAME_BOOLEAN)
+                .contains(aFeature.getType()) || aFeature.isVirtualFeature();
 
         return compatibleSpanLayer && compatibleFeature;
     }
@@ -83,5 +85,17 @@ public class OpenNlpDoccatMetadataRecommenderFactory
             IModel<Recommender> aModel)
     {
         return new OpenNlpDoccatRecommenderTraitsEditor(aId, aModel);
+    }
+
+    @Override
+    public boolean isModelExportSupported()
+    {
+        return true;
+    }
+
+    @Override
+    public String getExportModelName(Recommender aRecommender)
+    {
+        return "model.bin";
     }
 }

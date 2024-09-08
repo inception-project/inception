@@ -17,9 +17,12 @@
  */
 package de.tudarmstadt.ukp.inception.processing.recommender;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IN_PROGRESS;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.NEW;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
 import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CHANGE_EVENT;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhenNot;
+import static java.util.Arrays.asList;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -28,6 +31,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
@@ -37,6 +41,7 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer_;
@@ -53,6 +58,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapab
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerSupport;
@@ -67,6 +73,7 @@ public class BulkRecommenderPanel
     private @SpringBean SchedulingService schedulingService;
     private @SpringBean UserDao userService;
     private @SpringBean AnnotationSchemaService annotationSchemaService;
+    private @SpringBean FeatureSupportRegistry featureSupportRegistry;
 
     private CompoundPropertyModel<FormData> formModel;
     private FeatureEditorPanel processingMetadata;
@@ -88,8 +95,11 @@ public class BulkRecommenderPanel
                 .setChoiceRenderer(new ChoiceRenderer<>(Recommender_.NAME)) //
                 .setRequired(true));
 
+        queue(new AnnotationDocumentStatesChoice("states") //
+                .setChoices(asList(NEW, IN_PROGRESS)));
+
         processingMetadata = new FeatureEditorPanel("processingMetadata");
-                processingMetadata.setOutputMarkupPlaceholderTag(true);
+        processingMetadata.setOutputMarkupPlaceholderTag(true);
         queue(processingMetadata);
 
         var docMetaLayers = LoadableDetachableModel.of(this::listDocumentMetadataLayers);
@@ -103,6 +113,9 @@ public class BulkRecommenderPanel
                 })) //
                 .add(visibleWhenNot(docMetaLayers.map(List::isEmpty))));
 
+        queue(new CheckBox("finishDocumentsWithoutRecommendations") //
+                .setOutputMarkupId(true));
+
         queue(new LambdaAjaxButton<>("startProcessing", this::actionStartProcessing));
     }
 
@@ -112,7 +125,7 @@ public class BulkRecommenderPanel
         for (var state : processingMetadata.getModelObject()) {
             metadata.put(state.getFeature(), state.getValue());
         }
-        
+
         var formData = aForm.getModelObject();
         schedulingService.enqueue(BulkPredictionTask.builder() //
                 .withSessionOwner(userService.getCurrentUser()) //
@@ -120,6 +133,9 @@ public class BulkRecommenderPanel
                 .withTrigger("User request") //
                 .withDataOwner(formData.user.getUsername()) //
                 .withProcessingMetadata(metadata) //
+                .withStatesToProcess(formData.states) //
+                .withFinishDocumentsWithoutRecommendations(
+                        formData.finishDocumentsWithoutRecommendations) //
                 .build());
     }
 
@@ -130,8 +146,8 @@ public class BulkRecommenderPanel
 
     private List<AnnotationLayer> listDocumentMetadataLayers()
     {
-        return annotationSchemaService.listAnnotationLayer(getModelObject()) //
-                .stream().filter(l -> DocumentMetadataLayerSupport.TYPE.equals(l.getType())) //
+        return annotationSchemaService.listAnnotationLayer(getModelObject()).stream() //
+                .filter(l -> DocumentMetadataLayerSupport.TYPE.equals(l.getType())) //
                 .toList();
     }
 
@@ -173,11 +189,7 @@ public class BulkRecommenderPanel
         var layer = formModel.map(d -> d.processingMetadataLayer).getObject();
 
         var featureStates = new ArrayList<FeatureState>();
-        for (var feature : annotationSchemaService.listSupportedFeatures(layer)) {
-            if (!feature.isEnabled()) {
-                continue;
-            }
-
+        for (var feature : annotationSchemaService.listEnabledFeatures(layer)) {
             if (feature.getLinkMode() != LinkMode.NONE) {
                 continue;
             }
@@ -199,5 +211,12 @@ public class BulkRecommenderPanel
         private User user;
         private Recommender recommender;
         private AnnotationLayer processingMetadataLayer;
+        private boolean finishDocumentsWithoutRecommendations;
+        private List<AnnotationDocumentState> states;
+
+        {
+            states = new ArrayList<>();
+            states.add(NEW);
+        }
     }
 }

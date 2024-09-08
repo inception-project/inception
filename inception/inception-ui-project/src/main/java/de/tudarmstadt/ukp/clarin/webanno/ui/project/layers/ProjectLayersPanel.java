@@ -37,8 +37,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.persistence.NoResultException;
-
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -86,6 +84,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.bootstrap.BootstrapFileInputField;
 import de.tudarmstadt.ukp.inception.bootstrap.BootstrapModalDialog;
 import de.tudarmstadt.ukp.inception.export.LayerImportExportUtils;
+import de.tudarmstadt.ukp.inception.project.api.ProjectInitializationRequest;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.config.AnnotationSchemaProperties;
@@ -99,6 +98,7 @@ import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.inception.support.spring.ApplicationEventPublisherHolder;
 import de.tudarmstadt.ukp.inception.support.wicket.WicketUtil;
+import jakarta.persistence.NoResultException;
 
 /**
  * A Panel Used to add Layers to a selected {@link Project} in the project settings page
@@ -289,7 +289,9 @@ public class ProjectLayersPanel
                 target.add(layerSelection);
                 target.add(addButton);
                 target.addChildren(getPage(), IFeedback.class);
-                projectService.initializeProject(getModelObject(), asList(initializer));
+                var request = ProjectInitializationRequest.builder().withProject(getModelObject())
+                        .build();
+                projectService.initializeProject(request, asList(initializer));
                 info("Applying project initializer [" + initializer.getName() + "]");
             }
             catch (Exception e) {

@@ -24,8 +24,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Properties;
 
-import javax.servlet.http.HttpServletRequest;
-
 import org.apache.commons.lang3.reflect.ConstructorUtils;
 import org.apache.wicket.Component;
 import org.apache.wicket.MetaDataKey;
@@ -57,11 +55,14 @@ import de.tudarmstadt.ukp.inception.bootstrap.BootstrapFeedbackPanel;
 import de.tudarmstadt.ukp.inception.support.SettingsUtil;
 import de.tudarmstadt.ukp.inception.support.interceptors.GlobalInterceptorsRegistry;
 import de.tudarmstadt.ukp.inception.ui.core.darkmode.DarkModeWrapper;
+import jakarta.servlet.http.HttpServletRequest;
 
 public abstract class ApplicationPageBase
     extends WebPage
 {
     private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
+    public static final String CID_FOOTER_ITEM = "item";
 
     private static final long serialVersionUID = -1690130604031181803L;
 
@@ -186,10 +187,6 @@ public abstract class ApplicationPageBase
         {
             private static final long serialVersionUID = 5912513189482015963L;
 
-            {
-                setReuseItems(true);
-            }
-
             @Override
             protected void populateItem(ListItem<Component> aItem)
             {
@@ -231,7 +228,7 @@ public abstract class ApplicationPageBase
 
     public void addToFooter(Component aComponent)
     {
-        List<Component> items = footerItems.getObject();
+        var items = footerItems.getObject();
 
         if (!items.contains(aComponent)) {
             items.add(aComponent);
@@ -244,7 +241,7 @@ public abstract class ApplicationPageBase
 
     public void removeFromFooter(Component aComponent)
     {
-        List<Component> items = footerItems.getObject();
+        var items = footerItems.getObject();
 
         items.remove(aComponent);
 

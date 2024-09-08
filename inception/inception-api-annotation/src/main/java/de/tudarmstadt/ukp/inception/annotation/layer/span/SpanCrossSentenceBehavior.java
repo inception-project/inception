@@ -101,7 +101,7 @@ public class SpanCrossSentenceBehavior
 
     @Override
     public void onRender(TypeAdapter aAdapter, VDocument aResponse,
-            Map<AnnotationFS, VSpan> annoToSpanIdx, int aPageBegin, int aPageEnd)
+            Map<AnnotationFS, VSpan> annoToSpanIdx)
     {
         if (aAdapter.getLayer().isCrossSentence() || annoToSpanIdx.isEmpty()) {
             return;
@@ -114,8 +114,8 @@ public class SpanCrossSentenceBehavior
         // particular offset, even if it is not the start/end offset of a sentence.
         NavigableMap<Integer, AnnotationFS> sentBeginIdx = new TreeMap<>();
         NavigableMap<Integer, AnnotationFS> sentEndIdx = new TreeMap<>();
-        for (AnnotationFS sent : selectOverlapping(cas, getType(cas, Sentence.class), aPageBegin,
-                aPageEnd)) {
+        for (AnnotationFS sent : selectOverlapping(cas, getType(cas, Sentence.class),
+                aResponse.getWindowBegin(), aResponse.getWindowEnd())) {
             sentBeginIdx.put(sent.getBegin(), sent);
             sentEndIdx.put(sent.getEnd(), sent);
         }

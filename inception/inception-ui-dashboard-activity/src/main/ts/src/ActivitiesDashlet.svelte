@@ -26,7 +26,7 @@
     dayjs.extend(localizedFormat)
 
     export let dataUrl: string
-    export let activities = [];
+    export let activities: any[] = [];
     export let loading = true;
 
     onMount(async () => {
@@ -51,7 +51,7 @@
     }
 </script>
 
-<div class="card-body">
+<div class="card-body p-0">
     {#if loading}
         <div class="mt-5 d-flex flex-column justify-content-center">
             <div class="d-flex flex-row justify-content-center">

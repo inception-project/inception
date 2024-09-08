@@ -1,0 +1,100 @@
+<!--
+  Licensed to the Technische Universität Darmstadt under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The Technische Universität Darmstadt 
+  licenses this file to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.
+   
+  http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<html xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
+<body>
+  <wicket:panel>
+    <h1>System Status</h1>
+
+    <div class="card m-2">
+      <div class="card-header">
+        Active Users 
+        <span class="badge rounded-pill text-bg-secondary float-end">
+          <wicket:container wicket:id="activeUsers" />
+        </span>
+      </div>
+      <div class="card-body">
+        <wicket:container wicket:id="activeUsersDetail" />
+      </div>
+    </div>
+
+    <div wicket:id="reverseProxyInfo" class="card m-2">
+      <div class="card-header">Reverse Proxy Status</div>
+      <div class="card-body">
+        <div class="row form-row">
+          <p><wicket:message key="proxyDetected"/></p>
+
+          <p wicket:id="isProxyTrusted"></p>
+          <p wicket:enclosure="remoteIp">
+            Remote IP: <code wicket:id="remoteIp"/>
+          </p>
+          <p wicket:enclosure="internalProxies">
+            Internal proxies: <code wicket:id="internalProxies"/>
+          </p>
+          <p wicket:enclosure="trustedProxies">
+            Trusted proxies: <code wicket:id="trustedProxies"/>
+          </p>
+          
+          <div wicket:id="isProtocolOk"></div>
+          <p wicket:enclosure="clientUrl">
+            Client URL: <code wicket:id="clientUrl"/>
+          </p>
+          <p wicket:enclosure="serverUrl">
+            Server URL: <code wicket:id="serverUrl"/>
+          </p>
+          
+          <div wicket:id="hasCsrfWithProtocol"></div>
+          <div wicket:id="hasCsrfWithoutProtocol"></div>
+        </div>
+      </div>
+    </div>
+
+    <div wicket:id="requestDetails" class="card m-2">
+      <div class="card-header">Request Details</div>
+      <div class="card-body">
+        <div class="row form-row" wicket:enclosure="reverseProxyHeaders">
+          <label class="col-sm-4 col-form-label"> Reverse Proxy Headers </label>
+          <div class="col-sm-8">
+            <pre wicket:id="reverseProxyHeaders" class="form-control" />
+          </div>
+        </div>
+
+        <div class="row form-row" wicket:enclosure="csrfInfo">
+          <label class="col-sm-4 col-form-label"> CSRF </label>
+          <div class="col-sm-8">
+            <pre wicket:id="csrfInfo" class="form-control" />
+          </div>
+        </div>
+
+        <div class="row form-row" wicket:enclosure="headers">
+          <label class="col-sm-4 col-form-label"> All Headers </label>
+          <div class="col-sm-8">
+            <pre wicket:id="headers" class="form-control" />
+          </div>
+        </div>
+      </div>
+    </div>
+  </wicket:panel>
+  <wicket:fragment wicket:id="proxyTrusted">
+    <wicket:message key="proxyTrusted"/>
+  </wicket:fragment>
+  <wicket:fragment wicket:id="proxyNotTrusted">
+    <wicket:message key="proxyNotTrusted"/>
+  </wicket:fragment>
+</body>
+</html>

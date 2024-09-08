@@ -19,7 +19,7 @@
   <parent>
     <artifactId>inception-app</artifactId>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-    <version>32.0-SNAPSHOT</version>
+    <version>34.0-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <artifactId>inception-workload-dynamic</artifactId>
@@ -79,8 +79,8 @@
     </dependency>
 
     <dependency>
-      <groupId>javax.persistence</groupId>
-      <artifactId>javax.persistence-api</artifactId>
+      <groupId>jakarta.persistence</groupId>
+      <artifactId>jakarta.persistence-api</artifactId>
     </dependency>
 
     <dependency>
@@ -170,16 +170,16 @@
       <artifactId>wicketstuff-annotationeventdispatcher</artifactId>
     </dependency>
     <dependency>
-      <groupId>com.googlecode.wicket-jquery-ui</groupId>
-      <artifactId>wicket-jquery-ui-core</artifactId>
+      <groupId>org.wicketstuff</groupId>
+      <artifactId>wicketstuff-jquery-ui-core</artifactId>
     </dependency>
     <dependency>
-      <groupId>com.googlecode.wicket-jquery-ui</groupId>
-      <artifactId>wicket-jquery-ui</artifactId>
+      <groupId>org.wicketstuff</groupId>
+      <artifactId>wicketstuff-jquery-ui</artifactId>
     </dependency>
     <dependency>
-      <groupId>com.googlecode.wicket-jquery-ui</groupId>
-      <artifactId>wicket-kendo-ui</artifactId>
+      <groupId>org.wicketstuff</groupId>
+      <artifactId>wicketstuff-kendo-ui</artifactId>
     </dependency>
     <dependency>
       <groupId>org.danekja</groupId>
@@ -250,6 +250,11 @@
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-documents</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-constraints</artifactId>
       <scope>test</scope>
     </dependency>
   </dependencies>

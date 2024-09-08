@@ -24,13 +24,13 @@ import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.COREFERENCE_RELA
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.COREFERENCE_TYPE_FEATURE;
 import static java.util.Arrays.asList;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.zip.ZipFile;
+import java.util.zip.ZipOutputStream;
 
 import org.apache.uima.cas.CAS;
 import org.slf4j.Logger;
@@ -87,22 +87,22 @@ public class LayerExporter
 
     @Override
     public void exportData(FullProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
-            ExportedProject aExProject, File aStage)
+            ExportedProject aExProject, ZipOutputStream aStage)
     {
-        List<ExportedAnnotationLayer> exLayers = new ArrayList<>();
+        var exLayers = new ArrayList<ExportedAnnotationLayer>();
 
         // Store map of layer and its equivalent exLayer so that the attach type is attached later
-        Map<AnnotationLayer, ExportedAnnotationLayer> layerToExLayers = new HashMap<>();
+        var layerToExLayers = new HashMap<AnnotationLayer, ExportedAnnotationLayer>();
 
         // Store map of feature and its equivalent exFeature so that the attach feature is attached
         // later
-        Map<AnnotationFeature, ExportedAnnotationFeature> featureToExFeatures = new HashMap<>();
-        for (AnnotationLayer layer : annotationService.listAnnotationLayer(aRequest.getProject())) {
+        var featureToExFeatures = new HashMap<AnnotationFeature, ExportedAnnotationFeature>();
+        for (var layer : annotationService.listAnnotationLayer(aRequest.getProject())) {
             exLayers.add(exportLayerDetails(layerToExLayers, featureToExFeatures, layer));
         }
 
         // add the attach-type and attach-feature to the exported layers and exported feature
-        for (AnnotationLayer layer : layerToExLayers.keySet()) {
+        for (var layer : layerToExLayers.keySet()) {
             if (layer.getAttachType() != null) {
                 layerToExLayers.get(layer).setAttachType(
                         new ExportedAnnotationLayerReference(layer.getAttachType().getName()));
@@ -126,7 +126,7 @@ public class LayerExporter
             Map<AnnotationFeature, ExportedAnnotationFeature> aFeatureToExFeature,
             AnnotationLayer aLayer)
     {
-        ExportedAnnotationLayer exLayer = new ExportedAnnotationLayer();
+        var exLayer = new ExportedAnnotationLayer();
         // Allow limited backwards compatibility by exporting data that older versions used
         exLayer.setAllowStacking(aLayer.isAllowStacking());
         exLayer.setLockToTokenOffset(AnchoringMode.SINGLE_TOKEN.equals(aLayer.getAnchoringMode()));
@@ -151,8 +151,8 @@ public class LayerExporter
         }
 
         // Export features
-        List<ExportedAnnotationFeature> exFeatures = new ArrayList<>();
-        for (AnnotationFeature feature : annotationService.listAnnotationFeature(aLayer)) {
+        var exFeatures = new ArrayList<ExportedAnnotationFeature>();
+        for (var feature : annotationService.listAnnotationFeature(aLayer)) {
             ExportedAnnotationFeature exFeature = exportFeatureDetails(feature);
             exFeatures.add(exFeature);
 
@@ -167,7 +167,7 @@ public class LayerExporter
 
     private ExportedAnnotationFeature exportFeatureDetails(AnnotationFeature feature)
     {
-        ExportedAnnotationFeature exFeature = new ExportedAnnotationFeature();
+        var exFeature = new ExportedAnnotationFeature();
         exFeature.setDescription(feature.getDescription());
         exFeature.setEnabled(feature.isEnabled());
         exFeature.setRemember(feature.isRemember());
@@ -189,10 +189,10 @@ public class LayerExporter
         exFeature.setRank(feature.getRank());
 
         if (feature.getTagset() != null) {
-            TagSet tagSet = feature.getTagset();
+            var tagSet = feature.getTagset();
             // We export only the name here as a stub. The actual tag set is exported by
             // the TagSetExporter.
-            ExportedTagSet exTagSet = new ExportedTagSet();
+            var exTagSet = new ExportedTagSet();
             exTagSet.setName(tagSet.getName());
             exFeature.setTagSet(exTagSet);
         }
@@ -221,27 +221,26 @@ public class LayerExporter
     private void importLayers(Project aProject, ExportedProject aExProject) throws IOException
     {
         // Round 1: layers and features
-        for (ExportedAnnotationLayer exLayer : aExProject.getLayers()) {
+        for (var exLayer : aExProject.getLayers()) {
             if (annotationService.existsLayer(exLayer.getName(), exLayer.getType(), aProject)) {
-                AnnotationLayer layer = annotationService.findLayer(aProject, exLayer.getName());
+                var layer = annotationService.findLayer(aProject, exLayer.getName());
                 importLayer(layer, exLayer, aProject);
-                for (ExportedAnnotationFeature exfeature : exLayer.getFeatures()) {
+                for (var exfeature : exLayer.getFeatures()) {
                     if (annotationService.existsFeature(exfeature.getName(), layer)) {
-                        AnnotationFeature feature = annotationService
-                                .getFeature(exfeature.getName(), layer);
+                        var feature = annotationService.getFeature(exfeature.getName(), layer);
                         importFeature(feature, exfeature, aProject);
                         continue;
                     }
-                    AnnotationFeature feature = new AnnotationFeature();
+                    var feature = new AnnotationFeature();
                     feature.setLayer(layer);
                     importFeature(feature, exfeature, aProject);
                 }
             }
             else {
-                AnnotationLayer layer = new AnnotationLayer();
+                var layer = new AnnotationLayer();
                 importLayer(layer, exLayer, aProject);
-                for (ExportedAnnotationFeature exfeature : exLayer.getFeatures()) {
-                    AnnotationFeature feature = new AnnotationFeature();
+                for (var exfeature : exLayer.getFeatures()) {
+                    var feature = new AnnotationFeature();
                     feature.setLayer(layer);
                     importFeature(feature, exfeature, aProject);
                 }
@@ -249,14 +248,14 @@ public class LayerExporter
         }
 
         // Round 2: attach-layers, attach-features
-        for (ExportedAnnotationLayer exLayer : aExProject.getLayers()) {
+        for (var exLayer : aExProject.getLayers()) {
             if (exLayer.getAttachType() != null) {
-                AnnotationLayer layer = annotationService.findLayer(aProject, exLayer.getName());
-                AnnotationLayer attachLayer = annotationService.findLayer(aProject,
+                var layer = annotationService.findLayer(aProject, exLayer.getName());
+                var attachLayer = annotationService.findLayer(aProject,
                         exLayer.getAttachType().getName());
                 layer.setAttachType(attachLayer);
                 if (exLayer.getAttachFeature() != null) {
-                    AnnotationFeature attachFeature = annotationService
+                    var attachFeature = annotationService
                             .getFeature(exLayer.getAttachFeature().getName(), attachLayer);
                     layer.setAttachFeature(attachFeature);
                 }
@@ -310,7 +309,7 @@ public class LayerExporter
         aFeature.setUiName(aExFeature.getUiName());
         aFeature.setProject(aProject);
         aFeature.setName(aExFeature.getName());
-        boolean isItChainedLayer = CHAIN_TYPE.equals(aFeature.getLayer().getType());
+        var isItChainedLayer = CHAIN_TYPE.equals(aFeature.getLayer().getType());
         if (isItChainedLayer && (COREFERENCE_TYPE_FEATURE.equals(aExFeature.getName())
                 || COREFERENCE_RELATION_FEATURE.equals(aExFeature.getName()))) {
             aFeature.setType(CAS.TYPE_NAME_STRING);
@@ -337,7 +336,7 @@ public class LayerExporter
         aFeature.setRank(aExFeature.getRank());
 
         if (aExFeature.getTagSet() != null) {
-            TagSet tagset = annotationService.getTagSet(aExFeature.getTagSet().getName(), aProject);
+            var tagset = annotationService.getTagSet(aExFeature.getTagSet().getName(), aProject);
             aFeature.setTagset(tagset);
         }
 

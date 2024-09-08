@@ -19,8 +19,6 @@ package de.tudarmstadt.ukp.inception.curation.service;
 
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.getDiffAdapters;
-import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior.LINK_ROLE_AS_LABEL;
-import static java.lang.Integer.MAX_VALUE;
 import static java.lang.invoke.MethodHandles.lookup;
 import static java.util.stream.Collectors.toList;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -34,12 +32,9 @@ import org.apache.uima.cas.CAS;
 import org.slf4j.Logger;
 import org.springframework.context.ApplicationEventPublisher;
 
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.DiffResult;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.DiffAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.DiffResult;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.curation.config.CurationServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.curation.merge.CasMerge;
 import de.tudarmstadt.ukp.inception.curation.merge.strategy.MergeStrategy;
@@ -73,44 +68,37 @@ public class CurationMergeServiceImpl
             CAS aTargetCas, Map<String, CAS> aCassesToMerge, MergeStrategy aMergeStrategy)
         throws UIMAException
     {
-        List<AnnotationLayer> layers = annotationService.listSupportedLayers(aDocument.getProject())
-                .stream() //
+        var layers = annotationService.listSupportedLayers(aDocument.getProject()).stream() //
                 .filter(AnnotationLayer::isEnabled) //
                 .collect(toList());
 
         return mergeCasses(aDocument, aTargetCasUserName, aTargetCas, aCassesToMerge,
-                aMergeStrategy, layers);
+                aMergeStrategy, layers, true);
     }
 
     @Override
     public Set<LogMessage> mergeCasses(SourceDocument aDocument, String aTargetCasUserName,
             CAS aTargetCas, Map<String, CAS> aCassesToMerge, MergeStrategy aMergeStrategy,
-            List<AnnotationLayer> aLayers)
+            List<AnnotationLayer> aLayers, boolean aClearTargetCas)
         throws UIMAException
     {
-        List<DiffAdapter> adapters = getDiffAdapters(annotationService, aLayers);
-
-        // If the token/sentence layer is not editable, we do not offer curation of the tokens.
-        // Instead the tokens are obtained from a random template CAS when initializing the CAS - we
-        // assume here that the tokens have never been modified.
-        if (!annotationService.isSentenceLayerEditable(aDocument.getProject())) {
-            adapters.removeIf(adapter -> Sentence._TypeName.equals(adapter.getType()));
-        }
-
-        if (!annotationService.isTokenLayerEditable(aDocument.getProject())) {
-            adapters.removeIf(adapter -> Token._TypeName.equals(adapter.getType()));
-        }
-
         DiffResult diff;
-        try (StopWatch watch = new StopWatch(LOG, "CasDiff")) {
-            diff = doDiff(adapters, LINK_ROLE_AS_LABEL, aCassesToMerge, 0, MAX_VALUE).toResult();
+        try (var watch = new StopWatch(LOG, "CasDiff")) {
+            var adapters = getDiffAdapters(annotationService, aLayers);
+            diff = doDiff(adapters, aCassesToMerge).toResult();
         }
 
-        try (StopWatch watch = new StopWatch(LOG, "CasMerge")) {
-            CasMerge casMerge = new CasMerge(annotationService, applicationEventPublisher);
+        try (var watch = new StopWatch(LOG, "CasMerge")) {
+            var casMerge = new CasMerge(annotationService, applicationEventPublisher);
             casMerge.setMergeStrategy(aMergeStrategy);
-            return casMerge.reMergeCas(diff, aDocument, aTargetCasUserName, aTargetCas,
-                    aCassesToMerge);
+            if (aClearTargetCas) {
+                return casMerge.clearAndMergeCas(diff, aDocument, aTargetCasUserName, aTargetCas,
+                        aCassesToMerge);
+            }
+            else {
+                return casMerge.mergeCas(diff, aDocument, aTargetCasUserName, aTargetCas,
+                        aCassesToMerge);
+            }
         }
     }
 }

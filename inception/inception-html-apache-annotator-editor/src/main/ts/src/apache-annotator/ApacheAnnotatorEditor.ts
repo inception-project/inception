@@ -19,9 +19,16 @@ import { AnnotationEditor, DiamAjax, calculateStartOffset } from '@inception-pro
 import { highlights, ApacheAnnotatorVisualizer } from './ApacheAnnotatorVisualizer'
 import { ApacheAnnotatorSelector } from './ApacheAnnotatorSelector'
 import ApacheAnnotatorToolbar from './ApacheAnnotatorToolbar.svelte'
-import { showEmptyHighlights, showLabels } from './ApacheAnnotatorState'
+import { showDocumentStructure, documentStructureWidth, showLabels, showEmptyHighlights, showAggregatedLabels } from './ApacheAnnotatorState'
 import AnnotationDetailPopOver from '@inception-project/inception-js-api/src/widget/AnnotationDetailPopOver.svelte'
 import { Writable } from 'svelte/store'
+
+interface SelectionLike {
+  anchorNode: Node | null | undefined
+  anchorOffset: number
+  focusNode: Node | null | undefined
+  focusOffset: number
+}
 
 export class ApacheAnnotatorEditor implements AnnotationEditor {
   private ajax: DiamAjax
@@ -30,14 +37,21 @@ export class ApacheAnnotatorEditor implements AnnotationEditor {
   private selector: ApacheAnnotatorSelector
   private toolbar: ApacheAnnotatorToolbar
   private popover: AnnotationDetailPopOver
+  private sectionSelector: string
+  private horizSplitPane: HTMLElement
+  private documentStructureNavigator: Element
 
-  public constructor (element: Element, ajax: DiamAjax, userPreferencesKey: string) {
+  public constructor (element: Element, ajax: DiamAjax, userPreferencesKey: string, sectionElementLocalNames: Set<string>) {
     this.ajax = ajax
     this.root = element
+    this.sectionSelector = [...sectionElementLocalNames].join(',')
 
     const defaultPreferences = {
       showLabels: false,
-      showEmptyHighlights: false
+      showAggregatedLabels: true,
+      showEmptyHighlights: false,
+      showDocumentStructure: false,
+      documentStructureWidth: 0.2,
     }
     let preferences = Object.assign({}, defaultPreferences)
 
@@ -67,10 +81,34 @@ export class ApacheAnnotatorEditor implements AnnotationEditor {
       }
 
       bindPreference(showLabels, "showLabels")
+      bindPreference(showAggregatedLabels, "showAggregatedLabels")
       bindPreference(showEmptyHighlights, "showEmptyHighlights")
+      bindPreference(showDocumentStructure, "showDocumentStructure")
+      bindPreference(documentStructureWidth, "documentStructureWidth")
     }).then(() => {
-      this.vis = new ApacheAnnotatorVisualizer(this.root, this.ajax)
+      this.ensureSectionElementsHaveAnId()
+
+      // Move all content into a document container
+      const documentContainer = this.root.ownerDocument.createElement('div')
+      documentContainer.classList.add('iaa-document-container');
+      [...this.root.ownerDocument.body.children].forEach(child => documentContainer.appendChild(child))
+
+      // Set up a container for the document navigation sidebar
+      const navigatorContainer = this.root.ownerDocument.createElement('div')
+      navigatorContainer.classList.add('iaa-document-navigator');
+
+      // Set up a split pane to host the document and the document structure navigation sidebar
+      this.horizSplitPane = this.createHorizontalSplitPane(navigatorContainer, documentContainer)
+
+      // Add the split pane to the document
+      this.root.ownerDocument.body.appendChild(this.horizSplitPane)
+
+      // Add the editor components for the document container
+      this.vis = new ApacheAnnotatorVisualizer(this.root, this.ajax, this.sectionSelector)
       this.selector = new ApacheAnnotatorSelector(this.root, this.ajax)
+
+      // Add auxiliary controls
+      this.documentStructureNavigator = this.createDocumentNavigator(navigatorContainer)
       this.toolbar = this.createToolbar()
 
       this.popover = new AnnotationDetailPopOver({
@@ -91,10 +129,92 @@ export class ApacheAnnotatorEditor implements AnnotationEditor {
       this.root.addEventListener('mousedown', e => this.cancelRightClick(e), { capture: true })
       this.root.addEventListener('mouseup', e => this.cancelRightClick(e), { capture: true })
       this.root.addEventListener('mouseclick', e => this.cancelRightClick(e), { capture: true })
+
+      showDocumentStructure.subscribe(enabled => {
+        navigatorContainer.style.display = enabled ? 'flex' : 'none'
+      })
+
+      // Delay subscription a bit so the browser has time to render and we can obtain the width
+      // of the split pane
+      window.setTimeout(() => documentStructureWidth.subscribe(relativeWidth => {
+        const totalWidth = this.horizSplitPane.getBoundingClientRect().width
+        const width = totalWidth * Math.max(0.1, Math.min(0.9, relativeWidth))
+        console.log(`width: ${width} / totalWidth: ${totalWidth}`)
+        navigatorContainer.style.width = `${width}px`
+        navigatorContainer.style.minWidth = `${width}px`
+        navigatorContainer.style.maxWidth = `${width}px`
+      }), 10)
     })
   }
 
-  private createToolbar () {
+  /**
+   * Set up a wrapper around the editor content and move the root content node into the wrapper
+   * The wrapper creates the opportunity to add the document structure sidebar besides the
+   * document content.
+   */
+  private createHorizontalSplitPane(leftPane: HTMLElement, rightPane: HTMLElement): HTMLElement {
+    const divider = this.root.ownerDocument.createElement('div')
+    const pane = document.createElement('div')
+    pane.classList.add('iaa-split-pane')
+    pane.appendChild(leftPane)
+    pane.appendChild(divider)
+    pane.appendChild(rightPane)
+
+    let origin = 0
+    let totalWidth = 0
+    let leftStartWidth = 0
+    let glass: HTMLElement | undefined = undefined
+
+    divider.classList.add('iaa-divider')
+    divider.addEventListener('mousedown', e => { 
+      if (e.buttons !== 1) return
+
+      origin = e.clientX
+      totalWidth = pane.getBoundingClientRect().width
+      leftStartWidth = leftPane.getBoundingClientRect().width
+      glass = document.createElement('div')
+      glass.classList.add('iaa-glass')
+      glass.addEventListener('mouseup', e => {
+        if (e.buttons !== 1) return
+        glass?.remove()
+        glass = undefined
+        const width = leftPane.getBoundingClientRect().width
+        const relativeWidth = width / totalWidth
+        documentStructureWidth.set(relativeWidth)
+      })
+      glass.addEventListener('mousemove', e => { 
+        if (e.buttons !== 1) {
+          glass?.remove()
+          glass = undefined
+          return
+        }
+  
+        const delta = e.clientX - origin
+        let relativeWidth =  Math.max(0, Math.min(leftStartWidth + delta, totalWidth)) / totalWidth
+        relativeWidth = Math.max(0.1, Math.min(0.9, relativeWidth))
+        let leftWidth = relativeWidth * totalWidth
+        leftPane.style.width = `${leftWidth}px`
+        leftPane.style.minWidth = `${leftWidth}px`
+        leftPane.style.maxWidth = `${leftWidth}px`
+        documentStructureWidth.set(relativeWidth)
+      }, true)
+      this.root.ownerDocument.body.appendChild(glass)
+    })
+
+    return pane
+  }
+
+  private ensureSectionElementsHaveAnId() {
+    if (this.sectionSelector) {
+      this.root.querySelectorAll(this.sectionSelector).forEach((e, i) => {
+        if (!e.id) {
+          e.id = `i7n-sec-${i}`
+        }
+      })
+    }
+  }
+
+  private createToolbar (): ApacheAnnotatorToolbar {
     // Svelte components are appended to the target element. However, we want the toolbar to come
     // first in the DOM, so we first create a container element and prepend it to the body.
     const toolbarContainer = this.root.ownerDocument.createElement('div')
@@ -105,7 +225,11 @@ export class ApacheAnnotatorEditor implements AnnotationEditor {
     this.root.ownerDocument.body.insertBefore(toolbarContainer, this.root.ownerDocument.body.firstChild)
 
     // @ts-ignore - VSCode does not seem to understand the Svelte component
-    return new ApacheAnnotatorToolbar({ target: toolbarContainer, props: {} })
+    return new ApacheAnnotatorToolbar({ target: toolbarContainer, props: { sectionSelector: this.sectionSelector } })
+  }
+
+  private createDocumentNavigator (target: HTMLElement): DocumentStructureNavigator {
+    return this.root.ownerDocument.createElement('div');
   }
 
   private cancelRightClick (e: Event): void {
@@ -160,11 +284,14 @@ export class ApacheAnnotatorEditor implements AnnotationEditor {
     this.vis?.loadAnnotations()
   }
 
-  scrollTo (args: { offset: number; position: string; }): void {
+  scrollTo (args: { offset: number, position?: string, pingRanges?: Offsets[] }): void {
     this.vis?.scrollTo(args)
   }
 
   destroy (): void {
+    if (this.popover?.$destroy) {
+      this.popover.$destroy()
+    }
     this.vis?.destroy()
     this.selector?.destroy()
   }

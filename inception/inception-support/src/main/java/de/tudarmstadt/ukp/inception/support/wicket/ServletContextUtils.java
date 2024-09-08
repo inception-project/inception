@@ -17,20 +17,19 @@
  */
 package de.tudarmstadt.ukp.inception.support.wicket;
 
-import javax.servlet.ServletContext;
-
 import org.apache.wicket.Application;
 import org.apache.wicket.request.handler.resource.ResourceReferenceRequestHandler;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.request.resource.ResourceReference;
+
+import jakarta.servlet.ServletContext;
 
 public class ServletContextUtils
 {
     public static String referenceToUrl(ServletContext aServletContext,
             ResourceReference aResourceReference)
     {
-        ResourceReferenceRequestHandler handler = new ResourceReferenceRequestHandler(
-                aResourceReference, new PageParameters());
+        var handler = new ResourceReferenceRequestHandler(aResourceReference, new PageParameters());
 
         var contextPath = aServletContext.getContextPath();
         if (!contextPath.startsWith("/")) {

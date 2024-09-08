@@ -17,17 +17,17 @@
  */
 package de.tudarmstadt.ukp.inception.diam.editor.actions;
 
-import java.util.Map;
-
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.request.Request;
 import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.inception.diam.editor.DiamAjaxBehavior;
 import de.tudarmstadt.ukp.inception.diam.editor.config.DiamAutoConfig;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.AjaxResponse;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.DefaultAjaxResponse;
-import de.tudarmstadt.ukp.inception.preferences.ClientSidePreferencesKey;
+import de.tudarmstadt.ukp.inception.preferences.ClientSidePreferenceKey;
+import de.tudarmstadt.ukp.inception.preferences.ClientSidePreferenceMapValue;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 
@@ -60,10 +60,12 @@ public class LoadPreferences
     }
 
     @Override
-    public AjaxResponse handle(AjaxRequestTarget aTarget, Request aRequest)
+    public AjaxResponse handle(DiamAjaxBehavior aBehavior, AjaxRequestTarget aTarget,
+            Request aRequest)
     {
         try {
-            var key = new ClientSidePreferencesKey<Map>(Map.class,
+            var key = new ClientSidePreferenceKey<ClientSidePreferenceMapValue>(
+                    ClientSidePreferenceMapValue.class,
                     aRequest.getRequestParameters().getParameterValue(PARAM_KEY).toString());
             var project = getAnnotatorState().getProject();
             var sessionOwner = userService.getCurrentUser();

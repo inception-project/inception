@@ -113,4 +113,18 @@ public class FeatureSupportRegistryImpl
     {
         return findExtension(aFeature).map(fs -> (T) fs.readTraits(aFeature)).orElseGet(aIfMissing);
     }
+
+    @Override
+    public boolean isSupported(AnnotationFeature aFeature)
+    {
+        return findExtension(aFeature).isPresent();
+    }
+
+    @Override
+    public boolean isAccessible(AnnotationFeature aFeature)
+    {
+        return findExtension(aFeature) //
+                .map(extension -> extension.isAccessible(aFeature)) //
+                .orElse(false);
+    }
 }

@@ -221,6 +221,24 @@ Checks if there are any unreachable feature structures. Such feature structures 
 they are not regularly accessible. Such feature structures may be created as a result of bugs.
 Removing them is harmless and reduces memory and disk space usage.
 
+[[check_AllAnnotationsStartAndEndWithCharactersCheck]]
+=== All annotations start and end with characters
+[horizontal]
+ID:: `check_AllAnnotationsStartAndEndWithCharactersCheck`
+Related repairs:: <<repair_TrimAnnotationsRepair>>
+
+Checks if all annotations start and end with a character (i.e. not a whitespace). Annotations that start or end with a
+whitespace character can cause problems during rendering. Trimming whitespace at the begin and end is typically as 
+harmless procedure.
+
+[[check_DocumentTextStartsWithBomCheck]]
+=== Document text starts with Byte Order Mark
+[horizontal]
+ID:: `check_DocumentTextStartsWithBomCheck`
+Related repairs:: <<repair_RemoveBomRepair>>
+
+Checks if the document text starts with a Byte Order Mark (BOM).
+
 
 [[sect_repairs]]
 == Repairs
@@ -369,3 +387,24 @@ ID:: `CoverAllTextInSentencesRepair`
 This repair checks if there is any text not covered by sentences. If there is, it creates a new
 sentence annotation on this text starting at the end of the last sentence before it (or the start
 of the document text) and the begin of the next sentence (or the end of the document text).
+
+[[repair_TrimAnnotationsRepair]]
+=== Trim annotations
+
+[horizontal]
+ID:: `TrimAnnotationsRepair`
+
+This repair adjusts annotation boundaries such that they do not include any whitespace at the beginning or end of the 
+annotation.
+
+NOTE: Run the checks again after applying this repair as certain annotations can become invalid if they get trimmed down
+      to a length of zero. It may be necessary to apply another repair such as <<repair_RemoveZeroSizeTokensAndSentencesRepair>>
+      to remove these annotations.
+
+[[repair_RemoveBomRepair]]
+=== Remove Byte Order Mark
+
+[horizontal]
+ID:: `RemoveBomRepair`
+
+This repair removes the Byte Order Mark at the start of the document and adjusts all annotation offsets accordingly.

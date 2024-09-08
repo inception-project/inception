@@ -142,6 +142,27 @@
                   <label wicket:for="uiName">
                     <wicket:label key="name"/>
                   </label>
+                  <div class="form-text" wicket:enclosure="name">
+                    <wicket:message key="internalName" />
+                    <strong><span wicket:id="name"/></strong>
+                  </div>
+                </div>
+                <div class="form-row form-floating" wicket:enclosure="type">
+                  <select wicket:id="type" class="form-select" wicket:message="placeholder:type"/>
+                  <label wicket:for="type">
+                    <wicket:label key="type" />
+                  </label>
+                  <div class="form-text" wicket:enclosure="effectiveAttachType">
+                    <wicket:message key="effectiveAttachLayer" />
+                    <strong><span wicket:id="effectiveAttachType"/></strong>
+                  </div>
+                </div>
+                
+                <div class="form-row form-floating" wicket:enclosure="attachType">
+                  <select wicket:id="attachType" class="form-select" wicket:message="placeholder:attachToLayer"/>
+                  <label wicket:for="attachType">
+                    <wicket:label key="attachToLayer" />
+                  </label>
                 </div>
                 <div class="form-row form-floating">
                   <textarea wicket:id="description" rows="4" class="form-control" wicket:message="placeholder:description"/>
@@ -160,39 +181,6 @@
               </div>
             </div>
             
-            <div class="card min-content-height">
-              <div class="card-header small">
-                <wicket:message key="technicalProperties"/>
-                <a wicket:id="technicalPropertiesHelpLink"/>
-              </div>
-              <div class="card-body">
-                <div class="form-row form-floating" wicket:enclosure="name">
-                  <span wicket:id="name" class="form-control" readonly/>
-                  <label> 
-                    <wicket:message key="internalName" />
-                  </label>
-                </div>
-                <div class="form-row form-floating" wicket:enclosure="type">
-                  <select wicket:id="type" class="form-select" wicket:message="placeholder:type"/>
-                  <label wicket:for="type">
-                    <wicket:label key="type" />
-                  </label>
-                </div>
-                <div class="form-row form-floating" wicket:enclosure="attachType">
-                  <select wicket:id="attachType" class="form-select" wicket:message="placeholder:attachToLayer"/>
-                  <label wicket:for="attachType">
-                    <wicket:label key="attachToLayer" />
-                  </label>
-                </div>
-                <div class="form-row form-floating" wicket:enclosure="effectiveAttachType">
-                  <span wicket:id="effectiveAttachType" class="form-control" readonly/>
-                  <label> 
-                    <wicket:message key="attachToLayer" />
-                  </label>
-                </div>
-              </div>
-            </div>
-    
             <div class="card min-content-height">
               <div class="card-header small">
                 <wicket:message key="behaviors"/>
@@ -306,59 +294,61 @@
                 <textarea wicket:id="description" rows="4" class="form-control"></textarea>
               </div>
             </div>
-            <div class="row form-row">
-              <label class="col-sm-4 col-form-label">
-                <wicket:message key="options"/>
-              </label>
-              <div class="col-sm-8">
-                <div class="form-check" wicket:enclosure="enabled">
-                  <input wicket:id="enabled" class="form-check-input" type="checkbox">
-                  <label wicket:for="enabled" class="form-check-label">
-                    <wicket:label key="enabled"/>
-                  </label>
-                </div>
-                <div class="form-check" wicket:enclosure="required">
-                  <input wicket:id="required" class="form-check-input" type="checkbox">
-                  <label wicket:for="required" class="form-check-label">
-                    <wicket:label key="required"/>
-                  </label>
-                </div>
-                <div class="form-check" wicket:enclosure="remember">
-                  <input wicket:id="remember" class="form-check-input" type="checkbox">
-                  <label wicket:for="remember" class="form-check-label">
-                    <wicket:label key="remember"/>
-                  </label>
-                </div>
-                <div class="form-check" wicket:enclosure="curatable">
-                  <input wicket:id="curatable" class="form-check-input" type="checkbox">
-                  <label wicket:for="curatable" class="form-check-label">
-                    <wicket:label key="curatable"/>
-                  </label>
+            <div wicket:id="defaultOptionsContainer">
+              <div class="row form-row">
+                <label class="col-sm-4 col-form-label">
+                  <wicket:message key="options"/>
+                </label>
+                <div class="col-sm-8">
+                  <div class="form-check" wicket:enclosure="enabled">
+                    <input wicket:id="enabled" class="form-check-input" type="checkbox">
+                    <label wicket:for="enabled" class="form-check-label">
+                      <wicket:label key="enabled"/>
+                    </label>
+                  </div>
+                  <div class="form-check" wicket:enclosure="required">
+                    <input wicket:id="required" class="form-check-input" type="checkbox">
+                    <label wicket:for="required" class="form-check-label">
+                      <wicket:label key="required"/>
+                    </label>
+                  </div>
+                  <div class="form-check" wicket:enclosure="remember">
+                    <input wicket:id="remember" class="form-check-input" type="checkbox">
+                    <label wicket:for="remember" class="form-check-label">
+                      <wicket:label key="remember"/>
+                    </label>
+                  </div>
+                  <div class="form-check" wicket:enclosure="curatable">
+                    <input wicket:id="curatable" class="form-check-input" type="checkbox">
+                    <label wicket:for="curatable" class="form-check-label">
+                      <wicket:label key="curatable"/>
+                    </label>
+                  </div>
                 </div>
               </div>
-            </div>
-            <div class="row form-row">
-              <label class="col-sm-4 col-form-label">
-                <wicket:message key="visibility"/>
-              </label>
-              <div class="col-sm-8">
-                <div class="form-check" wicket:enclosure="visible">
-                  <input wicket:id="visible" class="form-check-input" type="checkbox">
-                  <label wicket:for="visible" class="form-check-label">
-                    <wicket:label key="visible"/>
-                  </label>
-                </div>
-                <div class="form-check" wicket:enclosure="includeInHover">
-                  <input wicket:id="includeInHover" class="form-check-input" type="checkbox">
-                  <label wicket:for="includeInHover" class="form-check-label">
-                    <wicket:label key="includeInHover"/>
-                  </label>
-                </div>
-                <div class="form-check" wicket:enclosure="hideUnconstraintFeature">
-                  <input wicket:id="hideUnconstraintFeature" class="form-check-input" type="checkbox">
-                  <label wicket:for="hideUnconstraintFeature" class="form-check-label">
-                    <wicket:label key="hideUnconstraintFeature"/>
-                  </label>
+              <div class="row form-row">
+                <label class="col-sm-4 col-form-label">
+                  <wicket:message key="visibility"/>
+                </label>
+                <div class="col-sm-8">
+                  <div class="form-check" wicket:enclosure="visible">
+                    <input wicket:id="visible" class="form-check-input" type="checkbox">
+                    <label wicket:for="visible" class="form-check-label">
+                      <wicket:label key="visible"/>
+                    </label>
+                  </div>
+                  <div class="form-check" wicket:enclosure="includeInHover">
+                    <input wicket:id="includeInHover" class="form-check-input" type="checkbox">
+                    <label wicket:for="includeInHover" class="form-check-label">
+                      <wicket:label key="includeInHover"/>
+                    </label>
+                  </div>
+                  <div class="form-check" wicket:enclosure="hideUnconstraintFeature">
+                    <input wicket:id="hideUnconstraintFeature" class="form-check-input" type="checkbox">
+                    <label wicket:for="hideUnconstraintFeature" class="form-check-label">
+                      <wicket:label key="hideUnconstraintFeature"/>
+                    </label>
+                  </div>
                 </div>
               </div>
             </div>

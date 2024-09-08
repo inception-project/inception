@@ -18,10 +18,43 @@
 package de.tudarmstadt.ukp.inception.scheduling.controller;
 
 import static de.tudarmstadt.ukp.inception.security.config.InceptionSecurityWebUIApiAutoConfiguration.BASE_API_URL;
+import static de.tudarmstadt.ukp.inception.websocket.config.WebSocketConstants.PARAM_PROJECT;
+import static de.tudarmstadt.ukp.inception.websocket.config.WebSocketConstants.TOPIC_ELEMENT_PROJECT;
+
+import java.util.Properties;
+
+import org.springframework.util.PropertyPlaceholderHelper;
+
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.inception.scheduling.controller.model.MTaskStateUpdate;
 
 public interface SchedulerWebsocketController
 {
     String BASE_URL = BASE_API_URL + "/scheduler";
+
     String BASE_TOPIC = "/scheduler";
-    String TASKS_TOPIC = "/tasks";
+    String USER_TASKS_TOPIC = BASE_TOPIC + "/user";
+    String PROJECT_TASKS_TOPIC_TEMPLATE = BASE_TOPIC + TOPIC_ELEMENT_PROJECT + "{" + PARAM_PROJECT
+            + "}";
+
+    void dispatch(MTaskStateUpdate update);
+
+    static String getUserTaskUpdatesTopic()
+    {
+        return USER_TASKS_TOPIC;
+    }
+
+    static String getProjectTaskUpdatesTopic(Project aProject)
+    {
+        return getProjectTaskUpdatesTopic(aProject.getId());
+    }
+
+    static String getProjectTaskUpdatesTopic(long aProjectId)
+    {
+        var properties = new Properties();
+        properties.setProperty(PARAM_PROJECT, String.valueOf(aProjectId));
+        var replacer = new PropertyPlaceholderHelper("{", "}", null, false);
+        var topic = replacer.replacePlaceholders(PROJECT_TASKS_TOPIC_TEMPLATE, properties);
+        return topic;
+    }
 }

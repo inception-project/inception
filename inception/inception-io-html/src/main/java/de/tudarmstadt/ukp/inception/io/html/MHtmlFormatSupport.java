@@ -17,13 +17,17 @@
  */
 package de.tudarmstadt.ukp.inception.io.html;
 
+import static java.util.Arrays.asList;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReaderDescription;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 import java.util.Optional;
 
 import org.apache.james.mime4j.dom.Message;
@@ -87,6 +91,12 @@ public class MHtmlFormatSupport
     }
 
     @Override
+    public List<String> getSectionElements()
+    {
+        return asList("p");
+    }
+
+    @Override
     public Optional<PolicyCollection> getPolicy() throws IOException
     {
         return Optional.of(defaultPolicy.getPolicy());
@@ -105,11 +115,15 @@ public class MHtmlFormatSupport
             var builder = new DefaultMessageBuilder();
             var message = builder.parseMessage(is);
             var resourceBody = getResourcePartBody(message, aResourcePath);
-            return resourceBody.getInputStream();
+            try (var baos = new ByteArrayOutputStream()) {
+                resourceBody.getInputStream().transferTo(baos);
+                return new ByteArrayInputStream(baos.toByteArray());
+            }
         }
     }
 
-    private static SingleBody getResourcePartBody(Message message, String aResourcePath) throws IOException
+    private static SingleBody getResourcePartBody(Message message, String aResourcePath)
+        throws IOException
     {
         if (message.getBody() instanceof Multipart body) {
             var documentPart = body.getBodyParts().stream() //

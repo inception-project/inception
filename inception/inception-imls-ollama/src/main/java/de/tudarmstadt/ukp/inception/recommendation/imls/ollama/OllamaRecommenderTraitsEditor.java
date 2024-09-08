@@ -48,10 +48,9 @@ import org.apache.wicket.model.util.ListModel;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.validation.validator.UrlValidator;
-
-import com.googlecode.wicket.kendo.ui.KendoUIBehavior;
-import com.googlecode.wicket.kendo.ui.form.combobox.ComboBox;
-import com.googlecode.wicket.kendo.ui.form.combobox.ComboBoxBehavior;
+import org.wicketstuff.kendo.ui.KendoUIBehavior;
+import org.wicketstuff.kendo.ui.form.combobox.ComboBox;
+import org.wicketstuff.kendo.ui.form.combobox.ComboBoxBehavior;
 
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
@@ -60,7 +59,10 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.Recommendatio
 import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.client.OllamaClientImpl;
 import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.client.OllamaGenerateRequest;
 import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.client.OllamaModel;
-import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.client.Option;
+import de.tudarmstadt.ukp.inception.recommendation.imls.support.llm.option.Option;
+import de.tudarmstadt.ukp.inception.recommendation.imls.support.llm.option.OptionSetting;
+import de.tudarmstadt.ukp.inception.recommendation.imls.support.llm.prompt.PromptingModeSelect;
+import de.tudarmstadt.ukp.inception.recommendation.imls.support.llm.response.ExtractionModeSelect;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxSubmitLink;
@@ -127,6 +129,7 @@ public class OllamaRecommenderTraitsEditor
         }));
         model.setOutputMarkupId(true);
         form.add(model);
+
         form.add(new TextField<String>("url").add(new LambdaAjaxFormComponentUpdatingBehavior(
                 CHANGE_EVENT, _target -> _target.add(model))));
         form.add(new TextArea<String>("prompt"));

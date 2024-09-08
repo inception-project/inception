@@ -22,7 +22,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiffSummaryState.AGREE;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiffSummaryState.DISAGREE;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiffSummaryState.calculateState;
-import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior.LINK_TARGET_AS_LABEL;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.relation.RelationDiffAdapter.DEPENDENCY_DIFF_ADAPTER;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span.SpanDiffAdapter.POS_DIFF_ADAPTER;
 import static java.util.Arrays.asList;
@@ -40,8 +39,7 @@ import org.apache.uima.fit.factory.JCasFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.DiffResult;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.DiffResult;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoTsv2Reader;
@@ -111,7 +109,7 @@ public class TwoPairedKappaTest
         documentJCases.put(document, userCases);
 
         // Check against new impl
-        var diff = doDiff(asList(POS_DIFF_ADAPTER), LINK_TARGET_AS_LABEL, convert(userCases));
+        var diff = doDiff(asList(POS_DIFF_ADAPTER), convert(userCases));
         var result = diff.toResult();
         var agreement = getCohenKappaAgreement(diff, POS.class.getName(), "PosValue",
                 convert(userCases));
@@ -151,8 +149,7 @@ public class TwoPairedKappaTest
         documentJCases.put(document, userCases);
 
         // Check against new impl
-        var diff = doDiff(asList(DEPENDENCY_DIFF_ADAPTER), LINK_TARGET_AS_LABEL,
-                convert(userCases));
+        var diff = doDiff(asList(DEPENDENCY_DIFF_ADAPTER), convert(userCases));
         var result = diff.toResult();
         var agreement = getCohenKappaAgreement(diff, Dependency.class.getName(), "DependencyType",
                 convert(userCases));
@@ -183,7 +180,7 @@ public class TwoPairedKappaTest
         documentJCases.put(document, userCases);
 
         // Check against new impl
-        var diff = doDiff(asList(POS_DIFF_ADAPTER), LINK_TARGET_AS_LABEL, convert(userCases));
+        var diff = doDiff(asList(POS_DIFF_ADAPTER), convert(userCases));
         var result = diff.toResult();
         var agreement = getCohenKappaAgreement(diff, POS.class.getName(), "PosValue",
                 convert(userCases));
@@ -214,8 +211,7 @@ public class TwoPairedKappaTest
         documentJCases.put(document, userCases);
 
         // Check against new impl
-        var diff = doDiff(asList(DEPENDENCY_DIFF_ADAPTER), LINK_TARGET_AS_LABEL,
-                convert(userCases));
+        var diff = doDiff(asList(DEPENDENCY_DIFF_ADAPTER), convert(userCases));
         var result = diff.toResult();
         var agreement = getCohenKappaAgreement(diff, Dependency.class.getName(), "DependencyType",
                 convert(userCases));
@@ -249,8 +245,7 @@ public class TwoPairedKappaTest
         documentJCases.put(document, userCases);
 
         // Check against new impl
-        CasDiff diff = doDiff(asList(POS_DIFF_ADAPTER, DEPENDENCY_DIFF_ADAPTER),
-                LINK_TARGET_AS_LABEL, convert(userCases));
+        var diff = doDiff(asList(POS_DIFF_ADAPTER, DEPENDENCY_DIFF_ADAPTER), convert(userCases));
         DiffResult result = diff.toResult();
 
         var user1and2 = convert(userCases);

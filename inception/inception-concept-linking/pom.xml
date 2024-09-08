@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>32.0-SNAPSHOT</version>
+    <version>34.0-SNAPSHOT</version>
   </parent>
   <artifactId>inception-concept-linking</artifactId>
   <name>INCEpTION - Concept Linking</name>
@@ -136,6 +136,10 @@
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
     </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-annotations</artifactId>
+    </dependency>
 
     <dependency>
       <groupId>org.springframework</groupId>
@@ -168,12 +172,13 @@
       <artifactId>jdk-serializable-functional</artifactId>
     </dependency>
 
-    <dependency>
-      <groupId>javax.persistence</groupId>
-      <artifactId>javax.persistence-api</artifactId>
-    </dependency>
 
     <!-- Testing -->
+    <dependency>
+      <groupId>jakarta.persistence</groupId>
+      <artifactId>jakarta.persistence-api</artifactId>
+      <scope>test</scope>
+    </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-annotation-storage-api</artifactId>
@@ -221,20 +226,10 @@
       <artifactId>inception-testing</artifactId>
       <scope>test</scope>
     </dependency>
-    <dependency>
-      <groupId>org.dkpro.core</groupId>
-      <artifactId>dkpro-core-api-datasets-asl</artifactId>
-      <scope>test</scope>
-    </dependency>
 
     <dependency>
       <groupId>org.dkpro.core</groupId>
       <artifactId>dkpro-core-api-ner-asl</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.dkpro.core</groupId>
-      <artifactId>dkpro-core-io-conll-asl</artifactId>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -248,7 +243,7 @@
             <ignoredDependencies>
               <!-- Dependency analysis does not get it... -->
               <ignoredDependency>org.danekja:jdk-serializable-functional</ignoredDependency>
-              <ignoredDependency>javax.persistence:javax.persistence-api</ignoredDependency>
+              <ignoredDependency>jakarta.persistence:jakarta.persistence-api</ignoredDependency>
             </ignoredDependencies>
             <usedDependencies>
               <!-- Testing - used via reflection -->

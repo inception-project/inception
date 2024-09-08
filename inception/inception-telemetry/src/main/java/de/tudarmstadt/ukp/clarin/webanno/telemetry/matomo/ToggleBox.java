@@ -20,10 +20,9 @@ package de.tudarmstadt.ukp.clarin.webanno.telemetry.matomo;
 import static java.util.Arrays.asList;
 
 import org.apache.wicket.markup.html.form.IChoiceRenderer;
-
-import com.googlecode.wicket.jquery.core.JQueryBehavior;
-import com.googlecode.wicket.jquery.core.Options;
-import com.googlecode.wicket.kendo.ui.form.dropdown.DropDownList;
+import org.wicketstuff.jquery.core.JQueryBehavior;
+import org.wicketstuff.jquery.core.Options;
+import org.wicketstuff.kendo.ui.form.dropdown.DropDownList;
 
 public class ToggleBox
     extends DropDownList<Boolean>

@@ -60,7 +60,7 @@ public class CompactAnnotationAttributes
     {
         return hideScore;
     }
-    
+
     public void setHideScore(boolean aHideScore)
     {
         hideScore = aHideScore;

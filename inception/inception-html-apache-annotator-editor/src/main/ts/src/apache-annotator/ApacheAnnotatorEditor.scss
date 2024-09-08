@@ -23,7 +23,8 @@
   --anim-slow: 0.7s;
   --anim-fast: 0.4s;
   --border-width: 2px;
-  --vertical-tray-width: 16px;
+  --vertical-tray-width-left: 48px;
+  --vertical-tray-width-right: 16px;
 }
 
 html > body {
@@ -31,12 +32,54 @@ html > body {
   margin: 0px;
 }
 
+.iaa-document-container {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  overflow: hidden;
+}
+
+.iaa-document-navigator {
+  min-width: 200px;
+  overflow: scroll;
+}
+
+.iaa-split-pane {
+  display: flex;
+  flex-direction: row;
+  flex-grow: 1;
+  overflow: hidden;
+
+  .iaa-divider {
+    width: 3px;
+    min-width: 3px;
+    max-width: 3px;
+    user-select: none;
+    background-color: var(--bs-secondary-bg);
+    cursor: col-resize; 
+
+    &:hover {
+      background-color: var(--bs-secondary);
+    }
+  }
+}
+
+.iaa-glass {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  cursor: col-resize; 
+}
+
 .i7n-wrapper {
   position: relative;
   line-height: 1.8;
   overflow: auto;
-  padding-left: var(--vertical-tray-width);
-  padding-right: var(--vertical-tray-width);
+  padding-left: var(--vertical-tray-width-left);
+  padding-right: var(--vertical-tray-width-right);
 }
 
 /**
@@ -88,7 +131,7 @@ html > body {
         // ------------------------------
         // These properties fine-tune the position of the label
         font-size: 70%;
-        line-height: 1.7;
+        line-height: 1.8;
         padding-top: 0.30em;
         padding-bottom: 0.30em;
         vertical-align: text-top;
@@ -173,7 +216,7 @@ html > body {
   position: absolute;
   width: calc(2 * var(--border-width));
   background-color: var(--i7n-focus-color);
-  left: calc(var(--vertical-tray-width) / 2 - var(--border-width));
+  left: calc(0.25 * var(--vertical-tray-width-left) - var(--border-width));
 
   .terminator-start {
     cursor: s-resize;
@@ -217,7 +260,7 @@ html > body {
 
     &.iaa-first-highlight {
       &:before {
-        background-color: var(--i7n-focus-color)t;
+        background-color: var(--i7n-focus-color);
       }
     }
   }

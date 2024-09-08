@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.inception.curation.merge;
 
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
-import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior.LINK_TARGET_AS_LABEL;
 import static de.tudarmstadt.ukp.inception.curation.merge.CurationTestUtils.loadWebAnnoTsv3;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.factory.AnalysisEngineFactory.createEngineDescription;
@@ -67,9 +66,9 @@ public class CasMergeSuiteTest
         var curatorCas = createText(
                 casByUser.values().stream().findFirst().get().getDocumentText());
 
-        var result = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser).toResult();
+        var result = doDiff(diffAdapters, casByUser).toResult();
 
-        sut.reMergeCas(result, document, "dummyTargetUser", curatorCas, casByUser);
+        sut.clearAndMergeCas(result, document, "dummyTargetUser", curatorCas, casByUser);
 
         writeAndAssertEquals(curatorCas, aReferenceFolder);
     }
@@ -81,10 +80,10 @@ public class CasMergeSuiteTest
 
         var dmd = DocumentMetaData.get(curatorCas);
         dmd.setDocumentId("curator");
-        runPipeline(curatorCas,
-                createEngineDescription(WebannoTsv3XWriter.class,
-                        WebannoTsv3XWriter.PARAM_TARGET_LOCATION, targetFolder,
-                        WebannoTsv3XWriter.PARAM_OVERWRITE, true));
+        runPipeline(curatorCas, createEngineDescription( //
+                WebannoTsv3XWriter.class, //
+                WebannoTsv3XWriter.PARAM_TARGET_LOCATION, targetFolder, //
+                WebannoTsv3XWriter.PARAM_OVERWRITE, true));
 
         var referenceFile = new File(aReferenceFolder, "curator.tsv");
         assumeTrue(referenceFile.exists(), "No reference data available for this test.");

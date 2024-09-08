@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.inception.externaleditor;
 
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
-import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectAnnotationByAddr;
 import static de.tudarmstadt.ukp.inception.support.wicket.WicketUtil.wrapInTryCatch;
 import static java.lang.String.format;
 import static java.lang.invoke.MethodHandles.lookup;
@@ -27,32 +26,20 @@ import static org.apache.wicket.markup.head.OnDomReadyHeaderItem.forScript;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.IOException;
-import java.io.Serializable;
-import java.util.List;
 
-import javax.servlet.ServletContext;
-
-import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.request.Request;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.wicketstuff.event.annotation.OnEvent;
-
-import com.googlecode.wicket.jquery.ui.widget.menu.IMenuItem;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.diam.editor.DiamAjaxBehavior;
 import de.tudarmstadt.ukp.inception.diam.editor.DiamJavaScriptReference;
-import de.tudarmstadt.ukp.inception.diam.editor.actions.EditorAjaxRequestHandlerBase;
-import de.tudarmstadt.ukp.inception.diam.model.ajax.AjaxResponse;
-import de.tudarmstadt.ukp.inception.diam.model.ajax.DefaultAjaxResponse;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorBase;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorExtensionRegistry;
@@ -70,12 +57,9 @@ import de.tudarmstadt.ukp.inception.externaleditor.resources.ExternalEditorJavas
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.selection.ScrollToEvent;
-import de.tudarmstadt.ukp.inception.rendering.selection.Selection;
-import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
-import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
-import de.tudarmstadt.ukp.inception.support.lambda.LambdaMenuItem;
 import de.tudarmstadt.ukp.inception.support.wicket.ContextMenu;
+import jakarta.servlet.ServletContext;
 
 public abstract class ExternalAnnotationEditorBase
     extends AnnotationEditorBase
@@ -137,9 +121,7 @@ public abstract class ExternalAnnotationEditorBase
 
     protected DiamAjaxBehavior createDiamBehavior()
     {
-        var diam = new DiamAjaxBehavior();
-        diam.addPriorityHandler(new ShowContextMenuHandler());
-        return diam;
+        return new DiamAjaxBehavior(contextMenu);
     }
 
     protected Component getViewComponent()
@@ -208,7 +190,7 @@ public abstract class ExternalAnnotationEditorBase
 
     private String getPropertiesAsJson()
     {
-        AnnotationEditorProperties props = getProperties();
+        var props = getProperties();
         try {
             return JSONUtil.toInterpretableJsonString(props);
         }
@@ -256,83 +238,5 @@ public abstract class ExternalAnnotationEditorBase
     protected void render(AjaxRequestTarget aTarget)
     {
         aTarget.appendJavaScript(renderScript());
-    }
-
-    private void actionArcRightClick(AjaxRequestTarget aTarget, VID paramId)
-        throws IOException, AnnotationException
-    {
-        if (!getModelObject().getSelection().isSpan()) {
-            return;
-        }
-
-        CAS cas;
-        try {
-            cas = getCasProvider().get();
-        }
-        catch (Exception e) {
-            handleError("Unable to load data", e);
-            return;
-        }
-
-        // Currently selected span
-        AnnotationFS originFs = selectAnnotationByAddr(cas,
-                getModelObject().getSelection().getAnnotation().getId());
-
-        // Target span of the relation
-        AnnotationFS targetFs = selectAnnotationByAddr(cas, paramId.getId());
-
-        AnnotatorState state = getModelObject();
-        Selection selection = state.getSelection();
-        selection.selectArc(VID.NONE_ID, originFs, targetFs);
-
-        // Create new annotation
-        getActionHandler().actionCreateOrUpdate(aTarget, cas);
-    }
-
-    private class ShowContextMenuHandler
-        extends EditorAjaxRequestHandlerBase
-        implements Serializable
-    {
-        private static final long serialVersionUID = 2566256640285857435L;
-
-        @Override
-        public String getCommand()
-        {
-            return ACTION_CONTEXT_MENU;
-        }
-
-        @Override
-        public boolean accepts(Request aRequest)
-        {
-            final VID paramId = getVid(aRequest);
-            return super.accepts(aRequest) && paramId.isSet() && !paramId.isSynthetic()
-                    && !paramId.isSlotSet();
-        }
-
-        @Override
-        public AjaxResponse handle(AjaxRequestTarget aTarget, Request aRequest)
-        {
-            try {
-                List<IMenuItem> items = contextMenu.getItemList();
-                items.clear();
-
-                if (getModelObject().getSelection().isSpan()) {
-                    VID vid = getVid(aRequest);
-                    items.add(new LambdaMenuItem("Link to ...",
-                            _target -> actionArcRightClick(_target, vid)));
-                }
-
-                extensionRegistry.generateContextMenuItems(items);
-
-                if (!items.isEmpty()) {
-                    contextMenu.onOpen(aTarget);
-                }
-            }
-            catch (Exception e) {
-                handleError("Unable to load data", e);
-            }
-
-            return new DefaultAjaxResponse(getAction(aRequest));
-        }
     }
 }

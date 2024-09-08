@@ -39,8 +39,6 @@ import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import javax.persistence.EntityManager;
-
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -69,12 +67,14 @@ import org.springframework.security.authentication.dao.DaoAuthenticationProvider
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.UserDetailsManager;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.messaging.WebSocketStompClient;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.AnnotationAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRenderer;
+import de.tudarmstadt.ukp.clarin.webanno.diag.config.CasDoctorAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -83,6 +83,7 @@ import de.tudarmstadt.ukp.clarin.webanno.project.config.ProjectServiceAutoConfig
 import de.tudarmstadt.ukp.clarin.webanno.security.ExtensiblePermissionEvaluator;
 import de.tudarmstadt.ukp.clarin.webanno.security.InceptionDaoAuthenticationProvider;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.security.config.InceptionSecurityAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
@@ -97,7 +98,9 @@ import de.tudarmstadt.ukp.inception.documents.api.RepositoryAutoConfiguration;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
 import de.tudarmstadt.ukp.inception.documents.config.DocumentServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.preferences.config.PreferencesServiceAutoConfig;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
+import de.tudarmstadt.ukp.inception.rendering.config.RenderingAutoConfig;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
@@ -112,6 +115,7 @@ import de.tudarmstadt.ukp.inception.websocket.config.WebsocketConfig;
 import de.tudarmstadt.ukp.inception.websocket.config.WebsocketSecurityConfig;
 import de.tudarmstadt.ukp.inception.websocket.config.stomp.LambdaStompFrameHandler;
 import de.tudarmstadt.ukp.inception.websocket.config.stomp.LoggingStompSessionHandlerAdapter;
+import jakarta.persistence.EntityManager;
 
 @SpringBootTest( //
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, //
@@ -122,6 +126,10 @@ import de.tudarmstadt.ukp.inception.websocket.config.stomp.LoggingStompSessionHa
         exclude = { //
                 LiquibaseAutoConfiguration.class })
 @ImportAutoConfiguration({ //
+        PreferencesServiceAutoConfig.class, //
+        CasDoctorAutoConfiguration.class, //
+        RenderingAutoConfig.class, //
+        InceptionSecurityAutoConfiguration.class, //
         SecurityAutoConfiguration.class, //
         WebsocketAutoConfiguration.class, //
         ProjectServiceAutoConfiguration.class, //
@@ -200,7 +208,7 @@ public class DiamWebsocketController_ViewportRoutingTest
         documentService.createSourceDocument(testDocument);
 
         testAnnotationDocument = new AnnotationDocument(USER, testDocument);
-        documentService.createAnnotationDocument(testAnnotationDocument);
+        documentService.createOrUpdateAnnotationDocument(testAnnotationDocument);
 
         try (var session = CasStorageSession.open()) {
             documentService.uploadSourceDocument(
@@ -215,26 +223,23 @@ public class DiamWebsocketController_ViewportRoutingTest
         entityManager.clear();
     }
 
+    @WithMockUser(username = "user", roles = { "USER" })
     @SuppressFBWarnings("RV_RETURN_VALUE_IGNORED")
     @Test
     public void thatViewportBasedMessageRoutingWorks() throws Exception
     {
-        CountDownLatch subscriptionDone = new CountDownLatch(2);
-        CountDownLatch initDone = new CountDownLatch(2);
+        var subscriptionDone = new CountDownLatch(2);
+        var initDone = new CountDownLatch(2);
 
-        ViewportDefinition vpd1 = new ViewportDefinition(testAnnotationDocument, 10, 20,
-                FORMAT_LEGACY);
-        ViewportDefinition vpd2 = new ViewportDefinition(testAnnotationDocument, 30, 40,
-                FORMAT_LEGACY);
+        var vpd1 = new ViewportDefinition(testAnnotationDocument, 10, 20, FORMAT_LEGACY);
+        var vpd2 = new ViewportDefinition(testAnnotationDocument, 30, 40, FORMAT_LEGACY);
 
         var sessionHandler1 = new SessionHandler(subscriptionDone, initDone, vpd1);
         var sessionHandler2 = new SessionHandler(subscriptionDone, initDone, vpd2);
 
         // try {
-        StompSession session1 = stompClient.connect(websocketUrl, sessionHandler1).get(1000,
-                SECONDS);
-        StompSession session2 = stompClient.connect(websocketUrl, sessionHandler2).get(1000,
-                SECONDS);
+        var session1 = stompClient.connect(websocketUrl, sessionHandler1).get(1000, SECONDS);
+        var session2 = stompClient.connect(websocketUrl, sessionHandler2).get(1000, SECONDS);
         // }
         // catch (Exception e) {
         // Thread.sleep(Duration.of(3, ChronoUnit.HOURS).toMillis());
@@ -341,7 +346,7 @@ public class DiamWebsocketController_ViewportRoutingTest
         public DaoAuthenticationProvider internalAuthenticationProvider(PasswordEncoder aEncoder,
                 @Lazy UserDetailsManager aUserDetailsManager)
         {
-            DaoAuthenticationProvider authProvider = new InceptionDaoAuthenticationProvider();
+            var authProvider = new InceptionDaoAuthenticationProvider();
             authProvider.setUserDetailsService(aUserDetailsManager);
             authProvider.setPasswordEncoder(aEncoder);
             return authProvider;
@@ -362,7 +367,7 @@ public class DiamWebsocketController_ViewportRoutingTest
                 @Override
                 public void render(VDocument aResponse, RenderRequest aRequest)
                 {
-                    AnnotationLayer layer = new AnnotationLayer();
+                    var layer = new AnnotationLayer();
                     layer.setId(1l);
                     aResponse.add(
                             new VSpan(layer, new VID(1), new VRange(aRequest.getWindowBeginOffset(),

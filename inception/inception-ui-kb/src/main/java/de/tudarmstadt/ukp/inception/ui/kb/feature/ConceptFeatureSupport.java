@@ -26,6 +26,8 @@ import java.util.List;
 import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.FeatureStructure;
+import org.apache.uima.fit.util.FSUtil;
 import org.apache.uima.resource.metadata.TypeDescription;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.wicket.MarkupContainer;
@@ -129,6 +131,16 @@ public class ConceptFeatureSupport
     }
 
     @Override
+    public boolean isFeatureValueValid(AnnotationFeature aFeature, FeatureStructure aFS)
+    {
+        if (aFeature.isRequired()) {
+            return isNotBlank(FSUtil.getFeature(aFS, aFeature.getName(), String.class));
+        }
+
+        return true;
+    }
+
+    @Override
     public String renderFeatureValue(AnnotationFeature aFeature, String aIdentifier)
     {
         if (aIdentifier == null) {
@@ -137,6 +149,12 @@ public class ConceptFeatureSupport
 
         var traits = readTraits(aFeature);
         return getConceptHandle(aFeature, aIdentifier, traits).getUiLabel();
+    }
+
+    @Override
+    public <V> V getDefaultFeatureValue(AnnotationFeature aFeature, FeatureStructure aFS)
+    {
+        return null;
     }
 
     public KBHandle getConceptHandle(AnnotationFeature aFeature, String aIdentifier,
@@ -214,19 +232,15 @@ public class ConceptFeatureSupport
     }
 
     @Override
+    public ConceptFeatureTraits createDefaultTraits()
+    {
+        return new ConceptFeatureTraits();
+    }
+
+    @Override
     public ConceptFeatureTraits readTraits(AnnotationFeature aFeature)
     {
-        ConceptFeatureTraits traits = null;
-        try {
-            traits = JSONUtil.fromJsonString(ConceptFeatureTraits.class, aFeature.getTraits());
-        }
-        catch (IOException e) {
-            LOG.error("Unable to read traits", e);
-        }
-
-        if (traits == null) {
-            traits = new ConceptFeatureTraits();
-        }
+        var traits = FeatureSupport.super.readTraits(aFeature);
 
         // If there is no scope set in the trait, see if once can be extracted from the legacy
         // location which is the feature type.

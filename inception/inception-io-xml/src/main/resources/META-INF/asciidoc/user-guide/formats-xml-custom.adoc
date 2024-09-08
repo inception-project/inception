@@ -15,7 +15,7 @@
 // limitations under the License.
 
 [[sect_formats_xml_custom]]
-= XML (custom)
+= 🧪 Custom XML formats
 
 ====
 CAUTION: Experimental feature. To use this functionality, you need to enable it first by adding `format.custom-xml.enabled` to the `settings.properties` file.
@@ -34,7 +34,11 @@ Custom XML formats are based on the <<sect_formats_xml>> format support. They ar
   "name": "TTML format (external)",
   "stylesheets": [ 
     "styles.css"
-  ]
+  ],
+  "blockElements": [
+    "div", "p"
+  ],
+  "splitSentencesInBlockElements": true
 }
 ----
 

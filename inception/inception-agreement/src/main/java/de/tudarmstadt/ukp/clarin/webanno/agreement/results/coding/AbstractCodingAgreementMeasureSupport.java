@@ -23,18 +23,23 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.LinkMode.NONE;
 import static java.util.Arrays.asList;
 
+import org.apache.wicket.markup.html.panel.EmptyPanel;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.dkpro.statistics.agreement.coding.ICodingAnnotationStudy;
 
-import de.tudarmstadt.ukp.clarin.webanno.agreement.PairwiseAnnotationResult;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.AgreementResult_ImplBase;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.PairwiseAgreementResult;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.PerDocumentAgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasureSupport_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.DefaultAgreementTraits;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.results.perdoc.PerDocumentAgreementTable;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
+import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerSupport;
 
 public abstract class AbstractCodingAgreementMeasureSupport<T extends DefaultAgreementTraits>
     extends AgreementMeasureSupport_ImplBase<T, FullCodingAgreementResult, ICodingAnnotationStudy>
@@ -44,7 +49,8 @@ public abstract class AbstractCodingAgreementMeasureSupport<T extends DefaultAgr
     {
         AnnotationLayer layer = aFeature.getLayer();
 
-        return asList(SpanLayerSupport.TYPE, RelationLayerSupport.TYPE).contains(layer.getType())
+        return asList(SpanLayerSupport.TYPE, RelationLayerSupport.TYPE,
+                DocumentMetadataLayerSupport.TYPE).contains(layer.getType())
                 && asList(SINGLE_TOKEN, TOKENS, SENTENCES).contains(layer.getAnchoringMode())
                 // Link features are supported (because the links generate sub-positions in the diff
                 // but multi-value primitives (e.g. multi-value strings) are not supported
@@ -53,8 +59,18 @@ public abstract class AbstractCodingAgreementMeasureSupport<T extends DefaultAgr
     }
 
     @Override
-    public Panel createResultsPanel(String aId, IModel<PairwiseAnnotationResult> aResults)
+    public Panel createResultsPanel(String aId, IModel<? extends AgreementResult_ImplBase> aResults,
+            DefaultAgreementTraits aDefaultAgreementTraits)
     {
-        return new PairwiseCodingAgreementTable(aId, aResults);
+        if (aResults.getObject() instanceof PairwiseAgreementResult) {
+            return new PairwiseCodingAgreementTable(aId, (IModel) aResults,
+                    aDefaultAgreementTraits);
+        }
+
+        if (aResults.getObject() instanceof PerDocumentAgreementResult) {
+            return new PerDocumentAgreementTable(aId, (IModel) aResults, aDefaultAgreementTraits);
+        }
+
+        return new EmptyPanel(aId);
     }
 }

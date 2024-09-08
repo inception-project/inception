@@ -49,8 +49,8 @@ public class BaselineRankingStrategyTest
     @Test
     public void thatIriExactlyMatchingQueryIsRankedFirst()
     {
-        String query = "123";
-        String mention = "456";
+        var query = "123";
+        var mention = "456";
 
         var exactIriMatch = new KBHandle(query, "1");
         var labelMatchLev0 = new KBHandle("1", "123");
@@ -86,8 +86,8 @@ public class BaselineRankingStrategyTest
     @Test
     public void thatCasedEditDistanceWinsIfUncasedEditDistanceIsEqual()
     {
-        String query = "this";
-        String mention = "Chicago";
+        var query = "this";
+        var mention = "Chicago";
 
         var labelMatch0 = new KBHandle("1", "This");
         var labelMatch2 = new KBHandle("3", "tHIS");
@@ -137,9 +137,9 @@ public class BaselineRankingStrategyTest
 
     private List<CandidateEntity> build(String aQuery, String aMention, KBHandle... aCandidates)
     {
-        List<CandidateEntity> results = new ArrayList<>();
-        for (KBHandle candidate : aCandidates) {
-            CandidateEntity cand = new CandidateEntity(candidate) //
+        var results = new ArrayList<CandidateEntity>();
+        for (var candidate : aCandidates) {
+            var cand = new CandidateEntity(candidate) //
                     .with(KEY_LABEL_NC, candidate.getUiLabel().toLowerCase(Locale.ROOT))
                     .with(KEY_QUERY, aQuery) //
                     .with(KEY_QUERY_NC, aQuery.toLowerCase(Locale.ROOT)) //
