@@ -100,7 +100,9 @@ public class ConstraintsEvaluator
 
         for (var rule : scope.getRules()) {
             if (allRuleConditionsMatch(aConstraints, rule, aContext)) {
-                return anyRestrictionAffectsFeature(aConstraints, rule, aFeature);
+                if (anyRestrictionAffectsFeature(aConstraints, rule, aFeature)) {
+                    return true;
+                }
             }
         }
 
