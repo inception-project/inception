@@ -18,6 +18,8 @@
 package de.tudarmstadt.ukp.inception.recommendation.imls.ollama;
 
 import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CHANGE_EVENT;
+import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
+import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhenNot;
 import static de.tudarmstadt.ukp.inception.support.wicket.WicketUtil.wrapInTryCatch;
 import static java.lang.String.format;
 
@@ -53,6 +55,7 @@ import org.wicketstuff.kendo.ui.form.combobox.ComboBox;
 import org.wicketstuff.kendo.ui.form.combobox.ComboBoxBehavior;
 
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
+import de.tudarmstadt.ukp.inception.recommendation.api.config.InteractiveRecommenderProperties;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.AbstractTraitsEditor;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
@@ -92,6 +95,7 @@ public class OllamaRecommenderTraitsEditor
 
     private @SpringBean RecommendationService recommendationService;
     private @SpringBean RecommendationEngineFactory<OllamaRecommenderTraits> toolFactory;
+    private @SpringBean InteractiveRecommenderProperties properties;
 
     private final CompoundPropertyModel<OllamaRecommenderTraits> traits;
 
@@ -120,14 +124,6 @@ public class OllamaRecommenderTraitsEditor
         };
         form.setOutputMarkupPlaceholderTag(true);
 
-        var presetSelect = new DropDownChoice<Preset>(MID_PRESET);
-        presetSelect.setModel(Model.of());
-        presetSelect.setChoiceRenderer(new ChoiceRenderer<>("name"));
-        presetSelect.setChoices(aPresets);
-        presetSelect.add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT,
-                _target -> applyPreset(form, presetSelect.getModelObject(), _target)));
-        form.add(presetSelect);
-
         var modelsModel = LoadableDetachableModel.of(this::listModels);
         var model = new ComboBox<String>(MID_MODEL, modelsModel);
         model.add(LambdaBehavior.onConfigure(() -> {
@@ -146,24 +142,38 @@ public class OllamaRecommenderTraitsEditor
 
         form.add(new TextField<String>(MID_URL).add(new LambdaAjaxFormComponentUpdatingBehavior(
                 CHANGE_EVENT, _target -> _target.add(model))));
-        form.add(new TextArea<String>(MID_PROMPT));
-        form.add(new CheckBox(MID_RAW).setOutputMarkupPlaceholderTag(true));
+
+        var promptContainer = new WebMarkupContainer("promptContainer");
+        promptContainer.setOutputMarkupPlaceholderTag(true);
+        promptContainer.add(visibleWhenNot(traits.map(OllamaRecommenderTraits::isInteractive)));
+        form.add(promptContainer);
+
+        var presetSelect = new DropDownChoice<Preset>(MID_PRESET);
+        presetSelect.setModel(Model.of());
+        presetSelect.setChoiceRenderer(new ChoiceRenderer<>("name"));
+        presetSelect.setChoices(aPresets);
+        presetSelect.add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT,
+                _target -> applyPreset(form, presetSelect.getModelObject(), _target)));
+        promptContainer.add(presetSelect);
+
+        promptContainer.add(new TextArea<String>(MID_PROMPT));
+        promptContainer.add(new CheckBox(MID_RAW).setOutputMarkupPlaceholderTag(true));
         var markdownLabel = new MarkdownLabel(MID_PROMPT_HINTS,
                 LoadableDetachableModel.of(this::getPromptHints));
         markdownLabel.setOutputMarkupId(true);
-        form.add(markdownLabel);
-        form.add(new PromptingModeSelect(MID_PROMPTING_MODE)
+        promptContainer.add(markdownLabel);
+        promptContainer.add(new PromptingModeSelect(MID_PROMPTING_MODE)
                 .add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT,
                         _target -> _target.add(markdownLabel))));
-        form.add(new ExtractionModeSelect(MID_EXTRACTION_MODE, traits.bind(MID_EXTRACTION_MODE),
-                getModel()));
-        form.add(new OllamaResponseFormatSelect(MID_FORMAT));
+        promptContainer.add(new ExtractionModeSelect(MID_EXTRACTION_MODE,
+                traits.bind(MID_EXTRACTION_MODE), getModel()));
+        promptContainer.add(new OllamaResponseFormatSelect(MID_FORMAT));
         add(form);
 
         var optionSettingsForm = new Form<>(MID_OPTION_SETTINGS_FORM,
                 CompoundPropertyModel.of(new OptionSetting()));
         optionSettingsForm.setVisibilityAllowed(false); // FIXME Not quite ready yet
-        form.add(optionSettingsForm);
+        promptContainer.add(optionSettingsForm);
 
         optionSettingsForm.add(
                 new DropDownChoice<Option<?>>(MID_OPTION, OllamaGenerateRequest.getAllOptions()));
@@ -179,6 +189,12 @@ public class OllamaRecommenderTraitsEditor
                 .collect(Collectors.toCollection(ArrayList::new)));
 
         optionSettingsContainer.add(createOptionSettingsList(MID_OPTION_SETTINGS, optionSettings));
+
+        form.add(new CheckBox("interactive") //
+                .setOutputMarkupId(true) //
+                .add(visibleWhen(properties::isEnabled)) //
+                .add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT,
+                        $ -> $.add(promptContainer))));
     }
 
     private void applyPreset(Form<OllamaRecommenderTraits> aForm, Preset aPreset,

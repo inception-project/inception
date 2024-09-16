@@ -17,7 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.chatgpt;
 
-import static de.tudarmstadt.ukp.inception.recommendation.imls.chatgpt.ChatGptRecommenderTraits.DEFAULT_CHATGPT_URL;
+import static de.tudarmstadt.ukp.inception.recommendation.imls.chatgpt.ChatGptRecommenderTraits.CEREBRAS_API_URL;
+import static de.tudarmstadt.ukp.inception.recommendation.imls.chatgpt.ChatGptRecommenderTraits.GROQ_API_URL;
+import static de.tudarmstadt.ukp.inception.recommendation.imls.chatgpt.ChatGptRecommenderTraits.LOCAL_OLLAMA_API_URL;
+import static de.tudarmstadt.ukp.inception.recommendation.imls.chatgpt.ChatGptRecommenderTraits.OPENAI_API_URL;
 import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CHANGE_EVENT;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhenNot;
@@ -49,10 +52,10 @@ import org.wicketstuff.kendo.ui.form.combobox.ComboBox;
 import org.wicketstuff.kendo.ui.form.combobox.ComboBoxBehavior;
 
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
+import de.tudarmstadt.ukp.inception.recommendation.api.config.InteractiveRecommenderProperties;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.AbstractTraitsEditor;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
-import de.tudarmstadt.ukp.inception.recommendation.config.InteractiveRecommenderProperties;
 import de.tudarmstadt.ukp.inception.recommendation.imls.chatgpt.client.ChatGptClientImpl;
 import de.tudarmstadt.ukp.inception.recommendation.imls.chatgpt.client.ChatGptModel;
 import de.tudarmstadt.ukp.inception.recommendation.imls.chatgpt.client.ListModelsRequest;
@@ -122,8 +125,11 @@ public class ChatGptRecommenderTraitsEditor
             traits.getObject().setAuthentication(new ApiKeyAuthenticationTraits());
         }
 
-        var comboBox = new ComboBox<String>("url", asList(DEFAULT_CHATGPT_URL,
-                "https://api.cerebras.ai/v1", "https://api.groq.com/openai/v1"));
+        var comboBox = new ComboBox<String>("url", asList(//
+                OPENAI_API_URL, //
+                CEREBRAS_API_URL, //
+                GROQ_API_URL, //
+                LOCAL_OLLAMA_API_URL));
         comboBox.setOutputMarkupId(true);
         comboBox.setRequired(true);
         form.add(comboBox);

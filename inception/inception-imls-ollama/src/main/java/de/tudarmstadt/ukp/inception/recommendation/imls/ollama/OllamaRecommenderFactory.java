@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.util.ListModel;
 import org.slf4j.Logger;
@@ -121,6 +122,12 @@ public class OllamaRecommenderFactory
     public boolean isInteractive(Recommender aRecommender)
     {
         return readTraits(aRecommender).isInteractive();
+    }
+
+    @Override
+    public Panel createInteractionPanel(String aId, IModel<Recommender> aModel)
+    {
+        return new OllamaInteractionPanel(aId, aModel, new ListModel<>(getPresets()));
     }
 
     private List<Preset> getPresets()

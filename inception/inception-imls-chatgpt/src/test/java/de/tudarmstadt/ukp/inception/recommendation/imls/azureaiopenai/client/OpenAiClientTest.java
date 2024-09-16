@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.azureaiopenai.client;
 
-import static de.tudarmstadt.ukp.inception.recommendation.imls.chatgpt.ChatGptRecommenderTraits.DEFAULT_CHATGPT_URL;
+import static de.tudarmstadt.ukp.inception.recommendation.imls.chatgpt.ChatGptRecommenderTraits.OPENAI_API_URL;
 import static de.tudarmstadt.ukp.inception.recommendation.imls.chatgpt.client.ResponseFormatType.JSON_OBJECT;
 import static org.assertj.core.api.Assumptions.assumeThat;
 
@@ -38,7 +38,7 @@ class OpenAiClientTest
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private static final String CHATGPT_BASE_URL = System.getProperty("chatgpt-base-url",
-            DEFAULT_CHATGPT_URL);
+            OPENAI_API_URL);
     private static final String CHATGPT_API_KEY = System.getProperty("chatgpt-api-key");
 
     private ChatGptClientImpl sut = new ChatGptClientImpl();

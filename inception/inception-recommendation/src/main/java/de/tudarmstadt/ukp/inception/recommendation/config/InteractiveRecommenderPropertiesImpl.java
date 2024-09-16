@@ -19,6 +19,8 @@ package de.tudarmstadt.ukp.inception.recommendation.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
+import de.tudarmstadt.ukp.inception.recommendation.api.config.InteractiveRecommenderProperties;
+
 /**
  * <p>
  * This class is exposed as a Spring Component via {@link RecommenderServiceAutoConfiguration}.

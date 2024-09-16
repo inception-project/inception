@@ -17,10 +17,14 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.sidebar.llm;
 
+import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CHANGE_EVENT;
+
 import java.util.List;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.WebMarkupContainer;
+import org.apache.wicket.markup.html.form.ChoiceRenderer;
+import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.panel.EmptyPanel;
 import org.apache.wicket.model.CompoundPropertyModel;
@@ -40,6 +44,7 @@ import de.tudarmstadt.ukp.inception.recommendation.tasks.PredictionTask;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxButton;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 
 public class InteractiveRecommenderSidebar
     extends AnnotationSidebar_ImplBase
@@ -50,6 +55,7 @@ public class InteractiveRecommenderSidebar
     private static final String MID_TRAITS_CONTAINER = "traitsContainer";
     private static final String MID_TRAITS = "traits";
     private static final String MID_EXECUTE = "execute";
+    private static final String MID_RECOMMENDER = "recommender";
 
     private @SpringBean UserDao userService;
     private @SpringBean RecommendationService recommendationService;
@@ -61,37 +67,55 @@ public class InteractiveRecommenderSidebar
 
     private IModel<Recommender> recommender;
 
-    public InteractiveRecommenderSidebar(String aId, AnnotationActionHandler aActionHandler, CasProvider aCasProvider,
-            AnnotationPageBase2 aAnnotationPage)
+    public InteractiveRecommenderSidebar(String aId, AnnotationActionHandler aActionHandler,
+            CasProvider aCasProvider, AnnotationPageBase2 aAnnotationPage)
     {
         super(aId, aActionHandler, aCasProvider, aAnnotationPage);
 
-        var interactiveRecommenders = listInteractiveRecommenders();
-        if (interactiveRecommenders.isEmpty()) {
-            recommender = Model.of();
-        }
-        else {
-            recommender = Model.of(interactiveRecommenders.get(0));
-        }
+        recommender = new Model<>();
 
         var form = new Form<>(MID_FORM, CompoundPropertyModel.of(recommender));
         add(form);
 
+        var interactiveRecommenders = listInteractiveRecommenders();
+        if (!interactiveRecommenders.isEmpty()) {
+            recommender.setObject(interactiveRecommenders.get(0));
+        }
+
+        var recommenderSelect = new DropDownChoice<Recommender>(MID_RECOMMENDER);
+        recommenderSelect.setModel(recommender);
+        recommenderSelect.setChoiceRenderer(new ChoiceRenderer<>("name"));
+        recommenderSelect.setChoices(interactiveRecommenders);
+        recommenderSelect.setVisible(interactiveRecommenders.size() > 0);
+        recommenderSelect.setEnabled(interactiveRecommenders.size() > 1);
+        recommenderSelect.add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT,
+                this::actionChangeRecommender));
+        form.add(recommenderSelect);
+
         form.add(traitsContainer = new WebMarkupContainer(MID_TRAITS_CONTAINER));
         traitsContainer.setOutputMarkupPlaceholderTag(true);
 
+        actionChangeRecommender(null);
+
+        form.add(new LambdaAjaxButton<Recommender>(MID_EXECUTE, this::execute));
+    }
+
+    private void actionChangeRecommender(AjaxRequestTarget aTarget)
+    {
         if (recommender.isPresent().getObject()) {
             var factory = recommendationService.getRecommenderFactory(recommender.getObject());
             if (factory.isPresent()) {
                 traitsContainer.addOrReplace( //
-                        factory.get().createInteractionPanel(MID_TRAITS, form.getModel()));
+                        factory.get().createInteractionPanel(MID_TRAITS, recommender));
             }
         }
         else {
             traitsContainer.add(new EmptyPanel(MID_TRAITS));
         }
 
-        form.add(new LambdaAjaxButton<Recommender>(MID_EXECUTE, this::execute));
+        if (aTarget != null) {
+            aTarget.add(traitsContainer);
+        }
     }
 
     private List<Recommender> listInteractiveRecommenders()
