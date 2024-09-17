@@ -98,7 +98,7 @@ public class SelectionTask
     @Override
     public void execute()
     {
-        try (CasStorageSession session = CasStorageSession.open()) {
+        try (var session = CasStorageSession.open()) {
             var sessionOwner = getUser().orElseThrow();
             var sessionOwnerName = sessionOwner.getUsername();
             var startTime = System.currentTimeMillis();
@@ -118,9 +118,9 @@ public class SelectionTask
 
             var listAnnotationLayers = annoService.listAnnotationLayer(getProject());
             getMonitor().setMaxProgress(listAnnotationLayers.size());
-            boolean seenRecommender = false;
+            var seenRecommender = false;
             var layers = annoService.listAnnotationLayer(getProject());
-            for (AnnotationLayer layer : layers) {
+            for (var layer : layers) {
                 getMonitor().incrementProgress();
 
                 if (!layer.isEnabled()) {
@@ -134,7 +134,7 @@ public class SelectionTask
                 }
 
                 var evaluatedRecommenders = new ArrayList<EvaluatedRecommender>();
-                for (Recommender r : recommenders) {
+                for (var r : recommenders) {
                     // Make sure we have the latest recommender config from the DB - the one from
                     // the active recommenders list may be outdated
                     var optRecommender = freshenRecommender(sessionOwner, r);
@@ -280,6 +280,10 @@ public class SelectionTask
             return Optional.of(skipRecommenderWithInvalidSettings(user, recommender));
         }
 
+        if (factory.isInteractive(recommender)) {
+            return Optional.of(skipInteractiveRecommender(user, recommender));
+        }
+
         if (recommender.isAlwaysSelected()) {
             return Optional.of(activateAlwaysOnRecommender(userName, recommender));
         }
@@ -369,6 +373,17 @@ public class SelectionTask
                 recommenderName, recommenderName);
         info("Recommender [%s] activated without evaluating - always selected", recommenderName);
         return EvaluatedRecommender.makeActiveWithoutEvaluation(recommender);
+    }
+
+    private EvaluatedRecommender skipInteractiveRecommender(User user, Recommender recommender)
+    {
+        var recommenderName = recommender.getName();
+        LOG.info("[{}][{}]: Recommender reserved for interactive use " + "- skipping recommender",
+                user.getUsername(), recommenderName);
+        info("Recommender [%s] reserved for interactive use - skipping recommender",
+                recommenderName);
+        return EvaluatedRecommender.makeInactiveWithoutEvaluation(recommender,
+                "Reserved for interactive use");
     }
 
     private EvaluatedRecommender skipRecommenderWithInvalidSettings(User user,

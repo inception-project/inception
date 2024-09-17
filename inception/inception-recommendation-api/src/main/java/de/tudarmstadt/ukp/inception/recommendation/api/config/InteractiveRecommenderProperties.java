@@ -15,20 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.api.recommender;
+package de.tudarmstadt.ukp.inception.recommendation.api.config;
 
-import org.apache.wicket.markup.html.panel.GenericPanel;
-import org.apache.wicket.model.IModel;
-
-import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
-
-public class AbstractTraitsEditor
-    extends GenericPanel<Recommender>
+public interface InteractiveRecommenderProperties
 {
-    private static final long serialVersionUID = -5826029092354401342L;
-
-    public AbstractTraitsEditor(String aId, IModel<Recommender> aRecommender)
-    {
-        super(aId, aRecommender);
-    }
+    boolean isEnabled();
 }

@@ -42,45 +42,57 @@
         <div wicket:id="authentication"/>
       </div>
     </div>
-    <div class="row form-row" wicket:enclosure="preset">
+    <div class="row form-row" wicket:enclosure="interactive">
       <div class="offset-sm-3 col-sm-9">
-        <select wicket:id="preset" class="form-select"/>
-      </div>
-    </div>
-    <div class="row form-row" wicket:enclosure="promptingMode">
-      <label wicket:for="promptingMode" class="col-sm-3 control-label">
-        <wicket:label key="promptingMode" />
-      </label>
-      <div class="col-sm-9">
-        <select wicket:id="promptingMode" class="form-select"/>
-      </div>
-    </div>
-    <div class="row form-row" wicket:enclosure="format">
-      <label wicket:for="format" class="col-sm-3 control-label">
-        <wicket:label key="format" />
-      </label>
-      <div class="col-sm-9">
-        <select wicket:id="format" class="form-select"/>
-      </div>
-    </div>
-    <div class="row form-row" wicket:enclosure="extractionMode">
-      <label wicket:for="extractionMode" class="col-sm-3 control-label">
-        <wicket:label key="extractionMode" />
-      </label>
-      <div class="col-sm-9">
-        <select wicket:id="extractionMode" class="form-select"/>
-      </div>
-    </div>
-    <div class="row form-row" wicket:enclosure="prompt">
-      <label class="col-sm-3 col-form-label" wicket:for="prompt">
-        <wicket:message key="prompt"/>
-        <div class="small text-muted mb-2">
-          <i class="fas fa-torii-gate"></i> Jinja supported
+        <div class="form-check form-switch">
+          <input wicket:id="interactive" class="form-check-input" type="checkbox"/>
+          <label wicket:for="interactive" class="form-check-label">
+            <wicket:label key="interactive"/>
+          </label>
         </div>
-        <div wicket:id="promptHints" class="small text-muted"/>
-      </label>
-      <div class="col-sm-9">
-        <textarea wicket:id="prompt" class="form-control" rows="10"/>
+      </div>  
+    </div>
+    <div wicket:id="promptContainer">
+      <div class="row form-row" wicket:enclosure="preset">
+        <div class="offset-sm-3 col-sm-9">
+          <select wicket:id="preset" class="form-select"/>
+        </div>
+      </div>
+      <div class="row form-row" wicket:enclosure="promptingMode">
+        <label wicket:for="promptingMode" class="col-sm-3 control-label">
+          <wicket:label key="promptingMode" />
+        </label>
+        <div class="col-sm-9">
+          <select wicket:id="promptingMode" class="form-select"/>
+        </div>
+      </div>
+      <div class="row form-row" wicket:enclosure="format">
+        <label wicket:for="format" class="col-sm-3 control-label">
+          <wicket:label key="format" />
+        </label>
+        <div class="col-sm-9">
+          <select wicket:id="format" class="form-select"/>
+        </div>
+      </div>
+      <div class="row form-row" wicket:enclosure="extractionMode">
+        <label wicket:for="extractionMode" class="col-sm-3 control-label">
+          <wicket:label key="extractionMode" />
+        </label>
+        <div class="col-sm-9">
+          <select wicket:id="extractionMode" class="form-select"/>
+        </div>
+      </div>
+      <div class="row form-row" wicket:enclosure="prompt">
+        <label class="col-sm-3 col-form-label" wicket:for="prompt">
+          <wicket:message key="prompt"/>
+          <div class="small text-muted mb-2">
+            <i class="fas fa-torii-gate"></i> Jinja supported
+          </div>
+          <div wicket:id="promptHints" class="small text-muted"/>
+        </label>
+        <div class="col-sm-9">
+          <textarea wicket:id="prompt" class="form-control" rows="10"/>
+        </div>
       </div>
     </div>
   </form>
