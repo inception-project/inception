@@ -180,16 +180,16 @@
     <bootstrap.version>5.3.3</bootstrap.version>
     <cross-env.version>^7.0.3</cross-env.version>
     <color-convert.version>^2.0.1</color-convert.version>
-    <dayjs.version>^1.11.10</dayjs.version>
-    <esbuild.version>^0.20.2</esbuild.version>
-    <esbuild-sass-plugin.version>^3.2.0</esbuild-sass-plugin.version>
-    <esbuild-svelte.version>^0.8.0</esbuild-svelte.version>
-    <eslint.version>^8.57.0</eslint.version>
+    <dayjs.version>^1.11.13</dayjs.version>
+    <esbuild.version>^0.23.1</esbuild.version>
+    <esbuild-sass-plugin.version>^3.3.1</esbuild-sass-plugin.version>
+    <esbuild-svelte.version>^0.8.2</esbuild-svelte.version>
+    <eslint.version>^8.57.1</eslint.version>
     <eslint-config-standard.version>^17.1.0</eslint-config-standard.version>
-    <eslint-plugin-import.version>^2.29.1</eslint-plugin-import.version>
+    <eslint-plugin-import.version>^2.30.0</eslint-plugin-import.version>
     <eslint-plugin-n.version>^16.6.2</eslint-plugin-n.version>
-    <eslint-plugin-promise.version>^6.1.1</eslint-plugin-promise.version>
-    <eslint-plugin-svelte.version>^2.37.0</eslint-plugin-svelte.version>
+    <eslint-plugin-promise.version>^6.6.0</eslint-plugin-promise.version>
+    <eslint-plugin-svelte.version>^2.44.0</eslint-plugin-svelte.version>
     <events.version>^3.3.0</events.version>
     <fast-json-patch.version>^3.1.1</fast-json-patch.version>
     <font-awesome.version>6.5.2</font-awesome.version>
@@ -207,9 +207,9 @@
     <sass.version>^1.75.0</sass.version>
     <stomp-stompjs.version>^6.1.2</stomp-stompjs.version>
     <svelte.version>^4.2.19</svelte.version>
-    <svelte-preprocess.version>^5.1.4</svelte-preprocess.version>
-    <sveltejs-vite-plugin-svelte.version>^3.1.0</sveltejs-vite-plugin-svelte.version>
-    <svgdotjs-svg-js.version>^3.2.0</svgdotjs-svg-js.version>
+    <svelte-preprocess.version>^6.0.2</svelte-preprocess.version>
+    <sveltejs-vite-plugin-svelte.version>^3.1.2</sveltejs-vite-plugin-svelte.version>
+    <svgdotjs-svg-js.version>^3.2.4</svgdotjs-svg-js.version>
     <svgdotjs-svg-filter-js.version>^3.0.8</svgdotjs-svg-filter-js.version>
     <temp-write.version>^5.0.0</temp-write.version>
     <testing-library-svelte.version>^5.0.1</testing-library-svelte.version>
@@ -222,7 +222,7 @@
     <types-urijs.version>^1.19.20</types-urijs.version>
     <uuid.version>^9.0.1</uuid.version>
     <urijs.version>^1.19.11</urijs.version>
-    <vitest.version>^1.5.0</vitest.version>
+    <vitest.version>^2.1.1</vitest.version>
     <yargs.version>^17.7.2</yargs.version>
   </properties>
 
