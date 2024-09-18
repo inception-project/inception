@@ -75,7 +75,7 @@ public class LazyDetailsLookupServiceImpl
 
     @Override
     public List<LazyDetailGroup> lookupLazyDetails(IRequestParameters request, VID aVid,
-            CasProvider aCas, SourceDocument aDocument, User aUser, int windowBeginOffset,
+            CasProvider aCas, SourceDocument aDocument, User aDataOwner, int windowBeginOffset,
             int windowEndOffset)
         throws AnnotationException, IOException
     {
@@ -87,14 +87,14 @@ public class LazyDetailsLookupServiceImpl
 
         var cas = aCas.get();
 
-        var detailGroups = lookLazyDetails(aVid, aDocument, aUser, layerParam, cas);
+        var detailGroups = lookLazyDetails(aVid, aDocument, aDataOwner, layerParam, cas);
 
         return detailGroups.stream() //
                 .map(this::toExternalForm) //
                 .collect(toList());
     }
 
-    private List<VLazyDetailGroup> lookLazyDetails(VID aVid, SourceDocument aDocument, User aUser,
+    private List<VLazyDetailGroup> lookLazyDetails(VID aVid, SourceDocument aDocument, User aDataOwner,
             StringValue aLayerParam, CAS aCas)
         throws AnnotationException, IOException
     {
@@ -103,12 +103,12 @@ public class LazyDetailsLookupServiceImpl
         }
 
         var layer = findLayer(aVid, aCas, aLayerParam, aDocument.getProject());
-        return lookupAnnotationLevelDetails(aVid, aDocument, aUser, layer, aCas);
+        return lookupAnnotationLevelDetails(aVid, aDocument, aDataOwner, layer, aCas);
     }
 
     @Override
     public List<VLazyDetailGroup> lookupAnnotationLevelDetails(VID aVid, SourceDocument aDocument,
-            User aUser, AnnotationLayer aLayer, CAS aCas)
+            User aDataOwner, AnnotationLayer aLayer, CAS aCas)
         throws AnnotationException, IOException
     {
         var detailGroups = new ArrayList<VLazyDetailGroup>();
@@ -116,7 +116,7 @@ public class LazyDetailsLookupServiceImpl
         lookupLayerLevelDetails(aVid, aCas, aLayer).forEach(detailGroups::add);
 
         if (aVid.isSynthetic()) {
-            lookupExtensionLevelDetails(aVid, aDocument, aCas, aUser, aLayer)
+            lookupExtensionLevelDetails(aVid, aDocument, aCas, aDataOwner, aLayer)
                     .forEach(detailGroups::add);
         }
         else {
@@ -161,18 +161,18 @@ public class LazyDetailsLookupServiceImpl
         return extGroup;
     }
 
-    private AnnotationLayer findLayer(VID aVid, CAS aCas, StringValue aLayerParam, Project project)
+    private AnnotationLayer findLayer(VID aVid, CAS aCas, StringValue aLayerParam, Project aProject)
         throws AnnotationException, IOException
     {
         if (aVid.isSynthetic()) {
             var layerId = aLayerParam.toLong();
-            return annotationService.getLayer(project, layerId)
+            return annotationService.getLayer(aProject, layerId)
                     .orElseThrow(() -> new AnnotationException("Layer with ID [" + layerId
-                            + "] does not exist in project " + project));
+                            + "] does not exist in project " + aProject));
         }
 
         var fs = selectFsByAddr(aCas, aVid.getId());
-        return annotationService.findLayer(project, fs);
+        return annotationService.findLayer(aProject, fs);
     }
 
     @Override
@@ -207,7 +207,7 @@ public class LazyDetailsLookupServiceImpl
     }
 
     private List<VLazyDetailGroup> lookupExtensionLevelDetails(VID aVid, SourceDocument aDocument,
-            CAS aCas, User aUser, AnnotationLayer aLayer)
+            CAS aCas, User aDataOwner, AnnotationLayer aLayer)
         throws IOException
     {
         if (!aVid.isSynthetic()) {
@@ -219,6 +219,6 @@ public class LazyDetailsLookupServiceImpl
             return emptyList();
         }
 
-        return extension.lookupLazyDetails(aDocument, aUser, aCas, aVid, aLayer);
+        return extension.lookupLazyDetails(aDocument, aDataOwner, aCas, aVid, aLayer);
     }
 }
