@@ -203,6 +203,11 @@ public class KnowledgeBase
     @Column
     private String defaultLanguage;
 
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "knowledgebase_add_languages")
+    @Column(name = "name")
+    private Set<String> additionalLanguages = new LinkedHashSet<>();
+
     /**
      * Limits the number of results that can be retrieved from a SPARQL query.
      */
@@ -223,9 +228,9 @@ public class KnowledgeBase
         return repositoryId;
     }
 
-    public void setRepositoryId(String repositoryId)
+    public void setRepositoryId(String aRepositoryId)
     {
-        this.repositoryId = repositoryId;
+        repositoryId = aRepositoryId;
     }
 
     public Project getProject()
@@ -233,9 +238,9 @@ public class KnowledgeBase
         return project;
     }
 
-    public void setProject(Project project)
+    public void setProject(Project aProject)
     {
-        this.project = project;
+        project = aProject;
     }
 
     public String getName()
@@ -243,9 +248,9 @@ public class KnowledgeBase
         return name;
     }
 
-    public void setName(String name)
+    public void setName(String aName)
     {
-        this.name = name;
+        name = aName;
     }
 
     public RepositoryType getType()
@@ -253,9 +258,9 @@ public class KnowledgeBase
         return type;
     }
 
-    public void setType(RepositoryType type)
+    public void setType(RepositoryType aType)
     {
-        this.type = type;
+        type = aType;
     }
 
     public String getClassIri()
@@ -487,6 +492,16 @@ public class KnowledgeBase
         }
     }
 
+    public void applyAdditionalLanguages(KnowledgeBaseProfile aProfile)
+    {
+        if (aProfile.getAdditionalLanguages() == null) {
+            additionalLanguages = emptySet();
+        }
+        else {
+            additionalLanguages = new LinkedHashSet<>(aProfile.getAdditionalLanguages());
+        }
+    }
+
     public String getDefaultDatasetIri()
     {
         return defaultDatasetIri;
@@ -515,6 +530,19 @@ public class KnowledgeBase
     public Set<String> getAdditionalMatchingProperties()
     {
         return additionalMatchingProperties;
+    }
+
+    public void setAdditionalLanguages(Collection<String> aAdditionalLanguages)
+    {
+        additionalLanguages = new LinkedHashSet<>();
+        if (aAdditionalLanguages != null) {
+            additionalLanguages.addAll(aAdditionalLanguages);
+        }
+    }
+
+    public Set<String> getAdditionalLanguages()
+    {
+        return additionalLanguages;
     }
 
     public boolean isUseFuzzy()

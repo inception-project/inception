@@ -519,7 +519,7 @@ public class DynamicWorkloadManagementPage
 
                 if (userSelection.getModelObject() != null) {
                     if (aInput != null) {
-                        for (SourceDocument sourceDocument : documentService
+                        for (var sourceDocument : documentService
                                 .listAnnotatableDocuments(currentProject.getObject(),
                                         userSelection.getModelObject())
                                 .keySet()) {
