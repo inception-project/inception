@@ -83,11 +83,11 @@ public class KnowledgeBaseDetailsPanel
 
         kbModel = aKbModel;
 
-        KnowledgeBaseWrapper kbw = new KnowledgeBaseWrapper(kbModel.getObject());
+        var kbw = new KnowledgeBaseWrapper(kbModel.getObject());
 
         // set the URL of the KBW to the current SPARQL URL, if dealing with a remote repository
         if (kbw.getKb().getType() == REMOTE) {
-            RepositoryImplConfig cfg = kbService.getKnowledgeBaseConfig(kbw.getKb());
+            var cfg = kbService.getKnowledgeBaseConfig(kbw.getKb());
             if (cfg != null) {
                 String url = ((SPARQLRepositoryConfig) cfg).getQueryEndpointUrl();
                 kbw.setUrl(url);
@@ -158,7 +158,7 @@ public class KnowledgeBaseDetailsPanel
 
             content.applyState();
 
-            KnowledgeBase kb = kbw.getKb();
+            var kb = kbw.getKb();
             kb.setTraits(JSONUtil.toJsonString(kbw.getTraits()));
             kbService.updateKnowledgeBase(kb, cfg);
 
@@ -192,7 +192,7 @@ public class KnowledgeBaseDetailsPanel
     {
         aTarget.addChildren(getPage(), IFeedback.class);
 
-        KnowledgeBase kb = kbwModel.getObject().getKb();
+        var kb = kbwModel.getObject().getKb();
         try {
             LOG.info("Starting rebuilding full-text index of {} ... this may take a while ...", kb);
             kbService.rebuildFullTextIndex(kb);
