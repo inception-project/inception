@@ -55,6 +55,8 @@ public class OllamaRecommenderTraits
 
     private @JsonInclude(NON_EMPTY) Map<String, Object> options = new LinkedHashMap<String, Object>();
 
+    private boolean interactive;
+
     public String getUrl()
     {
         return url;
@@ -134,5 +136,15 @@ public class OllamaRecommenderTraits
     {
         options.clear();
         options.putAll(aOptions);
+    }
+
+    public boolean isInteractive()
+    {
+        return interactive;
+    }
+
+    public void setInteractive(boolean aInteractive)
+    {
+        interactive = aInteractive;
     }
 }

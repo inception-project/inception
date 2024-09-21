@@ -208,9 +208,7 @@ public class SPARQLQueryBuilder
         protected String getLabelPropertyAsString(KnowledgeBase aKb)
         {
             switch (this) {
-            case ITEM: // fall-through
-            case CLASS: // fall-through
-            case INSTANCE:
+            case ITEM, CLASS, INSTANCE:
                 return aKb.getLabelIri();
             case PROPERTY:
                 return aKb.getPropertyLabelIri();
@@ -222,9 +220,7 @@ public class SPARQLQueryBuilder
         protected Iri getDescriptionProperty(KnowledgeBase aKb)
         {
             switch (this) {
-            case ITEM: // fall-through
-            case CLASS: // fall-through
-            case INSTANCE:
+            case ITEM, CLASS, INSTANCE:
                 return iri(aKb.getDescriptionIri());
             case PROPERTY:
                 return iri(aKb.getPropertyDescriptionIri());
@@ -236,9 +232,7 @@ public class SPARQLQueryBuilder
         protected List<Iri> getAdditionalMatchingProperties(KnowledgeBase aKb)
         {
             switch (this) {
-            case ITEM: // fall-through
-            case CLASS: // fall-through
-            case INSTANCE:
+            case ITEM, CLASS, INSTANCE:
                 return aKb.getAdditionalMatchingProperties().stream() //
                         .map(Rdf::iri) //
                         .collect(toList());
@@ -302,9 +296,7 @@ public class SPARQLQueryBuilder
             var subPropertyProperty = iri(aKB.getSubPropertyIri());
 
             switch (this) {
-            case ITEM:
-            case CLASS:
-            case INSTANCE: {
+            case ITEM, CLASS, INSTANCE: {
                 var classPatterns = new ArrayList<GraphPattern>();
                 classPatterns.add(aContext.has(
                         PropertyPathBuilder.of(subClassProperty).oneOrMore().build(), VAR_SUBJECT));
@@ -329,13 +321,13 @@ public class SPARQLQueryBuilder
          */
         protected GraphPattern childrenPattern(KnowledgeBase aKB, Iri aContext)
         {
-            Iri subPropertyProperty = iri(aKB.getSubPropertyIri());
-            Iri subClassProperty = iri(aKB.getSubclassIri());
-            Iri typeOfProperty = iri(aKB.getTypeIri());
+            var subPropertyProperty = iri(aKB.getSubPropertyIri());
+            var subClassProperty = iri(aKB.getSubclassIri());
+            var typeOfProperty = iri(aKB.getTypeIri());
 
             switch (this) {
             case ITEM: {
-                List<GraphPattern> classPatterns = new ArrayList<>();
+                var classPatterns = new ArrayList<GraphPattern>();
                 classPatterns
                         .add(VAR_SUBJECT.has(() -> subClassProperty.getQueryString(), aContext));
                 classPatterns.add(VAR_SUBJECT.has(typeOfProperty, aContext));
@@ -351,7 +343,7 @@ public class SPARQLQueryBuilder
             case CLASS: {
                 // Follow the subclass property and also take into account owl:intersectionOf if
                 // using OWL classes
-                List<GraphPattern> classPatterns = new ArrayList<>();
+                var classPatterns = new ArrayList<GraphPattern>();
                 classPatterns.add(VAR_SUBJECT.has(subClassProperty, aContext));
                 if (OWL.CLASS.stringValue().equals(aKB.getClassIri())) {
                     classPatterns.add(VAR_SUBJECT.has(OWL_INTERSECTIONOF_PATH, aContext));
@@ -371,13 +363,13 @@ public class SPARQLQueryBuilder
          */
         protected GraphPattern parentsPattern(KnowledgeBase aKB, Iri aContext)
         {
-            Iri subClassProperty = iri(aKB.getSubclassIri());
-            Iri subPropertyProperty = iri(aKB.getSubPropertyIri());
-            Iri typeOfProperty = iri(aKB.getTypeIri());
+            var subClassProperty = iri(aKB.getSubclassIri());
+            var subPropertyProperty = iri(aKB.getSubPropertyIri());
+            var typeOfProperty = iri(aKB.getTypeIri());
 
             switch (this) {
             case CLASS: {
-                List<GraphPattern> classPatterns = new ArrayList<>();
+                var classPatterns = new ArrayList<GraphPattern>();
                 classPatterns.add(aContext.has(subClassProperty, VAR_SUBJECT));
                 classPatterns.add(aContext.has(typeOfProperty, VAR_SUBJECT));
                 if (OWL.CLASS.stringValue().equals(aKB.getClassIri())) {
@@ -443,10 +435,7 @@ public class SPARQLQueryBuilder
         protected Iri getDeprecationProperty(KnowledgeBase aKb)
         {
             switch (this) {
-            case ITEM: // fall-through
-            case CLASS: // fall-through
-            case INSTANCE: // fall-through
-            case PROPERTY:
+            case ITEM, CLASS, INSTANCE, PROPERTY:
                 return iri(aKb.getDeprecationPropertyIri());
             default:
                 throw new IllegalStateException("Unsupported mode: " + this);
@@ -479,7 +468,7 @@ public class SPARQLQueryBuilder
      */
     public static SPARQLQueryPrimaryConditions forClasses(KnowledgeBase aKB)
     {
-        SPARQLQueryBuilder builder = new SPARQLQueryBuilder(aKB, Mode.CLASS);
+        var builder = new SPARQLQueryBuilder(aKB, Mode.CLASS);
         builder.limitToClasses();
         return builder;
     }
@@ -494,7 +483,7 @@ public class SPARQLQueryBuilder
      */
     public static SPARQLQueryPrimaryConditions forInstances(KnowledgeBase aKB)
     {
-        SPARQLQueryBuilder builder = new SPARQLQueryBuilder(aKB, Mode.INSTANCE);
+        var builder = new SPARQLQueryBuilder(aKB, Mode.INSTANCE);
         builder.limitToInstances();
         return builder;
     }
@@ -509,7 +498,7 @@ public class SPARQLQueryBuilder
      */
     public static SPARQLQueryPrimaryConditions forProperties(KnowledgeBase aKB)
     {
-        SPARQLQueryBuilder builder = new SPARQLQueryBuilder(aKB, Mode.PROPERTY);
+        var builder = new SPARQLQueryBuilder(aKB, Mode.PROPERTY);
         builder.limitToProperties();
         return builder;
     }
@@ -529,7 +518,9 @@ public class SPARQLQueryBuilder
         var appCtx = ApplicationContextProvider.getApplicationContext();
         if (appCtx != null) {
             var props = appCtx.getBean(KnowledgeBaseProperties.class);
-            withFallbackLanguages(props.getDefaultFallbackLanguages());
+            var langs = new LinkedHashSet<>(props.getDefaultFallbackLanguages());
+            langs.addAll(aKB.getAdditionalLanguages());
+            withFallbackLanguages(langs);
         }
     }
 
@@ -1144,12 +1135,12 @@ public class SPARQLQueryBuilder
 
     private GraphPattern isPropertyPattern()
     {
-        Iri propertyIri = iri(kb.getPropertyTypeIri());
-        Iri subPropertyProperty = iri(kb.getSubPropertyIri());
-        Iri typeOfProperty = iri(kb.getTypeIri());
-        Iri pSubClass = iri(kb.getSubclassIri());
+        var propertyIri = iri(kb.getPropertyTypeIri());
+        var subPropertyProperty = iri(kb.getSubPropertyIri());
+        var typeOfProperty = iri(kb.getTypeIri());
+        var pSubClass = iri(kb.getSubclassIri());
 
-        List<GraphPattern> propertyPatterns = new ArrayList<>();
+        var propertyPatterns = new ArrayList<GraphPattern>();
 
         // An item is a property if ...
         // ... it is explicitly defined as being a property
@@ -1296,15 +1287,14 @@ public class SPARQLQueryBuilder
     @Override
     public List<KBHandle> asHandles(RepositoryConnection aConnection, boolean aAll)
     {
-        long startTime = currentTimeMillis();
-        String queryId = toHexString(hashCode());
+        var startTime = currentTimeMillis();
+        var queryId = toHexString(hashCode());
 
-        String queryString = selectQuery().getQueryString();
+        var queryString = selectQuery().getQueryString();
         // queryString = QueryParserUtil.parseQuery(QueryLanguage.SPARQL, queryString, null)
         // .toString();
         LOG.trace("[{}] Query: {}", queryId, queryString);
 
-        List<KBHandle> results;
         if (returnEmptyResult) {
             LOG.debug("[{}] Query was skipped because it would not return any results anyway",
                     queryId);
@@ -1313,12 +1303,12 @@ public class SPARQLQueryBuilder
         }
 
         try {
-            TupleQuery tupleQuery = aConnection.prepareTupleQuery(queryString);
+            var tupleQuery = aConnection.prepareTupleQuery(queryString);
             tupleQuery.setIncludeInferred(includeInferred);
-            results = evaluateListQuery(tupleQuery, aAll);
+            var results = evaluateListQuery(tupleQuery, aAll);
             results.sort(comparing(KBObject::getUiLabel, CASE_INSENSITIVE_ORDER));
 
-            long duration = currentTimeMillis() - startTime;
+            var duration = currentTimeMillis() - startTime;
             LOG.debug("[{}] Query returned {} results in {}ms {}", queryId, results.size(),
                     duration, duration > 1000 ? "-- SLOW QUERY!" : "");
 
@@ -1348,14 +1338,14 @@ public class SPARQLQueryBuilder
     @Override
     public boolean exists(RepositoryConnection aConnection, boolean aAll)
     {
-        long startTime = currentTimeMillis();
-        String queryId = toHexString(hashCode());
+        var startTime = currentTimeMillis();
+        var queryId = toHexString(hashCode());
 
         limit(1);
 
-        SelectQuery query = selectQuery();
+        var query = selectQuery();
 
-        String queryString = query.getQueryString();
+        var queryString = query.getQueryString();
         LOG.trace("[{}] Query: {}", queryId, queryString);
 
         if (returnEmptyResult) {
@@ -1366,10 +1356,10 @@ public class SPARQLQueryBuilder
         }
 
         try {
-            TupleQuery tupleQuery = aConnection.prepareTupleQuery(queryString);
-            boolean result = !evaluateListQuery(tupleQuery, aAll).isEmpty();
+            var tupleQuery = aConnection.prepareTupleQuery(queryString);
+            var result = !evaluateListQuery(tupleQuery, aAll).isEmpty();
 
-            long duration = currentTimeMillis() - startTime;
+            var duration = currentTimeMillis() - startTime;
             LOG.debug("[{}] Query returned {} in {}ms {}", queryId, result, duration,
                     duration > 1000 ? "-- SLOW QUERY!" : "");
 
@@ -1388,15 +1378,14 @@ public class SPARQLQueryBuilder
     @Override
     public Optional<KBHandle> asHandle(RepositoryConnection aConnection, boolean aAll)
     {
-        long startTime = currentTimeMillis();
-        String queryId = toHexString(hashCode());
+        var startTime = currentTimeMillis();
+        var queryId = toHexString(hashCode());
 
         limit(1);
 
-        String queryString = selectQuery().getQueryString();
+        var queryString = selectQuery().getQueryString();
         LOG.trace("[{}] Query: {}", queryId, queryString);
 
-        Optional<KBHandle> result;
         if (returnEmptyResult) {
             LOG.debug("[{}] Query was skipped because it would not return any results anyway",
                     queryId);
@@ -1404,11 +1393,11 @@ public class SPARQLQueryBuilder
         }
 
         try {
-            TupleQuery tupleQuery = aConnection.prepareTupleQuery(queryString);
+            var tupleQuery = aConnection.prepareTupleQuery(queryString);
             tupleQuery.setIncludeInferred(includeInferred);
-            result = evaluateListQuery(tupleQuery, aAll).stream().findFirst();
+            var result = evaluateListQuery(tupleQuery, aAll).stream().findFirst();
 
-            long duration = currentTimeMillis() - startTime;
+            var duration = currentTimeMillis() - startTime;
             LOG.debug("[{}] Query returned a result in {}ms {}", queryId, duration,
                     duration > 1000 ? "-- SLOW QUERY!" : "");
 
@@ -1519,8 +1508,8 @@ public class SPARQLQueryBuilder
 
     private void extractLabel(KBHandle aTargetHandle, BindingSet aSourceBindings)
     {
-        Binding prefLabel = aSourceBindings.getBinding(VAR_PREF_LABEL_NAME);
-        Binding matchTerm = aSourceBindings.getBinding(VAR_MATCH_TERM_NAME);
+        var prefLabel = aSourceBindings.getBinding(VAR_PREF_LABEL_NAME);
+        var matchTerm = aSourceBindings.getBinding(VAR_MATCH_TERM_NAME);
 
         // Obtain name either from the pref-label or from the match term if available
         if (prefLabel != null) {

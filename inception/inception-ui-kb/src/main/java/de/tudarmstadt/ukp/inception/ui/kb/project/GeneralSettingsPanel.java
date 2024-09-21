@@ -18,9 +18,12 @@
 package de.tudarmstadt.ukp.inception.ui.kb.project;
 
 import static java.util.Arrays.asList;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.RequiredTextField;
 import org.apache.wicket.markup.html.form.TextField;
@@ -31,7 +34,11 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.validation.IValidatable;
 import org.apache.wicket.validation.IValidator;
 import org.apache.wicket.validation.ValidationError;
+import org.wicketstuff.jquery.core.JQueryBehavior;
+import org.wicketstuff.jquery.core.Options;
+import org.wicketstuff.kendo.ui.KendoDataSource;
 import org.wicketstuff.kendo.ui.form.combobox.ComboBox;
+import org.wicketstuff.kendo.ui.form.multiselect.lazy.MultiSelect;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.kb.IriConstants;
@@ -44,9 +51,23 @@ public class GeneralSettingsPanel
 {
     private static final long serialVersionUID = 8824114174867195670L;
 
+    private static final List<String> LANGUAGE_CODES = asList("aa", "ab", "ae", "af", "ak", "am",
+            "an", "ar", "as", "av", "ay", "az", "ba", "be", "bg", "bi", "bm", "bn", "bo", "br",
+            "bs", "ca", "ce", "ch", "co", "cr", "cs", "cu", "cv", "cy", "da", "de", "dv", "dz",
+            "ee", "el", "en", "eo", "es", "et", "eu", "fa", "ff", "fi", "fj", "fo", "fr", "fy",
+            "ga", "gd", "gl", "gn", "gu", "gv", "ha", "he", "hi", "ho", "hr", "ht", "hu", "hy",
+            "hz", "ia", "id", "ie", "ig", "ii", "ik", "io", "is", "it", "iu", "ja", "jv", "ka",
+            "kg", "ki", "kj", "kk", "kl", "km", "kn", "ko", "kr", "ks", "ku", "kv", "kw", "ky",
+            "la", "lb", "lg", "li", "ln", "lo", "lt", "lu", "lv", "mg", "mh", "mi", "mk", "ml",
+            "mn", "mr", "ms", "mt", "my", "na", "nb", "nd", "ne", "ng", "nl", "nn", "no", "nr",
+            "nv", "ny", "oc", "oj", "om", "or", "os", "pa", "pi", "pl", "ps", "pt", "qu", "rm",
+            "rn", "ro", "ru", "rw", "sa", "sc", "sd", "se", "sg", "si", "sk", "sl", "sm", "sn",
+            "so", "sq", "sr", "ss", "st", "su", "sv", "sw", "ta", "te", "tg", "th", "ti", "tk",
+            "tl", "tn", "to", "tr", "ts", "tt", "tw", "ty", "ug", "uk", "ur", "uz", "ve", "vi",
+            "vo", "wa", "wo", "xh", "yi", "yo", "za", "zh", "zu");
+
     private final IModel<Project> projectModel;
     private final CompoundPropertyModel<KnowledgeBaseWrapper> kbModel;
-    private final List<String> languages = asList("en", "de");
 
     private @SpringBean KnowledgeBaseService kbService;
     private @SpringBean KnowledgeBaseProperties kbproperties;
@@ -64,6 +85,49 @@ public class GeneralSettingsPanel
         add(languageComboBox("language", kbModel.bind("kb.defaultLanguage")));
         add(basePrefixField("basePrefix", "kb.basePrefix"));
         add(createCheckbox("enabled", "kb.enabled"));
+
+        var additionalLanguages = new MultiSelect<String>("additionalLanguages")
+        {
+            @Override
+            protected void onConfigure(KendoDataSource aDataSource)
+            {
+                // This ensures that we get the user input in getChoices
+                aDataSource.set("serverFiltering", true);
+            }
+
+            @Override
+            public void onConfigure(JQueryBehavior aBehavior)
+            {
+                super.onConfigure(aBehavior);
+                aBehavior.setOption("filter", Options.asString("contains"));
+                aBehavior.setOption("autoClose", false);
+            }
+
+            private static final long serialVersionUID = -7735027268669019571L;
+
+            @Override
+            protected List<String> getChoices(String aInput)
+            {
+                var choices = new ArrayList<>(getModelObject());
+                choices.addAll(LANGUAGE_CODES);
+                choices.sort(String::compareTo);
+                choices.remove(aInput);
+                if (isNotBlank(aInput)) {
+                    choices.add(0, aInput);
+                }
+                return choices;
+            }
+
+            @Override
+            public void convertInput()
+            {
+                var list = new ArrayList<>(asList(getInputAsArray()));
+                list.removeIf(StringUtils::isBlank);
+                this.setConvertedInput(list);
+            }
+        };
+        additionalLanguages.setModel(kbModel.bind("kb.additionalLanguages"));
+        add(additionalLanguages);
     }
 
     private TextField<String> nameField(String id, String property)
@@ -76,11 +140,11 @@ public class GeneralSettingsPanel
     private ComboBox<String> languageComboBox(String id, IModel<String> aModel)
     {
         // Only set kbModel object if it has not been initialized yet
-        if (aModel.getObject() == null && !languages.isEmpty()) {
-            aModel.setObject(languages.get(0));
+        if (aModel.getObject() == null) {
+            aModel.setObject("en");
         }
 
-        var comboBox = new ComboBox<String>(id, aModel, languages);
+        var comboBox = new ComboBox<String>(id, aModel, LANGUAGE_CODES);
         comboBox.setOutputMarkupId(true);
         comboBox.setRequired(true);
         // Do nothing just update the kbModel values

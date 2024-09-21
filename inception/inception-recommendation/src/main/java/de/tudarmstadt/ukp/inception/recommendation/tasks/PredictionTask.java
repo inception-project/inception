@@ -283,10 +283,23 @@ public class PredictionTask
         }
 
         try (var casHolder = new PredictionCasHolder()) {
+            var predictionCas = casHolder.cas;
 
-            final CAS predictionCas = casHolder.cas;
-            applyAllRecommendersToDocument(predecessorPredictions, incomingPredictions,
-                    predictionCas, aCurrentDocument, predictionBegin, predictionEnd);
+            if (recommender != null) {
+                var originalCas = new LazyCas(aCurrentDocument);
+                try {
+                    applySingleRecomenderToDocument(originalCas, recommender,
+                            predecessorPredictions, incomingPredictions, predictionCas,
+                            aCurrentDocument, predictionBegin, predictionEnd);
+                }
+                catch (IOException e) {
+                    logUnableToReadAnnotations(incomingPredictions, aCurrentDocument, e);
+                }
+            }
+            else {
+                applyAllRecommendersToDocument(predecessorPredictions, incomingPredictions,
+                        predictionCas, aCurrentDocument, predictionBegin, predictionEnd);
+            }
         }
         catch (ResourceInitializationException e) {
             logErrorCreationPredictionCas(incomingPredictions);
@@ -338,12 +351,6 @@ public class PredictionTask
         try {
             var originalCas = new LazyCas(aDocument);
             for (var activeRecommender : activeRecommenders) {
-                var layer = schemaService
-                        .getLayer(activeRecommender.getRecommender().getLayer().getId());
-                if (!layer.isEnabled()) {
-                    continue;
-                }
-
                 // Make sure we have the latest recommender config from the DB - the one
                 // from the active recommenders list may be outdated
                 var rec = activeRecommender.getRecommender();
@@ -352,11 +359,6 @@ public class PredictionTask
                 }
                 catch (NoResultException e) {
                     logRecommenderNotAvailable(aPredictions, rec);
-                    continue;
-                }
-
-                if (!rec.isEnabled()) {
-                    logRecommenderDisabled(aPredictions, rec);
                     continue;
                 }
 
@@ -378,6 +380,16 @@ public class PredictionTask
             SourceDocument aDocument, int aPredictionBegin, int aPredictionEnd)
         throws IOException
     {
+        var layer = schemaService.getLayer(aRecommender.getLayer().getId());
+        if (!layer.isEnabled()) {
+            return;
+        }
+
+        if (!aRecommender.isEnabled()) {
+            logRecommenderDisabled(aPredictions, aRecommender);
+            return;
+        }
+
         var sessionOwner = getSessionOwner();
         var context = isolated ? Optional.of(RecommenderContext.emptyContext())
                 : recommendationService.getContext(sessionOwner.getUsername(), aRecommender);
@@ -519,14 +531,14 @@ public class PredictionTask
             logNoSuggestionSupportAvailable(aIncomingPredictions, rec);
             return;
         }
-        var supportRegistry = maybeSuggestionSupport.get();
+        var suggestionSupport = maybeSuggestionSupport.get();
 
         // Perform the actual prediction
         var predictedRange = predict(aIncomingPredictions, aCtx, aEngine, aPredictionCas,
                 aPredictionRange);
 
         var generatedSuggestions = extractSuggestions(aIncomingPredictions, aDocument, aOriginalCas,
-                aPredictionCas, rec, supportRegistry);
+                aPredictionCas, rec, suggestionSupport);
 
         // Reconcile new suggestions with suggestions from previous run
         var reconciliationResult = reconcile(aActivePredictions, aDocument, rec, predictedRange,
@@ -615,11 +627,11 @@ public class PredictionTask
 
     private List<AnnotationSuggestion> extractSuggestions(Predictions aIncomingPredictions,
             SourceDocument aDocument, CAS aOriginalCas, CAS aPredictionCas,
-            Recommender aRecommender, SuggestionSupport supportRegistry)
+            Recommender aRecommender, SuggestionSupport aSuggestionSupport)
     {
         var extractionContext = new ExtractionContext(aIncomingPredictions.getGeneration(),
                 aRecommender, aDocument, aOriginalCas, aPredictionCas);
-        return supportRegistry.extractSuggestions(extractionContext);
+        return aSuggestionSupport.extractSuggestions(extractionContext);
     }
 
     private Range predict(Predictions aIncomingPredictions, PredictionContext aCtx,

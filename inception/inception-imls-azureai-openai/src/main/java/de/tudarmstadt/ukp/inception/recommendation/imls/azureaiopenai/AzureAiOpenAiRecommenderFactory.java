@@ -17,13 +17,14 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.azureaiopenai;
 
+import static java.util.Collections.emptyList;
 import static org.apache.uima.cas.CAS.TYPE_NAME_STRING;
 
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
+import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.util.ListModel;
 import org.slf4j.Logger;
@@ -118,6 +119,18 @@ public class AzureAiOpenAiRecommenderFactory
         return false;
     }
 
+    @Override
+    public boolean isInteractive(Recommender aRecommender)
+    {
+        return readTraits(aRecommender).isInteractive();
+    }
+
+    @Override
+    public Panel createInteractionPanel(String aId, IModel<Recommender> aModel)
+    {
+        return new AzureAiOpenAiInteractionPanel(aId, aModel, new ListModel<>(getPresets()));
+    }
+
     private List<Preset> getPresets()
     {
         try {
@@ -125,7 +138,7 @@ public class AzureAiOpenAiRecommenderFactory
         }
         catch (Exception e) {
             LOG.error("Unable to load presets", e);
-            return Collections.emptyList();
+            return emptyList();
         }
     }
 }

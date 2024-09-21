@@ -63,6 +63,9 @@ public class KnowledgeBaseProfile
     @JsonProperty("additional-matching-properties")
     private List<String> additionalMatchingProperties;
 
+    @JsonProperty("additional-languages")
+    private List<String> additionalLanguages;
+
     @JsonProperty("info")
     private KnowledgeBaseInfo info;
 
@@ -177,6 +180,16 @@ public class KnowledgeBaseProfile
         additionalMatchingProperties = aProperties;
     }
 
+    public List<String> getAdditionalLanguages()
+    {
+        return additionalLanguages;
+    }
+
+    public void setAdditionalLanguages(List<String> aLanguages)
+    {
+        additionalLanguages = aLanguages;
+    }
+
     public KnowledgeBaseInfo getInfo()
     {
         return info;
@@ -226,7 +239,7 @@ public class KnowledgeBaseProfile
         try (var r = new InputStreamReader(
                 KnowledgeBaseProfile.class.getResourceAsStream(KNOWLEDGEBASE_PROFILES_YAML),
                 UTF_8)) {
-            ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+            var mapper = new ObjectMapper(new YAMLFactory());
             return mapper.readValue(r, new TypeReference<HashMap<String, KnowledgeBaseProfile>>()
             {
             });
@@ -243,20 +256,25 @@ public class KnowledgeBaseProfile
             return false;
         }
         KnowledgeBaseProfile that = (KnowledgeBaseProfile) o;
-        return Objects.equals(name, that.name) && Objects.equals(disabled, that.disabled)
-                && Objects.equals(access, that.access) && Objects.equals(mapping, that.mapping)
-                && Objects.equals(type, that.type)
-                && Objects.equals(rootConcepts, that.rootConcepts)
-                && Objects.equals(info, that.info) && Objects.equals(reification, that.reification)
-                && Objects.equals(defaultLanguage, that.defaultLanguage)
-                && Objects.equals(defaultDataset, that.defaultDataset);
+        return Objects.equals(name, that.name) //
+                && Objects.equals(disabled, that.disabled) //
+                && Objects.equals(access, that.access) //
+                && Objects.equals(mapping, that.mapping) //
+                && Objects.equals(type, that.type) //
+                && Objects.equals(rootConcepts, that.rootConcepts) //
+                && Objects.equals(info, that.info) //
+                && Objects.equals(reification, that.reification) //
+                && Objects.equals(defaultLanguage, that.defaultLanguage) //
+                && Objects.equals(defaultDataset, that.defaultDataset) //
+                && Objects.equals(additionalMatchingProperties, that.additionalMatchingProperties) //
+                && Objects.equals(additionalLanguages, that.additionalLanguages);
     }
 
     @Override
     public int hashCode()
     {
         return Objects.hash(name, disabled, type, access, mapping, rootConcepts, info, reification,
-                defaultLanguage, defaultDataset);
+                defaultLanguage, defaultDataset, additionalMatchingProperties, additionalLanguages);
     }
 
     @Override
