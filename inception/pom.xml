@@ -222,6 +222,7 @@
     <module>inception-io-bioc</module>
     <module>inception-io-brat</module>
     <module>inception-io-conll</module>
+    <module>inception-io-docx</module>
     <module>inception-io-json</module>
     <module>inception-io-html</module>
     <module>inception-io-nif</module>
