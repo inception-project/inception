@@ -121,8 +121,12 @@ public class GeneralSettingsPanel
             @Override
             public void convertInput()
             {
-                var list = new ArrayList<>(asList(getInputAsArray()));
-                list.removeIf(StringUtils::isBlank);
+                var input = getInputAsArray();
+                var list = new ArrayList<String>();
+                if (input != null) {
+                    list.addAll(asList(input));
+                    list.removeIf(StringUtils::isBlank);
+                }
                 this.setConvertedInput(list);
             }
         };
