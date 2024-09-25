@@ -15,7 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.project.initializers.neannotation;
+package de.tudarmstadt.ukp.inception.project.initializers.phi;
+
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationEditorState.KEY_EDITOR_STATE;
 
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
@@ -29,58 +31,57 @@ import org.apache.wicket.request.resource.ResourceReference;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.annotation.Order;
 
+import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratTokenWrappingAnnotationEditorFactory;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.project.initializers.NamedEntityLayerInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.QuickProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.io.jsoncas.UimaJsonCasFormatSupport;
+import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.project.api.ProjectInitializationRequest;
 import de.tudarmstadt.ukp.inception.project.api.ProjectInitializer;
-import de.tudarmstadt.ukp.inception.project.initializers.wikidatalinking.config.WikiDataLinkingProjectInitializersAutoConfiguration;
-import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.project.initializers.phi.config.InceptionPhiProjectInitializersAutoConfiguration;
 import de.tudarmstadt.ukp.inception.support.wicket.resource.Strings;
 
 /**
  * <p>
  * This class is exposed as a Spring Component via
- * {@link WikiDataLinkingProjectInitializersAutoConfiguration#entityAnnotationProjectInitializer}.
+ * {@link InceptionPhiProjectInitializersAutoConfiguration#phiProjectInitializer}.
  * </p>
  */
-@Order(4900)
-public class EntityAnnotationProjectInitializer
+@Order(3000)
+public class PhiProjectInitializer
     implements QuickProjectInitializer
 {
     private static final PackageResourceReference THUMBNAIL = new PackageResourceReference(
-            MethodHandles.lookup().lookupClass(), "EntityAnnotationProjectInitializer.svg");
+            MethodHandles.lookup().lookupClass(), "PhiProjectInitializer.svg");
 
-    private final AnnotationSchemaService annotationService;
     private final ApplicationContext context;
+
     private final DocumentService documentService;
     private final UserDao userService;
+    private final PreferencesService preferencesService;
 
-    public EntityAnnotationProjectInitializer(ApplicationContext aContext,
-            AnnotationSchemaService aAnnotationService, DocumentService aDocumentService,
-            UserDao aUserService)
+    public PhiProjectInitializer(ApplicationContext aContext, DocumentService aDocumentService,
+            UserDao aUserService, PreferencesService aPreferencesService)
     {
         context = aContext;
-        annotationService = aAnnotationService;
         documentService = aDocumentService;
         userService = aUserService;
+        preferencesService = aPreferencesService;
     }
 
     @Override
     public String getName()
     {
-        return "Entity annotation";
+        return "PHI annotation";
     }
 
     @Override
     public Optional<String> getDescription()
     {
-        return Optional.of(Strings.getString("entity-annotation-project.description"));
+        return Optional.of("Annotate personal health information (PHI).");
     }
 
     @Override
@@ -99,51 +100,38 @@ public class EntityAnnotationProjectInitializer
     public List<Class<? extends ProjectInitializer>> getDependencies()
     {
         var dependencies = new ArrayList<Class<? extends ProjectInitializer>>();
-        dependencies.add(NamedEntityLayerInitializer.class);
+        dependencies.add(PhiSpanLayerInitializer.class);
 
-        if (isStringRecommenderAvailable()) {
-            dependencies.add(NamedEntityStringRecommenderInitializer.class);
+        if (context.getBeanNamesForType(
+                PhiSpanStringMatchingRecommenderInitializer.class).length > 0) {
+            dependencies.add(PhiSpanStringMatchingRecommenderInitializer.class);
         }
 
-        if (isSequenceClassifierRecommenderAvailable()) {
-            dependencies.add(NamedEntitySequenceClassifierRecommenderInitializer.class);
+        if (context.getBeanNamesForType(PhiSpanOpenNlpNerRecommenderInitializer.class).length > 0) {
+            dependencies.add(PhiSpanOpenNlpNerRecommenderInitializer.class);
         }
 
         return dependencies;
-    }
-
-    private boolean isSequenceClassifierRecommenderAvailable()
-    {
-        return context.getBeanNamesForType(
-                NamedEntitySequenceClassifierRecommenderInitializer.class).length > 0;
-    }
-
-    private boolean isStringRecommenderAvailable()
-    {
-        return context
-                .getBeanNamesForType(NamedEntityStringRecommenderInitializer.class).length > 0;
     }
 
     @Override
     public void configure(ProjectInitializationRequest aRequest) throws IOException
     {
         var project = aRequest.getProject();
-        project.setName(userService.getCurrentUsername() + " - New entity annotation project");
-
-        var layer = annotationService.findLayer(project, NamedEntity.class.getName());
-        var valueFeature = annotationService.getFeature(NamedEntity._FeatName_identifier, layer);
-        valueFeature.setEnabled(false);
-        annotationService.createFeature(valueFeature);
+        project.setName(userService.getCurrentUsername() + " - New PHI annotation project");
 
         var description = //
                 """
-                This project comes pre-configured for **entity annotation**.
+                This project comes pre-configured for **Personal Health Information (PHI)**.
 
-                To annotate an entity, mark the text with the mouse, then assign a category in annotation detail
+                To annotate a PHI information, mark the text with the mouse, then assign a category in annotation detail
                 panel on the right.
+
+                The tagset used in this project template was derived from the PHI tagset used by the GeMTeX project.
+                It was originally published as part of the [`GraSCCo_PHI` dataset](https://zenodo.org/records/11502329).
                 """;
 
-        if (isSequenceClassifierRecommenderAvailable() || isStringRecommenderAvailable()) {
+        if (isStringRecommenderAvailable()) {
             description += //
                     """
 
@@ -154,19 +142,29 @@ public class EntityAnnotationProjectInitializer
         }
 
         if (aRequest.isIncludeSampleData()) {
-            importExampleDocument(project,
-                    "foodista_blog_2019_08_13_northern-british-columbia_abbreviated.json");
-            importExampleDocument(project,
-                    "foodista_blog_2019_10_22_lewiston-clarkstons-new-wine-district_abbreviated.json");
+            importExampleDocument(project, "Albers.txt_phi.json");
+            importExampleDocument(project, "Amanda_Alzheimer.txt_phi.json");
+            importExampleDocument(project, "Baastrup.txt_phi.json");
 
-            description += """
-
-                           The project includes example documents.
-                           Open the **Annotation** page from the left sidbar menu to dive right in.
-                           """;
+            description += Strings.getString("phi-span-layer.example-data");
+            ;
         }
 
         project.setDescription(description);
+
+        var bratEditorFactory = context.getBean(BratTokenWrappingAnnotationEditorFactory.class);
+        if (bratEditorFactory != null) {
+            var editorState = preferencesService.loadDefaultTraitsForProject(KEY_EDITOR_STATE,
+                    project);
+            editorState.setDefaultEditor(bratEditorFactory.getBeanName());
+            preferencesService.saveDefaultTraitsForProject(KEY_EDITOR_STATE, project, editorState);
+        }
+    }
+
+    private boolean isStringRecommenderAvailable()
+    {
+        return context
+                .getBeanNamesForType(PhiSpanStringMatchingRecommenderInitializer.class).length > 0;
     }
 
     private void importExampleDocument(Project aProject, String docName) throws IOException
