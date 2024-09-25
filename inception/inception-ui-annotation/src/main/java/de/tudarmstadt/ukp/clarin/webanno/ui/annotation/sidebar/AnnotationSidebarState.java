@@ -28,7 +28,7 @@ public class AnnotationSidebarState
     private static final long serialVersionUID = -5212679894035839772L;
 
     private String selectedTab;
-    private boolean expanded;
+    private boolean expanded = true;
 
     public void setSelectedTab(String aFactoryId)
     {
