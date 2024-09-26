@@ -31,13 +31,12 @@ format **Web page, Single File**.
 
 A special feature of the MHTML format is that it also allows images that were part of the original page to be displayed in {product-name}. Note that when saving a page, it is possible that the browser does not capture all the images into the MHTML file. {product-name} will only be able to display those images that are actually included.
 
-[cols="2,1,1,1,3"]
+[cols="2,1,1,3"]
 |====
-| Format | Read | Write | Custom Layers | Description
+| Format | Import | Export | Supported layers
 
 | MHTML (`hmtml`)
 | yes
 | no
-| no
-| 
+| None
 |====
