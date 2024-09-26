@@ -24,6 +24,7 @@ import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.Predic
 import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapability.TRAINING_NOT_SUPPORTED;
 import static de.tudarmstadt.ukp.inception.rendering.model.Range.rangeCoveringDocument;
 import static java.lang.System.currentTimeMillis;
+import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
@@ -93,7 +94,7 @@ public class PredictionTask
     private final int predictionEnd;
     private final String dataOwner;
     private final boolean isolated;
-    private final Recommender recommender;
+    private final List<Recommender> recommenders;
     private final boolean synchronousRecommenders;
     private final boolean asynchronousRecommenders;
 
@@ -108,7 +109,7 @@ public class PredictionTask
         predictionBegin = aBuilder.predictionBegin;
         predictionEnd = aBuilder.predictionEnd;
         isolated = aBuilder.isolated;
-        recommender = aBuilder.recommender;
+        recommenders = aBuilder.recommenders;
         synchronousRecommenders = aBuilder.synchronousRecommenders;
         asynchronousRecommenders = aBuilder.asynchronousRecommenders;
     }
@@ -227,7 +228,7 @@ public class PredictionTask
 
                 monitor.setProgressWithMessage(progress, maxProgress,
                         LogMessage.info(this, "%s", document.getName()));
-                applyAllRecommendersToDocument(activePredictions, incomingPredictions,
+                applyActiveRecommendersToDocument(activePredictions, incomingPredictions,
                         casHolder.cas, document, -1, -1);
                 progress++;
             }
@@ -285,19 +286,21 @@ public class PredictionTask
         try (var casHolder = new PredictionCasHolder()) {
             var predictionCas = casHolder.cas;
 
-            if (recommender != null) {
+            if (isolated) {
                 var originalCas = new LazyCas(aCurrentDocument);
-                try {
-                    applySingleRecomenderToDocument(originalCas, recommender,
-                            predecessorPredictions, incomingPredictions, predictionCas,
-                            aCurrentDocument, predictionBegin, predictionEnd);
-                }
-                catch (IOException e) {
-                    logUnableToReadAnnotations(incomingPredictions, aCurrentDocument, e);
+                for (var recommender : recommenders) {
+                    try {
+                        applySingleRecomenderToDocument(originalCas, recommender,
+                                predecessorPredictions, incomingPredictions, predictionCas,
+                                aCurrentDocument, predictionBegin, predictionEnd);
+                    }
+                    catch (IOException e) {
+                        logUnableToReadAnnotations(incomingPredictions, aCurrentDocument, e);
+                    }
                 }
             }
             else {
-                applyAllRecommendersToDocument(predecessorPredictions, incomingPredictions,
+                applyActiveRecommendersToDocument(predecessorPredictions, incomingPredictions,
                         predictionCas, aCurrentDocument, predictionBegin, predictionEnd);
             }
         }
@@ -337,7 +340,7 @@ public class PredictionTask
      * @param aPredictionEnd
      *            end of the prediction range (negative to predict until the end of the document)
      */
-    private void applyAllRecommendersToDocument(Predictions aActivePredictions,
+    private void applyActiveRecommendersToDocument(Predictions aActivePredictions,
             Predictions aPredictions, CAS aPredictionCas, SourceDocument aDocument,
             int aPredictionBegin, int aPredictionEnd)
     {
@@ -411,75 +414,75 @@ public class PredictionTask
             return;
         }
 
-        // We lazily load the CAS only at this point because that allows us to skip
-        // loading the CAS entirely if there is no enabled layer or recommender.
-        // If the CAS cannot be loaded, then we skip to the next document.
-        var originalCas = aOriginalCas.get();
+        if (!recommenders.isEmpty() && !recommenders.contains(aRecommender)) {
+            logSkippingNotRequestedRecommender(aPredictions, aRecommender);
+
+            if (activePredictions != null) {
+                inheritSuggestionsAtRecommenderLevel(aPredictions, aRecommender, activePredictions,
+                        aDocument);
+            }
+
+            return;
+        }
+
+        var engine = factory.build(aRecommender);
+
+        var isSynchronous = factory.isSynchronous(aRecommender);
+        if (isSynchronous && !synchronousRecommenders) {
+            logSkippingSynchronous(aPredictions, aRecommender);
+
+            // If possible, we inherit recommendations from a previous run while the recommender is
+            // still busy
+            if (activePredictions != null) {
+                inheritSuggestionsAtRecommenderLevel(aPredictions, aRecommender, activePredictions,
+                        aDocument);
+            }
+
+            return;
+        }
+
+        if (!isSynchronous && !asynchronousRecommenders) {
+            logSkippingAsynchronous(aPredictions, aRecommender);
+
+            // If possible, we inherit recommendations from a previous run while the recommender is
+            // still busy
+            if (activePredictions != null) {
+                inheritSuggestionsAtRecommenderLevel(aPredictions, aRecommender, activePredictions,
+                        aDocument);
+            }
+
+            return;
+        }
+
+        if (!engine.isReadyForPrediction(context.get())) {
+            logRecommenderContextNoReady(aPredictions, aDocument, aRecommender);
+
+            // If possible, we inherit recommendations from a previous run while the recommender is
+            // still busy
+            if (activePredictions != null) {
+                inheritSuggestionsAtRecommenderLevel(aPredictions, aRecommender, activePredictions,
+                        aDocument);
+            }
+
+            return;
+        }
+
+        // If the recommender is not trainable and not sensitive to annotations, we can actually
+        // re-use the predictions.
+        if (TRAINING_NOT_SUPPORTED == engine.getTrainingCapability()
+                && PREDICTION_USES_TEXT_ONLY == engine.getPredictionCapability()
+                && activePredictions != null
+                && activePredictions.hasRunPredictionOnDocument(aDocument)) {
+            inheritSuggestionsAtRecommenderLevel(aPredictions, engine.getRecommender(),
+                    activePredictions, aDocument);
+            return;
+        }
 
         try {
-            if (recommender != null && !recommender.equals(aRecommender)) {
-                logSkippingNotRequestedRecommender(aPredictions, aRecommender);
-
-                if (activePredictions != null) {
-                    inheritSuggestionsAtRecommenderLevel(aPredictions, originalCas, aRecommender,
-                            activePredictions, aDocument);
-                }
-
-                return;
-            }
-
-            var engine = factory.build(aRecommender);
-
-            var isSynchronous = factory.isSynchronous(aRecommender);
-            if (isSynchronous && !synchronousRecommenders) {
-                logSkippingSynchronous(aPredictions, aRecommender);
-
-                // If possible, we inherit recommendations from a previous run while
-                // the recommender is still busy
-                if (activePredictions != null) {
-                    inheritSuggestionsAtRecommenderLevel(aPredictions, originalCas, aRecommender,
-                            activePredictions, aDocument);
-                }
-
-                return;
-            }
-
-            if (!isSynchronous && !asynchronousRecommenders) {
-                logSkippingAsynchronous(aPredictions, aRecommender);
-
-                // If possible, we inherit recommendations from a previous run while
-                // the recommender is still busy
-                if (activePredictions != null) {
-                    inheritSuggestionsAtRecommenderLevel(aPredictions, originalCas, aRecommender,
-                            activePredictions, aDocument);
-                }
-
-                return;
-            }
-
-            if (!engine.isReadyForPrediction(context.get())) {
-                logRecommenderContextNoReady(aPredictions, aDocument, aRecommender);
-
-                // If possible, we inherit recommendations from a previous run while
-                // the recommender is still busy
-                if (activePredictions != null) {
-                    inheritSuggestionsAtRecommenderLevel(aPredictions, originalCas, aRecommender,
-                            activePredictions, aDocument);
-                }
-
-                return;
-            }
-
-            // If the recommender is not trainable and not sensitive to annotations,
-            // we can actually re-use the predictions.
-            if (TRAINING_NOT_SUPPORTED == engine.getTrainingCapability()
-                    && PREDICTION_USES_TEXT_ONLY == engine.getPredictionCapability()
-                    && activePredictions != null
-                    && activePredictions.hasRunPredictionOnDocument(aDocument)) {
-                inheritSuggestionsAtRecommenderLevel(aPredictions, originalCas,
-                        engine.getRecommender(), activePredictions, aDocument);
-                return;
-            }
+            // We lazily load the CAS only at this point because that allows us to skip loading the
+            // CAS entirely if there is no enabled layer or recommender. If the CAS cannot be
+            // loaded, then we skip to the next document.
+            var originalCas = aOriginalCas.get();
 
             var ctx = new PredictionContext(context.get());
             cloneAndMonkeyPatchCAS(getProject(), originalCas, predictionCas);
@@ -489,8 +492,8 @@ public class PredictionTask
                     predictionCas, predictionRange);
             ctx.getMessages().forEach(aPredictions::log);
         }
-        // Catching Throwable is intentional here as we want to continue the
-        // execution even if a particular recommender fails.
+        // Catching Throwable is intentional here as we want to continue the execution even if a
+        // particular recommender fails.
         catch (Throwable e) {
             logErrorExecutingRecommender(aPredictions, aDocument, aRecommender, e);
 
@@ -500,12 +503,11 @@ public class PredictionTask
                             aRecommender.getName(), e.getMessage())) //
                     .build());
 
-            // If there was a previous successful run of the recommender, inherit
-            // its suggestions to avoid that all the suggestions of the recommender
-            // simply disappear.
+            // If there was a previous successful run of the recommender, inherit its suggestions to
+            // avoid that all the suggestions of the recommender simply disappear.
             if (activePredictions != null) {
-                inheritSuggestionsAtRecommenderLevel(aPredictions, originalCas, aRecommender,
-                        activePredictions, aDocument);
+                inheritSuggestionsAtRecommenderLevel(aPredictions, aRecommender, activePredictions,
+                        aDocument);
             }
 
             return;
@@ -570,7 +572,7 @@ public class PredictionTask
      * Extracts existing predictions from the last prediction run so we do not have to recalculate
      * them. This is useful when the engine is not trainable.
      */
-    private void inheritSuggestionsAtRecommenderLevel(Predictions aPredictions, CAS aOriginalCas,
+    private void inheritSuggestionsAtRecommenderLevel(Predictions aPredictions,
             Recommender aRecommender, Predictions activePredictions, SourceDocument document)
     {
         var suggestions = activePredictions.getPredictionsByRecommenderAndDocument(aRecommender,
@@ -1012,7 +1014,7 @@ public class PredictionTask
     public static class Builder<T extends Builder<?>>
         extends RecommendationTask_ImplBase.Builder<T>
     {
-        private Recommender recommender;
+        private final List<Recommender> recommenders = new ArrayList<>();
         private SourceDocument currentDocument;
         private String dataOwner;
         private int predictionBegin = -1;
@@ -1025,13 +1027,15 @@ public class PredictionTask
          * Generate predictions only for the specified recommender. If this is not set, then
          * predictions will be run for all active recommenders.
          * 
-         * @param aRecommender
-         *            the one recommender to run.
+         * @param aRecommenders
+         *            the recommenders to run.
          */
         @SuppressWarnings("unchecked")
-        public T withRecommender(Recommender aRecommender)
+        public T withRecommender(Recommender... aRecommenders)
         {
-            recommender = aRecommender;
+            if (aRecommenders != null) {
+                recommenders.addAll(asList(aRecommenders));
+            }
             return (T) this;
         }
 
