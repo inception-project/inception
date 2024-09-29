@@ -25,13 +25,12 @@ Generic support for HTML documents. This format imports expects a HTML `index.ht
 Additionally, the ZIP file may include images or other media which can be referenced from the `index.html` file e.g.
 via the `<img src="..."/>` element.
 
-[cols="2,1,1,1,3"]
+[cols="2,1,1,3"]
 |====
-| Format | Read | Write | Custom Layers | Description
+| Format | Import | Export | Supported layers
 
 | HTML (`htmldoc-zip`)
 | yes
 | no
-| no
-| 
+| None
 |====

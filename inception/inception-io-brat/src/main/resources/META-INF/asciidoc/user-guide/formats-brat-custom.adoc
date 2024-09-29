@@ -35,14 +35,12 @@ When reading, the format will try to match the labels of brat span and relation 
 NOTE: {product-name} supports attributes (features) on relations, but the original brat does not. For this reason, the
       files produced by this format may not import into or display properly in the original brat tool.
 
-[cols="2,1,1,1,3"]
+[cols="2,1,1,3"]
 |====
-| Format | Read | Write | Custom Layers | Description
+| Format | Import | Export | Supported layers
 
 | brat (experimental) (`bratCustom`)
 | false
 | yes
-| yes
-| brat format
-
+| All span and relation layers (built-in and custom)
 |====
