@@ -50,7 +50,7 @@ import de.tudarmstadt.ukp.inception.support.wicket.resource.Strings;
  * {@link InceptionPhiProjectInitializersAutoConfiguration#phiProjectInitializer}.
  * </p>
  */
-@Order(3000)
+@Order(5500)
 public class PhiProjectInitializer
     implements QuickProjectInitializer
 {
