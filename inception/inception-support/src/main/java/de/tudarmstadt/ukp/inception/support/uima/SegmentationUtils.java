@@ -41,13 +41,13 @@ public abstract class SegmentationUtils
 
     public static void segment(CAS aCas)
     {
-        splitSentences(aCas, null);
-        tokenize(aCas, null);
+        splitSentences(aCas);
+        tokenize(aCas);
     }
 
     public static void splitSentences(CAS aCas)
     {
-        splitSentences(aCas, null);
+        splitSentences(aCas, 0, aCas.getDocumentText().length(), null);
     }
 
     public static void splitSentences(CAS aCas, int aBegin, int aEnd)
@@ -67,13 +67,14 @@ public abstract class SegmentationUtils
         }
     }
 
-    public static void splitSentences(CAS aCas, Iterable<? extends AnnotationFS> aZones)
+    public static void splitSentences(CAS aCas, int aBegin, int aEnd,
+            Iterable<? extends AnnotationFS> aZones)
     {
         if (aCas.getDocumentText() == null) {
             return;
         }
 
-        int[] sortedZoneBoundaries = sortedZoneBoundaries(aCas, aZones);
+        int[] sortedZoneBoundaries = sortedZoneBoundaries(aCas, aBegin, aEnd, aZones);
 
         for (int i = 1; i < sortedZoneBoundaries.length; i++) {
             var begin = sortedZoneBoundaries[i - 1];
@@ -85,16 +86,17 @@ public abstract class SegmentationUtils
 
     public static void tokenize(CAS aCas)
     {
-        tokenize(aCas, null);
+        tokenize(aCas, 0, aCas.getDocumentText().length(), null);
     }
 
-    public static void tokenize(CAS aCas, Iterable<? extends AnnotationFS> aZones)
+    public static void tokenize(CAS aCas, int aBegin, int aEnd,
+            Iterable<? extends AnnotationFS> aZones)
     {
         if (aCas.getDocumentText() == null) {
             return;
         }
 
-        var sortedZoneBoundaries = sortedZoneBoundaries(aCas, aZones);
+        var sortedZoneBoundaries = sortedZoneBoundaries(aCas, aBegin, aEnd, aZones);
         var zbi = 0;
 
         for (var s : selectSentences(aCas)) {
@@ -107,8 +109,9 @@ public abstract class SegmentationUtils
                 zbi++;
             }
 
-            var innerZoneBoundaries = innerZoneBoundariesBuffer.intStream().distinct().sorted()
-                    .toArray();
+            var innerZoneBoundaries = innerZoneBoundariesBuffer.intStream()
+                    .filter(i -> aBegin <= i && i <= aEnd) //
+                    .distinct().sorted().toArray();
 
             for (int i = 1; i < innerZoneBoundaries.length; i++) {
                 var begin = innerZoneBoundaries[i - 1];
@@ -140,24 +143,22 @@ public abstract class SegmentationUtils
         return aBegin >= aEnd;
     }
 
-    private static int[] sortedZoneBoundaries(CAS aCas, Iterable<? extends AnnotationFS> aZones)
+    private static int[] sortedZoneBoundaries(CAS aCas, int aBegin, int aEnd,
+            Iterable<? extends AnnotationFS> aZones)
     {
-        int[] sortedZoneBoundaries = null;
+        var zoneBoundaries = new IntArrayList();
+        zoneBoundaries.add(aBegin);
+        zoneBoundaries.add(aEnd);
 
         if (aZones != null) {
-            var zoneBoundaries = new IntArrayList();
             for (var zone : aZones) {
                 zoneBoundaries.add(zone.getBegin());
                 zoneBoundaries.add(zone.getEnd());
             }
-
-            sortedZoneBoundaries = zoneBoundaries.intStream().distinct().sorted().toArray();
         }
 
-        if (sortedZoneBoundaries == null || sortedZoneBoundaries.length < 2) {
-            sortedZoneBoundaries = new int[] { 0, aCas.getDocumentText().length() };
-        }
-
-        return sortedZoneBoundaries;
+        return zoneBoundaries.intStream() //
+                .filter(i -> aBegin <= i && i <= aEnd) //
+                .distinct().sorted().toArray();
     }
 }

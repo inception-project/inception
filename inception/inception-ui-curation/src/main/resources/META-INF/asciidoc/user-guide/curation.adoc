@@ -122,7 +122,6 @@ If any of the annotators did not create an annotation at the position or assigne
 | not merged
 | disagreement
 
-| `foo`, `bar`
 | _anything_
 | _anything_
 | not merged
@@ -165,15 +164,17 @@ For example, if your project has two annotators, one working on POS tagging and 
 | `foo`
 | `bar`
 | _no annotation_
-| not merge
+| not merged
 | incomplete disagreement
 
 | `foo`
 | `bar`
 | `qux`
+| not merged
 | complete disagreement
 
 | `foo`, `bar`
+| _anything_
 | _anything_
 | not merged
 | stacked

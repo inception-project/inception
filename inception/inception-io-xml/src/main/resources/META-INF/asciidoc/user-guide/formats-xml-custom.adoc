@@ -23,7 +23,7 @@ CAUTION: Experimental feature. To use this functionality, you need to enable it 
 
 Custom XML document support allows defining own XML annotation formats that can be displayed as formatted documents in HTML-based editors (e.g. the Apache Annotator editor or the RecogitoJS editor). 
 
-The custom XML document support has the goal to provide means of suitably formatting and rendering XML documents in the browser. It does **not** aim at being able to extract potential annotations from the XML document and making them accessible and editable as annotations within {product-name}. It only offers support for **importing** custom XML documents, but not for exporting them. To **export** the annotated document, another format such as <<sect_formats_uimaxmi>> has to be used. 
+The custom XML document support has the goal to provide means of suitably formatting and rendering XML documents in the browser. It does **not** aim at being able to extract potential annotations from the XML document and making them accessible and editable as annotations within {product-name}. It only offers support for **importing** custom XML documents, but not for exporting them. To **export** the annotated document, another format such as <<sect_formats_uimajson>> has to be used. 
 
 Custom XML formats are based on the <<sect_formats_xml>> format support. They are defined by creating a sub-folder `xml-formats` in the application home direcotry. Within that folder, another folder is created for each custom XML format. The name of the folder is used as part of the format identifier. Within this per-format folder, a file called `plugin.json` need to be created with the following content:
 
@@ -123,13 +123,12 @@ NOTE: When exporting a project that contains documents using a custom XML format
       clash with others. E.g. `tei` may not be the best name for a custom TEI format support -   
       `project-theater-2000-tei` may be a better name.¸
 
-[cols="2,1,1,1,3"]
+[cols="2,1,1,3"]
 |====
-| Format | Read | Write | Custom Layers | Description
+| Format | Import | Export | Supported layers
 
 | XML (custom) (`custom-xml-format-FOLDERNAME`)
 | yes
 | no
-| no
-| 
+| None
 |====
