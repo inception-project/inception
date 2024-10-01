@@ -30,9 +30,9 @@ public class AfterDocumentCreatedEventAdapter
     implements EventLoggingAdapter<AfterDocumentCreatedEvent>
 {
     @Override
-    public boolean accepts(Object aEvent)
+    public boolean accepts(Class<?> aEvent)
     {
-        return aEvent instanceof AfterDocumentCreatedEvent;
+        return AfterDocumentCreatedEvent.class.isAssignableFrom(aEvent);
     }
 
     @Override

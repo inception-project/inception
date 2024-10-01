@@ -17,11 +17,18 @@
   limitations under the License.
 -->
 <html xmlns:wicket="http://wicket.apache.org">
+<wicket:head>
+  <style>
+    .page-content {
+      overflow: hidden;
+    }
+  </style>
+</wicket:head>
 <body>
   <wicket:extend>
     <div class="scrolling flex-content flex-h-container justify-content-center">
       <div class="container pt-3" style="max-width: 60em;">
-        <form wicket:id="form">
+        <form wicket:id="form" class="pb-3">
           <div class="flex-h-container flex-gutter">
             <div class="flex-content">
               <p>

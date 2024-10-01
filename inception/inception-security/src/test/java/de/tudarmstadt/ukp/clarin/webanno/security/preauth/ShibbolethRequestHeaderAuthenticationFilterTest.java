@@ -32,7 +32,9 @@ import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Bean;
+import org.springframework.security.authentication.AuthenticationEventPublisher;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DefaultAuthenticationEventPublisher;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
 import org.springframework.security.oauth2.core.OAuth2AccessToken;
@@ -179,6 +181,12 @@ class ShibbolethRequestHeaderAuthenticationFilterTest
             sut.setUserRepository(aUserService);
             sut.setAuthenticationManager(aAuthenticationConfiguration.getAuthenticationManager());
             return sut;
+        }
+
+        @Bean
+        AuthenticationEventPublisher authenticationEventPublisher()
+        {
+            return new DefaultAuthenticationEventPublisher();
         }
     }
 }

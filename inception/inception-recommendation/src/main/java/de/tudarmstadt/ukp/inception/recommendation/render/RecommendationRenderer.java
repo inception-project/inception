@@ -22,11 +22,11 @@ import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationServ
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionDocumentGroup.groupByType;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.toMap;
 
 import java.util.HashMap;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.springframework.core.annotation.Order;
 
@@ -129,7 +129,7 @@ public class RecommendationRenderer
                 .collect(groupingBy(AnnotationSuggestion::getLayerId));
 
         var recommenderCache = recommendationService.listRecommenders(aRequest.getProject())
-                .stream().collect(Collectors.toMap(Recommender::getId, identity()));
+                .stream().collect(toMap(Recommender::getId, identity()));
         var suggestionSupportCache = new HashMap<Recommender, Optional<SuggestionSupport>>();
 
         for (var layer : aRequest.getVisibleLayers()) {

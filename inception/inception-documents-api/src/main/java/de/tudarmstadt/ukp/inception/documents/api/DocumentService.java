@@ -25,8 +25,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import javax.persistence.NoResultException;
-
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
@@ -43,6 +41,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import jakarta.persistence.NoResultException;
 
 public interface DocumentService
 {
@@ -173,6 +172,20 @@ public interface DocumentService
     SourceDocumentState setSourceDocumentState(SourceDocument aDocument,
             SourceDocumentState aState);
 
+    /**
+     * Sets the state of multiple source documents at once. This method does not generate
+     * {@code DocumentStateChangeEvent} events. This means in particular that webhooks for
+     * annotation document changes will not fire and that workload managers will not know that they
+     * need to recalculate the document and project states.
+     * 
+     * @param aDocuments
+     *            the documents to update
+     * @param aState
+     *            the state to update the documents to
+     */
+    void bulkSetSourceDocumentState(Iterable<SourceDocument> aDocuments,
+            SourceDocumentState aState);
+
     // --------------------------------------------------------------------------------------------
     // Methods related to AnnotationDocuments
     // --------------------------------------------------------------------------------------------
@@ -186,7 +199,7 @@ public interface DocumentService
      *            and id of {@link User}
      * @return the annotation document.
      */
-    AnnotationDocument createAnnotationDocument(AnnotationDocument annotationDocument);
+    AnnotationDocument createOrUpdateAnnotationDocument(AnnotationDocument annotationDocument);
 
     /**
      * Saves the annotations from the CAS to the storage.
@@ -195,14 +208,31 @@ public interface DocumentService
      *            the CAS.
      * @param aAnnotationDocument
      *            the annotation document.
-     * @param aExplicitAnnotatorUserAction
+     * @param aFlags
      *            indicate that the CAS is written as the result of an explicit annotator user
      *            action (i.e. not as a result of a third person or implicitly by the system).
      * @throws IOException
      *             if an I/O error occurs.
      */
     void writeAnnotationCas(CAS aCas, AnnotationDocument aAnnotationDocument,
-            boolean aExplicitAnnotatorUserAction)
+            AnnotationDocumentStateChangeFlag... aFlags)
+        throws IOException;
+
+    /**
+     * Saves the annotations from the CAS to the storage.
+     *
+     * @param aCas
+     *            the CAS.
+     * @param aAnnotationDocument
+     *            the annotation document.
+     * @param aFlags
+     *            indicate that the CAS is written as the result of an explicit annotator user
+     *            action (i.e. not as a result of a third person or implicitly by the system).
+     * @throws IOException
+     *             if an I/O error occurs.
+     */
+    void writeAnnotationCasSilently(CAS aCas, AnnotationDocument aAnnotationDocument,
+            AnnotationDocumentStateChangeFlag... aFlags)
         throws IOException;
 
     /**
@@ -214,14 +244,14 @@ public interface DocumentService
      *            the source document.
      * @param aUser
      *            The User who perform this operation
-     * @param aExplicitAnnotatorUserAction
+     * @param aFlags
      *            indicate that the CAS is written as the result of an explicit annotator user
      *            action (i.e. not as a result of a third person or implicitly by the system).
      * @throws IOException
      *             if an I/O error occurs.
      */
     void writeAnnotationCas(CAS aCas, SourceDocument aDocument, User aUser,
-            boolean aExplicitAnnotatorUserAction)
+            AnnotationDocumentStateChangeFlag... aFlags)
         throws IOException;
 
     /**
@@ -233,14 +263,14 @@ public interface DocumentService
      *            the source document.
      * @param aUser
      *            The User who perform this operation
-     * @param aExplicitAnnotatorUserAction
+     * @param aFlags
      *            indicate that the CAS is written as the result of an explicit annotator user
      *            action (i.e. not as a result of a third person or implicitly by the system).
      * @throws IOException
      *             if an I/O error occurs.
      */
     void writeAnnotationCas(CAS aCas, SourceDocument aDocument, String aUser,
-            boolean aExplicitAnnotatorUserAction)
+            AnnotationDocumentStateChangeFlag... aFlags)
         throws IOException;
 
     /**
@@ -651,6 +681,8 @@ public interface DocumentService
 
     AnnotationDocument createOrGetAnnotationDocument(SourceDocument aDocument, User aUser);
 
+    AnnotationDocument createOrGetAnnotationDocument(SourceDocument aDocument, String aUser);
+
     List<AnnotationDocument> createOrGetAnnotationDocuments(SourceDocument aDocument,
             Collection<User> aUsers);
 
@@ -693,6 +725,9 @@ public interface DocumentService
     Map<SourceDocument, AnnotationDocument> listAllDocuments(Project aProject, String aUser);
 
     AnnotationDocumentState setAnnotationDocumentState(AnnotationDocument aDocument,
+            AnnotationDocumentState aState, AnnotationDocumentStateChangeFlag... aFlags);
+
+    AnnotationDocumentState setAnnotationDocumentState(SourceDocument aDocument, String aUser,
             AnnotationDocumentState aState, AnnotationDocumentStateChangeFlag... aFlags);
 
     /**

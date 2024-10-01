@@ -27,31 +27,30 @@ import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Set;
 
-import javax.persistence.CollectionTable;
-import javax.persistence.Column;
-import javax.persistence.ElementCollection;
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.FetchType;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.Lob;
-import javax.persistence.ManyToOne;
-import javax.persistence.NamedQueries;
-import javax.persistence.NamedQuery;
-import javax.persistence.Table;
-import javax.persistence.UniqueConstraint;
-
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
+import org.hibernate.annotations.Type;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.kb.IriConstants;
 import de.tudarmstadt.ukp.inception.kb.RepositoryType;
 import de.tudarmstadt.ukp.inception.kb.reification.Reification;
+import de.tudarmstadt.ukp.inception.kb.reification.ReificationType;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseMapping;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
+import jakarta.persistence.CollectionTable;
+import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.NamedQueries;
+import jakarta.persistence.NamedQuery;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 
 @Entity
 @Table(name = "knowledgebase", uniqueConstraints = {
@@ -83,6 +82,7 @@ public class KnowledgeBase
     private String name;
 
     @Enumerated
+    @Type(KnowledgeBaseType.class)
     private RepositoryType type;
 
     /**
@@ -175,7 +175,7 @@ public class KnowledgeBase
     private boolean enabled = true;
 
     @Column(nullable = false)
-    @Enumerated(EnumType.STRING)
+    @Type(ReificationType.class)
     private Reification reification = NONE;
 
     /**
@@ -203,6 +203,11 @@ public class KnowledgeBase
     @Column
     private String defaultLanguage;
 
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "knowledgebase_add_languages")
+    @Column(name = "name")
+    private Set<String> additionalLanguages = new LinkedHashSet<>();
+
     /**
      * Limits the number of results that can be retrieved from a SPARQL query.
      */
@@ -215,7 +220,6 @@ public class KnowledgeBase
     @Column(nullable = false)
     private boolean skipSslValidation = false;
 
-    @Lob
     @Column(length = 64000)
     private String traits;
 
@@ -224,9 +228,9 @@ public class KnowledgeBase
         return repositoryId;
     }
 
-    public void setRepositoryId(String repositoryId)
+    public void setRepositoryId(String aRepositoryId)
     {
-        this.repositoryId = repositoryId;
+        repositoryId = aRepositoryId;
     }
 
     public Project getProject()
@@ -234,9 +238,9 @@ public class KnowledgeBase
         return project;
     }
 
-    public void setProject(Project project)
+    public void setProject(Project aProject)
     {
-        this.project = project;
+        project = aProject;
     }
 
     public String getName()
@@ -244,9 +248,9 @@ public class KnowledgeBase
         return name;
     }
 
-    public void setName(String name)
+    public void setName(String aName)
     {
-        this.name = name;
+        name = aName;
     }
 
     public RepositoryType getType()
@@ -254,9 +258,9 @@ public class KnowledgeBase
         return type;
     }
 
-    public void setType(RepositoryType type)
+    public void setType(RepositoryType aType)
     {
-        this.type = type;
+        type = aType;
     }
 
     public String getClassIri()
@@ -488,6 +492,16 @@ public class KnowledgeBase
         }
     }
 
+    public void applyAdditionalLanguages(KnowledgeBaseProfile aProfile)
+    {
+        if (aProfile.getAdditionalLanguages() == null) {
+            additionalLanguages = emptySet();
+        }
+        else {
+            additionalLanguages = new LinkedHashSet<>(aProfile.getAdditionalLanguages());
+        }
+    }
+
     public String getDefaultDatasetIri()
     {
         return defaultDatasetIri;
@@ -516,6 +530,19 @@ public class KnowledgeBase
     public Set<String> getAdditionalMatchingProperties()
     {
         return additionalMatchingProperties;
+    }
+
+    public void setAdditionalLanguages(Collection<String> aAdditionalLanguages)
+    {
+        additionalLanguages = new LinkedHashSet<>();
+        if (aAdditionalLanguages != null) {
+            additionalLanguages.addAll(aAdditionalLanguages);
+        }
+    }
+
+    public Set<String> getAdditionalLanguages()
+    {
+        return additionalLanguages;
     }
 
     public boolean isUseFuzzy()

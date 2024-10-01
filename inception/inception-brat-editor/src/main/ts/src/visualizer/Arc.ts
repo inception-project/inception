@@ -48,7 +48,7 @@ export class Arc {
   origin: VID
   target: VID
   dist: number
-  type: number
+  type: string
   shadowClass: string
   jumpHeight = 0
   equiv = false

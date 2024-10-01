@@ -163,6 +163,12 @@ public class SubjectObjectFeatureSupport
         aTD.addFeature(aFeature.getName(), "", CAS.TYPE_NAME_FS_ARRAY, linkTD.getName(), false);
     }
 
+    @Override
+    public <V> V getDefaultFeatureValue(AnnotationFeature aFeature, FeatureStructure aFS)
+    {
+        return null;
+    }
+
     @SuppressWarnings("unchecked")
     @Override
     public List<LinkWithRoleModel> getFeatureValue(AnnotationFeature aFeature, FeatureStructure aFS)

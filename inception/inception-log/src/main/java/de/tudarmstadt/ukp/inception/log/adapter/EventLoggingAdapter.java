@@ -30,7 +30,12 @@ public interface EventLoggingAdapter<T>
     public static final String SYSTEM_USER = "<SYSTEM>";
     public static final String ANONYMOUS_USER = "anonymousUser";
 
-    boolean accepts(Object aEvent);
+    boolean accepts(Class<?> aEvent);
+
+    default boolean isLoggable(T aEvent)
+    {
+        return true;
+    }
 
     default String getDetails(T aEvent) throws Exception
     {

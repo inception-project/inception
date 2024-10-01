@@ -36,7 +36,7 @@ public class BratEventAnnotationDecl
     {
         slots.add(aSlot);
     }
-    
+
     public Set<BratEventArgumentDecl> getSlots()
     {
         return slots;
@@ -54,10 +54,10 @@ public class BratEventAnnotationDecl
                 sb.append(", ");
             }
             first = false;
-            
+
             sb.append(slot.toString());
         }
-        
+
         return sb.toString();
     }
 }

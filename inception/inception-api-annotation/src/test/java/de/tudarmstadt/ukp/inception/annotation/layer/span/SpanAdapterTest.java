@@ -41,6 +41,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.MultipleSentenceCoveredException;
+import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -56,6 +57,7 @@ import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 @ExtendWith(MockitoExtension.class)
 public class SpanAdapterTest
 {
+    private @Mock ConstraintsService constraintsService;
     private @Mock FeatureSupportRegistry featureSupportRegistry;
 
     private LayerSupportRegistry layerSupportRegistry;
@@ -104,7 +106,7 @@ public class SpanAdapterTest
         builder.buildTokens(jcas, "This is a test .\nThis is sentence two .");
 
         SpanAdapter sut = new SpanAdapter(layerSupportRegistry, featureSupportRegistry, null,
-                neLayer, () -> asList(), behaviors);
+                neLayer, () -> asList(), behaviors, constraintsService);
 
         assertThatExceptionOfType(MultipleSentenceCoveredException.class)
                 .isThrownBy(() -> sut.add(document, username, jcas.getCas(), 0,
@@ -120,7 +122,7 @@ public class SpanAdapterTest
         builder.buildTokens(jcas, "This is a test .\nThis is sentence two .");
 
         SpanAdapter sut = new SpanAdapter(layerSupportRegistry, featureSupportRegistry, null,
-                neLayer, () -> asList(), behaviors);
+                neLayer, () -> asList(), behaviors, constraintsService);
 
         // Add two annotations
         neLayer.setCrossSentence(true);
@@ -141,7 +143,7 @@ public class SpanAdapterTest
         builder.buildTokens(jcas, "This is a test .");
 
         SpanAdapter sut = new SpanAdapter(layerSupportRegistry, featureSupportRegistry, null,
-                neLayer, () -> asList(), behaviors);
+                neLayer, () -> asList(), behaviors, constraintsService);
 
         // First time should work
         neLayer.setOverlapMode(ANY_OVERLAP);
@@ -175,7 +177,7 @@ public class SpanAdapterTest
         builder.buildTokens(jcas, "This is a test .");
 
         SpanAdapter sut = new SpanAdapter(layerSupportRegistry, featureSupportRegistry, null,
-                neLayer, () -> asList(), behaviors);
+                neLayer, () -> asList(), behaviors, constraintsService);
 
         // Add two annotations
         neLayer.setOverlapMode(ANY_OVERLAP);
@@ -214,7 +216,7 @@ public class SpanAdapterTest
         builder.buildTokens(jcas, "This is a test .");
 
         SpanAdapter sut = new SpanAdapter(layerSupportRegistry, featureSupportRegistry, null,
-                neLayer, () -> asList(), behaviors);
+                neLayer, () -> asList(), behaviors, constraintsService);
 
         // First time should work - we annotate the whole word "This"
         neLayer.setOverlapMode(ANY_OVERLAP);
@@ -252,7 +254,7 @@ public class SpanAdapterTest
         new NamedEntity(jcas, 4, 5).addToIndexes();
 
         SpanAdapter sut = new SpanAdapter(layerSupportRegistry, featureSupportRegistry, null,
-                neLayer, () -> asList(), behaviors);
+                neLayer, () -> asList(), behaviors, constraintsService);
 
         neLayer.setOverlapMode(NO_OVERLAP);
         assertThat(sut.validate(jcas.getCas())).isEmpty();

@@ -17,8 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.curation.config;
 
-import javax.persistence.EntityManager;
-
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.annotation.Bean;
@@ -29,6 +27,7 @@ import de.tudarmstadt.ukp.inception.curation.service.CurationDocumentService;
 import de.tudarmstadt.ukp.inception.curation.service.CurationDocumentServiceImpl;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import jakarta.persistence.EntityManager;
 
 @Configuration
 @AutoConfigureAfter(name = {

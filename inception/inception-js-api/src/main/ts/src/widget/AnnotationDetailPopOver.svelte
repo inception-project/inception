@@ -81,11 +81,6 @@
     function onMouseMove(e: MouseEvent) {
         if (!annotation) return;
 
-        // if (!popoverTimeoutId && annotation) {
-        //     annotation = undefined
-        //     return
-        // }
-
         movePopover(e);
     }
 
@@ -146,6 +141,8 @@
     }
 
     function movePopover(e: MouseEvent) {
+        if (!popover) return
+
         const rect = popover.getBoundingClientRect();
 
         const x = e.clientX;
@@ -227,7 +224,7 @@
 
 <!-- svelte-ignore css-unused-selector -->
 <style lang="scss">
-    @import "../../node_modules/bootstrap/scss/bootstrap.scss";
+    @import "bootstrap/scss/bootstrap.scss";
     @import "../style/InceptionEditorIcons.scss";
     @import "../style/InceptionEditorColors.scss";
 

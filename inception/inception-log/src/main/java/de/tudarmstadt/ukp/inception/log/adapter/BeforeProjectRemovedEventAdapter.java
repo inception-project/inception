@@ -26,9 +26,9 @@ public class BeforeProjectRemovedEventAdapter
     implements EventLoggingAdapter<BeforeProjectRemovedEvent>
 {
     @Override
-    public boolean accepts(Object aEvent)
+    public boolean accepts(Class<?> aEvent)
     {
-        return aEvent instanceof BeforeProjectRemovedEvent;
+        return BeforeProjectRemovedEvent.class.isAssignableFrom(aEvent);
     }
 
     @Override

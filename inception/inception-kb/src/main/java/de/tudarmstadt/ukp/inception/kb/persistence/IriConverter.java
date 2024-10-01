@@ -18,12 +18,12 @@
 
 package de.tudarmstadt.ukp.inception.kb.persistence;
 
-import javax.persistence.AttributeConverter;
-import javax.persistence.Converter;
-
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+
+import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.Converter;
 
 @Converter(autoApply = true)
 public class IriConverter

@@ -28,16 +28,17 @@ import de.tudarmstadt.ukp.inception.externaleditor.policy.SafetyNetDocumentPolic
 import de.tudarmstadt.ukp.inception.externaleditor.xhtml.XHtmlXmlDocumentIFrameViewFactory;
 import de.tudarmstadt.ukp.inception.externaleditor.xml.XmlDocumentIFrameViewFactory;
 
-@ConditionalOnWebApplication
 @EnableConfigurationProperties(ExternalEditorPropertiesImpl.class)
 public class ExternalEditorAutoConfiguration
 {
+    @ConditionalOnWebApplication
     @Bean
     public XHtmlXmlDocumentIFrameViewFactory xHtmlXmlDocumentIFrameViewFactory()
     {
         return new XHtmlXmlDocumentIFrameViewFactory();
     }
 
+    @ConditionalOnWebApplication
     @Bean
     public XmlDocumentIFrameViewFactory xmlDocumentIFrameViewFactory()
     {

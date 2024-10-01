@@ -19,5 +19,5 @@ package de.tudarmstadt.ukp.inception.ui.curation.actionbar.opendocument;
 
 public enum CurationDocumentTableSortKeys
 {
-    NAME, STATE
+    NAME, STATE, CREATED, UPDATED;
 }

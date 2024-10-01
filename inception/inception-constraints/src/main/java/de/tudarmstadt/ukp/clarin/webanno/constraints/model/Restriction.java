@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.constraints.model;
 import static de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ConstraintsParser.asFlatString;
 
 import java.io.Serializable;
+import java.util.List;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -64,6 +65,11 @@ public class Restriction
     public String getValue()
     {
         return value;
+    }
+
+    public boolean matchesAny(List<String> listOfValues)
+    {
+        return listOfValues.contains(value);
     }
 
     public boolean isFlagImportant()

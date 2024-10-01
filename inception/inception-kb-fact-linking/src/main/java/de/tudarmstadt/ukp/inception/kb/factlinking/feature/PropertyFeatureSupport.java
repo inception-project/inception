@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.kb.factlinking.feature;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -26,6 +28,8 @@ import java.util.stream.Stream;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.FeatureStructure;
+import org.apache.uima.fit.util.FSUtil;
 import org.apache.uima.resource.metadata.TypeDescription;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.wicket.MarkupContainer;
@@ -111,6 +115,16 @@ public class PropertyFeatureSupport
     }
 
     @Override
+    public boolean isFeatureValueValid(AnnotationFeature aFeature, FeatureStructure aFS)
+    {
+        if (aFeature.isRequired()) {
+            return isNotBlank(FSUtil.getFeature(aFS, aFeature.getName(), String.class));
+        }
+
+        return true;
+    }
+
+    @Override
     public String renderFeatureValue(AnnotationFeature aFeature, String aLabel)
     {
         String renderValue = null;
@@ -132,6 +146,12 @@ public class PropertyFeatureSupport
             LOG.error("Unable to render feature value [{}]", aKey.getLabel(), e);
             return "ERROR (" + aKey.getLabel() + ")";
         }
+    }
+
+    @Override
+    public <V> V getDefaultFeatureValue(AnnotationFeature aFeature, FeatureStructure aFS)
+    {
+        return null;
     }
 
     @SuppressWarnings("unchecked")

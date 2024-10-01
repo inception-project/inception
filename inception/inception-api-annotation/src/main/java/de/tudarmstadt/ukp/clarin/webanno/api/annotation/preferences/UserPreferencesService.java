@@ -44,6 +44,7 @@ public interface UserPreferencesService
 
     void savePreferences(AnnotatorState aState, String aSessionOwner) throws IOException;
 
-    void savePreferences(Project aProject, String aSessionOwner, Mode aMode, AnnotationPreference aPref)
+    void savePreferences(Project aProject, String aSessionOwner, Mode aMode,
+            AnnotationPreference aPref)
         throws IOException;
 }

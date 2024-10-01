@@ -32,8 +32,8 @@ public class RecommenderDeletedEventAdapter
     implements EventLoggingAdapter<RecommenderDeletedEvent>
 {
     @Override
-    public boolean accepts(Object aEvent)
+    public boolean accepts(Class<?> aEvent)
     {
-        return aEvent instanceof RecommenderDeletedEvent;
+        return RecommenderDeletedEvent.class.isAssignableFrom(aEvent);
     }
 }

@@ -48,7 +48,7 @@ public class ActivitiesDashlet
 
         project = aProject;
 
-        long projectId = aProject.map(Project::getId).orElse(-1l).getObject();
+        var projectId = aProject.map(Project::getId).orElse(-1l).getObject();
         setDefaultModel(Model.ofMap(Map.of("dataUrl", controller.getListActivitiesUrl(projectId))));
 
         setOutputMarkupPlaceholderTag(true);

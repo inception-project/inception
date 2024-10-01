@@ -19,9 +19,11 @@ import './ApacheAnnotatorEditor.scss'
 import { unpackCompactAnnotatedTextV2, DiamAjax, DiamLoadAnnotationsOptions, VID, ViewportTracker, offsetToRange, AnnotatedText, Span, TextMarker, Offsets, AnnotationOverEvent, AnnotationOutEvent } from '@inception-project/inception-js-api'
 import { CompactAnnotatedText } from '@inception-project/inception-js-api/src/model/compact_v2'
 import { highlightText } from '@apache-annotator/dom'
-import { showEmptyHighlights, showLabels } from './ApacheAnnotatorState'
+import { showEmptyHighlights, showAggregatedLabels, showLabels } from './ApacheAnnotatorState'
 import { ResizeManager } from './ResizeManager'
 import { bgToFgColor } from '@inception-project/inception-js-api/src/util/Coloring'
+import { SectionAnnotationVisualizer } from './SectionAnnotationVisualizer'
+import { SectionAnnotationCreator } from './SectionAnnotationCreator'
 
 export const CLASS_RELATED = 'iaa-related'
 
@@ -37,6 +39,11 @@ export class ApacheAnnotatorVisualizer {
   private tracker: ViewportTracker
   private showInlineLabels = false
   private showEmptyHighlights = false
+  private observer: IntersectionObserver
+  private sectionSelector: string
+  private sectionAnnotationVisualizer: SectionAnnotationVisualizer
+  private sectionAnnotationCreator: SectionAnnotationCreator
+  private showAggregatedLabels = true
 
   private data? : AnnotatedText
 
@@ -45,12 +52,16 @@ export class ApacheAnnotatorVisualizer {
 
   private alpha = '55'
 
-  constructor (element: Element, ajax: DiamAjax) {
+  constructor (element: Element, ajax: DiamAjax, sectionSelector: string) {
     this.ajax = ajax
     this.root = element
+    this.sectionSelector = sectionSelector
 
     this.tracker = new ViewportTracker(this.root, () => this.loadAnnotations())
     this.resizer = new ResizeManager(this, this.ajax)
+
+    this.sectionAnnotationCreator = new SectionAnnotationCreator(this.root, this.ajax, this.sectionSelector)
+    this.sectionAnnotationVisualizer = new SectionAnnotationVisualizer(this.root, this.ajax, this.sectionSelector)
 
     // Event handlers for the resizer component
     this.root.addEventListener('mouseover', e => this.showResizer(e))
@@ -85,6 +96,11 @@ export class ApacheAnnotatorVisualizer {
 
     showEmptyHighlights.subscribe(enabled => {
       this.showEmptyHighlights = enabled
+      if (initialized) this.loadAnnotations()
+    })
+
+    showAggregatedLabels.subscribe(enabled => {
+      this.showAggregatedLabels = enabled
       if (initialized) this.loadAnnotations()
     })
     initialized = true
@@ -147,6 +163,15 @@ export class ApacheAnnotatorVisualizer {
       this.postProcessHighlights()
     }
 
+    if (this.showAggregatedLabels) {
+      this.sectionAnnotationVisualizer.render(doc)
+    }
+    else {
+      this.sectionAnnotationVisualizer.clear()
+    }
+
+    this.sectionAnnotationCreator.render(doc)
+
     if (doc.textMarkers) {
       doc.textMarkers.forEach(marker => this.renderTextMarker(doc, marker))
       this.renderVerticalSelectionMarker(doc)
@@ -185,10 +210,11 @@ export class ApacheAnnotatorVisualizer {
     }
 
     const scrollerContainerRect = this.root.closest('.i7n-wrapper')?.getBoundingClientRect() || this.root.getBoundingClientRect()
+    const scrollTop = this.root.closest('.i7n-wrapper')?.scrollTop || this.root.scrollTop || 0
 
     const vhl = this.root.ownerDocument.createElement('div')
     vhl.classList.add('iaa-vertical-marker-focus')
-    vhl.style.top = `${top - scrollerContainerRect.top + (this.root.scrollTop || 0)}px`
+    vhl.style.top = `${top - scrollerContainerRect.top + scrollTop}px`
     vhl.style.height = `${bottom - top}px`
     this.root.appendChild(vhl)
 
@@ -280,7 +306,7 @@ export class ApacheAnnotatorVisualizer {
 
   // eslint-disable-next-line no-undef
   getHighlightsForAnnotation (vid: VID): NodeListOf<Element> {
-    return this.root.querySelectorAll(`[data-iaa-id="${vid}"]`)
+    return this.root.querySelectorAll(`[data-iaa-id="${vid}"].iaa-highlighted`)
   }
 
   private renderTextMarker (doc: AnnotatedText, marker: TextMarker) {
@@ -373,12 +399,18 @@ export class ApacheAnnotatorVisualizer {
     }
   }
 
-  renderHighlight (span: Span, begin: number, end: number, attributes: {}): void {
+  renderHighlight (span: Span, begin: number, end: number, attributes: {class: string}): void {
     const range = offsetToRange(this.root, begin, end)
     if (!range) {
       console.debug(`Could not determine fragment range for (${begin},${end}) of annotation ${span}`)
       return
     }
+
+    if (range.collapsed && !attributes.class.includes('iaa-zero-width')) {
+      console.debug(`Fragment range for (${begin},${end}) of annotation ${span} is collapsed`)
+      return
+    }
+
     this.toCleanUp.add(highlightText(range, 'mark', attributes))
   }
 
@@ -388,6 +420,7 @@ export class ApacheAnnotatorVisualizer {
 
     window.clearTimeout(this.removeTransientMarkersTimeout)
     this.removeTransientMarkers.forEach(remove => remove())
+    this.root.normalize() // https://github.com/apache/incubator-annotator/issues/120
 
     const removeScrollMarker = highlightText(range, 'mark', { id: 'iaa-scroll-marker' })
     this.removeTransientMarkers = [removeScrollMarker]
@@ -420,13 +453,24 @@ export class ApacheAnnotatorVisualizer {
       break
     }
 
-    if (scrollTarget) {
-      scrollTarget.scrollIntoView({ behavior: 'auto', block: 'center', inline: 'nearest' })
+    const finalScrollTarget = scrollTarget
+    if (finalScrollTarget) {
+      // As part of scrolling and rendering, it may be possible that CSS scroll padding properties
+      // are set on our scroll root element. For such a case, we schedule a new scroll action
+      // which would then take the new padding into account. We do this as long as the transient
+      // markers are still there.
+      var scrollIntoViewFunc = () => { 
+        finalScrollTarget.scrollIntoView({ behavior: 'auto', block: 'start', inline: 'nearest' })
+        if (this.removeTransientMarkers.length > 0) window.setTimeout(scrollIntoViewFunc, 100)
+      }
+
+      window.setTimeout(scrollIntoViewFunc, 100)
     }
 
     this.removeTransientMarkersTimeout = window.setTimeout(() => {
       this.removeTransientMarkers.forEach(remove => remove())
       this.removeTransientMarkers = []
+      this.root.normalize() // https://github.com/apache/incubator-annotator/issues/120
     }, 2000)
   }
 
@@ -447,6 +491,10 @@ export class ApacheAnnotatorVisualizer {
   }
 
   destroy (): void {
+    if (this.observer) {
+      this.observer.disconnect()
+    }
+
     this.clearHighlights()
   }
 }

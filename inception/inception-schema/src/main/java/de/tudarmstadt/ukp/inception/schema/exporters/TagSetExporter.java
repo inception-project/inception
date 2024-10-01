@@ -17,13 +17,12 @@
  */
 package de.tudarmstadt.ukp.inception.schema.exporters;
 
-import java.io.File;
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.zip.ZipFile;
+import java.util.zip.ZipOutputStream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,30 +50,30 @@ import de.tudarmstadt.ukp.inception.support.WebAnnoConst;
 public class TagSetExporter
     implements ProjectExporter
 {
-    private static final Logger LOG = LoggerFactory.getLogger(TagSetExporter.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
-    private final AnnotationSchemaService annotationService;
+    private final AnnotationSchemaService schemaService;
 
-    public TagSetExporter(AnnotationSchemaService aAnnotationService)
+    public TagSetExporter(AnnotationSchemaService aSchemaService)
     {
-        annotationService = aAnnotationService;
+        schemaService = aSchemaService;
     }
 
     @Override
     public void exportData(FullProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
-            ExportedProject aExProject, File aStage)
+            ExportedProject aExProject, ZipOutputStream aStage)
     {
-        List<ExportedTagSet> extTagSets = new ArrayList<>();
-        for (TagSet tagSet : annotationService.listTagSets(aRequest.getProject())) {
-            ExportedTagSet exTagSet = new ExportedTagSet();
+        var extTagSets = new ArrayList<ExportedTagSet>();
+        for (var tagSet : schemaService.listTagSets(aRequest.getProject())) {
+            var exTagSet = new ExportedTagSet();
             exTagSet.setCreateTag(tagSet.isCreateTag());
             exTagSet.setDescription(tagSet.getDescription());
             exTagSet.setLanguage(tagSet.getLanguage());
             exTagSet.setName(tagSet.getName());
 
-            List<ExportedTag> exTags = new ArrayList<>();
-            for (Tag tag : annotationService.listTags(tagSet)) {
-                ExportedTag exTag = new ExportedTag();
+            var exTags = new ArrayList<ExportedTag>();
+            for (var tag : schemaService.listTags(tagSet)) {
+                var exTag = new ExportedTag();
                 exTag.setDescription(tag.getDescription());
                 exTag.setName(tag.getName());
                 exTags.add(exTag);
@@ -100,7 +99,7 @@ public class TagSetExporter
             return;
         }
 
-        for (ExportedTagSet exTagSet : aExProject.getTagSets()) {
+        for (var exTagSet : aExProject.getTagSets()) {
             importTagSet(new TagSet(), exTagSet, aProject);
         }
     }
@@ -111,54 +110,54 @@ public class TagSetExporter
     @Deprecated
     private void importTagSetsV0(Project aProject, ExportedProject aExProject) throws IOException
     {
-        List<ExportedTagSet> importedTagSets = aExProject.getTagSets();
+        var importedTagSets = aExProject.getTagSets();
 
-        List<String> posTags = new ArrayList<>();
-        List<String> depTags = new ArrayList<>();
-        List<String> neTags = new ArrayList<>();
-        List<String> posTagDescriptions = new ArrayList<>();
-        List<String> depTagDescriptions = new ArrayList<>();
-        List<String> neTagDescriptions = new ArrayList<>();
-        List<String> corefTypeTags = new ArrayList<>();
-        List<String> corefRelTags = new ArrayList<>();
-        for (ExportedTagSet tagSet : importedTagSets) {
+        var posTags = new ArrayList<String>();
+        var depTags = new ArrayList<String>();
+        var neTags = new ArrayList<String>();
+        var posTagDescriptions = new ArrayList<String>();
+        var depTagDescriptions = new ArrayList<String>();
+        var neTagDescriptions = new ArrayList<String>();
+        var corefTypeTags = new ArrayList<String>();
+        var corefRelTags = new ArrayList<String>();
+        for (var tagSet : importedTagSets) {
             switch (tagSet.getTypeName()) {
             case WebAnnoConst.POS:
-                for (ExportedTag tag : tagSet.getTags()) {
+                for (var tag : tagSet.getTags()) {
                     posTags.add(tag.getName());
                     posTagDescriptions.add(tag.getDescription());
                 }
                 break;
             case WebAnnoConst.DEPENDENCY:
-                for (ExportedTag tag : tagSet.getTags()) {
+                for (var tag : tagSet.getTags()) {
                     depTags.add(tag.getName());
                     depTagDescriptions.add(tag.getDescription());
                 }
                 break;
             case WebAnnoConst.NAMEDENTITY:
-                for (ExportedTag tag : tagSet.getTags()) {
+                for (var tag : tagSet.getTags()) {
                     neTags.add(tag.getName());
                     neTagDescriptions.add(tag.getDescription());
                 }
                 break;
             case WebAnnoConst.COREFRELTYPE:
-                for (ExportedTag tag : tagSet.getTags()) {
+                for (var tag : tagSet.getTags()) {
                     corefTypeTags.add(tag.getName());
                 }
                 break;
             case WebAnnoConst.COREFERENCE:
-                for (ExportedTag tag : tagSet.getTags()) {
+                for (var tag : tagSet.getTags()) {
                     corefRelTags.add(tag.getName());
                 }
                 break;
             }
         }
 
-        new LegacyProjectInitializer(annotationService).initialize(aProject,
-                posTags.toArray(new String[0]), posTagDescriptions.toArray(new String[0]),
-                depTags.toArray(new String[0]), depTagDescriptions.toArray(new String[0]),
-                neTags.toArray(new String[0]), neTagDescriptions.toArray(new String[0]),
-                corefTypeTags.toArray(new String[0]), corefRelTags.toArray(new String[0]));
+        new LegacyProjectInitializer(schemaService).initialize(aProject,
+                posTags.toArray(String[]::new), posTagDescriptions.toArray(String[]::new),
+                depTags.toArray(String[]::new), depTagDescriptions.toArray(String[]::new),
+                neTags.toArray(String[]::new), neTagDescriptions.toArray(String[]::new),
+                corefTypeTags.toArray(String[]::new), corefRelTags.toArray(String[]::new));
     }
 
     private void importTagSet(TagSet aTagSet, ExportedTagSet aExTagSet, Project aProject)
@@ -171,20 +170,20 @@ public class TagSetExporter
         aTagSet.setLanguage(aExTagSet.getLanguage());
         aTagSet.setName(aExTagSet.getName());
         aTagSet.setProject(aProject);
-        annotationService.createTagSet(aTagSet);
+        schemaService.createTagSet(aTagSet);
 
-        Set<String> existingTags = annotationService.listTags(aTagSet).stream() //
+        var existingTags = schemaService.listTags(aTagSet).stream() //
                 .map(Tag::getName) //
                 .collect(Collectors.toSet());
 
-        List<Tag> tags = new ArrayList<>();
-        for (ExportedTag exTag : aExTagSet.getTags()) {
+        var tags = new ArrayList<Tag>();
+        for (var exTag : aExTagSet.getTags()) {
             // do not duplicate tag
             if (existingTags.contains(exTag.getName())) {
                 continue;
             }
 
-            Tag tag = new Tag();
+            var tag = new Tag();
             tag.setTagSet(aTagSet);
             tag.setName(exTag.getName());
             tag.setDescription(exTag.getDescription());
@@ -192,6 +191,6 @@ public class TagSetExporter
             tags.add(tag);
         }
 
-        annotationService.createTags(tags.stream().toArray(Tag[]::new));
+        schemaService.createTags(tags.stream().toArray(Tag[]::new));
     }
 }

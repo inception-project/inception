@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.inception.ui.kb.project.local;
 
 import static de.tudarmstadt.ukp.inception.kb.RepositoryType.LOCAL;
-import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.enabledWhen;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhenNot;
 import static java.util.Arrays.asList;
@@ -42,7 +41,6 @@ import org.apache.commons.io.FileUtils;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ClassAttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
@@ -61,7 +59,6 @@ import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.model.util.ListModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.resource.IResourceStream;
-import org.eclipse.rdf4j.repository.RepositoryException;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -71,7 +68,6 @@ import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.fileinput.Fil
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.SchemaProfile;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
-import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseInfo;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 import de.tudarmstadt.ukp.inception.support.io.FileUploadDownloadHelper;
@@ -86,8 +82,6 @@ public class LocalRepositorySettingsPanel
     extends Panel
 {
     private static final long serialVersionUID = 866658729983211740L;
-
-    private static final String CID_CLEAR = "clear";
 
     private static final String CLASSPATH_PREFIX = "classpath:";
 
@@ -141,10 +135,6 @@ public class LocalRepositorySettingsPanel
         knowledgeBaseProfiles = aKnowledgeBaseProfiles;
 
         queue(uploadForm("uploadForm", "uploadField"));
-
-        // add link for clearing the knowledge base contents, enabled only, if there is
-        // something to clear
-        queue(clearLink(CID_CLEAR));
 
         queue(fileExtensionsExportList("exportButtons"));
 
@@ -229,19 +219,6 @@ public class LocalRepositorySettingsPanel
             LOG.error("Error while uploading files", e);
             error("Could not upload files");
         }
-    }
-
-    private AjaxLink<Void> clearLink(String aId)
-    {
-        var clearLink = new LambdaAjaxLink(aId, this::actionClear);
-        clearLink.add(visibleWhen(getModel().map(KnowledgeBaseWrapper::getKb) //
-                .map(kb -> kb.getRepositoryId() != null) //
-                .orElse(false)));
-        clearLink.add(enabledWhen(getModel().map(KnowledgeBaseWrapper::getKb) //
-                .map(kb -> kb.getRepositoryId() != null && !kbService.isEmpty(kb)) //
-                .orElse(false)));
-        return clearLink;
-
     }
 
     private ListView<String> fileExtensionsExportList(String aId)
@@ -359,22 +336,6 @@ public class LocalRepositorySettingsPanel
         }
 
         return uploadedFiles.get(fileName);
-    }
-
-    private void actionClear(AjaxRequestTarget aTarget)
-    {
-        try {
-            kbService.clear(getModel().getObject().getKb());
-            info(getString("kb.details.local.contents.clear.feedback",
-                    getModel().map(KnowledgeBaseWrapper::getKb).map(KnowledgeBase::getName)));
-            aTarget.add(this);
-            aTarget.addChildren(getPage(), IFeedback.class);
-        }
-        catch (RepositoryException e) {
-            error("Error clearing KB: " + e.getMessage());
-            LOG.error("Error clearing KB", e);
-            aTarget.addChildren(getPage(), IFeedback.class);
-        }
     }
 
     private IResourceStream actionExport(String rdfFormatFileExt)

@@ -27,23 +27,25 @@ public class BratLabelDecl
 {
     private final String type;
     private final String[] labels;
+
     public BratLabelDecl(String aType, String[] aLabels)
     {
         super();
         type = aType;
         labels = aLabels;
     }
+
     public String getType()
     {
         return type;
     }
+
     public String[] getLabels()
     {
         return labels;
     }
-    
-    public void write(JsonGenerator aJG)
-        throws IOException
+
+    public void write(JsonGenerator aJG) throws IOException
     {
         aJG.writeFieldName("labels");
         aJG.writeStartArray();
@@ -52,7 +54,7 @@ public class BratLabelDecl
         }
         aJG.writeEndArray();
     }
-    
+
     @Override
     public String toString()
     {

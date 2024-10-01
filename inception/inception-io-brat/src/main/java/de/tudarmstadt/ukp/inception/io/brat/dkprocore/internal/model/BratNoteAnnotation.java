@@ -26,17 +26,14 @@ import com.fasterxml.jackson.core.JsonGenerator;
 public class BratNoteAnnotation
     extends BratAnnotation
 {
-    private static final Pattern PATTERN = Pattern.compile(
-            "(?<ID>#[0-9]+)\\t" + 
-            "(?<TYPE>[a-zA-Z_][a-zA-Z0-9_\\-]+) " +
-            "(?<TARGET>[ETR][0-9]+)\\t" +
-            "(?<NOTE>.*)");
-    
+    private static final Pattern PATTERN = Pattern.compile("(?<ID>#[0-9]+)\\t"
+            + "(?<TYPE>[a-zA-Z_][a-zA-Z0-9_\\-]+) " + "(?<TARGET>[ETR][0-9]+)\\t" + "(?<NOTE>.*)");
+
     private static final String ID = "ID";
     private static final String TYPE = "TYPE";
     private static final String TARGET = "TARGET";
     private static final String NOTE = "NOTE";
-    
+
     private final String target;
     private final String note;
 
@@ -63,19 +60,18 @@ public class BratNoteAnnotation
     }
 
     @Override
-    public void write(JsonGenerator aJG)
-        throws IOException
+    public void write(JsonGenerator aJG) throws IOException
     {
         // Format: [${TARGET}, ${TYPE}, ${NOTE}]
         // ['T1', 'AnnotatorNotes', 'Hurrah!']
-        
+
         aJG.writeStartArray();
         aJG.writeString(getType());
         aJG.writeString(target);
         aJG.writeString(note);
         aJG.writeEndArray();
     }
-    
+
     @Override
     public String toString()
     {
@@ -85,7 +81,7 @@ public class BratNoteAnnotation
     public static BratNoteAnnotation parse(String aLine)
     {
         Matcher m = PATTERN.matcher(aLine);
-        
+
         if (!m.matches()) {
             throw new IllegalArgumentException("Illegal text annotation format [" + aLine + "]");
         }

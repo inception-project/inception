@@ -33,7 +33,9 @@ import static org.mockito.Mockito.when;
 import java.io.File;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+import java.util.zip.ZipOutputStream;
 
 import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
@@ -45,6 +47,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.export.FullProjectExportRequest;
@@ -79,13 +82,15 @@ public class KnowledgeBaseExporterTest
     @BeforeEach
     public void setUp() throws Exception
     {
-        sourceProject = new Project();
-        sourceProject.setId(1l);
-        sourceProject.setName("Test Project");
+        sourceProject = Project.builder() //
+                .withId(1l) //
+                .withName("Test Project") //
+                .build();
 
-        targetProject = new Project();
-        sourceProject.setId(2l);
-        targetProject.setName("Test Project");
+        targetProject = Project.builder() //
+                .withId(2l) //
+                .withName("Test Project") //
+                .build();
 
         when(kbService.getKnowledgeBases(sourceProject)).thenReturn(knowledgeBases());
 
@@ -106,7 +111,8 @@ public class KnowledgeBaseExporterTest
         var exportRequest = new FullProjectExportRequest(sourceProject, null, false);
         var monitor = new ProjectExportTaskMonitor(sourceProject, null, "test");
         var exportedProject = new ExportedProject();
-        sut.exportData(exportRequest, monitor, exportedProject, temporaryFolder);
+        var stage = Mockito.mock(ZipOutputStream.class);
+        sut.exportData(exportRequest, monitor, exportedProject, stage);
 
         // Import the project again
         var exportKbCaptor = ArgumentCaptor.forClass(KnowledgeBase.class);
@@ -114,6 +120,8 @@ public class KnowledgeBaseExporterTest
 
         var importRequest = new ProjectImportRequest(true);
         var zipFile = mock(ZipFile.class);
+        var zipFileEntry = mock(ZipEntry.class);
+        when(zipFile.getEntry(any())).thenReturn(zipFileEntry);
 
         sut.importData(importRequest, targetProject, exportedProject, zipFile);
 
@@ -139,7 +147,8 @@ public class KnowledgeBaseExporterTest
         var exportRequest = new FullProjectExportRequest(sourceProject, null, false);
         var monitor = new ProjectExportTaskMonitor(sourceProject, null, "test");
         var exportedProject = new ExportedProject();
-        sut.exportData(exportRequest, monitor, exportedProject, temporaryFolder);
+        var stage = Mockito.mock(ZipOutputStream.class);
+        sut.exportData(exportRequest, monitor, exportedProject, stage);
 
         // Mock that the KB ID changes during import when registerKnowledgeBase is called
         doAnswer(i -> {
@@ -159,6 +168,8 @@ public class KnowledgeBaseExporterTest
         // Import the project again
         var importRequest = new ProjectImportRequest(true);
         var zipFile = mock(ZipFile.class);
+        var zipFileEntry = mock(ZipEntry.class);
+        when(zipFile.getEntry(any())).thenReturn(zipFileEntry);
         sut.importData(importRequest, targetProject, exportedProject, zipFile);
 
         // Verify that features were actually processed

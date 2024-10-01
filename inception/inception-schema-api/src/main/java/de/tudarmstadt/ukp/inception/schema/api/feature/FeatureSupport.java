@@ -24,10 +24,10 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.fit.util.FSUtil;
 import org.apache.uima.resource.metadata.TypeDescription;
@@ -308,9 +308,9 @@ public interface FeatureSupport<T>
             throw unsupportedFeatureTypeException(aFeature);
         }
 
-        FeatureStructure fs = selectFsByAddr(aCas, aAddress);
+        var fs = selectFsByAddr(aCas, aAddress);
 
-        Object value = unwrapFeatureValue(aFeature, fs.getCAS(), aValue);
+        var value = unwrapFeatureValue(aFeature, fs.getCAS(), aValue);
         setFeature(fs, aFeature, value);
     }
 
@@ -325,10 +325,10 @@ public interface FeatureSupport<T>
     {
         Object value;
 
-        Feature f = aFS.getType().getFeatureByBaseName(aFeature.getName());
+        var f = aFS.getType().getFeatureByBaseName(aFeature.getName());
 
         if (f == null) {
-            value = null;
+            value = getDefaultFeatureValue(aFeature, aFS);
         }
         else if (f.getRange().isPrimitive()) {
             value = FSUtil.getFeature(aFS, aFeature.getName(), Object.class);
@@ -341,6 +341,26 @@ public interface FeatureSupport<T>
         }
 
         return (V) wrapFeatureValue(aFeature, aFS.getCAS(), value);
+    }
+
+    <V> V getDefaultFeatureValue(AnnotationFeature aFeature, FeatureStructure aFS);
+
+    default boolean isFeatureValueEqual(AnnotationFeature aFeature, FeatureStructure aFS1,
+            FeatureStructure aFS2)
+    {
+        var value1 = getFeatureValue(aFeature, aFS1);
+        var value2 = getFeatureValue(aFeature, aFS2);
+        return Objects.equals(value1, value2);
+    }
+
+    default void clearFeatureValue(AnnotationFeature aFeature, FeatureStructure aFS)
+    {
+        setFeature(aFS, aFeature, null);
+    }
+
+    default boolean isFeatureValueValid(AnnotationFeature aFeature, FeatureStructure aFS)
+    {
+        return true;
     }
 
     /**
@@ -464,6 +484,15 @@ public interface FeatureSupport<T>
      * @see FeatureSupportRegistry#isAccessible(AnnotationFeature)
      */
     default boolean isAccessible(AnnotationFeature aFeature)
+    {
+        return true;
+    }
+
+    /**
+     * @return whether the feature value should be copied when the owning annotation is merged into
+     *         another CAS.
+     */
+    default boolean isCopyOnCurationMerge(AnnotationFeature aFeature)
     {
         return true;
     }

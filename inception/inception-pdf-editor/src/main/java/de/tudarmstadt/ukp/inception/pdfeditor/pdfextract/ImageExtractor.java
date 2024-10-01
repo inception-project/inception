@@ -32,6 +32,7 @@ import java.util.List;
 
 import javax.imageio.ImageIO;
 
+import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.contentstream.PDFStreamEngine;
 import org.apache.pdfbox.contentstream.operator.DrawObject;
 import org.apache.pdfbox.contentstream.operator.Operator;
@@ -84,7 +85,7 @@ public class ImageExtractor
     static void processFile(File inFile, int dpi, String outDir) throws IOException
     {
         String baseName = inFile.getName().substring(0, inFile.getName().lastIndexOf("."));
-        try (PDDocument doc = PDDocument.load(inFile)) {
+        try (PDDocument doc = Loader.loadPDF(inFile)) {
             RegionExtractor regionExt = new RegionExtractor(doc, dpi);
             int count = 1;
             for (int pageIndex = 0; pageIndex < doc.getNumberOfPages(); pageIndex++) {
@@ -110,12 +111,12 @@ public class ImageExtractor
 
     public ImageExtractor()
     {
-        addOperator(new Concatenate());
-        addOperator(new DrawObject());
-        addOperator(new SetGraphicsStateParameters());
-        addOperator(new Save());
-        addOperator(new Restore());
-        addOperator(new SetMatrix());
+        addOperator(new Concatenate(this));
+        addOperator(new DrawObject(this));
+        addOperator(new SetGraphicsStateParameters(this));
+        addOperator(new Save(this));
+        addOperator(new Restore(this));
+        addOperator(new SetMatrix(this));
     }
 
     @Override

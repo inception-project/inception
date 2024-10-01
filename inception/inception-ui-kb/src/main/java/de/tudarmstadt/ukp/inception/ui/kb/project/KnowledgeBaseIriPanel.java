@@ -37,8 +37,7 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.eclipse.rdf4j.model.IRI;
-
-import com.googlecode.wicket.kendo.ui.form.combobox.ComboBox;
+import org.wicketstuff.kendo.ui.form.combobox.ComboBox;
 
 import de.tudarmstadt.ukp.inception.kb.IriConstants;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;

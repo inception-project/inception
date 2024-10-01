@@ -33,16 +33,17 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.saml2.provider.service.authentication.OpenSaml4AuthenticationProvider;
-import org.springframework.security.saml2.provider.service.authentication.OpenSamlAuthenticationProvider;
 import org.springframework.security.saml2.provider.service.metadata.OpenSamlMetadataResolver;
 import org.springframework.security.saml2.provider.service.registration.RelyingPartyRegistrationRepository;
-import org.springframework.security.saml2.provider.service.servlet.filter.Saml2WebSsoAuthenticationFilter;
 import org.springframework.security.saml2.provider.service.web.DefaultRelyingPartyRegistrationResolver;
 import org.springframework.security.saml2.provider.service.web.RelyingPartyRegistrationResolver;
 import org.springframework.security.saml2.provider.service.web.Saml2MetadataFilter;
+import org.springframework.security.saml2.provider.service.web.authentication.Saml2WebSsoAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.security.web.util.matcher.AnyRequestMatcher;
+import org.springframework.security.web.util.matcher.NegatedRequestMatcher;
 
 import de.tudarmstadt.ukp.inception.security.oauth.OAuth2Adapter;
 import de.tudarmstadt.ukp.inception.security.saml.Saml2Adapter;
@@ -61,14 +62,26 @@ public class InceptionSecurityWebUIBuiltInAutoConfiguration
             Optional<RelyingPartyRegistrationRepository> aRelyingPartyRegistrationRepository)
         throws Exception
     {
-        aHttp.csrf().disable();
-        aHttp.headers().frameOptions().sameOrigin();
+        aHttp.csrf(csrf -> {
+            // Instead of disabling the Spring CSRF filter, we just disable the CSRF validation for
+            // the Wicket UI (Wicket has its own CSRF mechanism). This way, Spring will still
+            // populate the CSRF token attribute in the request which we will need later when we
+            // need to provide the token to the JavaScript code in the browser to make callbacks to
+            // Spring MVC controllers.
+            csrf.requireCsrfProtectionMatcher(
+                    new NegatedRequestMatcher(AnyRequestMatcher.INSTANCE));
+        });
+        aHttp.headers(headers -> {
+            headers.frameOptions(frameOptions -> {
+                frameOptions.sameOrigin();
+            });
+        });
 
         var authorizations = aHttp.authorizeHttpRequests();
         authorizations.requestMatchers("/login.html*").permitAll();
         accessToStaticResources(authorizations);
         accessToRemoteApiAndSwagger(authorizations);
-        authorizations.requestMatchers("/" + NS_PROJECT + "/*/join-project/**").permitAll();
+        authorizations.requestMatchers(NS_PROJECT + "/*/join-project/**").permitAll();
         accessToApplication(authorizations);
         authorizations.anyRequest().denyAll();
 
@@ -103,17 +116,6 @@ public class InceptionSecurityWebUIBuiltInAutoConfiguration
                     @Override
                     public <O> O postProcess(O aObject)
                     {
-                        if (aObject instanceof OpenSamlAuthenticationProvider) {
-                            var provider = (OpenSamlAuthenticationProvider) aObject;
-                            var converter = OpenSamlAuthenticationProvider
-                                    .createDefaultResponseAuthenticationConverter();
-                            provider.setResponseAuthenticationConverter(token -> {
-                                var authentication = converter.convert(token);
-                                authentication = aSaml2Handling.process(token, authentication);
-                                return authentication;
-                            });
-                        }
-
                         if (aObject instanceof OpenSaml4AuthenticationProvider) {
                             var provider = (OpenSaml4AuthenticationProvider) aObject;
                             var converter = OpenSaml4AuthenticationProvider

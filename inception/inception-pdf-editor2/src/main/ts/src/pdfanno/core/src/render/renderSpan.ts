@@ -48,7 +48,7 @@ export function mapToDocumentCoordinates (aRectangles: Rectangle[]): Rectangle[]
     // to adjust the position of the rectangle on the X-axis
     leftOffset = (pageInfo.left - firstPageLeft) / scale
 
-    console.log(leftOffset, r.x + leftOffset, r.y + pageTopY, r.w, r.h)
+    // console.log(leftOffset, r.x + leftOffset, r.y + pageTopY, r.w, r.h)
     r = new Rectangle({ p: r.p, x: r.x + leftOffset, y: r.y + pageTopY, w: r.w, h: r.h })
     if (r.w > 0 && r.h > 0 /* && r.x > -1 && r.y > -1 */) {
       rectangles.push(r)

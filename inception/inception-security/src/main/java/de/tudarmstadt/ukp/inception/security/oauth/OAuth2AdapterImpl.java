@@ -195,7 +195,7 @@ public class OAuth2AdapterImpl
             String messages = userNameValidationResult.stream() //
                     .map(ValidationError::getMessage) //
                     .collect(joining("\n- ", "\n- ", ""));
-            LOG.info("Prevented login of user [{}] with illegal username: {}", aUsername, messages);
+            LOG.warn("Prevented login of user [{}] with illegal username: {}", aUsername, messages);
             throw new BadCredentialsException("Illegal username");
         }
     }
@@ -203,7 +203,7 @@ public class OAuth2AdapterImpl
     private void denyAccessOfRealmsDoNotMatch(String aExpectedRealm, User aUser)
     {
         if (!aExpectedRealm.equals(aUser.getRealm())) {
-            LOG.info("Prevented login of user {} from realm [{}] via realm [{}]", aUser,
+            LOG.warn("Prevented login of user {} from realm [{}] via realm [{}]", aUser,
                     aUser.getRealm(), aExpectedRealm);
             throw new BadCredentialsException("Realm mismatch");
         }
@@ -212,7 +212,7 @@ public class OAuth2AdapterImpl
     private void denyAccessToDeactivatedUsers(User aUser)
     {
         if (!aUser.isEnabled()) {
-            LOG.info("Prevented login of locally deactivated user {}", aUser);
+            LOG.warn("Prevented login of locally deactivated user {}", aUser);
             throw new DisabledException("User deactivated");
         }
     }

@@ -21,8 +21,6 @@ import static java.time.Duration.ofSeconds;
 
 import java.util.Objects;
 
-import javax.persistence.NoResultException;
-
 import org.springframework.beans.factory.annotation.Autowired;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -30,6 +28,7 @@ import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.scheduling.DebouncingTask;
 import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtension;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
+import jakarta.persistence.NoResultException;
 
 public class RecalculateProjectStateTask
     extends DebouncingTask

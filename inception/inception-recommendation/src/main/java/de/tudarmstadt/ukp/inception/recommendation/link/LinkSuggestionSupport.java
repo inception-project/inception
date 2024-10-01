@@ -17,10 +17,12 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.link;
 
+import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectAnnotationByAddr;
 import static org.apache.uima.fit.util.CasUtil.select;
 
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 
@@ -53,12 +55,10 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.ExtractionContext;
 import de.tudarmstadt.ukp.inception.recommendation.relation.ArcSuggestionSupport_ImplBase;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationComparisonUtils;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.inception.schema.api.feature.LinkWithRoleModel;
-import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
 
 public class LinkSuggestionSupport
     extends ArcSuggestionSupport_ImplBase
@@ -115,7 +115,9 @@ public class LinkSuggestionSupport
 
         var sourceBegin = suggestion.getPosition().getSourceBegin();
         var sourceEnd = suggestion.getPosition().getSourceEnd();
-        var linkHostType = adapter.getAnnotationType(aCas);
+        var linkHostType = adapter.getAnnotationType(aCas)
+                .orElseThrow(() -> new IllegalStateException(
+                        "Type [" + adapter.getAnnotationTypeName() + "] not found in target CAS"));
 
         // Check if there is already a link host
         var linkHostCandidates = aCas.<Annotation> select(linkHostType).at(sourceBegin, sourceEnd)
@@ -187,7 +189,8 @@ public class LinkSuggestionSupport
     {
         var adapter = (SpanAdapter) aAdapter;
 
-        var type = adapter.getAnnotationType(aCas);
+        var type = adapter.getAnnotationType(aCas).orElseThrow(() -> new IllegalStateException(
+                "Type [" + adapter.getAnnotationTypeName() + "] not found in target CAS"));
 
         var annotationsInWindow = getAnnotationsInWindow(aCas, type, aWindowBegin, aWindowEnd);
 
@@ -201,7 +204,7 @@ public class LinkSuggestionSupport
                 var links = (List<LinkWithRoleModel>) adapter.getFeatureValue(linkFeature, source);
 
                 for (var link : links) {
-                    var slotFiller = ICasUtil.selectAnnotationByAddr(aCas, link.targetAddr);
+                    var slotFiller = selectAnnotationByAddr(aCas, link.targetAddr);
                     var linkPosition = new LinkPosition(linkFeature.getName(), source.getBegin(),
                             source.getEnd(), slotFiller.getBegin(), slotFiller.getEnd());
 
@@ -225,6 +228,8 @@ public class LinkSuggestionSupport
     {
         var adapter = schemaService.getAdapter(ctx.getLayer());
 
+        var adapterCache = new HashMap<String, TypeAdapter>();
+
         var result = new ArrayList<AnnotationSuggestion>();
         for (var predictedFS : ctx.getPredictionCas().select(ctx.getPredictedType())) {
             if (!predictedFS.getBooleanValue(ctx.getPredictionFeature())) {
@@ -232,17 +237,19 @@ public class LinkSuggestionSupport
             }
 
             var feature = ctx.getRecommender().getFeature();
-            var links = (List<LinkWithRoleModel>) adapter.getFeatureValue(feature, predictedFS);
+            List<LinkWithRoleModel> links = adapter.getFeatureValue(feature, predictedFS);
             if (links.isEmpty()) {
                 continue;
             }
 
             var source = (AnnotationFS) predictedFS;
             var link = links.get(0);
-            var target = ICasUtil.selectAnnotationByAddr(ctx.getPredictionCas(), link.targetAddr);
+            var target = selectAnnotationByAddr(ctx.getPredictionCas(), link.targetAddr);
+            var targetAdapter = adapterCache.computeIfAbsent(target.getType().getName(),
+                    $ -> schemaService.findAdapter(ctx.getRecommender().getProject(), target));
 
-            var originalSource = findEquivalentSpan(ctx.getOriginalCas(), source);
-            var originalTarget = findEquivalentSpan(ctx.getOriginalCas(), target);
+            var originalSource = findEquivalentSpan(adapter, ctx.getOriginalCas(), source);
+            var originalTarget = findEquivalentSpan(targetAdapter, ctx.getOriginalCas(), target);
             if (originalSource.isEmpty() || originalTarget.isEmpty()) {
                 LOG.debug("Unable to find owner or slot filler of predicted link in original CAS");
                 continue;
@@ -276,16 +283,15 @@ public class LinkSuggestionSupport
      *
      * @param aOriginalCas
      *            the original CAS.
-     * @param aAnnotation
+     * @param aSpan
      *            an annotation in the prediction CAS. return the equivalent in the original CAS.
      */
-    private static Optional<Annotation> findEquivalentSpan(CAS aOriginalCas,
-            AnnotationFS aAnnotation)
+    private static Optional<Annotation> findEquivalentSpan(TypeAdapter aAdapter, CAS aOriginalCas,
+            AnnotationFS aSpan)
     {
-        return aOriginalCas.<Annotation> select(aAnnotation.getType()) //
-                .at(aAnnotation) //
-                .filter(candidate -> AnnotationComparisonUtils.isEquivalentSpanAnnotation(candidate,
-                        aAnnotation, null))
+        return aOriginalCas.<Annotation> select(aSpan.getType()) //
+                .at(aSpan) //
+                .filter(canditeSpan -> aAdapter.isSamePosition(canditeSpan, aSpan)) //
                 .findFirst();
     }
 

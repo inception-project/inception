@@ -27,7 +27,7 @@ public interface AnnotationSchemaProperties
 
     boolean isSentenceLayerEditable();
 
-    boolean isCrossLayerRelationEnabled();
+    boolean isCrossLayerRelationsEnabled();
 
     default boolean isLayerBlocked(AnnotationLayer aLayer)
     {

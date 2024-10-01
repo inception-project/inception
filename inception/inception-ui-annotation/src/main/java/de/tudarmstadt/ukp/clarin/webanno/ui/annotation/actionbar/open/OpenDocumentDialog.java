@@ -29,7 +29,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.bootstrap.BootstrapModalDialog;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
-import de.tudarmstadt.ukp.inception.support.wicket.DecoratedObject;
 
 public class OpenDocumentDialog
     extends BootstrapModalDialog
@@ -40,7 +39,6 @@ public class OpenDocumentDialog
     private final IModel<AnnotatorState> state;
 
     public OpenDocumentDialog(String aId, IModel<AnnotatorState> aModel,
-            IModel<List<DecoratedObject<Project>>> aProjects,
             SerializableBiFunction<Project, User, List<AnnotationDocument>> aDocListProvider)
     {
         super(aId);

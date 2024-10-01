@@ -371,7 +371,8 @@ snomed-ct:
       Here is what you need to do to obtain and load the actual SNOMED CT data:
       
       - Download SNOMED CT RD2 data files, e.g. from the [National Library of Medicine](https://www.nlm.nih.gov/healthit/snomedct/international.html)
-      - The RD2 package contains a data file in _OWL Functional Syntax_ wiht the ending `.owl` - rename the file to end in `.ofn`
+      - Use the [snomed-owl-toolkit](https://github.com/IHTSDO/snomed-owl-toolkit) to convert the RD2 data to  _OWL Functional Syntax_.
+      - Rename the `.owl` file produced by the snomed-owl-toolkit to end in `.ofn`.
       - Import the renamed file into the knowledge base created from this profile (this may take a while)
       
       At this point, you will be able to link against SNOMED concepts, but the tree browser will not be able to find

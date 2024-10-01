@@ -37,9 +37,11 @@ import org.apache.uima.jcas.JCas;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.MultipleSentenceCoveredException;
+import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -58,6 +60,8 @@ import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistry;
 @ExtendWith(MockitoExtension.class)
 public class ChainAdapterTest
 {
+    private @Mock ConstraintsService constraintsService;
+
     private LayerSupportRegistry layerSupportRegistry;
     private FeatureSupportRegistry featureSupportRegistry;
     private Project project;
@@ -104,11 +108,11 @@ public class ChainAdapterTest
     {
         corefLayer.setCrossSentence(false);
 
-        TokenBuilder<Token, Sentence> builder = new TokenBuilder<>(Token.class, Sentence.class);
+        var builder = new TokenBuilder<>(Token.class, Sentence.class);
         builder.buildTokens(jcas, "This is a test .\nThis is sentence two .");
 
-        ChainAdapter sut = new ChainAdapter(layerSupportRegistry, featureSupportRegistry, null,
-                corefLayer, () -> asList(), behaviors);
+        var sut = new ChainAdapter(layerSupportRegistry, featureSupportRegistry, null, corefLayer,
+                () -> asList(), behaviors, constraintsService);
 
         assertThatExceptionOfType(MultipleSentenceCoveredException.class)
                 .isThrownBy(() -> sut.addSpan(document, username, jcas.getCas(), 0,
@@ -119,11 +123,11 @@ public class ChainAdapterTest
     @Test
     public void thatSpanOverlapBehaviorOnCreateWorks() throws AnnotationException
     {
-        TokenBuilder<Token, Sentence> builder = new TokenBuilder<>(Token.class, Sentence.class);
+        var builder = new TokenBuilder<>(Token.class, Sentence.class);
         builder.buildTokens(jcas, "This is a test .");
 
-        ChainAdapter sut = new ChainAdapter(layerSupportRegistry, featureSupportRegistry, null,
-                corefLayer, () -> asList(), behaviors);
+        var sut = new ChainAdapter(layerSupportRegistry, featureSupportRegistry, null, corefLayer,
+                () -> asList(), behaviors, constraintsService);
 
         // First time should work
         corefLayer.setOverlapMode(ANY_OVERLAP);
@@ -153,11 +157,11 @@ public class ChainAdapterTest
     @Test
     public void thatSpanAnchoringAndStackingBehaviorsWorkInConcert() throws AnnotationException
     {
-        TokenBuilder<Token, Sentence> builder = new TokenBuilder<>(Token.class, Sentence.class);
+        var builder = new TokenBuilder<>(Token.class, Sentence.class);
         builder.buildTokens(jcas, "This is a test .");
 
-        ChainAdapter sut = new ChainAdapter(layerSupportRegistry, featureSupportRegistry, null,
-                corefLayer, () -> asList(), behaviors);
+        var sut = new ChainAdapter(layerSupportRegistry, featureSupportRegistry, null, corefLayer,
+                () -> asList(), behaviors, constraintsService);
 
         // First time should work - we annotate the whole word "This"
         corefLayer.setOverlapMode(ANY_OVERLAP);

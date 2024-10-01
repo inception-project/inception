@@ -121,8 +121,6 @@ pos.PosValue
 
 Hereby all annotations of type `<shortLayerName>` at the same position as the current context are found.
 
-=== Comments
-
 The constraint language supports block comments which start with `/*` and end with `*/`. These
 comments may span across multiple lines.
 
@@ -136,11 +134,26 @@ comments may span across multiple lines.
 */
 ----
 
-=== Example
+=== Constraint on a single layer
 
-The following simple example of a constraints file re-orders POS tags depending on Lemma values.
-If the Lemma was annotated as *can*, the POS tags *VERB* and *NOUN* are highlighted. If the Lemma value is
-*the*, the POS tag *DET* is suggested first.
+The simplest constraint rules only consider features on a single layer. In the following example, we constraint the values of the *PosValue* feature based on the value of the *coarseValue*  feature.
+
+[source,text]
+----
+import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS as Pos;
+
+Pos {
+  coarseValue = "NOUN" -> PosValue = "NN" | PosValue = "NNS" | PosValue = "NNP" | PosValue = "NNPS";
+  coarseValue = "VERB" -> PosValue = "VB" | PosValue = "VBD" | PosValue = "VBG" | PosValue = "VBN";
+}
+----
+
+
+=== Constraint between two span layers
+
+The following simple example of a constraints file re-orders *POS* tags depending on *Lemma* values.
+If the Lemma was annotated as `can`, the POS tags `VERB` and `NOUN` are highlighted. If the *Lemma* value is
+`the`, the POS tag `DET*` is suggested first. The trick here is the `@Lemma` which tells the system to look for a *Lemma* annotation at the same position as the current *POS*  annotation and then consider the features of that lemma.
 
 [source,text]
 ----
@@ -160,6 +173,45 @@ Pos {
 In the UI, the tags that were matched by the constraints are bold and come first in the list of tags:
 
 image::constraints.png[align="center"]
+
+
+=== Constraining a relation layer based on its endpoints
+
+It is possible to constrain the value of a feature on a relation layer based on features of the relation endpoints. Or said differently: you can restrict which relations are possible between certain entities.
+In the following example, we will used the pre-defined *Dependency* layer.
+
+----
+import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency as DEPENDENCY;
+
+DEPENDENCY {
+ Governor.pos.PosValue = "NN" & Dependent.pos.PosValue = "DET" -> DependencyType = "det";
+}
+----
+
+The `DEPENDENCY { ... }` block says that the rules in that block apply to any annotations of the type `...Dependency` as define by the `import`.
+Of course you do not need to use the alias `DEPENDENCY` or the `...Dependency` type, you can use any span or relation layer name and an alias
+of your choice.
+
+A relation layer (like `...Dependency`) always has two features called `Governor` and `Dependent` which represent the endpoints of the relation.
+`Dependent` should be the *TARGET* of the relation (the side where the arrowhead should be) and `Governor` should be the *SOURCE* (i.e. the side without the arrowhead).
+
+So when we read 
+
+----
+<RELATION_LAYER> {
+ Governor.<FEATURE> = "<VALUE>" ... -> ...
+}
+----
+
+that means: looking at the current annotation of `<LAYER>`, match if the *TARGET* of the relation has a `<FEATURE>` with the given `<VALUE>`. Note that in the snippet above, we use not a simple `<FEATURE>` but actually a `<FEATURE_PATH>` `...pos.PosValue` which means that we first go to the annotation referred to by the `pos` feature on the *TARGET* and then continue to the `PosValue` feature. This is a special situation for the built-in Dependency layer which you do not need when using custom layers.
+
+So the general structure for you to start from could be:
+
+----
+<RELATION_LAYER> {
+ Governor.<SOURCE_FEATURE> = "<SOURCE_FEATURE_VALUE>" & Dependent.<TARGET_FEATURE> = "<TARGET_FEATURE_VALUE>" -> <RELATION_FEATURE> = "<RELATION_VALUE>"
+}
+----
 
 [[sect_constraints_conditional_features]]
 === Conditional features
@@ -238,9 +290,9 @@ SemPred {
 <rule>            ::= <conds> "->" <restrictions> ";"
 
 // Conditions --------------------------------------------
-<conds>           ::= <cond> | <cond> "&" <conds>
+<conds>           ::= <cond> | (<cond> "&" <conds>)
 <cond>            ::= <path> "=" <value>
-<path>            ::= <featureName> | <step> "." <path>
+<path>            ::= <featureName> | (<step> "." <path>)
 <step>            ::= <featureName> | <layerSelector>
 <layerSelector>   ::= <layerOperator>? <shortLayerName>
 <layerOperator>   ::= "@" // select annotation in layer X

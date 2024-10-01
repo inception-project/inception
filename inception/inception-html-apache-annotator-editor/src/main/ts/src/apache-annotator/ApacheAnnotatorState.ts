@@ -20,4 +20,10 @@ import { writable } from 'svelte/store'
 
 export const showLabels = writable(true)
 
+export const showAggregatedLabels = writable(true)
+
 export const showEmptyHighlights = writable(false)
+
+export const showDocumentStructure = writable(false)
+
+export const documentStructureWidth = writable(0.2)

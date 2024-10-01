@@ -19,16 +19,20 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.project.constraints;
 
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Arrays.asList;
 import static java.util.Objects.isNull;
 import static org.apache.commons.collections4.CollectionUtils.isEmpty;
 import static org.apache.commons.io.IOUtils.toInputStream;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
+import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.input.BOMInputStream;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.wicket.WicketRuntimeException;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -57,8 +61,11 @@ import de.tudarmstadt.ukp.clarin.webanno.model.ConstraintSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.bootstrap.BootstrapFileInputField;
 import de.tudarmstadt.ukp.inception.bootstrap.BootstrapModalDialog;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 
@@ -74,6 +81,7 @@ public class ProjectConstraintsPanel
 
     private @SpringBean ConstraintsService constraintsService;
     private @SpringBean UserDao userService;
+    private @SpringBean AnnotationSchemaService schemaService;
 
     private SelectionForm selectionForm;
     private DetailForm detailForm;
@@ -107,7 +115,7 @@ public class ProjectConstraintsPanel
         {
             super(aId, aModel);
 
-            LoadableDetachableModel<List<ConstraintSet>> rulesets = new LoadableDetachableModel<List<ConstraintSet>>()
+            var rulesets = new LoadableDetachableModel<List<ConstraintSet>>()
             {
                 private static final long serialVersionUID = 1L;
 
@@ -154,7 +162,7 @@ public class ProjectConstraintsPanel
 
             setOutputMarkupPlaceholderTag(true);
 
-            TextField<String> constraintNameTextField = new TextField<>("name");
+            var constraintNameTextField = new TextField<String>("name");
             add(constraintNameTextField);
 
             add(script = new TextArea<String>("script",
@@ -164,8 +172,8 @@ public class ProjectConstraintsPanel
             // when switching set selection
             // script.setEnabled(false);
 
-            final IModel<String> exportFilenameModel = new Model<>();
-            final IModel<File> exportFileModel = new LoadableDetachableModel<File>()
+            final var exportFilenameModel = new Model<String>();
+            final var exportFileModel = new LoadableDetachableModel<File>()
             {
                 private static final long serialVersionUID = 840863954694163375L;
 
@@ -193,7 +201,7 @@ public class ProjectConstraintsPanel
             // file - it must NOT be deleted after the export is complete!
             add(new DownloadLink("export", exportFileModel, exportFilenameModel));
 
-            LambdaAjaxLink deleteButton = new LambdaAjaxLink("delete", this::actionDelete);
+            var deleteButton = new LambdaAjaxLink("delete", this::actionDelete);
             deleteButton.add(visibleWhen(() -> DetailForm.this.getModelObject().getId() != null));
             add(deleteButton);
 
@@ -204,7 +212,7 @@ public class ProjectConstraintsPanel
                 @Override
                 public void onSubmit()
                 {
-                    ConstraintSet constraintSet = DetailForm.this.getModelObject();
+                    var constraintSet = DetailForm.this.getModelObject();
 
                     try {
                         ConstraintsParser.parse(script.getModelObject());
@@ -218,7 +226,7 @@ public class ProjectConstraintsPanel
                     constraintsService.createOrUpdateConstraintSet(constraintSet);
 
                     // Persist rules
-                    try (InputStream rules = toInputStream(script.getModelObject(), UTF_8)) {
+                    try (var rules = toInputStream(script.getModelObject(), UTF_8)) {
                         constraintsService.writeConstraintSet(constraintSet, rules);
 
                         selectionForm.setModelObject(constraintSet);
@@ -320,11 +328,34 @@ public class ProjectConstraintsPanel
 
         private void createAction(AjaxRequestTarget aTarget)
         {
-            String constraintFilename = "New constraints set";
-            String content = "/* Constraint rules set created by "
-                    + userService.getCurrentUsername() + " */";
+            var constraintFilename = "New constraints set.rules";
+            var content = "/* Constraint rules set created by " + userService.getCurrentUsername()
+                    + " */\n\n";
 
-            ConstraintSet constraintSet = createConstraintsSet(constraintFilename);
+            var disambiguationMap = new HashMap<String, AtomicInteger>();
+            for (var layer : schemaService
+                    .listAnnotationLayer(ProjectConstraintsPanel.this.getModelObject())) {
+
+                if (asList(Token._TypeName, Sentence._TypeName).contains(layer.getName())) {
+                    continue;
+                }
+
+                var shortName = StringUtils.substringAfterLast(layer.getName(), ".");
+                if (shortName.isEmpty()) {
+                    shortName = layer.getName();
+                }
+                var disambiguation = disambiguationMap.computeIfAbsent(shortName,
+                        $ -> new AtomicInteger(0));
+                disambiguation.incrementAndGet();
+                content += "import " + layer.getName() + " as " + shortName;
+                if (disambiguation.get() >= 2) {
+                    content += disambiguation.get();
+                }
+                content += ";\n";
+            }
+            content += "\n";
+
+            var constraintSet = createConstraintsSet(constraintFilename);
 
             aTarget.addChildren(getPage(), IFeedback.class);
             aTarget.add(selectionForm);
@@ -332,7 +363,7 @@ public class ProjectConstraintsPanel
             aTarget.focusComponent(detailForm.script);
 
             // Persist rules
-            try (InputStream rules = toInputStream(content, UTF_8)) {
+            try (var rules = toInputStream(content, UTF_8)) {
                 constraintsService.writeConstraintSet(constraintSet, rules);
 
                 selectionForm.setModelObject(constraintSet);
@@ -349,9 +380,9 @@ public class ProjectConstraintsPanel
 
         private void importAction(AjaxRequestTarget aTarget, Form<Void> aForm)
         {
-            Project project = ProjectConstraintsPanel.this.getModelObject();
+            var project = ProjectConstraintsPanel.this.getModelObject();
 
-            List<FileUpload> uploadedFiles = uploads.getFileUploads();
+            var uploadedFiles = uploads.getFileUploads();
 
             selectionForm.setModelObject(null);
             detailForm.setModelObject(null);
@@ -371,11 +402,11 @@ public class ProjectConstraintsPanel
             }
 
             nextFile: for (FileUpload constraintRulesFile : uploadedFiles) {
-                String constraintFilename = constraintRulesFile.getClientFileName();
+                var constraintFilename = constraintRulesFile.getClientFileName();
 
                 // Handling Windows BOM
-                try (BOMInputStream bomInputStream = new BOMInputStream(
-                        constraintRulesFile.getInputStream(), false)) {
+                try (var bomInputStream = new BOMInputStream(constraintRulesFile.getInputStream(),
+                        false)) {
                     ConstraintsParser.parse(bomInputStream);
                 }
                 catch (IOException e) {
@@ -390,8 +421,7 @@ public class ProjectConstraintsPanel
                 }
 
                 // Persist rules
-                try (InputStream rules = new BOMInputStream(constraintRulesFile.getInputStream(),
-                        false)) {
+                try (var rules = new BOMInputStream(constraintRulesFile.getInputStream(), false)) {
                     ConstraintSet constraintSet = createConstraintsSet(constraintFilename);
 
                     constraintsService.writeConstraintSet(constraintSet, rules);
@@ -411,9 +441,9 @@ public class ProjectConstraintsPanel
 
         private ConstraintSet createConstraintsSet(String constraintFilename)
         {
-            Project project = ProjectConstraintsPanel.this.getModelObject();
+            var project = ProjectConstraintsPanel.this.getModelObject();
 
-            ConstraintSet constraintSet = new ConstraintSet();
+            var constraintSet = new ConstraintSet();
             constraintSet.setProject(ProjectConstraintsPanel.this.getModelObject());
 
             // Check if ConstraintSet already exists or not
@@ -432,16 +462,18 @@ public class ProjectConstraintsPanel
         private String copyConstraintName(ConstraintsService aConstraintsService,
                 String constraintFilename)
         {
-            String betterConstraintName = "copy_of_" + constraintFilename;
+            var baseConstraintName = FilenameUtils.getBaseName(constraintFilename);
+            var betterConstraintName = baseConstraintName;
+            var suffix = FilenameUtils.getExtension(constraintFilename);
             int i = 1;
             while (true) {
-                if (aConstraintsService.existConstraintSet(betterConstraintName,
+                if (aConstraintsService.existConstraintSet(betterConstraintName + "." + suffix,
                         ProjectConstraintsPanel.this.getModelObject())) {
-                    betterConstraintName = "copy_of_" + constraintFilename + "(" + i + ")";
+                    betterConstraintName = baseConstraintName + " (" + i + ")";
                     i++;
                 }
                 else {
-                    return betterConstraintName;
+                    return betterConstraintName + "." + suffix;
                 }
             }
         }

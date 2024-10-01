@@ -21,17 +21,16 @@ import static de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationPrefe
 import static de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationPreference.SIDEBAR_SIZE_MAX;
 import static de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationPreference.SIDEBAR_SIZE_MIN;
 
-import java.io.Serializable;
-
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-import de.tudarmstadt.ukp.inception.preferences.Key;
+import de.tudarmstadt.ukp.inception.preferences.PreferenceKey;
+import de.tudarmstadt.ukp.inception.preferences.PreferenceValue;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class AnnotationPageLayoutState
-    implements Serializable
+    implements PreferenceValue
 {
-    public static final Key<AnnotationPageLayoutState> KEY_LAYOUT_STATE = new Key<>(
+    public static final PreferenceKey<AnnotationPageLayoutState> KEY_LAYOUT_STATE = new PreferenceKey<>(
             AnnotationPageLayoutState.class, "annotation/layout");
 
     private static final long serialVersionUID = 4751157181917255392L;

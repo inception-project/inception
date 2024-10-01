@@ -18,9 +18,12 @@
 package de.tudarmstadt.ukp.inception.kb.config;
 
 import java.time.Duration;
+import java.util.List;
 
 public interface KnowledgeBaseProperties
 {
+    double getFtsInternalMaxResultsFactor();
+
     int getDefaultMaxResults();
 
     int getHardMaxResults();
@@ -52,4 +55,6 @@ public interface KnowledgeBaseProperties
     Duration getRenderCacheExpireDelay();
 
     long getRenderCacheSize();
+
+    List<String> getDefaultFallbackLanguages();
 }

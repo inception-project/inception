@@ -1,0 +1,108 @@
+{
+  "name": "PHI kinds",
+  "typeUiName": null,
+  "description": "Kinds of Personal Health Information (PHI)",
+  "language": "en",
+  "type": null,
+  "type_name": null,
+  "type_description": null,
+  "tags": [
+    {
+      "tag_name": "AGE",
+      "tag_description": "Specific age details (not in date format)"
+    },
+    {
+      "tag_name": "CONTACT_EMAIL",
+      "tag_description": "Email address"
+    },
+    {
+      "tag_name": "NAME_EXT",
+      "tag_description": "Mention of individuals in connection with offices, insurance, etc."
+    },
+    {
+      "tag_name": "NAME_OTHER",
+      "tag_description": "Mention of additional names"
+    },
+    {
+      "tag_name": "NAME_RELATIVE",
+      "tag_description": "Relatives of the patient"
+    },
+    {
+      "tag_name": "NAME_TITLE",
+      "tag_description": "Title designations"
+    },
+    {
+      "tag_name": "PROFESSION",
+      "tag_description": "Designations of professions related to the patient, without mentioning a status (e.g., unemployed, retired, part-time)"
+    },
+    {
+      "tag_name": "OTHER",
+      "tag_description": "Other features to be de-identified that cannot be covered by other categories"
+    },
+    {
+      "tag_name": "CONTACT_FAX",
+      "tag_description": "Fax number"
+    },
+    {
+      "tag_name": "CONTACT_PHONE",
+      "tag_description": "Phone number"
+    },
+    {
+      "tag_name": "CONTACT_URL",
+      "tag_description": "URL of a website"
+    },
+    {
+      "tag_name": "DATE",
+      "tag_description": "All date information (e.g., birth date, death date)"
+    },
+    {
+      "tag_name": "ID",
+      "tag_description": "Number for identifying a patient, number for identifying a medical case, other identification numbers"
+    },
+    {
+      "tag_name": "LOCATION_CITY",
+      "tag_description": "Name of a city"
+    },
+    {
+      "tag_name": "LOCATION_COUNTRY",
+      "tag_description": "Name of a country"
+    },
+    {
+      "tag_name": "LOCATION_HOSPITAL",
+      "tag_description": "Mention of a medical facility"
+    },
+    {
+      "tag_name": "LOCATION_ORGANIZATION",
+      "tag_description": "Name of a (medical) organization"
+    },
+    {
+      "tag_name": "LOCATION_OTHER",
+      "tag_description": "Other addresses"
+    },
+    {
+      "tag_name": "LOCATION_STATE",
+      "tag_description": "Name of a state"
+    },
+    {
+      "tag_name": "LOCATION_STREET",
+      "tag_description": "Street name + house number"
+    },
+    {
+      "tag_name": "LOCATION_ZIP",
+      "tag_description": "Postal code"
+    },
+    {
+      "tag_name": "NAME_DOCTOR",
+      "tag_description": "First and last name of a doctor or medical personnel"
+    },
+    {
+      "tag_name": "NAME_USERNAME",
+      "tag_description": "Username, secretarial initials"
+    },
+    {
+      "tag_name": "NAME_PATIENT",
+      "tag_description": "First and last name of a patient or relatives"
+    }
+  ],
+  "create_tag": false
+}

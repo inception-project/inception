@@ -32,10 +32,6 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Stream;
 
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-import javax.persistence.Tuple;
-
 import org.apache.commons.lang3.function.FailableConsumer;
 import org.apache.commons.lang3.stream.Streams;
 import org.apache.commons.lang3.tuple.Pair;
@@ -49,6 +45,9 @@ import de.tudarmstadt.ukp.inception.log.config.EventLoggingAutoConfiguration;
 import de.tudarmstadt.ukp.inception.log.model.LoggedEvent;
 import de.tudarmstadt.ukp.inception.log.model.LoggedEvent_;
 import de.tudarmstadt.ukp.inception.log.model.SummarizedLoggedEvent;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.Tuple;
 
 /**
  * <p>
@@ -80,6 +79,7 @@ public class EventRepositoryImpl
             LOG.trace("{}", event);
             entityManager.persist(event);
         }
+
         long duration = System.currentTimeMillis() - start;
 
         if (aEvents.length > 0 && !LOG.isTraceEnabled()) {

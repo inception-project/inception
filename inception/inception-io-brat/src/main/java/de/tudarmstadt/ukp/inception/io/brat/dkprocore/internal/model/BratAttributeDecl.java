@@ -39,15 +39,15 @@ public class BratAttributeDecl
     public BratAttributeDecl(String aName, Collection<String> aTargetTypes)
     {
         name = aName;
-        targetTypes = aTargetTypes == null ? Collections.emptySet() : new LinkedHashSet<>(
-                aTargetTypes);
+        targetTypes = aTargetTypes == null ? Collections.emptySet()
+                : new LinkedHashSet<>(aTargetTypes);
     }
 
     public String getName()
     {
         return name;
     }
-    
+
     public Set<String> getTargetTypes()
     {
         return targetTypes;
@@ -57,12 +57,12 @@ public class BratAttributeDecl
     {
         return values;
     }
-    
+
     public void addValue(String aValue)
     {
         values.add(aValue);
     }
-    
+
     @Override
     public String toString()
     {

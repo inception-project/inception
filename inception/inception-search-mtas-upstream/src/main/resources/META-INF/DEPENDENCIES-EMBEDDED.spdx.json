@@ -1,0 +1,31 @@
+{
+  "$schema": "https://raw.githubusercontent.com/spdx/spdx-spec/v2.2.2/schemas/spdx-schema.json",
+  "packages": [
+    {
+      "name": "MTAS",
+      "versionInfo": "9.10.0.0",
+      "originator": "Matthijs Brouwer",
+      "homepage": "https://github.com/textexploration/mtas",
+      "licenseDeclared": "Apache-2.0",
+      "description": "A customized version of MTAS without Solr support",
+      "hasFiles": [
+        "src/main/java/mtas/**",
+        "src/main/resources/**",
+        "src/test/java/mtas/**",
+        "src/test/resources/**",
+        "docker/**"
+      ]
+    },
+    {
+      "name": "Apache Solr",
+      "versionInfo": "9.6.0",
+      "originator": "Apache Foundation",
+      "homepage": "https://solr.apache.org",
+      "licenseDeclared": "Apache-2.0",
+      "description": "LegacyNumericUtils utility class required by MTAS",
+      "hasFiles": [
+        "src/main/java/org/apache/solr/**"
+      ]
+    }
+ ]
+}

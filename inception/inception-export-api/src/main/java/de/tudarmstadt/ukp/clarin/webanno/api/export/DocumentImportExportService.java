@@ -99,6 +99,18 @@ public interface DocumentImportExportService
         return formatSupport.getCssStylesheets();
     }
 
+    default List<String> getSectionElements(SourceDocument aDoc)
+    {
+        Optional<FormatSupport> maybeFormatSupport = getFormatById(aDoc.getFormat());
+        if (!maybeFormatSupport.isPresent()) {
+            return Collections.emptyList();
+        }
+
+        FormatSupport formatSupport = maybeFormatSupport.get();
+
+        return formatSupport.getSectionElements();
+    }
+
     default Optional<PolicyCollection> getFormatPolicy(SourceDocument aDoc) throws IOException
     {
         Optional<FormatSupport> maybeFormatSupport = getFormatById(aDoc.getFormat());

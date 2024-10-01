@@ -27,8 +27,6 @@ import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.IOException;
 
-import javax.servlet.ServletContext;
-
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
@@ -42,7 +40,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.diam.editor.DiamAjaxBehavior;
 import de.tudarmstadt.ukp.inception.diam.editor.DiamJavaScriptReference;
-import de.tudarmstadt.ukp.inception.diam.editor.actions.ShowContextMenuHandler;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorBase;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorExtensionRegistry;
@@ -62,6 +59,7 @@ import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.selection.ScrollToEvent;
 import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 import de.tudarmstadt.ukp.inception.support.wicket.ContextMenu;
+import jakarta.servlet.ServletContext;
 
 public abstract class ExternalAnnotationEditorBase
     extends AnnotationEditorBase
@@ -123,10 +121,7 @@ public abstract class ExternalAnnotationEditorBase
 
     protected DiamAjaxBehavior createDiamBehavior()
     {
-        var diam = new DiamAjaxBehavior();
-        diam.addPriorityHandler(new ShowContextMenuHandler(extensionRegistry, contextMenu,
-                getModel(), getActionHandler(), getCasProvider()));
-        return diam;
+        return new DiamAjaxBehavior(contextMenu);
     }
 
     protected Component getViewComponent()
@@ -195,7 +190,7 @@ public abstract class ExternalAnnotationEditorBase
 
     private String getPropertiesAsJson()
     {
-        AnnotationEditorProperties props = getProperties();
+        var props = getProperties();
         try {
             return JSONUtil.toInterpretableJsonString(props);
         }

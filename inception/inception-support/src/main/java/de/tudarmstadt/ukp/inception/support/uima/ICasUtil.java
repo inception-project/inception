@@ -17,9 +17,15 @@
  */
 package de.tudarmstadt.ukp.inception.support.uima;
 
+import static java.util.Collections.emptySet;
 import static org.apache.uima.fit.util.FSCollectionFactory.createStringArrayFS;
 import static org.apache.uima.fit.util.FSCollectionFactory.createStringList;
 
+import java.lang.invoke.MethodHandle;
+import java.lang.reflect.Method;
+
+import org.apache.commons.lang3.reflect.FieldUtils;
+import org.apache.commons.lang3.reflect.MethodUtils;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
@@ -27,6 +33,7 @@ import org.apache.uima.cas.impl.CASImpl;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.fit.util.FSUtil;
+import org.apache.uima.jcas.cas.Sofa;
 import org.apache.uima.jcas.cas.TOP;
 
 public class ICasUtil
@@ -116,6 +123,8 @@ public class ICasUtil
     public static Object getDefaultFeatureValue(Feature aFeature)
     {
         switch (aFeature.getRange().getName()) {
+        case CAS.TYPE_NAME_STRING_ARRAY:
+            return emptySet();
         case CAS.TYPE_NAME_STRING:
             return null;
         case CAS.TYPE_NAME_BOOLEAN:
@@ -188,5 +197,61 @@ public class ICasUtil
             typeName = CAS.TYPE_NAME_ANNOTATION;
         }
         return typeName;
+    }
+
+    /**
+     * NOT AT HOME THIS YOU SHOULD TRY<br>
+     * SETTING THE SOFA STRING FORCEFULLY FOLLOWING THE DARK SIDE IS!
+     * 
+     * @param aCas
+     *            the CAS to change
+     * @param aValue
+     *            the new sofa string
+     */
+    public static void forceOverwriteSofa(CAS aCas, String aValue)
+    {
+        try {
+            Sofa sofa = (Sofa) aCas.getSofa();
+            MethodHandle _FH_sofaString = (MethodHandle) FieldUtils.readField(sofa,
+                    "_FH_sofaString", true);
+            Method method = MethodUtils.getMatchingMethod(Sofa.class, "wrapGetIntCatchException",
+                    MethodHandle.class);
+            int adjOffset;
+            try {
+                method.setAccessible(true);
+                adjOffset = (int) method.invoke(null, _FH_sofaString);
+            }
+            finally {
+                method.setAccessible(false);
+            }
+            sofa._setStringValueNcWj(adjOffset, aValue);
+        }
+        catch (Exception e) {
+            throw new IllegalStateException("Cannot force-update SofA string", e);
+        }
+    }
+
+    public static boolean hasSameType(AnnotationFS aFs1, AnnotationFS aFs2)
+    {
+        // Null check
+        if (aFs1 == null || aFs2 == null) {
+            return false;
+        }
+
+        // Trivial case: same instance
+        if (aFs1 == aFs2) {
+            return true;
+        }
+
+        // Trivial case: same address
+        if (aFs1.getCAS() == aFs1.getCAS() && getAddr(aFs1) == getAddr(aFs1)) {
+            return true;
+        }
+
+        var type1 = aFs1.getType();
+        var type2 = aFs2.getType();
+
+        // Types must be the same
+        return type1.getName().equals(type2.getName());
     }
 }

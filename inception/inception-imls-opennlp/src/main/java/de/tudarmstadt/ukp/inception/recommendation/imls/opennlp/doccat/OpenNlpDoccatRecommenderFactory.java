@@ -22,6 +22,7 @@
 package de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.doccat;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SENTENCES;
+import static java.util.Arrays.asList;
 
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.model.IModel;
@@ -70,8 +71,8 @@ public class OpenNlpDoccatRecommenderFactory
                 && !aLayer.isCrossSentence() //
                 && SpanLayerSupport.TYPE.equals(aLayer.getType());
 
-        var compatibleFeature = CAS.TYPE_NAME_STRING.equals(aFeature.getType())
-                || aFeature.isVirtualFeature();
+        var compatibleFeature = asList(CAS.TYPE_NAME_STRING, CAS.TYPE_NAME_BOOLEAN)
+                .contains(aFeature.getType()) || aFeature.isVirtualFeature();
 
         return compatibleSpanLayer && compatibleFeature;
     }

@@ -26,9 +26,9 @@ public class BulkAnnotationEventAdapter
     implements EventLoggingAdapter<BulkAnnotationEvent>
 {
     @Override
-    public boolean accepts(Object aEvent)
+    public boolean accepts(Class<?> aEvent)
     {
-        return aEvent instanceof BulkAnnotationEvent;
+        return BulkAnnotationEvent.class.isAssignableFrom(aEvent);
     }
 
     @Override

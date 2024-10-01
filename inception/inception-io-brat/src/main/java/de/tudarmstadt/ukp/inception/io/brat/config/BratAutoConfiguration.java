@@ -23,6 +23,7 @@ import org.springframework.context.annotation.Configuration;
 
 import de.tudarmstadt.ukp.inception.io.brat.BratBasicFormatSupport;
 import de.tudarmstadt.ukp.inception.io.brat.BratCustomFormatSupport;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
 @Configuration
 public class BratAutoConfiguration
@@ -38,8 +39,8 @@ public class BratAutoConfiguration
     @Bean
     @ConditionalOnProperty(prefix = "format.brat-custom", name = "enabled", //
             havingValue = "true", matchIfMissing = false)
-    public BratCustomFormatSupport bratCustomFormatSupport()
+    public BratCustomFormatSupport bratCustomFormatSupport(AnnotationSchemaService aSchemaService)
     {
-        return new BratCustomFormatSupport();
+        return new BratCustomFormatSupport(aSchemaService);
     }
 }

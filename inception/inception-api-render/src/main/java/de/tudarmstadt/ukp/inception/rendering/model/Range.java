@@ -23,7 +23,6 @@ import static java.lang.String.format;
 
 import java.io.Serializable;
 import java.lang.invoke.MethodHandles;
-import java.util.Iterator;
 import java.util.Objects;
 
 import org.apache.uima.cas.CAS;
@@ -76,16 +75,16 @@ public class Range
      * @deprecated Use {@link #rangeCoveringAnnotations(Iterable)} instead.
      */
     @Deprecated
-    public Range(Iterable<AnnotationFS> aAnnotations)
+    public Range(Iterable<? extends AnnotationFS> aAnnotations)
     {
-        Iterator<AnnotationFS> i = aAnnotations.iterator();
+        var i = aAnnotations.iterator();
         if (!i.hasNext()) {
             begin = -1;
             end = -1;
             return;
         }
 
-        AnnotationFS current = i.next();
+        var current = i.next();
         int b = current.getBegin();
         int e = current.getEnd();
 
@@ -136,7 +135,7 @@ public class Range
         return new Range(aCas);
     }
 
-    public static Range rangeCoveringAnnotations(Iterable<AnnotationFS> aAnnotations)
+    public static Range rangeCoveringAnnotations(Iterable<? extends AnnotationFS> aAnnotations)
     {
         return new Range(aAnnotations);
     }

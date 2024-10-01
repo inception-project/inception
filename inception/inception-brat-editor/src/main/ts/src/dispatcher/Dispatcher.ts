@@ -94,7 +94,7 @@ export class Dispatcher {
   }
 
   post (message: Message, args?, returnType?: 'any' | 'all') {
-    // console.debug(`brat dispacher processing ${message}`)
+    // console.trace(`brat dispacher processing ${message}`)
 
     if (args === undefined) {
       args = []

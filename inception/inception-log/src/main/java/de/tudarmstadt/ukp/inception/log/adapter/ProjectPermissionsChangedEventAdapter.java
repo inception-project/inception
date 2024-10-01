@@ -33,9 +33,9 @@ public class ProjectPermissionsChangedEventAdapter
     implements EventLoggingAdapter<ProjectPermissionsChangedEvent>
 {
     @Override
-    public boolean accepts(Object aEvent)
+    public boolean accepts(Class<?> aEvent)
     {
-        return aEvent instanceof ProjectPermissionsChangedEvent;
+        return ProjectPermissionsChangedEvent.class.isAssignableFrom(aEvent);
     }
 
     @Override

@@ -60,6 +60,19 @@ public class VDocument
         // Nothing to do
     }
 
+    public VDocument(String aText)
+    {
+        text = aText;
+        windowBegin = 0;
+        windowEnd = aText.length();
+    }
+
+    public void setWindow(int aWindowBegin, int aWindowEnd)
+    {
+        windowBegin = aWindowBegin;
+        windowEnd = aWindowEnd;
+    }
+
     public void setWindowBegin(int aWindowBegin)
     {
         windowBegin = aWindowBegin;
@@ -82,6 +95,8 @@ public class VDocument
 
     public void setText(String aText)
     {
+        assert text == null : "Text can only be set once";
+
         text = aText;
     }
 
@@ -102,8 +117,20 @@ public class VDocument
 
     public void add(VArc aArc)
     {
-        if (arcs.containsKey(aArc.getVid()) || spans.containsKey(aArc.getVid())) {
+        if (spans.containsKey(aArc.getVid())) {
             throw new IllegalStateException("Annotation [" + aArc.getVid() + "] already exists.");
+        }
+
+        var existing = arcs.get(aArc.getVid());
+        if (existing != null) {
+            if (aArc.isPlaceholder()) {
+                return;
+            }
+
+            if (!existing.isPlaceholder()) {
+                throw new IllegalStateException(
+                        "Annotation [" + aArc.getVid() + "] already exists.");
+            }
         }
 
         arcs.put(aArc.getVid(), aArc);
@@ -113,8 +140,20 @@ public class VDocument
 
     public void add(VSpan aSpan)
     {
-        if (arcs.containsKey(aSpan.getVid()) || spans.containsKey(aSpan.getVid())) {
+        if (arcs.containsKey(aSpan.getVid())) {
             throw new IllegalStateException("Annotation [" + aSpan.getVid() + "] already exists.");
+        }
+
+        var existing = spans.get(aSpan.getVid());
+        if (existing != null) {
+            if (aSpan.isPlaceholder()) {
+                return;
+            }
+
+            if (!existing.isPlaceholder()) {
+                throw new IllegalStateException(
+                        "Annotation [" + aSpan.getVid() + "] already exists.");
+            }
         }
 
         spans.put(aSpan.getVid(), aSpan);

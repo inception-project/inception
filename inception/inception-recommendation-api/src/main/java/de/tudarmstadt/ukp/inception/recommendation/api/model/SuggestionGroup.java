@@ -24,7 +24,7 @@ import static java.util.Collections.sort;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Collections.unmodifiableMap;
 import static java.util.Comparator.comparing;
-import static java.util.Comparator.comparingInt;
+import static java.util.Comparator.comparingDouble;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.collections4.IteratorUtils.unmodifiableIterator;
@@ -174,10 +174,10 @@ public class SuggestionGroup<T extends AnnotationSuggestion>
 
     public List<T> bestSuggestions(Preferences aPreferences)
     {
-        Map<LabelMapKey, Map<Long, T>> labelMap = suggestionsByLabel(aPreferences);
+        var labelMap = suggestionsByLabel(aPreferences);
 
         // Determine the maximum score per Label
-        Map<LabelMapKey, Double> maxScorePerLabel = new HashMap<>();
+        var maxScorePerLabel = new HashMap<LabelMapKey, Double>();
         for (var label : labelMap.keySet()) {
             double maxScore = labelMap.get(label).values().stream()
                     .mapToDouble(AnnotationSuggestion::getScore).max().orElse(0.0d);
@@ -195,13 +195,14 @@ public class SuggestionGroup<T extends AnnotationSuggestion>
 
         // Create VID using the recommendation with the lowest recommendationId
         List<T> canonicalSuggestions = new ArrayList<>();
-        for (LabelMapKey label : sortedAndFiltered) {
-            // Pick out the recommendations with the lowest recommendationId as canonical for
-            // generating the VID
+        for (var label : sortedAndFiltered) {
+            // Pick out the recommendations with the highest score and then lowest recommendationId
+            // as canonical for generating the VID
             T ao = stream()
                     // check for label or feature for no-label annotations as key
                     .filter(p -> label.equalsAnnotationSuggestion(p))
-                    .max(comparingInt(AnnotationSuggestion::getId)) //
+                    .max(comparingDouble(AnnotationSuggestion::getScore)
+                            .thenComparingInt(AnnotationSuggestion::getId)) //
                     .orElse(null);
 
             if (ao != null) {

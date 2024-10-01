@@ -34,9 +34,9 @@ public class AnnotationStateChangedEventAdapter
     implements EventLoggingAdapter<AnnotationStateChangeEvent>
 {
     @Override
-    public boolean accepts(Object aEvent)
+    public boolean accepts(Class<?> aEvent)
     {
-        return aEvent instanceof AnnotationStateChangeEvent;
+        return AnnotationStateChangeEvent.class.isAssignableFrom(aEvent);
     }
 
     @Override

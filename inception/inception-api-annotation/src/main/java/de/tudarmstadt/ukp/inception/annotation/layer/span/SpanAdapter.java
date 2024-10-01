@@ -20,9 +20,11 @@ package de.tudarmstadt.ukp.inception.annotation.layer.span;
 import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectByAddr;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Collections.emptyList;
+import static org.apache.uima.cas.text.AnnotationPredicates.colocated;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
 
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -30,6 +32,7 @@ import java.util.function.Supplier;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
 import org.slf4j.Logger;
@@ -38,6 +41,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.IllegalPlacementException;
+import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -55,24 +59,26 @@ import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 public class SpanAdapter
     extends TypeAdapter_ImplBase
 {
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private final List<SpanLayerBehavior> behaviors;
 
     public SpanAdapter(LayerSupportRegistry aLayerSupportRegistry,
             FeatureSupportRegistry aFeatureSupportRegistry,
             ApplicationEventPublisher aEventPublisher, AnnotationLayer aLayer,
-            Supplier<Collection<AnnotationFeature>> aFeatures, List<SpanLayerBehavior> aBehaviors)
+            Supplier<Collection<AnnotationFeature>> aFeatures, List<SpanLayerBehavior> aBehaviors,
+            ConstraintsService aConstraintsService)
     {
-        super(aLayerSupportRegistry, aFeatureSupportRegistry, aEventPublisher, aLayer, aFeatures);
+        super(aLayerSupportRegistry, aFeatureSupportRegistry, aConstraintsService, aEventPublisher,
+                aLayer, aFeatures);
 
         if (aBehaviors == null) {
             behaviors = emptyList();
         }
         else {
-            List<SpanLayerBehavior> temp = new ArrayList<>(aBehaviors);
-            AnnotationAwareOrderComparator.sort(temp);
-            behaviors = temp;
+            behaviors = aBehaviors.stream() //
+                    .sorted(AnnotationAwareOrderComparator.INSTANCE) //
+                    .toList();
         }
     }
 
@@ -106,7 +112,7 @@ public class SpanAdapter
 
         // Adjust the creation request (e.g. adjust offsets to the configured granularity) or
         // reject the creation (e.g. reject cross-sentence annotations)
-        for (SpanLayerBehavior behavior : behaviors) {
+        for (var behavior : behaviors) {
             request = behavior.onCreate(this, request);
         }
 
@@ -176,7 +182,7 @@ public class SpanAdapter
         var type = CasUtil.getType(aCas, getAnnotationTypeName());
         var newAnnotation = aCas.createAnnotation(type, aBegin, aEnd);
 
-        log.trace("Created span annotation {}-{} [{}]", newAnnotation.getBegin(),
+        LOG.trace("Created span annotation {}-{} [{}]", newAnnotation.getBegin(),
                 newAnnotation.getEnd(), newAnnotation.getCoveredText());
 
         // If if the layer attaches to a feature, then set the attach-feature to the newly
@@ -201,7 +207,7 @@ public class SpanAdapter
         aAnnotation.setBegin(aBegin);
         aAnnotation.setEnd(aEnd);
 
-        log.trace("Moved span annotation from {}-{} [{}] to {}-{} [{}]", oldBegin, oldEnd,
+        LOG.trace("Moved span annotation from {}-{} [{}] to {}-{} [{}]", oldBegin, oldEnd,
                 oldCoveredText, aAnnotation.getBegin(), aAnnotation.getEnd(),
                 aAnnotation.getCoveredText());
 
@@ -271,7 +277,7 @@ public class SpanAdapter
         for (var behavior : behaviors) {
             var startTime = currentTimeMillis();
             messages.addAll(behavior.onValidate(this, aCas));
-            log.trace("Validation for [{}] on [{}] took {}ms", behavior.getClass().getSimpleName(),
+            LOG.trace("Validation for [{}] on [{}] took {}ms", behavior.getClass().getSimpleName(),
                     getLayer().getUiName(), currentTimeMillis() - startTime);
         }
 
@@ -284,5 +290,33 @@ public class SpanAdapter
         var selection = new Selection();
         selection.selectSpan(aAnno);
         return selection;
+    }
+
+    @Override
+    public boolean isSamePosition(FeatureStructure aFS1, FeatureStructure aFS2)
+    {
+        if (aFS1 == null || aFS2 == null) {
+            return false;
+        }
+
+        if (!aFS1.getType().getName().equals(getAnnotationTypeName())) {
+            throw new IllegalArgumentException("Expected [" + getAnnotationTypeName()
+                    + "] but got [" + aFS1.getType().getName() + "]");
+        }
+
+        if (!aFS2.getType().getName().equals(getAnnotationTypeName())) {
+            throw new IllegalArgumentException("Expected [" + getAnnotationTypeName()
+                    + "] but got [" + aFS2.getType().getName() + "]");
+        }
+
+        if (aFS1 instanceof AnnotationFS ann1 && aFS2 instanceof AnnotationFS ann2) {
+            if (aFS1 == aFS2) {
+                return true;
+            }
+
+            return colocated(ann1, ann2);
+        }
+
+        throw new IllegalArgumentException("Feature structures need to be annotations");
     }
 }

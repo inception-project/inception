@@ -44,7 +44,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.ValidationExce
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.CurationPage;
+import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.LegacyCurationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.MergeDialog;
 import de.tudarmstadt.ukp.inception.curation.merge.MergeStrategyFactory;
 import de.tudarmstadt.ukp.inception.curation.merge.strategy.MergeStrategy;
@@ -111,10 +111,10 @@ public class CuratorWorkflowActionBarItemGroup
         AnnotatorState state = page.getModelObject();
 
         if (curationDocumentService.isCurationFinished(state.getDocument())) {
-            return FontAwesome5IconType.lock_s.cssClassName();
+            return FontAwesome5IconType.clipboard_s.cssClassName();
         }
         else {
-            return FontAwesome5IconType.lock_open_s.cssClassName();
+            return FontAwesome5IconType.clipboard_check_s.cssClassName();
         }
     }
 
@@ -133,21 +133,21 @@ public class CuratorWorkflowActionBarItemGroup
     protected void actionToggleCurationState(AjaxRequestTarget aTarget)
         throws IOException, AnnotationException
     {
-        try {
-            page.actionValidateDocument(aTarget, page.getEditorCas());
-        }
-        catch (ValidationException e) {
-            page.error("Document cannot be marked as finished: " + e.getMessage());
-            aTarget.addChildren(page, IFeedback.class);
-            return;
-        }
-
-        AnnotatorState state = page.getModelObject();
-        SourceDocument sourceDocument = state.getDocument();
+        var state = page.getModelObject();
+        var sourceDocument = state.getDocument();
         var docState = sourceDocument.getState();
 
         switch (docState) {
         case CURATION_IN_PROGRESS:
+            try {
+                page.actionValidateDocument(aTarget, page.getEditorCas());
+            }
+            catch (ValidationException e) {
+                page.error("Document cannot be marked as finished: " + e.getMessage());
+                aTarget.addChildren(page, IFeedback.class);
+                return;
+            }
+
             documentService.setSourceDocumentState(sourceDocument, CURATION_FINISHED);
             aTarget.add(page);
             break;
@@ -177,7 +177,7 @@ public class CuratorWorkflowActionBarItemGroup
             aTarget.addChildren(getPage(), IFeedback.class);
         }
 
-        ((CurationPage) page).readOrCreateCurationCas(mergeStrategy, true);
+        ((LegacyCurationPage) page).readOrCreateCurationCas(mergeStrategy, true);
 
         // ... and load it
         page.actionLoadDocument(aTarget);

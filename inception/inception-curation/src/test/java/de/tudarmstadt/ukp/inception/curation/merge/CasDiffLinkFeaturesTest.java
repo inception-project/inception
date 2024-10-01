@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.inception.curation.merge;
 
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
-import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior.LINK_TARGET_AS_LABEL;
 import static de.tudarmstadt.ukp.inception.curation.merge.CurationTestUtils.HOST_TYPE;
 import static de.tudarmstadt.ukp.inception.curation.merge.CurationTestUtils.createMultiLinkWithRoleTestTypeSystem;
 import static de.tudarmstadt.ukp.inception.curation.merge.CurationTestUtils.makeLinkFS;
@@ -55,7 +54,7 @@ public class CasDiffLinkFeaturesTest
         var casByUser = new LinkedHashMap<String, CAS>();
         casByUser.put("user1", targetCas.getCas());
         casByUser.put("user2", sourceCas.getCas());
-        var diff = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser).toResult();
+        var diff = doDiff(diffAdapters, casByUser).toResult();
 
         assertThat(diff.getDifferingConfigurationSets()).isEmpty();
         assertThat(diff.getIncompleteConfigurationSets()).isEmpty();
@@ -81,7 +80,7 @@ public class CasDiffLinkFeaturesTest
         var casByUser = new LinkedHashMap<String, CAS>();
         casByUser.put("user1", targetCas.getCas());
         casByUser.put("user2", sourceCas.getCas());
-        var diff = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser).toResult();
+        var diff = doDiff(diffAdapters, casByUser).toResult();
 
         assertThat(diff.getDifferingConfigurationSets()).isEmpty();
         assertThat(diff.getIncompleteConfigurationSets()).hasSize(2);

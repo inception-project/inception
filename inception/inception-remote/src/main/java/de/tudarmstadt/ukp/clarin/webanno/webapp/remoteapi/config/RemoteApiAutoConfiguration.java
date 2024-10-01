@@ -17,11 +17,13 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.config;
 
+import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.SPEL_IS_ADMIN_ACCOUNT_RECOVERY_MODE;
+
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 
-import org.springdoc.core.GroupedOpenApi;
+import org.springdoc.core.models.GroupedOpenApi;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -41,16 +43,18 @@ import io.swagger.v3.oas.models.info.Info;
 @EnableConfigurationProperties({ RemoteApiProperties.class, WebhooksConfiguration.class })
 public class RemoteApiAutoConfiguration
 {
-    static final String REMOTE_API_ENABLED_CONDITION = "${remote-api.enabled:false} || ${webanno.remote-api.enable:false}";
+    static final String REMOTE_API_ENABLED_CONDITION = //
+            "(${remote-api.enabled:false} || ${webanno.remote-api.enable:false}) && !"
+                    + SPEL_IS_ADMIN_ACCOUNT_RECOVERY_MODE;
 
-    @ConditionalOnExpression(RemoteApiAutoConfiguration.REMOTE_API_ENABLED_CONDITION)
+    @ConditionalOnExpression(REMOTE_API_ENABLED_CONDITION)
     @Bean
     public AeroRemoteApiController aeroRemoteApiController()
     {
         return new AeroRemoteApiController();
     }
 
-    @ConditionalOnExpression(RemoteApiAutoConfiguration.REMOTE_API_ENABLED_CONDITION)
+    @ConditionalOnExpression(REMOTE_API_ENABLED_CONDITION)
     @Bean
     public LegacyRemoteApiController legacyRemoteApiController()
     {
@@ -63,7 +67,7 @@ public class RemoteApiAutoConfiguration
     {
         return GroupedOpenApi.builder().group("disabled") //
                 .pathsToExclude("/**") //
-                .addOpenApiCustomiser(openApi -> { //
+                .addOpenApiCustomizer(openApi -> { //
                     openApi.info(new Info() //
                             .title("Remote API disabled") //
                             .description("The remote API is not enabled."));
@@ -77,7 +81,7 @@ public class RemoteApiAutoConfiguration
     {
         return GroupedOpenApi.builder().group("legacy-v1")
                 .pathsToMatch(LegacyRemoteApiController.API_BASE + "/**") //
-                .addOpenApiCustomiser(openApi -> { //
+                .addOpenApiCustomizer(openApi -> { //
                     openApi.info(new Info() //
                             .title("Legacy API") //
                             .version("1"));
@@ -91,7 +95,7 @@ public class RemoteApiAutoConfiguration
     {
         return GroupedOpenApi.builder().group("aero-v1")
                 .pathsToMatch(AeroRemoteApiController.API_BASE + "/**")
-                .addOpenApiCustomiser(openApi -> { //
+                .addOpenApiCustomizer(openApi -> { //
                     openApi.info(new Info() //
                             .title("AERO") //
                             .version("1.0.0")

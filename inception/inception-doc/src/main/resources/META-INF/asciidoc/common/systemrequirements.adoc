@@ -48,9 +48,12 @@ The examples in this guide are based on a recent Debian Linux. Most of them shou
 | Java Runtime Environment
 | version 17 or higher
 
-| MariaDB Server (or compatible)
+| DB Server
 | MariaDB version 10.6 or higher +
-  MySQL version 8.0 or higher
+  MySQL version 8.0 or higher +
+  MS SQL Server 2022 or higher (🧪 experimental) +
+  PostgreSQL 16.3 or higher (🧪 experimental) 
+
 |===
 
 [.small]

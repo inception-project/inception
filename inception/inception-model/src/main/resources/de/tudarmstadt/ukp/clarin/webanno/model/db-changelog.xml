@@ -22,7 +22,7 @@
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="
     http://www.liquibase.org/xml/ns/dbchangelog-ext https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd 
-    http://www.liquibase.org/xml/ns/dbchangelog https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+    http://www.liquibase.org/xml/ns/dbchangelog https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.27.xsd">
   
   <changeSet author="WebAnno Team" id="1512223050574-1">
     <preConditions onFail="MARK_RAN">
@@ -48,19 +48,6 @@
       <column name="document" type="BIGINT" />
       <column name="project" type="BIGINT" />
     </createTable>
-  </changeSet>
-  
-  <!--
-    Clean up legacy unique constraint (name, project, user) on (annotation_document)
-    
-    NOTE: This change set ignores failures since there is no precondition to check if
-          unique constraints exist or not. So we simply have to try it.
-   -->
-  <changeSet author="WebAnno Team" id="1512223050574-1.1" failOnError="false">
-    <dropUniqueConstraint 
-      tableName="annotation_document" 
-      constraintName="UK_lq2x3u95l76hxx8ei9hydk824"
-      uniqueColumns="name, project, user" />
   </changeSet>
 
   <!-- 
@@ -147,19 +134,6 @@
     </createTable>
   </changeSet>
 
-  <!--
-    Clean up legacy unique constraint (annotation_type, name, project) on (annotation_feature)
-    
-    NOTE: This change set ignores failures since there is no precondition to check if
-          unique constraints exist or not. So we simply have to try it.
-   -->
-  <changeSet author="WebAnno Team" id="1512223050574-2.1" failOnError="false">
-    <dropUniqueConstraint 
-      tableName="annotation_feature"
-      constraintName="UK_pgq9palohljgv9qympj7nbcp2" 
-      uniqueColumns="annotation_type, name, project" />
-  </changeSet>
-
   <!-- 
     Add unique constraint (annotation_type, name, project) on (annotation_feature)
     
@@ -226,19 +200,6 @@
       <column name="project" type="BIGINT" />
     </createTable>
   </changeSet>
-  
-  <!--
-    Clean up legacy unique constraint (annotation_type, name, project) on (annotation_feature)
-    
-    NOTE: This change set ignores failures since there is no precondition to check if
-          unique constraints exist or not. So we simply have to try it.
-   -->
-  <changeSet author="WebAnno Team" id="1512223050574-3.1" failOnError="false">
-    <dropUniqueConstraint 
-      tableName="annotation_type" 
-      constraintName="UK_m2jvqyu4akybpmyv7e6xli166"
-      uniqueColumns="name, project" />
-  </changeSet>
 
   <!-- 
     Add unique constraint (annotation_type, name, project) on (annotation_feature)
@@ -282,19 +243,6 @@
       </column>
       <column name="project" type="BIGINT" />
     </createTable>
-  </changeSet>
-  
-  <!--
-    Clean up legacy unique constraint (name, project) on (constraint_set)
-    
-    NOTE: This change set ignores failures since there is no precondition to check if
-          unique constraints exist or not. So we simply have to try it.
-   -->
-  <changeSet author="WebAnno Team" id="1512223050574-6.1" failOnError="false">
-    <dropUniqueConstraint
-      tableName="constraint_set" 
-      constraintName="UK_m2jvqyu4akybpmyv7e6xli166"
-      uniqueColumns="name, project" />
   </changeSet>
 
   <!-- 
@@ -350,19 +298,6 @@
       </column>
     </createTable>
   </changeSet>
-  
-  <!--
-    Clean up legacy unique constraint (name) on (project)
-    
-    NOTE: This change set ignores failures since there is no precondition to check if
-          unique constraints exist or not. So we simply have to try it.
-   -->
-  <changeSet author="WebAnno Team" id="1512223050574-9.1" failOnError="false">
-    <dropUniqueConstraint
-      tableName="project"
-      constraintName="UK_3k75vvu7mevyvvb5may5lj8k7" 
-      uniqueColumns="name" />
-  </changeSet>
 
   <!-- 
     Add unique constraint (name) on (project)
@@ -391,19 +326,6 @@
       <column name="user" type="VARCHAR(255)" />
       <column name="project" type="BIGINT" />
     </createTable>
-  </changeSet>
-  
-  <!--
-    Clean up legacy unique constraint (user, level, project) on (project_permissions)
-    
-    NOTE: This change set ignores failures since there is no precondition to check if
-          unique constraints exist or not. So we simply have to try it.
-   -->
-  <changeSet author="WebAnno Team" id="1512223050574-10.1" failOnError="false">
-    <dropUniqueConstraint
-      tableName="project_permissions" 
-      constraintName="UK_gh78wc2j1lxhhmk1hu5b9u8vb"
-      uniqueColumns="user, level, project" />
   </changeSet>
 
   <!-- 
@@ -464,19 +386,6 @@
       <column name="updated" type="datetime(6)" />
       <column name="project" type="BIGINT" />
     </createTable>
-  </changeSet>
-  
-  <!--
-    Clean up legacy unique constraint (name, project) on (source_document)
-    
-    NOTE: This change set ignores failures since there is no precondition to check if
-          unique constraints exist or not. So we simply have to try it.
-   -->
-  <changeSet author="WebAnno Team" id="1512223050574-11.1" failOnError="false">
-    <dropUniqueConstraint
-      tableName="source_document"
-      constraintName="UK_3ma3d81kn5x2sjpv7e99rnt2h"
-      uniqueColumns="name, project" />
   </changeSet>
 
   <!-- 
@@ -559,19 +468,6 @@
       <column name="project" type="BIGINT" />
     </createTable>
   </changeSet>
-  
-  <!--
-    Clean up legacy unique constraint (name, project) on (tag_set)
-    
-    NOTE: This change set ignores failures since there is no precondition to check if
-          unique constraints exist or not. So we simply have to try it.
-   -->
-  <changeSet author="WebAnno Team" id="1512223050574-13.1" failOnError="false">
-    <dropUniqueConstraint
-      tableName="tag_set" 
-      constraintName="UK_n1pf8qa78xwkkq5890mp5u5rw"
-      uniqueColumns="name, project" />
-  </changeSet>
 
   <!-- 
     Add unique constraint (name, project) on (tag_set)
@@ -599,77 +495,7 @@
       <column name="project" />
     </createIndex>
   </changeSet>  
-  
-  <changeSet author="WebAnno Team" id="1512223050574-14">
-    <preConditions onFail="MARK_RAN">
-      <not>
-        <tableExists tableName="train_document" />
-      </not>
-    </preConditions>
-    <createTable tableName="train_document">
-      <column autoIncrement="true" name="id" type="BIGINT">
-        <constraints primaryKey="true" />
-      </column>
-      <column name="format" type="VARCHAR(255)" />
-      <column name="name" type="VARCHAR(255)">
-        <constraints nullable="false" />
-      </column>
-      <column name="processed" type="BIT(1)">
-        <constraints nullable="false" />
-      </column>
-      <column name="sentenceAccessed" type="INT">
-        <constraints nullable="false" />
-      </column>
-      <column name="state" type="VARCHAR(255)">
-        <constraints nullable="false" />
-      </column>
-      <column name="timestamp" type="datetime(6)" />
-      <column name="feature_id" type="BIGINT" />
-      <column name="project" type="BIGINT" />
-    </createTable>
-  </changeSet>
-  
-  <!--
-    Clean up legacy unique constraint (name, project) on (train_document)
-    
-    NOTE: This change set ignores failures since there is no precondition to check if
-          unique constraints exist or not. So we simply have to try it.
-   -->
-  <changeSet author="WebAnno Team" id="1512223050574-14.1" failOnError="false">
-    <dropUniqueConstraint
-      tableName="train_document" 
-      constraintName="UK_jf8bhw2u6xwp9goc2yqv2qfhc"
-      uniqueColumns="name, project" />
-  </changeSet>
 
-  <!-- 
-    Add unique constraint (name, project) on (train_document)
-    
-    NOTE: This change set ignores failures since there is no precondition to check if
-          unique constraints exist or not. So we simply have to try it.
-   -->
-  <changeSet author="WebAnno Team" id="1512223050574-14.2" failOnError="false">
-    <addUniqueConstraint 
-      tableName="train_document" 
-      constraintName="UKjf8bhw2u6xwp9goc2yqv2qfhc"
-      columnNames="name, project" />
-  </changeSet>  
-
-  <!--
-    Add index (project) on (train_document)
-   -->
-  <changeSet author="WebAnno Team" id="1512223050574-14.4">
-    <preConditions onFail="MARK_RAN">
-      <not>
-        <indexExists tableName="train_document" indexName="FKrthd11flannrdgc0hvvjcagy5"/>
-      </not>
-    </preConditions>
-    <createIndex indexName="FKrthd11flannrdgc0hvvjcagy5" tableName="train_document">
-      <column name="project" />
-    </createIndex>
-  </changeSet>  
-  
-  
   <changeSet author="WebAnno Team" id="1512223050574-41.1">
     <preConditions onFail="MARK_RAN">
       <foreignKeyConstraintExists foreignKeyTableName="constraint_set" foreignKeyName="FK7D6BCB001EBB5F0A" />
@@ -903,25 +729,6 @@
       onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="tag_set" />
   </changeSet>
 
-
-  <changeSet author="WebAnno Team" id="1512223050574-54.1">
-    <preConditions onFail="MARK_RAN">
-      <foreignKeyConstraintExists foreignKeyTableName="train_document" foreignKeyName="FK_ijpb9cuo73wabicxjvnpf8gb6" />
-    </preConditions>
-    <dropForeignKeyConstraint baseTableName="train_document" constraintName="FK_ijpb9cuo73wabicxjvnpf8gb6" />
-  </changeSet>
-
-  <changeSet author="WebAnno Team" id="1512223050574-54.3">
-    <preConditions onFail="MARK_RAN">
-      <not>
-        <foreignKeyConstraintExists foreignKeyTableName="train_document" foreignKeyName="FKrthd11flannrdgc0hvvjcagy5" />
-      </not>
-    </preConditions>
-    <addForeignKeyConstraint baseColumnNames="project" baseTableName="train_document"
-      constraintName="FKrthd11flannrdgc0hvvjcagy5" deferrable="false" initiallyDeferred="false"
-      onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="project" />
-  </changeSet>
-
   <!--
     Clean up legacy index (project) on (annotation_document)
    -->
@@ -1030,18 +837,6 @@
       indexName="FK_o4j88awilp74dl39y4kh6p1h0" />
   </changeSet>
 
-  <!--
-    Clean up legacy index (project) on (train_document)
-   -->
-  <changeSet author="WebAnno Team" id="1512223050574-14.3">
-    <preConditions onFail="MARK_RAN">
-      <indexExists tableName="train_document" indexName="FK_ijpb9cuo73wabicxjvnpf8gb6"/>
-    </preConditions>
-    <dropIndex 
-      tableName="train_document"
-      indexName="FK_ijpb9cuo73wabicxjvnpf8gb6" />
-  </changeSet>
-  
   <changeSet author="WebAnno Team" id="20180204-1">
     <preConditions onFail="MARK_RAN">
       <not>
@@ -1095,7 +890,7 @@
     </addColumn>
   </changeSet>
   
-  <changeSet author="WebAnno Team" id="20181005-2b" dbms="!postgresql">
+  <changeSet author="WebAnno Team" id="20181005-2b" dbms="!postgresql,!mssql">
     <preConditions onFail="MARK_RAN">
       <and>
         <columnExists tableName="annotation_type" columnName="lockToTokenOffset"/>
@@ -1142,7 +937,31 @@
       <column name="anchoring_mode" type="VARCHAR(255)" value="tokens"/>
       <where>"lockToTokenOffset" = b'0' and "multipleTokens" = b'1'</where>
     </update>
-  </changeSet> 
+  </changeSet>
+  <changeSet author="WebAnno Team" id="20181005-2b-mssql" dbms="mssql">
+    <preConditions onFail="MARK_RAN">
+      <and>
+        <columnExists tableName="annotation_type" columnName="lockToTokenOffset"/>
+        <columnExists tableName="annotation_type" columnName="multipleTokens"/>
+      </and>
+    </preConditions>
+    <update tableName="annotation_type">
+      <column name="anchoring_mode" type="VARCHAR(255)" value="characters"/>
+      <where>"lockToTokenOffset" = 0 and "multipleTokens" = 0</where>
+    </update>
+    <update tableName="annotation_type">
+      <column name="anchoring_mode" type="VARCHAR(255)" value="singleToken"/>
+      <where>"lockToTokenOffset" = 1 and "multipleTokens" = 0</where>
+    </update>
+    <update tableName="annotation_type">
+      <column name="anchoring_mode" type="VARCHAR(255)" value="tokens"/>
+      <where>"lockToTokenOffset" = 1 and "multipleTokens" = 1</where>
+    </update>
+    <update tableName="annotation_type">
+      <column name="anchoring_mode" type="VARCHAR(255)" value="tokens"/>
+      <where>"lockToTokenOffset" = 0 and "multipleTokens" = 1</where>
+    </update>
+  </changeSet>
 
   <changeSet author="WebAnno Team" id="20181005-2c" failOnError="false">
     <preConditions onFail="MARK_RAN">
@@ -1200,7 +1019,7 @@
     </addColumn>
   </changeSet>
 
-  <changeSet author="WebAnno Team" id="20190125-1b" dbms="!postgresql">
+  <changeSet author="WebAnno Team" id="20190125-1b" dbms="!postgresql,!mssql">
     <preConditions onFail="MARK_RAN">
       <columnExists tableName="annotation_type" columnName="allowSTacking"/>
     </preConditions>
@@ -1226,7 +1045,20 @@
       <where>"allowSTacking" = b'0'</where>
     </update>
   </changeSet>
-  
+  <changeSet author="WebAnno Team" id="20190125-1b-mssql" dbms="mssql">
+    <preConditions onFail="MARK_RAN">
+      <columnExists tableName="annotation_type" columnName="allowSTacking"/>
+    </preConditions>
+    <update tableName="annotation_type">
+      <column name="overlap_mode" type="VARCHAR(255)" value="any"/>
+      <where>"allowSTacking" = 1</where>
+    </update>
+    <update tableName="annotation_type">
+      <column name="overlap_mode" type="VARCHAR(255)" value="overlapOnly"/>
+      <where>"allowSTacking" = 0</where>
+    </update>
+  </changeSet>
+
   <changeSet author="WebAnno Team" id="20190125-1c" failOnError="false">
     <preConditions onFail="MARK_RAN">
       <changeSetExecuted author="WebAnno Team" id="20190125-1b"/>
@@ -1236,7 +1068,7 @@
       columnName="overlap_mode"
       columnDataType="VARCHAR(255)" />
   </changeSet>
-  
+
   <changeSet author="WebAnno Team" id="20100129-1">
     <preConditions onFail="MARK_RAN">
       <not>
@@ -1261,8 +1093,8 @@
         <constraints nullable="false" />
       </column>
     </addColumn>
-  </changeSet>  
-
+  </changeSet>
+  
   <changeSet author="WebAnno Team" id="20190711-1">
     <preConditions onFail="MARK_RAN">
       <not>
@@ -1320,9 +1152,9 @@
     </dropColumn>  
   </changeSet>
 
-  <changeSet author="INCEpTION Team" id="20210218-2">
-    <preConditions onFail="WARN">
-      <changeSetExecuted author="WebAnno Team" id="1512223050574-14"/>
+  <changeSet author="INCEpTION Team" id="20210218-2.1">
+    <preConditions onFail="MARK_RAN">
+      <tableExists tableName="train_document"/>
     </preConditions>
     <dropTable tableName="train_document" cascadeConstraints="true"/>
   </changeSet>
@@ -1437,5 +1269,129 @@
         <constraints nullable="false"/>
       </column>
     </addColumn>
+  </changeSet>
+  
+  <changeSet author="INCEpTION Team" id="20240404-01">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <indexExists tableName="annotation_document" indexName="idx_user_project"/>
+      </not>
+    </preConditions>
+    <createIndex indexName="idx_user_project" tableName="annotation_document">
+      <column name="user"/>
+      <column name="project"/>
+    </createIndex>
+  </changeSet>
+
+  <changeSet author="INCEpTION Team" id="20240629-1" dbms="!postgresql">
+    <modifyDataType tableName="tag_set" columnName="createTag" newDataType="BOOLEAN"/>
+    <addNotNullConstraint tableName="tag_set" columnName="createTag" columnDataType="BOOLEAN"/>
+  </changeSet>
+  <changeSet author="INCEpTION Team" id="20240629-1-pg" dbms="postgresql">
+    <sql>ALTER TABLE tag_set ALTER "createTag" TYPE BOOLEAN USING ("createTag"::int::bool)</sql>
+  </changeSet>
+
+  <changeSet author="INCEpTION Team" id="20240629-2" dbms="!postgresql">
+    <modifyDataType tableName="annotation_type" columnName="builtIn" newDataType="BOOLEAN"/>
+    <addNotNullConstraint tableName="annotation_type" columnName="builtIn" columnDataType="BOOLEAN"/>
+  </changeSet>
+  <changeSet author="INCEpTION Team" id="20240629-2-pg" dbms="postgresql">
+    <sql>ALTER TABLE annotation_type ALTER "builtIn" TYPE BOOLEAN USING ("builtIn"::int::bool)</sql>
+  </changeSet>
+  
+  <changeSet author="INCEpTION Team" id="20240629-3" dbms="!postgresql">
+    <modifyDataType tableName="annotation_type" columnName="crossSentence" newDataType="BOOLEAN"/>
+    <addNotNullConstraint tableName="annotation_type" columnName="crossSentence" columnDataType="BOOLEAN"/>
+  </changeSet>
+  <changeSet author="INCEpTION Team" id="20240629-3-pg" dbms="postgresql">
+    <sql>ALTER TABLE annotation_type ALTER "crossSentence" TYPE BOOLEAN USING ("crossSentence"::int::bool)</sql>
+  </changeSet>
+  
+  <changeSet author="INCEpTION Team" id="20240629-4" dbms="!postgresql">
+    <modifyDataType tableName="annotation_type" columnName="enabled" newDataType="BOOLEAN"/>
+    <addNotNullConstraint tableName="annotation_type" columnName="enabled" columnDataType="BOOLEAN"/>
+  </changeSet>
+  <changeSet author="INCEpTION Team" id="20240629-4-pg" dbms="postgresql">
+    <sql>ALTER TABLE annotation_type ALTER "enabled" TYPE BOOLEAN USING ("enabled"::int::bool)</sql>
+  </changeSet>
+  
+  <changeSet author="INCEpTION Team" id="20240629-5" dbms="!postgresql">
+    <modifyDataType tableName="annotation_type" columnName="linkedListBehavior" newDataType="BOOLEAN"/>
+    <addNotNullConstraint tableName="annotation_type" columnName="linkedListBehavior" columnDataType="BOOLEAN"/>
+  </changeSet>
+  <changeSet author="INCEpTION Team" id="20240629-5-pg" dbms="postgresql">
+    <sql>ALTER TABLE annotation_type ALTER "linkedListBehavior" TYPE BOOLEAN USING ("linkedListBehavior"::int::bool)</sql>
+  </changeSet>
+  
+  <changeSet author="INCEpTION Team" id="20240629-6" dbms="!postgresql">
+    <modifyDataType tableName="annotation_type" columnName="readonly" newDataType="BOOLEAN"/>
+    <addNotNullConstraint tableName="annotation_type" columnName="readonly" columnDataType="BOOLEAN"/>
+  </changeSet>
+  <changeSet author="INCEpTION Team" id="20240629-6-pg" dbms="postgresql">
+    <sql>ALTER TABLE annotation_type ALTER "readonly" TYPE BOOLEAN USING ("readonly"::int::bool)</sql>
+  </changeSet>
+  
+  <changeSet author="INCEpTION Team" id="20240629-7" dbms="!postgresql">
+    <modifyDataType tableName="annotation_type" columnName="showTextInHover" newDataType="BOOLEAN"/>
+    <addNotNullConstraint tableName="annotation_type" columnName="showTextInHover" columnDataType="BOOLEAN"/>
+  </changeSet>
+  <changeSet author="INCEpTION Team" id="20240629-7-pg" dbms="postgresql">
+    <sql>ALTER TABLE annotation_type ALTER "showTextInHover" TYPE BOOLEAN USING ("showTextInHover"::int::bool)</sql>
+  </changeSet>
+
+  <changeSet author="INCEpTION Team" id="20240629-8" dbms="!postgresql">
+    <modifyDataType tableName="annotation_feature" columnName="enabled" newDataType="BOOLEAN"/>
+    <addNotNullConstraint tableName="annotation_feature" columnName="enabled" columnDataType="BOOLEAN"/>
+  </changeSet>
+  <changeSet author="INCEpTION Team" id="20240629-8-pg" dbms="postgresql">
+    <sql>ALTER TABLE annotation_feature ALTER "enabled" TYPE BOOLEAN USING ("enabled"::int::bool)</sql>
+  </changeSet>
+
+  <changeSet author="INCEpTION Team" id="20240629-9" dbms="!postgresql">
+    <modifyDataType tableName="annotation_feature" columnName="hideUnconstraintFeature" newDataType="BOOLEAN"/>
+    <addNotNullConstraint tableName="annotation_feature" columnName="hideUnconstraintFeature" columnDataType="BOOLEAN"/>
+  </changeSet>
+  <changeSet author="INCEpTION Team" id="20240629-9-pg" dbms="postgresql">
+    <sql>ALTER TABLE annotation_feature ALTER "hideUnconstraintFeature" TYPE BOOLEAN USING ("hideUnconstraintFeature"::int::bool)</sql>
+  </changeSet>
+
+  <changeSet author="INCEpTION Team" id="20240629-10" dbms="!postgresql">
+    <modifyDataType tableName="annotation_feature" columnName="includeInHover" newDataType="BOOLEAN"/>
+    <addNotNullConstraint tableName="annotation_feature" columnName="includeInHover" columnDataType="BOOLEAN"/>
+  </changeSet>
+  <changeSet author="INCEpTION Team" id="20240629-10-pg" dbms="postgresql">
+    <sql>ALTER TABLE annotation_feature ALTER "includeInHover" TYPE BOOLEAN USING ("includeInHover"::int::bool)</sql>
+  </changeSet>
+
+  <changeSet author="INCEpTION Team" id="20240629-11" dbms="!postgresql">
+    <modifyDataType tableName="annotation_feature" columnName="remember" newDataType="BOOLEAN"/>
+    <addNotNullConstraint tableName="annotation_feature" columnName="remember" columnDataType="BOOLEAN"/>
+  </changeSet>
+  <changeSet author="INCEpTION Team" id="20240629-11-pg" dbms="postgresql">
+    <sql>ALTER TABLE annotation_feature ALTER "remember" TYPE BOOLEAN USING ("remember"::int::bool)</sql>
+  </changeSet>
+
+  <changeSet author="INCEpTION Team" id="20240629-12" dbms="!postgresql">
+    <modifyDataType tableName="annotation_feature" columnName="required" newDataType="BOOLEAN"/>
+    <addNotNullConstraint tableName="annotation_feature" columnName="required" columnDataType="BOOLEAN"/>
+  </changeSet>
+  <changeSet author="INCEpTION Team" id="20240629-12-pg" dbms="postgresql">
+    <sql>ALTER TABLE annotation_feature ALTER "required" TYPE BOOLEAN USING ("required"::int::bool)</sql>
+  </changeSet>
+
+  <changeSet author="INCEpTION Team" id="20240629-13" dbms="!postgresql">
+    <modifyDataType tableName="annotation_feature" columnName="visible" newDataType="BOOLEAN"/>
+    <addNotNullConstraint tableName="annotation_feature" columnName="visible" columnDataType="BOOLEAN"/>
+  </changeSet>
+  <changeSet author="INCEpTION Team" id="20240629-13-pg" dbms="postgresql">
+    <sql>ALTER TABLE annotation_feature ALTER "visible" TYPE BOOLEAN USING ("visible"::int::bool)</sql>
+  </changeSet>
+
+  <changeSet author="INCEpTION Team" id="20240629-14" dbms="!postgresql">
+    <modifyDataType tableName="annotation_feature" columnName="curatable" newDataType="BOOLEAN"/>
+    <addNotNullConstraint tableName="annotation_feature" columnName="curatable" columnDataType="BOOLEAN"/>
+  </changeSet>
+  <changeSet author="INCEpTION Team" id="20240629-14-pg" dbms="postgresql">
+    <sql>ALTER TABLE annotation_feature ALTER "curatable" TYPE BOOLEAN USING ("curatable"::int::bool)</sql>
   </changeSet>
 </databaseChangeLog>

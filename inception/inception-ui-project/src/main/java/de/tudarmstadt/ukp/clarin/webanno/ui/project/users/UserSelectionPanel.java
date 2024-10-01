@@ -32,12 +32,11 @@ import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.util.CollectionModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-
-import com.googlecode.wicket.jquery.core.JQueryBehavior;
-import com.googlecode.wicket.jquery.core.Options;
-import com.googlecode.wicket.kendo.ui.KendoDataSource;
-import com.googlecode.wicket.kendo.ui.form.multiselect.lazy.MultiSelect;
-import com.googlecode.wicket.kendo.ui.renderer.ChoiceRenderer;
+import org.wicketstuff.jquery.core.JQueryBehavior;
+import org.wicketstuff.jquery.core.Options;
+import org.wicketstuff.kendo.ui.KendoDataSource;
+import org.wicketstuff.kendo.ui.form.multiselect.lazy.MultiSelect;
+import org.wicketstuff.kendo.ui.renderer.ChoiceRenderer;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectUserPermissions;

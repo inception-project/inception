@@ -24,8 +24,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 
-import javax.persistence.NoResultException;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.context.ApplicationEvent;
@@ -41,6 +39,7 @@ import de.tudarmstadt.ukp.inception.log.EventRepository;
 import de.tudarmstadt.ukp.inception.log.adapter.EventLoggingAdapterRegistry;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.websocket.model.LoggedEventMessage;
+import jakarta.persistence.NoResultException;
 
 @Controller
 @ConditionalOnExpression("${websocket.enabled:true} and ${websocket.logged-events.enabled:false}")
@@ -74,7 +73,7 @@ public class LoggedEventsWebsocketControllerImpl
     @Override
     public void onApplicationEvent(ApplicationEvent aEvent)
     {
-        adapterRegistry.getAdapter(aEvent)
+        adapterRegistry.getAdapter(aEvent).filter(a -> a.isLoggable(aEvent)) //
                 .map(a -> createLoggedEventMessage(a.getUser(aEvent), a.getProject(aEvent),
                         a.getCreated(aEvent), a.getEvent(aEvent), a.getDocument(aEvent)))
                 .ifPresent(eventMsg -> msgTemplate.convertAndSend(LOGGED_EVENTS_TOPIC, eventMsg));
@@ -102,7 +101,8 @@ public class LoggedEventsWebsocketControllerImpl
         return eventRepo.listRecentActivity(aUsername, aMaxEvents).stream()
                 .map(event -> createLoggedEventMessage(event.getUser(), event.getProject(),
                         event.getCreated(), event.getEvent(), event.getDocument()))
-                .filter(Objects::nonNull).collect(toList());
+                .filter(Objects::nonNull) //
+                .collect(toList());
     }
 
     private LoggedEventMessage createLoggedEventMessage(String aUsername, long aProjectId,

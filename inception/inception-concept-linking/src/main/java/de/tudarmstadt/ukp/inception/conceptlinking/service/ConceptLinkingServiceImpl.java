@@ -17,15 +17,12 @@
  */
 package de.tudarmstadt.ukp.inception.conceptlinking.service;
 
-import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_LABEL_NC;
-import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_MENTION;
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_MENTION_CONTEXT;
-import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_MENTION_NC;
-import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_QUERY;
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_QUERY_BEST_MATCH_TERM_NC;
-import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_QUERY_NC;
+import static de.tudarmstadt.ukp.inception.kb.RepositoryType.LOCAL;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Comparator.comparingInt;
@@ -74,7 +71,6 @@ import de.tudarmstadt.ukp.inception.conceptlinking.util.FileUtils;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureValueType;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
-import de.tudarmstadt.ukp.inception.kb.RepositoryType;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder;
@@ -175,7 +171,7 @@ public class ConceptLinkingServiceImpl
         // where we want to avoid long reaction times when there is large number of candidates
         // (which is very likely when e.g. searching for all items starting with or containing a
         // specific letter.
-        final var threshold = RepositoryType.LOCAL.equals(aKB.getType()) ? 0 : 3;
+        final var threshold = aKB.getType() == LOCAL ? 0 : 3;
 
         var results = new LinkedHashSet<KBHandle>();
 
@@ -277,7 +273,7 @@ public class ConceptLinkingServiceImpl
         if (longLabels.length == 0) {
             LOG.debug(
                     "Not searching for candidates containing query/mention because they are too short");
-            return Collections.emptyList();
+            return emptyList();
         }
 
         var startTime = currentTimeMillis();
@@ -308,8 +304,8 @@ public class ConceptLinkingServiceImpl
         }
 
         var duration = currentTimeMillis() - startTime;
-        LOG.debug("Found [{}] candidates using matching {} in {}ms", result.size(),
-                asList(longLabels), duration);
+        LOG.debug("Found [{}] candidates containing {} in {}ms", result.size(), asList(longLabels),
+                duration);
         WicketUtil.serverTiming("findContainingMatches", duration);
 
         return result;
@@ -407,16 +403,8 @@ public class ConceptLinkingServiceImpl
     private CandidateEntity initCandidate(CandidateEntity candidate, String aQuery, String aMention,
             CAS aCas, int aBegin)
     {
-        if (aMention != null) {
-            candidate.put(KEY_MENTION, aMention);
-            candidate.put(KEY_MENTION_NC, aMention.toLowerCase(candidate.getLocale()));
-        }
-        if (aQuery != null) {
-            candidate.put(KEY_QUERY, aQuery);
-            candidate.put(KEY_QUERY_NC, aQuery.toLowerCase(candidate.getLocale()));
-        }
-
-        candidate.put(KEY_LABEL_NC, candidate.getLabel().toLowerCase(candidate.getLocale()));
+        candidate.withMention(aMention);
+        candidate.withQuery(aQuery);
 
         if (aCas != null && aMention != null) {
             var sentence = selectSentenceCovering(aCas, aBegin);
@@ -471,7 +459,7 @@ public class ConceptLinkingServiceImpl
         var results = candidates.stream() //
                 .map(candidate -> {
                     var handle = candidate.getHandle();
-                    handle.setDebugInfo(String.valueOf(candidate.getFeatures()));
+                    handle.setDebugInfo(candidate.getFeaturesAsString());
                     candidate.get(KEY_QUERY_BEST_MATCH_TERM_NC)
                             .filter(t -> !t.equalsIgnoreCase(handle.getUiLabel()))
                             .ifPresent(handle::setQueryBestMatchTerm);

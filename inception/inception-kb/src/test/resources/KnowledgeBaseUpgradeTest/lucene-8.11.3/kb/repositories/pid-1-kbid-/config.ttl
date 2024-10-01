@@ -1,0 +1,18 @@
+@prefix config: <tag:rdf4j.org,2023:config/> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<#pid-1-kbid-> a <http://www.openrdf.org/config/repository#Repository>, config:Repository;
+  <http://www.openrdf.org/config/repository#repositoryID> "pid-1-kbid-";
+  <http://www.openrdf.org/config/repository#repositoryImpl> [
+      <http://www.openrdf.org/config/repository#repositoryType> "openrdf:SailRepository";
+      <http://www.openrdf.org/config/repository/sail#sailImpl> [
+          <http://www.openrdf.org/config/sail#delegate> [
+              <http://www.openrdf.org/config/sail#sailType> "openrdf:NativeStore"
+            ];
+          <http://www.openrdf.org/config/sail#sailType> "openrdf:LuceneSail";
+          <http://www.openrdf.org/config/sail/lucene#fuzzyPrefixLength> "3";
+          <http://www.openrdf.org/config/sail/lucene#indexDir> "/var/folders/zd/493f9w953l12lkqhdsnjvwtr0000gt/T/junit14347330883550817196/kb/indexes/pid-1-kbid-";
+          <http://www.openrdf.org/config/sail/lucene#maxDocuments> "2500"
+        ]
+    ] .

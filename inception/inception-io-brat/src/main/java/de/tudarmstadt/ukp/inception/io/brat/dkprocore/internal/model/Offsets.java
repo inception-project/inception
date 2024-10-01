@@ -19,15 +19,15 @@ package de.tudarmstadt.ukp.inception.io.brat.dkprocore.internal.model;
 
 public class Offsets
 {
-    private  int begin;
-    private  int end;
+    private int begin;
+    private int end;
 
     public Offsets(int aBegin, int aEnd)
     {
         begin = aBegin;
         end = aEnd;
     }
-        
+
     public int getBegin()
     {
         return begin;
@@ -37,7 +37,7 @@ public class Offsets
     {
         return end;
     }
-    
+
     public void setBegin(int aBegin)
     {
         begin = aBegin;

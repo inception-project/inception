@@ -16,19 +16,29 @@
   limitations under the License.
 -->
 <script lang="ts">
-  import { showLabels, showEmptyHighlights } from './ApacheAnnotatorState'
+  import { showLabels, showAggregatedLabels, showEmptyHighlights } from './ApacheAnnotatorState'
+
+  export let sectionSelector : string
 </script>
 
 <div class="bootstrap card card-header border-0 border-bottom rounded-0 p-1" role="toolbar">
   <div class="d-flex">
     <div class="form-check form-switch mx-2">
       <input class="form-check-input" type="checkbox" role="switch" id="inlineLabelsEnabled" bind:checked={$showLabels}>
-      <label class="form-check-label" for="inlineLabelsEnabled">Labels</label>
+      <label class="form-check-label" for="inlineLabelsEnabled">Inline labels</label>
     </div>
-    <!-- <div class="form-check form-switch mx-2">
+    {#if sectionSelector}      
+      <div class="form-check form-switch mx-2">
+        <input class="form-check-input" type="checkbox" role="switch" id="aggregatedLabelsEnabled" bind:checked={$showAggregatedLabels}>
+        <label class="form-check-label" for="aggregatedLabelsEnabled">Section labels</label>
+      </div>
+    {/if}
+    <!--
+    <div class="form-check form-switch mx-2">
       <input class="form-check-input" type="checkbox" role="switch" id="showEmptyHighlights" bind:checked={$showEmptyHighlights}>
       <label class="form-check-label" for="showEmptyHighlights">Empties</label>
-    </div> -->
+    </div>
+    -->
   </div>
 </div>
 

@@ -66,6 +66,12 @@ public class TeiXmlDocumentFormatSupport
     }
 
     @Override
+    public List<String> getSectionElements()
+    {
+        return asList("p", "lg", "biblStruct");
+    }
+
+    @Override
     public CollectionReaderDescription getReaderDescription(Project aProject,
             TypeSystemDescription aTSD)
         throws ResourceInitializationException

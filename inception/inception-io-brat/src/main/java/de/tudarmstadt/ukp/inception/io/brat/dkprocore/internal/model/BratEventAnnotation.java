@@ -37,37 +37,35 @@ public class BratEventAnnotation
     extends BratAnnotation
 {
     // Multiple slots with the same name:
-    // E3   Binding:T9 Theme:T4 Theme2:T5 Theme3:T6 Theme4:T3
+    // E3 Binding:T9 Theme:T4 Theme2:T5 Theme3:T6 Theme4:T3
     // These at all "Theme" slots, the number basically just for disambiguation
-    
+
     // If two stacking events are created, they reuse the trigger span
-    // T31 Binding 6 16    annotation
+    // T31 Binding 6 16 annotation
     // E11 Binding:T31 Theme:T19 Theme2:T29
-    // E12 Binding:T31 
-    
+    // E12 Binding:T31
+
     // Attributes on events attach to the event, not to the trigger
-    // E9  Binding:T27 Theme:T12 Theme2:T11
-    // A1  Negation E9
-    
+    // E9 Binding:T27 Theme:T12 Theme2:T11
+    // A1 Negation E9
+
     // Probably relations pointing to events also attach to the event, not to the trigger
-    
-    private static final Pattern PATTERN = Pattern.compile(
-            "(?<ID>E[0-9]+)[\\t]" + 
-            "(?<TYPE>[a-zA-Z0-9_][a-zA-Z0-9_-]+):" +
-            "(?<TRIGGER>[ET][0-9]+)" + 
-            "(?<ARGS>( [a-zA-Z_][a-zA-Z0-9_-]+:[ET][0-9]+)*)[ ]*");
-    
+
+    private static final Pattern PATTERN = Pattern.compile("(?<ID>E[0-9]+)[\\t]"
+            + "(?<TYPE>[a-zA-Z0-9_][a-zA-Z0-9_-]+):" + "(?<TRIGGER>[ET][0-9]+)"
+            + "(?<ARGS>( [a-zA-Z_][a-zA-Z0-9_-]+:[ET][0-9]+)*)[ ]*");
+
     private static final String ID = "ID";
     private static final String TYPE = "TYPE";
     private static final String TRIGGER = "TRIGGER";
     private static final String ARGS = "ARGS";
-    
+
     private final String trigger;
-    
+
     private BratTextAnnotation triggerAnnotation;
-    
+
     private List<BratEventArgument> arguments;
-    
+
     public BratEventAnnotation(int aId, String aType, String aTrigger,
             BratEventArgument... aArguments)
     {
@@ -94,7 +92,7 @@ public class BratEventAnnotation
     {
         return trigger;
     }
-    
+
     public BratTextAnnotation getTriggerAnnotation()
     {
         return triggerAnnotation;
@@ -110,12 +108,12 @@ public class BratEventAnnotation
         arguments = aArguments == null ? Collections.emptyList()
                 : Collections.unmodifiableList(new ArrayList<BratEventArgument>(aArguments));
     }
-    
+
     public List<BratEventArgument> getArguments()
     {
         return arguments;
     }
-    
+
     public Map<String, List<BratEventArgument>> getGroupedArguments()
     {
         Map<String, List<BratEventArgument>> grouped = new LinkedHashMap<>();
@@ -131,8 +129,7 @@ public class BratEventAnnotation
     }
 
     @Override
-    public void write(JsonGenerator aJG)
-        throws IOException
+    public void write(JsonGenerator aJG) throws IOException
     {
         aJG.writeStartArray();
         aJG.writeString(getId());
@@ -164,7 +161,7 @@ public class BratEventAnnotation
     public static BratEventAnnotation parse(String aLine)
     {
         Matcher m = PATTERN.matcher(aLine);
-        
+
         if (!m.matches()) {
             throw new IllegalArgumentException("Illegal event annotation format [" + aLine + "]");
         }
@@ -174,7 +171,7 @@ public class BratEventAnnotation
             arguments = Arrays.stream(m.group(ARGS).trim().split(" "))
                     .map(arg -> BratEventArgument.parse(arg)).collect(Collectors.toList());
         }
-        
+
         return new BratEventAnnotation(m.group(ID), m.group(TYPE), m.group(TRIGGER), arguments);
     }
 }

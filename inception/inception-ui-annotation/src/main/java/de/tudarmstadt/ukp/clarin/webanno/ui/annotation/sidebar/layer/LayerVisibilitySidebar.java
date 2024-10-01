@@ -36,11 +36,10 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.UserPreferen
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase2;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
 import de.tudarmstadt.ukp.inception.bootstrap.IconToggleBox;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
-import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.config.AnnotationSchemaProperties;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
@@ -55,11 +54,10 @@ public class LayerVisibilitySidebar
     private @SpringBean UserPreferencesService userPreferencesService;
     private @SpringBean UserDao userService;
 
-    public LayerVisibilitySidebar(String aId, IModel<AnnotatorState> aModel,
-            AnnotationActionHandler aActionHandler, CasProvider aCasProvider,
-            AnnotationPage aAnnotationPage)
+    public LayerVisibilitySidebar(String aId, AnnotationActionHandler aActionHandler,
+            CasProvider aCasProvider, AnnotationPageBase2 aAnnotationPage)
     {
-        super(aId, aModel, aActionHandler, aCasProvider, aAnnotationPage);
+        super(aId, aActionHandler, aCasProvider, aAnnotationPage);
 
         add(createLayerContainer("annotationLayers", LoadableDetachableModel.of(this::listLayers)));
     }

@@ -60,6 +60,10 @@ public class FtsAdapterNoFts
             values.add(literalOf(sanitizedValue));
         }
 
+        if (values.isEmpty()) {
+            builder.noResult();
+        }
+
         builder.addPattern(PRIMARY,
                 and(builder.bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY),
                         new ValuesPattern(VAR_MATCH_TERM, values),
@@ -80,6 +84,10 @@ public class FtsAdapterNoFts
                     .filter(builder.containsPattern(VAR_MATCH_TERM, value)));
         }
 
+        if (valuePatterns.isEmpty()) {
+            builder.noResult();
+        }
+
         // The WikiData search service does not support properties. So we disable the use of the
         // WikiData search service when looking for properties. But then, searching first by
         // the label becomes very slow because withLabelMatchingAnyOf falls back to "containing"
@@ -94,7 +102,7 @@ public class FtsAdapterNoFts
     public void withLabelStartingWith(String aPrefixQuery)
     {
         if (aPrefixQuery.isEmpty()) {
-            builder.setReturnEmptyResult(true);
+            builder.noResult();
         }
 
         // Label matching without FTS is slow, so we add this with low prio and hope that some

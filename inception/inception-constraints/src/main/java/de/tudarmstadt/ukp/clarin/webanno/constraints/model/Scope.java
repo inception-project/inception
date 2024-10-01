@@ -27,13 +27,14 @@ public class Scope
     implements Serializable
 {
     private static final long serialVersionUID = 226908916809455385L;
+
     private final String scopeName;
     private final List<Rule> rules;
 
-    public Scope(String scopeName, List<Rule> rules)
+    public Scope(String aScopeName, List<Rule> aRules)
     {
-        this.scopeName = scopeName;
-        this.rules = rules;
+        scopeName = aScopeName;
+        rules = aRules;
     }
 
     public String getScopeName()
@@ -51,5 +52,4 @@ public class Scope
     {
         return "Scope [" + scopeName + "]\nRules\n" + rules.toString() + "]";
     }
-
 }

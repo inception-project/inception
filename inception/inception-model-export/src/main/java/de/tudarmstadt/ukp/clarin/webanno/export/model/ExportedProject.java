@@ -25,9 +25,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
-
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -37,6 +34,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.ScriptDirection;
 import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
+import jakarta.persistence.Temporal;
+import jakarta.persistence.TemporalType;
 
 /**
  * All required contents of a project to be exported.

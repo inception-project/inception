@@ -142,6 +142,27 @@
                   <label wicket:for="uiName">
                     <wicket:label key="name"/>
                   </label>
+                  <div class="form-text" wicket:enclosure="name">
+                    <wicket:message key="internalName" />
+                    <strong><span wicket:id="name"/></strong>
+                  </div>
+                </div>
+                <div class="form-row form-floating" wicket:enclosure="type">
+                  <select wicket:id="type" class="form-select" wicket:message="placeholder:type"/>
+                  <label wicket:for="type">
+                    <wicket:label key="type" />
+                  </label>
+                  <div class="form-text" wicket:enclosure="effectiveAttachType">
+                    <wicket:message key="effectiveAttachLayer" />
+                    <strong><span wicket:id="effectiveAttachType"/></strong>
+                  </div>
+                </div>
+                
+                <div class="form-row form-floating" wicket:enclosure="attachType">
+                  <select wicket:id="attachType" class="form-select" wicket:message="placeholder:attachToLayer"/>
+                  <label wicket:for="attachType">
+                    <wicket:label key="attachToLayer" />
+                  </label>
                 </div>
                 <div class="form-row form-floating">
                   <textarea wicket:id="description" rows="4" class="form-control" wicket:message="placeholder:description"/>
@@ -160,39 +181,6 @@
               </div>
             </div>
             
-            <div class="card min-content-height">
-              <div class="card-header small">
-                <wicket:message key="technicalProperties"/>
-                <a wicket:id="technicalPropertiesHelpLink"/>
-              </div>
-              <div class="card-body">
-                <div class="form-row form-floating" wicket:enclosure="name">
-                  <span wicket:id="name" class="form-control" readonly/>
-                  <label> 
-                    <wicket:message key="internalName" />
-                  </label>
-                </div>
-                <div class="form-row form-floating" wicket:enclosure="type">
-                  <select wicket:id="type" class="form-select" wicket:message="placeholder:type"/>
-                  <label wicket:for="type">
-                    <wicket:label key="type" />
-                  </label>
-                </div>
-                <div class="form-row form-floating" wicket:enclosure="attachType">
-                  <select wicket:id="attachType" class="form-select" wicket:message="placeholder:attachToLayer"/>
-                  <label wicket:for="attachType">
-                    <wicket:label key="attachToLayer" />
-                  </label>
-                </div>
-                <div class="form-row form-floating" wicket:enclosure="effectiveAttachType">
-                  <span wicket:id="effectiveAttachType" class="form-control" readonly/>
-                  <label> 
-                    <wicket:message key="attachToLayer" />
-                  </label>
-                </div>
-              </div>
-            </div>
-    
             <div class="card min-content-height">
               <div class="card-header small">
                 <wicket:message key="behaviors"/>

@@ -37,10 +37,9 @@ public abstract class BratDrawingDecl
     }
 
     public abstract String getSpec();
-    
-    public abstract void write(JsonGenerator aJG)
-        throws IOException;
-    
+
+    public abstract void write(JsonGenerator aJG) throws IOException;
+
     @Override
     public String toString()
     {

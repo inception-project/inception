@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.io.xml.dkprocore;
 
+import static java.util.Collections.unmodifiableSet;
 import static org.apache.commons.lang3.StringUtils.trimToNull;
 
 import java.util.ArrayDeque;
@@ -24,6 +25,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Deque;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -40,15 +42,21 @@ import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
+import de.tudarmstadt.ukp.inception.support.uima.SegmentationUtils;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+
 public class CasXmlHandler
     extends DefaultHandler
 {
     private final JCas jcas;
     private final StringBuilder text;
     private final Deque<StackFrame> stack;
+    private final Set<String> blockElements = new HashSet<>();
 
     private XmlDocument docNode;
     private boolean captureText = true;
+    private boolean splitSentencesInBlockElements = true;
 
     private final Set<ElementListener> listeners = new LinkedHashSet<>();
 
@@ -67,6 +75,29 @@ public class CasXmlHandler
     public void removeListener(ElementListener aListener)
     {
         listeners.remove(aListener);
+    }
+
+    public void setBlockElements(Collection<String> aElements)
+    {
+        blockElements.clear();
+        if (aElements != null) {
+            blockElements.addAll(aElements);
+        }
+    }
+
+    public Set<String> getBlockElements()
+    {
+        return unmodifiableSet(blockElements);
+    }
+
+    public void setSplitSentencesInBlockElements(boolean aSplitSentencesInBlockElements)
+    {
+        splitSentencesInBlockElements = aSplitSentencesInBlockElements;
+    }
+
+    public boolean isSplitSentencesInBlockElements()
+    {
+        return splitSentencesInBlockElements;
     }
 
     @Override
@@ -95,7 +126,16 @@ public class CasXmlHandler
         }
 
         jcas.setDocumentText(text.toString());
-    };
+
+        if (!blockElements.isEmpty()) {
+            if (splitSentencesInBlockElements) {
+                splitSentencesRespectingBlockElements(jcas, blockElements);
+            }
+            else {
+                treatBlockElementsAsSentences(jcas, blockElements);
+            }
+        }
+    }
 
     @Override
     public void startElement(String aUri, String aLocalName, String aQName, Attributes aAttributes)
@@ -106,7 +146,7 @@ public class CasXmlHandler
                     "Illegal element start event when document start has not been seen.");
         }
 
-        XmlElement element = new XmlElement(jcas);
+        var element = new XmlElement(jcas);
         element.setBegin(text.length());
         element.setUri(trimToNull(aUri));
         element.setLocalName(trimToNull(aLocalName));
@@ -115,7 +155,7 @@ public class CasXmlHandler
         if (aAttributes != null && aAttributes.getLength() > 0) {
             var attributes = new FSArray<XmlAttribute>(jcas, aAttributes.getLength());
             for (int i = 0; i < aAttributes.getLength(); i++) {
-                XmlAttribute attribute = new XmlAttribute(jcas);
+                var attribute = new XmlAttribute(jcas);
                 attribute.setUri(trimToNull(aAttributes.getURI(i)));
                 attribute.setLocalName(trimToNull(aAttributes.getLocalName(i)));
                 attribute.setQName(trimToNull(aAttributes.getQName(i)));
@@ -129,7 +169,7 @@ public class CasXmlHandler
         attachToParent(element);
 
         boolean capture;
-        StackFrame parentFrame = stack.peek();
+        var parentFrame = stack.peek();
         if (parentFrame != null) {
             capture = parentFrame.isCaptureText();
         }
@@ -149,7 +189,7 @@ public class CasXmlHandler
     {
         StackFrame frame = stack.pop();
 
-        XmlElement element = frame.getElement();
+        var element = frame.getElement();
         element.setEnd(text.length());
 
         // Fill in children
@@ -182,7 +222,7 @@ public class CasXmlHandler
             return;
         }
 
-        XmlTextNode textNode = new XmlTextNode(jcas);
+        var textNode = new XmlTextNode(jcas);
         textNode.setBegin(text.length());
 
         if (stack.peek().isCaptureText()) {
@@ -208,7 +248,7 @@ public class CasXmlHandler
 
     private void attachToParent(XmlNode aNode)
     {
-        StackFrame parentFrame = stack.peek();
+        var parentFrame = stack.peek();
         if (parentFrame != null) {
             aNode.setParent(parentFrame.getElement());
             parentFrame.addChild(aNode);
@@ -260,6 +300,64 @@ public class CasXmlHandler
         }
 
         return stack.peek().isCaptureText();
+    }
+
+    static void splitSentencesRespectingBlockElements(JCas aJCas, Set<String> aZoningElements)
+    {
+        var boundaries = new IntArrayList();
+        boundaries.add(0);
+        boundaries.add(aJCas.getDocumentText().length());
+
+        for (var e : aJCas.select(XmlElement.class)) {
+            if (aZoningElements.contains(e.getQName())) {
+                boundaries.add(e.getBegin());
+                boundaries.add(e.getEnd());
+            }
+        }
+
+        var sortedBoundaries = boundaries.intStream().distinct().sorted().toArray();
+
+        if (sortedBoundaries.length < 2) {
+            sortedBoundaries = new int[] { 0, aJCas.getDocumentText().length() };
+        }
+
+        for (int i = 1; i < sortedBoundaries.length; i++) {
+            SegmentationUtils.splitSentences(aJCas.getCas(), sortedBoundaries[i - 1],
+                    sortedBoundaries[i]);
+        }
+    }
+
+    static void treatBlockElementsAsSentences(JCas aJCas, Set<String> aZoningElements)
+    {
+        var boundaries = new IntArrayList();
+        boundaries.add(0);
+        boundaries.add(aJCas.getDocumentText().length());
+
+        var xmlElementIterator = aJCas.select(XmlElement.class).iterator();
+        while (xmlElementIterator.hasNext()) {
+            var e = xmlElementIterator.next();
+            if (aZoningElements.contains(e.getQName())) {
+                var zone = e;
+
+                boundaries.add(zone.getBegin());
+                boundaries.add(zone.getEnd());
+
+                // Skip over elements covered by the current sentence
+                while (xmlElementIterator.hasNext() && zone.covering(e)) {
+                    e = xmlElementIterator.next();
+                }
+            }
+        }
+
+        var sortedBoundaries = boundaries.intStream().distinct().sorted().toArray();
+
+        for (int i = 1; i < sortedBoundaries.length; i++) {
+            var sentence = new Sentence(aJCas, sortedBoundaries[i - 1], sortedBoundaries[i]);
+            sentence.trim();
+            if (sentence.getBegin() != sentence.getEnd()) {
+                sentence.addToIndexes();
+            }
+        }
     }
 
     public static interface ElementListener

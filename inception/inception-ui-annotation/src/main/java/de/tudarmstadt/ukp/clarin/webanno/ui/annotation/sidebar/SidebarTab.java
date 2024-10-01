@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar;
 
 import org.apache.wicket.Component;
 import org.apache.wicket.extensions.markup.html.tabs.AbstractTab;
+import org.apache.wicket.markup.html.panel.EmptyPanel;
 import org.apache.wicket.model.IModel;
 
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
@@ -49,8 +50,10 @@ public abstract class SidebarTab
             // that the lambda doesn't have a dependency on the non-serializable
             // AnnotationSidebarFactory class.
             var ctx = ApplicationContextProvider.getApplicationContext();
-            return ctx.getBean(AnnotationSidebarRegistry.class).getSidebarFactory(factoryId)
-                    .createIcon(aId, aState);
+            return ctx.getBean(AnnotationSidebarRegistry.class) //
+                    .getExtension(factoryId) //
+                    .map($ -> $.createIcon(aId, aState)) //
+                    .orElseGet(() -> new EmptyPanel(aId));
         }
         catch (Exception e) {
             throw new RuntimeException(e);

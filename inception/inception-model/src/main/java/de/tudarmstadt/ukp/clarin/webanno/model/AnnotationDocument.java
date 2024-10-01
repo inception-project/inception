@@ -21,22 +21,21 @@ import java.io.Serializable;
 import java.util.Date;
 import java.util.Objects;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.Lob;
-import javax.persistence.ManyToOne;
-import javax.persistence.PrePersist;
-import javax.persistence.PreUpdate;
-import javax.persistence.Table;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
-import javax.persistence.UniqueConstraint;
-
 import org.hibernate.annotations.Type;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
+import jakarta.persistence.Table;
+import jakarta.persistence.Temporal;
+import jakarta.persistence.TemporalType;
+import jakarta.persistence.UniqueConstraint;
 
 /**
  * A persistence object for meta-data of annotation documents. The content of annotation document is
@@ -72,7 +71,7 @@ public class AnnotationDocument
      * or by a third person (e.g. curator/manager) or the system (e.g. workload manager).
      */
     @Column(nullable = false)
-    @Type(type = "de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateType")
+    @Type(AnnotationDocumentStateType.class)
     private AnnotationDocumentState state = AnnotationDocumentState.NEW;
 
     /**
@@ -84,14 +83,13 @@ public class AnnotationDocument
      * or if it was marked as finished by the manager or by the system.
      */
     @Column(nullable = true)
-    @Type(type = "de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateType")
+    @Type(AnnotationDocumentStateType.class)
     private AnnotationDocumentState annotatorState;
 
     /**
      * Comment the anntoator can leave when marking a document as finished. Typically used to report
      * problems to the curator.
      */
-    @Lob
     @Column(length = 64000)
     private String annotatorComment;
 
@@ -114,6 +112,22 @@ public class AnnotationDocument
     @Temporal(TemporalType.TIMESTAMP)
     @Column(nullable = true)
     private Date updated;
+
+    private AnnotationDocument(Builder builder)
+    {
+        id = builder.id;
+        name = builder.name;
+        project = builder.project;
+        user = builder.user;
+        document = builder.document;
+        state = builder.state;
+        annotatorState = builder.annotatorState;
+        annotatorComment = builder.annotatorComment;
+        timestamp = builder.timestamp;
+        sentenceAccessed = builder.sentenceAccessed;
+        created = builder.created;
+        updated = builder.updated;
+    }
 
     public AnnotationDocument()
     {
@@ -295,5 +309,116 @@ public class AnnotationDocument
     public int hashCode()
     {
         return Objects.hash(name, project, user, document);
+    }
+
+    public static Builder builder()
+    {
+        return new Builder();
+    }
+
+    public static final class Builder
+    {
+        private Long id;
+        private String name;
+        private Project project;
+        private String user;
+        private SourceDocument document;
+        private AnnotationDocumentState state = AnnotationDocumentState.NEW;
+        private AnnotationDocumentState annotatorState;
+        private String annotatorComment;
+        private Date timestamp;
+        private int sentenceAccessed = 0;
+        private Date created;
+        private Date updated;
+
+        private Builder()
+        {
+            // Nothing
+        }
+
+        public Builder withId(Long aId)
+        {
+            id = aId;
+            return this;
+        }
+
+        public Builder withName(String aName)
+        {
+            name = aName;
+            return this;
+        }
+
+        public Builder withProject(Project aProject)
+        {
+            project = aProject;
+            return this;
+        }
+
+        public Builder withUser(String aUser)
+        {
+            user = aUser;
+            return this;
+        }
+
+        public Builder withDocument(SourceDocument aDocument)
+        {
+            document = aDocument;
+            return this;
+        }
+
+        public Builder forDocument(SourceDocument aDocument)
+        {
+            document = aDocument;
+            name = aDocument.getName();
+            project = aDocument.getProject();
+            return this;
+        }
+
+        public Builder withState(AnnotationDocumentState aState)
+        {
+            state = aState;
+            return this;
+        }
+
+        public Builder withAnnotatorState(AnnotationDocumentState aAnnotatorState)
+        {
+            annotatorState = aAnnotatorState;
+            return this;
+        }
+
+        public Builder withAnnotatorComment(String aAnnotatorComment)
+        {
+            annotatorComment = aAnnotatorComment;
+            return this;
+        }
+
+        public Builder withTimestamp(Date aTimestamp)
+        {
+            timestamp = aTimestamp;
+            return this;
+        }
+
+        public Builder withSentenceAccessed(int aSentenceAccessed)
+        {
+            sentenceAccessed = aSentenceAccessed;
+            return this;
+        }
+
+        public Builder withCreated(Date aCreated)
+        {
+            created = aCreated;
+            return this;
+        }
+
+        public Builder withUpdated(Date aUpdated)
+        {
+            updated = aUpdated;
+            return this;
+        }
+
+        public AnnotationDocument build()
+        {
+            return new AnnotationDocument(this);
+        }
     }
 }

@@ -15,37 +15,37 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-$(document)
-  .ready(
-    function() {
-      function hideBusysign() {
-        let spinner = document.getElementById('spinner')
-        if (spinner) spinner.style.display = 'none';
-      }
+$(document).ready(function() {
+  function hideBusysign() {
+    let spinner = document.getElementById('spinner')
+    if (spinner) spinner.style.display = 'none';
+  }
 
-      function showBusysign() {
-        let spinner = document.getElementById('spinner')
-        if (spinner) spinner.style.display = 'inline';
-      }
-      
-      hideBusysign();
-      if (typeof Wicket != 'undefined') {
-        Wicket.Event.subscribe('/ajax/call/beforeSend', function(attributes, jqXHR, settings) {
-          showBusysign()
-        });
-        Wicket.Event.subscribe('/ajax/call/complete', function(attributes, jqXHR, textStatus) {
-          hideBusysign()
-        });
-      }
+  function showBusysign() {
+    let spinner = document.getElementById('spinner')
+    if (spinner) spinner.style.display = 'inline';
+  }
+  
+  hideBusysign();
+  if (typeof Wicket != 'undefined') {
+    Wicket.Event.subscribe('/ajax/call/beforeSend', function(attributes, jqXHR, settings) {
+      showBusysign()
     });
+    Wicket.Event.subscribe('/ajax/call/complete', function(attributes, jqXHR, textStatus) {
+      hideBusysign()
+    });
+  }
+});
     
 $( document ).ready(function() { 
   // Prevent the sticky dropdowns from closing on every click inside the dropdown
-  $('.sticky-dropdown').each((i, e) => addEventListener('hide.bs.dropdown', function(e) {
-    if (e.clickEvent && $(e.clickEvent.target).closest('.sticky-dropdown').length) {
-      e.preventDefault();
-    }
-  }));
+  document.querySelectorAll('.sticky-dropdown, .k-popup').forEach(element => {
+    element.addEventListener('hide.bs.dropdown', function(event) {
+      if (event.clickEvent && event.target.closest('.sticky-dropdown, .k-popup')) {
+        event.preventDefault();
+      }
+    });
+  });
 });
     
 

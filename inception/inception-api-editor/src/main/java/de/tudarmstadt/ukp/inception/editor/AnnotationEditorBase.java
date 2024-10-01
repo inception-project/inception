@@ -49,7 +49,6 @@ import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.pipeline.RenderingPipeline;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequestedEvent;
-import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.serialization.VDocumentSerializer;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.api.config.AnnotationSchemaProperties;
@@ -189,19 +188,20 @@ public abstract class AnnotationEditorBase
     protected <T> T render(CAS aCas, int aWindowBeginOffset, int aWindowEndOffset,
             VDocumentSerializer<T> aTerminalStep)
     {
-        RenderRequest request = RenderRequest.builder() //
+        var request = RenderRequest.builder() //
                 .withState(getModelObject()) //
                 .withWindow(aWindowBeginOffset, aWindowEndOffset) //
                 .withCas(aCas) //
                 .withSessionOwner(userService.getCurrentUser()) //
                 .withVisibleLayers(getLayersToRender(getModelObject())) //
+                .withLongArcs(true) //
                 .build();
 
-        VDocument vdoc = renderingPipeline.render(request);
+        var vdoc = renderingPipeline.render(request);
         return aTerminalStep.render(vdoc, request);
     }
 
-    private List<AnnotationLayer> getLayersToRender(AnnotatorState state)
+    protected List<AnnotationLayer> getLayersToRender(AnnotatorState state)
     {
         List<AnnotationLayer> layersToRender = new ArrayList<>();
         for (AnnotationLayer layer : state.getAnnotationLayers()) {

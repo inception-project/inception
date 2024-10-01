@@ -31,9 +31,9 @@ public class ProjectStateChangedEventAdapter
     implements EventLoggingAdapter<ProjectStateChangedEvent>
 {
     @Override
-    public boolean accepts(Object aEvent)
+    public boolean accepts(Class<?> aEvent)
     {
-        return aEvent instanceof ProjectStateChangedEvent;
+        return ProjectStateChangedEvent.class.isAssignableFrom(aEvent);
     }
 
     @Override

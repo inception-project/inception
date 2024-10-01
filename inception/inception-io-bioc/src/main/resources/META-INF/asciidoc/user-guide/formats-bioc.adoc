@@ -37,7 +37,7 @@ NOTE: This format dynamically maps information from the imported files to the la
   annotation layer. If a layer exists where either the full technical name of the layer or the
   simple technical name (the part after the last dot) match the type, then an attempt will be made
   to match the annotation to that layer. If the annotation has other infons that match features on
-  that layer, they will also be matched. If no layer matches but the default `SimpleSpan` layer is 
+  that layer, they will also be matched. If no layer matches but the default `Span` layer is 
   present, annotations will be matched to that. Similarly, if only a single infon is present in an 
   annotation and no other feature matches, then the infon value may be matched to a potentially
   existing `value` feature.
@@ -58,15 +58,13 @@ NOTE: This format dynamically maps information from the imported files to the la
 * Document-level infons are not supported.
 * The writer writes one BioC file per CAS (i.e. writing multiple documents to a single collection file is not supported).
 
-[cols="2,1,1,1,3"]
+[cols="2,1,1,3"]
 |====
-| Format | Read | Write | Custom Layers | Description
+| Format | Import | Export | Supported layers
 
 | link:https://raw.githubusercontent.com/2mh/PyBioC/master/BioC.dtd[BioC (experimental)] (`bioc`)
 | yes
 | yes
-| yes
-| BioC format
-
+| see description
 |====
 

@@ -100,21 +100,23 @@ public class SemPredArgLayerInitializer
     @Override
     public void configure(Project aProject) throws IOException
     {
-        AnnotationLayer semArgLayer = new AnnotationLayer(SemArg.class.getName(), "SemArg",
-                SPAN_TYPE, aProject, true, AnchoringMode.TOKENS, OverlapMode.ANY_OVERLAP);
+        var semArgLayer = new AnnotationLayer(SemArg.class.getName(), "SemArg", SPAN_TYPE, aProject,
+                true, AnchoringMode.TOKENS, OverlapMode.ANY_OVERLAP);
         semArgLayer.setCrossSentence(false);
 
         annotationSchemaService.createOrUpdateLayer(semArgLayer);
 
-        AnnotationLayer semPredLayer = new AnnotationLayer(SemPred.class.getName(), "SemPred",
-                SPAN_TYPE, aProject, true, AnchoringMode.TOKENS, OverlapMode.ANY_OVERLAP);
+        var semPredLayer = new AnnotationLayer(SemPred.class.getName(), "SemPred", SPAN_TYPE,
+                aProject, true, AnchoringMode.TOKENS, OverlapMode.ANY_OVERLAP);
         semPredLayer.setCrossSentence(false);
+
+        annotationSchemaService.createOrUpdateLayer(semPredLayer);
 
         annotationSchemaService.createFeature(new AnnotationFeature(aProject, semPredLayer,
                 "category", "category", CAS.TYPE_NAME_STRING,
                 "Category of the semantic predicate, e.g. the frame identifier.", null));
 
-        AnnotationFeature semPredArgumentsFeature = new AnnotationFeature();
+        var semPredArgumentsFeature = new AnnotationFeature();
         semPredArgumentsFeature.setName("arguments");
         semPredArgumentsFeature.setUiName("arguments");
         semPredArgumentsFeature.setDescription("Arguments of the semantic predicate");

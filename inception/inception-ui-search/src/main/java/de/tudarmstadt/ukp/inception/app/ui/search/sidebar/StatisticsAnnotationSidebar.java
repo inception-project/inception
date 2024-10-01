@@ -54,13 +54,12 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase2;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
 import de.tudarmstadt.ukp.inception.app.ui.search.Formats;
 import de.tudarmstadt.ukp.inception.app.ui.search.sidebar.options.StatisticsOptions;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
-import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.search.ExecutionException;
 import de.tudarmstadt.ukp.inception.search.Granularities;
@@ -131,11 +130,10 @@ public class StatisticsAnnotationSidebar
 
     private StatisticsProvider statsProvider;
 
-    public StatisticsAnnotationSidebar(String aId, IModel<AnnotatorState> aModel,
-            AnnotationActionHandler aActionHandler, CasProvider aCasProvider,
-            AnnotationPage aAnnotationPage)
+    public StatisticsAnnotationSidebar(String aId, AnnotationActionHandler aActionHandler,
+            CasProvider aCasProvider, AnnotationPageBase2 aAnnotationPage)
     {
-        super(aId, aModel, aActionHandler, aCasProvider, aAnnotationPage);
+        super(aId, aActionHandler, aCasProvider, aAnnotationPage);
 
         setOutputMarkupId(true);
         setOutputMarkupPlaceholderTag(true);

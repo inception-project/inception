@@ -31,9 +31,9 @@ public class RelationEventAdapter
     implements EventLoggingAdapter<RelationEvent>
 {
     @Override
-    public boolean accepts(Object aEvent)
+    public boolean accepts(Class<?> aEvent)
     {
-        return aEvent instanceof RelationEvent;
+        return RelationEvent.class.isAssignableFrom(aEvent);
     }
 
     @Override

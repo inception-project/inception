@@ -22,15 +22,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 
-import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ParseException;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.model.ParsedConstraints;
 import de.tudarmstadt.ukp.clarin.webanno.model.ConstraintSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
 public interface ConstraintsService
 {
-    String SERVICE_NAME = "constraintsService";
-
     String CONSTRAINTS = "constraints";
 
     /**
@@ -84,5 +81,5 @@ public interface ConstraintsService
      */
     boolean existConstraintSet(String constraintSetName, Project aProject);
 
-    ParsedConstraints loadConstraints(Project aProject) throws IOException, ParseException;
+    ParsedConstraints getMergedConstraints(Project aProject);
 }

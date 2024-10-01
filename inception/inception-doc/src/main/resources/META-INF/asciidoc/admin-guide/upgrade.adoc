@@ -67,3 +67,9 @@ disk.
 Also, for certain versions there might be special considerations to be aware of when performing the
 upgrade. Always be sure to check the section below **as well as the release notes** of every version
 between the version you are upgrading from up to and including the version you are upgrading to.
+
+=== Database upgrades
+
+If - as recommeded - you are using a dedicated database (e.g. MariaDB), you should also occasinally upgrade that. 
+If you are obtaining a new <<sect_docker_compose,Docker Compose>>, it may well include a new database version.
+Please refer to the upgrade documentation of your database (e.g. link:https://mariadb.com/kb/en/upgrading/[MariaDB upgrade]) or to the <<sect_docker_compose,Docker Compose section>> in this manual for more information.

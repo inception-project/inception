@@ -26,6 +26,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.docnav.DocumentNavigator;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.open.OpenDocumentDialog;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 
 @Order(0)
 @Component
@@ -62,13 +63,22 @@ public class AnnotationDocumentNavigatorActionBarExtension
         // selected. In order to allow the dialog to be rendered *before* a document has been
         // selected (i.e. when the action bar is still not on screen), we need to attach it to the
         // page. The same for the AutoOpenDialogBehavior we add below.
-        aPage.addToFooter(createOpenDocumentsDialog("item", aPage));
+        aPage.addToFooter(createOpenDocumentsDialog(ApplicationPageBase.CID_FOOTER_ITEM, aPage));
+    }
+
+    @Override
+    public void onRemove(AnnotationPageBase aPage)
+    {
+        aPage.getBehaviors(AutoOpenDialogBehavior.class).forEach(aPage::remove);
+        aPage.getFooterItems().getObject().stream() //
+                .filter(OpenDocumentDialog.class::isInstance) //
+                .toList() // avoid concurrent modification problems
+                .forEach(aPage::removeFromFooter);
     }
 
     private OpenDocumentDialog createOpenDocumentsDialog(String aId, AnnotationPageBase aPage)
     {
         var page = (AnnotationPage) aPage;
-        return new OpenDocumentDialog(aId, aPage.getModel(), aPage.getAllowedProjects(),
-                page::listAccessibleDocuments);
+        return new OpenDocumentDialog(aId, aPage.getModel(), page::listAccessibleDocuments);
     }
 }

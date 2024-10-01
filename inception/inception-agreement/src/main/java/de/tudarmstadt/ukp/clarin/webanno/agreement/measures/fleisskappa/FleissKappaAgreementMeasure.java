@@ -53,11 +53,10 @@ public class FleissKappaAgreementMeasure
     public FullCodingAgreementResult getAgreement(Map<String, CAS> aCasMap)
     {
         var feature = getFeature();
-        var traits = getTraits();
 
         var adapters = getDiffAdapters(annotationService, asList(feature.getLayer()));
 
-        var diff = doDiff(adapters, traits.getLinkCompareBehavior(), aCasMap);
+        var diff = doDiff(adapters, aCasMap);
 
         var tagset = annotationService.listTags(feature.getTagset()).stream() //
                 .map(Tag::getName) //

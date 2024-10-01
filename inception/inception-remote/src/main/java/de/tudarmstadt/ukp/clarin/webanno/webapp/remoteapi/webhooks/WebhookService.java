@@ -36,10 +36,14 @@ import javax.net.ssl.SSLSession;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.ssl.TrustStrategy;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuilder;
+import org.apache.hc.client5.http.io.HttpClientConnectionManager;
+import org.apache.hc.client5.http.ssl.SSLConnectionSocketFactory;
+import org.apache.hc.client5.http.ssl.SSLConnectionSocketFactoryBuilder;
+import org.apache.hc.core5.ssl.SSLContexts;
+import org.apache.hc.core5.ssl.TrustStrategy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
@@ -105,13 +109,21 @@ public class WebhookService
         TrustStrategy acceptingTrustStrategy = (X509Certificate[] chain, String authType) -> true;
         HostnameVerifier verifier = (String aHostname, SSLSession aSession) -> true;
 
-        SSLContext sslContext = org.apache.http.ssl.SSLContexts.custom()
-                .loadTrustMaterial(null, acceptingTrustStrategy).build();
+        SSLContext sslContext = SSLContexts.custom() //
+                .loadTrustMaterial(null, acceptingTrustStrategy) //
+                .build();
 
-        SSLConnectionSocketFactory csf = new SSLConnectionSocketFactory(sslContext, verifier);
+        SSLConnectionSocketFactory sslSocketFactory = SSLConnectionSocketFactoryBuilder.create()
+                .setSslContext(sslContext) //
+                .setHostnameVerifier(verifier) //
+                .build();
+
+        HttpClientConnectionManager cm = PoolingHttpClientConnectionManagerBuilder.create()
+                .setSSLSocketFactory(sslSocketFactory) //
+                .build();
 
         CloseableHttpClient httpClient = HttpClients.custom() //
-                .setSSLSocketFactory(csf) //
+                .setConnectionManager(cm) //
                 .build();
 
         nonValidatingRequestFactory = new HttpComponentsClientHttpRequestFactory();
@@ -138,7 +150,7 @@ public class WebhookService
     @Async
     public void onApplicationEvent(ApplicationEvent aEvent)
     {
-        String topic = EVENT_TOPICS.get(aEvent.getClass());
+        var topic = EVENT_TOPICS.get(aEvent.getClass());
         if (topic == null) {
             return;
         }

@@ -54,7 +54,6 @@ import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
@@ -168,7 +167,7 @@ public class ProjectDetailPanel
         boolean isNewProject = isNull(project.getId());
         if (isNewProject) {
             try {
-                User user = userRepository.getCurrentUser();
+                var user = userRepository.getCurrentUser();
                 projectService.createProject(project);
                 projectService.assignRole(project, user, ANNOTATOR, CURATOR, MANAGER);
                 projectService.initializeProject(project);

@@ -32,12 +32,11 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.wicketstuff.event.annotation.OnEvent;
-
-import com.googlecode.wicket.jquery.core.JQueryBehavior;
-import com.googlecode.wicket.jquery.core.template.IJQueryTemplate;
-import com.googlecode.wicket.kendo.ui.KendoUIBehavior;
-import com.googlecode.wicket.kendo.ui.form.combobox.ComboBox;
-import com.googlecode.wicket.kendo.ui.form.combobox.ComboBoxBehavior;
+import org.wicketstuff.jquery.core.JQueryBehavior;
+import org.wicketstuff.jquery.core.template.IJQueryTemplate;
+import org.wicketstuff.kendo.ui.KendoUIBehavior;
+import org.wicketstuff.kendo.ui.form.combobox.ComboBox;
+import org.wicketstuff.kendo.ui.form.combobox.ComboBoxBehavior;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.keybindings.KeyBindingsPanel;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;

@@ -18,10 +18,13 @@
 package de.tudarmstadt.ukp.clarin.webanno.curation.casdiff;
 
 import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectFsByAddr;
+import static java.util.stream.Collectors.joining;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
 
@@ -43,6 +46,7 @@ public class Configuration
 
     private final Position position;
     final Map<String, AID> fsAddresses = new TreeMap<>();
+    private Map<String, List<AID>> extras;
 
     /**
      * Flag indicating that there is at least once CAS group containing more than one annotation at
@@ -81,8 +85,13 @@ public class Configuration
     @SuppressWarnings("javadoc")
     public void add(String aCasGroupId, AID aAID)
     {
-        AID old = fsAddresses.put(aCasGroupId, aAID);
+        var old = fsAddresses.put(aCasGroupId, aAID);
         if (old != null) {
+            if (extras == null) {
+                extras = new TreeMap<>();
+            }
+            var list = extras.computeIfAbsent(aCasGroupId, $ -> new ArrayList<AID>());
+            list.add(old);
             stacked = true;
         }
     }
@@ -109,11 +118,6 @@ public class Configuration
         return selectFsByAddr(aCasMap.get(e.getKey()), e.getValue().addr);
     }
 
-    Map<String, AID> getAddressByCasId()
-    {
-        return fsAddresses;
-    }
-
     public AID getAID(String aCasGroupId)
     {
         return fsAddresses.get(aCasGroupId);
@@ -121,23 +125,38 @@ public class Configuration
 
     public boolean contains(String aCasGroupId, FeatureStructure aFS)
     {
-        return new AID(ICasUtil.getAddr(aFS)).equals(fsAddresses.get(aCasGroupId));
+        var aid = new AID(ICasUtil.getAddr(aFS));
+
+        return contains(aCasGroupId, aid);
     }
 
     public boolean contains(String aCasGroupId, AID aAID)
     {
-        return aAID.equals(fsAddresses.get(aCasGroupId));
+        if (aAID.equals(fsAddresses.get(aCasGroupId))) {
+            return true;
+        }
+
+        if (extras == null) {
+            return false;
+        }
+
+        var list = extras.get(aCasGroupId);
+        if (list == null) {
+            return false;
+        }
+
+        return list.contains(aAID);
     }
 
-    public <T extends FeatureStructure> FeatureStructure getFs(String aCasGroupId, Class<T> aClass,
+    private <T extends FeatureStructure> FeatureStructure getFs(String aCasGroupId, Class<T> aClass,
             Map<String, CAS> aCasMap)
     {
-        AID aid = fsAddresses.get(aCasGroupId);
+        var aid = fsAddresses.get(aCasGroupId);
         if (aid == null) {
             return null;
         }
 
-        CAS cas = aCasMap.get(aCasGroupId);
+        var cas = aCasMap.get(aCasGroupId);
         if (cas == null) {
             return null;
         }
@@ -150,18 +169,61 @@ public class Configuration
         return getFs(aCasGroupId, FeatureStructure.class, aCasMap);
     }
 
+    private <T extends FeatureStructure> List<FeatureStructure> getFses(String aCasGroupId,
+            Class<T> aClass, Map<String, CAS> aCasMap)
+    {
+        AID aid = fsAddresses.get(aCasGroupId);
+        if (aid == null) {
+            return Collections.emptyList();
+        }
+
+        CAS cas = aCasMap.get(aCasGroupId);
+        if (cas == null) {
+            return Collections.emptyList();
+        }
+        var allFs = new ArrayList<FeatureStructure>();
+        allFs.add(ICasUtil.selectFsByAddr(cas, aid.addr));
+
+        if (extras != null) {
+            var list = extras.get(aCasGroupId);
+            if (list != null) {
+                for (var eAid : list) {
+                    allFs.add(ICasUtil.selectFsByAddr(cas, eAid.addr));
+                }
+            }
+        }
+
+        return allFs;
+    }
+
+    public List<FeatureStructure> getFses(String aCasGroupId, Map<String, CAS> aCasMap)
+    {
+        return getFses(aCasGroupId, FeatureStructure.class, aCasMap);
+    }
+
     @Override
     public String toString()
     {
-        StringBuilder sb = new StringBuilder();
+        var sb = new StringBuilder();
         sb.append('[');
-        for (Entry<String, AID> e : fsAddresses.entrySet()) {
+        for (var e : fsAddresses.entrySet()) {
             if (sb.length() > 1) {
                 sb.append(", ");
             }
             sb.append(e.getKey());
-            sb.append(':');
+            sb.append(": ");
             sb.append(e.getValue());
+            if (extras != null) {
+                sb.append(" (extras: ");
+                for (var entries : extras.entrySet()) {
+                    sb.append(" {");
+                    sb.append(entries.getKey());
+                    sb.append(entries.getValue().stream().map(String::valueOf)
+                            .collect(joining(", ")));
+                    sb.append("} ");
+                }
+                sb.append(")");
+            }
         }
         sb.append("] -> ");
         sb.append(getRepresentativeAID());

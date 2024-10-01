@@ -18,8 +18,10 @@
 package de.tudarmstadt.ukp.inception.kb.querybuilder;
 
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.PREFIX_BLAZEGRAPH;
+import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder.convertToRequiredTokenPrefixMatchingQuery;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder.Priority.PRIMARY;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions.and;
 import static org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.prefix;
 import static org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns.and;
 import static org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns.union;
@@ -27,12 +29,15 @@ import static org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.iri;
 
 import java.util.ArrayList;
 
+import org.eclipse.rdf4j.sparqlbuilder.constraint.Expression;
 import org.eclipse.rdf4j.sparqlbuilder.core.Prefix;
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPattern;
 
 public class FtsAdapterBlazegraph
     implements FtsAdapter
 {
+    private static final String MULTI_CHAR_WILDCARD = "*";
+
     private static final Prefix PREFIX_BLAZEGRAPH_SEARCH = prefix("bds", iri(PREFIX_BLAZEGRAPH));
 
     private final SPARQLQueryBuilder builder;
@@ -44,20 +49,13 @@ public class FtsAdapterBlazegraph
     }
 
     @Override
-    public void withLabelMatchingExactlyAnyOf(String[] aValues)
+    public void withLabelMatchingExactlyAnyOf(String... aValues)
     {
         var kb = builder.getKnowledgeBase();
 
         var valuePatterns = new ArrayList<GraphPattern>();
         for (var value : aValues) {
-            var sanitizedValue = SPARQLQueryBuilder.sanitizeQueryString_FTS(value);
-
-            // We assume that the FTS is case insensitive and found that some FTSes (i.e.
-            // Fuseki) can have trouble matching if they get upper-case query when they
-            // internally lower-case#
-            if (builder.isCaseInsensitive()) {
-                sanitizedValue = SPARQLQueryBuilder.toLowerCase(kb, sanitizedValue);
-            }
+            var sanitizedValue = builder.sanitizeQueryString_FTS(value);
 
             if (isBlank(sanitizedValue)) {
                 continue;
@@ -73,6 +71,10 @@ public class FtsAdapterBlazegraph
                                     kb)));
         }
 
+        if (valuePatterns.isEmpty()) {
+            builder.noResult();
+        }
+
         builder.addPattern(PRIMARY, and( //
                 builder.bindMatchTermProperties(SPARQLQueryBuilder.VAR_MATCH_TERM_PROPERTY), //
                 union(valuePatterns.toArray(GraphPattern[]::new))));
@@ -81,18 +83,9 @@ public class FtsAdapterBlazegraph
     @Override
     public void withLabelContainingAnyOf(String... aValues)
     {
-        var kb = builder.getKnowledgeBase();
-
         var valuePatterns = new ArrayList<GraphPattern>();
         for (var value : aValues) {
-            var sanitizedValue = SPARQLQueryBuilder.sanitizeQueryString_FTS(value);
-
-            // We assume that the FTS is case insensitive and found that some FTSes (i.e.
-            // Fuseki) can have trouble matching if they get upper-case query when they
-            // internally lower-case#
-            if (builder.isCaseInsensitive()) {
-                sanitizedValue = SPARQLQueryBuilder.toLowerCase(kb, sanitizedValue);
-            }
+            var sanitizedValue = builder.sanitizeQueryString_FTS(value);
 
             if (isBlank(sanitizedValue)) {
                 continue;
@@ -108,6 +101,10 @@ public class FtsAdapterBlazegraph
                                     value)));
         }
 
+        if (valuePatterns.isEmpty()) {
+            builder.noResult();
+        }
+
         builder.addPattern(PRIMARY,
                 and(builder.bindMatchTermProperties(SPARQLQueryBuilder.VAR_MATCH_TERM_PROPERTY),
                         union(valuePatterns.toArray(GraphPattern[]::new))));
@@ -116,26 +113,18 @@ public class FtsAdapterBlazegraph
     @Override
     public void withLabelStartingWith(String aPrefixQuery)
     {
-        var kb = builder.getKnowledgeBase();
+        // Strip single quotes and asterisks because they have special semantics
+        var queryString = builder.sanitizeQueryString_FTS(aPrefixQuery);
 
-        var queryString = aPrefixQuery.trim();
-
-        // We assume that the FTS is case insensitive and found that some FTSes (i.e.
-        // Fuseki) can have trouble matching if they get upper-case query when they
-        // internally lower-case#
-        if (builder.isCaseInsensitive()) {
-            queryString = SPARQLQueryBuilder.toLowerCase(kb, queryString);
-        }
-
-        if (queryString.isEmpty()) {
-            builder.setReturnEmptyResult(true);
+        if (isBlank(queryString)) {
+            builder.noResult();
         }
 
         // If the query string entered by the user does not end with a space character, then
         // we assume that the user may not yet have finished writing the word and add a
         // wildcard
         if (!aPrefixQuery.endsWith(" ")) {
-            queryString += "*";
+            queryString += MULTI_CHAR_WILDCARD;
         }
 
         builder.addProjection(SPARQLQueryBuilder.VAR_SCORE);
@@ -155,24 +144,16 @@ public class FtsAdapterBlazegraph
     @Override
     public void withLabelMatchingAnyOf(String... aValues)
     {
-        var kb = builder.getKnowledgeBase();
-
         var valuePatterns = new ArrayList<GraphPattern>();
         for (var value : aValues) {
-            var sanitizedValue = SPARQLQueryBuilder.sanitizeQueryString_FTS(value);
+            var sanitizedValue = builder.sanitizeQueryString_FTS(value);
 
             if (isBlank(sanitizedValue)) {
                 continue;
             }
 
-            // We assume that the FTS is case insensitive and found that some FTSes (i.e.
-            // Fuseki) can have trouble matching if they get upper-case query when they
-            // internally lower-case#
-            if (builder.isCaseInsensitive()) {
-                sanitizedValue = SPARQLQueryBuilder.toLowerCase(kb, sanitizedValue);
-            }
-
-            var fuzzyQuery = SPARQLQueryBuilder.convertToFuzzyMatchingQuery(sanitizedValue, "*");
+            var fuzzyQuery = convertToRequiredTokenPrefixMatchingQuery(sanitizedValue, "",
+                    MULTI_CHAR_WILDCARD);
 
             if (isBlank(fuzzyQuery)) {
                 continue;
@@ -180,10 +161,18 @@ public class FtsAdapterBlazegraph
 
             builder.addProjection(SPARQLQueryBuilder.VAR_SCORE);
 
+            var labelFilterExpressions = new ArrayList<Expression<?>>();
+            labelFilterExpressions.add(builder.matchKbLanguage(VAR_MATCH_TERM));
+
             valuePatterns.add(new BlazegraphFtsQuery(SPARQLQueryBuilder.VAR_SUBJECT,
                     SPARQLQueryBuilder.VAR_SCORE, SPARQLQueryBuilder.VAR_MATCH_TERM,
-                    SPARQLQueryBuilder.VAR_MATCH_TERM_PROPERTY, fuzzyQuery)
-                            .withLimit(builder.getLimit()));
+                    SPARQLQueryBuilder.VAR_MATCH_TERM_PROPERTY, fuzzyQuery) //
+                            .withLimit(builder.getLimit()) //
+                            .filter(and(labelFilterExpressions.toArray(Expression[]::new))));
+        }
+
+        if (valuePatterns.isEmpty()) {
+            builder.noResult();
         }
 
         builder.addPattern(PRIMARY,

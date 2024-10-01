@@ -28,6 +28,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.time.DurationFormatUtils.formatDurationWords;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.Duration;
@@ -47,6 +48,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+import java.util.zip.ZipOutputStream;
 
 import org.apache.commons.collections4.SetUtils;
 import org.apache.commons.io.FileUtils;
@@ -81,7 +83,6 @@ import de.tudarmstadt.ukp.inception.project.export.model.ProjectExportTask;
 import de.tudarmstadt.ukp.inception.project.export.task.backup.BackupProjectExportTask;
 import de.tudarmstadt.ukp.inception.project.export.task.curated.CuratedDocumentsProjectExportRequest;
 import de.tudarmstadt.ukp.inception.project.export.task.curated.CuratedDocumentsProjectExportTask;
-import de.tudarmstadt.ukp.inception.support.io.ZipUtils;
 import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 import de.tudarmstadt.ukp.inception.support.logging.BaseLoggers;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
@@ -192,29 +193,17 @@ public class ProjectExportServiceImpl
     @Override
     @Transactional
     public void exportProject(FullProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
-            File projectZipFile)
+            File aProjectZipFile)
         throws ProjectExportException, IOException, InterruptedException
     {
         boolean success = false;
         File exportTempDir = null;
         try (var logCtx = withProjectLogger(aRequest.getProject())) {
             // Directory to store source documents and annotation documents
-            exportTempDir = File.createTempFile("inception-project", "export");
-            exportTempDir.delete();
-            exportTempDir.mkdirs();
 
-            ExportedProject exProjekt = exportProjectToPath(aRequest, aMonitor, exportTempDir);
-
-            // all metadata and project settings data from the database as JSON file
-            File projectSettings = new File(exportTempDir, EXPORTED_PROJECT + ".json");
-            JSONUtil.generatePrettyJson(exProjekt, projectSettings);
-
-            try {
-                ZipUtils.zipFolder(exportTempDir, projectZipFile);
-            }
-            finally {
-                System.gc();
-                FileUtils.forceDelete(exportTempDir);
+            try (var zos = new ZipOutputStream(new FileOutputStream(aProjectZipFile));) {
+                var exProjekt = exportProjectToZip(aRequest, aMonitor, zos);
+                writeProjectJson(zos, exProjekt);
             }
 
             success = true;
@@ -233,12 +222,27 @@ public class ProjectExportServiceImpl
         }
     }
 
-    private ExportedProject exportProjectToPath(FullProjectExportRequest aRequest,
-            ProjectExportTaskMonitor aMonitor, File aStage)
+    private void writeProjectJson(ZipOutputStream aZOs, ExportedProject aExProjekt)
+        throws IOException
+    {
+        var zipEntry = new ZipEntry(EXPORTED_PROJECT + ".json");
+        aZOs.putNextEntry(zipEntry);
+
+        try {
+            var jsonBytes = JSONUtil.toPrettyJsonString(aExProjekt).getBytes();
+            aZOs.write(jsonBytes, 0, jsonBytes.length);
+        }
+        finally {
+            aZOs.closeEntry();
+        }
+    }
+
+    private ExportedProject exportProjectToZip(FullProjectExportRequest aRequest,
+            ProjectExportTaskMonitor aMonitor, ZipOutputStream aZip)
         throws ProjectExportException, IOException, InterruptedException
     {
-        Deque<ProjectExporter> deque = new LinkedList<>(exporters);
-        Set<Class<? extends ProjectExporter>> exportersSeen = new HashSet<>();
+        var deque = new LinkedList<>(exporters);
+        var exportersSeen = new HashSet<Class<? extends ProjectExporter>>();
         Set<ProjectExporter> exportersDeferred = SetUtils.newIdentityHashSet();
 
         ExportedProject exProject = new ExportedProject();
@@ -246,7 +250,7 @@ public class ProjectExportServiceImpl
 
         try {
             while (!deque.isEmpty()) {
-                ProjectExporter exporter = deque.pop();
+                var exporter = deque.pop();
 
                 if (exportersDeferred.contains(exporter)) {
                     throw new IllegalStateException("Circular exporter dependencies in "
@@ -255,7 +259,7 @@ public class ProjectExportServiceImpl
 
                 if (exportersSeen.containsAll(exporter.getExportDependencies())) {
                     log.debug("Applying project exporter: {}", exporter);
-                    exporter.exportData(aRequest, aMonitor, exProject, aStage);
+                    exporter.exportData(aRequest, aMonitor, exProject, aZip);
                     exportersSeen.add(exporter.getClass());
                     exportersDeferred.clear();
                 }

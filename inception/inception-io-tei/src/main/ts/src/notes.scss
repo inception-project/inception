@@ -17,9 +17,15 @@
  */
 TEI {
   note {
+    position: relative;
     color: #999;
+    font-size: small;
+    font-weight: lighter;
+    width: 0px;
 
     &::before {
+      vertical-align: super;
+      font-size: smaller;
       content: attr(n);
     }
 

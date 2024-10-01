@@ -23,6 +23,7 @@ import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
+import de.tudarmstadt.ukp.inception.recommendation.api.RecommenderFactoryRegistry;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.DefaultTrainableRecommenderTraitsEditor;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
@@ -34,7 +35,7 @@ public class OpenNlpDoccatRecommenderTraitsEditor
 
     private static final String MID_FORM = "form";
 
-    private @SpringBean RecommendationEngineFactory<OpenNlpDoccatRecommenderTraits> toolFactory;
+    private @SpringBean RecommenderFactoryRegistry recommenderFactoryRegistry;
 
     private final OpenNlpDoccatRecommenderTraits traits;
 
@@ -42,10 +43,13 @@ public class OpenNlpDoccatRecommenderTraitsEditor
     {
         super(aId, aRecommender);
 
+        var toolFactory = (RecommendationEngineFactory<OpenNlpDoccatRecommenderTraits>) recommenderFactoryRegistry
+                .getFactory(aRecommender.getObject().getTool());
+
         traits = toolFactory.readTraits(aRecommender.getObject());
 
-        Form<OpenNlpDoccatRecommenderTraits> form = new Form<OpenNlpDoccatRecommenderTraits>(
-                MID_FORM, new CompoundPropertyModel<>(traits))
+        var form = new Form<OpenNlpDoccatRecommenderTraits>(MID_FORM,
+                new CompoundPropertyModel<>(traits))
         {
             private static final long serialVersionUID = -3109239605742291123L;
 

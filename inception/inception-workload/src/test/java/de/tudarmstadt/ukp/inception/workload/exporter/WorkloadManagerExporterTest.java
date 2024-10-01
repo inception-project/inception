@@ -22,8 +22,8 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.io.File;
 import java.util.zip.ZipFile;
+import java.util.zip.ZipOutputStream;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -66,10 +66,11 @@ public class WorkloadManagerExporterTest
                 .thenReturn(workloadManager());
 
         // Export the project and import it again
-        ArgumentCaptor<WorkloadManager> captor = runExportImportAndFetchWorkloadManager();
+        var captor = runExportImportAndFetchWorkloadManager();
 
         // Check that after re-importing the exported projects, they are identical to the original
-        assertThat(captor.getAllValues()).usingRecursiveFieldByFieldElementComparator()
+        assertThat(captor.getAllValues()) //
+                .usingRecursiveFieldByFieldElementComparator() //
                 .containsExactly(workloadManager());
     }
 
@@ -77,19 +78,19 @@ public class WorkloadManagerExporterTest
         throws Exception
     {
         // Export the project
-        FullProjectExportRequest exportRequest = new FullProjectExportRequest(project, null, false);
-        ProjectExportTaskMonitor monitor = new ProjectExportTaskMonitor(project, null, "test");
-        ExportedProject exportedProject = new ExportedProject();
-        File file = mock(File.class);
+        var exportRequest = new FullProjectExportRequest(project, null, false);
+        var monitor = new ProjectExportTaskMonitor(project, null, "test");
+        var exportedProject = new ExportedProject();
+        var stage = mock(ZipOutputStream.class);
 
-        sut.exportData(exportRequest, monitor, exportedProject, file);
+        sut.exportData(exportRequest, monitor, exportedProject, stage);
 
         // Import the project again
-        ArgumentCaptor<WorkloadManager> captor = ArgumentCaptor.forClass(WorkloadManager.class);
+        var captor = ArgumentCaptor.forClass(WorkloadManager.class);
         doNothing().when(workloadManagementService).saveConfiguration(captor.capture());
 
-        ProjectImportRequest importRequest = new ProjectImportRequest(true);
-        ZipFile zipFile = mock(ZipFile.class);
+        var importRequest = new ProjectImportRequest(true);
+        var zipFile = mock(ZipFile.class);
         sut.importData(importRequest, project, exportedProject, zipFile);
 
         return captor;
@@ -97,7 +98,7 @@ public class WorkloadManagerExporterTest
 
     private WorkloadManager workloadManager()
     {
-        WorkloadManager workloadManager = new WorkloadManager();
+        var workloadManager = new WorkloadManager();
         workloadManager.setProject(project);
         workloadManager.setType("static");
         workloadManager.setTraits("traits");

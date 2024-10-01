@@ -117,7 +117,7 @@ public class BratWriter
      * </code>.
      */
     public static final String PARAM_RELATION_TYPES = "relationTypes";
-    @ConfigurationParameter(name = PARAM_RELATION_TYPES, mandatory = true)
+    @ConfigurationParameter(name = PARAM_RELATION_TYPES, defaultValue = {})
     /*
      * , defaultValue = { Dependency._TypeName + ":" + Dependency._FeatName_Governor + ":" +
      * Dependency._FeatName_Dependent }
@@ -176,6 +176,13 @@ public class BratWriter
     private String[] palette;
 
     /**
+     * Whether to render types by their short name or by their qualified name.
+     */
+    public static final String PARAM_SHORT_TYPE_NAMES = "shortTypeNames";
+    @ConfigurationParameter(name = PARAM_SHORT_TYPE_NAMES, mandatory = true, defaultValue = "false")
+    private boolean shortTypeNames;
+
+    /**
      * Whether to render attributes by their short name or by their qualified name.
      */
     public static final String PARAM_SHORT_ATTRIBUTE_NAMES = "shortAttributeNames";
@@ -201,6 +208,7 @@ public class BratWriter
         converter.setWriteNullAttributes(writeNullAttributes);
         converter.setWriteRelationAttributes(writeRelationAttributes);
         converter.setShortAttributeNames(shortAttributeNames);
+        converter.setShortTypeNames(shortTypeNames);
         converter.setPalette(palette);
         converter.setExcludeTypes(excludeTypes);
         converter.setSpanTypes(spanTypes);

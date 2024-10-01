@@ -22,7 +22,6 @@ import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visible
 
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -38,7 +37,6 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationEditorState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.inception.editor.AnnotationEditorFactory;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorRegistry;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaForm;
@@ -83,10 +81,9 @@ public class DefaultAnnotationEditorStatePanel
 
     private List<Pair<String, String>> listAvailableEditors()
     {
-        List<Pair<String, String>> editorChoices = annotationEditorRegistry.getEditorFactories()
-                .stream().map(f -> Pair.of(f.getBeanName(), f.getDisplayName()))
-                .collect(Collectors.toList());
-        return editorChoices;
+        return annotationEditorRegistry.getEditorFactories().stream() //
+                .map(f -> Pair.of(f.getBeanName(), f.getDisplayName())) //
+                .toList();
     }
 
     @SuppressWarnings("unchecked")
@@ -101,8 +98,7 @@ public class DefaultAnnotationEditorStatePanel
                 getModel().getObject()));
 
         var defaultEditorId = state.getObject().getDefaultEditor();
-        AnnotationEditorFactory factory = annotationEditorRegistry
-                .getEditorFactory(defaultEditorId);
+        var factory = annotationEditorRegistry.getEditorFactory(defaultEditorId);
 
         if (factory != null) {
             defaultEditor.setObject(listAvailableEditors().stream() //

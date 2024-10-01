@@ -20,5 +20,5 @@ import { ApacheAnnotatorEditorFactory } from './apache-annotator/ApacheAnnotator
 const INSTANCE = new ApacheAnnotatorEditorFactory()
 
 export function factory (): ApacheAnnotatorEditorFactory {
-  return INSTANCE;
+  return INSTANCE
 }

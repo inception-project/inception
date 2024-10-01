@@ -22,7 +22,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAG
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.apache.wicket.Component;
 import org.apache.wicket.RestartResponseException;
@@ -122,7 +121,8 @@ public class ProjectDashboardPage
 
     private List<MenuItem> getMenuItems()
     {
-        return menuItemService.getMenuItems().stream()
-                .filter(item -> item.getPath().matches("/[^/]+")).collect(Collectors.toList());
+        return menuItemService.getMenuItems().stream() //
+                .filter(item -> item.getPath().matches("/[^/]+")) //
+                .toList();
     }
 }

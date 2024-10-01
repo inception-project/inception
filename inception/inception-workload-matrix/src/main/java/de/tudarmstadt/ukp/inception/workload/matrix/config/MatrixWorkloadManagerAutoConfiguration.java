@@ -28,8 +28,10 @@ import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.workload.matrix.MatrixWorkloadExtension;
 import de.tudarmstadt.ukp.inception.workload.matrix.MatrixWorkloadExtensionImpl;
 import de.tudarmstadt.ukp.inception.workload.matrix.annotation.MatrixWorkflowActionBarExtension;
-import de.tudarmstadt.ukp.inception.workload.matrix.annotation.MatrixWorkflowDocumentNavigationActionBarExtension;
+import de.tudarmstadt.ukp.inception.workload.matrix.annotation.MatrixWorkflowNoRandomAccessDocumentNavigationActionBarExtension;
 import de.tudarmstadt.ukp.inception.workload.matrix.event.MatrixWorkloadStateWatcher;
+import de.tudarmstadt.ukp.inception.workload.matrix.service.MatrixWorkloadService;
+import de.tudarmstadt.ukp.inception.workload.matrix.service.MatrixWorkloadServiceImpl;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 
 @Configuration
@@ -59,13 +61,22 @@ public class MatrixWorkloadManagerAutoConfiguration
     }
 
     @Bean
-    public MatrixWorkflowDocumentNavigationActionBarExtension matrixWorkflowDocumentNavigationActionBarExtension(
-            DocumentService aDocumentService, WorkloadManagementService aWorkloadManagementService,
-            MatrixWorkloadExtension aMatrixWorkloadExtension, ProjectService aProjectService,
-            UserDao aUserService)
+    public MatrixWorkflowNoRandomAccessDocumentNavigationActionBarExtension //
+            matrixWorkflowNoRandomAccessDocumentNavigationActionBarExtension(
+                    DocumentService aDocumentService,
+                    WorkloadManagementService aWorkloadManagementService,
+                    MatrixWorkloadExtension aMatrixWorkloadExtension,
+                    ProjectService aProjectService, UserDao aUserService)
     {
-        return new MatrixWorkflowDocumentNavigationActionBarExtension(aDocumentService,
-                aWorkloadManagementService, aMatrixWorkloadExtension, aProjectService,
-                aUserService);
+        return new MatrixWorkflowNoRandomAccessDocumentNavigationActionBarExtension(
+                aDocumentService, aWorkloadManagementService, aMatrixWorkloadExtension,
+                aProjectService, aUserService);
+    }
+
+    @Bean
+    public MatrixWorkloadService matrixWorkloadService(DocumentService aDocumentService,
+            ProjectService aProjectService)
+    {
+        return new MatrixWorkloadServiceImpl(aDocumentService, aProjectService);
     }
 }

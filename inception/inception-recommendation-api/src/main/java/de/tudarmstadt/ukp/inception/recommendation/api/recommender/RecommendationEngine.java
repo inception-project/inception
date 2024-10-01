@@ -83,12 +83,14 @@ public abstract class RecommendationEngine
      *            The context of the recommender
      * @param aCas
      *            The training data
+     * @return Range in which the recommender generated predictions. No suggestions in this range
+     *         should be inherited.
      * @throws RecommendationException
      *             if there was a problem during prediction
      */
-    public void predict(PredictionContext aContext, CAS aCas) throws RecommendationException
+    public Range predict(PredictionContext aContext, CAS aCas) throws RecommendationException
     {
-        predict(aContext, aCas, 0, aCas.getDocumentText().length());
+        return predict(aContext, aCas, 0, aCas.getDocumentText().length());
     }
 
     /**

@@ -23,21 +23,19 @@ CAUTION: Experimental feature. To use this functionality, you need to enable it 
 
 This format provides a representation of the annotated document in RDF using the design model of the UIMA CAS. This format is not an official Apache UIMA file format but rather a facility provided by {product-name} for the benefit of users who want to interact with thier annotated data using Semantic Web technology.
 
-[cols="2,1,1,1,3"]
+[cols="2,1,1,3"]
 |====
-| Format | Read | Write | Custom Layers | Description
+| Format | Import | Export | Supported layers
 
 | UIMA CAS RDF (`rdfcas`)
 | yes
 | yes
-| yes
-| 
+| All built-in and custom layers
 |====
 
 .Example
 [source,turtle]
 ----
-{
 <doc:fi-orig.conll#6>
         a                    cas:Sofa , rdfcas:View ;
         cas:Sofa-mimeType    "text" ;

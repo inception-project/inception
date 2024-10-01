@@ -49,7 +49,6 @@ import org.opensearch.client.RequestOptions;
 import org.opensearch.client.RestClient;
 import org.opensearch.client.RestClientBuilder;
 import org.opensearch.client.RestHighLevelClient;
-import org.opensearch.common.text.Text;
 import org.opensearch.index.query.QueryBuilder;
 import org.opensearch.index.query.QueryBuilders;
 import org.opensearch.index.query.functionscore.RandomScoreFunctionBuilder;
@@ -138,8 +137,8 @@ public class OpenSearchProvider
                     // There are highlights, set them in the result
                     List<ExternalSearchHighlight> highlights = new ArrayList<>();
                     if (hit.getHighlightFields().get(aTraits.getDefaultField()) != null) {
-                        for (Text highlight : hit.getHighlightFields()
-                                .get(aTraits.getDefaultField()).getFragments()) {
+                        for (var highlight : hit.getHighlightFields().get(aTraits.getDefaultField())
+                                .getFragments()) {
                             highlights.add(new ExternalSearchHighlight(highlight.toString()));
                         }
                     }

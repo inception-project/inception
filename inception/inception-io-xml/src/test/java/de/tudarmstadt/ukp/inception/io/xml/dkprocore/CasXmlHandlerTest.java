@@ -25,8 +25,6 @@ import static org.apache.commons.io.IOUtils.toInputStream;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 
-import javax.xml.parsers.SAXParser;
-
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.jcas.JCas;
 import org.dkpro.core.api.xml.type.XmlAttribute;
@@ -52,9 +50,9 @@ public class CasXmlHandlerTest
     @Test
     void testWithDefaultNamespace() throws Exception
     {
-        String xml = "<root xmlns='http://namespace.org'/>";
+        var xml = "<root xmlns='http://namespace.org'/>";
 
-        SAXParser parser = XmlParserUtils.newSaxParser();
+        var parser = XmlParserUtils.newSaxParser();
         parser.parse(toInputStream(xml, UTF_8), sut);
 
         assertThat(jcas.select(XmlElement.class).asList()) //
@@ -69,9 +67,9 @@ public class CasXmlHandlerTest
     @Test
     void testWithPrefixedNamespace() throws Exception
     {
-        String xml = "<ns:root xmlns:ns='http://namespace.org'/>";
+        var xml = "<ns:root xmlns:ns='http://namespace.org'/>";
 
-        SAXParser parser = XmlParserUtils.newSaxParser();
+        var parser = XmlParserUtils.newSaxParser();
         parser.parse(toInputStream(xml, UTF_8), sut);
 
         assertThat(jcas.select(XmlElement.class).asList()) //
@@ -87,9 +85,9 @@ public class CasXmlHandlerTest
     @Test
     void testWithPrefixedNamespace_NS_enabled() throws Exception
     {
-        String xml = "<ns:root xmlns:ns='http://namespace.org' x='true'/>";
+        var xml = "<ns:root xmlns:ns='http://namespace.org' x='true'/>";
 
-        SAXParser parser = newSaxParser(enableNamespaceSupport(newSaxParserFactory()));
+        var parser = newSaxParser(enableNamespaceSupport(newSaxParserFactory()));
         parser.parse(toInputStream(xml, UTF_8), sut);
 
         assertThat(jcas.select(XmlElement.class).asList()) //

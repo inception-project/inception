@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.active.learning;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateChangeFlag.EXPLICIT_ANNOTATOR_USER_ACTION;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation.AL_SIDEBAR;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.ACCEPTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.CORRECTED;
@@ -224,7 +225,8 @@ public class ActiveLearningServiceImpl
         }
 
         // Save CAS after annotation has been created
-        documentService.writeAnnotationCas(cas, aDocument, aDataOwner, true);
+        documentService.writeAnnotationCas(cas, aDocument, aDataOwner,
+                EXPLICIT_ANNOTATOR_USER_ACTION);
 
         // Send an application event indicating if the user has accepted/skipped/corrected/rejected
         // the suggestion

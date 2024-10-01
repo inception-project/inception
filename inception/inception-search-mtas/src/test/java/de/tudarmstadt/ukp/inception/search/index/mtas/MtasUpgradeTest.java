@@ -40,6 +40,7 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.annotation.DirtiesContext.ClassMode;
 import org.springframework.transaction.annotation.Transactional;
 
+import de.tudarmstadt.ukp.clarin.webanno.constraints.config.ConstraintsServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.diag.config.CasDoctorAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -76,6 +77,7 @@ import de.tudarmstadt.ukp.inception.support.spring.ApplicationContextProvider;
 @EnableAutoConfiguration
 @ImportAutoConfiguration( //
         classes = { //
+                ConstraintsServiceAutoConfiguration.class, //
                 PreferencesServiceAutoConfig.class, //
                 ProjectServiceAutoConfiguration.class, //
                 AnnotationSchemaServiceAutoConfiguration.class, //
@@ -128,7 +130,7 @@ public class MtasUpgradeTest
         srcDoc = new SourceDocument("test.txt", project, TextFormatSupport.ID);
         annDoc = new AnnotationDocument("user", srcDoc);
         documentService.createSourceDocument(srcDoc);
-        documentService.createAnnotationDocument(annDoc);
+        documentService.createOrUpdateAnnotationDocument(annDoc);
 
         index = new MtasDocumentIndex(project, documentService,
                 repositoryProperties.getPath().getAbsolutePath(), featureIndexingSupportRegistry,

@@ -31,9 +31,9 @@ public class DocumentMetadataEventAdapter
     implements EventLoggingAdapter<DocumentMetadataEvent>
 {
     @Override
-    public boolean accepts(Object aEvent)
+    public boolean accepts(Class<?> aEvent)
     {
-        return aEvent instanceof DocumentMetadataEvent;
+        return DocumentMetadataEvent.class.isAssignableFrom(aEvent);
     }
 
     @Override

@@ -1,9 +1,0 @@
-import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS as pos;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma as lemma;
-import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency as DEPENDENCY;
-
-
-lemma{
-@DEPENDENCY.@pos.@pos.PosValue="pronoun" -> value = "good" (!);
-}
-

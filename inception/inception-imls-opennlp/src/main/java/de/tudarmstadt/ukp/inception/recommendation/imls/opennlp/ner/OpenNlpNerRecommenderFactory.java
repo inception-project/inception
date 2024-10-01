@@ -51,7 +51,7 @@ public class OpenNlpNerRecommenderFactory
     @Override
     public RecommendationEngine build(Recommender aRecommender)
     {
-        OpenNlpNerRecommenderTraits traits = new OpenNlpNerRecommenderTraits();
+        var traits = new OpenNlpNerRecommenderTraits();
         return new OpenNlpNerRecommender(aRecommender, traits);
     }
 
@@ -70,12 +70,25 @@ public class OpenNlpNerRecommenderFactory
 
         return (asList(SINGLE_TOKEN, TOKENS, SENTENCES).contains(aLayer.getAnchoringMode()))
                 && SpanLayerSupport.TYPE.equals(aLayer.getType())
-                && (CAS.TYPE_NAME_STRING.equals(aFeature.getType()) || aFeature.isVirtualFeature());
+                && (asList(CAS.TYPE_NAME_STRING, CAS.TYPE_NAME_BOOLEAN).contains(aFeature.getType())
+                        || aFeature.isVirtualFeature());
     }
 
     @Override
     public OpenNlpNerRecommenderTraits createTraits()
     {
         return new OpenNlpNerRecommenderTraits();
+    }
+
+    @Override
+    public boolean isModelExportSupported()
+    {
+        return true;
+    }
+
+    @Override
+    public String getExportModelName(Recommender aRecommender)
+    {
+        return "model.bin";
     }
 }

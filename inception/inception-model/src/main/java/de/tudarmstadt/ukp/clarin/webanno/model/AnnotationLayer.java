@@ -17,28 +17,27 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.model;
 
+import static jakarta.persistence.ConstraintMode.NO_CONSTRAINT;
 import static java.util.Arrays.asList;
-import static javax.persistence.ConstraintMode.NO_CONSTRAINT;
 
 import java.io.Serializable;
-
-import javax.persistence.Cacheable;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.ForeignKey;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.Lob;
-import javax.persistence.ManyToOne;
-import javax.persistence.Table;
-import javax.persistence.UniqueConstraint;
 
 import org.apache.uima.jcas.cas.TOP;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.Type;
+
+import jakarta.persistence.Cacheable;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.ForeignKey;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 
 /**
  * A persistence object for an annotation layer. Currently, the builtin layers are: {@literal
@@ -70,7 +69,6 @@ public class AnnotationLayer
     @Column(nullable = false)
     private String type;
 
-    @Lob
     @Column(length = 64000)
     private String description;
 
@@ -81,8 +79,7 @@ public class AnnotationLayer
 
     private boolean readonly = false;
 
-    @Lob
-    @Column(nullable = true, length = 64000)
+    @Column(length = 64000)
     private String onClickJavascriptAction;
 
     @Column(name = "name", nullable = false)
@@ -116,18 +113,17 @@ public class AnnotationLayer
     private boolean linkedListBehavior;
 
     @Column(name = "anchoring_mode")
-    @Type(type = "de.tudarmstadt.ukp.clarin.webanno.model.AnchoringModeType")
+    @Type(AnchoringModeType.class)
     private AnchoringMode anchoringMode = AnchoringMode.TOKENS;
 
     @Column(name = "overlap_mode")
-    @Type(type = "de.tudarmstadt.ukp.clarin.webanno.model.OverlapModeType")
+    @Type(OverlapModeType.class)
     private OverlapMode overlapMode = OverlapMode.NO_OVERLAP;
 
     @Column(name = "validation_mode")
-    @Type(type = "de.tudarmstadt.ukp.clarin.webanno.model.ValidationModeType")
+    @Type(ValidationModeType.class)
     private ValidationMode validationMode = ValidationMode.ALWAYS;
 
-    @Lob
     @Column(length = 64000)
     private String traits;
 

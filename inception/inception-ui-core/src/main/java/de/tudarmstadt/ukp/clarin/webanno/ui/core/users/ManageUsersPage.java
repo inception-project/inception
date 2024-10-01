@@ -169,7 +169,7 @@ public class ManageUsersPage
                 }).forEach(realms::add);
 
         // Add the realms from the external authentication providers. Note that multiple providers
-        // might use the same registration. E.g. the saml IdP might be registered as an OAuth and
+        // might use the same registration. E.g. the SAML IdP might be registered as an OAuth and
         // simultaneously as a SAML2 provider. It does not make much sense to be honest, but it
         // is possible.
         oAuth2Adapter.getOAuthClientRegistrations()
@@ -183,8 +183,8 @@ public class ManageUsersPage
         }
 
         return realms.stream() //
-                .distinct() //
                 .sorted(Realm::compareRealms) //
+                .distinct() //
                 .collect(toList());
     }
 

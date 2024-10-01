@@ -47,7 +47,8 @@ for module in $TS_MODULES ; do
   popd
   
   pushd "$module"
-  npm audit fix
+  npm install npm-audit-resolver
+  npm exec -- resolve-audit
   popd
   
   pushd "$module"

@@ -17,16 +17,23 @@
  */
 package de.tudarmstadt.ukp.inception.kb.querybuilder;
 
-import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder.sanitizeQueryString_FTS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
+
+import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
+import de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder.Mode;
 
 public class SPARQLQueryBuilderTest
 {
     @Test
     public void thatLineBreaksAreSanitized() throws Exception
     {
-        assertThat(sanitizeQueryString_FTS("Green\n\rGoblin")).isEqualTo("Green Goblin");
+        var kb = new KnowledgeBase();
+        var sut = new SPARQLQueryBuilder(kb, Mode.CLASS);
+        sut.caseSensitive(true);
+
+        assertThat(sut.sanitizeQueryString_FTS("Green\n\rGoblin")) //
+                .isEqualTo("Green Goblin");
     }
 }

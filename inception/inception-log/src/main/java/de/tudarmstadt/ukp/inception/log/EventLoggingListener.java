@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.log;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
+
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Deque;
@@ -117,6 +119,9 @@ public class EventLoggingListener
         }
 
         var adapter = maybeAdapter.get();
+        if (!adapter.isLoggable(aEvent)) {
+            return;
+        }
 
         if (!shouldLogEvent(adapter.getEvent(aEvent))) {
             return;
@@ -177,5 +182,12 @@ public class EventLoggingListener
 
         // Make sure and pending events are flushed before the application shuts down
         flush();
+
+        try {
+            scheduler.awaitTermination(30, SECONDS);
+        }
+        catch (InterruptedException e) {
+            // Ignore
+        }
     }
 }

@@ -20,8 +20,6 @@ package de.tudarmstadt.ukp.clarin.webanno.project;
 import java.io.Serializable;
 import java.util.Optional;
 
-import javax.persistence.NoResultException;
-
 import org.springframework.security.core.Authentication;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
@@ -31,6 +29,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.PermissionExtension;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
+import jakarta.persistence.NoResultException;
 
 /**
  * <p>

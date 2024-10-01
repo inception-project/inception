@@ -70,7 +70,7 @@
                 function (msg) {
                     var msgBody = JSON.parse(msg.body) as MTaskStateUpdate;
 
-                    console.log(msgBody)
+                    // console.log(msgBody)
 
                     if (typePattern && msgBody.type && !msgBody.type.match(typePattern)) {
                         return;

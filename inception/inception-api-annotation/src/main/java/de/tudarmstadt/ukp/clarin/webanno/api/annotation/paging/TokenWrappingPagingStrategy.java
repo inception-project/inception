@@ -52,7 +52,7 @@ public class TokenWrappingPagingStrategy
     {
         Iterator<AnnotationFS> tokenIterator = WebAnnoCasUtil.selectTokens(aCas).iterator();
 
-        List<Unit> units = new ArrayList<>();
+        var units = new ArrayList<Unit>();
 
         int currentUnitStart = 0;
         int currentUnitEnd = 0;
@@ -65,7 +65,7 @@ public class TokenWrappingPagingStrategy
                         currentToken.getBegin(), currentToken.getEnd(), currentUnitEnd));
             }
 
-            String gap = aCas.getDocumentText().substring(currentUnitEnd, currentToken.getBegin());
+            var gap = aCas.getDocumentText().substring(currentUnitEnd, currentToken.getBegin());
             int gapStart = currentUnitEnd;
             int lineBreakIndex = gap.indexOf("\n");
             while (lineBreakIndex > -1) {
@@ -75,8 +75,8 @@ public class TokenWrappingPagingStrategy
                 lineBreakIndex = gap.indexOf("\n", lineBreakIndex + 1);
             }
 
-            boolean unitNonEmpty = (currentUnitEnd - currentUnitStart) > 0;
-            boolean unitFull = unitNonEmpty
+            var unitNonEmpty = (currentUnitEnd - currentUnitStart) > 0;
+            var unitFull = unitNonEmpty
                     && ((currentToken.getEnd() - currentUnitStart) > maxLineLength);
 
             // If the unit is full, finish the unit and start a new one

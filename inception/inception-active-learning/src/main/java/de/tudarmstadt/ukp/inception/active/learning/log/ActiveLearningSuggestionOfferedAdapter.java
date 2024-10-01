@@ -22,7 +22,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import de.tudarmstadt.ukp.inception.active.learning.config.ActiveLearningAutoConfiguration;
-import de.tudarmstadt.ukp.inception.active.learning.event.ActiveLearningRecommendationEvent;
 import de.tudarmstadt.ukp.inception.active.learning.event.ActiveLearningSuggestionOfferedEvent;
 import de.tudarmstadt.ukp.inception.log.adapter.EventLoggingAdapter;
 import de.tudarmstadt.ukp.inception.log.model.AnnotationDetails;
@@ -39,9 +38,9 @@ public class ActiveLearningSuggestionOfferedAdapter
     implements EventLoggingAdapter<ActiveLearningSuggestionOfferedEvent>
 {
     @Override
-    public boolean accepts(Object aEvent)
+    public boolean accepts(Class<?> aEvent)
     {
-        return aEvent instanceof ActiveLearningRecommendationEvent;
+        return ActiveLearningSuggestionOfferedEvent.class.isAssignableFrom(aEvent);
     }
 
     @Override

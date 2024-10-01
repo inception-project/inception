@@ -23,8 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.wicket.Application;
-
-import com.googlecode.wicket.jquery.core.template.IJQueryTemplate;
+import org.wicketstuff.jquery.core.template.IJQueryTemplate;
 
 final class KBHandleTemplate
     implements IJQueryTemplate

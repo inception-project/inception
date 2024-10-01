@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.annotation.feature.multistring;
 
 import static java.util.Arrays.asList;
+import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.uima.cas.CAS.TYPE_NAME_STRING_ARRAY;
 
@@ -108,6 +109,13 @@ public class MultiValueStringFeatureSupport
     {
         return MultiValueMode.ARRAY.equals(aFeature.getMultiValueMode())
                 && CAS.TYPE_NAME_STRING_ARRAY.equals(aFeature.getType());
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public <V> V getDefaultFeatureValue(AnnotationFeature aFeature, FeatureStructure aFS)
+    {
+        return (V) Collections.emptyList();
     }
 
     @SuppressWarnings("unchecked")
@@ -225,6 +233,17 @@ public class MultiValueStringFeatureSupport
     }
 
     @Override
+    public boolean isFeatureValueValid(AnnotationFeature aFeature, FeatureStructure aFS)
+    {
+        if (aFeature.isRequired()) {
+            var value = FSUtil.getFeature(aFS, aFeature.getName(), List.class);
+            return isNotEmpty(value);
+        }
+
+        return true;
+    }
+
+    @Override
     public Panel createTraitsEditor(String aId, IModel<AnnotationFeature> aFeatureModel)
     {
         return new MultiValueStringFeatureTraitsEditor(aId, this, aFeatureModel);
@@ -294,5 +313,28 @@ public class MultiValueStringFeatureSupport
             }
         }
         return asList(results);
+    }
+
+    @Override
+    public <V> V getFeatureValue(AnnotationFeature aFeature, FeatureStructure aFS)
+    {
+        Object value;
+
+        var f = aFS.getType().getFeatureByBaseName(aFeature.getName());
+
+        if (f == null) {
+            value = null;
+        }
+        else if (f.getRange().isPrimitive()) {
+            value = FSUtil.getFeature(aFS, aFeature.getName(), Object.class);
+        }
+        else if (FSUtil.isMultiValuedFeature(aFS, f)) {
+            value = FSUtil.getFeature(aFS, aFeature.getName(), List.class);
+        }
+        else {
+            value = FSUtil.getFeature(aFS, aFeature.getName(), FeatureStructure.class);
+        }
+
+        return (V) wrapFeatureValue(aFeature, aFS.getCAS(), value);
     }
 }

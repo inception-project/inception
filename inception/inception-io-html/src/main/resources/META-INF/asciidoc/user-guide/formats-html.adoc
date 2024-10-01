@@ -26,13 +26,12 @@ Support for this feature will be removed in a future version. The replacement is
 Legacy support for HTML documents which imports a small subset of HTML elements as annotations.
 Supported elements are `h1`-`h6` and `p`.
 
-[cols="2,1,1,1,3"]
+[cols="2,1,1,3"]
 |====
-| Format | Read | Write | Custom Layers | Description
+| Format | Import | Export | Supported layers
 
 | HTML (`html`)
 | yes
 | no
-| no
-| 
+| None
 |====

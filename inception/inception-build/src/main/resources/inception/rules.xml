@@ -23,6 +23,7 @@
     <ignoreVersion type="regex">(?i).*[-_\.]b[0-9\.]*</ignoreVersion>
     <ignoreVersion type="regex">(?i).*[-_\.]M[0-9\.]*</ignoreVersion>
     <ignoreVersion type="regex">(?i).*[-_\.]rc[0-9\.-]*</ignoreVersion>
+    <ignoreVersion type="regex">(?i).*[-_\.]Dev[0-9\.-]*</ignoreVersion>
     <ignoreVersion type="regex">(?i).*[-_\.]alpha[0-9\.-]*</ignoreVersion>
     <ignoreVersion type="regex">(?i).*[-_\.]beta[0-9\.-]*</ignoreVersion>
     <!-- e.g. commons-collections:commons-collections ... 3.2.1.redhat-7 -> 20040117.000000 -->

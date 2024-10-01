@@ -35,6 +35,7 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 
+import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.annotation.layer.behaviors.LayerBehaviorRegistry;
@@ -65,6 +66,7 @@ public class RelationLayerSupport
 
     private final ApplicationEventPublisher eventPublisher;
     private final LayerBehaviorRegistry layerBehaviorsRegistry;
+    private final ConstraintsService constraintsService;
 
     private String layerSupportId;
     private List<LayerType> types;
@@ -72,11 +74,12 @@ public class RelationLayerSupport
     @Autowired
     public RelationLayerSupport(FeatureSupportRegistry aFeatureSupportRegistry,
             ApplicationEventPublisher aEventPublisher,
-            LayerBehaviorRegistry aLayerBehaviorsRegistry)
+            LayerBehaviorRegistry aLayerBehaviorsRegistry, ConstraintsService aConstraintsService)
     {
         super(aFeatureSupportRegistry);
         eventPublisher = aEventPublisher;
         layerBehaviorsRegistry = aLayerBehaviorsRegistry;
+        constraintsService = aConstraintsService;
     }
 
     @Override
@@ -113,11 +116,10 @@ public class RelationLayerSupport
     public RelationAdapter createAdapter(AnnotationLayer aLayer,
             Supplier<Collection<AnnotationFeature>> aFeatures)
     {
-        var adapter = new RelationAdapter(getLayerSupportRegistry(), featureSupportRegistry,
+        return new RelationAdapter(getLayerSupportRegistry(), featureSupportRegistry,
                 eventPublisher, aLayer, FEAT_REL_TARGET, FEAT_REL_SOURCE, aFeatures,
-                layerBehaviorsRegistry.getLayerBehaviors(this, RelationLayerBehavior.class));
-
-        return adapter;
+                layerBehaviorsRegistry.getLayerBehaviors(this, RelationLayerBehavior.class),
+                constraintsService);
     }
 
     @Override

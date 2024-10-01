@@ -17,10 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.ui.curation.sidebar.config;
 
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
@@ -29,6 +25,7 @@ import org.springframework.security.core.session.SessionRegistry;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.inception.curation.service.CurationDocumentService;
 import de.tudarmstadt.ukp.inception.curation.service.CurationMergeService;
 import de.tudarmstadt.ukp.inception.curation.service.CurationService;
 import de.tudarmstadt.ukp.inception.curation.sidebar.CurationSidebarProperties;
@@ -40,29 +37,29 @@ import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.inception.ui.curation.sidebar.CurationEditorExtension;
 import de.tudarmstadt.ukp.inception.ui.curation.sidebar.CurationSidebarApplicationInitializer;
+import de.tudarmstadt.ukp.inception.ui.curation.sidebar.CurationSidebarDocumentNavigatorActionBarExtension;
 import de.tudarmstadt.ukp.inception.ui.curation.sidebar.CurationSidebarFactory;
 import de.tudarmstadt.ukp.inception.ui.curation.sidebar.CurationSidebarService;
 import de.tudarmstadt.ukp.inception.ui.curation.sidebar.CurationSidebarServiceImpl;
 import de.tudarmstadt.ukp.inception.ui.curation.sidebar.render.CurationSidebarRenderer;
+import jakarta.persistence.EntityManager;
 
 @ConditionalOnWebApplication
 @Configuration
-@ConditionalOnProperty(prefix = "curation.sidebar", name = "enabled", havingValue = "true")
 public class CurationSidebarAutoConfiguration
 {
-    private @PersistenceContext EntityManager entityManager;
-
     @Bean
     public CurationSidebarService curationSidebarService(EntityManager aEntityManager,
             DocumentService aDocumentService, SessionRegistry aSessionRegistry,
             ProjectService aProjectService, UserDao aUserRegistry,
             CasStorageService aCasStorageService, CurationService aCurationService,
             CurationMergeService aCurationMergeService,
-            CurationSidebarProperties aCurationSidebarProperties)
+            CurationSidebarProperties aCurationSidebarProperties,
+            CurationDocumentService aCurationDocumentService)
     {
         return new CurationSidebarServiceImpl(aEntityManager, aDocumentService, aSessionRegistry,
                 aProjectService, aUserRegistry, aCasStorageService, aCurationService,
-                aCurationMergeService, aCurationSidebarProperties);
+                aCurationMergeService, aCurationSidebarProperties, aCurationDocumentService);
     }
 
     @Bean(CurationEditorExtension.EXTENSION_ID)
@@ -79,11 +76,11 @@ public class CurationSidebarAutoConfiguration
     }
 
     @Bean("curationSidebar")
-    @ConditionalOnProperty(prefix = "curation.sidebar", name = "enabled", havingValue = "true")
     public CurationSidebarFactory curationSidebarFactory(ProjectService aProjectService,
-            UserDao aUserService)
+            UserDao aUserService, CurationSidebarProperties aCurationSidebarProperties)
     {
-        return new CurationSidebarFactory(aProjectService, aUserService);
+        return new CurationSidebarFactory(aProjectService, aUserService,
+                aCurationSidebarProperties);
     }
 
     @Bean
@@ -95,9 +92,19 @@ public class CurationSidebarAutoConfiguration
                 aDocumentService, aUserRepository, aAnnotationService);
     }
 
+    @Deprecated
     @Bean
     public CurationSidebarApplicationInitializer curationSidebarApplicationInitializer()
     {
         return new CurationSidebarApplicationInitializer();
+    }
+
+    @Deprecated
+    @Bean
+    public CurationSidebarDocumentNavigatorActionBarExtension curationSidebarDocumentNavigatorActionBarExtension(
+            CurationSidebarService aCurationSidebarService, UserDao aUserRepository)
+    {
+        return new CurationSidebarDocumentNavigatorActionBarExtension(aCurationSidebarService,
+                aUserRepository);
     }
 }

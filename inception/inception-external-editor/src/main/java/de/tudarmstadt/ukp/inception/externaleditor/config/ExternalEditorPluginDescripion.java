@@ -36,6 +36,7 @@ public class ExternalEditorPluginDescripion
 
     private List<String> scripts = Collections.emptyList();
     private List<String> stylesheets = Collections.emptyList();
+    private List<String> sectionElements = Collections.emptyList();
 
     private @JsonIgnore Path basePath;
 
@@ -107,5 +108,15 @@ public class ExternalEditorPluginDescripion
     public void setStylesheets(List<String> aStylesheets)
     {
         stylesheets = aStylesheets;
+    }
+
+    public List<String> getSectionElements()
+    {
+        return sectionElements;
+    }
+
+    public void setSectionElements(List<String> aSectionElements)
+    {
+        sectionElements = aSectionElements;
     }
 }

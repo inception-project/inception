@@ -24,9 +24,8 @@ import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-
-import com.googlecode.wicket.jquery.core.Options;
-import com.googlecode.wicket.kendo.ui.widget.tooltip.TooltipBehavior;
+import org.wicketstuff.jquery.core.Options;
+import org.wicketstuff.kendo.ui.widget.tooltip.TooltipBehavior;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;

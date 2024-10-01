@@ -41,7 +41,7 @@ public class BratTextAnnotationDrawingDecl
         fgColor = aFgColor;
         borderColor = aBorderColor;
     }
-    
+
     public String getBgColor()
     {
         return bgColor;
@@ -58,14 +58,13 @@ public class BratTextAnnotationDrawingDecl
     }
 
     @Override
-    public void write(JsonGenerator aJG)
-        throws IOException
+    public void write(JsonGenerator aJG) throws IOException
     {
         aJG.writeStringField("fgColor", getFgColor());
         aJG.writeStringField("bgColor", getBgColor());
         aJG.writeStringField("borderColor", getBorderColor());
     }
-    
+
     @Override
     public String getSpec()
     {

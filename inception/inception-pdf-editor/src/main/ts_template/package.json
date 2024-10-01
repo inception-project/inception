@@ -32,5 +32,10 @@
     "@types/events": "${types-events.version}",
     "@types/urijs": "${types-urijs.version}",
     "yargs": "${yargs.version}"
-  }
+  },
+  "auditConfig": {
+    "ignore": [
+      "https://github.com/advisories/GHSA-wgrm-67xf-hhpq"
+    ]
+  }  
 }

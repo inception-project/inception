@@ -19,11 +19,36 @@ package de.tudarmstadt.ukp.inception.conceptlinking.recommender;
 
 import java.io.Serializable;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 @JsonSerialize
 public class NamedEntityLinkerTraits
     implements Serializable
 {
     private static final long serialVersionUID = 4379021097577126023L;
+
+    private boolean emptyCandidateFeatureRequired = true;
+    private boolean synchronous = true;
+
+    public boolean isEmptyCandidateFeatureRequired()
+    {
+        return emptyCandidateFeatureRequired;
+    }
+
+    public void setEmptyCandidateFeatureRequired(boolean aEmptyCandidateFeatureRequired)
+    {
+        emptyCandidateFeatureRequired = aEmptyCandidateFeatureRequired;
+    }
+
+    public boolean isSynchronous()
+    {
+        return synchronous;
+    }
+
+    public void setSynchronous(boolean aSynchronous)
+    {
+        synchronous = aSynchronous;
+    }
 }

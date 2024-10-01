@@ -17,9 +17,11 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.relation;
 
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior;
+import java.util.Objects;
+
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.Position;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.Position_ImplBase;
+import de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureMultiplicityMode;
 
 /**
  * Represents a span position in the text.
@@ -39,7 +41,8 @@ public class RelationPosition
     public RelationPosition(String aCollectionId, String aDocumentId, String aType,
             int aSourceBegin, int aSourceEnd, String aSourceText, int aTargetBegin, int aTargetEnd,
             String aTargetText, String aFeature, String aRole, int aLinkTargetBegin,
-            int aLinkTargetEnd, String aLinkTargetText, LinkCompareBehavior aLinkCompareBehavior)
+            int aLinkTargetEnd, String aLinkTargetText,
+            LinkFeatureMultiplicityMode aLinkCompareBehavior)
     {
         super(aCollectionId, aDocumentId, aType, aFeature, aRole, aLinkTargetBegin, aLinkTargetEnd,
                 aLinkTargetText, aLinkCompareBehavior);
@@ -108,6 +111,28 @@ public class RelationPosition
                 return otherSpan.targetEnd - targetEnd;
             }
         }
+    }
+
+    @Override
+    public boolean equals(final Object other)
+    {
+        if (!(other instanceof RelationPosition)) {
+            return false;
+        }
+        if (!super.equals(other)) {
+            return false;
+        }
+        RelationPosition castOther = (RelationPosition) other;
+        return Objects.equals(sourceBegin, castOther.sourceBegin)
+                && Objects.equals(sourceEnd, castOther.sourceEnd)
+                && Objects.equals(targetBegin, castOther.targetBegin)
+                && Objects.equals(targetEnd, castOther.targetEnd);
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return Objects.hash(super.hashCode(), sourceBegin, sourceEnd, targetBegin, targetEnd);
     }
 
     @Override

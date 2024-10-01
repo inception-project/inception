@@ -23,15 +23,13 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.weblicht.exporter;
 
 import static java.util.Arrays.asList;
 
-import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
+import java.lang.invoke.MethodHandles;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
-import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+import java.util.zip.ZipOutputStream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,7 +42,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.exporter.RecommenderExporter;
 import de.tudarmstadt.ukp.inception.recommendation.imls.weblicht.chains.WeblichtChainService;
 import de.tudarmstadt.ukp.inception.recommendation.imls.weblicht.config.WeblichtRecommenderAutoConfiguration;
@@ -59,7 +56,7 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.weblicht.model.WeblichtC
 public class ChainExporter
     implements ProjectExporter
 {
-    private static final Logger LOG = LoggerFactory.getLogger(ChainExporter.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private static final String KEY = "weblicht-chains";
 
@@ -84,27 +81,29 @@ public class ChainExporter
 
     @Override
     public void exportData(FullProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
-            ExportedProject aExProject, File aStage)
+            ExportedProject aExProject, ZipOutputStream aStage)
         throws IOException
     {
-        Project project = aRequest.getProject();
+        var project = aRequest.getProject();
 
-        List<ExportedWeblichtChain> exportedChains = new ArrayList<>();
-        for (Recommender recommender : recommendationService.listRecommenders(project)) {
-            Optional<WeblichtChain> optChain = chainService.getChain(recommender);
+        var exportedChains = new ArrayList<ExportedWeblichtChain>();
+        for (var recommender : recommendationService.listRecommenders(project)) {
+            var optChain = chainService.getChain(recommender);
             if (optChain.isPresent()) {
-                WeblichtChain chain = optChain.get();
-                ExportedWeblichtChain exportedChain = new ExportedWeblichtChain();
+                var chain = optChain.get();
+                var exportedChain = new ExportedWeblichtChain();
                 exportedChain.setId(chain.getId());
                 exportedChain.setName(chain.getName());
                 exportedChain.setRecommender(recommender.getName());
                 exportedChains.add(exportedChain);
 
-                File targetFolder = new File(aStage, CHAINS_FOLDER);
-                targetFolder.mkdirs();
-
-                Files.copy(chainService.getChainFile(chain).toPath(),
-                        new File(targetFolder, chain.getId() + ".xml").toPath());
+                ProjectExporter.writeEntry(aStage, CHAINS_FOLDER + "/" + chain.getId() + ".xml",
+                        os -> {
+                            try (var is = Files
+                                    .newInputStream(chainService.getChainFile(chain).toPath())) {
+                                is.transferTo(os);
+                            }
+                        });
             }
         }
 
@@ -118,20 +117,20 @@ public class ChainExporter
             ExportedProject aExProject, ZipFile aZip)
         throws Exception
     {
-        ExportedWeblichtChain[] exportedChains = aExProject.getArrayProperty(KEY,
-                ExportedWeblichtChain.class);
+        var exportedChains = aExProject.getArrayProperty(KEY, ExportedWeblichtChain.class);
 
-        for (ExportedWeblichtChain exportedChain : exportedChains) {
-            Recommender recommender = recommendationService
+        for (var exportedChain : exportedChains) {
+            var recommender = recommendationService
                     .getRecommender(aProject, exportedChain.getRecommender()).get();
 
-            WeblichtChain chain = new WeblichtChain();
+            var chain = new WeblichtChain();
             chain.setName(exportedChain.getName());
             chain.setRecommender(recommender);
             chainService.createOrUpdateChain(chain);
 
-            ZipEntry entry = aZip.getEntry(CHAINS_FOLDER + "/" + exportedChain.getId() + ".xml");
-            try (InputStream is = aZip.getInputStream(entry)) {
+            var entry = ProjectExporter.getEntry(aZip,
+                    CHAINS_FOLDER + "/" + exportedChain.getId() + ".xml");
+            try (var is = aZip.getInputStream(entry)) {
                 chainService.importChainFile(chain, is);
             }
         }

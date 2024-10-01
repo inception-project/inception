@@ -35,9 +35,9 @@ public class SearchQueryEventAdapter
     implements EventLoggingAdapter<SearchQueryEvent>
 {
     @Override
-    public boolean accepts(Object aEvent)
+    public boolean accepts(Class<?> aEvent)
     {
-        return aEvent instanceof SearchQueryEvent;
+        return SearchQueryEvent.class.isAssignableFrom(aEvent);
     }
 
     @Override

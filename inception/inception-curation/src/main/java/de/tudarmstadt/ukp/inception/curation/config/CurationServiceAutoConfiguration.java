@@ -19,9 +19,6 @@ package de.tudarmstadt.ukp.inception.curation.config;
 
 import java.util.List;
 
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationEventPublisher;
@@ -49,6 +46,8 @@ import de.tudarmstadt.ukp.inception.curation.sidebar.CurationSidebarPropertiesIm
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.config.AnnotationSchemaProperties;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 
 @Configuration
 @EnableConfigurationProperties(CurationSidebarPropertiesImpl.class)

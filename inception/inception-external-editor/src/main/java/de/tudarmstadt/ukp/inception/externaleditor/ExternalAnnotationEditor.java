@@ -23,8 +23,6 @@ import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.substringAfter;
 
-import javax.servlet.ServletContext;
-
 import org.apache.wicket.Component;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.model.IModel;
@@ -40,6 +38,7 @@ import de.tudarmstadt.ukp.inception.editor.view.DocumentViewExtensionPoint;
 import de.tudarmstadt.ukp.inception.externaleditor.config.ExternalEditorPluginDescripion;
 import de.tudarmstadt.ukp.inception.externaleditor.model.AnnotationEditorProperties;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import jakarta.servlet.ServletContext;
 
 public class ExternalAnnotationEditor
     extends ExternalAnnotationEditorBase
@@ -104,7 +103,7 @@ public class ExternalAnnotationEditor
     protected AnnotationEditorProperties getProperties()
     {
         var props = new AnnotationEditorProperties();
-        ExternalEditorPluginDescripion pluginDesc = getDescription();
+        var pluginDesc = getDescription();
         props.setEditorFactory(pluginDesc.getFactory());
         props.setDiamAjaxCallbackUrl(getDiamBehavior().getCallbackUrl().toString());
         props.setDiamWsUrl(constructWsEndpointUrl());
@@ -114,6 +113,7 @@ public class ExternalAnnotationEditor
         props.setScriptSources(pluginDesc.getScripts().stream() //
                 .map(this::getUrlForPluginAsset) //
                 .collect(toList()));
+        props.setSectionElements(pluginDesc.getSectionElements());
         getFactory().getUserPreferencesKey()
                 .ifPresent(key -> props.setUserPreferencesKey(key.getClientSideKey()));
         props.setEditorFactoryId(getFactory().getBeanName());

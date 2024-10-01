@@ -60,7 +60,7 @@
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 {#if annotation.vid.toString().startsWith("rec:")}
-    <div class="btn-group mb-0 ms-0 btn-group-recommendation bg-body" role="group">
+    <div class="btn-group mb-1 ms-0 btn-group-recommendation bg-body" role="group">
         <button
             type="button"
             class="btn-accept btn btn-outline-success btn-sm py-0 px-1"
@@ -90,7 +90,7 @@
 {:else if annotation.vid.toString().startsWith("cur:")}
     <button
         type="button"
-        class="btn-merge btn btn-colored btn-sm py-0 px-1 border-dark"
+        class="btn-merge btn btn-colored btn-sm pt-0 mb-1 px-1 border-dark mb-1"
         style="color: {textColor}; background-color: {backgroundColor}"
         on:click={handleMerge}
         title="Merge"
@@ -107,7 +107,7 @@
         {/if}
     </button>
 {:else}
-    <div class="input-group mb-0 ms-1 bg-body" role="group">
+    <div class="input-group mb-1 ms-1 bg-body flex-nowrap text-break" role="group">
         {#if hasError || hasInfo}
             <span class="input-group-text py-0 px-1">
                 {#if hasError}<i class="fas fa-exclamation-circle" style="color: var(--i7n-error-color)"></i>{/if}

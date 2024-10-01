@@ -28,10 +28,10 @@ public class NotifyingTaskMonitor
 
     private MTaskStateUpdate lastUpdate;
 
-    public NotifyingTaskMonitor(TaskHandle aHandle, Task aTask,
+    public NotifyingTaskMonitor(Task aTask,
             SchedulerWebsocketController aSchedulerWebsocketController)
     {
-        super(aHandle, aTask);
+        super(aTask);
         schedulerWebsocketController = aSchedulerWebsocketController;
     }
 
@@ -90,7 +90,7 @@ public class NotifyingTaskMonitor
         }
     }
 
-    private void sendNotification()
+    protected void sendNotification()
     {
         if (isDestroyed()) {
             return;

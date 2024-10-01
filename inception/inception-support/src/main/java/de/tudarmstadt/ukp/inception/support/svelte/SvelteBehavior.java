@@ -22,8 +22,6 @@ import static de.tudarmstadt.ukp.inception.support.json.JSONUtil.toInterpretable
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 
-import javax.servlet.ServletContext;
-
 import org.apache.wicket.Component;
 import org.apache.wicket.behavior.Behavior;
 import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
@@ -40,6 +38,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.inception.support.wicket.WicketUtil;
+import jakarta.servlet.ServletContext;
 
 public class SvelteBehavior
     extends Behavior
@@ -169,8 +168,11 @@ public class SvelteBehavior
         String id = aComponent.getMarkupId();
         return WicketUtil.wrapInTryCatch(String.join("\n", //
                 "let element = document.getElementById('" + id + "');", //
-                "element.$destroy();", //
-                "delete element.$destroy;", //
-                "console.log('Svelte component on element [" + id + "] was destroyed');"));
+                "if (element.$destroy) {", //
+                "  element.$destroy();", //
+                "  delete element.$destroy;", //
+                "  console.log('Svelte component with class [" + host.getClass().getName()
+                        + "] on element [" + id + "] was destroyed');", //
+                "}"));
     }
 }

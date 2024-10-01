@@ -21,7 +21,7 @@
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="
     http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd 
-    http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+    http://www.liquibase.org/xml/ns/dbchangelog https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.27.xsd">
 
   <changeSet author="WebAnno Team" id="1512223050574-4">
     <preConditions onFail="MARK_RAN">
@@ -40,19 +40,6 @@
         <constraints nullable="false" />
       </column>
     </createTable>
-  </changeSet>
-  
-  <!--
-    Clean up legacy unique constraint (authority, username) on (authorities)
-    
-    NOTE: This change set ignores failures since there is no precondition to check if
-          unique constraints exist or not. So we simply have to try it.
-   -->
-  <changeSet author="WebAnno Team" id="1512223050574-4.1" failOnError="false">
-    <dropUniqueConstraint
-      tableName="authorities" 
-      constraintName="UK_2uf74smucdwf9qal2n67m2343"
-      uniqueColumns="authority, username" />
   </changeSet>
 
   <!-- 
@@ -81,7 +68,7 @@
       <column name="username" />
     </createIndex>
   </changeSet>  
-  
+
   <changeSet author="WebAnno Team" id="1512223050574-15">
     <preConditions onFail="MARK_RAN">
       <not>
@@ -103,8 +90,7 @@
     </createTable>
     <addPrimaryKey columnNames="username" tableName="users" />
   </changeSet>
-  
-  
+
   <changeSet author="WebAnno Team" id="1512223050574-48.1">
     <preConditions onFail="MARK_RAN">
       <foreignKeyConstraintExists foreignKeyTableName="authorities" foreignKeyName="FK2B0F1321292E1AC9" />
@@ -118,7 +104,7 @@
     </preConditions>
     <dropForeignKeyConstraint baseTableName="authorities" constraintName="FK_baahryprcge2u172egph1qwur" />
   </changeSet>
-  
+
   <changeSet author="WebAnno Team" id="1512223050574-48.3">
     <preConditions onFail="MARK_RAN">
       <not>
@@ -156,14 +142,14 @@
       </column>
     </addColumn>
   </changeSet>
-  
+
   <changeSet author="INCEpTION Team" id="20210410-01" failOnError="false">
     <addUniqueConstraint 
       tableName="users" 
       constraintName="UK_realm_uiName"
       columnNames="realm, uiName" />
   </changeSet>
-  
+
   <changeSet author="INCEpTION Team" id="20210410-02">
     <preConditions onFail="MARK_RAN">
       <foreignKeyConstraintExists 
@@ -188,7 +174,7 @@
       onDelete="CASCADE" onUpdate="CASCADE" referencedColumnNames="username"
       referencedTableName="users" />
   </changeSet>
-  
+
   <changeSet author="INCEpTION Team" id="20220930-2" dbms="!postgresql">
     <modifyDataType tableName="users" columnName="enabled" newDataType="BOOLEAN"/>
     <addNotNullConstraint tableName="users" columnName="enabled" columnDataType="BOOLEAN"/>

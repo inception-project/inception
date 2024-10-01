@@ -34,11 +34,10 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.googlecode.wicket.jquery.core.JQueryBehavior;
-import com.googlecode.wicket.jquery.core.renderer.TextRenderer;
-import com.googlecode.wicket.jquery.core.template.IJQueryTemplate;
-import com.googlecode.wicket.kendo.ui.form.autocomplete.AutoCompleteTextField;
+import org.wicketstuff.jquery.core.JQueryBehavior;
+import org.wicketstuff.jquery.core.renderer.TextRenderer;
+import org.wicketstuff.jquery.core.template.IJQueryTemplate;
+import org.wicketstuff.kendo.ui.form.autocomplete.AutoCompleteTextField;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;

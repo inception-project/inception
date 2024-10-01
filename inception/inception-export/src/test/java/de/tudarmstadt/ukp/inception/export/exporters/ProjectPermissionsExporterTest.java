@@ -30,14 +30,13 @@ import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.io.File;
 import java.util.List;
 import java.util.zip.ZipFile;
+import java.util.zip.ZipOutputStream;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.io.TempDir;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -60,8 +59,6 @@ import de.tudarmstadt.ukp.inception.support.spring.ApplicationContextProvider;
 @ExtendWith(MockitoExtension.class)
 public class ProjectPermissionsExporterTest
 {
-    public @TempDir File workFolder;
-
     private @Mock ApplicationContext appContext;
     private @Mock ProjectService projectService;
     private @Mock UserDao userService;
@@ -216,9 +213,10 @@ public class ProjectPermissionsExporterTest
 
     private void exportProject() throws Exception
     {
-        FullProjectExportRequest exportRequest = new FullProjectExportRequest(project, null, false);
-        ProjectExportTaskMonitor monitor = new ProjectExportTaskMonitor(project, null, "test");
-        sut.exportData(exportRequest, monitor, exportedProject, workFolder);
+        var exportRequest = new FullProjectExportRequest(project, null, false);
+        var monitor = new ProjectExportTaskMonitor(project, null, "test");
+        var stage = mock(ZipOutputStream.class);
+        sut.exportData(exportRequest, monitor, exportedProject, stage);
     }
 
     private ArgumentCaptor<ProjectPermission> captureCreatedPermissions()

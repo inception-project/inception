@@ -96,6 +96,10 @@ public class Uima2Rdf
         var docuri = dmd.getDocumentUri() != null ? dmd.getDocumentUri()
                 : DOCUMENT_SCHEME + dmd.getDocumentId();
 
+        if (docuri.indexOf(':') < 0) {
+            docuri = DOCUMENT_SCHEME + docuri;
+        }
+
         // These only collect a single view...
         var reachable = CasDoctorUtils.collectReachable(aJCas.getCas());
         var indexed = CasDoctorUtils.collectIndexed(aJCas.getCas());

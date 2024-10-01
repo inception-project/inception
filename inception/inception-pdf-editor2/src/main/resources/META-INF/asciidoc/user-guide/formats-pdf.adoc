@@ -38,13 +38,12 @@ NOTE: There is a feature of PDF files called "annotations" which you may create 
       with {product-name} annotations. There is currently no way for {product-name} to interact with these
       "PDF annotations".
 
-[cols="2,1,1,1,3"]
+[cols="2,1,1,3"]
 |====
-| Format | Read | Write | Custom Layers | Description
+| Format | Import | Export | Supported layers
 
 | PDF (`pdf2`)
 | yes
 | no
-| n/a
-| 
+| None
 |====
