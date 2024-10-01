@@ -20,30 +20,30 @@
 The CoNLL 2000 format represents POS and Chunk tags. Fields in a line are separated by spaces. 
 Sentences are separated by a blank new line.
 
-[cols="2,1,1,1,3"]
+[cols="2,1,1,3"]
 |====
-| Format | Read | Write | Custom Layers | Description
+| Format | Import | Export | Supported layers
 
 | link:http://www.cnts.ua.ac.be/conll2000/chunking/[CoNLL 2000] (`conll2000`)
 | yes
 | yes
-| no
-| POS, chunks
+| Part-of-speech tagging (built-in), +
+  Chunking (built-in)
 |====
 
 .Columns
 [cols="1,2,3", options="header"]
 |====
-| Column | Type         | Description
-| FORM   
-| Token        
+| Column | Type | Description
+| FORM
+| Token
 | token
 
 | POSTAG 
-| POS          
+| POS
 | part-of-speech tag
 
-| CHUNK  
+| CHUNK
 | Chunk
 | chunk (IOB1 encoded)
 |====

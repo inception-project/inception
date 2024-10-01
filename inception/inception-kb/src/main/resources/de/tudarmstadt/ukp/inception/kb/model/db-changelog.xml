@@ -490,4 +490,19 @@
       </column>
     </addColumn>
   </changeSet>
+
+  <changeSet author="INCEpTION Team" id="20240920-1">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="knowledgebase_add_languages"/>
+      </not>
+    </preConditions>
+    <createTable tableName="knowledgebase_add_languages">
+      <column name="knowledgebase_repositoryId" type="VARCHAR(255)">
+        <constraints nullable="false" />
+      </column>
+      <column name="name" type="VARCHAR(255)">
+      </column>
+    </createTable>
+  </changeSet>
 </databaseChangeLog>

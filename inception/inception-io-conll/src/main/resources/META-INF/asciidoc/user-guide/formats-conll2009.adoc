@@ -19,15 +19,18 @@
 
 The CoNLL 2009 format targets semantic role labeling. Columns are tab-separated. Sentences are separated by a blank new line.
 
-[cols="2,1,1,1,3"]
+[cols="2,1,1,3"]
 |====
-| Format | Read | Write | Custom Layers | Description
+| Format | Import | Export | Supported layers
 
 | link:http://ufal.mff.cuni.cz/conll2009-st/task-description.html[CoNLL 2009] (`conll2009`)
 | yes
 | yes
-| no
-| Lemma, POS, dependencies (basic)
+| Part-of-speech tagging (built-in), +
+  Lemmatization (built-ion), +
+  Dependency parsing (built-in), +
+  Morphological analysis (built-in), +
+  Predicate argument structure SemArg/SemPred  (built-in)
 |====
 
 

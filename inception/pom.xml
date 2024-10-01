@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception</artifactId>
-    <version>34.0-SNAPSHOT</version>
+    <version>35.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>inception-app</artifactId>
@@ -43,14 +43,14 @@
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-dependencies</artifactId>
-        <version>34.0-SNAPSHOT</version>
+        <version>35.0-SNAPSHOT</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-bom</artifactId>
-        <version>34.0-SNAPSHOT</version>
+        <version>35.0-SNAPSHOT</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -178,6 +178,7 @@
     <module>inception-project-initializers</module>
     <module>inception-project-initializers-basic</module>
     <module>inception-project-initializers-doclabeling</module>
+    <module>inception-project-initializers-phi</module>
     <module>inception-project-initializers-sentencelabeling</module>
     <module>inception-project-initializers-ud</module>
     <module>inception-project-initializers-wikidatalinking</module>
@@ -222,6 +223,7 @@
     <module>inception-io-bioc</module>
     <module>inception-io-brat</module>
     <module>inception-io-conll</module>
+    <module>inception-io-docx</module>
     <module>inception-io-json</module>
     <module>inception-io-html</module>
     <module>inception-io-nif</module>

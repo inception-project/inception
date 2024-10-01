@@ -23,7 +23,6 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
@@ -78,11 +77,10 @@ public class WikiDataLinkingProjectInitializersAutoConfiguration
     @Bean
     public EntityAnnotationProjectInitializer entityAnnotationProjectInitializer(
             ApplicationContext aContext, AnnotationSchemaService aAnnotationService,
-            DocumentService aDocumentService,
-            DocumentImportExportService aDocumentImportExportService, UserDao aUserService)
+            DocumentService aDocumentService, UserDao aUserService)
     {
         return new EntityAnnotationProjectInitializer(aContext, aAnnotationService,
-                aDocumentService, aDocumentImportExportService, aUserService);
+                aDocumentService, aUserService);
     }
 
     @ConditionalOnBean(RecommendationService.class)
