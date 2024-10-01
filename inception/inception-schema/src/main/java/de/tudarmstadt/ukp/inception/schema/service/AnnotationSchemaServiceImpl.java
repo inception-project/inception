@@ -23,7 +23,6 @@ import static de.tudarmstadt.ukp.inception.project.api.ProjectService.withProjec
 import static de.tudarmstadt.ukp.inception.schema.api.AttachedAnnotation.Direction.INCOMING;
 import static de.tudarmstadt.ukp.inception.schema.api.AttachedAnnotation.Direction.LOOP;
 import static de.tudarmstadt.ukp.inception.schema.api.AttachedAnnotation.Direction.OUTGOING;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.RELATION_TYPE;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.RESTRICTED_FEATURE_NAMES;
 import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectByAddr;
 import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.getRealCas;
@@ -46,11 +45,11 @@ import static org.hibernate.annotations.QueryHints.CACHEABLE;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.StringTokenizer;
@@ -66,6 +65,7 @@ import org.apache.uima.cas.impl.TypeSystemUtils;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.factory.CasFactory;
 import org.apache.uima.fit.util.CasUtil;
+import org.apache.uima.jcas.tcas.Annotation;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.FeatureDescription;
 import org.apache.uima.resource.metadata.TypeDescription;
@@ -84,7 +84,6 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeSystemAnalysis;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeSystemAnalysis.RelationDetails;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -135,7 +134,7 @@ import jakarta.persistence.criteria.Predicate;
 public class AnnotationSchemaServiceImpl
     implements AnnotationSchemaService
 {
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private final EntityManager entityManager;
     private final ApplicationEventPublisher applicationEventPublisher;
@@ -179,12 +178,12 @@ public class AnnotationSchemaServiceImpl
     @Transactional
     public void createTag(Tag aTag)
     {
-        boolean created = createTagNoLog(aTag);
+        var created = createTagNoLog(aTag);
 
         flushImmutableTagCache(aTag.getTagSet());
 
         try (var logCtx = withProjectLogger(aTag.getTagSet().getProject())) {
-            log.info("{} tag [{}]({}) in tagset {} in project {}", created ? "Created" : "Updated",
+            LOG.info("{} tag [{}]({}) in tagset {} in project {}", created ? "Created" : "Updated",
                     aTag.getName(), aTag.getId(), aTag.getTagSet(), aTag.getTagSet().getProject());
         }
     }
@@ -213,7 +212,7 @@ public class AnnotationSchemaServiceImpl
         }
 
         try (var logCtx = withProjectLogger(project)) {
-            log.info("Created {} tags and updated {} tags in tagset {} in project {}", createdCount,
+            LOG.info("Created {} tags and updated {} tags in tagset {} in project {}", createdCount,
                     updatedCount, tagset, project);
         }
 
@@ -246,19 +245,19 @@ public class AnnotationSchemaServiceImpl
     @Transactional
     public void updateTagRanks(TagSet aTagSet, List<Tag> aTags)
     {
-        Map<Tag, Tag> dbTags = new HashMap<Tag, Tag>();
-        for (Tag t : listTags(aTagSet)) {
+        var dbTags = new HashMap<Tag, Tag>();
+        for (var t : listTags(aTagSet)) {
             dbTags.put(t, t);
         }
 
         int n = 0;
-        for (Tag tag : aTags) {
+        for (var tag : aTags) {
             if (!aTagSet.equals(tag.getTagSet())) {
                 throw new IllegalArgumentException("All tags to be updated must belong to "
                         + aTagSet + ", but [" + tag + "] belongs to " + tag.getTagSet());
             }
 
-            Tag dbTag = dbTags.get(tag);
+            var dbTag = dbTags.get(tag);
             if (dbTag != null) {
                 dbTag.setRank(n);
                 tag.setRank(n);
@@ -299,11 +298,11 @@ public class AnnotationSchemaServiceImpl
         try (var logCtx = withProjectLogger(aTagSet.getProject())) {
             if (isNull(aTagSet.getId())) {
                 entityManager.persist(aTagSet);
-                log.info("Created tagset {} in project {}", aTagSet, aTagSet.getProject());
+                LOG.info("Created tagset {} in project {}", aTagSet, aTagSet.getProject());
             }
             else {
                 entityManager.merge(aTagSet);
-                log.info("Updated tagset {} in project {}", aTagSet, aTagSet.getProject());
+                LOG.info("Updated tagset {} in project {}", aTagSet, aTagSet.getProject());
             }
         }
     }
@@ -315,11 +314,11 @@ public class AnnotationSchemaServiceImpl
         try (var logCtx = withProjectLogger(aLayer.getProject())) {
             if (isNull(aLayer.getId())) {
                 entityManager.persist(aLayer);
-                log.info("Created layer {} in project {}", aLayer, aLayer.getProject());
+                LOG.info("Created layer {} in project {}", aLayer, aLayer.getProject());
             }
             else {
                 entityManager.merge(aLayer);
-                log.info("Updated layer {} in project {}", aLayer, aLayer.getProject());
+                LOG.info("Updated layer {} in project {}", aLayer, aLayer.getProject());
             }
         }
     }
@@ -331,11 +330,11 @@ public class AnnotationSchemaServiceImpl
         try (var logCtx = withProjectLogger(aFeature.getProject())) {
             if (isNull(aFeature.getId())) {
                 entityManager.persist(aFeature);
-                log.info("Created feature {} in project {}", aFeature, aFeature.getProject());
+                LOG.info("Created feature {} in project {}", aFeature, aFeature.getProject());
             }
             else {
                 entityManager.merge(aFeature);
-                log.info("Updated feature {} in project {}", aFeature, aFeature.getProject());
+                LOG.info("Updated feature {} in project {}", aFeature, aFeature.getProject());
             }
         }
     }
@@ -459,13 +458,13 @@ public class AnnotationSchemaServiceImpl
     @Transactional
     public boolean existsEnabledLayerOfType(Project aProject, String aType)
     {
-        String query = String.join("\n", //
+        var query = String.join("\n", //
                 "FROM AnnotationLayer", //
                 "WHERE project = :project ", //
                 "AND type = :type", //
                 "AND enabled = true");
 
-        List<AnnotationLayer> layers = entityManager.createQuery(query, AnnotationLayer.class) //
+        var layers = entityManager.createQuery(query, AnnotationLayer.class) //
                 .setParameter("project", aProject) //
                 .setParameter("type", aType) //
                 .getResultList();
@@ -503,14 +502,14 @@ public class AnnotationSchemaServiceImpl
     @Transactional
     public boolean existsEnabledFeatureOfType(Project aProject, String aType)
     {
-        String query = String.join("\n", //
+        var query = String.join("\n", //
                 "FROM AnnotationFeature", //
                 "WHERE project = :project ", //
                 "AND type = :type", //
                 "AND enabled = true", //
                 "AND layer.enabled = true");
 
-        List<AnnotationFeature> features = entityManager.createQuery(query, AnnotationFeature.class) //
+        var features = entityManager.createQuery(query, AnnotationFeature.class) //
                 .setParameter("project", aProject) //
                 .setParameter("type", aType) //
                 .getResultList();
@@ -555,7 +554,7 @@ public class AnnotationSchemaServiceImpl
     @Transactional(noRollbackFor = NoResultException.class)
     public Optional<AnnotationLayer> getLayer(Project aProject, long aLayerId)
     {
-        AnnotationLayer layer = getLayer(aLayerId);
+        var layer = getLayer(aLayerId);
 
         // Check that the layer actually belongs to the project
         if (layer != null && !Objects.equals(layer.getProject().getId(), aProject.getId())) {
@@ -730,7 +729,7 @@ public class AnnotationSchemaServiceImpl
         }
 
         try (var logCtx = withProjectLogger(aProject)) {
-            log.info("Created {} tags and updated {} tags in tagset {} in project {}", createdCount,
+            LOG.info("Created {} tags and updated {} tags in tagset {} in project {}", createdCount,
                     updatedCount, tagSet, aProject);
         }
 
@@ -1012,7 +1011,7 @@ public class AnnotationSchemaServiceImpl
             entityManager.remove(
                     entityManager.contains(aFeature) ? aFeature : entityManager.merge(aFeature));
 
-            log.info("Removed feature {} from project {}", aFeature, aFeature.getProject());
+            LOG.info("Removed feature {} from project {}", aFeature, aFeature.getProject());
         }
     }
 
@@ -1021,8 +1020,7 @@ public class AnnotationSchemaServiceImpl
     public void removeLayer(AnnotationLayer aLayer)
     {
         try (var logCtx = withProjectLogger(aLayer.getProject())) {
-            AnnotationLayer layer = entityManager.contains(aLayer) ? aLayer
-                    : entityManager.merge(aLayer);
+            var layer = entityManager.contains(aLayer) ? aLayer : entityManager.merge(aLayer);
 
             // We must not rely on the DB-level CASCADE ON DELETE if Hibernate 2nd-level caching is
             // enabled because if we do, then Hibernate will not know that entries have gone from
@@ -1039,7 +1037,7 @@ public class AnnotationSchemaServiceImpl
 
             entityManager.remove(layer);
 
-            log.info("Removed layer {} from project {}", aLayer, aLayer.getProject());
+            LOG.info("Removed layer {} from project {}", aLayer, aLayer.getProject());
         }
     }
 
@@ -1047,7 +1045,7 @@ public class AnnotationSchemaServiceImpl
     @Transactional
     public void removeAllTags(TagSet aTagSet)
     {
-        for (Tag tag : listTags(aTagSet)) {
+        for (var tag : listTags(aTagSet)) {
             entityManager.remove(tag);
         }
 
@@ -1235,7 +1233,7 @@ public class AnnotationSchemaServiceImpl
             boolean upgraded = upgradeCasIfRequired(aCas, aSourceDocument);
             if (!upgraded) {
                 try (var logCtx = withProjectLogger(aSourceDocument.getProject())) {
-                    log.debug(
+                    LOG.debug(
                             "CAS [{}]@{} in {} is already compatible with project type system - skipping upgrade",
                             aUser, aSourceDocument, aSourceDocument.getProject());
                 }
@@ -1255,7 +1253,7 @@ public class AnnotationSchemaServiceImpl
         try (var logCtx = withProjectLogger(aSourceDocument.getProject())) {
             upgradeCas(aCas, aSourceDocument.getProject());
 
-            log.info("Upgraded CAS of user [{}] for document {} in project {}", aUser,
+            LOG.info("Upgraded CAS of user [{}] for document {} in project {}", aUser,
                     aSourceDocument, aSourceDocument.getProject());
         }
     }
@@ -1374,14 +1372,14 @@ public class AnnotationSchemaServiceImpl
 
             // Type does not exist
             if (t == null) {
-                log.debug("CAS update required: type {} does not exist", tdesc.getName());
+                LOG.debug("CAS update required: type {} does not exist", tdesc.getName());
                 upgradeRequired = true;
                 break nextType;
             }
 
             // Super-type does not match
             if (!Objects.equals(tdesc.getSupertypeName(), ts.getParent(t).getName())) {
-                log.debug("CAS update required: supertypes of {} do not match: {} <-> {}",
+                LOG.debug("CAS update required: supertypes of {} do not match: {} <-> {}",
                         tdesc.getName(), tdesc.getSupertypeName(), ts.getParent(t).getName());
                 upgradeRequired = true;
                 break nextType;
@@ -1393,7 +1391,7 @@ public class AnnotationSchemaServiceImpl
 
                 // Feature does not exist
                 if (f == null) {
-                    log.debug("CAS update required: feature {} on type {} does not exist",
+                    LOG.debug("CAS update required: feature {} on type {} does not exist",
                             fdesc.getName(), tdesc.getName());
                     upgradeRequired = true;
                     break nextType;
@@ -1403,7 +1401,7 @@ public class AnnotationSchemaServiceImpl
                 if (CAS.TYPE_NAME_FS_ARRAY.equals(fdesc.getRangeTypeName())) {
                     if (!Objects.equals(fdesc.getElementType(),
                             f.getRange().getComponentType().getName())) {
-                        log.debug(
+                        LOG.debug(
                                 "CAS update required: ranges of feature {} on type {} do not match: {} <-> {}",
                                 fdesc.getName(), tdesc.getName(), fdesc.getRangeTypeName(),
                                 f.getRange().getName());
@@ -1413,7 +1411,7 @@ public class AnnotationSchemaServiceImpl
                 }
                 else {
                     if (!Objects.equals(fdesc.getRangeTypeName(), f.getRange().getName())) {
-                        log.debug(
+                        LOG.debug(
                                 "CAS update required: ranges of feature {} on type {} do not match: {} <-> {}",
                                 fdesc.getName(), tdesc.getName(), fdesc.getRangeTypeName(),
                                 f.getRange().getName());
@@ -1453,46 +1451,33 @@ public class AnnotationSchemaServiceImpl
     public void importUimaTypeSystem(Project aProject, TypeSystemDescription aTSD)
         throws ResourceInitializationException
     {
-        TypeSystemAnalysis analysis = TypeSystemAnalysis.of(aTSD);
-        for (AnnotationLayer l : analysis.getLayers()) {
+        var analysis = TypeSystemAnalysis.of(aTSD);
+        for (var layer : analysis.getLayers()) {
             // Modifications/imports of built-in layers are not supported
-            if (builtInTypes.getType(l.getName()) != null) {
+            if (builtInTypes.getType(layer.getName()) != null) {
                 continue;
             }
 
             // If a custom layer does not exist yet, create it
-            if (!existsLayer(l.getName(), aProject)) {
-                l.setProject(aProject);
+            if (!existsLayer(layer.getName(), aProject)) {
+                layer.setProject(aProject);
 
                 // Need to set the attach type
-                if (RELATION_TYPE.equals(l.getType())) {
-                    RelationDetails relDetails = analysis.getRelationDetails(l.getName());
-
-                    AnnotationLayer attachLayer;
-                    try {
-                        // First check if this type is already in the project
-                        attachLayer = findLayer(aProject, relDetails.getAttachLayer());
-                    }
-                    catch (NoResultException e) {
-                        // If it does not exist in the project yet, then we create it
-                        attachLayer = analysis.getLayer(relDetails.getAttachLayer());
-                        attachLayer.setProject(aProject);
-                        createOrUpdateLayer(attachLayer);
-                    }
-
-                    l.setAttachType(attachLayer);
+                if (RelationLayerSupport.TYPE.equals(layer.getType())) {
+                    var attachLayer = findOrCreateAttachLayer(analysis, layer);
+                    layer.setAttachType(attachLayer);
                 }
 
-                createOrUpdateLayer(l);
+                createOrUpdateLayer(layer);
             }
 
             // Import the features for the layer except if the layer is a built-in layer.
             // We must not touch the built-in layers because WebAnno may rely on their
             // structure. This is a conservative measure for now any may be relaxed in the
             // future.
-            AnnotationLayer persistedLayer = findLayer(aProject, l.getName());
+            var persistedLayer = findLayer(aProject, layer.getName());
             if (!persistedLayer.isBuiltIn()) {
-                for (AnnotationFeature f : analysis.getFeatures(l.getName())) {
+                for (var f : analysis.getFeatures(layer.getName())) {
                     if (!existsFeature(f.getName(), persistedLayer)) {
                         f.setProject(aProject);
                         f.setLayer(persistedLayer);
@@ -1503,15 +1488,44 @@ public class AnnotationSchemaServiceImpl
         }
     }
 
+    private AnnotationLayer findOrCreateAttachLayer(TypeSystemAnalysis aAnalysis,
+            AnnotationLayer aLayer)
+    {
+        var aProject = aLayer.getProject();
+
+        var relDetails = aAnalysis.getRelationDetails(aLayer.getName());
+        try {
+            // First check if this type is already in the project
+            return findLayer(aProject, relDetails.getAttachLayer());
+        }
+        catch (NoResultException e) {
+            // If it does not exist in the project yet, then we create it
+            var maybeAttachLayer = aAnalysis.getLayer(relDetails.getAttachLayer());
+
+            if (maybeAttachLayer.isEmpty()) {
+                return null;
+            }
+
+            var attachLayer = maybeAttachLayer.get();
+            attachLayer.setProject(aProject);
+            createOrUpdateLayer(attachLayer);
+            return attachLayer;
+        }
+    }
+
     @Override
     @Transactional
     public List<AttachedAnnotation> getAttachedRels(AnnotationLayer aLayer, AnnotationFS aFs)
     {
         var cas = aFs.getCAS();
         var result = new ArrayList<AttachedAnnotation>();
-        for (var layer : listAttachedRelationLayers(aLayer)) {
+        nextLayer: for (var layer : listAttachedRelationLayers(aLayer)) {
             var adapter = (RelationAdapter) getAdapter(layer);
-            var type = adapter.getAnnotationType(cas);
+            var maybeType = adapter.getAnnotationType(cas);
+            if (maybeType.isEmpty()) {
+                continue nextLayer;
+            }
+
             var sourceFeature = adapter.getSourceFeature(cas);
             var targetFeature = adapter.getTargetFeature(cas);
 
@@ -1527,7 +1541,7 @@ public class AnnotationSchemaServiceImpl
                         .getFeatureByBaseName(adapter.getAttachFeatureName());
             }
 
-            for (var relationFS : CasUtil.select(cas, type)) {
+            for (var relationFS : cas.<Annotation> select(maybeType.get())) {
                 if (!(relationFS instanceof AnnotationFS)) {
                     continue;
                 }
@@ -1564,7 +1578,7 @@ public class AnnotationSchemaServiceImpl
                     }
                     message.append("\nSource: " + sourceFS);
                     message.append("\nTarget: " + targetFS);
-                    log.warn("{}", message.toString());
+                    LOG.warn("{}", message.toString());
                     continue;
                 }
 
@@ -1675,7 +1689,7 @@ public class AnnotationSchemaServiceImpl
                     + "] is not in the tag list. Please choose from the existing tags");
         }
 
-        Tag selectedTag = new Tag();
+        var selectedTag = new Tag();
         selectedTag.setName(aValue);
         selectedTag.setTagSet(aFeature.getTagset());
         createTag(selectedTag);

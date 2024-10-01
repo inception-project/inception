@@ -2,10 +2,12 @@
   "action" : "getAnnotatedDocument",
   "layers" : [ {
     "id" : 1,
-    "name" : "Span"
+    "name" : "Span",
+    "type" : "span"
   }, {
     "id" : 2,
-    "name" : "Relation"
+    "name" : "Relation",
+    "type" : "relation"
   } ],
   "text" : "This is a test.",
   "window" : [ 0, 15 ],

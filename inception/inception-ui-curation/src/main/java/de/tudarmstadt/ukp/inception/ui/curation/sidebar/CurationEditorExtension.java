@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.inception.ui.curation.sidebar;
 
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.getDiffAdapters;
-import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior.LINK_ROLE_AS_LABEL;
 import static de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode.NONE;
 import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectAnnotationByAddr;
 import static java.util.Arrays.asList;
@@ -261,7 +260,7 @@ public class CurationEditorExtension
         var doc = aState.getDocument();
         var casMerge = new CasMerge(annotationService, applicationEventPublisher);
         var mergeResult = casMerge.mergeRelationAnnotation(doc, aSrcUser, layer, aTargetCas,
-                sourceAnnotation, layer.isAllowStacking());
+                sourceAnnotation);
 
         // open created/updates FS in annotation detail editor panel
         var mergedAnno = selectAnnotationByAddr(aTargetCas, mergeResult.getResultFSAddress());
@@ -275,7 +274,7 @@ public class CurationEditorExtension
         var doc = aState.getDocument();
         var casMerge = new CasMerge(annotationService, applicationEventPublisher);
         var mergeResult = casMerge.mergeSpanAnnotation(doc, aSrcUser, layer, aTargetCas,
-                sourceAnnotation, layer.isAllowStacking());
+                sourceAnnotation);
 
         // open created/updates FS in annotation detail editor panel
         var mergedAnno = selectAnnotationByAddr(aTargetCas, mergeResult.getResultFSAddress());
@@ -398,6 +397,6 @@ public class CurationEditorExtension
             int aEnd)
     {
         var adapters = getDiffAdapters(annotationService, asList(aLayer));
-        return doDiff(adapters, LINK_ROLE_AS_LABEL, casses, aBegin, aEnd);
+        return doDiff(adapters, casses, aBegin, aEnd);
     }
 }

@@ -23,6 +23,9 @@ import de.tudarmstadt.ukp.inception.log.adapter.EventLoggingAdapter;
 import de.tudarmstadt.ukp.inception.log.model.AnnotationDetails;
 import de.tudarmstadt.ukp.inception.log.model.FeatureChangeDetails;
 import de.tudarmstadt.ukp.inception.recommendation.api.event.RecommendationRejectedEvent;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.LinkSuggestion;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationSuggestion;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 
@@ -62,15 +65,28 @@ public class RecommendationRejectedEventAdapter
     @Override
     public String getDetails(RecommendationRejectedEvent aEvent) throws IOException
     {
-        AnnotationDetails annotation = new AnnotationDetails();
-        annotation.setBegin(aEvent.getBegin());
-        annotation.setEnd(aEvent.getEnd());
-        annotation.setText(aEvent.getText());
+        var suggestion = aEvent.getSuggestion();
+
+        var annotation = new AnnotationDetails();
         annotation.setType(aEvent.getFeature().getLayer().getName());
 
-        FeatureChangeDetails details = new FeatureChangeDetails();
+        if (suggestion instanceof SpanSuggestion spanSuggestion) {
+            annotation.setBegin(spanSuggestion.getBegin());
+            annotation.setEnd(spanSuggestion.getEnd());
+            annotation.setText(spanSuggestion.getCoveredText());
+        }
+        else if (suggestion instanceof RelationSuggestion relationSuggestion) {
+            annotation.setBegin(relationSuggestion.getPosition().getTargetBegin());
+            annotation.setEnd(relationSuggestion.getPosition().getTargetEnd());
+        }
+        else if (suggestion instanceof LinkSuggestion linkSuggestion) {
+            annotation.setBegin(linkSuggestion.getPosition().getTargetBegin());
+            annotation.setEnd(linkSuggestion.getPosition().getTargetEnd());
+        }
+
+        var details = new FeatureChangeDetails();
         details.setAnnotation(annotation);
-        details.setValue(aEvent.getRecommendedValue());
+        details.setValue(suggestion.getLabel());
 
         return JSONUtil.toJsonString(details);
     }

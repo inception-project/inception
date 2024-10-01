@@ -116,7 +116,7 @@ public class SanitizingContentHandler
         var element = toQName(aUri, aLocalName, aQName);
 
         var policy = policies.forElement(element);
-        var action = policy.map(ElementPolicy::getAction)
+        var action = policy.map(QNameElementPolicy::getAction)
                 .orElse(policies.getDefaultElementAction());
 
         switch (action) {
@@ -134,7 +134,7 @@ public class SanitizingContentHandler
         }
     }
 
-    private void startElement(QName aElement, Attributes aAtts, Optional<ElementPolicy> aPolicy,
+    private void startElement(QName aElement, Attributes aAtts, Optional<QNameElementPolicy> aPolicy,
             ElementAction aAction, Map<String, String> aLocalNamespaces)
         throws SAXException
     {
@@ -320,11 +320,11 @@ public class SanitizingContentHandler
     private static final class Frame
     {
         final QName element;
-        final @SuppressWarnings("unused") Optional<ElementPolicy> policy;
+        final @SuppressWarnings("unused") Optional<QNameElementPolicy> policy;
         final ElementAction action;
         final Map<String, String> namespaces;
 
-        public Frame(QName aElement, Optional<ElementPolicy> aPolicy, ElementAction aAction,
+        public Frame(QName aElement, Optional<QNameElementPolicy> aPolicy, ElementAction aAction,
                 Map<String, String> aLocalNamespaces)
         {
             element = aElement;

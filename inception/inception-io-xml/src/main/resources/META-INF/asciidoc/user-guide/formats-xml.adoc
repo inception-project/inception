@@ -30,15 +30,14 @@ well as links which could easily interfere with the functionality of the annotat
 
 Note that when exporting a document in this format, you only recover the originally imported XML
 document - no annotations will be included. If you want to export the annotated data, you should
-use e.g. <<sect_formats_uimaxmi>>. 
+use e.g. <<sect_formats_uimajson>>. 
 
-[cols="2,1,1,1,3"]
+[cols="2,1,1,3"]
 |====
-| Format | Read | Write | Custom Layers | Description
+| Format | Import | Export | Supported layers
 
 | XML (generic) (`dkpro-core-xml-document`)
 | yes
 | yes
-| no
-| 
+| None
 |====

@@ -151,6 +151,12 @@ public class ConceptFeatureSupport
         return getConceptHandle(aFeature, aIdentifier, traits).getUiLabel();
     }
 
+    @Override
+    public <V> V getDefaultFeatureValue(AnnotationFeature aFeature, FeatureStructure aFS)
+    {
+        return null;
+    }
+
     public KBHandle getConceptHandle(AnnotationFeature aFeature, String aIdentifier,
             ConceptFeatureTraits traits)
     {

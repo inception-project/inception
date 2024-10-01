@@ -17,17 +17,22 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.curation.casdiff;
 
+import de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureMultiplicityMode;
+
 public class LinkFeatureDecl
 {
     private final String name;
     private final String roleFeature;
     private final String targetFeature;
+    private final LinkFeatureMultiplicityMode compareBehavior;
 
-    public LinkFeatureDecl(String aName, String aRoleFeature, String aTargetFeature)
+    public LinkFeatureDecl(String aName, String aRoleFeature, String aTargetFeature,
+            LinkFeatureMultiplicityMode aCompareBehavior)
     {
         name = aName;
         roleFeature = aRoleFeature;
         targetFeature = aTargetFeature;
+        compareBehavior = aCompareBehavior;
     }
 
     public String getName()
@@ -45,10 +50,15 @@ public class LinkFeatureDecl
         return targetFeature;
     }
 
+    public LinkFeatureMultiplicityMode getCompareBehavior()
+    {
+        return compareBehavior;
+    }
+
     @Override
     public String toString()
     {
-        StringBuilder builder = new StringBuilder();
+        var builder = new StringBuilder();
         builder.append("LinkFeatureDecl [name=");
         builder.append(getName());
         if (getRoleFeature() != null) {

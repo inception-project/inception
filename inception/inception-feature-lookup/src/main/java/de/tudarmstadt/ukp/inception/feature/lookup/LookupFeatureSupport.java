@@ -136,6 +136,12 @@ public class LookupFeatureSupport
         return labelCache.get(aFeature, traits, aId).getUiLabel();
     }
 
+    @Override
+    public <V> V getDefaultFeatureValue(AnnotationFeature aFeature, FeatureStructure aFS)
+    {
+        return null;
+    }
+
     @SuppressWarnings("unchecked")
     @Override
     public String unwrapFeatureValue(AnnotationFeature aFeature, CAS aCAS, Object aValue)

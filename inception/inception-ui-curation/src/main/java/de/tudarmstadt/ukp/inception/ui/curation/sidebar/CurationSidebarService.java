@@ -102,6 +102,10 @@ public interface CurationSidebarService
 
     boolean isShowAll(String aUsername, Long aProjectId);
 
+    void setShowScore(String aUsername, Long aProjectId, boolean aValue);
+
+    boolean isShowScore(String aUsername, Long aProjectId);
+
     void setDefaultSelectedUsersForDocument(String aSessionOwner, SourceDocument aDocument);
 
     MergeStrategyFactory<?> merge(AnnotatorState aState, CurationWorkflow aWorkflow,

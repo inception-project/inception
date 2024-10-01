@@ -293,6 +293,8 @@ public class DiamWebsocketController
                 .filter(l -> !prefs.getHiddenAnnotationLayerIds().contains(l.getId())) //
                 .toList();
 
+        var allLayers = schemaService.listAnnotationLayer(aProject);
+
         var request = RenderRequest.builder() //
                 .withSessionOwner(userRepository.getCurrentUser()) //
                 .withDocument(doc, dataOwner) //
@@ -300,6 +302,7 @@ public class DiamWebsocketController
                 .withWindow(aViewportBegin, aViewportEnd) //
                 .withCas(cas) //
                 .withVisibleLayers(layers) //
+                .withAllLayers(allLayers) //
                 .build();
 
         var vdoc = renderingPipeline.render(request);

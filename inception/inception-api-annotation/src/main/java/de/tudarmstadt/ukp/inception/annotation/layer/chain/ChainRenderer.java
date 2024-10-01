@@ -145,7 +145,7 @@ public class ChainRenderer
                 var nextLinkFs = (AnnotationFS) linkFs.getFeatureValue(linkNext);
 
                 // Is link after window? If yes, we can skip the rest of the chain
-                if (linkFs.getBegin() >= windowBegin) {
+                if (linkFs.getBegin() >= windowEnd) {
                     break; // Go to next chain
                 }
 

@@ -17,11 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.agreement.measures;
 
-import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior.LINK_TARGET_AS_LABEL;
-
 import java.io.Serializable;
-
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior;
 
 public class DefaultAgreementTraits
     implements Serializable
@@ -30,18 +26,6 @@ public class DefaultAgreementTraits
 
     private boolean limitToFinishedDocuments = false;
     private boolean excludeIncomplete;
-
-    private LinkCompareBehavior linkCompareBehavior = LINK_TARGET_AS_LABEL;
-
-    public LinkCompareBehavior getLinkCompareBehavior()
-    {
-        return linkCompareBehavior;
-    }
-
-    public void setLinkCompareBehavior(LinkCompareBehavior aLinkCompareBehavior)
-    {
-        linkCompareBehavior = aLinkCompareBehavior;
-    }
 
     public boolean isLimitToFinishedDocuments()
     {

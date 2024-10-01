@@ -25,8 +25,10 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.uima.cas.CAS;
@@ -70,8 +72,7 @@ import de.tudarmstadt.ukp.inception.ui.kb.config.KnowledgeBaseServiceUIAutoConfi
 public class MultiValueConceptFeatureSupport
     implements FeatureSupport<MultiValueConceptFeatureTraits>
 {
-    private static final Logger LOG = LoggerFactory
-            .getLogger(MultiValueConceptFeatureSupport.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     public static final String PREFIX = "kb-multi:";
 
@@ -220,6 +221,13 @@ public class MultiValueConceptFeatureSupport
 
     @SuppressWarnings("unchecked")
     @Override
+    public <V> V getDefaultFeatureValue(AnnotationFeature aFeature, FeatureStructure aFS)
+    {
+        return (V) Collections.emptyList();
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
     public List<String> unwrapFeatureValue(AnnotationFeature aFeature, CAS aCAS, Object aValue)
     {
         if (aValue == null) {
@@ -248,23 +256,23 @@ public class MultiValueConceptFeatureSupport
             return null;
         }
 
-        if (aValue instanceof List) {
-            var traits = readTraits(aFeature);
-            var wrapped = new ArrayList<KBHandle>();
+        var traits = readTraits(aFeature);
+        var wrapped = new ArrayList<KBHandle>();
 
-            for (Object item : (List<?>) aValue) {
+        if (aValue instanceof String identifier) {
+            wrapped.add(getConcept(aFeature, traits, identifier));
+            return wrapped;
+        }
+
+        if (aValue instanceof List) {
+            for (var item : (List<?>) aValue) {
                 if (item instanceof KBHandle) {
                     wrapped.add((KBHandle) item);
                     continue;
                 }
 
-                if (item instanceof String) {
-                    var identifier = (String) item;
-                    var chbk = labelCache.get(aFeature, traits.getRepositoryId(), identifier);
-                    var clone = new KBHandle(chbk.getIdentifier(), chbk.getUiLabel(),
-                            chbk.getDescription(), chbk.getLanguage());
-                    clone.setKB(chbk.getKB());
-                    wrapped.add(clone);
+                if (item instanceof String identifier) {
+                    wrapped.add(getConcept(aFeature, traits, identifier));
                     continue;
                 }
 
@@ -277,6 +285,16 @@ public class MultiValueConceptFeatureSupport
 
         throw new IllegalArgumentException(
                 "Unable to handle value [" + aValue + "] of type [" + aValue.getClass() + "]");
+    }
+
+    private KBHandle getConcept(AnnotationFeature aFeature, MultiValueConceptFeatureTraits traits,
+            String identifier)
+    {
+        var chbk = labelCache.get(aFeature, traits.getRepositoryId(), identifier);
+        var clone = new KBHandle(chbk.getIdentifier(), chbk.getUiLabel(), chbk.getDescription(),
+                chbk.getLanguage());
+        clone.setKB(chbk.getKB());
+        return clone;
     }
 
     @Override

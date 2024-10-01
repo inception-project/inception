@@ -57,7 +57,7 @@ public class AnnotatorJsHtmlAnnotationEditor
     @Override
     protected Component makeView()
     {
-        AnnotatorState state = getModelObject();
+        var state = getModelObject();
 
         return viewFactory.createView(CID_VIS, Model.of(state.getDocument()),
                 editorFactory.getBeanName());
@@ -66,7 +66,7 @@ public class AnnotatorJsHtmlAnnotationEditor
     @Override
     protected AnnotationEditorProperties getProperties()
     {
-        AnnotationEditorProperties props = new AnnotationEditorProperties();
+        var props = new AnnotationEditorProperties();
         // The factory is the JS call. Cf. the "globalName" in build.js and the factory method
         // defined in main.ts
         props.setEditorFactory("AnnotatorJsEditor.factory()");

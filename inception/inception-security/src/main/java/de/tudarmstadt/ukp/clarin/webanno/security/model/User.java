@@ -17,14 +17,15 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.security.model;
 
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
 import static java.util.Arrays.asList;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import java.io.Serializable;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.apache.commons.lang3.StringUtils;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -228,7 +229,11 @@ public class User
 
     public String getUiName()
     {
-        if (StringUtils.isBlank(uiName)) {
+        if (isBlank(uiName)) {
+            if (CURATION_USER.equals(username)) {
+                return "Curator";
+            }
+
             return username;
         }
 

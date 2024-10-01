@@ -54,7 +54,7 @@ public class DiffResult
     DiffResult(CasDiff aDiff)
     {
         data = Collections.unmodifiableMap(aDiff.configSets);
-        casGroupIds = new LinkedHashSet<>(aDiff.cases.keySet());
+        casGroupIds = new LinkedHashSet<>(aDiff.casses.keySet());
     }
 
     public Set<String> getCasGroupIds()
@@ -303,7 +303,7 @@ public class DiffResult
                     isAgreement(configurationSet) ? "AGREE" : "DISAGREE",
                     isComplete(configurationSet) ? "COMPLETE" : "INCOMPLETE");
             for (var cfg : configurationSet.getConfigurations()) {
-                aOut.printf("  %s", cfg);
+                aOut.printf("  %s%n", cfg);
             }
         }
     }

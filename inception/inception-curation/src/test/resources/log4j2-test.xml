@@ -10,5 +10,8 @@
     <Root level="WARN">
       <AppenderRef ref="ConsoleAppender" />
     </Root>
+    
+    <Logger name="de.tudarmstadt.ukp.inception.curation.merge.CasMergeLinkFeature" level="TRACE" />
+    <Logger name="de.tudarmstadt.ukp.inception.curation.merge.CasMergeLinkTest" level="TRACE" />
   </Loggers>
 </Configuration>

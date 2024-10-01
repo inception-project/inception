@@ -128,6 +128,12 @@ public class VSpan
         return new Builder();
     }
 
+    @Override
+    public String toString()
+    {
+        return "VSpan [" + getVid() + "]";
+    }
+
     public static final class Builder
     {
         private AnnotationLayer layer;

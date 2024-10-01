@@ -55,7 +55,6 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
-import de.tudarmstadt.ukp.inception.documents.api.SourceDocumentStateStats;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 import de.tudarmstadt.ukp.inception.workload.dynamic.config.DynamicWorkloadManagerAutoConfiguration;
@@ -216,17 +215,17 @@ public class DynamicWorkloadExtensionImpl
     @Transactional
     public ProjectState recalculate(Project aProject)
     {
-        WorkloadManager currentWorkload = workloadManagementService
+        var currentWorkload = workloadManagementService
                 .loadOrCreateWorkloadManagerConfiguration(aProject);
-        DynamicWorkloadTraits traits = readTraits(currentWorkload);
+        var traits = readTraits(currentWorkload);
 
-        for (SourceDocument doc : documentService.listSourceDocuments(aProject)) {
+        for (var doc : documentService.listSourceDocuments(aProject)) {
             updateDocumentState(doc, traits.getDefaultNumberOfAnnotations());
         }
 
         // Refresh the project stats and recalculate them
-        Project project = projectService.getProject(aProject.getId());
-        SourceDocumentStateStats stats = documentService.getSourceDocumentStats(project);
+        var project = projectService.getProject(aProject.getId());
+        var stats = documentService.getSourceDocumentStats(project);
         projectService.setProjectState(aProject, stats.getProjectState());
 
         return project.getState();
@@ -236,9 +235,9 @@ public class DynamicWorkloadExtensionImpl
     @Transactional
     public ProjectState freshenStatus(Project aProject)
     {
-        WorkloadManager currentWorkload = workloadManagementService
+        var currentWorkload = workloadManagementService
                 .loadOrCreateWorkloadManagerConfiguration(aProject);
-        DynamicWorkloadTraits traits = readTraits(currentWorkload);
+        var traits = readTraits(currentWorkload);
 
         // If the duration is not positive, then we can already stop here
         if (traits.getAbandonationTimeout().isZero()
@@ -246,14 +245,14 @@ public class DynamicWorkloadExtensionImpl
             return projectService.getProject(aProject.getId()).getState();
         }
 
-        List<AnnotationDocument> inProgressDocuments = documentService
-                .listAnnotationDocumentsInState(aProject, IN_PROGRESS);
+        var inProgressDocuments = documentService.listAnnotationDocumentsInState(aProject,
+                IN_PROGRESS);
 
         // Find abandoned annotation documents
         Map<SourceDocument, Set<AnnotationDocument>> abandonedDocuments = new LinkedHashMap<>();
-        Instant now = Instant.now();
-        Duration abandonationTimeout = traits.getAbandonationTimeout();
-        for (AnnotationDocument doc : inProgressDocuments) {
+        var now = Instant.now();
+        var abandonationTimeout = traits.getAbandonationTimeout();
+        for (var doc : inProgressDocuments) {
             // If the SOURCE document is already in curation, we do not touch the state anymore
             if (doc.getDocument().getState() == CURATION_FINISHED
                     || doc.getDocument().getState() == CURATION_IN_PROGRESS) {
@@ -289,7 +288,7 @@ public class DynamicWorkloadExtensionImpl
         for (Entry<SourceDocument, Set<AnnotationDocument>> docSet : abandonedDocuments
                 .entrySet()) {
             if (AnnotationDocumentState.NEW == traits.getAbandonationState()) {
-                for (AnnotationDocument adoc : docSet.getValue()) {
+                for (var adoc : docSet.getValue()) {
                     User user = userCache.computeIfAbsent(adoc.getUser(),
                             username -> userRepository.get(username));
                     try (var session = CasStorageSession.openNested()) {
@@ -309,8 +308,8 @@ public class DynamicWorkloadExtensionImpl
         }
 
         // Refresh the project stats and recalculate them
-        Project project = projectService.getProject(aProject.getId());
-        SourceDocumentStateStats stats = documentService.getSourceDocumentStats(project);
+        var project = projectService.getProject(aProject.getId());
+        var stats = documentService.getSourceDocumentStats(project);
         projectService.setProjectState(aProject, stats.getProjectState());
 
         return project.getState();
@@ -326,10 +325,9 @@ public class DynamicWorkloadExtensionImpl
             return;
         }
 
-        Map<AnnotationDocumentState, Long> stats = documentService
-                .getAnnotationDocumentStats(aDocument);
-        long finishedCount = stats.get(AnnotationDocumentState.FINISHED);
-        long inProgressCount = stats.get(AnnotationDocumentState.IN_PROGRESS);
+        var stats = documentService.getAnnotationDocumentStats(aDocument);
+        var finishedCount = stats.get(AnnotationDocumentState.FINISHED);
+        var inProgressCount = stats.get(AnnotationDocumentState.IN_PROGRESS);
 
         // If enough documents are finished, mark as finished
         if (finishedCount >= aRequiredAnnotatorCount) {

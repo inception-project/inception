@@ -48,10 +48,10 @@ import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.FullCodingAgre
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.Configuration;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.ConfigurationSet;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.relation.RelationDiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.relation.RelationPosition;
+import de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureMultiplicityMode;
 
 public class AgreementUtils
 {
@@ -295,7 +295,7 @@ public class AgreementUtils
     }
 
     private static Object extractLinkFeatureValueForAgreement(FeatureStructure aFs, String aFeature,
-            int aLinkIndex, LinkCompareBehavior aLCB)
+            int aLinkIndex, LinkFeatureMultiplicityMode aLCB)
     {
         @SuppressWarnings("unchecked")
         var links = (ArrayFS<FeatureStructure>) aFs
@@ -303,15 +303,25 @@ public class AgreementUtils
         var link = links.get(aLinkIndex);
 
         switch (aLCB) {
-        case LINK_TARGET_AS_LABEL:
+        case ONE_TARGET_MULTIPLE_ROLES: {
             // FIXME The target feature name should be obtained from the feature definition!
             var target = (AnnotationFS) link
                     .getFeatureValue(link.getType().getFeatureByBaseName("target"));
 
             return target.getBegin() + "-" + target.getEnd() + " [" + target.getCoveredText() + "]";
-        case LINK_ROLE_AS_LABEL:
+        }
+        case MULTIPLE_TARGETS_ONE_ROLE:
             // FIXME The role feature name should be obtained from the feature definition!
             return link.getStringValue(link.getType().getFeatureByBaseName("role"));
+        case MULTIPLE_TARGETS_MULTIPLE_ROLES: {
+            // FIXME The role feature name should be obtained from the feature definition!
+            // FIXME The target feature name should be obtained from the feature definition!
+            var target = (AnnotationFS) link
+                    .getFeatureValue(link.getType().getFeatureByBaseName("target"));
+            return link.getStringValue(link.getType().getFeatureByBaseName("role")) + "@"
+                    + target.getBegin() + "-" + target.getEnd() + " [" + target.getCoveredText()
+                    + "]";
+        }
         default:
             throw new IllegalStateException("Unknown link target comparison mode [" + aLCB + "]");
         }

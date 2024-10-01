@@ -800,23 +800,23 @@ public class RecommendationServiceImpl
             return;
         }
 
-        var anySyncRan = false;
+        var syncRecommenders = new ArrayList<Recommender>();
         for (var recommender : recommenders) {
             var factory = getRecommenderFactory(recommender);
             if (factory.map($ -> $.isSynchronous(recommender)).orElse(false)) {
-                schedulingService.executeSync(PredictionTask.builder() //
-                        .withSessionOwner(sessionOwner) //
-                        .withTrigger(aTrigger) //
-                        .withCurrentDocument(aDocument) //
-                        .withDataOwner(aDataOwner) //
-                        .withRecommender(recommender) //
-                        .build());
-
-                anySyncRan = true;
+                syncRecommenders.add(recommender);
             }
         }
 
-        if (anySyncRan) {
+        if (!syncRecommenders.isEmpty()) {
+            schedulingService.executeSync(PredictionTask.builder() //
+                    .withSessionOwner(sessionOwner) //
+                    .withTrigger(aTrigger) //
+                    .withCurrentDocument(aDocument) //
+                    .withDataOwner(aDataOwner) //
+                    .withRecommender(syncRecommenders.toArray(Recommender[]::new)) //
+                    .build());
+
             var switched = forceSwitchPredictions(sessionOwner.getUsername(),
                     aDocument.getProject());
             if (switched) {
@@ -853,6 +853,7 @@ public class RecommendationServiceImpl
     public void onDocumentRemoval(BeforeDocumentRemovedEvent aEvent)
     {
         resetState(aEvent.getDocument().getProject());
+        deleteLearningRecords(aEvent.getDocument());
     }
 
     @EventListener
@@ -1553,8 +1554,8 @@ public class RecommendationServiceImpl
             var it = evaluatedRecommenders.mapIterator();
 
             while (it.hasNext()) {
-                AnnotationLayer layer = it.next();
-                EvaluatedRecommender rec = it.getValue();
+                var layer = it.next();
+                var rec = it.getValue();
                 if (!rec.getRecommender().equals(aRecommender)) {
                     newEvaluatedRecommenders.put(layer, rec);
                 }
@@ -1602,6 +1603,13 @@ public class RecommendationServiceImpl
             for (var records : learningRecords.values()) {
                 records.removeIf(r -> Objects.equals(r.getUser(), aDataOwner) && //
                         Objects.equals(r.getSourceDocument(), aDocument));
+            }
+        }
+
+        public void removeLearningRecords(SourceDocument aDocument)
+        {
+            for (var records : learningRecords.values()) {
+                records.removeIf(r -> Objects.equals(r.getSourceDocument(), aDocument));
             }
         }
 
@@ -1947,6 +1955,20 @@ public class RecommendationServiceImpl
         if (aRecords.length > 0 && !LOG.isTraceEnabled()) {
             LOG.debug("... {} learning records stored ... ({}ms)", aRecords.length, duration);
         }
+    }
+
+    private void deleteLearningRecords(SourceDocument aDocument)
+    {
+        synchronized (states) {
+            for (var state : states.values()) {
+                state.removeLearningRecords(aDocument);
+            }
+        }
+
+        var sql = "DELETE FROM LearningRecord l where l.sourceDocument = :document";
+        entityManager.createQuery(sql) //
+                .setParameter("document", aDocument) //
+                .executeUpdate();
     }
 
     private void deleteLearningRecords(SourceDocument aDocument, String aDataOwner)

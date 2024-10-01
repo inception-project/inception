@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.support.xml.sanitizer;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -26,8 +27,9 @@ import javax.xml.namespace.QName;
 
 public class PolicyCollection
 {
-    private final Map<QName, ElementPolicy> elementPolicies;
-    private final Map<QName, AttributePolicy> globalAttributePolicies;
+    private final Map<QName, QNameElementPolicy> elementPolicies;
+    private final Map<QName, QNameAttributePolicy> globalAttributePolicies;
+    private final List<QNameMatchingAttributePolicy> globalAttributeMatchingPolicies;
     private final ElementAction defaultElementAction;
     private final AttributeAction defaultAttributeAction;
 
@@ -37,18 +39,21 @@ public class PolicyCollection
     private boolean debug = false;
     private String defaultNamespace;
 
-    public PolicyCollection(String aDefaultNamespace, Map<QName, ElementPolicy> aElementPolicies,
-            Map<QName, AttributePolicy> aGlobalAttributePolicies,
+    public PolicyCollection(String aDefaultNamespace,
+            Map<QName, QNameElementPolicy> aElementPolicies,
+            Map<QName, QNameAttributePolicy> aGlobalAttributePolicies,
+            List<QNameMatchingAttributePolicy> aGlobalAttributeMatchingPolicies,
             ElementAction aDefaultElementAction, AttributeAction aDefaultAttributeAction)
     {
         defaultNamespace = aDefaultNamespace;
         elementPolicies = aElementPolicies;
         globalAttributePolicies = aGlobalAttributePolicies;
+        globalAttributeMatchingPolicies = aGlobalAttributeMatchingPolicies;
         defaultElementAction = aDefaultElementAction;
         defaultAttributeAction = aDefaultAttributeAction;
     }
 
-    public Optional<ElementPolicy> forElement(QName aElement)
+    public Optional<QNameElementPolicy> forElement(QName aElement)
     {
         return Optional.ofNullable(elementPolicies.get(aElement));
     }
@@ -69,16 +74,28 @@ public class PolicyCollection
             }
         }
 
-        return Optional.ofNullable(globalAttributePolicies.get(aAttribute))
+        var globalAction = Optional.ofNullable(globalAttributePolicies.get(aAttribute))
                 .flatMap(p -> p.apply(aAttributeValue));
+
+        if (globalAction.isPresent()) {
+            return globalAction;
+        }
+
+        for (var policy : globalAttributeMatchingPolicies) {
+            if (policy.matches(aElement, aAttribute, aAttributeType)) {
+                return policy.apply(aAttributeValue);
+            }
+        }
+
+        return Optional.empty();
     }
 
-    public Collection<ElementPolicy> getElementPolicies()
+    public Collection<QNameElementPolicy> getElementPolicies()
     {
         return Collections.unmodifiableCollection(elementPolicies.values());
     }
 
-    public Collection<AttributePolicy> getGlobalAttributeElementPolicies()
+    public Collection<QNameAttributePolicy> getGlobalAttributeElementPolicies()
     {
         return Collections.unmodifiableCollection(globalAttributePolicies.values());
     }

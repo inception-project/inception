@@ -30,7 +30,6 @@ import static org.apache.uima.fit.util.CasUtil.select;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 
@@ -84,7 +83,7 @@ public class StringMatchingRelationRecommender
 
     private MultiValuedMap<Pair<String, String>, String> trainModel(List<Triple> aData)
     {
-        MultiValuedMap<Pair<String, String>, String> model = new ArrayListValuedHashMap<>();
+        var model = new ArrayListValuedHashMap<Pair<String, String>, String>();
 
         for (var t : aData) {
             var key = Pair.of(t.governor, t.dependent);
@@ -98,7 +97,7 @@ public class StringMatchingRelationRecommender
     public Range predict(PredictionContext aContext, CAS aCas, int aBegin, int aEnd)
         throws RecommendationException
     {
-        MultiValuedMap<Pair<String, String>, String> model = aContext.get(KEY_MODEL).orElseThrow(
+        var model = aContext.get(KEY_MODEL).orElseThrow(
                 () -> new RecommendationException("Key [" + KEY_MODEL + "] not found in context"));
 
         var sampleUnitType = getType(aCas, SAMPLE_UNIT);
@@ -116,8 +115,13 @@ public class StringMatchingRelationRecommender
         // whole document for potential relations, we only need to look at those units that overlap
         // with the current prediction request area
         var units = selectOverlapping(aCas, sampleUnitType, aBegin, aEnd);
+
+        if (model.isEmpty()) {
+            return Range.rangeCoveringAnnotations(units);
+        }
+
         for (var sampleUnit : units) {
-            Collection<AnnotationFS> baseAnnotations = selectCovered(attachType, sampleUnit);
+            var baseAnnotations = selectCovered(attachType, sampleUnit);
             for (var governor : baseAnnotations) {
                 for (var dependent : baseAnnotations) {
 
@@ -151,7 +155,7 @@ public class StringMatchingRelationRecommender
             }
         }
 
-        return new Range(units);
+        return Range.rangeCoveringAnnotations(units);
     }
 
     @Override
@@ -218,22 +222,22 @@ public class StringMatchingRelationRecommender
 
     private List<Triple> getTrainingData(List<CAS> aCasses)
     {
-        List<Triple> data = new ArrayList<>();
+        var data = new ArrayList<Triple>();
 
-        for (CAS cas : aCasses) {
-            Type predictedType = getPredictedType(cas);
-            Feature governorFeature = predictedType.getFeatureByBaseName(FEAT_REL_SOURCE);
-            Feature dependentFeature = predictedType.getFeatureByBaseName(FEAT_REL_TARGET);
-            Feature predictedFeature = getPredictedFeature(cas);
-            Feature attachFeature = getAttachFeature(cas);
+        for (var cas : aCasses) {
+            var predictedType = getPredictedType(cas);
+            var governorFeature = predictedType.getFeatureByBaseName(FEAT_REL_SOURCE);
+            var dependentFeature = predictedType.getFeatureByBaseName(FEAT_REL_TARGET);
+            var predictedFeature = getPredictedFeature(cas);
+            var attachFeature = getAttachFeature(cas);
 
-            for (AnnotationFS relation : select(cas, predictedType)) {
-                AnnotationFS governor = (AnnotationFS) relation.getFeatureValue(governorFeature);
-                AnnotationFS dependent = (AnnotationFS) relation.getFeatureValue(dependentFeature);
+            for (var relation : select(cas, predictedType)) {
+                var governor = (AnnotationFS) relation.getFeatureValue(governorFeature);
+                var dependent = (AnnotationFS) relation.getFeatureValue(dependentFeature);
 
-                String relationLabel = relation.getStringValue(predictedFeature);
-                String governorLabel = governor.getStringValue(attachFeature);
-                String dependentLabel = dependent.getStringValue(attachFeature);
+                var relationLabel = relation.getStringValue(predictedFeature);
+                var governorLabel = governor.getStringValue(attachFeature);
+                var dependentLabel = dependent.getStringValue(attachFeature);
 
                 if (isBlank(governorLabel) || isBlank(dependentLabel) || isBlank(relationLabel)) {
                     continue;
@@ -268,7 +272,7 @@ public class StringMatchingRelationRecommender
 
     private Feature getAttachFeature(CAS aCas)
     {
-        Type attachType = getAttachType(aCas);
+        var attachType = getAttachType(aCas);
         return attachType.getFeatureByBaseName(traits.getAdjunctFeature());
     }
 

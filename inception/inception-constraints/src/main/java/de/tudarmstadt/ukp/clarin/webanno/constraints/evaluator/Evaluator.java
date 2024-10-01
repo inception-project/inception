@@ -68,7 +68,7 @@ public interface Evaluator
      * 
      * @return true if features can be affected by this execution
      */
-    boolean isAffectedByConstraints(ParsedConstraints aConstraints, FeatureStructure aContext,
+    boolean isPathUsedInAnyRestriction(ParsedConstraints aConstraints, FeatureStructure aContext,
             AnnotationFeature aFeature);
 
     boolean isHiddenConditionalFeature(ParsedConstraints aConstraints, FeatureStructure aContext,

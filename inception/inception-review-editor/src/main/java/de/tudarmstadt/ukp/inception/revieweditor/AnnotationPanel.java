@@ -24,7 +24,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -42,7 +41,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.inception.rendering.Renderer;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
@@ -106,26 +104,29 @@ public abstract class AnnotationPanel
 
     public List<AnnotationListItem> listAnnotations()
     {
-        CAS cas = getCas();
-        List<AnnotationListItem> items = new ArrayList<>();
-        List<AnnotationLayer> metadataLayers = annotationService
-                .listAnnotationLayer(model.getObject().getProject());
+        var cas = getCas();
+        var items = new ArrayList<AnnotationListItem>();
+        var metadataLayers = annotationService.listAnnotationLayer(model.getObject().getProject());
 
-        for (AnnotationLayer layer : metadataLayers) {
+        nextLayer: for (var layer : metadataLayers) {
             if (layer.getUiName().equals("Token")) {
                 // TODO: exception later when calling renderer.getFeatures "lemma"
-                continue;
+                continue nextLayer;
             }
 
-            List<AnnotationFeature> features = annotationService.listAnnotationFeature(layer);
-            TypeAdapter adapter = annotationService.getAdapter(layer);
-            Renderer renderer = layerSupportRegistry.getLayerSupport(layer).createRenderer(layer,
+            var adapter = annotationService.getAdapter(layer);
+            var maybeType = adapter.getAnnotationType(cas);
+            if (!maybeType.isPresent()) {
+                continue nextLayer;
+            }
+
+            var features = annotationService.listAnnotationFeature(layer);
+            var renderer = layerSupportRegistry.getLayerSupport(layer).createRenderer(layer,
                     () -> annotationService.listAnnotationFeature(layer));
 
-            for (FeatureStructure fs : cas.select(adapter.getAnnotationType(cas))) {
-                Map<String, String> renderedFeatures = renderer.renderLabelFeatureValues(adapter,
-                        fs, features);
-                String labelText = TypeUtil.getUiLabelText(renderedFeatures);
+            for (var fs : cas.select(maybeType.get())) {
+                var renderedFeatures = renderer.renderLabelFeatureValues(adapter, fs, features);
+                var labelText = TypeUtil.getUiLabelText(renderedFeatures);
                 if (labelText.isEmpty()) {
                     labelText = "(" + layer.getUiName() + ")";
                 }

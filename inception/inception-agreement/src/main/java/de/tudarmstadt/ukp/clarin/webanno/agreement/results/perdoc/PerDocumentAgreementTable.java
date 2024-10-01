@@ -18,10 +18,16 @@
 package de.tudarmstadt.ukp.clarin.webanno.agreement.results.perdoc;
 
 import static java.lang.String.format;
+import static java.util.Comparator.comparing;
+import static java.util.stream.Collectors.joining;
 
 import java.lang.invoke.MethodHandles;
-import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
+import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.behavior.AttributeAppender;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.panel.GenericPanel;
@@ -37,6 +43,7 @@ import de.tudarmstadt.ukp.clarin.webanno.agreement.PerDocumentAgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.DefaultAgreementTraits;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
@@ -49,12 +56,15 @@ public class PerDocumentAgreementTable
 
     private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
+    private final static int ANNOTATORS_LIMIT = 3;
+
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean DocumentService documentService;
     private @SpringBean ProjectService projectService;
     private @SpringBean UserDao userRepository;
 
     private final RefreshingView<SourceDocument> rows;
+    private final Map<String, String> userNameCache = new HashMap<>();
 
     public PerDocumentAgreementTable(String aId, IModel<PerDocumentAgreementResult> aModel,
             DefaultAgreementTraits aTraits)
@@ -63,8 +73,9 @@ public class PerDocumentAgreementTable
 
         setOutputMarkupId(true);
 
-        var documents = getModelObject().getDocuments().stream()
-                .sorted(Comparator.comparing(SourceDocument::getName)).toList();
+        var documents = getModelObject().getDocuments().stream() //
+                .sorted(comparing(SourceDocument::getName)) //
+                .toList();
 
         queue(new Label("meanScore",
                 aModel.map($ -> format("%.4f", $.getAgreementScoreStats().getMean()))));
@@ -88,7 +99,15 @@ public class PerDocumentAgreementTable
                 var agreementSummary = aModel.getObject().getResult(doc);
                 aRowItem.add(new Label("score", format("%.2f", agreementSummary.getAgreement())));
 
-                aRowItem.add(new Label("annotatorCount", agreementSummary.getCasGroupIds().size()));
+                var casGroupIds = agreementSummary.getCasGroupIds();
+                var annotators = new Label("annotators", renderAnnotators(casGroupIds));
+                if (casGroupIds.size() > ANNOTATORS_LIMIT) {
+                    annotators.add(AttributeModifier.replace("title", casGroupIds.stream() //
+                            .map(PerDocumentAgreementTable.this::getUserName) //
+                            .sorted() //
+                            .collect(joining(", "))));
+                }
+                aRowItem.add(annotators);
 
                 // Odd/even coloring is reversed here to account for the header row at index 0
                 aRowItem.add(new AttributeAppender("class",
@@ -97,5 +116,27 @@ public class PerDocumentAgreementTable
         };
 
         add(rows);
+    }
+
+    private String renderAnnotators(List<String> aCasGroupIds)
+    {
+        var head = aCasGroupIds.stream() //
+                .map(this::getUserName) //
+                .sorted() //
+                .limit(ANNOTATORS_LIMIT) //
+                .collect(joining(", "));
+
+        if (aCasGroupIds.size() <= ANNOTATORS_LIMIT) {
+            return head;
+        }
+
+        return head + " + " + (aCasGroupIds.size() - ANNOTATORS_LIMIT);
+    }
+
+    private String getUserName(String aUserName)
+    {
+        return userNameCache.computeIfAbsent(aUserName,
+                $ -> Optional.ofNullable(userRepository.getUserOrCurationUser($))
+                        .map(User::getUiName).orElse($));
     }
 }

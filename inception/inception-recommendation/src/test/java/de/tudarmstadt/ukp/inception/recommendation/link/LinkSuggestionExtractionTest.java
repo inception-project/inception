@@ -23,6 +23,7 @@ import static java.util.Arrays.asList;
 import static org.apache.uima.util.CasCreationUtils.mergeTypeSystems;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
@@ -149,7 +150,10 @@ class LinkSuggestionExtractionTest
 
         var linkHostLayerAdapter = layerSupportRegistry.getLayerSupport(linkHostLayer)
                 .createAdapter(linkHostLayer, () -> asList(linkFeature));
+        var slotFillerLayerAdapter = layerSupportRegistry.getLayerSupport(linkHostLayer)
+                .createAdapter(slotFillerLayer, () -> asList());
         when(schemaService.getAdapter(linkHostLayer)).thenReturn(linkHostLayerAdapter);
+        when(schemaService.findAdapter(any(), any())).thenReturn(slotFillerLayerAdapter);
     }
 
     @Test

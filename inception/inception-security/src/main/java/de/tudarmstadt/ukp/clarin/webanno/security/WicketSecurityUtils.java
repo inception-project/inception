@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.security;
 
 import org.apache.wicket.protocol.http.servlet.ServletWebRequest;
 import org.apache.wicket.request.cycle.RequestCycle;
+import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.security.web.csrf.HttpSessionCsrfTokenRepository;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -30,6 +31,12 @@ public class WicketSecurityUtils
     {
         var httpRequest = (HttpServletRequest) RequestCycle.get().getRequest()
                 .getContainerRequest();
+
+        var token = (CsrfToken) httpRequest.getAttribute("_csrf");
+        if (token != null) {
+            return token.getToken();
+        }
+
         var httpResponse = (HttpServletResponse) RequestCycle.get().getResponse()
                 .getContainerResponse();
 

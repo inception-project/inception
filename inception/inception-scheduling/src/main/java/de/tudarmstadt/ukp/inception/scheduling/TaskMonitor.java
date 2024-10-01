@@ -217,6 +217,6 @@ public class TaskMonitor
     @Deprecated
     public synchronized Progress toProgress()
     {
-        return new Progress(maxProgress, progress);
+        return new Progress(progress, maxProgress);
     }
 }

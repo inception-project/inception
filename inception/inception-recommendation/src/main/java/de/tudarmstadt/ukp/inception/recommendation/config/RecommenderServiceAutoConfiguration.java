@@ -58,6 +58,7 @@ import de.tudarmstadt.ukp.inception.recommendation.service.RecommendationService
 import de.tudarmstadt.ukp.inception.recommendation.service.RecommenderFactoryRegistryImpl;
 import de.tudarmstadt.ukp.inception.recommendation.service.SuggestionSupportRegistryImpl;
 import de.tudarmstadt.ukp.inception.recommendation.sidebar.RecommendationSidebarFactory;
+import de.tudarmstadt.ukp.inception.recommendation.sidebar.llm.InteractiveRecommenderSidebarFactory;
 import de.tudarmstadt.ukp.inception.recommendation.span.SpanSuggestionSupport;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
@@ -69,7 +70,8 @@ import jakarta.persistence.PersistenceContext;
  * Provides all back-end Spring beans for the recommendation functionality.
  */
 @Configuration
-@EnableConfigurationProperties(RecommenderPropertiesImpl.class)
+@EnableConfigurationProperties({ RecommenderPropertiesImpl.class,
+        InteractiveRecommenderPropertiesImpl.class })
 @ConditionalOnProperty(prefix = "recommender", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class RecommenderServiceAutoConfiguration
 {
@@ -144,10 +146,18 @@ public class RecommenderServiceAutoConfiguration
             havingValue = "true", matchIfMissing = true)
     @Bean
     public RecommendationSidebarFactory recommendationSidebarFactory(
-            RecommendationService aRecommendationService, PreferencesService aPreferencesService,
-            UserDao aUserService)
+            RecommendationService aRecommendationService)
     {
         return new RecommendationSidebarFactory(aRecommendationService);
+    }
+
+    @ConditionalOnProperty(prefix = "recommender.interactive", name = "enabled", //
+            havingValue = "true", matchIfMissing = false)
+    @Bean
+    public InteractiveRecommenderSidebarFactory interactiveRecommenderSidebarFactory(
+            RecommendationService aRecommendationService)
+    {
+        return new InteractiveRecommenderSidebarFactory(aRecommendationService);
     }
 
     @Bean(name = RecommendationEditorExtension.BEAN_NAME)

@@ -31,6 +31,7 @@ import de.tudarmstadt.ukp.inception.apacheannotatoreditor.config.ApacheAnnotator
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorBase;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorFactoryImplBase;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
+import de.tudarmstadt.ukp.inception.io.html.HtmlArchiveFormatSupport;
 import de.tudarmstadt.ukp.inception.io.html.HtmlFormatSupport;
 import de.tudarmstadt.ukp.inception.io.html.MHtmlFormatSupport;
 import de.tudarmstadt.ukp.inception.io.tei.TeiXmlDocumentFormatSupport;
@@ -83,7 +84,11 @@ public class ApacheAnnotatorHtmlAnnotationEditorFactory
         }
 
         return switch (aFormat) {
-        case HtmlFormatSupport.ID, MHtmlFormatSupport.ID, XmlFormatSupport.ID, TeiXmlDocumentFormatSupport.ID:
+        case HtmlFormatSupport.ID, //
+                HtmlArchiveFormatSupport.ID, //
+                MHtmlFormatSupport.ID, //
+                XmlFormatSupport.ID, //
+                TeiXmlDocumentFormatSupport.ID:
             yield PREFERRED;
         default:
             yield DEFAULT;

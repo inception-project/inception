@@ -17,7 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.ui.core.docanno.layer;
 
+import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectFsByAddr;
 import static de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerSupport.FEATURE_NAME_ORDER;
+import static java.util.Collections.emptyList;
+import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.FSUtil.setFeature;
 
 import java.util.ArrayList;
@@ -28,11 +31,11 @@ import java.util.function.Supplier;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.cas.AnnotationBaseFS;
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.Type;
+import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.fit.util.FSUtil;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -45,33 +48,37 @@ import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
-import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
 import de.tudarmstadt.ukp.inception.ui.core.docanno.event.DocumentMetadataCreatedEvent;
 import de.tudarmstadt.ukp.inception.ui.core.docanno.event.DocumentMetadataDeletedEvent;
 
 public class DocumentMetadataLayerAdapter
     extends TypeAdapter_ImplBase
 {
+    private final List<DocumentMetadataLayerBehavior> behaviors;
+
     public DocumentMetadataLayerAdapter(LayerSupportRegistry aLayerSupportRegistry,
             FeatureSupportRegistry aFeatureSupportRegistry,
             ApplicationEventPublisher aEventPublisher, AnnotationLayer aLayer,
             Supplier<Collection<AnnotationFeature>> aFeatures,
-            ConstraintsService aConstraintsService)
+            ConstraintsService aConstraintsService, List<DocumentMetadataLayerBehavior> aBehaviors)
     {
         super(aLayerSupportRegistry, aFeatureSupportRegistry, aConstraintsService, aEventPublisher,
                 aLayer, aFeatures);
+
+        if (aBehaviors == null) {
+            behaviors = emptyList();
+        }
+        else {
+            behaviors = aBehaviors.stream() //
+                    .sorted(AnnotationAwareOrderComparator.INSTANCE) //
+                    .toList();
+        }
     }
 
     @Override
     public long getTypeId()
     {
         return getLayer().getId();
-    }
-
-    @Override
-    public Type getAnnotationType(CAS aCas)
-    {
-        return CasUtil.getType(aCas, getAnnotationTypeName());
     }
 
     @Override
@@ -108,7 +115,7 @@ public class DocumentMetadataLayerAdapter
     public AnnotationBaseFS add(SourceDocument aDocument, String aUsername, CAS aCas)
         throws AnnotationException
     {
-        var type = CasUtil.getType(aCas, getAnnotationTypeName());
+        var type = getType(aCas, getAnnotationTypeName());
 
         AnnotationBaseFS newAnnotation = aCas.createFS(type);
         var maxOrder = aCas.select(type) //
@@ -127,7 +134,7 @@ public class DocumentMetadataLayerAdapter
     @Override
     public void delete(SourceDocument aDocument, String aUsername, CAS aCas, VID aVid)
     {
-        var fs = (AnnotationBaseFS) ICasUtil.selectFsByAddr(aCas, aVid.getId());
+        var fs = (AnnotationBaseFS) selectFsByAddr(aCas, aVid.getId());
         aCas.removeFsFromIndexes(fs);
 
         publishEvent(
@@ -136,7 +143,7 @@ public class DocumentMetadataLayerAdapter
 
     public AnnotationBaseFS restore(SourceDocument aDocument, String aUsername, CAS aCas, VID aVid)
     {
-        var fs = (AnnotationBaseFS) ICasUtil.selectFsByAddr(aCas, aVid.getId());
+        var fs = (AnnotationBaseFS) selectFsByAddr(aCas, aVid.getId());
 
         aCas.addFsToIndexes(fs);
 
@@ -148,12 +155,12 @@ public class DocumentMetadataLayerAdapter
     @Override
     public List<Pair<LogMessage, AnnotationFS>> validate(CAS aCas)
     {
-        List<Pair<LogMessage, AnnotationFS>> messages = new ArrayList<>();
-        // There are no behaviors for document metadata annotations yet
-        /*
-         * for (SpanLayerBehavior behavior : behaviors) { messages.addAll(behavior.onValidate(this,
-         * aJCas)); }
-         */
+        var messages = new ArrayList<Pair<LogMessage, AnnotationFS>>();
+
+        for (var behavior : behaviors) {
+            messages.addAll(behavior.onValidate(this, aCas));
+        }
+
         return messages;
     }
 
@@ -163,5 +170,33 @@ public class DocumentMetadataLayerAdapter
         var selection = new Selection();
         selection.selectSpan(aAnno);
         return selection;
+    }
+
+    @Override
+    public boolean isSamePosition(FeatureStructure aFS1, FeatureStructure aFS2)
+    {
+        if (aFS1 == null || aFS2 == null) {
+            return false;
+        }
+
+        if (!aFS1.getType().getName().equals(getAnnotationTypeName())) {
+            throw new IllegalArgumentException("Expected [" + getAnnotationTypeName()
+                    + "] but got [" + aFS1.getType().getName() + "]");
+        }
+
+        if (!aFS2.getType().getName().equals(getAnnotationTypeName())) {
+            throw new IllegalArgumentException("Expected [" + getAnnotationTypeName()
+                    + "] but got [" + aFS2.getType().getName() + "]");
+        }
+
+        if (aFS1 instanceof AnnotationBaseFS ann1 && aFS2 instanceof AnnotationBaseFS ann2) {
+            if (aFS1 == aFS2) {
+                return true;
+            }
+
+            return ann1.getView() == ann2.getView();
+        }
+
+        throw new IllegalArgumentException("Feature structures need to be AnnotationBaseFS");
     }
 }

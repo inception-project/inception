@@ -25,7 +25,6 @@ import java.util.Properties;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.wicket.Session;
 import org.apache.wicket.markup.head.IHeaderResponse;
-import org.apache.wicket.markup.head.JavaScriptHeaderItem;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.panel.Panel;
@@ -59,58 +58,43 @@ public class WarningsFooterPanel
 
         setOutputMarkupId(true);
 
-        Properties settings = SettingsUtil.getSettings();
+        var settings = SettingsUtil.getSettings();
 
         // set up warnings shown when using an embedded DB or some unsupported browser
-        boolean isBrowserWarningVisible = isBrowserWarningVisible(settings);
-        boolean isDatabaseWarningVisible = isDatabaseWarningVisible(settings);
+        var isBrowserWarningVisible = isBrowserWarningVisible(settings);
+        var isDatabaseWarningVisible = isDatabaseWarningVisible(settings);
 
         embeddedDbWarning = new Label("embeddedDbWarning", new ResourceModel("warning.database"));
         embeddedDbWarning.setVisible(isDatabaseWarningVisible);
-        add(embeddedDbWarning);
+        queue(embeddedDbWarning);
+
         browserWarning = new Label("browserWarning", new ResourceModel("warning.browser"));
         browserWarning.setVisible(isBrowserWarningVisible);
-        add(browserWarning);
+        queue(browserWarning);
 
         warningsContainer = new WebMarkupContainer("warnings");
         warningsContainer.setVisible(isBrowserWarningVisible || isDatabaseWarningVisible);
-        add(warningsContainer);
+        queue(warningsContainer);
     }
 
     @Override
     public void renderHead(IHeaderResponse aResponse)
     {
         super.renderHead(aResponse);
-
-        // @formatter:off
-        String script = String.join("\n",
-                "$(function () {",
-                "  let panel = document.getElementById('" + getMarkupId() + "');",
-                "  let popoverTriggerList = [].slice.call(panel.querySelectorAll('[data-bs-toggle=\"popover\"]'))",
-                "  let popoverList = popoverTriggerList.map(function (popoverTriggerEl) {",
-                "    return new bootstrap.Popover(popoverTriggerEl, {",
-                "      content: function() {",
-                "        var content = $(this).attr('data-bs-popover-content');",
-                "        return $(content).children('.popover-body').html();",
-                "      }});",
-                "    });",
-                "});");
-        // @formatter:on
-        aResponse.render(JavaScriptHeaderItem.forScript(script, "popover"));
     }
 
     private boolean isDatabaseWarningVisible(Properties settings)
     {
         boolean isUsingEmbeddedDatabase;
         try {
-            String driver = dbDriverService.getDatabaseDriverName();
+            var driver = dbDriverService.getDatabaseDriverName();
             isUsingEmbeddedDatabase = StringUtils.contains(driver.toLowerCase(Locale.US), "hsql");
         }
         catch (Throwable e) {
             LOG.warn("Unable to determine which database is being used", e);
             isUsingEmbeddedDatabase = false;
         }
-        boolean ignoreWarning = "false".equalsIgnoreCase(
+        var ignoreWarning = "false".equalsIgnoreCase(
                 settings.getProperty(SettingsUtil.CFG_WARNINGS_EMBEDDED_DATABASE));
 
         return isUsingEmbeddedDatabase && !ignoreWarning;
@@ -118,21 +102,20 @@ public class WarningsFooterPanel
 
     private boolean isBrowserWarningVisible(Properties settings)
     {
-        RequestCycle requestCycle = RequestCycle.get();
+        var requestCycle = RequestCycle.get();
         WebClientInfo clientInfo;
         if (Session.exists()) {
-            WebSession session = WebSession.get();
-            clientInfo = session.getClientInfo();
+            clientInfo = WebSession.get().getClientInfo();
         }
         else {
             clientInfo = new WebClientInfo(requestCycle);
         }
 
-        String userAgent = defaultString(clientInfo.getUserAgent(), "").toLowerCase();
-        boolean isUsingUnsupportedBrowser = !(userAgent.contains("safari")
+        var userAgent = defaultString(clientInfo.getUserAgent(), "").toLowerCase();
+        var isUsingUnsupportedBrowser = !(userAgent.contains("safari")
                 || userAgent.contains("chrome"));
 
-        boolean ignoreWarning = "false".equalsIgnoreCase(
+        var ignoreWarning = "false".equalsIgnoreCase(
                 settings.getProperty(SettingsUtil.CFG_WARNINGS_UNSUPPORTED_BROWSER));
 
         return isUsingUnsupportedBrowser && !ignoreWarning;

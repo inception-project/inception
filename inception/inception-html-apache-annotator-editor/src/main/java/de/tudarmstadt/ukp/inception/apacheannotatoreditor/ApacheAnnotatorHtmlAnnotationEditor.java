@@ -20,6 +20,9 @@ package de.tudarmstadt.ukp.inception.apacheannotatoreditor;
 import static de.tudarmstadt.ukp.inception.support.wicket.ServletContextUtils.referenceToUrl;
 import static java.util.Arrays.asList;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.wicket.Component;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
@@ -35,6 +38,7 @@ import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.editor.view.DocumentViewFactory;
 import de.tudarmstadt.ukp.inception.externaleditor.ExternalAnnotationEditorBase;
 import de.tudarmstadt.ukp.inception.externaleditor.model.AnnotationEditorProperties;
+import de.tudarmstadt.ukp.inception.io.xml.css.StylesheetRegistry;
 import de.tudarmstadt.ukp.inception.preferences.ClientSideUserPreferencesProvider;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import jakarta.servlet.ServletContext;
@@ -49,6 +53,7 @@ public class ApacheAnnotatorHtmlAnnotationEditor
     private @SpringBean DocumentService documentService;
     private @SpringBean ServletContext servletContext;
     private @SpringBean DocumentImportExportService documentImportExportService;
+    private @SpringBean StylesheetRegistry stylesheetSources;
 
     public ApacheAnnotatorHtmlAnnotationEditor(String aId, IModel<AnnotatorState> aModel,
             AnnotationActionHandler aActionHandler, CasProvider aCasProvider,
@@ -79,12 +84,25 @@ public class ApacheAnnotatorHtmlAnnotationEditor
                     .ifPresent(key -> props.setUserPreferencesKey(key.getClientSideKey()));
         }
         props.setDiamAjaxCallbackUrl(getDiamBehavior().getCallbackUrl().toString());
-        props.setStylesheetSources(asList(
-                referenceToUrl(servletContext, ApacheAnnotatorJsCssResourceReference.get())));
-        props.setScriptSources(asList(referenceToUrl(servletContext,
-                ApacheAnnotatorJsJavascriptResourceReference.get())));
+        props.setStylesheetSources(getStylesheetSources());
+        props.setScriptSources(asList( //
+                referenceToUrl(servletContext,
+                        ApacheAnnotatorJsJavascriptResourceReference.get())));
         props.setSectionElements(
                 documentImportExportService.getSectionElements(getModelObject().getDocument()));
         return props;
+    }
+
+    private List<String> getStylesheetSources()
+    {
+        var sources = new ArrayList<String>();
+
+        sources.add(referenceToUrl(servletContext, ApacheAnnotatorJsCssResourceReference.get()));
+
+        for (var reference : stylesheetSources.listStylesheetReferences()) {
+            sources.add(referenceToUrl(servletContext, reference));
+        }
+
+        return sources;
     }
 }

@@ -25,6 +25,7 @@ import static org.assertj.core.api.Assertions.tuple;
 import java.io.File;
 import java.io.StringWriter;
 
+import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.fit.factory.CasFactory;
@@ -78,7 +79,7 @@ class VisualPdfReaderTest
     {
         VModel expected;
         var textBuffer = new StringWriter();
-        try (var doc = PDDocument.load(new File(testFilesBase + "hello3.pdf"))) {
+        try (var doc = Loader.loadPDF(new File(testFilesBase + "hello3.pdf"))) {
             var extractor = new VisualPDFTextStripper();
             extractor.setSortByPosition(true);
             extractor.writeText(doc, textBuffer);
@@ -156,7 +157,7 @@ class VisualPdfReaderTest
     {
         VModel expected;
         var textBuffer = new StringWriter();
-        try (var doc = PDDocument.load(new File(testFilesBase + "hello3.pdf"))) {
+        try (var doc = Loader.loadPDF(new File(testFilesBase + "hello3.pdf"))) {
             var extractor = new VisualPDFTextStripper();
             extractor.setSortByPosition(false);
             extractor.writeText(doc, textBuffer);
@@ -262,7 +263,7 @@ class VisualPdfReaderTest
     {
         VModel expected;
         var textBuffer = new StringWriter();
-        try (var doc = PDDocument.load(new File(testFilesBase + "FC60_Times.pdf"))) {
+        try (var doc = Loader.loadPDF(new File(testFilesBase + "FC60_Times.pdf"))) {
             var extractor = new VisualPDFTextStripper();
             extractor.setSortByPosition(true);
             extractor.writeText(doc, textBuffer);
@@ -347,7 +348,7 @@ class VisualPdfReaderTest
     {
         VModel expected;
         var textBuffer = new StringWriter();
-        try (PDDocument doc = PDDocument.load(new File(testFilesBase + "FC60_Times.pdf"))) {
+        try (PDDocument doc = Loader.loadPDF(new File(testFilesBase + "FC60_Times.pdf"))) {
             var extractor = new VisualPDFTextStripper();
             extractor.setSortByPosition(false);
             extractor.writeText(doc, textBuffer);

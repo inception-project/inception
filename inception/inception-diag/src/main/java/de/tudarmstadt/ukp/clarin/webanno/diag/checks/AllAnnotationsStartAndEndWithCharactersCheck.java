@@ -31,9 +31,9 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Type;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.TrimUtils;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
+import de.tudarmstadt.ukp.inception.support.text.TrimUtils;
 
 public class AllAnnotationsStartAndEndWithCharactersCheck
     implements Check
@@ -79,8 +79,8 @@ public class AllAnnotationsStartAndEndWithCharactersCheck
                 var offsets = new int[] { ann.getBegin(), ann.getEnd() };
                 TrimUtils.trim(docText, offsets);
 
-                boolean startsWithWhitespace = offsets[0] != ann.getBegin();
-                boolean endsWithWhitespace = offsets[1] != ann.getEnd();
+                var startsWithWhitespace = offsets[0] != ann.getBegin();
+                var endsWithWhitespace = offsets[1] != ann.getEnd();
                 if (!startsWithWhitespace && !endsWithWhitespace) {
                     continue;
                 }

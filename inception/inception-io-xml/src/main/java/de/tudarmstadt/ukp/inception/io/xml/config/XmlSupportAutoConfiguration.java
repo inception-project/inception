@@ -22,14 +22,23 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import de.tudarmstadt.ukp.inception.io.xml.XmlFormatSupport;
+import de.tudarmstadt.ukp.inception.io.xml.css.StylesheetRegistry;
+import de.tudarmstadt.ukp.inception.io.xml.css.StylesheetRegistryImpl;
 
 @Configuration
-@ConditionalOnProperty(prefix = "format.generic-xml", name = "enabled", havingValue = "true", matchIfMissing = false)
 public class XmlSupportAutoConfiguration
 {
     @Bean
+    @ConditionalOnProperty(prefix = "format.generic-xml", name = "enabled", //
+            havingValue = "true", matchIfMissing = false)
     public XmlFormatSupport xmlFormatSupport()
     {
         return new XmlFormatSupport();
+    }
+
+    @Bean
+    public StylesheetRegistry stylesheetRegistry()
+    {
+        return new StylesheetRegistryImpl();
     }
 }

@@ -54,18 +54,16 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Relation;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.SentenceComment;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.SentenceMarker;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.TextMarker;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.TrimUtils;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.inception.rendering.paging.Unit;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VAnnotationMarker;
-import de.tudarmstadt.ukp.inception.rendering.vmodel.VComment;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
-import de.tudarmstadt.ukp.inception.rendering.vmodel.VMarker;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VSentenceMarker;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VTextMarker;
 import de.tudarmstadt.ukp.inception.support.text.TextUtils;
+import de.tudarmstadt.ukp.inception.support.text.TrimUtils;
 import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
 
 /**
@@ -154,6 +152,7 @@ public class BratSerializerImpl
                         .setClippedAtStart(vspan.getRanges().get(0).isClippedAtBegin());
                 entity.getAttributes().setClippedAtEnd(
                         vspan.getRanges().get(vspan.getRanges().size() - 1).isClippedAtEnd());
+                entity.getAttributes().setScore(vspan.getScore());
 
                 aResponse.addEntity(entity);
             }
@@ -183,7 +182,7 @@ public class BratSerializerImpl
         }
 
         Map<AnnotationFS, Integer> sentenceIndexes = null;
-        for (VComment vcomment : aVDoc.comments()) {
+        for (var vcomment : aVDoc.comments()) {
             String type;
             switch (vcomment.getCommentType()) {
             case ERROR:
@@ -205,7 +204,7 @@ public class BratSerializerImpl
                 if (sentenceIndexes == null) {
                     sentenceIndexes = new HashMap<>();
                     int i = 1;
-                    for (AnnotationFS s : select(cas, getType(cas, Sentence.class))) {
+                    for (var s : select(cas, getType(cas, Sentence.class))) {
                         sentenceIndexes.put(s, i);
                         i++;
                     }
@@ -224,18 +223,14 @@ public class BratSerializerImpl
 
     private void renderMarkers(GetDocumentResponse aResponse, VDocument aVDoc)
     {
-        // Render markers
-        for (VMarker vmarker : aVDoc.getMarkers()) {
-            if (vmarker instanceof VAnnotationMarker) {
-                VAnnotationMarker marker = (VAnnotationMarker) vmarker;
+        for (var vmarker : aVDoc.getMarkers()) {
+            if (vmarker instanceof VAnnotationMarker marker) {
                 aResponse.addMarker(new AnnotationMarker(vmarker.getType(), marker.getVid()));
             }
-            else if (vmarker instanceof VSentenceMarker) {
-                VSentenceMarker marker = (VSentenceMarker) vmarker;
+            else if (vmarker instanceof VSentenceMarker marker) {
                 aResponse.addMarker(new SentenceMarker(vmarker.getType(), marker.getIndex()));
             }
-            else if (vmarker instanceof VTextMarker) {
-                var marker = (VTextMarker) vmarker;
+            else if (vmarker instanceof VTextMarker marker) {
                 var range = marker.getRange();
                 aResponse.addMarker(
                         new TextMarker(marker.getType(), range.getBegin(), range.getEnd()));

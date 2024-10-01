@@ -17,10 +17,13 @@
  */
 package de.tudarmstadt.ukp.inception.ui.agreement.page;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_PROJECT;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAGE_PARAM_PROJECT;
+import static de.tudarmstadt.ukp.inception.scheduling.TaskScope.LAST_USER_SESSION;
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CHANGE_EVENT;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.enabledWhen;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -39,6 +42,7 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
@@ -65,7 +69,6 @@ import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.event.Pairwise
 import de.tudarmstadt.ukp.clarin.webanno.agreement.task.CalculatePairwiseAgreementTask;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.task.CalculatePerDocumentAgreementTask;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectUserPermissions;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -78,7 +81,6 @@ import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
-import de.tudarmstadt.ukp.inception.scheduling.TaskScope;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.help.DocLink;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxButton;
@@ -165,6 +167,8 @@ public class AgreementPage
         queue(featureList = makeFeatureChoice("feature"));
         queue(measureDropDown = makeMeasuresDropdown("measure"));
 
+        queue(new CheckBox("compareWithCurator").setOutputMarkupId(true));
+
         var annotatorList = new ListMultipleChoice<ProjectUserPermissions>("annotators");
         annotatorList.setChoiceRenderer(new ProjectUserPermissionChoiceRenderer());
         annotatorList.setChoices(listUsersWithPermissions());
@@ -228,7 +232,7 @@ public class AgreementPage
     private List<ProjectUserPermissions> listUsersWithPermissions()
     {
         return projectService.listProjectUserPermissions(getProject()).stream() //
-                .filter(p -> p.getRoles().contains(PermissionLevel.ANNOTATOR)) //
+                .filter(p -> p.getRoles().contains(ANNOTATOR)) //
                 .sorted(comparing(p -> p.getUser().map(User::getUiName).orElse(p.getUsername()))) //
                 .toList();
     }
@@ -349,7 +353,7 @@ public class AgreementPage
             var sessionOwner = userRepository.getCurrentUser();
             var model = aForm.getModelObject();
             var project = getProject();
-            var annotators = getAnnotators(aForm.getModelObject());
+            var annotators = getAnnotators(model);
             var traits = getTraits();
             var documents = agreementService
                     .getDocumentsToEvaluate(project, model.documents, traits).keySet().stream()
@@ -409,7 +413,7 @@ public class AgreementPage
                 .withFeature(model.feature) //
                 .withMeasure(measure) //
                 .withDocuments(allAnnDocs) //
-                .withScope(TaskScope.LAST_USER_SESSION) //
+                .withScope(LAST_USER_SESSION) //
                 // When running sync, we cannot cancel because the browser will still be in an
                 // AJAX request when we try to fire a second one and that second one will fail
                 // then. This would only work if the cancel action would be sent through
@@ -462,7 +466,7 @@ public class AgreementPage
                 .withFeature(model.feature) //
                 .withMeasure(measure) //
                 .withDocuments(allAnnDocs) //
-                .withScope(TaskScope.LAST_USER_SESSION) //
+                .withScope(LAST_USER_SESSION) //
                 // When running sync, we cannot cancel because the browser will still be in an
                 // AJAX request when we try to fire a second one and that second one will fail
                 // then. This would only work if the cancel action would be sent through
@@ -477,13 +481,23 @@ public class AgreementPage
 
     private List<String> getAnnotators(AgreementFormModel model)
     {
-        List<String> annotators;
+        var annotators = new ArrayList<String>();
+
+        if (model.compareWithCurator) {
+            annotators.add(CURATION_USER);
+        }
+
         if (isEmpty(model.annotators)) {
-            annotators = listUsersWithPermissions().stream().map(t -> t.getUsername()).toList();
+            listUsersWithPermissions().stream() //
+                    .map(t -> t.getUsername()) //
+                    .forEach(annotators::add);
         }
         else {
-            annotators = model.annotators.stream().map(t -> t.getUsername()).toList();
+            model.annotators.stream() //
+                    .map(t -> t.getUsername()) //
+                    .forEach(annotators::add);
         }
+
         return annotators;
     }
 
@@ -545,5 +559,7 @@ public class AgreementPage
         List<ProjectUserPermissions> annotators = new ArrayList<>();
 
         List<SourceDocument> documents = new ArrayList<>();
+
+        boolean compareWithCurator;
     }
 }

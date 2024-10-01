@@ -19,6 +19,10 @@ package de.tudarmstadt.ukp.clarin.webanno.agreement.task;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.AUTO_CAS_UPGRADE;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
+import static java.util.Arrays.asList;
 import static java.util.Comparator.comparing;
 
 import java.io.IOException;
@@ -111,6 +115,16 @@ public class CalculatePairwiseAgreementTask
 
                         var annotator2 = annotators.get(n);
 
+                        if ((CURATION_USER.equals(annotator1) || CURATION_USER.equals(annotator2))
+                                && !asList(CURATION_IN_PROGRESS, CURATION_FINISHED)
+                                        .contains(doc.getState())) {
+                            LOG.trace("Skipping combination {}/{}@{}: {} not in a curation state",
+                                    annotator1, annotator2, doc, annotator1);
+                            summary.mergeResult(annotator1, annotator2, AgreementSummary
+                                    .skipped(feature.getLayer().getName(), feature.getName()));
+                            continue;
+                        }
+
                         if (maybeCas1.get().isEmpty()) {
                             LOG.trace("Skipping combination {}/{}@{}: {} has no data", annotator1,
                                     annotator2, doc, annotator1);
@@ -164,6 +178,14 @@ public class CalculatePairwiseAgreementTask
             Map<SourceDocument, List<AnnotationDocument>> aAllAnnDocs)
         throws IOException
     {
+        if (CURATION_USER.equals(aDataOwner)) {
+            if (!asList(CURATION_IN_PROGRESS, CURATION_FINISHED).contains(aDocument.getState())) {
+                return Optional.empty();
+            }
+
+            return loadCas(aDocument, aDataOwner);
+        }
+
         var annDocs = aAllAnnDocs.get(aDocument);
 
         if (annDocs.stream().noneMatch(annDoc -> aDataOwner.equals(annDoc.getUser()))) {
@@ -174,6 +196,11 @@ public class CalculatePairwiseAgreementTask
             Optional.of(loadInitialCas(aDocument));
         }
 
+        return loadCas(aDocument, aDataOwner);
+    }
+
+    private Optional<CAS> loadCas(SourceDocument aDocument, String aDataOwner) throws IOException
+    {
         var cas = documentService.readAnnotationCas(aDocument, aDataOwner, AUTO_CAS_UPGRADE,
                 SHARED_READ_ONLY_ACCESS);
 

@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.annotation.layer.span;
 import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectByAddr;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Collections.emptyList;
+import static org.apache.uima.cas.text.AnnotationPredicates.colocated;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
 
@@ -31,6 +32,7 @@ import java.util.function.Supplier;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
 import org.slf4j.Logger;
@@ -110,7 +112,7 @@ public class SpanAdapter
 
         // Adjust the creation request (e.g. adjust offsets to the configured granularity) or
         // reject the creation (e.g. reject cross-sentence annotations)
-        for (SpanLayerBehavior behavior : behaviors) {
+        for (var behavior : behaviors) {
             request = behavior.onCreate(this, request);
         }
 
@@ -288,5 +290,33 @@ public class SpanAdapter
         var selection = new Selection();
         selection.selectSpan(aAnno);
         return selection;
+    }
+
+    @Override
+    public boolean isSamePosition(FeatureStructure aFS1, FeatureStructure aFS2)
+    {
+        if (aFS1 == null || aFS2 == null) {
+            return false;
+        }
+
+        if (!aFS1.getType().getName().equals(getAnnotationTypeName())) {
+            throw new IllegalArgumentException("Expected [" + getAnnotationTypeName()
+                    + "] but got [" + aFS1.getType().getName() + "]");
+        }
+
+        if (!aFS2.getType().getName().equals(getAnnotationTypeName())) {
+            throw new IllegalArgumentException("Expected [" + getAnnotationTypeName()
+                    + "] but got [" + aFS2.getType().getName() + "]");
+        }
+
+        if (aFS1 instanceof AnnotationFS ann1 && aFS2 instanceof AnnotationFS ann2) {
+            if (aFS1 == aFS2) {
+                return true;
+            }
+
+            return colocated(ann1, ann2);
+        }
+
+        throw new IllegalArgumentException("Feature structures need to be annotations");
     }
 }

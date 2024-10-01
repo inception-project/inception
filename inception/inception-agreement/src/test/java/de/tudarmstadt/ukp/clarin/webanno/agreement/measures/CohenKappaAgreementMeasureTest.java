@@ -68,7 +68,7 @@ public class CohenKappaAgreementMeasureTest
 
         var diff = result.getDiff();
 
-        diff.print(System.out);
+        // diff.print(System.out);
 
         assertEquals(3, diff.size());
         assertThat(diff.getDifferingConfigurationSets()).isEmpty();
@@ -108,7 +108,7 @@ public class CohenKappaAgreementMeasureTest
     {
         var result = twoWithoutLabelTest(sut, traits);
 
-        result.getDiff().print(System.out);
+        // result.getDiff().print(System.out);
 
         assertThat(result.getStudy().getItems())
                 .extracting(item -> StreamSupport.stream(item.getUnits().spliterator(), false)

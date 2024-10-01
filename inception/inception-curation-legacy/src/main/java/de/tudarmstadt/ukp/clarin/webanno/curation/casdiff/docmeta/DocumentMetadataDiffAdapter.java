@@ -28,9 +28,9 @@ import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.fit.util.FSUtil;
 import org.apache.uima.jcas.cas.AnnotationBase;
 
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.DiffAdapter_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.Position;
+import de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureMultiplicityMode;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanRenderer;
 import de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil;
 
@@ -59,7 +59,8 @@ public class DocumentMetadataDiffAdapter
 
     @Override
     public Position getPosition(FeatureStructure aFS, String aFeature, String aRole,
-            int aLinkTargetBegin, int aLinkTargetEnd, LinkCompareBehavior aLinkCompareBehavior)
+            int aLinkTargetBegin, int aLinkTargetEnd,
+            LinkFeatureMultiplicityMode aLinkCompareBehavior)
     {
         String collectionId = null;
         String documentId = null;

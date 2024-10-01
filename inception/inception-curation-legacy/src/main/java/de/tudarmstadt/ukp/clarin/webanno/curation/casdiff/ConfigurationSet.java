@@ -163,4 +163,14 @@ public class ConfigurationSet
     {
         return position;
     }
+
+    @Override
+    public String toString()
+    {
+        var sb = new StringBuilder();
+        sb.append('[');
+        sb.append(position);
+        sb.append(']');
+        return sb.toString();
+    }
 }

@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.annotation.layer.span;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.LinkMode.WITH_ROLE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode.ARRAY;
+import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectAnnotationByAddr;
 import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectByAddr;
 import static java.util.Collections.emptyList;
 import static org.apache.commons.lang3.StringUtils.abbreviate;
@@ -122,6 +123,16 @@ public class SpanRenderer
         var group = new VLazyDetailGroup();
         group.addDetail(
                 new VLazyDetail("Text", abbreviate(fs.getCoveredText(), MAX_HOVER_TEXT_LENGTH)));
+
+        if (aVid.getAttribute() != VID.NONE) {
+            var adapter = getTypeAdapter();
+            var feature = adapter.listFeatures().stream().sequential().skip(aVid.getAttribute())
+                    .findFirst().get();
+            List<LinkWithRoleModel> sourceLinks = adapter.getFeatureValue(feature, fs);
+            var target = selectAnnotationByAddr(aCas, sourceLinks.get(aVid.getSlot()).targetAddr);
+            group.addDetail(new VLazyDetail("Target",
+                    abbreviate(target.getCoveredText(), MAX_HOVER_TEXT_LENGTH)));
+        }
 
         var details = super.lookupLazyDetails(aCas, aVid);
         if (!group.getDetails().isEmpty()) {

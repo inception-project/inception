@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception</artifactId>
-    <version>34.0-SNAPSHOT</version>
+    <version>35.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>inception-app</artifactId>
@@ -42,15 +42,15 @@
     <dependencies>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-        <artifactId>inception-bom</artifactId>
-        <version>34.0-SNAPSHOT</version>
+        <artifactId>inception-dependencies</artifactId>
+        <version>35.0-SNAPSHOT</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-        <artifactId>inception-dependencies</artifactId>
-        <version>34.0-SNAPSHOT</version>
+        <artifactId>inception-bom</artifactId>
+        <version>35.0-SNAPSHOT</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -146,6 +146,13 @@
       <scope>runtime</scope>
     </dependency>
     
+    <!-- Java Servlet API -->
+    <dependency>
+      <groupId>jakarta.servlet</groupId>
+      <artifactId>jakarta.servlet-api</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-test-dependencies</artifactId>
@@ -171,6 +178,7 @@
     <module>inception-project-initializers</module>
     <module>inception-project-initializers-basic</module>
     <module>inception-project-initializers-doclabeling</module>
+    <module>inception-project-initializers-phi</module>
     <module>inception-project-initializers-sentencelabeling</module>
     <module>inception-project-initializers-ud</module>
     <module>inception-project-initializers-wikidatalinking</module>
@@ -215,6 +223,7 @@
     <module>inception-io-bioc</module>
     <module>inception-io-brat</module>
     <module>inception-io-conll</module>
+    <module>inception-io-docx</module>
     <module>inception-io-json</module>
     <module>inception-io-html</module>
     <module>inception-io-nif</module>
@@ -236,10 +245,10 @@
     <!-- Internal search -->
     <module>inception-ui-search</module>
     <module>inception-search-core</module>
+    <module>inception-search-mtas-upstream</module>
     <module>inception-search-mtas</module>
     <!-- External search -->
     <module>inception-external-search-core</module>
-    <module>inception-external-search-elastic</module>
     <module>inception-external-search-opensearch</module>
     <module>inception-external-search-solr</module>
     <module>inception-external-search-pubannotation</module>
@@ -248,6 +257,7 @@
     <!-- Knowledge base -->
     <module>inception-kb</module>
     <module>inception-kb-fact-linking</module>
+    <module>inception-kb-lucene-sail</module>
     <module>inception-ui-kb</module>
     <module>inception-concept-linking</module>
     <!-- Editor extensions -->
@@ -272,6 +282,7 @@
     <module>inception-recommendation</module>
     <module>inception-active-learning</module>
     <module>inception-imls-azureai-openai</module>
+    <module>inception-imls-chatgpt</module>
     <module>inception-imls-opennlp</module>
     <module>inception-imls-stringmatch</module>
     <module>inception-imls-elg</module>
@@ -441,6 +452,11 @@
             <dependency>com.sun.xml.bind:jaxb-core</dependency>
             <dependency>com.sun.xml.bind:jaxb-impl</dependency>
             <dependency>javax.activation:javax.activation-api</dependency>
+            <!--
+              - Servlet API
+            -->
+            <dependency>jakarta.servlet:jakarta.servlet-api</dependency>
+
             <!--
               - hsqldb and data-jpa, used via reflection in tests in search-mtas,
               - cannot be detected by Maven
@@ -731,6 +747,7 @@
                     <exclude>.factorypath</exclude>
                     <exclude>.gitignore</exclude>
                     <exclude>.checkstyle</exclude>
+                    <exclude>**/.asciidoctorconfig.adoc</exclude>
                     <exclude>**/.vscode/**/*</exclude>
                     <exclude>suppressions.xml</exclude>
                     <exclude>marker-*</exclude>
@@ -843,7 +860,7 @@
             <plugin>
               <groupId>org.apache.maven.plugins</groupId>
               <artifactId>maven-checkstyle-plugin</artifactId>
-              <version>3.3.0</version>
+              <version>3.5.0</version>
               <inherited>true</inherited>
               <dependencies>
                 <dependency>
@@ -854,7 +871,7 @@
                 <dependency>
                   <groupId>com.puppycrawl.tools</groupId>
                   <artifactId>checkstyle</artifactId>
-                  <version>10.14.2</version>
+                  <version>10.18.1</version>
                 </dependency>
               </dependencies>
               <configuration>

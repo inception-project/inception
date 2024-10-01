@@ -17,8 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.schema.api.adapter;
 
-import static de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationComparisonUtils.isEquivalentSpanAnnotation;
-
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -29,10 +27,10 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.fit.util.CasUtil;
 import org.springframework.context.ApplicationEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeatureFilter;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
@@ -65,13 +63,13 @@ public interface TypeAdapter
     /**
      * Get the CAS type of the this {@link TypeAdapter}
      *
-     * @param cas
+     * @param aCas
      *            the CAS.
      * @return the type.
      */
-    default Type getAnnotationType(CAS cas)
+    default Optional<Type> getAnnotationType(CAS aCas)
     {
-        return CasUtil.getType(cas, getAnnotationTypeName());
+        return Optional.ofNullable(aCas.getTypeSystem().getType(getAnnotationTypeName()));
     }
 
     /**
@@ -235,17 +233,39 @@ public interface TypeAdapter
 
     <T> Optional<T> getTraits(Class<T> aInterface);
 
-    default boolean equivalents(AnnotationFS aFs1, AnnotationFS aFs2)
+    <T> Optional<T> getFeatureTraits(AnnotationFeature aFeature, Class<T> aInterface);
+
+    default boolean isEquivalentAnnotation(AnnotationFS aFS1, AnnotationFS aFS2)
     {
-        return equivalents(aFs1, aFs2, null);
+        if (!isSamePosition(aFS1, aFS2)) {
+            return false;
+        }
+
+        for (var feature : listFeatures()) {
+            if (!isFeatureValueEqual(feature, aFS1, aFS2)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
-    default boolean equivalents(AnnotationFS aFs1, AnnotationFS aFs2, FeatureFilter aFilter)
+    default int countNonEqualFeatures(AnnotationFS aFS1, AnnotationFS aFS2,
+            AnnotationFeatureFilter aFilter)
     {
-        return isEquivalentSpanAnnotation(aFs1, aFs2, aFilter);
+        return (int) listFeatures().stream() //
+                .filter(feature -> aFilter == null
+                        || (aFilter.isAllowed(aFS1, feature) && aFilter.isAllowed(aFS1, feature)))
+                .filter(feature -> !isFeatureValueEqual(feature, aFS1, aFS2)) //
+                .count();
     }
 
     <T> Optional<FeatureSupport<T>> getFeatureSupport(String aName);
 
     String renderFeatureValue(FeatureStructure aFS, String aFeature);
+
+    boolean isFeatureValueEqual(AnnotationFeature aFeature, FeatureStructure aFS1,
+            FeatureStructure aFS2);
+
+    boolean isSamePosition(FeatureStructure aFS1, FeatureStructure aFS2);
 }

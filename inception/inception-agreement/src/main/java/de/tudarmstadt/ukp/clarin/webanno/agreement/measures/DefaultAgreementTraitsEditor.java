@@ -28,16 +28,16 @@ import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
+import de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureMultiplicityMode;
 
 public class DefaultAgreementTraitsEditor<T extends DefaultAgreementTraits>
     extends Panel
 {
     private static final long serialVersionUID = 7780019891761754494L;
 
-    private final DropDownChoice<LinkCompareBehavior> linkCompareBehaviorDropDown;
+    private final DropDownChoice<LinkFeatureMultiplicityMode> linkCompareBehaviorDropDown;
 
     private final Form<T> form;
 
@@ -59,7 +59,7 @@ public class DefaultAgreementTraitsEditor<T extends DefaultAgreementTraits>
         };
 
         linkCompareBehaviorDropDown = new DropDownChoice<>("linkCompareBehavior",
-                asList(LinkCompareBehavior.values()), new EnumChoiceRenderer<>(this));
+                asList(LinkFeatureMultiplicityMode.values()), new EnumChoiceRenderer<>(this));
         linkCompareBehaviorDropDown.add(
                 visibleWhen(aFeature.map(f -> LinkMode.NONE != f.getLinkMode()).orElse(false)));
         linkCompareBehaviorDropDown.setOutputMarkupPlaceholderTag(true);

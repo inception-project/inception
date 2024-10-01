@@ -21,6 +21,7 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
+import java.util.regex.Pattern;
 
 import javax.xml.namespace.QName;
 
@@ -51,14 +52,14 @@ public class PolicyCollectionTest
     @MethodSource("builderVariants")
     void thatPassPolicyForElementIsAccepted(String aName, PolicyCollectionBuilder aBuilder)
     {
-        QName goodElement = new QName("good");
+        var goodElement = new QName("good");
 
         var policies = aBuilder //
                 .allowElements(goodElement) //
                 .build();
 
         assertThat(policies.forElement(goodElement)).get() //
-                .extracting(ElementPolicy::getAction) //
+                .extracting(QNameElementPolicy::getAction) //
                 .isEqualTo(ElementAction.PASS);
     }
 
@@ -66,14 +67,14 @@ public class PolicyCollectionTest
     @MethodSource("builderVariants")
     void thatDropPolicyForElementIsAccepted(String aName, PolicyCollectionBuilder aBuilder)
     {
-        QName goodElement = new QName("good");
+        var goodElement = new QName("good");
 
         var policies = aBuilder //
                 .disallowElements(goodElement) //
                 .build();
 
         assertThat(policies.forElement(goodElement)).get() //
-                .extracting(ElementPolicy::getAction) //
+                .extracting(QNameElementPolicy::getAction) //
                 .isEqualTo(ElementAction.DROP);
     }
 
@@ -82,8 +83,8 @@ public class PolicyCollectionTest
     void thatDropPolicyForAttributeOnElementIsAccepted(String aName,
             PolicyCollectionBuilder aBuilder)
     {
-        QName element = new QName("element");
-        QName attr = new QName("attr");
+        var element = new QName("element");
+        var attr = new QName("attr");
 
         var policies = aBuilder //
                 .disallowAttributes(attr).onElements(element) //
@@ -98,8 +99,8 @@ public class PolicyCollectionTest
     void thatDropPolicyForAttributeGloballyIsAccepted(String aName,
             PolicyCollectionBuilder aBuilder)
     {
-        QName element = new QName("element");
-        QName attr = new QName("attr");
+        var element = new QName("element");
+        var attr = new QName("attr");
 
         var policies = aBuilder //
                 .disallowAttributes(attr).globally() //
@@ -125,9 +126,9 @@ public class PolicyCollectionTest
     @MethodSource("builderVariants")
     void thatPassPolicyForElementAttributeIsAccepted(String aName, PolicyCollectionBuilder aBuilder)
     {
-        QName goodElement = new QName("good");
-        QName goodAttribute = new QName("gattr");
-        QName badAttribute = new QName("battr");
+        var goodElement = new QName("good");
+        var goodAttribute = new QName("gattr");
+        var badAttribute = new QName("battr");
 
         var policies = aBuilder //
                 .allowElements(goodElement) //
@@ -145,13 +146,36 @@ public class PolicyCollectionTest
     void thatLocalAttributePolicyTakesPrecedenceOverGlobalAttributePolicy(String aName,
             PolicyCollectionBuilder aBuilder)
     {
-        QName element = new QName("element");
-        QName otherElement = new QName("otherElement");
-        QName attribute = new QName("attr");
+        var element = new QName("element");
+        var otherElement = new QName("otherElement");
+        var attribute = new QName("attr");
 
         var policies = aBuilder //
                 .allowElements(element) //
                 .allowAttributes(attribute).globally() //
+                .disallowAttributes(attribute).onElements(element) //
+                .build();
+
+        assertThat(policies.forAttribute(element, attribute, null, null)).get() //
+                .isEqualTo(AttributeAction.DROP);
+
+        assertThat(policies.forAttribute(otherElement, attribute, null, null)).get() //
+                .isEqualTo(AttributeAction.PASS);
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("builderVariants")
+    void thatPassPolicyForGlobalAttributeNameMatchingIsAccepted(String aName,
+            PolicyCollectionBuilder aBuilder)
+    {
+        var element = new QName("element");
+        var otherElement = new QName("otherElement");
+        var attribute = new QName("data-forbidden");
+        var attributeNamePattern = Pattern.compile("data-.*");
+
+        var policies = aBuilder //
+                .allowElements(element) //
+                .allowAttributes(attributeNamePattern).globally() //
                 .disallowAttributes(attribute).onElements(element) //
                 .build();
 

@@ -67,7 +67,7 @@ public class Condition
         return "Condition [[" + path + "] = [" + value + "]]";
     }
 
-    public boolean matches(List<String> listOfValues)
+    public boolean matchesAny(List<String> listOfValues)
     {
         return listOfValues.contains(value);
     }

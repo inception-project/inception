@@ -28,13 +28,12 @@ while retaining most of the HTML layout. Note that some HTML elements and attrib
 out during rendering. These include e.g. JavaScript-related elements and attributes as well as
 links which could easily interfere with the functionality of the annotation editor.
 
-[cols="2,1,1,1,3"]
+[cols="2,1,1,3"]
 |====
-| Format | Read | Write | Custom Layers | Description
+| Format | Import | Export | Supported layers
 
 | HTML (`htmldoc`)
 | yes
 | no
-| no
-| 
+| None
 |====

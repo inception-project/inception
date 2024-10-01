@@ -106,7 +106,9 @@ public abstract class XmlDocumentViewControllerImplBase
                     atts = filterResourceUrl(aAtts, "href");
                 }
 
-                if ("img".equalsIgnoreCase(element.getLocalPart())) {
+                if ("img".equalsIgnoreCase(element.getLocalPart())
+                        || "audio".equalsIgnoreCase(element.getLocalPart())
+                        || "video".equalsIgnoreCase(element.getLocalPart())) {
                     atts = filterResourceUrl(aAtts, "src");
                 }
 

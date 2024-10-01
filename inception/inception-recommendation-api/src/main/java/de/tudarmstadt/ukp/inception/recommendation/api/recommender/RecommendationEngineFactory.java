@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.api.recommender;
 
+import org.apache.wicket.markup.html.panel.EmptyPanel;
+import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -88,5 +90,15 @@ public interface RecommendationEngineFactory<T>
     default boolean isRanker(Recommender aRecommender)
     {
         return false;
+    }
+
+    default boolean isInteractive(Recommender aRecommender)
+    {
+        return false;
+    }
+
+    default Panel createInteractionPanel(String aId, IModel<Recommender> aModel)
+    {
+        return new EmptyPanel(aId);
     }
 }

@@ -21,7 +21,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXC
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.FORCE_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.getDiffAdapters;
-import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior.LINK_ROLE_AS_LABEL;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateChangeFlag.EXPLICIT_ANNOTATOR_USER_ACTION;
@@ -163,7 +162,7 @@ public class BulkCurationTask
         allCasses.put(targetUser, targetCas);
 
         var adapters = getDiffAdapters(schemaService, annotationLayers);
-        var diff = doDiff(adapters, LINK_ROLE_AS_LABEL, allCasses).toResult();
+        var diff = doDiff(adapters, allCasses).toResult();
 
         if (LOG.isTraceEnabled()) {
             for (var cfgSet : diff.getConfigurationSets()) {

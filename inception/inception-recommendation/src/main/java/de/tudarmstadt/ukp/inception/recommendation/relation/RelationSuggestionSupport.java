@@ -25,6 +25,7 @@ import static org.apache.uima.fit.util.CasUtil.selectAt;
 
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 
@@ -57,7 +58,6 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.ExtractionContext;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationComparisonUtils;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
@@ -145,7 +145,8 @@ public class RelationSuggestionSupport
         var targetEnd = suggestion.getPosition().getTargetEnd();
 
         // Check if there is already a relation for the given source and target
-        var type = adapter.getAnnotationType(aCas);
+        var type = adapter.getAnnotationType(aCas).orElseThrow(() -> new IllegalStateException(
+                "Type [" + adapter.getAnnotationTypeName() + "] not found in target CAS"));
         var attachType = CasUtil.getType(aCas, adapter.getAttachTypeName());
 
         var sourceFeature = type.getFeatureByBaseName(adapter.getSourceFeatureName());
@@ -230,7 +231,8 @@ public class RelationSuggestionSupport
     {
         var adapter = (RelationAdapter) aAdapter;
 
-        var type = adapter.getAnnotationType(aCas);
+        var type = adapter.getAnnotationType(aCas).orElseThrow(() -> new IllegalStateException(
+                "Type [" + adapter.getAnnotationTypeName() + "] not found in target CAS"));
         var governorFeature = adapter.getSourceFeature(aCas);
         var dependentFeature = adapter.getTargetFeature(aCas);
 
@@ -268,6 +270,8 @@ public class RelationSuggestionSupport
         var sourceFeature = ctx.getPredictedType().getFeatureByBaseName(FEAT_REL_SOURCE);
         var targetFeature = ctx.getPredictedType().getFeatureByBaseName(FEAT_REL_TARGET);
 
+        var adapterCache = new HashMap<String, TypeAdapter>();
+
         var result = new ArrayList<AnnotationSuggestion>();
         for (var predictedFS : ctx.getPredictionCas().select(ctx.getPredictedType())) {
             if (!predictedFS.getBooleanValue(ctx.getPredictionFeature())) {
@@ -277,8 +281,18 @@ public class RelationSuggestionSupport
             var source = (AnnotationFS) predictedFS.getFeatureValue(sourceFeature);
             var target = (AnnotationFS) predictedFS.getFeatureValue(targetFeature);
 
-            var originalSource = findEquivalentSpan(ctx.getOriginalCas(), source);
-            var originalTarget = findEquivalentSpan(ctx.getOriginalCas(), target);
+            if (source == null || target == null) {
+                LOG.debug("Source or target is null, skipping");
+                continue;
+            }
+
+            var sourceAdapter = adapterCache.computeIfAbsent(source.getType().getName(),
+                    $ -> schemaService.findAdapter(ctx.getRecommender().getProject(), source));
+            var targetAdapter = adapterCache.computeIfAbsent(target.getType().getName(),
+                    $ -> schemaService.findAdapter(ctx.getRecommender().getProject(), target));
+
+            var originalSource = findEquivalentSpan(sourceAdapter, ctx.getOriginalCas(), source);
+            var originalTarget = findEquivalentSpan(targetAdapter, ctx.getOriginalCas(), target);
             if (originalSource.isEmpty() || originalTarget.isEmpty()) {
                 LOG.debug("Unable to find source or target of predicted relation in original CAS");
                 continue;
@@ -315,16 +329,15 @@ public class RelationSuggestionSupport
      *
      * @param aOriginalCas
      *            the original CAS.
-     * @param aAnnotation
+     * @param aSpan
      *            an annotation in the prediction CAS. return the equivalent in the original CAS.
      */
-    private static Optional<Annotation> findEquivalentSpan(CAS aOriginalCas,
-            AnnotationFS aAnnotation)
+    private static Optional<Annotation> findEquivalentSpan(TypeAdapter aAdapter, CAS aOriginalCas,
+            AnnotationFS aSpan)
     {
-        return aOriginalCas.<Annotation> select(aAnnotation.getType()) //
-                .at(aAnnotation) //
-                .filter(candidate -> AnnotationComparisonUtils.isEquivalentSpanAnnotation(candidate,
-                        aAnnotation, null))
+        return aOriginalCas.<Annotation> select(aSpan.getType()) //
+                .at(aSpan) //
+                .filter(canditeSpan -> aAdapter.isSamePosition(canditeSpan, aSpan)) //
                 .findFirst();
     }
 

@@ -59,6 +59,10 @@ server:
     whitelabel:
       enabled: false
     path: /whoops
+  servlet:
+    session:
+      cookie:
+        same-site: strict
 
 wicket:
   core:

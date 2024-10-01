@@ -23,15 +23,15 @@
 
 The link:https://wiki.lappsgrid.org/interchange/[LAPPS Interchange Format] (LIF) is a JSON-based format which is used by the link:http://www.lappsgrid.org[Language Applications Grid]. The the format is in principle generic, the support for it is based on the link:http://vocab.lappsgrid.org[LAPPS Web Service Exchange Vocabulary].
 
-[cols="2,1,1,1,3"]
+[cols="2,1,1,3"]
 |====
-| Format | Read | Write | Custom Layers | Description
+| Format | Import | Export | Supported layers
 
 | link:https://wiki.lappsgrid.org/interchange/[LIF] (`lif`)
 | yes
 | yes
-| no
-| 
+| Named entity tagging (built-in), +
+  Dependency parsing (built-in)
 |====
 
 .Example

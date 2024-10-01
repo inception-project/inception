@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.inception.curation.service;
 
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.getDiffAdapters;
-import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior.LINK_ROLE_AS_LABEL;
 import static java.lang.invoke.MethodHandles.lookup;
 import static java.util.stream.Collectors.toList;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -86,7 +85,7 @@ public class CurationMergeServiceImpl
         DiffResult diff;
         try (var watch = new StopWatch(LOG, "CasDiff")) {
             var adapters = getDiffAdapters(annotationService, aLayers);
-            diff = doDiff(adapters, LINK_ROLE_AS_LABEL, aCassesToMerge).toResult();
+            diff = doDiff(adapters, aCassesToMerge).toResult();
         }
 
         try (var watch = new StopWatch(LOG, "CasMerge")) {

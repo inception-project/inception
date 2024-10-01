@@ -268,7 +268,9 @@ public class UserDaoImpl
     @Override
     public User getCurationUser()
     {
-        return new User(CURATION_USER);
+        var user = new User(CURATION_USER);
+        user.setUiName("Curator");
+        return user;
     }
 
     @Override

@@ -397,6 +397,10 @@ ID:: `TrimAnnotationsRepair`
 This repair adjusts annotation boundaries such that they do not include any whitespace at the beginning or end of the 
 annotation.
 
+NOTE: Run the checks again after applying this repair as certain annotations can become invalid if they get trimmed down
+      to a length of zero. It may be necessary to apply another repair such as <<repair_RemoveZeroSizeTokensAndSentencesRepair>>
+      to remove these annotations.
+
 [[repair_RemoveBomRepair]]
 === Remove Byte Order Mark
 

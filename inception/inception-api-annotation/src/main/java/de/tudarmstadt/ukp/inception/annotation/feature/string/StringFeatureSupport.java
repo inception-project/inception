@@ -236,4 +236,10 @@ public class StringFeatureSupport
 
         return emptyList();
     }
+
+    @Override
+    public <V> V getDefaultFeatureValue(AnnotationFeature aFeature, FeatureStructure aFS)
+    {
+        return null;
+    }
 }

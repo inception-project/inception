@@ -29,15 +29,13 @@ Support for this format is available in the following implementations:
 
 The current draft specification of the format is available link:https://github.com/apache/uima-uimaj-io-jsoncas/blob/main/SPECIFICATION.adoc[here].
 
-[cols="2,1,1,1,3"]
+[cols="2,1,1,3"]
 |====
-| Format | Read | Write | Custom Layers | Description
+| Format | Import | Export | Supported layers
 
-| link:https://github.com/apache/uima-uimaj-io-jsoncas/blob/main/SPECIFICATION.adoc[UIMA CAS JSON] (`jsoncas`)
+| link:https://github.com/apache/uima-uimaj-io-jsoncas/blob/main/SPECIFICATION.adoc[UIMA CAS JSON 0.4.0] (`jsoncas`)
 | yes
 | yes
-| yes
-| UIMA CAS JSON 0.4.0
-
+| All built-in and custom layers
 |====
 

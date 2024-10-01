@@ -173,6 +173,12 @@ public class ImageFeatureSupport
         aTD.addFeature(aFeature.getName(), "", CAS.TYPE_NAME_STRING);
     }
 
+    @Override
+    public <V> V getDefaultFeatureValue(AnnotationFeature aFeature, FeatureStructure aFS)
+    {
+        return null;
+    }
+
     @SuppressWarnings("unchecked")
     @Override
     public <V> V unwrapFeatureValue(AnnotationFeature aFeature, CAS aCAS, Object aValue)

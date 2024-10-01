@@ -62,8 +62,8 @@ public class ChainLayerSupport
     public static final String FEATURE_NAME_NEXT = "next";
     public static final String FEATURE_NAME_REFERENCE_RELATION = "referenceRelation";
     public static final String FEATURE_NAME_REFERENCE = "referenceType";
-    private static final String TYPE_SUFFIX_LINK = "Link";
-    private static final String TYPE_SUFFIX_CHAIN = "Chain";
+    public static final String TYPE_SUFFIX_LINK = "Link";
+    public static final String TYPE_SUFFIX_CHAIN = "Chain";
 
     private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 

@@ -25,8 +25,8 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.jcas.cas.AnnotationBase;
 
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkFeatureDecl;
+import de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureMultiplicityMode;
 
 public interface DiffAdapter
 {
@@ -35,8 +35,7 @@ public interface DiffAdapter
      */
     String getType();
 
-    Collection<? extends Position> generateSubPositions(AnnotationBase aFs,
-            LinkCompareBehavior aLinkCompareBehavior);
+    Collection<? extends Position> generateSubPositions(AnnotationBase aFs);
 
     LinkFeatureDecl getLinkFeature(String aFeature);
 
@@ -45,7 +44,7 @@ public interface DiffAdapter
     Position getPosition(FeatureStructure aFS);
 
     Position getPosition(FeatureStructure aFS, String aFeature, String aRole, int aLinkTargetBegin,
-            int aLinkTargetEnd, LinkCompareBehavior aLinkCompareBehavior);
+            int aLinkTargetEnd, LinkFeatureMultiplicityMode aLinkCompareBehavior);
 
     List<? extends AnnotationBase> selectAnnotationsInWindow(CAS aCas, int aWindowBegin,
             int aWindowEnd);

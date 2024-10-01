@@ -40,8 +40,8 @@ public class VArc
         super(builder.layer, builder.vid, builder.equivalenceSet, builder.features);
         setPlaceholder(builder.placeholder);
         setLabelHint(builder.label);
-        this.source = builder.source;
-        this.target = builder.target;
+        source = builder.source;
+        target = builder.target;
     }
 
     /**
@@ -142,6 +142,12 @@ public class VArc
     public VID getTarget()
     {
         return target;
+    }
+
+    @Override
+    public String toString()
+    {
+        return "VArc [" + getVid() + "]";
     }
 
     public static Builder builder()

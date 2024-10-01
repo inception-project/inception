@@ -26,6 +26,7 @@ import static org.apache.uima.fit.util.CasUtil.indexCovered;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.List;
@@ -311,5 +312,14 @@ public class OpenNlpDoccatRecommender
             throw new RecommendationException(
                     "Exception during training the OpenNLP Document Categorizer model", e);
         }
+    }
+
+    @Override
+    public void exportModel(RecommenderContext aContext, OutputStream aOutput) throws IOException
+    {
+        var model = aContext.get(KEY_MODEL)
+                .orElseThrow(() -> new IOException("No model trained yet."));
+
+        model.serialize(aOutput);
     }
 }

@@ -17,9 +17,12 @@
  */
 package de.tudarmstadt.ukp.inception.ui.core.about;
 
+import org.apache.wicket.authorization.Action;
+import org.apache.wicket.authroles.authorization.strategies.role.annotations.AuthorizeAction;
 import org.apache.wicket.markup.html.link.BookmarkablePageLink;
 import org.apache.wicket.markup.html.panel.Panel;
 
+@AuthorizeAction(action = Action.RENDER, roles = "ROLE_USER")
 public class AboutFooterPanel
     extends Panel
 {

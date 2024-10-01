@@ -24,14 +24,13 @@ CAUTION: This format is currently disabled by default. It can be enabled using t
 
 A binary format used by the Apache UIMA Java SDK.
 
-[cols="2,1,1,1,3"]
+[cols="2,1,1,3"]
 |====
-| Format | Read | Write | Custom Layers | Description
+| Format | Import | Export | Supported layers
 
-| link:https://uima.apache.org/d/uimaj-current/references.html#ugr.ref.compress:[Binary] (`bin`)
+| link:https://uima.apache.org/d/uimaj-current/references.html#ugr.ref.compress:[UIMA Binary CAS] (`bin`)
 | yes
 | yes
-| yes
-| UIMA Binary CAS
+| All built-in and custom layers
 |====
 

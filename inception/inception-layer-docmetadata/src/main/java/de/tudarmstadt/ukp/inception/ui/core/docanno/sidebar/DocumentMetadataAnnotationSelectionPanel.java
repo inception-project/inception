@@ -43,7 +43,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.Type;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.Component;
 import org.apache.wicket.Session;
@@ -482,15 +481,12 @@ public class DocumentMetadataAnnotationSelectionPanel
         var renderer = layerSupport.createRenderer(aLayer,
                 () -> annotationService.listAnnotationFeature(aLayer));
 
-        Type type;
-        try {
-            type = adapter.getAnnotationType(cas);
-        }
-        catch (IllegalArgumentException e) {
-            // CAS probably has not been upgraded to contain the type - ignore
+        var maybeType = adapter.getAnnotationType(cas);
+        if (!maybeType.isPresent()) {
             return;
         }
 
+        var type = maybeType.get();
         var annotations = cas.select(type).asList();
         var hasOrderFeature = type.getFeatureByBaseName(FEATURE_NAME_ORDER) != null;
         if (hasOrderFeature) {

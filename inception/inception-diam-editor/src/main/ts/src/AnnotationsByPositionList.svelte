@@ -29,7 +29,7 @@
     import LabelBadge from "./LabelBadge.svelte";
     import SpanText from "./SpanText.svelte";
     import {
-    debounce,
+        debounce,
         groupRelationsByPosition,
         groupSpansByPosition,
         uniqueOffsets,
@@ -103,7 +103,7 @@
                             class="flex-grow-1 my-1 mx-2 overflow-hidden"
                             on:click={() => scrollToSpan(firstSpan)}
                         >
-                            <div class="float-end labels">
+                            <div class="float-end labels me-1">
                                 {#each spans as span}
                                     <span
                                         on:mouseover={(ev) =>
@@ -144,7 +144,7 @@
                                     class="flex-grow-1 my-1 mx-2 overflow-hidden"
                                     on:click={() => scrollToRelation(relation)}
                                 >
-                                    <div class="float-end labels">
+                                    <div class="float-end labels me-1">
                                         <LabelBadge
                                             annotation={relation}
                                             {ajaxClient}

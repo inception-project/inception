@@ -27,18 +27,23 @@
         <wicket:message key="applyRecommenderDescription"/>
       </p>
       <div class="container">
+        <div class="row form-row form-floating" wicket:enclosure="recommender">
+          <select wicket:id="recommender" class="form-select" wicket:message="placeholder:recommender"/>
+          <label wicket:for="recommender">
+            <wicket:label key="recommender"/>
+          </label>
+        </div>
+
         <div class="row form-row form-floating" wicket:enclosure="user">
           <select wicket:id="user" class="form-select" wicket:message="placeholder:user"/>
           <label wicket:for="user">
             <wicket:label key="user"/>
           </label>
         </div>
-                
-        <div class="row form-row form-floating" wicket:enclosure="recommender">
-          <select wicket:id="recommender" class="form-select" wicket:message="placeholder:recommender"/>
-          <label wicket:for="recommender">
-            <wicket:label key="recommender"/>
-          </label>
+
+        <div class="row form-row border rounded" wicket:enclosure="states">
+          <div class="form-text"><wicket:message key="states"/></div>
+          <div wicket:id="states"/>
         </div>
 
         <div class="row form-row" wicket:enclosure="finishDocumentsWithoutRecommendations">

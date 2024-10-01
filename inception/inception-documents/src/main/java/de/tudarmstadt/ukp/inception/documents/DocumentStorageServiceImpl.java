@@ -81,7 +81,9 @@ public class DocumentStorageServiceImpl
         Validate.notNull(aDocument, "Parameter [sourceDocument] must be specified");
 
         var path = getSourceDocumentFolder(aDocument);
-        FileUtils.forceDelete(path.toFile());
+        if (Files.exists(path)) {
+            FileUtils.forceDelete(path.toFile());
+        }
     }
 
     @Override
