@@ -80,12 +80,6 @@ public class SettingsUtil
      * @deprecated Should introduce/use a Spring properties bean instead.
      */
     @Deprecated
-    public static final String CFG_USER_ALLOW_PROFILE_ACCESS = "user.profile.accessible";
-
-    /**
-     * @deprecated Should introduce/use a Spring properties bean instead.
-     */
-    @Deprecated
     public static final String CFG_LINK_PREFIX = "style.header.icon.";
     public static final @Deprecated String CFG_LINK_URL = ".linkUrl";
     public static final @Deprecated String CFG_LINK_IMAGE_URL = ".imageUrl";
