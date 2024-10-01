@@ -19,19 +19,18 @@
 
 ====
 CAUTION: Legacy feature. This format does not support all of the layer and feature configurations of {product-name}. For example, multi-value features are not supported. Using this format when exporting documents or projects with layer configurations not supported by this file format may generate errors or may simply omit unsupported information from the export. Please consider switching your post-processing workflows to
-the <<sect_formats_uimaxmi,CAS XMI (XML 1.0)>> format.
+the <<sect_formats_uimajson>> format.
 ====
 
 The file format used by WebAnno version 3.
 
-[cols="2,1,1,1,3"]
+[cols="2,1,1,3"]
 |====
-| Format | Read | Write | Custom Layers | Description
+| Format | Import | Export | Supported layers
 
 | <<sect_webannotsv,WebAnno TSV 3>> (`ctsv3`)
 | yes
 | yes
-| yes
-| 
+| Any layer/feature supported by WebAnno 3. For export, see warning above.
 |====
 

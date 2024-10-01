@@ -54,6 +54,8 @@ public class AzureAiOpenAiRecommenderTraits
 
     private @JsonInclude(NON_EMPTY) Map<String, Object> options = new LinkedHashMap<String, Object>();
 
+    private boolean interactive;
+
     public AuthenticationTraits getAuthentication()
     {
         return authentication;
@@ -123,5 +125,15 @@ public class AzureAiOpenAiRecommenderTraits
     {
         options.clear();
         options.putAll(aOptions);
+    }
+
+    public boolean isInteractive()
+    {
+        return interactive;
+    }
+
+    public void setInteractive(boolean aInteractive)
+    {
+        interactive = aInteractive;
     }
 }

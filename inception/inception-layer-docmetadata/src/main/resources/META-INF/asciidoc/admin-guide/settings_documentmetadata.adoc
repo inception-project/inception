@@ -33,7 +33,7 @@ NOTE: Disabling document metadata support prevents new document metadata layers 
 
 
 | documentmetadata.enabled
-| Enable/disable search
+| Enable/disable
 | false
 | true
 |===

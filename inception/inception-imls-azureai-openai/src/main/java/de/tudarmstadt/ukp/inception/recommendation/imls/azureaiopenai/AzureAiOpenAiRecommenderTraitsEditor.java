@@ -18,10 +18,14 @@
 package de.tudarmstadt.ukp.inception.recommendation.imls.azureaiopenai;
 
 import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CHANGE_EVENT;
+import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
+import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhenNot;
 
 import java.util.List;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.markup.html.WebMarkupContainer;
+import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
@@ -34,6 +38,7 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
+import de.tudarmstadt.ukp.inception.recommendation.api.config.InteractiveRecommenderProperties;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.AbstractTraitsEditor;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
@@ -53,6 +58,7 @@ public class AzureAiOpenAiRecommenderTraitsEditor
 
     private @SpringBean RecommendationService recommendationService;
     private @SpringBean RecommendationEngineFactory<AzureAiOpenAiRecommenderTraits> toolFactory;
+    private @SpringBean InteractiveRecommenderProperties properties;
 
     private final CompoundPropertyModel<AzureAiOpenAiRecommenderTraits> traits;
 
@@ -81,14 +87,6 @@ public class AzureAiOpenAiRecommenderTraitsEditor
         };
         form.setOutputMarkupPlaceholderTag(true);
 
-        var presetSelect = new DropDownChoice<Preset>("preset");
-        presetSelect.setModel(Model.of());
-        presetSelect.setChoiceRenderer(new ChoiceRenderer<>("name"));
-        presetSelect.setChoices(aPresets);
-        presetSelect.add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT,
-                _target -> applyPreset(form, presetSelect.getModelObject(), _target)));
-        form.add(presetSelect);
-
         if (!(traits.getObject().getAuthentication() instanceof ApiKeyAuthenticationTraits)) {
             traits.getObject().setAuthentication(new ApiKeyAuthenticationTraits());
         }
@@ -97,17 +95,39 @@ public class AzureAiOpenAiRecommenderTraitsEditor
         authenticationTraitsEditor = new ApiKeyAuthenticationTraitsEditor("authentication",
                 Model.of((ApiKeyAuthenticationTraits) traits.getObject().getAuthentication()));
         form.add(authenticationTraitsEditor);
-        form.add(new TextArea<String>("prompt"));
+
+        var promptContainer = new WebMarkupContainer("promptContainer");
+        promptContainer.setOutputMarkupPlaceholderTag(true);
+        promptContainer
+                .add(visibleWhenNot(traits.map(AzureAiOpenAiRecommenderTraits::isInteractive)));
+        form.add(promptContainer);
+
+        var presetSelect = new DropDownChoice<Preset>("preset");
+        presetSelect.setModel(Model.of());
+        presetSelect.setChoiceRenderer(new ChoiceRenderer<>("name"));
+        presetSelect.setChoices(aPresets);
+        presetSelect.add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT,
+                _target -> applyPreset(form, presetSelect.getModelObject(), _target)));
+        promptContainer.add(presetSelect);
+
+        promptContainer.add(new TextArea<String>("prompt"));
         var markdownLabel = new MarkdownLabel("promptHints",
                 LoadableDetachableModel.of(this::getPromptHints));
         markdownLabel.setOutputMarkupId(true);
-        form.add(markdownLabel);
-        form.add(new PromptingModeSelect("promptingMode")
+        promptContainer.add(markdownLabel);
+        promptContainer.add(new PromptingModeSelect("promptingMode")
                 .add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT,
                         _target -> _target.add(markdownLabel))));
-        form.add(new ExtractionModeSelect("extractionMode", traits.bind("extractionMode"),
-                getModel()));
-        form.add(new AzureAiOpenAiResponseFormatSelect("format"));
+        promptContainer.add(new ExtractionModeSelect("extractionMode",
+                traits.bind("extractionMode"), getModel()));
+        promptContainer.add(new AzureAiOpenAiResponseFormatSelect("format"));
+
+        form.add(new CheckBox("interactive") //
+                .setOutputMarkupId(true) //
+                .add(visibleWhen(properties::isEnabled)) //
+                .add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT,
+                        $ -> $.add(promptContainer))));
+
         add(form);
     }
 
