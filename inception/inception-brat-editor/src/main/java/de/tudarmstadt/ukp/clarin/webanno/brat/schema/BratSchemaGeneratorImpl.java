@@ -17,17 +17,16 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.brat.schema;
 
+import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.groupingBy;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-
-import javax.persistence.NoResultException;
 
 import de.tudarmstadt.ukp.clarin.webanno.brat.config.BratAnnotationEditorAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.brat.schema.model.EntityType;
@@ -39,7 +38,10 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import jakarta.persistence.NoResultException;
 
 /**
  * <p>
@@ -71,25 +73,29 @@ public class BratSchemaGeneratorImpl
             List<AnnotationLayer> aAnnotationLayers)
     {
         // Sort layers
-        List<AnnotationLayer> layers = new ArrayList<>(aAnnotationLayers);
+        var layers = new ArrayList<AnnotationLayer>(aAnnotationLayers);
         layers.sort(comparing(AnnotationLayer::getName));
 
         // Look up all the features once to avoid hammering the database in the loop below
-        Map<AnnotationLayer, List<AnnotationFeature>> layerToFeatures = annotationService
-                .listSupportedFeatures(aProject).stream()
+        var layerToFeatures = annotationService.listSupportedFeatures(aProject).stream()
                 .collect(groupingBy(AnnotationFeature::getLayer));
 
         // Now build the actual configuration
-        Set<EntityType> entityTypes = new LinkedHashSet<>();
-        for (AnnotationLayer layer : layers) {
-            EntityType entityType = configureEntityType(layer);
+        var entityTypes = new LinkedHashMap<AnnotationLayer, EntityType>();
+        var relationTypes = new LinkedHashMap<AnnotationLayer, RelationType>();
+        for (var layer : layers) {
+            if (RelationLayerSupport.TYPE.equals(layer.getType())) {
+                continue;
+            }
 
-            List<RelationType> arcs = new ArrayList<>();
+            var entityType = configureEntityType(layer);
+
+            var arcs = new LinkedHashSet<RelationType>();
 
             // For link features, we also need to configure the arcs, even though there is no arc
             // layer here.
             boolean hasLinkFeatures = false;
-            for (AnnotationFeature f : layerToFeatures.computeIfAbsent(layer, k -> emptyList())) {
+            for (var f : layerToFeatures.computeIfAbsent(layer, k -> emptyList())) {
                 if (!LinkMode.NONE.equals(f.getLinkMode())) {
                     hasLinkFeatures = true;
                     break;
@@ -97,20 +103,23 @@ public class BratSchemaGeneratorImpl
             }
 
             if (hasLinkFeatures) {
-                arcs.add(new RelationType(layer.getName(), layer.getUiName(),
-                        getBratTypeName(layer), getBratTypeName(layer), null, "triangle,5", "3,3"));
+                arcs.add(new RelationType(layer.getUiName(), getBratTypeName(layer),
+                        getBratTypeName(layer), null, "triangle,5", "3,3"));
             }
 
             // Styles for the remaining relation and chain layers
-            for (AnnotationLayer attachingLayer : getAttachingLayers(layer, layers)) {
-                arcs.add(configureRelationType(layer, attachingLayer));
+            for (var attachingLayer : getAttachingLayers(layer, layers)) {
+                var relationLayer = relationTypes.computeIfAbsent(attachingLayer,
+                        $ -> buildRelationType(layer, attachingLayer));
+                relationLayer.addTarget(getBratTypeName(layer));
+                arcs.add(relationLayer);
             }
 
-            entityType.setArcs(arcs);
-            entityTypes.add(entityType);
+            entityType.setArcs(new ArrayList<>(arcs));
+            entityTypes.put(layer, entityType);
         }
 
-        return entityTypes;
+        return new LinkedHashSet<>(entityTypes.values());
     }
 
     /**
@@ -119,12 +128,12 @@ public class BratSchemaGeneratorImpl
     private List<AnnotationLayer> getAttachingLayers(AnnotationLayer aTarget,
             List<AnnotationLayer> aLayers)
     {
-        List<AnnotationLayer> attachingLayers = new ArrayList<>();
-
         // Chains always attach to themselves
         if (ChainLayerSupport.TYPE.equals(aTarget.getType())) {
-            attachingLayers.add(aTarget);
+            return asList(aTarget);
         }
+
+        var attachingLayers = new ArrayList<AnnotationLayer>();
 
         // FIXME This is a hack! Actually we should check the type of the attachFeature when
         // determine which layers attach to with other layers. Currently we only use attachType,
@@ -140,9 +149,16 @@ public class BratSchemaGeneratorImpl
         }
 
         // Custom layers
-        for (AnnotationLayer l : aLayers) {
-            if (aTarget.equals(l.getAttachType())) {
-                attachingLayers.add(l);
+        for (var layer : aLayers) {
+            // Layer attaches explicitly to other layer
+            if (aTarget.equals(layer.getAttachType())) {
+                attachingLayers.add(layer);
+            }
+            // Relation layer that attaches to "any" other span layer
+            else if (SpanLayerSupport.TYPE.equals(aTarget.getType())
+                    && RelationLayerSupport.TYPE.equals(layer.getType())
+                    && layer.getAttachType() == null) {
+                attachingLayers.add(layer);
             }
         }
 
@@ -151,12 +167,11 @@ public class BratSchemaGeneratorImpl
 
     private EntityType configureEntityType(AnnotationLayer aLayer)
     {
-        String bratTypeName = getBratTypeName(aLayer);
+        var bratTypeName = getBratTypeName(aLayer);
         return new EntityType(aLayer.getName(), aLayer.getUiName(), bratTypeName);
     }
 
-    private RelationType configureRelationType(AnnotationLayer aLayer,
-            AnnotationLayer aAttachingLayer)
+    private RelationType buildRelationType(AnnotationLayer aLayer, AnnotationLayer aAttachingLayer)
     {
         String attachingLayerBratTypeName = getBratTypeName(aAttachingLayer);
 
@@ -187,9 +202,9 @@ public class BratSchemaGeneratorImpl
             break;
         }
 
-        String bratTypeName = getBratTypeName(aLayer);
-        return new RelationType(aAttachingLayer.getName(), aAttachingLayer.getUiName(),
-                attachingLayerBratTypeName, bratTypeName, null, arrowHead, dashArray);
+        var bratTypeName = getBratTypeName(aLayer);
+        return new RelationType(aAttachingLayer.getUiName(), attachingLayerBratTypeName,
+                bratTypeName, null, arrowHead, dashArray);
     }
 
     public static String getBratTypeName(AnnotationLayer aLayer)

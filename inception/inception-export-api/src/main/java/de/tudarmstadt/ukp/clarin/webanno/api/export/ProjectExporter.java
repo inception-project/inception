@@ -17,12 +17,20 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.export;
 
-import java.io.File;
+import static org.apache.commons.io.FilenameUtils.normalize;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static org.apache.commons.lang3.StringUtils.removeStart;
+
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.Collections;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+import java.util.zip.ZipOutputStream;
+
+import org.apache.commons.io.output.CloseShieldOutputStream;
+import org.apache.commons.lang3.function.FailableConsumer;
 
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -40,7 +48,7 @@ public interface ProjectExporter
     }
 
     void exportData(FullProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
-            ExportedProject aExProject, File aStage)
+            ExportedProject aExProject, ZipOutputStream aZOs)
         throws ProjectExportException, IOException, InterruptedException;
 
     void importData(ProjectImportRequest aRequest, Project aProject, ExportedProject aExProject,
@@ -49,12 +57,43 @@ public interface ProjectExporter
 
     static String normalizeEntryName(ZipEntry aEntry)
     {
-        // Strip leading "/" that we had in ZIP files prior to 2.0.8 (bug #985)
-        var entryName = aEntry.toString();
-        if (entryName.startsWith("/")) {
-            entryName = entryName.substring(1);
+        var name = removeStart(normalize(aEntry.getName(), true), "/");
+
+        if (isEmpty(name)) {
+            return null;
         }
 
-        return entryName;
+        return name;
+    }
+
+    static ZipEntry getEntry(ZipFile aFile, String aEntryName)
+    {
+        var normalizedEntryName = normalize(aEntryName, true);
+
+        var entry = aFile.getEntry(normalizedEntryName);
+        if (entry != null) {
+            return entry;
+        }
+
+        if (normalizedEntryName.startsWith("/")) {
+            return aFile.getEntry(removeStart(normalizedEntryName, "/"));
+        }
+        else {
+            return aFile.getEntry("/" + normalizedEntryName);
+        }
+    }
+
+    static void writeEntry(ZipOutputStream aStage, String aEntryName,
+            FailableConsumer<OutputStream, IOException> aWriter)
+        throws IOException
+    {
+        var entryName = new ZipEntry(removeStart(normalize(aEntryName, true), "/"));
+        aStage.putNextEntry(entryName);
+        try {
+            aWriter.accept(CloseShieldOutputStream.wrap(aStage));
+        }
+        finally {
+            aStage.closeEntry();
+        }
     }
 }

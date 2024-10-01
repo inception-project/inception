@@ -37,17 +37,16 @@ import org.jsoup.select.NodeTraversor;
 import de.tudarmstadt.ukp.inception.io.html.dkprocore.CasXmlNodeVisitor;
 
 /**
- * Reads the contents of a given URL and strips the HTML. Returns the textual contents. Also
- * recognizes headings and paragraphs.
+ * Reads the contents of a given URL and strips the HTML. Returns the textual contents.
  */
 @ResourceMetaData(name = "MHTML Reader")
 @MimeTypeCapability({ MimeTypes.APPLICATION_XHTML, MimeTypes.TEXT_HTML })
 @TypeCapability(outputs = { //
-        "de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData",
-        "de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Heading",
-        "de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Paragraph",
-        "org.dkpro.core.api.xml.type.XmlAttribute", "org.dkpro.core.api.xml.type.XmlDocument",
-        "org.dkpro.core.api.xml.type.XmlElement", "org.dkpro.core.api.xml.type.XmlNode",
+        "de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData", //
+        "org.dkpro.core.api.xml.type.XmlAttribute", //
+        "org.dkpro.core.api.xml.type.XmlDocument", //
+        "org.dkpro.core.api.xml.type.XmlElement", //
+        "org.dkpro.core.api.xml.type.XmlNode", //
         "org.dkpro.core.api.xml.type.XmlTextNode" })
 public class MHtmlDocumentReader
     extends JCasResourceCollectionReader_ImplBase
@@ -62,7 +61,7 @@ public class MHtmlDocumentReader
     @Override
     public void getNext(JCas aJCas) throws IOException, CollectionException
     {
-        Resource res = nextFile();
+        var res = nextFile();
         initCas(aJCas, res);
 
         try (var is = res.getInputStream()) {
@@ -70,14 +69,7 @@ public class MHtmlDocumentReader
             var message = builder.parseMessage(is);
             var htmlDocument = getDocument(message);
             try (var docIs = htmlDocument.getInputStream()) {
-                var charset = htmlDocument.getMimeCharset();
-                if ("US-ASCII".equals(charset)) {
-                    // mime4j uses US_ASCII as default and we cannot override it. While it may be
-                    // technically correct, e.g. Chrome seems to use UTF-8 by default but does not
-                    // provide an encoding the MHTML files... *sigh*
-                    charset = "UTF-8";
-                }
-                var doc = Jsoup.parse(docIs, charset, "");
+                var doc = Jsoup.parse(docIs, null, "");
 
                 var visitor = new CasXmlNodeVisitor(aJCas, normalizeWhitespace);
 

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<mtas>
+  <configurations type="mtas.analysis.util.MtasTokenizerFactory">
+    <configuration name="source1" file="folia.xml" />      
+    <configuration name="source2" file="folia.xml" />      
+    <configuration name="source3" file="folia.xml" />      
+  </configurations>
+  <configurations type="mtas.analysis.util.MtasCharFilterFactory">
+    <configuration name="source1" type="file" postfix=".xml.gz" />    
+    <configuration name="source2" type="file" postfix=".gz" />    
+    <configuration name="source3" type="file" />    
+  </configurations>
+</mtas>

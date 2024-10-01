@@ -22,7 +22,9 @@ import static de.tudarmstadt.ukp.inception.support.xml.sanitizer.ElementAction.P
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 import java.lang.invoke.MethodHandles;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.function.Supplier;
@@ -41,8 +43,9 @@ public class PolicyCollectionBuilder
     @SuppressWarnings("rawtypes")
     private final Supplier<? extends Map> mapSupplier;
     private final Map<QName, ElementPolicyBuilder> elementPolicyBuilders;
-    private final Map<QName, Map<QName, AttributePolicy>> elementAttributePolicies;
-    private final Map<QName, AttributePolicy> globalAttributePolicies;
+    private final Map<QName, Map<QName, QNameAttributePolicy>> elementAttributePolicies;
+    private final Map<QName, QNameAttributePolicy> globalAttributePolicies;
+    private final List<QNameMatchingAttributePolicy> globalAttributeMatchingPolicies;
 
     private ElementAction defaultElementAction = ElementAction.DROP;
     private AttributeAction defaultAttributeAction = AttributeAction.DROP;
@@ -69,6 +72,7 @@ public class PolicyCollectionBuilder
         elementPolicyBuilders = mapSupplier.get();
         elementAttributePolicies = mapSupplier.get();
         globalAttributePolicies = mapSupplier.get();
+        globalAttributeMatchingPolicies = new ArrayList<>();
     }
 
     public PolicyCollectionBuilder defaultNamespace(String aDefaultNamespace)
@@ -209,6 +213,11 @@ public class PolicyCollectionBuilder
         return new AttributePolicyBuilder(this, AttributeAction.PASS, aAttributeNames);
     }
 
+    public AttributePolicyBuilder allowAttributes(Pattern... aAttributeNamePattern)
+    {
+        return new AttributePolicyBuilder(this, AttributeAction.PASS, aAttributeNamePattern);
+    }
+
     public AttributePolicyBuilder disallowAttributes(String... aAttributeNames)
     {
         var attributeNames = Stream.of(aAttributeNames).map(QName::new).toArray(QName[]::new);
@@ -223,7 +232,7 @@ public class PolicyCollectionBuilder
     public PolicyCollection build()
     {
         @SuppressWarnings("unchecked")
-        Map<QName, ElementPolicy> elementPolicies = mapSupplier.get();
+        Map<QName, QNameElementPolicy> elementPolicies = mapSupplier.get();
 
         for (var entry : elementAttributePolicies.entrySet()) {
             var elementPolicyBuilder = elementPolicyBuilders.computeIfAbsent(entry.getKey(),
@@ -236,44 +245,52 @@ public class PolicyCollectionBuilder
         }
 
         return new PolicyCollection(defaultNamespace, elementPolicies, globalAttributePolicies,
-                defaultElementAction, defaultAttributeAction);
+                globalAttributeMatchingPolicies, defaultElementAction, defaultAttributeAction);
     }
 
     void attributePolicy(QName aElementName, QName aAttributeName, AttributePolicy aPolicy)
     {
-        if (defaultNamespace == null) {
-            _attributePolicy(aElementName, aAttributeName, aPolicy);
+        if (aPolicy instanceof QNameAttributePolicy qnameAttributePolicy) {
+            if (defaultNamespace == null) {
+                _attributePolicy(aElementName, aAttributeName, qnameAttributePolicy);
+                return;
+            }
+
+            if (isEmpty(aElementName.getNamespaceURI())
+                    && isEmpty(aAttributeName.getNamespaceURI())) {
+                var elementName = new QName(defaultNamespace, aElementName.getLocalPart());
+                var attributeName = useDefaultNamespaceForAttributes
+                        ? new QName(defaultNamespace, aAttributeName.getLocalPart())
+                        : aAttributeName;
+                _attributePolicy(elementName, attributeName, qnameAttributePolicy);
+
+                if (matchWithoutNamespace) {
+                    _attributePolicy(aElementName, aAttributeName, qnameAttributePolicy);
+                }
+            }
             return;
         }
 
-        if (isEmpty(aElementName.getNamespaceURI()) && isEmpty(aAttributeName.getNamespaceURI())) {
-            var elementName = new QName(defaultNamespace, aElementName.getLocalPart());
-            var attributeName = useDefaultNamespaceForAttributes
-                    ? new QName(defaultNamespace, aAttributeName.getLocalPart())
-                    : aAttributeName;
-            _attributePolicy(elementName, attributeName, aPolicy);
-
-            if (matchWithoutNamespace) {
-                _attributePolicy(aElementName, aAttributeName, aPolicy);
-            }
-        }
+        throw new IllegalArgumentException(
+                "Unsupported attribute policy type: [" + aPolicy.getClass().getName() + "]");
     }
 
-    private void _attributePolicy(QName aElementName, QName aAttributeName, AttributePolicy aPolicy)
+    private void _attributePolicy(QName aElementName, QName aAttributeName,
+            QNameAttributePolicy aPolicy)
     {
         @SuppressWarnings("unchecked")
-        Map<QName, AttributePolicy> attributePolicies = elementAttributePolicies
+        Map<QName, QNameAttributePolicy> attributePolicies = elementAttributePolicies
                 .computeIfAbsent(aElementName, k -> mapSupplier.get());
-        var attributePolicy = attributePolicies.computeIfAbsent(aAttributeName,
-                k -> AttributePolicy.UNDEFINED);
+        AttributePolicy attributePolicy = attributePolicies.computeIfAbsent(aAttributeName,
+                k -> QNameAttributePolicy.UNDEFINED);
 
-        if (aPolicy instanceof DelegatingAttributePolicy) {
-            ((DelegatingAttributePolicy) aPolicy).setDelegate(attributePolicy);
+        if (aPolicy instanceof ChainableAttributePolicy) {
+            ((ChainableAttributePolicy) aPolicy).setDelegate(attributePolicy);
             attributePolicies.put(aAttributeName, aPolicy);
             return;
         }
 
-        var oldPolicy = attributePolicies.put(aAttributeName, aPolicy);
+        AttributePolicy oldPolicy = attributePolicies.put(aAttributeName, aPolicy);
         if (!AttributePolicy.isUndefined(oldPolicy)) {
             log.warn("On element [{}] overriding policy for attribute [{}]: [{}] -> [{}]",
                     aElementName, aAttributeName, oldPolicy, aPolicy);
@@ -282,38 +299,49 @@ public class PolicyCollectionBuilder
 
     public void allowAttribute(QName aAttribute, Pattern aPattern)
     {
-        globalAttributePolicy(new AttributePolicy(aAttribute, AttributeAction.PASS));
+        globalAttributePolicy(
+                new AttributeValueMatchingPolicy(aAttribute, AttributeAction.PASS, aPattern));
     }
 
     public void disallowAttribute(QName aAttribute, Pattern aPattern)
     {
-        globalAttributePolicy(new AttributePolicy(aAttribute, AttributeAction.PASS));
+        globalAttributePolicy(
+                new AttributeValueMatchingPolicy(aAttribute, AttributeAction.PASS, aPattern));
     }
 
     public void globalAttributePolicy(AttributePolicy aPolicy)
     {
-        if (defaultNamespace == null) {
-            _globalAttributePolicy(aPolicy);
+        if (aPolicy instanceof QNameMatchingAttributePolicy qnameMatchingAttributePolicy) {
+            globalAttributeMatchingPolicies.add(qnameMatchingAttributePolicy);
             return;
         }
 
-        if (isEmpty(aPolicy.getQName().getNamespaceURI())) {
-            var attributeName = useDefaultNamespaceForAttributes
-                    ? new QName(defaultNamespace, aPolicy.getQName().getLocalPart())
-                    : aPolicy.getQName();
-            _globalAttributePolicy(new AttributePolicy(attributeName, aPolicy.getAction()));
+        if (aPolicy instanceof QNameAttributePolicy qnameAttributePolicy) {
+            if (defaultNamespace == null) {
+                _globalAttributePolicy(qnameAttributePolicy);
+                return;
+            }
 
-            if (matchWithoutNamespace) {
-                _globalAttributePolicy(aPolicy);
+            if (isEmpty(qnameAttributePolicy.getQName().getNamespaceURI())) {
+                var attributeName = useDefaultNamespaceForAttributes
+                        ? new QName(defaultNamespace,
+                                qnameAttributePolicy.getQName().getLocalPart())
+                        : qnameAttributePolicy.getQName();
+                _globalAttributePolicy(
+                        new QNameAttributePolicy(attributeName, qnameAttributePolicy.getAction()));
+
+                if (matchWithoutNamespace) {
+                    _globalAttributePolicy(qnameAttributePolicy);
+                }
             }
         }
     }
 
-    private void _globalAttributePolicy(AttributePolicy aPolicy)
+    private void _globalAttributePolicy(QNameAttributePolicy aPolicy)
     {
         var newPolicy = aPolicy;
-        var oldPolicy = globalAttributePolicies.put(aPolicy.getQName(), newPolicy);
-        if (!AttributePolicy.isUndefined(oldPolicy)
+        AttributePolicy oldPolicy = globalAttributePolicies.put(aPolicy.getQName(), newPolicy);
+        if (!QNameAttributePolicy.isUndefined(oldPolicy)
                 && oldPolicy.getAction() != newPolicy.getAction()) {
             log.warn("Globally overriding policy for attribute [{}]: [{}] -> [{}]",
                     aPolicy.getQName(), oldPolicy, newPolicy);

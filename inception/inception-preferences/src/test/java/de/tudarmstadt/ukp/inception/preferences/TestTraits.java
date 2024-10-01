@@ -17,11 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.preferences;
 
-import java.io.Serializable;
 import java.util.List;
 
 public class TestTraits
-    implements Serializable
+    implements PreferenceValue
 {
     private static final long serialVersionUID = 3910415681988129881L;
 

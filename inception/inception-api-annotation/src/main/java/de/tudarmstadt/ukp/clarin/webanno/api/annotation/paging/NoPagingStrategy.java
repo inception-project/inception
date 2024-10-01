@@ -45,7 +45,7 @@ public class NoPagingStrategy
     @Override
     public Component createPositionLabel(String aId, IModel<AnnotatorState> aModel)
     {
-        EmptyPanel emptyPanel = new EmptyPanel(aId);
+        var emptyPanel = new EmptyPanel(aId);
         // Just to avoid errors when re-rendering this is requested in an AJAX request
         emptyPanel.setOutputMarkupId(true);
         return emptyPanel;
@@ -54,7 +54,7 @@ public class NoPagingStrategy
     @Override
     public DefaultPagingNavigator createPageNavigator(String aId, Page aPage)
     {
-        DefaultPagingNavigator navi = new DefaultPagingNavigator(aId, (AnnotationPageBase) aPage);
+        var navi = new DefaultPagingNavigator(aId, (AnnotationPageBase) aPage);
         navi.setOutputMarkupPlaceholderTag(true);
         navi.setVisible(false);
         return navi;

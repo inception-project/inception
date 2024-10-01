@@ -34,8 +34,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.NopRenderer;
+import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.inception.annotation.layer.behaviors.LayerBehaviorRegistry;
 import de.tudarmstadt.ukp.inception.rendering.Renderer;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupport_ImplBase;
@@ -60,6 +62,8 @@ public class DocumentMetadataLayerSupport
 
     private final ApplicationEventPublisher eventPublisher;
     private final DocumentMetadataLayerSupportProperties properties;
+    private final ConstraintsService constraintsService;
+    private final LayerBehaviorRegistry layerBehaviorsRegistry;
 
     private String layerSupportId;
     private List<LayerType> types;
@@ -67,11 +71,14 @@ public class DocumentMetadataLayerSupport
     @Autowired
     public DocumentMetadataLayerSupport(FeatureSupportRegistry aFeatureSupportRegistry,
             ApplicationEventPublisher aEventPublisher,
-            DocumentMetadataLayerSupportProperties aProperties)
+            DocumentMetadataLayerSupportProperties aProperties,
+            LayerBehaviorRegistry aLayerBehaviorsRegistry, ConstraintsService aConstraintsService)
     {
         super(aFeatureSupportRegistry);
         eventPublisher = aEventPublisher;
         properties = aProperties;
+        layerBehaviorsRegistry = aLayerBehaviorsRegistry;
+        constraintsService = aConstraintsService;
     }
 
     @Override
@@ -110,7 +117,8 @@ public class DocumentMetadataLayerSupport
             Supplier<Collection<AnnotationFeature>> aFeatures)
     {
         return new DocumentMetadataLayerAdapter(getLayerSupportRegistry(), featureSupportRegistry,
-                eventPublisher, aLayer, aFeatures);
+                eventPublisher, aLayer, aFeatures, constraintsService, layerBehaviorsRegistry
+                        .getLayerBehaviors(this, DocumentMetadataLayerBehavior.class));
     }
 
     @Override

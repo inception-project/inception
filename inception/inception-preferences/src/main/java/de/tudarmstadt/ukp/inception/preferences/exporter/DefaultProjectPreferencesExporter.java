@@ -17,9 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.preferences.exporter;
 
-import java.io.File;
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.zip.ZipFile;
+import java.util.zip.ZipOutputStream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,8 +46,7 @@ public class DefaultProjectPreferencesExporter
     implements ProjectExporter
 {
     private static final String KEY = "default-preferences";
-    private static final Logger LOG = LoggerFactory
-            .getLogger(DefaultProjectPreferencesExporter.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private final PreferencesService preferencesService;
 
@@ -58,7 +58,7 @@ public class DefaultProjectPreferencesExporter
 
     @Override
     public void exportData(FullProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
-            ExportedProject aExProject, File aFile)
+            ExportedProject aExProject, ZipOutputStream aStage)
     {
         var project = aRequest.getProject();
 

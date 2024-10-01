@@ -35,9 +35,15 @@ public class CASMetadataTypeIsPresentCheck
     @Override
     public boolean check(Project aProject, CAS aCas, List<LogMessage> aMessages)
     {
-        if (aCas.getTypeSystem().getType(CASMetadata.class.getName()) == null) {
-            aMessages.add(LogMessage.warn(this, "CAS needs upgrade to support CASMetadata which is "
+        if (aCas.getTypeSystem().getType(CASMetadata._TypeName) == null) {
+            aMessages.add(LogMessage.info(this, "CAS needs upgrade to support CASMetadata which is "
                     + "required to detect concurrent modifications to CAS files."));
+            return true;
+        }
+
+        if (aCas.select(CASMetadata.class).isEmpty()) {
+            aMessages.add(LogMessage.warn(this,
+                    "CAS contains no CASMetadata. Cannot check concurrent access."));
         }
 
         // This is an informative check - not critical, so we always pass it.

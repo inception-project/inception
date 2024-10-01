@@ -17,17 +17,16 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.brat.preferences;
 
-import java.io.Serializable;
-
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.AnnotationEditorDefaultPreferencesProperties;
-import de.tudarmstadt.ukp.inception.preferences.Key;
+import de.tudarmstadt.ukp.inception.preferences.PreferenceKey;
+import de.tudarmstadt.ukp.inception.preferences.PreferenceValue;
 import de.tudarmstadt.ukp.inception.support.spring.ApplicationContextProvider;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class BratAnnotationEditorManagerPrefs
-    implements Serializable
+    implements PreferenceValue
 {
     private static final long serialVersionUID = 4740468259864549184L;
 
@@ -35,8 +34,9 @@ public class BratAnnotationEditorManagerPrefs
 
     private int defaultPageSize;
 
-    public static final Key<BratAnnotationEditorManagerPrefs> KEY_BRAT_EDITOR_MANAGER_PREFS = new Key<>(
-            BratAnnotationEditorManagerPrefs.class, "annotation/editor/brat/manager");
+    public static final PreferenceKey<BratAnnotationEditorManagerPrefs> KEY_BRAT_EDITOR_MANAGER_PREFS = //
+            new PreferenceKey<>(BratAnnotationEditorManagerPrefs.class,
+                    "annotation/editor/brat/manager");
 
     public BratAnnotationEditorManagerPrefs()
     {

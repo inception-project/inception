@@ -27,7 +27,15 @@ import org.slf4j.Logger;
 import com.giffing.wicket.spring.boot.context.extensions.WicketApplicationInitConfiguration;
 
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
+import de.tudarmstadt.ukp.inception.ui.curation.page.CurationPage;
 
+/**
+ * @deprecated Can be removed when the sidebar curation mode on the annotation page goes away. On
+ *             the new {@link CurationPage}, this is not required anymore because the
+ *             {@code MatrixWorkflowActionBarExtension} is used.
+ * @forRemoval 35.0
+ */
+@Deprecated
 public class CurationSidebarApplicationInitializer
     implements WicketApplicationInitConfiguration
 {
@@ -42,16 +50,13 @@ public class CurationSidebarApplicationInitializer
 
     private void addCurationSidebarBehaviorToAnnotationPage(Component aComponent)
     {
-        if (!(aComponent instanceof AnnotationPage)) {
-            return;
-        }
+        if (aComponent instanceof AnnotationPage annotationPage) {
+            if (!annotationPage.getBehaviors(CurationSidebarBehavior.class).isEmpty()) {
+                LOG.trace("CurationSidebarBehavior is already installed");
+            }
 
-        var annotationPage = (AnnotationPage) aComponent;
-        if (!annotationPage.getBehaviors(CurationSidebarBehavior.class).isEmpty()) {
-            LOG.trace("CurationSidebarBehavior is already installed");
+            LOG.trace("Installing CurationSidebarBehavior");
+            annotationPage.add(new CurationSidebarBehavior());
         }
-
-        LOG.trace("Installing CurationSidebarBehavior");
-        annotationPage.add(new CurationSidebarBehavior());
     }
 }

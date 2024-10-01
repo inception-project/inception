@@ -3,7 +3,7 @@
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="
     http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd 
-    http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+    http://www.liquibase.org/xml/ns/dbchangelog https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.27.xsd">
 
   <changeSet author="INCEpTION Team" id="1512303750846-7">
     <preConditions onFail="MARK_RAN">
@@ -489,5 +489,20 @@
         <constraints nullable="false" />
       </column>
     </addColumn>
+  </changeSet>
+
+  <changeSet author="INCEpTION Team" id="20240920-1">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="knowledgebase_add_languages"/>
+      </not>
+    </preConditions>
+    <createTable tableName="knowledgebase_add_languages">
+      <column name="knowledgebase_repositoryId" type="VARCHAR(255)">
+        <constraints nullable="false" />
+      </column>
+      <column name="name" type="VARCHAR(255)">
+      </column>
+    </createTable>
   </changeSet>
 </databaseChangeLog>

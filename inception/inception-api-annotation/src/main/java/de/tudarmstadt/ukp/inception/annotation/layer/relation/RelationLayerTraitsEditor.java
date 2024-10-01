@@ -48,9 +48,7 @@ public class RelationLayerTraitsEditor
     @Override
     protected void initializeForm(Form<RelationLayerTraits> aForm)
     {
-        var renderArcs = new CheckBox("renderArcs", getTraitsModel().bind("renderArcs"));
-        renderArcs.setOutputMarkupPlaceholderTag(true);
-        aForm.add(renderArcs);
+        aForm.add(new RelationRenderModeSelect("renderMode"));
 
         aForm.add(new ValidationModeSelect("validationMode", getLayerModel()));
 

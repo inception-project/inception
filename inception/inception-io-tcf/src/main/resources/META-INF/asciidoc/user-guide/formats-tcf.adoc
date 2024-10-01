@@ -17,17 +17,126 @@
 [[sect_formats_tcf]]
 = WebLicht TCF
 
-The TCF (Text Corpus Format) was created in the context of the CLARIN project. It is
+The link:http://weblicht.sfs.uni-tuebingen.de/weblichtwiki/index.php/The_TCF_Format[TCF (Text Corpus Format)] was created in the context of the CLARIN project. It is
 mainly used to exchange data between the different web-services that are part of the
 WebLicht platform.
 
-[cols="2,1,1,1,3"]
+[cols="2,1,1,3"]
 |====
-| Format | Read | Write | Custom Layers | Description
+| Format | Import | Export | Supported layers
 
 | link:http://weblicht.sfs.uni-tuebingen.de/weblichtwiki/index.php/The_TCF_Format[TCF] (`tcf`)
 | yes
 | no
-| no
-| Lemma, POS, dependencies (basic), coreference, named entities
+| Part-of-speech tagging (built-in), +
+  Lemmatization (built-ion), +
+  Dependency parsing (built-in), +
+  Named entity tagging (built-in), +
+  Coreference resolution (built-in)
 |====
+
+.Example
+[source,tcf]
+----
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-model href="https://raw.githubusercontent.com/weblicht/tcf-spec/master/src/main/rnc-schema/d-spin_0_4.rnc" type="application/relax-ng-compact-syntax"?>
+<D-Spin xmlns="http://www.dspin.de/data" version="0.4">
+<md:MetaData xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:cmd="http://www.clarin.eu/cmd/" xmlns:md="http://www.dspin.de/data/metadata" xsi:schemaLocation="http://www.clarin.eu/cmd/ http://catalog.clarin.eu/ds/ComponentRegistry/rest/registry/profiles/clarin.eu:cr1:p_1320657629623/xsd"></md:MetaData>
+<tc:TextCorpus xmlns:tc="http://www.dspin.de/data/textcorpus" lang="de">
+    <tc:text>Sie sind gegen den Euro , gegen Ausländer und Abtreibungen : Bei der Parlamentswahl in Finnland haben die " Wahren Finnen " riesige Gewinne erzielt .</tc:text>
+    <tc:tokens charOffsets="true">
+      <tc:token end="3" start="0" ID="t_1">Sie</tc:token>
+      <tc:token end="8" start="4" ID="t_2">sind</tc:token>
+      <tc:token end="14" start="9" ID="t_3">gegen</tc:token>
+      <tc:token end="18" start="15" ID="t_4">den</tc:token>
+      <tc:token end="23" start="19" ID="t_5">Euro</tc:token>
+      <tc:token end="25" start="24" ID="t_6">,</tc:token>
+      <tc:token end="31" start="26" ID="t_7">gegen</tc:token>
+      <tc:token end="41" start="32" ID="t_8">Ausländer</tc:token>
+      <tc:token end="45" start="42" ID="t_9">und</tc:token>
+      <tc:token end="58" start="46" ID="t_10">Abtreibungen</tc:token>
+      <tc:token end="60" start="59" ID="t_11">:</tc:token>
+      <tc:token end="64" start="61" ID="t_12">Bei</tc:token>
+      <tc:token end="68" start="65" ID="t_13">der</tc:token>
+      <tc:token end="83" start="69" ID="t_14">Parlamentswahl</tc:token>
+      <tc:token end="86" start="84" ID="t_15">in</tc:token>
+      <tc:token end="95" start="87" ID="t_16">Finnland</tc:token>
+      <tc:token end="101" start="96" ID="t_17">haben</tc:token>
+      <tc:token end="105" start="102" ID="t_18">die</tc:token>
+      <tc:token end="107" start="106" ID="t_19">"</tc:token>
+      <tc:token end="114" start="108" ID="t_20">Wahren</tc:token>
+      <tc:token end="121" start="115" ID="t_21">Finnen</tc:token>
+      <tc:token end="123" start="122" ID="t_22">"</tc:token>
+      <tc:token end="131" start="124" ID="t_23">riesige</tc:token>
+      <tc:token end="139" start="132" ID="t_24">Gewinne</tc:token>
+      <tc:token end="147" start="140" ID="t_25">erzielt</tc:token>
+      <tc:token end="149" start="148" ID="t_26">.</tc:token>
+    </tc:tokens>
+    <tc:sentences>
+      <tc:sentence tokenIDs="t_1 t_2 t_3 t_4 t_5 t_6 t_7 t_8 t_9 t_10 t_11 t_12 t_13 t_14 t_15 t_16 t_17 t_18 t_19 t_20 t_21 t_22 t_23 t_24 t_25 t_26"></tc:sentence>
+    </tc:sentences>
+    <tc:lemmas>
+      <tc:lemma ID="l_0" tokenIDs="t_1">Sie|sie|sie</tc:lemma>
+      <tc:lemma ID="l_1" tokenIDs="t_2">sein</tc:lemma>
+      <tc:lemma ID="l_2" tokenIDs="t_3">gegen</tc:lemma>
+      <tc:lemma ID="l_3" tokenIDs="t_4">d</tc:lemma>
+      <tc:lemma ID="l_4" tokenIDs="t_5">Euro</tc:lemma>
+      <tc:lemma ID="l_5" tokenIDs="t_6">,</tc:lemma>
+      <tc:lemma ID="l_6" tokenIDs="t_7">gegen</tc:lemma>
+      <tc:lemma ID="l_7" tokenIDs="t_8">Ausländer</tc:lemma>
+      <tc:lemma ID="l_8" tokenIDs="t_9">und</tc:lemma>
+      <tc:lemma ID="l_9" tokenIDs="t_10">Abtreibung</tc:lemma>
+      <tc:lemma ID="l_10" tokenIDs="t_11">:</tc:lemma>
+      <tc:lemma ID="l_11" tokenIDs="t_12">bei</tc:lemma>
+      <tc:lemma ID="l_12" tokenIDs="t_13">d</tc:lemma>
+      <tc:lemma ID="l_13" tokenIDs="t_14">Parlamentswahl</tc:lemma>
+      <tc:lemma ID="l_14" tokenIDs="t_15">in</tc:lemma>
+      <tc:lemma ID="l_15" tokenIDs="t_16">Finnland</tc:lemma>
+      <tc:lemma ID="l_16" tokenIDs="t_17">haben</tc:lemma>
+      <tc:lemma ID="l_17" tokenIDs="t_18">d</tc:lemma>
+      <tc:lemma ID="l_18" tokenIDs="t_19">"</tc:lemma>
+      <tc:lemma ID="l_19" tokenIDs="t_20">wahr</tc:lemma>
+      <tc:lemma ID="l_20" tokenIDs="t_21">Finne</tc:lemma>
+      <tc:lemma ID="l_21" tokenIDs="t_22">"</tc:lemma>
+      <tc:lemma ID="l_22" tokenIDs="t_23">riesig</tc:lemma>
+      <tc:lemma ID="l_23" tokenIDs="t_24">Gewinn</tc:lemma>
+      <tc:lemma ID="l_24" tokenIDs="t_25">erzielen</tc:lemma>
+      <tc:lemma ID="l_25" tokenIDs="t_26">.</tc:lemma>
+    </tc:lemmas>
+    <tc:POStags tagset="STTS">
+      <tc:tag tokenIDs="t_1">PPER</tc:tag>
+      <tc:tag tokenIDs="t_2">VAFIN</tc:tag>
+      <tc:tag tokenIDs="t_3">APPR</tc:tag>
+      <tc:tag tokenIDs="t_4">ART</tc:tag>
+      <tc:tag tokenIDs="t_5">NN</tc:tag>
+      <tc:tag tokenIDs="t_6">$,</tc:tag>
+      <tc:tag tokenIDs="t_7">APPR</tc:tag>
+      <tc:tag tokenIDs="t_8">NN</tc:tag>
+      <tc:tag tokenIDs="t_9">KON</tc:tag>
+      <tc:tag tokenIDs="t_10">NN</tc:tag>
+      <tc:tag tokenIDs="t_11">$.</tc:tag>
+      <tc:tag tokenIDs="t_12">APPR</tc:tag>
+      <tc:tag tokenIDs="t_13">ART</tc:tag>
+      <tc:tag tokenIDs="t_14">NN</tc:tag>
+      <tc:tag tokenIDs="t_15">APPR</tc:tag>
+      <tc:tag tokenIDs="t_16">NE</tc:tag>
+      <tc:tag tokenIDs="t_17">VAFIN</tc:tag>
+      <tc:tag tokenIDs="t_18">ART</tc:tag>
+      <tc:tag tokenIDs="t_19">$(</tc:tag>
+      <tc:tag tokenIDs="t_20">ADJA</tc:tag>
+      <tc:tag tokenIDs="t_21">NN</tc:tag>
+      <tc:tag tokenIDs="t_22">$(</tc:tag>
+      <tc:tag tokenIDs="t_23">ADJA</tc:tag>
+      <tc:tag tokenIDs="t_24">NN</tc:tag>
+      <tc:tag tokenIDs="t_25">VVPP</tc:tag>
+      <tc:tag tokenIDs="t_26">$.</tc:tag>
+    </tc:POStags>
+    <tc:references reltagset="TueBaDz">
+      <tc:entity>
+        <tc:reference ID="rc_0" type="pro.per3" rel="cataphoric" target="rc_1" tokenIDs="t_1"></tc:reference>
+        <tc:reference ID="rc_1" type="nam" tokenIDs="t_18 t_19 t_20 t_21 t_22"></tc:reference>
+      </tc:entity>
+    </tc:references>
+  </tc:TextCorpus>
+</D-Spin>
+----

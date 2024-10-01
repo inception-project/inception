@@ -99,7 +99,8 @@ public class KnowledgeBaseCreationWizard
         super(id);
 
         projectModel = aProjectModel;
-        wizardDataModel = new CompoundPropertyModel<>(new KnowledgeBaseWrapper());
+        var kb = new KnowledgeBase();
+        wizardDataModel = new CompoundPropertyModel<>(new KnowledgeBaseWrapper(kb));
         wizardModel = new DynamicWizardModel(new TypeStep(null, wizardDataModel));
         wizardModel.setLastVisible(false);
         knowledgeBaseProfiles = readKbProfiles();
@@ -141,7 +142,7 @@ public class KnowledgeBaseCreationWizard
             super(previousStep, "Create Knowledgebase", "", aKbModel);
             kbModel = aKbModel;
 
-            Component generalSettings = new GeneralSettingsPanel("generalSettings", projectModel,
+            var generalSettings = new GeneralSettingsPanel("generalSettings", projectModel,
                     aKbModel);
             add(generalSettings);
             generalSettings.get("enabled").setOutputMarkupId(true).setVisible(false);
@@ -158,7 +159,7 @@ public class KnowledgeBaseCreationWizard
 
             switch (kbModel.getObject().getKb().getType()) {
             case LOCAL:
-                // Local KBs are writeable by default
+                // Local KBs are writable by default
                 kbModel.getObject().getKb().setReadOnly(false);
                 // local KBs are always RDF4J + Lucene, so we can set the FTS mode accordingly
                 kbModel.getObject().getKb().setFullTextSearchIri(FTS_RDF4J_LUCENE.stringValue());
@@ -255,8 +256,8 @@ public class KnowledgeBaseCreationWizard
         public void applyState()
         {
             try {
-                KnowledgeBaseWrapper wrapper = wizardDataModel.getObject();
-                KnowledgeBase kb = wrapper.getKb();
+                var wrapper = wizardDataModel.getObject();
+                var kb = wrapper.getKb();
 
                 kb.setProject(projectModel.getObject());
                 kb.setTraits(JSONUtil.toJsonString(wrapper.getTraits()));

@@ -19,11 +19,11 @@ package de.tudarmstadt.ukp.inception.recommendation.exporter;
 
 import static java.util.Arrays.asList;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.zip.ZipFile;
+import java.util.zip.ZipOutputStream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -85,13 +85,13 @@ public class LearningRecordExporter
 
     @Override
     public void exportData(FullProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
-            ExportedProject aExProject, File aFile)
+            ExportedProject aExProject, ZipOutputStream aFile)
     {
         var project = aRequest.getProject();
 
         var exportedLearningRecords = new ArrayList<ExportedLearningRecord>();
         for (var record : learningRecordService.listLearningRecords(project)) {
-            ExportedLearningRecord exportedRecord = new ExportedLearningRecord();
+            var exportedRecord = new ExportedLearningRecord();
             exportedRecord.setAnnotation(record.getAnnotation());
             exportedRecord.setActionDate(record.getActionDate());
             exportedRecord.setChangeLocation(record.getChangeLocation());
@@ -118,13 +118,24 @@ public class LearningRecordExporter
     public void importData(ProjectImportRequest aRequest, Project aProject,
             ExportedProject aExProject, ZipFile aZip)
     {
+        int eventCount = 0;
+
         var learningRecords = aExProject.getArrayProperty(KEY, ExportedLearningRecord.class);
 
         var documentCache = new HashMap<String, SourceDocument>();
         var layerCache = new HashMap<String, AnnotationLayer>();
         var featureCache = new HashMap<String, AnnotationFeature>();
 
+        var batch = new ArrayList<LearningRecord>();
         for (var exportedRecord : learningRecords) {
+            // Flush events
+            if (batch.size() >= 50_000) {
+                learningRecordService
+                        .createLearningRecords(batch.stream().toArray(LearningRecord[]::new));
+                batch.clear();
+                LOG.trace("... {} learning records imported ...", eventCount);
+            }
+
             var record = new LearningRecord();
             record.setAnnotation(exportedRecord.getAnnotation());
             record.setActionDate(exportedRecord.getActionDate());
@@ -150,8 +161,11 @@ public class LearningRecordExporter
                     $ -> annotationService.getFeature($, layer));
             record.setAnnotationFeature(feature);
 
-            learningRecordService.createLearningRecord(record);
+            batch.add(record);
         }
+
+        // Flush remaining records
+        learningRecordService.createLearningRecords(batch.stream().toArray(LearningRecord[]::new));
 
         int n = learningRecords.length;
         LOG.info("Imported [{}] learning records for project [{}]", n, aProject.getName());

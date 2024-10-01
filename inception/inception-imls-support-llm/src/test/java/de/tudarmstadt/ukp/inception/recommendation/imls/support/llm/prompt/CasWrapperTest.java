@@ -46,15 +46,15 @@ class CasWrapperTest
     void thatSelectCanAccessAnnotationsFromCas() throws Exception
     {
         var script = """
-                {% for x in cas.select('NamedEntity') %}
-                {{ x }}{% endfor %}""";
+                     {% for x in cas.select('NamedEntity') %}
+                     {{ x }}{% endfor %}""";
 
         var bindings = Map.of("test", "test");
 
         var cas = CasFactory.createCas();
         cas.setDocumentText("""
-                My name is John McCain.
-                His name is Mickey.""");
+                            My name is John McCain.
+                            His name is Mickey.""");
         buildAnnotation(cas, NamedEntity.class).on("John McCain").buildAndAddToIndexes();
         buildAnnotation(cas, NamedEntity.class).on("Mickey").buildAndAddToIndexes();
 

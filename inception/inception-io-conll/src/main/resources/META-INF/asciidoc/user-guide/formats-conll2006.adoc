@@ -19,15 +19,17 @@
 
 The CoNLL 2006 (aka CoNLL-X) format targets dependency parsing. Columns are tab-separated. Sentences are separated by a blank new line.
 
-[cols="2,1,1,1,3"]
+[cols="2,1,1,3"]
 |====
-| Format | Read | Write | Custom Layers | Description
+| Format | Import | Export | Supported layers
 
 | link:http://ilk.uvt.nl/conll/[CoNLL 2006] (`conll2006`)
 | yes
 | yes
-| no
-| Lemma, POS, dependencies (basic)
+| Part-of-speech tagging (built-in), +
+  Lemmatization (built-ion), +
+  Morphological analysis (built-in), +
+  Dependency parsing (built-in)
 |====
 
 .Columns
@@ -79,5 +81,5 @@ The CoNLL 2006 (aka CoNLL-X) format targets dependency parsing. Columns are tab-
 .Example
 [source,text,tabsize=0]
 ----
-Heutzutage	heutzutage	ADV	_	_	ADV	_	_
+1	Heutzutage	heutzutage	ADV	_	_	ADV	_	_
 ----

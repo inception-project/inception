@@ -45,6 +45,7 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.transaction.annotation.Transactional;
 
+import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -86,6 +87,7 @@ public class RecommendationServiceImplIntegrationTest
 
     private @Autowired TestEntityManager testEntityManager;
 
+    private @Mock ConstraintsService constraintsService;
     private @Mock RecommenderFactoryRegistry recommenderFactoryRegistry;
     private @Mock AnnotationSchemaServiceImpl schemaService;
     private @Mock LayerSupportRegistry layerSupportRegistry;
@@ -209,7 +211,7 @@ public class RecommendationServiceImplIntegrationTest
                 .withProject(project) //
                 .build();
         var adapter = new SpanAdapter(layerSupportRegistry, featureSupportRegistry, null, spanLayer,
-                () -> asList(), asList());
+                () -> asList(), asList(), constraintsService);
 
         when(schemaService.getLayer(anyLong())).thenReturn(spanLayer);
         when(schemaService.getAdapter(any())).thenReturn(adapter);

@@ -18,9 +18,11 @@
 package de.tudarmstadt.ukp.inception.ui.core.docanno.layer;
 
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.util.List;
 
-import org.apache.uima.cas.CAS;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.event.EventListener;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -42,6 +44,8 @@ import de.tudarmstadt.ukp.inception.ui.core.docanno.config.DocumentMetadataLayer
  */
 public class DocumentMetadataLayerSingletonCreatingWatcher
 {
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
     private final AnnotationSchemaService annotationService;
     private final LayerSupportRegistry layerSupportRegistry;
 
@@ -70,15 +74,21 @@ public class DocumentMetadataLayerSingletonCreatingWatcher
             return;
         }
 
-        CAS cas = aEvent.getCas();
+        var cas = aEvent.getCas();
         for (var layer : listMetadataLayers(aEvent.getDocument().getProject())) {
             if (!getLayerSupport(layer).readTraits(layer).isSingleton()) {
                 continue;
             }
 
             var adapter = (DocumentMetadataLayerAdapter) annotationService.getAdapter(layer);
-            if (cas.select(adapter.getAnnotationType(cas)).isEmpty()) {
-                adapter.add(aEvent.getDocument(), aEvent.getSessionOwner(), cas);
+            var maybeType = adapter.getAnnotationType(cas);
+            if (maybeType.isPresent()) {
+                if (cas.select(maybeType.get()).isEmpty()) {
+                    adapter.add(aEvent.getDocument(), aEvent.getSessionOwner(), cas);
+                }
+            }
+            else {
+                LOG.warn("CAS does not contain type [{}] - not adding singleton!", layer.getName());
             }
         }
     }

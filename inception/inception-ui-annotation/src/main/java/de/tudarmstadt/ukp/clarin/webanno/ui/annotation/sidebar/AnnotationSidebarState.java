@@ -17,18 +17,18 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar;
 
-import java.io.Serializable;
-
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+import de.tudarmstadt.ukp.inception.preferences.PreferenceValue;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class AnnotationSidebarState
-    implements Serializable
+    implements PreferenceValue
 {
     private static final long serialVersionUID = -5212679894035839772L;
 
     private String selectedTab;
-    private boolean expanded;
+    private boolean expanded = true;
 
     public void setSelectedTab(String aFactoryId)
     {

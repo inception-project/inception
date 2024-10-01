@@ -64,7 +64,12 @@ export class Row {
     // Object.seal(this)
   }
 
-  updateFragmentHeight () {
+  updateFragmentHeight (defaultHeight: number) {
+    if (this.chunks.length === 0) {
+      this.maxSpanHeight = defaultHeight
+      return
+    }
+
     for (const chunk of this.chunks) {
       for (const fragment of chunk.fragments) {
         if (this.maxSpanHeight < fragment.height) {

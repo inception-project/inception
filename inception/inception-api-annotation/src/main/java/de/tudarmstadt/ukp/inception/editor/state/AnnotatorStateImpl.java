@@ -363,6 +363,18 @@ public class AnnotatorStateImpl
     @Override
     public void setVisibleUnits(List<Unit> aUnits, int aTotalUnitCount)
     {
+        if (aUnits.isEmpty()) {
+            unitCount = 0;
+            visibleUnits = aUnits;
+            firstVisibleUnitIndex = 0;
+            lastVisibleUnitIndex = 0;
+            focusUnitIndex = 0;
+            windowBeginOffset = 0;
+            windowEndOffset = 0;
+            fireViewStateChanged();
+            return;
+        }
+
         unitCount = aTotalUnitCount;
         visibleUnits = aUnits;
         firstVisibleUnitIndex = aUnits.get(0).getIndex();

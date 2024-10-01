@@ -95,23 +95,31 @@ public class CasKey
             return false;
         }
         CasKey castOther = (CasKey) other;
-        return new EqualsBuilder().append(projectId, castOther.projectId)
-                .append(documentId, castOther.documentId).append(userId, castOther.userId)
+        return new EqualsBuilder() //
+                .append(projectId, castOther.projectId) //
+                .append(documentId, castOther.documentId) //
+                .append(userId, castOther.userId) //
                 .isEquals();
     }
 
     @Override
     public int hashCode()
     {
-        return new HashCodeBuilder().append(projectId).append(documentId).append(userId)
+        return new HashCodeBuilder() //
+                .append(projectId) //
+                .append(documentId) //
+                .append(userId) //
                 .toHashCode();
     }
 
     @Override
     public String toString()
     {
-        return new ToStringBuilder(this, ToStringStyle.NO_CLASS_NAME_STYLE).append("p", projectId)
-                .append("d", documentId).append("u", userId).toString();
+        return new ToStringBuilder(this, ToStringStyle.NO_CLASS_NAME_STYLE) //
+                .append("p", projectId) //
+                .append("d", documentId) //
+                .append("u", userId) //
+                .toString();
     }
 
     public static CasKey matchingAllFromProject(Project aProject)

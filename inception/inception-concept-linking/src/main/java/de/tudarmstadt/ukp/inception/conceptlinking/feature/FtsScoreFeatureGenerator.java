@@ -32,6 +32,6 @@ public class FtsScoreFeatureGenerator
     @Override
     public void apply(CandidateEntity aCandidate)
     {
-        aCandidate.put(CandidateEntity.KEY_FTS_SCORE, aCandidate.getHandle().getScore());
+        aCandidate.put(CandidateEntity.SCORE_FTS, aCandidate.getHandle().getScore());
     }
 }

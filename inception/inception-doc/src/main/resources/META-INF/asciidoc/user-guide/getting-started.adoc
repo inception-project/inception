@@ -147,10 +147,12 @@ $ java -jar inception-app-standalone-x.xx.x.jar
 In this case, no splash screen will appear.
 Just go to http://localhost:8080/[_http://localhost:8080_] in your browser.
 
-*Step 3 - Log in:* The first time you start the application, a default user with the *username _admin_* and the *password _admin_* is created.
-Use this username and password to log in to the application.
+*Step 3 - Log in:* The first time you start the application, you will be asked to set a password for the default **admin** user. 
+You need to enter this password into two separate fields. 
+Only if the same password has been entered into both fields, it will be accepted and saved. 
+After the password has been set, you will be redirected to the regular login screen where you can log in using the username **admin** and the password you have just set.
 
-image::getting_started_login.png[align="center"]
+image::getting_started_set_password.png[align="center"]
 
 *You have finished the installation.*
 
@@ -292,7 +294,7 @@ What we called "`aspects`", "`categories`" or "`ways to annotate`" here, is refe
 A span layer annotation always anchors on one span only.
 A relation layer annotation always anchors on the two span annotations of the relation.
 Chains anchor on all spans which are part of the chain.
-For span layers, the default granularity is to annotate one or more tokens (“words”) but you can adjust to character level or sentence level in the layer details (see <<Layers>> in the main documentation; especially <<Properties>>). +
+For span layers, the default granularity is to annotate one or more tokens (“words”) but you can adjust to character level or sentence level in the layer details (see <<sect_projects_layers>> in the main documentation; especially <<Properties>>). +
 {zwsp} +
 Each layer provides appropriate fields, so-called *features*, to enter a label for the annotation of the selected text part.
 For example, on the _Named Entity_ layer in {product-name}, you find two feature-fields: _value_ and _identifier_.

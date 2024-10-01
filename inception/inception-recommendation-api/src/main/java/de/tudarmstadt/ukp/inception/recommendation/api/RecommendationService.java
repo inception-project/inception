@@ -29,7 +29,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.inception.preferences.Key;
+import de.tudarmstadt.ukp.inception.preferences.PreferenceKey;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.EvaluatedRecommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation;
@@ -52,7 +52,7 @@ import de.tudarmstadt.ukp.inception.support.logging.LogMessageGroup;
  */
 public interface RecommendationService
 {
-    Key<RecommenderGeneralSettings> KEY_RECOMMENDER_GENERAL_SETTINGS = new Key<>(
+    PreferenceKey<RecommenderGeneralSettings> KEY_RECOMMENDER_GENERAL_SETTINGS = new PreferenceKey<>(
             RecommenderGeneralSettings.class, "recommendation/general");
 
     String FEATURE_NAME_IS_PREDICTION = "inception_internal_predicted";

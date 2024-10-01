@@ -61,6 +61,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.ui.project.layers.ProjectLayersPanel.FeatureSelectionForm;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport;
 import de.tudarmstadt.ukp.inception.bootstrap.BootstrapModalDialog;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
@@ -113,7 +114,6 @@ public class LayerDetailForm
         super(id, CompoundPropertyModel.of(aSelectedLayer));
 
         add(new DocLink("propertiesHelpLink", "sect_projects_layers_properties"));
-        add(new DocLink("technicalPropertiesHelpLink", "sect_projects_layers_properties"));
         add(new DocLink("behavioursHelpLink", "sect_projects_layers_behaviours"));
 
         featureSelectionForm = aFeatureSelectionForm;
@@ -177,7 +177,20 @@ public class LayerDetailForm
 
         attachTypeSelect = new DropDownChoice<AnnotationLayer>("attachType",
                 LoadableDetachableModel.of(this::getAttachLayerChoices),
-                new ChoiceRenderer<>("uiName"));
+                new ChoiceRenderer<>("uiName"))
+        {
+            private static final long serialVersionUID = -7022036247442205106L;
+
+            @Override
+            protected String getNullValidKey()
+            {
+                if (annotationSchemaProperties.isCrossLayerRelationsEnabled()) {
+                    return getId() + ".any";
+                }
+
+                return super.getNullValidKey();
+            };
+        };
         attachTypeSelect.setNullValid(true);
         attachTypeSelect.add(visibleWhen(() -> isNull(getModelObject().getId())
                 && RELATION_TYPE.equals(getModelObject().getType())));
@@ -215,6 +228,10 @@ public class LayerDetailForm
         var layer = LayerDetailForm.this.getModelObject();
 
         if (layer.getAttachType() == null) {
+            if (RelationLayerSupport.TYPE.equals(layer.getType())) {
+                return "Any span";
+            }
+
             return null;
         }
 
@@ -358,8 +375,9 @@ public class LayerDetailForm
             layer.setName(layerName);
         }
 
-        if (annotationSchemaProperties.isCrossLayerRelationEnabled()) {
-            if (RELATION_TYPE.equals(layer.getType()) && layer.getAttachType() == null) {
+        if (!annotationSchemaProperties.isCrossLayerRelationsEnabled()) {
+            if (RelationLayerSupport.TYPE.equals(layer.getType())
+                    && layer.getAttachType() == null) {
                 error("A relation layer needs to attach to a span layer.");
                 return;
             }
@@ -375,7 +393,6 @@ public class LayerDetailForm
         }
 
         success("Settings for layer [" + layer.getUiName() + "] saved.");
-        aTarget.addChildren(getPage(), IFeedback.class);
         aTarget.add(findParent(ProjectLayersPanel.class));
         aTarget.add(featureDetailForm);
         aTarget.add(featureSelectionForm);

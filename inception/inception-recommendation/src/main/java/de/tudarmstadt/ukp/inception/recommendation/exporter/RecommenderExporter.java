@@ -21,10 +21,10 @@ import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationServ
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.MAX_RECOMMENDATIONS_DEFAULT;
 import static java.util.Arrays.asList;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.ZipFile;
+import java.util.zip.ZipOutputStream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,8 +35,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExporter;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
@@ -81,13 +79,13 @@ public class RecommenderExporter
 
     @Override
     public void exportData(FullProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
-            ExportedProject aExProject, File aFile)
+            ExportedProject aExProject, ZipOutputStream aStage)
     {
         Project project = aRequest.getProject();
 
         List<ExportedRecommender> exportedRecommenders = new ArrayList<>();
-        for (Recommender recommender : recommendationService.listRecommenders(project)) {
-            ExportedRecommender exportedRecommender = new ExportedRecommender();
+        for (var recommender : recommendationService.listRecommenders(project)) {
+            var exportedRecommender = new ExportedRecommender();
             exportedRecommender.setAlwaysSelected(recommender.isAlwaysSelected());
             exportedRecommender.setFeature(recommender.getFeature().getName());
             exportedRecommender.setEnabled(recommender.isEnabled());
@@ -112,11 +110,10 @@ public class RecommenderExporter
     public void importData(ProjectImportRequest aRequest, Project aProject,
             ExportedProject aExProject, ZipFile aZip)
     {
-        ExportedRecommender[] recommenders = aExProject.getArrayProperty(KEY,
-                ExportedRecommender.class);
+        var recommenders = aExProject.getArrayProperty(KEY, ExportedRecommender.class);
 
-        for (ExportedRecommender exportedRecommender : recommenders) {
-            Recommender recommender = new Recommender();
+        for (var exportedRecommender : recommenders) {
+            var recommender = new Recommender();
             recommender.setAlwaysSelected(exportedRecommender.isAlwaysSelected());
             recommender.setEnabled(exportedRecommender.isEnabled());
             recommender.setName(exportedRecommender.getName());
@@ -140,12 +137,12 @@ public class RecommenderExporter
                 recommender.setMaxRecommendations(MAX_RECOMMENDATIONS_CAP);
             }
 
-            String layerName = exportedRecommender.getLayerName();
-            AnnotationLayer layer = annotationService.findLayer(aProject, layerName);
+            var layerName = exportedRecommender.getLayerName();
+            var layer = annotationService.findLayer(aProject, layerName);
             recommender.setLayer(layer);
 
-            String featureName = exportedRecommender.getFeature();
-            AnnotationFeature feature = annotationService.getFeature(featureName, layer);
+            var featureName = exportedRecommender.getFeature();
+            var feature = annotationService.getFeature(featureName, layer);
             recommender.setFeature(feature);
 
             recommender.setProject(aProject);

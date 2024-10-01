@@ -27,6 +27,7 @@ import org.wicketstuff.annotation.mount.MountPath;
 
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
+import de.tudarmstadt.ukp.inception.processing.curation.BulkCurationPanel;
 import de.tudarmstadt.ukp.inception.processing.recommender.BulkRecommenderPanel;
 import de.tudarmstadt.ukp.inception.processing.tagset.TagSetExtractionPanel;
 import de.tudarmstadt.ukp.inception.ui.scheduling.TaskMonitorPanel;
@@ -50,6 +51,8 @@ public class BulkProcessingPage
         queue(new BulkRecommenderPanel("bulkRecommenderPanel", getProjectModel()));
 
         queue(new TagSetExtractionPanel("tagSetExtractionPanel", getProjectModel()));
+
+        queue(new BulkCurationPanel("bulkCurationPanel", getProjectModel()));
 
         queue(new TaskMonitorPanel("runningProcesses", getProject()) //
                 .setPopupMode(false) //

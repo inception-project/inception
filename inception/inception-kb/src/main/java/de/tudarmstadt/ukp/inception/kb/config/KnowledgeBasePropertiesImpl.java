@@ -19,8 +19,10 @@ package de.tudarmstadt.ukp.inception.kb.config;
 
 import static java.time.Duration.ofMinutes;
 import static java.time.temporal.ChronoUnit.MINUTES;
+import static java.util.Collections.emptyList;
 
 import java.time.Duration;
+import java.util.List;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.convert.DurationUnit;
@@ -36,6 +38,8 @@ public class KnowledgeBasePropertiesImpl
 {
     public static final int HARD_MIN_RESULTS = 10;
 
+    private double ftsInternalMaxResultsFactor = 2.5;
+
     private int defaultMaxResults = 1_000;
     private int hardMaxResults = 10_000;
 
@@ -48,6 +52,19 @@ public class KnowledgeBasePropertiesImpl
     private long renderCacheSize = 10_000;
     private @DurationUnit(MINUTES) Duration renderCacheExpireDelay = ofMinutes(10);
     private @DurationUnit(MINUTES) Duration renderCacheRefreshDelay = ofMinutes(1);
+
+    private List<String> defaultFallbackLanguages = emptyList();
+
+    public void setFtsInternalMaxResultsFactor(double aFtsMaxResultsFactor)
+    {
+        ftsInternalMaxResultsFactor = aFtsMaxResultsFactor;
+    }
+
+    @Override
+    public double getFtsInternalMaxResultsFactor()
+    {
+        return ftsInternalMaxResultsFactor;
+    }
 
     @Override
     public int getDefaultMaxResults()
@@ -146,5 +163,16 @@ public class KnowledgeBasePropertiesImpl
     public void setRenderCacheRefreshDelay(Duration aRenderCacheRefreshDelay)
     {
         renderCacheRefreshDelay = aRenderCacheRefreshDelay;
+    }
+
+    @Override
+    public List<String> getDefaultFallbackLanguages()
+    {
+        return defaultFallbackLanguages;
+    }
+
+    public void setDefaultFallbackLanguages(List<String> aDefaultFallbackLanguages)
+    {
+        defaultFallbackLanguages = aDefaultFallbackLanguages;
     }
 }

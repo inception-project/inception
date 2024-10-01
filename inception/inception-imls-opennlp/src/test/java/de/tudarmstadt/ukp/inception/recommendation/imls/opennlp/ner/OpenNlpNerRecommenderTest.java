@@ -102,10 +102,10 @@ public class OpenNlpNerRecommenderTest
     {
         var cas = JCasFactory.createJCas();
         cas.setDocumentText("""
-                I like noodles.
-                I guess St. John is good.
-                Does St. John like noodles?
-                """);
+                            I like noodles.
+                            I guess St. John is good.
+                            Does St. John like noodles?
+                            """);
 
         SegmentationUtils.segment(cas.getCas());
 

@@ -22,11 +22,12 @@ import static org.apache.commons.io.FileUtils.forceMkdir;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Enumeration;
+import java.lang.invoke.MethodHandles;
+import java.nio.file.Files;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+import java.util.zip.ZipOutputStream;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,7 +54,7 @@ public class GuidelinesExporter
     public static final String GUIDELINE = "guideline";
     private static final String GUIDELINES_FOLDER = "/" + GUIDELINE;
 
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private final GuidelinesService guidelinesService;
 
@@ -66,19 +67,23 @@ public class GuidelinesExporter
      * Copy Project guidelines from the file system of this project to the export folder
      * 
      * @throws IOException
+     *             if an I/O error occurs.
      */
     @Override
     public void exportData(FullProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
-            ExportedProject aExProject, File aStage)
+            ExportedProject aExProject, ZipOutputStream aStage)
         throws IOException
     {
-        File guidelineDir = new File(aStage + GUIDELINES_FOLDER);
-        FileUtils.forceMkdir(guidelineDir);
-        File annotationGuidlines = guidelinesService.getGuidelinesFolder(aRequest.getProject());
+        var annotationGuidlines = guidelinesService.getGuidelinesFolder(aRequest.getProject());
 
         if (annotationGuidlines.exists()) {
-            for (File annotationGuideline : annotationGuidlines.listFiles()) {
-                FileUtils.copyFileToDirectory(annotationGuideline, guidelineDir);
+            for (var annotationGuideline : annotationGuidlines.listFiles()) {
+                ProjectExporter.writeEntry(aStage,
+                        GUIDELINES_FOLDER + "/" + annotationGuideline.getName(), os -> {
+                            try (var is = Files.newInputStream(annotationGuideline.toPath())) {
+                                is.transferTo(os);
+                            }
+                        });
             }
         }
     }
@@ -98,23 +103,22 @@ public class GuidelinesExporter
             ExportedProject aExProject, ZipFile aZip)
         throws Exception
     {
-        for (Enumeration<? extends ZipEntry> zipEnumerate = aZip.entries(); zipEnumerate
-                .hasMoreElements();) {
-            ZipEntry entry = (ZipEntry) zipEnumerate.nextElement();
+        for (var zipEnumerate = aZip.entries(); zipEnumerate.hasMoreElements();) {
+            var entry = (ZipEntry) zipEnumerate.nextElement();
 
             // Strip leading "/" that we had in ZIP files prior to 2.0.8 (bug #985)
-            String entryName = ZipUtils.normalizeEntryName(entry);
+            var entryName = ZipUtils.normalizeEntryName(entry);
 
             if (entryName.startsWith(GUIDELINE + "/")) {
-                String fileName = FilenameUtils.getName(entry.getName());
+                var fileName = FilenameUtils.getName(entry.getName());
                 if (fileName.trim().isEmpty()) {
                     continue;
                 }
-                File guidelineDir = guidelinesService.getGuidelinesFolder(aProject);
+                var guidelineDir = guidelinesService.getGuidelinesFolder(aProject);
                 forceMkdir(guidelineDir);
                 copyInputStreamToFile(aZip.getInputStream(entry), new File(guidelineDir, fileName));
 
-                log.info("Imported guideline [" + fileName + "] for project [" + aProject.getName()
+                LOG.info("Imported guideline [" + fileName + "] for project [" + aProject.getName()
                         + "] with id [" + aProject.getId() + "]");
             }
         }

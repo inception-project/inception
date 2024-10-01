@@ -26,11 +26,11 @@ import org.apache.wicket.request.Request;
 import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.inception.diam.editor.DiamAjaxBehavior;
 import de.tudarmstadt.ukp.inception.diam.editor.config.DiamAutoConfig;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.AjaxResponse;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.DefaultAjaxResponse;
 import de.tudarmstadt.ukp.inception.diam.model.compact.CompactSerializerImpl;
-import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.pipeline.RenderingPipeline;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
@@ -52,7 +52,9 @@ public class LoadAnnotationsHandler
     public static final String PARAM_BEGIN = "begin";
     public static final String PARAM_END = "end";
     public static final String PARAM_TEXT = "text";
-    public static final String PARAM_CLIP = "clip";
+    public static final String PARAM_CLIP_SPANS = "clip";
+    public static final String PARAM_CLIP_ARCS = "clipArcs";
+    public static final String PARAM_LONG_ARCS = "longArcs";
 
     private final RenderingPipeline renderingPipeline;
     private final VDocumentSerializerExtensionPoint vDocumentSerializerExtensionPoint;
@@ -74,7 +76,8 @@ public class LoadAnnotationsHandler
     }
 
     @Override
-    public AjaxResponse handle(AjaxRequestTarget aTarget, Request aRequest)
+    public AjaxResponse handle(DiamAjaxBehavior aBehavior, AjaxRequestTarget aTarget,
+            Request aRequest)
     {
         try {
             var request = prepareRenderRequest(aRequest);
@@ -91,27 +94,32 @@ public class LoadAnnotationsHandler
     private RenderRequest prepareRenderRequest(Request aRequest) throws IOException
     {
         var page = getPage();
-        AnnotatorState state = getAnnotatorState();
+        var state = getAnnotatorState();
 
-        int begin = aRequest.getRequestParameters().getParameterValue(PARAM_BEGIN)
+        var begin = aRequest.getRequestParameters().getParameterValue(PARAM_BEGIN)
                 .toInt(state.getWindowBeginOffset());
-        int end = aRequest.getRequestParameters().getParameterValue(PARAM_END)
+        var end = aRequest.getRequestParameters().getParameterValue(PARAM_END)
                 .toInt(state.getWindowEndOffset());
-        boolean includeText = aRequest.getRequestParameters().getParameterValue(PARAM_TEXT)
+        var includeText = aRequest.getRequestParameters().getParameterValue(PARAM_TEXT)
                 .toBoolean(true);
-        boolean clipSpans = aRequest.getRequestParameters().getParameterValue(PARAM_CLIP)
+        var clipSpans = aRequest.getRequestParameters().getParameterValue(PARAM_CLIP_SPANS)
                 .toBoolean(true);
+        var clipArcs = aRequest.getRequestParameters().getParameterValue(PARAM_CLIP_ARCS)
+                .toBoolean(true);
+        var longArcs = aRequest.getRequestParameters().getParameterValue(PARAM_LONG_ARCS)
+                .toBoolean(false);
 
-        RenderRequest request = RenderRequest.builder() //
+        return RenderRequest.builder() //
                 .withState(state) //
                 .withSessionOwner(userService.getCurrentUser()) //
                 .withCas(page.getEditorCas()) //
                 .withWindow(begin, end) //
                 .withText(includeText) //
                 .withClipSpans(clipSpans) //
+                .withClipArcs(clipArcs) //
+                .withLongArcs(longArcs) //
                 .withVisibleLayers(state.getAnnotationLayers()) //
                 .build();
-        return request;
     }
 
     private String serializeToWireFormat(Request aRequest, RenderRequest request, VDocument vdoc)

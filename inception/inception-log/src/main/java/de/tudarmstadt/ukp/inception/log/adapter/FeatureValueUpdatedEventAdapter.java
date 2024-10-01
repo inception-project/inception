@@ -30,9 +30,9 @@ public class FeatureValueUpdatedEventAdapter
     implements EventLoggingAdapter<FeatureValueUpdatedEvent>
 {
     @Override
-    public boolean accepts(Object aEvent)
+    public boolean accepts(Class<?> aEvent)
     {
-        return aEvent instanceof FeatureValueUpdatedEvent;
+        return FeatureValueUpdatedEvent.class.isAssignableFrom(aEvent);
     }
 
     @Override

@@ -99,7 +99,11 @@ public interface PagingStrategy
             index = 1;
         }
 
-        List<Unit> units = units(aCas);
+        var units = units(aCas);
+
+        if (units.isEmpty()) {
+            return null;
+        }
 
         if (index > units.size()) {
             index = units.size();
@@ -128,8 +132,10 @@ public interface PagingStrategy
      */
     default void moveToUnit(AnnotatorViewState aState, CAS aCas, int aIndex, FocusPosition aPos)
     {
-        Unit unit = unitAtIndex(aCas, aIndex);
-        moveToOffset(aState, aCas, unit.getBegin(), aPos);
+        var unit = unitAtIndex(aCas, aIndex);
+        if (unit != null) {
+            moveToOffset(aState, aCas, unit.getBegin(), aPos);
+        }
     }
 
     default void moveToPreviousPage(AnnotatorViewState aState, CAS aCas, FocusPosition aPos)

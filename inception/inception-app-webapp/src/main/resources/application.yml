@@ -36,6 +36,7 @@ spring:
     properties:
       hibernate:
         dialect: ${database.dialect:${INCEPTION_DB_DIALECT:}}
+        generate_statistics: false
         # Enable SQL statements formatting.
         # format_sql: true
         # jmx:
@@ -58,6 +59,10 @@ server:
     whitelabel:
       enabled: false
     path: /whoops
+  servlet:
+    session:
+      cookie:
+        same-site: strict
 
 wicket:
   core:

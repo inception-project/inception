@@ -20,8 +20,6 @@ package de.tudarmstadt.ukp.inception.processing;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static java.lang.String.format;
 
-import javax.servlet.ServletContext;
-
 import org.apache.wicket.Page;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.core.annotation.Order;
@@ -33,10 +31,11 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.ProjectMenuItem;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
+import jakarta.servlet.ServletContext;
 import wicket.contrib.input.events.key.KeyType;
 
 @ConditionalOnWebApplication
-@Order(200)
+@Order(250)
 public class BulkProcessingPageMenuItem
     implements ProjectMenuItem
 {

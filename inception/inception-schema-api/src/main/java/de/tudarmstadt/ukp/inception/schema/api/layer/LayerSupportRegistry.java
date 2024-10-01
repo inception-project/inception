@@ -21,10 +21,14 @@ import static java.util.Comparator.comparing;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.inception.support.extensionpoint.ContextLookupExtensionPoint;
 
 public interface LayerSupportRegistry
+    extends ContextLookupExtensionPoint<AnnotationLayer, LayerSupport<?, ?>>
 {
     List<LayerSupport<?, ?>> getLayerSupports();
 
@@ -60,4 +64,8 @@ public interface LayerSupportRegistry
 
         return allTypes;
     }
+
+    <T extends TypeAdapter, S> Optional<LayerSupport<T, S>> findExtension(AnnotationLayer aKey);
+
+    boolean isSupported(AnnotationLayer aLayer);
 }

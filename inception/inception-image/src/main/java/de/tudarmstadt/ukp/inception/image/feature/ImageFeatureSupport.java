@@ -20,13 +20,17 @@ package de.tudarmstadt.ukp.inception.image.feature;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import java.io.Serializable;
+import java.lang.invoke.MethodHandles;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.FeatureStructure;
+import org.apache.uima.fit.util.FSUtil;
 import org.apache.uima.resource.metadata.TypeDescription;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.wicket.MarkupContainer;
@@ -63,7 +67,7 @@ public class ImageFeatureSupport
     public static final String URL = "url";
     public static final String TYPE_IMAGE_URL = PREFIX + URL;
 
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private String featureSupportId;
 
@@ -116,6 +120,16 @@ public class ImageFeatureSupport
     }
 
     @Override
+    public boolean isFeatureValueValid(AnnotationFeature aFeature, FeatureStructure aFS)
+    {
+        if (aFeature.isRequired()) {
+            return isNotBlank(FSUtil.getFeature(aFS, aFeature.getName(), String.class));
+        }
+
+        return true;
+    }
+
+    @Override
     public Panel createTraitsEditor(String aId, IModel<AnnotationFeature> aFeatureModel)
     {
         return new ImageFeatureTraitsEditor(aId, this, aFeatureModel);
@@ -157,6 +171,12 @@ public class ImageFeatureSupport
             AnnotationFeature aFeature)
     {
         aTD.addFeature(aFeature.getName(), "", CAS.TYPE_NAME_STRING);
+    }
+
+    @Override
+    public <V> V getDefaultFeatureValue(AnnotationFeature aFeature, FeatureStructure aFS)
+    {
+        return null;
     }
 
     @SuppressWarnings("unchecked")

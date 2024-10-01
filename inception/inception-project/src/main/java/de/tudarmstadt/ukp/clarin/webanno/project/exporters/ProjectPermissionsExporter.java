@@ -26,7 +26,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_USER;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.startsWith;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -34,6 +33,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.zip.ZipFile;
+import java.util.zip.ZipOutputStream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -77,15 +77,15 @@ public class ProjectPermissionsExporter
 
     @Override
     public void exportData(FullProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
-            ExportedProject aExProject, File aStage)
+            ExportedProject aExProject, ZipOutputStream aStage)
     {
         Project project = aRequest.getProject();
 
         List<ExportedUser> projectUsers = new ArrayList<>();
         List<ExportedProjectPermission> projectPermissions = new ArrayList<>();
-        for (User user : projectService.listProjectUsersWithPermissions(project)) {
+        for (var user : projectService.listProjectUsersWithPermissions(project)) {
             if (startsWith(user.getRealm(), REALM_PROJECT_PREFIX)) {
-                ExportedUser exUser = new ExportedUser();
+                var exUser = new ExportedUser();
                 exUser.setCreated(user.getCreated());
                 exUser.setEmail(user.getEmail());
                 exUser.setEnabled(user.isEnabled());
@@ -96,9 +96,8 @@ public class ProjectPermissionsExporter
                 projectUsers.add(exUser);
             }
 
-            for (ProjectPermission permission : projectService.listProjectPermissionLevel(user,
-                    project)) {
-                ExportedProjectPermission permissionToExport = new ExportedProjectPermission();
+            for (var permission : projectService.listProjectPermissionLevel(user, project)) {
+                var permissionToExport = new ExportedProjectPermission();
                 permissionToExport.setLevel(permission.getLevel());
                 permissionToExport.setUser(user.getUsername());
                 projectPermissions.add(permissionToExport);
@@ -128,10 +127,10 @@ public class ProjectPermissionsExporter
         throws Exception
     {
         // Always import project-bound users
-        ExportedUser[] projectUsers = aExProject.getArrayProperty(KEY_USERS, ExportedUser.class);
+        var projectUsers = aExProject.getArrayProperty(KEY_USERS, ExportedUser.class);
         Set<String> createdProjectUsers = new HashSet<>();
         Set<String> rejectedProjectUsers = new HashSet<>();
-        for (ExportedUser importedProjectUser : projectUsers) {
+        for (var importedProjectUser : projectUsers) {
             if (userService.exists(importedProjectUser.getUsername())) {
                 aRequest.addMessage(format("Unable to create project-bound user [%s] with ID "
                         + "[%s] because a user with this ID already exists in the system. "
@@ -141,7 +140,7 @@ public class ProjectPermissionsExporter
                 continue;
             }
 
-            User u = new User();
+            var u = new User();
             u.setRealm(REALM_PROJECT_PREFIX + aProject.getId());
             u.setEmail(importedProjectUser.getEmail());
             u.setUiName(importedProjectUser.getUiName());

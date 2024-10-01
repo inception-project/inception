@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<schema name="nederlab" version="1.6">
+
+	<uniqueKey>id</uniqueKey>
+
+	<fieldType name="binary" class="solr.BinaryField" />
+	<fieldType name="boolean" class="solr.BoolField"
+		sortMissingLast="true" />
+	<fieldType name="date" class="solr.TrieDateField"
+		positionIncrementGap="0" precisionStep="0" />
+	<fieldType name="double" class="solr.TrieDoubleField"
+		positionIncrementGap="0" precisionStep="0" />
+	<fieldType name="float" class="solr.TrieFloatField"
+		positionIncrementGap="0" precisionStep="0" />
+	<fieldType name="int" class="solr.TrieIntField"
+		positionIncrementGap="0" precisionStep="0" />
+	<fieldType name="long" class="solr.TrieLongField"
+		positionIncrementGap="0" precisionStep="0" />
+	<fieldType name="string" class="solr.StrField"
+		sortMissingLast="true" />
+	<fieldType name="geo" class="solr.RptWithGeometrySpatialField" 
+    spatialContextFactory="JTS" format="GeoJSON" />	
+
+	<fieldType name="text" class="solr.TextField"
+		positionIncrementGap="100">
+		<analyzer type="index">
+			<tokenizer class="solr.StandardTokenizerFactory" />
+			<filter class="solr.LowerCaseFilterFactory" />
+		</analyzer>
+		<analyzer type="query">
+			<tokenizer class="solr.StandardTokenizerFactory" />
+			<filter class="solr.LowerCaseFilterFactory" />
+		</analyzer>
+	</fieldType>
+
+	<fieldType name="mtas" class="solr.TextField" postingsFormat="MtasCodec">
+		<analyzer type="index">
+			<charFilter class="mtas.analysis.util.MtasCharFilterFactory"
+				type="file" />
+			<tokenizer class="mtas.analysis.util.MtasTokenizerFactory"
+				configFile="folia.xml" />
+		</analyzer>
+	</fieldType>
+
+	<fieldType name="mtas_example" class="solr.TextField"
+		postingsFormat="MtasCodec">
+		<analyzer type="index">
+			<charFilter class="mtas.analysis.util.MtasCharFilterFactory"
+				config="mtas.xml" />
+			<tokenizer class="mtas.analysis.util.MtasTokenizerFactory"
+				config="mtas.xml" />
+		</analyzer>
+	</fieldType>
+
+	<fieldType name="mtas_preAnalyzed" class="mtas.solr.schema.MtasPreAnalyzedField"
+		followIndexAnalyzer="mtas_example" defaultConfiguration="default"
+		configurationFromField="source" setNumberOfTokens="numberOfTokens"
+		setNumberOfPositions="numberOfPositions" setSize="size" setError="error"
+		setPrefix="prefix" postingsFormat="MtasCodec">
+		<analyzer type="query">
+			<tokenizer class="solr.WhitespaceTokenizerFactory" />
+			<filter class="mtas.analysis.util.MtasPrefixTokenFilterFactory"
+				prefix="t" />
+		</analyzer>
+	</fieldType>
+
+	<field name="id" type="string" multiValued="false" indexed="true"
+		required="true" stored="true" />
+	<field name="_version_" type="long" indexed="true" stored="true" />
+	<field name="title" type="string" indexed="true" stored="true" />
+	<field name="location" type="geo" indexed="true" stored="true" />
+  <field name="text" type="string" indexed="true" stored="true" />
+	<field name="source" type="string" indexed="true" stored="true" />
+	<field name="error" type="string" indexed="true" stored="true" />
+	<field name="numberOfTokens" type="int" indexed="true" stored="true" />
+	<field name="numberOfPositions" type="int" indexed="true" stored="true" />
+	<field name="size" type="int" indexed="true" stored="true" />
+	<field name="prefix" type="string" indexed="true" stored="true"
+		multiValued="true" />
+
+	<field name="mtas" type="mtas" indexed="true" stored="true" />
+	<field name="mtasAdvanced" type="mtas_preAnalyzed" indexed="true"
+		stored="true" />
+
+</schema>

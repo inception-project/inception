@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.agreement;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -36,8 +37,7 @@ public class AgreementSummary
 
     private final String type;
     private final String feature;
-    private final boolean excludeIncomplete;
-    private final List<String> casGroupIds = new ArrayList<>();
+    private final Set<String> casGroupIds = new HashSet<>();
 
     private final List<Double> agreements = new ArrayList<>();
     private final Set<Object> categories = new LinkedHashSet<>();
@@ -52,43 +52,7 @@ public class AgreementSummary
     private int pluralitySets;
     private int relevantSetCount;
     private int completeSetCount;
-
-    public AgreementSummary remap(Map<String, String> aMapping)
-    {
-        return new AgreementSummary(this, aMapping);
-    }
-
-    private AgreementSummary(AgreementSummary aSummary, Map<String, String> aMapping)
-    {
-        type = aSummary.type;
-        feature = aSummary.feature;
-        excludeIncomplete = aSummary.excludeIncomplete;
-
-        aSummary.casGroupIds.stream().map(aMapping::get).sorted().forEach(casGroupIds::add);
-
-        agreements.addAll(aSummary.agreements);
-        categories.addAll(aSummary.categories);
-
-        for (var e : aSummary.itemCounts.entrySet()) {
-            itemCounts.put(aMapping.get(e.getKey()), e.getValue());
-        }
-
-        for (var e : aSummary.nonNullContentCounts.entrySet()) {
-            nonNullContentCounts.put(aMapping.get(e.getKey()), e.getValue());
-        }
-
-        for (var e : aSummary.allNull.entrySet()) {
-            allNull.put(aMapping.get(e.getKey()), e.getValue());
-        }
-
-        empty = aSummary.empty;
-
-        incompleteSetsByPosition = aSummary.incompleteSetsByPosition;
-        incompleteSetsByLabel = aSummary.incompleteSetsByLabel;
-        pluralitySets = aSummary.pluralitySets;
-        relevantSetCount = aSummary.relevantSetCount;
-        completeSetCount = aSummary.completeSetCount;
-    }
+    private int usedSetCount;
 
     public void merge(AgreementSummary aResult)
     {
@@ -102,17 +66,7 @@ public class AgreementSummary
                     + feature + "] but encountered [" + aResult.feature + "]");
         }
 
-        if (excludeIncomplete != aResult.excludeIncomplete) {
-            throw new IllegalArgumentException(
-                    "All merged results must have the same excludeIncomplete [" + excludeIncomplete
-                            + "] but encountered [" + aResult.excludeIncomplete + "]");
-        }
-
-        if (!casGroupIds.equals(aResult.casGroupIds)) {
-            throw new IllegalArgumentException("All merged results must have the same casGroupIds "
-                    + casGroupIds + " but encountered " + aResult.casGroupIds);
-        }
-
+        casGroupIds.addAll(aResult.casGroupIds);
         agreements.addAll(aResult.agreements);
         categories.addAll(aResult.categories);
 
@@ -149,6 +103,10 @@ public class AgreementSummary
         if (completeSetCount >= 0 && aResult.completeSetCount >= 0) {
             completeSetCount += aResult.completeSetCount;
         }
+
+        if (usedSetCount >= 0 && aResult.usedSetCount >= 0) {
+            usedSetCount += aResult.usedSetCount;
+        }
     }
 
     public static AgreementSummary of(Serializable aResult)
@@ -165,6 +123,19 @@ public class AgreementSummary
                 "Unsupported result type: [" + aResult.getClass().getName() + "]");
     }
 
+    public static AgreementSummary skipped(String aType, String aFeature)
+    {
+        return new AgreementSummary(aType, aFeature);
+    }
+
+    public AgreementSummary(String aType, String aFeature)
+    {
+        type = aType;
+        feature = aFeature;
+        agreements.add(Double.NaN);
+        empty = true;
+    }
+
     public AgreementSummary(FullUnitizingAgreementResult aResult)
     {
         this((FullAgreementResult_ImplBase<?>) aResult);
@@ -173,6 +144,7 @@ public class AgreementSummary
         incompleteSetsByPosition = -1;
         relevantSetCount = -1;
         completeSetCount = -1;
+        usedSetCount = -1;
         pluralitySets = -1;
     }
 
@@ -183,16 +155,20 @@ public class AgreementSummary
         incompleteSetsByLabel = aResult.getIncompleteSetsByLabel().size();
         incompleteSetsByPosition = aResult.getIncompleteSetsByPosition().size();
         pluralitySets = aResult.getPluralitySets().size();
-        relevantSetCount = aResult.getRelevantSetCount();
-        completeSetCount = aResult.getCompleteSetCount();
+        relevantSetCount = aResult.getRelevantSets().size();
+        completeSetCount = aResult.getCompleteSets().size();
+
+        usedSetCount = completeSetCount;
+        if (!aResult.isExcludeIncomplete()) {
+            usedSetCount += incompleteSetsByLabel + incompleteSetsByPosition;
+        }
     }
 
     private AgreementSummary(FullAgreementResult_ImplBase<?> aResult)
     {
         type = aResult.getType();
         feature = aResult.getFeature();
-        excludeIncomplete = aResult.isExcludeIncomplete();
-        aResult.casGroupIds.stream().sorted().forEach(casGroupIds::add);
+        casGroupIds.addAll(aResult.casGroupIds);
         agreements.add(aResult.agreement);
         aResult.getCategories().forEach(categories::add);
         empty = aResult.isEmpty();
@@ -206,7 +182,7 @@ public class AgreementSummary
 
     public List<String> getCasGroupIds()
     {
-        return casGroupIds;
+        return casGroupIds.stream().sorted().toList();
     }
 
     private DoubleStream usableAgreements()
@@ -239,11 +215,6 @@ public class AgreementSummary
     public String getFeature()
     {
         return feature;
-    }
-
-    public boolean isExcludeIncomplete()
-    {
-        return excludeIncomplete;
     }
 
     public boolean isEmpty()
@@ -294,5 +265,10 @@ public class AgreementSummary
     public int getPluralitySets()
     {
         return pluralitySets;
+    }
+
+    public int getUsedSetCount()
+    {
+        return usedSetCount;
     }
 }

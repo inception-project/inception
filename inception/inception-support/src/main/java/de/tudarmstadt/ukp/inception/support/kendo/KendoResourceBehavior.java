@@ -22,8 +22,7 @@ import org.apache.wicket.behavior.Behavior;
 import org.apache.wicket.markup.head.CssHeaderItem;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.JavaScriptHeaderItem;
-
-import com.googlecode.wicket.kendo.ui.settings.KendoUILibrarySettings;
+import org.wicketstuff.kendo.ui.settings.KendoUILibrarySettings;
 
 public class KendoResourceBehavior
     extends Behavior

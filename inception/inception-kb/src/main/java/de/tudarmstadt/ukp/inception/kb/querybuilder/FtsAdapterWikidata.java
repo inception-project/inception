@@ -29,6 +29,7 @@ import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPattern;
 public class FtsAdapterWikidata
     implements FtsAdapter
 {
+    private static final String FALLBACK_LANGUAGE = "en";
     private final SPARQLQueryBuilder builder;
 
     public FtsAdapterWikidata(SPARQLQueryBuilder aBuilder)
@@ -43,19 +44,24 @@ public class FtsAdapterWikidata
 
         // In our KB settings, the language can be unset, but the Wikidata entity search
         // requires a preferred language. So we use English as the default.
-        var language = kb.getDefaultLanguage() != null ? kb.getDefaultLanguage() : "en";
+        var language = kb.getDefaultLanguage() != null ? kb.getDefaultLanguage()
+                : FALLBACK_LANGUAGE;
 
         var valuePatterns = new ArrayList<GraphPattern>();
         for (var value : aValues) {
-            var sanitizedValue = SPARQLQueryBuilder.sanitizeQueryString_FTS(value);
+            var query = builder.sanitizeQueryString_FTS(value);
 
-            if (isBlank(sanitizedValue)) {
+            if (isBlank(query)) {
                 continue;
             }
 
-            valuePatterns.add(new WikidataEntitySearchService(VAR_SUBJECT, sanitizedValue, language)
+            valuePatterns.add(new WikidataEntitySearchService(VAR_SUBJECT, query, language)
                     .and(VAR_SUBJECT.has(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM)
                             .filter(builder.equalsPattern(VAR_MATCH_TERM, value, kb))));
+        }
+
+        if (valuePatterns.isEmpty()) {
+            builder.noResult();
         }
 
         builder.addPattern(PRIMARY, and( //
@@ -70,19 +76,24 @@ public class FtsAdapterWikidata
 
         // In our KB settings, the language can be unset, but the Wikidata entity search
         // requires a preferred language. So we use English as the default.
-        var language = kb.getDefaultLanguage() != null ? kb.getDefaultLanguage() : "en";
+        var language = kb.getDefaultLanguage() != null ? kb.getDefaultLanguage()
+                : FALLBACK_LANGUAGE;
 
         var valuePatterns = new ArrayList<GraphPattern>();
         for (var value : aValues) {
-            var sanitizedValue = SPARQLQueryBuilder.sanitizeQueryString_FTS(value);
+            var query = builder.sanitizeQueryString_FTS(value);
 
-            if (isBlank(sanitizedValue)) {
+            if (isBlank(query)) {
                 continue;
             }
 
-            valuePatterns.add(new WikidataEntitySearchService(VAR_SUBJECT, sanitizedValue, language)
+            valuePatterns.add(new WikidataEntitySearchService(VAR_SUBJECT, query, language)
                     .and(VAR_SUBJECT.has(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM)
                             .filter(builder.containsPattern(VAR_MATCH_TERM, value))));
+        }
+
+        if (valuePatterns.isEmpty()) {
+            builder.noResult();
         }
 
         builder.addPattern(PRIMARY, and( //
@@ -97,13 +108,14 @@ public class FtsAdapterWikidata
 
         // In our KB settings, the language can be unset, but the Wikidata entity search
         // requires a preferred language. So we use English as the default.
-        var language = kb.getDefaultLanguage() != null ? kb.getDefaultLanguage() : "en";
+        var language = kb.getDefaultLanguage() != null ? kb.getDefaultLanguage()
+                : FALLBACK_LANGUAGE;
 
         if (aPrefixQuery.isEmpty()) {
-            builder.setReturnEmptyResult(true);
+            builder.noResult();
         }
 
-        var sanitizedValue = SPARQLQueryBuilder.sanitizeQueryString_FTS(aPrefixQuery);
+        var sanitizedValue = builder.sanitizeQueryString_FTS(aPrefixQuery);
 
         builder.addPattern(PRIMARY, and( //
                 builder.bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY),
@@ -119,11 +131,12 @@ public class FtsAdapterWikidata
 
         // In our KB settings, the language can be unset, but the Wikidata entity search
         // requires a preferred language. So we use English as the default.
-        var language = kb.getDefaultLanguage() != null ? kb.getDefaultLanguage() : "en";
+        var language = kb.getDefaultLanguage() != null ? kb.getDefaultLanguage()
+                : FALLBACK_LANGUAGE;
 
         var valuePatterns = new ArrayList<GraphPattern>();
         for (var value : aValues) {
-            var sanitizedValue = SPARQLQueryBuilder.sanitizeQueryString_FTS(value);
+            var sanitizedValue = builder.sanitizeQueryString_FTS(value);
 
             if (isBlank(sanitizedValue)) {
                 continue;
@@ -131,6 +144,10 @@ public class FtsAdapterWikidata
 
             valuePatterns.add(new WikidataEntitySearchService(VAR_SUBJECT, sanitizedValue, language)
                     .and(VAR_SUBJECT.has(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM)));
+        }
+
+        if (valuePatterns.isEmpty()) {
+            builder.noResult();
         }
 
         builder.addPattern(PRIMARY, and( //

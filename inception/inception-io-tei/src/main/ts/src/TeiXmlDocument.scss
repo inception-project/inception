@@ -16,9 +16,12 @@
  * limitations under the License.
  */
 @import 'typography';
+@import 'bibliography';
 @import 'layout';
 @import 'tables';
 @import 'notes';
+@import 'figures';
+@import 'linguistic-teitok';
 
 :root {
   --section-padding: 8px;
@@ -175,5 +178,13 @@ TEI {
     background-color: #ddd;
     font-style: normal;
     border-radius: 16px;
+  }
+
+  rs {
+    font-style: italic;
+  }
+
+  ref {
+    font-style: italic;
   }
 }

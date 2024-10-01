@@ -25,8 +25,6 @@ import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMess
 import java.lang.invoke.MethodHandles;
 import java.util.List;
 
-import javax.persistence.NoResultException;
-
 import org.apache.commons.lang3.Validate;
 import org.apache.commons.lang3.concurrent.ConcurrentException;
 import org.apache.uima.cas.CAS;
@@ -48,6 +46,7 @@ import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderTaskNotifica
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.support.WebAnnoConst;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
+import jakarta.persistence.NoResultException;
 
 public class TrainingTask
     extends RecommendationTask_ImplBase
@@ -238,6 +237,7 @@ public class TrainingTask
                 .withTrigger(String.format("TrainingTask %s complete", getId())) //
                 .withCurrentDocument(currentDocument) //
                 .withDataOwner(dataOwner) //
+                .withSynchronousRecommenders(false) // ;
                 .build();
 
         predictionTask.inheritLog(this);

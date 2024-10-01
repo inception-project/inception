@@ -86,8 +86,8 @@ public class SentenceOrientedPagingStrategy
     @Override
     public Component createPositionLabel(String aId, IModel<AnnotatorState> aModel)
     {
-        Label label = new Label(aId, () -> {
-            AnnotatorState state = aModel.getObject();
+        var label = new Label(aId, () -> {
+            var state = aModel.getObject();
             return String.format("%d-%d / %d sentences [doc %d / %d]",
                     state.getFirstVisibleUnitIndex(), state.getLastVisibleUnitIndex(),
                     state.getUnitCount(), state.getDocumentIndex() + 1,

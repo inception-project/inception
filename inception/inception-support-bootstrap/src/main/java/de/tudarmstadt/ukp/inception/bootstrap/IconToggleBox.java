@@ -22,10 +22,12 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
 import org.apache.wicket.behavior.AttributeAppender;
 import org.apache.wicket.behavior.Behavior;
+import org.apache.wicket.event.Broadcast;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.FormComponentUpdatingBehavior;
 import org.apache.wicket.markup.html.panel.GenericPanel;
 import org.apache.wicket.model.IModel;
+import org.wicketstuff.event.annotation.AbstractAjaxAwareEvent;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.checkboxx.CheckBoxX;
@@ -64,6 +66,8 @@ public class IconToggleBox
             protected void onChange(Boolean aValue, AjaxRequestTarget aTarget)
             {
                 aTarget.add(IconToggleBox.this);
+                IconToggleBox.this.send(IconToggleBox.this, Broadcast.BUBBLE,
+                        new IconToggleBoxChangedEvent(aTarget, IconToggleBox.this));
             }
         });
         queue(postLabel = new Label("postLabel"));
@@ -171,6 +175,24 @@ public class IconToggleBox
         }
         else {
             return "<i class=\"" + aIcon.cssClassName() + "\"></i>";
+        }
+    }
+
+    public static class IconToggleBoxChangedEvent
+        extends AbstractAjaxAwareEvent
+    {
+        private final IconToggleBox source;
+
+        public IconToggleBoxChangedEvent(AjaxRequestTarget aTarget, IconToggleBox aSource)
+        {
+            super(aTarget);
+
+            source = aSource;
+        }
+
+        public IconToggleBox getSource()
+        {
+            return source;
         }
     }
 }

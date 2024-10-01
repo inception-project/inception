@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { expect } from 'chai'
+import { it, expect } from 'vitest'
 import { AnnotatedText, Span, Comment } from '../../../src/model'
 import { CompactComment, unpackCompactComments } from '../../../src/model/compact_v2/CompactComment'
 

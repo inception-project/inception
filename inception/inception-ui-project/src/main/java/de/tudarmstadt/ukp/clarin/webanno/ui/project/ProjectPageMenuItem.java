@@ -30,7 +30,7 @@ import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import wicket.contrib.input.events.key.KeyType;
 
 @Component
-@Order(400)
+@Order(100)
 public class ProjectPageMenuItem
     implements MenuItem
 {

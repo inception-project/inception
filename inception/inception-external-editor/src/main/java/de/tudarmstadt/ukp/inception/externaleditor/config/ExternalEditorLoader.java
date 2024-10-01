@@ -49,7 +49,7 @@ import de.tudarmstadt.ukp.inception.externaleditor.ExternalAnnotationEditorFacto
 import de.tudarmstadt.ukp.inception.support.SettingsUtil;
 
 @ConditionalOnWebApplication
-@Configuration
+@Configuration(proxyBeanMethods = false)
 public class ExternalEditorLoader
     implements BeanDefinitionRegistryPostProcessor, WebMvcConfigurer
 {

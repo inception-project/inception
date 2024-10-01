@@ -1,0 +1,272 @@
+options
+{
+  STATIC = false;
+  UNICODE_INPUT = true;
+  JAVA_UNICODE_ESCAPE = false;
+  LOOKAHEAD= 100;
+}
+
+PARSER_BEGIN(MtasFunctionParser)
+package mtas.parser.function;
+import mtas.codec.util.CodecUtil;
+import mtas.parser.function.util.MtasFunctionParserFunction;
+import mtas.parser.function.util.MtasFunctionParserFunctionBasic;
+import mtas.parser.function.util.MtasFunctionParserItem;
+import java.io.IOException;
+
+public class MtasFunctionParser
+{
+  public MtasFunctionParserFunction parse() throws ParseException
+  {
+    MtasFunctionParserFunction pf = parserFunction();
+    pf.close();
+    return pf;
+  }
+}
+
+PARSER_END(MtasFunctionParser)
+
+SKIP :
+{
+  " "
+| "\r"
+| "\t"
+| "\n"
+}
+
+TOKEN :
+{
+  < VARIABLE_Q : "$q" ([ "0"-"9" ])+ >
+}
+
+TOKEN :
+{
+  < VARIABLE_D : "$d" ([ "0"-"9" ])* >
+}
+
+TOKEN :
+{
+  < LONG :
+    ([ "-" ])?
+    (
+      [ "1"-"9" ] ([ "0"-"9" ])*
+    | [ "0" ]
+    ) >
+}
+
+TOKEN :
+{
+  < DOUBLE :
+    ([ "-" ])?
+    (
+      [ "1"-"9" ] ([ "0"-"9" ])*
+    | [ "0" ]
+    )
+    ([ "." ]) ([ "0"-"9" ])+ >
+}
+
+TOKEN :
+{
+  < N : "$n" >
+}
+
+TOKEN :
+{
+  < BASIC_OPERATOR_ADD : "+" >
+}
+
+TOKEN :
+{
+  < BASIC_OPERATOR_SUBTRACT : "-" >
+}
+
+TOKEN :
+{
+  < BASIC_OPERATOR_MULTIPLY : "*" >
+}
+
+TOKEN :
+{
+  < BASIC_OPERATOR_DIVIDE : "/" >
+}
+
+TOKEN :
+{
+  < BASIC_OPERATOR_POWER : "^" >
+}
+
+TOKEN :
+{
+  < BRACKET_START : "(" >
+}
+
+TOKEN :
+{
+  < BRACKET_END : ")" >
+}
+
+private MtasFunctionParserFunction parserFunction() throws ParseException :
+{
+  MtasFunctionParserFunction pf;
+}
+{
+  pf = parserFunctionBasic() 
+  < EOF >
+  {
+    return pf;
+  }
+}
+
+private MtasFunctionParserFunction parserFunctionBasic() throws ParseException :
+{
+  Token v, operator;
+  long vLong;
+  double vDouble;
+  MtasFunctionParserItem item;
+  MtasFunctionParserFunctionBasic pf;
+}
+{
+  item = parserFunctionItem()
+  {
+    pf = new MtasFunctionParserFunctionBasic(item);
+  }
+  (
+    operator = < BASIC_OPERATOR_ADD > 
+    item = parserFunctionItem()
+    {
+      pf.add(item);
+    }
+  | 
+    operator = < BASIC_OPERATOR_SUBTRACT > 
+    item = parserFunctionItem()
+    {
+      pf.subtract(item);
+    }
+  | 
+    operator = < BASIC_OPERATOR_MULTIPLY > 
+    item = parserFunctionItem()
+    {
+      pf.multiply(item);
+    }
+  | 
+    operator = < BASIC_OPERATOR_DIVIDE > 
+    item = parserFunctionItem()
+    {
+      pf.divide(item);
+    }
+  | 
+    operator = < BASIC_OPERATOR_POWER > 
+    item = parserFunctionItem()
+    {
+      pf.power(item);
+    }
+  | 
+    v = < LONG >
+    {
+      vLong = Long.parseLong(v.image);
+      if (vLong > 0)
+      {
+        throw new ParseException("only negative");
+      }
+      else
+      {
+        item = new MtasFunctionParserItem(MtasFunctionParserItem.TYPE_CONSTANT_LONG, - 1 * vLong);
+        pf.subtract(item);
+      }
+    }
+  | 
+    v = < DOUBLE >
+    {
+      vDouble = Double.parseDouble(v.image);
+      if (vDouble > 0)
+      {
+        throw new ParseException("only negative");
+      }
+      else
+      {
+        item = new MtasFunctionParserItem(MtasFunctionParserItem.TYPE_CONSTANT_DOUBLE, - 1 * vDouble);
+        pf.subtract(item);
+      }
+    }
+  )*
+  {
+    return pf;
+  }
+}
+
+private MtasFunctionParserItem parserFunctionItem() throws ParseException :
+{
+  Token v;
+  long vLong;
+  int vInt;
+  double vDouble;
+  String type;
+  MtasFunctionParserItem item;
+  MtasFunctionParserFunction pf;
+}
+{
+  (
+    v = < VARIABLE_Q >
+    {
+      vInt = Integer.parseInt(v.image.substring(2));
+      item = new MtasFunctionParserItem(MtasFunctionParserItem.TYPE_ARGUMENT_Q, vInt);
+      return item;
+    }
+  |
+    v = < VARIABLE_D >
+    {
+      if(v.image.length() >2) { 
+        vInt = Integer.parseInt(v.image.substring(2));
+        item = new MtasFunctionParserItem(MtasFunctionParserItem.TYPE_ARGUMENT_D, vInt);
+        return item;
+	  } else {
+	    item = new MtasFunctionParserItem(MtasFunctionParserItem.TYPE_D);
+	    return item;
+	  }  
+    }
+  | 
+    < N >
+    {
+      item = new MtasFunctionParserItem(MtasFunctionParserItem.TYPE_N);
+      return item;
+    }
+  | 
+    v = < LONG >
+    {
+      vLong = Long.parseLong(v.image);
+      item = new MtasFunctionParserItem(MtasFunctionParserItem.TYPE_CONSTANT_LONG, vLong);
+      return item;
+    }
+  | 
+    v = < DOUBLE >
+    {
+      vDouble = Double.parseDouble(v.image);
+      item = new MtasFunctionParserItem(MtasFunctionParserItem.TYPE_CONSTANT_DOUBLE, vDouble);
+      return item;
+    }
+  | 
+    < BRACKET_START > 
+    pf = parserFunctionBasic() 
+    < BRACKET_END >
+    {
+      type = pf.getType();
+      if (type.equals(CodecUtil.DATA_TYPE_LONG))
+      {
+        item = new MtasFunctionParserItem(MtasFunctionParserItem.TYPE_PARSER_LONG, pf);
+        return item;
+      }
+      else if (type.equals(CodecUtil.DATA_TYPE_DOUBLE))
+      {
+        item = new MtasFunctionParserItem(MtasFunctionParserItem.TYPE_PARSER_DOUBLE, pf);
+        return item;
+      }
+      else
+      {
+        throw new ParseException("unknown dataType");
+      }
+    }
+  )
+  {
+    throw new ParseException("unknown type");
+  }
+}

@@ -222,7 +222,7 @@ public class StandaloneUserInterface
 
     private static String getLog()
     {
-        return RingBufferAppender.events().stream() //
+        return RingBufferAppender.messages().stream() //
                 .map(msg -> "[" + msg.level + "]: "
                         + msg.getMessage().replace("↩", "").replace("\n", "↩\n\t")) //
                 .collect(Collectors.joining("\n"));

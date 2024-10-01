@@ -30,9 +30,9 @@ public class AfterCasWrittenEventAdapter
     implements EventLoggingAdapter<AfterCasWrittenEvent>
 {
     @Override
-    public boolean accepts(Object aEvent)
+    public boolean accepts(Class<?> aEvent)
     {
-        return aEvent instanceof AfterCasWrittenEvent;
+        return AfterCasWrittenEvent.class.isAssignableFrom(aEvent);
     }
 
     @Override

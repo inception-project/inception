@@ -76,13 +76,13 @@ public class UserSelectToolbar
 
                 var selected = new CheckBox("selected");
 
-                if (column instanceof AnnotatorColumn annotatorColumn) {
+                if (column instanceof DocumentMatrixAnnotatorColumn annotatorColumn) {
                     var username = annotatorColumn.getDisplayModel().getObject();
                     selected.add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT,
                             _target -> actionSelectAnnotator(_target, username, selected)));
                     selected.setModel(Model.of(getSelection().contains(username)));
                 }
-                else if (column instanceof CuratorColumn curatorColumn) {
+                else if (column instanceof DocumentMatrixCuratorColumn curatorColumn) {
                     selected.add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT,
                             _target -> actionSelectCurator(_target, selected)));
                     selected.setModel(Model.of(getSelection().contains(CURATION_USER)));

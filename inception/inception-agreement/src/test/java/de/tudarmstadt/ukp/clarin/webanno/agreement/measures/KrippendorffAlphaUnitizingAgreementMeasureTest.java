@@ -25,15 +25,14 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.krippendorffalphaunitizing.KrippendorffAlphaUnitizingAgreementMeasureSupport;
-import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.krippendorffalphaunitizing.KrippendorffAlphaUnitizingAgreementTraits;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.results.unitizing.FullUnitizingAgreementResult;
 
 public class KrippendorffAlphaUnitizingAgreementMeasureTest
     extends AgreementMeasureTestSuite_ImplBase
 {
-    private AgreementMeasureSupport_ImplBase<KrippendorffAlphaUnitizingAgreementTraits, //
+    private AgreementMeasureSupport_ImplBase<DefaultAgreementTraits, //
             FullUnitizingAgreementResult, IUnitizingAnnotationStudy> sut;
-    private KrippendorffAlphaUnitizingAgreementTraits traits;
+    private DefaultAgreementTraits traits;
 
     @Override
     @BeforeEach
@@ -41,7 +40,7 @@ public class KrippendorffAlphaUnitizingAgreementMeasureTest
     {
         super.setup();
 
-        sut = new KrippendorffAlphaUnitizingAgreementMeasureSupport(annotationService);
+        sut = new KrippendorffAlphaUnitizingAgreementMeasureSupport();
         traits = sut.createTraits();
     }
 

@@ -17,12 +17,16 @@
  */
 package de.tudarmstadt.ukp.inception.conceptlinking.recommender;
 
+import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
+
+import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.AbstractTraitsEditor;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
@@ -44,8 +48,7 @@ public class NamedEntityLinkerTraitsEditor
 
         traits = toolFactory.readTraits(aRecommender.getObject());
 
-        Form<NamedEntityLinkerTraits> form = new Form<NamedEntityLinkerTraits>(MID_FORM,
-                CompoundPropertyModel.of(Model.of(traits)))
+        var form = new Form<>(MID_FORM, CompoundPropertyModel.of(Model.of(traits)))
         {
             private static final long serialVersionUID = -3109239605742291123L;
 
@@ -56,6 +59,14 @@ public class NamedEntityLinkerTraitsEditor
                 toolFactory.writeTraits(aRecommender.getObject(), traits);
             }
         };
+
+        form.add(new CheckBox("emptyCandidateFeatureRequired") //
+                .add(visibleWhen(aRecommender.map(Recommender::getLayer)
+                        .map(AnnotationLayer::isAllowStacking))) //
+                .setOutputMarkupPlaceholderTag(true));
+
+        form.add(new CheckBox("synchronous") //
+                .setOutputMarkupPlaceholderTag(true));
 
         add(form);
     }

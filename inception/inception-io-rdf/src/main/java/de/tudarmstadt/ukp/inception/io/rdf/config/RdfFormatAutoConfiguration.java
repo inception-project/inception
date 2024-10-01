@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.io.rdf.config;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -25,6 +26,7 @@ import de.tudarmstadt.ukp.inception.io.rdf.UimaRdfCasFormatSupport;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.ui.kb.feature.ConceptFeatureSupport;
 
+@ConditionalOnWebApplication
 @Configuration
 public class RdfFormatAutoConfiguration
 {

@@ -17,10 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.externalsearch.exporter;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.ZipFile;
+import java.util.zip.ZipOutputStream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,12 +58,11 @@ public class DocumentRepositoryExporter
 
     @Override
     public void exportData(FullProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
-            ExportedProject aExProject, File aFile)
+            ExportedProject aExProject, ZipOutputStream aFile)
     {
-        Project project = aRequest.getProject();
+        var project = aRequest.getProject();
         List<ExportedDocumentRepository> exportedDocumentRepositories = new ArrayList<>();
-        for (DocumentRepository documentRepository : externalSearchService
-                .listDocumentRepositories(project)) {
+        for (var documentRepository : externalSearchService.listDocumentRepositories(project)) {
             ExportedDocumentRepository exportedDocumentRepository = new ExportedDocumentRepository();
             exportedDocumentRepository.setId(documentRepository.getId());
             exportedDocumentRepository.setName(documentRepository.getName());
@@ -80,11 +79,11 @@ public class DocumentRepositoryExporter
     public void importData(ProjectImportRequest aRequest, Project aProject,
             ExportedProject aExProject, ZipFile aZip)
     {
-        ExportedDocumentRepository[] exportedDocumentRepositories = aExProject.getArrayProperty(KEY,
+        var exportedDocumentRepositories = aExProject.getArrayProperty(KEY,
                 ExportedDocumentRepository.class);
 
-        for (ExportedDocumentRepository exportedDocumentRepository : exportedDocumentRepositories) {
-            DocumentRepository documentRepository = new DocumentRepository();
+        for (var exportedDocumentRepository : exportedDocumentRepositories) {
+            var documentRepository = new DocumentRepository();
             documentRepository.setName(exportedDocumentRepository.getName());
             documentRepository.setProperties(exportedDocumentRepository.getProperties());
             documentRepository.setType(exportedDocumentRepository.getType());

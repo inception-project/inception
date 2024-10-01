@@ -90,6 +90,9 @@ public class ExportedKnowledgeBase
     @JsonProperty("additional_matching_properties")
     private List<String> additionalMatchingProperties;
 
+    @JsonProperty("additional_languages")
+    private List<String> additionalLanguages;
+
     @JsonProperty("default_language")
     private String defaultLanguage;
 
@@ -312,6 +315,16 @@ public class ExportedKnowledgeBase
     public List<String> getAdditionalMatchingProperties()
     {
         return additionalMatchingProperties;
+    }
+
+    public void setAdditionalLanguages(List<String> aAdditionalLanguages)
+    {
+        additionalLanguages = aAdditionalLanguages;
+    }
+
+    public List<String> getAdditionalLanguages()
+    {
+        return additionalLanguages;
     }
 
     public String getDefaultLanguage()

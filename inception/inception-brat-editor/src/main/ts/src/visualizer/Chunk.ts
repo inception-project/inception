@@ -62,6 +62,7 @@ export class Chunk {
   lastSpace: string
   nextSpace: string
   sentence: number
+  virtual: boolean
   group: SVGTypeMapping<SVGGElement>
   highlightGroup: SVGTypeMapping<SVGGElement>
   markedTextStart: MarkerStart[] = []

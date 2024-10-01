@@ -26,9 +26,9 @@ public class LayerConfigurationChangedEventAdapter
     implements EventLoggingAdapter<LayerConfigurationChangedEvent>
 {
     @Override
-    public boolean accepts(Object aEvent)
+    public boolean accepts(Class<?> aEvent)
     {
-        return aEvent instanceof LayerConfigurationChangedEvent;
+        return LayerConfigurationChangedEvent.class.isAssignableFrom(aEvent);
     }
 
     @Override

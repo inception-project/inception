@@ -22,8 +22,11 @@ import static java.util.Arrays.asList;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -44,7 +47,9 @@ public class ConfigurationSet
 
     private List<Configuration> configurations = new ArrayList<>();
     private Set<String> casGroupIds = new LinkedHashSet<>();
+
     private EnumSet<Tag> tags = EnumSet.noneOf(Tag.class);
+    private Map<String, Set<Object>> values = new HashMap<>();
 
     public ConfigurationSet(Position aPosition)
     {
@@ -60,6 +65,9 @@ public class ConfigurationSet
         return this;
     }
 
+    /**
+     * @return tags added during agreement calculation (not by {@link CasDiff}!)
+     */
     public EnumSet<Tag> getTags()
     {
         return tags;
@@ -70,6 +78,19 @@ public class ConfigurationSet
         return tags.contains(aTag);
     }
 
+    public void addValue(String aDataOwner, Object aValue)
+    {
+        values.computeIfAbsent(aDataOwner, $ -> new HashSet<>()).add(aValue);
+    }
+
+    /**
+     * @return values added during agreement calculation (not by {@link CasDiff}!)
+     */
+    public Set<Object> getValues(String aDataOwner)
+    {
+        return values.get(aDataOwner);
+    }
+
     /**
      * @return the total number of configurations recorded in this set. If a configuration has been
      *         seen in multiple CASes, it will be counted multiple times.
@@ -78,7 +99,7 @@ public class ConfigurationSet
     {
         int i = 0;
         for (var cfg : configurations) {
-            i += cfg.getAddressByCasId().size();
+            i += cfg.getCasGroupIds().size();
         }
         return i;
     }
@@ -141,5 +162,15 @@ public class ConfigurationSet
     public Position getPosition()
     {
         return position;
+    }
+
+    @Override
+    public String toString()
+    {
+        var sb = new StringBuilder();
+        sb.append('[');
+        sb.append(position);
+        sb.append(']');
+        return sb.toString();
     }
 }

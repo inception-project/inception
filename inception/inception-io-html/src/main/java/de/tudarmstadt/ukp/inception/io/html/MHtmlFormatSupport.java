@@ -20,6 +20,8 @@ package de.tudarmstadt.ukp.inception.io.html;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReaderDescription;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -113,7 +115,10 @@ public class MHtmlFormatSupport
             var builder = new DefaultMessageBuilder();
             var message = builder.parseMessage(is);
             var resourceBody = getResourcePartBody(message, aResourcePath);
-            return resourceBody.getInputStream();
+            try (var baos = new ByteArrayOutputStream()) {
+                resourceBody.getInputStream().transferTo(baos);
+                return new ByteArrayInputStream(baos.toByteArray());
+            }
         }
     }
 

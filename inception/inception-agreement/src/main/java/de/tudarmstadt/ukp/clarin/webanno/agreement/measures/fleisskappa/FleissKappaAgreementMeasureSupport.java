@@ -17,8 +17,6 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.agreement.measures.fleisskappa;
 
-import org.springframework.stereotype.Component;
-
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasure;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.DefaultAgreementTraits;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.AbstractCodingAgreementMeasureSupport;
@@ -26,16 +24,22 @@ import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.FullCodingAgre
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
-@Component
 public class FleissKappaAgreementMeasureSupport
     extends AbstractCodingAgreementMeasureSupport<DefaultAgreementTraits>
 {
+    public static final String ID = "FleissKappa";
+
     private final AnnotationSchemaService annotationService;
 
     public FleissKappaAgreementMeasureSupport(AnnotationSchemaService aAnnotationService)
     {
-        super();
         annotationService = aAnnotationService;
+    }
+
+    @Override
+    public String getId()
+    {
+        return ID;
     }
 
     @Override
@@ -49,5 +53,11 @@ public class FleissKappaAgreementMeasureSupport
             DefaultAgreementTraits aTraits)
     {
         return new FleissKappaAgreementMeasure(aFeature, aTraits, annotationService);
+    }
+
+    @Override
+    public boolean isSupportingMoreThanTwoRaters()
+    {
+        return true;
     }
 }

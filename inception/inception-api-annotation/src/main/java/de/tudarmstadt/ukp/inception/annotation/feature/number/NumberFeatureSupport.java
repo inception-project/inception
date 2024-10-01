@@ -25,6 +25,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.FeatureStructure;
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
@@ -93,13 +94,13 @@ public class NumberFeatureSupport
             AnnotationActionHandler aHandler, final IModel<AnnotatorState> aStateModel,
             final IModel<FeatureState> aFeatureStateModel)
     {
-        AnnotationFeature feature = aFeatureStateModel.getObject().feature;
+        var feature = aFeatureStateModel.getObject().feature;
 
         if (!accepts(feature)) {
             throw unsupportedFeatureTypeException(feature);
         }
 
-        NumberFeatureTraits traits = readTraits(feature);
+        var traits = readTraits(feature);
 
         switch (feature.getType()) {
         case CAS.TYPE_NAME_INTEGER: {
@@ -136,5 +137,16 @@ public class NumberFeatureSupport
     public NumberFeatureTraits createDefaultTraits()
     {
         return new NumberFeatureTraits();
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public <V> V getDefaultFeatureValue(AnnotationFeature aFeature, FeatureStructure aFS)
+    {
+        return switch (aFeature.getType()) {
+        case CAS.TYPE_NAME_INTEGER -> (V) (Object) 0;
+        case CAS.TYPE_NAME_FLOAT -> (V) (Object) 0.0f;
+        default -> throw unsupportedFeatureTypeException(aFeature);
+        };
     }
 }

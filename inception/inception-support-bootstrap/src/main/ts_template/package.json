@@ -9,9 +9,7 @@
     "url": "https://github.com/inception-project/issues"
   },
   "scripts": {
-    "build": "sass bootstrap/bootstrap.scss ../../../target/js/de/tudarmstadt/ukp/inception/bootstrap/inception-bootstrap.css",
-    "build:minified": "sass bootstrap/bootstrap.scss ../../../target/js/de/tudarmstadt/ukp/inception/bootstrap/inception-bootstrap.min.css --style compressed",
-    "build-js": "node build.js"
+    "build": "node build.js"
   },
   "devDependencies": {
     "cross-env": "${cross-env.version}",

@@ -129,7 +129,7 @@ public class DocumentImportExportServiceImplTest
                 schemaService, properties, checksRegistry, repairsRegistry, xmiFormatSupport);
         sut.onContextRefreshedEvent();
 
-        doReturn(emptyList()).when(schemaService).listAnnotationLayer(any());
+        doReturn(emptyList()).when(schemaService).listSupportedLayers(any());
         doReturn(emptyList()).when(schemaService).listSupportedFeatures((Project) any());
 
         // The prepareCasForExport method internally calls getFullProjectTypeSystem, so we need to

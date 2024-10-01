@@ -17,11 +17,14 @@
  */
 package de.tudarmstadt.ukp.inception.log.adapter;
 
+import java.util.Set;
+
 import org.springframework.boot.web.context.WebServerInitializedEvent;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.event.ApplicationContextEvent;
 import org.springframework.security.access.event.AbstractAuthorizationEvent;
 import org.springframework.security.authentication.event.AbstractAuthenticationEvent;
+import org.springframework.security.authorization.event.AuthorizationEvent;
 import org.springframework.security.core.session.SessionCreationEvent;
 import org.springframework.security.core.session.SessionDestroyedEvent;
 import org.springframework.web.context.support.ServletRequestHandledEvent;
@@ -36,22 +39,26 @@ public class GenericEventAdapter
 {
     public static final GenericEventAdapter INSTANCE = new GenericEventAdapter();
 
+    private static final Set<Class<?>> UNLOGGED_EVENTS = Set.of( //
+            ApplicationContextEvent.class, //
+            ServletRequestHandledEvent.class, //
+            SessionCreationEvent.class, //
+            SessionDestroyedEvent.class, //
+            AuthorizationEvent.class, //
+            AbstractAuthorizationEvent.class, //
+            AbstractAuthenticationEvent.class, //
+            WebServerInitializedEvent.class, //
+            // Websocket events
+            SessionConnectedEvent.class, //
+            SessionConnectEvent.class, //
+            SessionDisconnectEvent.class, //
+            SessionSubscribeEvent.class, //
+            SessionUnsubscribeEvent.class);
+
     @Override
-    public boolean accepts(Object aEvent)
+    public boolean accepts(Class<?> aEvent)
     {
-        return aEvent instanceof ApplicationEvent && //
-                !(aEvent instanceof ApplicationContextEvent //
-                        || aEvent instanceof ServletRequestHandledEvent //
-                        || aEvent instanceof SessionCreationEvent //
-                        || aEvent instanceof SessionDestroyedEvent //
-                        || aEvent instanceof AbstractAuthorizationEvent //
-                        || aEvent instanceof AbstractAuthenticationEvent //
-                        || aEvent instanceof WebServerInitializedEvent //
-                        // Websocket events
-                        || aEvent instanceof SessionConnectedEvent //
-                        || aEvent instanceof SessionConnectEvent //
-                        || aEvent instanceof SessionDisconnectEvent //
-                        || aEvent instanceof SessionSubscribeEvent //
-                        || aEvent instanceof SessionUnsubscribeEvent);
+        return ApplicationEvent.class.isAssignableFrom(aEvent)
+                && UNLOGGED_EVENTS.stream().noneMatch($ -> $.isAssignableFrom(aEvent));
     }
 }

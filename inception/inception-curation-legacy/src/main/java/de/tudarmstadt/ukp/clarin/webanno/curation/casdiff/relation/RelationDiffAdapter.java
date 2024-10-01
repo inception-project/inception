@@ -20,23 +20,24 @@ package de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.relation;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.FEAT_REL_SOURCE;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.FEAT_REL_TARGET;
 import static java.util.Arrays.asList;
-import static org.apache.uima.fit.util.CasUtil.selectCovered;
+import static org.apache.uima.cas.text.AnnotationPredicates.overlapping;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
-import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.fit.util.FSUtil;
+import org.apache.uima.jcas.tcas.Annotation;
 
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.DiffAdapter_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.Position;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
+import de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureMultiplicityMode;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationRenderer;
 import de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil;
 
 public class RelationDiffAdapter
@@ -73,26 +74,46 @@ public class RelationDiffAdapter
         return targetFeature;
     }
 
+    /**
+     * @see RelationRenderer#selectAnnotationsInWindow
+     */
     @Override
-    public List<AnnotationFS> selectAnnotationsInWindow(CAS aCas, int aWindowBegin, int aWindowEnd)
+    public List<Annotation> selectAnnotationsInWindow(CAS aCas, int aWindowBegin, int aWindowEnd)
     {
-        return selectCovered(aCas, CasUtil.getType(aCas, getType()), aWindowBegin, aWindowEnd);
+        // return selectCovered(aCas, CasUtil.getType(aCas, getType()), aWindowBegin, aWindowEnd);
+
+        var result = new ArrayList<Annotation>();
+        for (var rel : aCas.<Annotation> select(getType())) {
+            var sourceFs = getSourceFs(rel);
+            var targetFs = getTargetFs(rel);
+
+            if (sourceFs instanceof Annotation source && targetFs instanceof Annotation target) {
+                var relBegin = Math.min(source.getBegin(), target.getBegin());
+                var relEnd = Math.max(source.getEnd(), target.getEnd());
+
+                if (overlapping(relBegin, relEnd, aWindowBegin, aWindowEnd)) {
+                    result.add(rel);
+                }
+            }
+        }
+
+        return result;
+
     }
 
     @Override
     public Position getPosition(FeatureStructure aFS, String aFeature, String aRole,
-            int aLinkTargetBegin, int aLinkTargetEnd, LinkCompareBehavior aLinkCompareBehavior)
+            int aLinkTargetBegin, int aLinkTargetEnd,
+            LinkFeatureMultiplicityMode aLinkCompareBehavior)
     {
-        Type type = aFS.getType();
-        AnnotationFS sourceFS = (AnnotationFS) aFS
-                .getFeatureValue(type.getFeatureByBaseName(sourceFeature));
-        AnnotationFS targetFS = (AnnotationFS) aFS
-                .getFeatureValue(type.getFeatureByBaseName(targetFeature));
+        var type = aFS.getType();
+        var sourceFS = (AnnotationFS) aFS.getFeatureValue(type.getFeatureByBaseName(sourceFeature));
+        var targetFS = (AnnotationFS) aFS.getFeatureValue(type.getFeatureByBaseName(targetFeature));
 
         String collectionId = null;
         String documentId = null;
         try {
-            FeatureStructure dmd = WebAnnoCasUtil.getDocumentMetadata(aFS.getCAS());
+            var dmd = WebAnnoCasUtil.getDocumentMetadata(aFS.getCAS());
             collectionId = FSUtil.getFeature(dmd, "collectionId", String.class);
             documentId = FSUtil.getFeature(dmd, "documentId", String.class);
         }
@@ -115,5 +136,23 @@ public class RelationDiffAdapter
                 targetFS != null ? targetFS.getEnd() : -1,
                 targetFS != null ? targetFS.getCoveredText() : null, aFeature, aRole,
                 aLinkTargetBegin, aLinkTargetEnd, linkTargetText, aLinkCompareBehavior);
+    }
+
+    private FeatureStructure getSourceFs(FeatureStructure fs)
+    {
+        // if (attachFeature != null) {
+        // return fs.getFeatureValue(sourceFeature).getFeatureValue(attachFeature);
+        // }
+
+        return FSUtil.getFeature(fs, sourceFeature, FeatureStructure.class);
+    }
+
+    private FeatureStructure getTargetFs(FeatureStructure fs)
+    {
+        // if (attachFeature != null) {
+        // return fs.getFeatureValue(targetFeature).getFeatureValue(attachFeature);
+        // }
+
+        return FSUtil.getFeature(fs, targetFeature, FeatureStructure.class);
     }
 }

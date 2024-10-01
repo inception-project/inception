@@ -17,15 +17,21 @@
  */
 package de.tudarmstadt.ukp.inception.ui.agreement.page;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_PROJECT;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAGE_PARAM_PROJECT;
+import static de.tudarmstadt.ukp.inception.scheduling.TaskScope.LAST_USER_SESSION;
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CHANGE_EVENT;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.enabledWhen;
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Comparator.comparing;
 import static org.apache.commons.collections4.CollectionUtils.isEmpty;
 
 import java.io.Serializable;
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -36,6 +42,7 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
@@ -47,19 +54,25 @@ import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.wicketstuff.annotation.mount.MountPath;
 import org.wicketstuff.event.annotation.OnEvent;
 
+import de.tudarmstadt.ukp.clarin.webanno.agreement.AgreementResult_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.DefaultAgreementTraits;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.krippendorffalpha.KrippendorffAlphaAgreementMeasureSupport;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.krippendorffalphaunitizing.KrippendorffAlphaUnitizingAgreementMeasureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.event.PairwiseAgreementScoreClickedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.task.CalculatePairwiseAgreementTask;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.task.CalculatePerDocumentAgreementTask;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectUserPermissions;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.project.users.ProjectUserPermissionChoiceRenderer;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
@@ -68,8 +81,6 @@ import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
-import de.tudarmstadt.ukp.inception.scheduling.TaskScope;
-import de.tudarmstadt.ukp.inception.scheduling.TaskState;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.help.DocLink;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxButton;
@@ -82,6 +93,8 @@ import de.tudarmstadt.ukp.inception.ui.core.config.DefaultMdcSetup;
 public class AgreementPage
     extends ProjectPageBase
 {
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
     private static final long serialVersionUID = 5333662917247971912L;
 
     private static final String MID_TRAITS_CONTAINER = "traitsContainer";
@@ -103,8 +116,9 @@ public class AgreementPage
     private AjaxDownloadBehavior downloadBehavior;
     private DropDownChoice<AnnotationFeature> featureList;
     private DropDownChoice<Pair<String, String>> measureDropDown;
-    private LambdaAjaxButton<AgreementFormModel> runCalculationsButton;
-    private LambdaAjaxButton<AgreementFormModel> exportAgreementButton;
+    private LambdaAjaxButton<AgreementFormModel> calculatePairwiseAgreementButton;
+    private LambdaAjaxButton<AgreementFormModel> calculatePerDocumentAgreement;
+    private LambdaAjaxButton<AgreementFormModel> exportDiffButton;
     private WebMarkupContainer traitsContainer;
 
     public AgreementPage(final PageParameters aPageParameters)
@@ -153,6 +167,8 @@ public class AgreementPage
         queue(featureList = makeFeatureChoice("feature"));
         queue(measureDropDown = makeMeasuresDropdown("measure"));
 
+        queue(new CheckBox("compareWithCurator").setOutputMarkupId(true));
+
         var annotatorList = new ListMultipleChoice<ProjectUserPermissions>("annotators");
         annotatorList.setChoiceRenderer(new ProjectUserPermissionChoiceRenderer());
         annotatorList.setChoices(listUsersWithPermissions());
@@ -163,22 +179,61 @@ public class AgreementPage
         documentList.setChoices(listDocuments());
         queue(documentList);
 
-        runCalculationsButton = new LambdaAjaxButton<>("run", this::actionRunCalculations);
-        runCalculationsButton.triggerAfterSubmit();
-        runCalculationsButton.add(enabledWhen(() -> measureDropDown.getModelObject() != null));
-        queue(runCalculationsButton);
+        calculatePairwiseAgreementButton = new LambdaAjaxButton<>("calculatePairwiseAgreement",
+                this::actionCalculatePairwiseAgreement);
+        calculatePairwiseAgreementButton.triggerAfterSubmit();
+        calculatePairwiseAgreementButton
+                .add(enabledWhen(() -> measureDropDown.getModelObject() != null));
+        queue(calculatePairwiseAgreementButton);
 
-        exportAgreementButton = new LambdaAjaxButton<>("export", this::actionExportDiff);
-        exportAgreementButton.triggerAfterSubmit();
-        exportAgreementButton.add(enabledWhen(() -> measureDropDown.getModelObject() != null));
-        queue(exportAgreementButton);
+        calculatePerDocumentAgreement = new LambdaAjaxButton<>("calculatePerDocumentAgreement",
+                this::actionCalculatePerDocumentAgreement);
+        calculatePerDocumentAgreement.triggerAfterSubmit();
+        calculatePerDocumentAgreement.add(enabledWhen(this::isMeasureSupportingMoreThanTwoRaters));
+        queue(calculatePerDocumentAgreement);
 
+        exportDiffButton = new LambdaAjaxButton<>("export", this::actionExportDiff);
+        exportDiffButton.triggerAfterSubmit();
+        exportDiffButton.add(enabledWhen(() -> measureDropDown.getModelObject() != null));
+        queue(exportDiffButton);
+
+        if (featureList.getChoices().size() == 1) {
+            featureList.setModelObject(featureList.getChoices().get(0));
+        }
+
+        preselectBestAgreementMeasures();
+    }
+
+    private void preselectBestAgreementMeasures()
+    {
+        // If possible use Krippendorff Alpha
+        measureDropDown.getChoices().stream() //
+                .filter(p -> p.getKey().equals(KrippendorffAlphaAgreementMeasureSupport.ID))
+                .findFirst().ifPresent(measureDropDown::setModelObject);
+
+        // ... or even better - if available use Krippendorff Alpha Unitizing
+        measureDropDown.getChoices().stream() //
+                .filter(p -> p.getKey()
+                        .equals(KrippendorffAlphaUnitizingAgreementMeasureSupport.ID))
+                .findFirst().ifPresent(measureDropDown::setModelObject);
+    }
+
+    private boolean isMeasureSupportingMoreThanTwoRaters()
+    {
+        var measure = measureDropDown.getModelObject();
+        if (measure == null) {
+            return false;
+        }
+
+        var ams = agreementRegistry.getAgreementMeasureSupport(measure.getKey());
+        return ams.isSupportingMoreThanTwoRaters();
     }
 
     private List<ProjectUserPermissions> listUsersWithPermissions()
     {
         return projectService.listProjectUserPermissions(getProject()).stream() //
-                .filter(p -> p.getRoles().contains(PermissionLevel.ANNOTATOR)) //
+                .filter(p -> p.getRoles().contains(ANNOTATOR)) //
+                .sorted(comparing(p -> p.getUser().map(User::getUiName).orElse(p.getUsername()))) //
                 .toList();
     }
 
@@ -228,8 +283,9 @@ public class AgreementPage
             }
         };
         dropdown.setChoiceRenderer(new ChoiceRenderer<>("value"));
-        dropdown.add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT, _target -> _target
-                .add(runCalculationsButton, exportAgreementButton, traitsContainer)));
+        dropdown.add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT,
+                _target -> _target.add(calculatePairwiseAgreementButton,
+                        calculatePerDocumentAgreement, exportDiffButton, traitsContainer)));
         return dropdown;
     }
 
@@ -247,39 +303,47 @@ public class AgreementPage
     //
     // }
 
-    private void actionRefreshResults(AjaxRequestTarget aTarget,
-            CalculatePairwiseAgreementTask aTask)
+    // private void refreshResultsWhenFinished(AjaxRequestTarget aTarget,
+    // CalculatePairwiseAgreementTask aTask)
+    // {
+    // // var task = getCurrentTask();
+    // var task = aTask;
+    //
+    // if (task == null || task.getMonitor().getState() != TaskState.COMPLETED) {
+    // return;
+    // }
+    //
+    // refreshResults(aTarget, task.getResult());
+    // }
+
+    private void refreshResults(AjaxRequestTarget aTarget, AgreementResult_ImplBase aResult)
     {
-        // var task = getCurrentTask();
-        var task = aTask;
-
-        if (task == null || task.getMonitor().getState() != TaskState.COMPLETED) {
-            return;
-        }
-
         var ams = agreementRegistry
                 .getAgreementMeasureSupport(measureDropDown.getModelObject().getKey());
-        var resultsPanel = ams.createResultsPanel(MID_RESULTS, Model.of(task.getResult()));
+        var resultsPanel = ams.createResultsPanel(MID_RESULTS, Model.of(aResult), getTraits());
         resultsContainer.addOrReplace(resultsPanel);
         aTarget.add(resultsContainer);
     }
 
     private void actionSelectFeature(AjaxRequestTarget aTarget)
     {
-        // If the currently selected measure is not compatible with the selected feature, then
-        // we clear the measure selection.
-        var selectedFeature = featureList.getModelObject();
-        var measureCompatibleWithFeature = measureDropDown.getModel() //
-                .map(k -> agreementRegistry.getAgreementMeasureSupport(k.getKey())) //
-                .map(s -> selectedFeature != null && s.accepts(selectedFeature)) //
-                .orElse(false) //
-                .getObject();
+        // // If the currently selected measure is not compatible with the selected feature, then
+        // // we clear the measure selection.
+        // var selectedFeature = featureList.getModelObject();
+        // var measureCompatibleWithFeature = measureDropDown.getModel() //
+        // .map(k -> agreementRegistry.getAgreementMeasureSupport(k.getKey())) //
+        // .map(s -> selectedFeature != null && s.accepts(selectedFeature)) //
+        // .orElse(false) //
+        // .getObject();
+        //
+        // if (!measureCompatibleWithFeature) {
+        // preselectBestAgreementMeasures();
+        // }
 
-        if (!measureCompatibleWithFeature) {
-            measureDropDown.setModelObject(null);
-        }
+        preselectBestAgreementMeasures();
 
-        aTarget.add(measureDropDown, runCalculationsButton, traitsContainer);
+        aTarget.add(measureDropDown, calculatePerDocumentAgreement,
+                calculatePairwiseAgreementButton, traitsContainer, exportDiffButton);
     }
 
     private void actionExportDiff(AjaxRequestTarget aTarget, Form<AgreementFormModel> aForm)
@@ -289,7 +353,7 @@ public class AgreementPage
             var sessionOwner = userRepository.getCurrentUser();
             var model = aForm.getModelObject();
             var project = getProject();
-            var annotators = getAnnotators(aForm.getModelObject());
+            var annotators = getAnnotators(model);
             var traits = getTraits();
             var documents = agreementService
                     .getDocumentsToEvaluate(project, model.documents, traits).keySet().stream()
@@ -298,14 +362,19 @@ public class AgreementPage
             // PipedStreamResource runs the lambda in a separate thread, so we need to make
             // sure the MDC is correctly set up here.
             try (var ctx = new DefaultMdcSetup(repositoryProperties, getProject(), sessionOwner)) {
-                agreementService.exportDiff(os, model.feature, model.measure.getKey(), getTraits(),
-                        sessionOwner, documents, annotators);
+                agreementService.exportDiff(os, model.feature, getTraits(), sessionOwner, documents,
+                        annotators);
+            }
+            catch (Exception e) {
+                os.write("Unexpected error during export, see log for details.".getBytes(UTF_8));
+                LOG.error("Unexpected error while exporting diff", e);
             }
         }));
 
     }
 
-    private void actionRunCalculations(AjaxRequestTarget aTarget, Form<AgreementFormModel> aForm)
+    private void actionCalculatePairwiseAgreement(AjaxRequestTarget aTarget,
+            Form<AgreementFormModel> aForm)
     {
         var model = aForm.getModelObject();
         var project = getProject();
@@ -344,7 +413,7 @@ public class AgreementPage
                 .withFeature(model.feature) //
                 .withMeasure(measure) //
                 .withDocuments(allAnnDocs) //
-                .withScope(TaskScope.LAST_USER_SESSION) //
+                .withScope(LAST_USER_SESSION) //
                 // When running sync, we cannot cancel because the browser will still be in an
                 // AJAX request when we try to fire a second one and that second one will fail
                 // then. This would only work if the cancel action would be sent through
@@ -353,18 +422,82 @@ public class AgreementPage
                 .build();
 
         schedulingService.executeSync(task);
-        actionRefreshResults(aTarget, task);
+
+        refreshResults(aTarget, task.getResult());
+    }
+
+    private void actionCalculatePerDocumentAgreement(AjaxRequestTarget aTarget,
+            Form<AgreementFormModel> aForm)
+    {
+        var model = aForm.getModelObject();
+        var project = getProject();
+
+        // Do not do any agreement if no feature or measure has been selected yet.
+        if (model.feature == null || model.measure == null) {
+            return;
+        }
+
+        var traits = getTraits();
+
+        var measure = agreementRegistry.getMeasure(model.feature, model.measure.getKey(), traits);
+
+        var allAnnDocs = agreementService.getDocumentsToEvaluate(project, model.documents, traits);
+
+        if (allAnnDocs.isEmpty()) {
+            error("At least one document needs to be selected.");
+            aTarget.addChildren(getPage(), IFeedback.class);
+            return;
+        }
+
+        var annotators = getAnnotators(model);
+
+        if (annotators.size() < 2) {
+            error("At least two annotators need to be selected.");
+            aTarget.addChildren(getPage(), IFeedback.class);
+            return;
+        }
+
+        var task = CalculatePerDocumentAgreementTask.builder() //
+                .withSessionOwner(userRepository.getCurrentUser()) //
+                .withProject(project) //
+                .withTrigger("Agreement page") //
+                .withAnnotators(annotators) //
+                .withTraits(traits) //
+                .withFeature(model.feature) //
+                .withMeasure(measure) //
+                .withDocuments(allAnnDocs) //
+                .withScope(LAST_USER_SESSION) //
+                // When running sync, we cannot cancel because the browser will still be in an
+                // AJAX request when we try to fire a second one and that second one will fail
+                // then. This would only work if the cancel action would be sent through
+                // WebSocket
+                .withCancellable(false) //
+                .build();
+
+        schedulingService.executeSync(task);
+
+        refreshResults(aTarget, task.getResult());
     }
 
     private List<String> getAnnotators(AgreementFormModel model)
     {
-        List<String> annotators;
+        var annotators = new ArrayList<String>();
+
+        if (model.compareWithCurator) {
+            annotators.add(CURATION_USER);
+        }
+
         if (isEmpty(model.annotators)) {
-            annotators = listUsersWithPermissions().stream().map(t -> t.getUsername()).toList();
+            listUsersWithPermissions().stream() //
+                    .map(t -> t.getUsername()) //
+                    .forEach(annotators::add);
         }
         else {
-            annotators = model.annotators.stream().map(t -> t.getUsername()).toList();
+            model.annotators.stream() //
+                    .map(t -> t.getUsername()) //
+                    .forEach(annotators::add);
         }
+
         return annotators;
     }
 
@@ -426,81 +559,7 @@ public class AgreementPage
         List<ProjectUserPermissions> annotators = new ArrayList<>();
 
         List<SourceDocument> documents = new ArrayList<>();
+
+        boolean compareWithCurator;
     }
-
-    // private final DropDownChoice<AgreementReportExportFormat> formatField;
-
-    // add(formatField = new DropDownChoice<AgreementReportExportFormat>("exportFormat",
-    // Model.of(CSV), asList(AgreementReportExportFormat.values()),
-    // new EnumChoiceRenderer<>(this)));
-    // formatField.add(new LambdaAjaxFormComponentUpdatingBehavior("change"));
-    //
-
-    // private Behavior makeDownloadBehavior(final String aKey1, final String aKey2)
-    // {
-    // return new AjaxEventBehavior("click")
-    // {
-    // private static final long serialVersionUID = 1L;
-    //
-    // @Override
-    // protected void onEvent(AjaxRequestTarget aTarget)
-    // {
-    // var download = new AjaxDownloadBehavior(
-    // LoadableDetachableModel.of(PairwiseCodingAgreementTable.this::getFilename),
-    // LoadableDetachableModel.of(() -> getAgreementTableData(aKey1, aKey2)));
-    // getComponent().add(download);
-    // download.initiate(aTarget);
-    // }
-    // };
-    // }
-    //
-    // private AbstractResourceStream getAgreementTableData(final String aKey1, final String aKey2)
-    // {
-    // return new AbstractResourceStream()
-    // {
-    // private static final long serialVersionUID = 1L;
-    //
-    // @Override
-    // public InputStream getInputStream() throws ResourceStreamNotFoundException
-    // {
-    // try {
-    // var result = PairwiseCodingAgreementTable.this.getModelObject().getStudy(aKey1,
-    // aKey2);
-    //
-    // switch (formatField.getModelObject()) {
-    // case CSV:
-    // return AgreementUtils.generateCsvReport(result);
-    // case DEBUG:
-    // return generateDebugReport(result);
-    // default:
-    // throw new IllegalStateException(
-    // "Unknown export format [" + formatField.getModelObject() + "]");
-    // }
-    // }
-    // catch (Exception e) {
-    // // FIXME Is there some better error handling here?
-    // LOG.error("Unable to generate agreement report", e);
-    // throw new ResourceStreamNotFoundException(e);
-    // }
-    // }
-    //
-    // @Override
-    // public void close() throws IOException
-    // {
-    // // Nothing to do
-    // }
-    // };
-    // }
-    //
-    // private String getFilename()
-    // {
-    // return "agreement" + formatField.getModelObject().getExtension();
-    // }
-    //
-    // private InputStream generateDebugReport(FullCodingAgreementResult aResult)
-    // {
-    // var buf = new ByteArrayOutputStream();
-    // AgreementUtils.dumpAgreementStudy(new PrintStream(buf), aResult);
-    // return new ByteArrayInputStream(buf.toByteArray());
-    // }
 }

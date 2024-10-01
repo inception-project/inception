@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.curation.merge;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.ANY_OVERLAP;
+import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.NO_OVERLAP;
 import static de.tudarmstadt.ukp.inception.curation.merge.CurationTestUtils.HOST_TYPE;
 import static de.tudarmstadt.ukp.inception.curation.merge.CurationTestUtils.createMultiLinkWithRoleTestTypeSystem;
 import static de.tudarmstadt.ukp.inception.curation.merge.CurationTestUtils.makeLinkFS;
@@ -37,35 +38,34 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.tcas.Annotation;
 import org.junit.jupiter.api.Test;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.api.feature.LinkWithRoleModel;
 
-public class CasMergeSpanTest
+class CasMergeSpanTest
     extends CasMergeTestBase
 {
     private static final String DUMMY_USER = "dummyTargetUser";
 
     @Test
-    public void simpleCopyToEmptyTest() throws Exception
+    void simpleCopyToEmptyTest() throws Exception
     {
         var sourceCas = createCas();
-        var clickedFs = createNEAnno(sourceCas, "NN", 0, 0);
+        var sourceFS = createNEAnno(sourceCas, "NN", 0, 0);
 
         var targetCas = createCas();
         createToken(targetCas, 0, 0);
 
-        sut.mergeSpanAnnotation(document, DUMMY_USER, neLayer, targetCas, clickedFs, false);
+        sut.mergeSpanAnnotation(document, DUMMY_USER, neLayer, targetCas, sourceFS);
 
         assertThat(targetCas.select(NamedEntity.class).coveredBy(0, 0).asList()) //
                 .hasSize(1);
     }
 
     @Test
-    public void simpleCopyToSameExistingAnnoTest() throws Exception
+    void simpleCopyToSameExistingAnnoTest() throws Exception
     {
         var sourceCas = createCas();
         var sourceType = sourceCas.getTypeSystem().getType(POS.class.getTypeName());
@@ -80,26 +80,26 @@ public class CasMergeSpanTest
 
         assertThatExceptionOfType(AnnotationException.class) //
                 .isThrownBy(() -> sut.mergeSpanAnnotation(document, DUMMY_USER, posLayer, targetCas,
-                        sourceFs, false))
+                        sourceFs))
                 .withMessageContaining("annotation already exists");
     }
 
     @Test
-    public void simpleCopyToDiffExistingAnnoWithNoStackingTest() throws Exception
+    void simpleCopyToDiffExistingAnnoWithNoStackingTest() throws Exception
     {
-        var sourceCas = createJCas().getCas();
-        var sourceType = sourceCas.getTypeSystem().getType(POS.class.getTypeName());
+        var sourceCas = createCas();
+        var type = POS.class;
         var sourceFs = createPOSAnno(sourceCas, "NN", 0, 0);
 
-        var targetCas = createJCas().getCas();
-        buildAnnotation(targetCas, sourceType) //
+        var targetCas = createCas();
+        buildAnnotation(targetCas, type) //
                 .at(sourceFs) //
                 .withFeature(POS._FeatName_PosValue, "NE") //
                 .buildAndAddToIndexes();
 
-        sut.mergeSpanAnnotation(document, DUMMY_USER, posLayer, targetCas, sourceFs, false);
+        sut.mergeSpanAnnotation(document, DUMMY_USER, posLayer, targetCas, sourceFs);
 
-        assertThat(targetCas.<Annotation> select(sourceType).coveredBy(0, 0).asList()) //
+        assertThat(targetCas.select(type).coveredBy(0, 0).asList()) //
                 .as("Target feature value should be overwritten by source feature value")
                 .extracting( //
                         AnnotationFS::getBegin, //
@@ -110,7 +110,7 @@ public class CasMergeSpanTest
     }
 
     @Test
-    public void simpleCopyToDiffExistingAnnoWithStackingTest() throws Exception
+    void simpleCopyToDiffExistingAnnoWithStackingTest() throws Exception
     {
         neLayer.setOverlapMode(ANY_OVERLAP);
 
@@ -119,14 +119,14 @@ public class CasMergeSpanTest
         var sourceType = sourceCas.getTypeSystem().getType(NamedEntity.class.getTypeName());
         var sourceFs = createNEAnno(sourceCas, "NN", 0, 0);
 
-        CAS targetCas = createCas();
+        var targetCas = createCas();
         createToken(targetCas, 0, 0);
         var existingFs = buildAnnotation(targetCas, sourceType) //
                 .at(sourceFs.getBegin(), sourceFs.getEnd()) //
                 .withFeature(sourceFeature, "NE") //
                 .buildAndAddToIndexes();
 
-        sut.mergeSpanAnnotation(document, DUMMY_USER, neLayer, targetCas, sourceFs, true);
+        sut.mergeSpanAnnotation(document, DUMMY_USER, neLayer, targetCas, sourceFs);
 
         assertThat(targetCas.<Annotation> select(sourceType).coveredBy(0, 0).asList()) //
                 .as("Source FS should be added alongside existing FS in target") //
@@ -140,9 +140,9 @@ public class CasMergeSpanTest
     }
 
     @Test
-    public void copySpanWithSlotNoStackingTest() throws Exception
+    void copySpanWithSlotNoStackingTest() throws Exception
     {
-        slotLayer.setOverlapMode(OverlapMode.NO_OVERLAP);
+        slotLayer.setOverlapMode(NO_OVERLAP);
 
         var sourceCas = createJCas(createMultiLinkWithRoleTestTypeSystem("f1"));
         var sourceType = sourceCas.getTypeSystem().getType(HOST_TYPE);
@@ -154,14 +154,13 @@ public class CasMergeSpanTest
         var targetCas = createJCas(createMultiLinkWithRoleTestTypeSystem("f1"));
         makeLinkHostFS(targetCas, 0, 0, sourceFeature, "C", makeLinkFS(targetCas, role, 0, 0));
 
-        sut.mergeSpanAnnotation(document, DUMMY_USER, slotLayer, targetCas.getCas(), sourceFs,
-                false);
+        sut.mergeSpanAnnotation(document, DUMMY_USER, slotLayer, targetCas.getCas(), sourceFs);
 
         assertThat(targetCas.select(sourceType).coveredBy(0, 0).asList()).hasSize(1);
     }
 
     @Test
-    public void copySpanWithSlotWithStackingTest() throws Exception
+    void copySpanWithSlotWithStackingTest() throws Exception
     {
         slotLayer.setAnchoringMode(TOKENS);
         slotLayer.setOverlapMode(ANY_OVERLAP);
@@ -178,8 +177,7 @@ public class CasMergeSpanTest
         makeLinkHostFS(targetCas, 0, 0, sourceFeature, "EXISTING", targetLinkFs);
         var targetSlotFiller = getFeature(targetLinkFs, "target", Annotation.class);
 
-        sut.mergeSpanAnnotation(document, DUMMY_USER, slotLayer, targetCas.getCas(), sourceFs,
-                true);
+        sut.mergeSpanAnnotation(document, DUMMY_USER, slotLayer, targetCas.getCas(), sourceFs);
 
         assertThat(targetCas.select(sourceType).coveredBy(0, 0).asList()).hasSize(2);
 

@@ -24,13 +24,13 @@ import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.COREFERENCE_RELA
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.COREFERENCE_TYPE_FEATURE;
 import static java.util.Arrays.asList;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.zip.ZipFile;
+import java.util.zip.ZipOutputStream;
 
 import org.apache.uima.cas.CAS;
 import org.slf4j.Logger;
@@ -87,7 +87,7 @@ public class LayerExporter
 
     @Override
     public void exportData(FullProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
-            ExportedProject aExProject, File aStage)
+            ExportedProject aExProject, ZipOutputStream aStage)
     {
         var exLayers = new ArrayList<ExportedAnnotationLayer>();
 
@@ -220,27 +220,26 @@ public class LayerExporter
     private void importLayers(Project aProject, ExportedProject aExProject) throws IOException
     {
         // Round 1: layers and features
-        for (ExportedAnnotationLayer exLayer : aExProject.getLayers()) {
+        for (var exLayer : aExProject.getLayers()) {
             if (annotationService.existsLayer(exLayer.getName(), exLayer.getType(), aProject)) {
-                AnnotationLayer layer = annotationService.findLayer(aProject, exLayer.getName());
+                var layer = annotationService.findLayer(aProject, exLayer.getName());
                 importLayer(layer, exLayer, aProject);
-                for (ExportedAnnotationFeature exfeature : exLayer.getFeatures()) {
+                for (var exfeature : exLayer.getFeatures()) {
                     if (annotationService.existsFeature(exfeature.getName(), layer)) {
-                        AnnotationFeature feature = annotationService
-                                .getFeature(exfeature.getName(), layer);
+                        var feature = annotationService.getFeature(exfeature.getName(), layer);
                         importFeature(feature, exfeature, aProject);
                         continue;
                     }
-                    AnnotationFeature feature = new AnnotationFeature();
+                    var feature = new AnnotationFeature();
                     feature.setLayer(layer);
                     importFeature(feature, exfeature, aProject);
                 }
             }
             else {
-                AnnotationLayer layer = new AnnotationLayer();
+                var layer = new AnnotationLayer();
                 importLayer(layer, exLayer, aProject);
-                for (ExportedAnnotationFeature exfeature : exLayer.getFeatures()) {
-                    AnnotationFeature feature = new AnnotationFeature();
+                for (var exfeature : exLayer.getFeatures()) {
+                    var feature = new AnnotationFeature();
                     feature.setLayer(layer);
                     importFeature(feature, exfeature, aProject);
                 }
@@ -248,14 +247,14 @@ public class LayerExporter
         }
 
         // Round 2: attach-layers, attach-features
-        for (ExportedAnnotationLayer exLayer : aExProject.getLayers()) {
+        for (var exLayer : aExProject.getLayers()) {
             if (exLayer.getAttachType() != null) {
-                AnnotationLayer layer = annotationService.findLayer(aProject, exLayer.getName());
-                AnnotationLayer attachLayer = annotationService.findLayer(aProject,
+                var layer = annotationService.findLayer(aProject, exLayer.getName());
+                var attachLayer = annotationService.findLayer(aProject,
                         exLayer.getAttachType().getName());
                 layer.setAttachType(attachLayer);
                 if (exLayer.getAttachFeature() != null) {
-                    AnnotationFeature attachFeature = annotationService
+                    var attachFeature = annotationService
                             .getFeature(exLayer.getAttachFeature().getName(), attachLayer);
                     layer.setAttachFeature(attachFeature);
                 }
@@ -309,7 +308,7 @@ public class LayerExporter
         aFeature.setUiName(aExFeature.getUiName());
         aFeature.setProject(aProject);
         aFeature.setName(aExFeature.getName());
-        boolean isItChainedLayer = CHAIN_TYPE.equals(aFeature.getLayer().getType());
+        var isItChainedLayer = CHAIN_TYPE.equals(aFeature.getLayer().getType());
         if (isItChainedLayer && (COREFERENCE_TYPE_FEATURE.equals(aExFeature.getName())
                 || COREFERENCE_RELATION_FEATURE.equals(aExFeature.getName()))) {
             aFeature.setType(CAS.TYPE_NAME_STRING);
@@ -336,7 +335,7 @@ public class LayerExporter
         aFeature.setRank(aExFeature.getRank());
 
         if (aExFeature.getTagSet() != null) {
-            TagSet tagset = annotationService.getTagSet(aExFeature.getTagSet().getName(), aProject);
+            var tagset = annotationService.getTagSet(aExFeature.getTagSet().getName(), aProject);
             aFeature.setTagset(tagset);
         }
 

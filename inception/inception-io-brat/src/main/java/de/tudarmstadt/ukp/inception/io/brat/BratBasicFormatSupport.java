@@ -65,41 +65,41 @@ public class BratBasicFormatSupport
         throws ResourceInitializationException
     {
         var mapping = """
-                {
-                  'textTypeMapppings': [
-                    {
-                      'from': '.*',
-                      'to': 'custom.Span',
-                      'defaultFeatureValues': { }
-                    }
-                  ],
-                  'relationTypeMapppings': [
-                    {
-                      'from': '.*',
-                      'to': 'custom.Relation',
-                      'defaultFeatureValues': { }
-                    }
-                  ],
-                  'spans': [
-                    {
-                      'type': 'custom.Span',
-                      'subCatFeature': 'label',
-                      'defaultFeatureValues': { }
-                    }
-                  ],
-                  'relations': [
-                    {
-                      'type': 'custom.Relation',
-                      'arg1': 'Governor',
-                      'arg2': 'Dependent',
-                      'flags2': 'A',
-                      'subCatFeature': 'label',
-                      'defaultFeatureValues': { }
-                    }
-                  ],
-                  'comments': [ ]
-                }
-                """;
+                      {
+                        'textTypeMapppings': [
+                          {
+                            'from': '.*',
+                            'to': 'custom.Span',
+                            'defaultFeatureValues': { }
+                          }
+                        ],
+                        'relationTypeMapppings': [
+                          {
+                            'from': '.*',
+                            'to': 'custom.Relation',
+                            'defaultFeatureValues': { }
+                          }
+                        ],
+                        'spans': [
+                          {
+                            'type': 'custom.Span',
+                            'subCatFeature': 'label',
+                            'defaultFeatureValues': { }
+                          }
+                        ],
+                        'relations': [
+                          {
+                            'type': 'custom.Relation',
+                            'arg1': 'Governor',
+                            'arg2': 'Dependent',
+                            'flags2': 'A',
+                            'subCatFeature': 'label',
+                            'defaultFeatureValues': { }
+                          }
+                        ],
+                        'comments': [ ]
+                      }
+                      """;
 
         return createReaderDescription(BratReader.class, aTSD, //
                 BratReader.PARAM_MAPPING, mapping, //

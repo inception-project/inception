@@ -34,9 +34,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -57,6 +54,8 @@ import de.tudarmstadt.ukp.clarin.webanno.telemetry.event.TelemetrySettingsSavedE
 import de.tudarmstadt.ukp.clarin.webanno.telemetry.model.TelemetrySettings;
 import de.tudarmstadt.ukp.inception.support.deployment.DeploymentMode;
 import de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeServiceImpl;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 
 /**
  * <p>

@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.external.v1;
 
-import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapability.TRAINING_NOT_SUPPORTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapability.TRAINING_REQUIRED;
 import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.getRealCas;
 import static java.lang.String.format;
@@ -158,7 +157,7 @@ public class ExternalRecommender
     @Override
     public boolean isReadyForPrediction(RecommenderContext aContext)
     {
-        if (traits.isTrainable()) {
+        if (traits.getTrainingCapability() == TRAINING_REQUIRED) {
             return aContext.get(KEY_TRAINING_COMPLETE).orElse(false);
         }
 
@@ -386,12 +385,6 @@ public class ExternalRecommender
     @Override
     public TrainingCapability getTrainingCapability()
     {
-        if (!traits.isTrainable()) {
-            return TRAINING_NOT_SUPPORTED;
-        }
-
-        // return TRAINING_SUPPORTED;
-        // We need to get at least one training CAS because we need to extract the type system
-        return TRAINING_REQUIRED;
+        return traits.getTrainingCapability();
     }
 }

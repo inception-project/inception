@@ -30,15 +30,18 @@ Note that this format cannot deal with the following situations:
   This is because the `category` of the `SemPred` annotation goes to the  **Predicate Frameset ID** 
   and that can only hold one value which.
 
-[cols="2,1,1,1,3"]
+[cols="2,1,1,3"]
 |====
-| Format | Read | Write | Custom Layers | Description
+| Format | Import | Export | Supported layers
 
 | link:http://conll.cemantix.org/2012/data.html[CoNLL 2012] (`conll2012`)
 | yes
 | yes
-| no
-|
+| Part-of-speech tagging (built-in), +
+  Lemmatization (built-in), +
+  Named entity tagging (built-in), +
+  Predicate argument structure SemArg/SemPred  (built-in), +
+  Coreference resolution (built-in)
 |====
 
 .Columns
@@ -67,7 +70,7 @@ Note that this format cannot deal with the following situations:
 | 
 
 | Parse bit
-| Constituent
+| ignored
 | This is the bracketed structure broken before the first open parenthesis in the parse, and the word/part-of-speech leaf replaced with a `*`. The full parse can be created by substituting the asterisk with the `([pos] [word])` string (or leaf) and concatenating the items in the rows of that column.
 
 | Predicate lemma

@@ -76,7 +76,7 @@ export class SectionAnnotationVisualizer {
       const spacerRect = spacer.getBoundingClientRect() // Dimensions same as panel
 
       const sectionLeavingViewport = sectionRect.bottom - spacerRect.height < rootRect.top
-      console.log(`Leaving viewport = ${sectionLeavingViewport}`)
+      // console.log(`Leaving viewport = ${sectionLeavingViewport}`)
       if (sectionLeavingViewport) {
         const hiddenUnderHigherLevelPanel = lastSectionPanelBottom && (sectionRect.bottom + rootRect.top - spacerRect.height) < lastSectionPanelBottom
         if (hiddenUnderHigherLevelPanel) {

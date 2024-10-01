@@ -20,9 +20,8 @@ package de.tudarmstadt.ukp.inception.ui.kb;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
-
-import com.googlecode.wicket.jquery.core.Options;
-import com.googlecode.wicket.kendo.ui.widget.tooltip.TooltipBehavior;
+import org.wicketstuff.jquery.core.Options;
+import org.wicketstuff.kendo.ui.widget.tooltip.TooltipBehavior;
 
 public class IriInfoBadge
     extends Panel

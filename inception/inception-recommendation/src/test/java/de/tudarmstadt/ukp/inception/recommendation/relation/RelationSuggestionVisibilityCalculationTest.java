@@ -38,6 +38,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -68,6 +69,7 @@ public class RelationSuggestionVisibilityCalculationTest
     private final static double CONFIDENCE = 0.2;
     private final static String CONFIDENCE_EXPLANATION = "Predictor A: 0.05 | Predictor B: 0.15";
 
+    private @Mock ConstraintsService constraintsService;
     private @Mock AnnotationSchemaService schemaService;
     private @Mock LearningRecordService learningRecordService;
     private @Mock LayerBehaviorRegistry layerBehaviorRegistry;
@@ -88,19 +90,34 @@ public class RelationSuggestionVisibilityCalculationTest
     public void setUp() throws Exception
     {
         layerSupportRegistry = new LayerSupportRegistryImpl(asList(
-                new SpanLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry),
-                new RelationLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry)));
+                new SpanLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry,
+                        constraintsService),
+                new RelationLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry,
+                        constraintsService)));
         layerSupportRegistry.init();
 
-        layer = AnnotationLayer.builder().withId(42l).forJCasClass(Dependency.class)
-                .withType(RelationLayerSupport.TYPE).build();
+        layer = AnnotationLayer.builder() //
+                .withId(42l) //
+                .forJCasClass(Dependency.class) //
+                .withType(RelationLayerSupport.TYPE) //
+                .build();
 
-        feature = AnnotationFeature.builder().withId(2l).withLayer(layer)
-                .withName(Dependency._FeatName_DependencyType).withType(TYPE_NAME_STRING).build();
+        feature = AnnotationFeature.builder() //
+                .withId(2l) //
+                .withLayer(layer) //
+                .withName(Dependency._FeatName_DependencyType) //
+                .withType(TYPE_NAME_STRING) //
+                .build();
 
-        project = Project.builder().withName("Test Project").build();
+        project = Project.builder() //
+                .withName("Test Project") //
+                .build();
 
-        doc = SourceDocument.builder().withId(12l).withName("doc").withProject(project).build();
+        doc = SourceDocument.builder() //
+                .withId(12l) //
+                .withName("doc") //
+                .withProject(project) //
+                .build();
 
         when(schemaService.listSupportedFeatures(layer)).thenReturn(asList(feature));
 

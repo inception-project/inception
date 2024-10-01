@@ -58,7 +58,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataRetrievalFailureException;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionalEventListener;
 import org.springframework.util.ConcurrentReferenceHashMap;
 
@@ -1095,7 +1094,6 @@ public class CasStorageServiceImpl
     }
 
     @TransactionalEventListener(fallbackExecution = true)
-    @Transactional
     public void beforeLayerConfigurationChanged(LayerConfigurationChangedEvent aEvent)
     {
         // Tell the known CAS holders for the given project that their type system is outdated

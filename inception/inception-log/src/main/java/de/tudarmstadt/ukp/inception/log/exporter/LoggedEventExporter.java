@@ -17,11 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.log.exporter;
 
+import static com.fasterxml.jackson.core.JsonEncoding.UTF8;
 import static java.util.Arrays.asList;
 import static java.util.function.Function.identity;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
@@ -31,12 +30,12 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.zip.ZipFile;
+import java.util.zip.ZipOutputStream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import com.fasterxml.jackson.core.JsonEncoding;
 import com.fasterxml.jackson.core.util.MinimalPrettyPrinter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -84,7 +83,7 @@ public class LoggedEventExporter
 
     @Override
     public void exportData(FullProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
-            ExportedProject aExProject, File aFile)
+            ExportedProject aExProject, ZipOutputStream aStage)
         throws IOException
     {
         var project = aRequest.getProject();
@@ -99,50 +98,49 @@ public class LoggedEventExporter
         documentService.listSourceDocuments(project)
                 .forEach(doc -> documentNameIndex.put(doc.getId(), doc.getName()));
 
-        var eventLog = new File(aFile, EVENT_LOG);
-        eventLog.createNewFile();
-        try (var jGenerator = new ObjectMapper().getFactory()
-                .createGenerator(new FileOutputStream(eventLog), JsonEncoding.UTF8)) {
+        ProjectExporter.writeEntry(aStage, EVENT_LOG, os -> {
+            try (var jGenerator = new ObjectMapper().getFactory().createGenerator(os, UTF8)) {
+                jGenerator.setPrettyPrinter(new MinimalPrettyPrinter("\n"));
 
-            jGenerator.setPrettyPrinter(new MinimalPrettyPrinter("\n"));
-
-            // Stream data
-            eventRepository.forEachLoggedEvent(project, event -> {
-                // check if the export has been cancelled
-                if (Thread.interrupted()) {
-                    throw new InterruptedException();
-                }
-
-                String documentName = null;
-                // If the document ID is -1, then there is no document linked up to this event.
-                // In this case, we do not need to try resolving the IDs to a name.
-                if (event.getDocument() != -1) {
-                    documentName = documentNameIndex.get(event.getDocument());
-                    if (documentName == null) {
-                        // The document has been deleted from the project so we cannot link up
-                        // events back up to this document during import. So since this is not
-                        // possible, we can even save ourselves the effort of exporting the logged
-                        // events on a document that doesn't exist anymore.
-                        missingDocuments.add(event.getDocument());
-                        droppedEvents.incrementAndGet();
-                        return;
+                // Stream data
+                eventRepository.forEachLoggedEvent(project, event -> {
+                    // check if the export has been cancelled
+                    if (Thread.interrupted()) {
+                        throw new InterruptedException();
                     }
-                }
 
-                // Transfer data over to DTO
-                var exportedEvent = ExportedLoggedEvent.fromLoggedEvent(documentName, event);
+                    String documentName = null;
+                    // If the document ID is -1, then there is no document linked up to this event.
+                    // In this case, we do not need to try resolving the IDs to a name.
+                    if (event.getDocument() != -1) {
+                        documentName = documentNameIndex.get(event.getDocument());
+                        if (documentName == null) {
+                            // The document has been deleted from the project so we cannot link up
+                            // events back up to this document during import. So since this is not
+                            // possible, we can even save ourselves the effort of exporting the
+                            // logged
+                            // events on a document that doesn't exist anymore.
+                            missingDocuments.add(event.getDocument());
+                            droppedEvents.incrementAndGet();
+                            return;
+                        }
+                    }
 
-                // Write DTO
-                try {
-                    jGenerator.writeObject(exportedEvent);
-                }
-                catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
+                    // Transfer data over to DTO
+                    var exportedEvent = ExportedLoggedEvent.fromLoggedEvent(documentName, event);
 
-                eventCount.incrementAndGet();
-            });
-        }
+                    // Write DTO
+                    try {
+                        jGenerator.writeObject(exportedEvent);
+                    }
+                    catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+
+                    eventCount.incrementAndGet();
+                });
+            }
+        });
 
         LOG.info("Exported [{}] logged events for project [{}]", eventCount.get(),
                 project.getName());
@@ -159,7 +157,7 @@ public class LoggedEventExporter
     {
         int eventCount = 0;
 
-        var entry = aZip.getEntry(EVENT_LOG);
+        var entry = ProjectExporter.getEntry(aZip, EVENT_LOG);
 
         if (entry == null) {
             LOG.info("No event log available for import in project [{}]", aProject.getName());
@@ -209,8 +207,9 @@ public class LoggedEventExporter
             }
 
             // Flush remaining events
-            eventRepository.create(batch.stream().toArray(LoggedEvent[]::new));
-
+            if (!batch.isEmpty()) {
+                eventRepository.create(batch.stream().toArray(LoggedEvent[]::new));
+            }
         }
 
         LOG.info("Imported [{}] logged events for project [{}]", eventCount, aProject.getName());

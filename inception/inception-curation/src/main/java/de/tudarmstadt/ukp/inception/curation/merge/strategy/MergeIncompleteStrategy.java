@@ -22,7 +22,6 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.apache.commons.lang3.builder.ToStringStyle.SHORT_PREFIX_STYLE;
 
-import java.lang.invoke.MethodHandles;
 import java.util.List;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -33,11 +32,12 @@ import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.Configuration;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.ConfigurationSet;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.DiffResult;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.inception.curation.merge.CasMerge;
 
 public class MergeIncompleteStrategy
     implements MergeStrategy
 {
-    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+    private static final Logger LOG = LoggerFactory.getLogger(CasMerge.class);
 
     public static final String BEAN_NAME = "incompleteAgreementNonStacked";
 
@@ -45,17 +45,18 @@ public class MergeIncompleteStrategy
     public List<Configuration> chooseConfigurationsToMerge(DiffResult aDiff, ConfigurationSet aCfgs,
             AnnotationLayer aLayer)
     {
-        boolean stacked = aCfgs.getConfigurations().stream() //
+        var stacked = aCfgs.getConfigurations().stream() //
                 .filter(Configuration::isStacked) //
                 .findAny().isPresent();
 
         if (stacked) {
-            LOG.trace(" `-> Not merging stacked annotation");
+            LOG.trace(" `-> Not merging stacked annotation ({})", getClass().getSimpleName());
             return emptyList();
         }
 
         if (!aDiff.isAgreementWithExceptions(aCfgs, CURATION_USER)) {
-            LOG.trace(" `-> Not merging annotation with disagreement");
+            LOG.trace(" `-> Not merging annotation due to disagreement ({})",
+                    getClass().getSimpleName());
             return emptyList();
         }
 

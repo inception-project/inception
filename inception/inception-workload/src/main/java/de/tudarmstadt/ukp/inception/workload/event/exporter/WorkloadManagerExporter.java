@@ -17,9 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.workload.event.exporter;
 
-import java.io.File;
-import java.util.Optional;
 import java.util.zip.ZipFile;
+import java.util.zip.ZipOutputStream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,7 +32,6 @@ import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.workload.config.WorkloadManagementAutoConfiguration;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
-import de.tudarmstadt.ukp.inception.workload.model.WorkloadManager;
 
 /**
  * <p>
@@ -57,13 +55,13 @@ public class WorkloadManagerExporter
 
     @Override
     public void exportData(FullProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
-            ExportedProject aExProject, File aFile)
+            ExportedProject aExProject, ZipOutputStream aStage)
     {
-        Project project = aRequest.getProject();
-        WorkloadManager workloadManager = workloadManagementService
+        var project = aRequest.getProject();
+        var workloadManager = workloadManagementService
                 .loadOrCreateWorkloadManagerConfiguration(project);
 
-        ExportedWorkloadManager exportedWorkloadManager = new ExportedWorkloadManager();
+        var exportedWorkloadManager = new ExportedWorkloadManager();
         exportedWorkloadManager.setType(workloadManager.getType());
         exportedWorkloadManager.setTraits(workloadManager.getTraits());
 
@@ -76,7 +74,7 @@ public class WorkloadManagerExporter
             ExportedProject aExProject, ZipFile aZip)
         throws Exception
     {
-        Optional<ExportedWorkloadManager> maybeExportedWorkloadManager = aExProject.getProperty(KEY,
+        var maybeExportedWorkloadManager = aExProject.getProperty(KEY,
                 ExportedWorkloadManager.class);
 
         if (!maybeExportedWorkloadManager.isPresent()) {
@@ -85,7 +83,7 @@ public class WorkloadManagerExporter
 
         var exportedWorkloadManager = maybeExportedWorkloadManager.get();
 
-        WorkloadManager workloadManager = workloadManagementService
+        var workloadManager = workloadManagementService
                 .loadOrCreateWorkloadManagerConfiguration(aProject);
         workloadManager.setType(exportedWorkloadManager.getType());
         workloadManager.setTraits(exportedWorkloadManager.getTraits());

@@ -26,9 +26,9 @@ public class BeforeDocumentRemovedEventAdapter
     implements EventLoggingAdapter<BeforeDocumentRemovedEvent>
 {
     @Override
-    public boolean accepts(Object aEvent)
+    public boolean accepts(Class<?> aEvent)
     {
-        return aEvent instanceof BeforeDocumentRemovedEvent;
+        return BeforeDocumentRemovedEvent.class.isAssignableFrom(aEvent);
     }
 
     @Override

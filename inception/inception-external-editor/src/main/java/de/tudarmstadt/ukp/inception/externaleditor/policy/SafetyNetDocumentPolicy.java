@@ -87,6 +87,21 @@ public class SafetyNetDocumentPolicy
         if (properties.isBlockAudio()) {
             policy.disallowElements("audio");
         }
+        else {
+            switch (properties.getAllowAudioSource()) {
+            case NONE:
+                policy.disallowAttributes("src").onElements("audio");
+                break;
+            case LOCAL:
+                policy.disallowAttributes("src") //
+                        .matchingValue(compile("(?!res[?]resId=).*")) //
+                        .onElements("audio");
+                break;
+            case ANY:
+                // No restriction in this case
+                break;
+            }
+        }
 
         if (properties.isBlockEmbed()) {
             policy.disallowElements("embed");
@@ -102,7 +117,7 @@ public class SafetyNetDocumentPolicy
                 break;
             case LOCAL:
                 policy.disallowAttributes("src") //
-                        .matching(compile("(?!res[?]resId=).*")) //
+                        .matchingValue(compile("(?!res[?]resId=).*")) //
                         .onElements("img");
                 break;
             case ANY:
@@ -118,9 +133,24 @@ public class SafetyNetDocumentPolicy
         if (properties.isBlockVideo()) {
             policy.disallowElements("video");
         }
+        else {
+            switch (properties.getAllowVideoSource()) {
+            case NONE:
+                policy.disallowAttributes("src").onElements("source");
+                break;
+            case LOCAL:
+                policy.disallowAttributes("src") //
+                        .matchingValue(compile("(?!res[?]resId=).*")) //
+                        .onElements("video");
+                break;
+            case ANY:
+                // No restriction in this case
+                break;
+            }
+        }
 
         policy.disallowAttributes(JAVASCRIPT_ACTIVE_ATTRIBUTES) //
-                .matching(compile("\\s*javascript:.*")) //
+                .matchingValue(compile("\\s*javascript:.*")) //
                 .globally();
 
         policy.disallowAttributes(JAVASCRIPT_EVENT_ATTRIBUTES).globally();

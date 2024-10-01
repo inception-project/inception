@@ -289,6 +289,9 @@ export class ApacheAnnotatorEditor implements AnnotationEditor {
   }
 
   destroy (): void {
+    if (this.popover?.$destroy) {
+      this.popover.$destroy()
+    }
     this.vis?.destroy()
     this.selector?.destroy()
   }

@@ -18,28 +18,26 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.docinfo;
 
 import org.apache.wicket.markup.html.basic.Label;
-import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.PropertyModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase2;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
-import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 
 public class DocumentInfoSidebar
     extends AnnotationSidebar_ImplBase
 {
     private static final long serialVersionUID = 6127948490101336779L;
 
-    public DocumentInfoSidebar(String aId, IModel<AnnotatorState> aModel,
-            AnnotationActionHandler aActionHandler, CasProvider aCasProvider,
-            AnnotationPage aAnnotationPage)
+    public DocumentInfoSidebar(String aId, AnnotationActionHandler aActionHandler,
+            CasProvider aCasProvider, AnnotationPageBase2 aAnnotationPage)
     {
-        super(aId, aModel, aActionHandler, aCasProvider, aAnnotationPage);
+        super(aId, aActionHandler, aCasProvider, aAnnotationPage);
 
-        add(new Label("id", PropertyModel.of(aModel, "document.name")));
-        add(new Label("format", PropertyModel.of(aModel, "document.format")));
-        add(new Label("timestamp", PropertyModel.of(aModel, "document.timestamp")));
+        var model = aAnnotationPage.getModel();
+        add(new Label("id", PropertyModel.of(model, "document.name")));
+        add(new Label("format", PropertyModel.of(model, "document.format")));
+        add(new Label("timestamp", PropertyModel.of(model, "document.timestamp")));
     }
 }

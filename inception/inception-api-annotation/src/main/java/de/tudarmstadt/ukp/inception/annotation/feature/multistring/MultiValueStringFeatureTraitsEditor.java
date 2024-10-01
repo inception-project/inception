@@ -58,8 +58,7 @@ public class MultiValueStringFeatureTraitsEditor
 
         traits = CompoundPropertyModel.of(getFeatureSupport().readTraits(feature.getObject()));
 
-        Form<MultiValueStringFeatureTraits> form = new Form<MultiValueStringFeatureTraits>(MID_FORM,
-                traits)
+        var form = new Form<MultiValueStringFeatureTraits>(MID_FORM, traits)
         {
             private static final long serialVersionUID = -3109239605783291123L;
 
@@ -74,7 +73,7 @@ public class MultiValueStringFeatureTraitsEditor
         form.setOutputMarkupPlaceholderTag(true);
         add(form);
 
-        DropDownChoice<TagSet> tagset = new DropDownChoice<>("tagset");
+        var tagset = new DropDownChoice<TagSet>("tagset");
         tagset.setOutputMarkupPlaceholderTag(true);
         tagset.setChoiceRenderer(new ChoiceRenderer<>("name"));
         tagset.setNullValid(true);

@@ -17,25 +17,32 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.api.recommender;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public enum TrainingCapability
 {
     /**
      * {@link RecommendationEngine} does not support training. Calling
      * {@link RecommendationEngine#train} may be a no-op at best or result in an exception at worst.
      */
+    @JsonProperty("training-not-supported")
     TRAINING_NOT_SUPPORTED,
 
     /**
      * {@link RecommendationEngine} supports training but does not require it. Thus,
      * {@link RecommendationEngine#predict} can be called even if there was not training data.
      * {@link RecommendationEngine#isReadyForPrediction} may return {@code true}, even if
-     * {@link RecommendationEngine#train} has not been called before.
+     * {@link RecommendationEngine#train} has not been called before. It also means that prediction
+     * will be called repeatedly (i.e. data predicted once will not be cached indefinitely as with
+     * {link {@link #TRAINING_NOT_SUPPORTED}}).
      */
+    @JsonProperty("training-supported")
     TRAINING_SUPPORTED,
 
     /**
      * {@link RecommendationEngine} requires training. {@link RecommendationEngine#train} must be
      * called to initialize a context before {@link RecommendationEngine#predict} can be used.
      */
+    @JsonProperty("training-required")
     TRAINING_REQUIRED
 }

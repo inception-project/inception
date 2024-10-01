@@ -26,8 +26,6 @@ import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -40,7 +38,6 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.Form;
-import org.apache.wicket.markup.html.form.upload.FileUpload;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
@@ -82,18 +79,18 @@ public class ProjectImportPanel
         preferences = Model.of(new Preferences());
         selectedModel = aModel;
 
-        Form<Preferences> form = new Form<>("form", CompoundPropertyModel.of(preferences));
+        var form = new Form<>("form", CompoundPropertyModel.of(preferences));
 
         // Only administrators who can access user management can also use the "create missing
         // users" checkbox. Also, the option is only available when importing permissions in the
         // first place.
-        CheckBox generateUsers = new CheckBox("generateUsers");
+        var generateUsers = new CheckBox("generateUsers");
         generateUsers.setOutputMarkupPlaceholderTag(true);
         generateUsers.add(visibleWhen(() -> preferences.getObject().importPermissions));
         form.add(generateUsers);
         authorize(generateUsers, Component.RENDER, ROLE_ADMIN.name());
 
-        CheckBox importPermissions = new CheckBox("importPermissions");
+        var importPermissions = new CheckBox("importPermissions");
         importPermissions.add(new LambdaAjaxFormComponentUpdatingBehavior("change", _target -> {
             if (!preferences.getObject().importPermissions) {
                 preferences.getObject().generateUsers = false;
@@ -116,11 +113,11 @@ public class ProjectImportPanel
 
     private void actionImport(AjaxRequestTarget aTarget, Form<Preferences> aForm)
     {
-        List<FileUpload> exportedProjects = fileUpload.getFileUploads();
+        var exportedProjects = fileUpload.getFileUploads();
 
-        User currentUser = userRepository.getCurrentUser();
-        boolean currentUserIsAdministrator = userRepository.isAdministrator(currentUser);
-        boolean currentUserIsProjectCreator = userRepository.isProjectCreator(currentUser);
+        var currentUser = userRepository.getCurrentUser();
+        var currentUserIsAdministrator = userRepository.isAdministrator(currentUser);
+        var currentUserIsProjectCreator = userRepository.isProjectCreator(currentUser);
 
         boolean createMissingUsers;
         boolean importPermissions;
@@ -156,15 +153,14 @@ public class ProjectImportPanel
         }
 
         List<Project> importedProjects = new ArrayList<>();
-        for (FileUpload exportedProject : exportedProjects) {
-            ProjectImportRequest request = new ProjectImportRequest(createMissingUsers,
-                    importPermissions, manager);
+        for (var exportedProject : exportedProjects) {
+            var request = new ProjectImportRequest(createMissingUsers, importPermissions, manager);
 
             try {
                 // Workaround for WICKET-6425
-                File tempFile = File.createTempFile("project-import", null);
-                try (InputStream is = new BufferedInputStream(exportedProject.getInputStream());
-                        OutputStream os = new FileOutputStream(tempFile);) {
+                var tempFile = File.createTempFile("project-import", null);
+                try (var is = new BufferedInputStream(exportedProject.getInputStream());
+                        var os = new FileOutputStream(tempFile);) {
                     if (!ZipUtils.isZipStream(is)) {
                         throw new IOException("Invalid ZIP file");
                     }

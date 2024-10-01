@@ -17,20 +17,20 @@
  */
 package de.tudarmstadt.ukp.inception.curation.sidebar;
 
-import java.io.Serializable;
-
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-import de.tudarmstadt.ukp.inception.preferences.Key;
+import de.tudarmstadt.ukp.inception.preferences.PreferenceKey;
+import de.tudarmstadt.ukp.inception.preferences.PreferenceValue;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class CurationSidebarManagerPrefs
-    implements Serializable
+    implements PreferenceValue
 {
     private static final long serialVersionUID = -7731274322176414665L;
 
-    public static final Key<CurationSidebarManagerPrefs> KEY_CURATION_SIDEBAR_MANAGER_PREFS = new Key<>(
-            CurationSidebarManagerPrefs.class, "annotation/editor/curation-sidebar/manager");
+    public static final PreferenceKey<CurationSidebarManagerPrefs> KEY_CURATION_SIDEBAR_MANAGER_PREFS = //
+            new PreferenceKey<>(CurationSidebarManagerPrefs.class,
+                    "annotation/editor/curation-sidebar/manager");
 
     private boolean autoMergeCurationSidebar = true;
 

@@ -146,6 +146,7 @@ If it becomes necessary to pass command line arguments to {product-name} running
 `APP_ARGS` environment variable. Note, this is specifically for application parameters, not for parameters for the Java
 Virtual Machine.
 
+[[sect_docker_compose]]
 == Docker Compose
 
 Using Docker Compose, you can manage multiple related containers. This section illustrates how to use
@@ -222,3 +223,11 @@ NOTE: Mind that you cannot arbitrarily switch between volume-managed and host-st
 
 There is a lot more that you can do using Docker and Docker Compose. Please see the link:https://docs.docker.com/compose/[docker-compose reference] for details.
 
+=== Upgrading with Docker Compose
+
+When new versions of {product-name} are released, they may at times include an updated Docker Compose example file.
+
+Starting with {product-name} 33.0, the MariaDB container that is configured in the example file will set the environment
+variable `MARIADB_AUTO_UPGRADE` to `1` to have MariaDB automatically upgrade its internal tables when encountering a database
+produced with an earlier version of MariaDB (see link:https://hub.docker.com/_/mariadb[MariaDB Environment Variables].
+If you do not want this behavior, be sure to remove this settings from the compose file.

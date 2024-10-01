@@ -17,30 +17,15 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.agreement.measures;
 
-import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior.LINK_TARGET_AS_LABEL;
-
 import java.io.Serializable;
-
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior;
 
 public class DefaultAgreementTraits
     implements Serializable
 {
     private static final long serialVersionUID = -2554578512915184789L;
 
-    private boolean limitToFinishedDocuments = true;
-
-    private LinkCompareBehavior linkCompareBehavior = LINK_TARGET_AS_LABEL;
-
-    public LinkCompareBehavior getLinkCompareBehavior()
-    {
-        return linkCompareBehavior;
-    }
-
-    public void setLinkCompareBehavior(LinkCompareBehavior aLinkCompareBehavior)
-    {
-        linkCompareBehavior = aLinkCompareBehavior;
-    }
+    private boolean limitToFinishedDocuments = false;
+    private boolean excludeIncomplete;
 
     public boolean isLimitToFinishedDocuments()
     {
@@ -50,5 +35,15 @@ public class DefaultAgreementTraits
     public void setLimitToFinishedDocuments(boolean aLimitToFinishedDocuments)
     {
         limitToFinishedDocuments = aLimitToFinishedDocuments;
+    }
+
+    public boolean isExcludeIncomplete()
+    {
+        return excludeIncomplete;
+    }
+
+    public void setExcludeIncomplete(boolean aExcludeIncomplete)
+    {
+        excludeIncomplete = aExcludeIncomplete;
     }
 }

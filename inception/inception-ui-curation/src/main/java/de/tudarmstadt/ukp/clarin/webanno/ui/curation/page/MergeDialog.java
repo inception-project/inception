@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.curation.page;
 
+import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
+
 import java.io.Serializable;
 import java.util.Objects;
 
@@ -32,6 +34,7 @@ import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.request.RequestHandlerExecutor.ReplaceHandlerException;
 import org.slf4j.LoggerFactory;
 
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.inception.bootstrap.BootstrapModalDialog;
 import de.tudarmstadt.ukp.inception.curation.model.CurationWorkflow;
 import de.tudarmstadt.ukp.inception.curation.settings.MergeStrategyPanel;
@@ -181,10 +184,16 @@ public class MergeDialog
         String response;
         String feedback;
         boolean saveSettingsAsDefault;
+        boolean clearTargetCas = true;
 
         public boolean isSaveSettingsAsDefault()
         {
             return saveSettingsAsDefault;
+        }
+
+        public boolean isClearTargetCas()
+        {
+            return clearTargetCas;
         }
     }
 
@@ -210,6 +219,9 @@ public class MergeDialog
             queue(new TextField<>("response"));
             queue(new MergeStrategyPanel("mergeStrategySettings", curationWorkflowModel));
             queue(new CheckBox("saveSettingsAsDefault").setOutputMarkupId(true));
+            // On the curation page, the option to (not) clear the target CAS is not (yet) supported
+            queue(new CheckBox("clearTargetCas").setOutputMarkupId(true)
+                    .add(visibleWhen(() -> getPage() instanceof AnnotationPage)));
             queue(new LambdaAjaxButton<>("confirm", MergeDialog.this::onConfirmInternal)
                     .triggerAfterSubmit());
             queue(new LambdaAjaxLink("closeDialog", MergeDialog.this::onCancelInternal));

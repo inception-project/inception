@@ -16,3 +16,9 @@
 <#red-goblin>
     rdfs:label 'Red Goblin' ;
     rdfs:comment 'Little red monster' .
+
+<#blue-goblin>
+    rdfs:label 'Gobelin Blue'@fr ;
+    rdfs:label 'Folletto Blue'@it ;
+    rdfs:label 'Super Blue' ;
+    rdfs:comment 'Piccolo mostro blu'@it .

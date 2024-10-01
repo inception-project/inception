@@ -64,6 +64,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.security.oauth.OAuth2Adapter;
+import de.tudarmstadt.ukp.inception.security.saml.Saml2Adapter;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
@@ -74,10 +75,13 @@ public class UserDetailPanel
 {
     private static final long serialVersionUID = 5307939458232893305L;
 
-    private @SpringBean UserDao userRepository;
+    public static final String REALM_PROJECT_PREFIX = "project:";
+
+    private @SpringBean UserDao userService;
     private @SpringBean(required = false) RemoteApiProperties remoteApiProperties;
     private @SpringBean AuthenticationProvider authenticationProvider;
     private @SpringBean OAuth2Adapter oAuth2Adapter;
+    private @SpringBean Saml2Adapter saml2Adapter;
 
     private boolean isCreate = false;
     private PasswordTextField oldPasswordField;
@@ -112,8 +116,8 @@ public class UserDetailPanel
         var passwordUnsetNotice = new WebMarkupContainer("passwordUnsetNotice");
         passwordUnsetNotice.setOutputMarkupPlaceholderTag(true);
         passwordUnsetNotice
-                .add(visibleWhen(() -> userRepository.userHasNoPassword(getModel().getObject())
-                        && userRepository.canChangePassword(getModelObject())));
+                .add(visibleWhen(() -> userService.userHasNoPassword(getModel().getObject())
+                        && userService.canChangePassword(getModelObject())));
         queue(passwordUnsetNotice);
 
         oldPasswordField = new PasswordTextField("oldPassword");
@@ -129,7 +133,7 @@ public class UserDetailPanel
         passwordField.add(this::validatePassword);
         passwordField.setModel(PropertyModel.of(this, "password"));
         passwordField.setRequired(false);
-        passwordField.add(visibleWhen(() -> userRepository.canChangePassword(getModelObject())));
+        passwordField.add(visibleWhen(() -> userService.canChangePassword(getModelObject())));
         queue(passwordField);
 
         repeatPasswordField = new PasswordTextField("repeatPassword");
@@ -137,17 +141,16 @@ public class UserDetailPanel
         repeatPasswordField.add(this::validatePassword);
         repeatPasswordField.setModel(PropertyModel.of(this, "repeatPassword"));
         repeatPasswordField.setRequired(false);
-        repeatPasswordField
-                .add(visibleWhen(() -> userRepository.canChangePassword(getModelObject())));
+        repeatPasswordField.add(visibleWhen(() -> userService.canChangePassword(getModelObject())));
         queue(repeatPasswordField);
 
         queue(new ListMultipleChoice<>("roles", getRoles()) //
                 .add(this::validateRoles) //
-                .add(visibleWhen(userRepository::isCurrentUserAdmin)));
+                .add(visibleWhen(userService::isCurrentUserAdmin)));
 
         queue(new CheckBox("enabled") //
                 .add(this::validateEnabled) //
-                .add(visibleWhen(userRepository::isCurrentUserAdmin)) //
+                .add(visibleWhen(userService::isCurrentUserAdmin)) //
                 .setOutputMarkupPlaceholderTag(true));
 
         queue(new LambdaAjaxButton<>("save", this::actionSave));
@@ -169,7 +172,7 @@ public class UserDetailPanel
                 // Do not permit moving users out of project realms
                 && !Realm.isProjectRealm(aModel.getObject().getRealm())));
         realm.add(visibleWhen(() -> realm.getChoicesModel().getObject().size() > 1
-                && userRepository.isCurrentUserAdmin()));
+                && userService.isCurrentUserAdmin()));
         realm.add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT, _target -> {
             _target.add(oldPasswordField, passwordField, repeatPasswordField, passwordUnsetNotice);
         }));
@@ -180,14 +183,20 @@ public class UserDetailPanel
     {
         var realms = new ArrayList<Realm>();
 
-        userRepository.listRealms().stream() //
+        userService.listRealms().stream() //
                 // Do not permit to move users to project realms
                 .filter(_id -> !startsWith(_id, UserDao.REALM_PROJECT_PREFIX)) //
                 .map(Realm::new) //
                 .forEach(realms::add);
 
+        // Add the realms from the external authentication providers. Note that multiple providers
+        // might use the same registration. E.g. the SAML IdP might be registered as an OAuth and
+        // simultaneously as a SAML2 provider. It does not make much sense to be honest, but it
+        // is possible.
         oAuth2Adapter.getOAuthClientRegistrations()
                 .forEach(reg -> realms.add(Realm.forExternalOAuth(reg)));
+        saml2Adapter.getSamlRelyingPartyRegistrations()
+                .forEach(((uri, regId) -> realms.add(Realm.forExternalSaml(uri, regId))));
 
         // If there is a choice, then the local realm should always be a part of it
         if (!realms.isEmpty()) {
@@ -195,8 +204,8 @@ public class UserDetailPanel
         }
 
         return realms.stream() //
-                .distinct() //
                 .sorted(Realm::compareRealms) //
+                .distinct() //
                 .collect(toList());
     }
 
@@ -204,7 +213,7 @@ public class UserDetailPanel
     {
         // When creating a user we do not need the old password
         // When a password change is not possible anyway, we also do not need the old password
-        if (isCreate || !userRepository.canChangePassword(getModelObject())) {
+        if (isCreate || !userService.canChangePassword(getModelObject())) {
             return false;
         }
 
@@ -214,12 +223,12 @@ public class UserDetailPanel
         }
 
         // Admins do not need the old password for changing the password of a user
-        return !userRepository.isCurrentUserAdmin();
+        return !userService.isCurrentUserAdmin();
     }
 
     private boolean viewingOwnUserDetails()
     {
-        return userRepository.getCurrentUsername().equals(getModelObject().getUsername());
+        return userService.getCurrentUsername().equals(getModelObject().getUsername());
     }
 
     public void setCreatingNewUser(boolean aIsCreate)
@@ -256,27 +265,27 @@ public class UserDetailPanel
 
     private void validatePassword(IValidatable<String> aValidatable)
     {
-        userRepository.validatePassword(aValidatable.getValue()).forEach(aValidatable::error);
+        userService.validatePassword(aValidatable.getValue()).forEach(aValidatable::error);
     }
 
     private void validateUsername(IValidatable<String> aValidatable)
     {
-        if (userRepository.exists(aValidatable.getValue()) && isCreate) {
+        if (userService.exists(aValidatable.getValue()) && isCreate) {
             aValidatable.error(new ValidationError().addKey("username.alreadyExistsError")
                     .setVariable("name", aValidatable.getValue()));
         }
 
-        userRepository.validateUsername(aValidatable.getValue()).forEach(aValidatable::error);
+        userService.validateUsername(aValidatable.getValue()).forEach(aValidatable::error);
     }
 
     private void validateEmail(IValidatable<String> aValidatable)
     {
-        userRepository.validateEmail(aValidatable.getValue()).forEach(aValidatable::error);
+        userService.validateEmail(aValidatable.getValue()).forEach(aValidatable::error);
     }
 
     private void validateUiName(IValidatable<String> aValidatable)
     {
-        User other = userRepository.getUserByRealmAndUiName(getModelObject().getRealm(),
+        User other = userService.getUserByRealmAndUiName(getModelObject().getRealm(),
                 aValidatable.getValue());
 
         if (other != null && !other.getUsername().equals(getModelObject().getUsername())) {
@@ -284,12 +293,12 @@ public class UserDetailPanel
                     .setVariable("name", aValidatable.getValue()));
         }
 
-        userRepository.validateUiName(aValidatable.getValue()).forEach(aValidatable::error);
+        userService.validateUiName(aValidatable.getValue()).forEach(aValidatable::error);
     }
 
     private void validateEnabled(IValidatable<Boolean> aValidatable)
     {
-        if (!aValidatable.getValue() && userRepository.getCurrentUser().equals(getModelObject())) {
+        if (!aValidatable.getValue() && userService.getCurrentUser().equals(getModelObject())) {
             aValidatable.error(
                     new ValidationError().setMessage("You cannot disable your own account."));
         }
@@ -308,7 +317,7 @@ public class UserDetailPanel
                     .error(new ValidationError().setMessage("Every user must have 'ROLE_USER'."));
         }
         // don't let an admin user strip himself of admin rights
-        if (userRepository.getCurrentUser().equals(getModelObject())
+        if (userService.getCurrentUser().equals(getModelObject())
                 && !newRoles.contains(ROLE_ADMIN)) {
             aValidatable.error(
                     new ValidationError().setMessage("You cannot remove your own admin status."));
@@ -334,12 +343,12 @@ public class UserDetailPanel
                 user.setPassword(password);
             }
 
-            if (!userRepository.exists(user.getUsername())) {
-                userRepository.create(user);
+            if (!userService.exists(user.getUsername())) {
+                userService.create(user);
                 success("User [" + user.getUsername() + "] has been created.");
             }
             else {
-                userRepository.update(user);
+                userService.update(user);
                 success("Details for user [" + user.getUsername() + "] have been updated.");
             }
 
@@ -356,7 +365,7 @@ public class UserDetailPanel
 
     private void actionCancel(AjaxRequestTarget aTarget)
     {
-        if (userRepository.isCurrentUserAdmin()) {
+        if (userService.isCurrentUserAdmin()) {
             getModel().setObject(null);
             aTarget.add(findParent(ManageUsersPage.class));
         }

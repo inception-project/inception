@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.page;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.ValidationMode.NEVER;
 import static de.tudarmstadt.ukp.inception.rendering.selection.FocusPosition.CENTERED;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
 import static java.lang.String.format;
@@ -28,8 +29,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.persistence.NoResultException;
 
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -54,9 +53,9 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.NotEditableExc
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.ValidationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.NoPagingStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.UserPreferencesService;
+import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.ConstraintsEvaluator;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.ValidationMode;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
@@ -70,9 +69,9 @@ import de.tudarmstadt.ukp.inception.rendering.vmodel.VRange;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
-import de.tudarmstadt.ukp.inception.schema.api.validation.ValidationUtils;
 import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
 import de.tudarmstadt.ukp.inception.support.wicket.DecoratedObject;
+import jakarta.persistence.NoResultException;
 
 public abstract class AnnotationPageBase
     extends ProjectPageBase
@@ -303,9 +302,9 @@ public abstract class AnnotationPageBase
     {
         boolean switched = actionShowSelectedDocument(aTarget, aDocument);
 
-        AnnotatorState state = getModelObject();
+        var state = getModelObject();
 
-        CAS cas = getEditorCas();
+        var cas = getEditorCas();
         state.getPagingStrategy().moveToOffset(state, cas, aBegin, new VRange(aBegin, aEnd),
                 CENTERED);
 
@@ -376,24 +375,35 @@ public abstract class AnnotationPageBase
             return;
         }
 
+        var evaluator = new ConstraintsEvaluator();
+        var constraints = getModelObject().getConstraints();
+
         // Check each feature structure of this layer
-        var layerType = aAdapter.getAnnotationType(editorCas);
+        var layerType = aAdapter.getAnnotationType(editorCas).get();
         var annotationFsType = editorCas.getAnnotationType();
         try (var fses = editorCas.select(layerType)) {
             for (var fs : fses) {
                 for (var f : features) {
-                    if (ValidationUtils.isRequiredFeatureMissing(f, fs)) {
-                        // If it is an annotation, then we jump to it if it has required empty
-                        // features
-                        if (editorCas.getTypeSystem().subsumes(annotationFsType, layerType)) {
-                            getAnnotationActionHandler().actionSelectAndJump(aTarget, VID.of(fs));
-                        }
-
-                        // Inform the user
-                        throw new ValidationException("Annotation with ID [" + ICasUtil.getAddr(fs)
-                                + "] on layer [" + layer.getUiName()
-                                + "] is missing value for feature [" + f.getUiName() + "].");
+                    if (!f.isRequired()) {
+                        continue;
                     }
+                    if (evaluator.isHiddenConditionalFeature(constraints, fs, f)) {
+                        continue;
+                    }
+
+                    if (aAdapter.isFeatureValueValid(f, fs)) {
+                        continue;
+                    }
+
+                    // Jump to invalid annotation if possible
+                    if (editorCas.getTypeSystem().subsumes(annotationFsType, layerType)) {
+                        getAnnotationActionHandler().actionSelectAndJump(aTarget, VID.of(fs));
+                    }
+
+                    // Inform the user
+                    throw new ValidationException("Annotation with ID [" + ICasUtil.getAddr(fs)
+                            + "] on layer [" + layer.getUiName()
+                            + "] has invalid feature value in [" + f.getUiName() + "].");
                 }
             }
         }
@@ -410,7 +420,7 @@ public abstract class AnnotationPageBase
                 continue;
             }
 
-            if (ValidationMode.NEVER.equals(layer.getValidationMode())) {
+            if (layer.getValidationMode() == NEVER) {
                 // If validation is disabled, then skip it
                 continue;
             }

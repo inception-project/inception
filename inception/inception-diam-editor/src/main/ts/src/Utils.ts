@@ -171,6 +171,10 @@ export function groupRelationsByPosition (data: AnnotatedText): Record<string, R
   return groupBy(data?.relations.values(), (r) => `${(r.arguments[0].target as Span).offsets}`)
 }
 
+export function groupRelationsBySource (data: AnnotatedText): Record<string, Relation[]> {
+  return groupBy(data?.relations.values(), (r) => `${r.arguments[0].target?.vid}`)
+}
+
 export function highlightClasses (vid: VID, data: AnnotatedText): string {
   const classes: string[] = []
   for (const marker of data.annotationMarkers.get(vid) || []) {

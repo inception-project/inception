@@ -27,6 +27,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SINGLE_TOKEN
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.NO_OVERLAP;
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.OVERLAP_ONLY;
+import static de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureMultiplicityMode.ONE_TARGET_MULTIPLE_ROLES;
 import static de.tudarmstadt.ukp.inception.curation.merge.CurationTestUtils.HOST_TYPE;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.RELATION_TYPE;
 import static java.util.Arrays.asList;
@@ -42,6 +43,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.DiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.relation.RelationDiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span.SpanDiffAdapter;
@@ -71,6 +73,7 @@ import de.tudarmstadt.ukp.inception.schema.service.FeatureSupportRegistryImpl;
 @ExtendWith(MockitoExtension.class)
 public class CasMergeTestBase
 {
+    protected @Mock ConstraintsService constraintsService;
     protected @Mock AnnotationSchemaService schemaService;
 
     protected CasMerge sut;
@@ -110,8 +113,8 @@ public class CasMergeTestBase
     @BeforeEach
     public void setup() throws Exception
     {
-        SpanDiffAdapter slotHostDiffAdapter = new SpanDiffAdapter(HOST_TYPE);
-        slotHostDiffAdapter.addLinkFeature("links", "role", "target");
+        var slotHostDiffAdapter = new SpanDiffAdapter(HOST_TYPE);
+        slotHostDiffAdapter.addLinkFeature("links", "role", "target", ONE_TARGET_MULTIPLE_ROLES);
 
         diffAdapters = new ArrayList<>();
         diffAdapters.add(TOKEN_DIFF_ADAPTER);
@@ -368,13 +371,16 @@ public class CasMergeTestBase
                         new NumberFeatureSupport(), new LinkFeatureSupport(schemaService)));
         featureSupportRegistry.init();
 
-        LayerBehaviorRegistryImpl layerBehaviorRegistry = new LayerBehaviorRegistryImpl(asList());
+        var layerBehaviorRegistry = new LayerBehaviorRegistryImpl(asList());
         layerBehaviorRegistry.init();
 
         layerSupportRegistry = new LayerSupportRegistryImpl(asList(
-                new SpanLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry),
-                new RelationLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry),
-                new ChainLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry)));
+                new SpanLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry,
+                        constraintsService),
+                new RelationLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry,
+                        constraintsService),
+                new ChainLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry,
+                        constraintsService)));
         layerSupportRegistry.init();
 
         sut = new CasMerge(schemaService, null);

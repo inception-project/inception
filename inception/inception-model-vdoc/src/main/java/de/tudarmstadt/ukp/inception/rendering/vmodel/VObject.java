@@ -38,6 +38,7 @@ public abstract class VObject
     private double score;
     private boolean hideScore;
     private boolean actionButtons;
+    private boolean placeholder;
 
     public VObject(AnnotationLayer aLayer, VID aVid, Map<String, String> aFeatures)
     {
@@ -126,5 +127,15 @@ public abstract class VObject
     public void setHideScore(boolean aHideScore)
     {
         hideScore = aHideScore;
+    }
+
+    public void setPlaceholder(boolean aPlaceholder)
+    {
+        placeholder = aPlaceholder;
+    }
+
+    public boolean isPlaceholder()
+    {
+        return placeholder;
     }
 }

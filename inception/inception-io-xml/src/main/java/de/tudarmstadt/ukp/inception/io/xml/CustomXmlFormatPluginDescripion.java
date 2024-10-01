@@ -34,6 +34,8 @@ public class CustomXmlFormatPluginDescripion
 
     private List<String> stylesheets = Collections.emptyList();
     private List<String> sectionElements;
+    private List<String> blockElements;
+    private boolean splitSentencesInBlockElements;
 
     private @JsonIgnore Path basePath;
 
@@ -85,5 +87,25 @@ public class CustomXmlFormatPluginDescripion
     public void setSectionElements(List<String> aSectionElements)
     {
         sectionElements = aSectionElements;
+    }
+
+    public void setBlockElements(List<String> aBlockElements)
+    {
+        blockElements = aBlockElements;
+    }
+
+    public List<String> getBlockElements()
+    {
+        return blockElements;
+    }
+
+    public void setSplitSentencesInBlockElements(boolean aSplitSentencesInBlockElements)
+    {
+        splitSentencesInBlockElements = aSplitSentencesInBlockElements;
+    }
+
+    public boolean isSplitSentencesInBlockElements()
+    {
+        return splitSentencesInBlockElements;
     }
 }

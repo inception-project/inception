@@ -18,12 +18,12 @@
 package de.tudarmstadt.ukp.inception.ui.kb.project;
 
 import static de.tudarmstadt.ukp.inception.support.json.JSONUtil.fromJsonString;
+import static java.util.Collections.unmodifiableList;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -153,7 +153,7 @@ public class KnowledgeBaseWrapper
 
     public List<Pair<String, File>> getFiles()
     {
-        return Collections.unmodifiableList(files);
+        return unmodifiableList(files);
     }
 
     public void clearFiles()

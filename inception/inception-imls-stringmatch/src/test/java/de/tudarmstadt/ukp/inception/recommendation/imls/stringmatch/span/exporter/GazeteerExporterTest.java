@@ -19,9 +19,9 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.export
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.NO_OVERLAP;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.SPAN_TYPE;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
+import static org.apache.uima.cas.CAS.TYPE_NAME_STRING;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
@@ -32,9 +32,9 @@ import java.io.File;
 import java.util.List;
 import java.util.Optional;
 import java.util.zip.ZipFile;
+import java.util.zip.ZipOutputStream;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.uima.cas.CAS;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -51,6 +51,7 @@ import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.gazeteer.GazeteerService;
@@ -80,25 +81,27 @@ public class GazeteerExporterTest
     @BeforeEach
     public void setUp() throws Exception
     {
-        sourceProject = new Project();
-        sourceProject.setId(1l);
-        sourceProject.setName("Test Project");
+        sourceProject = Project.builder() //
+                .withId(1l) //
+                .withName("Test Project") //
+                .build();
 
-        sourceLayer = new AnnotationLayer("span", "span", SPAN_TYPE, sourceProject, false, TOKENS,
-                NO_OVERLAP);
+        targetProject = Project.builder() //
+                .withId(2l) //
+                .withName("Test Project") //
+                .build();
+
+        sourceLayer = new AnnotationLayer("span", "span", SpanLayerSupport.TYPE, sourceProject,
+                false, TOKENS, NO_OVERLAP);
         sourceFeature = new AnnotationFeature(sourceProject, sourceLayer, "value", "value",
-                CAS.TYPE_NAME_STRING);
+                TYPE_NAME_STRING);
         sourceRecommender = new Recommender("rec1", sourceLayer);
         sourceRecommender.setFeature(sourceFeature);
 
-        targetProject = new Project();
-        targetProject.setId(2l);
-        targetProject.setName("Test Project");
-
-        targetLayer = new AnnotationLayer("span", "span", SPAN_TYPE, sourceProject, false, TOKENS,
-                NO_OVERLAP);
+        targetLayer = new AnnotationLayer("span", "span", SpanLayerSupport.TYPE, sourceProject,
+                false, TOKENS, NO_OVERLAP);
         targetFeature = new AnnotationFeature(sourceProject, targetLayer, "value", "value",
-                CAS.TYPE_NAME_STRING);
+                TYPE_NAME_STRING);
         targetRecommender = new Recommender("rec1", targetLayer);
         targetRecommender.setFeature(targetFeature);
 
@@ -106,8 +109,8 @@ public class GazeteerExporterTest
 
         when(gazeteerService.getGazeteerFile(Mockito.any())).thenAnswer(invocation -> {
             Gazeteer gaz = invocation.getArgument(0);
-            File gazFile = temporaryFolder.toPath().resolve(gaz.getId() + ".txt").toFile();
-            String data = "John\tVAL" + gaz.getId();
+            var gazFile = temporaryFolder.toPath().resolve(gaz.getId() + ".txt").toFile();
+            var data = "John\tVAL" + gaz.getId();
             FileUtils.writeStringToFile(gazFile, data, UTF_8);
             return gazFile;
         });
@@ -125,22 +128,21 @@ public class GazeteerExporterTest
     public void thatExportingWorks() throws Exception
     {
         // Export the project
-        FullProjectExportRequest exportRequest = new FullProjectExportRequest(sourceProject, null,
-                false);
-        ProjectExportTaskMonitor monitor = new ProjectExportTaskMonitor(sourceProject, null,
-                "test");
-        ExportedProject exportedProject = new ExportedProject();
-        sut.exportData(exportRequest, monitor, exportedProject, temporaryFolder);
+        var exportRequest = new FullProjectExportRequest(sourceProject, null, false);
+        var monitor = new ProjectExportTaskMonitor(sourceProject, null, "test");
+        var exportedProject = new ExportedProject();
+        var stage = Mockito.mock(ZipOutputStream.class);
+        sut.exportData(exportRequest, monitor, exportedProject, stage);
 
         // Import the project again
-        ArgumentCaptor<Gazeteer> gazeteerCaptor = ArgumentCaptor.forClass(Gazeteer.class);
+        var gazeteerCaptor = ArgumentCaptor.forClass(Gazeteer.class);
         doNothing().when(gazeteerService).createOrUpdateGazeteer(gazeteerCaptor.capture());
 
-        ArgumentCaptor<Gazeteer> gazeteerFileCaptor = ArgumentCaptor.forClass(Gazeteer.class);
+        var gazeteerFileCaptor = ArgumentCaptor.forClass(Gazeteer.class);
         doNothing().when(gazeteerService).importGazeteerFile(gazeteerFileCaptor.capture(), any());
 
-        ProjectImportRequest importRequest = new ProjectImportRequest(true);
-        ZipFile zipFile = mock(ZipFile.class);
+        var importRequest = new ProjectImportRequest(true);
+        var zipFile = mock(ZipFile.class);
 
         sut.importData(importRequest, targetProject, exportedProject, zipFile);
 
@@ -155,10 +157,10 @@ public class GazeteerExporterTest
 
     private List<Gazeteer> gazeteers() throws Exception
     {
-        Gazeteer gaz1 = new Gazeteer("gaz1", sourceRecommender);
+        var gaz1 = new Gazeteer("gaz1", sourceRecommender);
         gaz1.setId(1l);
 
-        Gazeteer gaz2 = new Gazeteer("gaz2", sourceRecommender);
+        var gaz2 = new Gazeteer("gaz2", sourceRecommender);
         gaz2.setId(2l);
 
         return asList(gaz1, gaz2);

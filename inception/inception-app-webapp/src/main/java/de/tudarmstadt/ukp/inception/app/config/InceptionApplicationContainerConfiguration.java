@@ -17,8 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.app.config;
 
-import javax.validation.Validator;
-
 import org.apache.catalina.Context;
 import org.apache.catalina.connector.Connector;
 import org.apache.catalina.webresources.StandardRoot;
@@ -35,6 +33,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 
 import de.tudarmstadt.ukp.inception.app.startup.StartupNoticeValve;
+import jakarta.validation.Validator;
 
 @Component
 public class InceptionApplicationContainerConfiguration

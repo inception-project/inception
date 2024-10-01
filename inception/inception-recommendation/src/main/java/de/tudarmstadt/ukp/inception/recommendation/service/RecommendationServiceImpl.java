@@ -43,10 +43,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import javax.persistence.EntityManager;
-import javax.persistence.NoResultException;
-import javax.persistence.TypedQuery;
-
 import org.apache.commons.collections4.MapIterator;
 import org.apache.commons.collections4.MultiValuedMap;
 import org.apache.commons.collections4.multimap.HashSetValuedHashMap;
@@ -132,6 +128,9 @@ import de.tudarmstadt.ukp.inception.schema.api.event.LayerConfigurationChangedEv
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessageGroup;
 import de.tudarmstadt.ukp.inception.support.wicket.WicketExceptionUtil;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.NoResultException;
+import jakarta.persistence.TypedQuery;
 
 /**
  * The implementation of the RecommendationService.
@@ -491,6 +490,11 @@ public class RecommendationServiceImpl
     {
         var project = aEvent.getDocument().getProject();
         var sessionOwnerName = aEvent.getSessionOwner();
+
+        if (isSuspended(sessionOwnerName, project)) {
+            return;
+        }
+
         var dataOwner = aEvent.getDocumentOwner();
         var doc = aEvent.getDocument();
         var predictions = getState(sessionOwnerName, project).getActivePredictions();
@@ -525,6 +529,13 @@ public class RecommendationServiceImpl
                     .build());
         }
 
+        // Check if there are any synchronous recommenders we need to run
+        var recommenders = listEnabledRecommenders(aEvent.getDocument().getProject());
+        if (!recommenders.isEmpty()) {
+            runSynchronousRecommenders(aEvent.getDocument(), aEvent.getDocumentOwner(),
+                    recommenders, "onDocumentOpened");
+        }
+
         // Check if we need to wait for the initial recommender run before displaying the document
         // to the user
         var predictionTriggered = nonTrainableRecommenderRunSync(doc, predictions, sessionOwner,
@@ -554,7 +565,13 @@ public class RecommendationServiceImpl
         // start the predictions so that the user gets recommendations as quickly as possible
         // without any interaction needed
         if (!predictionTriggered) {
-            triggerPrediction(sessionOwnerName, trigger, doc, dataOwner);
+            schedulingService.enqueue(PredictionTask.builder() //
+                    .withSessionOwner(sessionOwner) //
+                    .withTrigger("onDocumentOpened") //
+                    .withCurrentDocument(doc) //
+                    .withDataOwner(dataOwner) //
+                    .withSynchronousRecommenders(false) //
+                    .build());
         }
     }
 
@@ -585,6 +602,7 @@ public class RecommendationServiceImpl
                 .withTrigger(trigger) //
                 .withCurrentDocument(doc) //
                 .withDataOwner(aDataOwner) //
+                .withSynchronousRecommenders(false) //
                 .build());
         switchPredictions(aSessionOwner.getUsername(), doc.getProject());
 
@@ -729,7 +747,8 @@ public class RecommendationServiceImpl
             return;
         }
 
-        runSynchronousRecommenders(aEvent, recommenders);
+        runSynchronousRecommenders(aEvent.getDocument().getDocument(),
+                aEvent.getDocument().getUser(), recommenders, "onAfterCasWritten");
 
         var committed = requestCycle.getMetaData(COMMITTED);
         if (committed == null) {
@@ -772,33 +791,39 @@ public class RecommendationServiceImpl
         }
     }
 
-    private void runSynchronousRecommenders(AfterCasWrittenEvent aEvent,
-            List<Recommender> recommenders)
+    private void runSynchronousRecommenders(SourceDocument aDocument, String aDataOwner,
+            List<Recommender> recommenders, String aTrigger)
     {
         var sessionOwner = userRepository.getCurrentUser();
-        var anySyncRan = false;
+
+        if (isSuspended(sessionOwner.getUsername(), aDocument.getProject())) {
+            return;
+        }
+
+        var syncRecommenders = new ArrayList<Recommender>();
         for (var recommender : recommenders) {
             var factory = getRecommenderFactory(recommender);
-            if (factory.map(RecommendationEngineFactory::isSynchronous).orElse(false)) {
-                var predictionTask = PredictionTask.builder() //
-                        .withSessionOwner(sessionOwner) //
-                        .withTrigger("Synchronous prediction") //
-                        .withCurrentDocument(aEvent.getDocument().getDocument()) //
-                        .withDataOwner(aEvent.getDocument().getUser()) //
-                        .withRecommender(recommender) //
-                        .build();
-                schedulingService.executeSync(predictionTask);
-                anySyncRan = true;
+            if (factory.map($ -> $.isSynchronous(recommender)).orElse(false)) {
+                syncRecommenders.add(recommender);
             }
         }
-        if (anySyncRan) {
+
+        if (!syncRecommenders.isEmpty()) {
+            schedulingService.executeSync(PredictionTask.builder() //
+                    .withSessionOwner(sessionOwner) //
+                    .withTrigger(aTrigger) //
+                    .withCurrentDocument(aDocument) //
+                    .withDataOwner(aDataOwner) //
+                    .withRecommender(syncRecommenders.toArray(Recommender[]::new)) //
+                    .build());
+
             var switched = forceSwitchPredictions(sessionOwner.getUsername(),
-                    aEvent.getDocument().getProject());
+                    aDocument.getProject());
             if (switched) {
                 // Notify other UI components on the page about the prediction switch such that they
                 // can also update their state to remain in sync with the new predictions
-                applicationEventPublisher.publishEvent(new PredictionsSwitchedEvent(this,
-                        sessionOwner.getUsername(), aEvent.getDocument().getDocument()));
+                applicationEventPublisher.publishEvent(
+                        new PredictionsSwitchedEvent(this, sessionOwner.getUsername(), aDocument));
             }
         }
     }
@@ -828,6 +853,7 @@ public class RecommendationServiceImpl
     public void onDocumentRemoval(BeforeDocumentRemovedEvent aEvent)
     {
         resetState(aEvent.getDocument().getProject());
+        deleteLearningRecords(aEvent.getDocument());
     }
 
     @EventListener
@@ -1019,8 +1045,9 @@ public class RecommendationServiceImpl
         }
     }
 
-    @EventListener
+    // Set order so this is handled before session info is removed from sessionRegistry
     @Order(Ordered.HIGHEST_PRECEDENCE)
+    @EventListener
     public void onSessionDestroyed(SessionDestroyedEvent event)
     {
         var info = sessionRegistry.getSessionInformation(event.getId());
@@ -1527,8 +1554,8 @@ public class RecommendationServiceImpl
             var it = evaluatedRecommenders.mapIterator();
 
             while (it.hasNext()) {
-                AnnotationLayer layer = it.next();
-                EvaluatedRecommender rec = it.getValue();
+                var layer = it.next();
+                var rec = it.getValue();
                 if (!rec.getRecommender().equals(aRecommender)) {
                     newEvaluatedRecommenders.put(layer, rec);
                 }
@@ -1576,6 +1603,13 @@ public class RecommendationServiceImpl
             for (var records : learningRecords.values()) {
                 records.removeIf(r -> Objects.equals(r.getUser(), aDataOwner) && //
                         Objects.equals(r.getSourceDocument(), aDocument));
+            }
+        }
+
+        public void removeLearningRecords(SourceDocument aDocument)
+        {
+            for (var records : learningRecords.values()) {
+                records.removeIf(r -> Objects.equals(r.getSourceDocument(), aDocument));
             }
         }
 
@@ -1905,6 +1939,36 @@ public class RecommendationServiceImpl
     {
         entityManager.persist(aLearningRecord);
         entityManager.flush();
+    }
+
+    @Override
+    @Transactional
+    public void createLearningRecords(LearningRecord... aRecords)
+    {
+        var start = System.currentTimeMillis();
+        for (var record : aRecords) {
+            LOG.trace("{}", record);
+            entityManager.persist(record);
+        }
+        var duration = System.currentTimeMillis() - start;
+
+        if (aRecords.length > 0 && !LOG.isTraceEnabled()) {
+            LOG.debug("... {} learning records stored ... ({}ms)", aRecords.length, duration);
+        }
+    }
+
+    private void deleteLearningRecords(SourceDocument aDocument)
+    {
+        synchronized (states) {
+            for (var state : states.values()) {
+                state.removeLearningRecords(aDocument);
+            }
+        }
+
+        var sql = "DELETE FROM LearningRecord l where l.sourceDocument = :document";
+        entityManager.createQuery(sql) //
+                .setParameter("document", aDocument) //
+                .executeUpdate();
     }
 
     private void deleteLearningRecords(SourceDocument aDocument, String aDataOwner)

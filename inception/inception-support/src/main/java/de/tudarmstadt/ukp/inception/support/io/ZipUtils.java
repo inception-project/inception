@@ -87,7 +87,7 @@ public class ZipUtils
     public static void zipFolder(File srcFolder, File destZipFile) throws IOException
     {
         try (var zip = new ZipOutputStream(new FileOutputStream(destZipFile));) {
-            for (File file : srcFolder.getAbsoluteFile().listFiles()) {
+            for (var file : srcFolder.getAbsoluteFile().listFiles()) {
                 addToZip(zip, srcFolder.getAbsoluteFile(), file);
             }
             zip.flush();

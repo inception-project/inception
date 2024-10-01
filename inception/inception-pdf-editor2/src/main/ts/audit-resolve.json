@@ -1,0 +1,10 @@
+{
+  "decisions": {
+    "1097504|pdfjs-dist": {
+      "decision": "ignore",
+      "madeAt": 1718722800964
+    }
+  },
+  "rules": {},
+  "version": 1
+}

@@ -20,8 +20,6 @@ package de.tudarmstadt.ukp.inception.recogitojseditor;
 import static de.tudarmstadt.ukp.inception.support.wicket.ServletContextUtils.referenceToUrl;
 import static java.util.Arrays.asList;
 
-import javax.servlet.ServletContext;
-
 import org.apache.wicket.Component;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
@@ -38,6 +36,7 @@ import de.tudarmstadt.ukp.inception.preferences.ClientSideUserPreferencesProvide
 import de.tudarmstadt.ukp.inception.recogitojseditor.resources.RecogitoJsCssResourceReference;
 import de.tudarmstadt.ukp.inception.recogitojseditor.resources.RecogitoJsJavascriptResourceReference;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import jakarta.servlet.ServletContext;
 
 public class RecogitoHtmlAnnotationEditor
     extends ExternalAnnotationEditorBase

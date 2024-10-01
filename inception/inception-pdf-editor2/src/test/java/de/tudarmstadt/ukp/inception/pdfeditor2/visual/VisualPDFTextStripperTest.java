@@ -27,7 +27,7 @@ import java.util.Collection;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.Loader;
 import org.apache.uima.cas.CASException;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.jcas.JCas;
@@ -63,7 +63,7 @@ class VisualPDFTextStripperTest
     {
         VModel vModel;
         var target = new StringWriter();
-        try (PDDocument doc = PDDocument.load(aFile)) {
+        try (var doc = Loader.loadPDF(aFile)) {
             var extractor = new VisualPDFTextStripper();
             extractor.setSortByPosition(aSortByPosition);
             extractor.writeText(doc, target);
@@ -102,7 +102,7 @@ class VisualPDFTextStripperTest
     {
         VModel expected;
         var textBuffer = new StringWriter();
-        try (PDDocument doc = PDDocument.load(aFile)) {
+        try (var doc = Loader.loadPDF(aFile)) {
             var extractor = new VisualPDFTextStripper();
             extractor.setSortByPosition(aSortByPosition);
             extractor.writeText(doc, textBuffer);

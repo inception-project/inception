@@ -20,6 +20,8 @@ package de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.internal;
 import java.io.Serializable;
 import java.util.Objects;
 
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
+
 public class AID
     implements Serializable
 {
@@ -28,6 +30,11 @@ public class AID
     public final int addr;
     public final String feature;
     public final int index;
+
+    public AID(VID aVid)
+    {
+        this(aVid.getId(), null, -1);
+    }
 
     public AID(int aAddr)
     {

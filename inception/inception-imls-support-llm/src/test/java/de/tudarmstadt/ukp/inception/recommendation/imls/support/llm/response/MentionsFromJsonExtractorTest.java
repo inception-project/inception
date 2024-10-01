@@ -31,10 +31,10 @@ class MentionsFromJsonExtractorTest
     void testExtractMentionFromJson_categorizedNumbers()
     {
         var json = """
-                {
-                    "even_numbers": [2, 4, 6]
-                }
-                """;
+                   {
+                       "even_numbers": [2, 4, 6]
+                   }
+                   """;
         assertThat(sut.extractMentionFromJson(json)) //
                 .containsExactly( //
                         Pair.of("2", "even_numbers"), //
@@ -46,12 +46,12 @@ class MentionsFromJsonExtractorTest
     void testExtractMentionFromJson_nullLabels()
     {
         var json = """
-                {
-                    "Honolulu": null,
-                    "Columbia University": null,
-                    "Harvard Law Review": null
-                }
-                """;
+                   {
+                       "Honolulu": null,
+                       "Columbia University": null,
+                       "Harvard Law Review": null
+                   }
+                   """;
         assertThat(sut.extractMentionFromJson(json)) //
                 .containsExactly( //
                         Pair.of("Honolulu", null), //
@@ -63,11 +63,11 @@ class MentionsFromJsonExtractorTest
     void testExtractMentionFromJson_categorizedStrings()
     {
         var json = """
-                {
-                    "Person": ["John"],
-                    "Location": ["diner", "Starbucks"]
-                }
-                """;
+                   {
+                       "Person": ["John"],
+                       "Location": ["diner", "Starbucks"]
+                   }
+                   """;
         assertThat(sut.extractMentionFromJson(json)) //
                 .containsExactly( //
                         Pair.of("John", "Person"), //
@@ -79,14 +79,14 @@ class MentionsFromJsonExtractorTest
     void testExtractMentionFromJson_categorizedObjects()
     {
         var json = """
-                {
-                    "politicians": [
-                         { "name": "President Livingston" },
-                         { "name": "John" },
-                         { "name": "Don Horny" }
-                     ]
-                }
-                """;
+                   {
+                       "politicians": [
+                            { "name": "President Livingston" },
+                            { "name": "John" },
+                            { "name": "Don Horny" }
+                        ]
+                   }
+                   """;
         assertThat(sut.extractMentionFromJson(json)) //
                 .containsExactly( //
                         Pair.of("President Livingston", "politicians"), //
@@ -98,12 +98,12 @@ class MentionsFromJsonExtractorTest
     void testExtractMentionFromJson_namedObjects()
     {
         var json = """
-                {
-                    "John": {"type": "PERSON"},
-                    "diner": {"type": "LOCATION"},
-                    "Starbucks": {"type": "LOCATION"}
-                }
-                """;
+                   {
+                       "John": {"type": "PERSON"},
+                       "diner": {"type": "LOCATION"},
+                       "Starbucks": {"type": "LOCATION"}
+                   }
+                   """;
         assertThat(sut.extractMentionFromJson(json)) //
                 .containsExactly( //
                         Pair.of("John", null), //
@@ -115,13 +115,13 @@ class MentionsFromJsonExtractorTest
     void testExtractMentionFromJson_keyValue()
     {
         var json = """
-                {
-                    "John": "politician",
-                    "President Livingston": "politician",
-                    "minister of foreign affairs": "politician",
-                    "Don Horny": "politician"
-                }
-                """;
+                   {
+                       "John": "politician",
+                       "President Livingston": "politician",
+                       "minister of foreign affairs": "politician",
+                       "Don Horny": "politician"
+                   }
+                   """;
         assertThat(sut.extractMentionFromJson(json)) //
                 .containsExactly( //
                         Pair.of("John", "politician"), //
@@ -137,11 +137,11 @@ class MentionsFromJsonExtractorTest
         // We assume that the first item is the most relevant one (the
         // mention) so we do not get a bad mention in cases like this:
         var json = """
-                {
-                    "name": "Don Horny",
-                    "affiliation": "Lord of Darkness"
-                }
-                """;
+                   {
+                       "name": "Don Horny",
+                       "affiliation": "Lord of Darkness"
+                   }
+                   """;
         assertThat(sut.extractMentionFromJson(json)) //
                 .containsExactly( //
                         Pair.of("Don Horny", null));

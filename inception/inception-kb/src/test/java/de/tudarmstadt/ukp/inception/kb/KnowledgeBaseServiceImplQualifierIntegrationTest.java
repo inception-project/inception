@@ -24,8 +24,6 @@ import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import java.io.File;
 import java.util.List;
 
-import javax.persistence.EntityManager;
-
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.RDFWriter;
 import org.eclipse.rdf4j.rio.Rio;
@@ -55,6 +53,7 @@ import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.kb.reification.Reification;
 import de.tudarmstadt.ukp.inception.kb.util.TestFixtures;
+import jakarta.persistence.EntityManager;
 
 @Transactional
 @DataJpaTest( //

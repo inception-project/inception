@@ -24,7 +24,6 @@ import de.tudarmstadt.ukp.inception.rendering.pipeline.RenderStep;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VAnnotationMarker;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
-import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VMarker;
 
 /**
@@ -53,7 +52,7 @@ public class FocusMarkerRenderer
             return;
         }
 
-        VID selectedAnnotation = aRequest.getState().getSelection().getAnnotation();
+        var selectedAnnotation = aRequest.getState().getSelection().getAnnotation();
         if (selectedAnnotation.isSet()) {
             aVDoc.add(new VAnnotationMarker(VMarker.FOCUS, selectedAnnotation));
         }

@@ -23,15 +23,16 @@
 
 The link:https://persistence.uni-leipzig.org/nlp2rdf/[NLP Interchange Format] (NIF) provides a way of representing NLP information using semantic web technology, specifically RDF and OWL. A few additions of the format were defined in the apparently in-official link:https://nif.readthedocs.io/en/latest/[NIF 2.1] specification.
 
-[cols="2,1,1,1,3"]
+[cols="2,1,1,3"]
 |====
-| Format | Read | Write | Custom Layers | Description
+| Format | Import | Export | Supported layers
 
 | link:https://persistence.uni-leipzig.org/nlp2rdf/[NIF] (`nif`)
 | yes
 | yes
-| no
-| 
+| Part-of-speech tagging (built-in), +
+  Lemmatization (built-ion), +
+  Named entity tagging (built-in)  
 |====
 
 .Example

@@ -22,13 +22,12 @@ import java.util.List;
 import org.apache.commons.lang3.Validate;
 import org.apache.wicket.model.IModel;
 import org.danekja.java.util.function.serializable.SerializableFunction;
-
-import com.googlecode.wicket.jquery.core.JQueryBehavior;
-import com.googlecode.wicket.jquery.core.Options;
-import com.googlecode.wicket.jquery.core.renderer.ITextRenderer;
-import com.googlecode.wicket.jquery.core.renderer.TextRenderer;
-import com.googlecode.wicket.jquery.core.template.IJQueryTemplate;
-import com.googlecode.wicket.kendo.ui.form.autocomplete.AutoCompleteTextField;
+import org.wicketstuff.jquery.core.JQueryBehavior;
+import org.wicketstuff.jquery.core.Options;
+import org.wicketstuff.jquery.core.renderer.ITextRenderer;
+import org.wicketstuff.jquery.core.renderer.TextRenderer;
+import org.wicketstuff.jquery.core.template.IJQueryTemplate;
+import org.wicketstuff.kendo.ui.form.autocomplete.AutoCompleteTextField;
 
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.support.kendo.KendoStyleUtils;

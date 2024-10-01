@@ -60,13 +60,13 @@ public class CasMergeRelationTest
     void simpleCopyRelationToEmptyAnnoTest() throws Exception
     {
         // Set up source
-        AnnotationFS clickedFs = createDependencyWithTokenAndPos(sourceCas, 0, 0, "NN", 1, 1, "NN");
+        var clickedFs = createDependencyWithTokenAndPos(sourceCas, 0, 0, "NN", 1, 1, "NN");
 
         // Set up target
         createTokenAndOptionalPos(targetCas, 0, 0, "NN");
         createTokenAndOptionalPos(targetCas, 1, 1, "NN");
 
-        sut.mergeRelationAnnotation(document, DUMMY_USER, depLayer, targetCas, clickedFs, false);
+        sut.mergeRelationAnnotation(document, DUMMY_USER, depLayer, targetCas, clickedFs);
 
         assertThat(targetCas.select(Dependency.class).coveredBy(0, 1).asList())
                 .as("Relation was merged") //
@@ -78,7 +78,7 @@ public class CasMergeRelationTest
     {
         // Set up source
         // Create a dependency relation with endpoints in the annotator CAS
-        AnnotationFS clickedFs = createDependencyWithTokenAndPos(sourceCas, 0, 0, "NN", 1, 1, "NN");
+        var clickedFs = createDependencyWithTokenAndPos(sourceCas, 0, 0, "NN", 1, 1, "NN");
 
         // Set up target
         // Create stacked endpoint candidates in the merge CAS
@@ -90,15 +90,15 @@ public class CasMergeRelationTest
         assertThatExceptionOfType(AnnotationException.class) //
                 .as("Cannot merge when there are multiple/stacked candidates") //
                 .isThrownBy(() -> sut.mergeRelationAnnotation(document, DUMMY_USER, depLayer,
-                        targetCas, clickedFs, false))
-                .withMessageContaining("Stacked sources exist");
+                        targetCas, clickedFs))
+                .withMessageContaining("multiple possible");
     }
 
     @Test
     public void thatMergingRelationIsRejectedIfAlreadyExists() throws Exception
     {
         // Set up source
-        AnnotationFS clickedFs = createDependencyWithTokenAndPos(sourceCas, 0, 0, "NN", 1, 1, "NN");
+        var clickedFs = createDependencyWithTokenAndPos(sourceCas, 0, 0, "NN", 1, 1, "NN");
 
         // Set up target
         createDependencyWithTokenAndPos(targetCas, 0, 0, "NN", 1, 1, "NN");
@@ -106,7 +106,7 @@ public class CasMergeRelationTest
         assertThatExceptionOfType(AnnotationException.class) //
                 .as("Reject merging relation which already exists")
                 .isThrownBy(() -> sut.mergeRelationAnnotation(document, DUMMY_USER, depLayer,
-                        targetCas, clickedFs, false))
+                        targetCas, clickedFs))
                 .withMessageContaining("annotation already exists");
     }
 
@@ -114,14 +114,14 @@ public class CasMergeRelationTest
     public void thatSecondRelationCanBeMergedWithSameTarget() throws Exception
     {
         // Set up source
-        AnnotationFS clickedFs = createDependencyWithTokenAndPos(sourceCas, 2, 2, "NN", 0, 0, "NN");
+        var clickedFs = createDependencyWithTokenAndPos(sourceCas, 2, 2, "NN", 0, 0, "NN");
 
         // Set up target
         createDependencyWithTokenAndPos(targetCas, 1, 1, "NN", 0, 0, "NN");
         createTokenAndOptionalPos(targetCas, 2, 2, "NN");
 
-        CasMergeOperationResult result = sut.mergeRelationAnnotation(document, DUMMY_USER, depLayer,
-                targetCas, clickedFs, false);
+        var result = sut.mergeRelationAnnotation(document, DUMMY_USER, depLayer, targetCas,
+                clickedFs);
 
         assertThat(result.getState()).isEqualTo(CREATED);
         assertThat(targetCas.select(Dependency.class).asList()) //
@@ -139,14 +139,14 @@ public class CasMergeRelationTest
     public void thatSecondRelationCanBeMergedWithSameSource() throws Exception
     {
         // Set up source
-        AnnotationFS clickedFs = createDependencyWithTokenAndPos(sourceCas, 0, 0, "NN", 2, 2, "NN");
+        var clickedFs = createDependencyWithTokenAndPos(sourceCas, 0, 0, "NN", 2, 2, "NN");
 
         // Set up target
         createDependencyWithTokenAndPos(targetCas, 0, 0, "NN", 1, 1, "NN");
         createTokenAndOptionalPos(targetCas, 2, 2, "NN");
 
-        CasMergeOperationResult result = sut.mergeRelationAnnotation(document, DUMMY_USER, depLayer,
-                targetCas, clickedFs, false);
+        var result = sut.mergeRelationAnnotation(document, DUMMY_USER, depLayer, targetCas,
+                clickedFs);
 
         assertThat(result.getState()).isEqualTo(CREATED);
         assertThat(targetCas.select(Dependency.class).asList()) //

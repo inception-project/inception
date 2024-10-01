@@ -26,6 +26,8 @@ import java.util.List;
 import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.FeatureStructure;
+import org.apache.uima.fit.util.FSUtil;
 import org.apache.uima.resource.metadata.TypeDescription;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.wicket.MarkupContainer;
@@ -129,6 +131,16 @@ public class ConceptFeatureSupport
     }
 
     @Override
+    public boolean isFeatureValueValid(AnnotationFeature aFeature, FeatureStructure aFS)
+    {
+        if (aFeature.isRequired()) {
+            return isNotBlank(FSUtil.getFeature(aFS, aFeature.getName(), String.class));
+        }
+
+        return true;
+    }
+
+    @Override
     public String renderFeatureValue(AnnotationFeature aFeature, String aIdentifier)
     {
         if (aIdentifier == null) {
@@ -137,6 +149,12 @@ public class ConceptFeatureSupport
 
         var traits = readTraits(aFeature);
         return getConceptHandle(aFeature, aIdentifier, traits).getUiLabel();
+    }
+
+    @Override
+    public <V> V getDefaultFeatureValue(AnnotationFeature aFeature, FeatureStructure aFS)
+    {
+        return null;
     }
 
     public KBHandle getConceptHandle(AnnotationFeature aFeature, String aIdentifier,

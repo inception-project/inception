@@ -95,8 +95,8 @@
 
 
     export function disconnect () {
-        stompClient.deactivate()
-        socket.close()
+        stompClient && stompClient.deactivate()
+        socket && socket.close()
         connected = false;
     }
 

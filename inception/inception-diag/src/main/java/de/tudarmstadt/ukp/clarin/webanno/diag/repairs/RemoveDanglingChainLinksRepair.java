@@ -23,13 +23,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.FSUtil;
 import org.apache.uima.jcas.tcas.Annotation;
 
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.Repair.Safe;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.WebAnnoConst;
@@ -50,7 +48,7 @@ public class RemoveDanglingChainLinksRepair
     @Override
     public void repair(Project aProject, CAS aCas, List<LogMessage> aMessages)
     {
-        for (AnnotationLayer layer : annotationService.listAnnotationLayer(aProject)) {
+        for (var layer : annotationService.listAnnotationLayer(aProject)) {
             if (!WebAnnoConst.CHAIN_TYPE.equals(layer.getType())) {
                 continue;
             }
@@ -59,8 +57,8 @@ public class RemoveDanglingChainLinksRepair
             var links = new ArrayList<>(
                     aCas.<Annotation> select(getType(aCas, layer.getName() + "Link")).asList());
 
-            for (FeatureStructure chain : chains) {
-                AnnotationFS link = FSUtil.getFeature(chain, "first", AnnotationFS.class);
+            for (var chain : chains) {
+                var link = FSUtil.getFeature(chain, "first", AnnotationFS.class);
 
                 while (link != null) {
                     links.remove(link);

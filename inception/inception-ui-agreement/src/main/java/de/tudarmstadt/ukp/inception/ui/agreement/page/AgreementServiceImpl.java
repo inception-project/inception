@@ -21,10 +21,17 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHA
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.AUTO_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.getDiffAdapters;
+import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.Tag.USED;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
+import static java.lang.String.join;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toCollection;
 import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 import static org.apache.commons.csv.CSVFormat.RFC4180;
@@ -38,27 +45,26 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.io.output.CloseShieldOutputStream;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.fit.util.FSUtil;
-import org.dkpro.statistics.agreement.coding.ICodingAnnotationStudy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.agreement.AgreementUtils;
-import de.tudarmstadt.ukp.clarin.webanno.agreement.FullAgreementResult_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.DefaultAgreementTraits;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.ConfigurationSet;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.FullCodingAgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
@@ -68,16 +74,21 @@ import de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil;
 public class AgreementServiceImpl
     implements AgreementService
 {
+    private static final String NO_ANNOTATION = "<no annotation>";
+    private static final String NO_LABEL = "<no label>";
+
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private final DocumentService documentService;
     private final AnnotationSchemaService schemaService;
+    private final UserDao userService;
 
     public AgreementServiceImpl(DocumentService aDocumentService,
-            AnnotationSchemaService aSchemaService)
+            AnnotationSchemaService aSchemaService, UserDao aUserService)
     {
         documentService = aDocumentService;
         schemaService = aSchemaService;
+        userService = aUserService;
     }
 
     @Override
@@ -96,12 +107,21 @@ public class AgreementServiceImpl
 
         if (isNotEmpty(documents)) {
             allAnnDocs.keySet().retainAll(documents);
+            for (var doc : documents) {
+                allAnnDocs.computeIfAbsent(doc, $ -> emptyList());
+            }
         }
+        else {
+            for (var doc : documentService.listSourceDocuments(aProject)) {
+                allAnnDocs.computeIfAbsent(doc, $ -> emptyList());
+            }
+        }
+
         return allAnnDocs;
     }
 
     @Override
-    public void exportDiff(OutputStream aOut, AnnotationFeature aFeature, String aMeasure,
+    public void exportDiff(OutputStream aOut, AnnotationFeature aFeature,
             DefaultAgreementTraits traits, User aCurrentUser, List<SourceDocument> aDocuments,
             List<String> aAnnotators)
     {
@@ -128,17 +148,17 @@ public class AgreementServiceImpl
                     casMap.put(annotator, cas);
                 }
 
-                var diff = doDiff(adapters, traits.getLinkCompareBehavior(), casMap);
+                var diff = doDiff(adapters, casMap);
 
                 var result = AgreementUtils.makeCodingStudy(diff, aFeature.getLayer().getName(),
-                        aFeature.getName(), tagset, true, casMap);
+                        aFeature.getName(), tagset, traits.isExcludeIncomplete(), casMap);
 
                 try (var printer = new CSVPrinter(
                         new OutputStreamWriter(CloseShieldOutputStream.wrap(aOut), UTF_8),
                         RFC4180)) {
 
-                    configurationSetsWithItemsToCsv(printer, result, result.getCompleteSets(),
-                            countWritten == 0);
+                    configurationSetsWithItemsToCsv(printer, result, countWritten == 0,
+                            userService);
                 }
 
                 countWritten++;
@@ -154,7 +174,7 @@ public class AgreementServiceImpl
             DefaultAgreementTraits traits, User aCurrentUser, List<SourceDocument> aDocuments,
             String aAnnotator1, String aAnnotator2)
     {
-        exportDiff(aOut, aFeature, aMeasure, traits, aCurrentUser, aDocuments,
+        exportDiff(aOut, aFeature, traits, aCurrentUser, aDocuments,
                 asList(aAnnotator1, aAnnotator2));
     }
 
@@ -162,6 +182,14 @@ public class AgreementServiceImpl
             Map<SourceDocument, List<AnnotationDocument>> aAllAnnDocs)
         throws IOException
     {
+        if (CURATION_USER.equals(aDataOwner)) {
+            if (!asList(CURATION_IN_PROGRESS, CURATION_FINISHED).contains(aDocument.getState())) {
+                return Optional.empty();
+            }
+
+            return loadCas(aDocument, aDataOwner);
+        }
+
         var annDocs = aAllAnnDocs.get(aDocument);
 
         if (annDocs.stream().noneMatch(annDoc -> aDataOwner.equals(annDoc.getUser()))) {
@@ -172,6 +200,11 @@ public class AgreementServiceImpl
             Optional.empty();
         }
 
+        return loadCas(aDocument, aDataOwner);
+    }
+
+    private Optional<CAS> loadCas(SourceDocument aDocument, String aDataOwner) throws IOException
+    {
         var cas = documentService.readAnnotationCas(aDocument, aDataOwner, AUTO_CAS_UPGRADE,
                 SHARED_READ_ONLY_ACCESS);
 
@@ -199,39 +232,84 @@ public class AgreementServiceImpl
     }
 
     public static void configurationSetsWithItemsToCsv(CSVPrinter aOut,
-            FullAgreementResult_ImplBase<ICodingAnnotationStudy> aAgreement,
-            List<ConfigurationSet> aSets, boolean aIncludeHeader)
+            FullCodingAgreementResult aAgreement, boolean aIncludeHeader)
+        throws IOException
+    {
+        configurationSetsWithItemsToCsv(aOut, aAgreement, aIncludeHeader, null);
+    }
+
+    private static void configurationSetsWithItemsToCsv(CSVPrinter aOut,
+            FullCodingAgreementResult aAgreement, boolean aIncludeHeader, UserDao aUserService)
         throws IOException
     {
         if (aIncludeHeader) {
             var headers = new ArrayList<>(asList("Type", "Collection", "Document", "Layer",
                     "Feature", "Position", "Flags"));
-            headers.addAll(aAgreement.getCasGroupIds());
+            aAgreement.getCasGroupIds().stream() //
+                    .map($ -> getUserName(aUserService, $)) //
+                    .forEach(headers::add);
             aOut.printRecord(headers);
         }
 
-        int i = 0;
-        for (var item : aAgreement.getStudy().getItems()) {
-            var cfgSet = aSets.get(i);
+        var relevantSets = aAgreement.getRelevantSets();
+        var usedItemIterator = aAgreement.getStudy().getItems().iterator();
+        for (var cfgSet : relevantSets) {
+            var row = new ArrayList<String>();
             var pos = cfgSet.getPosition();
 
-            var values = new ArrayList<String>();
-            values.add(pos.getClass().getSimpleName());
-            values.add(pos.getCollectionId());
-            values.add(pos.getDocumentId());
-            values.add(pos.getType());
-            values.add(aAgreement.getFeature());
-            values.add(cfgSet.getPosition().toMinimalString());
-            values.add(cfgSet.getTags().stream().map(s -> s.toString())
-                    .collect(Collectors.joining(", ")));
+            row.add(pos.getClass().getSimpleName());
+            row.add(pos.getCollectionId());
+            row.add(pos.getDocumentId());
+            row.add(pos.getType());
+            row.add(aAgreement.getFeature());
+            row.add(cfgSet.getPosition().toMinimalString());
+            row.add(cfgSet.getTags().stream().map(s -> s.toString()).collect(joining(", ")));
 
-            for (var unit : item.getUnits()) {
-                values.add(String.valueOf(unit.getCategory()));
+            if (cfgSet.getTags().contains(USED)) {
+                // The study contains only the USED items
+                var item = usedItemIterator.next();
+
+                for (var unit : item.getUnits()) {
+                    if (unit.getCategory() == null) {
+                        row.add(NO_ANNOTATION);
+                    }
+                    else if ("".equals(unit.getCategory())) {
+                        row.add(NO_LABEL);
+                    }
+                    else {
+                        row.add(String.valueOf(unit.getCategory()));
+                    }
+                }
+            }
+            else {
+                for (var rater : aAgreement.getCasGroupIds()) {
+                    var values = cfgSet.getValues(rater);
+                    if (values != null) {
+                        row.add(join(", ", values.stream() //
+                                .map($ -> Objects.toString($, NO_LABEL)) //
+                                .sorted().toList()));
+                    }
+                    else {
+                        row.add(NO_ANNOTATION);
+                    }
+                }
             }
 
-            aOut.printRecord(values);
-
-            i++;
+            aOut.printRecord(row);
         }
+    }
+
+    private static String getUserName(UserDao aUserService, String aUserName)
+    {
+        if (aUserService == null) {
+            return aUserName;
+        }
+
+        var user = aUserService.getUserOrCurationUser(aUserName);
+        if (user != null) {
+            return user.getUiName();
+        }
+
+        return aUserName;
     }
 }

@@ -17,16 +17,24 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.agreement;
 
+import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.Tag.COMPLETE;
+import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.Tag.DIFFERENCE;
+import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.Tag.INCOMPLETE_LABEL;
+import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.Tag.INCOMPLETE_POSITION;
+import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.Tag.STACKED;
+import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.Tag.USED;
 import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.getFeature;
+import static org.apache.commons.collections4.CollectionUtils.containsAny;
 import static org.apache.uima.fit.util.FSUtil.getFeature;
 
 import java.io.PrintStream;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Stream;
 
-import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.cas.ArrayFS;
 import org.apache.uima.cas.CAS;
@@ -40,10 +48,10 @@ import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.FullCodingAgre
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.Configuration;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.ConfigurationSet;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.relation.RelationDiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.relation.RelationPosition;
+import de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureMultiplicityMode;
 
 public class AgreementUtils
 {
@@ -155,20 +163,10 @@ public class AgreementUtils
             var values = new Object[users.size()];
             var i = 0;
             for (var user : users) {
-                // Set has to include all users, otherwise we cannot calculate the agreement for
-                // this configuration set.
                 if (!cfgSet.getCasGroupIds().contains(user)) {
                     cfgSet.addTags(Tag.INCOMPLETE_POSITION);
-                    if (aExcludeIncomplete) {
-                        // Record as incomplete
-                        continue nextPosition;
-                    }
-                    else {
-                        // Record as missing value
-                        values[i] = null;
-                        i++;
-                        continue;
-                    }
+                    i++;
+                    continue;
                 }
 
                 // Make sure a single user didn't do multiple alternative annotations at a single
@@ -176,42 +174,22 @@ public class AgreementUtils
                 // annotations.
                 var cfgs = cfgSet.getConfigurations(user);
                 if (cfgs.size() > 1) {
-                    cfgSet.addTags(Tag.STACKED);
+                    cfgSet.addTags(STACKED);
+
+                    for (var cfg : cfgs) {
+                        var value = extractValueForAgreement(cfg, user, aCasMap, aFeature);
+                        cfgSet.addValue(user, value);
+                    }
+
                     continue nextPosition;
                 }
 
-                Configuration cfg = cfgs.get(0);
-
-                // Check if source and/or targets of a relation are stacked
-                if (cfg.getPosition() instanceof RelationPosition pos) {
-                    var arc = cfg.getFs(user, aCasMap);
-
-                    var adapter = (RelationDiffAdapter) aDiff.getTypeAdapters().get(pos.getType());
-
-                    // Check if the source of the relation is stacked
-                    var source = getFeature(arc, adapter.getSourceFeature(), AnnotationFS.class);
-                    List<AnnotationFS> sourceCandidates = CasUtil.selectAt(arc.getCAS(),
-                            source.getType(), source.getBegin(), source.getEnd());
-                    if (sourceCandidates.size() > 1) {
-                        cfgSet.addTags(Tag.STACKED);
-                        continue nextPosition;
-                    }
-
-                    // Check if the target of the relation is stacked
-                    var target = getFeature(arc, adapter.getTargetFeature(), AnnotationFS.class);
-                    List<AnnotationFS> targetCandidates = CasUtil.selectAt(arc.getCAS(),
-                            target.getType(), target.getBegin(), target.getEnd());
-                    if (targetCandidates.size() > 1) {
-                        cfgSet.addTags(Tag.STACKED);
-                        continue nextPosition;
-                    }
-                }
+                var cfg = cfgs.get(0);
 
                 // Only calculate agreement for the given feature
-                FeatureStructure fs = cfg.getFs(user, aCasMap);
+                values[i] = extractValueForAgreement(cfg, user, aCasMap, aFeature);
 
-                values[i] = extractValueForAgreement(fs, aFeature, cfg.getAID(user).index,
-                        cfg.getPosition().getLinkCompareBehavior());
+                cfgSet.addValue(user, values[i]);
 
                 // Consider empty/null feature values to be the same and do not exclude them from
                 // agreement calculation. The empty label is still a valid label.
@@ -219,19 +197,43 @@ public class AgreementUtils
                     values[i] = "";
                 }
 
-                // "null" cannot be used in agreement calculations. We treat these as incomplete
-                if (values[i] == null) {
-                    cfgSet.addTags(Tag.INCOMPLETE_LABEL);
-                    if (aExcludeIncomplete) {
+                // Check if source and/or targets of a relation are stacked/
+                // FIXME: Do we really need this check - and if we need it, shouldn't it be
+                // integrated into e.g. cfg.isStacked()?! - REC 2024-04-14
+                if (cfg.getPosition() instanceof RelationPosition pos) {
+                    var arc = cfg.getFs(user, aCasMap);
+
+                    var adapter = (RelationDiffAdapter) aDiff.getTypeAdapters().get(pos.getType());
+
+                    // Check if the source of the relation is stacked
+                    var source = getFeature(arc, adapter.getSourceFeature(), AnnotationFS.class);
+                    var sourceCandidates = CasUtil.selectAt(arc.getCAS(), source.getType(),
+                            source.getBegin(), source.getEnd());
+                    if (sourceCandidates.size() > 1) {
+                        cfgSet.addTags(STACKED);
                         continue nextPosition;
                     }
+
+                    // Check if the target of the relation is stacked
+                    var target = getFeature(arc, adapter.getTargetFeature(), AnnotationFS.class);
+                    var targetCandidates = CasUtil.selectAt(arc.getCAS(), target.getType(),
+                            target.getBegin(), target.getEnd());
+                    if (targetCandidates.size() > 1) {
+                        cfgSet.addTags(STACKED);
+                        continue nextPosition;
+                    }
+                }
+
+                // "null" cannot be used in agreement calculations. We treat these as incomplete
+                if (values[i] == null) {
+                    cfgSet.addTags(INCOMPLETE_LABEL);
                 }
 
                 i++;
             }
 
-            if (ObjectUtils.notEqual(values[0], values[1])) {
-                cfgSet.addTags(Tag.DIFFERENCE);
+            if (Stream.of(values).filter(Objects::nonNull).distinct().count() > 1) {
+                cfgSet.addTags(DIFFERENCE);
             }
 
             // If the position feature is set (subposition), then it must match the feature we
@@ -239,8 +241,14 @@ public class AgreementUtils
             assert cfgSet.getPosition().getFeature() == null
                     || cfgSet.getPosition().getFeature().equals(aFeature);
 
-            cfgSet.addTags(Tag.COMPLETE);
-            study.addItemAsArray(values);
+            if (!containsAny(cfgSet.getTags(), INCOMPLETE_LABEL, INCOMPLETE_POSITION)) {
+                cfgSet.addTags(COMPLETE);
+            }
+
+            if (!aExcludeIncomplete || cfgSet.hasTag(COMPLETE)) {
+                cfgSet.addTags(USED);
+                study.addItemAsArray(values);
+            }
         }
 
         var taggedSets = aDiff.getPositions().stream() //
@@ -251,17 +259,19 @@ public class AgreementUtils
                 taggedSets, aExcludeIncomplete);
     }
 
-    private static Object extractValueForAgreement(FeatureStructure aFs, String aFeature,
-            int aLinkIndex, LinkCompareBehavior aLCB)
+    private static Object extractValueForAgreement(Configuration cfg, String user,
+            Map<String, CAS> aCasMap, String aFeature)
     {
-        var isPrimitiveFeature = aFs.getType().getFeatureByBaseName(aFeature).getRange()
+        var fs = cfg.getFs(user, aCasMap);
+        var linkIndex = cfg.getAID(user).index;
+        var isPrimitiveFeature = fs.getType().getFeatureByBaseName(aFeature).getRange()
                 .isPrimitive();
 
         // If the feature on a position is set, then it is a subposition
-        var isSubPosition = aLinkIndex != -1;
+        var isSubPosition = linkIndex != -1;
 
         // BEGIN PARANOIA
-        assert aFs.getType().getFeatureByBaseName(aFeature).getRange()
+        assert fs.getType().getFeatureByBaseName(aFeature).getRange()
                 .isPrimitive() == isPrimitiveFeature;
         // primitive implies not subposition - if this is primitive and subposition, we
         // should never have gotten here in the first place.
@@ -270,21 +280,22 @@ public class AgreementUtils
 
         if (isPrimitiveFeature && !isSubPosition) {
             // Primitive feature / primary position
-            return getFeature(aFs, aFeature);
+            return getFeature(fs, aFeature);
         }
-        else if (!isPrimitiveFeature && isSubPosition) {
+
+        if (!isPrimitiveFeature && isSubPosition) {
             // Link feature / sub-position
-            return extractLinkFeatureValueForAgreement(aFs, aFeature, aLinkIndex, aLCB);
+            return extractLinkFeatureValueForAgreement(fs, aFeature, linkIndex,
+                    cfg.getPosition().getLinkCompareBehavior());
         }
-        else {
-            throw new IllegalStateException("Should never get here: primitive: "
-                    + aFs.getType().getFeatureByBaseName(aFeature).getRange().isPrimitive()
-                    + "; subpos: " + isSubPosition);
-        }
+
+        throw new IllegalStateException("Should never get here: primitive: "
+                + fs.getType().getFeatureByBaseName(aFeature).getRange().isPrimitive()
+                + "; subpos: " + isSubPosition);
     }
 
     private static Object extractLinkFeatureValueForAgreement(FeatureStructure aFs, String aFeature,
-            int aLinkIndex, LinkCompareBehavior aLCB)
+            int aLinkIndex, LinkFeatureMultiplicityMode aLCB)
     {
         @SuppressWarnings("unchecked")
         var links = (ArrayFS<FeatureStructure>) aFs
@@ -292,15 +303,25 @@ public class AgreementUtils
         var link = links.get(aLinkIndex);
 
         switch (aLCB) {
-        case LINK_TARGET_AS_LABEL:
+        case ONE_TARGET_MULTIPLE_ROLES: {
             // FIXME The target feature name should be obtained from the feature definition!
             var target = (AnnotationFS) link
                     .getFeatureValue(link.getType().getFeatureByBaseName("target"));
 
             return target.getBegin() + "-" + target.getEnd() + " [" + target.getCoveredText() + "]";
-        case LINK_ROLE_AS_LABEL:
+        }
+        case MULTIPLE_TARGETS_ONE_ROLE:
             // FIXME The role feature name should be obtained from the feature definition!
             return link.getStringValue(link.getType().getFeatureByBaseName("role"));
+        case MULTIPLE_TARGETS_MULTIPLE_ROLES: {
+            // FIXME The role feature name should be obtained from the feature definition!
+            // FIXME The target feature name should be obtained from the feature definition!
+            var target = (AnnotationFS) link
+                    .getFeatureValue(link.getType().getFeatureByBaseName("target"));
+            return link.getStringValue(link.getType().getFeatureByBaseName("role")) + "@"
+                    + target.getBegin() + "-" + target.getEnd() + " [" + target.getCoveredText()
+                    + "]";
+        }
         default:
             throw new IllegalStateException("Unknown link target comparison mode [" + aLCB + "]");
         }
@@ -321,7 +342,7 @@ public class AgreementUtils
             aOut.printf("Item count: %s%n", ExceptionUtils.getRootCauseMessage(e));
         }
 
-        aOut.printf("Relevant position count: %d%n", aAgreement.getRelevantSetCount());
+        aOut.printf("Relevant position count: %d%n", aAgreement.getRelevantSets().size());
 
         aOut.printf("%n== Complete sets: %d ==%n", aAgreement.getCompleteSets().size());
         dumpAgreementConfigurationSetsWithItems(aOut, aAgreement, aAgreement.getCompleteSets());

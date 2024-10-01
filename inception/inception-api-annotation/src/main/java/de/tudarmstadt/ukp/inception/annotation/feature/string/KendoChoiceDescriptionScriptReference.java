@@ -25,9 +25,8 @@ import java.util.List;
 
 import org.apache.wicket.markup.head.HeaderItem;
 import org.apache.wicket.request.resource.JavaScriptResourceReference;
-
-import com.googlecode.wicket.jquery.core.template.IJQueryTemplate;
-import com.googlecode.wicket.jquery.ui.settings.JQueryUILibrarySettings;
+import org.wicketstuff.jquery.core.template.IJQueryTemplate;
+import org.wicketstuff.jquery.ui.settings.JQueryUILibrarySettings;
 
 public class KendoChoiceDescriptionScriptReference
     extends JavaScriptResourceReference

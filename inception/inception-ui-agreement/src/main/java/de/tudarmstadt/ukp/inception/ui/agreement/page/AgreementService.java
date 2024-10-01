@@ -37,7 +37,6 @@ public interface AgreementService
     Map<SourceDocument, List<AnnotationDocument>> getDocumentsToEvaluate(Project aProject,
             List<SourceDocument> aDocuments, DefaultAgreementTraits aTraits);
 
-    void exportDiff(OutputStream aOut, AnnotationFeature aFeature, String aMeasure,
-            DefaultAgreementTraits aTraits, User aCurrentUser, List<SourceDocument> aDocuments,
-            List<String> aAnnotators);
+    void exportDiff(OutputStream aOut, AnnotationFeature aFeature, DefaultAgreementTraits aTraits,
+            User aCurrentUser, List<SourceDocument> aDocuments, List<String> aAnnotators);
 }

@@ -106,28 +106,28 @@ class MentionsSampleTest
                 .contains(entry("John", "PER"), entry("Mary", "PER"));
 
         var template1 = """
-                {% for sentence, example in examples.items() %}
-                {{ sentence }}
-                {% set mentions = example.getLabelledMentions() %}
-                {% for mention, label in mentions.items() %}
-                {{ mention }} :: {{ label }}
-                {% endfor %}
-                {% endfor %}""";
+                        {% for sentence, example in examples.items() %}
+                        {{ sentence }}
+                        {% set mentions = example.getLabelledMentions() %}
+                        {% for mention, label in mentions.items() %}
+                        {{ mention }} :: {{ label }}
+                        {% endfor %}
+                        {% endfor %}""";
 
         System.out.println(render(examples, template1));
 
         var template2 = """
-                {% for sentence, example in examples.items() %}
-                Extract and classify the named entities from the following sentence as JSON:
+                        {% for sentence, example in examples.items() %}
+                        Extract and classify the named entities from the following sentence as JSON:
 
-                Text:
+                        Text:
 
-                '''
-                {{ example.getText() }}
-                '''
+                        '''
+                        {{ example.getText() }}
+                        '''
 
-                {{ example.getLabelledMentions() | tojson }}
-                {% endfor %}""";
+                        {{ example.getLabelledMentions() | tojson }}
+                        {% endfor %}""";
 
         System.out.println(render(examples, template2));
     }

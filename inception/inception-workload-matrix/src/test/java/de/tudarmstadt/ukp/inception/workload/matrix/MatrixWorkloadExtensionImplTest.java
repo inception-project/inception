@@ -41,6 +41,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.util.FileSystemUtils;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
+import de.tudarmstadt.ukp.clarin.webanno.constraints.config.ConstraintsServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -68,12 +69,13 @@ import de.tudarmstadt.ukp.inception.workload.model.WorkloadManager;
 @DataJpaTest(excludeAutoConfiguration = LiquibaseAutoConfiguration.class, showSql = false, //
         properties = { //
                 "spring.main.banner-mode=off", //
-                "workload.dynamic.enabled=true", //
+                "workload.matrix.enabled=true", //
                 "repository.path=" + MatrixWorkloadExtensionImplTest.TEST_OUTPUT_FOLDER })
 @EntityScan({ //
         "de.tudarmstadt.ukp.inception", //
         "de.tudarmstadt.ukp.clarin.webanno" })
 @Import({ //
+        ConstraintsServiceAutoConfiguration.class, //
         TextFormatsAutoConfiguration.class, //
         DocumentServiceAutoConfiguration.class, //
         ProjectServiceAutoConfiguration.class, //
@@ -113,7 +115,7 @@ public class MatrixWorkloadExtensionImplTest
 
         sourceDocument = documentService
                 .createSourceDocument(new SourceDocument("doc.txt", project, TextFormatSupport.ID));
-        annotationDocument = documentService.createAnnotationDocument(
+        annotationDocument = documentService.createOrUpdateAnnotationDocument(
                 new AnnotationDocument(annotator.getUsername(), sourceDocument));
 
         Fixtures.importTestSourceDocumentAndAddNamedEntity(documentService, annotationDocument);

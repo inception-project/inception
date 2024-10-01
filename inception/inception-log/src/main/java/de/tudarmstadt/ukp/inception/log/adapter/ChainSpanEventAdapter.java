@@ -30,9 +30,9 @@ public class ChainSpanEventAdapter
     implements EventLoggingAdapter<ChainSpanEvent>
 {
     @Override
-    public boolean accepts(Object aEvent)
+    public boolean accepts(Class<?> aEvent)
     {
-        return aEvent instanceof ChainSpanEvent;
+        return ChainSpanEvent.class.isAssignableFrom(aEvent);
     }
 
     @Override

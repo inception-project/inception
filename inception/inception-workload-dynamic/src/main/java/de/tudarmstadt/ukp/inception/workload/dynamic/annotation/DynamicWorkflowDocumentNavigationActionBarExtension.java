@@ -22,21 +22,14 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExtension.DYNAMIC_WORKLOAD_MANAGER_EXTENSION_ID;
 
 import java.io.Serializable;
-import java.util.Optional;
-
-import javax.persistence.EntityManager;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.request.cycle.RequestCycle;
-import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBarExtension;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
@@ -65,9 +58,6 @@ public class DynamicWorkflowDocumentNavigationActionBarExtension
     private final ProjectService projectService;
 
     private AnnotatorState annotatorState;
-
-    // SpringBeans
-    private @SpringBean EntityManager entityManager;
 
     @Autowired
     public DynamicWorkflowDocumentNavigationActionBarExtension(DocumentService aDocumentService,
@@ -119,23 +109,28 @@ public class DynamicWorkflowDocumentNavigationActionBarExtension
     public void onInitialize(AnnotationPageBase aPage)
     {
         annotatorState = aPage.getModelObject();
-        User user = annotatorState.getUser();
-        Project project = annotatorState.getProject();
-        Optional<AjaxRequestTarget> target = RequestCycle.get().find(AjaxRequestTarget.class);
+        var user = annotatorState.getUser();
+        var project = annotatorState.getProject();
+        var target = RequestCycle.get().find(AjaxRequestTarget.class);
 
         // Assign a new document with actionLoadDocument
-        Optional<SourceDocument> nextDocument = dynamicWorkloadExtension
-                .nextDocumentToAnnotate(project, user);
+        var allDocuments = documentService.listSourceDocuments(project);
+        var nextDocument = dynamicWorkloadExtension.nextDocumentToAnnotate(project, user);
         if (nextDocument.isPresent()) {
+            var state = aPage.getModelObject();
             // This was the case, so load the document and return
-            aPage.getModelObject().setDocument(nextDocument.get(),
-                    documentService.listSourceDocuments(nextDocument.get().getProject()));
-            aPage.actionLoadDocument(target.orElse(null));
+            if (!nextDocument.get().equals(state.getDocument())) {
+                // If the document is already loaded, do nothing (avoids an endless recursion
+                // triggered by actionLoadDocument refreshing the action bar which then
+                // calls onInitialize).
+                state.setDocument(nextDocument.get(), allDocuments);
+                aPage.actionLoadDocument(target.orElse(null));
+            }
+            return;
         }
-        else {
-            // Nothing left, so returning to homepage and showing hint
-            aPage.getSession().info("There are no more documents to annotate available for you.");
-            aPage.setResponsePage(aPage.getApplication().getHomePage());
-        }
+
+        // Nothing left, so returning to home page and showing hint
+        aPage.getSession().info("There are no more documents to annotate available for you.");
+        aPage.setResponsePage(aPage.getApplication().getHomePage());
     }
 }

@@ -17,9 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.elg.config;
 
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -33,6 +30,8 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.elg.client.ElgServiceCli
 import de.tudarmstadt.ukp.inception.recommendation.imls.elg.client.ElgServiceClientImpl;
 import de.tudarmstadt.ukp.inception.recommendation.imls.elg.service.ElgService;
 import de.tudarmstadt.ukp.inception.recommendation.imls.elg.service.ElgServiceImpl;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 
 @Configuration
 @ConditionalOnProperty(prefix = "recommender.elg", name = "enabled", havingValue = "true", matchIfMissing = true)

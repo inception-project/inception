@@ -20,15 +20,15 @@ package de.tudarmstadt.ukp.inception.sharing.project.exporters;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.when;
 
-import java.io.File;
 import java.util.zip.ZipFile;
+import java.util.zip.ZipOutputStream;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.io.TempDir;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -45,31 +45,34 @@ import de.tudarmstadt.ukp.inception.sharing.model.ProjectInvite;
 @ExtendWith(MockitoExtension.class)
 public class ProjectInviteExporterTest
 {
-    public @TempDir File workFolder;
-
     private @Mock InviteService inviteService;
 
-    private Project project;
+    private Project sourceProject;
+    private Project targetProject;
 
     private ProjectInviteExporter sut;
 
     @BeforeEach
     public void setUp() throws Exception
     {
-        project = new Project();
-        project.setId(1l);
-        project.setName("Test Project");
+        sourceProject = Project.builder() //
+                .withId(1l) //
+                .withName("Test Project") //
+                .build();
 
-        when(inviteService.readProjectInvite(Mockito.any())).thenReturn(invite());
+        targetProject = Project.builder() //
+                .withId(2l) //
+                .withName("Test Project") //
+                .build();
 
         sut = new ProjectInviteExporter(inviteService);
     }
 
-    private ProjectInvite invite()
+    private ProjectInvite invite(Project aProject)
     {
-        ProjectInvite i = new ProjectInvite();
+        var i = new ProjectInvite();
         i.setId(1l);
-        i.setProject(project);
+        i.setProject(aProject);
         i.setInviteId("deadbeaf");
         i.setInvitationText("Join the fray!");
         i.setUserIdPlaceholder("Nickname");
@@ -80,24 +83,29 @@ public class ProjectInviteExporterTest
     @Test
     public void thatExportingWorks() throws Exception
     {
-        // Export the project
-        FullProjectExportRequest exportRequest = new FullProjectExportRequest(project, null, false);
-        ProjectExportTaskMonitor monitor = new ProjectExportTaskMonitor(project, null, "test");
-        ExportedProject exportedProject = new ExportedProject();
+        when(inviteService.readProjectInvite(Mockito.any())).thenReturn(invite(sourceProject));
 
-        sut.exportData(exportRequest, monitor, exportedProject, workFolder);
+        // Export the project
+        var exportRequest = new FullProjectExportRequest(sourceProject, null, false);
+        var monitor = new ProjectExportTaskMonitor(sourceProject, null, "test");
+        var exportedProject = new ExportedProject();
+        var stage = mock(ZipOutputStream.class);
+
+        sut.exportData(exportRequest, monitor, exportedProject, stage);
+
+        reset(inviteService);
 
         // Import the project again
-        ArgumentCaptor<ProjectInvite> captor = ArgumentCaptor.forClass(ProjectInvite.class);
+        var captor = ArgumentCaptor.forClass(ProjectInvite.class);
         doNothing().when(inviteService).writeProjectInvite(captor.capture());
 
-        ProjectImportRequest importRequest = new ProjectImportRequest(true);
-        ZipFile zipFile = mock(ZipFile.class);
-        sut.importData(importRequest, project, exportedProject, zipFile);
+        var importRequest = new ProjectImportRequest(true);
+        var zipFile = mock(ZipFile.class);
+        sut.importData(importRequest, targetProject, exportedProject, zipFile);
 
         // Check that after re-importing the exported projects, they are identical to the original
         assertThat(captor.getAllValues()) //
                 .usingRecursiveFieldByFieldElementComparatorIgnoringFields("id") //
-                .containsExactlyInAnyOrder(invite());
+                .containsExactlyInAnyOrder(invite(targetProject));
     }
 }

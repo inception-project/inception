@@ -25,9 +25,8 @@ import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
-
-import com.googlecode.wicket.jquery.core.Options;
-import com.googlecode.wicket.jquery.ui.widget.tooltip.CustomTooltipBehavior;
+import org.wicketstuff.jquery.core.Options;
+import org.wicketstuff.jquery.ui.widget.tooltip.CustomTooltipBehavior;
 
 import de.tudarmstadt.ukp.inception.support.markdown.MarkdownLabel;
 

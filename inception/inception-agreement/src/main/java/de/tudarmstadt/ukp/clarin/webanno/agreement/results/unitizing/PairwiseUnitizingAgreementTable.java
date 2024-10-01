@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.agreement.results.unitizing;
 
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CLICK_EVENT;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 import static java.lang.String.format;
@@ -46,7 +47,8 @@ import org.slf4j.LoggerFactory;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.components.PopoverConfig;
 import de.agilecoders.wicket.core.markup.html.bootstrap.components.TooltipConfig.Placement;
-import de.tudarmstadt.ukp.clarin.webanno.agreement.PairwiseAnnotationResult;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.PairwiseAgreementResult;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.DefaultAgreementTraits;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.event.PairwiseAgreementScoreClickedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
@@ -58,7 +60,7 @@ import de.tudarmstadt.ukp.inception.support.wicket.DefaultRefreshingView;
 import de.tudarmstadt.ukp.inception.support.wicket.DescriptionTooltipBehavior;
 
 public class PairwiseUnitizingAgreementTable
-    extends GenericPanel<PairwiseAnnotationResult>
+    extends GenericPanel<PairwiseAgreementResult>
 {
     private static final long serialVersionUID = 571396822546125376L;
 
@@ -71,7 +73,8 @@ public class PairwiseUnitizingAgreementTable
 
     private final RefreshingView<User> rows;
 
-    public PairwiseUnitizingAgreementTable(String aId, IModel<PairwiseAnnotationResult> aModel)
+    public PairwiseUnitizingAgreementTable(String aId, IModel<PairwiseAgreementResult> aModel,
+            DefaultAgreementTraits aTraits)
     {
         super(aId, aModel);
 
@@ -89,11 +92,16 @@ public class PairwiseUnitizingAgreementTable
             var raters = new ArrayList<User>();
             if (getModelObject() != null) {
                 raters.add(null);
+
                 for (var rater : getModelObject().getRaters()) {
                     var user = userRepository.get(rater);
                     if (user != null) {
                         raters.add(user);
                     }
+                }
+
+                if (getModelObject().getRaters().contains(CURATION_USER)) {
+                    raters.add(userRepository.getCurationUser());
                 }
             }
             return raters;
@@ -181,8 +189,14 @@ public class PairwiseUnitizingAgreementTable
     {
         var result = getModelObject().getResult(aRater1.getUsername(), aRater2.getUsername());
 
-        if (result == null) {
+        if (result == null || result.getCasGroupIds().isEmpty()) {
             return new Label("label", "no data");
+        }
+
+        if (result.getCasGroupIds().size() != 2) {
+            throw new IllegalStateException(
+                    "Pairwise agreeement always requires two annotators, but got: "
+                            + result.getCasGroupIds());
         }
 
         var casGroupId1 = result.getCasGroupIds().get(0);

@@ -79,6 +79,7 @@ export class Entity {
   comment: Comment
   drawCurly = false
   labelText: string
+  score: number | undefined
   refedIndexSum: number
   color: string
   shadowClass: string

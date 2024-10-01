@@ -22,6 +22,7 @@ import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.COREFERENCE_TYPE
 import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.isSame;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Collections.emptyList;
+import static org.apache.uima.cas.text.AnnotationPredicates.colocated;
 
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
@@ -40,6 +41,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 
+import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -76,9 +78,11 @@ public class ChainAdapter
     public ChainAdapter(LayerSupportRegistry aLayerSupportRegistry,
             FeatureSupportRegistry aFeatureSupportRegistry,
             ApplicationEventPublisher aEventPublisher, AnnotationLayer aLayer,
-            Supplier<Collection<AnnotationFeature>> aFeatures, List<SpanLayerBehavior> aBehaviors)
+            Supplier<Collection<AnnotationFeature>> aFeatures, List<SpanLayerBehavior> aBehaviors,
+            ConstraintsService aConstraintsService)
     {
-        super(aLayerSupportRegistry, aFeatureSupportRegistry, aEventPublisher, aLayer, aFeatures);
+        super(aLayerSupportRegistry, aFeatureSupportRegistry, aConstraintsService, aEventPublisher,
+                aLayer, aFeatures);
 
         if (aBehaviors == null) {
             behaviors = emptyList();
@@ -562,5 +566,33 @@ public class ChainAdapter
         var selection = new Selection();
         selection.selectArc(new VID(aAnno, 1, VID.NONE, VID.NONE), aAnno, getNextLink(aAnno));
         return selection;
+    }
+
+    @Override
+    public boolean isSamePosition(FeatureStructure aFS1, FeatureStructure aFS2)
+    {
+        if (aFS1 == null || aFS2 == null) {
+            return false;
+        }
+
+        if (!aFS1.getType().getName().equals(getAnnotationTypeName())) {
+            throw new IllegalArgumentException("Expected [" + getAnnotationTypeName()
+                    + "] but got [" + aFS1.getType().getName() + "]");
+        }
+
+        if (!aFS2.getType().getName().equals(getAnnotationTypeName())) {
+            throw new IllegalArgumentException("Expected [" + getAnnotationTypeName()
+                    + "] but got [" + aFS2.getType().getName() + "]");
+        }
+
+        if (aFS1 instanceof AnnotationFS ann1 && aFS2 instanceof AnnotationFS ann2) {
+            if (aFS1 == aFS2) {
+                return true;
+            }
+
+            return colocated(ann1, ann2);
+        }
+
+        throw new IllegalArgumentException("Feature structures need to be annotations");
     }
 }

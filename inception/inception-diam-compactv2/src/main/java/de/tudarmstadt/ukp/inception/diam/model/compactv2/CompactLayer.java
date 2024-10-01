@@ -21,11 +21,13 @@ public class CompactLayer
 {
     private final long id;
     private final String name;
+    private final String type;
 
-    public CompactLayer(long aId, String aName)
+    public CompactLayer(long aId, String aName, String aType)
     {
         id = aId;
         name = aName;
+        type = aType;
     }
 
     public long getId()
@@ -36,5 +38,10 @@ public class CompactLayer
     public String getName()
     {
         return name;
+    }
+
+    public String getType()
+    {
+        return type;
     }
 }

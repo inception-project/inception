@@ -43,7 +43,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.Type;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.Component;
 import org.apache.wicket.Session;
@@ -70,6 +69,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase2;
 import de.tudarmstadt.ukp.inception.annotation.events.FeatureValueUpdatedEvent;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
@@ -122,7 +122,7 @@ public class DocumentMetadataAnnotationSelectionPanel
     private @SpringBean RecommendationService recommendationService;
     private @SpringBean UserDao userService;
 
-    private final AnnotationPage annotationPage;
+    private final AnnotationPageBase2 annotationPage;
     private final CasProvider casProvider;
     private final AnnotationActionHandler actionHandler;
     private final WebMarkupContainer layersContainer;
@@ -135,10 +135,9 @@ public class DocumentMetadataAnnotationSelectionPanel
     private int createdAnnotationAddress;
 
     public DocumentMetadataAnnotationSelectionPanel(String aId, CasProvider aCasProvider,
-            AnnotationPage aAnnotationPage, AnnotationActionHandler aActionHandler,
-            IModel<AnnotatorState> aState)
+            AnnotationPageBase2 aAnnotationPage, AnnotationActionHandler aActionHandler)
     {
-        super(aId, aState);
+        super(aId, aAnnotationPage.getModel());
 
         setOutputMarkupPlaceholderTag(true);
 
@@ -482,15 +481,12 @@ public class DocumentMetadataAnnotationSelectionPanel
         var renderer = layerSupport.createRenderer(aLayer,
                 () -> annotationService.listAnnotationFeature(aLayer));
 
-        Type type;
-        try {
-            type = adapter.getAnnotationType(cas);
-        }
-        catch (IllegalArgumentException e) {
-            // CAS probably has not been upgraded to contain the type - ignore
+        var maybeType = adapter.getAnnotationType(cas);
+        if (!maybeType.isPresent()) {
             return;
         }
 
+        var type = maybeType.get();
         var annotations = cas.select(type).asList();
         var hasOrderFeature = type.getFeatureByBaseName(FEATURE_NAME_ORDER) != null;
         if (hasOrderFeature) {

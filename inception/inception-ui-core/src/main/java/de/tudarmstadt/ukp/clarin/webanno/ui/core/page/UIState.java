@@ -19,12 +19,15 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.core.page;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-import de.tudarmstadt.ukp.inception.preferences.Key;
+import de.tudarmstadt.ukp.inception.preferences.PreferenceKey;
+import de.tudarmstadt.ukp.inception.preferences.PreferenceValue;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class UIState
+    implements PreferenceValue
 {
-    public static final Key<UIState> KEY_UI = new Key<>(UIState.class, "global/ui");
+    public static final PreferenceKey<UIState> KEY_UI = new PreferenceKey<>(UIState.class,
+            "global/ui");
 
     public static final String LIGHT_THEME = "light";
     public static final String DARK_THEME = "dark";

@@ -37,7 +37,7 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.Icon;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.inception.preferences.Key;
+import de.tudarmstadt.ukp.inception.preferences.PreferenceKey;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
@@ -48,7 +48,7 @@ public class SidebarTabbedPanel<T extends SidebarTab>
 {
     private static final long serialVersionUID = -5077247310722334915L;
 
-    public static final Key<AnnotationSidebarState> KEY_SIDEBAR_STATE = new Key<>(
+    public static final PreferenceKey<AnnotationSidebarState> KEY_SIDEBAR_STATE = new PreferenceKey<>(
             AnnotationSidebarState.class, "annotation/left-sidebar");
 
     private boolean expanded = false;
@@ -130,13 +130,13 @@ public class SidebarTabbedPanel<T extends SidebarTab>
         var user = userService.getCurrentUser();
         var sidebarState = prefService.loadTraitsForUserAndProject(KEY_SIDEBAR_STATE, user,
                 state.getObject().getProject());
+        expanded = sidebarState.isExpanded();
         if (isNotBlank(sidebarState.getSelectedTab())) {
             var tabFactories = getTabs().stream().map(SidebarTab::getFactoryId)
                     .collect(Collectors.toList());
             var tabIndex = tabFactories.indexOf(sidebarState.getSelectedTab());
             if (tabIndex >= 0) {
                 super.setSelectedTab(tabIndex);
-                expanded = sidebarState.isExpanded();
             }
         }
     }

@@ -21,8 +21,8 @@ import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visible
 import static de.tudarmstadt.ukp.inception.ui.kb.KnowledgeBasePage.PAGE_PARAM_KB_NAME;
 import static org.apache.wicket.RuntimeConfigurationType.DEVELOPMENT;
 
-import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 import org.apache.wicket.AttributeModifier;
@@ -261,28 +261,37 @@ public class KnowledgeBasePanel
     public void actionStatementChanged(AjaxStatementChangedEvent event)
     {
         // if this event is not about renaming (changing the RDFS label) of a KBObject, return
-        KBStatement statement = event.getStatement();
+        var statement = event.getStatement();
 
         if (isLabelStatement(statement)) {
             // determine whether the concept name or property name was changed (or neither), then
             // update the name in the respective KBHandle
-
-            List<Model<? extends KBObject>> models = Arrays.asList(selectedConceptHandle,
-                    selectedPropertyHandle);
-            models.stream().filter(model -> model.getObject() != null && model.getObject()
-                    .getIdentifier().equals(statement.getInstance().getIdentifier()))
-                    .forEach(model -> {
-                        Optional<KBHandle> kbObject = kbService.readHandle(kbModel.getObject(),
-                                model.getObject().getIdentifier());
-                        if (kbObject.isPresent()) {
-                            model.getObject().setName(kbObject.get().getName());
-                        }
-                        event.getTarget().add(this);
-                    });
+            if (updateStatmentModel(event, statement, selectedConceptHandle)) {
+                event.getTarget().add(this);
+            }
+            if (updateStatmentModel(event, statement, selectedPropertyHandle)) {
+                event.getTarget().add(this);
+            }
         }
         else {
             event.getTarget().add(getPage());
         }
+    }
+
+    private boolean updateStatmentModel(AjaxStatementChangedEvent event, KBStatement statement,
+            Model<? extends KBObject> mod)
+    {
+        if (mod.getObject() != null && mod.getObject().getIdentifier()
+                .equals(statement.getInstance().getIdentifier())) {
+            var kbObject = kbService.readHandle(kbModel.getObject(),
+                    mod.getObject().getIdentifier());
+            if (kbObject.isPresent()
+                    && !Objects.equals(kbObject.get().getName(), mod.getObject().getName())) {
+                mod.getObject().setName(kbObject.get().getName());
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -298,22 +307,6 @@ public class KnowledgeBasePanel
         }
 
         return labelProperties.contains(aStatement.getProperty().getIdentifier());
-
-        // SimpleValueFactory vf = SimpleValueFactory.getInstance();
-        //
-        // String propertyIri = aStatement.getProperty().getIdentifier();
-        // IRI subjectIri = vf.createIRI(aStatement.getInstance().getIdentifier());
-        // IRI labelIri = kbModel.getObject().getLabelIri();
-        //
-        // try (RepositoryConnection conn = kbService.getConnection(kbModel.getObject())) {
-        //
-        // boolean hasMainLabel = RdfUtils
-        // .readFirst(conn, subjectIri, labelIri, null, kbModel.getObject()).isPresent();
-        //
-        // return propertyIri.equals(labelIri.stringValue())
-        // || (kbService.isLabelProperty(kbModel.getObject(), propertyIri)
-        // && !hasMainLabel);
-        // }
     }
 
     @OnEvent

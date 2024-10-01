@@ -19,14 +19,16 @@ package de.tudarmstadt.ukp.inception.recommendation.exporter;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.when;
 
-import java.io.File;
 import java.util.List;
+import java.util.stream.Stream;
 import java.util.zip.ZipFile;
+import java.util.zip.ZipOutputStream;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -58,42 +60,23 @@ public class LearningRecordExporterTest
     private @Mock DocumentService documentService;
     private @Mock LearningRecordService learningRecordService;
 
-    private Project project;
-    private SourceDocument document;
-    private AnnotationLayer layer;
-    private AnnotationFeature feature;
+    private Project sourceProject;
+    private Project targetProject;
 
     private LearningRecordExporter sut;
 
     @BeforeEach
     public void setUp()
     {
-        project = Project.builder() //
+        sourceProject = Project.builder() //
                 .withId(1l) //
                 .withName("Test Project") //
                 .build();
 
-        document = SourceDocument.builder() //
-                .withId(1l) //
-                .withProject(project) //
-                .withName("Document") //
+        targetProject = Project.builder() //
+                .withId(2l) //
+                .withName("Test Project") //
                 .build();
-
-        layer = AnnotationLayer.builder() //
-                .withId(1l) //
-                .withProject(project) //
-                .withName("Layer") //
-                .build();
-
-        feature = AnnotationFeature.builder() //
-                .withId(1l) //
-                .withProject(project) //
-                .withName("feature1") //
-                .build();
-
-        when(annotationService.findLayer(project, layer.getName())).thenReturn(layer);
-        when(annotationService.getFeature(eq(feature.getName()), eq(layer))).thenReturn(feature);
-        when(documentService.getSourceDocument(project, document.getName())).thenReturn(document);
 
         sut = new LearningRecordExporter(annotationService, documentService, learningRecordService);
     }
@@ -101,41 +84,80 @@ public class LearningRecordExporterTest
     @Test
     public void thatExportingWorks()
     {
-        when(learningRecordService.listLearningRecords(project)).thenReturn(records());
+        when(annotationService.findLayer(any(Project.class), any(String.class)))
+                .then(call -> layer(call.getArgument(0), call.getArgument(1)));
+        when(annotationService.getFeature(any(String.class), any(AnnotationLayer.class)))
+                .then(call -> feature(call.getArgument(0), call.getArgument(1)));
+        when(documentService.getSourceDocument(any(), any()))
+                .then(call -> document(call.getArgument(0), call.getArgument(1)));
+        when(learningRecordService.listLearningRecords(any())).thenReturn(records(sourceProject));
 
-        // Export the project and import it again
-        var captor = runExportImportAndFetchRecommenders();
-
-        // Check that after re-importing the exported data is identical to the original
-        assertThat(captor.getAllValues()) //
-                .usingRecursiveFieldByFieldElementComparatorIgnoringFields("id", "actionDate")
-                .containsExactlyInAnyOrderElementsOf(records());
-    }
-
-    private ArgumentCaptor<LearningRecord> runExportImportAndFetchRecommenders()
-    {
         // Export the project
-        FullProjectExportRequest exportRequest = new FullProjectExportRequest(project, null, false);
-        ProjectExportTaskMonitor monitor = new ProjectExportTaskMonitor(project, null, "test");
-        ExportedProject exportedProject = new ExportedProject();
-        File file = mock(File.class);
+        var exportRequest = new FullProjectExportRequest(sourceProject, null, false);
+        var monitor = new ProjectExportTaskMonitor(sourceProject, null, "test");
+        var exportedProject = new ExportedProject();
+        var file = mock(ZipOutputStream.class);
 
         sut.exportData(exportRequest, monitor, exportedProject, file);
 
+        reset(annotationService, learningRecordService);
+
+        when(annotationService.findLayer(any(Project.class), any(String.class)))
+                .then(call -> layer(call.getArgument(0), call.getArgument(1)));
+        when(annotationService.getFeature(any(String.class), any(AnnotationLayer.class)))
+                .then(call -> feature(call.getArgument(0), call.getArgument(1)));
+        when(documentService.getSourceDocument(any(), any()))
+                .then(call -> document(call.getArgument(0), call.getArgument(1)));
+
         // Import the project again
-        var captor = ArgumentCaptor.forClass(LearningRecord.class);
-        doNothing().when(learningRecordService).createLearningRecord(captor.capture());
+        var captor = ArgumentCaptor.forClass(LearningRecord[].class);
+        doNothing().when(learningRecordService).createLearningRecords(captor.capture());
 
-        ProjectImportRequest importRequest = new ProjectImportRequest(true);
-        ZipFile zipFile = mock(ZipFile.class);
-        sut.importData(importRequest, project, exportedProject, zipFile);
+        var importRequest = new ProjectImportRequest(true);
+        var zipFile = mock(ZipFile.class);
+        sut.importData(importRequest, targetProject, exportedProject, zipFile);
 
-        return captor;
+        // Export the project and import it again
+        // Check that after re-importing the exported data is identical to the original
+        assertThat(captor.getAllValues().stream().flatMap(Stream::of)) //
+                .usingRecursiveFieldByFieldElementComparatorIgnoringFields("id", "actionDate")
+                .containsExactlyInAnyOrderElementsOf(records(targetProject));
     }
 
-    private List<LearningRecord> records()
+    private AnnotationFeature feature(String aFeature, AnnotationLayer aAnnotationLayer)
     {
-        LearningRecord r1 = LearningRecord.builder() //
+        return AnnotationFeature.builder() //
+                .withId(1l) //
+                .withProject(aAnnotationLayer.getProject()) //
+                .withName(aFeature) //
+                .build();
+    }
+
+    private AnnotationLayer layer(Project aProject, String aName)
+    {
+        return AnnotationLayer.builder() //
+                .withId(1l) //
+                .withProject(aProject) //
+                .withName(aName) //
+                .build();
+    }
+
+    private SourceDocument document(Project aProject, String aName)
+    {
+        return SourceDocument.builder() //
+                .withId(1l) //
+                .withProject(aProject) //
+                .withName(aName) //
+                .build();
+    }
+
+    private List<LearningRecord> records(Project aProject)
+    {
+        var document = document(aProject, "document");
+        var layer = layer(aProject, "layer");
+        var feature = feature("feature", layer);
+
+        return asList(LearningRecord.builder() //
                 .withAnnotation("label") //
                 .withAnnotationFeature(feature) //
                 .withChangeLocation(LearningRecordChangeLocation.MAIN_EDITOR) //
@@ -150,8 +172,6 @@ public class LearningRecordExporterTest
                 .withTokenText("0123456789") //
                 .withUser("user1") //
                 .withUserAction(LearningRecordUserAction.ACCEPTED) //
-                .build();
-
-        return asList(r1);
+                .build());
     }
 }
