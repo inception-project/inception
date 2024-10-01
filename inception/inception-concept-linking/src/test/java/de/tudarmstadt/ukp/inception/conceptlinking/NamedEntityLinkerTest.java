@@ -130,7 +130,10 @@ public class NamedEntityLinkerTest
         buildAnnotation(cas, NamedEntity.class).on("Barack Obama").buildAllAndAddToIndexes();
         SegmentationUtils.splitSentences(cas);
         SegmentationUtils.tokenize(cas);
-        RecommenderTestHelper.addPredictionFeatures(cas, NamedEntity.class, "value");
+        RecommenderTestHelper.addPredictionFeatures(cas, NamedEntity.class,
+                NamedEntity._FeatName_value);
+        RecommenderTestHelper.addPredictionFeatures(cas, NamedEntity.class,
+                NamedEntity._FeatName_identifier);
     }
 
     @AfterEach

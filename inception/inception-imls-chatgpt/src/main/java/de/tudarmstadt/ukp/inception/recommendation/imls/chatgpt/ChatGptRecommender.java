@@ -98,6 +98,9 @@ public class ChatGptRecommender
                 .withModel(traits.getModel());
 
         if (traits.getFormat() != null) {
+            request.withPrompt(
+                    "Respond with a JSON object using the words as the key and the label as the value.\n\n"
+                            + aPrompt);
             request.withResponseFormat(
                     ResponseFormat.builder().withType(traits.getFormat()).build());
         }

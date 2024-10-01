@@ -31,7 +31,7 @@ public class RecommenderGeneralSettings
 
     private boolean waitForRecommendersOnOpenDocument = false;
 
-    private boolean showRecommendationsWhenViewingOtherUser = true;
+    private boolean showRecommendationsWhenViewingOtherUser = false;
 
     private boolean showRecommendationsWhenViewingCurationUser = true;
 

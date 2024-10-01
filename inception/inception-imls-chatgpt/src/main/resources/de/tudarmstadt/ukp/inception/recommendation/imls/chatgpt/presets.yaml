@@ -3,7 +3,7 @@
   format: json
   extractionMode: mentions-from-json
   prompt: |-
-    Identify all named entities in the following text and return them as JSON.
+    Identify all named entities in the following text.
 
     {{ text }}
 
@@ -12,7 +12,7 @@
   format: json
   extractionMode: mentions-from-json
   prompt: |-
-    Identify all named entities in the following text and return them as JSON.
+    Identify all named entities in the following text.
     
     {% if examples %}
     {% for example in examples %}

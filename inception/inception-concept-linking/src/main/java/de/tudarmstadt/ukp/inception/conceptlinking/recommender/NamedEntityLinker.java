@@ -152,7 +152,7 @@ public class NamedEntityLinker
         }
 
         var predictedType = getPredictedType(aCas);
-        // Feature scoreFeature = getScoreFeature(aCas);
+        var scoreFeature = getScoreFeature(aCas);
         var predictedFeature = getPredictedFeature(aCas);
         var isPredictionFeature = getIsPredictionFeature(aCas);
 
@@ -167,6 +167,7 @@ public class NamedEntityLinker
             var annotation = aCas.createAnnotation(predictedType, aBegin, aEnd);
             annotation.setStringValue(predictedFeature, prediction.getIdentifier());
             annotation.setBooleanValue(isPredictionFeature, true);
+            annotation.setDoubleValue(scoreFeature, prediction.getScore());
             aCas.addFsToIndexes(annotation);
             suggestionsCreated++;
             if (suggestionsCreated >= recommender.getMaxRecommendations()) {

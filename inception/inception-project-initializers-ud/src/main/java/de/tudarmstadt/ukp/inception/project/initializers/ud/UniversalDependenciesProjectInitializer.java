@@ -37,6 +37,7 @@ import de.tudarmstadt.ukp.clarin.webanno.project.initializers.QuickProjectInitia
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.SurfaceFormLayerInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.TokenLayerInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.config.ProjectInitializersAutoConfiguration;
+import de.tudarmstadt.ukp.inception.project.api.ProjectInitializationRequest;
 import de.tudarmstadt.ukp.inception.project.api.ProjectInitializer;
 import de.tudarmstadt.ukp.inception.support.wicket.resource.Strings;
 
@@ -91,7 +92,7 @@ public class UniversalDependenciesProjectInitializer
     }
 
     @Override
-    public void configure(Project aProject) throws IOException
+    public void configure(ProjectInitializationRequest aRequest) throws IOException
     {
         // Nothing to do - all initialization is already done by the dependencies
     }

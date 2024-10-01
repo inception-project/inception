@@ -34,13 +34,12 @@ By default, the format writes all values to the JSON output, even if the values 
 in JSON (e.g. `0` for numbers or `false` for booleans). You can configure this behavior by setting
 `format.json-cas-legacy.omit-default-values` to `true` or `false` (default) respectively.
 
-[cols="2,1,1,1,3"]
+[cols="2,1,1,3"]
 |====
-| Format | Read | Write | Custom Layers | Description
+| Format | Import | Export | Supported layers
 
 | link:https://uima.apache.org/d/uimaj-current/references.html#ugr.ref.json[UIMA CAS JSON (legacy)] (`json`)
 | no
 | yes
-| yes
-| UIMA CAS JSON (legacy)
+| All built-in and custom layers
 |====

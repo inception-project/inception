@@ -21,7 +21,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>34.0-SNAPSHOT</version>
+    <version>35.0-SNAPSHOT</version>
     <relativePath>..</relativePath>
   </parent>
 
@@ -127,6 +127,10 @@
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-project-initializers-doclabeling</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-project-initializers-phi</artifactId>
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
@@ -408,6 +412,10 @@
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-io-conll</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-io-docx</artifactId>
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
@@ -1031,6 +1039,7 @@
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-processing</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-project-initializers-basic</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-project-initializers-doclabeling</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-project-initializers-phi</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-project-initializers-sentencelabeling</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-project-initializers-ud</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-project-initializers-wikidatalinking</usedDependency>
@@ -1047,6 +1056,7 @@
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-io-bioc</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-io-brat</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-io-conll</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-io-docx</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-io-imscwb</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-io-html</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-io-intertext</usedDependency>

@@ -29,7 +29,6 @@ import org.apache.wicket.request.resource.ResourceReference;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.annotation.Order;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.NamedEntityLayerInitializer;
@@ -59,18 +58,16 @@ public class EntityAnnotationProjectInitializer
 
     private final AnnotationSchemaService annotationService;
     private final ApplicationContext context;
-    private final DocumentImportExportService documentImportExportService;
     private final DocumentService documentService;
     private final UserDao userService;
 
     public EntityAnnotationProjectInitializer(ApplicationContext aContext,
             AnnotationSchemaService aAnnotationService, DocumentService aDocumentService,
-            DocumentImportExportService aDocumentImportExportService, UserDao aUserService)
+            UserDao aUserService)
     {
         context = aContext;
         annotationService = aAnnotationService;
         documentService = aDocumentService;
-        documentImportExportService = aDocumentImportExportService;
         userService = aUserService;
     }
 

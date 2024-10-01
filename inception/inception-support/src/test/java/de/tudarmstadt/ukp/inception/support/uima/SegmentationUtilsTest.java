@@ -15,12 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.export;
+package de.tudarmstadt.ukp.inception.support.uima;
 
 import static de.tudarmstadt.ukp.inception.support.uima.SegmentationUtils.splitSentences;
 import static de.tudarmstadt.ukp.inception.support.uima.SegmentationUtils.tokenize;
 import static org.apache.uima.fit.factory.JCasFactory.createText;
-import static org.apache.uima.fit.util.CasUtil.toText;
 import static org.apache.uima.fit.util.JCasUtil.select;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -41,7 +40,8 @@ public class SegmentationUtilsTest
 
         splitSentences(jcas.getCas());
 
-        assertThat(toText(select(jcas, Sentence.class))) //
+        assertThat(select(jcas, Sentence.class)) //
+                .extracting(Sentence::getCoveredText) //
                 .containsExactly("I am one.", "I am two.");
     }
 
@@ -52,10 +52,25 @@ public class SegmentationUtilsTest
         new Heading(jcas, 0, 7).addToIndexes();
         new Paragraph(jcas, 8, 17).addToIndexes();
 
-        splitSentences(jcas.getCas(), jcas.select(Div.class));
+        splitSentences(jcas.getCas(), 0, jcas.getDocumentText().length(), jcas.select(Div.class));
 
-        assertThat(toText(select(jcas, Sentence.class))) //
+        assertThat(select(jcas, Sentence.class)) //
+                .extracting(Sentence::getCoveredText) //
                 .containsExactly("Heading", "I am two.");
+    }
+
+    @Test
+    public void testSplitSentencesWithLimitAndZones() throws Exception
+    {
+        var jcas = createText("Heading I am two.", "en");
+        new Heading(jcas, 0, 7).addToIndexes();
+        new Paragraph(jcas, 8, 17).addToIndexes();
+
+        splitSentences(jcas.getCas(), 4, 12, jcas.select(Div.class));
+
+        assertThat(select(jcas, Sentence.class)) //
+                .extracting(Sentence::getCoveredText) //
+                .containsExactly("ing", "I am");
     }
 
     @Test
@@ -67,15 +82,19 @@ public class SegmentationUtilsTest
 
         tokenize(jcas.getCas());
 
-        assertThat(toText(select(jcas, Sentence.class))) //
+        assertThat(select(jcas, Sentence.class)) //
+                .extracting(Sentence::getCoveredText) //
                 .containsExactly("i am one.", "i am two.");
 
-        assertThat(toText(select(jcas, Token.class))) //
-                .containsExactly("i", "am", "one", ".", "i", "am", "two", ".");
+        assertThat(select(jcas, Token.class)) //
+                .extracting(Token::getCoveredText) //
+                .containsExactly( //
+                        "i", "am", "one", ".", //
+                        "i", "am", "two", ".");
     }
 
     @Test
-    public void testTokenizeWitZones() throws Exception
+    public void testTokenizeWithZones() throws Exception
     {
         var jcas = createText("i am one.i am two.", "en");
         new Sentence(jcas, 0, 9).addToIndexes();
@@ -83,12 +102,38 @@ public class SegmentationUtilsTest
         new Div(jcas, 3, 3).addToIndexes();
         new Div(jcas, 12, 15).addToIndexes();
 
-        tokenize(jcas.getCas(), jcas.select(Div.class));
+        tokenize(jcas.getCas(), 0, jcas.getDocumentText().length(), jcas.select(Div.class));
 
-        assertThat(toText(select(jcas, Sentence.class))) //
+        assertThat(select(jcas, Sentence.class)) //
+                .extracting(Sentence::getCoveredText) //
                 .containsExactly("i am one.", "i am two.");
 
-        assertThat(toText(select(jcas, Token.class))) //
-                .containsExactly("i", "a", "m", "one", ".", "i", "a", "m", "t", "wo", ".");
+        assertThat(select(jcas, Token.class)) //
+                .extracting(Token::getCoveredText) //
+                .containsExactly( //
+                        "i", "a", "m", "one", ".", //
+                        "i", "a", "m", "t", "wo", ".");
+    }
+
+    @Test
+    public void testTokenizeWithLimitAndZones() throws Exception
+    {
+        var jcas = createText("i am one.i am two.", "en");
+        new Sentence(jcas, 0, 9).addToIndexes();
+        new Sentence(jcas, 9, 18).addToIndexes();
+        new Div(jcas, 3, 3).addToIndexes();
+        new Div(jcas, 12, 15).addToIndexes();
+
+        tokenize(jcas.getCas(), 5, 13, jcas.select(Div.class));
+
+        assertThat(select(jcas, Sentence.class)) //
+                .extracting(Sentence::getCoveredText) //
+                .containsExactly("i am one.", "i am two.");
+
+        assertThat(select(jcas, Token.class)) //
+                .extracting(Token::getCoveredText) //
+                .containsExactly( //
+                        "one", ".", //
+                        "i", "a", "m");
     }
 }

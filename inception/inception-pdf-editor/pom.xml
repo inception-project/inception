@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>34.0-SNAPSHOT</version>
+    <version>35.0-SNAPSHOT</version>
   </parent>
   <name>INCEpTION - Editor - PDF (pdfbox ${pdfbox.version}) (deprecated)</name>
   <artifactId>inception-pdf-editor</artifactId>
@@ -201,7 +201,7 @@
                 <excludes combine.children="append">
                   <exclude>src/main/java/de/tudarmstadt/ukp/inception/pdfeditor/pdfextract/PDFExtractor.java</exclude>
                   <exclude>src/main/java/de/tudarmstadt/ukp/inception/pdfeditor/pdfextract/ImageExtractor.java</exclude>
-                  <exclude>src/main/ts/**/*</exclude>
+                  <exclude>src/main/java/de/tudarmstadt/ukp/inception/pdfeditor/pdfextract/DrawOperator.java</exclude>
                   <exclude>src/main/ts/**/*</exclude>
                 </excludes>
               </configuration>

@@ -294,7 +294,7 @@ What we called "`aspects`", "`categories`" or "`ways to annotate`" here, is refe
 A span layer annotation always anchors on one span only.
 A relation layer annotation always anchors on the two span annotations of the relation.
 Chains anchor on all spans which are part of the chain.
-For span layers, the default granularity is to annotate one or more tokens (“words”) but you can adjust to character level or sentence level in the layer details (see <<Layers>> in the main documentation; especially <<Properties>>). +
+For span layers, the default granularity is to annotate one or more tokens (“words”) but you can adjust to character level or sentence level in the layer details (see <<sect_projects_layers>> in the main documentation; especially <<Properties>>). +
 {zwsp} +
 Each layer provides appropriate fields, so-called *features*, to enter a label for the annotation of the selected text part.
 For example, on the _Named Entity_ layer in {product-name}, you find two feature-fields: _value_ and _identifier_.

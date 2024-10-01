@@ -21,6 +21,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.LinkMode.WITH_ROLE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.ANNOTATION;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation.MAIN_EDITOR;
 import static java.util.Collections.emptyList;
@@ -46,7 +47,6 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.message.DoActionResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.RejectActionResponse;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
@@ -310,10 +310,13 @@ public class RecommendationEditorExtension
     }
 
     @Override
-    public List<VLazyDetailGroup> lookupLazyDetails(SourceDocument aDocument, User aUser, CAS aCas,
-            VID aVid, AnnotationLayer aLayer)
+    public List<VLazyDetailGroup> lookupLazyDetails(SourceDocument aDocument, User aDataOwner,
+            CAS aCas, VID aVid, AnnotationLayer aLayer)
     {
-        var predictions = recommendationService.getPredictions(aUser, aDocument.getProject());
+        var sessionOwner = userService.getCurrentUser();
+
+        var predictions = recommendationService.getPredictions(sessionOwner,
+                aDocument.getProject());
 
         if (predictions == null) {
             return emptyList();
@@ -321,7 +324,7 @@ public class RecommendationEditorExtension
 
         var detailGroups = new ArrayList<VLazyDetailGroup>();
         for (var aFeature : annotationService.listAnnotationFeature(aLayer)) {
-            if (aFeature.getLinkMode() == LinkMode.WITH_ROLE) {
+            if (aFeature.getLinkMode() == WITH_ROLE) {
                 continue;
             }
 
@@ -344,12 +347,12 @@ public class RecommendationEditorExtension
                 continue;
             }
 
-            var pref = recommendationService.getPreferences(aUser, aDocument.getProject());
+            var pref = recommendationService.getPreferences(sessionOwner, aDocument.getProject());
             var label = defaultIfBlank(sao.getLabel(), null);
             var sortedByScore = group.get().bestSuggestionsByFeatureAndLabel(pref,
                     aFeature.getName(), label);
 
-            var value = getFeatureValue(aDocument, aUser, aCas, aVid, aFeature);
+            var value = getFeatureValue(aDocument, sessionOwner, aCas, aVid, aFeature);
             featureSupportRegistry.findExtension(aFeature).orElseThrow()
                     .lookupLazyDetails(aFeature, value).forEach(detailGroups::add);
 

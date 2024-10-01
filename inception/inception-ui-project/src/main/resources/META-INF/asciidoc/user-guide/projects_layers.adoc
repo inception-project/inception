@@ -115,8 +115,11 @@ have have been included in the files are ignored on import.
 |====
 | Property | Description
 
-| Layer name
+| Name
 | The name of the layer (obligatory)
+
+| Type
+| The type of the layer (see below)
 
 | Description
 | A description of the layer. This information will be shown in a tooltip when the mouse hovers over the layer name in the annotation detail editor panel.
@@ -127,29 +130,6 @@ have have been included in the files are ignored on import.
 
 NOTE: When a layer is first created, only ASCII characters are allowed for the layer name because the internal UIMA type name is derived from the initial layer name. After the layer has been created, the name can be changed arbitrarily. The internal UIMA type name will not be updated. The internal UIMA name is
 e.g. used when exporting data or in constraint rules.
-
-image::layer_details.png[align="center"]
-
-[[sect_projects_layers_technical_properties]]
-== Technical Properties 
-
-In the frame *Technical Properties*, the user may select the type of annation that will be made with this layer: span, relation, or chain.
-
-.Technical Properites
-[cols="1v,2", options="header"]
-|====
-| Property | Description
-
-| Internal name
-| Internal UIMA type name
-
-| Type
-| The type of the layer (obligatory, see below)
-
-| Attach to layer
-_(Relations)_
-| Determines which span layer a relation attaches to. Relations can only be created between annotations of this span layer.
-|====
 
 The layer type defines the structure of the layer. Three different types are supported: spans, relations, and chains.
 
@@ -165,7 +145,8 @@ The layer type defines the structure of the layer. Three different types are sup
 | image:project_layer_type_span.png[]
 
 | Relation
-| Binary relation between two spans visualized as an arc between spans. The example shows a relation between two spans.
+| Binary relation between two spans visualized as an arc between spans. The example shows a relation between two spans. For relation annotations the type of the spans which are to be connected can be chosen in the field *Attach to layer*. Here, only non-default layers are displayed. To create a relation, first the span annotation needs to be created.
+
 | image:project_layer_type_relation.png[]
 
 | Chain
@@ -173,11 +154,7 @@ The layer type defines the structure of the layer. Three different types are sup
 | image:project_layer_type_chain.png[]
 |====
 
-For relation annotations the type of the spans which are to be connected can be chosen in the field *Attach to layer*. Here, only non-default layers are displayed. To create a relation, first the span annotation needs to be created.
-
-NOTE: Currently for each span layer there can be at most one relation layer attaching to it.
-
-NOTE: It is currently not possible to create relations between spans in different layers. For example if you define span layers called *Men* and *Women*, it is impossible to define a relation layer *Married to* between the two. To work around this limitation, create a single span layer *Person* with a feature *Gender* instead. You can now set the feature *Gender* to *Man* or *Woman* and eventually define a relation layer *Married to* attaching to the *Person* layer.
+image::layer_properties.png[align="center"]
 
 [[sect_projects_layers_behaviours]]
 == Behaviours
@@ -216,6 +193,8 @@ can be annotated.
 _(chain)_
 | Controls what happens when two chains are connected with each other. If this option is *disabled*, then the two entire chains will be merged into one large chain. Links between spans will be changed so that each span connects to the closest following span -  no arc labels are displayed. If this option is *enabled*, then the chains will be split if necessary at the source and target points, reconnecting the spans such that exactly the newly created connection is made - arc labels are available.
 |====
+
+image::layer_behaviours.png[align="center"]
 
 [[sect_projects_layers_features]]
 == Features

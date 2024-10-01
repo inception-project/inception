@@ -38,9 +38,12 @@ public class ChatGptRecommenderTraits
 {
     private static final long serialVersionUID = 6433061638746045602L;
 
-    public static final String DEFAULT_CHATGPT_URL = "https://api.openai.com/v1";
+    public static final String OPENAI_API_URL = "https://api.openai.com/v1";
+    public static final String LOCAL_OLLAMA_API_URL = "http://localhost:11434/v1";
+    public static final String GROQ_API_URL = "https://api.groq.com/openai/v1";
+    public static final String CEREBRAS_API_URL = "https://api.cerebras.ai/v1";
 
-    private String url = DEFAULT_CHATGPT_URL;
+    private String url = OPENAI_API_URL;
 
     private AuthenticationTraits authentication;
 
@@ -55,6 +58,8 @@ public class ChatGptRecommenderTraits
     private ExtractionMode extractionMode = ExtractionMode.RESPONSE_AS_LABEL;
 
     private @JsonInclude(NON_EMPTY) Map<String, Object> options = new LinkedHashMap<String, Object>();
+
+    private boolean interactive;
 
     public AuthenticationTraits getAuthentication()
     {
@@ -135,5 +140,15 @@ public class ChatGptRecommenderTraits
     {
         options.clear();
         options.putAll(aOptions);
+    }
+
+    public boolean isInteractive()
+    {
+        return interactive;
+    }
+
+    public void setInteractive(boolean aInteractive)
+    {
+        interactive = aInteractive;
     }
 }

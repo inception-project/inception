@@ -130,13 +130,13 @@ public class SidebarTabbedPanel<T extends SidebarTab>
         var user = userService.getCurrentUser();
         var sidebarState = prefService.loadTraitsForUserAndProject(KEY_SIDEBAR_STATE, user,
                 state.getObject().getProject());
+        expanded = sidebarState.isExpanded();
         if (isNotBlank(sidebarState.getSelectedTab())) {
             var tabFactories = getTabs().stream().map(SidebarTab::getFactoryId)
                     .collect(Collectors.toList());
             var tabIndex = tabFactories.indexOf(sidebarState.getSelectedTab());
             if (tabIndex >= 0) {
                 super.setSelectedTab(tabIndex);
-                expanded = sidebarState.isExpanded();
             }
         }
     }
