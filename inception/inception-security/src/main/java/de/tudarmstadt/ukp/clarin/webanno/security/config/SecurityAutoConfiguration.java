@@ -59,6 +59,7 @@ import jakarta.servlet.ServletContext;
 
 @Configuration
 @EnableConfigurationProperties({ //
+        UserProfilePropertiesImpl.class, //
         LegacyLoginPropertiesImpl.class, //
         LoginPropertiesImpl.class, //
         SecurityPropertiesImpl.class, //
@@ -70,10 +71,11 @@ public class SecurityAutoConfiguration
 
     @Bean("userRepository")
     public UserDao userService(SecurityProperties aSecurityProperties,
+            UserProfileProperties aUserProfileProperties,
             @Autowired(required = false) SessionRegistry aSessionRegistry)
     {
-        return new UserDaoImpl(entityManager, aSecurityProperties, transactionManager,
-                aSessionRegistry);
+        return new UserDaoImpl(entityManager, aSecurityProperties, aUserProfileProperties,
+                transactionManager, aSessionRegistry);
     }
 
     @Bean
