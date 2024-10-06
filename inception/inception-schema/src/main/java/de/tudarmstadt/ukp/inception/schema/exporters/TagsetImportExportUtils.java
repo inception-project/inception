@@ -15,7 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.export;
+package de.tudarmstadt.ukp.inception.schema.exporters;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -30,8 +32,68 @@ import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 
-public class JsonImportUtil
+public class TagsetImportExportUtils
 {
+    public static TagSet importTagsetFromTabSeparated(AnnotationSchemaService annotationService,
+            Project project, InputStream aInputStream, boolean aOverwrite)
+        throws IOException
+    {
+        var text = IOUtils.toString(aInputStream, UTF_8);
+        var tabbedTagsetFromFile = LayerImportExportUtils.getTagSetFromFile(text);
+
+        var listOfTagsFromFile = tabbedTagsetFromFile.keySet();
+        var i = 0;
+        var tagSetName = "";
+        var tagSetDescription = "";
+        var tagsetLanguage = "";
+        TagSet tagSet = null;
+        for (var key : listOfTagsFromFile) {
+            // the first key is the tagset name and its
+            // description
+            if (i == 0) {
+                tagSetName = key;
+                tagSetDescription = tabbedTagsetFromFile.get(key);
+            }
+            // the second key is the tagset language
+            else if (i == 1) {
+                tagsetLanguage = key;
+                // remove and replace the tagset if it
+                // exist
+                if (annotationService.existsTagSet(tagSetName, project)) {
+                    // If overwrite is enabled
+                    if (aOverwrite) {
+                        tagSet = annotationService.getTagSet(tagSetName, project);
+                        annotationService.removeAllTags(tagSet);
+                    }
+                    else {
+                        tagSet = new TagSet();
+                        tagSet.setName(copyTagSetName(annotationService, tagSetName, project));
+                    }
+                }
+                else {
+                    tagSet = new TagSet();
+                    tagSet.setName(tagSetName);
+                }
+                tagSet.setDescription(tagSetDescription.replace("\\n", "\n"));
+                tagSet.setLanguage(tagsetLanguage);
+                tagSet.setProject(project);
+                annotationService.createTagSet(tagSet);
+            }
+            // otherwise it is a tag entry, add the tag to the tagset
+            else {
+                Tag tag = new Tag();
+                tag.setName(key);
+                tag.setDescription(tabbedTagsetFromFile.get(key).replace("\\n", "\n"));
+                tag.setRank(i);
+                tag.setTagSet(tagSet);
+                annotationService.createTag(tag);
+            }
+            i++;
+        }
+
+        return tagSet;
+    }
+
     /**
      * Works for scenarios with overwrite enabled Checks if tagset already exists, then overwrites
      * otherwise works normally
@@ -51,14 +113,48 @@ public class JsonImportUtil
         throws IOException
     {
         var importedTagSet = JSONUtil.fromJsonStream(ExportedTagSet.class, aInputStream);
-
+    
         if (aAnnotationService.existsTagSet(importedTagSet.getName(), aProject)) {
             // A tagset exists so we'll have to replace it
             return replaceTagSet(aProject, importedTagSet, aAnnotationService);
         }
-
+    
         // Proceed normally
         return createTagSet(aProject, importedTagSet, aAnnotationService);
+    }
+
+    public static TagSet importTagSetFromJson(Project project, InputStream tagInputStream,
+            AnnotationSchemaService aAnnotationService)
+        throws IOException
+    {
+        var importedTagSet = JSONUtil.fromJsonStream(ExportedTagSet.class, tagInputStream);
+        return createTagSet(project, importedTagSet, aAnnotationService);
+    }
+
+    /**
+     * Provides a new name if TagSet already exists.
+     * 
+     * @param aAnnotationService
+     *            annotation service to look up existing tagsets
+     * @param aName
+     *            the suggested name
+     * @param aProject
+     *            the project into which to import the tagset
+     * @return a unique tag set name
+     */
+    private static String copyTagSetName(AnnotationSchemaService aAnnotationService, String aName,
+            Project aProject)
+    {
+        var betterTagSetName = "copy_of_" + aName;
+        int i = 1;
+        while (true) {
+            if (!aAnnotationService.existsTagSet(betterTagSetName, aProject)) {
+                return betterTagSetName;
+            }
+
+            betterTagSetName = "copy_of_" + aName + "(" + i + ")";
+            i++;
+        }
     }
 
     private static TagSet replaceTagSet(Project project, ExportedTagSet importedTagSet,
@@ -91,23 +187,14 @@ public class JsonImportUtil
         return tagsetInUse;
     }
 
-    public static TagSet importTagSetFromJson(Project project, InputStream tagInputStream,
-            AnnotationSchemaService aAnnotationService)
-        throws IOException
-    {
-        var text = IOUtils.toString(tagInputStream, "UTF-8");
-
-        var importedTagSet = JSONUtil.getObjectMapper().readValue(text, ExportedTagSet.class);
-        return createTagSet(project, importedTagSet, aAnnotationService);
-    }
-
-    public static TagSet createTagSet(Project project, ExportedTagSet aExTagSet,
+    private static TagSet createTagSet(Project project, ExportedTagSet aExTagSet,
             AnnotationSchemaService aAnnotationService)
         throws IOException
     {
         var exTagSetName = aExTagSet.getName();
         if (aAnnotationService.existsTagSet(exTagSetName, project)) {
-            exTagSetName = copyTagSetName(aAnnotationService, exTagSetName, project);
+            exTagSetName = TagsetImportExportUtils.copyTagSetName(aAnnotationService, exTagSetName,
+                    project);
         }
 
         var newTagSet = new TagSet();
@@ -131,31 +218,5 @@ public class JsonImportUtil
         aAnnotationService.createTags(tags.stream().toArray(Tag[]::new));
 
         return newTagSet;
-    }
-
-    /**
-     * Provides a new name if TagSet already exists.
-     * 
-     * @param aAnnotationService
-     *            annotation service to look up existing tagsets
-     * @param aName
-     *            the suggested name
-     * @param aProject
-     *            the project into which to import the tagset
-     * @return a unique tag set name
-     */
-    public static String copyTagSetName(AnnotationSchemaService aAnnotationService, String aName,
-            Project aProject)
-    {
-        var betterTagSetName = "copy_of_" + aName;
-        int i = 1;
-        while (true) {
-            if (!aAnnotationService.existsTagSet(betterTagSetName, aProject)) {
-                return betterTagSetName;
-            }
-
-            betterTagSetName = "copy_of_" + aName + "(" + i + ")";
-            i++;
-        }
     }
 }

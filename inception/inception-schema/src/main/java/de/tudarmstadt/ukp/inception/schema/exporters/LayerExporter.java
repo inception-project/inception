@@ -141,7 +141,6 @@ public class LayerExporter
         exLayer.setValidationMode(aLayer.getValidationMode());
         exLayer.setLinkedListBehavior(aLayer.isLinkedListBehavior());
         exLayer.setName(aLayer.getName());
-        exLayer.setProjectName(aLayer.getProject().getName());
         exLayer.setType(aLayer.getType());
         exLayer.setUiName(aLayer.getUiName());
         exLayer.setTraits(aLayer.getTraits());
@@ -153,7 +152,7 @@ public class LayerExporter
         // Export features
         var exFeatures = new ArrayList<ExportedAnnotationFeature>();
         for (var feature : annotationService.listAnnotationFeature(aLayer)) {
-            ExportedAnnotationFeature exFeature = exportFeatureDetails(feature);
+            var exFeature = exportFeatureDetails(feature);
             exFeatures.add(exFeature);
 
             if (aFeatureToExFeature != null) {
