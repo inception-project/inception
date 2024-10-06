@@ -390,7 +390,7 @@
       <dependency>
         <groupId>org.mozilla</groupId>
         <artifactId>rhino-runtime</artifactId>
-        <version>1.7.14</version>
+        <version>1.7.15</version>
       </dependency>
 
       <dependency>
@@ -1372,7 +1372,7 @@
       <dependency>
         <groupId>org.apache.ant</groupId>
         <artifactId>ant</artifactId>
-        <version>1.10.14</version>
+        <version>${ant-version}</version>
       </dependency>
 
       <dependency>
@@ -1424,6 +1424,28 @@
         <version>${spring.boot.version}</version>
         <type>pom</type>
         <scope>import</scope>
+        <exclusions>
+          <exclusion>
+            <groupId>org.seleniumhq.selenium</groupId>
+            <artifactId>*</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.jetbrains.kotlinx</groupId>
+            <artifactId>*</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>*</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>*</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.infinispan</groupId>
+            <artifactId>*</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
 
       <dependency>
