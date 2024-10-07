@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.render;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.schema.BratSchemaGeneratorImpl.getBratTypeName;
 import static de.tudarmstadt.ukp.clarin.webanno.model.ScriptDirection.RTL;
 import static java.util.Arrays.asList;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.uima.cas.text.AnnotationPredicates.covering;
 import static org.apache.uima.cas.text.AnnotationPredicates.overlappingAtBegin;
@@ -251,11 +252,11 @@ public class BratSerializerImpl
 
     private void renderText(VDocument aVDoc, GetDocumentResponse aResponse, RenderRequest aRequest)
     {
-        if (!aRequest.isIncludeText()) {
+        if (!aRequest.isIncludeText() || isEmpty(aVDoc.getText())) {
             return;
         }
 
-        String visibleText = aVDoc.getText();
+        var visibleText = aVDoc.getText();
         char replacementChar = 0;
         if (StringUtils.isNotEmpty(properties.getWhiteSpaceReplacementCharacter())) {
             replacementChar = properties.getWhiteSpaceReplacementCharacter().charAt(0);
@@ -267,9 +268,13 @@ public class BratSerializerImpl
 
     private void renderBratTokensFromText(GetDocumentResponse aResponse, VDocument aVDoc)
     {
-        List<Offsets> bratTokenOffsets = new ArrayList<>();
-        String visibleText = aVDoc.getText();
-        BreakIterator bi = BreakIterator.getWordInstance(Locale.ROOT);
+        if (isEmpty(aVDoc.getText())) {
+            return;
+        }
+
+        var bratTokenOffsets = new ArrayList<Offsets>();
+        var visibleText = aVDoc.getText();
+        var bi = BreakIterator.getWordInstance(Locale.ROOT);
         bi.setText(visibleText);
         int last = bi.first();
         int cur = bi.next();
