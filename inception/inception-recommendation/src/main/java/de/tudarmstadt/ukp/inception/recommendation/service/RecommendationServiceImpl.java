@@ -43,7 +43,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.commons.collections4.MapIterator;
 import org.apache.commons.collections4.MultiValuedMap;
 import org.apache.commons.collections4.multimap.HashSetValuedHashMap;
 import org.apache.commons.lang3.Validate;
@@ -1406,10 +1405,9 @@ public class RecommendationServiceImpl
 
         public MultiValuedMap<AnnotationLayer, EvaluatedRecommender> getActiveRecommenders()
         {
-            MultiValuedMap<AnnotationLayer, EvaluatedRecommender> active = new HashSetValuedHashMap<>();
+            var active = new HashSetValuedHashMap<AnnotationLayer, EvaluatedRecommender>();
 
-            MapIterator<AnnotationLayer, EvaluatedRecommender> i = evaluatedRecommenders
-                    .mapIterator();
+            var i = evaluatedRecommenders.mapIterator();
             while (i.hasNext()) {
                 i.next();
                 if (i.getValue().isActive()) {

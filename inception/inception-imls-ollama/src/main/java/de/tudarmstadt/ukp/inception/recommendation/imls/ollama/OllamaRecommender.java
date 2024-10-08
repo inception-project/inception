@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.ollama;
 import static de.tudarmstadt.ukp.inception.recommendation.imls.support.llm.prompt.PromptContextGenerator.VAR_EXAMPLES;
 import static de.tudarmstadt.ukp.inception.recommendation.imls.support.llm.prompt.PromptContextGenerator.getPromptContextGenerator;
 import static de.tudarmstadt.ukp.inception.recommendation.imls.support.llm.response.ResponseExtractor.getResponseExtractor;
+import static java.lang.System.currentTimeMillis;
 
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
@@ -99,11 +100,11 @@ public class OllamaRecommender
                 .withFormat(traits.getFormat()) //
                 .withRaw(traits.isRaw()) //
                 .withStream(false) //
-                // FIXME: Make NUM_PREDICT accessible in UI
-                .withOption(OllamaGenerateRequest.NUM_PREDICT, 300) //
                 .build();
+        var startTime = currentTimeMillis();
         var response = client.generate(traits.getUrl(), request).trim();
-        LOG.trace("Ollama [{}] responds: [{}]", traits.getModel(), response);
+        LOG.trace("Ollama [{}] responds ({} ms): [{}]", traits.getModel(),
+                currentTimeMillis() - startTime, response);
         return response;
     }
 }
