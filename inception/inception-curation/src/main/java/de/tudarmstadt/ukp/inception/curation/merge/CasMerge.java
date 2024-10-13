@@ -41,6 +41,10 @@ import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.util.CasCopier;
+import org.dkpro.core.api.xml.type.XmlAttribute;
+import org.dkpro.core.api.xml.type.XmlDocument;
+import org.dkpro.core.api.xml.type.XmlNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
@@ -412,25 +416,40 @@ public class CasMerge
         aCas.setDocumentText(backup.getDocumentText());
 
         transferSegmentation(aDocument.getProject(), aCas, backup);
+        transferDocumentStructure(aDocument.getProject(), aCas, backup);
+    }
+
+    private void transferDocumentStructure(Project aProject, CAS aTarget, CAS aSource)
+    {
+        var casCopier = new CasCopier(aSource, aTarget);
+        // Recursively copy the structure - this does not add the copied annotations to the index
+        for (var doc : aSource.select(XmlDocument.class)) {
+            casCopier.copyFs(doc);
+        }
+
+        // Add the document structure annotations to the index
+        aTarget.select(XmlDocument.class).forEach(aTarget::addFsToIndexes);
+        aTarget.select(XmlNode.class).forEach(aTarget::addFsToIndexes);
+        aTarget.select(XmlAttribute.class).forEach(aTarget::addFsToIndexes);
     }
 
     /**
      * If tokens and/or sentences are not editable, then they are not part of the curation process
      * and we transfer them from the template CAS.
      */
-    private void transferSegmentation(Project aProject, CAS aCas, CAS backup)
+    private void transferSegmentation(Project aProject, CAS aTarget, CAS aSource)
     {
         if (!schemaService.isTokenLayerEditable(aProject)) {
             // Transfer token boundaries
-            for (var t : selectTokens(backup)) {
-                aCas.addFsToIndexes(createToken(aCas, t.getBegin(), t.getEnd()));
+            for (var t : selectTokens(aSource)) {
+                aTarget.addFsToIndexes(createToken(aTarget, t.getBegin(), t.getEnd()));
             }
         }
 
         if (!schemaService.isSentenceLayerEditable(aProject)) {
             // Transfer sentence boundaries
-            for (var s : selectSentences(backup)) {
-                aCas.addFsToIndexes(createSentence(aCas, s.getBegin(), s.getEnd()));
+            for (var s : selectSentences(aSource)) {
+                aTarget.addFsToIndexes(createSentence(aTarget, s.getBegin(), s.getEnd()));
             }
         }
     }
