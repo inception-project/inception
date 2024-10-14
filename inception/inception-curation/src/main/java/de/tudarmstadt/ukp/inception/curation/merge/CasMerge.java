@@ -41,10 +41,6 @@ import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.util.CasCopier;
-import org.dkpro.core.api.xml.type.XmlAttribute;
-import org.dkpro.core.api.xml.type.XmlDocument;
-import org.dkpro.core.api.xml.type.XmlNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
@@ -66,6 +62,7 @@ import de.tudarmstadt.ukp.inception.annotation.events.BulkAnnotationEvent;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasMetadataUtils;
 import de.tudarmstadt.ukp.inception.curation.merge.strategy.DefaultMergeStrategy;
 import de.tudarmstadt.ukp.inception.curation.merge.strategy.MergeStrategy;
+import de.tudarmstadt.ukp.inception.io.xml.dkprocore.XmlNodeUtils;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.IllegalFeatureValueException;
@@ -416,21 +413,7 @@ public class CasMerge
         aCas.setDocumentText(backup.getDocumentText());
 
         transferSegmentation(aDocument.getProject(), aCas, backup);
-        transferDocumentStructure(aDocument.getProject(), aCas, backup);
-    }
-
-    private void transferDocumentStructure(Project aProject, CAS aTarget, CAS aSource)
-    {
-        var casCopier = new CasCopier(aSource, aTarget);
-        // Recursively copy the structure - this does not add the copied annotations to the index
-        for (var doc : aSource.select(XmlDocument.class)) {
-            casCopier.copyFs(doc);
-        }
-
-        // Add the document structure annotations to the index
-        aTarget.select(XmlDocument.class).forEach(aTarget::addFsToIndexes);
-        aTarget.select(XmlNode.class).forEach(aTarget::addFsToIndexes);
-        aTarget.select(XmlAttribute.class).forEach(aTarget::addFsToIndexes);
+        XmlNodeUtils.transferXmlDocumentStructure(aCas, backup);
     }
 
     /**
