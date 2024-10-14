@@ -79,7 +79,7 @@ public class AllAnnotationsIndexedCheckTest
                 .toArray(String[]::new));
 
         // A project is not required for this check
-        var result = cd.analyze(null, cas, messages);
+        var result = cd.analyze(null, null, cas, messages);
 
         messages.forEach($ -> LOG.debug("{}", $));
 
@@ -126,7 +126,7 @@ public class AllAnnotationsIndexedCheckTest
                 .toArray(String[]::new));
 
         // A project is not required for this check
-        var result = cd.analyze(null, cas, messages);
+        var result = cd.analyze(null, null, cas, messages);
 
         messages.forEach($ -> LOG.debug("{}", $));
 

@@ -24,13 +24,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.FSUtil;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.WebAnnoConst;
 import de.tudarmstadt.ukp.inception.support.logging.LogLevel;
@@ -47,10 +45,11 @@ public class LinksReachableThroughChainsCheck
     }
 
     @Override
-    public boolean check(Project aProject, CAS aCas, List<LogMessage> aMessages)
+    public boolean check(SourceDocument aDocument, String aDataOwner, CAS aCas,
+            List<LogMessage> aMessages)
     {
         boolean ok = true;
-        for (AnnotationLayer layer : annotationService.listAnnotationLayer(aProject)) {
+        for (var layer : annotationService.listAnnotationLayer(aDocument.getProject())) {
             if (!WebAnnoConst.CHAIN_TYPE.equals(layer.getType())) {
                 continue;
             }
@@ -72,8 +71,8 @@ public class LinksReachableThroughChainsCheck
             var chains = aCas.select(chainType).asList();
             var links = new ArrayList<>(select(aCas, linkType));
 
-            for (FeatureStructure chain : chains) {
-                AnnotationFS link = FSUtil.getFeature(chain, "first", AnnotationFS.class);
+            for (var chain : chains) {
+                var link = FSUtil.getFeature(chain, "first", AnnotationFS.class);
 
                 while (link != null) {
                     links.remove(link);

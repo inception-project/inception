@@ -25,7 +25,7 @@ import java.util.List;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.jcas.tcas.Annotation;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
@@ -34,7 +34,8 @@ public class TokensAndSententencedDoNotOverlapCheck
     implements Check
 {
     @Override
-    public boolean check(Project aProject, CAS aCas, List<LogMessage> aMessages)
+    public boolean check(SourceDocument aDocument, String aDataOwner, CAS aCas,
+            List<LogMessage> aMessages)
     {
         return checkTokens(aCas, aMessages) && checkSentences(aCas, aMessages);
     }
