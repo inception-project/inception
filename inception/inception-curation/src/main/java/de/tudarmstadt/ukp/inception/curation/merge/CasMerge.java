@@ -62,6 +62,7 @@ import de.tudarmstadt.ukp.inception.annotation.events.BulkAnnotationEvent;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasMetadataUtils;
 import de.tudarmstadt.ukp.inception.curation.merge.strategy.DefaultMergeStrategy;
 import de.tudarmstadt.ukp.inception.curation.merge.strategy.MergeStrategy;
+import de.tudarmstadt.ukp.inception.io.xml.dkprocore.XmlNodeUtils;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.IllegalFeatureValueException;
@@ -412,25 +413,26 @@ public class CasMerge
         aCas.setDocumentText(backup.getDocumentText());
 
         transferSegmentation(aDocument.getProject(), aCas, backup);
+        XmlNodeUtils.transferXmlDocumentStructure(aCas, backup);
     }
 
     /**
      * If tokens and/or sentences are not editable, then they are not part of the curation process
      * and we transfer them from the template CAS.
      */
-    private void transferSegmentation(Project aProject, CAS aCas, CAS backup)
+    private void transferSegmentation(Project aProject, CAS aTarget, CAS aSource)
     {
         if (!schemaService.isTokenLayerEditable(aProject)) {
             // Transfer token boundaries
-            for (var t : selectTokens(backup)) {
-                aCas.addFsToIndexes(createToken(aCas, t.getBegin(), t.getEnd()));
+            for (var t : selectTokens(aSource)) {
+                aTarget.addFsToIndexes(createToken(aTarget, t.getBegin(), t.getEnd()));
             }
         }
 
         if (!schemaService.isSentenceLayerEditable(aProject)) {
             // Transfer sentence boundaries
-            for (var s : selectSentences(backup)) {
-                aCas.addFsToIndexes(createSentence(aCas, s.getBegin(), s.getEnd()));
+            for (var s : selectSentences(aSource)) {
+                aTarget.addFsToIndexes(createSentence(aTarget, s.getBegin(), s.getEnd()));
             }
         }
     }

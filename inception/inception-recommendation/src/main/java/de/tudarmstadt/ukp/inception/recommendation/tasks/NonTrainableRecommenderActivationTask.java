@@ -146,6 +146,10 @@ public class NonTrainableRecommenderActivationTask
 
         var engine = factory.build(recommender);
 
+        if (factory.isInteractive(recommender)) {
+            return Optional.of(activateNonTrainableRecommender(user, recommender, engine));
+        }
+
         return switch (engine.getTrainingCapability()) {
         case TRAINING_NOT_SUPPORTED, TRAINING_SUPPORTED -> Optional
                 .of(activateNonTrainableRecommender(user, recommender, engine));
@@ -169,7 +173,8 @@ public class NonTrainableRecommenderActivationTask
         LOG.debug("[{}][{}]: Activating [{}] non-trainable recommender", user.getUsername(),
                 recommenderName, recommenderName);
         info("Recommender [%s] activated because it is not trainable", recommenderName);
-        return EvaluatedRecommender.makeActiveWithoutEvaluation(recommender);
+        return EvaluatedRecommender.makeActiveWithoutEvaluation(recommender,
+                "Non-trainable recommenders is always active (without evaluation)");
     }
 
     private EvaluatedRecommender skipTrainableRecommender(User user, Recommender recommender)
@@ -237,8 +242,6 @@ public class NonTrainableRecommenderActivationTask
     public static class Builder<T extends Builder<?>>
         extends RecommendationTask_ImplBase.Builder<T>
     {
-        private Recommender recommender;
-
         public NonTrainableRecommenderActivationTask build()
         {
             return new NonTrainableRecommenderActivationTask(this);
