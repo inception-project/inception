@@ -14,6 +14,12 @@
     
     <Logger name="de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder" level="WARN"/>
     
+<!--     <Logger name="de.tudarmstadt.ukp.inception.kb.querybuilder.GraphDbRepositoryTest" level="INFO"/> -->
+<!--     <Logger name="org.eclipse.rdf4j.http.client" level="DEBUG" /> -->
+
+<!--     <Logger name="org.apache" level="TRACE"/> -->
+<!--     <Logger name="httpclient" level="TRACE"/> -->
+    
     <Root level="warn">
       <AppenderRef ref="ConsoleAppender" />
     </Root>
