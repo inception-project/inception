@@ -76,7 +76,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.ConcurentCasModificationException;
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor;
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctorException;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageCacheProperties;
 import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageServiceAutoConfiguration;
@@ -679,34 +678,11 @@ public class CasStorageServiceImpl
     }
 
     @Override
-    public void analyzeAndRepair(SourceDocument aDocument, String aUsername, CAS aCas)
+    public void analyzeAndRepair(SourceDocument aDocument, String aDataOwner, CAS aCas)
     {
-        analyzeAndRepair(aDocument.getProject(), aDocument.getName(), aDocument.getId(), aUsername,
-                aCas);
-    }
+        var project = aDocument.getProject();
 
-    /**
-     * Runs {@link CasDoctor} in repair mode on the given CAS (if repairs are active), otherwise it
-     * runs only in analysis mode.
-     * <p>
-     * <b>Note:</b> {@link CasDoctor} is an optional service. If no {@link CasDoctor} implementation
-     * is available, this method returns without doing anything.
-     * 
-     * @param aProject
-     *            the project
-     * @param aDocumentName
-     *            the document name (used for logging)
-     * @param aDocumentId
-     *            the aDocument ID (used for logging)
-     * @param aUsername
-     *            the user owning the CAS (used for logging)
-     * @param aCas
-     *            the CAS object
-     */
-    private void analyzeAndRepair(Project aProject, String aDocumentName, long aDocumentId,
-            String aUsername, CAS aCas)
-    {
-        try (var logCtx = withProjectLogger(aProject)) {
+        try (var logCtx = withProjectLogger(project)) {
             if (casDoctor == null) {
                 return;
             }
@@ -715,18 +691,18 @@ public class CasStorageServiceImpl
             // because the repairs do an analysis as a pre- and post-condition.
             if (casDoctor.isRepairsActive()) {
                 try {
-                    casDoctor.repair(aProject, aCas);
+                    casDoctor.repair(aDocument, aDataOwner, aCas);
                 }
                 catch (Exception e) {
-                    throw new DataRetrievalFailureException("Error repairing CAS of user ["
-                            + aUsername + "] for document [" + aDocumentName + "] (" + aDocumentId
-                            + ") in project[" + aProject.getName() + "] (" + aProject.getId() + ")",
+                    throw new DataRetrievalFailureException(
+                            "Error repairing CAS of user [" + aDataOwner + "] for document "
+                                    + aDocument + " in project " + aDocument.getProject(),
                             e);
                 }
             }
             // If the repairs are not active, then we run the analysis explicitly
             else {
-                analyze(aProject, aDocumentName, aDocumentId, aUsername, aCas);
+                analyze(aDocument, aDataOwner, aCas);
             }
         }
     }
@@ -737,59 +713,55 @@ public class CasStorageServiceImpl
      * <b>Note:</b> {@link CasDoctor} is an optional service. If no {@link CasDoctor} implementation
      * is available, this method returns without doing anything.
      * 
-     * @param aProject
-     *            the project
-     * @param aDocumentName
-     *            the document name (used for logging)
-     * @param aDocumentId
-     *            the aDocument ID (used for logging)
-     * @param aUsername
+     * @param aDocument
+     *            the document
+     * @param aDataOwner
      *            the user owning the CAS (used for logging)
      * @param aCas
      *            the CAS object
      */
-    private void analyze(Project aProject, String aDocumentName, long aDocumentId, String aUsername,
-            CAS aCas)
+    private void analyze(SourceDocument aDocument, String aDataOwner, CAS aCas)
     {
         if (casDoctor == null) {
             return;
         }
 
+        var project = aDocument.getProject();
+
         try {
-            casDoctor.analyze(aProject, aCas);
+            casDoctor.analyze(aDocument, aDataOwner, aCas);
         }
         catch (CasDoctorException e) {
             var detailMsg = new StringBuilder();
-            detailMsg.append("CAS Doctor found problems for user [").append(aUsername)
-                    .append("] in document [").append(aDocumentName).append("] (")
-                    .append(aDocumentId).append(") in project [").append(aProject.getName())
-                    .append("] (").append(aProject.getId()).append(")\n");
+            detailMsg.append("CAS Doctor found problems for user [").append(aDataOwner)
+                    .append("] in document ").append(aDocument).append(" in project ")
+                    .append(project).append("\n");
             e.getDetails().forEach(
                     m -> detailMsg.append(String.format("- [%s] %s%n", m.level, m.message)));
 
             throw new DataRetrievalFailureException(detailMsg.toString());
         }
         catch (Exception e) {
-            throw new DataRetrievalFailureException("Error analyzing CAS of user [" + aUsername
-                    + "] in document [" + aDocumentName + "] (" + aDocumentId + ") in project["
-                    + aProject.getName() + "] (" + aProject.getId() + ")", e);
+            throw new DataRetrievalFailureException("Error analyzing CAS of user [" + aDataOwner
+                    + "] in document " + aDocument + " in project " + project, e);
         }
     }
 
     @Override
-    public void exportCas(SourceDocument aDocument, String aUser, OutputStream aStream)
+    public void exportCas(SourceDocument aDocument, String aDataOwner, OutputStream aStream)
         throws IOException
     {
         // Ensure that the CAS is not being re-written and temporarily unavailable while we export
         // it, then add this info to a mini-session to ensure that write-access is known
         try (var session = CasStorageSession.openNested(true)) {
-            try (var access = new WithExclusiveAccess(aDocument, aUser)) {
-                session.add(aDocument.getId(), aUser, EXCLUSIVE_WRITE_ACCESS, access.getHolder());
+            try (var access = new WithExclusiveAccess(aDocument, aDataOwner)) {
+                session.add(aDocument.getId(), aDataOwner, EXCLUSIVE_WRITE_ACCESS,
+                        access.getHolder());
 
-                driver.exportCas(aDocument, aUser, aStream);
+                driver.exportCas(aDocument, aDataOwner, aStream);
             }
             finally {
-                session.remove(aDocument.getId(), aUser);
+                session.remove(aDocument.getId(), aDataOwner);
             }
         }
         catch (IOException e) {
@@ -801,19 +773,20 @@ public class CasStorageServiceImpl
     }
 
     @Override
-    public void importCas(SourceDocument aDocument, String aUser, InputStream aStream)
+    public void importCas(SourceDocument aDocument, String aDataOwner, InputStream aStream)
         throws IOException
     {
         // Ensure that the CAS is not being re-written and temporarily unavailable while we export
         // it, then add this info to a mini-session to ensure that write-access is known
         try (var session = CasStorageSession.openNested(true)) {
-            try (var access = new WithExclusiveAccess(aDocument, aUser)) {
-                session.add(aDocument.getId(), aUser, EXCLUSIVE_WRITE_ACCESS, access.getHolder());
+            try (var access = new WithExclusiveAccess(aDocument, aDataOwner)) {
+                session.add(aDocument.getId(), aDataOwner, EXCLUSIVE_WRITE_ACCESS,
+                        access.getHolder());
 
-                driver.importCas(aDocument, aUser, aStream);
+                driver.importCas(aDocument, aDataOwner, aStream);
             }
             finally {
-                session.remove(aDocument.getId(), aUser);
+                session.remove(aDocument.getId(), aDataOwner);
             }
         }
         catch (IOException e) {
@@ -825,39 +798,40 @@ public class CasStorageServiceImpl
     }
 
     @Override
-    public void upgradeCas(SourceDocument aDocument, String aUser) throws IOException
+    public void upgradeCas(SourceDocument aDocument, String aDataOwner) throws IOException
     {
         Validate.notNull(aDocument, "Source document must be specified");
-        Validate.notBlank(aUser, "User must be specified");
+        Validate.notBlank(aDataOwner, "Data owner must be specified");
 
-        forceActionOnCas(aDocument, aUser, //
+        forceActionOnCas(aDocument, aDataOwner, //
                 (doc, user) -> driver.readCas(doc, user),
-                (cas) -> schemaService.upgradeCas(cas, aDocument, aUser), //
+                (doc, user, cas) -> schemaService.upgradeCas(cas, doc, user), //
                 true);
     }
 
     @Override
-    public void forceActionOnCas(SourceDocument aDocument, String aUser,
+    public void forceActionOnCas(SourceDocument aDocument, String aDataOwner,
             CasStorageServiceLoader aLoader, CasStorageServiceAction aAction, boolean aSave)
         throws IOException
     {
         // Ensure that the CAS is not being re-written and temporarily unavailable while we check
         // upgrade it, then add this info to a mini-session to ensure that write-access is known
         try (var session = CasStorageSession.openNested(true)) {
-            try (var access = new WithExclusiveAccess(aDocument, aUser)) {
-                session.add(aDocument.getId(), aUser, EXCLUSIVE_WRITE_ACCESS, access.getHolder());
+            try (var access = new WithExclusiveAccess(aDocument, aDataOwner)) {
+                session.add(aDocument.getId(), aDataOwner, EXCLUSIVE_WRITE_ACCESS,
+                        access.getHolder());
 
-                var cas = aLoader.load(aDocument, aUser);
+                var cas = aLoader.load(aDocument, aDataOwner);
                 access.setCas(cas);
 
-                aAction.apply(cas);
+                aAction.apply(aDocument, aDataOwner, cas);
 
                 if (aSave) {
-                    realWriteCas(aDocument, aUser, cas);
+                    realWriteCas(aDocument, aDataOwner, cas);
                 }
             }
             finally {
-                session.remove(aDocument.getId(), aUser);
+                session.remove(aDocument.getId(), aDataOwner);
             }
         }
         catch (IOException e) {
@@ -1118,7 +1092,7 @@ public class CasStorageServiceImpl
     private void realWriteCas(SourceDocument aDocument, String aUserName, CAS aCas)
         throws IOException
     {
-        analyze(aDocument.getProject(), aDocument.getName(), aDocument.getId(), aUserName, aCas);
+        analyze(aDocument, aUserName, aCas);
 
         if (CasStorageSession.exists()) {
             var session = CasStorageSession.get();

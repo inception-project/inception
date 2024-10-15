@@ -104,7 +104,8 @@ public class RepairTask
                     casStorageService.forceActionOnCas(sd, INITIAL_CAS_PSEUDO_USER,
                             (doc, user) -> createOrReadInitialCasWithoutSavingOrChecks(doc,
                                     messageSet),
-                            (cas) -> casDoctor.repair(project, cas, messageSet.getMessages()), //
+                            (doc, user, cas) -> casDoctor.repair(doc, user, cas,
+                                    messageSet.getMessages()), //
                             true);
                 }
                 catch (Exception e) {
@@ -125,7 +126,8 @@ public class RepairTask
                     casStorageService.forceActionOnCas(sd, CURATION_USER,
                             (doc, user) -> casStorageService.readCas(doc, user,
                                     UNMANAGED_NON_INITIALIZING_ACCESS),
-                            (cas) -> casDoctor.repair(project, cas, messageSet.getMessages()), //
+                            (doc, user, cas) -> casDoctor.repair(doc, user, cas,
+                                    messageSet.getMessages()), //
                             true);
                 }
                 catch (FileNotFoundException e) {
@@ -158,7 +160,8 @@ public class RepairTask
                         casStorageService.forceActionOnCas(sd, ad.getUser(),
                                 (doc, user) -> casStorageService.readCas(doc, user,
                                         UNMANAGED_NON_INITIALIZING_ACCESS),
-                                (cas) -> casDoctor.repair(project, cas, messageSet.getMessages()), //
+                                (doc, user, cas) -> casDoctor.repair(doc, user, cas,
+                                        messageSet.getMessages()), //
                                 true);
                     }
                 }

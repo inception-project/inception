@@ -46,6 +46,7 @@ import de.tudarmstadt.ukp.clarin.webanno.diag.checks.RelationOffsetsCheck;
 import de.tudarmstadt.ukp.clarin.webanno.diag.checks.TokensAndSententencedDoNotOverlapCheck;
 import de.tudarmstadt.ukp.clarin.webanno.diag.checks.UniqueDocumentAnnotationCheck;
 import de.tudarmstadt.ukp.clarin.webanno.diag.checks.UnreachableAnnotationsCheck;
+import de.tudarmstadt.ukp.clarin.webanno.diag.checks.XmlStructurePresentInCurationCasCheck;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.CoverAllTextInSentencesRepair;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.ReattachFeatureAttachedSpanAnnotationsAndDeleteExtrasRepair;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.ReattachFeatureAttachedSpanAnnotationsRepair;
@@ -57,9 +58,11 @@ import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.RemoveDanglingFeatureAttac
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.RemoveDanglingRelationsRepair;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.RemoveZeroSizeTokensAndSentencesRepair;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.Repair;
+import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.ReplaceXmlStructureInCurationCasRepair;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.SwitchBeginAndEndOnNegativeSizedAnnotationsRepair;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.TrimAnnotationsRepair;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.UpgradeCasRepair;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
 @Configuration
@@ -264,5 +267,19 @@ public class CasDoctorAutoConfiguration
     public RemoveBomRepair removeBomRepair()
     {
         return new RemoveBomRepair();
+    }
+
+    @Bean
+    public XmlStructurePresentInCurationCasCheck xmlStructurePresentInCurationCasCheck(
+            DocumentService aDocumentService)
+    {
+        return new XmlStructurePresentInCurationCasCheck(aDocumentService);
+    }
+
+    @Bean
+    public ReplaceXmlStructureInCurationCasRepair replaceXmlStructureInCurationCasRepair(
+            DocumentService aDocumentService)
+    {
+        return new ReplaceXmlStructureInCurationCasRepair(aDocumentService);
     }
 }

@@ -30,7 +30,7 @@ import java.util.List;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Type;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 import de.tudarmstadt.ukp.inception.support.text.TrimUtils;
@@ -46,13 +46,14 @@ public class AllAnnotationsStartAndEndWithCharactersCheck
     }
 
     @Override
-    public boolean check(Project aProject, CAS aCas, List<LogMessage> aMessages)
+    public boolean check(SourceDocument aDocument, String aDataOwner, CAS aCas,
+            List<LogMessage> aMessages)
     {
         if (annotationService == null) {
             return true;
         }
 
-        var allAnnoLayers = annotationService.listAnnotationLayer(aProject);
+        var allAnnoLayers = annotationService.listAnnotationLayer(aDocument.getProject());
         if (isEmpty(allAnnoLayers)) {
             return true;
         }

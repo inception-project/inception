@@ -21,6 +21,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXC
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.UNMANAGED_ACCESS;
 import static de.tudarmstadt.ukp.inception.project.api.ProjectService.withProjectLogger;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
 import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.exists;
 import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.getRealCas;
 import static java.util.Arrays.asList;
@@ -363,11 +364,10 @@ public class DocumentImportExportServiceImpl
         var casDoctor = new CasDoctor(checksRegistry, repairsRegistry);
         casDoctor.setActiveChecks(
                 checksRegistry.getExtensions().stream().map(c -> c.getId()).toArray(String[]::new));
-        casDoctor.analyze(aDocument.getProject(), aCas, messages, true);
+        casDoctor.analyze(aDocument, INITIAL_CAS_PSEUDO_USER, aCas, messages, true);
     }
 
-    private void splitTokens(CAS cas, FormatSupport aFormat)
-        throws IOException
+    private void splitTokens(CAS cas, FormatSupport aFormat) throws IOException
     {
         var tokenType = getType(cas, Token.class);
 
@@ -396,8 +396,7 @@ public class DocumentImportExportServiceImpl
         }
     }
 
-    private void splitSenencesIfNecssary(CAS cas, FormatSupport aFormat)
-        throws IOException
+    private void splitSenencesIfNecssary(CAS cas, FormatSupport aFormat) throws IOException
     {
         var sentenceType = getType(cas, Sentence.class);
 

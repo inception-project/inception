@@ -28,7 +28,7 @@ import org.apache.uima.fit.util.FSUtil;
 import org.apache.uima.jcas.tcas.Annotation;
 
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.Repair.Safe;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.WebAnnoConst;
 import de.tudarmstadt.ukp.inception.support.logging.LogLevel;
@@ -46,9 +46,10 @@ public class RemoveDanglingChainLinksRepair
     }
 
     @Override
-    public void repair(Project aProject, CAS aCas, List<LogMessage> aMessages)
+    public void repair(SourceDocument aDocument, String aDataOwner, CAS aCas,
+            List<LogMessage> aMessages)
     {
-        for (var layer : annotationService.listAnnotationLayer(aProject)) {
+        for (var layer : annotationService.listAnnotationLayer(aDocument.getProject())) {
             if (!WebAnnoConst.CHAIN_TYPE.equals(layer.getType())) {
                 continue;
             }
