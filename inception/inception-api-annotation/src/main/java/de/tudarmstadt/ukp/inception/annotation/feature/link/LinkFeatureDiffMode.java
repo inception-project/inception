@@ -15,13 +15,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.curation.merge;
+package de.tudarmstadt.ukp.inception.annotation.feature.link;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.inception.support.extensionpoint.ExtensionPoint;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-public interface MergeStrategyFactoryExtensionPoint
-    extends ExtensionPoint<Project, MergeStrategyFactory<?>>
+public enum LinkFeatureDiffMode
 {
-    MergeStrategyFactory<?> getDefault();
+    /**
+     * The link target is considered to be part of the position. Two links that have the same target
+     * will be considered to be at the same position. Thus, linking the same target in multiple
+     * roles will be considered stacking. Linking different targets in the same role is viable.
+     */
+    @JsonProperty("include")
+    INCLUDE,
+
+    /**
+     * The link role is considered to be part of the position. Two links that have the same role but
+     * different targets it will be considered stacking.
+     */
+    @JsonProperty("exclude")
+    EXCLUDE;
+
+    public static final LinkFeatureDiffMode DEFAULT_LINK_DIFF_MODE = EXCLUDE;
 }

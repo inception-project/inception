@@ -15,33 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.curation.merge;
-
-import org.apache.wicket.Component;
-import org.apache.wicket.model.IModel;
+package de.tudarmstadt.ukp.inception.curation.merge.strategy;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.inception.curation.merge.strategy.MergeStrategy;
-import de.tudarmstadt.ukp.inception.curation.model.CurationWorkflow;
-import de.tudarmstadt.ukp.inception.support.extensionpoint.Extension;
+import de.tudarmstadt.ukp.inception.support.extensionpoint.ExtensionPoint;
 
-public interface MergeStrategyFactory<T>
-    extends Extension<Project>
-
+public interface MergeStrategyFactoryExtensionPoint
+    extends ExtensionPoint<Project, MergeStrategyFactory<?>>
 {
-    String getLabel();
-
-    @Override
-    default boolean accepts(Project aContext)
-    {
-        return true;
-    }
-
-    T readTraits(CurationWorkflow aCurationWorkflow);
-
-    void writeTraits(CurationWorkflow aCurationWorkflow, T aTrait);
-
-    MergeStrategy makeStrategy(T aTraits);
-
-    Component createTraitsEditor(String aString, IModel<CurationWorkflow> aModel);
+    MergeStrategyFactory<?> getDefault();
 }

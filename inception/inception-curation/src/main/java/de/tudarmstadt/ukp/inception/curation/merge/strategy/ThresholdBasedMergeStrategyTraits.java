@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.curation.merge;
+package de.tudarmstadt.ukp.inception.curation.merge.strategy;
 
 import java.io.Serializable;
 
@@ -58,7 +58,7 @@ public class ThresholdBasedMergeStrategyTraits
 
     public int getTopRanks()
     {
-        return topRanks < 1 ? 1 : topRanks;
+        return topRanks < 0 ? 0 : topRanks;
     }
 
     public void setTopRanks(int aTopRanks)

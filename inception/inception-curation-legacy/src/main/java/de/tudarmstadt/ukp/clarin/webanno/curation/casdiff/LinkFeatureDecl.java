@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.curation.casdiff;
 
+import de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureDiffMode;
 import de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureMultiplicityMode;
 
 public class LinkFeatureDecl
@@ -24,15 +25,17 @@ public class LinkFeatureDecl
     private final String name;
     private final String roleFeature;
     private final String targetFeature;
-    private final LinkFeatureMultiplicityMode compareBehavior;
+    private final LinkFeatureMultiplicityMode multiplicityMode;
+    private LinkFeatureDiffMode diffMode;
 
     public LinkFeatureDecl(String aName, String aRoleFeature, String aTargetFeature,
-            LinkFeatureMultiplicityMode aCompareBehavior)
+            LinkFeatureMultiplicityMode aLinkFeatureMultiplicityMode, LinkFeatureDiffMode aDiffMode)
     {
         name = aName;
         roleFeature = aRoleFeature;
         targetFeature = aTargetFeature;
-        compareBehavior = aCompareBehavior;
+        multiplicityMode = aLinkFeatureMultiplicityMode;
+        diffMode = aDiffMode;
     }
 
     public String getName()
@@ -50,9 +53,14 @@ public class LinkFeatureDecl
         return targetFeature;
     }
 
-    public LinkFeatureMultiplicityMode getCompareBehavior()
+    public LinkFeatureMultiplicityMode getMultiplicityMode()
     {
-        return compareBehavior;
+        return multiplicityMode;
+    }
+
+    public LinkFeatureDiffMode getDiffMode()
+    {
+        return diffMode;
     }
 
     @Override
@@ -68,6 +76,14 @@ public class LinkFeatureDecl
         if (getTargetFeature() != null) {
             builder.append(", targetFeature=");
             builder.append(getTargetFeature());
+        }
+        if (getMultiplicityMode() != null) {
+            builder.append(", multiplicity=");
+            builder.append(getMultiplicityMode());
+        }
+        if (getDiffMode() != null) {
+            builder.append(", diff=");
+            builder.append(getDiffMode());
         }
         builder.append("]");
         return builder.toString();

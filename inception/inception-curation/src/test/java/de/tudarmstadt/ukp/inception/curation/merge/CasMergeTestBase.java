@@ -27,17 +27,17 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SINGLE_TOKEN
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.NO_OVERLAP;
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.OVERLAP_ONLY;
+import static de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureDiffMode.EXCLUDE;
 import static de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureMultiplicityMode.ONE_TARGET_MULTIPLE_ROLES;
 import static de.tudarmstadt.ukp.inception.curation.merge.CurationTestUtils.HOST_TYPE;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.RELATION_TYPE;
 import static java.util.Arrays.asList;
+import static org.apache.uima.cas.CAS.TYPE_NAME_STRING;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.lenient;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.uima.cas.CAS;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -103,7 +103,9 @@ public class CasMergeTestBase
     protected AnnotationFeature multiValSpanF1;
     protected AnnotationFeature multiValSpanF2;
     protected SourceDocument document;
+
     protected List<DiffAdapter> diffAdapters;
+    protected SpanDiffAdapter slotHostDiffAdapter;
 
     protected static final RelationDiffAdapter MULTIVALREL_DIFF_ADAPTER = new RelationDiffAdapter(
             "webanno.custom.Multivalrel", "Dependent", "Governor", "rel1", "rel2");
@@ -113,8 +115,9 @@ public class CasMergeTestBase
     @BeforeEach
     public void setup() throws Exception
     {
-        var slotHostDiffAdapter = new SpanDiffAdapter(HOST_TYPE);
-        slotHostDiffAdapter.addLinkFeature("links", "role", "target", ONE_TARGET_MULTIPLE_ROLES);
+        slotHostDiffAdapter = new SpanDiffAdapter(HOST_TYPE);
+        slotHostDiffAdapter.addLinkFeature("links", "role", "target", ONE_TARGET_MULTIPLE_ROLES,
+                EXCLUDE);
 
         diffAdapters = new ArrayList<>();
         diffAdapters.add(TOKEN_DIFF_ADAPTER);
@@ -156,7 +159,7 @@ public class CasMergeTestBase
         posFeature = new AnnotationFeature();
         posFeature.setName("PosValue");
         posFeature.setEnabled(true);
-        posFeature.setType(CAS.TYPE_NAME_STRING);
+        posFeature.setType(TYPE_NAME_STRING);
         posFeature.setUiName("PosValue");
         posFeature.setLayer(posLayer);
         posFeature.setProject(project);
@@ -166,7 +169,7 @@ public class CasMergeTestBase
         posCoarseFeature = new AnnotationFeature();
         posCoarseFeature.setName("coarseValue");
         posCoarseFeature.setEnabled(true);
-        posCoarseFeature.setType(CAS.TYPE_NAME_STRING);
+        posCoarseFeature.setType(TYPE_NAME_STRING);
         posCoarseFeature.setUiName("coarseValue");
         posCoarseFeature.setLayer(posLayer);
         posCoarseFeature.setProject(project);
@@ -179,7 +182,7 @@ public class CasMergeTestBase
         neFeature = new AnnotationFeature();
         neFeature.setName("value");
         neFeature.setEnabled(true);
-        neFeature.setType(CAS.TYPE_NAME_STRING);
+        neFeature.setType(TYPE_NAME_STRING);
         neFeature.setUiName("value");
         neFeature.setLayer(neLayer);
         neFeature.setProject(project);
@@ -189,22 +192,22 @@ public class CasMergeTestBase
         neIdentifierFeature = new AnnotationFeature();
         neIdentifierFeature.setName("identifier");
         neIdentifierFeature.setEnabled(true);
-        neIdentifierFeature.setType(CAS.TYPE_NAME_STRING);
+        neIdentifierFeature.setType(TYPE_NAME_STRING);
         neIdentifierFeature.setUiName("identifier");
         neIdentifierFeature.setLayer(neLayer);
         neIdentifierFeature.setProject(project);
         neIdentifierFeature.setVisible(true);
         neIdentifierFeature.setCuratable(true);
 
-        depLayer = new AnnotationLayer(Dependency.class.getName(), "Dependency", RELATION_TYPE,
-                project, true, SINGLE_TOKEN, OVERLAP_ONLY);
+        depLayer = new AnnotationLayer(Dependency.class.getName(), "Dependency",
+                RelationLayerSupport.TYPE, project, true, SINGLE_TOKEN, OVERLAP_ONLY);
         depLayer.setAttachType(tokenLayer);
         depLayer.setAttachFeature(tokenPosFeature);
 
         depFeature = new AnnotationFeature();
         depFeature.setName("DependencyType");
         depFeature.setEnabled(true);
-        depFeature.setType(CAS.TYPE_NAME_STRING);
+        depFeature.setType(TYPE_NAME_STRING);
         depFeature.setUiName("Relation");
         depFeature.setLayer(depLayer);
         depFeature.setProject(project);
@@ -214,7 +217,7 @@ public class CasMergeTestBase
         depFlavorFeature = new AnnotationFeature();
         depFlavorFeature.setName("flavor");
         depFlavorFeature.setEnabled(true);
-        depFlavorFeature.setType(CAS.TYPE_NAME_STRING);
+        depFlavorFeature.setType(TYPE_NAME_STRING);
         depFlavorFeature.setUiName("flavor");
         depFlavorFeature.setLayer(depLayer);
         depFlavorFeature.setProject(project);
@@ -242,7 +245,7 @@ public class CasMergeTestBase
         stringFeature = new AnnotationFeature();
         stringFeature.setName("f1");
         stringFeature.setEnabled(true);
-        stringFeature.setType(CAS.TYPE_NAME_STRING);
+        stringFeature.setType(TYPE_NAME_STRING);
         stringFeature.setUiName("f1");
         stringFeature.setLayer(slotLayer);
         stringFeature.setProject(project);
@@ -255,7 +258,7 @@ public class CasMergeTestBase
         multiValSpanF1 = new AnnotationFeature();
         multiValSpanF1.setName("f1");
         multiValSpanF1.setEnabled(true);
-        multiValSpanF1.setType(CAS.TYPE_NAME_STRING);
+        multiValSpanF1.setType(TYPE_NAME_STRING);
         multiValSpanF1.setUiName("f1");
         multiValSpanF1.setLayer(multiValSpan);
         multiValSpanF1.setProject(project);
@@ -265,7 +268,7 @@ public class CasMergeTestBase
         multiValSpanF2 = new AnnotationFeature();
         multiValSpanF2.setName("f2");
         multiValSpanF2.setEnabled(true);
-        multiValSpanF2.setType(CAS.TYPE_NAME_STRING);
+        multiValSpanF2.setType(TYPE_NAME_STRING);
         multiValSpanF2.setUiName("f2");
         multiValSpanF2.setLayer(multiValSpan);
         multiValSpanF2.setProject(project);
@@ -273,13 +276,13 @@ public class CasMergeTestBase
         multiValSpanF2.setCuratable(true);
 
         multiValRel = new AnnotationLayer("webanno.custom.Multivalrel", "Multivalrel",
-                RELATION_TYPE, project, true, SINGLE_TOKEN, OVERLAP_ONLY);
+                RelationLayerSupport.TYPE, project, true, SINGLE_TOKEN, OVERLAP_ONLY);
         multiValRel.setAttachType(multiValSpan);
 
         multiValRelRel1 = new AnnotationFeature();
         multiValRelRel1.setName("rel1");
         multiValRelRel1.setEnabled(true);
-        multiValRelRel1.setType(CAS.TYPE_NAME_STRING);
+        multiValRelRel1.setType(TYPE_NAME_STRING);
         multiValRelRel1.setUiName("rel1");
         multiValRelRel1.setLayer(multiValSpan);
         multiValRelRel1.setProject(project);
@@ -289,7 +292,7 @@ public class CasMergeTestBase
         multiValRelRel2 = new AnnotationFeature();
         multiValRelRel2.setName("rel2");
         multiValRelRel2.setEnabled(true);
-        multiValRelRel2.setType(CAS.TYPE_NAME_STRING);
+        multiValRelRel2.setType(TYPE_NAME_STRING);
         multiValRelRel2.setUiName("rel2");
         multiValRelRel2.setLayer(multiValSpan);
         multiValRelRel2.setProject(project);

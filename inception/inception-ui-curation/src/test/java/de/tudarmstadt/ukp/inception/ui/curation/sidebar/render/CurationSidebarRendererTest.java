@@ -627,7 +627,7 @@ class CurationSidebarRendererTest
 
         var spanLayerLinkFeatureTraits = new LinkFeatureTraits();
         spanLayerLinkFeatureTraits.setEnableRoleLabels(true);
-        spanLayerLinkFeatureTraits.setCompareMode(aLinkFeatureMultiplicityMode);
+        spanLayerLinkFeatureTraits.setMultiplicityMode(aLinkFeatureMultiplicityMode);
         spanLayerLinkFeature.setTraits(JSONUtil.toJsonString(spanLayerLinkFeatureTraits));
     }
 }

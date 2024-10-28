@@ -17,22 +17,29 @@
  */
 package de.tudarmstadt.ukp.inception.curation.merge;
 
+import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
+import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.ANY_OVERLAP;
+import static de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureDiffMode.INCLUDE;
+import static de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureMultiplicityMode.ONE_TARGET_MULTIPLE_ROLES;
 import static de.tudarmstadt.ukp.inception.curation.merge.CurationTestUtils.HOST_TYPE;
 import static de.tudarmstadt.ukp.inception.curation.merge.CurationTestUtils.LINKS_FEATURE;
 import static de.tudarmstadt.ukp.inception.curation.merge.CurationTestUtils.TARGET_FEATURE;
 import static de.tudarmstadt.ukp.inception.curation.merge.CurationTestUtils.makeLinkFS;
 import static de.tudarmstadt.ukp.inception.curation.merge.CurationTestUtils.makeLinkHostFS;
+import static de.tudarmstadt.ukp.inception.schema.api.feature.MaterializedLink.toMaterializedLinks;
+import static de.tudarmstadt.ukp.inception.support.json.JSONUtil.toJsonString;
 import static de.tudarmstadt.ukp.inception.support.uima.AnnotationBuilder.buildAnnotation;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.factory.JCasFactory.createJCas;
 import static org.apache.uima.fit.util.FSUtil.getFeature;
+import static org.apache.uima.fit.util.FSUtil.setFeature;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 import java.lang.invoke.MethodHandles;
 import java.util.List;
+import java.util.Map;
 
-import org.apache.uima.fit.util.FSUtil;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.jcas.tcas.Annotation;
 import org.junit.jupiter.api.BeforeEach;
@@ -42,8 +49,9 @@ import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureTraits;
+import de.tudarmstadt.ukp.inception.curation.merge.strategy.ThresholdBasedMergeStrategy;
 import de.tudarmstadt.ukp.inception.schema.api.feature.LinkWithRoleModel;
-import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
+import de.tudarmstadt.ukp.inception.schema.api.feature.MaterializedLink;
 
 public class CasMergeLinkTest
     extends CasMergeTestBase
@@ -136,13 +144,13 @@ public class CasMergeLinkTest
         // Set up source CAS
         var role = "slot1";
         var sourceFs1 = makeLinkHostFS(sourceCas, 0, 0, makeLinkFS(sourceCas, role, 0, 0));
-        FSUtil.setFeature(sourceFs1, "f1", "foo");
+        setFeature(sourceFs1, "f1", "foo");
         var sourceFs2 = makeLinkHostFS(sourceCas, 0, 0, makeLinkFS(sourceCas, role, 1, 1));
-        FSUtil.setFeature(sourceFs2, "f1", "bar");
+        setFeature(sourceFs2, "f1", "bar");
 
         // Set up target CAS
         var target1 = makeLinkHostFS(targetCas, 0, 0);
-        FSUtil.setFeature(target1, "f1", "foo");
+        setFeature(target1, "f1", "foo");
         var targetFiller1 = new Token(targetCas, 0, 0);
         targetFiller1.addToIndexes();
 
@@ -158,7 +166,7 @@ public class CasMergeLinkTest
 
         // Add stacked target to target CAS
         var target2 = makeLinkHostFS(targetCas, 0, 0);
-        FSUtil.setFeature(target2, "f1", "bar");
+        setFeature(target2, "f1", "bar");
         var targetFiller2 = new Token(targetCas, 1, 1);
         targetFiller2.addToIndexes();
 
@@ -178,7 +186,7 @@ public class CasMergeLinkTest
     {
         var traits = new LinkFeatureTraits();
         traits.setEnableRoleLabels(false);
-        slotFeature.setTraits(JSONUtil.toJsonString(traits));
+        slotFeature.setTraits(toJsonString(traits));
 
         // Set up source CAS
         var sourceFs = buildAnnotation(sourceCas.getCas(), HOST_TYPE) //
@@ -266,5 +274,50 @@ public class CasMergeLinkTest
                 .as("There is still only a single link from the host to the filler")
                 .containsExactly( //
                         new LinkWithRoleModel("role1", null, targetFiller.getAddress()));
+    }
+
+    @Test
+    public void thatStackedLinkHostsWithDifferentTargetsAreMerged() throws Exception
+    {
+        slotLayer.setOverlapMode(ANY_OVERLAP);
+        var traits = new LinkFeatureTraits();
+        traits.setDiffMode(INCLUDE);
+        slotHostDiffAdapter.addLinkFeature("links", "role", "target", ONE_TARGET_MULTIPLE_ROLES,
+                INCLUDE);
+
+        slotFeature.setTraits(toJsonString(traits));
+        sut.setMergeStrategy(ThresholdBasedMergeStrategy.builder() //
+                .withUserThreshold(1) //
+                .withConfidenceThreshold(0) //
+                .withTopRanks(Integer.MAX_VALUE) //
+                .build());
+
+        // Set up source CAS
+        buildAnnotation(sourceCas.getCas(), HOST_TYPE) //
+                .at(0, 0) //
+                .withFeature(LINKS_FEATURE, asList(makeLinkFS(sourceCas, "role1", 1, 1)))
+                .buildAndAddToIndexes();
+
+        buildAnnotation(sourceCas.getCas(), HOST_TYPE) //
+                .at(0, 0) //
+                .withFeature(LINKS_FEATURE, asList(makeLinkFS(sourceCas, "role2", 1, 1)))
+                .buildAndAddToIndexes();
+
+        var casMap = Map.of("source", sourceCas.getCas());
+
+        var diff = doDiff(diffAdapters, casMap).toResult();
+        diff.print(System.out);
+
+        sut.mergeCas(diff, document, DUMMY_USER, targetCas.getCas(), casMap);
+
+        var targetHosts = targetCas.select(HOST_TYPE).asList();
+        assertThat(targetHosts) //
+                .as("Links by host in target CAS") //
+                .hasSize(2) //
+                .extracting(host -> toMaterializedLinks(host, LINKS_FEATURE, "role", "target")) //
+                .containsExactlyInAnyOrder( //
+                        asList(new MaterializedLink(LINKS_FEATURE, "role1", Token._TypeName, 1, 1)), //
+                        asList(new MaterializedLink(LINKS_FEATURE, "role2", Token._TypeName, 1,
+                                1)));
     }
 }
