@@ -48,7 +48,7 @@ public class KrippendorffAlphaAgreementMeasureSupport
     @Override
     public String getName()
     {
-        return "Krippendorff's Kappa (coding / nominal)";
+        return "Krippendorff's Alpha (coding / nominal)";
     }
 
     @Override

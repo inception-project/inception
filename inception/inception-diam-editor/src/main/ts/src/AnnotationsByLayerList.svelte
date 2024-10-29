@@ -219,7 +219,7 @@
                                         <!-- svelte-ignore a11y-click-events-have-key-events -->
                                         <!-- svelte-ignore a11y-no-static-element-interactions -->
                                         <div class="flex-grow-1 my-1 mx-2 position-relative overflow-hidden"  on:click={() => scrollTo(ann)}>
-                                            <div class="float-end labels me-1">
+                                            <div class="float-end labels">
                                                 <LabelBadge
                                                     annotation={ann}
                                                     {ajaxClient}
@@ -253,7 +253,7 @@
                                                     class="flex-grow-1 my-1 mx-2 overflow-hidden"
                                                     on:click={() => scrollTo(target)}
                                                 >
-                                                    <div class="float-end labels me-1">
+                                                    <div class="float-end labels">
                                                         <LabelBadge
                                                             annotation={relation}
                                                             {ajaxClient}

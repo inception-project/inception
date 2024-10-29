@@ -34,23 +34,13 @@
               <wicket:container wicket:id="expectedResponse" />
             </p>
             <div>
-              <input wicket:id="response" class="form-control" placeholder="Enter value here..."/>
+              <input wicket:id="response" class="form-control text-center border-primary" placeholder="Enter value here..."/>
             </div>
           </div>
         </div>
         <div class="row form-row">
           <div class="col-sm-12">
             <div wicket:id="mergeStrategySettings" />
-          </div>
-        </div>
-        <div class="row form-row" wicket:enclosure="saveSettingsAsDefault">
-          <div class="col-sm-12">
-            <div class="form-check">
-              <input wicket:id="saveSettingsAsDefault" class="form-check-input" type="checkbox" />
-              <label wicket:for="saveSettingsAsDefault" class="form-check-label">
-                Update project merge strategy settings
-              </label>
-            </div>
           </div>
         </div>
         <div class="row form-row" wicket:enclosure="clearTargetCas">
@@ -63,24 +53,27 @@
             </div>
           </div>
         </div>
-        <div class="row form-row">
-          <div class="col-sm-12">
-            <p>
-              <span wicket:id="feedback"></span>
-            </p>
-          </div>
-        </div>
       </div>
     </div>
-    <div class="modal-footer">
-      <button wicket:id="confirm" class="btn btn-danger">
-        <i class="fas fa-check"></i>&nbsp;
-        <wicket:message key="confirm.label" />
-      </button>
-      <button wicket:id="cancel" class="btn btn-secondary">
-        <i class="fas fa-times"></i>&nbsp;
-        <wicket:message key="cancel.label" />
-      </button>
+    <div class="modal-footer d-flex justify-content-between">
+      <div>
+        <div class="form-check" wicket:enclosure="saveSettingsAsDefault">
+          <input wicket:id="saveSettingsAsDefault" class="form-check-input" type="checkbox" />
+          <label wicket:for="saveSettingsAsDefault" class="form-check-label">
+            <wicket:message key="saveSettingsAsDefault" />
+          </label>
+        </div>
+      </div>
+      <div>
+        <button wicket:id="confirm" class="btn btn-danger">
+          <i class="fas fa-check"></i>&nbsp;
+          <wicket:message key="confirm.label" />
+        </button>
+        <button wicket:id="cancel" class="btn btn-secondary">
+          <i class="fas fa-times"></i>&nbsp;
+          <wicket:message key="cancel.label" />
+        </button>
+      </div>
     </div>
   </form>
 </wicket:panel>
