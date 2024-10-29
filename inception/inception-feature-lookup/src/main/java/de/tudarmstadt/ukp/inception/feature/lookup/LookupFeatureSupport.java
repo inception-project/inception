@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.feature.lookup;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import java.lang.invoke.MethodHandles;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -61,7 +62,7 @@ public class LookupFeatureSupport
     public static final String STRING = "string";
     public static final String TYPE_STRING_LOOKUP = PREFIX + STRING;
 
-    private static final Logger LOG = LoggerFactory.getLogger(LookupFeatureSupport.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private final LookupCache labelCache;
     private final LookupServiceProperties properties;
@@ -94,13 +95,15 @@ public class LookupFeatureSupport
         }
 
         return Optional.of(new FeatureType(aFeature.getType(),
-                aFeature.getType().substring(PREFIX.length()), featureSupportId));
+                "Lookup (" + aFeature.getType().substring(PREFIX.length()) + ")",
+                featureSupportId));
     }
 
     @Override
     public List<FeatureType> getSupportedFeatureTypes(AnnotationLayer aAnnotationLayer)
     {
-        return asList(new FeatureType(TYPE_STRING_LOOKUP, "Lookup", featureSupportId));
+        return asList(
+                new FeatureType(TYPE_STRING_LOOKUP, "Lookup (" + STRING + ")", featureSupportId));
     }
 
     @Override
