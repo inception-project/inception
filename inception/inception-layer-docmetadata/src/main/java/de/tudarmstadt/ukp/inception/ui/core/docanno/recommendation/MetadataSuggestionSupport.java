@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.ui.core.docanno.recommendation;
 
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_ALL;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_OVERLAP;
+import static org.apache.uima.cas.CAS.TYPE_NAME_STRING;
 
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
@@ -83,7 +84,7 @@ public class MetadataSuggestionSupport
         }
 
         var feature = aContext.getFeature();
-        if (CAS.TYPE_NAME_STRING.equals(feature.getType()) || feature.isVirtualFeature()) {
+        if (TYPE_NAME_STRING.equals(feature.getType()) || feature.isVirtualFeature()) {
             return true;
         }
 
@@ -213,6 +214,7 @@ public class MetadataSuggestionSupport
     {
 
         for (var annotation : aAnnotations) {
+            // FIXME: This will not work for multi-valued features
             var label = annotation.getFeatureValueAsString(aFeat);
 
             if (label == null) {
