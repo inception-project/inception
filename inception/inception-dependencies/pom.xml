@@ -579,6 +579,20 @@
         <version>${jena.version}</version>
         <type>pom</type>
         <scope>import</scope>
+        <exclusions>
+          <exclusion>
+            <groupId>org.junit</groupId>
+            <artifactId>*</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>*</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.junitplatform</groupId>
+            <artifactId>*</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.apache.jena</groupId>
@@ -774,6 +788,16 @@
         <version>${opensaml.version}</version>
         <type>pom</type>
         <scope>import</scope>
+        <exclusions>
+          <exclusion>
+            <groupId>com.fasterxml.jackson</groupId>
+            <artifactId>*</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>*</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
 
       <!-- Springdoc -->
@@ -1128,6 +1152,16 @@
         <version>${rdf4j.version}</version>
         <type>pom</type>
         <scope>import</scope>
+        <exclusions>
+          <exclusion>
+            <groupId>com.fasterxml.jackson</groupId>
+            <artifactId>*</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>*</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.eclipse.rdf4j</groupId>
@@ -1426,6 +1460,10 @@
         <scope>import</scope>
         <exclusions>
           <exclusion>
+            <groupId>org.apache.maven.plugin-tools</groupId>
+            <artifactId>*</artifactId>
+          </exclusion>
+          <exclusion>
             <groupId>org.seleniumhq.selenium</groupId>
             <artifactId>*</artifactId>
           </exclusion>
@@ -1443,6 +1481,26 @@
           </exclusion>
           <exclusion>
             <groupId>org.infinispan</groupId>
+            <artifactId>*</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>*</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.junit.platform</groupId>
+            <artifactId>*</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.junit.vintage</groupId>
+            <artifactId>*</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>*</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.slf4j</groupId>
             <artifactId>*</artifactId>
           </exclusion>
         </exclusions>
