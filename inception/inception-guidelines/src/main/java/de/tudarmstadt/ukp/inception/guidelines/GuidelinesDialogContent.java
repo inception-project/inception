@@ -32,7 +32,6 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.request.resource.ResourceStreamResource;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.resource.FileResourceStream;
-import org.apache.wicket.util.resource.IResourceStream;
 
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
@@ -54,26 +53,27 @@ public class GuidelinesDialogContent
         super(aId);
 
         // Overall progress by Projects
-        RepeatingView guidelineRepeater = new RepeatingView("guidelineRepeater");
+        var guidelineRepeater = new RepeatingView("guidelineRepeater");
         add(guidelineRepeater);
 
-        for (String guidelineFileName : guidelinesService
+        for (var guidelineFileName : guidelinesService
                 .listGuidelines(aModel.getObject().getProject())) {
-            AbstractItem item = new AbstractItem(guidelineRepeater.newChildId());
+            var item = new AbstractItem(guidelineRepeater.newChildId());
 
             guidelineRepeater.add(item);
 
-            // Add a popup window link to display annotation guidelines
-            PopupSettings popupSettings = new PopupSettings(RESIZABLE | SCROLLBARS).setHeight(500)
+            // Add a pop-up window link to display annotation guidelines
+            var popupSettings = new PopupSettings(RESIZABLE | SCROLLBARS).setHeight(500)
                     .setWidth(700);
 
-            IResourceStream stream = new FileResourceStream(guidelinesService
+            var stream = new FileResourceStream(guidelinesService
                     .getGuideline(aModel.getObject().getProject(), guidelineFileName));
-            ResourceStreamResource resource = new ResourceStreamResource(stream);
-            ResourceLink<Void> rlink = new ResourceLink<>("guideine", resource);
+            var resource = new ResourceStreamResource(stream);
+            var rlink = new ResourceLink<Void>("guideine", resource);
             rlink.setPopupSettings(popupSettings);
-            item.add(new Label("guidelineName", guidelineFileName));
-            item.add(rlink);
+            item.queue(rlink);
+
+            item.queue(new Label("guidelineName", guidelineFileName));
         }
 
         cancelButton = new LambdaAjaxLink("cancel", this::actionCloseDialog);
