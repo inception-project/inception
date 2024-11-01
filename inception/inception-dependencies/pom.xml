@@ -1460,6 +1460,10 @@
         <scope>import</scope>
         <exclusions>
           <exclusion>
+            <groupId>org.apache.maven.plugin-tools</groupId>
+            <artifactId>*</artifactId>
+          </exclusion>
+          <exclusion>
             <groupId>org.seleniumhq.selenium</groupId>
             <artifactId>*</artifactId>
           </exclusion>
@@ -1477,10 +1481,6 @@
           </exclusion>
           <exclusion>
             <groupId>org.infinispan</groupId>
-            <artifactId>*</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>org.apache.maven.plugin-tools</groupId>
             <artifactId>*</artifactId>
           </exclusion>
           <exclusion>

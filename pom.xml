@@ -70,12 +70,12 @@
     <build-ant-version>1.10.15</build-ant-version>
     <build-groovy-version>4.0.23</build-groovy-version>
 
-    <junit-jupiter.version>5.11.1</junit-jupiter.version>
-    <junit-platform.version>1.11.1</junit-platform.version>
-    <mockito.version>5.14.1</mockito.version>
+    <junit-jupiter.version>5.11.3</junit-jupiter.version>
+    <junit-platform.version>1.11.3</junit-platform.version>
+    <mockito.version>5.14.2</mockito.version>
     <assertj.version>3.26.3</assertj.version>
     <xmlunit.version>2.10.0</xmlunit.version>
-    <testcontainers.version>1.20.2</testcontainers.version>
+    <testcontainers.version>1.20.3</testcontainers.version>
 
     <awaitility.version>4.2.2</awaitility.version>
 
@@ -86,26 +86,26 @@
 
     <pdfbox.version>3.0.3</pdfbox.version>
 
-    <spring.version>6.1.13</spring.version>
-    <spring.boot.version>3.3.4</spring.boot.version>
+    <spring.version>6.1.14</spring.version>
+    <spring.boot.version>3.3.5</spring.boot.version>
     <spring.data.version>3.3.2</spring.data.version>
-    <spring.security.version>6.3.3</spring.security.version>
+    <spring.security.version>6.3.4</spring.security.version>
     <springdoc.version>2.6.0</springdoc.version>
-    <swagger.version>2.2.24</swagger.version>
+    <swagger.version>2.2.25</swagger.version>
     <jjwt.version>0.12.6</jjwt.version>
 
     <slf4j.version>2.0.16</slf4j.version>
     <log4j2.version>2.24.1</log4j2.version>
     <jboss.logging.version>3.6.0.Final</jboss.logging.version>
-    <sentry.version>7.14.0</sentry.version>
+    <sentry.version>7.16.0</sentry.version>
 
-    <tomcat.version>10.1.30</tomcat.version>
+    <tomcat.version>10.1.31</tomcat.version>
     <jetty.version>12.0.14</jetty.version>
     <servlet-api.version>6.0.0</servlet-api.version>
 
-    <mariadb.driver.version>3.4.1</mariadb.driver.version>
-    <mssql.driver.version>12.6.3.jre11</mssql.driver.version>
-    <mysql.driver.version>9.0.0</mysql.driver.version>
+    <mariadb.driver.version>3.5.0</mariadb.driver.version>
+    <mssql.driver.version>12.8.1.jre11</mssql.driver.version>
+    <mysql.driver.version>9.1.0</mysql.driver.version>
     <postgres.driver.version>42.7.4</postgres.driver.version>
     <hibernate.version>6.5.2.Final</hibernate.version>
     <hibernate.validator.version>8.0.1.Final</hibernate.validator.version>
@@ -122,8 +122,8 @@
       -->
     <lucene.version>9.11.1</lucene.version>
     <solr.version>9.6.1</solr.version>
-    <opensearch.version>2.17.0</opensearch.version>
-    <jena.version>5.1.0</jena.version>
+    <opensearch.version>2.17.1</opensearch.version>
+    <jena.version>5.2.0</jena.version>
     <rdf4j.version>5.0.2</rdf4j.version> 
     <owlapi-version>5.5.1</owlapi-version>
 
@@ -136,11 +136,11 @@
     <json.version>20230227</json.version>
     <pf4j.version>2.6.0</pf4j.version>
     <pf4j-spring.version>0.5.0</pf4j-spring.version>
-    <jackson.version>2.18.0</jackson.version>
+    <jackson.version>2.18.1</jackson.version>
     <snakeyaml.version>2.3</snakeyaml.version>
     <okhttp.version>4.12.0</okhttp.version>
     <okio.version>3.9.1</okio.version>
-    <byte-buddy.version>1.15.3</byte-buddy.version>
+    <byte-buddy.version>1.15.7</byte-buddy.version>
     <caffeine.version>3.1.8</caffeine.version>
     <commons-beanutils.version>1.9.4</commons-beanutils.version>
     <commons-collections4.version>4.4</commons-collections4.version>
@@ -155,19 +155,19 @@
     <commons-text.version>1.12.0</commons-text.version>
     <commons-validator.version>1.9.0</commons-validator.version>
     <commons-io.version>2.17.0</commons-io.version>
-    <commons-logging.version>1.3.3</commons-logging.version>
+    <commons-logging.version>1.3.4</commons-logging.version>
     <commons-logging-api.version>1.1</commons-logging-api.version>
     <jinjava.version>2.7.3</jinjava.version>
-    <fastutil.version>8.5.14</fastutil.version>
+    <fastutil.version>8.5.15</fastutil.version>
     <picocli.version>4.7.6</picocli.version>
     <woodstox-core.version>6.7.0</woodstox-core.version>
-    <nimbus-jose-jwt.version>9.41.2</nimbus-jose-jwt.version>
-    <json-schema-validator.version>1.5.2</json-schema-validator.version>
+    <nimbus-jose-jwt.version>9.44</nimbus-jose-jwt.version>
+    <json-schema-validator.version>1.5.3</json-schema-validator.version>
     <jgit.version>6.10.0.202406032230-r</jgit.version>
     <jaxb.version>4.0.5</jaxb.version>
     <snappy.version>1.1.10.7</snappy.version>
     <jsonld-java.version>0.13.6</jsonld-java.version>
-    <jna.version>5.14.0</jna.version>
+    <jna.version>5.15.0</jna.version>
     <jsoup.version>1.18.1</jsoup.version>
     <mime4j.version>0.8.11</mime4j.version>
     <hsqldb.version>2.7.3</hsqldb.version>
