@@ -21,22 +21,19 @@
   <div class="d-flex flex-column overflow-auto">
     <div class="modal-header">
       <h5 class="modal-title">
-        <wicket:message key="export" />
+        <wicket:message key="guidelines" />
       </h5>
       <button wicket:id="closeDialog" type="button" class="btn-close" aria-label="Close"></button>
     </div>
-    <div class="modal-body overflow-auto">
-      <div class="container-fluid">
-        <ul class="list-group">
-          <li wicket:id="guidelineRepeater" class="list-group-item">
-            <i class="fas fa-book"></i>
-            <span wicket:id="guidelineName"></span>
-            <button wicket:id="guideine" class="float-end btn btn-sm btn-primary">
-              <i class="fas fa-book-open"></i>
-              Open Guideline
-            </button>
-          </li>
-        </ul>
+    <div class="modal-body p-0 overflow-auto">
+      <div class="list-group list-group-flush">
+        <wicket:container wicket:id="guidelineRepeater" >
+          <a wicket:id="guideine" class="list-group-item list-group-item-action">
+            <i class="fas fa-book me-3"></i>
+            <u wicket:id="guidelineName" class="link-primary"></u>
+            <i class="fa-solid fa-arrow-up-right-from-square link-primary"></i>
+          </a>
+        </wicket:container>
       </div>
     </div>
     <div class="modal-footer">
@@ -47,5 +44,4 @@
     </div>
   </div>
 </wicket:panel>
-
 </html>
