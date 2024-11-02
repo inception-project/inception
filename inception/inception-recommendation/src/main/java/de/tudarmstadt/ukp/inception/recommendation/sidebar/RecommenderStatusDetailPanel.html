@@ -20,15 +20,11 @@
 <wicket:panel>
   <div class="modal-header">
     <h5 class="modal-title">Confusion Matrix</h5>
-    <!--
-    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-      <span aria-hidden="true">&times;</span>
-    </button>
-    -->
+    <button wicket:id="closeDialog" type="button" class="btn-close" aria-label="Close"></button>
   </div>
   <div class="modal-body small p-0 flex-v-container" style="overflow: auto;">
     <div class="p-2 text-center">
-      Expected label in rows, predicted label in columns.
+      Gold labels in rows, predicted labels in columns.
     </div>
     <div class="scrolling flex-content" style="flex-basis: auto;">
       <table style="width: 100%;">
@@ -41,22 +37,23 @@
     </div>
     <div>
       <div class="px-2 pt-2">
-        <label>Evaluation datapoints</label>
+        Evaluation is performed on a single train/test split. 
+        The confusion matrix only covers the data in the test set.
+        A full cross-validation over all data is not performed.
+      </div>
+      <div class="px-2">
+        <label>Evaluation data points:</label>
         <span class="float-end">
           <wicket:container wicket:id="totalDatapoints"/> @ 
-          <wicket:container wicket:id="datapointUnit"/>
+          <wicket:container wicket:id="datapointUnit"/>-level
         </span>
       </div>
       <div class="px-2">
-        <label>Ignored as expected</label>
+        <label>Labels ignored wrt. accuracy/precision/recall when gold matches predicted:</label>
         <span class="float-end" wicket:id="ignoredLabels"/>
       </div>
     </div>
   </div>
-  <!--  
-  <div class="modal-footer">
-  </div>
-  -->
   <wicket:fragment wicket:id="th-centered">
     <th class="headers text-center"><wicket:container wicket:id="label"/></th>
   </wicket:fragment>
