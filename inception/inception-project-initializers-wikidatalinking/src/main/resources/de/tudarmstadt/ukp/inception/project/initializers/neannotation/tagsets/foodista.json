@@ -1,0 +1,31 @@
+{
+  "name" : "Named entity - value",
+  "description" : null,
+  "language" : null,
+  "tags" : [ {
+    "tag_name" : "Date",
+    "tag_description" : null
+  }, {
+    "tag_name" : "Event",
+    "tag_description" : null
+  }, {
+    "tag_name" : "Location",
+    "tag_description" : null
+  }, {
+    "tag_name" : "Organization",
+    "tag_description" : null
+  }, {
+    "tag_name" : "Person",
+    "tag_description" : null
+  }, {
+    "tag_name" : "Product",
+    "tag_description" : null
+  }, {
+    "tag_name" : "Product Category",
+    "tag_description" : null
+  }, {
+    "tag_name" : "Route",
+    "tag_description" : null
+  } ],
+  "create_tag" : false
+}
