@@ -581,7 +581,7 @@ public class CurationSidebarServiceImpl
         // the curationdoc can be retrieved from user (CURATION or current) and projectId
         private String curationTarget;
         private boolean showAll;
-        private boolean showScore;
+        private boolean showScore = true;
 
         public CurationSession(String aUser)
         {
