@@ -17,6 +17,22 @@
   limitations under the License.
 -->
 <html xmlns:wicket="http://wicket.apache.org">
+<wicket:head>
+  <style>
+    .column-header {
+      text-align: -webkit-center;
+      vertical-align: bottom;
+    }
+
+    .row-header {
+    }
+
+    .text-tilted {
+      writing-mode: vertical-rl;
+       transform: rotate(-180deg);
+    }
+  </style>
+</wicket:head>
 <wicket:panel>
   <div class="modal-header">
     <h5 class="modal-title">Confusion Matrix</h5>
@@ -54,11 +70,16 @@
       </div>
     </div>
   </div>
-  <wicket:fragment wicket:id="th-centered">
-    <th class="headers text-center"><wicket:container wicket:id="label"/></th>
+  <wicket:fragment wicket:id="th-column">
+    <th class="headers column-header">
+      <div class="text-tilted" wicket:id="label"/>
+    </th>
   </wicket:fragment>
-  <wicket:fragment wicket:id="th-right">
-    <th class="headers text-end"><wicket:container wicket:id="label"/></th>
+  <wicket:fragment wicket:id="th-row">
+    <th class="headers row-header text-end"><wicket:container wicket:id="label"/></th>
+  </wicket:fragment>
+  <wicket:fragment wicket:id="th">
+    <th class="headers"></th>
   </wicket:fragment>
   <wicket:fragment wicket:id="td">
     <td wicket:id="cellContent" class="text-center"><span wicket:id="label"/></td>
