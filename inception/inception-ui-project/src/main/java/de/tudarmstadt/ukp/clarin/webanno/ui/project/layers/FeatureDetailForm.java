@@ -118,19 +118,43 @@ public class FeatureDetailForm
         add(defaultOptionsContainer);
         defaultOptionsContainer.add(new CheckBox("enabled").setOutputMarkupPlaceholderTag(true));
         defaultOptionsContainer.add(new CheckBox("curatable").setOutputMarkupPlaceholderTag(true));
-        defaultOptionsContainer.add(new CheckBox("remember").setOutputMarkupPlaceholderTag(true));
+
+        var remember = new CheckBox("remember");
+        remember.setOutputMarkupPlaceholderTag(true);
+        remember.add(LambdaBehavior.onConfigure(_this -> {
+            var type = FeatureDetailForm.this.getModelObject().getType();
+            var rememberAllowed = asList(TYPE_NAME_INTEGER, TYPE_NAME_FLOAT, TYPE_NAME_DOUBLE,
+                    TYPE_NAME_BOOLEAN, TYPE_NAME_STRING).contains(type);
+            if (rememberAllowed) {
+                remember.setModel(PropertyModel.of(FeatureDetailForm.this.getModel(), "remember"));
+                remember.setVisible(true);
+            }
+            else {
+                remember.setModel(Model.of(false));
+                remember.setVisible(false);
+            }
+        }));
+        defaultOptionsContainer.add(remember);
+
         required = new CheckBox("required");
         required.setOutputMarkupPlaceholderTag(true);
         required.add(LambdaBehavior.onConfigure(_this -> {
             var type = FeatureDetailForm.this.getModelObject().getType();
-            var mandatory = asList(TYPE_NAME_INTEGER, TYPE_NAME_FLOAT, TYPE_NAME_DOUBLE,
+            var requiredMandatory = asList(TYPE_NAME_INTEGER, TYPE_NAME_FLOAT, TYPE_NAME_DOUBLE,
                     TYPE_NAME_BOOLEAN).contains(type);
-            _this.setEnabled(!mandatory);
-            if (mandatory) {
+            var requiredOptional = asList(TYPE_NAME_STRING_ARRAY, TYPE_NAME_STRING).contains(type);
+            if (requiredMandatory) {
                 required.setModel(Model.of(true));
+                required.setEnabled(false);
+            }
+            else if (requiredOptional) {
+                required.setModel(PropertyModel.of(FeatureDetailForm.this.getModel(), "required"));
+                required.setEnabled(true);
+                required.setVisible(true);
             }
             else {
-                required.setModel(PropertyModel.of(FeatureDetailForm.this.getModel(), "required"));
+                required.setModel(Model.of(false));
+                required.setVisible(false);
             }
         }));
         defaultOptionsContainer.add(required);
@@ -140,10 +164,10 @@ public class FeatureDetailForm
                 .setOutputMarkupPlaceholderTag(true) //
                 .add(visibleWhen(() -> {
                     var type = FeatureDetailForm.this.getModelObject().getType();
-                    var constaintsSupportType = asList(TYPE_NAME_STRING_ARRAY, TYPE_NAME_STRING)
+                    var constraintsSupportType = asList(TYPE_NAME_STRING_ARRAY, TYPE_NAME_STRING)
                             .contains(type);
                     var hasTagset = FeatureDetailForm.this.getModelObject().getTagset() != null;
-                    return constaintsSupportType && hasTagset;
+                    return constraintsSupportType && hasTagset;
                 })) //
                 .setOutputMarkupPlaceholderTag(true));
         defaultOptionsContainer
