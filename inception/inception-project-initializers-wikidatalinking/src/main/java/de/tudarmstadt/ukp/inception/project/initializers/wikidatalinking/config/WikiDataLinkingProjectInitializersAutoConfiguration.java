@@ -29,6 +29,7 @@ import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.project.initializers.neannotation.EntityAnnotationProjectInitializer;
+import de.tudarmstadt.ukp.inception.project.initializers.neannotation.NamedEntitySampleDataTagSetInitializer;
 import de.tudarmstadt.ukp.inception.project.initializers.neannotation.NamedEntitySequenceClassifierRecommenderInitializer;
 import de.tudarmstadt.ukp.inception.project.initializers.neannotation.NamedEntityStringRecommenderInitializer;
 import de.tudarmstadt.ukp.inception.project.initializers.wikidatalinking.EntityLinkingProjectInitializer;
@@ -101,5 +102,12 @@ public class WikiDataLinkingProjectInitializersAutoConfiguration
     {
         return new NamedEntitySequenceClassifierRecommenderInitializer(aRecommenderService,
                 aAnnotationService, aRecommenderFactory);
+    }
+
+    @Bean
+    public NamedEntitySampleDataTagSetInitializer namedEntitySampleDataTagSetInitializer(
+            AnnotationSchemaService aAnnotationSchemaService)
+    {
+        return new NamedEntitySampleDataTagSetInitializer(aAnnotationSchemaService);
     }
 }
