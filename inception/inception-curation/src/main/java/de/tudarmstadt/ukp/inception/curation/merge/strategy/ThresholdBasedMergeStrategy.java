@@ -84,6 +84,11 @@ public class ThresholdBasedMergeStrategy
             return emptyList();
         }
 
+        var totalAnnotators = cfgsAboveUserThreshold.stream() //
+                .flatMap(cfg -> cfg.getCasGroupIds().stream()) //
+                .distinct() //
+                .count();
+
         var totalVotes = cfgsAboveUserThreshold.stream() //
                 .mapToDouble(cfg -> cfg.getCasGroupIds().size()) //
                 .sum();

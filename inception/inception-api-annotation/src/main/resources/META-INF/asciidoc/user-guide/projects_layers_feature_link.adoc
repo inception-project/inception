@@ -36,6 +36,12 @@ If the link feature is configured to any layer, an existing span annotation need
   If disabled the UI labels of annotations will be displayed instead of role labels. 
   This property is enabled by default.
 
+| Comparison
+| Determines whether to consider this link feature when comparing the annotations of the layer to which this feature belongs. 
+By default, link featurse are **ignored when comparing annotations**. That means, two annotations at the same position with the same feature values but different links will be considered equal. 
+If you want to consider the links when comparing annotations, you can change this setting to **consider when comparing annotations**.
+Note that even when the links are considered, two annotations at the same position are still considered to be stacked and will not be auto-merge by any merge strategies that do not support stacking.
+
 | Multiplicity
 | Determines how links are compared to each other e.g. when calulating agreement or when merging annotations during curation.
   Use *Target can be linked in multiple different roles* if a link target can appear in multiple roles with respect to the same source span.

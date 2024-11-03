@@ -43,6 +43,7 @@ import java.util.Map;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.jcas.tcas.Annotation;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -276,48 +277,53 @@ public class CasMergeLinkTest
                         new LinkWithRoleModel("role1", null, targetFiller.getAddress()));
     }
 
-    @Test
-    public void thatStackedLinkHostsWithDifferentTargetsAreMerged() throws Exception
+    @Nested
+    class ThesholdBasedMergeStrategyTests
     {
-        slotLayer.setOverlapMode(ANY_OVERLAP);
-        var traits = new LinkFeatureTraits();
-        traits.setDiffMode(INCLUDE);
-        slotHostDiffAdapter.addLinkFeature("links", "role", "target", ONE_TARGET_MULTIPLE_ROLES,
-                INCLUDE);
+        @BeforeEach
+        void setup() throws Exception
+        {
+            slotLayer.setOverlapMode(ANY_OVERLAP);
+            var traits = new LinkFeatureTraits();
+            traits.setDiffMode(INCLUDE);
+            slotHostDiffAdapter.addLinkFeature("links", "role", "target", ONE_TARGET_MULTIPLE_ROLES,
+                    INCLUDE);
 
-        slotFeature.setTraits(toJsonString(traits));
-        sut.setMergeStrategy(ThresholdBasedMergeStrategy.builder() //
-                .withUserThreshold(1) //
-                .withConfidenceThreshold(0) //
-                .withTopRanks(Integer.MAX_VALUE) //
-                .build());
+            slotFeature.setTraits(toJsonString(traits));
+            sut.setMergeStrategy(ThresholdBasedMergeStrategy.builder() //
+                    .withUserThreshold(1) //
+                    .withConfidenceThreshold(0) //
+                    .withTopRanks(Integer.MAX_VALUE) //
+                    .build());
+        }
 
-        // Set up source CAS
-        buildAnnotation(sourceCas.getCas(), HOST_TYPE) //
-                .at(0, 0) //
-                .withFeature(LINKS_FEATURE, asList(makeLinkFS(sourceCas, "role1", 1, 1)))
-                .buildAndAddToIndexes();
+        @Test
+        public void thatStackedLinkHostsWithDifferentTargetsAreMerged() throws Exception
+        {
+            buildAnnotation(sourceCas.getCas(), HOST_TYPE) //
+                    .at(0, 0) //
+                    .withFeature(LINKS_FEATURE, asList(makeLinkFS(sourceCas, "role1", 1, 1)))
+                    .buildAndAddToIndexes();
 
-        buildAnnotation(sourceCas.getCas(), HOST_TYPE) //
-                .at(0, 0) //
-                .withFeature(LINKS_FEATURE, asList(makeLinkFS(sourceCas, "role2", 1, 1)))
-                .buildAndAddToIndexes();
+            buildAnnotation(sourceCas.getCas(), HOST_TYPE) //
+                    .at(0, 0) //
+                    .withFeature(LINKS_FEATURE, asList(makeLinkFS(sourceCas, "role2", 1, 1)))
+                    .buildAndAddToIndexes();
 
-        var casMap = Map.of("source", sourceCas.getCas());
+            var casMap = Map.of("source", sourceCas.getCas());
+            var diff = doDiff(diffAdapters, casMap).toResult();
+            sut.mergeCas(diff, document, DUMMY_USER, targetCas.getCas(), casMap);
 
-        var diff = doDiff(diffAdapters, casMap).toResult();
-        diff.print(System.out);
-
-        sut.mergeCas(diff, document, DUMMY_USER, targetCas.getCas(), casMap);
-
-        var targetHosts = targetCas.select(HOST_TYPE).asList();
-        assertThat(targetHosts) //
-                .as("Links by host in target CAS") //
-                .hasSize(2) //
-                .extracting(host -> toMaterializedLinks(host, LINKS_FEATURE, "role", "target")) //
-                .containsExactlyInAnyOrder( //
-                        asList(new MaterializedLink(LINKS_FEATURE, "role1", Token._TypeName, 1, 1)), //
-                        asList(new MaterializedLink(LINKS_FEATURE, "role2", Token._TypeName, 1,
-                                1)));
+            var targetHosts = targetCas.select(HOST_TYPE).asList();
+            assertThat(targetHosts) //
+                    .as("Links by host in target CAS") //
+                    .hasSize(2) //
+                    .extracting(host -> toMaterializedLinks(host, LINKS_FEATURE, "role", "target")) //
+                    .containsExactlyInAnyOrder( //
+                            asList(new MaterializedLink(LINKS_FEATURE, "role1", Token._TypeName, 1,
+                                    1)), //
+                            asList(new MaterializedLink(LINKS_FEATURE, "role2", Token._TypeName, 1,
+                                    1)));
+        }
     }
 }
