@@ -34,6 +34,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.NamedEntityLayerInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.QuickProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.text.LineOrientedTextFormatSupport;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.io.jsoncas.UimaJsonCasFormatSupport;
@@ -106,6 +107,7 @@ public class EntityAnnotationProjectInitializer
     {
         var dependencies = new ArrayList<Class<? extends ProjectInitializer>>();
         dependencies.add(NamedEntityLayerInitializer.class);
+        dependencies.add(NamedEntitySampleDataTagSetInitializer.class);
 
         if (isStringRecommenderAvailable()) {
             dependencies.add(NamedEntityStringRecommenderInitializer.class);
@@ -136,9 +138,17 @@ public class EntityAnnotationProjectInitializer
         var project = aRequest.getProject();
         project.setName(userService.getCurrentUsername() + " - New entity annotation project");
 
+        var tagset = annotationService
+                .getTagSet(NamedEntitySampleDataTagSetInitializer.TAG_SET_NAME, project);
+
         var layer = annotationService.findLayer(project, NamedEntity.class.getName());
-        var valueFeature = annotationService.getFeature(NamedEntity._FeatName_identifier, layer);
-        valueFeature.setEnabled(false);
+        var identifierFeature = annotationService.getFeature(NamedEntity._FeatName_identifier,
+                layer);
+        identifierFeature.setEnabled(false);
+        annotationService.createFeature(identifierFeature);
+        var valueFeature = annotationService.getFeature(NamedEntity._FeatName_value, layer);
+        valueFeature.setEnabled(true);
+        valueFeature.setTagset(tagset);
         annotationService.createFeature(valueFeature);
 
         var description = //
@@ -160,29 +170,34 @@ public class EntityAnnotationProjectInitializer
         }
 
         if (aRequest.isIncludeSampleData()) {
-            importExampleDocument(project,
+            importExampleDocument(project, UimaJsonCasFormatSupport.ID,
                     "foodista_blog_2019_08_13_northern-british-columbia_abbreviated.json");
-            importExampleDocument(project,
+            importExampleDocument(project, UimaJsonCasFormatSupport.ID,
                     "foodista_blog_2019_10_22_lewiston-clarkstons-new-wine-district_abbreviated.json");
+            importExampleDocument(project, LineOrientedTextFormatSupport.ID,
+                    "foodista_blog_2024_09_18_the-schoolhouse-district-of-downtown-woodinville-washington.txt");
 
             description += """
 
                            The project includes example documents.
                            Open the **Annotation** page from the left sidbar menu to dive right in.
+                           Two of the three documents come pre-annotated.
                            """;
         }
 
         project.setDescription(description);
     }
 
-    private void importExampleDocument(Project aProject, String docName) throws IOException
+    private void importExampleDocument(Project aProject, String aFormat, String aDocName)
+        throws IOException
     {
         var doc = SourceDocument.builder() //
                 .withProject(aProject) //
-                .withName(docName) //
-                .withFormat(UimaJsonCasFormatSupport.ID) //
+                .withName(aDocName) //
+                .withFormat(aFormat) //
                 .build();
-        try (var is = getClass().getResourceAsStream("data/" + docName)) {
+
+        try (var is = getClass().getResourceAsStream("data/" + aDocName)) {
             documentService.uploadSourceDocument(is, doc);
         }
         catch (UIMAException e) {
