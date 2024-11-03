@@ -15,6 +15,7 @@
 // limitations under the License.
 
 :include-dir: admin-guide/
+:imagesdir: admin-guide/
 
 = {product-name} Administrator Guide
 The {product-name} Team
