@@ -34,21 +34,20 @@ import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.markup.repeater.Item;
 import org.apache.wicket.markup.repeater.RefreshingView;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.model.Model;
 
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.ConfusionMatrix;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.support.wicket.DefaultRefreshingView;
 
-public class RecommenderStatusDetailPanel
+public class ConfusionMatrixDialogContent
     extends Panel
 {
     private static final long serialVersionUID = 6002385711741527179L;
 
     private RefreshingView<String> rows;
 
-    public RecommenderStatusDetailPanel(String aId, IModel<EvaluationResult> aModel)
+    public ConfusionMatrixDialogContent(String aId, IModel<EvaluationResult> aModel)
     {
         super(aId, aModel);
 
@@ -83,25 +82,25 @@ public class RecommenderStatusDetailPanel
 
                         Fragment cell;
                         // Header cell
-                        if (aRowItem.getIndex() == 0) {
-                            cell = new Fragment("cell", "th-centered",
-                                    RecommenderStatusDetailPanel.this);
+                        if (aRowItem.getIndex() == 0 && aCellItem.getIndex() != 0) {
+                            cell = new Fragment("cell", "th-column",
+                                    ConfusionMatrixDialogContent.this);
                         }
-                        else if (aCellItem.getIndex() == 0) {
-                            cell = new Fragment("cell", "th-right",
-                                    RecommenderStatusDetailPanel.this);
+                        else if (aRowItem.getIndex() != 0 && aCellItem.getIndex() == 0) {
+                            cell = new Fragment("cell", "th-row",
+                                    ConfusionMatrixDialogContent.this);
+                        }
+                        else if (aRowItem.getIndex() == 0 && aCellItem.getIndex() == 0) {
+                            cell = new Fragment("cell", "th", ConfusionMatrixDialogContent.this);
                         }
                         // Content cell
                         else {
-                            cell = new Fragment("cell", "td", RecommenderStatusDetailPanel.this);
+                            cell = new Fragment("cell", "td", ConfusionMatrixDialogContent.this);
                         }
 
                         // Top-left cell
-                        if (aRowItem.getIndex() == 0 && aCellItem.getIndex() == 0) {
-                            cell.add(new Label("label", Model.of("")));
-                        }
                         // Horizontal headers
-                        else if (aRowItem.getIndex() == 0 && aCellItem.getIndex() != 0) {
+                        if (aRowItem.getIndex() == 0 && aCellItem.getIndex() != 0) {
                             cell.add(new Label("label", aCellItem.getModel()));
                         }
                         // Vertical headers
