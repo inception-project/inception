@@ -143,7 +143,7 @@
                     <wicket:label key="name"/>
                   </label>
                   <div class="form-text" wicket:enclosure="name">
-                    <wicket:message key="internalName" />
+                    <wicket:message key="internalName" />: 
                     <strong><span wicket:id="name"/></strong>
                   </div>
                 </div>
@@ -261,40 +261,28 @@
             </div>
           </div>
           <div class="scrolling card-body">
-            <div class="row form-row" wicket:enclosure="name">
-              <label class="col-sm-4 col-form-label">
-                <wicket:message key="internalName"/>
-              </label>
-              <div class="col-sm-8">
-                <span class="form-control-plaintext">
-                  <wicket:container wicket:id="name"/>
-                </span>
-              </div>
-            </div>
-            <div class="row form-row">
-              <label wicket:for="uiName" class="col-sm-4 col-form-label">
+            <div class="form-row form-floating">
+              <input wicket:id="uiName" class="form-control" wicket:message="placeholder:name"/>
+              <label wicket:for="uiName">
                 <wicket:label key="name"/>
               </label>
-              <div class="col-sm-8">
-                <input wicket:id="uiName" class="form-control"/>
+              <div class="form-text" wicket:enclosure="name">
+                <wicket:message key="internalName" />: 
+                <strong><span wicket:id="name"/></strong>
               </div>
             </div>
-            <div class="row form-row">
-              <label wicket:for="type" class="col-sm-4 col-form-label">
-                <wicket:label key="type"/>
+            <div class="form-row form-floating" wicket:enclosure="type">
+              <select wicket:id="type" class="form-select" wicket:message="placeholder:type"/>
+              <label wicket:for="type">
+                <wicket:label key="type" />
               </label>
-              <div class="col-sm-8">
-                <select wicket:id="type" class="form-select" data-container="body"/>
-                <div class="form-text">Type cannot be changed after creation</div>
-              </div>
+              <div class="form-text">Type cannot be changed after creation</div>
             </div>
-            <div class="row form-row">
-              <label wicket:for="description" class="col-sm-4 col-form-label">
+            <div class="form-row form-floating">
+              <textarea wicket:id="description" rows="4" class="form-control" wicket:message="placeholder:description"/>
+              <label wicket:for="description">
                 <wicket:label key="description"/>
               </label>
-              <div class="col-sm-8">
-                <textarea wicket:id="description" rows="4" class="form-control"></textarea>
-              </div>
             </div>
             <div wicket:id="defaultOptionsContainer">
               <div class="row form-row">
