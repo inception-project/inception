@@ -172,7 +172,7 @@ Pos {
 
 In the UI, the tags that were matched by the constraints are bold and come first in the list of tags:
 
-image::constraints.png[align="center"]
+image::images/constraints.png[align="center"]
 
 
 === Constraining a relation layer based on its endpoints

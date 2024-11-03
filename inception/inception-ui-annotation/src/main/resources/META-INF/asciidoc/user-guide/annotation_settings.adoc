@@ -21,7 +21,7 @@
 Once the document is opened, a default of 5 sentences is loaded on the annotation  page.  The  
 *Settings*  button will  allow  you  to specify the settings of the annotation layer.
 
-image::annotation_settings.png[align="center",width="50%"]
+image::images/annotation_settings.png[align="center",width="50%"]
 
 The *Editor* setting can be used to switch between different modes of presentation. It is currently
 only available on the annotation page.

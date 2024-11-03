@@ -41,7 +41,7 @@ at this time to mark a unit as curated in which an annotator has made an annotat
 curator has not (e.g. because the curator considers the annotator's annotation to be entirely
 wrong and misplaced).
 
-image::curation_1.png[align="center"]
+image::images/curation_1.png[align="center"]
 
 The center part of the annotation page is divided into the *Annotation* pane which is a full-scale
 annotation editor and contains the final data from the curation step. 
