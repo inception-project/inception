@@ -10,7 +10,7 @@ To perform a search, access the search sidebar located at the left of the screen
 press the *Search* button. The results are shown below the query in a KWIC (keyword in context)
 style grouped by document. Clicking on a result will open the match in the main annotation editor.
 
-image::search-core-search.png[Search sidebar]
+image::images/search-core-search.png[Search sidebar]
 
 The search only considers documents in the current project and only matches annotations made by
 the current user.

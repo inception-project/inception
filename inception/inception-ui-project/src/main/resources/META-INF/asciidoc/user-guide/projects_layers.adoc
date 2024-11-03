@@ -154,7 +154,7 @@ The layer type defines the structure of the layer. Three different types are sup
 | image:project_layer_type_chain.png[]
 |====
 
-image::layer_properties.png[align="center"]
+image::images/layer_properties.png[align="center"]
 
 [[sect_projects_layers_behaviours]]
 == Behaviours
@@ -194,12 +194,12 @@ _(chain)_
 | Controls what happens when two chains are connected with each other. If this option is *disabled*, then the two entire chains will be merged into one large chain. Links between spans will be changed so that each span connects to the closest following span -  no arc labels are displayed. If this option is *enabled*, then the chains will be split if necessary at the source and target points, reconnecting the spans such that exactly the newly created connection is made - arc labels are available.
 |====
 
-image::layer_behaviours.png[align="center"]
+image::images/layer_behaviours.png[align="center"]
 
 [[sect_projects_layers_features]]
 == Features
 
-image::layer_feature_details.png[align="center"]
+image::images/layer_feature_details.png[align="center"]
 
 In this section, features and their properties can be configured. 
 

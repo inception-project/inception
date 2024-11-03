@@ -21,7 +21,7 @@ NOTE: This functionality is only available to *administrators*.
 
 After selecting this functionality, a frame which shows all users is displayed. By selecting a user, a frame is displayed on the right. 
 
-image::manage_users.png[align="center"]
+image::images/manage_users.png[align="center"]
 
 Now you may change his role or password, specify  an e-mail address and dis- or enable his account by placing the tick.
 

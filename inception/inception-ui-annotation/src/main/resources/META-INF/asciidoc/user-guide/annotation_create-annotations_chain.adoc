@@ -26,10 +26,10 @@ in the *Projects Settings* mode. After choosing *Coreference*, *linked list* beh
 is displayed in the checkbox and can either be marked or unmarked.
 
 .Configuration of a chain layer in the project settings
-image::LinkedList_1.png[align="center"]
+image::images/LinkedList_1.png[align="center"]
 
 .Example of chain annotations
-image::annotation_span_many.jpg[align="center"]
+image::images/annotation_span_many.jpg[align="center"]
 
 To abort the creation of an annotation, hold *CTRL* when you release the mouse button.
 

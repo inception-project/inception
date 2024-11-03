@@ -4,7 +4,7 @@ In the *Projects Settings*, switch to the *Knowledge Bases* tab, then click *New
  and a dialogue box shows as in the figure below.
 
 [.thumb]
-image::kb1.png[align="center"]
+image::images/kb1.png[align="center"]
 
 To create a *local* or *remote*  knowledge base, one needs to choose *Local* or *Remote* for the type. For the reification,
 *NONE* is the default case, but to support qualifiers, one needs to choose *WIKIDATA*. 
@@ -14,14 +14,14 @@ For the local KB, the user can optionally choose a RDF file from which to import
 For remote KBs, INCEpTION provides the user with some pre-configured knowledge base such as WikiData, British Museum, BabelNet, DBPediaa or Yago. The user can also set up a custom remote KB, in which case the user needs to provide the SPARQL endpoint URL for the knowledge base as in the figure below.
 
 [.thumb]
-image::kb2.png[align="center"]
+image::images/kb2.png[align="center"]
 
 == Settings
 
 There are various settings for knowledge bases.
 
 [.thumb]
-image::kb3.png[align="center"]
+image::images/kb3.png[align="center"]
 
 === Local KBs
 
