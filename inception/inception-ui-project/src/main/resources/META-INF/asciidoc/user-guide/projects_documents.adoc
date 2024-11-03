@@ -23,7 +23,7 @@ After selecting the files, use the *Format* dropdown to choose which format your
 
 Finally, use the *Import* button to upload the files and add them to the project. 
 
-image::project_documents.png[align="center"]
+image::images/project_documents.png[align="center"]
 
 To delete a document from the project, you have to click on it and then click on *Delete* in the right lower corner. Again, you can select multiple files for deletion using with the aid of the *control* or *shift* keys on the keyboard.
 
