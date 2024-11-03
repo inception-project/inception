@@ -112,7 +112,7 @@ public class ConfusionMatrix
     @Override
     public String toString()
     {
-        StringBuilder matrixStr = new StringBuilder();
+        var matrixStr = new StringBuilder();
         // header
         matrixStr.append("Gold\\Predicted\n\t");
         labels.forEach(l -> {
@@ -120,8 +120,9 @@ public class ConfusionMatrix
             matrixStr.append("  ");
         });
         matrixStr.append("\n");
+
         // table
-        for (String goldLabel : labels) {
+        for (var goldLabel : labels) {
             matrixStr.append(goldLabel);
             matrixStr.append("\t| ");
             for (String predictedLabel : labels) {
@@ -131,6 +132,7 @@ public class ConfusionMatrix
             }
             matrixStr.append("\n");
         }
+
         return matrixStr.toString();
     }
 
@@ -164,7 +166,7 @@ public class ConfusionMatrix
                 return false;
             }
 
-            ConfMatrixKey aKey = (ConfMatrixKey) aObj;
+            var aKey = (ConfMatrixKey) aObj;
             return predictedLabel.equals(aKey.getPredictedLabel())
                     && goldLabel.equals(aKey.getGoldLabel());
         }

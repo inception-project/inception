@@ -21,11 +21,12 @@ import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Stream.concat;
 
-import java.util.List;
 import java.util.stream.Stream;
 
 import org.apache.wicket.AttributeModifier;
+import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.AttributeAppender;
+import org.apache.wicket.extensions.ajax.markup.html.modal.ModalDialog;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.panel.Fragment;
@@ -37,6 +38,7 @@ import org.apache.wicket.model.Model;
 
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.ConfusionMatrix;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.support.wicket.DefaultRefreshingView;
 
 public class RecommenderStatusDetailPanel
@@ -50,17 +52,17 @@ public class RecommenderStatusDetailPanel
     {
         super(aId, aModel);
 
-        IModel<ConfusionMatrix> confusionMatrixData = aModel
-                .map(EvaluationResult::getConfusionMatrix);
+        var confusionMatrixData = aModel.map(EvaluationResult::getConfusionMatrix);
 
         // Prepend a dummy element for the header columns into the axes
-        IModel<List<String>> axes = confusionMatrixData.map(ConfusionMatrix::getLabels)
+        var axes = confusionMatrixData.map(ConfusionMatrix::getLabels)
                 .map(label -> concat(Stream.of(""), label.stream()).collect(toList()));
 
-        add(new Label("totalDatapoints", confusionMatrixData.map(ConfusionMatrix::getTotal)));
-        add(new Label("datapointUnit", confusionMatrixData.map(ConfusionMatrix::getUnit)));
-        add(new Label("ignoredLabels", aModel.map(EvaluationResult::getIgnoreLabels)
+        queue(new Label("totalDatapoints", confusionMatrixData.map(ConfusionMatrix::getTotal)));
+        queue(new Label("datapointUnit", confusionMatrixData.map(ConfusionMatrix::getUnit)));
+        queue(new Label("ignoredLabels", aModel.map(EvaluationResult::getIgnoreLabels)
                 .map(labels -> labels.stream().collect(joining(", ")))));
+        queue(new LambdaAjaxLink("closeDialog", this::actionCloseDialog));
 
         rows = new DefaultRefreshingView<String>("rows", axes)
         {
@@ -124,19 +126,26 @@ public class RecommenderStatusDetailPanel
     private void renderCell(IModel<ConfusionMatrix> aModel, Item<String> aRowItem,
             Item<String> aCellItem, Fragment aCell)
     {
-        String predicted = aCellItem.getModelObject();
-        String gold = aRowItem.getModelObject();
+        var predicted = aCellItem.getModelObject();
+        var gold = aRowItem.getModelObject();
+        var count = aModel.map(m -> m.getEntryCount(predicted, gold));
 
-        WebMarkupContainer cellContent = new WebMarkupContainer("cellContent");
-        // if (aCellItem.getIndex() == aRowItem.getIndex()) {
-        // cellContent.add(AttributeAppender.append("class", "bg-success"));
-        // }
+        var cellContent = new WebMarkupContainer("cellContent");
+        if (aCellItem.getIndex() == aRowItem.getIndex()) {
+            if (!getModel().map(EvaluationResult::getIgnoreLabels)
+                    .map(ignLabels -> ignLabels.contains(gold)).getObject()) {
+                cellContent.add(AttributeAppender.append("class", "text-bg-success"));
+            }
+        }
+        else if (count.map(v -> v > 0).getObject()) {
+            cellContent.add(AttributeAppender.append("class", "text-bg-danger"));
+        }
         aCell.queue(cellContent);
 
-        Label label = new Label("label", aModel.map(m -> m.getEntryCount(predicted, gold)));
+        var label = new Label("label", count);
         label.add(AttributeModifier.append("class", getModel() //
                 .map(EvaluationResult::getIgnoreLabels) //
-                .map(ignLabels -> ignLabels.contains(gold)) //
+                .map(ignLabels -> ignLabels.contains(gold) && predicted.equals(gold)) //
                 .map(ignored -> ignored ? "text-muted" : "")));
         aCell.queue(label);
     }
@@ -150,5 +159,10 @@ public class RecommenderStatusDetailPanel
     public EvaluationResult getModelObject()
     {
         return (EvaluationResult) getDefaultModelObject();
+    }
+
+    protected void actionCloseDialog(AjaxRequestTarget aTarget)
+    {
+        findParent(ModalDialog.class).close(aTarget);
     }
 }
