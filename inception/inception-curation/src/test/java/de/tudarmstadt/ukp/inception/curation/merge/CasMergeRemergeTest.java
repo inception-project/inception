@@ -23,6 +23,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiffSummaryS
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiffSummaryState.calculateState;
 import static de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS._FeatName_PosValue;
 import static de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token._FeatName_pos;
+import static de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureDiffMode.EXCLUDE;
 import static de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureMultiplicityMode.ONE_TARGET_MULTIPLE_ROLES;
 import static de.tudarmstadt.ukp.inception.curation.merge.CurationTestUtils.HOST_TYPE;
 import static de.tudarmstadt.ukp.inception.curation.merge.CurationTestUtils.createMultiLinkWithRoleTestTypeSystem;
@@ -93,8 +94,12 @@ public class CasMergeRemergeTest
                 .extracting(set -> set.getPosition()) //
                 .usingRecursiveFieldByFieldElementComparator() //
                 .containsExactly( //
-                        new SpanPosition(null, null, POS.class.getName(), 0, 4, "word", null, null,
-                                -1, -1, null, null));
+                        SpanPosition.builder() //
+                                .withType(POS.class.getName()) //
+                                .withBegin(0) //
+                                .withEnd(4) //
+                                .withText("word") //
+                                .build());
 
         assertThat(select(curatorCas, POS.class)).isEmpty();
         assertThat(calculateState(result)).isEqualTo(INCOMPLETE);
@@ -130,9 +135,13 @@ public class CasMergeRemergeTest
         assertThat(result.getIncompleteConfigurationSets().values())
                 .extracting(set -> set.getPosition()) //
                 .usingRecursiveFieldByFieldElementComparator()//
-                .containsExactly(//
-                        new SpanPosition(null, null, POS.class.getName(), 0, 4, "word", null, null,
-                                -1, -1, null, null));
+                .containsExactly( //
+                        SpanPosition.builder() //
+                                .withType(POS.class.getName()) //
+                                .withBegin(0) //
+                                .withEnd(4) //
+                                .withText("word") //
+                                .build());
 
         assertThat(select(curatorCas, POS.class)).hasSize(1);
         assertThat(calculateState(result)).isEqualTo(INCOMPLETE);
@@ -260,7 +269,7 @@ public class CasMergeRemergeTest
         curatorCas.setDocumentText(casByUser.values().stream().findFirst().get().getDocumentText());
 
         var adapter = new SpanDiffAdapter(HOST_TYPE);
-        adapter.addLinkFeature("links", "role", "target", ONE_TARGET_MULTIPLE_ROLES);
+        adapter.addLinkFeature("links", "role", "target", ONE_TARGET_MULTIPLE_ROLES, EXCLUDE);
 
         var result = doDiff(asList(adapter), casByUser).toResult();
 

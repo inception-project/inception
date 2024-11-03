@@ -147,5 +147,10 @@
       <artifactId>inception-model</artifactId>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.opensearch</groupId>
+      <artifactId>opensearch-common</artifactId>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 </project>

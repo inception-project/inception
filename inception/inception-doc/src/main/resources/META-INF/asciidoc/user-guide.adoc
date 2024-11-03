@@ -15,6 +15,7 @@
 // limitations under the License.
 
 :include-dir: user-guide/
+:imagesdir: user-guide/
 
 = {product-name} User Guide
 The {product-name} Team
@@ -130,6 +131,16 @@ include::{include-dir}projects_users.adoc[leveloffset=+2]
 include::{include-dir}projects_documents.adoc[leveloffset=+2]
 
 include::{include-dir}projects_layers.adoc[leveloffset=+2]
+
+include::{include-dir}projects_layers_feature.adoc[leveloffset=+3]
+
+include::{include-dir}projects_layers_feature_string.adoc[leveloffset=+4]
+
+include::{include-dir}projects_layers_feature_number.adoc[leveloffset=+4]
+
+include::{include-dir}projects_layers_feature_boolean.adoc[leveloffset=+4]
+
+include::{include-dir}projects_layers_feature_link.adoc[leveloffset=+4]
 
 include::{include-dir}projects_layers_feature_lookup.adoc[leveloffset=+4]
 

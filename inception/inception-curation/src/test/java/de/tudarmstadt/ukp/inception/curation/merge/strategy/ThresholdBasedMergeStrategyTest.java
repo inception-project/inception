@@ -198,23 +198,26 @@ class ThresholdBasedMergeStrategyTest
     private List<Configuration> calculate(int aUserThreshold, double aConfidenceThreshold,
             int aTopRanks, OverlapMode aOverlapMode, Configuration... aConfigurations)
     {
-        ConfigurationSet cfgSet = new ConfigurationSet(position);
-        for (Configuration cfg : aConfigurations) {
+        var cfgSet = new ConfigurationSet(position);
+        for (var cfg : aConfigurations) {
             cfgSet.addConfiguration(cfg);
         }
 
-        AnnotationLayer layer = new AnnotationLayer();
+        var layer = new AnnotationLayer();
         layer.setOverlapMode(aOverlapMode);
 
-        ThresholdBasedMergeStrategy sut = new ThresholdBasedMergeStrategy(aUserThreshold,
-                aConfidenceThreshold, aTopRanks);
+        var sut = ThresholdBasedMergeStrategy.builder() //
+                .withUserThreshold(aUserThreshold) //
+                .withConfidenceThreshold(aConfidenceThreshold) //
+                .withTopRanks(aTopRanks) //
+                .build();
         return sut.chooseConfigurationsToMerge(null, cfgSet, layer);
     }
 
     private Configuration makeConfiguration(String... aAnnototors)
     {
-        Configuration cfg = new Configuration(position);
-        for (String annotator : aAnnototors) {
+        var cfg = new Configuration(position);
+        for (var annotator : aAnnototors) {
             cfg.add(annotator, new AID(0));
         }
         return cfg;

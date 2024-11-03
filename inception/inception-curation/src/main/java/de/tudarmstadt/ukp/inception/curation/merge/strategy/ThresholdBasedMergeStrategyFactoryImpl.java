@@ -15,26 +15,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.curation.merge;
+package de.tudarmstadt.ukp.inception.curation.merge.strategy;
 
 import org.apache.wicket.Component;
-import org.apache.wicket.markup.html.panel.EmptyPanel;
 import org.apache.wicket.model.IModel;
 
 import de.tudarmstadt.ukp.inception.curation.config.CurationServiceAutoConfiguration;
-import de.tudarmstadt.ukp.inception.curation.merge.strategy.MergeIncompleteStrategy;
 import de.tudarmstadt.ukp.inception.curation.model.CurationWorkflow;
 
 /**
  * <p>
  * This class is exposed as a Spring Component via
- * {@link CurationServiceAutoConfiguration#mergeIncompleteStrategyFactory}.
+ * {@link CurationServiceAutoConfiguration#thresholdBasedMergeStrategyFactory}.
  * </p>
  */
-public class MergeIncompleteStrategyFactory
-    extends MergeStrategyFactory_ImplBase<Void>
+public class ThresholdBasedMergeStrategyFactoryImpl
+    extends MergeStrategyFactory_ImplBase<ThresholdBasedMergeStrategyTraits>
+    implements ThresholdBasedMergeStrategyFactory
 {
-    public static final String BEAN_NAME = "incompleteAgreementNonStacked";
+    public static final String BEAN_NAME = "thresholdBased";
 
     @Override
     public String getId()
@@ -45,26 +44,28 @@ public class MergeIncompleteStrategyFactory
     @Override
     public String getLabel()
     {
-        return "Merge incomplete agreeing non-stacked annotations";
+        return "Merge using thresholds";
     }
 
     @Override
-    protected Void createTraits()
+    protected ThresholdBasedMergeStrategyTraits createTraits()
     {
-        // No traits
-        return null;
+        return new ThresholdBasedMergeStrategyTraits();
     }
 
     @Override
-    public MergeIncompleteStrategy makeStrategy(Void aTraits)
+    public MergeStrategy makeStrategy(ThresholdBasedMergeStrategyTraits aTraits)
     {
-        return new MergeIncompleteStrategy();
+        return ThresholdBasedMergeStrategy.builder() //
+                .withUserThreshold(aTraits.getUserThreshold()) //
+                .withConfidenceThreshold(aTraits.getConfidenceThreshold()) //
+                .withTopRanks(aTraits.getTopRanks()) //
+                .build();
     }
 
     @Override
-    public Component createTraitsEditor(String aString, IModel<CurationWorkflow> aModel)
+    public Component createTraitsEditor(String aId, IModel<CurationWorkflow> aModel)
     {
-        // No traits
-        return new EmptyPanel(aString);
+        return new ThresholdBasedMergeStrategyTraitsEditor(aId, aModel);
     }
 }

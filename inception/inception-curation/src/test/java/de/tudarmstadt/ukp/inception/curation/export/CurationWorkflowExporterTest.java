@@ -39,9 +39,9 @@ import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.inception.curation.merge.ThresholdBasedMergeStrategyFactory;
-import de.tudarmstadt.ukp.inception.curation.merge.ThresholdBasedMergeStrategyFactoryImpl;
-import de.tudarmstadt.ukp.inception.curation.merge.ThresholdBasedMergeStrategyTraits;
+import de.tudarmstadt.ukp.inception.curation.merge.strategy.ThresholdBasedMergeStrategyFactory;
+import de.tudarmstadt.ukp.inception.curation.merge.strategy.ThresholdBasedMergeStrategyFactoryImpl;
+import de.tudarmstadt.ukp.inception.curation.merge.strategy.ThresholdBasedMergeStrategyTraits;
 import de.tudarmstadt.ukp.inception.curation.model.CurationWorkflow;
 import de.tudarmstadt.ukp.inception.curation.service.CurationService;
 

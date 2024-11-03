@@ -136,7 +136,7 @@ public class AgreementUtils
             }
 
             // If the feature on a position is set, then it is a subposition
-            var isSubPosition = p.getFeature() != null;
+            var isSubPosition = p.getLinkFeature() != null;
 
             // Check if this position is irrelevant:
             // - if we are looking for a primitive type and encounter a subposition
@@ -149,7 +149,7 @@ public class AgreementUtils
 
             // Check if subposition is for the feature we are looking for or for a different
             // feature
-            if (isSubPosition && !aFeature.equals(cfgSet.getPosition().getFeature())) {
+            if (isSubPosition && !aFeature.equals(cfgSet.getPosition().getLinkFeature())) {
                 cfgSet.addTags(Tag.IRRELEVANT);
                 continue nextPosition;
             }
@@ -203,7 +203,7 @@ public class AgreementUtils
                 if (cfg.getPosition() instanceof RelationPosition pos) {
                     var arc = cfg.getFs(user, aCasMap);
 
-                    var adapter = (RelationDiffAdapter) aDiff.getTypeAdapters().get(pos.getType());
+                    var adapter = (RelationDiffAdapter) aDiff.getAdapters().get(pos.getType());
 
                     // Check if the source of the relation is stacked
                     var source = getFeature(arc, adapter.getSourceFeature(), AnnotationFS.class);
@@ -238,8 +238,8 @@ public class AgreementUtils
 
             // If the position feature is set (subposition), then it must match the feature we
             // are calculating agreement over
-            assert cfgSet.getPosition().getFeature() == null
-                    || cfgSet.getPosition().getFeature().equals(aFeature);
+            assert cfgSet.getPosition().getLinkFeature() == null
+                    || cfgSet.getPosition().getLinkFeature().equals(aFeature);
 
             if (!containsAny(cfgSet.getTags(), INCOMPLETE_LABEL, INCOMPLETE_POSITION)) {
                 cfgSet.addTags(COMPLETE);
@@ -286,7 +286,7 @@ public class AgreementUtils
         if (!isPrimitiveFeature && isSubPosition) {
             // Link feature / sub-position
             return extractLinkFeatureValueForAgreement(fs, aFeature, linkIndex,
-                    cfg.getPosition().getLinkCompareBehavior());
+                    cfg.getPosition().getLinkFeatureMultiplicityMode());
         }
 
         throw new IllegalStateException("Should never get here: primitive: "

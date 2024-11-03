@@ -17,13 +17,15 @@
  */
 package de.tudarmstadt.ukp.inception.annotation.feature.link;
 
-import static de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureMultiplicityMode.DEFAULT_LINK_MULTIPLICITY;
+import static de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureDiffMode.DEFAULT_LINK_DIFF_MODE;
+import static de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureMultiplicityMode.DEFAULT_LINK_MULTIPLICITY_MODE;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  * Traits for link features.
@@ -34,9 +36,17 @@ public class LinkFeatureTraits
 {
     private static final long serialVersionUID = -8450181605003189055L;
 
+    @JsonProperty("defaultSlots")
     private List<Long> defaultSlots = new ArrayList<>();
+
+    @JsonProperty("enableRoleLabels")
     private boolean enableRoleLabels = true;
-    private LinkFeatureMultiplicityMode compareMode = DEFAULT_LINK_MULTIPLICITY;
+
+    @JsonProperty("compareMode")
+    private LinkFeatureMultiplicityMode compareMode = DEFAULT_LINK_MULTIPLICITY_MODE;
+
+    @JsonProperty("diffMode")
+    private LinkFeatureDiffMode diffMode = DEFAULT_LINK_DIFF_MODE;
 
     public LinkFeatureTraits()
     {
@@ -63,13 +73,23 @@ public class LinkFeatureTraits
         enableRoleLabels = aEnableRoleLabels;
     }
 
-    public LinkFeatureMultiplicityMode getCompareMode()
+    public LinkFeatureMultiplicityMode getMultiplicityMode()
     {
         return compareMode;
     }
 
-    public void setCompareMode(LinkFeatureMultiplicityMode aCompareMode)
+    public void setMultiplicityMode(LinkFeatureMultiplicityMode aCompareMode)
     {
         compareMode = aCompareMode;
+    }
+
+    public LinkFeatureDiffMode getDiffMode()
+    {
+        return diffMode;
+    }
+
+    public void setDiffMode(LinkFeatureDiffMode aDiffMode)
+    {
+        diffMode = aDiffMode;
     }
 }

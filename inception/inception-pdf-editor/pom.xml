@@ -201,6 +201,7 @@
                 <excludes combine.children="append">
                   <exclude>src/main/java/de/tudarmstadt/ukp/inception/pdfeditor/pdfextract/PDFExtractor.java</exclude>
                   <exclude>src/main/java/de/tudarmstadt/ukp/inception/pdfeditor/pdfextract/ImageExtractor.java</exclude>
+                  <exclude>src/main/java/de/tudarmstadt/ukp/inception/pdfeditor/pdfextract/DrawOperator.java</exclude>
                   <exclude>src/main/ts/**/*</exclude>
                   <exclude>src/main/ts/**/*</exclude>
                 </excludes>

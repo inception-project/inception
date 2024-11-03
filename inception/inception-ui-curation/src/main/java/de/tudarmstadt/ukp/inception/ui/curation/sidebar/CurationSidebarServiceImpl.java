@@ -59,7 +59,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.annotation.events.DocumentOpenedEvent;
-import de.tudarmstadt.ukp.inception.curation.merge.MergeStrategyFactory;
+import de.tudarmstadt.ukp.inception.curation.merge.strategy.MergeStrategyFactory;
 import de.tudarmstadt.ukp.inception.curation.model.CurationSettings;
 import de.tudarmstadt.ukp.inception.curation.model.CurationSettingsId;
 import de.tudarmstadt.ukp.inception.curation.model.CurationWorkflow;

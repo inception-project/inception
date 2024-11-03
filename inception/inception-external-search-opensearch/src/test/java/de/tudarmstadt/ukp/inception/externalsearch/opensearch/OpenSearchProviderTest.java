@@ -24,12 +24,18 @@ import static org.codelibs.opensearch.runner.OpenSearchRunner.newConfigs;
 import java.util.List;
 
 import org.codelibs.opensearch.runner.OpenSearchRunner;
+import org.codelibs.opensearch.runner.OpenSearchRunnerException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.opensearch.LegacyESVersion;
+import org.opensearch.action.admin.cluster.health.ClusterHealthResponse;
+import org.opensearch.client.Requests;
+import org.opensearch.cluster.health.ClusterHealthStatus;
+import org.opensearch.common.Priority;
 import org.opensearch.common.settings.Settings;
 import org.opensearch.common.settings.Settings.Builder;
+import org.opensearch.common.unit.TimeValue;
 
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchResult;
 import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
@@ -52,7 +58,25 @@ public class OpenSearchProviderTest
     @BeforeEach
     public void setup()
     {
-        osRunner = new OpenSearchRunner();
+        osRunner = new OpenSearchRunner()
+        {
+            @Override
+            public ClusterHealthStatus ensureYellow(final String... indices)
+            {
+                final ClusterHealthResponse actionGet = client().admin().cluster()
+                        .health(Requests.clusterHealthRequest(indices)
+                                .waitForNoRelocatingShards(true).waitForYellowStatus()
+                                .waitForEvents(Priority.LANGUID))
+                        .actionGet(TimeValue.timeValueSeconds(60));
+                if (actionGet.isTimedOut()) {
+                    throw new OpenSearchRunnerException("ensureYellow timed out, cluster state:\n"
+                            + "\n" + client().admin().cluster().prepareState().get().getState()
+                            + "\n" + client().admin().cluster().preparePendingClusterTasks().get(),
+                            actionGet);
+                }
+                return actionGet.getStatus();
+            }
+        };
         osRunner.onBuild(new OpenSearchRunner.Builder()
         {
             @Override

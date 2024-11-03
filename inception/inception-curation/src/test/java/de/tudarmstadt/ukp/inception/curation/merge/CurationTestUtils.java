@@ -20,8 +20,10 @@ package de.tudarmstadt.ukp.inception.curation.merge;
 
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.RELATION_TYPE;
 import static de.tudarmstadt.ukp.inception.support.uima.AnnotationBuilder.buildAnnotation;
+import static de.tudarmstadt.ukp.inception.support.uima.FeatureStructureBuilder.buildFS;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
+import static org.apache.uima.fit.factory.TypeSystemDescriptionFactory.createTypeSystemDescription;
 import static org.apache.uima.util.CasCreationUtils.mergeTypeSystems;
 
 import java.io.File;
@@ -37,7 +39,6 @@ import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.factory.JCasFactory;
-import org.apache.uima.fit.factory.TypeSystemDescriptionFactory;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.uima.resource.metadata.impl.TypeSystemDescription_impl;
@@ -138,7 +139,7 @@ public class CurationTestUtils
                 WebannoTsv2Reader.PARAM_SOURCE_LOCATION, "src/test/resources/" + aPath);
         CAS cas;
         if (aType != null) {
-            var builtInTypes = TypeSystemDescriptionFactory.createTypeSystemDescription();
+            var builtInTypes = createTypeSystemDescription();
             List<TypeSystemDescription> allTypes = new ArrayList<>();
             allTypes.add(builtInTypes);
             allTypes.add(aType);
@@ -161,8 +162,7 @@ public class CurationTestUtils
                 XmiReader.PARAM_SOURCE_LOCATION, "src/test/resources/" + aPath);
         CAS jcas;
         if (aType != null) {
-            TypeSystemDescription builtInTypes = TypeSystemDescriptionFactory
-                    .createTypeSystemDescription();
+            TypeSystemDescription builtInTypes = createTypeSystemDescription();
             List<TypeSystemDescription> allTypes = new ArrayList<>();
             allTypes.add(builtInTypes);
             allTypes.add(aType);
@@ -193,7 +193,7 @@ public class CurationTestUtils
         hostTD.addFeature(LINKS_FEATURE, "", CAS.TYPE_NAME_FS_ARRAY, linkTD.getName(), false);
 
         typeSystems.add(tsd);
-        typeSystems.add(TypeSystemDescriptionFactory.createTypeSystemDescription());
+        typeSystems.add(createTypeSystemDescription());
 
         return mergeTypeSystems(typeSystems);
     }
@@ -218,7 +218,7 @@ public class CurationTestUtils
         }
 
         typeSystems.add(tsd);
-        typeSystems.add(TypeSystemDescriptionFactory.createTypeSystemDescription());
+        typeSystems.add(createTypeSystemDescription());
 
         return mergeTypeSystems(typeSystems);
     }
@@ -271,15 +271,12 @@ public class CurationTestUtils
     public static FeatureStructure makeLinkFS(JCas aCas, String aRole, int aTargetBegin,
             int aTargetEnd)
     {
-        var token1 = new Token(aCas, aTargetBegin, aTargetEnd);
-        token1.addToIndexes();
+        var token = new Token(aCas, aTargetBegin, aTargetEnd);
+        token.addToIndexes();
 
-        var linkType = aCas.getTypeSystem().getType(LINK_TYPE);
-        var linkA1 = aCas.getCas().createFS(linkType);
-        linkA1.setStringValue(linkType.getFeatureByBaseName(ROLE_FEATURE), aRole);
-        linkA1.setFeatureValue(linkType.getFeatureByBaseName(TARGET_FEATURE), token1);
-        aCas.getCas().addFsToIndexes(linkA1);
-
-        return linkA1;
+        return buildFS(aCas.getCas(), LINK_TYPE) //
+                .withFeature(ROLE_FEATURE, aRole) //
+                .withFeature(TARGET_FEATURE, token) //
+                .buildAndAddToIndexes();
     }
 }

@@ -46,13 +46,7 @@ public class Configuration
 
     private final Position position;
     final Map<String, AID> fsAddresses = new TreeMap<>();
-    private Map<String, List<AID>> extras;
-
-    /**
-     * Flag indicating that there is at least once CAS group containing more than one annotation at
-     * this position - i.e. a stacked annotation.
-     */
-    private boolean stacked = false;
+    private Map<String, List<AID>> duplicates;
 
     public String getRepresentativeCasGroupId()
     {
@@ -74,9 +68,13 @@ public class Configuration
         return position;
     }
 
-    public boolean isStacked()
+    /**
+     * @return flag indicating that there is at least once CAS group containing more than one
+     *         annotation with the same values at this position - i.e. a duplicate annotation.
+     */
+    public boolean containsDuplicates()
     {
-        return stacked;
+        return duplicates != null;
     }
 
     /**
@@ -87,12 +85,11 @@ public class Configuration
     {
         var old = fsAddresses.put(aCasGroupId, aAID);
         if (old != null) {
-            if (extras == null) {
-                extras = new TreeMap<>();
+            if (duplicates == null) {
+                duplicates = new TreeMap<>();
             }
-            var list = extras.computeIfAbsent(aCasGroupId, $ -> new ArrayList<AID>());
+            var list = duplicates.computeIfAbsent(aCasGroupId, $ -> new ArrayList<AID>());
             list.add(old);
-            stacked = true;
         }
     }
 
@@ -136,11 +133,11 @@ public class Configuration
             return true;
         }
 
-        if (extras == null) {
+        if (duplicates == null) {
             return false;
         }
 
-        var list = extras.get(aCasGroupId);
+        var list = duplicates.get(aCasGroupId);
         if (list == null) {
             return false;
         }
@@ -184,8 +181,8 @@ public class Configuration
         var allFs = new ArrayList<FeatureStructure>();
         allFs.add(ICasUtil.selectFsByAddr(cas, aid.addr));
 
-        if (extras != null) {
-            var list = extras.get(aCasGroupId);
+        if (duplicates != null) {
+            var list = duplicates.get(aCasGroupId);
             if (list != null) {
                 for (var eAid : list) {
                     allFs.add(ICasUtil.selectFsByAddr(cas, eAid.addr));
@@ -213,9 +210,9 @@ public class Configuration
             sb.append(e.getKey());
             sb.append(": ");
             sb.append(e.getValue());
-            if (extras != null) {
-                sb.append(" (extras: ");
-                for (var entries : extras.entrySet()) {
+            if (duplicates != null) {
+                sb.append(" (duplicates: ");
+                for (var entries : duplicates.entrySet()) {
                     sb.append(" {");
                     sb.append(entries.getKey());
                     sb.append(entries.getValue().stream().map(String::valueOf)

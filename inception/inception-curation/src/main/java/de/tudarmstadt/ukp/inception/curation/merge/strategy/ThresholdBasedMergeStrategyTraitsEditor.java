@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.curation.merge;
+package de.tudarmstadt.ukp.inception.curation.merge.strategy;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.form.Form;
@@ -64,12 +64,14 @@ public class ThresholdBasedMergeStrategyTraitsEditor
 
         form.add(new LambdaAjaxLink("presetUnanimousVote", this::actionPresetUnanimousVote));
 
-        form.add(new NumberTextField<>("topRanks", Integer.class).setMinimum(1));
+        form.add(new NumberTextField<>("topRanks", Integer.class).setMinimum(0));
 
         form.add(new NumberTextField<>("userThreshold", Integer.class).setMinimum(1));
 
         form.add(new NumberTextField<>("confidenceThreshold", Double.class) //
-                .setMinimum(0.0d).setMaximum(100.0d).setStep(0.1d) //
+                .setMinimum(0.0d) //
+                .setMaximum(100.0d) //
+                .setStep(0.1d) //
                 .setModel(LambdaModelAdapter.of( //
                         () -> traits.getConfidenceThreshold() * 100.0d,
                         (v) -> traits.setConfidenceThreshold(v / 100.0d))));
