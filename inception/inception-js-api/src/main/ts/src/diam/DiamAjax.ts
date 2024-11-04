@@ -45,7 +45,7 @@ export interface DiamAjax {
    * Scroll to the given annotation or offset. If both are given, the offset is used. Offsets
    * are relative to the entire document, not to the current viewport.
    */
-  scrollTo(args: { id?: VID, offset?: Offsets }): void;
+  scrollTo(args: { id?: VID, offset?: Offsets, offsets?: Array<Offsets> }): void;
 
   /**
    * Delete the given annotation.
