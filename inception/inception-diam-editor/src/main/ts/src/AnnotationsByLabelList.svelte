@@ -100,6 +100,11 @@
     }
 
     function scrollTo(ann: Annotation) {
+        if (ann instanceof Span) {
+            ajaxClient.scrollTo({ id: ann.vid, offset: ann.offsets[0] });
+            return;
+        }
+
         ajaxClient.scrollTo({ id: ann.vid });
     }
 

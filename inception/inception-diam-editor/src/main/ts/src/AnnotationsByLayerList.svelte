@@ -102,8 +102,8 @@
         }
     }
 
-    function scrollTo(ann: Annotation) {
-        ajaxClient.scrollTo({ id: ann.vid });
+    function scrollToSpan(span: Span) {
+        ajaxClient.scrollTo({ id: span.vid, offset: span.offsets[0] });
     }
 
     function mouseOverAnnotation(event: MouseEvent, annotation: Annotation) {
@@ -218,7 +218,7 @@
                                     >
                                         <!-- svelte-ignore a11y-click-events-have-key-events -->
                                         <!-- svelte-ignore a11y-no-static-element-interactions -->
-                                        <div class="flex-grow-1 my-1 mx-2 position-relative overflow-hidden"  on:click={() => scrollTo(ann)}>
+                                        <div class="flex-grow-1 my-1 mx-2 position-relative overflow-hidden"  on:click={() => scrollToSpan(ann)}>
                                             <div class="float-end labels">
                                                 <LabelBadge
                                                     annotation={ann}
@@ -251,7 +251,7 @@
                                                 <!-- svelte-ignore a11y-no-static-element-interactions -->
                                                 <div
                                                     class="flex-grow-1 my-1 mx-2 overflow-hidden"
-                                                    on:click={() => scrollTo(target)}
+                                                    on:click={() => scrollToSpan(target)}
                                                 >
                                                     <div class="float-end labels">
                                                         <LabelBadge
@@ -281,7 +281,7 @@
                                                     showText={true}
                                                 />
                                             </div>
-                                            <div class="d-flex flex-row list-group-item-action" on:click={() => scrollTo(ann.arguments[0].target)}>
+                                            <div class="d-flex flex-row list-group-item-action" on:click={() => scrollToSpan(ann.arguments[0].target)}>
                                                 <div class="text-secondary bg-light-subtle border-end px-2 d-flex align-items-center">
                                                     <span style="transform: rotate(90deg);">↳</span>
                                                 </div>
@@ -290,7 +290,7 @@
                                                     span={ann.arguments[0].target}
                                                 />
                                             </div>
-                                            <div class="d-flex flex-row list-group-item-action" on:click={() => scrollTo(ann.arguments[1].target)}>
+                                            <div class="d-flex flex-row list-group-item-action" on:click={() => scrollToSpan(ann.arguments[1].target)}>
                                                 <div class="text-secondary bg-light-subtle border-end px-2 d-flex align-items-center">
                                                     <span>↳</span>
                                                 </div>

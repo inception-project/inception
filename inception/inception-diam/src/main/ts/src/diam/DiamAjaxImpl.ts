@@ -76,7 +76,15 @@ export class DiamAjaxImpl implements DiamAjax {
     })
   }
 
-  scrollTo (args: { id?: VID, offset?: Offsets }): void {
+  scrollTo (args: { id?: VID, offset?: Offsets, offsets?: Array<Offsets> }): void {
+    let effectiveOffsets: Array<Offsets> | undefined
+    if (args.offset) {
+      effectiveOffsets = [args.offset]
+    }
+    else {
+      effectiveOffsets = args.offsets
+    }
+
     DiamAjaxImpl.performAjaxCall(() => {
       Wicket.Ajax.ajax({
         m: 'POST',
@@ -84,7 +92,7 @@ export class DiamAjaxImpl implements DiamAjax {
         ep: {
           action: 'scrollTo',
           id: args.id,
-          offset: args.offset
+          offsets: JSON.stringify(effectiveOffsets)
         }
       })
     })
