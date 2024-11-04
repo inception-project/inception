@@ -64,6 +64,7 @@ public class HfHubClientImpl
         Map<String, String> queryParameters = new LinkedHashMap<>();
         queryParameters.put("cardData", "true");
         queryParameters.put("pipeline_tag", "token-classification");
+        queryParameters.put("other", "endpoints_compatible");
         if (isNotBlank(aSearch)) {
             queryParameters.put("search", aSearch);
         }
