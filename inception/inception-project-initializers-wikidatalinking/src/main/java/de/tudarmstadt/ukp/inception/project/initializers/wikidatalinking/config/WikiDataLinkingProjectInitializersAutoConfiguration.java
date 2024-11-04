@@ -24,6 +24,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.inception.annotation.feature.string.StringFeatureSupport;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
@@ -78,10 +79,11 @@ public class WikiDataLinkingProjectInitializersAutoConfiguration
     @Bean
     public EntityAnnotationProjectInitializer entityAnnotationProjectInitializer(
             ApplicationContext aContext, AnnotationSchemaService aAnnotationService,
-            DocumentService aDocumentService, UserDao aUserService)
+            DocumentService aDocumentService, UserDao aUserService,
+            StringFeatureSupport aStringFeatureSupport)
     {
         return new EntityAnnotationProjectInitializer(aContext, aAnnotationService,
-                aDocumentService, aUserService);
+                aDocumentService, aUserService, aStringFeatureSupport);
     }
 
     @ConditionalOnBean(RecommendationService.class)
