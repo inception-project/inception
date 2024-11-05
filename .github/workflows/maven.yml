@@ -53,6 +53,7 @@ jobs:
       run: mvn --no-transfer-progress -B clean verify --file pom.xml
 
     - name: Upload Artifacts
+      if: matrix.os == 'ubuntu-latest'
       uses: actions/upload-artifact@v4
       with:
         name: build-artifacts
