@@ -59,7 +59,7 @@
     }
 
     function scrollToRelation(relation: Relation) {
-        ajaxClient.scrollTo({ id: relation.vid });
+        ajaxClient.scrollTo({ id: relation.vid, offset: relation.arguments[0].target.offsets[0] });
     }
 
     function mouseOverAnnotation(event: MouseEvent, annotation: Annotation) {
