@@ -21,10 +21,12 @@ import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.FEAT_REL_SOURCE;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.FEAT_REL_TARGET;
 import static de.tudarmstadt.ukp.inception.support.logging.LogLevel.INFO;
 
+import java.util.HashMap;
 import java.util.List;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
+import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -51,7 +53,9 @@ public class DanglingRelationsCheck
     public boolean check(SourceDocument aDocument, String aDataOwner, CAS aCas,
             List<LogMessage> aMessages)
     {
-        boolean ok = true;
+        var ok = true;
+
+        var adapterCache = new HashMap<Type, RelationAdapter>();
 
         for (var fs : aCas.getAnnotationIndex()) {
             var t = fs.getType();
@@ -64,8 +68,9 @@ public class DanglingRelationsCheck
                 continue;
             }
 
-            var relationAdapter = (RelationAdapter) annotationService
-                    .findAdapter(aDocument.getProject(), fs);
+            var relationAdapter = adapterCache.computeIfAbsent(t,
+                    _t -> (RelationAdapter) annotationService.findAdapter(aDocument.getProject(),
+                            fs));
 
             Feature relationSourceAttachFeature = null;
             Feature relationTargetAttachFeature = null;
@@ -88,7 +93,7 @@ public class DanglingRelationsCheck
                 target = (AnnotationFS) target.getFeatureValue(relationTargetAttachFeature);
             }
 
-            // Does it have null endpoints?
+            // Does it have null end-points?
             if (source == null || target == null) {
                 var message = new StringBuilder();
 
