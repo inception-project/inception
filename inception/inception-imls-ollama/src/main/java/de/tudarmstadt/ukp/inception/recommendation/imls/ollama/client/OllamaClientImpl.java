@@ -30,6 +30,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpRequest.BodyPublishers;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -142,6 +143,7 @@ public class OllamaClientImpl
         var request = HttpRequest.newBuilder() //
                 .uri(URI.create(appendIfMissing(aUrl, "/") + "api/tags")) //
                 .header(HttpHeaders.CONTENT_TYPE, "application/json").GET() //
+                .timeout(Duration.ofSeconds(10)) //
                 .build();
 
         var response = sendRequest(request);
