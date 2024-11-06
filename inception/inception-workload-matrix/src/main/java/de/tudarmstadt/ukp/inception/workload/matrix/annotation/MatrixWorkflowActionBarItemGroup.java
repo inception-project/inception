@@ -21,6 +21,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.FI
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateChangeFlag.EXPLICIT_ANNOTATOR_USER_ACTION;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
@@ -280,8 +281,10 @@ public class MatrixWorkflowActionBarItemGroup
             return;
         }
 
+        var sessionOwner = userRepository.getCurrentUser();
         var annDoc = documentService.getAnnotationDocument(document, state.getUser());
-        if (annDoc.getAnnotatorState() != annDoc.getState()) {
+        if (annDoc.getAnnotatorState() != annDoc.getState()
+                && !projectService.hasRole(sessionOwner, state.getProject(), CURATOR, MANAGER)) {
             error("Annotation state has been overridden by a project manager or curator. "
                     + "You cannot change it.");
             aTarget.addChildren(getPage(), IFeedback.class);
