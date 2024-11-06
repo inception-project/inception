@@ -17,23 +17,11 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.ollama;
 
-import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY;
-
-import java.io.Serializable;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.Map;
-
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonInclude;
-
 import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.client.OllamaGenerateResponseFormat;
-import de.tudarmstadt.ukp.inception.recommendation.imls.support.llm.prompt.PromptingMode;
-import de.tudarmstadt.ukp.inception.recommendation.imls.support.llm.response.ExtractionMode;
+import de.tudarmstadt.ukp.inception.recommendation.imls.support.llm.option.LlmRecommenderTraits;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
 public class OllamaRecommenderTraits
-    implements Serializable
+    extends LlmRecommenderTraits
 {
     public static final String DEFAULT_OLLAMA_URL = "http://localhost:11434/";
 
@@ -43,19 +31,9 @@ public class OllamaRecommenderTraits
 
     private String model;
 
-    private String prompt;
-
     private boolean raw;
 
     private OllamaGenerateResponseFormat format;
-
-    private PromptingMode promptingMode = PromptingMode.PER_ANNOTATION;
-
-    private ExtractionMode extractionMode = ExtractionMode.RESPONSE_AS_LABEL;
-
-    private @JsonInclude(NON_EMPTY) Map<String, Object> options = new LinkedHashMap<String, Object>();
-
-    private boolean interactive;
 
     public String getUrl()
     {
@@ -77,26 +55,6 @@ public class OllamaRecommenderTraits
         model = aModel;
     }
 
-    public String getPrompt()
-    {
-        return prompt;
-    }
-
-    public void setPrompt(String aPrompt)
-    {
-        prompt = aPrompt;
-    }
-
-    public PromptingMode getPromptingMode()
-    {
-        return promptingMode;
-    }
-
-    public void setPromptingMode(PromptingMode aPromptingMode)
-    {
-        promptingMode = aPromptingMode;
-    }
-
     public boolean isRaw()
     {
         return raw;
@@ -115,36 +73,5 @@ public class OllamaRecommenderTraits
     public void setFormat(OllamaGenerateResponseFormat aFormat)
     {
         format = aFormat;
-    }
-
-    public ExtractionMode getExtractionMode()
-    {
-        return extractionMode;
-    }
-
-    public void setExtractionMode(ExtractionMode aExtractionMode)
-    {
-        extractionMode = aExtractionMode;
-    }
-
-    public Map<String, Object> getOptions()
-    {
-        return Collections.unmodifiableMap(options);
-    }
-
-    public void setOptions(Map<String, Object> aOptions)
-    {
-        options.clear();
-        options.putAll(aOptions);
-    }
-
-    public boolean isInteractive()
-    {
-        return interactive;
-    }
-
-    public void setInteractive(boolean aInteractive)
-    {
-        interactive = aInteractive;
     }
 }

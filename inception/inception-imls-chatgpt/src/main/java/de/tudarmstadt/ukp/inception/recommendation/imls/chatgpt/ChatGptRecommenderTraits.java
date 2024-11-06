@@ -17,23 +17,17 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.chatgpt;
 
-import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY;
-
 import java.io.Serializable;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonInclude;
 
 import de.tudarmstadt.ukp.inception.recommendation.imls.chatgpt.client.ResponseFormatType;
-import de.tudarmstadt.ukp.inception.recommendation.imls.support.llm.prompt.PromptingMode;
-import de.tudarmstadt.ukp.inception.recommendation.imls.support.llm.response.ExtractionMode;
+import de.tudarmstadt.ukp.inception.recommendation.imls.support.llm.option.LlmRecommenderTraits;
 import de.tudarmstadt.ukp.inception.security.client.auth.AuthenticationTraits;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ChatGptRecommenderTraits
+    extends LlmRecommenderTraits
     implements Serializable
 {
     private static final long serialVersionUID = 6433061638746045602L;
@@ -47,19 +41,9 @@ public class ChatGptRecommenderTraits
 
     private AuthenticationTraits authentication;
 
-    private String prompt;
-
     private String model = "gpt-3.5-turbo";
 
     private ResponseFormatType format;
-
-    private PromptingMode promptingMode = PromptingMode.PER_ANNOTATION;
-
-    private ExtractionMode extractionMode = ExtractionMode.RESPONSE_AS_LABEL;
-
-    private @JsonInclude(NON_EMPTY) Map<String, Object> options = new LinkedHashMap<String, Object>();
-
-    private boolean interactive;
 
     public AuthenticationTraits getAuthentication()
     {
@@ -91,26 +75,6 @@ public class ChatGptRecommenderTraits
         model = aModel;
     }
 
-    public String getPrompt()
-    {
-        return prompt;
-    }
-
-    public void setPrompt(String aPrompt)
-    {
-        prompt = aPrompt;
-    }
-
-    public PromptingMode getPromptingMode()
-    {
-        return promptingMode;
-    }
-
-    public void setPromptingMode(PromptingMode aPromptingMode)
-    {
-        promptingMode = aPromptingMode;
-    }
-
     public ResponseFormatType getFormat()
     {
         return format;
@@ -119,36 +83,5 @@ public class ChatGptRecommenderTraits
     public void setFormat(ResponseFormatType aFormat)
     {
         format = aFormat;
-    }
-
-    public ExtractionMode getExtractionMode()
-    {
-        return extractionMode;
-    }
-
-    public void setExtractionMode(ExtractionMode aExtractionMode)
-    {
-        extractionMode = aExtractionMode;
-    }
-
-    public Map<String, Object> getOptions()
-    {
-        return Collections.unmodifiableMap(options);
-    }
-
-    public void setOptions(Map<String, Object> aOptions)
-    {
-        options.clear();
-        options.putAll(aOptions);
-    }
-
-    public boolean isInteractive()
-    {
-        return interactive;
-    }
-
-    public void setInteractive(boolean aInteractive)
-    {
-        interactive = aInteractive;
     }
 }

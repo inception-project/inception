@@ -24,6 +24,7 @@ import org.springframework.context.annotation.Configuration;
 import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.OllamaRecommenderFactory;
 import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.client.OllamaClient;
 import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.client.OllamaClientImpl;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
 @Configuration
 @ConditionalOnProperty(prefix = "recommender.ollama", name = "enabled", havingValue = "true", matchIfMissing = false)
@@ -36,8 +37,9 @@ public class OllamaRecommenderAutoConfiguration
     }
 
     @Bean
-    public OllamaRecommenderFactory ollamaRecommenderFactory(OllamaClient aClient)
+    public OllamaRecommenderFactory ollamaRecommenderFactory(OllamaClient aClient,
+            AnnotationSchemaService aSchemaService)
     {
-        return new OllamaRecommenderFactory(aClient);
+        return new OllamaRecommenderFactory(aClient, aSchemaService);
     }
 }

@@ -39,6 +39,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactoryImplBase;
 import de.tudarmstadt.ukp.inception.recommendation.imls.chatgpt.client.ChatGptClient;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.io.WatchedResourceFile;
 import de.tudarmstadt.ukp.inception.support.yaml.YamlUtil;
 import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerSupport;
@@ -53,12 +54,14 @@ public class ChatGptRecommenderFactory
     private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private final ChatGptClient client;
+    private final AnnotationSchemaService schemaService;
 
     private WatchedResourceFile<ArrayList<Preset>> presets;
 
-    public ChatGptRecommenderFactory(ChatGptClient aClient)
+    public ChatGptRecommenderFactory(ChatGptClient aClient, AnnotationSchemaService aSchemaService)
     {
         client = aClient;
+        schemaService = aSchemaService;
 
         var presetsResource = getClass().getResource("presets.yaml");
         presets = new WatchedResourceFile<>(presetsResource, is -> YamlUtil.getObjectMapper()
@@ -83,7 +86,7 @@ public class ChatGptRecommenderFactory
     public RecommendationEngine build(Recommender aRecommender)
     {
         ChatGptRecommenderTraits traits = readTraits(aRecommender);
-        return new ChatGptRecommender(aRecommender, traits, client);
+        return new ChatGptRecommender(aRecommender, traits, client, schemaService);
     }
 
     @Override

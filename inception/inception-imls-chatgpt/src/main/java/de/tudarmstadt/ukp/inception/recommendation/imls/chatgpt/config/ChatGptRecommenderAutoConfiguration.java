@@ -24,6 +24,7 @@ import org.springframework.context.annotation.Configuration;
 import de.tudarmstadt.ukp.inception.recommendation.imls.chatgpt.ChatGptRecommenderFactory;
 import de.tudarmstadt.ukp.inception.recommendation.imls.chatgpt.client.ChatGptClient;
 import de.tudarmstadt.ukp.inception.recommendation.imls.chatgpt.client.ChatGptClientImpl;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
 @Configuration
 @ConditionalOnProperty(prefix = "recommender.chatgpt", name = "enabled", //
@@ -37,8 +38,9 @@ public class ChatGptRecommenderAutoConfiguration
     }
 
     @Bean
-    public ChatGptRecommenderFactory chatGptRecommenderFactory(ChatGptClient aClient)
+    public ChatGptRecommenderFactory chatGptRecommenderFactory(ChatGptClient aClient,
+            AnnotationSchemaService aSchemaService)
     {
-        return new ChatGptRecommenderFactory(aClient);
+        return new ChatGptRecommenderFactory(aClient, aSchemaService);
     }
 }

@@ -24,6 +24,7 @@ import org.springframework.context.annotation.Configuration;
 import de.tudarmstadt.ukp.inception.recommendation.imls.azureaiopenai.AzureAiOpenAiRecommenderFactory;
 import de.tudarmstadt.ukp.inception.recommendation.imls.azureaiopenai.client.AzureAiOpenAiClient;
 import de.tudarmstadt.ukp.inception.recommendation.imls.azureaiopenai.client.AzureAiOpenAiClientImpl;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
 @Configuration
 @ConditionalOnProperty(prefix = "recommender.azureai-openai", name = "enabled", //
@@ -38,8 +39,8 @@ public class AzureAiOpenAiRecommenderAutoConfiguration
 
     @Bean
     public AzureAiOpenAiRecommenderFactory azureAiOpenAiRecommenderFactory(
-            AzureAiOpenAiClient aClient)
+            AzureAiOpenAiClient aClient, AnnotationSchemaService aSchemaService)
     {
-        return new AzureAiOpenAiRecommenderFactory(aClient);
+        return new AzureAiOpenAiRecommenderFactory(aClient, aSchemaService);
     }
 }

@@ -25,22 +25,25 @@ public enum PromptingMode
     PER_ANNOTATION("""
                    Template variables:
 
-                   * `text`: annotation text,
-                   * `sentence`: sentence containing annotation,
+                   * `text`: annotation text
+                   * `tags`: tagset (if available)
+                   * `sentence`: sentence containing annotation
                    * `examples`: labeled annotations"""),
 
     @JsonProperty("per-sentence")
     PER_SENTENCE("""
                  Template variables:
 
-                 * `text`: sentence text,
+                 * `text`: sentence text
+                 * `tags`: tagset (if available)
                  * `examples`: labeled annotations"""),
 
     @JsonProperty("per-document")
     PER_DOCUMENT("""
                  Template variables:
 
-                 * `text`: document text""");
+                 * `text`: document text,
+                 * `tags`: tagset (if available)""");
 
     private final String hints;
 

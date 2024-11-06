@@ -39,6 +39,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactoryImplBase;
 import de.tudarmstadt.ukp.inception.recommendation.imls.azureaiopenai.client.AzureAiOpenAiClient;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.io.WatchedResourceFile;
 import de.tudarmstadt.ukp.inception.support.yaml.YamlUtil;
 import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerSupport;
@@ -53,12 +54,15 @@ public class AzureAiOpenAiRecommenderFactory
     private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private final AzureAiOpenAiClient client;
+    private final AnnotationSchemaService schemaService;
 
     private WatchedResourceFile<ArrayList<Preset>> presets;
 
-    public AzureAiOpenAiRecommenderFactory(AzureAiOpenAiClient aClient)
+    public AzureAiOpenAiRecommenderFactory(AzureAiOpenAiClient aClient,
+            AnnotationSchemaService aSchemaService)
     {
         client = aClient;
+        schemaService = aSchemaService;
 
         var presetsResource = getClass().getResource("presets.yaml");
         presets = new WatchedResourceFile<>(presetsResource, is -> YamlUtil.getObjectMapper()
@@ -83,7 +87,7 @@ public class AzureAiOpenAiRecommenderFactory
     public RecommendationEngine build(Recommender aRecommender)
     {
         AzureAiOpenAiRecommenderTraits traits = readTraits(aRecommender);
-        return new AzureAiOpenAiRecommender(aRecommender, traits, client);
+        return new AzureAiOpenAiRecommender(aRecommender, traits, client, schemaService);
     }
 
     @Override
