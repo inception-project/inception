@@ -29,6 +29,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpRequest.BodyPublishers;
 import java.net.http.HttpResponse;
+import java.time.Duration;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -141,6 +142,7 @@ public class ChatGptClientImpl
                 .uri(URI.create(appendIfMissing(aUrl, "/") + "models")) //
                 .header(HttpHeaders.CONTENT_TYPE, "application/json").GET() //
                 .header("Authorization", "Bearer " + aRequest.getApiKey()) //
+                .timeout(Duration.ofSeconds(10)) //
                 .build();
 
         var response = sendRequest(request);

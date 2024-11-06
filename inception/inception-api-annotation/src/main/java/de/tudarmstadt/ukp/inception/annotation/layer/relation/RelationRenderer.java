@@ -260,12 +260,18 @@ public class RelationRenderer
                     labelFeatures);
         case WHEN_SELECTED:
             if (aRequest.getState() == null || isSelected(aRequest, aFS, sourceFs, targetFs)) {
+                // State == null is when we render for the annotation sidebar...
                 return renderRelationAsArcs(aRequest, aVDocument, aFS, typeAdapter, sourceFs,
                         targetFs, labelFeatures);
             }
             return renderRelationOnLabel(aVDocument, typeAdapter, sourceFs, targetFs,
                     labelFeatures);
         case NEVER:
+            if (aRequest.getState() == null) {
+                // State == null is when we render for the annotation sidebar...
+                return renderRelationAsArcs(aRequest, aVDocument, aFS, typeAdapter, sourceFs,
+                        targetFs, labelFeatures);
+            }
             return renderRelationOnLabel(aVDocument, typeAdapter, sourceFs, targetFs,
                     labelFeatures);
         default:
