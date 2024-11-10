@@ -15,12 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.prompt;
+package de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.preset;
 
 import java.io.Serializable;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.prompt.PromptingMode;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.response.ExtractionMode;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.response.ResponseFormat;
 

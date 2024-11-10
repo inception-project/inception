@@ -41,10 +41,6 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-api-render</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-api-annotation</artifactId>
     </dependency>
     <dependency>
@@ -54,6 +50,10 @@
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-support</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-schema-api</artifactId>
     </dependency>
 
     <dependency>
@@ -94,18 +94,10 @@
       <artifactId>wicket-spring</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.wicketstuff</groupId>
-      <artifactId>wicketstuff-kendo-ui</artifactId>
-    </dependency>
-    <dependency>
       <groupId>org.danekja</groupId>
       <artifactId>jdk-serializable-functional</artifactId>
     </dependency>
 
-    <dependency>
-      <groupId>com.fasterxml.jackson.core</groupId>
-      <artifactId>jackson-core</artifactId>
-    </dependency>
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-annotations</artifactId>
@@ -139,6 +131,11 @@
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-testing</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-api-render</artifactId>
       <scope>test</scope>
     </dependency>
   </dependencies>

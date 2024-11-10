@@ -19,18 +19,9 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama;
 
 import static org.apache.uima.cas.CAS.TYPE_NAME_STRING;
 
-import java.lang.invoke.MethodHandles;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.util.ListModel;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.fasterxml.jackson.core.type.TypeReference;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -39,10 +30,8 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactoryImplBase;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaClient;
-import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.prompt.Preset;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.preset.Presets;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.inception.support.io.WatchedResourceFile;
-import de.tudarmstadt.ukp.inception.support.yaml.YamlUtil;
 import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerSupport;
 
 public class OllamaRecommenderFactory
@@ -52,23 +41,13 @@ public class OllamaRecommenderFactory
     // and without the database starting to refer to non-existing recommendation tools.
     public static final String ID = "de.tudarmstadt.ukp.inception.recommendation.imls.ollama.OllamaRecommenderFactory";
 
-    private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
-
     private final AnnotationSchemaService schemaService;
     private final OllamaClient client;
-
-    private WatchedResourceFile<ArrayList<Preset>> presets;
 
     public OllamaRecommenderFactory(OllamaClient aClient, AnnotationSchemaService aSchemaService)
     {
         client = aClient;
         schemaService = aSchemaService;
-
-        var presetsResource = getClass().getResource("presets.yaml");
-        presets = new WatchedResourceFile<>(presetsResource, is -> YamlUtil.getObjectMapper()
-                .readValue(is, new TypeReference<ArrayList<Preset>>()
-                {
-                }));
     }
 
     @Override
@@ -101,7 +80,8 @@ public class OllamaRecommenderFactory
     @Override
     public OllamaRecommenderTraitsEditor createTraitsEditor(String aId, IModel<Recommender> aModel)
     {
-        return new OllamaRecommenderTraitsEditor(aId, aModel, new ListModel<>(getPresets()));
+        return new OllamaRecommenderTraitsEditor(aId, aModel,
+                new ListModel<>(Presets.getPresets()));
     }
 
     @Override
@@ -131,17 +111,6 @@ public class OllamaRecommenderFactory
     @Override
     public Panel createInteractionPanel(String aId, IModel<Recommender> aModel)
     {
-        return new OllamaInteractionPanel(aId, aModel, new ListModel<>(getPresets()));
-    }
-
-    private List<Preset> getPresets()
-    {
-        try {
-            return presets.get().get();
-        }
-        catch (Exception e) {
-            LOG.error("Unable to load presets", e);
-            return Collections.emptyList();
-        }
+        return new OllamaInteractionPanel(aId, aModel, new ListModel<>(Presets.getPresets()));
     }
 }

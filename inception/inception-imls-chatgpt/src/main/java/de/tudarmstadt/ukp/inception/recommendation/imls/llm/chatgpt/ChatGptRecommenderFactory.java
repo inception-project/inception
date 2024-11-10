@@ -19,18 +19,9 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.llm.chatgpt;
 
 import static org.apache.uima.cas.CAS.TYPE_NAME_STRING;
 
-import java.lang.invoke.MethodHandles;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.util.ListModel;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.fasterxml.jackson.core.type.TypeReference;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -40,10 +31,8 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.Recommendatio
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactoryImplBase;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.chatgpt.client.ChatCompletionRequest;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.chatgpt.client.ChatGptClient;
-import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.prompt.Preset;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.preset.Presets;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.inception.support.io.WatchedResourceFile;
-import de.tudarmstadt.ukp.inception.support.yaml.YamlUtil;
 import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerSupport;
 
 public class ChatGptRecommenderFactory
@@ -53,23 +42,13 @@ public class ChatGptRecommenderFactory
     // and without the database starting to refer to non-existing recommendation tools.
     public static final String ID = "de.tudarmstadt.ukp.inception.recommendation.imls.chatgpt.ChatGptRecommender";
 
-    private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
-
     private final ChatGptClient client;
     private final AnnotationSchemaService schemaService;
-
-    private WatchedResourceFile<ArrayList<Preset>> presets;
 
     public ChatGptRecommenderFactory(ChatGptClient aClient, AnnotationSchemaService aSchemaService)
     {
         client = aClient;
         schemaService = aSchemaService;
-
-        var presetsResource = getClass().getResource("presets.yaml");
-        presets = new WatchedResourceFile<>(presetsResource, is -> YamlUtil.getObjectMapper()
-                .readValue(is, new TypeReference<ArrayList<Preset>>()
-                {
-                }));
     }
 
     @Override
@@ -102,7 +81,8 @@ public class ChatGptRecommenderFactory
     @Override
     public ChatGptRecommenderTraitsEditor createTraitsEditor(String aId, IModel<Recommender> aModel)
     {
-        return new ChatGptRecommenderTraitsEditor(aId, aModel, new ListModel<>(getPresets()),
+        return new ChatGptRecommenderTraitsEditor(aId, aModel,
+                new ListModel<>(Presets.getPresets()),
                 new ListModel<>(ChatCompletionRequest.getAllOptions()));
     }
 
@@ -133,17 +113,6 @@ public class ChatGptRecommenderFactory
     @Override
     public Panel createInteractionPanel(String aId, IModel<Recommender> aModel)
     {
-        return new ChatGptInteractionPanel(aId, aModel, new ListModel<>(getPresets()));
-    }
-
-    private List<Preset> getPresets()
-    {
-        try {
-            return presets.get().get();
-        }
-        catch (Exception e) {
-            LOG.error("Unable to load presets", e);
-            return Collections.emptyList();
-        }
+        return new ChatGptInteractionPanel(aId, aModel, new ListModel<>(Presets.getPresets()));
     }
 }

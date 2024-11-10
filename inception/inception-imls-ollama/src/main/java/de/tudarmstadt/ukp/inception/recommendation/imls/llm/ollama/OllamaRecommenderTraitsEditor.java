@@ -34,7 +34,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.Recommendatio
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaClientImpl;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaGenerateRequest;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaModel;
-import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.prompt.Preset;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.preset.Preset;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.traits.LlmRecommenderTraits;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.traits.LlmRecommenderTraitsEditor_ImplBase;
 

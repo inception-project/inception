@@ -38,7 +38,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.AbstractTraitsEditor;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
-import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.prompt.Preset;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.preset.Preset;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.prompt.PromptingModeSelect;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.response.ExtractionModeSelect;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.response.ResponseFormatSelect;
