@@ -68,7 +68,7 @@
 
   <properties>
     <build-ant-version>1.10.15</build-ant-version>
-    <build-groovy-version>4.0.23</build-groovy-version>
+    <build-groovy-version>4.0.24</build-groovy-version>
 
     <junit-jupiter.version>5.11.3</junit-jupiter.version>
     <junit-platform.version>1.11.3</junit-platform.version>
@@ -96,10 +96,10 @@
 
     <slf4j.version>2.0.16</slf4j.version>
     <log4j2.version>2.24.1</log4j2.version>
-    <jboss.logging.version>3.6.0.Final</jboss.logging.version>
+    <jboss.logging.version>3.6.1.Final</jboss.logging.version>
     <sentry.version>7.16.0</sentry.version>
 
-    <tomcat.version>10.1.31</tomcat.version>
+    <tomcat.version>10.1.33</tomcat.version>
     <jetty.version>12.0.14</jetty.version>
     <servlet-api.version>6.0.0</servlet-api.version>
 
@@ -107,7 +107,7 @@
     <mssql.driver.version>12.8.1.jre11</mssql.driver.version>
     <mysql.driver.version>9.1.0</mysql.driver.version>
     <postgres.driver.version>42.7.4</postgres.driver.version>
-    <hibernate.version>6.5.2.Final</hibernate.version>
+    <hibernate.version>6.6.2.Final</hibernate.version>
     <hibernate.validator.version>8.0.1.Final</hibernate.validator.version>
 
     <wicket.version>10.2.0</wicket.version>
@@ -121,16 +121,16 @@
       - These are all interconnected - because they share the dependency on Lucene.
       -->
     <lucene.version>9.11.1</lucene.version>
-    <solr.version>9.6.1</solr.version>
+    <solr.version>9.7.0</solr.version>
     <opensearch.version>2.17.1</opensearch.version>
     <jena.version>5.2.0</jena.version>
-    <rdf4j.version>5.0.2</rdf4j.version> 
+    <rdf4j.version>5.0.3</rdf4j.version> 
     <owlapi-version>5.5.1</owlapi-version>
 
     <asciidoctor.plugin.version>2.2.3</asciidoctor.plugin.version>
     <asciidoctor.version>2.5.13</asciidoctor.version>
     <asciidoctor-diagram.version>2.3.1</asciidoctor-diagram.version>
-    <build-asciidoctorj-pdf-version>2.3.18</build-asciidoctorj-pdf-version>
+    <build-asciidoctorj-pdf-version>2.3.19</build-asciidoctorj-pdf-version>
 
     <ant-version>1.10.15</ant-version>
     <json.version>20230227</json.version>
@@ -140,7 +140,7 @@
     <snakeyaml.version>2.3</snakeyaml.version>
     <okhttp.version>4.12.0</okhttp.version>
     <okio.version>3.9.1</okio.version>
-    <byte-buddy.version>1.15.7</byte-buddy.version>
+    <byte-buddy.version>1.15.10</byte-buddy.version>
     <caffeine.version>3.1.8</caffeine.version>
     <commons-beanutils.version>1.9.4</commons-beanutils.version>
     <commons-collections4.version>4.4</commons-collections4.version>
@@ -161,7 +161,7 @@
     <fastutil.version>8.5.15</fastutil.version>
     <picocli.version>4.7.6</picocli.version>
     <woodstox-core.version>6.7.0</woodstox-core.version>
-    <nimbus-jose-jwt.version>9.44</nimbus-jose-jwt.version>
+    <nimbus-jose-jwt.version>9.46</nimbus-jose-jwt.version>
     <json-schema-validator.version>1.5.3</json-schema-validator.version>
     <jgit.version>6.10.0.202406032230-r</jgit.version>
     <jaxb.version>4.0.5</jaxb.version>
@@ -170,7 +170,7 @@
     <jna.version>5.15.0</jna.version>
     <jsoup.version>1.18.1</jsoup.version>
     <mime4j.version>0.8.11</mime4j.version>
-    <hsqldb.version>2.7.3</hsqldb.version>
+    <hsqldb.version>2.7.4</hsqldb.version>
     <opensaml.version>4.3.2</opensaml.version>
     <oauth2-oidc-sdk.version>9.43.4</oauth2-oidc-sdk.version>
     <javassist.version>3.30.2-GA</javassist.version>
