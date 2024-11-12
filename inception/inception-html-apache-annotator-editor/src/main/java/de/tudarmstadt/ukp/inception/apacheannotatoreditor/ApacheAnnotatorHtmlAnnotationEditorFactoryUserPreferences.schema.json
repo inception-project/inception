@@ -16,6 +16,12 @@
     },
     "documentStructureWidth": {
       "type": "number"
+    },
+    "showImages": {
+      "type": "boolean"
+    },
+    "showTables": {
+      "type": "boolean"
     }
   },
   "additionalProperties": false

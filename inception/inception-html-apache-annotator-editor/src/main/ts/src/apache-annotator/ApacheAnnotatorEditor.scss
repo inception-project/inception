@@ -309,3 +309,39 @@ html > body {
   font-size: 80%;
   padding-left: 15px;
 }
+
+.iaa-hide-tables {
+  table-wrap {
+    table {
+      display: none !important;
+    }
+  
+    &::after {
+      font-size: small;
+      content: "Tables hidden";
+      opacity: 50%;
+      display: block;
+      text-align: center;
+    }
+  }
+}
+
+.iaa-hide-images {
+  graphic {
+    border: none;
+    margin: 0px;
+    padding: 0px;
+
+    img {
+      display: none !important;
+    }
+  
+    &::after {
+      font-size: small;
+      content: "Images hidden";
+      opacity: 50%;
+      display: block;
+      text-align: center;
+    }
+  }
+}
