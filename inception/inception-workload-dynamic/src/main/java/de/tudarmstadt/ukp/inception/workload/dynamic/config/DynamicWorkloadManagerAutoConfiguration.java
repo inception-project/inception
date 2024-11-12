@@ -94,9 +94,11 @@ public class DynamicWorkloadManagerAutoConfiguration
     @Bean
     public DynamicWorkflowDocumentNavigationActionBarExtension dynamicWorkflowDocumentNavigationActionBarExtension(
             DocumentService aDocumentService, WorkloadManagementService aWorkloadManagementService,
-            DynamicWorkloadExtension aDynamicWorkloadExtension, ProjectService aProjectService)
+            DynamicWorkloadExtension aDynamicWorkloadExtension, ProjectService aProjectService,
+            UserDao aUserService)
     {
         return new DynamicWorkflowDocumentNavigationActionBarExtension(aDocumentService,
-                aWorkloadManagementService, aDynamicWorkloadExtension, aProjectService);
+                aWorkloadManagementService, aDynamicWorkloadExtension, aProjectService,
+                aUserService);
     }
 }
