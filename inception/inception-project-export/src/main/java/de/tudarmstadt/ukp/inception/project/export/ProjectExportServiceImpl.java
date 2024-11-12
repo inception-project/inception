@@ -247,6 +247,7 @@ public class ProjectExportServiceImpl
 
         ExportedProject exProject = new ExportedProject();
         exProject.setName(aRequest.getProject().getName());
+        exProject.setSlug(aRequest.getProject().getSlug());
 
         try {
             while (!deque.isEmpty()) {
