@@ -35,9 +35,6 @@ export class SectionAnnotationCreator {
     if (this.sectionSelector) {
       this.initializeElementTracking()
       this.initializeSectionTypeAttributes()
-
-      // on scrolling the window, we need to ensure that the panels stay visible
-      this.root.addEventListener('scroll', () => this.ensureVisibility())
     }
   }
 
@@ -92,8 +89,8 @@ export class SectionAnnotationCreator {
       if (entry.isIntersecting && !panel) {
         panel = this.createControl()
         panel.setAttribute('data-iaa-applies-to', sectionId)
-        this.root.appendChild(panel)
         panel.style.top = `${sectionRect.top + scrollY}px`
+        this.root.appendChild(panel)
       }
 
       if (!entry.isIntersecting && panel) {

@@ -54,7 +54,6 @@ export class SectionAnnotationVisualizer {
     const panels = Array.from(this.root.parentNode?.querySelectorAll('.iaa-visible-annotations-panel') || [])
 
     const root = this.root.closest('.i7n-wrapper') || this.root
-    // const root = this.root
     const rootRect = root.getBoundingClientRect()
     const scrollY = (root.scrollTop || 0) - rootRect.top
     
@@ -72,6 +71,7 @@ export class SectionAnnotationVisualizer {
         continue
       }
 
+      // Fit the panels to the spacers
       const sectionRect = section.getBoundingClientRect()
       const spacerRect = spacer.getBoundingClientRect() // Dimensions same as panel
 
@@ -82,11 +82,13 @@ export class SectionAnnotationVisualizer {
         if (hiddenUnderHigherLevelPanel) {
           // If there is already a higher-level panel stacked then we snap the panel back to its
           // spacer immediately
-          panel.style.top = `${spacerRect.top + scrollY}px`
+          panel.style.position = 'fixed'
+          panel.style.top = `${spacerRect.top}px`
         }
         else {
           // Otherwise, we move the panel along with the bottom of the section
-          panel.style.top = `${sectionRect.bottom + scrollY - spacerRect.height}px`
+          panel.style.position = 'fixed'
+          panel.style.top = `${sectionRect.bottom - spacerRect.height}px`
         }
         continue
       }
@@ -95,12 +97,14 @@ export class SectionAnnotationVisualizer {
       if (shouldKeepPanelVisibleAtTop) {
         // Keep the panel at the top of the viewport if the spacer is above the viewport
         // and the section is still visible
-        panel.style.top = `${scrollY + lastSectionPanelBottom}px`
+        panel.style.position = 'fixed'
+        panel.style.top = `${lastSectionPanelBottom}px`
         lastSectionPanelBottom = panel.getBoundingClientRect().bottom
         continue
       }
 
       // Otherwise, keep the panel at the same position as the spacer
+      panel.style.position = 'absolute'
       panel.style.top = `${spacerRect.top + scrollY}px`
     }
 
@@ -158,23 +162,31 @@ export class SectionAnnotationVisualizer {
 
     // Fit the panels to the sections
     const panels = Array.from(this.root.parentNode?.querySelectorAll('.iaa-visible-annotations-panel') || [])
+    const toProcess: {panel: HTMLElement, spacer: HTMLElement, section: HTMLElement}[] = []
+
+    // Prepare the spacers without changing the DOM so layout due to getBoundingClientRect() is not
+    // triggered repeatedly
     for (const panel of (panels as HTMLElement[])) {
       const appliesTo = panel.getAttribute('data-iaa-applies-to')
       if (!appliesTo) continue
 
-      const sectionElement = document.getElementById(appliesTo) as HTMLElement
-      if (!sectionElement) continue
+      const section = document.getElementById(appliesTo) as HTMLElement
+      if (!section) continue
 
-      const vspace = panel.getBoundingClientRect().height
+      // The spacer reserves space for the panel in the document layout. The actual panel
+      // will then float over the spacer when possible but be adjusted such that it remains
+      // visible even if the spacer starts moving out of the screen
       const spacer = document.createElement('div')
-      spacer.setAttribute('data-iaa-applies-to', sectionElement.id)
+      spacer.setAttribute('data-iaa-applies-to', section.id)
       spacer.classList.add('iaa-visible-annotations-panel-spacer')
-      spacer.style.height = `${vspace}px`
-      sectionElement.parentElement?.insertBefore(spacer, sectionElement)
+      spacer.style.height = `${panel.getBoundingClientRect().height}px`
+      toProcess.push({panel, spacer, section});
+    }
 
-      const spacerRect = spacer.getBoundingClientRect()
-      const scrollY = spacer.ownerDocument.defaultView?.scrollY || 0
-      panel.style.top = `${spacerRect.top + scrollY}px`
+    // Add the spacers to the DOM all at once without triggering a re-layout in between
+    for (const parts of toProcess) {
+      const section = parts.section
+      section.parentElement?.insertBefore(parts.spacer, section)
     }
   }
 

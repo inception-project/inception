@@ -262,12 +262,17 @@ export class ApacheAnnotatorVisualizer {
    * Some highlights may only contain whitepace. This method removes such highlights.
    */
   private removeWhitepaceOnlyHighlights (selector: string = '.iaa-highlighted') {
-    this.root.querySelectorAll(selector).forEach(e => {
+    let candidates = this.root.querySelectorAll(selector)
+    console.log(`Found ${candidates.length} elements matching [${selector}] to remove whitespace-only highlights`)
+    let start = performance.now();
+    candidates.forEach(e => {
       if (!e.classList.contains('iaa-zero-width') && !e.textContent?.trim()) {
         e.after(...e.childNodes)
         e.remove()
       }
     })
+    let end = performance.now();
+    console.log(`Time taken: ${end - start} milliseconds`)
   }
 
   private postProcessHighlights () {
