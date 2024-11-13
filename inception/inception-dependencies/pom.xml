@@ -37,6 +37,14 @@
         <type>pom</type>
         <scope>import</scope>
       </dependency>
+
+      <dependency>
+        <groupId>org.apache.logging.log4j</groupId>
+        <artifactId>log4j-bom</artifactId>
+        <version>${log4j2.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
     
       <dependency>
         <groupId>org.springframework</groupId>
@@ -1459,14 +1467,6 @@
         <groupId>org.apache.uima</groupId>
         <artifactId>uimafit-bom</artifactId>
         <version>${uimafit.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
-
-      <dependency>
-        <groupId>org.apache.logging.log4j</groupId>
-        <artifactId>log4j-bom</artifactId>
-        <version>${log4j2.version}</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
