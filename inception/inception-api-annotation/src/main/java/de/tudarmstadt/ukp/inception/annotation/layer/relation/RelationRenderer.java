@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.annotation.layer.relation;
 
+import static java.lang.Math.max;
+import static java.lang.Math.min;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.groupingBy;
 import static org.apache.commons.lang3.StringUtils.abbreviate;
@@ -71,14 +73,16 @@ public class RelationRenderer
 {
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
+    public static final String REL_EXTENSION_ID = "rel";
+
     public static final VID VID_BEFORE = VID.builder() //
-            .withExtensionId("rel") //
+            .withExtensionId(REL_EXTENSION_ID) //
             .withAnnotationId(0) //
             .withExtensionPayload("before") //
             .build();
 
     public static final VID VID_AFTER = VID.builder() //
-            .withExtensionId("rel") //
+            .withExtensionId(REL_EXTENSION_ID) //
             .withAnnotationId(1) //
             .withExtensionPayload("after") //
             .build();
@@ -150,8 +154,8 @@ public class RelationRenderer
             var targetFs = getTargetFs(rel);
 
             if (sourceFs instanceof Annotation source && targetFs instanceof Annotation target) {
-                var relBegin = Math.min(source.getBegin(), target.getBegin());
-                var relEnd = Math.max(source.getEnd(), target.getEnd());
+                var relBegin = min(source.getBegin(), target.getBegin());
+                var relEnd = max(source.getEnd(), target.getEnd());
 
                 if (overlapping(relBegin, relEnd, aWindowBegin, aWindowEnd)) {
                     result.add(rel);

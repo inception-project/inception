@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.curation.casdiff;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.LinkMode.NONE;
 import static de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureMultiplicityMode.ONE_TARGET_MULTIPLE_ROLES;
+import static java.lang.System.currentTimeMillis;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.groupingBy;
@@ -133,7 +134,7 @@ public class CasDiff
             return new CasDiff(0, 0, aAdapters);
         }
 
-        var startTime = System.currentTimeMillis();
+        var startTime = currentTimeMillis();
 
         var diff = new CasDiff(aBegin, aEnd, aAdapters);
 
@@ -146,7 +147,7 @@ public class CasDiff
             }
         }
 
-        LOG.trace("CASDiff completed in {} ms", System.currentTimeMillis() - startTime);
+        LOG.trace("CASDiff completed in {} ms", currentTimeMillis() - startTime);
 
         return diff;
     }

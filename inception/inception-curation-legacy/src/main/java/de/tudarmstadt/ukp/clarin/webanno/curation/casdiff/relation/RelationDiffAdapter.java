@@ -19,6 +19,8 @@ package de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.relation;
 
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.FEAT_REL_SOURCE;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.FEAT_REL_TARGET;
+import static java.lang.Math.max;
+import static java.lang.Math.min;
 import static java.util.Arrays.asList;
 import static org.apache.uima.cas.text.AnnotationPredicates.overlapping;
 
@@ -88,8 +90,8 @@ public class RelationDiffAdapter
             var targetFs = getTargetFs(rel);
 
             if (sourceFs instanceof Annotation source && targetFs instanceof Annotation target) {
-                var relBegin = Math.min(source.getBegin(), target.getBegin());
-                var relEnd = Math.max(source.getEnd(), target.getEnd());
+                var relBegin = min(source.getBegin(), target.getBegin());
+                var relEnd = max(source.getEnd(), target.getEnd());
 
                 if (overlapping(relBegin, relEnd, aWindowBegin, aWindowEnd)) {
                     result.add(rel);
