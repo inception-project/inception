@@ -25,11 +25,28 @@
     const maxLength = 100
     const showTextAfter = true // Experimental
 
-    $: begin = span.offsets[0][0]
-    $: end = span.offsets[0][1]
-    $: text = data.text.substring(begin, end).trim().replace(/\s+/g, ' ')
-    $: textAfter = (showTextAfter && text.length < maxLength) ? 
-        data.text.substring(end, end + maxLength - text.length).trim().replace(/\s+/g, ' ') : ''
+    let begin : number
+    let end : number
+    let text : string
+    let textAfter : string
+
+    $: {
+        begin = span.offsets[0][0]
+        end = span.offsets[0][1]
+        let rawText = data.text.substring(begin, end).replace(/\s+/g, ' ')
+        text = rawText.trimEnd()
+        if (showTextAfter && text.length < maxLength) {
+            let rawTextAfter = data.text.substring(end, end + maxLength - text.length).replace(/\s+/g, ' ')
+            textAfter = rawTextAfter.trimStart()
+            if (rawText.length > text.length || rawTextAfter.length > textAfter.length) {
+                textAfter = ' ' + textAfter
+            }
+            textAfter = textAfter.trimEnd()
+        }
+        else {
+            textAfter = ''
+        }
+    }
 </script>
 
 {#if text.length === 0}
@@ -40,10 +57,7 @@
     <span>{text.substring(0, 50)}</span>
     <span class="text-muted trailing-text">…</span>
 {:else}
-    <span style="overflow-wrap: normal;">{text}</span>
-    {#if textAfter.length > 0}
-        <span class="text-muted trailing-text">{textAfter}</span>
-    {/if}
+    <span style="overflow-wrap: normal;">{text}</span>{#if textAfter.length > 0}<span class="text-muted trailing-text">{textAfter}</span>{/if}
 {/if}
 
 <style lang="scss">
@@ -52,5 +66,6 @@
         width: 0px;
         display: inline-block;
         white-space: nowrap;
+        white-space-collapse: preserve;
     }
 </style>
