@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.ui.curation.sidebar.render;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.getDiffAdapters;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.ANNOTATION;
+import static de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationRenderer.REL_EXTENSION_ID;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toMap;
@@ -347,6 +348,10 @@ public class CurationSidebarRenderer
     private VID resolveVisibleLinkHost(String aTargetUser, DiffResult aDiff, Configuration aCfg,
             VID aVid, boolean showAll)
     {
+        if (REL_EXTENSION_ID.equals(aVid.getExtensionId())) {
+            return aVid;
+        }
+
         var representativeCasGroupId = aCfg.getRepresentativeCasGroupId();
 
         if (showAll) {
@@ -388,6 +393,10 @@ public class CurationSidebarRenderer
     private VID resolveVisibleEndpoint(String aTargetUser, DiffResult aDiff, Configuration aCfg,
             VID aVid, boolean showAll)
     {
+        if (REL_EXTENSION_ID.equals(aVid.getExtensionId())) {
+            return aVid;
+        }
+
         var sourceConfiguration = aDiff.findConfiguration(aCfg.getRepresentativeCasGroupId(),
                 new AID(aVid));
 
