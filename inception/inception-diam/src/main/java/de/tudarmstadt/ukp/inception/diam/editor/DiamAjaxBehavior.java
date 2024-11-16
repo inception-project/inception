@@ -83,8 +83,6 @@ public class DiamAjaxBehavior
     @Override
     protected void respond(AjaxRequestTarget aTarget)
     {
-        LOG.trace("AJAX request received");
-
         var request = RequestCycle.get().getRequest();
 
         var priorityHandler = priorityHandlers.stream() //
@@ -104,6 +102,7 @@ public class DiamAjaxBehavior
 
     private void call(AjaxRequestTarget aTarget, EditorAjaxRequestHandler aHandler)
     {
+        LOG.trace("AJAX request received for {}", aHandler.getClass().getName());
         var request = RequestCycle.get().getRequest();
         try (var watch = new ServerTimingWatch("diam", "diam (" + aHandler.getCommand() + ")")) {
             aHandler.handle(this, aTarget, request);
