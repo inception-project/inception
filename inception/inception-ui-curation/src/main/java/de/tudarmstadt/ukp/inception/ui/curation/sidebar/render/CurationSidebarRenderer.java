@@ -126,17 +126,23 @@ public class CurationSidebarRenderer
     public void render(VDocument aVdoc, RenderRequest aRequest)
     {
         var sessionOwner = userRepository.getCurrentUsername();
-        var project = aRequest.getProject();
 
-        var selectedUsers = curationService.listUsersReadyForCuration(sessionOwner, project,
-                aRequest.getSourceDocument());
+        var selectedUsers = curationService.listUsersReadyForCuration(sessionOwner,
+                aRequest.getProject(), aRequest.getSourceDocument());
         if (selectedUsers.isEmpty()) {
             return;
         }
 
+        var casDiff = createDiff(aRequest, selectedUsers);
+        renderDiff(aVdoc, aRequest, casDiff);
+    }
+
+    private void renderDiff(VDocument aVdoc, RenderRequest aRequest, CasDiff casDiff)
+    {
+        var project = aRequest.getProject();
+        var sessionOwner = userRepository.getCurrentUsername();
         var targetUser = aRequest.getAnnotationUser().getUsername();
 
-        var casDiff = createDiff(aRequest, selectedUsers);
         var diff = casDiff.toResult();
         var totalAnnotatorCount = diff.getCasGroupIds().stream() //
                 .filter($ -> !$.equals(targetUser)) //
@@ -327,27 +333,25 @@ public class CurationSidebarRenderer
     private void resolveArcEndpoints(String targetUser, DiffResult diff, boolean showAll,
             Configuration cfg, VArc arc)
     {
-        if (showAll) {
-            var representativeCasGroupId = cfg.getRepresentativeCasGroupId();
-            arc.setSource(new CurationVID(representativeCasGroupId, arc.getSource()));
-            arc.setTarget(resolveVisibleEndpoint(targetUser, diff, cfg, arc.getTarget()));
-            return;
-        }
-
         if (cfg.getPosition() instanceof SpanPosition spanPosition
                 && spanPosition.isLinkFeaturePosition()) {
-            arc.setSource(resolveVisibleLinkHost(targetUser, diff, cfg, arc.getSource()));
+            arc.setSource(resolveVisibleLinkHost(targetUser, diff, cfg, arc.getSource(), showAll));
         }
         else {
-            arc.setSource(resolveVisibleEndpoint(targetUser, diff, cfg, arc.getSource()));
+            arc.setSource(resolveVisibleEndpoint(targetUser, diff, cfg, arc.getSource(), showAll));
         }
-        arc.setTarget(resolveVisibleEndpoint(targetUser, diff, cfg, arc.getTarget()));
+
+        arc.setTarget(resolveVisibleEndpoint(targetUser, diff, cfg, arc.getTarget(), showAll));
     }
 
     private VID resolveVisibleLinkHost(String aTargetUser, DiffResult aDiff, Configuration aCfg,
-            VID aVid)
+            VID aVid, boolean showAll)
     {
         var representativeCasGroupId = aCfg.getRepresentativeCasGroupId();
+
+        if (showAll) {
+            return new CurationVID(representativeCasGroupId, aVid);
+        }
 
         // If this is a link feature position, derive the base span position (i.e. the span
         // which owns the link feature) and check if that has already been merged. If yes, we
@@ -382,25 +386,28 @@ public class CurationSidebarRenderer
      * annotation and then switching over to the configuration containing the curators annotation.
      */
     private VID resolveVisibleEndpoint(String aTargetUser, DiffResult aDiff, Configuration aCfg,
-            VID aVid)
+            VID aVid, boolean showAll)
     {
-        var representativeCasGroupId = aCfg.getRepresentativeCasGroupId();
-
-        var sourceConfiguration = aDiff.findConfiguration(representativeCasGroupId, new AID(aVid));
+        var sourceConfiguration = aDiff.findConfiguration(aCfg.getRepresentativeCasGroupId(),
+                new AID(aVid));
 
         // This is for relation annotation endpoints and link targets. Here we can look for the
         // configuration which contains the annotators annotation and find the corresponding
         // curated version for it in the same configuration
         if (sourceConfiguration.isPresent()) {
             var curatedAID = sourceConfiguration.get().getAID(aTargetUser);
-            if (curatedAID != null) {
+
+            // If showAll is not enabled, we use the merged annotation of the target user
+            // If showAll is enabled though, we prefer to use the original un-merged annotation
+            if (!showAll && curatedAID != null) {
                 return new VID(curatedAID.addr);
             }
 
+            var representativeCasGroupId = sourceConfiguration.get().getRepresentativeCasGroupId();
             return new CurationVID(representativeCasGroupId,
                     new VID(sourceConfiguration.get().getAID(representativeCasGroupId).addr));
         }
 
-        return new CurationVID(representativeCasGroupId, aVid);
+        return new CurationVID(aCfg.getRepresentativeCasGroupId(), aVid);
     }
 }
