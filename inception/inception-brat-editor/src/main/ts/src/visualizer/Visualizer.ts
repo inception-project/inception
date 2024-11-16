@@ -2846,7 +2846,7 @@ export class Visualizer {
       return path
     }
 
-    // Render curve pointing to the rught annotation endpoint
+    // Render curve pointing to the right annotation endpoint
     let cornerx = to - (this.rtlmode ? -1 : 1) * ufoCatcherMod * this.arcSlant
 
     // TODO: duplicates above in part, make funcs
