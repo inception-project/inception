@@ -205,50 +205,51 @@
                             <button class="btn btn-link p-0" style="color: var(--bs-body-color)">
                                 <i class="fas fa-caret-down d-inline-block" class:group-collapsed={group.collapsed}/>
                             </button>
+                            <span class="badge rounded-pill text-bg-secondary float-end m-1">{groupedAnnotations[group.label].length}</span>
                             <span>{group.label || "No label"}</span>
                         </div>
                         <ul class="px-0 list-group list-group-flush" class:d-none={group.collapsed}>
                             {#if groupedAnnotations[group.label]}
-                            {#each groupedAnnotations[group.label] as ann}
-                                <!-- svelte-ignore a11y-mouse-events-have-key-events -->
-                                <li
-                                    class="list-group-item list-group-item-action p-0 d-flex"
-                                    on:mouseover={ev => mouseOverAnnotation(ev, ann)}
-                                    on:mouseout={ev => mouseOutAnnotation(ev, ann)}
-                                >
-                                    <div
-                                        class="text-secondary bg-light-subtle border-end px-2 d-flex align-items-center"
+                                {#each groupedAnnotations[group.label] as ann}
+                                    <!-- svelte-ignore a11y-mouse-events-have-key-events -->
+                                    <li
+                                        class="list-group-item list-group-item-action p-0 d-flex"
+                                        on:mouseover={ev => mouseOverAnnotation(ev, ann)}
+                                        on:mouseout={ev => mouseOutAnnotation(ev, ann)}
                                     >
-                                        {#if ann instanceof Span}
-                                            <div class="annotation-type-marker i7n-icon-span"/>
-                                        {:else if ann instanceof Relation}
-                                            <div class="annotation-type-marker i7n-icon-relation"/>
-                                        {/if}
-                                    </div>
-                                    <!-- svelte-ignore a11y-click-events-have-key-events -->
-                                    <div
-                                        class="flex-grow-1 my-1 mx-2 position-relative overflow-hidden"
-                                        on:click={() => scrollTo(ann)}
-                                    >
-                                        <div class="float-end labels">
-                                            <LabelBadge
-                                                annotation={ann}
-                                                {ajaxClient}
-                                                showText={false}
-                                            />
+                                        <div
+                                            class="text-secondary bg-light-subtle border-end px-2 d-flex align-items-center"
+                                        >
+                                            {#if ann instanceof Span}
+                                                <div class="annotation-type-marker i7n-icon-span"/>
+                                            {:else if ann instanceof Relation}
+                                                <div class="annotation-type-marker i7n-icon-relation"/>
+                                            {/if}
                                         </div>
+                                        <!-- svelte-ignore a11y-click-events-have-key-events -->
+                                        <div
+                                            class="flex-grow-1 my-1 mx-2 position-relative overflow-hidden"
+                                            on:click={() => scrollTo(ann)}
+                                        >
+                                            <div class="float-end labels">
+                                                <LabelBadge
+                                                    annotation={ann}
+                                                    {ajaxClient}
+                                                    showText={false}
+                                                />
+                                            </div>
 
-                                        {#if ann instanceof Span}
-                                            <SpanText {data} span={ann} />
-                                        {:else if ann instanceof Relation}
-                                            <SpanText
-                                                {data}
-                                                span={ann.arguments[0].target}
-                                            />
-                                        {/if}
-                                    </div>
-                                </li>
-                            {/each}
+                                            {#if ann instanceof Span}
+                                                <SpanText {data} span={ann} />
+                                            {:else if ann instanceof Relation}
+                                                <SpanText
+                                                    {data}
+                                                    span={ann.arguments[0].target}
+                                                />
+                                            {/if}
+                                        </div>
+                                    </li>
+                                {/each}
                             {:else}
                             <li class="list-group-item list-group-item-action p-2 text-center text-secondary bg-light">
                                 No occurrences
