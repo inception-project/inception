@@ -204,105 +204,106 @@
                             <button class="btn btn-link p-0" style="color: var(--bs-body-color)">
                                 <i class="fas fa-caret-down d-inline-block" class:group-collapsed={group.collapsed}/>
                             </button>
+                            <span class="badge rounded-pill text-bg-secondary float-end m-1">{groupedAnnotations[group.layer.name].length}</span>
                             <span>{group.layer.name} {group.layer.type}</span>
                         </div>
                         <ul class="px-0 list-group list-group-flush" class:d-none={group.collapsed}>
                             {#if groupedAnnotations[group.layer.name]}
-                            {#each groupedAnnotations[group.layer.name] as ann}
-                                <!-- svelte-ignore a11y-mouse-events-have-key-events -->
-                                {#if ann instanceof Span}
-                                    <li
-                                        class="list-group-item list-group-item-action p-0 d-flex"
-                                        on:mouseover={ev => mouseOverAnnotation(ev, ann)}
-                                        on:mouseout={ev => mouseOutAnnotation(ev, ann)}
-                                    >
-                                        <!-- svelte-ignore a11y-click-events-have-key-events -->
-                                        <!-- svelte-ignore a11y-no-static-element-interactions -->
-                                        <div class="flex-grow-1 my-1 mx-2 position-relative overflow-hidden"  on:click={() => scrollToSpan(ann)}>
-                                            <div class="float-end labels">
-                                                <LabelBadge
-                                                    annotation={ann}
-                                                    {ajaxClient}
-                                                    showText={true}
-                                                />
+                                {#each groupedAnnotations[group.layer.name] as ann}
+                                    <!-- svelte-ignore a11y-mouse-events-have-key-events -->
+                                    {#if ann instanceof Span}
+                                        <li
+                                            class="list-group-item list-group-item-action p-0 d-flex"
+                                            on:mouseover={ev => mouseOverAnnotation(ev, ann)}
+                                            on:mouseout={ev => mouseOutAnnotation(ev, ann)}
+                                        >
+                                            <!-- svelte-ignore a11y-click-events-have-key-events -->
+                                            <!-- svelte-ignore a11y-no-static-element-interactions -->
+                                            <div class="flex-grow-1 my-1 mx-2 position-relative overflow-hidden"  on:click={() => scrollToSpan(ann)}>
+                                                <div class="float-end labels">
+                                                    <LabelBadge
+                                                        annotation={ann}
+                                                        {ajaxClient}
+                                                        showText={true}
+                                                    />
+                                                </div>
+                                                <SpanText {data} span={ann} />
                                             </div>
-                                            <SpanText {data} span={ann} />
-                                        </div>
-                                    </li>
+                                        </li>
 
-                                    {@const relations = groupedRelations[`${ann.vid}`]}
-                                    {#if relations}
-                                        {#each relations as relation}
-                                            {@const target = relation.arguments[1].target}
-                                            <!-- svelte-ignore a11y-mouse-events-have-key-events -->
-                                            <li
-                                                class="list-group-item list-group-item-action p-0 d-flex"
-                                                on:mouseover={(ev) =>
-                                                    mouseOverAnnotation(ev, relation)}
-                                                on:mouseout={(ev) =>
-                                                    mouseOutAnnotation(ev, relation)}
-                                            >
-                                                <div
-                                                    class="text-secondary bg-light-subtle border-end px-2 d-flex align-items-center"
+                                        {@const relations = groupedRelations[`${ann.vid}`]}
+                                        {#if relations}
+                                            {#each relations as relation}
+                                                {@const target = relation.arguments[1].target}
+                                                <!-- svelte-ignore a11y-mouse-events-have-key-events -->
+                                                <li
+                                                    class="list-group-item list-group-item-action p-0 d-flex"
+                                                    on:mouseover={(ev) =>
+                                                        mouseOverAnnotation(ev, relation)}
+                                                    on:mouseout={(ev) =>
+                                                        mouseOutAnnotation(ev, relation)}
                                                 >
-                                                    <span>↳</span>
-                                                </div>
-                                                <!-- svelte-ignore a11y-click-events-have-key-events -->
-                                                <!-- svelte-ignore a11y-no-static-element-interactions -->
-                                                <div
-                                                    class="flex-grow-1 my-1 mx-2 overflow-hidden"
-                                                    on:click={() => scrollToSpan(target)}
-                                                >
-                                                    <div class="float-end labels">
-                                                        <LabelBadge
-                                                            annotation={relation}
-                                                            {ajaxClient}
-                                                        />
+                                                    <div
+                                                        class="text-secondary bg-light-subtle border-end px-2 d-flex align-items-center"
+                                                    >
+                                                        <span>↳</span>
                                                     </div>
-                
-                                                    <SpanText {data} span={target} />
+                                                    <!-- svelte-ignore a11y-click-events-have-key-events -->
+                                                    <!-- svelte-ignore a11y-no-static-element-interactions -->
+                                                    <div
+                                                        class="flex-grow-1 my-1 mx-2 overflow-hidden"
+                                                        on:click={() => scrollToSpan(target)}
+                                                    >
+                                                        <div class="float-end labels">
+                                                            <LabelBadge
+                                                                annotation={relation}
+                                                                {ajaxClient}
+                                                            />
+                                                        </div>
+                    
+                                                        <SpanText {data} span={target} />
+                                                    </div>
+                                                </li>
+                                            {/each}
+                                        {/if}                                       
+                                    {:else if ann instanceof Relation && group.layer.type === "relation"}
+                                        <li
+                                            class="list-group-item p-0 d-flex"
+                                            on:mouseover={ev => mouseOverAnnotation(ev, ann)}
+                                            on:mouseout={ev => mouseOutAnnotation(ev, ann)}
+                                    >
+                                            <!-- svelte-ignore a11y-click-events-have-key-events -->
+                                            <!-- svelte-ignore a11y-no-static-element-interactions -->
+                                            <div class="flex-grow-1 my-1 mx-0 position-relative overflow-hidden">
+                                                <div class="me-2">
+                                                    <LabelBadge
+                                                        annotation={ann}
+                                                        {ajaxClient}
+                                                        showText={true}
+                                                    />
                                                 </div>
-                                            </li>
-                                        {/each}
-                                    {/if}                                       
-                                {:else if ann instanceof Relation && group.layer.type === "relation"}
-                                    <li
-                                        class="list-group-item p-0 d-flex"
-                                        on:mouseover={ev => mouseOverAnnotation(ev, ann)}
-                                        on:mouseout={ev => mouseOutAnnotation(ev, ann)}
-                                >
-                                        <!-- svelte-ignore a11y-click-events-have-key-events -->
-                                        <!-- svelte-ignore a11y-no-static-element-interactions -->
-                                        <div class="flex-grow-1 my-1 mx-0 position-relative overflow-hidden">
-                                            <div class="me-2">
-                                                <LabelBadge
-                                                    annotation={ann}
-                                                    {ajaxClient}
-                                                    showText={true}
-                                                />
-                                            </div>
-                                            <div class="d-flex flex-row list-group-item-action" on:click={() => scrollToSpan(ann.arguments[0].target)}>
-                                                <div class="text-secondary bg-light-subtle border-end px-2 d-flex align-items-center">
-                                                    <span style="transform: rotate(90deg);">↳</span>
+                                                <div class="d-flex flex-row list-group-item-action" on:click={() => scrollToSpan(ann.arguments[0].target)}>
+                                                    <div class="text-secondary bg-light-subtle border-end px-2 d-flex align-items-center">
+                                                        <span style="transform: rotate(90deg);">↳</span>
+                                                    </div>
+                                                    <SpanText
+                                                        {data}
+                                                        span={ann.arguments[0].target}
+                                                    />
                                                 </div>
-                                                <SpanText
-                                                    {data}
-                                                    span={ann.arguments[0].target}
-                                                />
-                                            </div>
-                                            <div class="d-flex flex-row list-group-item-action" on:click={() => scrollToSpan(ann.arguments[1].target)}>
-                                                <div class="text-secondary bg-light-subtle border-end px-2 d-flex align-items-center">
-                                                    <span>↳</span>
+                                                <div class="d-flex flex-row list-group-item-action" on:click={() => scrollToSpan(ann.arguments[1].target)}>
+                                                    <div class="text-secondary bg-light-subtle border-end px-2 d-flex align-items-center">
+                                                        <span>↳</span>
+                                                    </div>
+                                                    <SpanText
+                                                        {data}
+                                                        span={ann.arguments[1].target}
+                                                    />
                                                 </div>
-                                                <SpanText
-                                                    {data}
-                                                    span={ann.arguments[1].target}
-                                                />
                                             </div>
-                                        </div>
-                                    </li>
-                                {/if}
-                            {/each}
+                                        </li>
+                                    {/if}
+                                {/each}
                             {:else}
                             <li class="list-group-item list-group-item-action p-2 text-center text-secondary bg-light">
                                 No occurrences
