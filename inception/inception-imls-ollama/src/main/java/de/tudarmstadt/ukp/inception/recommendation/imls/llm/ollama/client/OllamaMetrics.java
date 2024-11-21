@@ -17,12 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client;
 
-import java.io.IOException;
-import java.util.List;
-
-public interface OllamaClient
+public interface OllamaMetrics
 {
-    String generate(String aUrl, OllamaGenerateRequest aRequest) throws IOException;
-
-    List<OllamaModel> listModels(String aUrl) throws IOException;
+    void handleResponse(OllamaGenerateResponse aResponse);
 }

@@ -15,48 +15,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.traits;
+package de.tudarmstadt.ukp.inception.support.http;
 
-import java.io.Serializable;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
-public class OptionSetting
-    implements Serializable
+import java.net.URLEncoder;
+import java.util.Map;
+
+public final class HttpClientUtils
 {
-    private static final long serialVersionUID = 639108348141364660L;
-
-    private Option<?> option;
-    private String value;
-
-    public OptionSetting()
+    private HttpClientUtils()
     {
-        // For serialization
+        // No instances
     }
 
-    public OptionSetting(Option<?> aOption, Object aValue)
+    public static String urlEncodeParameters(Map<String, String> aParameters)
     {
-        option = aOption;
-        if (aValue != null) {
-            value = String.valueOf(aValue);
+        if (aParameters.isEmpty()) {
+            return "";
         }
-    }
 
-    public Option<?> getOption()
-    {
-        return option;
-    }
+        var uriBuilder = new StringBuilder();
+        for (var param : aParameters.entrySet()) {
+            if (uriBuilder.length() > 0) {
+                uriBuilder.append("&");
+            }
+            uriBuilder.append(URLEncoder.encode(param.getKey(), UTF_8));
+            uriBuilder.append('=');
+            uriBuilder.append(URLEncoder.encode(param.getValue(), UTF_8));
+        }
 
-    public void setOption(Option<?> aOption)
-    {
-        option = aOption;
-    }
-
-    public String getValue()
-    {
-        return value;
-    }
-
-    public void setValue(String aValue)
-    {
-        value = aValue;
+        return uriBuilder.toString();
     }
 }

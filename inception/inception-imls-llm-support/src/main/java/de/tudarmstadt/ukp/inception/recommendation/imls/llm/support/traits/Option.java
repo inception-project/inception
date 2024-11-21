@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.traits;
 
 import java.io.Serializable;
+import java.util.Map;
 
 public class Option<T>
     implements Serializable
@@ -47,5 +48,31 @@ public class Option<T>
     public String toString()
     {
         return "[" + name + "]";
+    }
+
+    public T parseValue(String aValue)
+    {
+        if (aValue == null) {
+            return null;
+        }
+
+        if (String.class.isAssignableFrom(valueClass)) {
+            return valueClass.cast(aValue);
+        }
+
+        if (Double.class.isAssignableFrom(valueClass)) {
+            return valueClass.cast(Double.parseDouble(aValue));
+        }
+
+        if (Integer.class.isAssignableFrom(valueClass)) {
+            return valueClass.cast(Integer.parseInt(aValue));
+        }
+
+        throw new IllegalStateException("Unable to parse values of [" + valueClass + "]");
+    }
+
+    public T get(Map<Option<?>, Object> aOptions)
+    {
+        return valueClass.cast(aOptions.get(this));
     }
 }

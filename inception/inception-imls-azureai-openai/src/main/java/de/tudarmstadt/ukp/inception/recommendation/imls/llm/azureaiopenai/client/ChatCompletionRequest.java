@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.llm.azureaiopenai.client;
 
+import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 import static java.util.Arrays.asList;
 
 import java.util.HashMap;
@@ -25,8 +26,9 @@ import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.traits.DoubleOption;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.traits.Option;
 
 public class ChatCompletionRequest
@@ -34,24 +36,36 @@ public class ChatCompletionRequest
     // See https://platform.openai.com/docs/api-reference/chat/create
     public static final Option<Integer> MAX_TOKENS = new Option<>(Integer.class, "max_tokens");
     public static final Option<Integer> SEED = new Option<>(Integer.class, "seed");
-    public static final Option<Integer> N = new Option<>(Integer.class, "n");
+    public static final Option<Double> FREQUENCY_PENALTY = new DoubleOption("frequency_penalty",
+            -2.0d, 2.0d);
+    public static final Option<Double> TEMPERATURE = new DoubleOption("temperature", 0.0d, 2.0d);
 
     public static List<Option<?>> getAllOptions()
     {
-        return asList(MAX_TOKENS, SEED, N);
+        return asList(MAX_TOKENS, SEED, FREQUENCY_PENALTY, TEMPERATURE);
     }
 
     private final @JsonIgnore String apiKey;
     private final @JsonIgnore String model;
+
+    private final @JsonInclude(NON_NULL) GenerateResponseFormat format;
+    private final @JsonInclude(NON_NULL) @JsonProperty("frequency_penalty") Double frequencyPenalty;
+    private final @JsonInclude(NON_NULL) @JsonProperty("temperature") Double temperature;
+    private final @JsonInclude(NON_NULL) @JsonProperty("seed") Integer seed;
+
     private final List<ChatCompletionMessage> messages;
-    private final @JsonInclude(Include.NON_NULL) GenerateResponseFormat format;
 
     private ChatCompletionRequest(Builder builder)
     {
         messages = asList(new ChatCompletionMessage("user", builder.prompt));
-        format = builder.format;
+
         model = builder.model;
         apiKey = builder.apiKey;
+
+        format = builder.format;
+        frequencyPenalty = FREQUENCY_PENALTY.get(builder.options);
+        temperature = TEMPERATURE.get(builder.options);
+        seed = SEED.get(builder.options);
     }
 
     public String getApiKey()
@@ -85,7 +99,7 @@ public class ChatCompletionRequest
         private String apiKey;
         private String prompt;
         private GenerateResponseFormat format;
-        private Map<String, Object> options = new HashMap<>();
+        private Map<Option<?>, Object> options = new HashMap<>();
 
         private Builder()
         {
@@ -93,35 +107,35 @@ public class ChatCompletionRequest
 
         public Builder withModel(String aModel)
         {
-            this.model = aModel;
+            model = aModel;
             return this;
         }
 
         public Builder withApiKey(String aApiKey)
         {
-            this.apiKey = aApiKey;
+            apiKey = aApiKey;
             return this;
         }
 
         public Builder withPrompt(String aPrompt)
         {
-            this.prompt = aPrompt;
+            prompt = aPrompt;
             return this;
         }
 
         public Builder withFormat(GenerateResponseFormat aFormat)
         {
-            this.format = aFormat;
+            format = aFormat;
             return this;
         }
 
         public <T> Builder withOption(Option<T> aOption, T aValue)
         {
             if (aValue != null) {
-                this.options.put(aOption.getName(), aValue);
+                options.put(aOption, aValue);
             }
             else {
-                this.options.remove(aOption.getName());
+                options.remove(aOption);
             }
             return this;
         }

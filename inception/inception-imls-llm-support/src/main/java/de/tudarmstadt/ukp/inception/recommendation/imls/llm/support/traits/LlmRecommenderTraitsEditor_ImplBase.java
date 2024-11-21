@@ -26,25 +26,19 @@ import static java.util.Collections.emptyList;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Optional;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
-import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.TextArea;
-import org.apache.wicket.markup.html.form.TextField;
-import org.apache.wicket.markup.html.list.ListItem;
-import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
-import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.model.util.ListModel;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
@@ -64,8 +58,6 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.response.Res
 import de.tudarmstadt.ukp.inception.security.client.auth.AuthenticationTraitsEditor;
 import de.tudarmstadt.ukp.inception.security.client.auth.NoAuthenticationTraitsEditor;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
-import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
-import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxSubmitLink;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.inception.support.markdown.MarkdownLabel;
 
@@ -74,13 +66,10 @@ public abstract class LlmRecommenderTraitsEditor_ImplBase
 {
     private static final long serialVersionUID = 1677442652521110324L;
 
-    private static final String MID_OPTION_SETTINGS = "optionSettings";
-    private static final String MID_OPTION_SETTINGS_CONTAINER = "optionSettingsContainer";
+    private static final String MID_OPTIONS_PANEL = "optionsPanel";
+    private static final String MID_PROMPT_CONTAINER = "promptContainer";
     private static final String MID_PROMPT_HINTS = "promptHints";
     private static final String MID_PROMPT = "prompt";
-    private static final String MID_OPTION_SETTINGS_FORM = "optionSettingsForm";
-    private static final String MID_ADD_OPTION = "addOption";
-    private static final String MID_OPTION = "option";
     private static final String MID_FORMAT = "format";
     private static final String MID_EXTRACTION_MODE = "extractionMode";
     private static final String MID_PROMPTING_MODE = "promptingMode";
@@ -94,7 +83,7 @@ public abstract class LlmRecommenderTraitsEditor_ImplBase
 
     private final CompoundPropertyModel<LlmRecommenderTraits> traits;
 
-    private final WebMarkupContainer optionSettingsContainer;
+    private final OptionsPanel optionSettingsContainer;
     private final IModel<List<OptionSetting>> optionSettings;
     private final IModel<List<Option<?>>> options;
 
@@ -144,10 +133,22 @@ public abstract class LlmRecommenderTraitsEditor_ImplBase
                 _target -> _target.add(model)));
         form.add(comboBox);
 
-        var promptContainer = new WebMarkupContainer("promptContainer");
+        var promptContainer = new WebMarkupContainer(MID_PROMPT_CONTAINER);
         promptContainer.setOutputMarkupPlaceholderTag(true);
         promptContainer.add(visibleWhenNot(traits.map(LlmRecommenderTraits::isInteractive)));
         form.add(promptContainer);
+
+        var optionSettingsList = new ArrayList<OptionSetting>();
+        for (var e : traits.getObject().getOptions().entrySet()) {
+            getOption(e.getKey()).ifPresent(option -> {
+                optionSettingsList.add(new OptionSetting(option, e.getValue()));
+            });
+        }
+        optionSettings = new ListModel<>(optionSettingsList);
+
+        optionSettingsContainer = new OptionsPanel(MID_OPTIONS_PANEL, options, optionSettings);
+        optionSettingsContainer.setOutputMarkupPlaceholderTag(true);
+        promptContainer.add(optionSettingsContainer);
 
         var presetSelect = new DropDownChoice<Preset>(MID_PRESET);
         presetSelect.setModel(Model.of());
@@ -169,25 +170,6 @@ public abstract class LlmRecommenderTraitsEditor_ImplBase
                 traits.bind(MID_EXTRACTION_MODE), getModel()));
         promptContainer.add(new ResponseFormatSelect(MID_FORMAT));
         add(form);
-
-        var optionSettingsForm = new Form<>(MID_OPTION_SETTINGS_FORM,
-                CompoundPropertyModel.of(new OptionSetting()));
-        optionSettingsForm.setVisibilityAllowed(false); // FIXME Not quite ready yet
-        promptContainer.add(optionSettingsForm);
-
-        optionSettingsForm.add(new DropDownChoice<Option<?>>(MID_OPTION, options));
-        optionSettingsForm.add(
-                new LambdaAjaxSubmitLink<OptionSetting>(MID_ADD_OPTION, this::addOptionSetting));
-
-        optionSettingsContainer = new WebMarkupContainer(MID_OPTION_SETTINGS_CONTAINER);
-        optionSettingsContainer.setOutputMarkupPlaceholderTag(true);
-        optionSettingsForm.add(optionSettingsContainer);
-
-        optionSettings = new ListModel<>(traits.getObject().getOptions().entrySet().stream()
-                .map(e -> new OptionSetting(e.getKey(), String.valueOf(e.getValue())))
-                .collect(Collectors.toCollection(ArrayList::new)));
-
-        optionSettingsContainer.add(createOptionSettingsList(MID_OPTION_SETTINGS, optionSettings));
 
         authenticationTraitsEditor = createAuthenticationTraitsEditor("authentication");
         form.add(authenticationTraitsEditor);
@@ -228,41 +210,6 @@ public abstract class LlmRecommenderTraitsEditor_ImplBase
         aTarget.add(aForm);
     }
 
-    private ListView<OptionSetting> createOptionSettingsList(String aId,
-            IModel<List<OptionSetting>> aOptionSettings)
-    {
-        return new ListView<OptionSetting>(aId, aOptionSettings)
-        {
-            private static final long serialVersionUID = 244305980337592760L;
-
-            @Override
-            protected void populateItem(ListItem<OptionSetting> aItem)
-            {
-                var optionSetting = aItem.getModelObject();
-
-                aItem.add(new Label(MID_OPTION, optionSetting.getOption()));
-                aItem.add(new TextField<>("value", PropertyModel.of(optionSetting, "value")));
-                aItem.add(new LambdaAjaxLink("removeOption",
-                        _target -> removeOptionSetting(_target, aItem.getModelObject())));
-            }
-        };
-    }
-
-    private void addOptionSetting(AjaxRequestTarget aTarget, Form<OptionSetting> aForm)
-    {
-        optionSettings.getObject()
-                .add(new OptionSetting(aForm.getModel().getObject().getOption(), ""));
-
-        aTarget.addChildren(getPage(), IFeedback.class);
-        aTarget.add(optionSettingsContainer);
-    }
-
-    private void removeOptionSetting(AjaxRequestTarget aTarget, OptionSetting aBinding)
-    {
-        optionSettings.getObject().remove(aBinding);
-        aTarget.add(optionSettingsContainer);
-    }
-
     private String getPromptHints()
     {
         return traits.getObject().getPromptingMode().getHints();
@@ -276,6 +223,13 @@ public abstract class LlmRecommenderTraitsEditor_ImplBase
     protected List<String> listUrls()
     {
         return emptyList();
+    }
+
+    protected Optional<Option<?>> getOption(String aOption)
+    {
+        return options.getObject().stream() //
+                .filter(o -> o.getName().equals(aOption)) //
+                .findFirst();
     }
 
     public abstract RecommendationEngineFactory<LlmRecommenderTraits> getToolFactory();

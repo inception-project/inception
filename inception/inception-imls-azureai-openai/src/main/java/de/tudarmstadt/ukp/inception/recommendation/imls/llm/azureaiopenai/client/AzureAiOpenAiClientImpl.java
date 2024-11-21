@@ -20,21 +20,17 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.llm.azureaiopenai.clien
 import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.commons.lang3.StringUtils.appendIfMissing;
+import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
-import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpRequest.BodyPublishers;
 import java.net.http.HttpResponse;
-import java.nio.charset.StandardCharsets;
-import java.util.Map;
-import java.util.Map.Entry;
 
 import org.apache.commons.io.IOUtils;
-import org.springframework.http.HttpHeaders;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -50,12 +46,12 @@ public class AzureAiOpenAiClientImpl
 
     public AzureAiOpenAiClientImpl()
     {
-        this.client = HttpClient.newBuilder().build();
+        client = HttpClient.newBuilder().build();
     }
 
     public AzureAiOpenAiClientImpl(HttpClient aClient)
     {
-        this.client = aClient;
+        client = aClient;
     }
 
     protected HttpResponse<InputStream> sendRequest(HttpRequest aRequest) throws IOException
@@ -75,40 +71,10 @@ public class AzureAiOpenAiClientImpl
     protected String getResponseBody(HttpResponse<InputStream> response) throws IOException
     {
         if (response.body() != null) {
-            return IOUtils.toString(response.body(), StandardCharsets.UTF_8);
-        }
-        else {
-            return "";
-        }
-    }
-
-    protected <T> T deserializeResponse(HttpResponse<String> response, Class<T> aType)
-        throws IOException
-    {
-        try {
-            return objectMapper.readValue(response.body(), aType);
-        }
-        catch (IOException e) {
-            throw new IOException("Error while deserializing server response!", e);
-        }
-    }
-
-    protected String urlEncodeParameters(Map<String, String> aParameters)
-    {
-        if (aParameters.isEmpty()) {
-            return "";
-        }
-        StringBuilder uriBuilder = new StringBuilder();
-        for (Entry<String, String> param : aParameters.entrySet()) {
-            if (uriBuilder.length() > 0) {
-                uriBuilder.append("&");
-            }
-            uriBuilder.append(URLEncoder.encode(param.getKey(), UTF_8));
-            uriBuilder.append('=');
-            uriBuilder.append(URLEncoder.encode(param.getValue(), UTF_8));
+            return IOUtils.toString(response.body(), UTF_8);
         }
 
-        return uriBuilder.toString();
+        return "";
     }
 
     @Override
@@ -117,7 +83,7 @@ public class AzureAiOpenAiClientImpl
         var request = HttpRequest.newBuilder() //
                 .uri(URI.create(
                         appendIfMissing(aUrl, "/") + "chat/completions?api-version=2023-05-15")) //
-                .header(HttpHeaders.CONTENT_TYPE, "application/json") //
+                .header(CONTENT_TYPE, "application/json") //
                 .header("api-key", aRequest.getApiKey()) //
                 .POST(BodyPublishers.ofString(JSONUtil.toJsonString(aRequest), UTF_8)) //
                 .build();

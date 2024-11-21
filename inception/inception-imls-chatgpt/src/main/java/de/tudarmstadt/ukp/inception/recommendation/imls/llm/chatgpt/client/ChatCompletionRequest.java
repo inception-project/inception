@@ -94,36 +94,42 @@ public class ChatCompletionRequest
 
         public Builder withModel(String aModel)
         {
-            this.model = aModel;
+            model = aModel;
             return this;
         }
 
         public Builder withApiKey(String aApiKey)
         {
-            this.apiKey = aApiKey;
+            apiKey = aApiKey;
             return this;
         }
 
         public Builder withPrompt(String aPrompt)
         {
-            this.prompt = aPrompt;
+            prompt = aPrompt;
             return this;
         }
 
         public Builder withResponseFormat(ResponseFormat aFormat)
         {
-            this.format = aFormat;
+            format = aFormat;
             return this;
         }
 
         public <T> Builder withOption(Option<T> aOption, T aValue)
         {
             if (aValue != null) {
-                this.options.put(aOption.getName(), aValue);
+                options.put(aOption.getName(), aValue);
             }
             else {
-                this.options.remove(aOption.getName());
+                options.remove(aOption.getName());
             }
+            return this;
+        }
+
+        public Builder withOptions(Map<String, Object> aOptions)
+        {
+            options.putAll(aOptions);
             return this;
         }
 

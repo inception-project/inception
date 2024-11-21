@@ -21,13 +21,11 @@ import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import java.io.IOException;
-import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -106,19 +104,6 @@ public class HttpClientImplBase
 
     protected String urlEncodeParameters(Map<String, String> aParameters)
     {
-        if (aParameters.isEmpty()) {
-            return "";
-        }
-        StringBuilder uriBuilder = new StringBuilder();
-        for (Entry<String, String> param : aParameters.entrySet()) {
-            if (uriBuilder.length() > 0) {
-                uriBuilder.append("&");
-            }
-            uriBuilder.append(URLEncoder.encode(param.getKey(), UTF_8));
-            uriBuilder.append('=');
-            uriBuilder.append(URLEncoder.encode(param.getValue(), UTF_8));
-        }
-
-        return uriBuilder.toString();
+        return HttpClientUtils.urlEncodeParameters(aParameters);
     }
 }

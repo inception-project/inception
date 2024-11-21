@@ -31,9 +31,9 @@ import org.apache.wicket.validation.validator.UrlValidator;
 
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
-import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaClientImpl;
-import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaGenerateRequest;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaClient;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaModel;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaOptions;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.preset.Preset;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.traits.LlmRecommenderTraits;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.traits.LlmRecommenderTraitsEditor_ImplBase;
@@ -44,11 +44,12 @@ public class OllamaRecommenderTraitsEditor
     private static final long serialVersionUID = 1677442652521110324L;
 
     private @SpringBean RecommendationEngineFactory<OllamaRecommenderTraits> toolFactory;
+    private @SpringBean OllamaClient ollamaClient;
 
     public OllamaRecommenderTraitsEditor(String aId, IModel<Recommender> aRecommender,
             IModel<List<Preset>> aPresets)
     {
-        super(aId, aRecommender, aPresets, new ListModel<>(OllamaGenerateRequest.getAllOptions()));
+        super(aId, aRecommender, aPresets, new ListModel<>(OllamaOptions.getAllOptions()));
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
@@ -66,9 +67,8 @@ public class OllamaRecommenderTraitsEditor
             return emptyList();
         }
 
-        var client = new OllamaClientImpl();
         try {
-            return client.listModels(url).stream().map(OllamaModel::getName).toList();
+            return ollamaClient.listModels(url).stream().map(OllamaModel::getName).toList();
         }
         catch (IOException e) {
             return emptyList();

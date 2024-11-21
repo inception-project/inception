@@ -17,67 +17,65 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.llm.chatgpt.client;
 
-import java.util.List;
-
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class ChatCompletionResponse
+public class ChatCompletionTimeInfo
 {
-    private @JsonProperty("model") String model;
-    private @JsonProperty("created") long createdAt;
-    private @JsonProperty("choices") List<ChatCompletionChoice> choices;
-    private @JsonProperty("usage") ChatCompletionUsage usage;
-    private @JsonProperty("time_info") ChatCompletionTimeInfo timeInfo;
+    private @JsonProperty("queue_time") double queueTime;
+    private @JsonProperty("prompt_time") double promptTime;
+    private @JsonProperty("completion_time") double completionTime;
+    private @JsonProperty("total_time") double totalTime;
+    private @JsonProperty("created") long created;
 
-    public String getModel()
+    public double getQueueTime()
     {
-        return model;
+        return queueTime;
     }
 
-    public void setModel(String aModel)
+    public void setQueueTime(double aQueueTime)
     {
-        model = aModel;
+        queueTime = aQueueTime;
     }
 
-    public long getCreatedAt()
+    public double getPromptTime()
     {
-        return createdAt;
+        return promptTime;
     }
 
-    public void setCreatedAt(long aCreatedAt)
+    public void setPromptTime(double aPromptTime)
     {
-        createdAt = aCreatedAt;
+        promptTime = aPromptTime;
     }
 
-    public List<ChatCompletionChoice> getChoices()
+    public double getCompletionTime()
     {
-        return choices;
+        return completionTime;
     }
 
-    public void setChoices(List<ChatCompletionChoice> aChoices)
+    public void setCompletionTime(double aCompletionTime)
     {
-        choices = aChoices;
+        completionTime = aCompletionTime;
     }
 
-    public ChatCompletionUsage getUsage()
+    public double getTotalTime()
     {
-        return usage;
+        return totalTime;
     }
 
-    public void setUsage(ChatCompletionUsage aUsage)
+    public void setTotalTime(double aTotalTime)
     {
-        usage = aUsage;
+        totalTime = aTotalTime;
     }
 
-    public ChatCompletionTimeInfo getTimeInfo()
+    public long getCreated()
     {
-        return timeInfo;
+        return created;
     }
 
-    public void setTimeInfo(ChatCompletionTimeInfo aTimeInfo)
+    public void setCreated(long aCreated)
     {
-        timeInfo = aTimeInfo;
+        created = aCreated;
     }
 }
