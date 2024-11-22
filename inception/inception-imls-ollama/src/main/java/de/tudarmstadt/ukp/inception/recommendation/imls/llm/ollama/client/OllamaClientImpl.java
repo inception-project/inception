@@ -20,23 +20,22 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client;
 import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.commons.lang3.StringUtils.appendIfMissing;
+import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.invoke.MethodHandles;
 import java.net.URI;
-import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpRequest.BodyPublishers;
 import java.net.http.HttpResponse;
-import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 
 import org.apache.commons.io.IOUtils;
-import org.springframework.http.HttpHeaders;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -45,19 +44,28 @@ import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 public class OllamaClientImpl
     implements OllamaClient
 {
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
+    private static final Duration TIMEOUT = Duration.ofSeconds(10);
+
     public static final int HTTP_BAD_REQUEST = 400;
 
+    private final OllamaMetrics metrics;
+
     protected final HttpClient client;
+
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public OllamaClientImpl()
     {
         client = HttpClient.newBuilder().build();
+        metrics = new OllamaMetricsImpl();
     }
 
-    public OllamaClientImpl(HttpClient aClient)
+    public OllamaClientImpl(HttpClient aClient, OllamaMetrics aMetrics)
     {
         client = aClient;
+        metrics = aMetrics;
     }
 
     protected HttpResponse<InputStream> sendRequest(HttpRequest aRequest) throws IOException
@@ -77,40 +85,10 @@ public class OllamaClientImpl
     protected String getResponseBody(HttpResponse<InputStream> response) throws IOException
     {
         if (response.body() != null) {
-            return IOUtils.toString(response.body(), StandardCharsets.UTF_8);
-        }
-        else {
-            return "";
-        }
-    }
-
-    protected <T> T deserializeResponse(HttpResponse<String> response, Class<T> aType)
-        throws IOException
-    {
-        try {
-            return objectMapper.readValue(response.body(), aType);
-        }
-        catch (IOException e) {
-            throw new IOException("Error while deserializing server response!", e);
-        }
-    }
-
-    protected String urlEncodeParameters(Map<String, String> aParameters)
-    {
-        if (aParameters.isEmpty()) {
-            return "";
-        }
-        StringBuilder uriBuilder = new StringBuilder();
-        for (Entry<String, String> param : aParameters.entrySet()) {
-            if (uriBuilder.length() > 0) {
-                uriBuilder.append("&");
-            }
-            uriBuilder.append(URLEncoder.encode(param.getKey(), UTF_8));
-            uriBuilder.append('=');
-            uriBuilder.append(URLEncoder.encode(param.getValue(), UTF_8));
+            return IOUtils.toString(response.body(), UTF_8);
         }
 
-        return uriBuilder.toString();
+        return "";
     }
 
     @Override
@@ -118,32 +96,55 @@ public class OllamaClientImpl
     {
         var request = HttpRequest.newBuilder() //
                 .uri(URI.create(appendIfMissing(aUrl, "/") + "api/generate")) //
-                .header(HttpHeaders.CONTENT_TYPE, "application/json")
+                .header(CONTENT_TYPE, "application/json")
                 .POST(BodyPublishers.ofString(JSONUtil.toJsonString(aRequest), UTF_8)) //
                 .build();
 
-        var response = sendRequest(request);
+        var rawResponse = sendRequest(request);
 
-        handleError(response);
+        handleError(rawResponse);
 
         var result = new StringBuilder();
-        try (var is = response.body()) {
+        try (var is = rawResponse.body()) {
             var iter = objectMapper.readerFor(OllamaGenerateResponse.class).readValues(is);
             while (iter.hasNext()) {
-                var chunk = (OllamaGenerateResponse) iter.nextValue();
-                result.append(chunk.getResponse());
+                var response = (OllamaGenerateResponse) iter.nextValue();
+
+                if (LOG.isDebugEnabled()) {
+                    var loadDuration = response.getLoadDuration() / 1_000_000_000;
+                    var promptEvalDuration = response.getPromptEvalDuration() / 1_000_000_000d;
+                    var promptEvalTokenPerSecond = response.getPromptEvalCount()
+                            / promptEvalDuration;
+                    var evalDuration = response.getEvalDuration() / 1_000_000_000d;
+                    var evalTokenPerSecond = response.getEvalCount() / evalDuration;
+                    var totalDuration = response.getTotalDuration() / 1_000_000_000;
+                    LOG.debug("Tokens  - prompt: {} ({} per sec) response: {} ({} per sec)", //
+                            response.getPromptEvalCount(), //
+                            promptEvalTokenPerSecond, //
+                            response.getEvalCount(), //
+                            evalTokenPerSecond);
+                    LOG.debug("Timings - load: {}sec  prompt: {}sec  response: {}s  total: {}sec", //
+                            loadDuration, promptEvalDuration, evalDuration, totalDuration);
+                }
+
+                if (metrics != null) {
+                    metrics.handleResponse(response);
+                }
+
+                result.append(response.getResponse());
             }
         }
 
         return result.toString().trim();
     }
 
+    @Override
     public List<OllamaModel> listModels(String aUrl) throws IOException
     {
         var request = HttpRequest.newBuilder() //
                 .uri(URI.create(appendIfMissing(aUrl, "/") + "api/tags")) //
-                .header(HttpHeaders.CONTENT_TYPE, "application/json").GET() //
-                .timeout(Duration.ofSeconds(10)) //
+                .header(CONTENT_TYPE, "application/json").GET() //
+                .timeout(TIMEOUT) //
                 .build();
 
         var response = sendRequest(request);

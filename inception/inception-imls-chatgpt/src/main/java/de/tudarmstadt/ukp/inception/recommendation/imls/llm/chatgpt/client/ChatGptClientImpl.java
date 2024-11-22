@@ -19,24 +19,25 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.llm.chatgpt.client;
 
 import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Comparator.comparing;
 import static org.apache.commons.lang3.StringUtils.appendIfMissing;
+import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.invoke.MethodHandles;
 import java.net.URI;
-import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpRequest.BodyPublishers;
 import java.net.http.HttpResponse;
 import java.time.Duration;
-import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 
 import org.apache.commons.io.IOUtils;
-import org.springframework.http.HttpHeaders;
+import org.apache.commons.lang3.math.NumberUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -45,6 +46,17 @@ import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 public class ChatGptClientImpl
     implements ChatGptClient
 {
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
+    private static final String AUTHORIZATION = "Authorization";
+
+    private static final String LIMIT_REQUESTS_DAY = "x-ratelimit-limit-requests-day";
+    private static final String LIMIT_TOKENS_MINUTE = "x-ratelimit-limit-tokens-minute";
+    private static final String REMAINING_REQUESTS_DAY = "x-ratelimit-remaining-requests-day";
+    private static final String REMAINING_TOKENS_MINUTE = "x-ratelimit-remaining-tokens-minute";
+    private static final String RESET_REQUESTS_DAY = "x-ratelimit-reset-requests-day";
+    private static final String RESET_TOKENS_MINUTE = "x-ratelimit-reset-tokens-minute";
+
     public static final int HTTP_BAD_REQUEST = 400;
 
     protected final HttpClient client;
@@ -83,43 +95,13 @@ public class ChatGptClientImpl
         return "";
     }
 
-    protected <T> T deserializeResponse(HttpResponse<String> response, Class<T> aType)
-        throws IOException
-    {
-        try {
-            return objectMapper.readValue(response.body(), aType);
-        }
-        catch (IOException e) {
-            throw new IOException("Error while deserializing server response!", e);
-        }
-    }
-
-    protected String urlEncodeParameters(Map<String, String> aParameters)
-    {
-        if (aParameters.isEmpty()) {
-            return "";
-        }
-
-        var uriBuilder = new StringBuilder();
-        for (Entry<String, String> param : aParameters.entrySet()) {
-            if (uriBuilder.length() > 0) {
-                uriBuilder.append("&");
-            }
-            uriBuilder.append(URLEncoder.encode(param.getKey(), UTF_8));
-            uriBuilder.append('=');
-            uriBuilder.append(URLEncoder.encode(param.getValue(), UTF_8));
-        }
-
-        return uriBuilder.toString();
-    }
-
     @Override
     public String generate(String aUrl, ChatCompletionRequest aRequest) throws IOException
     {
         var request = HttpRequest.newBuilder() //
                 .uri(URI.create(appendIfMissing(aUrl, "/") + "chat/completions")) //
-                .header(HttpHeaders.CONTENT_TYPE, "application/json") //
-                .header("Authorization", "Bearer " + aRequest.getApiKey()) //
+                .header(CONTENT_TYPE, "application/json") //
+                .header(AUTHORIZATION, "Bearer " + aRequest.getApiKey()) //
                 .POST(BodyPublishers.ofString(JSONUtil.toJsonString(aRequest), UTF_8)) //
                 .build();
 
@@ -129,7 +111,53 @@ public class ChatGptClientImpl
 
         var result = new StringBuilder();
         try (var is = response.body()) {
-            var completion = objectMapper.readValue(is, ChatCompletionResponse.class);
+            var buffer = IOUtils.toString(is, UTF_8);
+            if (LOG.isTraceEnabled()) {
+                for (var header : response.headers().map().entrySet()) {
+                    LOG.trace("Header - {}: {}", header.getKey(), header.getValue());
+                }
+                LOG.trace("JSON Response: {}", buffer);
+            }
+
+            var rateLimitInfo = new RateLimitInfo();
+            response.headers().firstValue(LIMIT_REQUESTS_DAY) //
+                    .map(NumberUtils::toInt) //
+                    .ifPresent(rateLimitInfo::setLimitRequestsDay);
+            response.headers().firstValue(LIMIT_TOKENS_MINUTE) //
+                    .map(NumberUtils::toInt) //
+                    .ifPresent(rateLimitInfo::setLimitTokensMinute);
+            response.headers().firstValue(REMAINING_REQUESTS_DAY) //
+                    .map(NumberUtils::toInt) //
+                    .ifPresent(rateLimitInfo::setRemainingRequestsDay);
+            response.headers().firstValue(REMAINING_TOKENS_MINUTE) //
+                    .map(NumberUtils::toInt) //
+                    .ifPresent(rateLimitInfo::setRemainingTokensMinute);
+            response.headers().firstValue(RESET_REQUESTS_DAY) //
+                    .map(NumberUtils::toDouble) //
+                    .ifPresent(rateLimitInfo::setResetRequestsDay);
+            response.headers().firstValue(RESET_TOKENS_MINUTE) //
+                    .map(NumberUtils::toDouble) //
+                    .ifPresent(rateLimitInfo::setResetTokensMinute);
+
+            var completion = objectMapper.readValue(buffer, ChatCompletionResponse.class);
+
+            if (LOG.isDebugEnabled()) {
+                var promptEvalTokenPerSecond = completion.getUsage().getPromptTokens()
+                        / completion.getTimeInfo().getPromptTime();
+                var evalTokenPerSecond = completion.getUsage().getCompletionTokens()
+                        / completion.getTimeInfo().getCompletionTime();
+                LOG.debug("Tokens  - prompt: {} ({} per sec) response: {} ({} per sec)", //
+                        completion.getUsage().getPromptTokens(), //
+                        promptEvalTokenPerSecond, //
+                        completion.getUsage().getCompletionTokens(), //
+                        evalTokenPerSecond);
+                LOG.debug("Timings - queue: {}sec  prompt: {}sec  response: {}s  total: {}sec", //
+                        completion.getTimeInfo().getQueueTime(),
+                        completion.getTimeInfo().getPromptTime(),
+                        completion.getTimeInfo().getCompletionTime(),
+                        completion.getTimeInfo().getTotalTime());
+            }
+
             result.append(completion.getChoices().get(0).getMessage().getContent());
         }
 
@@ -140,8 +168,8 @@ public class ChatGptClientImpl
     {
         var request = HttpRequest.newBuilder() //
                 .uri(URI.create(appendIfMissing(aUrl, "/") + "models")) //
-                .header(HttpHeaders.CONTENT_TYPE, "application/json").GET() //
-                .header("Authorization", "Bearer " + aRequest.getApiKey()) //
+                .header(CONTENT_TYPE, "application/json").GET() //
+                .header(AUTHORIZATION, "Bearer " + aRequest.getApiKey()) //
                 .timeout(Duration.ofSeconds(10)) //
                 .build();
 
@@ -151,7 +179,7 @@ public class ChatGptClientImpl
 
         try (var is = response.body()) {
             return objectMapper.readValue(is, ChatGptModelResponse.class).getData().stream() //
-                    .sorted(Comparator.comparing(ChatGptModel::getId)) //
+                    .sorted(comparing(ChatGptModel::getId)) //
                     .toList();
         }
     }

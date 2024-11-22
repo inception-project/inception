@@ -102,26 +102,7 @@
           <textarea wicket:id="prompt" class="form-control" rows="10"/>
         </div>
       </div>
-      <form wicket:id="optionSettingsForm">
-        <div class="row form-row">
-          <label class="col-sm-3 col-form-label">
-            <wicket:message key="options"/>
-          </label>
-          <div class="col-sm-9">
-            <div class="input-group">
-              <select wicket:id="option" class="form-select"/>
-              <button wicket:id="addOption" class="btn btn-outline-secondary" type="button">Add</button>
-            </div>
-            <div wicket:id="optionSettingsContainer">
-              <div wicket:id="optionSettings">
-                <span wicket:id="option"/>
-                <input wicket:id="value" type="text" class="form-control"/>
-              <button wicket:id="removeOption" class="btn btn-outline-secondary" type="button">Remove</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </form>
+      <div wicket:id="optionsPanel"/>
     </div>
   </form>
 </wicket:panel>

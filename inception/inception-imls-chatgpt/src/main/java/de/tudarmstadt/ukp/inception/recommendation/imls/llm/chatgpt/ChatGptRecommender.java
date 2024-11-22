@@ -56,6 +56,7 @@ public class ChatGptRecommender
         var request = ChatCompletionRequest.builder() //
                 .withApiKey(((ApiKeyAuthenticationTraits) traits.getAuthentication()).getApiKey()) //
                 .withPrompt(aPrompt) //
+                .withOptions(traits.getOptions()) //
                 .withModel(traits.getModel());
 
         if (traits.getFormat() == JSON) {

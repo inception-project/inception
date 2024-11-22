@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.config;
 
+import java.net.http.HttpClient;
+
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -24,6 +26,7 @@ import org.springframework.context.annotation.Configuration;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.OllamaRecommenderFactory;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaClient;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaClientImpl;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaMetrics;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
 @Configuration
@@ -31,9 +34,9 @@ import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 public class OllamaRecommenderAutoConfiguration
 {
     @Bean
-    public OllamaClient ollamaClient()
+    public OllamaClient ollamaClient(OllamaMetrics aMetrics)
     {
-        return new OllamaClientImpl();
+        return new OllamaClientImpl(HttpClient.newBuilder().build(), aMetrics);
     }
 
     @Bean
