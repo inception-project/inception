@@ -29,9 +29,15 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 public class StringMatchingRecommenderTraits
     implements Serializable
 {
-    private static final long serialVersionUID = -7433406243352691789L;
+    private static final long serialVersionUID = -7329491581513178640L;
 
     private boolean ignoreCase;
+
+    private String excludePattern;
+
+    private int minLength = 3;
+
+    // private int maxLength = 255;
 
     public boolean isIgnoreCase()
     {
@@ -42,4 +48,35 @@ public class StringMatchingRecommenderTraits
     {
         ignoreCase = aIgnoreCase;
     }
+
+    public int getMinLength()
+    {
+        return minLength;
+    }
+
+    public void setMinLength(int aMinLength)
+    {
+        minLength = aMinLength;
+    }
+
+    public String getExcludePattern()
+    {
+        return excludePattern;
+    }
+
+    public void setExcludePattern(String aExcludePattern)
+    {
+        excludePattern = aExcludePattern;
+    }
+
+    // public int getMaxLength()
+    // {
+    // return maxLength;
+    // }
+    //
+    // public void setMaxLength(int aMaxLength)
+    // {
+    // maxLength = aMaxLength;
+    // }
+
 }
