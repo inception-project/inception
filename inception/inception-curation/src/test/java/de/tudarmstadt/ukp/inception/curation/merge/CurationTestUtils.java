@@ -47,7 +47,7 @@ import org.dkpro.core.io.xmi.XmiReader;
 
 import de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoTsv2Reader;
 import de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoTsv3XReader;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.support.WebAnnoConst;
 
@@ -271,7 +271,7 @@ public class CurationTestUtils
     public static FeatureStructure makeLinkFS(JCas aCas, String aRole, int aTargetBegin,
             int aTargetEnd)
     {
-        var token = new Token(aCas, aTargetBegin, aTargetEnd);
+        var token = new NamedEntity(aCas, aTargetBegin, aTargetEnd);
         token.addToIndexes();
 
         return buildFS(aCas.getCas(), LINK_TYPE) //
