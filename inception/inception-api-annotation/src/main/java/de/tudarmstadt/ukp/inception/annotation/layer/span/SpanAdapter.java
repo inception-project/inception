@@ -17,8 +17,11 @@
  */
 package de.tudarmstadt.ukp.inception.annotation.layer.span;
 
+import static de.tudarmstadt.ukp.inception.annotation.layer.span.SpanAdapter.SpanOption.TRIM;
+import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectAnnotationByAddr;
 import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectByAddr;
 import static java.lang.System.currentTimeMillis;
+import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.apache.uima.cas.text.AnnotationPredicates.colocated;
 import static org.apache.uima.fit.util.CasUtil.getType;
@@ -35,6 +38,7 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
+import org.apache.uima.jcas.tcas.Annotation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
@@ -45,6 +49,8 @@ import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.annotation.layer.TypeAdapter_ImplBase;
 import de.tudarmstadt.ukp.inception.rendering.selection.Selection;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
@@ -52,6 +58,7 @@ import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
+import de.tudarmstadt.ukp.inception.support.text.TrimUtils;
 
 /**
  * Manage interactions with annotations on a span layer.
@@ -59,6 +66,11 @@ import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 public class SpanAdapter
     extends TypeAdapter_ImplBase
 {
+    public enum SpanOption
+    {
+        TRIM;
+    }
+
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private final List<SpanLayerBehavior> behaviors;
@@ -108,6 +120,14 @@ public class SpanAdapter
 
     public AnnotationFS handle(CreateSpanAnnotationRequest aRequest) throws AnnotationException
     {
+        if (Token._TypeName.equals(getAnnotationTypeName())) {
+            return splitUnit(aRequest, Token.class);
+        }
+
+        if (Sentence._TypeName.equals(getAnnotationTypeName())) {
+            return splitUnit(aRequest, Sentence.class);
+        }
+
         var request = aRequest;
 
         // Adjust the creation request (e.g. adjust offsets to the configured granularity) or
@@ -155,7 +175,21 @@ public class SpanAdapter
 
     public AnnotationFS handle(MoveSpanAnnotationRequest aRequest) throws AnnotationException
     {
+        var ann = aRequest.getAnnotation();
+        if (aRequest.getBegin() == ann.getBegin() && aRequest.getEnd() == ann.getEnd()) {
+            // NOP
+            return ann;
+        }
+
         var request = aRequest;
+
+        if (Token._TypeName.equals(getAnnotationTypeName())) {
+            return handleTokenMove(aRequest);
+        }
+
+        if (Sentence._TypeName.equals(getAnnotationTypeName())) {
+            return handleSentenceMove(aRequest);
+        }
 
         // Adjust the move request (e.g. adjust offsets to the configured granularity) or
         // reject the request (e.g. reject cross-sentence annotations)
@@ -176,11 +210,96 @@ public class SpanAdapter
         return request.getAnnotation();
     }
 
-    private AnnotationFS createSpanAnnotation(CAS aCas, int aBegin, int aEnd)
+    private AnnotationFS handleSentenceMove(MoveSpanAnnotationRequest aRequest)
+        throws AnnotationException
+    {
+        throw new IllegalPlacementException("Moving/resizing units currently not supported");
+    }
+
+    private AnnotationFS handleTokenMove(MoveSpanAnnotationRequest aRequest)
+        throws AnnotationException
+    {
+        throw new IllegalPlacementException("Moving/resizing units currently not supported");
+
+        // var cas = aRequest.getCas();
+        // var ann = (Annotation) aRequest.getAnnotation();
+        //
+        // if (aRequest.getBegin() != ann.getBegin() && aRequest.getEnd() != ann.getEnd()) {
+        // throw new IllegalPlacementException(
+        // "Can only resize at start or at end. Cannot move or resize at both ends at the same
+        // time.");
+        // }
+        //
+        // if (aRequest.getBegin() != ann.getBegin()) {
+        // // Expand at begin
+        // if (aRequest.getBegin() < ann.getBegin()) {
+        //
+        // }
+        //
+        // // Reduce at begin
+        // if (aRequest.getBegin() > ann.getBegin()) {
+        //
+        // }
+        // }
+        //
+        // if (aRequest.getEnd() != ann.getEnd()) {
+        // // Expand at end
+        // if (aRequest.getEnd() > ann.getEnd()) {
+        //
+        // }
+        //
+        // // Reduce at end
+        // if (aRequest.getEnd() < ann.getEnd()) {
+        // var followingToken = cas.select(Token.class).following(ann).singleOrNull();
+        // if (followingToken == null) {
+        // // We make the last token smaller, so we need to add a new last token in order
+        // // to keep the entire text covered in tokens.
+        // }
+        // else {
+        // // We have a following token that we can enlarge
+        // }
+        // }
+        // }
+        //
+        // return ann;
+    }
+
+    private <T extends Annotation> AnnotationFS splitUnit(CreateSpanAnnotationRequest aRequest,
+            Class<T> unitType)
+        throws AnnotationException
+    {
+        if (aRequest.getBegin() != aRequest.getEnd()) {
+            throw new IllegalPlacementException(
+                    "Can only split unit, not create an entirely new one.");
+        }
+
+        var cas = aRequest.getCas();
+        var unit = cas.select(unitType) //
+                .covering(aRequest.getBegin(), aRequest.getBegin()) //
+                .singleOrNull();
+
+        var oldBegin = unit.getBegin();
+        var oldEnd = unit.getEnd();
+        var head = moveSpanAnnotation(cas, unit, unit.getBegin(), aRequest.getBegin(), TRIM);
+        publishEvent(() -> new SpanMovedEvent(this, aRequest.getDocument(),
+                aRequest.getDocumentOwner(), getLayer(), head, oldBegin, oldEnd));
+
+        var tail = createSpanAnnotation(cas, aRequest.getEnd(), oldEnd, TRIM);
+        publishEvent(() -> new SpanCreatedEvent(this, aRequest.getDocument(),
+                aRequest.getDocumentOwner(), getLayer(), tail));
+        return tail;
+    }
+
+    private AnnotationFS createSpanAnnotation(CAS aCas, int aBegin, int aEnd,
+            SpanOption... aOptions)
         throws AnnotationException
     {
         var type = CasUtil.getType(aCas, getAnnotationTypeName());
-        var newAnnotation = aCas.createAnnotation(type, aBegin, aEnd);
+        var newAnnotation = (Annotation) aCas.createAnnotation(type, aBegin, aEnd);
+
+        if (asList(aOptions).contains(TRIM)) {
+            TrimUtils.trim(aCas.getDocumentText(), newAnnotation);
+        }
 
         LOG.trace("Created span annotation {}-{} [{}]", newAnnotation.getBegin(),
                 newAnnotation.getEnd(), newAnnotation.getCoveredText());
@@ -197,7 +316,7 @@ public class SpanAdapter
     }
 
     private AnnotationFS moveSpanAnnotation(CAS aCas, AnnotationFS aAnnotation, int aBegin,
-            int aEnd)
+            int aEnd, SpanOption... aOptions)
     {
         var oldCoveredText = aAnnotation.getCoveredText();
         var oldBegin = aAnnotation.getBegin();
@@ -206,6 +325,10 @@ public class SpanAdapter
         aCas.removeFsFromIndexes(aAnnotation);
         aAnnotation.setBegin(aBegin);
         aAnnotation.setEnd(aEnd);
+
+        if (asList(aOptions).contains(TRIM)) {
+            TrimUtils.trim(aCas.getDocumentText(), (Annotation) aAnnotation);
+        }
 
         LOG.trace("Moved span annotation from {}-{} [{}] to {}-{} [{}]", oldBegin, oldEnd,
                 oldCoveredText, aAnnotation.getBegin(), aAnnotation.getEnd(),
@@ -218,7 +341,16 @@ public class SpanAdapter
 
     @Override
     public void delete(SourceDocument aDocument, String aDocumentOwner, CAS aCas, VID aVid)
+        throws AnnotationException
     {
+        if (Token._TypeName.equals(getAnnotationTypeName())) {
+            deleteAndMergeUnit(aDocument, aDocumentOwner, aCas, aVid, Token.class);
+        }
+
+        if (Sentence._TypeName.equals(getAnnotationTypeName())) {
+            deleteAndMergeUnit(aDocument, aDocumentOwner, aCas, aVid, Sentence.class);
+        }
+
         var fs = selectByAddr(aCas, AnnotationFS.class, aVid.getId());
         aCas.removeFsFromIndexes(fs);
 
@@ -228,6 +360,37 @@ public class SpanAdapter
         }
 
         publishEvent(() -> new SpanDeletedEvent(this, aDocument, aDocumentOwner, getLayer(), fs));
+    }
+
+    private <T extends Annotation> void deleteAndMergeUnit(SourceDocument aDocument, String aDocumentOwner,
+            CAS aCas, VID aVid, Class<T> aClass)
+        throws AnnotationException
+    {
+        var unit = selectAnnotationByAddr(aCas, aVid.getId());
+
+        // First try to merge with the preceding unit
+        var precedingUnit = aCas.select(aClass).preceding(unit).limit(1).singleOrNull();
+        if (precedingUnit != null) {
+            var oldBegin = precedingUnit.getBegin();
+            var oldEnd = precedingUnit.getEnd();
+            moveSpanAnnotation(aCas, precedingUnit, precedingUnit.getBegin(), unit.getEnd(), TRIM);
+            publishEvent(() -> new SpanMovedEvent(this, aDocument, aDocumentOwner, getLayer(),
+                    precedingUnit, oldBegin, oldEnd));
+            return;
+        }
+
+        // Then try to merge with the following unit
+        var followingUnit = aCas.select(aClass).preceding(unit).limit(1).singleOrNull();
+        if (followingUnit != null) {
+            var oldBegin = followingUnit.getBegin();
+            var oldEnd = followingUnit.getEnd();
+            moveSpanAnnotation(aCas, followingUnit, unit.getBegin(), followingUnit.getEnd(), TRIM);
+            publishEvent(() -> new SpanMovedEvent(this, aDocument, aDocumentOwner, getLayer(),
+                    followingUnit, oldBegin, oldEnd));
+            return;
+        }
+
+        throw new IllegalPlacementException("The last unit cannot be deleted.");
     }
 
     public AnnotationFS restore(SourceDocument aDocument, String aDocumentOwner, CAS aCas, VID aVid)
