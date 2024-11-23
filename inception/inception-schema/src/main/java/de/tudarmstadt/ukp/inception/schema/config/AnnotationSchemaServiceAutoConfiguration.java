@@ -44,6 +44,7 @@ import de.tudarmstadt.ukp.inception.annotation.layer.behaviors.LayerSupportRegis
 import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainLayerSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationAttachmentBehavior;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationCrossSentenceBehavior;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationEndpointChangeListener;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationOverlapBehavior;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanAnchoringModeBehavior;
@@ -149,6 +150,13 @@ public class AnnotationSchemaServiceAutoConfiguration
     {
         return new RelationLayerSupport(aFeatureSupportRegistry, aEventPublisher,
                 aLayerBehaviorsRegistry, aConstraintsService);
+    }
+
+    @Bean
+    public RelationEndpointChangeListener relationEndpointChangeListener(
+            AnnotationSchemaService aSchemaService)
+    {
+        return new RelationEndpointChangeListener(aSchemaService);
     }
 
     @Bean
