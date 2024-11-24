@@ -33,7 +33,6 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
-import org.wicketstuff.jquery.ui.widget.menu.IMenuItem;
 
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.editor.config.AnnotationEditorAutoConfiguration;
@@ -100,10 +99,10 @@ public class AnnotationEditorExtensionRegistryImpl
         if (aId == null) {
             return null;
         }
-        else {
-            return extensions.stream().filter(ext -> aId.equals(ext.getBeanName())).findFirst()
-                    .orElse(null);
-        }
+
+        return extensions.stream() //
+                .filter(ext -> aId.equals(ext.getBeanName())) //
+                .findFirst().orElse(null);
     }
 
     @Override
@@ -111,8 +110,7 @@ public class AnnotationEditorExtensionRegistryImpl
             AjaxRequestTarget aTarget, CAS aCas, VID aParamId, String aAction)
         throws IOException, AnnotationException
     {
-        for (AnnotationEditorExtension ext : getExtensions()) {
-
+        for (var ext : getExtensions()) {
             if (!ext.getBeanName().equals(aParamId.getExtensionId())) {
                 continue;
             }
@@ -123,16 +121,8 @@ public class AnnotationEditorExtensionRegistryImpl
     @Override
     public void fireRenderRequested(AjaxRequestTarget aTarget, AnnotatorState aState)
     {
-        for (AnnotationEditorExtension ext : getExtensions()) {
+        for (var ext : getExtensions()) {
             ext.renderRequested(aTarget, aState);
-        }
-    }
-
-    @Override
-    public void generateContextMenuItems(List<IMenuItem> aItems)
-    {
-        for (AnnotationEditorExtension ext : getExtensions()) {
-            ext.generateContextMenuItems(aItems);
         }
     }
 }
