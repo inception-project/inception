@@ -37,6 +37,7 @@ import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationAdapter;
 import de.tudarmstadt.ukp.inception.diam.editor.DiamAjaxBehavior;
 import de.tudarmstadt.ukp.inception.diam.editor.config.DiamAutoConfig;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.DefaultAjaxResponse;
+import de.tudarmstadt.ukp.inception.editor.ContextMenuLookup;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.selection.Selection;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
@@ -102,8 +103,8 @@ public class CreateRelationAnnotationHandler
         actionArc(aBehavior, aTarget, originSpan, targetSpan, clientX, clientY);
     }
 
-    public void actionArc(DiamAjaxBehavior aBehavior, AjaxRequestTarget aTarget, VID originSpan,
-            VID targetSpan, int aClientX, int aClientY)
+    public void actionArc(ContextMenuLookup aBehavior, AjaxRequestTarget aTarget,
+            VID originSpan, VID targetSpan, int aClientX, int aClientY)
         throws NotEditableException, IOException, AnnotationException, IllegalPlacementException
     {
         var page = getPage();
@@ -155,9 +156,9 @@ public class CreateRelationAnnotationHandler
 
     }
 
-    private void createRelationAnnotation(DiamAjaxBehavior aBehavior, AjaxRequestTarget aTarget,
-            AnnotationLayer originLayer, VID aOriginSpan, VID aTargetSpan, int aClientX,
-            int aClientY)
+    private void createRelationAnnotation(ContextMenuLookup aBehavior,
+            AjaxRequestTarget aTarget, AnnotationLayer originLayer, VID aOriginSpan,
+            VID aTargetSpan, int aClientX, int aClientY)
         throws AnnotationException, IllegalPlacementException, IOException
     {
         var candidateLayers = schemaService.getRelationLayersFor(originLayer);

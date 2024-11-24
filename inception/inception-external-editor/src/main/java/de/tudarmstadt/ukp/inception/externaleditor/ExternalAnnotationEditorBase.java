@@ -26,6 +26,7 @@ import static org.apache.wicket.markup.head.OnDomReadyHeaderItem.forScript;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.IOException;
+import java.util.Optional;
 
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -45,6 +46,7 @@ import de.tudarmstadt.ukp.inception.editor.AnnotationEditorBase;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorExtensionRegistry;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorFactory;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorRegistry;
+import de.tudarmstadt.ukp.inception.editor.ContextMenuLookup;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.editor.view.DocumentViewExtensionPoint;
 import de.tudarmstadt.ukp.inception.externaleditor.command.CommandQueue;
@@ -132,6 +134,12 @@ public abstract class ExternalAnnotationEditorBase
     public DiamAjaxBehavior getDiamBehavior()
     {
         return diamBehavior;
+    }
+
+    @Override
+    public Optional<ContextMenuLookup> getContextMenuLookup()
+    {
+        return Optional.ofNullable(diamBehavior);
     }
 
     protected abstract Component makeView();

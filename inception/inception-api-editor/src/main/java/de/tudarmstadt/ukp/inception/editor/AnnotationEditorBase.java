@@ -25,6 +25,7 @@ import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import org.apache.commons.lang3.Validate;
@@ -253,4 +254,6 @@ public abstract class AnnotationEditorBase
         LOG.error("{}: {}", aMessage, e.getMessage(), e);
         error(aMessage + ": " + e.getMessage());
     }
+
+    public abstract Optional<ContextMenuLookup> getContextMenuLookup();
 }

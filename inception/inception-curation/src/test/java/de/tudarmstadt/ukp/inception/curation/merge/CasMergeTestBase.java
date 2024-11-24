@@ -20,8 +20,6 @@ package de.tudarmstadt.ukp.inception.curation.merge;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.relation.RelationDiffAdapter.DEPENDENCY_DIFF_ADAPTER;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span.SpanDiffAdapter.NER_DIFF_ADAPTER;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span.SpanDiffAdapter.POS_DIFF_ADAPTER;
-import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span.SpanDiffAdapter.SENTENCE_DIFF_ADAPTER;
-import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span.SpanDiffAdapter.TOKEN_DIFF_ADAPTER;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.CHARACTERS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SINGLE_TOKEN;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
@@ -120,8 +118,8 @@ public class CasMergeTestBase
                 EXCLUDE);
 
         diffAdapters = new ArrayList<>();
-        diffAdapters.add(TOKEN_DIFF_ADAPTER);
-        diffAdapters.add(SENTENCE_DIFF_ADAPTER);
+        // diffAdapters.add(TOKEN_DIFF_ADAPTER);
+        // diffAdapters.add(SENTENCE_DIFF_ADAPTER);
         diffAdapters.add(POS_DIFF_ADAPTER);
         diffAdapters.add(NER_DIFF_ADAPTER);
         diffAdapters.add(DEPENDENCY_DIFF_ADAPTER);

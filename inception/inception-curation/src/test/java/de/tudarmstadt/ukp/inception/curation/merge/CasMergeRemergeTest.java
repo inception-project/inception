@@ -30,6 +30,7 @@ import static de.tudarmstadt.ukp.inception.curation.merge.CurationTestUtils.crea
 import static de.tudarmstadt.ukp.inception.curation.merge.CurationTestUtils.makeLinkFS;
 import static de.tudarmstadt.ukp.inception.curation.merge.CurationTestUtils.makeLinkHostFS;
 import static de.tudarmstadt.ukp.inception.support.uima.AnnotationBuilder.buildAnnotation;
+import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.createCasCopy;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.factory.JCasFactory.createJCas;
 import static org.apache.uima.fit.factory.JCasFactory.createText;
@@ -123,13 +124,12 @@ public class CasMergeRemergeTest
         casByUser.put("user1", user1);
         casByUser.put("user2", user2);
 
-        var curatorCas = createText(
-                casByUser.values().stream().findFirst().get().getDocumentText());
+        var curatorCas = createCasCopy(user1);
 
         var result = doDiff(diffAdapters, casByUser).toResult();
 
         sut.setMergeStrategy(new MergeIncompleteStrategy());
-        sut.clearAndMergeCas(result, document, DUMMY_USER, curatorCas.getCas(), casByUser);
+        sut.clearAndMergeCas(result, document, DUMMY_USER, curatorCas, casByUser);
 
         assertThat(result.getDifferingConfigurationSets()).isEmpty();
         assertThat(result.getIncompleteConfigurationSets().values())
@@ -143,7 +143,7 @@ public class CasMergeRemergeTest
                                 .withText("word") //
                                 .build());
 
-        assertThat(select(curatorCas, POS.class)).hasSize(1);
+        assertThat(curatorCas.select(POS.class).asList()).hasSize(1);
         assertThat(calculateState(result)).isEqualTo(INCOMPLETE);
     }
 

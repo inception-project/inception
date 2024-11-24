@@ -48,7 +48,7 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureTraits;
 import de.tudarmstadt.ukp.inception.curation.merge.strategy.ThresholdBasedMergeStrategy;
 import de.tudarmstadt.ukp.inception.schema.api.feature.LinkWithRoleModel;
@@ -84,7 +84,7 @@ public class CasMergeLinkTest
 
         // Set up target CAS
         var target = makeLinkHostFS(targetCas, 0, 0);
-        var targetFiller = new Token(targetCas, 0, 0);
+        var targetFiller = new NamedEntity(targetCas, 0, 0);
         targetFiller.addToIndexes();
 
         // Perform merge
@@ -110,7 +110,7 @@ public class CasMergeLinkTest
 
         // Set up target CAS
         var target1 = makeLinkHostFS(targetCas, 0, 0);
-        var targetFiller1 = new Token(targetCas, 0, 0);
+        var targetFiller1 = new NamedEntity(targetCas, 0, 0);
         targetFiller1.addToIndexes();
 
         // Perform merge
@@ -125,7 +125,7 @@ public class CasMergeLinkTest
 
         // Add stacked target to target CAS
         var target2 = makeLinkHostFS(targetCas, 0, 0);
-        var targetFiller2 = new Token(targetCas, 1, 1);
+        var targetFiller2 = new NamedEntity(targetCas, 1, 1);
         targetFiller2.addToIndexes();
 
         // Perform another merge
@@ -154,7 +154,7 @@ public class CasMergeLinkTest
         // Set up target CAS
         var target1 = makeLinkHostFS(targetCas, 0, 0);
         setFeature(target1, "f1", "foo");
-        var targetFiller1 = new Token(targetCas, 0, 0);
+        var targetFiller1 = new NamedEntity(targetCas, 0, 0);
         targetFiller1.addToIndexes();
 
         // Perform merge
@@ -170,7 +170,7 @@ public class CasMergeLinkTest
         // Add stacked target to target CAS
         var target2 = makeLinkHostFS(targetCas, 0, 0);
         setFeature(target2, "f1", "bar");
-        var targetFiller2 = new Token(targetCas, 1, 1);
+        var targetFiller2 = new NamedEntity(targetCas, 1, 1);
         targetFiller2.addToIndexes();
 
         // Perform another merge
@@ -322,10 +322,10 @@ public class CasMergeLinkTest
                     .hasSize(2) //
                     .extracting(host -> toMaterializedLinks(host, LINKS_FEATURE, "role", "target")) //
                     .containsExactlyInAnyOrder( //
-                            asList(new MaterializedLink(LINKS_FEATURE, "role1", Token._TypeName, 1,
-                                    1)), //
-                            asList(new MaterializedLink(LINKS_FEATURE, "role2", Token._TypeName, 1,
-                                    1)));
+                            asList(new MaterializedLink(LINKS_FEATURE, "role1",
+                                    NamedEntity._TypeName, 1, 1)), //
+                            asList(new MaterializedLink(LINKS_FEATURE, "role2",
+                                    NamedEntity._TypeName, 1, 1)));
         }
     }
 
@@ -377,8 +377,8 @@ public class CasMergeLinkTest
                     .hasSize(1) //
                     .extracting(host -> toMaterializedLinks(host, LINKS_FEATURE, "role", "target")) //
                     .containsExactlyInAnyOrder( //
-                            asList(new MaterializedLink(LINKS_FEATURE, "role1", Token._TypeName, 1,
-                                    1)));
+                            asList(new MaterializedLink(LINKS_FEATURE, "role1",
+                                    NamedEntity._TypeName, 1, 1)));
         }
     }
 }

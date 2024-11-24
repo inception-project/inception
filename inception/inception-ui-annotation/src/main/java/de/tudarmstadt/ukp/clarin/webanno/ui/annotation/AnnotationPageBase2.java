@@ -36,6 +36,7 @@ import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.AttributeModifier;
@@ -83,6 +84,7 @@ import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorBase;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorExtensionRegistry;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorRegistry;
+import de.tudarmstadt.ukp.inception.editor.ContextMenuLookup;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.editor.state.AnnotatorStateImpl;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
@@ -755,5 +757,11 @@ public abstract class AnnotationPageBase2
         }
 
         return allDocuments;
+    }
+
+    @Override
+    public Optional<ContextMenuLookup> getContextMenuLookup()
+    {
+        return annotationEditor.getContextMenuLookup();
     }
 }

@@ -23,7 +23,6 @@ import java.util.List;
 
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.wicketstuff.jquery.ui.widget.menu.IMenuItem;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -70,11 +69,6 @@ public interface AnnotationEditorExtension
     }
 
     default void renderRequested(AjaxRequestTarget aTarget, AnnotatorState aState)
-    {
-        // Do nothing by default
-    }
-
-    default void generateContextMenuItems(List<IMenuItem> aItems)
     {
         // Do nothing by default
     }
