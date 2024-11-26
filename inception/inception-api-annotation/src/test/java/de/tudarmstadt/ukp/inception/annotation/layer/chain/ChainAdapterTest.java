@@ -48,7 +48,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceChain;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
-import de.tudarmstadt.ukp.inception.annotation.layer.behaviors.LayerSupportRegistryImpl;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanAnchoringModeBehavior;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanCrossSentenceBehavior;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerBehavior;
@@ -56,6 +55,7 @@ import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanOverlapBehavior;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistry;
+import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistryImpl;
 
 @ExtendWith(MockitoExtension.class)
 public class ChainAdapterTest

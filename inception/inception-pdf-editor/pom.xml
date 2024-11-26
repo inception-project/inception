@@ -178,11 +178,6 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-schema</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-constraints</artifactId>
       <scope>test</scope>
     </dependency>

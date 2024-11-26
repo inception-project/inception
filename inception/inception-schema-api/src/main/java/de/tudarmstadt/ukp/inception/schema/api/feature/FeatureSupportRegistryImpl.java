@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.schema.service;
+package de.tudarmstadt.ukp.inception.schema.api.feature;
 
 import static java.util.Comparator.comparing;
 
@@ -29,9 +29,6 @@ import org.springframework.context.annotation.Lazy;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupport;
-import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
-import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureType;
 import de.tudarmstadt.ukp.inception.support.extensionpoint.CachingContextLookupExtensionPoint_ImplBase;
 
 /**

@@ -39,16 +39,15 @@ public class TokenAttachedSpanChangeListener
     @EventListener
     public void onSpanMovedEvent(SpanMovedEvent aEvent)
     {
-        var unit = aEvent.getAnnotation();
-
-        adjustAttachedAnnotations(aEvent, unit);
-        adjustSingleTokenAnchoredAnnotations(aEvent, unit);
-        adjustMultiTokenAnchoredAnnotations(aEvent, unit);
+        adjustAttachedAnnotations(aEvent);
+        adjustSingleTokenAnchoredAnnotations(aEvent);
+        adjustTokenAnchoredAnnotations(aEvent);
     }
 
-    private void adjustMultiTokenAnchoredAnnotations(SpanMovedEvent aEvent, AnnotationFS aUnit)
+    void adjustTokenAnchoredAnnotations(SpanMovedEvent aEvent)
     {
-        var cas = aUnit.getCAS();
+        var unit = aEvent.getAnnotation();
+        var cas = unit.getCAS();
 
         var multiTokenLayers = schemaService.listAnnotationLayer(aEvent.getProject()).stream() //
                 .filter(layer -> layer.getAnchoringMode() == TOKENS) //
@@ -69,20 +68,21 @@ public class TokenAttachedSpanChangeListener
 
                 ann.removeFromIndexes();
                 if (ann.getBegin() == aEvent.getOldBegin()) {
-                    ann.setBegin(aUnit.getBegin());
+                    ann.setBegin(unit.getBegin());
                 }
 
                 if (ann.getEnd() == aEvent.getOldEnd()) {
-                    ann.setEnd(aUnit.getEnd());
+                    ann.setEnd(unit.getEnd());
                 }
                 ann.addToIndexes();
             }
         }
     }
 
-    private void adjustSingleTokenAnchoredAnnotations(SpanMovedEvent aEvent, AnnotationFS aUnit)
+    void adjustSingleTokenAnchoredAnnotations(SpanMovedEvent aEvent)
     {
-        var cas = aUnit.getCAS();
+        var unit = aEvent.getAnnotation();
+        var cas = unit.getCAS();
 
         var singleTokenLayers = schemaService.listAnnotationLayer(aEvent.getProject()).stream() //
                 .filter(layer -> layer.getAnchoringMode() == SINGLE_TOKEN) //
@@ -90,6 +90,10 @@ public class TokenAttachedSpanChangeListener
 
         for (var layer : singleTokenLayers) {
             var adapter = schemaService.getAdapter(layer);
+            if (adapter == null) {
+                continue;
+            }
+
             var maybeType = adapter.getAnnotationType(cas);
 
             if (maybeType.isEmpty()) {
@@ -98,8 +102,22 @@ public class TokenAttachedSpanChangeListener
 
             for (var ann : cas.<Annotation> select(maybeType.get())
                     .at(aEvent.getOldBegin(), aEvent.getOldEnd()).asList()) {
-                moveAnnotation(aUnit, ann);
+                moveAnnotation(unit, ann);
             }
+        }
+    }
+
+    void adjustAttachedAnnotations(SpanMovedEvent aEvent)
+    {
+        var unit = aEvent.getAnnotation();
+        for (var attachFeature : schemaService.listAttachedSpanFeatures(aEvent.getLayer())) {
+            var attachedAnnotation = getFeature(unit, attachFeature.getName(), Annotation.class);
+
+            if (attachedAnnotation == null) {
+                continue;
+            }
+
+            moveAnnotation(unit, attachedAnnotation);
         }
     }
 
@@ -111,16 +129,4 @@ public class TokenAttachedSpanChangeListener
         aAnn.addToIndexes();
     }
 
-    private void adjustAttachedAnnotations(SpanMovedEvent aEvent, AnnotationFS aUnit)
-    {
-        for (var attachFeature : schemaService.listAttachedSpanFeatures(aEvent.getLayer())) {
-            var attachedAnnotation = getFeature(aUnit, attachFeature.getName(), Annotation.class);
-
-            if (attachedAnnotation == null) {
-                continue;
-            }
-
-            moveAnnotation(aUnit, attachedAnnotation);
-        }
-    }
 }

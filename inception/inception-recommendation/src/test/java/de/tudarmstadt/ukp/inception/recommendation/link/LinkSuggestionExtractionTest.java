@@ -51,7 +51,6 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.behaviors.LayerBehaviorRegistry;
-import de.tudarmstadt.ukp.inception.annotation.layer.behaviors.LayerSupportRegistryImpl;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
@@ -61,8 +60,9 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.ExtractionContext;
 import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderProperties;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistryImpl;
 import de.tudarmstadt.ukp.inception.schema.api.feature.LinkWithRoleModel;
-import de.tudarmstadt.ukp.inception.schema.service.FeatureSupportRegistryImpl;
+import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistryImpl;
 import de.tudarmstadt.ukp.inception.support.uima.SegmentationUtils;
 
 @ExtendWith(MockitoExtension.class)

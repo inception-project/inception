@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.annotation.layer.behaviors;
+package de.tudarmstadt.ukp.inception.schema.api.layer;
 
 import java.util.List;
 import java.util.Optional;
@@ -25,9 +25,6 @@ import org.springframework.context.annotation.Lazy;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
-import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupport;
-import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistry;
-import de.tudarmstadt.ukp.inception.schema.api.layer.LayerType;
 import de.tudarmstadt.ukp.inception.support.extensionpoint.CachingContextLookupExtensionPoint_ImplBase;
 
 /**

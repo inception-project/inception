@@ -32,6 +32,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.config.ProjectInitializersAutoConfiguration;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
+import de.tudarmstadt.ukp.inception.project.api.ProjectInitializationRequest;
 import de.tudarmstadt.ukp.inception.project.api.ProjectInitializer;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
@@ -73,10 +74,11 @@ public class SentenceLayerInitializer
     }
 
     @Override
-    public void configure(Project aProject) throws IOException
+    public void configure(ProjectInitializationRequest aRequest) throws IOException
     {
+        var project = aRequest.getProject();
         AnnotationLayer sentenceLayer = new AnnotationLayer(Sentence.class.getName(), "Sentence",
-                SPAN_TYPE, aProject, true, TOKENS, NO_OVERLAP);
+                SPAN_TYPE, project, true, TOKENS, NO_OVERLAP);
 
         // Since the user cannot turn off validation for the sentence layer if there is any kind of
         // problem with the validation functionality we are conservative here and disable validation

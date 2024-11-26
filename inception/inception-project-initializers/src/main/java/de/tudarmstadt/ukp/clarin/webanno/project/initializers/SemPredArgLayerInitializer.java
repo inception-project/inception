@@ -41,6 +41,7 @@ import de.tudarmstadt.ukp.clarin.webanno.project.initializers.config.ProjectInit
 import de.tudarmstadt.ukp.dkpro.core.api.semantics.type.SemArg;
 import de.tudarmstadt.ukp.dkpro.core.api.semantics.type.SemArgLink;
 import de.tudarmstadt.ukp.dkpro.core.api.semantics.type.SemPred;
+import de.tudarmstadt.ukp.inception.project.api.ProjectInitializationRequest;
 import de.tudarmstadt.ukp.inception.project.api.ProjectInitializer;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.wicket.resource.Strings;
@@ -98,21 +99,22 @@ public class SemPredArgLayerInitializer
     }
 
     @Override
-    public void configure(Project aProject) throws IOException
+    public void configure(ProjectInitializationRequest aRequest) throws IOException
     {
-        var semArgLayer = new AnnotationLayer(SemArg.class.getName(), "SemArg", SPAN_TYPE, aProject,
+        var project = aRequest.getProject();
+        var semArgLayer = new AnnotationLayer(SemArg.class.getName(), "SemArg", SPAN_TYPE, project,
                 true, AnchoringMode.TOKENS, OverlapMode.ANY_OVERLAP);
         semArgLayer.setCrossSentence(false);
 
         annotationSchemaService.createOrUpdateLayer(semArgLayer);
 
         var semPredLayer = new AnnotationLayer(SemPred.class.getName(), "SemPred", SPAN_TYPE,
-                aProject, true, AnchoringMode.TOKENS, OverlapMode.ANY_OVERLAP);
+                project, true, AnchoringMode.TOKENS, OverlapMode.ANY_OVERLAP);
         semPredLayer.setCrossSentence(false);
 
         annotationSchemaService.createOrUpdateLayer(semPredLayer);
 
-        annotationSchemaService.createFeature(new AnnotationFeature(aProject, semPredLayer,
+        annotationSchemaService.createFeature(new AnnotationFeature(project, semPredLayer,
                 "category", "category", CAS.TYPE_NAME_STRING,
                 "Category of the semantic predicate, e.g. the frame identifier.", null));
 
@@ -121,7 +123,7 @@ public class SemPredArgLayerInitializer
         semPredArgumentsFeature.setUiName("arguments");
         semPredArgumentsFeature.setDescription("Arguments of the semantic predicate");
         semPredArgumentsFeature.setType(SemArg.class.getName());
-        semPredArgumentsFeature.setProject(aProject);
+        semPredArgumentsFeature.setProject(project);
         semPredArgumentsFeature.setTagset(null);
         semPredArgumentsFeature.setMode(MultiValueMode.ARRAY);
         semPredArgumentsFeature.setLinkMode(LinkMode.WITH_ROLE);

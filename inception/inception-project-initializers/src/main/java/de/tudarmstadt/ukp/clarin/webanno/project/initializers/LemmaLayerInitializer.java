@@ -38,6 +38,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.config.ProjectInitializersAutoConfiguration;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.inception.project.api.ProjectInitializationRequest;
 import de.tudarmstadt.ukp.inception.project.api.ProjectInitializer;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.wicket.resource.Strings;
@@ -94,17 +95,18 @@ public class LemmaLayerInitializer
     }
 
     @Override
-    public void configure(Project aProject) throws IOException
+    public void configure(ProjectInitializationRequest aRequest) throws IOException
     {
-        AnnotationLayer tokenLayer = annotationSchemaService.findLayer(aProject,
+        var project = aRequest.getProject();
+        AnnotationLayer tokenLayer = annotationSchemaService.findLayer(project,
                 Token.class.getName());
 
-        AnnotationFeature tokenLemmaFeature = new AnnotationFeature(aProject, tokenLayer, "lemma",
+        AnnotationFeature tokenLemmaFeature = new AnnotationFeature(project, tokenLayer, "lemma",
                 "lemma", Lemma.class.getName());
         annotationSchemaService.createFeature(tokenLemmaFeature);
 
         AnnotationLayer lemmaLayer = new AnnotationLayer(Lemma.class.getName(), "Lemma", SPAN_TYPE,
-                aProject, true, SINGLE_TOKEN, NO_OVERLAP);
+                project, true, SINGLE_TOKEN, NO_OVERLAP);
         lemmaLayer.setAttachType(tokenLayer);
         lemmaLayer.setAttachFeature(tokenLemmaFeature);
         annotationSchemaService.createOrUpdateLayer(lemmaLayer);
@@ -113,7 +115,7 @@ public class LemmaLayerInitializer
         lemmaFeature.setDescription("lemma Annotation");
         lemmaFeature.setName("value");
         lemmaFeature.setType(CAS.TYPE_NAME_STRING);
-        lemmaFeature.setProject(aProject);
+        lemmaFeature.setProject(project);
         lemmaFeature.setUiName("Lemma");
         lemmaFeature.setLayer(lemmaLayer);
         annotationSchemaService.createFeature(lemmaFeature);
