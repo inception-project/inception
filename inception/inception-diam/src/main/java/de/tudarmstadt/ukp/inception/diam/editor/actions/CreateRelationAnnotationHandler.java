@@ -18,8 +18,10 @@
 package de.tudarmstadt.ukp.inception.diam.editor.actions;
 
 import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectAnnotationByAddr;
+import static java.util.Arrays.asList;
 
 import java.io.IOException;
+import java.util.List;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
@@ -31,6 +33,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.IllegalPlaceme
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.NotEditableException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainAdapter;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.CreateRelationAnnotationRequest;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationAdapter;
@@ -58,6 +62,9 @@ import de.tudarmstadt.ukp.inception.support.spring.ApplicationContextProvider;
 public class CreateRelationAnnotationHandler
     extends EditorAjaxRequestHandlerBase
 {
+    private static final List<String> SEGMENTATION_TYPES = asList(Sentence._TypeName,
+            Token._TypeName);
+
     public static final String COMMAND = "arcOpenDialog";
 
     private final AnnotationSchemaService schemaService;
@@ -103,8 +110,8 @@ public class CreateRelationAnnotationHandler
         actionArc(aBehavior, aTarget, originSpan, targetSpan, clientX, clientY);
     }
 
-    public void actionArc(ContextMenuLookup aBehavior, AjaxRequestTarget aTarget,
-            VID originSpan, VID targetSpan, int aClientX, int aClientY)
+    public void actionArc(ContextMenuLookup aBehavior, AjaxRequestTarget aTarget, VID originSpan,
+            VID targetSpan, int aClientX, int aClientY)
         throws NotEditableException, IOException, AnnotationException, IllegalPlacementException
     {
         var page = getPage();
@@ -156,9 +163,9 @@ public class CreateRelationAnnotationHandler
 
     }
 
-    private void createRelationAnnotation(ContextMenuLookup aBehavior,
-            AjaxRequestTarget aTarget, AnnotationLayer originLayer, VID aOriginSpan,
-            VID aTargetSpan, int aClientX, int aClientY)
+    private void createRelationAnnotation(ContextMenuLookup aBehavior, AjaxRequestTarget aTarget,
+            AnnotationLayer originLayer, VID aOriginSpan, VID aTargetSpan, int aClientX,
+            int aClientY)
         throws AnnotationException, IllegalPlacementException, IOException
     {
         var candidateLayers = schemaService.getRelationLayersFor(originLayer);
@@ -201,6 +208,11 @@ public class CreateRelationAnnotationHandler
         var cas = page.getEditorCas();
         var originFs = selectAnnotationByAddr(cas, origin.getId());
         var targetFs = selectAnnotationByAddr(cas, target.getId());
+
+        if (SEGMENTATION_TYPES.contains(originFs.getType().getName())
+                || SEGMENTATION_TYPES.contains(targetFs.getType().getName())) {
+            throw new IllegalPlacementException("Cannot create relations on segmentation units.");
+        }
 
         if (!schemaProperties.isCrossLayerRelationsEnabled()
                 && !originFs.getType().equals(targetFs.getType())) {

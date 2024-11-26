@@ -38,6 +38,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.config.ProjectInitializersAutoConfiguration;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.morph.MorphologicalFeatures;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.inception.project.api.ProjectInitializationRequest;
 import de.tudarmstadt.ukp.inception.project.api.ProjectInitializer;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.wicket.resource.Strings;
@@ -94,17 +95,18 @@ public class MorphologicalFeaturesLayerInitializer
     }
 
     @Override
-    public void configure(Project aProject) throws IOException
+    public void configure(ProjectInitializationRequest aRequest) throws IOException
     {
-        AnnotationLayer tokenLayer = annotationSchemaService.findLayer(aProject,
+        var project = aRequest.getProject();
+        AnnotationLayer tokenLayer = annotationSchemaService.findLayer(project,
                 Token.class.getName());
 
-        AnnotationFeature tokenMorphFeature = new AnnotationFeature(aProject, tokenLayer, "morph",
+        AnnotationFeature tokenMorphFeature = new AnnotationFeature(project, tokenLayer, "morph",
                 "morph", MorphologicalFeatures.class.getName());
         annotationSchemaService.createFeature(tokenMorphFeature);
 
         AnnotationLayer morphLayer = new AnnotationLayer(MorphologicalFeatures.class.getName(),
-                "Morphological features", SPAN_TYPE, aProject, true, SINGLE_TOKEN, NO_OVERLAP);
+                "Morphological features", SPAN_TYPE, project, true, SINGLE_TOKEN, NO_OVERLAP);
         morphLayer.setAttachType(tokenLayer);
         morphLayer.setAttachFeature(tokenMorphFeature);
         annotationSchemaService.createOrUpdateLayer(morphLayer);
@@ -113,7 +115,7 @@ public class MorphologicalFeaturesLayerInitializer
         valueFeature.setDescription("Morphological features");
         valueFeature.setName("value");
         valueFeature.setType(CAS.TYPE_NAME_STRING);
-        valueFeature.setProject(aProject);
+        valueFeature.setProject(project);
         valueFeature.setUiName("Features");
         valueFeature.setLayer(morphLayer);
         valueFeature.setIncludeInHover(true);

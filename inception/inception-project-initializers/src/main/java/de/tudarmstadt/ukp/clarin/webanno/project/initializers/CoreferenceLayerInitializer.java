@@ -36,6 +36,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.config.ProjectInitializersAutoConfiguration;
+import de.tudarmstadt.ukp.inception.project.api.ProjectInitializationRequest;
 import de.tudarmstadt.ukp.inception.project.api.ProjectInitializer;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.wicket.resource.Strings;
@@ -97,14 +98,15 @@ public class CoreferenceLayerInitializer
     }
 
     @Override
-    public void configure(Project aProject) throws IOException
+    public void configure(ProjectInitializationRequest aRequest) throws IOException
     {
+        var project = aRequest.getProject();
         var corefTypeTagSet = annotationSchemaService
-                .getTagSet(CoreferenceTypeTagSetInitializer.TAG_SET_NAME, aProject);
+                .getTagSet(CoreferenceTypeTagSetInitializer.TAG_SET_NAME, project);
         var corefRelTagSet = annotationSchemaService
-                .getTagSet(CoreferenceRelationTagSetInitializer.TAG_SET_NAME, aProject);
+                .getTagSet(CoreferenceRelationTagSetInitializer.TAG_SET_NAME, project);
 
-        var base = new AnnotationLayer(COREFERENCE_LAYER_NAME, "Coreference", CHAIN_TYPE, aProject,
+        var base = new AnnotationLayer(COREFERENCE_LAYER_NAME, "Coreference", CHAIN_TYPE, project,
                 true, AnchoringMode.TOKENS, OverlapMode.ANY_OVERLAP);
         base.setCrossSentence(true);
         annotationSchemaService.createOrUpdateLayer(base);
@@ -113,10 +115,10 @@ public class CoreferenceLayerInitializer
         // annotationSchemaService.getAdapter(base)
         // .initializeLayerConfiguration(annotationSchemaService);
 
-        annotationSchemaService.createFeature(new AnnotationFeature(aProject, base, "referenceType",
+        annotationSchemaService.createFeature(new AnnotationFeature(project, base, "referenceType",
                 "referenceType", CAS.TYPE_NAME_STRING, "Coreference type", corefTypeTagSet));
         annotationSchemaService.createFeature(
-                new AnnotationFeature(aProject, base, "referenceRelation", "referenceRelation",
+                new AnnotationFeature(project, base, "referenceRelation", "referenceRelation",
                         CAS.TYPE_NAME_STRING, "Coreference relation", corefRelTagSet));
     }
 }

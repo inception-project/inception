@@ -38,6 +38,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.config.ProjectInitializersAutoConfiguration;
 import de.tudarmstadt.ukp.dkpro.core.api.transform.type.SofaChangeAnnotation;
+import de.tudarmstadt.ukp.inception.project.api.ProjectInitializationRequest;
 import de.tudarmstadt.ukp.inception.project.api.ProjectInitializer;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.wicket.resource.Strings;
@@ -97,10 +98,11 @@ public class OrthographyLayerInitializer
     }
 
     @Override
-    public void configure(Project aProject) throws IOException
+    public void configure(ProjectInitializationRequest aRequest) throws IOException
     {
+        var project = aRequest.getProject();
         AnnotationLayer orthography = new AnnotationLayer(SofaChangeAnnotation.class.getName(),
-                "Orthography Correction", SPAN_TYPE, aProject, true, AnchoringMode.SINGLE_TOKEN,
+                "Orthography Correction", SPAN_TYPE, project, true, AnchoringMode.SINGLE_TOKEN,
                 OverlapMode.NO_OVERLAP);
         annotationSchemaService.createOrUpdateLayer(orthography);
 
@@ -108,19 +110,19 @@ public class OrthographyLayerInitializer
         correction.setDescription("Correct this token using the specified operation.");
         correction.setName("value");
         correction.setType(CAS.TYPE_NAME_STRING);
-        correction.setProject(aProject);
+        correction.setProject(project);
         correction.setUiName("Correction");
         correction.setLayer(orthography);
         annotationSchemaService.createFeature(correction);
 
         TagSet operationTagset = annotationSchemaService
-                .getTagSet(SofaChangeOperationTagSetInitializer.TAG_SET_NAME, aProject);
+                .getTagSet(SofaChangeOperationTagSetInitializer.TAG_SET_NAME, project);
 
         AnnotationFeature operation = new AnnotationFeature();
         operation.setDescription("An operation taken to change this token.");
         operation.setName("operation");
         operation.setType(CAS.TYPE_NAME_STRING);
-        operation.setProject(aProject);
+        operation.setProject(project);
         operation.setUiName("Operation");
         operation.setLayer(orthography);
         operation.setVisible(false);

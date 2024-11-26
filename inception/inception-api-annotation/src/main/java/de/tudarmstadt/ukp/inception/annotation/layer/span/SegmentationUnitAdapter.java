@@ -87,11 +87,13 @@ public class SegmentationUnitAdapter
         if (Token._TypeName.equals(spanAdapter.getAnnotationTypeName())) {
             deleteAndMergeUnit(aRequest.getDocument(), aRequest.getDocumentOwner(),
                     aRequest.getCas(), (Annotation) aRequest.getAnnotation(), Token.class);
+            return;
         }
 
         if (Sentence._TypeName.equals(spanAdapter.getAnnotationTypeName())) {
             deleteAndMergeUnit(aRequest.getDocument(), aRequest.getDocumentOwner(),
                     aRequest.getCas(), (Annotation) aRequest.getAnnotation(), Sentence.class);
+            return;
         }
 
         throw new IllegalPlacementException(

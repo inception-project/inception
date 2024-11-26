@@ -48,10 +48,10 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
-import de.tudarmstadt.ukp.inception.annotation.layer.behaviors.LayerSupportRegistryImpl;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistry;
+import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistryImpl;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 
 @ExtendWith(MockitoExtension.class)
@@ -102,11 +102,11 @@ public class SpanAdapterTest
     {
         neLayer.setCrossSentence(false);
 
-        TokenBuilder<Token, Sentence> builder = new TokenBuilder<>(Token.class, Sentence.class);
+        var builder = new TokenBuilder<>(Token.class, Sentence.class);
         builder.buildTokens(jcas, "This is a test .\nThis is sentence two .");
 
-        SpanAdapter sut = new SpanAdapter(layerSupportRegistry, featureSupportRegistry, null,
-                neLayer, () -> asList(), behaviors, constraintsService);
+        var sut = new SpanAdapter(layerSupportRegistry, featureSupportRegistry, null, neLayer,
+                () -> asList(), behaviors, constraintsService);
 
         assertThatExceptionOfType(MultipleSentenceCoveredException.class)
                 .isThrownBy(() -> sut.add(document, username, jcas.getCas(), 0,
@@ -118,11 +118,11 @@ public class SpanAdapterTest
     public void thatSpanCrossSentenceBehaviorOnValidateReturnsErrorMessage()
         throws AnnotationException
     {
-        TokenBuilder<Token, Sentence> builder = new TokenBuilder<>(Token.class, Sentence.class);
+        var builder = new TokenBuilder<>(Token.class, Sentence.class);
         builder.buildTokens(jcas, "This is a test .\nThis is sentence two .");
 
-        SpanAdapter sut = new SpanAdapter(layerSupportRegistry, featureSupportRegistry, null,
-                neLayer, () -> asList(), behaviors, constraintsService);
+        var sut = new SpanAdapter(layerSupportRegistry, featureSupportRegistry, null, neLayer,
+                () -> asList(), behaviors, constraintsService);
 
         // Add two annotations
         neLayer.setCrossSentence(true);
@@ -139,11 +139,11 @@ public class SpanAdapterTest
     @Test
     public void thatSpanOverlapBehaviorOnCreateWorks() throws AnnotationException
     {
-        TokenBuilder<Token, Sentence> builder = new TokenBuilder<>(Token.class, Sentence.class);
+        var builder = new TokenBuilder<>(Token.class, Sentence.class);
         builder.buildTokens(jcas, "This is a test .");
 
-        SpanAdapter sut = new SpanAdapter(layerSupportRegistry, featureSupportRegistry, null,
-                neLayer, () -> asList(), behaviors, constraintsService);
+        var sut = new SpanAdapter(layerSupportRegistry, featureSupportRegistry, null, neLayer,
+                () -> asList(), behaviors, constraintsService);
 
         // First time should work
         neLayer.setOverlapMode(ANY_OVERLAP);
@@ -173,11 +173,11 @@ public class SpanAdapterTest
     @Test
     public void thatSpanOverlapBehaviorOnValidateGeneratesErrors() throws AnnotationException
     {
-        TokenBuilder<Token, Sentence> builder = new TokenBuilder<>(Token.class, Sentence.class);
+        var builder = new TokenBuilder<>(Token.class, Sentence.class);
         builder.buildTokens(jcas, "This is a test .");
 
-        SpanAdapter sut = new SpanAdapter(layerSupportRegistry, featureSupportRegistry, null,
-                neLayer, () -> asList(), behaviors, constraintsService);
+        var sut = new SpanAdapter(layerSupportRegistry, featureSupportRegistry, null, neLayer,
+                () -> asList(), behaviors, constraintsService);
 
         // Add two annotations
         neLayer.setOverlapMode(ANY_OVERLAP);
@@ -212,11 +212,11 @@ public class SpanAdapterTest
     @Test
     public void thatSpanAnchoringAndOverlapBehaviorsWorkInConcert() throws AnnotationException
     {
-        TokenBuilder<Token, Sentence> builder = new TokenBuilder<>(Token.class, Sentence.class);
+        var builder = new TokenBuilder<>(Token.class, Sentence.class);
         builder.buildTokens(jcas, "This is a test .");
 
-        SpanAdapter sut = new SpanAdapter(layerSupportRegistry, featureSupportRegistry, null,
-                neLayer, () -> asList(), behaviors, constraintsService);
+        var sut = new SpanAdapter(layerSupportRegistry, featureSupportRegistry, null, neLayer,
+                () -> asList(), behaviors, constraintsService);
 
         // First time should work - we annotate the whole word "This"
         neLayer.setOverlapMode(ANY_OVERLAP);
@@ -253,8 +253,8 @@ public class SpanAdapterTest
         new NamedEntity(jcas, 0, 4).addToIndexes();
         new NamedEntity(jcas, 4, 5).addToIndexes();
 
-        SpanAdapter sut = new SpanAdapter(layerSupportRegistry, featureSupportRegistry, null,
-                neLayer, () -> asList(), behaviors, constraintsService);
+        var sut = new SpanAdapter(layerSupportRegistry, featureSupportRegistry, null, neLayer,
+                () -> asList(), behaviors, constraintsService);
 
         neLayer.setOverlapMode(NO_OVERLAP);
         assertThat(sut.validate(jcas.getCas())).isEmpty();

@@ -38,6 +38,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.config.ProjectInitializersAutoConfiguration;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
+import de.tudarmstadt.ukp.inception.project.api.ProjectInitializationRequest;
 import de.tudarmstadt.ukp.inception.project.api.ProjectInitializer;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.wicket.resource.Strings;
@@ -99,12 +100,13 @@ public class DependencyLayerInitializer
     }
 
     @Override
-    public void configure(Project aProject) throws IOException
+    public void configure(ProjectInitializationRequest aRequest) throws IOException
     {
+        var project = aRequest.getProject();
         // Dependency Layer
         var depLayer = new AnnotationLayer(Dependency.class.getName(), "Dependency", RELATION_TYPE,
-                aProject, true, SINGLE_TOKEN, OVERLAP_ONLY);
-        var tokenLayer = annotationSchemaService.findLayer(aProject, Token.class.getName());
+                project, true, SINGLE_TOKEN, OVERLAP_ONLY);
+        var tokenLayer = annotationSchemaService.findLayer(project, Token.class.getName());
         var tokenFeatures = annotationSchemaService.listAnnotationFeature(tokenLayer);
         AnnotationFeature tokenPosFeature = null;
         for (var feature : tokenFeatures) {
@@ -121,16 +123,16 @@ public class DependencyLayerInitializer
                 .initializeLayerConfiguration(annotationSchemaService);
 
         var depTagSet = annotationSchemaService
-                .getTagSet(DependencyTypeTagSetInitializer.TAG_SET_NAME, aProject);
+                .getTagSet(DependencyTypeTagSetInitializer.TAG_SET_NAME, project);
 
         annotationSchemaService
-                .createFeature(new AnnotationFeature(aProject, depLayer, "DependencyType",
+                .createFeature(new AnnotationFeature(project, depLayer, "DependencyType",
                         "Relation", CAS.TYPE_NAME_STRING, "Dependency relation", depTagSet));
 
         var flavorsTagset = annotationSchemaService
-                .getTagSet(DependencyFlavorTagSetInitializer.TAG_SET_NAME, aProject);
+                .getTagSet(DependencyFlavorTagSetInitializer.TAG_SET_NAME, project);
 
-        annotationSchemaService.createFeature(new AnnotationFeature(aProject, depLayer, "flavor",
+        annotationSchemaService.createFeature(new AnnotationFeature(project, depLayer, "flavor",
                 "Flavor", CAS.TYPE_NAME_STRING, "Dependency relation", flavorsTagset));
     }
 }

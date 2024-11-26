@@ -37,6 +37,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.config.ProjectInitializersAutoConfiguration;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.chunk.Chunk;
+import de.tudarmstadt.ukp.inception.project.api.ProjectInitializationRequest;
 import de.tudarmstadt.ukp.inception.project.api.ProjectInitializer;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.wicket.resource.Strings;
@@ -93,17 +94,18 @@ public class ChunkLayerInitializer
     }
 
     @Override
-    public void configure(Project aProject) throws IOException
+    public void configure(ProjectInitializationRequest aRequest) throws IOException
     {
+        var project = aRequest.getProject();
         AnnotationLayer chunkLayer = new AnnotationLayer(Chunk.class.getName(), "Chunk", SPAN_TYPE,
-                aProject, true, AnchoringMode.TOKENS, OverlapMode.NO_OVERLAP);
+                project, true, AnchoringMode.TOKENS, OverlapMode.NO_OVERLAP);
         annotationSchemaService.createOrUpdateLayer(chunkLayer);
 
         AnnotationFeature chunkValueFeature = new AnnotationFeature();
         chunkValueFeature.setDescription("Chunk tag");
         chunkValueFeature.setName("chunkValue");
         chunkValueFeature.setType(CAS.TYPE_NAME_STRING);
-        chunkValueFeature.setProject(aProject);
+        chunkValueFeature.setProject(project);
         chunkValueFeature.setUiName("Tag");
         chunkValueFeature.setLayer(chunkLayer);
         annotationSchemaService.createFeature(chunkValueFeature);
