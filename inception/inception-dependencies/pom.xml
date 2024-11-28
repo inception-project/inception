@@ -1464,14 +1464,6 @@
       </dependency>
 
       <dependency>
-        <groupId>org.apache.uima</groupId>
-        <artifactId>uimafit-bom</artifactId>
-        <version>${uimafit.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
-
-      <dependency>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-dependencies</artifactId>
         <version>${spring.boot.version}</version>

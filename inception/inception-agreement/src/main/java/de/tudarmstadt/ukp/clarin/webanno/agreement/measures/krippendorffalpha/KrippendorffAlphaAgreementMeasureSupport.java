@@ -25,6 +25,7 @@ import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.DefaultAgreementTrai
 import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.AbstractCodingAgreementMeasureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.FullCodingAgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
 public class KrippendorffAlphaAgreementMeasureSupport
@@ -52,15 +53,15 @@ public class KrippendorffAlphaAgreementMeasureSupport
     }
 
     @Override
-    public AgreementMeasure<FullCodingAgreementResult> createMeasure(AnnotationFeature aFeature,
-            DefaultAgreementTraits aTraits)
+    public AgreementMeasure<FullCodingAgreementResult> createMeasure(AnnotationLayer aLayer,
+            AnnotationFeature aFeature, DefaultAgreementTraits aTraits)
     {
         return new KrippendorffAlphaAgreementMeasure(aFeature, aTraits, annotationService);
     }
 
     @Override
-    public Panel createTraitsEditor(String aId, IModel<AnnotationFeature> aFeature,
-            IModel<DefaultAgreementTraits> aModel)
+    public Panel createTraitsEditor(String aId, IModel<AnnotationLayer> aLayer,
+            IModel<AnnotationFeature> aFeature, IModel<DefaultAgreementTraits> aModel)
     {
         return new KrippendorffAlphaAgreementTraitsEditor(aId, aFeature, aModel);
     }

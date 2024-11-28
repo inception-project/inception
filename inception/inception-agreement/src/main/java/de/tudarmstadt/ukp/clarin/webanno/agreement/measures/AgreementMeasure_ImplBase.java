@@ -20,17 +20,26 @@ package de.tudarmstadt.ukp.clarin.webanno.agreement.measures;
 import java.io.Serializable;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
 public abstract class AgreementMeasure_ImplBase<R extends Serializable, T extends DefaultAgreementTraits>
     implements AgreementMeasure<R>
 {
+    private final AnnotationLayer layer;
     private final AnnotationFeature feature;
     private final T traits;
 
-    public AgreementMeasure_ImplBase(AnnotationFeature aFeature, T aTraits)
+    public AgreementMeasure_ImplBase(AnnotationLayer aLayer, AnnotationFeature aFeature, T aTraits)
     {
+        layer = aLayer;
         feature = aFeature;
         traits = aTraits;
+    }
+
+    @Override
+    public AnnotationLayer getLayer()
+    {
+        return layer;
     }
 
     @Override
