@@ -80,8 +80,7 @@
     <awaitility.version>4.2.2</awaitility.version>
 
     <dkpro.version>2.5.0</dkpro.version>
-    <uima.version>3.5.0</uima.version>
-    <uimafit.version>3.5.0</uimafit.version>
+    <uima.version>3.6.0</uima.version>
     <uima-json.version>0.5.0</uima-json.version>
 
     <pdfbox.version>3.0.3</pdfbox.version>

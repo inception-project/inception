@@ -23,6 +23,7 @@ import org.dkpro.statistics.agreement.IAnnotationStudy;
 
 import de.tudarmstadt.ukp.clarin.webanno.agreement.FullAgreementResult_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
 public abstract class AgreementMeasureSupport_ImplBase<//
         T extends DefaultAgreementTraits, //
@@ -32,8 +33,8 @@ public abstract class AgreementMeasureSupport_ImplBase<//
 {
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
-    public Panel createTraitsEditor(String aId, IModel<AnnotationFeature> aFeature,
-            IModel<T> aModel)
+    public Panel createTraitsEditor(String aId, IModel<AnnotationLayer> aLayer,
+            IModel<AnnotationFeature> aFeature, IModel<T> aModel)
     {
         return new DefaultAgreementTraitsEditor<DefaultAgreementTraits>(aId, aFeature,
                 (IModel) aModel);

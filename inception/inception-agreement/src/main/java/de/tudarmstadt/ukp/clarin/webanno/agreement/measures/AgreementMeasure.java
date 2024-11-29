@@ -23,10 +23,15 @@ import java.util.Map;
 import org.apache.uima.cas.CAS;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
 public interface AgreementMeasure<R extends Serializable>
 {
+    static final String POSITION = "<POS>";
+
     R getAgreement(Map<String, CAS> aCasMap);
+
+    AnnotationLayer getLayer();
 
     AnnotationFeature getFeature();
 
