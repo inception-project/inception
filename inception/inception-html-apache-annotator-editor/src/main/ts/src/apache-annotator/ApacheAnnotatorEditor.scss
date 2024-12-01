@@ -74,6 +74,10 @@ html > body {
   cursor: col-resize; 
 }
 
+.i7n-plain-text-document {
+  white-space: pre-line;
+}
+
 .i7n-wrapper {
   position: relative;
   line-height: 1.8;

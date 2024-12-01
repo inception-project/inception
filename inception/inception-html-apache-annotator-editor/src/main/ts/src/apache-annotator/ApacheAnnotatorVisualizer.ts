@@ -376,7 +376,7 @@ export class ApacheAnnotatorVisualizer {
       const startTime = new Date().getTime()
       this.renderHighlight(span, begin, end, attributes)
       const endTime = new Date().getTime()
-      console.debug(`Rendering span with size ${end - begin} took ${Math.abs(endTime - startTime)}ms`)
+      // console.debug(`Rendering span with size ${end - begin} took ${Math.abs(endTime - startTime)}ms`)
     } else {
       // Try optimizing for long spans to improve rendering performance
       let fragmentCount = 0
@@ -400,7 +400,7 @@ export class ApacheAnnotatorVisualizer {
         fragmentCount++
       }
       const endTime = new Date().getTime()
-      console.debug(`Rendering span with size ${end - begin} took ${Math.abs(endTime - startTime)}ms (${fragmentCount} fragments)`)
+      // console.debug(`Rendering span with size ${end - begin} took ${Math.abs(endTime - startTime)}ms (${fragmentCount} fragments)`)
     }
   }
 
