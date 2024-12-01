@@ -171,7 +171,7 @@ class BratSerializerImplTest
                     () -> asList(posFeature));
         });
 
-        var jsonFilePath = "target/test-output/output-sentence-oriented.json";
+        var jsonFilePath = "target/test-output/paging-sentence-oriented.json";
         var file = "src/test/resources/tcf04-karin-wl.xml";
 
         var cas = JCasFactory.createJCas().getCas();
@@ -201,15 +201,15 @@ class BratSerializerImplTest
 
         JSONUtil.generatePrettyJson(response, new File(jsonFilePath));
 
-        assertThat(contentOf(new File("src/test/resources/output-sentence-oriented.json"), UTF_8))
+        assertThat(contentOf(new File("src/test/resources/paging-sentence-oriented.json"), UTF_8))
                 .isEqualToNormalizingNewlines(contentOf(new File(jsonFilePath), UTF_8));
     }
 
     @Test
     void thatLineOrientedStrategyRenderCorrectly() throws Exception
     {
-        var jsonFilePath = "target/test-output/multiline.json";
-        var file = "src/test/resources/multiline.txt";
+        var jsonFilePath = "target/test-output/paging-line-oriented.json";
+        var file = "src/test/resources/paging-line-oriented.txt";
 
         var cas = JCasFactory.createJCas().getCas();
         var reader = createReader(TextReader.class, TextReader.PARAM_SOURCE_LOCATION, file);
@@ -239,15 +239,15 @@ class BratSerializerImplTest
 
         JSONUtil.generatePrettyJson(response, new File(jsonFilePath));
 
-        assertThat(contentOf(new File("src/test/resources/multiline.json"), UTF_8))
-                .isEqualToNormalizingNewlines(contentOf(new File(jsonFilePath), UTF_8));
+        assertThat(contentOf(new File(jsonFilePath), UTF_8)).isEqualToNormalizingNewlines(
+                contentOf(new File("src/test/resources/paging-line-oriented.json"), UTF_8));
     }
 
     @Test
     void thatTokenWrappingStrategyRenderCorrectly() throws Exception
     {
-        var jsonFilePath = "target/test-output/longlines.json";
-        var file = "src/test/resources/longlines.txt";
+        var jsonFilePath = "target/test-output/paging-token-wrapping.json";
+        var file = "src/test/resources/paging-token-wrapping.txt";
 
         var cas = JCasFactory.createJCas().getCas();
         var reader = createReader(TextReader.class, TextReader.PARAM_SOURCE_LOCATION, file);
@@ -277,7 +277,7 @@ class BratSerializerImplTest
 
         JSONUtil.generatePrettyJson(response, new File(jsonFilePath));
 
-        assertThat(contentOf(new File("src/test/resources/longlines.json"), UTF_8))
+        assertThat(contentOf(new File("src/test/resources/paging-token-wrapping.json"), UTF_8))
                 .isEqualToNormalizingNewlines(contentOf(new File(jsonFilePath), UTF_8));
     }
 

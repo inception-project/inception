@@ -494,9 +494,6 @@ For details, see <<sect_workload>> in the main documentation.
 
 image::images/getting_started_monitoring.png[align="center"]
 
-=== Evaluation
-The evaluation page shows a learning curve diagram of each recommender (see xref:recommenders_in_getting_started[Recommender]).
-
 === Settings
 Here, you can organize, manage and adjust all the details of your project.
 We had a look at those you need to get started for your own projects in the section <<Project Settings>> already.
