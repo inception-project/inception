@@ -414,7 +414,7 @@ public class SearchServiceImpl
         }
     }
 
-    @TransactionalEventListener(fallbackExecution = true)
+    @EventListener
     public void onAfterDocumentCreated(AfterDocumentCreatedEvent aEvent)
     {
         LOG.trace("Starting afterDocumentCreate");
@@ -423,7 +423,7 @@ public class SearchServiceImpl
         enqueueIndexDocument(aEvent.getDocument(), "onAfterDocumentCreated");
     }
 
-    @TransactionalEventListener(fallbackExecution = true)
+    @EventListener
     public void onAfterCasWritten(AfterCasWrittenEvent aEvent)
     {
         LOG.trace("Starting afterAnnotationUpdate");

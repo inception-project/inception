@@ -46,14 +46,12 @@ import jakarta.persistence.EntityManager;
 public class EventLoggingAutoConfiguration
 {
     @Bean
-    @Autowired
     public EventRepository eventRepository(EntityManager aEntityManager)
     {
         return new EventRepositoryImpl(aEntityManager);
     }
 
     @Bean
-    @Autowired
     public EventLoggingAdapterRegistry eventLoggingAdapterRegistry(
             @Lazy @Autowired(required = false) List<EventLoggingAdapter<?>> aAdapters)
     {
@@ -65,7 +63,6 @@ public class EventLoggingAutoConfiguration
     // pending events would have been flushed which would create an exception.
     @ConditionalOnWebApplication
     @Bean
-    @Autowired
     public EventLoggingListener eventLoggingListener(EventRepository aRepo,
             EventLoggingAdapterRegistry aAdapterRegistry, EventLoggingProperties aProperties)
     {

@@ -108,7 +108,7 @@ public class CasMerge
 
     /**
      * Using {@code DiffResult}, determine the annotations to be deleted from the randomly generated
-     * MergeCase. The initial Merge CAs is stored under a name {@code CurationPanel#CURATION_USER}.
+     * MergeCase. The initial Merge CAS is stored under a name {@code CurationPanel#CURATION_USER}.
      * <p>
      * Any similar annotations stacked in a {@code CasDiff2.Position} will be assumed a difference
      * <p>
