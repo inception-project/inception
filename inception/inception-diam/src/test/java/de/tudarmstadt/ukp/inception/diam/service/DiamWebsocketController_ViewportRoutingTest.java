@@ -27,6 +27,7 @@ import static org.apache.commons.io.IOUtils.toInputStream;
 import static org.apache.tomcat.websocket.Constants.WS_AUTHENTICATION_PASSWORD;
 import static org.apache.tomcat.websocket.Constants.WS_AUTHENTICATION_USER_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.security.config.Customizer.withDefaults;
 import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
 
 import java.io.File;
@@ -381,12 +382,12 @@ public class DiamWebsocketController_ViewportRoutingTest
         public SecurityFilterChain wsFilterChain(HttpSecurity aHttp) throws Exception
         {
             aHttp.securityMatcher(WebsocketConfig.WS_ENDPOINT);
-            aHttp.authorizeHttpRequests() //
+            aHttp.authorizeHttpRequests(rules -> rules //
                     .requestMatchers("/**").authenticated() //
-                    .anyRequest().denyAll();
-            aHttp.sessionManagement() //
-                    .sessionCreationPolicy(STATELESS);
-            aHttp.httpBasic();
+                    .anyRequest().denyAll());
+            aHttp.sessionManagement(session -> session //
+                    .sessionCreationPolicy(STATELESS));
+            aHttp.httpBasic(withDefaults());
             return aHttp.build();
         }
     }
