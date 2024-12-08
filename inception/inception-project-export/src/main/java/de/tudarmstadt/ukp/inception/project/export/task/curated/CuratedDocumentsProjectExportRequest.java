@@ -26,6 +26,7 @@ public class CuratedDocumentsProjectExportRequest
 {
     private static final long serialVersionUID = 4272079942793991783L;
 
+    private static final String FILENAME_PREFIX = "curated-docs";
     public static final String FORMAT_AUTO = "AUTO";
 
     private String format;
@@ -71,14 +72,9 @@ public class CuratedDocumentsProjectExportRequest
     }
 
     @Override
-    public String getFilenameTag()
+    public String getFilenamePrefix()
     {
-        return filenameTag;
-    }
-
-    public void setFilenameTag(String aFilenameTag)
-    {
-        filenameTag = aFilenameTag;
+        return FILENAME_PREFIX;
     }
 
     @Override

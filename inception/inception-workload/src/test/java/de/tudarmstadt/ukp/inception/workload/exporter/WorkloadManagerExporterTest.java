@@ -79,7 +79,8 @@ public class WorkloadManagerExporterTest
     {
         // Export the project
         var exportRequest = new FullProjectExportRequest(project, null, false);
-        var monitor = new ProjectExportTaskMonitor(project, null, "test");
+        var monitor = new ProjectExportTaskMonitor(project, null, "test",
+                exportRequest.getFilenamePrefix());
         var exportedProject = new ExportedProject();
         var stage = mock(ZipOutputStream.class);
 

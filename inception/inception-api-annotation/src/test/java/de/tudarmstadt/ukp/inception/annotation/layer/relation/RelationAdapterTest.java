@@ -22,8 +22,8 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.ANY_OVERLAP;
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.NO_OVERLAP;
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.OVERLAP_ONLY;
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.STACKING_ONLY;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.FEAT_REL_SOURCE;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.FEAT_REL_TARGET;
+import static de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport.FEAT_REL_SOURCE;
+import static de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport.FEAT_REL_TARGET;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.util.JCasUtil.select;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -100,14 +100,13 @@ public class RelationAdapterTest
         document.setProject(project);
 
         // Set up annotation schema with POS and Dependency
-        AnnotationLayer tokenLayer = new AnnotationLayer(Token.class.getName(), "Token",
-                SpanLayerSupport.TYPE, project, true, SINGLE_TOKEN, NO_OVERLAP);
+        var tokenLayer = new AnnotationLayer(Token.class.getName(), "Token", SpanLayerSupport.TYPE,
+                project, true, SINGLE_TOKEN, NO_OVERLAP);
         tokenLayer.setId(1l);
-        AnnotationFeature tokenLayerPos = new AnnotationFeature(1l, tokenLayer, "pos",
-                POS.class.getName());
+        var tokenLayerPos = new AnnotationFeature(1l, tokenLayer, "pos", POS.class.getName());
 
-        AnnotationLayer posLayer = new AnnotationLayer(POS.class.getName(), "POS",
-                SpanLayerSupport.TYPE, project, true, SINGLE_TOKEN, NO_OVERLAP);
+        var posLayer = new AnnotationLayer(POS.class.getName(), "POS", SpanLayerSupport.TYPE,
+                project, true, SINGLE_TOKEN, NO_OVERLAP);
         posLayer.setId(2l);
 
         depLayer = new AnnotationLayer(Dependency.class.getName(), "Dependency",
@@ -130,27 +129,27 @@ public class RelationAdapterTest
     @Test
     public void thatRelationAttachmentBehaviorOnCreateWorks() throws Exception
     {
-        TokenBuilder<Token, Sentence> builder = new TokenBuilder<>(Token.class, Sentence.class);
+        var builder = new TokenBuilder<>(Token.class, Sentence.class);
         builder.buildTokens(jcas, "This is a test .");
 
-        for (Token t : select(jcas, Token.class)) {
-            POS pos = new POS(jcas, t.getBegin(), t.getEnd());
+        for (var t : select(jcas, Token.class)) {
+            var pos = new POS(jcas, t.getBegin(), t.getEnd());
             t.setPos(pos);
             pos.addToIndexes();
         }
 
-        RelationAdapter sut = new RelationAdapter(layerSupportRegistry, featureSupportRegistry,
-                null, depLayer, FEAT_REL_TARGET, FEAT_REL_SOURCE,
+        var sut = new RelationAdapter(layerSupportRegistry, featureSupportRegistry, null, depLayer,
+                FEAT_REL_TARGET, FEAT_REL_SOURCE,
                 () -> asList(dependencyLayerGovernor, dependencyLayerDependent), behaviors,
                 constraintsService);
 
-        List<POS> posAnnotations = new ArrayList<>(select(jcas, POS.class));
-        List<Token> tokens = new ArrayList<>(select(jcas, Token.class));
+        var posAnnotations = new ArrayList<>(select(jcas, POS.class));
+        var tokens = new ArrayList<>(select(jcas, Token.class));
 
-        POS source = posAnnotations.get(0);
-        POS target = posAnnotations.get(1);
+        var source = posAnnotations.get(0);
+        var target = posAnnotations.get(1);
 
-        AnnotationFS dep = sut.add(document, username, source, target, jcas.getCas());
+        var dep = sut.add(document, username, source, target, jcas.getCas());
 
         assertThat(FSUtil.getFeature(dep, FEAT_REL_SOURCE, Token.class)).isEqualTo(tokens.get(0));
         assertThat(FSUtil.getFeature(dep, FEAT_REL_TARGET, Token.class)).isEqualTo(tokens.get(1));
@@ -161,24 +160,24 @@ public class RelationAdapterTest
     {
         depLayer.setCrossSentence(false);
 
-        TokenBuilder<Token, Sentence> builder = new TokenBuilder<>(Token.class, Sentence.class);
+        var builder = new TokenBuilder<>(Token.class, Sentence.class);
         builder.buildTokens(jcas, "This is a test .\nThis is sentence two .");
 
-        for (Token t : select(jcas, Token.class)) {
-            POS pos = new POS(jcas, t.getBegin(), t.getEnd());
+        for (var t : select(jcas, Token.class)) {
+            var pos = new POS(jcas, t.getBegin(), t.getEnd());
             t.setPos(pos);
             pos.addToIndexes();
         }
 
-        RelationAdapter sut = new RelationAdapter(layerSupportRegistry, featureSupportRegistry,
-                null, depLayer, FEAT_REL_TARGET, FEAT_REL_SOURCE,
+        var sut = new RelationAdapter(layerSupportRegistry, featureSupportRegistry, null, depLayer,
+                FEAT_REL_TARGET, FEAT_REL_SOURCE,
                 () -> asList(dependencyLayerGovernor, dependencyLayerDependent), behaviors,
                 constraintsService);
 
-        List<POS> posAnnotations = new ArrayList<>(select(jcas, POS.class));
+        var posAnnotations = new ArrayList<>(select(jcas, POS.class));
 
-        POS source = posAnnotations.get(0);
-        POS target = posAnnotations.get(posAnnotations.size() - 1);
+        var source = posAnnotations.get(0);
+        var target = posAnnotations.get(posAnnotations.size() - 1);
 
         assertThatExceptionOfType(MultipleSentenceCoveredException.class)
                 .isThrownBy(() -> sut.add(document, username, source, target, jcas.getCas()))
@@ -188,24 +187,24 @@ public class RelationAdapterTest
     @Test
     public void thatRelationCrossSentenceBehaviorOnValidateGeneratesErrors() throws Exception
     {
-        TokenBuilder<Token, Sentence> builder = new TokenBuilder<>(Token.class, Sentence.class);
+        var builder = new TokenBuilder<>(Token.class, Sentence.class);
         builder.buildTokens(jcas, "This is a test .\nThis is sentence two .");
 
-        for (Token t : select(jcas, Token.class)) {
-            POS pos = new POS(jcas, t.getBegin(), t.getEnd());
+        for (var t : select(jcas, Token.class)) {
+            var pos = new POS(jcas, t.getBegin(), t.getEnd());
             t.setPos(pos);
             pos.addToIndexes();
         }
 
-        RelationAdapter sut = new RelationAdapter(layerSupportRegistry, featureSupportRegistry,
-                null, depLayer, FEAT_REL_TARGET, FEAT_REL_SOURCE,
+        var sut = new RelationAdapter(layerSupportRegistry, featureSupportRegistry, null, depLayer,
+                FEAT_REL_TARGET, FEAT_REL_SOURCE,
                 () -> asList(dependencyLayerGovernor, dependencyLayerDependent), behaviors,
                 constraintsService);
 
-        List<POS> posAnnotations = new ArrayList<>(select(jcas, POS.class));
+        var posAnnotations = new ArrayList<>(select(jcas, POS.class));
 
-        POS source = posAnnotations.get(0);
-        POS target = posAnnotations.get(posAnnotations.size() - 1);
+        var source = posAnnotations.get(0);
+        var target = posAnnotations.get(posAnnotations.size() - 1);
 
         depLayer.setCrossSentence(true);
         sut.add(document, username, source, target, jcas.getCas());
@@ -219,27 +218,27 @@ public class RelationAdapterTest
     @Test
     public void thatCreatingRelationWorks() throws Exception
     {
-        TokenBuilder<Token, Sentence> builder = new TokenBuilder<>(Token.class, Sentence.class);
+        var builder = new TokenBuilder<>(Token.class, Sentence.class);
         builder.buildTokens(jcas, "This is a test .\nThis is sentence two .");
 
-        for (Token t : select(jcas, Token.class)) {
-            POS pos = new POS(jcas, t.getBegin(), t.getEnd());
+        for (var t : select(jcas, Token.class)) {
+            var pos = new POS(jcas, t.getBegin(), t.getEnd());
             t.setPos(pos);
             pos.addToIndexes();
         }
 
-        RelationAdapter sut = new RelationAdapter(layerSupportRegistry, featureSupportRegistry,
-                null, depLayer, FEAT_REL_TARGET, FEAT_REL_SOURCE,
+        var sut = new RelationAdapter(layerSupportRegistry, featureSupportRegistry, null, depLayer,
+                FEAT_REL_TARGET, FEAT_REL_SOURCE,
                 () -> asList(dependencyLayerGovernor, dependencyLayerDependent), behaviors,
                 constraintsService);
 
-        List<POS> posAnnotations = new ArrayList<>(select(jcas, POS.class));
-        List<Token> tokens = new ArrayList<>(select(jcas, Token.class));
+        var posAnnotations = new ArrayList<>(select(jcas, POS.class));
+        var tokens = new ArrayList<>(select(jcas, Token.class));
 
-        POS source = posAnnotations.get(0);
-        POS target = posAnnotations.get(1);
+        var source = posAnnotations.get(0);
+        var target = posAnnotations.get(1);
 
-        AnnotationFS dep1 = sut.add(document, username, source, target, jcas.getCas());
+        var dep1 = sut.add(document, username, source, target, jcas.getCas());
 
         assertThat(FSUtil.getFeature(dep1, FEAT_REL_SOURCE, Token.class)).isEqualTo(tokens.get(0));
         assertThat(FSUtil.getFeature(dep1, FEAT_REL_TARGET, Token.class)).isEqualTo(tokens.get(1));
@@ -248,24 +247,24 @@ public class RelationAdapterTest
     @Test
     public void thatRelationOverlapBehaviorOnCreateWorks() throws Exception
     {
-        TokenBuilder<Token, Sentence> builder = new TokenBuilder<>(Token.class, Sentence.class);
+        var builder = new TokenBuilder<>(Token.class, Sentence.class);
         builder.buildTokens(jcas, "This is a test .\nThis is sentence two .");
 
-        for (Token t : select(jcas, Token.class)) {
-            POS pos = new POS(jcas, t.getBegin(), t.getEnd());
+        for (var t : select(jcas, Token.class)) {
+            var pos = new POS(jcas, t.getBegin(), t.getEnd());
             t.setPos(pos);
             pos.addToIndexes();
         }
 
-        RelationAdapter sut = new RelationAdapter(layerSupportRegistry, featureSupportRegistry,
-                null, depLayer, FEAT_REL_TARGET, FEAT_REL_SOURCE,
+        var sut = new RelationAdapter(layerSupportRegistry, featureSupportRegistry, null, depLayer,
+                FEAT_REL_TARGET, FEAT_REL_SOURCE,
                 () -> asList(dependencyLayerGovernor, dependencyLayerDependent), behaviors,
                 constraintsService);
 
-        List<POS> posAnnotations = new ArrayList<>(select(jcas, POS.class));
+        var posAnnotations = new ArrayList<>(select(jcas, POS.class));
 
-        POS source = posAnnotations.get(0);
-        POS target = posAnnotations.get(1);
+        var source = posAnnotations.get(0);
+        var target = posAnnotations.get(1);
 
         // First annotation should work
         depLayer.setOverlapMode(ANY_OVERLAP);
@@ -295,24 +294,24 @@ public class RelationAdapterTest
     @Test
     public void thatRelationOverlapBehaviorOnValidateGeneratesErrors() throws Exception
     {
-        TokenBuilder<Token, Sentence> builder = new TokenBuilder<>(Token.class, Sentence.class);
+        var builder = new TokenBuilder<>(Token.class, Sentence.class);
         builder.buildTokens(jcas, "This is a test .\nThis is sentence two .");
 
-        for (Token t : select(jcas, Token.class)) {
-            POS pos = new POS(jcas, t.getBegin(), t.getEnd());
+        for (var t : select(jcas, Token.class)) {
+            var pos = new POS(jcas, t.getBegin(), t.getEnd());
             t.setPos(pos);
             pos.addToIndexes();
         }
 
-        RelationAdapter sut = new RelationAdapter(layerSupportRegistry, featureSupportRegistry,
-                null, depLayer, FEAT_REL_TARGET, FEAT_REL_SOURCE,
+        var sut = new RelationAdapter(layerSupportRegistry, featureSupportRegistry, null, depLayer,
+                FEAT_REL_TARGET, FEAT_REL_SOURCE,
                 () -> asList(dependencyLayerGovernor, dependencyLayerDependent), behaviors,
                 constraintsService);
 
-        List<POS> posAnnotations = new ArrayList<>(select(jcas, POS.class));
+        var posAnnotations = new ArrayList<>(select(jcas, POS.class));
 
-        POS source = posAnnotations.get(0);
-        POS target = posAnnotations.get(1);
+        var source = posAnnotations.get(0);
+        var target = posAnnotations.get(1);
 
         // Create two annotations stacked annotations
         depLayer.setOverlapMode(ANY_OVERLAP);

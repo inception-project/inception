@@ -17,27 +17,26 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.project.initializers;
 
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.SPAN_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SINGLE_TOKEN;
+import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.NO_OVERLAP;
 import static java.util.Arrays.asList;
+import static org.apache.uima.cas.CAS.TYPE_NAME_STRING;
 
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.util.List;
 import java.util.Optional;
 
-import org.apache.uima.cas.CAS;
 import org.apache.wicket.request.resource.PackageResourceReference;
 import org.apache.wicket.request.resource.ResourceReference;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.config.ProjectInitializersAutoConfiguration;
 import de.tudarmstadt.ukp.dkpro.core.api.transform.type.SofaChangeAnnotation;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.project.api.ProjectInitializationRequest;
 import de.tudarmstadt.ukp.inception.project.api.ProjectInitializer;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
@@ -101,27 +100,27 @@ public class OrthographyLayerInitializer
     public void configure(ProjectInitializationRequest aRequest) throws IOException
     {
         var project = aRequest.getProject();
-        AnnotationLayer orthography = new AnnotationLayer(SofaChangeAnnotation.class.getName(),
-                "Orthography Correction", SPAN_TYPE, project, true, AnchoringMode.SINGLE_TOKEN,
-                OverlapMode.NO_OVERLAP);
+        var orthography = new AnnotationLayer(SofaChangeAnnotation.class.getName(),
+                "Orthography Correction", SpanLayerSupport.TYPE, project, true, SINGLE_TOKEN,
+                NO_OVERLAP);
         annotationSchemaService.createOrUpdateLayer(orthography);
 
-        AnnotationFeature correction = new AnnotationFeature();
+        var correction = new AnnotationFeature();
         correction.setDescription("Correct this token using the specified operation.");
         correction.setName("value");
-        correction.setType(CAS.TYPE_NAME_STRING);
+        correction.setType(TYPE_NAME_STRING);
         correction.setProject(project);
         correction.setUiName("Correction");
         correction.setLayer(orthography);
         annotationSchemaService.createFeature(correction);
 
-        TagSet operationTagset = annotationSchemaService
+        var operationTagset = annotationSchemaService
                 .getTagSet(SofaChangeOperationTagSetInitializer.TAG_SET_NAME, project);
 
-        AnnotationFeature operation = new AnnotationFeature();
+        var operation = new AnnotationFeature();
         operation.setDescription("An operation taken to change this token.");
         operation.setName("operation");
-        operation.setType(CAS.TYPE_NAME_STRING);
+        operation.setType(TYPE_NAME_STRING);
         operation.setProject(project);
         operation.setUiName("Operation");
         operation.setLayer(orthography);

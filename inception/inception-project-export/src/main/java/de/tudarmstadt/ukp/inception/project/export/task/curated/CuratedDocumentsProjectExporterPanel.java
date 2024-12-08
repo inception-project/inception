@@ -95,9 +95,8 @@ public class CuratedDocumentsProjectExporterPanel
     private void actionStartExport(AjaxRequestTarget aTarget)
     {
         var request = getModelObject();
-        request.setFilenameTag("_project");
 
-        CuratedDocumentsProjectExportTask task = new CuratedDocumentsProjectExportTask(request,
+        var task = new CuratedDocumentsProjectExportTask(request,
                 SecurityContextHolder.getContext().getAuthentication().getName());
 
         projectExportService.startTask(task);

@@ -22,7 +22,6 @@ import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
@@ -72,12 +71,9 @@ public class BackupProjectExporterPanel
 
     private void actionStartExport(AjaxRequestTarget aTarget)
     {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
         var request = getModelObject();
-        request.setFilenameTag("_project");
-
-        BackupProjectExportTask task = new BackupProjectExportTask(request,
-                authentication.getName());
+        var task = new BackupProjectExportTask(request, authentication.getName());
 
         projectExportService.startTask(task);
     }

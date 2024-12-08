@@ -19,15 +19,14 @@ package de.tudarmstadt.ukp.clarin.webanno.project.initializers;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SINGLE_TOKEN;
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.NO_OVERLAP;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.SPAN_TYPE;
 import static java.util.Arrays.asList;
+import static org.apache.uima.cas.CAS.TYPE_NAME_STRING;
 
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.util.List;
 import java.util.Optional;
 
-import org.apache.uima.cas.CAS;
 import org.apache.wicket.request.resource.PackageResourceReference;
 import org.apache.wicket.request.resource.ResourceReference;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,6 +37,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.config.ProjectInitializersAutoConfiguration;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.project.api.ProjectInitializationRequest;
 import de.tudarmstadt.ukp.inception.project.api.ProjectInitializer;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
@@ -98,23 +98,22 @@ public class LemmaLayerInitializer
     public void configure(ProjectInitializationRequest aRequest) throws IOException
     {
         var project = aRequest.getProject();
-        AnnotationLayer tokenLayer = annotationSchemaService.findLayer(project,
-                Token.class.getName());
+        var tokenLayer = annotationSchemaService.findLayer(project, Token.class.getName());
 
-        AnnotationFeature tokenLemmaFeature = new AnnotationFeature(project, tokenLayer, "lemma",
-                "lemma", Lemma.class.getName());
+        var tokenLemmaFeature = new AnnotationFeature(project, tokenLayer, "lemma", "lemma",
+                Lemma.class.getName());
         annotationSchemaService.createFeature(tokenLemmaFeature);
 
-        AnnotationLayer lemmaLayer = new AnnotationLayer(Lemma.class.getName(), "Lemma", SPAN_TYPE,
+        var lemmaLayer = new AnnotationLayer(Lemma.class.getName(), "Lemma", SpanLayerSupport.TYPE,
                 project, true, SINGLE_TOKEN, NO_OVERLAP);
         lemmaLayer.setAttachType(tokenLayer);
         lemmaLayer.setAttachFeature(tokenLemmaFeature);
         annotationSchemaService.createOrUpdateLayer(lemmaLayer);
 
-        AnnotationFeature lemmaFeature = new AnnotationFeature();
+        var lemmaFeature = new AnnotationFeature();
         lemmaFeature.setDescription("lemma Annotation");
         lemmaFeature.setName("value");
-        lemmaFeature.setType(CAS.TYPE_NAME_STRING);
+        lemmaFeature.setType(TYPE_NAME_STRING);
         lemmaFeature.setProject(project);
         lemmaFeature.setUiName("Lemma");
         lemmaFeature.setLayer(lemmaLayer);
