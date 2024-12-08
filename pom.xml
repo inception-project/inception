@@ -85,11 +85,11 @@
 
     <pdfbox.version>3.0.3</pdfbox.version>
 
-    <spring.version>6.1.15</spring.version>
-    <spring.boot.version>3.3.6</spring.boot.version>
-    <spring.data.version>3.3.6</spring.data.version>
-    <spring.security.version>6.3.5</spring.security.version>
-    <springdoc.version>2.6.0</springdoc.version>
+    <spring.version>6.2.0</spring.version>
+    <spring.boot.version>3.4.0</spring.boot.version>
+    <spring.data.version>3.4.0</spring.data.version>
+    <spring.security.version>6.4.1</spring.security.version>
+    <springdoc.version>2.7.0</springdoc.version>
     <swagger.version>2.2.26</swagger.version>
     <jjwt.version>0.12.6</jjwt.version>
 
