@@ -17,8 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.externaleditor;
 
+import static de.tudarmstadt.ukp.clarin.webanno.security.WicketSecurityUtils.getCsrfTokenFromSession;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 import static de.tudarmstadt.ukp.inception.support.wicket.WicketUtil.wrapInTryCatch;
+import static de.tudarmstadt.ukp.inception.websocket.config.WebsocketConfig.WS_ENDPOINT;
 import static java.lang.String.format;
 import static java.lang.invoke.MethodHandles.lookup;
 import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
@@ -33,6 +35,8 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.request.Url;
+import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.wicketstuff.event.annotation.OnEvent;
@@ -56,6 +60,7 @@ import de.tudarmstadt.ukp.inception.externaleditor.command.QueuedEditorCommandsM
 import de.tudarmstadt.ukp.inception.externaleditor.command.ScrollToCommand;
 import de.tudarmstadt.ukp.inception.externaleditor.model.AnnotationEditorProperties;
 import de.tudarmstadt.ukp.inception.externaleditor.resources.ExternalEditorJavascriptResourceReference;
+import de.tudarmstadt.ukp.inception.preferences.ClientSideUserPreferencesProvider;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.selection.ScrollToEvent;
@@ -194,7 +199,28 @@ public abstract class ExternalAnnotationEditorBase
         return new LoadAnnotationsCommand();
     }
 
-    protected abstract AnnotationEditorProperties getProperties();
+    protected AnnotationEditorProperties getProperties()
+    {
+        var props = new AnnotationEditorProperties();
+        props.setEditorFactoryId(getFactory().getBeanName());
+        props.setDiamAjaxCallbackUrl(getDiamBehavior().getCallbackUrl().toString());
+        props.setDiamWsUrl(constructWsEndpointUrl());
+        props.setCsrfToken(getCsrfTokenFromSession());
+
+        if (getFactory() instanceof ClientSideUserPreferencesProvider factory) {
+            factory.getUserPreferencesKey()
+                    .ifPresent(key -> props.setUserPreferencesKey(key.getClientSideKey()));
+        }
+
+        return props;
+    }
+
+    private String constructWsEndpointUrl()
+    {
+        Url endPointUrl = Url.parse(format("%s%s", context.getContextPath(), WS_ENDPOINT));
+        endPointUrl.setProtocol("ws");
+        return RequestCycle.get().getUrlRenderer().renderFullUrl(endPointUrl);
+    }
 
     private String getPropertiesAsJson()
     {

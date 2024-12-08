@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.clarin.webanno.project.initializers;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SINGLE_TOKEN;
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.NO_OVERLAP;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.SPAN_TYPE;
 import static java.util.Arrays.asList;
 
 import java.io.IOException;
@@ -38,6 +37,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.config.ProjectInitializersAutoConfiguration;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.morph.MorphologicalFeatures;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.project.api.ProjectInitializationRequest;
 import de.tudarmstadt.ukp.inception.project.api.ProjectInitializer;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
@@ -98,20 +98,20 @@ public class MorphologicalFeaturesLayerInitializer
     public void configure(ProjectInitializationRequest aRequest) throws IOException
     {
         var project = aRequest.getProject();
-        AnnotationLayer tokenLayer = annotationSchemaService.findLayer(project,
-                Token.class.getName());
+        var tokenLayer = annotationSchemaService.findLayer(project, Token.class.getName());
 
-        AnnotationFeature tokenMorphFeature = new AnnotationFeature(project, tokenLayer, "morph",
-                "morph", MorphologicalFeatures.class.getName());
+        var tokenMorphFeature = new AnnotationFeature(project, tokenLayer, "morph", "morph",
+                MorphologicalFeatures.class.getName());
         annotationSchemaService.createFeature(tokenMorphFeature);
 
-        AnnotationLayer morphLayer = new AnnotationLayer(MorphologicalFeatures.class.getName(),
-                "Morphological features", SPAN_TYPE, project, true, SINGLE_TOKEN, NO_OVERLAP);
+        var morphLayer = new AnnotationLayer(MorphologicalFeatures.class.getName(),
+                "Morphological features", SpanLayerSupport.TYPE, project, true, SINGLE_TOKEN,
+                NO_OVERLAP);
         morphLayer.setAttachType(tokenLayer);
         morphLayer.setAttachFeature(tokenMorphFeature);
         annotationSchemaService.createOrUpdateLayer(morphLayer);
 
-        AnnotationFeature valueFeature = new AnnotationFeature();
+        var valueFeature = new AnnotationFeature();
         valueFeature.setDescription("Morphological features");
         valueFeature.setName("value");
         valueFeature.setType(CAS.TYPE_NAME_STRING);

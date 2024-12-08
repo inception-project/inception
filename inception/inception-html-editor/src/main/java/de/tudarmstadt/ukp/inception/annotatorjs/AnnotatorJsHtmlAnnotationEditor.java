@@ -66,11 +66,10 @@ public class AnnotatorJsHtmlAnnotationEditor
     @Override
     protected AnnotationEditorProperties getProperties()
     {
-        var props = new AnnotationEditorProperties();
+        var props = super.getProperties();
         // The factory is the JS call. Cf. the "globalName" in build.js and the factory method
         // defined in main.ts
         props.setEditorFactory("AnnotatorJsEditor.factory()");
-        props.setDiamAjaxCallbackUrl(getDiamBehavior().getCallbackUrl().toString());
         props.setStylesheetSources(
                 asList(referenceToUrl(servletContext, AnnotatorJsCssResourceReference.get())));
         props.setScriptSources(asList(

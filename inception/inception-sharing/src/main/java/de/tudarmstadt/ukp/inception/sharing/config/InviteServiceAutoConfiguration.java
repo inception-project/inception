@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.inception.sharing.config;
 
 import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.SPEL_IS_ADMIN_ACCOUNT_RECOVERY_MODE;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -66,7 +65,6 @@ public class InviteServiceAutoConfiguration
     }
 
     @Bean
-    @Autowired
     public ProjectInviteExporter projectInviteExporter(InviteService aInviteService)
     {
         return new ProjectInviteExporter(aInviteService);

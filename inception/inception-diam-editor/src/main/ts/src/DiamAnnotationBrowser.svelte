@@ -35,6 +35,7 @@
     import AnnotationDetailPopOver from "@inception-project/inception-js-api/src/widget/AnnotationDetailPopOver.svelte"
 
     export let wsEndpointUrl: string;
+    export let csrfToken: string;
     export let topicChannel: string;
     export let ajaxEndpointUrl: string;
     export let pinnedGroups: string[];
@@ -121,7 +122,7 @@
 
     export function connect(): void {
         if (connected) return;
-        wsClient.connect(wsEndpointUrl);
+        wsClient.connect({url: wsEndpointUrl, csrfToken});
     }
 
     export function disconnect() {

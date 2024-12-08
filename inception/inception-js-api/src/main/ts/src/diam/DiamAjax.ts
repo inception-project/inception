@@ -30,6 +30,11 @@ export type DiamSelectAnnotationOptions = {
   scrollTo?: boolean
 }
 
+export interface DiamAjaxConnectOptions {
+  url: string,
+  csrfToken: string
+}
+
 export interface DiamAjax {
   /**
    * Select the given annotation.

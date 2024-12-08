@@ -129,7 +129,8 @@ public class GazeteerExporterTest
     {
         // Export the project
         var exportRequest = new FullProjectExportRequest(sourceProject, null, false);
-        var monitor = new ProjectExportTaskMonitor(sourceProject, null, "test");
+        var monitor = new ProjectExportTaskMonitor(sourceProject, null, "test",
+                exportRequest.getFilenamePrefix());
         var exportedProject = new ExportedProject();
         var stage = Mockito.mock(ZipOutputStream.class);
         sut.exportData(exportRequest, monitor, exportedProject, stage);
