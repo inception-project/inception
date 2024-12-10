@@ -90,7 +90,7 @@ html > body {
  * Annotation highlight.
  */
 .iaa-highlighted {
-  transition: filter var(--anim-fast);
+  /* transition: filter var(--anim-fast); -- slow for large documents, so we disable it here */
   cursor: pointer;
   background-color: var(--iaa-background-color);
   box-sizing: border-box;
