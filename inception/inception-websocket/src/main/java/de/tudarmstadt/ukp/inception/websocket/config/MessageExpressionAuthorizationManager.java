@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.websocket.config;
 
-import static org.springframework.util.Assert.notNull;
+import static java.util.Objects.requireNonNull;
 
 import java.util.function.Supplier;
 
@@ -25,6 +25,7 @@ import org.springframework.expression.Expression;
 import org.springframework.security.access.expression.ExpressionUtils;
 import org.springframework.security.access.expression.SecurityExpressionHandler;
 import org.springframework.security.authorization.AuthorizationDecision;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.security.authorization.AuthorizationManager;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.messaging.access.intercept.MessageAuthorizationContext;
@@ -47,18 +48,34 @@ public class MessageExpressionAuthorizationManager
             SecurityExpressionHandler<MessageAuthorizationContext<?>> aExpressionHandler,
             String aExpression)
     {
-        notNull(aExpressionHandler, "expressionHandler cannot be null");
-        notNull(aExpression, "expression cannot be null");
+        requireNonNull(aExpressionHandler, "expressionHandler cannot be null");
+        requireNonNull(aExpression, "expression cannot be null");
         expressionHandler = aExpressionHandler;
-        expression = this.expressionHandler.getExpressionParser().parseExpression(aExpression);
+        expression = expressionHandler.getExpressionParser().parseExpression(aExpression);
     }
 
     @Override
-    public AuthorizationDecision check(Supplier<Authentication> authentication,
-            MessageAuthorizationContext<?> object)
+    public void verify(Supplier<Authentication> aAuthentication,
+            MessageAuthorizationContext<?> aObject)
     {
-        var context = expressionHandler.createEvaluationContext(authentication, object);
+        var context = expressionHandler.createEvaluationContext(aAuthentication, aObject);
         var granted = ExpressionUtils.evaluateAsBoolean(expression, context);
-        return new AuthorizationDecision(granted);
+        if (!granted) {
+            throw new AuthorizationDeniedException("Access Denied");
+        }
+    }
+
+    @SuppressWarnings("deprecation")
+    @Override
+    public AuthorizationDecision check(Supplier<Authentication> aAuthentication,
+            MessageAuthorizationContext<?> aObject)
+    {
+        try {
+            verify(aAuthentication, aObject);
+            return new AuthorizationDecision(true);
+        }
+        catch (AuthorizationDeniedException e) {
+            return new AuthorizationDecision(false);
+        }
     }
 }
