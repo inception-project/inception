@@ -20,9 +20,10 @@ package de.tudarmstadt.ukp.clarin.webanno.security.config;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @ConfigurationProperties("user.profile")
-public class UserProfilePropertiesImpl implements UserProfileProperties
+public class UserProfilePropertiesImpl
+    implements UserProfileProperties
 {
-    private boolean accessible;
+    private boolean accessible = true;
 
     public void setAccessible(boolean aAccessible)
     {
