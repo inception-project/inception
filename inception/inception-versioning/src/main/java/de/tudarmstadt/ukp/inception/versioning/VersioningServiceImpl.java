@@ -19,12 +19,12 @@ package de.tudarmstadt.ukp.inception.versioning;
 
 import static de.tudarmstadt.ukp.inception.project.api.ProjectService.DOCUMENT_FOLDER;
 import static de.tudarmstadt.ukp.inception.project.api.ProjectService.PROJECT_FOLDER;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URISyntaxException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -59,9 +59,9 @@ import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
 import de.tudarmstadt.ukp.inception.curation.service.CurationDocumentService;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
-import de.tudarmstadt.ukp.inception.export.LayerImportExportUtils;
 import de.tudarmstadt.ukp.inception.project.api.event.BeforeProjectRemovedEvent;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.exporters.LayerImportExportUtils;
 import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 import de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil;
 
@@ -283,16 +283,14 @@ public class VersioningServiceImpl
         List<ExportedAnnotationLayer> exLayers = new ArrayList<>();
         for (AnnotationLayer layer : annotationService.listAnnotationLayer(aProject)) {
 
-            ExportedAnnotationLayer exMainLayer = LayerImportExportUtils.exportLayerDetails(null,
-                    null, layer, annotationService);
+            var exMainLayer = LayerImportExportUtils.exportLayerDetails(layer, annotationService);
             exLayers.add(exMainLayer);
 
             // If the layer is attached to another layer, then we also have to export
             // that, otherwise we would be missing it during re-import.
             if (layer.getAttachType() != null) {
-                AnnotationLayer attachLayer = layer.getAttachType();
-                ExportedAnnotationLayer exAttachLayer = LayerImportExportUtils
-                        .exportLayerDetails(null, null, attachLayer, annotationService);
+                var attachLayer = layer.getAttachType();
+                var exAttachLayer = LayerImportExportUtils.exportLayerDetails(attachLayer, annotationService);
                 exMainLayer.setAttachType(
                         new ExportedAnnotationLayerReference(exAttachLayer.getName()));
                 exLayers.add(exAttachLayer);
@@ -300,6 +298,6 @@ public class VersioningServiceImpl
         }
 
         String json = JSONUtil.toPrettyJsonString(exLayers);
-        Files.write(aFile.toPath(), json.getBytes(StandardCharsets.UTF_8));
+        Files.write(aFile.toPath(), json.getBytes(UTF_8));
     }
 }
