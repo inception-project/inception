@@ -36,6 +36,14 @@ jobs:
         java-version: ${{ matrix.jdk }}
         distribution: 'temurin'
         cache: maven
+        server-id: ukp-oss
+        server-username: MAVEN_USERNAME
+        server-password: MAVEN_PASSWORD
+
+    - name: Set up Maven
+      uses: stCarolas/setup-maven@v5
+      with:
+        maven-version: 3.9.9
 
     - name: Set up cache date
       run: echo "CACHE_DATE=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
@@ -50,9 +58,18 @@ jobs:
           ${{ runner.os }}-maven-
 
     - name: Build with Maven
-      run: mvn --no-transfer-progress -B clean verify --file pom.xml
+      if: "!(matrix.os == 'ubuntu-latest' && github.event_name != 'pull_request')"
+      run: mvn --show-version --batch-mode --no-transfer-progress clean deploy
 
-    - name: Upload Artifacts
+    - name: Build with Maven and publish artifacts
+      if: matrix.os == 'ubuntu-latest' && github.event_name != 'pull_request'
+      env:
+        # `MAVEN_USERNAME` and `MAVEN_PASSWORD` are used in `~/.m2/settings.xml` created by `setup-java` action
+        MAVEN_USERNAME: ${{ secrets.UKP_MAVEN_USER }}
+        MAVEN_PASSWORD: ${{ secrets.UKP_MAVEN_TOKEN }}
+      run: mvn --show-version --batch-mode --errors --no-transfer-progress -DdeployAtEnd=true -DskipTests clean deploy
+
+    - name: Capture build artifacts
       if: matrix.os == 'ubuntu-latest'
       uses: actions/upload-artifact@v4
       with:
