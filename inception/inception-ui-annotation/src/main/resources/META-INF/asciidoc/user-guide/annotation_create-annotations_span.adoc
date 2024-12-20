@@ -26,19 +26,19 @@ can stack, can nest, and can cross sentence boundaries.
 .Example
 For example, for NE annotation, select the options as shown below (red check mark):
 
-image::annotation2.jpg[align="center"]
+image::images/annotation2.jpg[align="center"]
 
 link:http://en.wikipedia.org/wiki/Named-entity_recognition[NE] annotation can be chosen from a tagset and can span over several tokens within one sentence. Nested NE annotations are also possible (in the example below: "Frankfurter" in "Frankfurter FC"). 
 
-image::annotation_ner.jpg[align="center"]
+image::images/annotation_ner.jpg[align="center"]
 
 link:http://en.wikipedia.org/wiki/Lemma_%28morphology%29[Lemma] annotation, as shown below, is freely selectable over a single token.
 
-image::annotation_lemma.jpg[align="center"]
+image::images/annotation_lemma.jpg[align="center"]
 
 link:http://en.wikipedia.org/wiki/Part_of_speech[POS] can be chosen over one token out of a tagset.
 
-image::annotation_pos.jpg[align="center"]
+image::images/annotation_pos.jpg[align="center"]
 
 .Zero-width spans
 To create a zero-length annotation, hold kbd:[Shift] and click on the position where you wish to create the annotation. To avoid accidental creations of zero-length annotations, a simple single-click triggers no action by default. The *lock to token* behavior cancels the ability to create zero-length annotations.

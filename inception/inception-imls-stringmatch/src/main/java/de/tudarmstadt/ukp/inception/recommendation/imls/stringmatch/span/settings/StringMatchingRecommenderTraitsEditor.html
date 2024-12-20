@@ -21,11 +21,36 @@
     <form wicket:id="form">
       <div class="row form-row" wicket:enclosure="ignoreCase">
         <div class="offset-sm-3 col-sm-9">
-          <div class="form-check">
+          <div class="form-check form-switch">
             <input wicket:id="ignoreCase" class="form-check-input" type="checkbox"/>
             <label wicket:for="ignoreCase" class="form-check-label">
               <wicket:label key="ignoreCase"/>
             </label>
+          </div>
+        </div>
+      </div>
+      <div class="row form-row" wicket:enclosure="excludePattern">
+        <label wicket:for="excludePattern" class="col-sm-3 col-form-label">
+          <wicket:label key="excludePattern"/>
+        </label>
+        <div class="col-sm-9">
+          <div class="input-group">
+            <input wicket:id="excludePattern" class="form-control"/>
+            <span class="input-group-text">(.*)</span>
+          </div>
+          <div class="form-text">
+            Regular expression that controls what can be added to the dictionary.
+          </div>
+        </div>
+      </div>
+      <div class="row form-row" wicket:enclosure="minLength">
+        <label wicket:for="minLength" class="col-sm-3 col-form-label">
+          <wicket:label key="minLength"/>
+        </label>
+        <div class="col-sm-9">
+          <input wicket:id="minLength" type="number" class="form-control"/>
+          <div class="form-text">
+            Minimum length for dictionary entries. Shorter entries will not be added.
           </div>
         </div>
       </div>

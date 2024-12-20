@@ -28,20 +28,21 @@ import org.apache.uima.jcas.tcas.Annotation;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 
 class NegativeSizeAnnotationsCheckTest
 {
     NegativeSizeAnnotationsCheck sut;
-    Project project;
+    SourceDocument document;
+    String dataOwner;
     JCas jCas;
 
     @BeforeEach
     void setup() throws Exception
     {
         sut = new NegativeSizeAnnotationsCheck();
-        project = new Project();
+        document = SourceDocument.builder().build();
         jCas = JCasFactory.createJCas();
     }
 
@@ -56,7 +57,7 @@ class NegativeSizeAnnotationsCheckTest
 
         var messages = new ArrayList<LogMessage>();
 
-        var result = sut.check(project, jCas.getCas(), messages);
+        var result = sut.check(document, dataOwner, jCas.getCas(), messages);
 
         assertThat(result).isFalse();
         assertThat(messages).hasSize(1);

@@ -22,6 +22,7 @@ import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.DefaultAgreementTrai
 import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.AbstractCodingAgreementMeasureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.FullCodingAgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
 public class FleissKappaAgreementMeasureSupport
@@ -49,8 +50,8 @@ public class FleissKappaAgreementMeasureSupport
     }
 
     @Override
-    public AgreementMeasure<FullCodingAgreementResult> createMeasure(AnnotationFeature aFeature,
-            DefaultAgreementTraits aTraits)
+    public AgreementMeasure<FullCodingAgreementResult> createMeasure(AnnotationLayer aLayer,
+            AnnotationFeature aFeature, DefaultAgreementTraits aTraits)
     {
         return new FleissKappaAgreementMeasure(aFeature, aTraits, annotationService);
     }

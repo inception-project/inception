@@ -59,7 +59,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.context.event.ContextRefreshedEvent;
@@ -247,6 +246,7 @@ public class ProjectExportServiceImpl
 
         ExportedProject exProject = new ExportedProject();
         exProject.setName(aRequest.getProject().getName());
+        exProject.setSlug(aRequest.getProject().getSlug());
 
         try {
             while (!deque.isEmpty()) {
@@ -384,7 +384,7 @@ public class ProjectExportServiceImpl
     public ProjectExportTaskHandle startProjectExportTask(FullProjectExportRequest aRequest,
             String aUsername)
     {
-        BackupProjectExportTask task = new BackupProjectExportTask(aRequest, aUsername);
+        var task = new BackupProjectExportTask(aRequest, aUsername);
 
         return startTask(task);
     }
@@ -394,13 +394,10 @@ public class ProjectExportServiceImpl
             FullProjectExportRequest aRequest, String aUsername)
     {
         var request = new CuratedDocumentsProjectExportRequest(aRequest.getProject());
-        request.setFilenameTag(aRequest.getFilenameTag());
         request.setFormat(aRequest.getFormat());
         request.setIncludeInProgress(aRequest.isIncludeInProgress());
 
-        CuratedDocumentsProjectExportTask task = new CuratedDocumentsProjectExportTask(request,
-                aUsername);
-
+        var task = new CuratedDocumentsProjectExportTask(request, aUsername);
         return startTask(task);
     }
 
@@ -410,7 +407,7 @@ public class ProjectExportServiceImpl
         ProjectExportTaskHandle handle = aTask.getHandle();
 
         // This autowires the task fields manually.
-        AutowireCapableBeanFactory factory = applicationContext.getAutowireCapableBeanFactory();
+        var factory = applicationContext.getAutowireCapableBeanFactory();
         factory.autowireBean(aTask);
         factory.initializeBean(aTask, "transientTask");
 
@@ -422,7 +419,7 @@ public class ProjectExportServiceImpl
     @Override
     public ProjectExportRequest_ImplBase getExportRequest(ProjectExportTaskHandle aHandle)
     {
-        TaskInfo task = tasks.get(aHandle);
+        var task = tasks.get(aHandle);
 
         if (task == null) {
             return null;
@@ -434,7 +431,7 @@ public class ProjectExportServiceImpl
     @Override
     public ProjectExportTaskMonitor getTaskMonitor(ProjectExportTaskHandle aHandle)
     {
-        TaskInfo task = tasks.get(aHandle);
+        var task = tasks.get(aHandle);
 
         if (task == null) {
             return null;
@@ -456,7 +453,7 @@ public class ProjectExportServiceImpl
     @Override
     public boolean cancelTask(ProjectExportTaskHandle aHandle)
     {
-        TaskInfo task = tasks.get(aHandle);
+        var task = tasks.get(aHandle);
 
         if (task == null) {
             return false;

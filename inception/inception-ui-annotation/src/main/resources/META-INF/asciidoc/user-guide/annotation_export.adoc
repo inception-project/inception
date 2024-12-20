@@ -20,7 +20,7 @@
 
 Annotations are always immediately persistent in the backend database. Thus, it is not necessary to  save the annotations explicitly. Also, losing the connection through network issues or timeouts does not cause data loss. To obtain a local copy of the current document, click on *export* button. The following frame will appear:
 
-image::annotation_export.jpg[align="center"]
+image::images/annotation_export.jpg[align="center"]
 
 Choose your preferred format. Please take note of the facts that the plain text format does not contain any annotations and that the files in the binary format need to be unpacked before further usage. For further information the supported formats, please consult the corresponding chapter <<sect_formats>>.
 

@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.annotation.feature.number;
 
+import static de.tudarmstadt.ukp.inception.annotation.feature.number.NumberFeatureTraits.EditorType.SPINNER;
+import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CHANGE_EVENT;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 
 import java.io.Serializable;
@@ -31,7 +33,6 @@ import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
-import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.wicketstuff.jquery.core.Options;
 import org.wicketstuff.kendo.ui.form.NumberTextField;
@@ -70,7 +71,7 @@ public class NumberFeatureTraitsEditor
         feature = aFeature;
         traits = Model.of(readTraits());
 
-        Form<Traits> form = new Form<Traits>(MID_FORM, CompoundPropertyModel.of(traits))
+        var form = new Form<Traits>(MID_FORM, CompoundPropertyModel.of(traits))
         {
             private static final long serialVersionUID = 4456748721289266655L;
 
@@ -82,8 +83,6 @@ public class NumberFeatureTraitsEditor
             }
         };
         form.setOutputMarkupPlaceholderTag(true);
-        form.add(visibleWhen(
-                () -> traits.getObject().isLimited() && feature.getObject().getTagset() == null));
         add(form);
 
         Class clazz = Integer.class;
@@ -101,25 +100,30 @@ public class NumberFeatureTraitsEditor
         }
         }
 
-        DropDownChoice<NumberFeatureTraits.EditorType> editorType = new DropDownChoice<>(
-                CID_EDITOR_TYPE);
-        editorType.setModel(PropertyModel.of(traits, "editorType"));
+        var limited = new CheckBox("limited");
+        limited.add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT,
+                target -> target.add(form)));
+        form.add(limited);
+
+        var editorType = new DropDownChoice<NumberFeatureTraits.EditorType>(CID_EDITOR_TYPE);
+        // editorType.setModel(PropertyModel.of(traits, "editorType"));
         editorType.setChoices(Arrays.asList(NumberFeatureTraits.EditorType.values()));
         editorType.add(new LambdaAjaxFormComponentUpdatingBehavior("change"));
-        editorType.add(visibleWhen(() -> isEditorTypeSelectionPossible()));
+        editorType.add(visibleWhen(
+                () -> traits.getObject().isLimited() && isEditorTypeSelectionPossible()));
         form.add(editorType);
 
         var minimum = new NumberTextField<>("minimum", clazz, options);
-        minimum.setModel(PropertyModel.of(traits, "minimum"));
+        minimum.add(visibleWhen(() -> traits.getObject().isLimited()));
         form.add(minimum);
 
         var maximum = new NumberTextField<>("maximum", clazz, options);
-        maximum.setModel(PropertyModel.of(traits, "maximum"));
+        maximum.add(visibleWhen(() -> traits.getObject().isLimited()));
         form.add(maximum);
 
         minimum.add(new LambdaAjaxFormComponentUpdatingBehavior("change", target -> {
-            BigDecimal min = new BigDecimal(traits.getObject().getMinimum().toString());
-            BigDecimal max = new BigDecimal(traits.getObject().getMaximum().toString());
+            var min = new BigDecimal(traits.getObject().getMinimum().toString());
+            var max = new BigDecimal(traits.getObject().getMaximum().toString());
             if (min.compareTo(max) > 0) {
                 traits.getObject().setMaximum(traits.getObject().getMinimum());
             }
@@ -127,19 +131,13 @@ public class NumberFeatureTraitsEditor
         }));
 
         maximum.add(new LambdaAjaxFormComponentUpdatingBehavior("change", target -> {
-            BigDecimal min = new BigDecimal(traits.getObject().getMinimum().toString());
-            BigDecimal max = new BigDecimal(traits.getObject().getMaximum().toString());
+            var min = new BigDecimal(traits.getObject().getMinimum().toString());
+            var max = new BigDecimal(traits.getObject().getMaximum().toString());
             if (min.compareTo(max) > 0) {
                 traits.getObject().setMinimum(traits.getObject().getMaximum());
             }
             target.add(form);
         }));
-
-        CheckBox multipleRows = new CheckBox("limited");
-        multipleRows.setModel(PropertyModel.of(traits, "limited"));
-        multipleRows.add(
-                new LambdaAjaxFormComponentUpdatingBehavior("change", target -> target.add(form)));
-        add(multipleRows);
     }
 
     /**
@@ -168,9 +166,9 @@ public class NumberFeatureTraitsEditor
      */
     private Traits readTraits()
     {
-        Traits result = new Traits();
+        var result = new Traits();
 
-        NumberFeatureTraits t = getFeatureSupport().readTraits(feature.getObject());
+        var t = getFeatureSupport().readTraits(feature.getObject());
 
         result.setLimited(t.isLimited());
         result.setMinimum(t.getMinimum());
@@ -186,13 +184,13 @@ public class NumberFeatureTraitsEditor
      */
     private void writeTraits()
     {
-        NumberFeatureTraits t = new NumberFeatureTraits();
+        var t = new NumberFeatureTraits();
 
         t.setLimited(traits.getObject().isLimited());
         t.setMinimum(traits.getObject().getMinimum());
         t.setMaximum(traits.getObject().getMaximum());
-        t.setEditorType(isEditorTypeSelectionPossible() ? traits.getObject().getEditorType()
-                : NumberFeatureTraits.EditorType.SPINNER);
+        t.setEditorType(
+                isEditorTypeSelectionPossible() ? traits.getObject().getEditorType() : SPINNER);
 
         getFeatureSupport().writeTraits(feature.getObject(), t);
     }
@@ -216,9 +214,9 @@ public class NumberFeatureTraitsEditor
             return limited;
         }
 
-        public void setLimited(boolean limited)
+        public void setLimited(boolean aLimited)
         {
-            this.limited = limited;
+            limited = aLimited;
         }
 
         public Number getMinimum()
@@ -226,9 +224,9 @@ public class NumberFeatureTraitsEditor
             return minimum;
         }
 
-        public void setMinimum(Number minimum)
+        public void setMinimum(Number aMinimum)
         {
-            this.minimum = minimum;
+            minimum = aMinimum;
         }
 
         public Number getMaximum()
@@ -236,9 +234,9 @@ public class NumberFeatureTraitsEditor
             return maximum;
         }
 
-        public void setMaximum(Number maximum)
+        public void setMaximum(Number aMaximum)
         {
-            this.maximum = maximum;
+            maximum = aMaximum;
         }
 
         public NumberFeatureTraits.EditorType getEditorType()
@@ -246,9 +244,9 @@ public class NumberFeatureTraitsEditor
             return editorType;
         }
 
-        public void setEditorType(NumberFeatureTraits.EditorType editorType)
+        public void setEditorType(NumberFeatureTraits.EditorType aEditorType)
         {
-            this.editorType = editorType;
+            editorType = aEditorType;
         }
     }
 }

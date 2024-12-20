@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.agreement.measures;
 import java.util.List;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
 public interface AgreementMeasureSupportRegistry
 {
@@ -28,9 +29,9 @@ public interface AgreementMeasureSupportRegistry
 
     AgreementMeasureSupport<?, ?, ?> getAgreementMeasureSupport(String aId);
 
-    List<AgreementMeasureSupport<?, ?, ?>> getAgreementMeasureSupports(AnnotationFeature aFeature);
+    List<AgreementMeasureSupport<?, ?, ?>> getAgreementMeasureSupports(AnnotationLayer aLayer,
+            AnnotationFeature aFeature);
 
-    AgreementMeasure<?> getMeasure(AnnotationFeature aFeature, String aMeasure,
-            DefaultAgreementTraits aTraits);
-
+    AgreementMeasure<?> getMeasure(AnnotationLayer aLayer, AnnotationFeature aFeature,
+            String aMeasure, DefaultAgreementTraits aTraits);
 }

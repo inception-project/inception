@@ -40,7 +40,7 @@ import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupport;
  * {@code AnnotationServiceAutoConfiguration#spanAnchoringModeBehavior}.
  * </p>
  */
-@Order(10)
+@Order(100)
 public class SpanAnchoringModeBehavior
     extends SpanLayerBehavior
 {
@@ -70,6 +70,11 @@ public class SpanAnchoringModeBehavior
             T aRequest)
         throws AnnotationException
     {
+        if (Token.class.getName().equals(aAdapter.getAnnotationTypeName())
+                || Sentence.class.getName().equals(aAdapter.getAnnotationTypeName())) {
+            return aRequest;
+        }
+
         if (aRequest.getBegin() == aRequest.getEnd()) {
             if (!aAdapter.getLayer().getAnchoringMode().isZeroSpanAllowed()) {
                 throw new IllegalPlacementException(

@@ -26,6 +26,7 @@ import static de.tudarmstadt.ukp.inception.support.logging.Logging.KEY_PROJECT_I
 import static de.tudarmstadt.ukp.inception.support.logging.Logging.KEY_REPOSITORY_PATH;
 import static de.tudarmstadt.ukp.inception.support.logging.Logging.KEY_USERNAME;
 import static java.lang.String.format;
+import static java.lang.System.currentTimeMillis;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMessage;
 
 import java.io.File;
@@ -80,12 +81,13 @@ public abstract class ProjectExportTask_ImplBase<R extends ProjectExportRequest_
     {
         if (msgTemplate != null) {
             monitor = new NotifyingProjectExportTaskMonitor(project, handle, request.getTitle(),
-                    msgTemplate);
+                    request.getFilenamePrefix(), msgTemplate);
         }
         else {
-            monitor = new ProjectExportTaskMonitor(project, handle, request.getTitle());
+            monitor = new ProjectExportTaskMonitor(project, handle, request.getTitle(),
+                    request.getFilenamePrefix());
         }
-        monitor.setCreateTime(System.currentTimeMillis());
+        monitor.setCreateTime(currentTimeMillis());
     }
 
     @Override
@@ -101,9 +103,7 @@ public abstract class ProjectExportTask_ImplBase<R extends ProjectExportRequest_
             monitor.setUrl(format("%s%s/%s", servletContext.getContextPath(), BASE_URL,
                     monitor.getHandle().getRunId()));
 
-            File exportedFile = export(request, monitor);
-
-            monitor.setExportedFile(exportedFile);
+            monitor.setExportedFile(export(request, monitor));
             monitor.setStateAndProgress(COMPLETED, 100);
         }
         catch (ClosedByInterruptException | InterruptedException e) {

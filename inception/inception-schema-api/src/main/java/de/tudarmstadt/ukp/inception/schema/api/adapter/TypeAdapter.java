@@ -114,7 +114,8 @@ public interface TypeAdapter
      * @param aVid
      *            the VID of the object to be deleted.
      */
-    void delete(SourceDocument aDocument, String aDocumentOwner, CAS aCas, VID aVid);
+    void delete(SourceDocument aDocument, String aDocumentOwner, CAS aCas, VID aVid)
+        throws AnnotationException;
 
     /**
      * @return the layer for which this adapter has been created.

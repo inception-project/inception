@@ -61,6 +61,7 @@ import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.search.config.SearchServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeServiceImpl;
 import de.tudarmstadt.ukp.inception.support.spring.ApplicationContextProvider;
+import de.tudarmstadt.ukp.inception.ui.core.dashboard.config.DashboardAutoConfiguration;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 
@@ -78,6 +79,7 @@ import io.jsonwebtoken.Jwts;
 @EnableAutoConfiguration( //
         exclude = { //
                 LiquibaseAutoConfiguration.class, //
+                DashboardAutoConfiguration.class, //
                 EventLoggingAutoConfiguration.class, //
                 SearchServiceAutoConfiguration.class, //
                 WicketAutoConfiguration.class })

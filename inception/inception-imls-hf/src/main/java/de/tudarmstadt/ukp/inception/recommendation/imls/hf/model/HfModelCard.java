@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.recommendation.imls.hf.model;
 
 import java.io.Serializable;
+import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -34,6 +35,10 @@ public class HfModelCard
     private @JsonProperty("pipeline_tag") String pipelineTag;
     // private @JsonProperty("cardData") String pipelineTag;
     private @JsonProperty("modelId") String modelId;
+    private @JsonProperty("tags") Set<String> tags;
+    // private @JsonProperty("language") String langauge;
+    // private @JsonProperty("license") String license;
+    private @JsonProperty("library_name") String libraryName;
 
     public boolean isPrivateAccess()
     {
@@ -63,5 +68,25 @@ public class HfModelCard
     public void setModelId(String aModelId)
     {
         modelId = aModelId;
+    }
+
+    public Set<String> getTags()
+    {
+        return tags;
+    }
+
+    public void setTags(Set<String> aTags)
+    {
+        tags = aTags;
+    }
+
+    public String getLibraryName()
+    {
+        return libraryName;
+    }
+
+    public void setLibraryName(String aLibraryName)
+    {
+        libraryName = aLibraryName;
     }
 }

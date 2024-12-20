@@ -34,5 +34,5 @@ Please click on the functionality you need. The individual functionalities will 
 further chapters.
 
 ////
-image::menu.jpg[align="center"]
+image::images/menu.jpg[align="center"]
 ////

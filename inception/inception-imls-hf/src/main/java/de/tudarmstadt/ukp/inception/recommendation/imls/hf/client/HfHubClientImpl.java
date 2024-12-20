@@ -24,6 +24,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.time.Duration;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -64,6 +65,7 @@ public class HfHubClientImpl
         Map<String, String> queryParameters = new LinkedHashMap<>();
         queryParameters.put("cardData", "true");
         queryParameters.put("pipeline_tag", "token-classification");
+        queryParameters.put("other", "endpoints_compatible");
         if (isNotBlank(aSearch)) {
             queryParameters.put("search", aSearch);
         }
@@ -81,6 +83,7 @@ public class HfHubClientImpl
 
         HttpRequest request = HttpRequest.newBuilder() //
                 .uri(URI.create(uriBuilder.toString())) //
+                .timeout(Duration.ofSeconds(10)) //
                 .build();
 
         HttpResponse<String> response = sendRequest(request);

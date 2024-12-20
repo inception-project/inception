@@ -22,7 +22,6 @@ import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.builder.ToStringStyle.SHORT_PREFIX_STYLE;
 
-import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -39,8 +38,6 @@ public class ThresholdBasedMergeStrategy
     implements MergeStrategy
 {
     private static final Logger LOG = LoggerFactory.getLogger(CasMerge.class);
-
-    public static final String BEAN_NAME = "thresholdBased";
 
     /**
      * Number of users who have to annotate an item for it to be considered. If less than the given
@@ -60,12 +57,11 @@ public class ThresholdBasedMergeStrategy
 
     private final int topRanks;
 
-    public ThresholdBasedMergeStrategy(int aUserThreshold, double aConfidenceThreshold,
-            int aTopRanks)
+    private ThresholdBasedMergeStrategy(Builder builder)
     {
-        userThreshold = aUserThreshold;
-        confidenceThreshold = aConfidenceThreshold;
-        topRanks = aTopRanks;
+        this.userThreshold = builder.userThreshold;
+        this.confidenceThreshold = builder.confidenceThreshold;
+        this.topRanks = builder.topRanks;
     }
 
     @Override
@@ -73,6 +69,9 @@ public class ThresholdBasedMergeStrategy
             AnnotationLayer aLayer)
     {
         var topRanksToConsider = aLayer.isAllowStacking() ? topRanks : 1;
+        if (topRanksToConsider == 0) {
+            topRanksToConsider = Integer.MAX_VALUE;
+        }
 
         var cfgsAboveUserThreshold = aCfgs.getConfigurations().stream() //
                 .filter(cfg -> cfg.getCasGroupIds().size() >= userThreshold) //
@@ -84,6 +83,11 @@ public class ThresholdBasedMergeStrategy
                     userThreshold, getClass().getSimpleName());
             return emptyList();
         }
+
+        var totalAnnotators = cfgsAboveUserThreshold.stream() //
+                .flatMap(cfg -> cfg.getCasGroupIds().stream()) //
+                .distinct() //
+                .count();
 
         var totalVotes = cfgsAboveUserThreshold.stream() //
                 .mapToDouble(cfg -> cfg.getCasGroupIds().size()) //
@@ -103,7 +107,7 @@ public class ThresholdBasedMergeStrategy
         if (topRanksToConsider == 1 && result.size() > 1) {
             // If we request only one result but there is more than one, then it is a tie. If only
             // a single result is requested, then ties are considered a dispute.
-            return Collections.emptyList();
+            return emptyList();
         }
 
         return result;
@@ -136,5 +140,44 @@ public class ThresholdBasedMergeStrategy
         return new ToStringBuilder(this, SHORT_PREFIX_STYLE) //
                 .append("userThreshold", userThreshold)//
                 .append("confidenceThreshold", confidenceThreshold).toString();
+    }
+
+    public static Builder builder()
+    {
+        return new Builder();
+    }
+
+    public static final class Builder
+    {
+        private int userThreshold;
+        private double confidenceThreshold;
+        private int topRanks;
+
+        private Builder()
+        {
+        }
+
+        public Builder withUserThreshold(int aUserThreshold)
+        {
+            userThreshold = aUserThreshold;
+            return this;
+        }
+
+        public Builder withConfidenceThreshold(double aConfidenceThreshold)
+        {
+            confidenceThreshold = aConfidenceThreshold;
+            return this;
+        }
+
+        public Builder withTopRanks(int aTopRanks)
+        {
+            topRanks = aTopRanks;
+            return this;
+        }
+
+        public ThresholdBasedMergeStrategy build()
+        {
+            return new ThresholdBasedMergeStrategy(this);
+        }
     }
 }

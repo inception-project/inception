@@ -38,6 +38,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
@@ -59,16 +60,21 @@ class AllAnnotationsStartAndEndWithinSentencesCheckTest
     AllAnnotationsStartAndEndWithinSentencesCheck sut;
 
     Project project;
+    SourceDocument document;
+    String dataOwner;
     JCas jCas;
     List<AnnotationLayer> layers;
 
     @BeforeEach
     void setup() throws Exception
     {
-        project = new Project();
+        project = Project.builder().build();
+        document = SourceDocument.builder() //
+                .withProject(project) //
+                .build();
         jCas = JCasFactory.createJCas();
 
-        AnnotationLayer namedEntityLayer = new AnnotationLayer();
+        var namedEntityLayer = new AnnotationLayer();
         namedEntityLayer.setName(NamedEntity._TypeName);
         layers = asList(namedEntityLayer);
     }
@@ -88,7 +94,7 @@ class AllAnnotationsStartAndEndWithinSentencesCheckTest
 
         var messages = new ArrayList<LogMessage>();
 
-        var result = sut.check(project, jCas.getCas(), messages);
+        var result = sut.check(document, dataOwner, jCas.getCas(), messages);
 
         assertThat(result).isFalse();
         assertThat(messages).hasSize(1);

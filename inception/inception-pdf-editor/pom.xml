@@ -178,11 +178,6 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-schema</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-constraints</artifactId>
       <scope>test</scope>
     </dependency>
@@ -201,6 +196,8 @@
                 <excludes combine.children="append">
                   <exclude>src/main/java/de/tudarmstadt/ukp/inception/pdfeditor/pdfextract/PDFExtractor.java</exclude>
                   <exclude>src/main/java/de/tudarmstadt/ukp/inception/pdfeditor/pdfextract/ImageExtractor.java</exclude>
+                  <exclude>src/main/java/de/tudarmstadt/ukp/inception/pdfeditor/pdfextract/DrawOperator.java</exclude>
+                  <exclude>src/main/java/de/tudarmstadt/ukp/inception/pdfeditor/pdfextract/TextOperator.java</exclude>
                   <exclude>src/main/ts/**/*</exclude>
                   <exclude>src/main/ts/**/*</exclude>
                 </excludes>

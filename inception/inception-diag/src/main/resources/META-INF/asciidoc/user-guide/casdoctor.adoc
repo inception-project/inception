@@ -224,20 +224,28 @@ Removing them is harmless and reduces memory and disk space usage.
 [[check_AllAnnotationsStartAndEndWithCharactersCheck]]
 === All annotations start and end with characters
 [horizontal]
-ID:: `check_AllAnnotationsStartAndEndWithCharactersCheck`
+ID:: `AllAnnotationsStartAndEndWithCharactersCheck`
 Related repairs:: <<repair_TrimAnnotationsRepair>>
 
-Checks if all annotations start and end with a character (i.e. not a whitespace). Annotations that start or end with a
-whitespace character can cause problems during rendering. Trimming whitespace at the begin and end is typically as 
-harmless procedure.
+Checks if all annotations start and end with a character (i.e. not a whitespace). Annotations that start or end with a whitespace character can cause problems during rendering. 
+Trimming whitespace at the begin and end is typically as  harmless procedure.
 
 [[check_DocumentTextStartsWithBomCheck]]
 === Document text starts with Byte Order Mark
 [horizontal]
-ID:: `check_DocumentTextStartsWithBomCheck`
+ID:: `DocumentTextStartsWithBomCheck`
 Related repairs:: <<repair_RemoveBomRepair>>
 
 Checks if the document text starts with a Byte Order Mark (BOM).
+
+[[check_XmlStructurePresentInCurationCasCheck]]
+=== XML structure is present in curation CAS
+[horizontal]
+ID:: `XmlStructurePresentInCurationCasCheck`
+Related repairs:: <<repair_ReplaceXmlStructureInCurationCasRepair>>
+
+Checks if an XML structure that may have been extracted from the source document is present in the curation CAS.
+If it is not present, this check will fail.
 
 
 [[sect_repairs]]
@@ -251,9 +259,8 @@ ID:: `ReattachFeatureAttachedSpanAnnotationsRepair`
 
 This repair action attempts to attach spans that should be attached to another span, but are not.
 E.g. it tries to set the `pos` feature of tokens to the POS annotation for that respective token.
-The action is not performed if there are multiple stacked annotations to choose from. Stacked
-attached annotations would be an indication of a bug because attached layers are not allowed to
-stack.
+The action is not performed if there are multiple stacked annotations to choose from. 
+Stacked attached annotations would be an indication of a bug because attached layers are not allowed to stack.
 
 This is a safe repair action as it does not delete anything.
 
@@ -265,10 +272,10 @@ This is a safe repair action as it does not delete anything.
 ID:: `ReattachFeatureAttachedSpanAnnotationsAndDeleteExtrasRepair`
 
 This is a destructive variant of <<repair_ReattachFeatureAttachedSpanAnnotationsRepair>>. In
-addition to re-attaching unattached annotations, it also removes all extra candidates that cannot
-be attached. For example, if there are two unattached Lemma annotations at the position of a Token
-annotation, then one will be attached and the other will be deleted. Which one is attached and 
-which one is deleted is undefined.
+addition to re-attaching unattached annotations, it also removes all extra candidates that cannot be attached.
+For example, if there are two unattached Lemma annotations at the position of a Token
+annotation, then one will be attached and the other will be deleted.
+Which one is attached and  which one is deleted is undefined.
 
 
 [[repair_ReindexFeatureAttachedSpanAnnotationsRepair]]
@@ -277,8 +284,8 @@ which one is deleted is undefined.
 [horizontal]
 ID:: `ReindexFeatureAttachedSpanAnnotationsRepair`
 
-This repair locates annotations that are reachable via a attach feature but which are not actually
-indexed in the CAS. Such annotations are then added back to the CAS indexes.
+This repair locates annotations that are reachable via a attach feature but which are not actually indexed in the CAS. 
+Such annotations are then added back to the CAS indexes.
 
 This is a safe repair action as it does not delete anything.
 
@@ -289,9 +296,8 @@ This is a safe repair action as it does not delete anything.
 [horizontal]
 ID:: `RelationOffsetsRepair`
 
-Fixes that the offsets of relations match the target of the relation. This mirrors the DKPro
-Core convention that the offsets of a dependency relation must match the offsets of the 
-dependent.
+Fixes that the offsets of relations match the target of the relation.
+This mirrors the DKPro Core convention that the offsets of a dependency relation must match the offsets of the dependent.
 
 
 [[repair_RemoveDanglingChainLinksRepair]]
@@ -408,3 +414,11 @@ NOTE: Run the checks again after applying this repair as certain annotations can
 ID:: `RemoveBomRepair`
 
 This repair removes the Byte Order Mark at the start of the document and adjusts all annotation offsets accordingly.
+
+[[repair_ReplaceXmlStructureInCurationCasRepair]]
+=== Relace XML structure in the curation CAS
+
+[horizontal]
+ID:: `ReplaceXmlStructureInCurationCasRepair`
+
+This repair ensures the XML document structure that may have been extracted from the source document is also present in the curation CAS. Any potentially existing XML document structure int he curation CAS will be removed and replaced with the structure from the source document. 

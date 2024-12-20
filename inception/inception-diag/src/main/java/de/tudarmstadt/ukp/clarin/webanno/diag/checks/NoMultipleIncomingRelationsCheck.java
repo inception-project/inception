@@ -34,8 +34,7 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
@@ -52,19 +51,20 @@ public class NoMultipleIncomingRelationsCheck
     }
 
     @Override
-    public boolean check(Project aProject, CAS aCas, List<LogMessage> aMessages)
+    public boolean check(SourceDocument aDocument, String aDataOwner, CAS aCas,
+            List<LogMessage> aMessages)
     {
         if (annotationService == null) {
             return true;
         }
 
-        List<AnnotationLayer> allAnnoLayers = annotationService.listAnnotationLayer(aProject);
+        var allAnnoLayers = annotationService.listAnnotationLayer(aDocument.getProject());
         if (CollectionUtils.isEmpty(allAnnoLayers)) {
             return true;
         }
 
         boolean ok = true;
-        for (AnnotationLayer layer : allAnnoLayers) {
+        for (var layer : allAnnoLayers) {
 
             if (!RELATION_TYPE.equals(layer.getType())) {
                 continue;
@@ -89,14 +89,13 @@ public class NoMultipleIncomingRelationsCheck
             // to provide a better debugging output.
             Map<AnnotationFS, AnnotationFS> incoming = new HashMap<>();
 
-            for (AnnotationFS rel : select(aCas, type)) {
+            for (var rel : select(aCas, type)) {
 
-                AnnotationFS source = getFeature(rel, FEAT_REL_SOURCE, AnnotationFS.class);
-                AnnotationFS target = getFeature(rel, FEAT_REL_TARGET, AnnotationFS.class);
+                var source = getFeature(rel, FEAT_REL_SOURCE, AnnotationFS.class);
+                var target = getFeature(rel, FEAT_REL_TARGET, AnnotationFS.class);
 
-                AnnotationFS existingSource = incoming.get(target);
+                var existingSource = incoming.get(target);
                 if (existingSource != null) {
-
                     // Debug output should include sentence number to make the orientation
                     // easier
                     Optional<Integer> sentenceNumber = Optional.empty();
@@ -118,7 +117,6 @@ public class NoMultipleIncomingRelationsCheck
                                 target.getCoveredText()));
                     }
                     else {
-
                         aMessages.add(LogMessage.warn(this,
                                 "Relation [%s] -> [%s] points to span that already has an "
                                         + "incoming relation [%s] -> [%s].",

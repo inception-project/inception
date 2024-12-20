@@ -84,6 +84,8 @@ public class ConfigurationSet
     }
 
     /**
+     * @param aDataOwner
+     *            owner of the values to be retrieved
      * @return values added during agreement calculation (not by {@link CasDiff}!)
      */
     public Set<Object> getValues(String aDataOwner)
@@ -162,6 +164,25 @@ public class ConfigurationSet
     public Position getPosition()
     {
         return position;
+    }
+
+    /**
+     * @return flag indicating that there is at least once CAS group containing more than one
+     *         annotation at this position - i.e. a stacked annotation.
+     */
+    public boolean containsStackedConfigurations()
+    {
+        // User has annotated the position with multiple different configurations
+        for (var casGroupId : getCasGroupIds()) {
+            if (getConfigurations(casGroupId).size() > 1) {
+                return true;
+            }
+        }
+
+        // User has annotate the position multiple times with the same configuration
+        return getConfigurations().stream() //
+                .filter(Configuration::containsDuplicates) //
+                .findAny().isPresent();
     }
 
     @Override

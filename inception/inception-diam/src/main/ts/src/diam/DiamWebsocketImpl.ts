@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 import { Client, Stomp, StompSubscription, IFrame, frameCallbackType } from '@stomp/stompjs'
-import { DiamWebsocket } from '@inception-project/inception-js-api'
+import { DiamWebsocket, DiamWebsocketConnectOptions } from '@inception-project/inception-js-api'
 import * as jsonpatch from 'fast-json-patch'
 
 /**
@@ -35,18 +35,26 @@ export class DiamWebsocketImpl implements DiamWebsocket {
 
   public onConnect: frameCallbackType
 
-  connect (aWsEndpoint: string) {
+  connect (options: string | DiamWebsocketConnectOptions) {
     if (this.stompClient) {
       console.log('Already connected')
       return
     }
 
+    const wsEndpoint = new URL((options instanceof String || typeof options === 'string') ? 
+        options as string : options.url)
+
     const protocol = (window.location.protocol === 'https:' ? 'wss:' : 'ws:')
-    const wsEndpoint = new URL(aWsEndpoint)
     wsEndpoint.protocol = protocol
 
     this.stompClient = Stomp.over(() => new WebSocket(wsEndpoint.toString()))
     this.stompClient.reconnectDelay = 5000
+    
+    if (typeof options !== 'string' && options?.csrfToken) {
+      this.stompClient.connectHeaders = {
+        'X-CSRF-TOKEN': options.csrfToken
+      } 
+    }
 
     this.stompClient.onConnect = frame => {
       this.stompClient.subscribe('/user/queue/errors', this.handleProtocolError)

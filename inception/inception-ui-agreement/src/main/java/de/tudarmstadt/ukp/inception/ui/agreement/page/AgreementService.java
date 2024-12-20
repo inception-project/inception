@@ -24,19 +24,27 @@ import java.util.Map;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.DefaultAgreementTraits;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
 public interface AgreementService
 {
+    Map<SourceDocument, List<AnnotationDocument>> getDocumentsToEvaluate(Project aProject,
+            List<SourceDocument> aDocuments, DefaultAgreementTraits aTraits);
+
     void exportPairwiseDiff(OutputStream aOut, AnnotationFeature aFeature, String aMeasure,
             DefaultAgreementTraits aTraits, User aCurrentUser, List<SourceDocument> aDocuments,
             String aAnnotator1, String aAnnotator2);
 
-    Map<SourceDocument, List<AnnotationDocument>> getDocumentsToEvaluate(Project aProject,
-            List<SourceDocument> aDocuments, DefaultAgreementTraits aTraits);
+    void exportPairwiseDiff(OutputStream aOut, AnnotationLayer aLayer, String aMeasure,
+            DefaultAgreementTraits aTraits, User aCurrentUser, List<SourceDocument> aDocuments,
+            String aAnnotator1, String aAnnotator2);
 
     void exportDiff(OutputStream aOut, AnnotationFeature aFeature, DefaultAgreementTraits aTraits,
+            User aCurrentUser, List<SourceDocument> aDocuments, List<String> aAnnotators);
+
+    void exportDiff(OutputStream aOut, AnnotationLayer aLayer, DefaultAgreementTraits aTraits,
             User aCurrentUser, List<SourceDocument> aDocuments, List<String> aAnnotators);
 }

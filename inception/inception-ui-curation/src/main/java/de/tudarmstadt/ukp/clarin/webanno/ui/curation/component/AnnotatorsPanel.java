@@ -18,7 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.curation.component;
 
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
-import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.getDiffAdapters;
+import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.DiffAdapterRegistry.getDiffAdapters;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotationState.ACCEPTED_BY_CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotationState.ANNOTATORS_AGREE;
@@ -564,11 +564,12 @@ public class AnnotatorsPanel
                     for (var fs : configuration.getFses(user, aCasMap)) {
                         VID vid;
                         // link FS
-                        if (configuration.getPosition().getFeature() != null) {
+                        if (configuration.getPosition().getLinkFeature() != null) {
                             var typeAdapter = schemaService.findAdapter(aProject, fs);
                             int fi = 0;
                             for (var f : typeAdapter.listFeatures()) {
-                                if (f.getName().equals(configuration.getPosition().getFeature())) {
+                                if (f.getName()
+                                        .equals(configuration.getPosition().getLinkFeature())) {
                                     break;
                                 }
                                 fi++;

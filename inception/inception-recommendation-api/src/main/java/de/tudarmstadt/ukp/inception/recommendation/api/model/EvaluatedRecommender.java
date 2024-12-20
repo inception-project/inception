@@ -56,10 +56,16 @@ public class EvaluatedRecommender
         return reasonForState;
     }
 
-    public static EvaluatedRecommender makeActiveWithoutEvaluation(Recommender aRecommender)
+    @Override
+    public String toString()
     {
-        return new EvaluatedRecommender(aRecommender, EvaluationResult.skipped(), true,
-                "Recommender is always active (without evaluation).");
+        return "EvaluatedRecommender [" + recommender + " -> " + (active ? "ACTIVE" : "OFF") + "]";
+    }
+
+    public static EvaluatedRecommender makeActiveWithoutEvaluation(Recommender aRecommender,
+            String aReason)
+    {
+        return new EvaluatedRecommender(aRecommender, EvaluationResult.skipped(), true, aReason);
     }
 
     public static EvaluatedRecommender makeActive(Recommender aRecommender,

@@ -66,8 +66,9 @@ public class ActionBar
     {
         super.onInitialize();
 
+        var page = (AnnotationPageBase) getPage();
         for (var ext : getExtensions()) {
-            ext.onInitialize((AnnotationPageBase) getPage());
+            ext.onInitialize(page);
             activeExtensions.add(ext.getId());
         }
     }

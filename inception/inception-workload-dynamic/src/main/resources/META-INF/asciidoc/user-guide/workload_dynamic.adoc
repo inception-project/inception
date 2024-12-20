@@ -23,11 +23,11 @@ To enable the *dynamic assignment* workload manager, go to the *Workload* tab in
 
 When dynamic assignment is enabled, annotators can no longer actively choose which documents they want to annotate. Any functionality for opening a particular document or switching between documents on the annotation page are disabled. When the annotator opens the annotation page, a document is automatically selected for annotation. The only way to progress to the next document is by marking the current document as *finished*.
 
-image::workload_settings.png[align="center"]
+image::images/workload_settings.png[align="center"]
 
 The dynamic workload management page gives the project manager a fast overview of all documents and users within the current project. Additionally, the automatic distribution of documents to annotators can be modified.
 
-image::workload.png[align="center"]
+image::images/workload.png[align="center"]
 
 Therefore, it mainly consists of a substantial, but easy to understand table containing the data a project manager
 needs from their documents. This data is represented by a unique row for each individual document in the project. The following

@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.diam.sidebar;
 
+import static de.tudarmstadt.ukp.clarin.webanno.security.WicketSecurityUtils.getCsrfTokenFromSession;
 import static de.tudarmstadt.ukp.inception.diam.sidebar.preferences.DiamSidebarManagerPrefs.KEY_DIAM_SIDEBAR_MANAGER_PREFS;
 import static de.tudarmstadt.ukp.inception.websocket.config.WebsocketConfig.WS_ENDPOINT;
 import static java.lang.String.format;
@@ -93,6 +94,7 @@ public class DiamAnnotationBrowser
         Map<String, Object> properties = Map.of( //
                 "ajaxEndpointUrl", diamBehavior.getCallbackUrl(), //
                 "wsEndpointUrl", constructEndpointUrl(), //
+                "csrfToken", getCsrfTokenFromSession(), //
                 "topicChannel", viewport.getTopic(), //
                 "pinnedGroups", managerPrefs.getPinnedGroups(), //
                 "userPreferencesKey", userPreferencesKey);

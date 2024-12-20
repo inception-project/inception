@@ -1,0 +1,77 @@
+// Licensed to the Technische Universität Darmstadt under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The Technische Universität Darmstadt 
+// licenses this file to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.
+//  
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+[[sect_layers_feature_string]]
+= String features
+
+A string feature either holds a short tag (optionally from a restricted tag set) or a note (i.e. a multi-line text).
+
+When no tagset is associated with the string feature, it is displayed to the user simply as a
+single line input field. You can enable the *multiple rows* option to turn it into a multi-line
+text area. If you do so, additional options appear allowing to configure the size of the text area
+which can be fixed or dynamic (i.e. automatically adjust to the text area content).
+
+Optionally, a <<sect_projects_tagsets,tagset>> can be associated with a string feature (unless you enabled multiple rows). If string feature is associated with a tagset, there are different options
+as to which type of *editor type* (i.e. input field) is displayed to the user.
+
+.Editor types for string features with tagsets
+[cols="1v,2", options="header"]
+|====
+| Editor type | Description
+
+| Auto
+| An editor is chosen automatically depending on the size of the tagset and whether annotators can add to it.
+
+| Radio group
+| Each tag is shown as a button. Only one button can be active at a time. Best for quick access to small tagsets. Does not allow annotators to add new tags (yet).
+
+| Combo box
+| A text field with auto-completion and button that opens a drop-down list showing all possible tags and their descriptions. Best for mid-sized tagsets.
+
+| Autocomplete
+| A text field with auto-completion. A dropdown opens when the user starts typing into the field and it displays matching tags. There is no way to browse all available tags. Best for large tagsets.
+
+|====
+
+The tagset size thresholds used by the *Auto* mode to determine which editor to choose can be globally configured by an administrator via the <<admin_guide.adoc#sect_settings_annotation,`settings.properties`>> file. 
+Because the radio group editor does not support adding new tags (yet), it chosen automatically only if the associated tagset does not allow annotators to add new tags.
+
+.String feature properties
+[cols="1v,2", options="header"]
+|====
+| Property | Description
+
+| Tagset
+| The tagset controlling the possible values for a string feature.
+
+| Show only when constraints apply
+| Display the feature only if any constraint rules apply to it (cf. <<sect_constraints_conditional_features>>)
+
+| Editor type
+| The type of input field shown to the annotators.
+
+| Multiple Rows
+| If enabled the textfield will be replaced by a textarea which expands on focus. This also enables options to set the size of the textarea and disables tagsets.
+
+| Dynamic Size
+| If enabled the textfield will dynamically resize itself based on the content. This disables collapsed and expanded row settings. 
+
+| Collapsed Rows
+| Set the number of rows for the textarea when it is collapsed and not focused.
+
+| Expanded Rows
+| Set the number of rows for the textarea when it is expanded and not focused.
+|====

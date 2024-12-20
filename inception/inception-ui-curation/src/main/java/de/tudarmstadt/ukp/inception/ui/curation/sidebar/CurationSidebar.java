@@ -133,13 +133,13 @@ public class CurationSidebar
 
         queue(usersForm = createUserSelection("usersForm"));
 
-        showMerged = new CheckBox("showMerged", Model.of());
+        showMerged = new CheckBox("showMerged", Model.of(false));
         showMerged.add(visibleWhen(this::isSessionActive));
         showMerged.add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT,
                 this::actionToggleShowMerged));
         queue(showMerged);
 
-        showScore = new CheckBox("showScore", Model.of());
+        showScore = new CheckBox("showScore", Model.of(true));
         showScore.add(visibleWhen(this::isSessionActive));
         showScore.add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT,
                 this::actionToggleShowScore));

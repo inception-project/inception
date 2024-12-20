@@ -122,7 +122,7 @@ text, however _DKPro PDF Reader_ preserves them.
 The whitespaces are removed from the _DKPro PDF Reader_ string to have a similar
 structure to the _PDFExtract_ sanitized string content.
 
-image::matching.png[align="center", title="Mapping Process (left) with examples (right)"]
+image::images/matching.png[align="center", title="Mapping Process (left) with examples (right)"]
 
 Even though both representations now are in a similar shape it can still happen
 that the content in both strings differs.
@@ -180,4 +180,4 @@ occurrences for annotations in both directions.
 For the manually tested documents all annotations were found and matched.
 
 
-image::inception-pdf-editor.png[align="center",title="PDF Editor Architecture"]
+image::images/inception-pdf-editor.png[align="center",title="PDF Editor Architecture"]

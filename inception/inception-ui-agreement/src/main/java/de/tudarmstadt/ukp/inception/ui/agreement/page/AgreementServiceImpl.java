@@ -20,7 +20,7 @@ package de.tudarmstadt.ukp.inception.ui.agreement.page;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.AUTO_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
-import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.getDiffAdapters;
+import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.DiffAdapterRegistry.getDiffAdapters;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.Tag.USED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
@@ -29,6 +29,7 @@ import static java.lang.String.join;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.emptySet;
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.joining;
@@ -47,6 +48,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.io.output.CloseShieldOutputStream;
@@ -61,6 +63,7 @@ import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.FullCodingAgre
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
@@ -121,22 +124,39 @@ public class AgreementServiceImpl
     }
 
     @Override
+    public void exportDiff(OutputStream aOut, AnnotationLayer aLayer, DefaultAgreementTraits traits,
+            User aCurrentUser, List<SourceDocument> aDocuments, List<String> aAnnotators)
+    {
+        exportDiff(aOut, aLayer, null, traits, aCurrentUser, aDocuments, aAnnotators);
+    }
+
+    @Override
     public void exportDiff(OutputStream aOut, AnnotationFeature aFeature,
             DefaultAgreementTraits traits, User aCurrentUser, List<SourceDocument> aDocuments,
             List<String> aAnnotators)
     {
-        var project = aFeature.getProject();
+        exportDiff(aOut, aFeature.getLayer(), aFeature, traits, aCurrentUser, aDocuments,
+                aAnnotators);
+    }
+
+    public void exportDiff(OutputStream aOut, AnnotationLayer aLayer, AnnotationFeature aFeature,
+            DefaultAgreementTraits traits, User aCurrentUser, List<SourceDocument> aDocuments,
+            List<String> aAnnotators)
+    {
+        var project = aLayer.getProject();
         var allAnnDocs = getDocumentsToEvaluate(project, aDocuments, traits);
 
         var docs = allAnnDocs.keySet().stream() //
                 .sorted(comparing(SourceDocument::getName)) //
                 .toList();
 
-        var adapters = getDiffAdapters(schemaService, asList(aFeature.getLayer()));
+        var adapters = getDiffAdapters(schemaService, asList(aLayer));
 
-        var tagset = schemaService.listTags(aFeature.getTagset()).stream() //
-                .map(Tag::getName) //
-                .collect(toCollection(LinkedHashSet::new));
+        Set<String> tagset = aFeature != null
+                ? schemaService.listTags(aFeature.getTagset()).stream() //
+                        .map(Tag::getName) //
+                        .collect(toCollection(LinkedHashSet::new))
+                : emptySet();
 
         var countWritten = 0;
         for (var doc : docs) {
@@ -150,8 +170,9 @@ public class AgreementServiceImpl
 
                 var diff = doDiff(adapters, casMap);
 
-                var result = AgreementUtils.makeCodingStudy(diff, aFeature.getLayer().getName(),
-                        aFeature.getName(), tagset, traits.isExcludeIncomplete(), casMap);
+                var featureName = aFeature != null ? aFeature.getName() : null;
+                var result = AgreementUtils.makeCodingStudy(diff, aLayer.getName(), featureName,
+                        tagset, traits.isExcludeIncomplete(), casMap);
 
                 try (var printer = new CSVPrinter(
                         new OutputStreamWriter(CloseShieldOutputStream.wrap(aOut), UTF_8),
@@ -170,11 +191,20 @@ public class AgreementServiceImpl
     }
 
     @Override
-    public void exportPairwiseDiff(OutputStream aOut, AnnotationFeature aFeature, String aMeasure,
-            DefaultAgreementTraits traits, User aCurrentUser, List<SourceDocument> aDocuments,
+    public void exportPairwiseDiff(OutputStream aOut, AnnotationLayer aLayer, String aMeasure,
+            DefaultAgreementTraits aTraits, User aCurrentUser, List<SourceDocument> aDocuments,
             String aAnnotator1, String aAnnotator2)
     {
-        exportDiff(aOut, aFeature, traits, aCurrentUser, aDocuments,
+        exportDiff(aOut, aLayer, null, aTraits, aCurrentUser, aDocuments,
+                asList(aAnnotator1, aAnnotator2));
+    }
+
+    @Override
+    public void exportPairwiseDiff(OutputStream aOut, AnnotationFeature aFeature, String aMeasure,
+            DefaultAgreementTraits aTraits, User aCurrentUser, List<SourceDocument> aDocuments,
+            String aAnnotator1, String aAnnotator2)
+    {
+        exportDiff(aOut, aFeature.getLayer(), aFeature, aTraits, aCurrentUser, aDocuments,
                 asList(aAnnotator1, aAnnotator2));
     }
 

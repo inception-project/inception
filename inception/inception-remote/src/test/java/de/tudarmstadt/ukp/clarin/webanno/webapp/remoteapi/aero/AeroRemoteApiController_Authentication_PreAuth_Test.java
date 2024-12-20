@@ -56,6 +56,7 @@ import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.search.config.SearchServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeServiceImpl;
 import de.tudarmstadt.ukp.inception.support.spring.ApplicationContextProvider;
+import de.tudarmstadt.ukp.inception.ui.core.dashboard.config.DashboardAutoConfiguration;
 
 /**
  * This is basically the same as {@link AeroRemoteApiController_Authentication_Test} but with the
@@ -74,6 +75,7 @@ import de.tudarmstadt.ukp.inception.support.spring.ApplicationContextProvider;
 @EnableAutoConfiguration( //
         exclude = { //
                 LiquibaseAutoConfiguration.class, //
+                DashboardAutoConfiguration.class, //
                 EventLoggingAutoConfiguration.class, //
                 SearchServiceAutoConfiguration.class, //
                 WicketAutoConfiguration.class })

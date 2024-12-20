@@ -22,7 +22,6 @@ import java.util.List;
 
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.wicketstuff.jquery.ui.widget.menu.IMenuItem;
 
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
@@ -40,6 +39,4 @@ public interface AnnotationEditorExtensionRegistry
         throws IOException, AnnotationException;
 
     void fireRenderRequested(AjaxRequestTarget aTarget, AnnotatorState aState);
-
-    void generateContextMenuItems(List<IMenuItem> aItems);
 }

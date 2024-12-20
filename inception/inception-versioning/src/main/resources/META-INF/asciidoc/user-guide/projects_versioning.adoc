@@ -26,6 +26,6 @@ This is done via a git repository stored in the `+.inception+` folder.
 This git repository can also be used to push to a remote repository, e.g. saving on Github or Gitlab.
 We currently only support pushing via HTTPS.
 
-image::versioning_settings.png[align="center"]
+image::images/versioning_settings.png[align="center"]
 
 If you want to roll back to an earlier version, then you need to manually check out the old version in the local or remote git repository, load the old layer configuration manually in the layer settings and replace source and annotation documents via the remote API (see the <<admin-guide.adoc#sect_remote_api, Admin Guide>>).

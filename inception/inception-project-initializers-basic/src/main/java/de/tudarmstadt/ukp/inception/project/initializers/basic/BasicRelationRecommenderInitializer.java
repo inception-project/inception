@@ -30,7 +30,6 @@ import de.tudarmstadt.ukp.inception.project.api.ProjectInitializer;
 import de.tudarmstadt.ukp.inception.project.initializers.basic.config.InceptionBasicProjectInitializersAutoConfiguration;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
-import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.relation.StringMatchingRelationRecommenderFactory;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.relation.StringMatchingRelationRecommenderTraits;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
@@ -94,9 +93,8 @@ public class BasicRelationRecommenderInitializer
         recommender.setThreshold(0.0d);
         recommender.setTool(recommenderFactory.getId());
 
-        @SuppressWarnings("unchecked")
-        var factory = (RecommendationEngineFactory<StringMatchingRelationRecommenderTraits>) //
-        recommendationService.getRecommenderFactory(recommender).get();
+        var factory = recommendationService
+                .<StringMatchingRelationRecommenderTraits> getRecommenderFactory(recommender).get();
         var traits = factory.readTraits(recommender);
         traits.setAdjunctFeature(BASIC_SPAN_LABEL_FEATURE_NAME);
         factory.writeTraits(recommender, traits);

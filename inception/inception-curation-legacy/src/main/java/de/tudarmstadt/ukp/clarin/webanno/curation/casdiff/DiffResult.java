@@ -162,7 +162,7 @@ public class DiffResult
             return aConfigurationSet.getConfigurations().size() == 1;
         }
 
-        Set<String> exceptions = new HashSet<>(asList(aCasGroupIDsToIgnore));
+        var exceptions = new HashSet<>(asList(aCasGroupIDsToIgnore));
         return aConfigurationSet.getConfigurations().stream()
                 // Ignore configuration sets containing only exceptions and nothing else
                 .filter(cfg -> !subtract(cfg.getCasGroupIds(), exceptions).isEmpty())
@@ -300,7 +300,8 @@ public class DiffResult
         for (var p : getPositions()) {
             var configurationSet = getConfigurationSet(p);
             aOut.printf("=== %s -> %s %s%n", p,
-                    isAgreement(configurationSet) ? "AGREE" : "DISAGREE",
+                    configurationSet.containsStackedConfigurations() ? "STACKED"
+                            : isAgreement(configurationSet) ? "AGREE" : "DISAGREE",
                     isComplete(configurationSet) ? "COMPLETE" : "INCOMPLETE");
             for (var cfg : configurationSet.getConfigurations()) {
                 aOut.printf("  %s%n", cfg);

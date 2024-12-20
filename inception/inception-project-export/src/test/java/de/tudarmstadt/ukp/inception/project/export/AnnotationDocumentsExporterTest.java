@@ -138,7 +138,8 @@ public class AnnotationDocumentsExporterTest
 
         // Export the project
         var exportRequest = new FullProjectExportRequest(sourceProject, null, false);
-        var monitor = new ProjectExportTaskMonitor(sourceProject, null, "test");
+        var monitor = new ProjectExportTaskMonitor(sourceProject, null, "test",
+                exportRequest.getFilenamePrefix());
         var exportedProject = new ExportedProject();
 
         try (var zos = new ZipOutputStream(new FileOutputStream(exportFile))) {

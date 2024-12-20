@@ -25,9 +25,11 @@ import static org.apache.tomcat.websocket.Constants.WS_AUTHENTICATION_PASSWORD;
 import static org.apache.tomcat.websocket.Constants.WS_AUTHENTICATION_USER_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.slf4j.LoggerFactory.getLogger;
+import static org.springframework.security.config.Customizer.withDefaults;
 import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
 
 import java.io.File;
+import java.util.Base64;
 import java.util.Map;
 
 import org.awaitility.Awaitility;
@@ -45,18 +47,18 @@ import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.annotation.Order;
 import org.springframework.messaging.converter.MappingJackson2MessageConverter;
+import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.UserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.socket.WebSocketHttpHeaders;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.messaging.WebSocketStompClient;
 
@@ -64,7 +66,6 @@ import de.tudarmstadt.ukp.clarin.webanno.diag.config.CasDoctorAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.project.config.ProjectServiceAutoConfiguration;
-import de.tudarmstadt.ukp.clarin.webanno.security.ExtensiblePermissionEvaluator;
 import de.tudarmstadt.ukp.clarin.webanno.security.InceptionDaoAuthenticationProvider;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityAutoConfiguration;
@@ -83,7 +84,6 @@ import de.tudarmstadt.ukp.inception.support.logging.Logging;
 import de.tudarmstadt.ukp.inception.support.spring.ApplicationContextProvider;
 import de.tudarmstadt.ukp.inception.support.test.websocket.WebSocketSessionTestHandler;
 import de.tudarmstadt.ukp.inception.websocket.config.WebsocketAutoConfiguration;
-import de.tudarmstadt.ukp.inception.websocket.config.WebsocketConfig;
 import de.tudarmstadt.ukp.inception.websocket.config.WebsocketSecurityConfig;
 import jakarta.persistence.EntityManager;
 
@@ -97,16 +97,16 @@ import jakarta.persistence.EntityManager;
         exclude = { //
                 LiquibaseAutoConfiguration.class })
 @ImportAutoConfiguration({ //
-        CasStorageServiceAutoConfiguration.class, //
-        DocumentServiceAutoConfiguration.class, //
-        DocumentImportExportServiceAutoConfiguration.class, //
         CasDoctorAutoConfiguration.class, //
         SecurityAutoConfiguration.class, //
-        WebsocketSecurityConfig.class, //
         WebsocketAutoConfiguration.class, //
+        WebsocketSecurityConfig.class, //
         ProjectServiceAutoConfiguration.class, //
+        DocumentServiceAutoConfiguration.class, //
+        CasStorageServiceAutoConfiguration.class, //
         RepositoryAutoConfiguration.class, //
-        AnnotationSchemaServiceAutoConfiguration.class })
+        AnnotationSchemaServiceAutoConfiguration.class, //
+        DocumentImportExportServiceAutoConfiguration.class })
 @EntityScan({ //
         "de.tudarmstadt.ukp.clarin.webanno.model", //
         "de.tudarmstadt.ukp.clarin.webanno.security.model", //
@@ -121,6 +121,7 @@ class RecommendationEventWebsocketControllerImplTest
     private WebSocketStompClient stompClient;
     private @LocalServerPort int port;
     private String websocketUrl;
+    private WebSocketHttpHeaders headers;
 
     private @Autowired ProjectService projectService;
     private @Autowired RepositoryProperties repositoryProperties;
@@ -128,21 +129,25 @@ class RecommendationEventWebsocketControllerImplTest
     private @Autowired UserDao userService;
     private @Autowired ApplicationEventPublisher appEventPublisher;
 
-    // temporarily store data for test project
     private static @TempDir File repositoryDir;
-    private static Project project;
+
     private static User user;
+    private static Project project;
 
     @BeforeEach
     void setup() throws Exception
     {
-        // create websocket client
         websocketUrl = "ws://localhost:" + port + WS_ENDPOINT;
 
         var wsClient = new StandardWebSocketClient();
         wsClient.setUserProperties(Map.of( //
                 WS_AUTHENTICATION_USER_NAME, USER, //
                 WS_AUTHENTICATION_PASSWORD, PASS));
+
+        headers = new WebSocketHttpHeaders();
+        headers.add("Authorization",
+                "Basic " + Base64.getEncoder().encodeToString((USER + ":" + PASS).getBytes()));
+
         stompClient = new WebSocketStompClient(wsClient);
         stompClient.setMessageConverter(new MappingJackson2MessageConverter());
 
@@ -188,7 +193,8 @@ class RecommendationEventWebsocketControllerImplTest
                 }) //
                 .build();
 
-        var session = stompClient.connectAsync(websocketUrl, sessionHandler).get(10, SECONDS);
+        var session = stompClient.connectAsync(websocketUrl, headers, sessionHandler).get(10,
+                SECONDS);
 
         Awaitility.await().atMost(20, SECONDS).until(sessionHandler::messagesProcessed);
 
@@ -217,7 +223,8 @@ class RecommendationEventWebsocketControllerImplTest
                 }) //
                 .build();
 
-        var session = stompClient.connectAsync(websocketUrl, sessionHandler).get(10, SECONDS);
+        var session = stompClient.connectAsync(websocketUrl, headers, sessionHandler).get(10,
+                SECONDS);
 
         Awaitility.await().atMost(20, SECONDS).until(sessionHandler::messagesProcessed);
 
@@ -248,7 +255,8 @@ class RecommendationEventWebsocketControllerImplTest
                 }) //
                 .build();
 
-        var session = stompClient.connectAsync(websocketUrl, sessionHandler).get(10, SECONDS);
+        var session = stompClient.connectAsync(websocketUrl, headers, sessionHandler).get(10,
+                SECONDS);
         Awaitility.await().atMost(20, SECONDS).until(sessionHandler::messagesProcessed);
 
         sessionHandler.assertSuccess();
@@ -269,32 +277,29 @@ class RecommendationEventWebsocketControllerImplTest
                         .build());
     }
 
-    @Configuration
-    public static class WebsocketSecurityTestConfig
-        extends WebsocketSecurityConfig
-    {
-        @Autowired
-        public WebsocketSecurityTestConfig(ApplicationContext aContext,
-                ExtensiblePermissionEvaluator aPermissionEvaluator)
-        {
-            super(aContext, aPermissionEvaluator);
-        }
-    }
-
     @SpringBootConfiguration
-    public static class WebsocketBrokerTestConfig
+    public static class SpringConfig
     {
+        @Bean
+        public ChannelInterceptor csrfChannelInterceptor()
+        {
+            // Disable CSRF
+            return new ChannelInterceptor()
+            {
+            };
+        }
+
         @Bean
         public ApplicationContextProvider applicationContextProvider()
         {
             return new ApplicationContextProvider();
         }
 
-        @Bean(name = "authenticationProvider")
-        public DaoAuthenticationProvider internalAuthenticationProvider(PasswordEncoder aEncoder,
+        @Bean
+        public DaoAuthenticationProvider authenticationProvider(PasswordEncoder aEncoder,
                 @Lazy UserDetailsManager aUserDetailsManager)
         {
-            DaoAuthenticationProvider authProvider = new InceptionDaoAuthenticationProvider();
+            var authProvider = new InceptionDaoAuthenticationProvider();
             authProvider.setUserDetailsService(aUserDetailsManager);
             authProvider.setPasswordEncoder(aEncoder);
             return authProvider;
@@ -304,13 +309,13 @@ class RecommendationEventWebsocketControllerImplTest
         @Bean
         public SecurityFilterChain wsFilterChain(HttpSecurity aHttp) throws Exception
         {
-            aHttp.securityMatcher(WebsocketConfig.WS_ENDPOINT);
-            aHttp.authorizeHttpRequests() //
+            aHttp.securityMatcher(WS_ENDPOINT);
+            aHttp.authorizeHttpRequests(rules -> rules //
                     .requestMatchers("/**").authenticated() //
-                    .anyRequest().denyAll();
-            aHttp.sessionManagement() //
-                    .sessionCreationPolicy(STATELESS);
-            aHttp.httpBasic();
+                    .anyRequest().denyAll());
+            aHttp.sessionManagement(session -> session //
+                    .sessionCreationPolicy(STATELESS));
+            aHttp.httpBasic(withDefaults());
             return aHttp.build();
         }
     }

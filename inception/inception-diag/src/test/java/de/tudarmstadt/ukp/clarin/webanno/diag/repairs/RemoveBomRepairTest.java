@@ -59,7 +59,7 @@ class RemoveBomRepairTest
         }
 
         var messages = new ArrayList<LogMessage>();
-        sut.repair(null, cas, messages);
+        sut.repair(null, null, cas, messages);
 
         assertThat(annotations).hasSizeGreaterThan(annotationCount);
 

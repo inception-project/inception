@@ -20,26 +20,28 @@ package de.tudarmstadt.ukp.inception.websocket;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_ADMIN;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_USER;
 import static de.tudarmstadt.ukp.inception.websocket.config.WebsocketConfig.WS_ENDPOINT;
+import static java.lang.invoke.MethodHandles.lookup;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.apache.tomcat.websocket.Constants.WS_AUTHENTICATION_PASSWORD;
 import static org.apache.tomcat.websocket.Constants.WS_AUTHENTICATION_USER_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.slf4j.LoggerFactory.getLogger;
+import static org.springframework.security.config.Customizer.withDefaults;
 import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
 
 import java.io.File;
-import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.slf4j.Logger;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
@@ -48,7 +50,6 @@ import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -59,7 +60,7 @@ import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompFrameHandler;
 import org.springframework.messaging.simp.stomp.StompHeaders;
 import org.springframework.messaging.simp.stomp.StompSession;
-import org.springframework.messaging.simp.stomp.StompSessionHandlerAdapter;
+import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.security.authentication.AuthenticationEventPublisher;
 import org.springframework.security.authentication.DefaultAuthenticationEventPublisher;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -67,6 +68,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.UserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.socket.WebSocketHttpHeaders;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.messaging.WebSocketStompClient;
 
@@ -75,7 +77,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.project.config.ProjectServiceAutoConfiguration;
-import de.tudarmstadt.ukp.clarin.webanno.security.ExtensiblePermissionEvaluator;
 import de.tudarmstadt.ukp.clarin.webanno.security.InceptionDaoAuthenticationProvider;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.config.InceptionSecurityAutoConfiguration;
@@ -96,8 +97,8 @@ import de.tudarmstadt.ukp.inception.support.findbugs.SuppressFBWarnings;
 import de.tudarmstadt.ukp.inception.support.logging.Logging;
 import de.tudarmstadt.ukp.inception.support.spring.ApplicationContextProvider;
 import de.tudarmstadt.ukp.inception.websocket.config.WebsocketAutoConfiguration;
-import de.tudarmstadt.ukp.inception.websocket.config.WebsocketConfig;
 import de.tudarmstadt.ukp.inception.websocket.config.WebsocketSecurityConfig;
+import de.tudarmstadt.ukp.inception.websocket.config.stomp.LoggingStompSessionHandlerAdapter;
 import de.tudarmstadt.ukp.inception.websocket.model.LoggedEventMessage;
 import jakarta.persistence.EntityManager;
 
@@ -114,9 +115,10 @@ import jakarta.persistence.EntityManager;
 @ImportAutoConfiguration({ //
         CasDoctorAutoConfiguration.class, //
         EventLoggingAutoConfiguration.class, //
-        SecurityAutoConfiguration.class, //
         InceptionSecurityAutoConfiguration.class, //
+        SecurityAutoConfiguration.class, //
         WebsocketAutoConfiguration.class, //
+        WebsocketSecurityConfig.class, //
         ProjectServiceAutoConfiguration.class, //
         DocumentServiceAutoConfiguration.class, //
         CasStorageServiceAutoConfiguration.class, //
@@ -129,49 +131,56 @@ import jakarta.persistence.EntityManager;
         "de.tudarmstadt.ukp.inception.log.model" })
 public class WebSocketIntegrationTest
 {
+    private static final Logger LOG = getLogger(lookup().lookupClass());
+
     private static final String USER = "user";
     private static final String PASS = "pass";
 
     private WebSocketStompClient stompClient;
     private @LocalServerPort int port;
     private String websocketUrl;
+    private WebSocketHttpHeaders headers;
     private StompSession session;
 
     private @Autowired ApplicationEventPublisher applicationEventPublisher;
-    private @Autowired DocumentService docService;
+    private @Autowired DocumentService documentService;
     private @Autowired ProjectService projectService;
     private @Autowired RepositoryProperties repositoryProperties;
     private @Autowired EntityManager entityManager;
     private @Autowired UserDao userService;
 
-    private @TempDir File repositoryDir;
+    private static @TempDir File repositoryDir;
 
-    private User user;
-    private Project testProject;
-    private SourceDocument testDoc;
+    private static User user;
+    private static Project project;
+    private static SourceDocument testDoc;
 
     @BeforeEach
-    public void setup() throws IOException
+    void setup() throws Exception
     {
-        // create websocket client
         websocketUrl = "ws://localhost:" + port + WS_ENDPOINT;
+
         var wsClient = new StandardWebSocketClient();
         wsClient.setUserProperties(Map.of( //
                 WS_AUTHENTICATION_USER_NAME, USER, //
                 WS_AUTHENTICATION_PASSWORD, PASS));
+
+        headers = new WebSocketHttpHeaders();
+        headers.add("Authorization",
+                "Basic " + Base64.getEncoder().encodeToString((USER + ":" + PASS).getBytes()));
+
         stompClient = new WebSocketStompClient(wsClient);
         stompClient.setMessageConverter(new MappingJackson2MessageConverter());
-        createTestdata();
+
+        setupOnce();
     }
 
-    @AfterEach
-    public void tearDown()
+    void setupOnce() throws Exception
     {
-        entityManager.clear();
-    }
+        if (project != null) {
+            return;
+        }
 
-    private void createTestdata() throws IOException
-    {
         repositoryProperties.setPath(repositoryDir);
         MDC.put(Logging.KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
 
@@ -180,22 +189,29 @@ public class WebSocketIntegrationTest
         user.setPassword(PASS);
         userService.create(user);
 
-        testProject = new Project("test-project");
-        testDoc = new SourceDocument("testDoc", testProject, "text");
-        projectService.createProject(testProject);
-        docService.createSourceDocument(testDoc);
+        project = new Project("test-project");
+        projectService.createProject(project);
+
+        testDoc = new SourceDocument("testDoc", project, "text");
+        documentService.createSourceDocument(testDoc);
+    }
+
+    @AfterEach
+    void tearDown()
+    {
+        entityManager.clear();
     }
 
     @SuppressFBWarnings("RV_RETURN_VALUE_IGNORED")
     @Test
-    public void thatRecentMessageIsReceived()
-        throws InterruptedException, ExecutionException, TimeoutException
+    void thatRecentMessageIsReceived() throws Exception
     {
         var receivedMessages = new ArrayList<LoggedEventMessage>();
         var latch = new CountDownLatch(1);
         var sessionHandler = new SessionHandler(latch, receivedMessages);
 
-        session = stompClient.connectAsync(websocketUrl, sessionHandler).get(5, SECONDS);
+        session = stompClient.connectAsync(websocketUrl, headers, sessionHandler) //
+                .get(5, SECONDS);
         latch.await(10, SECONDS);
 
         assertThat(receivedMessages.size()).isEqualTo(1);
@@ -210,14 +226,15 @@ public class WebSocketIntegrationTest
         }
     }
 
-    private final class SessionHandler
-        extends StompSessionHandlerAdapter
+    private class SessionHandler
+        extends LoggingStompSessionHandlerAdapter
     {
         private final CountDownLatch latch;
         private final List<LoggedEventMessage> receivedMessages;
 
         private SessionHandler(CountDownLatch aLatch, List<LoggedEventMessage> aReceivedMessages)
         {
+            super(LOG);
             latch = aLatch;
             receivedMessages = aReceivedMessages;
         }
@@ -249,27 +266,15 @@ public class WebSocketIntegrationTest
         public void handleException(StompSession aSession, StompCommand aCommand,
                 StompHeaders aHeaders, byte[] aPayload, Throwable aException)
         {
-            System.out.println("StompSessionHandler: " + aException);
+            LOG.error("Exception: {}", aException.getMessage(), aException);
             aException.printStackTrace();
         }
 
         @Override
         public void handleTransportError(StompSession aSession, Throwable aException)
         {
-            System.out.println("TransportError: " + aException);
+            LOG.error("Transport error: {}", aException.getMessage(), aException);
             aException.printStackTrace();
-        }
-    }
-
-    @Configuration
-    public static class WebsocketSecurityTestConfig
-        extends WebsocketSecurityConfig
-    {
-        @Autowired
-        public WebsocketSecurityTestConfig(ApplicationContext aContext,
-                ExtensiblePermissionEvaluator aPermissionEvaluator)
-        {
-            super(aContext, aPermissionEvaluator);
         }
     }
 
@@ -277,9 +282,12 @@ public class WebSocketIntegrationTest
     public static class SpringConfig
     {
         @Bean
-        public DocumentStateChangedEventAdapter documentStateChangedEventAdapter()
+        public ChannelInterceptor csrfChannelInterceptor()
         {
-            return new DocumentStateChangedEventAdapter();
+            // Disable CSRF
+            return new ChannelInterceptor()
+            {
+            };
         }
 
         @Bean
@@ -289,13 +297,7 @@ public class WebSocketIntegrationTest
         }
 
         @Bean
-        AuthenticationEventPublisher authenticationEventPublisher()
-        {
-            return new DefaultAuthenticationEventPublisher();
-        }
-
-        @Bean(name = "authenticationProvider")
-        public DaoAuthenticationProvider internalAuthenticationProvider(PasswordEncoder aEncoder,
+        public DaoAuthenticationProvider authenticationProvider(PasswordEncoder aEncoder,
                 @Lazy UserDetailsManager aUserDetailsManager)
         {
             var authProvider = new InceptionDaoAuthenticationProvider();
@@ -308,14 +310,27 @@ public class WebSocketIntegrationTest
         @Bean
         public SecurityFilterChain wsFilterChain(HttpSecurity aHttp) throws Exception
         {
-            aHttp.securityMatcher(WebsocketConfig.WS_ENDPOINT);
-            aHttp.authorizeHttpRequests() //
+            aHttp.securityMatcher(WS_ENDPOINT);
+            aHttp.authorizeHttpRequests(rules -> rules //
                     .requestMatchers("/**").authenticated() //
-                    .anyRequest().denyAll();
-            aHttp.sessionManagement() //
-                    .sessionCreationPolicy(STATELESS);
-            aHttp.httpBasic();
+                    .anyRequest().denyAll());
+            aHttp.sessionManagement(session -> session //
+                    .sessionCreationPolicy(STATELESS));
+            aHttp.httpBasic(withDefaults());
             return aHttp.build();
         }
+
+        @Bean
+        AuthenticationEventPublisher authenticationEventPublisher()
+        {
+            return new DefaultAuthenticationEventPublisher();
+        }
+
+        @Bean
+        public DocumentStateChangedEventAdapter documentStateChangedEventAdapter()
+        {
+            return new DocumentStateChangedEventAdapter();
+        }
+
     }
 }

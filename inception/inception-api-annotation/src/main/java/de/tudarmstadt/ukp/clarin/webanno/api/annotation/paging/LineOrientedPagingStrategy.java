@@ -17,10 +17,14 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging;
 
-import static org.apache.commons.lang3.StringUtils.splitPreserveAllTokens;
+import static java.lang.String.join;
+import static java.util.Arrays.asList;
+import static java.util.regex.Pattern.compile;
+import static java.util.stream.Collectors.joining;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.Component;
@@ -37,22 +41,45 @@ public class LineOrientedPagingStrategy
 {
     private static final long serialVersionUID = -991967885210129525L;
 
+    static final String CR = "\r"; // carriage return (CR) (classic Mac)
+    static final String LF = "\n"; // line feed (LF) (Unix)
+    static final String CRLF = "\r\n"; // CRLF (Windows)
+    static final String NEL = "\u0085"; // Next Line (NEL)
+    static final String LINE_SEPARATOR = "\u2028"; // Line Separator
+    static final String PARAGRAPH_SEPARATOR = "\u2029"; // Paragraph Separator
+
+    // Mind that CRLF must come before CR and LF here so it matches as a unit!
+    static final List<String> LINE_SEPARATORS = asList(CRLF, CR, LF, NEL, LINE_SEPARATOR,
+            PARAGRAPH_SEPARATOR);
+
+    static final Pattern LINE_PATTERN = compile("[^" + join("", LINE_SEPARATORS) + "]+" //
+            + "|" + join("|", LINE_SEPARATORS));
+    static final Pattern LINE_SPLITTER_PATTERN = compile(LINE_SEPARATORS.stream() //
+            .map(Pattern::quote) //
+            .collect(joining("|")));
+
     @Override
     public List<Unit> units(CAS aCas, int aFirstIndex, int aLastIndex)
     {
-        // We need to preserve all tokens so we can add a +1 for the line breaks of empty lines.
-        String[] lines = splitPreserveAllTokens(aCas.getDocumentText(), '\n');
+        var text = aCas.getDocumentText();
+        var matcher = LINE_SPLITTER_PATTERN.matcher(text);
 
-        List<Unit> units = new ArrayList<>();
-        int beginOffset = 0;
-        for (int i = 0; i < Math.min(lines.length, aLastIndex); i++) {
+        var unitStart = 0;
+        var unitEnd = 0;
+        var index = 1;
 
-            if (i >= aFirstIndex) {
-                units.add(new Unit(i + 1, beginOffset, beginOffset + lines[i].length()));
+        var units = new ArrayList<Unit>();
+        while (matcher.find()) {
+            unitEnd = matcher.start();
+            units.add(new Unit(index, unitStart, unitEnd));
+            unitStart = matcher.end();
+            index++;
+        }
+
+        if (unitStart < text.length()) {
+            if (!text.substring(unitStart).isBlank()) {
+                units.add(new Unit(index, unitStart, text.length()));
             }
-
-            // The +1 below accounts for the line break which is not included in the token
-            beginOffset += lines[i].length() + 1;
         }
 
         return units;
@@ -61,8 +88,8 @@ public class LineOrientedPagingStrategy
     @Override
     public Component createPositionLabel(String aId, IModel<AnnotatorState> aModel)
     {
-        Label label = new Label(aId, () -> {
-            AnnotatorState state = aModel.getObject();
+        var label = new Label(aId, () -> {
+            var state = aModel.getObject();
             return String.format("%d-%d / %d lines [doc %d / %d]", state.getFirstVisibleUnitIndex(),
                     state.getLastVisibleUnitIndex(), state.getUnitCount(),
                     state.getDocumentIndex() + 1, state.getNumberOfDocuments());

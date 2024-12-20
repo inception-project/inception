@@ -22,7 +22,7 @@ NOTE: This functionality is only available to *curators* and *managers*. Agreeme
 This page allows you to calculate inter-annotator agreement between users.
 Agreement can be inspected on a per-feature basis and is calculated pair-wise between all annotators across all documents. 
 
-image::agreement_table.png[align="center"]
+image::images/agreement_table.png[align="center"]
 
 The *Feature* dropdown allows the selection of layers and features for which an agreement shall be computed. 
 

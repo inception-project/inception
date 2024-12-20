@@ -21,7 +21,6 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.config;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -49,7 +48,6 @@ public class StringMatchingRecommenderAutoConfiguration
     private @PersistenceContext EntityManager entityManager;
 
     @Bean
-    @Autowired
     public GazeteerExporter gazeteerExporter(RecommendationService aRecommendationService,
             GazeteerService aGazeteerService)
     {
@@ -57,7 +55,6 @@ public class StringMatchingRecommenderAutoConfiguration
     }
 
     @Bean
-    @Autowired
     public GazeteerService gazeteerService(RepositoryProperties aRepositoryProperties)
     {
         return new GazeteerServiceImpl(aRepositoryProperties, entityManager);
@@ -76,7 +73,6 @@ public class StringMatchingRecommenderAutoConfiguration
     }
 
     @Bean
-    @Autowired
     public StringMatchingRecommenderFactory stringMatchingRecommenderFactory(
             GazeteerService aGazeteerService)
     {

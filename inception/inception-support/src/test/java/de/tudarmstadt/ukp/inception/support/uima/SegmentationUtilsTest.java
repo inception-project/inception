@@ -136,4 +136,46 @@ public class SegmentationUtilsTest
                         "one", ".", //
                         "i", "a", "m");
     }
+
+    @Test
+    public void testTokenizeWithZonesAndNonDefaultSentence() throws Exception
+    {
+        var jcas = createText("    this isa test.    ", "en");
+        new Sentence(jcas, 4, 18).addToIndexes();
+        new Div(jcas, 11, 11).addToIndexes();
+
+        tokenize(jcas.getCas(), 0, jcas.getDocumentText().length(), jcas.select(Div.class));
+
+        assertThat(select(jcas, Sentence.class)) //
+                .extracting(Sentence::getCoveredText) //
+                .containsExactly("this isa test.");
+
+        assertThat(select(jcas, Token.class)) //
+                .extracting(Token::getCoveredText) //
+                .containsExactly( //
+                        "this", "is", "a", "test", ".");
+    }
+
+    @Test
+    public void testTokenizeWithZonesInBetweenSentences() throws Exception
+    {
+        var jcas = createText("0123456789", "en");
+        new Sentence(jcas, 1, 3).addToIndexes();
+        new Sentence(jcas, 4, 6).addToIndexes();
+        new Sentence(jcas, 7, 9).addToIndexes();
+        new Div(jcas, 2, 2).addToIndexes();
+        new Div(jcas, 5, 5).addToIndexes();
+        new Div(jcas, 8, 8).addToIndexes();
+
+        tokenize(jcas.getCas(), 0, jcas.getDocumentText().length(), jcas.select(Div.class));
+
+        assertThat(select(jcas, Sentence.class)) //
+                .extracting(Sentence::getCoveredText) //
+                .containsExactly("12", "45", "78");
+
+        assertThat(select(jcas, Token.class)) //
+                .extracting(Token::getCoveredText) //
+                .containsExactly( //
+                        "1", "2", "4", "5", "7", "8");
+    }
 }

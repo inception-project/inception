@@ -133,11 +133,10 @@ public class PdfAnnotationEditor
     @Override
     protected AnnotationEditorProperties getProperties()
     {
-        AnnotationEditorProperties props = new AnnotationEditorProperties();
+        var props = super.getProperties();
         // The factory is the JS call. Cf. the "globalName" in build.js and the factory method
         // defined in main.ts
         props.setEditorFactory("PdfAnnotationEditor.factory()");
-        props.setDiamAjaxCallbackUrl(getDiamBehavior().getCallbackUrl().toString());
         props.setStylesheetSources(asList(
                 referenceToUrl(servletContext, PdfAnnotationEditorCssResourceReference.get())));
         props.setScriptSources(asList(referenceToUrl(servletContext,

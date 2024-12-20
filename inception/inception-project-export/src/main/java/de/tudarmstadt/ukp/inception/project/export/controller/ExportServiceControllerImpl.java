@@ -17,13 +17,17 @@
  */
 package de.tudarmstadt.ukp.inception.project.export.controller;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskState.COMPLETED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_PROJECT;
+import static java.time.LocalDateTime.now;
 import static java.util.stream.Collectors.toList;
+import static org.springframework.http.HttpStatus.NOT_FOUND;
+import static org.springframework.http.HttpStatus.OK;
 
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -31,7 +35,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
@@ -47,7 +50,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskHandle;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
-import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskState;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -125,7 +127,7 @@ public class ExportServiceControllerImpl
         ProjectExportTaskMonitor monitor = projectExportService.getTaskMonitor(handle);
 
         if (monitor == null) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>(NOT_FOUND);
         }
 
         List<RExportLogMessage> result = monitor.getMessages().stream()
@@ -140,24 +142,24 @@ public class ExportServiceControllerImpl
             @PathVariable("runId") String aRunId)
         throws Exception
     {
-        ProjectExportTaskHandle handle = new ProjectExportTaskHandle(aRunId);
-        ProjectExportTaskMonitor monitor = projectExportService.getTaskMonitor(handle);
+        var handle = new ProjectExportTaskHandle(aRunId);
+        var monitor = projectExportService.getTaskMonitor(handle);
 
-        if (monitor == null || (monitor.getState() != ProjectExportTaskState.COMPLETED)) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        if (monitor == null || (monitor.getState() != COMPLETED)) {
+            return new ResponseEntity<>(NOT_FOUND);
         }
 
         // Get project (this also ensures that it exists). Then check user permissions.
-        Project project = projectService.getProject(monitor.getProjectId());
-        User user = userService.getCurrentUser();
+        var project = projectService.getProject(monitor.getProjectId());
+        var user = userService.getCurrentUser();
         if (!projectService.hasRole(user, project, MANAGER) && !userService.isAdministrator(user)) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>(NOT_FOUND);
         }
 
         // Turn the file into a resource and auto-delete the file when the resource closes the
         // stream.
-        File exportedFile = monitor.getExportedFile();
-        InputStreamResource result = new InputStreamResource(new FileInputStream(exportedFile)
+        var exportedFile = monitor.getExportedFile();
+        var result = new InputStreamResource(new FileInputStream(exportedFile)
         {
             @Override
             public void close() throws IOException
@@ -167,12 +169,15 @@ public class ExportServiceControllerImpl
             }
         });
 
-        HttpHeaders httpHeaders = new HttpHeaders();
+        var formattedDateTime = now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd-HHmmss"));
+        var filename = monitor.getExportedFilenamePrefix() + "-" + project.getSlug() + "-"
+                + formattedDateTime + ".zip";
+
+        var httpHeaders = new HttpHeaders();
         httpHeaders.setContentType(MediaType.valueOf("application/zip"));
         httpHeaders.setContentLength(exportedFile.length());
-        httpHeaders.set("Content-Disposition",
-                "attachment; filename=\"" + exportedFile.getName() + "\"");
+        httpHeaders.set("Content-Disposition", "attachment; filename=\"" + filename + "\"");
 
-        return new ResponseEntity<>(result, httpHeaders, HttpStatus.OK);
+        return new ResponseEntity<>(result, httpHeaders, OK);
     }
 }

@@ -18,7 +18,7 @@
 package de.tudarmstadt.ukp.inception.ui.curation.sidebar;
 
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
-import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.getDiffAdapters;
+import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.DiffAdapterRegistry.getDiffAdapters;
 import static de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode.NONE;
 import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectAnnotationByAddr;
 import static java.util.Arrays.asList;
@@ -249,7 +249,7 @@ public class CurationEditorExtension
                 sourceAnnotation, feature.getName(), aVid.getSlot());
 
         // open created/updates FS in annotation detail editor panel
-        var mergedAnno = selectAnnotationByAddr(aTargetCas, mergeResult.getResultFSAddress());
+        var mergedAnno = selectAnnotationByAddr(aTargetCas, mergeResult.getTargetFSAddress());
         aState.getSelection().selectSpan(mergedAnno);
     }
 
@@ -263,7 +263,7 @@ public class CurationEditorExtension
                 sourceAnnotation);
 
         // open created/updates FS in annotation detail editor panel
-        var mergedAnno = selectAnnotationByAddr(aTargetCas, mergeResult.getResultFSAddress());
+        var mergedAnno = selectAnnotationByAddr(aTargetCas, mergeResult.getTargetFSAddress());
         aState.getSelection().selectArc(mergedAnno);
     }
 
@@ -277,7 +277,7 @@ public class CurationEditorExtension
                 sourceAnnotation);
 
         // open created/updates FS in annotation detail editor panel
-        var mergedAnno = selectAnnotationByAddr(aTargetCas, mergeResult.getResultFSAddress());
+        var mergedAnno = selectAnnotationByAddr(aTargetCas, mergeResult.getTargetFSAddress());
         aState.getSelection().selectSpan(mergedAnno);
     }
 

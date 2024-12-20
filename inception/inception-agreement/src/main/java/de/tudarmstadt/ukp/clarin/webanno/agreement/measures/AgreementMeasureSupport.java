@@ -25,6 +25,7 @@ import org.dkpro.statistics.agreement.IAnnotationStudy;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.AgreementResult_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.FullAgreementResult_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
 public interface AgreementMeasureSupport<//
         T extends DefaultAgreementTraits, //
@@ -42,7 +43,7 @@ public interface AgreementMeasureSupport<//
      *            a feature definition.
      * @return whether the given feature is supported by the current agreement measure support.
      */
-    boolean accepts(AnnotationFeature aFeature);
+    boolean accepts(AnnotationLayer aLayer, AnnotationFeature aFeature);
 
     /**
      * Returns a Wicket component to configure the specific traits of this measure.
@@ -55,13 +56,25 @@ public interface AgreementMeasureSupport<//
      *            a model holding the measure settings.
      * @return the traits editor component .
      */
-    default Panel createTraitsEditor(String aId, IModel<AnnotationFeature> aFeature,
-            IModel<T> aModel)
+    default Panel createTraitsEditor(String aId, IModel<AnnotationLayer> aLayer,
+            IModel<AnnotationFeature> aFeature, IModel<T> aModel)
     {
         return new EmptyPanel(aId);
     }
 
-    AgreementMeasure<R> createMeasure(AnnotationFeature aFeature, T aTraits);
+    default Panel createTraitsEditor(String aId, IModel<AnnotationFeature> aFeature,
+            IModel<T> aModel)
+    {
+        return createTraitsEditor(aId, aFeature.map(AnnotationFeature::getLayer), aFeature, aModel);
+    }
+
+    default AgreementMeasure<R> createMeasure(AnnotationFeature aFeature, T aTraits)
+    {
+        return createMeasure(aFeature.getLayer(), aFeature, aTraits);
+    }
+
+    AgreementMeasure<R> createMeasure(AnnotationLayer aLayer, AnnotationFeature aFeature,
+            T aTraits);
 
     T createTraits();
 
