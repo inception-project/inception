@@ -69,12 +69,11 @@ public class Tsv3XSerializer
     {
         write(aOut, aDocument.getFormatHeader());
 
-        List<TsvColumn> headerColumns = aDocument.getSchema()
-                .getHeaderColumns(aDocument.getActiveColumns());
+        var headerColumns = aDocument.getSchema().getHeaderColumns(aDocument.getActiveColumns());
 
         write(aOut, headerColumns);
 
-        for (TsvSentence sentence : aDocument.getSentences()) {
+        for (var sentence : aDocument.getSentences()) {
             aOut.print(LINE_BREAK);
             write(aOut, sentence, headerColumns);
         }

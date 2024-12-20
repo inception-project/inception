@@ -33,16 +33,19 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerConfigurationException;
-import javax.xml.transform.sax.SAXTransformerFactory;
-import javax.xml.transform.sax.TransformerHandler;
 import javax.xml.transform.stream.StreamResult;
 
+import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.jcas.JCas;
+import org.apache.uima.util.CasCopier;
 import org.dkpro.core.api.xml.type.XmlAttribute;
+import org.dkpro.core.api.xml.type.XmlDocument;
 import org.dkpro.core.api.xml.type.XmlElement;
 import org.dkpro.core.api.xml.type.XmlNode;
 import org.dkpro.core.api.xml.type.XmlTextNode;
@@ -61,8 +64,8 @@ public class XmlNodeUtils
     static String serializeCasToXmlString(JCas aJCas) throws IOException
     {
         try (var out = new StringWriter()) {
-            SAXTransformerFactory tf = XmlParserUtils.newTransformerFactory();
-            TransformerHandler th = tf.newTransformerHandler();
+            var tf = XmlParserUtils.newTransformerFactory();
+            var th = tf.newTransformerHandler();
             th.getTransformer().setOutputProperty(OMIT_XML_DECLARATION, "yes");
             th.getTransformer().setOutputProperty(METHOD, "xml");
             th.getTransformer().setOutputProperty(INDENT, "no");
@@ -87,7 +90,7 @@ public class XmlNodeUtils
 
     static void parseXmlToCas(JCas aJCas, InputSource aSource) throws IOException
     {
-        CasXmlHandler handler = new CasXmlHandler(aJCas);
+        var handler = new CasXmlHandler(aJCas);
 
         try {
             var parser = XmlParserUtils.newSaxParser();
@@ -278,4 +281,30 @@ public class XmlNodeUtils
         return path;
     }
 
+    public static int transferXmlDocumentStructure(CAS aTarget, CAS aSource)
+    {
+        var copied = new AtomicInteger();
+        var casCopier = new CasCopier(aSource, aTarget);
+        Consumer<FeatureStructure> copyFunc = fs -> {
+            var copy = casCopier.copyFs(fs);
+            if (copy != null) {
+                copied.incrementAndGet();
+                aTarget.addFsToIndexes(copy);
+            }
+        };
+
+        aSource.select(XmlDocument.class).forEach(copyFunc);
+        aSource.select(XmlNode.class).forEach(copyFunc);
+        return copied.get();
+    }
+
+    public static int removeXmlDocumentStructure(CAS aCas)
+    {
+        var toDelete = new ArrayList<FeatureStructure>();
+        aCas.select(XmlDocument.class).forEach(toDelete::add);
+        aCas.select(XmlNode.class).forEach(toDelete::add);
+        aCas.select(XmlAttribute.class).forEach(toDelete::add);
+        toDelete.forEach(aCas::removeFsFromIndexes);
+        return toDelete.size();
+    }
 }

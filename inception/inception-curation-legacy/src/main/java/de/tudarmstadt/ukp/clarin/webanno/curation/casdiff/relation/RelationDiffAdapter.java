@@ -17,12 +17,16 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.relation;
 
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.FEAT_REL_SOURCE;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.FEAT_REL_TARGET;
+import static de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport.FEAT_REL_SOURCE;
+import static de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport.FEAT_REL_TARGET;
+import static java.lang.Math.max;
+import static java.lang.Math.min;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static org.apache.uima.cas.text.AnnotationPredicates.overlapping;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -31,12 +35,12 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.FSUtil;
+import org.apache.uima.jcas.cas.AnnotationBase;
 import org.apache.uima.jcas.tcas.Annotation;
 
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.DiffAdapter_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.Position;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
-import de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureMultiplicityMode;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationRenderer;
 import de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil;
 
@@ -51,15 +55,15 @@ public class RelationDiffAdapter
     private String targetFeature;
 
     public RelationDiffAdapter(String aType, String aSourceFeature, String aTargetFeature,
-            String... aLabelFeatures)
+            String... aFeatures)
     {
-        this(aType, aSourceFeature, aTargetFeature, new HashSet<>(asList(aLabelFeatures)));
+        this(aType, aSourceFeature, aTargetFeature, new HashSet<>(asList(aFeatures)));
     }
 
     public RelationDiffAdapter(String aType, String aSourceFeature, String aTargetFeature,
-            Set<String> aLabelFeatures)
+            Set<String> aFeatures)
     {
-        super(aType, aLabelFeatures);
+        super(aType, aFeatures);
         sourceFeature = aSourceFeature;
         targetFeature = aTargetFeature;
     }
@@ -80,16 +84,14 @@ public class RelationDiffAdapter
     @Override
     public List<Annotation> selectAnnotationsInWindow(CAS aCas, int aWindowBegin, int aWindowEnd)
     {
-        // return selectCovered(aCas, CasUtil.getType(aCas, getType()), aWindowBegin, aWindowEnd);
-
         var result = new ArrayList<Annotation>();
         for (var rel : aCas.<Annotation> select(getType())) {
             var sourceFs = getSourceFs(rel);
             var targetFs = getTargetFs(rel);
 
             if (sourceFs instanceof Annotation source && targetFs instanceof Annotation target) {
-                var relBegin = Math.min(source.getBegin(), target.getBegin());
-                var relEnd = Math.max(source.getEnd(), target.getEnd());
+                var relBegin = min(source.getBegin(), target.getBegin());
+                var relEnd = max(source.getEnd(), target.getEnd());
 
                 if (overlapping(relBegin, relEnd, aWindowBegin, aWindowEnd)) {
                     result.add(rel);
@@ -98,14 +100,13 @@ public class RelationDiffAdapter
         }
 
         return result;
-
     }
 
     @Override
-    public Position getPosition(FeatureStructure aFS, String aFeature, String aRole,
-            int aLinkTargetBegin, int aLinkTargetEnd,
-            LinkFeatureMultiplicityMode aLinkCompareBehavior)
+    public Position getPosition(AnnotationBase aFS)
     {
+        int aLinkTargetBegin = -1;
+        int aLinkTargetEnd = -1;
         var type = aFS.getType();
         var sourceFS = (AnnotationFS) aFS.getFeatureValue(type.getFeatureByBaseName(sourceFeature));
         var targetFS = (AnnotationFS) aFS.getFeatureValue(type.getFeatureByBaseName(targetFeature));
@@ -134,8 +135,15 @@ public class RelationDiffAdapter
                 sourceFS != null ? sourceFS.getCoveredText() : null,
                 targetFS != null ? targetFS.getBegin() : -1,
                 targetFS != null ? targetFS.getEnd() : -1,
-                targetFS != null ? targetFS.getCoveredText() : null, aFeature, aRole,
-                aLinkTargetBegin, aLinkTargetEnd, linkTargetText, aLinkCompareBehavior);
+                targetFS != null ? targetFS.getCoveredText() : null, null, null, aLinkTargetBegin,
+                aLinkTargetEnd, linkTargetText, null);
+    }
+
+    @Override
+    public Collection<? extends Position> generateSubPositions(AnnotationBase aFs)
+    {
+        // Relation layers do not support link features
+        return emptyList();
     }
 
     private FeatureStructure getSourceFs(FeatureStructure fs)

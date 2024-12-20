@@ -27,6 +27,7 @@ import static org.mockito.Mockito.when;
 import java.util.ArrayList;
 
 import org.apache.uima.fit.factory.JCasFactory;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -37,6 +38,8 @@ import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor;
 import de.tudarmstadt.ukp.clarin.webanno.diag.ChecksRegistryImpl;
 import de.tudarmstadt.ukp.clarin.webanno.diag.RepairsRegistryImpl;
 import de.tudarmstadt.ukp.clarin.webanno.diag.checks.AllFeatureStructuresIndexedCheck;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationAdapter;
@@ -48,6 +51,19 @@ public class RemoveDanglingRelationsRepairTest
 {
     private @Mock ConstraintsService constraintsService;
     private @Mock AnnotationSchemaService schemaService;
+
+    Project project;
+    SourceDocument document;
+    String dataOwner;
+
+    @BeforeEach
+    void setup() throws Exception
+    {
+        project = Project.builder().build();
+        document = SourceDocument.builder() //
+                .withProject(project) //
+                .build();
+    }
 
     @Test
     public void test() throws Exception
@@ -84,10 +100,10 @@ public class RemoveDanglingRelationsRepairTest
                 .toArray(String[]::new));
 
         // A project is not required for this check
-        var result = cd.analyze(null, jcas.getCas(), messages);
+        var result = cd.analyze(null, null, jcas.getCas(), messages);
 
         // A project is not required for this repair
-        cd.repair(null, jcas.getCas(), messages);
+        cd.repair(document, dataOwner, jcas.getCas(), messages);
 
         assertFalse(result);
 

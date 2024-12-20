@@ -21,24 +21,22 @@ import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.wicket.Component;
-import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.ajax.AbstractDefaultAjaxBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.apache.wicket.util.visit.IVisit;
-import org.apache.wicket.util.visit.IVisitor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.inception.diam.editor.actions.EditorAjaxRequestHandler;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.EditorAjaxRequestHandlerExtensionPoint;
+import de.tudarmstadt.ukp.inception.editor.ContextMenuLookup;
 import de.tudarmstadt.ukp.inception.support.http.ServerTimingWatch;
 import de.tudarmstadt.ukp.inception.support.wicket.ContextMenu;
 
 public class DiamAjaxBehavior
     extends AbstractDefaultAjaxBehavior
+    implements ContextMenuLookup
 {
     private static final long serialVersionUID = -7681019566646236763L;
 
@@ -83,8 +81,6 @@ public class DiamAjaxBehavior
     @Override
     protected void respond(AjaxRequestTarget aTarget)
     {
-        LOG.trace("AJAX request received");
-
         var request = RequestCycle.get().getRequest();
 
         var priorityHandler = priorityHandlers.stream() //
@@ -104,6 +100,7 @@ public class DiamAjaxBehavior
 
     private void call(AjaxRequestTarget aTarget, EditorAjaxRequestHandler aHandler)
     {
+        LOG.trace("AJAX request received for {}", aHandler.getClass().getName());
         var request = RequestCycle.get().getRequest();
         try (var watch = new ServerTimingWatch("diam", "diam (" + aHandler.getCommand() + ")")) {
             aHandler.handle(this, aTarget, request);
@@ -111,25 +108,7 @@ public class DiamAjaxBehavior
         }
     }
 
-    public ContextMenu findContextMenu()
-    {
-        var component = getComponent();
-        if (component instanceof MarkupContainer container) {
-            final Component[] result = new Component[1]; // Array to hold the result
-            container.visitChildren(ContextMenu.class, new IVisitor<Component, Void>()
-            {
-                @Override
-                public void component(Component aComponent, IVisit<Void> visit)
-                {
-                    result[0] = aComponent;
-                    visit.stop();
-                }
-            });
-            return (ContextMenu) result[0];
-        }
-        return null;
-    }
-
+    @Override
     public ContextMenu getContextMenu()
     {
         return contextMenu;

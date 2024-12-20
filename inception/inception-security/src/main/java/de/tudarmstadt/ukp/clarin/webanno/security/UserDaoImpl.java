@@ -39,7 +39,6 @@ import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
-import java.util.Properties;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -62,11 +61,11 @@ import org.springframework.transaction.support.TransactionTemplate;
 
 import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityProperties;
+import de.tudarmstadt.ukp.clarin.webanno.security.config.UserProfileProperties;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Authority;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User_;
-import de.tudarmstadt.ukp.inception.support.SettingsUtil;
 import de.tudarmstadt.ukp.inception.support.spring.ApplicationContextProvider;
 import de.tudarmstadt.ukp.inception.support.text.TextUtils;
 import jakarta.persistence.EntityManager;
@@ -112,16 +111,19 @@ public class UserDaoImpl
 
     private final EntityManager entityManager;
     private final SecurityProperties securityProperties;
+    private final UserProfileProperties userProfileProperties;
     private final PlatformTransactionManager transactionManager;
     private final SessionRegistry sessionRegistry;
 
     public UserDaoImpl(EntityManager aEntityManager, SecurityProperties aSecurityProperties,
+            UserProfileProperties aUserProfileProperties,
             PlatformTransactionManager aTransactionManager, SessionRegistry aSessionRegistry)
     {
         entityManager = aEntityManager;
         securityProperties = aSecurityProperties;
         transactionManager = aTransactionManager;
         sessionRegistry = aSessionRegistry;
+        userProfileProperties = aUserProfileProperties;
     }
 
     @EventListener
@@ -731,16 +733,10 @@ public class UserDaoImpl
         return false; // External users and project-bound users cannot
     }
 
-    private static boolean isProfileSelfServiceEnabled()
-    {
-        Properties settings = SettingsUtil.getSettings();
-        return "true".equals(settings.getProperty(SettingsUtil.CFG_USER_ALLOW_PROFILE_ACCESS));
-    }
-
     @Override
     public boolean isProfileSelfServiceAllowed(User aUser)
     {
-        if (!isProfileSelfServiceEnabled()) {
+        if (!userProfileProperties.isAccessible()) {
             return false;
         }
 

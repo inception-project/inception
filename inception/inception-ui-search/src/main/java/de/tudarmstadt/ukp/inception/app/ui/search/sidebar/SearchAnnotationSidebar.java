@@ -781,6 +781,7 @@ public class SearchAnnotationSidebar
 
     private void deleteAnnotationAtSearchResult(SourceDocument aDocument, CAS aCas,
             SpanAdapter aAdapter, SearchResult aSearchResult, BulkOperationResult aBulkResult)
+        throws AnnotationException
     {
         var dataOwner = getAnnotationPage().getModelObject().getUser();
         var type = CasUtil.getAnnotationType(aCas, aAdapter.getAnnotationTypeName());

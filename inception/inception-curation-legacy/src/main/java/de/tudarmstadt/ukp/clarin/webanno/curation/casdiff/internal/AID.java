@@ -73,7 +73,7 @@ public class AID
     @Override
     public String toString()
     {
-        StringBuilder builder = new StringBuilder();
+        var builder = new StringBuilder();
         builder.append("AID [addr=");
         builder.append(addr);
         if (feature != null) {

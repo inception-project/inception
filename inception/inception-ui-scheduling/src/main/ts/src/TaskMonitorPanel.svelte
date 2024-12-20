@@ -49,6 +49,8 @@
         stompClient = Stomp.over(
             () => (socket = new WebSocket(wsEndpoint.toString()))
         );
+        stompClient.connectHeaders= { 'X-CSRF-TOKEN': csrfToken }
+
         stompClient.onConnect = () => {
             connected = true;
             stompClient.subscribe("/user/queue/errors", function (msg) {

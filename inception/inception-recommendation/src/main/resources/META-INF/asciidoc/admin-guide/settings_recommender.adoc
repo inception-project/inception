@@ -32,11 +32,6 @@ This section describes the global settings related to the recommender module.
 | `true`
 | `false`
 
-| `recommender.evaluation-page.enabled`
-| enable/disable evaluation page
-| `true`
-| `false`
-
 | `recommender.sidebar.enabled`
 | enable/disable recommender sidebar on annotation page
 | `true`

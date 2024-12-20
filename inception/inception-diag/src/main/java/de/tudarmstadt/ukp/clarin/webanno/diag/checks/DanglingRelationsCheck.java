@@ -21,15 +21,15 @@ import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.FEAT_REL_SOURCE;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.FEAT_REL_TARGET;
 import static de.tudarmstadt.ukp.inception.support.logging.LogLevel.INFO;
 
+import java.util.HashMap;
 import java.util.List;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
-import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationAdapter;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
@@ -50,23 +50,27 @@ public class DanglingRelationsCheck
     }
 
     @Override
-    public boolean check(Project aProject, CAS aCas, List<LogMessage> aMessages)
+    public boolean check(SourceDocument aDocument, String aDataOwner, CAS aCas,
+            List<LogMessage> aMessages)
     {
-        boolean ok = true;
+        var ok = true;
 
-        for (AnnotationFS fs : aCas.getAnnotationIndex()) {
-            Type t = fs.getType();
+        var adapterCache = new HashMap<Type, RelationAdapter>();
 
-            Feature sourceFeat = t.getFeatureByBaseName(FEAT_REL_SOURCE);
-            Feature targetFeat = t.getFeatureByBaseName(FEAT_REL_TARGET);
+        for (var fs : aCas.getAnnotationIndex()) {
+            var t = fs.getType();
+
+            var sourceFeat = t.getFeatureByBaseName(FEAT_REL_SOURCE);
+            var targetFeat = t.getFeatureByBaseName(FEAT_REL_TARGET);
 
             // Is this a relation?
             if (!(sourceFeat != null && targetFeat != null)) {
                 continue;
             }
 
-            RelationAdapter relationAdapter = (RelationAdapter) annotationService
-                    .findAdapter(aProject, fs);
+            var relationAdapter = adapterCache.computeIfAbsent(t,
+                    _t -> (RelationAdapter) annotationService.findAdapter(aDocument.getProject(),
+                            fs));
 
             Feature relationSourceAttachFeature = null;
             Feature relationTargetAttachFeature = null;
@@ -77,8 +81,8 @@ public class DanglingRelationsCheck
                         .getFeatureByBaseName(relationAdapter.getAttachFeatureName());
             }
 
-            FeatureStructure source = fs.getFeatureValue(sourceFeat);
-            FeatureStructure target = fs.getFeatureValue(targetFeat);
+            var source = fs.getFeatureValue(sourceFeat);
+            var target = fs.getFeatureValue(targetFeat);
 
             // Here we get the annotations that the relation is pointing to in the UI
             if (source != null && relationSourceAttachFeature != null) {
@@ -89,9 +93,9 @@ public class DanglingRelationsCheck
                 target = (AnnotationFS) target.getFeatureValue(relationTargetAttachFeature);
             }
 
-            // Does it have null endpoints?
+            // Does it have null end-points?
             if (source == null || target == null) {
-                StringBuilder message = new StringBuilder();
+                var message = new StringBuilder();
 
                 message.append("Relation [" + relationAdapter.getLayer().getName() + "] with id ["
                         + ICasUtil.getAddr(fs) + "] has loose ends.");

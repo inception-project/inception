@@ -24,6 +24,7 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.DoubleStream;
 
@@ -61,7 +62,7 @@ public class AgreementSummary
                     + "] but encountered [" + aResult.type + "]");
         }
 
-        if (!feature.equals(aResult.feature)) {
+        if (!Objects.equals(feature, aResult.feature)) {
             throw new IllegalArgumentException("All merged results must have the same feature ["
                     + feature + "] but encountered [" + aResult.feature + "]");
         }

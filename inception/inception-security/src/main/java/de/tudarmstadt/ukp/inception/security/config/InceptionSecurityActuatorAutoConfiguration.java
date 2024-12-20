@@ -35,11 +35,11 @@ public class InceptionSecurityActuatorAutoConfiguration
     public SecurityFilterChain actuatorFilterChain(HttpSecurity aHttp) throws Exception
     {
         aHttp.securityMatcher(BASE_URL + "/**");
-        aHttp.authorizeHttpRequests() //
+        aHttp.authorizeHttpRequests(rules -> rules //
                 .requestMatchers(BASE_URL + "/health").permitAll() //
-                .anyRequest().denyAll();
-        aHttp.sessionManagement() //
-                .sessionCreationPolicy(STATELESS);
+                .anyRequest().denyAll());
+        aHttp.sessionManagement(rules -> rules //
+                .sessionCreationPolicy(STATELESS));
         return aHttp.build();
     }
 }

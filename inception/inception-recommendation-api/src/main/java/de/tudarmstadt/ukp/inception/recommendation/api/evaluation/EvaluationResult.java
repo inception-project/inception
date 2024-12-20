@@ -103,9 +103,10 @@ public class EvaluationResult
         if (ignoreLabels.isEmpty()) {
             return labels.size();
         }
-        else {
-            return Math.toIntExact(labels.stream().filter(l -> !ignoreLabels.contains(l)).count());
-        }
+
+        return Math.toIntExact(labels.stream() //
+                .filter(l -> !ignoreLabels.contains(l)) //
+                .count());
     }
 
     /**
@@ -115,16 +116,16 @@ public class EvaluationResult
      */
     public double computeAccuracyScore()
     {
-        double tp = 0.0;
-        double ignoreLabelAsGold = 0;
-        for (String label : confusionMatrix.getLabels()) {
+        var tp = 0.0d;
+        var ignoreLabelAsGold = 0.0d;
+        for (var label : confusionMatrix.getLabels()) {
             if (!ignoreLabels.contains(label)) {
                 tp += confusionMatrix.getEntryCount(label, label);
             }
             ignoreLabelAsGold += countIgnoreLabelsAsGold(label);
         }
         double total = confusionMatrix.getTotal() - ignoreLabelAsGold;
-        return (total > 0) ? tp / total : 0.0;
+        return (total > 0) ? tp / total : 0.0d;
     }
 
     /**
@@ -133,8 +134,8 @@ public class EvaluationResult
      */
     private double countIgnoreLabelsAsGold(String label)
     {
-        double ignoreLabelAsGold = 0.0;
-        for (String ignoreLabel : ignoreLabels) {
+        var ignoreLabelAsGold = 0.0d;
+        for (var ignoreLabel : ignoreLabels) {
             ignoreLabelAsGold += confusionMatrix.getEntryCount(label, ignoreLabel);
         }
         return ignoreLabelAsGold;
@@ -185,7 +186,7 @@ public class EvaluationResult
                     tp = confusionMatrix.getEntryCount(label, label);
                 }
                 double numIsLabel = 0.0;
-                for (String predictedLabel : labels) {
+                for (var predictedLabel : labels) {
                     numIsLabel += countFunction.applyAsDouble(label, predictedLabel);
                 }
                 metric += calcClassMetric(label, tp, numIsLabel);

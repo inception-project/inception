@@ -42,7 +42,7 @@ Hanover is in Lower Saxony.
 
 we annotate _Darmstadt_ and _Hanover_ as a location with `value=city` and _Hesse_ and _Lower Saxony_ as a location with `value=state`. We draw a relation between _Darmstadt_ and _Hesse_ with a label of _located in_. The recommender then predicts that Hanover is also located in Lower Saxony, because it learned that a relation between `city` and `state` should have label `located in`.
 
-image::relation_recommender_city.png[align="center"]
+image::images/relation_recommender_city.png[align="center"]
 
 This recommender currently does not work for base layers that allow stacking.
 

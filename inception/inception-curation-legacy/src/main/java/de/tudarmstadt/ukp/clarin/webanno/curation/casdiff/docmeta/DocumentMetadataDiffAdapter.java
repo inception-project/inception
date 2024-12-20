@@ -19,20 +19,20 @@ package de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.docmeta;
 
 import static java.util.Arrays.asList;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.uima.cas.ArrayFS;
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.FeatureStructure;
+import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.FSUtil;
 import org.apache.uima.jcas.cas.AnnotationBase;
 
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.DiffAdapter_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.Position;
-import de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureMultiplicityMode;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanRenderer;
-import de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil;
 
 public class DocumentMetadataDiffAdapter
     extends DiffAdapter_ImplBase
@@ -58,29 +58,42 @@ public class DocumentMetadataDiffAdapter
     }
 
     @Override
-    public Position getPosition(FeatureStructure aFS, String aFeature, String aRole,
-            int aLinkTargetBegin, int aLinkTargetEnd,
-            LinkFeatureMultiplicityMode aLinkCompareBehavior)
+    public Position getPosition(AnnotationBase aFS)
     {
-        String collectionId = null;
-        String documentId = null;
-        try {
-            var dmd = WebAnnoCasUtil.getDocumentMetadata(aFS.getCAS());
-            collectionId = FSUtil.getFeature(dmd, "collectionId", String.class);
-            documentId = FSUtil.getFeature(dmd, "documentId", String.class);
-        }
-        catch (IllegalArgumentException e) {
-            // We use this information only for debugging - so we can ignore if the information
-            // is missing.
+        return DocumentPosition.builder() //
+                .forAnnotation(aFS) //
+                .build();
+    }
+
+    @Override
+    public List<? extends Position> generateSubPositions(AnnotationBase aFs)
+    {
+        var subPositions = new ArrayList<Position>();
+
+        for (var decl : getLinkFeaturesDecls()) {
+            var linkFeature = aFs.getType().getFeatureByBaseName(decl.getName());
+            var array = FSUtil.getFeature(aFs, linkFeature, ArrayFS.class);
+
+            if (array == null) {
+                continue;
+            }
+
+            for (var linkFS : array.toArray()) {
+                var role = linkFS.getStringValue(
+                        linkFS.getType().getFeatureByBaseName(decl.getRoleFeature()));
+                var target = (AnnotationFS) linkFS.getFeatureValue(
+                        linkFS.getType().getFeatureByBaseName(decl.getTargetFeature()));
+                var pos = DocumentPosition.builder() //
+                        .forAnnotation(aFs) //
+                        .withLinkFeature(decl.getName()) //
+                        .withLinkFeatureMultiplicityMode(decl.getMultiplicityMode()) //
+                        .withLinkRole(role) //
+                        .withLinkTarget(target) //
+                        .build();
+                subPositions.add(pos);
+            }
         }
 
-        String linkTargetText = null;
-        if (aLinkTargetBegin != -1 && aFS.getCAS().getDocumentText() != null) {
-            linkTargetText = aFS.getCAS().getDocumentText().substring(aLinkTargetBegin,
-                    aLinkTargetEnd);
-        }
-
-        return new DocumentPosition(collectionId, documentId, getType(), aFeature, aRole,
-                aLinkTargetBegin, aLinkTargetEnd, linkTargetText, aLinkCompareBehavior);
+        return subPositions;
     }
 }

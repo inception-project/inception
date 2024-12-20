@@ -19,8 +19,10 @@ package de.tudarmstadt.ukp.clarin.webanno.api.casstorage;
 
 import org.apache.uima.cas.CAS;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+
 @FunctionalInterface
 public interface CasStorageServiceAction
 {
-    void apply(CAS aCas) throws Exception;
+    void apply(SourceDocument aDocument, String aDataOwner, CAS aCas) throws Exception;
 }

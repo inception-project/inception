@@ -1,1 +1,1 @@
-de.tudarmstadt.ukp.inception.websocket.config.WebsocketAutoConfiguration
+de.tudarmstadt.ukp.inception.websocket.config.WebsocketSecurityConfig

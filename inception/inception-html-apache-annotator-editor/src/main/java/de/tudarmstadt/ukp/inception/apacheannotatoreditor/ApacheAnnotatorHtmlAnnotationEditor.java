@@ -39,7 +39,6 @@ import de.tudarmstadt.ukp.inception.editor.view.DocumentViewFactory;
 import de.tudarmstadt.ukp.inception.externaleditor.ExternalAnnotationEditorBase;
 import de.tudarmstadt.ukp.inception.externaleditor.model.AnnotationEditorProperties;
 import de.tudarmstadt.ukp.inception.io.xml.css.StylesheetRegistry;
-import de.tudarmstadt.ukp.inception.preferences.ClientSideUserPreferencesProvider;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import jakarta.servlet.ServletContext;
 
@@ -74,16 +73,10 @@ public class ApacheAnnotatorHtmlAnnotationEditor
     @Override
     protected AnnotationEditorProperties getProperties()
     {
-        var props = new AnnotationEditorProperties();
+        var props = super.getProperties();
         // The factory is the JS call. Cf. the "globalName" in build.js and the factory method
         // defined in main.ts
         props.setEditorFactory("ApacheAnnotatorEditor.factory()");
-        props.setEditorFactoryId(getFactory().getBeanName());
-        if (getFactory() instanceof ClientSideUserPreferencesProvider factory) {
-            factory.getUserPreferencesKey()
-                    .ifPresent(key -> props.setUserPreferencesKey(key.getClientSideKey()));
-        }
-        props.setDiamAjaxCallbackUrl(getDiamBehavior().getCallbackUrl().toString());
         props.setStylesheetSources(getStylesheetSources());
         props.setScriptSources(asList( //
                 referenceToUrl(servletContext,

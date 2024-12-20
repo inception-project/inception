@@ -19,18 +19,19 @@ package de.tudarmstadt.ukp.inception.curation.merge;
 
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
 import static de.tudarmstadt.ukp.inception.curation.merge.CurationTestUtils.loadWebAnnoTsv3;
+import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.createCasCopy;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.factory.AnalysisEngineFactory.createEngineDescription;
-import static org.apache.uima.fit.factory.CasFactory.createText;
 import static org.apache.uima.fit.pipeline.SimplePipeline.runPipeline;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.contentOf;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import java.io.File;
 import java.io.FilenameFilter;
 import java.util.HashMap;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.RegexFileFilter;
 import org.apache.commons.io.filefilter.SuffixFileFilter;
 import org.apache.uima.cas.CAS;
@@ -63,8 +64,7 @@ public class CasMergeSuiteTest
             casByUser.put(inputFile.getName(), loadWebAnnoTsv3(inputFile).getCas());
         }
 
-        var curatorCas = createText(
-                casByUser.values().stream().findFirst().get().getDocumentText());
+        var curatorCas = createCasCopy(casByUser.values().stream().findFirst().get());
 
         var result = doDiff(diffAdapters, casByUser).toResult();
 
@@ -82,6 +82,7 @@ public class CasMergeSuiteTest
         dmd.setDocumentId("curator");
         runPipeline(curatorCas, createEngineDescription( //
                 WebannoTsv3XWriter.class, //
+                WebannoTsv3XWriter.PARAM_USE_DOCUMENT_ID, true, //
                 WebannoTsv3XWriter.PARAM_TARGET_LOCATION, targetFolder, //
                 WebannoTsv3XWriter.PARAM_OVERWRITE, true));
 
@@ -90,8 +91,8 @@ public class CasMergeSuiteTest
 
         var actualFile = new File(targetFolder, "curator.tsv");
 
-        var reference = FileUtils.readFileToString(referenceFile, "UTF-8");
-        var actual = FileUtils.readFileToString(actualFile, "UTF-8");
+        var reference = contentOf(referenceFile, UTF_8);
+        var actual = contentOf(actualFile, UTF_8);
 
         assertThat(actual).isEqualToNormalizingNewlines(reference);
     }

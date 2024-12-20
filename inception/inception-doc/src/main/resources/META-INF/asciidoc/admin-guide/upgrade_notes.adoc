@@ -22,6 +22,15 @@ NOTE: It is a good idea to back up your installation and data before an upgrade.
       you can actually re-create a working installation by restoring your backup. A backup which cannot be
       successfully restored is worthless.
 
+== INCEpTION 34.0
+
+=== Database schema changes
+
+This version makes various changes to the database schema in order to improve compatibiltiy with
+different database systems. This entails that after running this version, you cannot easily downgrade
+to an older version of {product-name} anymore. If you need to downgrade, you need to restore a
+backup from before the upgrade or manually revert the database schema changes.
+
 == INCEpTION 33.0
 
 === MariaDB upgrade in the Docker Compose file

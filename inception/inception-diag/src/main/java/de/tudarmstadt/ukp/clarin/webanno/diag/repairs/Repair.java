@@ -25,14 +25,14 @@ import java.util.List;
 
 import org.apache.uima.cas.CAS;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.support.extensionpoint.Extension;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 
 public interface Repair
     extends Extension<Void>
 {
-    void repair(Project aProject, CAS aCas, List<LogMessage> aMessages);
+    void repair(SourceDocument aDocument, String aDataOwner, CAS aCas, List<LogMessage> aMessages);
 
     @Retention(RetentionPolicy.RUNTIME)
     @Target(ElementType.TYPE)

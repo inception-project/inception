@@ -27,12 +27,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.Repair.Safe;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
@@ -50,35 +48,36 @@ public class ReattachFeatureAttachedSpanAnnotationsAndDeleteExtrasRepair
     }
 
     @Override
-    public void repair(Project aProject, CAS aCas, List<LogMessage> aMessages)
+    public void repair(SourceDocument aDocument, String aDataOwner, CAS aCas,
+            List<LogMessage> aMessages)
     {
-        for (AnnotationLayer layer : annotationService.listAnnotationLayer(aProject)) {
+        for (var layer : annotationService.listAnnotationLayer(aDocument.getProject())) {
             if (!(SpanLayerSupport.TYPE.equals(layer.getType())
                     && layer.getAttachFeature() != null)) {
                 continue;
             }
 
-            Type attachType = getType(aCas, layer.getAttachType().getName());
-            String attachFeature = layer.getAttachFeature().getName();
+            var attachType = getType(aCas, layer.getAttachType().getName());
+            var attachFeature = layer.getAttachFeature().getName();
 
-            int count = 0;
+            var count = 0;
 
             // Go over the layer that has an attach feature (e.g. Token) and make sure that it is
             // filled
             // anno -> e.g. Lemma
             // attach -> e.g. Token
-            for (AnnotationFS anno : select(aCas, getType(aCas, layer.getName()))) {
+            for (var anno : select(aCas, getType(aCas, layer.getName()))) {
                 // Here we fetch all annotations of the layer we attach to at the relevant position,
                 // e.g. Token
-                List<AnnotationFS> attachables = selectCovered(attachType, anno);
+                var attachables = selectCovered(attachType, anno);
                 if (attachables.size() > 1) {
                     aMessages.add(LogMessage.error(this,
                             "There is more than one attachable annotation for [%s] on layer [%s].",
                             layer.getName(), attachType.getName()));
                 }
 
-                for (AnnotationFS attach : attachables) {
-                    AnnotationFS existing = getFeature(attach, attachFeature, AnnotationFS.class);
+                for (var attach : attachables) {
+                    var existing = getFeature(attach, attachFeature, AnnotationFS.class);
 
                     // So there is an annotation to which we could attach and it does not yet have
                     // an annotation attached, so we attach to it.
@@ -102,17 +101,15 @@ public class ReattachFeatureAttachedSpanAnnotationsAndDeleteExtrasRepair
             //
             // attach -> e.g. Token
             // candidates -> e.g. Lemma
-            List<AnnotationFS> toDelete = new ArrayList<>();
-            for (AnnotationFS attach : select(aCas, attachType)) {
-                List<AnnotationFS> candidates = selectCovered(getType(aCas, layer.getName()),
-                        attach);
+            var toDelete = new ArrayList<AnnotationFS>();
+            for (var attach : select(aCas, attachType)) {
+                var candidates = selectCovered(getType(aCas, layer.getName()), attach);
 
                 if (!candidates.isEmpty()) {
                     // One of the candidates should already be attached
-                    AnnotationFS attachedCandidate = getFeature(attach, attachFeature,
-                            AnnotationFS.class);
+                    var attachedCandidate = getFeature(attach, attachFeature, AnnotationFS.class);
 
-                    for (AnnotationFS candidate : candidates) {
+                    for (var candidate : candidates) {
                         if (!candidate.equals(attachedCandidate)) {
                             toDelete.add(candidate);
                         }

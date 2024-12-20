@@ -23,12 +23,14 @@ import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiffSummaryS
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiffSummaryState.calculateState;
 import static de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS._FeatName_PosValue;
 import static de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token._FeatName_pos;
+import static de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureDiffMode.EXCLUDE;
 import static de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureMultiplicityMode.ONE_TARGET_MULTIPLE_ROLES;
 import static de.tudarmstadt.ukp.inception.curation.merge.CurationTestUtils.HOST_TYPE;
 import static de.tudarmstadt.ukp.inception.curation.merge.CurationTestUtils.createMultiLinkWithRoleTestTypeSystem;
 import static de.tudarmstadt.ukp.inception.curation.merge.CurationTestUtils.makeLinkFS;
 import static de.tudarmstadt.ukp.inception.curation.merge.CurationTestUtils.makeLinkHostFS;
 import static de.tudarmstadt.ukp.inception.support.uima.AnnotationBuilder.buildAnnotation;
+import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.createCasCopy;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.factory.JCasFactory.createJCas;
 import static org.apache.uima.fit.factory.JCasFactory.createText;
@@ -93,8 +95,12 @@ public class CasMergeRemergeTest
                 .extracting(set -> set.getPosition()) //
                 .usingRecursiveFieldByFieldElementComparator() //
                 .containsExactly( //
-                        new SpanPosition(null, null, POS.class.getName(), 0, 4, "word", null, null,
-                                -1, -1, null, null));
+                        SpanPosition.builder() //
+                                .withType(POS.class.getName()) //
+                                .withBegin(0) //
+                                .withEnd(4) //
+                                .withText("word") //
+                                .build());
 
         assertThat(select(curatorCas, POS.class)).isEmpty();
         assertThat(calculateState(result)).isEqualTo(INCOMPLETE);
@@ -118,23 +124,26 @@ public class CasMergeRemergeTest
         casByUser.put("user1", user1);
         casByUser.put("user2", user2);
 
-        var curatorCas = createText(
-                casByUser.values().stream().findFirst().get().getDocumentText());
+        var curatorCas = createCasCopy(user1);
 
         var result = doDiff(diffAdapters, casByUser).toResult();
 
         sut.setMergeStrategy(new MergeIncompleteStrategy());
-        sut.clearAndMergeCas(result, document, DUMMY_USER, curatorCas.getCas(), casByUser);
+        sut.clearAndMergeCas(result, document, DUMMY_USER, curatorCas, casByUser);
 
         assertThat(result.getDifferingConfigurationSets()).isEmpty();
         assertThat(result.getIncompleteConfigurationSets().values())
                 .extracting(set -> set.getPosition()) //
                 .usingRecursiveFieldByFieldElementComparator()//
-                .containsExactly(//
-                        new SpanPosition(null, null, POS.class.getName(), 0, 4, "word", null, null,
-                                -1, -1, null, null));
+                .containsExactly( //
+                        SpanPosition.builder() //
+                                .withType(POS.class.getName()) //
+                                .withBegin(0) //
+                                .withEnd(4) //
+                                .withText("word") //
+                                .build());
 
-        assertThat(select(curatorCas, POS.class)).hasSize(1);
+        assertThat(curatorCas.select(POS.class).asList()).hasSize(1);
         assertThat(calculateState(result)).isEqualTo(INCOMPLETE);
     }
 
@@ -260,7 +269,7 @@ public class CasMergeRemergeTest
         curatorCas.setDocumentText(casByUser.values().stream().findFirst().get().getDocumentText());
 
         var adapter = new SpanDiffAdapter(HOST_TYPE);
-        adapter.addLinkFeature("links", "role", "target", ONE_TARGET_MULTIPLE_ROLES);
+        adapter.addLinkFeature("links", "role", "target", ONE_TARGET_MULTIPLE_ROLES, EXCLUDE);
 
         var result = doDiff(asList(adapter), casByUser).toResult();
 

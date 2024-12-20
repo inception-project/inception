@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.annotation.feature.number;
 
+import static de.tudarmstadt.ukp.inception.annotation.feature.number.NumberFeatureTraits.EditorType.SPINNER;
+
 import java.io.Serializable;
 
 import com.fasterxml.jackson.annotation.JsonEnumDefaultValue;
@@ -54,7 +56,7 @@ public class NumberFeatureTraits
     private boolean limited = false;
     private Number minimum = 0;
     private Number maximum = 0;
-    private EditorType editorType = EditorType.SPINNER;
+    private EditorType editorType = SPINNER;
 
     public NumberFeatureTraits()
     {
@@ -66,9 +68,9 @@ public class NumberFeatureTraits
         return limited;
     }
 
-    public void setLimited(boolean limited)
+    public void setLimited(boolean aLimited)
     {
-        this.limited = limited;
+        limited = aLimited;
     }
 
     public Number getMinimum()
@@ -76,9 +78,9 @@ public class NumberFeatureTraits
         return minimum;
     }
 
-    public void setMinimum(Number minimum)
+    public void setMinimum(Number aMinimum)
     {
-        this.minimum = minimum;
+        minimum = aMinimum;
     }
 
     public Number getMaximum()
@@ -86,9 +88,9 @@ public class NumberFeatureTraits
         return maximum;
     }
 
-    public void setMaximum(Number maximum)
+    public void setMaximum(Number aMaximum)
     {
-        this.maximum = maximum;
+        maximum = aMaximum;
     }
 
     public EditorType getEditorType()
@@ -96,8 +98,8 @@ public class NumberFeatureTraits
         return editorType;
     }
 
-    public void setEditorType(EditorType editorType)
+    public void setEditorType(EditorType aEditorType)
     {
-        this.editorType = editorType;
+        editorType = aEditorType;
     }
 }

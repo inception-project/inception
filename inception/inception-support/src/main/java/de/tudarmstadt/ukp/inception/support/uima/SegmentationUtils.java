@@ -103,9 +103,11 @@ public abstract class SegmentationUtils
             var innerZoneBoundariesBuffer = new IntArrayList();
             innerZoneBoundariesBuffer.add(s.getBegin());
             innerZoneBoundariesBuffer.add(s.getEnd());
-            while (zbi < sortedZoneBoundaries.length && sortedZoneBoundaries[zbi] >= s.getBegin()
-                    && sortedZoneBoundaries[zbi] < s.getEnd()) {
-                innerZoneBoundariesBuffer.add(sortedZoneBoundaries[zbi]);
+
+            while (zbi < sortedZoneBoundaries.length && sortedZoneBoundaries[zbi] < s.getEnd()) {
+                if (sortedZoneBoundaries[zbi] >= s.getBegin()) {
+                    innerZoneBoundariesBuffer.add(sortedZoneBoundaries[zbi]);
+                }
                 zbi++;
             }
 

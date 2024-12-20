@@ -75,4 +75,4 @@ is useful e.g. in order to see all text governed the head of a particular depend
 The text may be abbreviated.
 
 .Example of the yield of a dependency relation
-image::annotation_relation_yield.png[align="center"]
+image::images/annotation_relation_yield.png[align="center"]

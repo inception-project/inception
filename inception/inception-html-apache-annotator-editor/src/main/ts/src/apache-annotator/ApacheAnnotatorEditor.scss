@@ -74,6 +74,10 @@ html > body {
   cursor: col-resize; 
 }
 
+.i7n-plain-text-document {
+  white-space: pre-line;
+}
+
 .i7n-wrapper {
   position: relative;
   line-height: 1.8;
@@ -86,7 +90,7 @@ html > body {
  * Annotation highlight.
  */
 .iaa-highlighted {
-  transition: filter var(--anim-fast);
+  /* transition: filter var(--anim-fast); -- slow for large documents, so we disable it here */
   cursor: pointer;
   background-color: var(--iaa-background-color);
   box-sizing: border-box;
@@ -308,4 +312,40 @@ html > body {
 .iaa-menu-item .iaa-btn {
   font-size: 80%;
   padding-left: 15px;
+}
+
+.iaa-hide-tables {
+  table-wrap {
+    table {
+      display: none !important;
+    }
+  
+    &::after {
+      font-size: small;
+      content: "Tables hidden";
+      opacity: 50%;
+      display: block;
+      text-align: center;
+    }
+  }
+}
+
+.iaa-hide-images {
+  graphic {
+    border: none;
+    margin: 0px;
+    padding: 0px;
+
+    img {
+      display: none !important;
+    }
+  
+    &::after {
+      font-size: small;
+      content: "Images hidden";
+      opacity: 50%;
+      display: block;
+      text-align: center;
+    }
+  }
 }

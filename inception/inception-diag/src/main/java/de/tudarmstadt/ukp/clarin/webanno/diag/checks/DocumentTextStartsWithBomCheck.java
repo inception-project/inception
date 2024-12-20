@@ -21,14 +21,15 @@ import java.util.List;
 
 import org.apache.uima.cas.CAS;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 
 public class DocumentTextStartsWithBomCheck
     implements Check
 {
     @Override
-    public boolean check(Project aProject, CAS aCas, List<LogMessage> aMessages)
+    public boolean check(SourceDocument aDocument, String aDataOwner, CAS aCas,
+            List<LogMessage> aMessages)
     {
         // BOM for UTF-16BE: FE FF
         // BOM for UTF-16LE: FF FE

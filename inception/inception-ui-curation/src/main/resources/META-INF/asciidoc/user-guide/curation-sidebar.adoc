@@ -24,7 +24,7 @@ Curation i.e. the process of combining finished annotated documents into a final
 can be done via the *Curation Page* in INCEpTION (see <<sect_curation, Curation>>) but also via the
 *Curation Sidebar* on the *Annotation Page*.
 
-image::curation-sidebar.png[Curation Sidebar]
+image::images/curation-sidebar.png[Curation Sidebar]
 
 To start a curation session, you need to choose a **curation target** and press the **start curation
 session** buttion next to the curation target select box.

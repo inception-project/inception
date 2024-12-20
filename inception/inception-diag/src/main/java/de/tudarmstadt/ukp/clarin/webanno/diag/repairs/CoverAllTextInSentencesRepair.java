@@ -25,7 +25,7 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Type;
 
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.Repair.Safe;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 
@@ -34,7 +34,8 @@ public class CoverAllTextInSentencesRepair
     implements Repair
 {
     @Override
-    public void repair(Project aProject, CAS aCas, List<LogMessage> aMessages)
+    public void repair(SourceDocument aDocument, String aDataOwner, CAS aCas,
+            List<LogMessage> aMessages)
     {
         int prevSentenceEnd = 0;
         for (Sentence sentence : aCas.select(Sentence.class)) {

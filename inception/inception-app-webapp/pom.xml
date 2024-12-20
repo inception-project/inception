@@ -810,7 +810,7 @@
                 <toc>left</toc>
                 <include-dir>./user-guide/</include-dir>
                 <source-dir>${project.basedir}/../</source-dir>
-                <imagesDir>./user-guide/images</imagesDir>
+                <imagesDir>./user-guide/</imagesDir>
               </attributes>
             </configuration>
           </execution>
@@ -827,7 +827,7 @@
                 <toc>left</toc>
                 <include-dir>./developer-guide/</include-dir>
                 <source-dir>${project.basedir}/../</source-dir>
-                <imagesDir>./developer-guide/images</imagesDir>
+                <imagesDir>./developer-guide/</imagesDir>
               </attributes>
             </configuration>
           </execution>
@@ -844,7 +844,7 @@
                 <toc>left</toc>
                 <include-dir>./admin-guide/</include-dir>
                 <source-dir>${project.basedir}/../</source-dir>
-                <imagesDir>./admin-guide/images</imagesDir>
+                <imagesDir>./admin-guide/</imagesDir>
               </attributes>
             </configuration>
           </execution>
@@ -1325,7 +1325,7 @@
                       <toc>preamble</toc>
                       <include-dir>./user-guide/</include-dir>
                       <source-dir>${project.basedir}/../</source-dir>
-                      <imagesDir>./user-guide/images</imagesDir>
+                      <imagesDir>./user-guide/</imagesDir>
                     </attributes>
                   </configuration>
                 </execution>
@@ -1342,7 +1342,7 @@
                       <toc>preamble</toc>
                       <include-dir>./developer-guide/</include-dir>
                       <source-dir>${project.basedir}/../</source-dir>
-                      <imagesDir>./developer-guide/images</imagesDir>
+                      <imagesDir>./developer-guide/</imagesDir>
                     </attributes>
                   </configuration>
                 </execution>
@@ -1359,6 +1359,7 @@
                       <toc>preamble</toc>
                       <include-dir>./admin-guide/</include-dir>
                       <source-dir>${project.basedir}/../</source-dir>
+                      <imagesDir>./admin-guide/</imagesDir>
                     </attributes>
                   </configuration>
                 </execution>

@@ -17,22 +17,16 @@
  */
 package de.tudarmstadt.ukp.inception.diam.editor.actions;
 
-import static de.tudarmstadt.ukp.inception.support.spring.ApplicationContextProvider.getApplicationContext;
-
-import java.io.IOException;
 import java.io.Serializable;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.request.Request;
 import org.springframework.core.annotation.Order;
 
+import de.tudarmstadt.ukp.inception.annotation.menu.ContextMenuItemRegistry;
 import de.tudarmstadt.ukp.inception.diam.editor.DiamAjaxBehavior;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.AjaxResponse;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.DefaultAjaxResponse;
-import de.tudarmstadt.ukp.inception.editor.AnnotationEditorExtensionRegistry;
-import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
-import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
-import de.tudarmstadt.ukp.inception.support.lambda.LambdaMenuItem;
 
 @Order(EditorAjaxRequestHandler.PRIO_CONTEXT_MENU)
 public class ShowContextMenuHandler
@@ -40,6 +34,13 @@ public class ShowContextMenuHandler
     implements Serializable
 {
     private static final long serialVersionUID = 2566256640285857435L;
+
+    private final ContextMenuItemRegistry contextMenuItemRegistry;
+
+    public ShowContextMenuHandler(ContextMenuItemRegistry aContextMenuItemRegistry)
+    {
+        contextMenuItemRegistry = aContextMenuItemRegistry;
+    }
 
     @Override
     public String getCommand()
@@ -67,24 +68,15 @@ public class ShowContextMenuHandler
         var clientX = cm.getClientX().getAsInt();
         var clientY = cm.getClientY().getAsInt();
 
-        // Need to fetch this here since the handler is not serializable
-        var extensionRegistry = getApplicationContext()
-                .getBean(AnnotationEditorExtensionRegistry.class);
-
         try {
-
             var items = cm.getItemList();
             items.clear();
 
-            var state = getAnnotatorState();
+            var vid = getVid(aRequest);
 
-            if (state.getSelection().isSpan()) {
-                var vid = getVid(aRequest);
-                items.add(new LambdaMenuItem("Link to ...",
-                        $ -> actionLinkTo(aBehavior, $, vid, clientX, clientY)));
+            for (var ext : contextMenuItemRegistry.getExtensions(getPage())) {
+                items.add(ext.createMenuItem(vid, clientX, clientY));
             }
-
-            extensionRegistry.generateContextMenuItems(items);
 
             if (!items.isEmpty()) {
                 cm.onOpen(aTarget);
@@ -95,26 +87,5 @@ public class ShowContextMenuHandler
         }
 
         return new DefaultAjaxResponse(getAction(aRequest));
-    }
-
-    private void actionLinkTo(DiamAjaxBehavior aBehavior, AjaxRequestTarget aTarget, VID paramId,
-            int aClientX, int aClientY)
-        throws IOException, AnnotationException
-    {
-        var page = getPage();
-        page.ensureIsEditable();
-
-        var state = getAnnotatorState();
-
-        if (!state.getSelection().isSpan()) {
-            return;
-        }
-
-        // Need to fetch this here since the handler is not serializable
-        var createRelationAnnotationHandler = getApplicationContext()
-                .getBean(CreateRelationAnnotationHandler.class);
-
-        createRelationAnnotationHandler.actionArc(aBehavior, aTarget,
-                state.getSelection().getAnnotation(), paramId, aClientX, aClientY);
     }
 }

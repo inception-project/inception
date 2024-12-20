@@ -69,8 +69,9 @@ public class InceptionSecurityWebUIApiAutoConfiguration
 
         aHttp.securityMatcher(BASE_VIEW_URL + "/**");
         // Views render data that we generally want to display in an IFrame on the editor page
-        aHttp.headers() //
-                .frameOptions().sameOrigin()//
+        aHttp.headers(headers -> headers //
+                .frameOptions(options -> options //
+                        .sameOrigin()) //
                 .contentSecurityPolicy(csp -> {
                     csp.policyDirectives(join(";", //
                             "default-src 'none'", //
@@ -86,7 +87,7 @@ public class InceptionSecurityWebUIApiAutoConfiguration
                             "child-src 'self'", //
                             "base-uri 'self'", //
                             "frame-src 'self' 'self'"));
-                });
+                }));
         commonConfiguration(aHttp);
         return aHttp.build();
     }
@@ -108,6 +109,5 @@ public class InceptionSecurityWebUIApiAutoConfiguration
                     new Http403ForbiddenEntryPoint(), //
                     new AntPathRequestMatcher("/**"));
         });
-
     }
 }

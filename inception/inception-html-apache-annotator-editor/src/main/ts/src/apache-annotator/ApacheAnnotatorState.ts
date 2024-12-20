@@ -27,3 +27,7 @@ export const showEmptyHighlights = writable(false)
 export const showDocumentStructure = writable(false)
 
 export const documentStructureWidth = writable(0.2)
+
+export const showImages = writable(true)
+
+export const showTables = writable(true)

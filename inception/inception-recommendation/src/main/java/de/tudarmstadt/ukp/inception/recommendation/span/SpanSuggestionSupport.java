@@ -300,8 +300,10 @@ public class SpanSuggestionSupport
             var group = suggestions.get(suggestionOffset);
             for (var annotation : annotations.get(annotationOffset)) {
                 Iterable<Object> labelObjects;
-                var value = featureSupportRegistry.findExtension(feature).get()
-                        .getFeatureValue(feature, annotation);
+                var featureSupport = featureSupportRegistry.findExtension(feature).get();
+                var wrappedValue = featureSupport.getFeatureValue(feature, annotation);
+                var value = featureSupport.unwrapFeatureValue(feature, annotation.getCAS(),
+                        wrappedValue);
                 if (value instanceof Iterable iterableValues) {
                     labelObjects = iterableValues;
                 }

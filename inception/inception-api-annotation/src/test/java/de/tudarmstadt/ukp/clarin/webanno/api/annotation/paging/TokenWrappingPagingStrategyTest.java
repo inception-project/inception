@@ -17,13 +17,14 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.LineOrientedPagingStrategy.CR;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.LineOrientedPagingStrategy.LINE_SEPARATORS;
+import static org.apache.commons.lang3.StringUtils.repeat;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.uima.fit.factory.JCasBuilder;
 import org.apache.uima.fit.factory.JCasFactory;
-import org.apache.uima.jcas.JCas;
 import org.junit.jupiter.api.Test;
 
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
@@ -34,10 +35,10 @@ public class TokenWrappingPagingStrategyTest
     @Test
     public void thatMultipleConsecutiveLineBreaksWork() throws Exception
     {
-        TokenWrappingPagingStrategy sut = new TokenWrappingPagingStrategy(120);
+        var sut = new TokenWrappingPagingStrategy(120);
 
-        JCas jcas = JCasFactory.createJCas();
-        JCasBuilder builder = new JCasBuilder(jcas);
+        var jcas = JCasFactory.createJCas();
+        var builder = new JCasBuilder(jcas);
         builder.add("See-", Token.class);
         builder.add("\n");
         builder.add("\n");
@@ -57,22 +58,23 @@ public class TokenWrappingPagingStrategyTest
     @Test
     public void thatLinesOfDifferntLenghtsWork() throws Exception
     {
-        TokenWrappingPagingStrategy sut = new TokenWrappingPagingStrategy(10);
+        var sut = new TokenWrappingPagingStrategy(10);
 
-        JCas jcas = JCasFactory.createJCas();
-        JCasBuilder builder = new JCasBuilder(jcas);
-        builder.add(StringUtils.repeat("a", 20), Token.class);
+        var jcas = JCasFactory.createJCas();
+        var builder = new JCasBuilder(jcas);
+        builder.add(repeat("a", 20), Token.class);
         builder.add("\n");
-        builder.add(StringUtils.repeat("b", 15), Token.class);
+        builder.add(repeat("b", 15), Token.class);
         builder.add("\n");
-        builder.add(StringUtils.repeat("c", 11), Token.class);
+        builder.add(repeat("c", 11), Token.class);
         builder.add("\n");
-        builder.add(StringUtils.repeat("d", 10), Token.class);
+        builder.add(repeat("d", 10), Token.class);
         builder.add("\n");
-        builder.add(StringUtils.repeat("e", 9), Token.class);
+        builder.add(repeat("e", 9), Token.class);
         builder.add("\n");
-        builder.add(StringUtils.repeat("f", 1), Token.class);
+        builder.add(repeat("f", 1), Token.class);
         builder.add("\n");
+        builder.add(repeat("g", 1), Token.class);
         builder.close();
 
         assertThat(sut.units(jcas.getCas())) //
@@ -86,18 +88,19 @@ public class TokenWrappingPagingStrategyTest
                         tuple(37, 48, "ccccccccccc"), //
                         tuple(49, 59, "dddddddddd"), //
                         tuple(60, 69, "eeeeeeeee"), //
-                        tuple(70, 71, "f"));
+                        tuple(70, 71, "f"), //
+                        tuple(72, 73, "g"));
     }
 
     @Test
     public void thatWrappingWork() throws Exception
     {
-        TokenWrappingPagingStrategy sut = new TokenWrappingPagingStrategy(11);
+        var sut = new TokenWrappingPagingStrategy(11);
 
-        JCas jcas = JCasFactory.createJCas();
-        JCasBuilder builder = new JCasBuilder(jcas);
+        var jcas = JCasFactory.createJCas();
+        var builder = new JCasBuilder(jcas);
         for (int n = 0; n < 10; n++) {
-            builder.add(StringUtils.repeat("a", 3), Token.class);
+            builder.add(repeat("a", 3), Token.class);
             builder.add(" ");
         }
         builder.close();
@@ -112,5 +115,55 @@ public class TokenWrappingPagingStrategyTest
                         tuple(12, 23, "aaa aaa aaa"), //
                         tuple(24, 35, "aaa aaa aaa"), //
                         tuple(36, 39, "aaa"));
+    }
+
+    @Test
+    void testMixedLineBreaks() throws Exception
+    {
+        var sut = new TokenWrappingPagingStrategy(10);
+
+        var jcas = JCasFactory.createJCas();
+        var builder = new JCasBuilder(jcas);
+        var i = 1;
+        for (var sep : LINE_SEPARATORS) {
+            builder.add(repeat("a", 3) + i, Token.class);
+            builder.add(" ");
+            builder.add(repeat("b", 3) + i, Token.class);
+            builder.add(" ");
+            builder.add(repeat("c", 3) + i, Token.class);
+            builder.add(sep);
+            i++;
+        }
+        builder.add("end", Token.class);
+        builder.close();
+
+        assertThat(sut.units(jcas.getCas()))
+                .extracting(u -> jcas.getDocumentText().substring(u.getBegin(), u.getEnd()))
+                .containsExactly( //
+                        "aaa1 bbb1", "ccc1", //
+                        "aaa2 bbb2", "ccc2", //
+                        "aaa3 bbb3", "ccc3", //
+                        "aaa4 bbb4", "ccc4", //
+                        "aaa5 bbb5", "ccc5", //
+                        "aaa6 bbb6", "ccc6", //
+                        "end");
+    }
+
+    @Test
+    void testEndingWithNewline() throws Exception
+    {
+        var sut = new TokenWrappingPagingStrategy(10);
+
+        var jcas = JCasFactory.createJCas();
+        var builder = new JCasBuilder(jcas);
+        builder.add(repeat("a", 3), Token.class);
+        builder.add(CR);
+        builder.add(CR);
+        builder.close();
+
+        assertThat(sut.units(jcas.getCas()))
+                .extracting(u -> jcas.getDocumentText().substring(u.getBegin(), u.getEnd()))
+                .containsExactly( //
+                        "aaa");
     }
 }

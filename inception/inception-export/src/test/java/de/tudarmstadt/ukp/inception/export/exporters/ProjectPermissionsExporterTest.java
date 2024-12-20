@@ -214,7 +214,8 @@ public class ProjectPermissionsExporterTest
     private void exportProject() throws Exception
     {
         var exportRequest = new FullProjectExportRequest(project, null, false);
-        var monitor = new ProjectExportTaskMonitor(project, null, "test");
+        var monitor = new ProjectExportTaskMonitor(project, null, "test",
+                exportRequest.getFilenamePrefix());
         var stage = mock(ZipOutputStream.class);
         sut.exportData(exportRequest, monitor, exportedProject, stage);
     }

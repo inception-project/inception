@@ -26,7 +26,6 @@ import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectAnnotatio
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.toCollection;
 
-import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -35,8 +34,6 @@ import java.util.Optional;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.tcas.Annotation;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -49,8 +46,6 @@ import de.tudarmstadt.ukp.inception.schema.api.feature.MaterializedLink;
 
 public class CasMergeLinkFeature
 {
-    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
-
     public static CasMergeOperationResult mergeSlotFeature(CasMergeContext aContext,
             SourceDocument aDocument, String aUsername, AnnotationLayer aAnnotationLayer,
             CAS aTargetCas, AnnotationFS aSourceFs, String aSourceFeature, int aSourceSlotIndex)

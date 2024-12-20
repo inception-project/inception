@@ -19,11 +19,10 @@ package de.tudarmstadt.ukp.inception.project.export.legacy;
 
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.enabledWhen;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
+import static java.time.LocalDateTime.now;
 import static java.util.Objects.nonNull;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.time.format.DateTimeFormatter;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
@@ -37,13 +36,11 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.resource.FileResourceStream;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.wicketstuff.progressbar.ProgressBar;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.FullProjectExportRequest;
-import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskHandle;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
@@ -142,11 +139,9 @@ public class LegacyProjectExportPanel
             public void onClick(final AjaxRequestTarget target)
             {
                 target.add(LegacyProjectExportPanel.this.getPage());
-                Authentication authentication = SecurityContextHolder.getContext()
-                        .getAuthentication();
-                FullProjectExportRequest request = aRequest.getObject();
+                var authentication = SecurityContextHolder.getContext().getAuthentication();
+                var request = aRequest.getObject();
                 request.setProject(LegacyProjectExportPanel.this.getModelObject());
-                request.setFilenameTag("_project");
                 exportInProgress = true;
                 exportTask = exportService.startProjectExportTask(request,
                         authentication.getName());
@@ -178,11 +173,9 @@ public class LegacyProjectExportPanel
             public void onClick(final AjaxRequestTarget target)
             {
                 target.add(LegacyProjectExportPanel.this.getPage());
-                Authentication authentication = SecurityContextHolder.getContext()
-                        .getAuthentication();
-                FullProjectExportRequest request = aRequest.getObject();
+                var authentication = SecurityContextHolder.getContext().getAuthentication();
+                var request = aRequest.getObject();
                 request.setProject(LegacyProjectExportPanel.this.getModelObject());
-                request.setFilenameTag("_curated_documents");
                 exportInProgress = true;
                 exportTask = exportService.startProjectExportCuratedDocumentsTask(request,
                         authentication.getName());
@@ -199,18 +192,13 @@ public class LegacyProjectExportPanel
 
     private String getFilename(ProjectExportTaskHandle aHandle)
     {
-        ProjectExportRequest_ImplBase request = exportService.getExportRequest(aHandle);
+        var request = exportService.getExportRequest(aHandle);
 
-        String name = request.getProject().getSlug();
+        var formattedDateTime = now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd-HHmmss"));
+        var filename = request.getFilenamePrefix() + "-" + request.getProject().getSlug() + "-"
+                + formattedDateTime + ".zip";
 
-        if (isNotBlank(request.getFilenameTag())) {
-            name += request.getFilenameTag();
-        }
-
-        SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd_HHmm");
-        name += "_" + fmt.format(new Date()) + ".zip";
-
-        return name;
+        return filename;
     }
 
     private FileResourceStream getExport(ProjectExportTaskHandle aHandle)

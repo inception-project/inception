@@ -32,7 +32,6 @@ import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.editor.view.DocumentViewFactory;
 import de.tudarmstadt.ukp.inception.externaleditor.ExternalAnnotationEditorBase;
 import de.tudarmstadt.ukp.inception.externaleditor.model.AnnotationEditorProperties;
-import de.tudarmstadt.ukp.inception.preferences.ClientSideUserPreferencesProvider;
 import de.tudarmstadt.ukp.inception.recogitojseditor.resources.RecogitoJsCssResourceReference;
 import de.tudarmstadt.ukp.inception.recogitojseditor.resources.RecogitoJsJavascriptResourceReference;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
@@ -67,16 +66,10 @@ public class RecogitoHtmlAnnotationEditor
     @Override
     protected AnnotationEditorProperties getProperties()
     {
-        AnnotationEditorProperties props = new AnnotationEditorProperties();
+        var props = super.getProperties();
         // The factory is the JS call. Cf. the "globalName" in build.js and the factory method
         // defined in main.ts
         props.setEditorFactory("RecogitoEditor.factory()");
-        props.setEditorFactoryId(getFactory().getBeanName());
-        if (getFactory() instanceof ClientSideUserPreferencesProvider) {
-            ((ClientSideUserPreferencesProvider) getFactory()).getUserPreferencesKey()
-                    .ifPresent(key -> props.setUserPreferencesKey(key.getClientSideKey()));
-        }
-        props.setDiamAjaxCallbackUrl(getDiamBehavior().getCallbackUrl().toString());
         props.setStylesheetSources(
                 asList(referenceToUrl(servletContext, RecogitoJsCssResourceReference.get())));
         props.setScriptSources(asList(

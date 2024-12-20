@@ -59,6 +59,7 @@ import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 import opennlp.tools.ml.BeamSearch;
 import opennlp.tools.postag.POSModel;
 import opennlp.tools.postag.POSSample;
+import opennlp.tools.postag.POSTagFormat;
 import opennlp.tools.postag.POSTaggerFactory;
 import opennlp.tools.postag.POSTaggerME;
 import opennlp.tools.util.TrainingParameters;
@@ -128,7 +129,7 @@ public class OpenNlpPosRecommender
         var model = aContext.get(KEY_MODEL).orElseThrow(
                 () -> new RecommendationException("Key [" + KEY_MODEL + "] not found in context"));
 
-        var tagger = new POSTaggerME(model);
+        var tagger = new POSTaggerME(model, POSTagFormat.CUSTOM);
 
         var sampleUnitType = getType(aCas, SAMPLE_UNIT);
         var predictedType = getPredictedType(aCas);
@@ -246,7 +247,7 @@ public class OpenNlpPosRecommender
             throw new RecommendationException("Model is null, cannot evaluate!");
         }
 
-        POSTaggerME tagger = new POSTaggerME(model);
+        POSTaggerME tagger = new POSTaggerME(model, POSTagFormat.CUSTOM);
 
         // Evaluate
         var labelPairs = new ArrayList<LabelPair>();

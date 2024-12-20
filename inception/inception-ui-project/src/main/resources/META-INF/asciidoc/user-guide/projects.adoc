@@ -27,7 +27,7 @@ You can either select one of the existing projects for editing, or click *Create
 
 Click on *Create Project* to create a new project. 
 
-image::project_creation.png[align="center"]
+image::images/project_creation.png[align="center"]
 
 Here, you can specify the name of your project. 
 
@@ -38,6 +38,6 @@ Finally, you can provide a project description here which is displayed on the pr
 
 When you have not save the project yet, you can cancel the creation of the project via the *Close* button. To delete a project after you have saved (i.e. created) it, use the *Delete* button.
 
-image::project_details.png[align="center"]
+image::images/project_details.png[align="center"]
 
 After saving the project, additional panes will appear where you can further configure the project.

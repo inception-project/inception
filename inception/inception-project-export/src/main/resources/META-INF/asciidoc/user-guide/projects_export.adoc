@@ -1,7 +1,7 @@
 [[sect_projects_export]]
 = Export
 
-image::project_export.png[align="center"]
+image::images/project_export.png[align="center"]
 
 Here you can export the project for different purposes. Once an export process has been started, its progress can be see in the right sidebar. If an export takes very long, you can keep it running and check back regularly to see its state. You can even log out and log in later. Once the export is complete, you have 30 minutes to download it before it gets cleaned up automatically. Any user with project manager permissions can visit this page and view the exports. When a user cancels an export or downloads an export, it is removed from the list. If there are any messages, warnings or errors, you should inspect them before cancelling or downloading the export. While an export is running, only the latest messages is displayed and it can happen that messages are skipped. Once the export is complete (either successfully or failed), the full list of messages is accessible.
 

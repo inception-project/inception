@@ -67,9 +67,9 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 import de.tudarmstadt.ukp.inception.recommendation.relation.RelationSuggestionSupport;
 import de.tudarmstadt.ukp.inception.recommendation.span.SpanSuggestionSupport;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistryImpl;
 import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.inception.schema.service.AnnotationSchemaServiceImpl;
-import de.tudarmstadt.ukp.inception.schema.service.FeatureSupportRegistryImpl;
 
 @ExtendWith(MockitoExtension.class)
 @ContextConfiguration(classes = SpringConfig.class)

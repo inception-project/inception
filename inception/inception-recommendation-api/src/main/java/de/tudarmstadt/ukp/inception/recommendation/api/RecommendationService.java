@@ -101,7 +101,7 @@ public interface RecommendationService
      *         recommender is only available behind a feature flag that was once enabled and now is
      *         disabled.
      */
-    Optional<RecommendationEngineFactory<?>> getRecommenderFactory(Recommender aRecommender);
+    <T> Optional<RecommendationEngineFactory<T>> getRecommenderFactory(Recommender aRecommender);
 
     boolean hasActiveRecommenders(String aSessionOwner, Project aProject);
 

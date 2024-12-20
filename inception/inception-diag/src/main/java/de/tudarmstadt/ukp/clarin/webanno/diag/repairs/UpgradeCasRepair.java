@@ -33,7 +33,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.Repair.Safe;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 import de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil;
@@ -56,7 +56,8 @@ public class UpgradeCasRepair
     }
 
     @Override
-    public void repair(Project aProject, CAS aCas, List<LogMessage> aMessages)
+    public void repair(SourceDocument aDocument, String aDataOwner, CAS aCas,
+            List<LogMessage> aMessages)
     {
         try {
             var casImpl = (CASImpl) getRealCas(aCas);
@@ -65,7 +66,7 @@ public class UpgradeCasRepair
             var bytesBefore = size(serializeCASComplete(casImpl));
             int bytesAfter;
 
-            annotationService.upgradeCas(aCas, aProject);
+            annotationService.upgradeCas(aCas, aDocument.getProject());
             aMessages.add(LogMessage.info(this, "CAS upgraded."));
 
             var annotationCountsAfter = countFeatureStructures(casImpl);

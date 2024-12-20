@@ -98,7 +98,7 @@ public class PreRendererImpl
 
         Validate.notNull(cas, "CAS cannot be null");
 
-        if (aRequest.getVisibleLayers().isEmpty() || isEmpty(documentText)) {
+        if (isEmpty(documentText)) {
             return;
         }
 

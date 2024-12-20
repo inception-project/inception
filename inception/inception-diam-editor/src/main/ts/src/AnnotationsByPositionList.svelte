@@ -59,7 +59,7 @@
     }
 
     function scrollToRelation(relation: Relation) {
-        ajaxClient.scrollTo({ id: relation.vid });
+        ajaxClient.scrollTo({ id: relation.vid, offset: relation.arguments[0].target.offsets[0] });
     }
 
     function mouseOverAnnotation(event: MouseEvent, annotation: Annotation) {
@@ -103,7 +103,7 @@
                             class="flex-grow-1 my-1 mx-2 overflow-hidden"
                             on:click={() => scrollToSpan(firstSpan)}
                         >
-                            <div class="float-end labels me-1">
+                            <div class="float-end labels">
                                 {#each spans as span}
                                     <span
                                         on:mouseover={(ev) =>
@@ -144,7 +144,7 @@
                                     class="flex-grow-1 my-1 mx-2 overflow-hidden"
                                     on:click={() => scrollToRelation(relation)}
                                 >
-                                    <div class="float-end labels me-1">
+                                    <div class="float-end labels">
                                         <LabelBadge
                                             annotation={relation}
                                             {ajaxClient}

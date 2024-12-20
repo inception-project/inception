@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.inception.workload.dynamic.annotation;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
-import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExtension.DYNAMIC_WORKLOAD_MANAGER_EXTENSION_ID;
 
 import java.io.Serializable;
@@ -30,6 +29,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBarExtension;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
@@ -56,18 +56,21 @@ public class DynamicWorkflowDocumentNavigationActionBarExtension
     private final WorkloadManagementService workloadManagementService;
     private final DynamicWorkloadExtension dynamicWorkloadExtension;
     private final ProjectService projectService;
+    private final UserDao userService;
 
     private AnnotatorState annotatorState;
 
     @Autowired
     public DynamicWorkflowDocumentNavigationActionBarExtension(DocumentService aDocumentService,
             WorkloadManagementService aWorkloadManagementService,
-            DynamicWorkloadExtension aDynamicWorkloadExtension, ProjectService aProjectService)
+            DynamicWorkloadExtension aDynamicWorkloadExtension, ProjectService aProjectService,
+            UserDao aUserService)
     {
         documentService = aDocumentService;
         workloadManagementService = aWorkloadManagementService;
         dynamicWorkloadExtension = aDynamicWorkloadExtension;
         projectService = aProjectService;
+        userService = aUserService;
     }
 
     @Override
@@ -86,16 +89,16 @@ public class DynamicWorkflowDocumentNavigationActionBarExtension
     public boolean accepts(AnnotationPageBase aPage)
     {
         // #Issue 1813 fix
-        if (aPage.getModelObject().getProject() == null) {
+        var project = aPage.getModelObject().getProject();
+        if (project == null) {
             return false;
         }
 
-        // Curator are excluded from the feature
-        return DYNAMIC_WORKLOAD_MANAGER_EXTENSION_ID
-                .equals(workloadManagementService.loadOrCreateWorkloadManagerConfiguration(
-                        aPage.getModelObject().getProject()).getType())
-                && !projectService.hasRole(aPage.getModelObject().getUser(),
-                        aPage.getModelObject().getProject(), CURATOR, MANAGER);
+        var sessionOwner = userService.getCurrentUser();
+        var workloadConfig = workloadManagementService
+                .loadOrCreateWorkloadManagerConfiguration(aPage.getModelObject().getProject());
+        return DYNAMIC_WORKLOAD_MANAGER_EXTENSION_ID.equals(workloadConfig.getType())
+                && !projectService.hasRole(sessionOwner, project, CURATOR);
     }
 
     @Override

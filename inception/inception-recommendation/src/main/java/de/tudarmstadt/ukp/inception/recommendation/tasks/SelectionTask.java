@@ -148,7 +148,7 @@ public class SelectionTask
                         seenRecommender = true;
                     }
 
-                    Recommender recommender = optRecommender.get();
+                    var recommender = optRecommender.get();
                     try {
                         long start = System.currentTimeMillis();
 
@@ -281,7 +281,7 @@ public class SelectionTask
         }
 
         if (factory.isInteractive(recommender)) {
-            return Optional.of(skipInteractiveRecommender(user, recommender));
+            return Optional.of(activateInteractiveRecommender(user, recommender));
         }
 
         if (recommender.isAlwaysSelected()) {
@@ -359,31 +359,32 @@ public class SelectionTask
             Recommender recommender)
     {
         String recommenderName = recommender.getName();
-        LOG.debug("[{}][{}]: Activating [{}] without evaluating - not evaluable", userName,
+        LOG.debug("[{}][{}]: Activating [{}] without evaluation - not evaluable", userName,
                 recommenderName, recommenderName);
-        info("Recommender [%s] activated without evaluating - not evaluable", recommenderName);
-        return EvaluatedRecommender.makeActiveWithoutEvaluation(recommender);
+        info("Recommender [%s] activated without evaluation - not evaluable", recommenderName);
+        return EvaluatedRecommender.makeActiveWithoutEvaluation(recommender,
+                "Non-evaluatable recommender is always active (without evaluation).");
     }
 
     private EvaluatedRecommender activateAlwaysOnRecommender(String userName,
             Recommender recommender)
     {
         String recommenderName = recommender.getName();
-        LOG.debug("[{}][{}]: Activating [{}] without evaluating - always selected", userName,
+        LOG.debug("[{}][{}]: Activating [{}] without evaluation - always selected", userName,
                 recommenderName, recommenderName);
-        info("Recommender [%s] activated without evaluating - always selected", recommenderName);
-        return EvaluatedRecommender.makeActiveWithoutEvaluation(recommender);
+        info("Recommender [%s] activated without evaluation - always selected", recommenderName);
+        return EvaluatedRecommender.makeActiveWithoutEvaluation(recommender,
+                "Recommender is always active (without evaluation).");
     }
 
-    private EvaluatedRecommender skipInteractiveRecommender(User user, Recommender recommender)
+    private EvaluatedRecommender activateInteractiveRecommender(User user, Recommender recommender)
     {
         var recommenderName = recommender.getName();
-        LOG.info("[{}][{}]: Recommender reserved for interactive use " + "- skipping recommender",
-                user.getUsername(), recommenderName);
-        info("Recommender [%s] reserved for interactive use - skipping recommender",
-                recommenderName);
-        return EvaluatedRecommender.makeInactiveWithoutEvaluation(recommender,
-                "Reserved for interactive use");
+        LOG.info("[{}][{}]: Activating [{}] without evaluation - interactive use",
+                user.getUsername(), recommenderName, recommenderName);
+        info("Recommender [%s] without evaluation - interactive use", recommenderName);
+        return EvaluatedRecommender.makeActiveWithoutEvaluation(recommender,
+                "Interactive recommender is always active (without evaluation).");
     }
 
     private EvaluatedRecommender skipRecommenderWithInvalidSettings(User user,

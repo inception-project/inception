@@ -32,6 +32,8 @@ import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CurationTestUti
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CurationTestUtils.makeLinkHostFS;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.relation.RelationDiffAdapter.DEPENDENCY_DIFF_ADAPTER;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span.SpanDiffAdapter.POS_DIFF_ADAPTER;
+import static de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureDiffMode.EXCLUDE;
+import static de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureDiffMode.INCLUDE;
 import static de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureMultiplicityMode.MULTIPLE_TARGETS_MULTIPLE_ROLES;
 import static de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureMultiplicityMode.MULTIPLE_TARGETS_ONE_ROLE;
 import static de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureMultiplicityMode.ONE_TARGET_MULTIPLE_ROLES;
@@ -488,7 +490,7 @@ public class CasDiffTest
     }
 
     @Nested
-    class MultipleTargetsMultipleRolesTests
+    class MultipleTargetsMultipleRolesIncludeLinksTests
     {
         private static final SpanDiffAdapter HOST_TYPE_ADAPTER;
         private static final SpanDiffAdapter FILLER_ADAPTER;
@@ -500,7 +502,64 @@ public class CasDiffTest
         static {
             HOST_TYPE_ADAPTER = new SpanDiffAdapter(HOST_TYPE);
             HOST_TYPE_ADAPTER.addLinkFeature("links", "role", "target",
-                    MULTIPLE_TARGETS_MULTIPLE_ROLES);
+                    MULTIPLE_TARGETS_MULTIPLE_ROLES, INCLUDE);
+
+            FILLER_ADAPTER = new SpanDiffAdapter(SLOT_FILLER_TYPE, "value");
+        }
+
+        @BeforeEach
+        void setup() throws Exception
+        {
+            jcasA = createJCas(createMultiLinkWithRoleTestTypeSystem());
+            jcasB = createJCas(createMultiLinkWithRoleTestTypeSystem());
+
+            casByUser = new LinkedHashMap<String, CAS>();
+            casByUser.put("user1", jcasA.getCas());
+            casByUser.put("user2", jcasB.getCas());
+        }
+
+        @Test
+        public void one_annotator__stacked_no_label_hosts__different_labels__stacked()
+            throws Exception
+        {
+            makeLinkHostFS(jcasA, 0, 0, //
+                    makeLinkFS(jcasA, "slot1", 0, 0));
+
+            makeLinkHostFS(jcasA, 0, 0, //
+                    makeLinkFS(jcasA, "slot2", 0, 0));
+
+            casByUser.remove("user2");
+
+            var result = doDiff(asList(HOST_TYPE_ADAPTER, FILLER_ADAPTER), casByUser).toResult();
+
+            assertSpanPositionConfigurations(result.getConfigurationSets()) //
+                    .containsExactlyInAnyOrder( //
+                            tuple("LinkHost", 0, 0, -1, -1, null, Set.of("user1")), //
+                            tuple("SlotFiller", 0, 0, -1, -1, null, Set.of("user1")), //
+                            tuple("LinkHost", 0, 0, 0, 0, "slot1", Set.of("user1")), //
+                            tuple("LinkHost", 0, 0, 0, 0, "slot2", Set.of("user1")));
+            assertSpanPositionConfigurations(result.getDifferingConfigurationSets().values()) //
+                    .containsExactlyInAnyOrder( //
+                            tuple("LinkHost", 0, 0, -1, -1, null, Set.of("user1")));
+            assertThat(result.getIncompleteConfigurationSets()).isEmpty();
+            assertThat(calculateState(result)).isEqualTo(STACKED);
+        }
+    }
+
+    @Nested
+    class MultipleTargetsMultipleRolesExcludeLinksTests
+    {
+        private static final SpanDiffAdapter HOST_TYPE_ADAPTER;
+        private static final SpanDiffAdapter FILLER_ADAPTER;
+
+        private JCas jcasA;
+        private JCas jcasB;
+        private Map<String, CAS> casByUser;
+
+        static {
+            HOST_TYPE_ADAPTER = new SpanDiffAdapter(HOST_TYPE);
+            HOST_TYPE_ADAPTER.addLinkFeature("links", "role", "target",
+                    MULTIPLE_TARGETS_MULTIPLE_ROLES, EXCLUDE);
 
             FILLER_ADAPTER = new SpanDiffAdapter(SLOT_FILLER_TYPE, "value");
         }
@@ -555,6 +614,31 @@ public class CasDiffTest
                             tuple("LinkHost", 0, 0, 0, 0, "slot1", Set.of("user1")), //
                             tuple("LinkHost", 0, 0, 0, 0, "slot2", Set.of("user1")));
             assertThat(result.getDifferingConfigurationSets()).isEmpty();
+            assertThat(result.getIncompleteConfigurationSets()).isEmpty();
+            assertThat(calculateState(result)).isEqualTo(AGREE);
+        }
+
+        @Test
+        public void one_annotator__stacked_no_label_hosts__different_labels__agreement()
+            throws Exception
+        {
+            makeLinkHostFS(jcasA, 0, 0, //
+                    makeLinkFS(jcasA, "slot1", 0, 0));
+
+            makeLinkHostFS(jcasA, 0, 0, //
+                    makeLinkFS(jcasA, "slot2", 0, 0));
+
+            casByUser.remove("user2");
+
+            var result = doDiff(asList(HOST_TYPE_ADAPTER, FILLER_ADAPTER), casByUser).toResult();
+
+            assertSpanPositionConfigurations(result.getConfigurationSets()) //
+                    .containsExactlyInAnyOrder( //
+                            tuple("LinkHost", 0, 0, -1, -1, null, Set.of("user1")), //
+                            tuple("SlotFiller", 0, 0, -1, -1, null, Set.of("user1")), //
+                            tuple("LinkHost", 0, 0, 0, 0, "slot1", Set.of("user1")), //
+                            tuple("LinkHost", 0, 0, 0, 0, "slot2", Set.of("user1")));
+            assertThat(result.getDifferingConfigurationSets().values()).isEmpty();
             assertThat(result.getIncompleteConfigurationSets()).isEmpty();
             assertThat(calculateState(result)).isEqualTo(AGREE);
         }
@@ -747,7 +831,8 @@ public class CasDiffTest
 
         static {
             HOST_TYPE_ADAPTER = new SpanDiffAdapter(HOST_TYPE);
-            HOST_TYPE_ADAPTER.addLinkFeature("links", "role", "target", ONE_TARGET_MULTIPLE_ROLES);
+            HOST_TYPE_ADAPTER.addLinkFeature("links", "role", "target", ONE_TARGET_MULTIPLE_ROLES,
+                    EXCLUDE);
 
             FILLER_ADAPTER = new SpanDiffAdapter(SLOT_FILLER_TYPE, "value");
         }
@@ -872,10 +957,12 @@ public class CasDiffTest
             var result = doDiff(asList(HOST_TYPE_ADAPTER), casByUser).toResult();
 
             assertSpanPositionConfigurations(result.getConfigurationSets()) //
+                    .as("ConfigurationSets") //
                     .containsExactlyInAnyOrder( //
                             tuple("LinkHost", 0, 0, -1, -1, null, Set.of("user1", "user2")), //
                             tuple("LinkHost", 0, 0, 0, 0, "slot1", Set.of("user1", "user2")));
             assertSpanPositionConfigurations(result.getDifferingConfigurationSets().values()) //
+                    .as("DifferingConfigurationSets") //
                     .containsExactlyInAnyOrder( //
                             tuple("LinkHost", 0, 0, 0, 0, "slot1", Set.of("user1", "user2")));
             assertThat(result.getIncompleteConfigurationSets()).isEmpty();
@@ -969,7 +1056,8 @@ public class CasDiffTest
 
         static {
             HOST_TYPE_ADAPTER = new SpanDiffAdapter(HOST_TYPE);
-            HOST_TYPE_ADAPTER.addLinkFeature("links", "role", "target", MULTIPLE_TARGETS_ONE_ROLE);
+            HOST_TYPE_ADAPTER.addLinkFeature("links", "role", "target", MULTIPLE_TARGETS_ONE_ROLE,
+                    EXCLUDE);
 
             FILLER_ADAPTER = new SpanDiffAdapter(SLOT_FILLER_TYPE, "value");
         }
@@ -1127,7 +1215,7 @@ public class CasDiffTest
                         cfg -> ((SpanPosition) cfg.getPosition()).getEnd(), //
                         cfg -> cfg.getPosition().getLinkTargetBegin(), //
                         cfg -> cfg.getPosition().getLinkTargetEnd(), //
-                        cfg -> cfg.getPosition().getRole(), //
+                        cfg -> cfg.getPosition().getLinkRole(), //
                         cfg -> cfg.getCasGroupIds());
     }
 }

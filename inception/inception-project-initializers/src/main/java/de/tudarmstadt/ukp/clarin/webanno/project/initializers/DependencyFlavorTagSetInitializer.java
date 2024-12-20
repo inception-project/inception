@@ -28,6 +28,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.config.ProjectInitializersAutoConfiguration;
+import de.tudarmstadt.ukp.inception.project.api.ProjectInitializationRequest;
 import de.tudarmstadt.ukp.inception.project.api.ProjectInitializer;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
@@ -69,11 +70,12 @@ public class DependencyFlavorTagSetInitializer
     }
 
     @Override
-    public void configure(Project aProject) throws IOException
+    public void configure(ProjectInitializationRequest aRequest) throws IOException
     {
+        var project = aRequest.getProject();
         String[] flavors = { BASIC, ENHANCED };
         String[] flavorDesc = { BASIC, ENHANCED };
         annotationSchemaService.createTagSet(TAG_SET_NAME, TAG_SET_NAME, "mul", flavors, flavorDesc,
-                aProject);
+                project);
     }
 }

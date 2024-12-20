@@ -17,10 +17,6 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.project.initializers;
 
-import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.CHARACTERS;
-import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.NO_OVERLAP;
-import static de.tudarmstadt.ukp.clarin.webanno.model.ValidationMode.NEVER;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.SPAN_TYPE;
 import static java.util.Collections.emptyList;
 
 import java.io.IOException;
@@ -28,10 +24,11 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.config.ProjectInitializersAutoConfiguration;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.inception.annotation.layer.LayerFactory;
+import de.tudarmstadt.ukp.inception.project.api.ProjectInitializationRequest;
 import de.tudarmstadt.ukp.inception.project.api.ProjectInitializer;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
@@ -71,18 +68,12 @@ public class TokenLayerInitializer
     }
 
     @Override
-    public void configure(Project aProject) throws IOException
+    public void configure(ProjectInitializationRequest aRequest) throws IOException
     {
-        AnnotationLayer tokenLayer = new AnnotationLayer(Token.class.getName(), "Token", SPAN_TYPE,
-                aProject, true, CHARACTERS, NO_OVERLAP);
-
-        // Since the user cannot turn off validation for the token layer if there is any kind of
-        // problem with the validation functionality we are conservative here and disable validation
-        // from the start.
-        tokenLayer.setValidationMode(NEVER);
-        tokenLayer.setReadonly(true);
-        tokenLayer.setCrossSentence(false);
-        tokenLayer.setEnabled(false);
+        var project = aRequest.getProject();
+        var tokenLayer = LayerFactory.tokenLayer(project) //
+                .withEnabled(false) //
+                .build();
 
         annotationSchemaService.createOrUpdateLayer(tokenLayer);
     }

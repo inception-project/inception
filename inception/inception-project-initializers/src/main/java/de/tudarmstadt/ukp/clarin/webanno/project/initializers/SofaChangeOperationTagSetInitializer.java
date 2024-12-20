@@ -25,6 +25,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.config.ProjectInitializersAutoConfiguration;
+import de.tudarmstadt.ukp.inception.project.api.ProjectInitializationRequest;
 import de.tudarmstadt.ukp.inception.project.api.ProjectInitializer;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
@@ -66,12 +67,13 @@ public class SofaChangeOperationTagSetInitializer
     }
 
     @Override
-    public void configure(Project aProject) throws IOException
+    public void configure(ProjectInitializationRequest aRequest) throws IOException
     {
+        var project = aRequest.getProject();
         annotationSchemaService.createTagSet(
                 "operation to be done with specified in tokenIDs token/tokens in order to correct",
                 TAG_SET_NAME, "en",
                 new String[] { "replace", "insert_before", "insert_after", "delete" },
-                new String[] { "replace", "insert before", "insert after", "delete" }, aProject);
+                new String[] { "replace", "insert before", "insert after", "delete" }, project);
     }
 }

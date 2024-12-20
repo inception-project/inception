@@ -89,6 +89,20 @@
     <pluginManagement>
       <plugins>
         <plugin>
+          <groupId>org.apache.rat</groupId>
+          <artifactId>apache-rat-plugin</artifactId>
+          <executions>
+            <execution>
+              <id>default</id>
+              <configuration>
+                <excludes combine.children="append">
+                  <exclude>src/main/java/de/tudarmstadt/ukp/inception/tutorial/enjoyhint.js</exclude>
+                </excludes>
+              </configuration>
+            </execution>
+          </executions>
+        </plugin>
+        <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-dependency-plugin</artifactId>
           <configuration>

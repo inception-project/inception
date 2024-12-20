@@ -32,8 +32,6 @@ import org.dkpro.core.api.parameter.ComponentParameters;
 import de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.Tsv3XCasDocumentBuilder;
 import de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.Tsv3XCasSchemaAnalyzer;
 import de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.Tsv3XSerializer;
-import de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.model.TsvDocument;
-import de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.model.TsvSchema;
 
 /**
  * Writes the WebAnno TSV v3.x format.
@@ -58,11 +56,11 @@ public class WebannoTsv3XWriter
     @Override
     public void process(JCas aJCas) throws AnalysisEngineProcessException
     {
-        TsvSchema schema = Tsv3XCasSchemaAnalyzer.analyze(aJCas.getTypeSystem());
+        var schema = Tsv3XCasSchemaAnalyzer.analyze(aJCas.getTypeSystem());
 
-        TsvDocument doc = Tsv3XCasDocumentBuilder.of(schema, aJCas);
+        var doc = Tsv3XCasDocumentBuilder.of(schema, aJCas);
 
-        try (PrintWriter docOS = new PrintWriter(
+        try (var docOS = new PrintWriter(
                 new OutputStreamWriter(buffer(getOutputStream(aJCas, filenameSuffix)), encoding))) {
             new Tsv3XSerializer().write(docOS, doc);
         }

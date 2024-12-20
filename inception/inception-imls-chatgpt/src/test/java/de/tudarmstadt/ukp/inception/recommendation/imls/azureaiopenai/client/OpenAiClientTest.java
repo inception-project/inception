@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.azureaiopenai.client;
 
-import static de.tudarmstadt.ukp.inception.recommendation.imls.chatgpt.ChatGptRecommenderTraits.OPENAI_API_URL;
-import static de.tudarmstadt.ukp.inception.recommendation.imls.chatgpt.client.ResponseFormatType.JSON_OBJECT;
+import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.chatgpt.ChatGptRecommenderTraits.OPENAI_API_URL;
+import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.chatgpt.client.ResponseFormatType.JSON_OBJECT;
 import static org.assertj.core.api.Assumptions.assumeThat;
 
 import java.lang.invoke.MethodHandles;
@@ -28,10 +28,10 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.tudarmstadt.ukp.inception.recommendation.imls.chatgpt.client.ChatCompletionRequest;
-import de.tudarmstadt.ukp.inception.recommendation.imls.chatgpt.client.ChatGptClientImpl;
-import de.tudarmstadt.ukp.inception.recommendation.imls.chatgpt.client.ListModelsRequest;
-import de.tudarmstadt.ukp.inception.recommendation.imls.chatgpt.client.ResponseFormat;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.chatgpt.client.ChatCompletionRequest;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.chatgpt.client.ChatGptClientImpl;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.chatgpt.client.ListModelsRequest;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.chatgpt.client.ResponseFormat;
 
 class OpenAiClientTest
 {

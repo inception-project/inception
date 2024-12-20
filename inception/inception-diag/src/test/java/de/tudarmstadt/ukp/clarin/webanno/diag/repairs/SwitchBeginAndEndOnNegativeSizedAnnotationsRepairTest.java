@@ -29,21 +29,18 @@ import org.apache.uima.jcas.tcas.Annotation;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 
 class SwitchBeginAndEndOnNegativeSizedAnnotationsRepairTest
 {
     SwitchBeginAndEndOnNegativeSizedAnnotationsRepair sut;
-    Project project;
     JCas jCas;
 
     @BeforeEach
     void setup() throws Exception
     {
         sut = new SwitchBeginAndEndOnNegativeSizedAnnotationsRepair();
-        project = new Project();
         jCas = JCasFactory.createJCas();
     }
 
@@ -58,7 +55,7 @@ class SwitchBeginAndEndOnNegativeSizedAnnotationsRepairTest
 
         var messages = new ArrayList<LogMessage>();
 
-        sut.repair(project, jCas.getCas(), messages);
+        sut.repair(null, null, jCas.getCas(), messages);
 
         assertThat(jCas.select(Token.class).asList()) //
                 .extracting(Annotation::getBegin, Annotation::getEnd)

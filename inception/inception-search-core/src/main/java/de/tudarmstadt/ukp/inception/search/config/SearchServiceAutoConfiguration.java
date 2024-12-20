@@ -80,7 +80,7 @@ public class SearchServiceAutoConfiguration
 
     @Bean
     public PrimitiveUimaIndexingSupport primitiveUimaIndexingSupport(
-            @Autowired FeatureSupportRegistry aFeatureSupportRegistry)
+            FeatureSupportRegistry aFeatureSupportRegistry)
     {
         return new PrimitiveUimaIndexingSupport(aFeatureSupportRegistry);
     }

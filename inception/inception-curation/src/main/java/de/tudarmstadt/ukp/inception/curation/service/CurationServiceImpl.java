@@ -24,9 +24,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.curation.config.CurationServiceAutoConfiguration;
-import de.tudarmstadt.ukp.inception.curation.merge.MergeStrategyFactory;
-import de.tudarmstadt.ukp.inception.curation.merge.MergeStrategyFactoryExtensionPoint;
 import de.tudarmstadt.ukp.inception.curation.merge.strategy.MergeStrategy;
+import de.tudarmstadt.ukp.inception.curation.merge.strategy.MergeStrategyFactory;
+import de.tudarmstadt.ukp.inception.curation.merge.strategy.MergeStrategyFactoryExtensionPoint;
 import de.tudarmstadt.ukp.inception.curation.model.CurationWorkflow;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.NoResultException;
@@ -69,7 +69,7 @@ public class CurationServiceImpl
     {
         CurationWorkflow result;
         try {
-            String query = "FROM CurationWorkflow WHERE project = :project";
+            var query = "FROM CurationWorkflow WHERE project = :project";
 
             result = entityManager.createQuery(query, CurationWorkflow.class) //
                     .setParameter("project", aProject) //
@@ -91,12 +91,12 @@ public class CurationServiceImpl
         return getMergeStrategy(readOrCreateCurationWorkflow(aProject));
     }
 
-    @SuppressWarnings({ "unchecked", "rawtypes" })
+    @SuppressWarnings({ "unchecked" })
     @Override
     @Transactional
     public MergeStrategy getMergeStrategy(CurationWorkflow aCurationWorkflow)
     {
-        MergeStrategyFactory factory = getMergeStrategyFactory(aCurationWorkflow);
+        var factory = getMergeStrategyFactory(aCurationWorkflow);
         return factory.makeStrategy(factory.readTraits(aCurationWorkflow));
     }
 

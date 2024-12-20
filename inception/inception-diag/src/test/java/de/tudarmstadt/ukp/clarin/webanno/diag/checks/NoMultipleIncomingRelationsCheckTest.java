@@ -17,16 +17,15 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.diag.checks;
 
+import static java.util.Arrays.asList;
+import static org.apache.uima.fit.factory.JCasFactory.createJCas;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
-import org.apache.uima.fit.factory.JCasFactory;
-import org.apache.uima.jcas.JCas;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
@@ -37,11 +36,14 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceChain;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
+import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.inception.support.WebAnnoConst;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 
 @ExtendWith(SpringExtension.class)
@@ -59,42 +61,54 @@ public class NoMultipleIncomingRelationsCheckTest
     @Autowired
     NoMultipleIncomingRelationsCheck sut;
 
+    Project project;
+    SourceDocument document;
+    String dataOwner;
+
+    @BeforeEach
+    void setup() throws Exception
+    {
+        project = Project.builder().build();
+        document = SourceDocument.builder() //
+                .withProject(project) //
+                .build();
+    }
+
     @Test
     public void testFail() throws Exception
     {
-        AnnotationLayer relationLayer = new AnnotationLayer();
+        var relationLayer = new AnnotationLayer();
         relationLayer.setName(Dependency.class.getName());
 
-        relationLayer.setType(WebAnnoConst.RELATION_TYPE);
-        when(annotationService.listAnnotationLayer(Mockito.isNull()))
-                .thenReturn(Arrays.asList(relationLayer));
+        relationLayer.setType(RelationLayerSupport.TYPE);
+        when(annotationService.listAnnotationLayer(project)).thenReturn(asList(relationLayer));
 
-        JCas jcas = JCasFactory.createJCas();
+        var jcas = createJCas();
 
         jcas.setDocumentText("This is a test.");
 
-        Token spanThis = new Token(jcas, 0, 4);
+        var spanThis = new Token(jcas, 0, 4);
         spanThis.addToIndexes();
 
-        Token spanIs = new Token(jcas, 5, 7);
+        var spanIs = new Token(jcas, 5, 7);
         spanIs.addToIndexes();
 
-        Token spanA = new Token(jcas, 8, 9);
+        var spanA = new Token(jcas, 8, 9);
         spanA.addToIndexes();
 
-        Dependency dep1 = new Dependency(jcas, 0, 7);
+        var dep1 = new Dependency(jcas, 0, 7);
         dep1.setGovernor(spanThis);
         dep1.setDependent(spanIs);
         dep1.addToIndexes();
 
-        Dependency dep2 = new Dependency(jcas, 0, 9);
+        var dep2 = new Dependency(jcas, 0, 9);
         dep2.setGovernor(spanA);
         dep2.setDependent(spanIs);
         dep2.addToIndexes();
 
-        List<LogMessage> messages = new ArrayList<>();
+        var messages = new ArrayList<LogMessage>();
 
-        boolean result = sut.check(null, jcas.getCas(), messages);
+        var result = sut.check(document, dataOwner, jcas.getCas(), messages);
 
         messages.forEach(System.out::println);
 
@@ -111,39 +125,38 @@ public class NoMultipleIncomingRelationsCheckTest
     @Test
     public void testOK() throws Exception
     {
-        AnnotationLayer relationLayer = new AnnotationLayer();
+        var relationLayer = new AnnotationLayer();
         relationLayer.setName(Dependency.class.getName());
+        relationLayer.setType(RelationLayerSupport.TYPE);
+        when(annotationService.listAnnotationLayer(Mockito.isNull()))
+                .thenReturn(asList(relationLayer));
 
-        relationLayer.setType(WebAnnoConst.RELATION_TYPE);
-        Mockito.when(annotationService.listAnnotationLayer(Mockito.isNull()))
-                .thenReturn(Arrays.asList(relationLayer));
-
-        JCas jcas = JCasFactory.createJCas();
+        var jcas = createJCas();
 
         jcas.setDocumentText("This is a test.");
 
-        Token spanThis = new Token(jcas, 0, 4);
+        var spanThis = new Token(jcas, 0, 4);
         spanThis.addToIndexes();
 
-        Token spanIs = new Token(jcas, 6, 8);
+        var spanIs = new Token(jcas, 6, 8);
         spanIs.addToIndexes();
 
-        Token spanA = new Token(jcas, 9, 10);
+        var spanA = new Token(jcas, 9, 10);
         spanA.addToIndexes();
 
-        Dependency dep1 = new Dependency(jcas, 0, 8);
+        var dep1 = new Dependency(jcas, 0, 8);
         dep1.setGovernor(spanThis);
         dep1.setDependent(spanIs);
         dep1.addToIndexes();
 
-        Dependency dep2 = new Dependency(jcas, 6, 10);
+        var dep2 = new Dependency(jcas, 6, 10);
         dep2.setGovernor(spanIs);
         dep2.setDependent(spanA);
         dep2.addToIndexes();
 
-        List<LogMessage> messages = new ArrayList<>();
+        var messages = new ArrayList<LogMessage>();
 
-        boolean result = sut.check(null, jcas.getCas(), messages);
+        var result = sut.check(document, dataOwner, jcas.getCas(), messages);
 
         messages.forEach(System.out::println);
 
@@ -154,39 +167,38 @@ public class NoMultipleIncomingRelationsCheckTest
     public void testOkBecauseCoref() throws Exception
     {
 
-        AnnotationLayer relationLayer = new AnnotationLayer();
+        var relationLayer = new AnnotationLayer();
         relationLayer.setName(CoreferenceChain.class.getName());
+        relationLayer.setType(ChainLayerSupport.TYPE);
+        when(annotationService.listAnnotationLayer(Mockito.isNull()))
+                .thenReturn(asList(relationLayer));
 
-        relationLayer.setType(WebAnnoConst.CHAIN_TYPE);
-        Mockito.when(annotationService.listAnnotationLayer(Mockito.isNull()))
-                .thenReturn(Arrays.asList(relationLayer));
-
-        JCas jcas = JCasFactory.createJCas();
+        var jcas = createJCas();
 
         jcas.setDocumentText("This is a test.");
 
-        Token spanThis = new Token(jcas, 0, 4);
+        var spanThis = new Token(jcas, 0, 4);
         spanThis.addToIndexes();
 
-        Token spanIs = new Token(jcas, 6, 8);
+        var spanIs = new Token(jcas, 6, 8);
         spanIs.addToIndexes();
 
-        Token spanA = new Token(jcas, 9, 10);
+        var spanA = new Token(jcas, 9, 10);
         spanA.addToIndexes();
 
-        Dependency dep1 = new Dependency(jcas, 0, 8);
+        var dep1 = new Dependency(jcas, 0, 8);
         dep1.setGovernor(spanThis);
         dep1.setDependent(spanIs);
         dep1.addToIndexes();
 
-        Dependency dep2 = new Dependency(jcas, 0, 10);
+        var dep2 = new Dependency(jcas, 0, 10);
         dep2.setGovernor(spanA);
         dep2.setDependent(spanIs);
         dep2.addToIndexes();
 
-        List<LogMessage> messages = new ArrayList<>();
+        var messages = new ArrayList<LogMessage>();
 
-        boolean result = sut.check(null, jcas.getCas(), messages);
+        var result = sut.check(document, dataOwner, jcas.getCas(), messages);
 
         messages.forEach(System.out::println);
 

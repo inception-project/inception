@@ -20,7 +20,7 @@
 
 Sentence  numbers  on  the  left  side  of  the  annotation  page  show  the  exact sentence numbers in the document. 
 
-image::annotation3.jpg[align="center"]
+image::images/annotation3.jpg[align="center"]
 
 The arrow buttons *first page*, *next page*, *previous page*, *last page*, and *go to page* allow you to navigate accordingly. 
 

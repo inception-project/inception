@@ -35,6 +35,7 @@ import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasure_Imp
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.DefaultAgreementTraits;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.results.unitizing.FullUnitizingAgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
 public class KrippendorffAlphaUnitizingAgreementMeasure
     extends AgreementMeasure_ImplBase<//
@@ -43,16 +44,16 @@ public class KrippendorffAlphaUnitizingAgreementMeasure
 {
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
-    public KrippendorffAlphaUnitizingAgreementMeasure(AnnotationFeature aFeature,
-            DefaultAgreementTraits aTraits)
+    public KrippendorffAlphaUnitizingAgreementMeasure(AnnotationLayer aLayer,
+            AnnotationFeature aFeature, DefaultAgreementTraits aTraits)
     {
-        super(aFeature, aTraits);
+        super(aLayer, aFeature, aTraits);
     }
 
     @Override
     public FullUnitizingAgreementResult getAgreement(Map<String, CAS> aCasMap)
     {
-        var typeName = getFeature().getLayer().getName();
+        var typeName = getLayer().getName();
 
         // Calculate a character offset continuum. We assume here that the documents
         // all have the same size - since the users cannot change the document sizes, this should be
@@ -79,9 +80,9 @@ public class KrippendorffAlphaUnitizingAgreementMeasure
             }
 
             var raterIdx = study.addRater(set.getKey());
-            var f = t.getFeatureByBaseName(getFeature().getName());
+            var f = getFeature() != null ? t.getFeatureByBaseName(getFeature().getName()) : null;
             for (var ann : cas.<Annotation> select(t)) {
-                var featureValue = FSUtil.getFeature(ann, f, Object.class);
+                var featureValue = f != null ? FSUtil.getFeature(ann, f, Object.class) : POSITION;
                 if (featureValue instanceof Collection) {
                     for (var value : (Collection<?>) featureValue) {
                         study.addUnit(ann.getBegin(), ann.getEnd() - ann.getBegin(), raterIdx,
@@ -98,7 +99,8 @@ public class KrippendorffAlphaUnitizingAgreementMeasure
         LOG.trace("Units in study : {}", study.getUnitCount());
         LOG.trace("Raters im study: {}", study.getRaterCount());
 
-        var result = new FullUnitizingAgreementResult(typeName, getFeature().getName(), study,
+        var featureName = getFeature() != null ? getFeature().getName() : null;
+        var result = new FullUnitizingAgreementResult(typeName, featureName, study,
                 new ArrayList<>(aCasMap.keySet()), getTraits().isExcludeIncomplete());
 
         if (result.isEmpty()) {

@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.clarin.webanno.project.initializers;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.NO_OVERLAP;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.SPAN_TYPE;
 import static java.util.Arrays.asList;
 
 import java.io.IOException;
@@ -37,6 +36,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.config.ProjectInitializersAutoConfiguration;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.SurfaceForm;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
+import de.tudarmstadt.ukp.inception.project.api.ProjectInitializationRequest;
 import de.tudarmstadt.ukp.inception.project.api.ProjectInitializer;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.wicket.resource.Strings;
@@ -93,18 +94,19 @@ public class SurfaceFormLayerInitializer
     }
 
     @Override
-    public void configure(Project aProject) throws IOException
+    public void configure(ProjectInitializationRequest aRequest) throws IOException
     {
+        var project = aRequest.getProject();
         // The surface form must be locked to tokens for CoNLL-U writer to work properly
-        AnnotationLayer surfaceFormLayer = new AnnotationLayer(SurfaceForm.class.getName(),
-                "Surface form", SPAN_TYPE, aProject, true, TOKENS, NO_OVERLAP);
+        var surfaceFormLayer = new AnnotationLayer(SurfaceForm.class.getName(), "Surface form",
+                SpanLayerSupport.TYPE, project, true, TOKENS, NO_OVERLAP);
         annotationSchemaService.createOrUpdateLayer(surfaceFormLayer);
 
-        AnnotationFeature surfaceFormValueFeature = new AnnotationFeature();
+        var surfaceFormValueFeature = new AnnotationFeature();
         surfaceFormValueFeature.setDescription("Original surface text");
         surfaceFormValueFeature.setName("value");
         surfaceFormValueFeature.setType(CAS.TYPE_NAME_STRING);
-        surfaceFormValueFeature.setProject(aProject);
+        surfaceFormValueFeature.setProject(project);
         surfaceFormValueFeature.setUiName("Form");
         surfaceFormValueFeature.setLayer(surfaceFormLayer);
         annotationSchemaService.createFeature(surfaceFormValueFeature);

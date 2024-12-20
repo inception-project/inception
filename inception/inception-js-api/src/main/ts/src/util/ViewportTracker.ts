@@ -25,6 +25,7 @@ export type ViewportTrackerOptions = {
 }
 
 export const NO_TRACKING_CLASS = 'data-i7n-no-tracking'
+export const TRACKING_CLASS = 'data-i7n-tracking'
 
 export class ViewportTracker {
   private _visibleElements = new Set<Element>()
@@ -68,6 +69,10 @@ export class ViewportTracker {
   }
 
   private shouldTrack (element: Element): boolean {
+    if (element.classList.contains(TRACKING_CLASS)) {
+      return true
+    }
+
     if (this.options?.ignoreSelector && element.matches(this.options.ignoreSelector)) {
       return false
     }

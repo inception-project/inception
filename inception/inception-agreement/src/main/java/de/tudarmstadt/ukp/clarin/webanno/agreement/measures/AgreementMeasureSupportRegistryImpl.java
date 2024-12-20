@@ -35,6 +35,7 @@ import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.support.logging.BaseLoggers;
 
 @Component
@@ -95,21 +96,20 @@ public class AgreementMeasureSupportRegistryImpl
 
     @Override
     public List<AgreementMeasureSupport<?, ?, ?>> getAgreementMeasureSupports(
-            AnnotationFeature aFeature)
+            AnnotationLayer aLayer, AnnotationFeature aFeature)
     {
         return agreementMeasures.stream() //
-                .filter(factory -> factory.accepts(aFeature)) //
+                .filter(factory -> factory.accepts(aLayer, aFeature)) //
                 .sorted(comparing(AgreementMeasureSupport::getName)) //
                 .collect(toList());
     }
 
     @Override
-    public AgreementMeasure getMeasure(AnnotationFeature aFeature, String aMeasure,
-            DefaultAgreementTraits traits)
+    public AgreementMeasure getMeasure(AnnotationLayer aLayer, AnnotationFeature aFeature,
+            String aMeasure, DefaultAgreementTraits traits)
     {
-        AgreementMeasureSupport ams = getAgreementMeasureSupport(aMeasure);
-
-        var measure = ams.createMeasure(aFeature, traits);
+        var ams = getAgreementMeasureSupport(aMeasure);
+        var measure = ams.createMeasure(aLayer, aFeature, traits);
         return measure;
     }
 }

@@ -78,7 +78,7 @@ public class Project
     private int version = 1;
 
     // Disable users from exporting annotation documents
-    private boolean disableExport = false;
+    private boolean disableExport = true;
 
     @Type(ScriptDirectionType.class)
     private ScriptDirection scriptDirection;

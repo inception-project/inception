@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.externaleditor.xhtml;
 
 import static java.lang.invoke.MethodHandles.lookup;
 import static java.util.Optional.ofNullable;
+import static javax.xml.XMLConstants.DEFAULT_NS_PREFIX;
 import static org.slf4j.LoggerFactory.getLogger;
 import static org.springframework.http.HttpStatus.OK;
 import static org.springframework.http.MediaType.IMAGE_GIF;
@@ -26,13 +27,10 @@ import static org.springframework.http.MediaType.IMAGE_JPEG;
 import static org.springframework.http.MediaType.IMAGE_PNG;
 
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.io.StringWriter;
 import java.security.Principal;
 import java.util.Locale;
 import java.util.Optional;
-
-import javax.xml.XMLConstants;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.uima.cas.CAS;
@@ -64,7 +62,6 @@ import de.tudarmstadt.ukp.inception.externaleditor.XmlDocumentViewControllerImpl
 import de.tudarmstadt.ukp.inception.externaleditor.policy.DefaultHtmlDocumentPolicy;
 import de.tudarmstadt.ukp.inception.externaleditor.policy.SafetyNetDocumentPolicy;
 import de.tudarmstadt.ukp.inception.externaleditor.xml.XmlCas2SaxEvents;
-import de.tudarmstadt.ukp.inception.io.xml.dkprocore.Cas2SaxEvents;
 import de.tudarmstadt.ukp.inception.support.wicket.ServletContextUtils;
 import jakarta.servlet.ServletContext;
 
@@ -87,6 +84,7 @@ public class XHtmlXmlDocumentViewControllerImpl
     private static final String BODY = "body";
     private static final String HEAD = "head";
     private static final String P = "p";
+    private static final String SPAN = "span";
 
     private final DocumentService documentService;
     private final DocumentStorageService documentStorageService;
@@ -160,12 +158,8 @@ public class XHtmlXmlDocumentViewControllerImpl
             // If the CAS contains an actual HTML structure, then we send that. Mind that we do
             // not inject format-specific CSS then!
             if (casContainsHtml) {
-                var xml = maybeXmlDocument.get();
                 startXHtmlDocument(rawHandler);
-
-                var serializer = new XmlCas2SaxEvents(xml, finalHandler);
-                serializer.process(xml.getRoot());
-
+                renderXmlContent(finalHandler, maybeXmlDocument.get());
                 endXHtmlDocument(rawHandler);
                 return toResponse(out);
             }
@@ -173,31 +167,35 @@ public class XHtmlXmlDocumentViewControllerImpl
             startXHtmlDocument(rawHandler);
 
             rawHandler.startElement(null, null, HTML, null);
-
             renderHead(doc, rawHandler);
 
-            rawHandler.startElement(null, null, BODY, null);
             if (maybeXmlDocument.isEmpty()) {
                 // Gracefully handle the case that the CAS does not contain any XML structure at all
                 // and show only the document text in this case.
+                var atts = new AttributesImpl();
+                atts.addAttribute("", "", "class", "CDATA", "i7n-plain-text-document");
+                rawHandler.startElement(null, null, BODY, atts);
                 renderTextContent(cas, finalHandler);
+                rawHandler.endElement(null, null, BODY);
             }
             else {
+                rawHandler.startElement(null, null, BODY, null);
+
                 var formatPolicy = formatRegistry.getFormatPolicy(doc);
                 var defaultNamespace = formatPolicy.flatMap(policy -> policy.getDefaultNamespace());
 
                 if (defaultNamespace.isPresent()) {
-                    finalHandler.startPrefixMapping(XMLConstants.DEFAULT_NS_PREFIX,
-                            defaultNamespace.get());
+                    finalHandler.startPrefixMapping(DEFAULT_NS_PREFIX, defaultNamespace.get());
                 }
 
-                renderXmlContent(doc, finalHandler, aEditor, maybeXmlDocument.get());
+                renderXmlContent(finalHandler, maybeXmlDocument.get());
 
                 if (defaultNamespace.isPresent()) {
-                    finalHandler.endPrefixMapping(XMLConstants.DEFAULT_NS_PREFIX);
+                    finalHandler.endPrefixMapping(DEFAULT_NS_PREFIX);
                 }
+
+                rawHandler.endElement(null, null, BODY);
             }
-            rawHandler.endElement(null, null, BODY);
 
             rawHandler.endElement(null, null, HTML);
 
@@ -229,27 +227,34 @@ public class XHtmlXmlDocumentViewControllerImpl
         ch.endElement(null, null, HEAD);
     }
 
-    private void renderXmlContent(SourceDocument doc, ContentHandler ch, Optional<String> aEditor,
-            XmlDocument aXmlDocument)
-        throws IOException, SAXException
+    private void renderXmlContent(ContentHandler ch, XmlDocument aXmlDocument) throws SAXException
     {
-        Cas2SaxEvents serializer = new XmlCas2SaxEvents(aXmlDocument, ch);
+        var serializer = new XmlCas2SaxEvents(aXmlDocument, ch);
         serializer.process(aXmlDocument.getRoot());
     }
 
     private void renderTextContent(CAS cas, ContentHandler ch) throws SAXException
     {
+        var lineAttribs = new AttributesImpl();
+        lineAttribs.addAttribute("", "", "class", "CDATA", "data-i7n-tracking");
+
         var text = cas.getDocumentText().toCharArray();
         ch.startElement(null, null, P, null);
+        ch.startElement(null, null, SPAN, lineAttribs);
+
         var lineBreakSequenceLength = 0;
         for (int i = 0; i < text.length; i++) {
             if (text[i] == '\n') {
                 lineBreakSequenceLength++;
+                ch.endElement(null, null, SPAN);
+                ch.startElement(null, null, SPAN, lineAttribs);
             }
             else if (text[i] != '\r') {
                 if (lineBreakSequenceLength > 1) {
+                    ch.endElement(null, null, SPAN);
                     ch.endElement(null, null, P);
                     ch.startElement(null, null, P, null);
+                    ch.startElement(null, null, SPAN, lineAttribs);
                 }
 
                 lineBreakSequenceLength = 0;
@@ -257,6 +262,8 @@ public class XHtmlXmlDocumentViewControllerImpl
 
             ch.characters(text, i, 1);
         }
+
+        ch.endElement(null, null, SPAN);
         ch.endElement(null, null, P);
     }
 

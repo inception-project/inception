@@ -31,7 +31,7 @@ In this mode, the workload management page allows you to monitor the progress of
 == Annotation state management
 
 .Annotation states
-image::monitoring-annotation-states.png[role=right]
+image::images/monitoring-annotation-states.png[role=right]
 
 To change the annotation state of a document, click on the table cell in the row for the respective document and in the column for the respective user.
 
@@ -60,7 +60,7 @@ In order to lock a document for a user who has already started annotating, the d
 == Curation state management
 
 .Curation states
-image::monitoring-curation-states.png[role=right]
+image::images/monitoring-curation-states.png[role=right]
 
 To change the curation state of a document, click on the table cell in the row for the respective document and in the column *Curation*.
 
@@ -83,7 +83,7 @@ It is possible to discard all the curation for particular document by right-clic
 == Bulk changes
 
 .Bulk actions
-image::monitoring-bulk-actions.png[role=right]
+image::images/monitoring-bulk-actions.png[role=right]
 
 To facilitate management in projects with many users and documents, it is possible to enable the *Bulk change* mode by clicking the respective button in the table title.
 

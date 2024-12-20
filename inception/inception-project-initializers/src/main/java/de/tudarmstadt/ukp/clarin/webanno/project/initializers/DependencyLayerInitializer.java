@@ -19,15 +19,14 @@ package de.tudarmstadt.ukp.clarin.webanno.project.initializers;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SINGLE_TOKEN;
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.OVERLAP_ONLY;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.RELATION_TYPE;
 import static java.util.Arrays.asList;
+import static org.apache.uima.cas.CAS.TYPE_NAME_STRING;
 
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.util.List;
 import java.util.Optional;
 
-import org.apache.uima.cas.CAS;
 import org.apache.wicket.request.resource.PackageResourceReference;
 import org.apache.wicket.request.resource.ResourceReference;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,6 +37,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.config.ProjectInitializersAutoConfiguration;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport;
+import de.tudarmstadt.ukp.inception.project.api.ProjectInitializationRequest;
 import de.tudarmstadt.ukp.inception.project.api.ProjectInitializer;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.wicket.resource.Strings;
@@ -99,12 +100,13 @@ public class DependencyLayerInitializer
     }
 
     @Override
-    public void configure(Project aProject) throws IOException
+    public void configure(ProjectInitializationRequest aRequest) throws IOException
     {
+        var project = aRequest.getProject();
         // Dependency Layer
-        var depLayer = new AnnotationLayer(Dependency.class.getName(), "Dependency", RELATION_TYPE,
-                aProject, true, SINGLE_TOKEN, OVERLAP_ONLY);
-        var tokenLayer = annotationSchemaService.findLayer(aProject, Token.class.getName());
+        var depLayer = new AnnotationLayer(Dependency.class.getName(), "Dependency",
+                RelationLayerSupport.TYPE, project, true, SINGLE_TOKEN, OVERLAP_ONLY);
+        var tokenLayer = annotationSchemaService.findLayer(project, Token.class.getName());
         var tokenFeatures = annotationSchemaService.listAnnotationFeature(tokenLayer);
         AnnotationFeature tokenPosFeature = null;
         for (var feature : tokenFeatures) {
@@ -121,16 +123,15 @@ public class DependencyLayerInitializer
                 .initializeLayerConfiguration(annotationSchemaService);
 
         var depTagSet = annotationSchemaService
-                .getTagSet(DependencyTypeTagSetInitializer.TAG_SET_NAME, aProject);
+                .getTagSet(DependencyTypeTagSetInitializer.TAG_SET_NAME, project);
 
-        annotationSchemaService
-                .createFeature(new AnnotationFeature(aProject, depLayer, "DependencyType",
-                        "Relation", CAS.TYPE_NAME_STRING, "Dependency relation", depTagSet));
+        annotationSchemaService.createFeature(new AnnotationFeature(project, depLayer,
+                "DependencyType", "Relation", TYPE_NAME_STRING, "Dependency relation", depTagSet));
 
         var flavorsTagset = annotationSchemaService
-                .getTagSet(DependencyFlavorTagSetInitializer.TAG_SET_NAME, aProject);
+                .getTagSet(DependencyFlavorTagSetInitializer.TAG_SET_NAME, project);
 
-        annotationSchemaService.createFeature(new AnnotationFeature(aProject, depLayer, "flavor",
-                "Flavor", CAS.TYPE_NAME_STRING, "Dependency relation", flavorsTagset));
+        annotationSchemaService.createFeature(new AnnotationFeature(project, depLayer, "flavor",
+                "Flavor", TYPE_NAME_STRING, "Dependency relation", flavorsTagset));
     }
 }

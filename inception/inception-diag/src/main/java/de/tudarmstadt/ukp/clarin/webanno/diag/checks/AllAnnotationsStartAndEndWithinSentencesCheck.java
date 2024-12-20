@@ -26,11 +26,9 @@ import java.util.List;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Type;
-import org.apache.uima.cas.text.AnnotationFS;
 import org.springframework.util.CollectionUtils;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
@@ -46,20 +44,21 @@ public class AllAnnotationsStartAndEndWithinSentencesCheck
     }
 
     @Override
-    public boolean check(Project aProject, CAS aCas, List<LogMessage> aMessages)
+    public boolean check(SourceDocument aDocument, String aDataOwner, CAS aCas,
+            List<LogMessage> aMessages)
     {
         if (annotationService == null) {
             return true;
         }
 
-        List<AnnotationLayer> allAnnoLayers = annotationService.listAnnotationLayer(aProject);
+        var allAnnoLayers = annotationService.listAnnotationLayer(aDocument.getProject());
         allAnnoLayers.removeIf(layer -> Sentence._TypeName.equals(layer.getName()));
         if (CollectionUtils.isEmpty(allAnnoLayers)) {
             return true;
         }
 
         boolean ok = true;
-        for (AnnotationLayer layer : allAnnoLayers) {
+        for (var layer : allAnnoLayers) {
             Type type;
             try {
                 type = getType(aCas, layer.getName());
@@ -75,7 +74,7 @@ public class AllAnnotationsStartAndEndWithinSentencesCheck
                 continue;
             }
 
-            for (AnnotationFS ann : select(aCas, type)) {
+            for (var ann : select(aCas, type)) {
                 var startsOutside = aCas.select(Sentence._TypeName)
                         .covering(ann.getBegin(), ann.getBegin()).isEmpty();
                 var endsOutside = aCas.select(Sentence._TypeName)

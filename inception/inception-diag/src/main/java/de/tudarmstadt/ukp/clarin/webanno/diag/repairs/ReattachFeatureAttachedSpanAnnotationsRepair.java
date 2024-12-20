@@ -26,12 +26,10 @@ import static org.apache.uima.fit.util.FSUtil.setFeature;
 import java.util.List;
 
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.Repair.Safe;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
@@ -48,30 +46,31 @@ public class ReattachFeatureAttachedSpanAnnotationsRepair
     }
 
     @Override
-    public void repair(Project aProject, CAS aCas, List<LogMessage> aMessages)
+    public void repair(SourceDocument aDocument, String aDataOwner, CAS aCas,
+            List<LogMessage> aMessages)
     {
-        for (AnnotationLayer layer : annotationService.listAnnotationLayer(aProject)) {
+        for (var layer : annotationService.listAnnotationLayer(aDocument.getProject())) {
             if (!(SpanLayerSupport.TYPE.equals(layer.getType())
                     && layer.getAttachFeature() != null)) {
                 continue;
             }
 
-            Type attachType = getType(aCas, layer.getAttachType().getName());
-            String attachFeature = layer.getAttachFeature().getName();
+            var attachType = getType(aCas, layer.getAttachType().getName());
+            var attachFeature = layer.getAttachFeature().getName();
 
-            int count = 0;
-            int nonNullCount = 0;
+            var count = 0;
+            var nonNullCount = 0;
 
             // Go over the layer that has an attach feature (e.g. Token) and make sure that it is
             // filled
             // anno -> e.g. Lemma
             // attach -> e.g. Token
             // Here we iterate over the attached layer, e.g. Lemma
-            for (AnnotationFS anno : select(aCas, getType(aCas, layer.getName()))) {
+            for (var anno : select(aCas, getType(aCas, layer.getName()))) {
                 // Here we fetch all annotations of the layer we attach to at the relevant position,
                 // e.g. Token
-                for (AnnotationFS attach : selectCovered(attachType, anno)) {
-                    AnnotationFS existing = getFeature(attach, attachFeature, AnnotationFS.class);
+                for (var attach : selectCovered(attachType, anno)) {
+                    var existing = getFeature(attach, attachFeature, AnnotationFS.class);
 
                     if (existing == null) {
                         setFeature(attach, layer.getAttachFeature().getName(), anno);
