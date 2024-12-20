@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [ "main", "release/**" ]
 
+concurrency:
+  group: ${{ github.ref }}
+  cancel-in-progress: true
+  
 jobs:
   build:
     strategy:
@@ -59,7 +63,7 @@ jobs:
         # `MAVEN_USERNAME` and `MAVEN_PASSWORD` are used in `~/.m2/settings.xml` created by `setup-java` action
         MAVEN_USERNAME: ${{ secrets.UKP_MAVEN_USER }}
         MAVEN_PASSWORD: ${{ secrets.UKP_MAVEN_TOKEN }}
-      run: mvn --show-version --batch-mode --errors --no-transfer-progress -DdeployAtEnd=false -DskipTests clean deploy
+      run: mvn --show-version --batch-mode --errors --no-transfer-progress -DdeployAtEnd=true -DskipTests clean deploy
 
     - name: Capture build artifacts
       if: matrix.os == 'ubuntu-latest'
