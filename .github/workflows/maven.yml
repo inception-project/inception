@@ -67,3 +67,5 @@ jobs:
       with:
         name: build-artifacts
         path: inception/inception-app-webapp/target/inception-app-webapp-*-standalone.jar
+
+
