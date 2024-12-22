@@ -23,23 +23,12 @@ import static de.tudarmstadt.ukp.inception.diam.service.DiamWebsocketController.
 import static de.tudarmstadt.ukp.inception.websocket.config.WebsocketConfig.WS_ENDPOINT;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.emptyMap;
-import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.apache.commons.io.IOUtils.toInputStream;
-import static org.apache.tomcat.websocket.Constants.WS_AUTHENTICATION_PASSWORD;
-import static org.apache.tomcat.websocket.Constants.WS_AUTHENTICATION_USER_NAME;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.config.Customizer.withDefaults;
 import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
 
 import java.io.File;
 import java.lang.invoke.MethodHandles;
-import java.time.Duration;
-import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.CountDownLatch;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -60,9 +49,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Primary;
 import org.springframework.core.annotation.Order;
-import org.springframework.messaging.converter.MappingJackson2MessageConverter;
-import org.springframework.messaging.simp.stomp.StompHeaders;
-import org.springframework.messaging.simp.stomp.StompSession;
 import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -70,9 +56,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.UserDetailsManager;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.web.socket.WebSocketHttpHeaders;
-import org.springframework.web.socket.client.standard.StandardWebSocketClient;
-import org.springframework.web.socket.messaging.WebSocketStompClient;
+
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.AnnotationAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRenderer;
@@ -90,7 +75,6 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.text.config.TextFormatsAutoConfiguration;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
 import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageServiceAutoConfiguration;
-import de.tudarmstadt.ukp.inception.diam.messages.MViewportInit;
 import de.tudarmstadt.ukp.inception.diam.messages.MViewportUpdate;
 import de.tudarmstadt.ukp.inception.diam.model.websocket.ViewportDefinition;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
@@ -107,13 +91,11 @@ import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VRange;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VSpan;
 import de.tudarmstadt.ukp.inception.schema.config.AnnotationSchemaServiceAutoConfiguration;
-import de.tudarmstadt.ukp.inception.support.findbugs.SuppressFBWarnings;
 import de.tudarmstadt.ukp.inception.support.logging.Logging;
 import de.tudarmstadt.ukp.inception.support.spring.ApplicationContextProvider;
+import de.tudarmstadt.ukp.inception.support.test.websocket.WebSocketStompTestClient;
 import de.tudarmstadt.ukp.inception.websocket.config.WebsocketAutoConfiguration;
 import de.tudarmstadt.ukp.inception.websocket.config.WebsocketSecurityConfig;
-import de.tudarmstadt.ukp.inception.websocket.config.stomp.LambdaStompFrameHandler;
-import de.tudarmstadt.ukp.inception.websocket.config.stomp.LoggingStompSessionHandlerAdapter;
 import jakarta.persistence.EntityManager;
 
 @SpringBootTest( //
@@ -153,10 +135,8 @@ public class DiamWebsocketController_ViewportRoutingTest
     private static final String USER = "user";
     private static final String PASS = "pass";
 
-    private WebSocketStompClient stompClient;
     private @LocalServerPort int port;
     private String websocketUrl;
-    private WebSocketHttpHeaders headers;
 
     private @Autowired DiamWebsocketController sut;
 
@@ -177,18 +157,6 @@ public class DiamWebsocketController_ViewportRoutingTest
     public void setup() throws Exception
     {
         websocketUrl = "ws://localhost:" + port + WS_ENDPOINT;
-
-        var wsClient = new StandardWebSocketClient();
-        wsClient.setUserProperties(Map.of( //
-                WS_AUTHENTICATION_USER_NAME, USER, //
-                WS_AUTHENTICATION_PASSWORD, PASS));
-
-        headers = new WebSocketHttpHeaders();
-        headers.add("Authorization",
-                "Basic " + Base64.getEncoder().encodeToString((USER + ":" + PASS).getBytes()));
-
-        stompClient = new WebSocketStompClient(wsClient);
-        stompClient.setMessageConverter(new MappingJackson2MessageConverter());
 
         setupOnce();
     }
@@ -230,99 +198,35 @@ public class DiamWebsocketController_ViewportRoutingTest
     }
 
     @WithMockUser(username = "user", roles = { "USER" })
-    @SuppressFBWarnings("RV_RETURN_VALUE_IGNORED")
     @Test
     public void thatViewportBasedMessageRoutingWorks() throws Exception
     {
-        var subscriptionDone = new CountDownLatch(2);
-        var initDone = new CountDownLatch(2);
+        var emptyListNode = JsonNodeFactory.instance.arrayNode();
 
         var vpd1 = new ViewportDefinition(testAnnotationDocument, 10, 20, FORMAT_LEGACY);
         var vpd2 = new ViewportDefinition(testAnnotationDocument, 30, 40, FORMAT_LEGACY);
 
-        var sessionHandler1 = new SessionHandler(subscriptionDone, initDone, vpd1);
-        var sessionHandler2 = new SessionHandler(subscriptionDone, initDone, vpd2);
+        try (var client1 = new WebSocketStompTestClient(USER, PASS);
+                var client2 = new WebSocketStompTestClient(USER, PASS)) {
+            client1.expectSuccessfulConnection().connect(websocketUrl);
+            client1.subscribe("/topic" + vpd1.getTopic());
+            client1.expect(new MViewportUpdate(0, 0, null)).subscribe("/app" + vpd1.getTopic());
 
-        var session1 = stompClient //
-                .connectAsync(websocketUrl, headers, sessionHandler1) //
-                .get(1000, SECONDS);
-        var session2 = stompClient //
-                .connectAsync(websocketUrl, headers, sessionHandler2) //
-                .get(1000, SECONDS);
+            client2.expectSuccessfulConnection().connect(websocketUrl);
+            client2.subscribe("/topic" + vpd2.getTopic());
+            client2.expect(new MViewportUpdate(0, 0, null)).subscribe("/app" + vpd2.getTopic());
 
-        try {
-            subscriptionDone.await(5, SECONDS);
-            assertThat(subscriptionDone.getCount()).isEqualTo(0);
-
-            initDone.await(5, SECONDS);
-            assertThat(initDone.getCount()).isEqualTo(0);
+            client1.expect(new MViewportUpdate(12, 15, emptyListNode))
+                    .expect(new MViewportUpdate(15, 35, emptyListNode));
+            client2.expect(new MViewportUpdate(31, 33, emptyListNode))
+                    .expect(new MViewportUpdate(15, 35, emptyListNode));
 
             sut.sendUpdate(testAnnotationDocument, 12, 15);
             sut.sendUpdate(testAnnotationDocument, 31, 33);
             sut.sendUpdate(testAnnotationDocument, 15, 35);
 
-            Thread.sleep(Duration.of(3, ChronoUnit.SECONDS).toMillis());
-
-            assertThat(sessionHandler1.getRecieved()).containsExactly("12-15", "15-35");
-            assertThat(sessionHandler2.getRecieved()).containsExactly("31-33", "15-35");
-        }
-        finally {
-            try {
-                session1.disconnect();
-            }
-            catch (Exception e) {
-                // Ignore exceptions during disconnect
-            }
-            try {
-                session2.disconnect();
-            }
-            catch (Exception e) {
-                // Ignore exceptions during disconnect
-            }
-        }
-    }
-
-    private class SessionHandler
-        extends LoggingStompSessionHandlerAdapter
-    {
-        private final CountDownLatch subscriptionDoneLatch;
-        private final CountDownLatch initDoneLatch;
-        private final ViewportDefinition vpd;
-
-        private final List<String> received = new ArrayList<>();
-
-        public SessionHandler(CountDownLatch aSubscriptionDoneLatch, CountDownLatch aInitDoneLatch,
-                ViewportDefinition aVpd)
-        {
-            super(LOG);
-            subscriptionDoneLatch = aSubscriptionDoneLatch;
-            initDoneLatch = aInitDoneLatch;
-            vpd = aVpd;
-        }
-
-        @Override
-        public void afterConnected(StompSession aSession, StompHeaders aConnectedHeaders)
-        {
-            aSession.subscribe("/app" + vpd.getTopic(),
-                    LambdaStompFrameHandler.handleFrame(MViewportInit.class, this::onInit));
-            aSession.subscribe("/topic" + vpd.getTopic(),
-                    LambdaStompFrameHandler.handleFrame(MViewportUpdate.class, this::onUpdate));
-            subscriptionDoneLatch.countDown();
-        }
-
-        public void onInit(StompHeaders aHeaders, MViewportInit aPayload)
-        {
-            initDoneLatch.countDown();
-        }
-
-        public void onUpdate(StompHeaders aHeaders, MViewportUpdate aPayload)
-        {
-            received.add(aPayload.getBegin() + "-" + aPayload.getEnd());
-        }
-
-        public List<String> getRecieved()
-        {
-            return received;
+            client1.assertExpectations();
+            client2.assertExpectations();
         }
     }
 

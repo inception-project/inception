@@ -21,43 +21,25 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
 
-public class MViewportUpdate
+public record MViewportUpdate(@JsonProperty("begin") int begin, @JsonProperty("end") int end,
+        @JsonProperty("diff") JsonNode diff)
 {
-    private final int begin;
-    private final int end;
-    private final JsonNode diff;
-
     /**
-     * @param aBegin
+     * @param begin
      *            begin offset of the updates contained in the diff. Like the end offset, this
      *            information is mainly informative and currently used only during testing. It might
      *            also not be accurate.
-     * @param aEnd
+     * @param end
      *            end offset of the updates contained in the diff.
-     * @param aDiff
+     * @param diff
      *            the diff.
      */
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-    public MViewportUpdate(@JsonProperty("begin") int aBegin, @JsonProperty("end") int aEnd,
-            @JsonProperty("diff") JsonNode aDiff)
+    public MViewportUpdate(@JsonProperty("begin") int begin, @JsonProperty("end") int end,
+            @JsonProperty("diff") JsonNode diff)
     {
-        begin = aBegin;
-        end = aEnd;
-        diff = aDiff;
-    }
-
-    public int getBegin()
-    {
-        return begin;
-    }
-
-    public int getEnd()
-    {
-        return end;
-    }
-
-    public JsonNode getDiff()
-    {
-        return diff;
+        this.begin = begin;
+        this.end = end;
+        this.diff = diff;
     }
 }
