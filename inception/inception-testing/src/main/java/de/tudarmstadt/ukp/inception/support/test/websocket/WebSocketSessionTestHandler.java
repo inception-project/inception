@@ -18,13 +18,13 @@
 package de.tudarmstadt.ukp.inception.support.test.websocket;
 
 import static java.lang.invoke.MethodHandles.lookup;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.lang.reflect.Type;
 import java.util.LinkedList;
 import java.util.Queue;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -62,39 +62,21 @@ public class WebSocketSessionTestHandler
     @Override
     public void afterConnected(StompSession aSession, StompHeaders aConnectedHeaders)
     {
-        aSession.subscribe(destination, new StompFrameHandler()
-        {
-            @Override
-            public Type getPayloadType(StompHeaders aHeaders)
-            {
-                if (expectedMessages.isEmpty()) {
-                    return String.class;
-                }
-
-                return expectedMessages.peek().type;
-            }
-
-            @Override
-            public void handleFrame(StompHeaders aHeaders, Object aPayload)
-            {
-                if (expectedMessages.isEmpty()) {
-                    Assertions.fail("Recieved unexpected message: {}", aPayload);
-                }
-
-                expectedMessages.peek().handler.accept(aHeaders, aPayload);
-                expectedMessages.poll();
-            }
-        });
+        if (destination != null) {
+            aSession.subscribe(destination, new StompFrameHandlerImplementation());
+        }
 
         // For some reason we have to wait a moment, otherwise the published event does not
         // go through
-        Awaitility.with().pollDelay(100, TimeUnit.MILLISECONDS).await().until(() -> true);
+        Awaitility.with().pollDelay(100, MILLISECONDS).await().until(() -> true);
 
-        try {
-            afterConnectedAction.run();
-        }
-        catch (Throwable e) {
-            throw new IllegalStateException(e);
+        if (afterConnectedAction != null) {
+            try {
+                afterConnectedAction.run();
+            }
+            catch (Throwable e) {
+                throw new IllegalStateException(e);
+            }
         }
     }
 
@@ -140,6 +122,37 @@ public class WebSocketSessionTestHandler
         return new Builder();
     }
 
+    public void assertError(Consumer<String> aErrorConsumer)
+    {
+        assertThat(errorRecieved).as("error was detected").isTrue();
+        aErrorConsumer.accept(errorMsg);
+    }
+
+    private final class StompFrameHandlerImplementation
+        implements StompFrameHandler
+    {
+        @Override
+        public Type getPayloadType(StompHeaders aHeaders)
+        {
+            if (expectedMessages.isEmpty()) {
+                return String.class;
+            }
+
+            return expectedMessages.peek().type;
+        }
+
+        @Override
+        public void handleFrame(StompHeaders aHeaders, Object aPayload)
+        {
+            if (expectedMessages.isEmpty()) {
+                Assertions.fail("Recieved unexpected message: {}", aPayload);
+            }
+
+            expectedMessages.peek().handler.accept(aHeaders, aPayload);
+            expectedMessages.poll();
+        }
+    }
+
     private static final class ExpectedMessage
     {
         private final Type type;
@@ -163,12 +176,22 @@ public class WebSocketSessionTestHandler
             // Construct only via factory method
         }
 
+        /**
+         * @deprecated Use {@link WebSocketStompTestClient#subscribe(String)}
+         */
+        @Deprecated
         public Builder subscribe(String aDestination)
         {
             destination = aDestination;
             return this;
         }
 
+        /**
+         * @deprecated Use
+         *             {@link WebSocketStompTestClient#connect(String, StompSessionHandlerAdapter)}
+         *             and then perform your callback code
+         */
+        @Deprecated
         public Builder afterConnected(FailableRunnable<Throwable> aCallback)
         {
             afterConnectedAction = aCallback;
@@ -187,11 +210,5 @@ public class WebSocketSessionTestHandler
         {
             return new WebSocketSessionTestHandler(this);
         }
-    }
-
-    public void assertError(Consumer<String> aErrorConsumer)
-    {
-        assertThat(errorRecieved).isTrue();
-        aErrorConsumer.accept(errorMsg);
     }
 }
