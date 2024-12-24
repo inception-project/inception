@@ -25,6 +25,7 @@ import static de.tudarmstadt.ukp.inception.support.test.http.HttpTestUtils.assum
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 import java.lang.invoke.MethodHandles;
@@ -47,7 +48,6 @@ import org.springframework.boot.autoconfigure.web.servlet.DispatcherServletAutoC
 import org.springframework.boot.autoconfigure.web.servlet.ServletWebServerFactoryAutoConfiguration;
 import org.springframework.boot.autoconfigure.web.servlet.WebMvcAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
@@ -80,8 +80,9 @@ import de.tudarmstadt.ukp.inception.project.api.event.ProjectStateChangedEvent;
 import de.tudarmstadt.ukp.inception.support.spring.ApplicationContextProvider;
 
 @SpringBootTest( //
-        webEnvironment = WebEnvironment.RANDOM_PORT, //
+        webEnvironment = RANDOM_PORT, //
         properties = { //
+                "server.address=127.0.0.1", //
                 "spring.main.banner-mode=off",
                 "repository.path=" + WebhookServiceTest.TEST_OUTPUT_FOLDER })
 @ImportAutoConfiguration( //

@@ -26,6 +26,7 @@ import static org.apache.tomcat.websocket.Constants.WS_AUTHENTICATION_PASSWORD;
 import static org.apache.tomcat.websocket.Constants.WS_AUTHENTICATION_USER_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.slf4j.LoggerFactory.getLogger;
+import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 import static org.springframework.security.config.Customizer.withDefaults;
 import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
 
@@ -103,8 +104,9 @@ import de.tudarmstadt.ukp.inception.websocket.model.LoggedEventMessage;
 import jakarta.persistence.EntityManager;
 
 @SpringBootTest( //
-        webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, //
+        webEnvironment = RANDOM_PORT, //
         properties = { //
+                "server.address=127.0.0.1", //
                 "spring.main.banner-mode=off", //
                 "websocket.enabled=true", //
                 "websocket.logged-events.enabled=true", //
