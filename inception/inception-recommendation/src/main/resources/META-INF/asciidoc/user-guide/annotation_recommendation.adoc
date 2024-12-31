@@ -16,11 +16,10 @@
 
 [[sect_annotation_recommendation]]
 = Recommenders
-After configuring one or more recommender in the <<sect_projects_recommendation, Project Settings>>,
-they can be used during annotation to generate predictions. In the annotation view, predictions are
-shown as grey bubbles. Predictions can be accepted by clicking once on them. In order to reject,
-use a double-click. For an example how recommendations look in action, please see the screenshot
-below.
+After configuring one or more recommender in the <<sect_projects_recommendation, Project Settings>>, they can be used during annotation to generate predictions.
+In the annotation view, predictions are shown as grey bubbles.
+Predictions can be accepted by clicking once on them. In order to reject, use a double-click.
+For an example how recommendations look in action, please see the screenshot below.
 
 image::images/annotation_editor_with_suggestions.png[align="center"]
 
@@ -33,8 +32,8 @@ Clicking *Reset* in the _Workflow_ area will remove all predictions, however it 
 CAUTION: Experimental feature. To use this functionality, you need to enable it first by adding `recommender.action-buttons-enabled=true` to the `settings.properties` file (see the <<admin-guide.adoc#sect_settings, Admin Guide>>).
 ====
 
-It is possible to enable explicit *Accept* and *Reject* buttons in the annotation interface. These
-appear left and right of the suggestion marker as the mouse hovers over the marker.
+It is possible to enable explicit *Accept* and *Reject* buttons in the annotation interface.
+These appear left and right of the suggestion marker as the mouse hovers over the marker.
 
 == Recommender Sidebar
 
@@ -59,7 +58,11 @@ Export the model of the recommender ::
   from this recommender can be uploaded a gazetteer to a String Matching Span Recommender in the project settings. 
 
 === Evaluation scores and recommender activation
-The circles at the top of the sidebar indicate the progress towards the next recommender evaluation. Every change to the annotations triggers a new training and prediction run. If a run is already in progress, at most one additional run is queued. When a run starts, it always use the latest annotation data available at the time. Every 5th run, an additional evaluation step is triggered. This updates the recall, precision, accuracy and F1 scores in the sidebar. Also, if a recommender has been configured to activate only at a particular score threshold, then the recommender may get activated or deactivated depending on the evaluation results.
+The circles at the top of the sidebar indicate the progress towards the next recommender evaluation.
+Every change to the annotations triggers a new training and prediction run.
+If a run is already in progress, at most one additional run is queued. When a run starts, it always use the latest annotation data available at the time.
+Every 5th run, an additional evaluation step is triggered. This updates the recall, precision, accuracy and F1 scores in the sidebar.
+Also, if a recommender has been configured to activate only at a particular score threshold, then the recommender may get activated or deactivated depending on the evaluation results.
 
 === Additional settings
 Additionally, there are several configuration options available from the settings dropdown accessible via the cogwheel icon:

@@ -82,6 +82,9 @@ import de.tudarmstadt.ukp.inception.support.spring.ApplicationContextProvider;
 @SpringBootTest( //
         webEnvironment = RANDOM_PORT, //
         properties = { //
+                // Not really used atm but if manage to set up a testing badssl via testcontainers,
+                // it might come in useful.
+                // "jdk.net.hosts.file=src/test/resources/hosts", //
                 "server.address=127.0.0.1", //
                 "spring.main.banner-mode=off",
                 "repository.path=" + WebhookServiceTest.TEST_OUTPUT_FOLDER })

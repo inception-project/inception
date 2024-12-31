@@ -86,7 +86,7 @@ public class WebsocketSecurityConfig
             .simpSubscribeDestMatchers(recommenterEventsTopic)
                 .access(expression(mah, "@projectAccess.canAccessProject(#" + PARAM_PROJECT + ") and "
                         + "@userAccess.isUser(#" + PARAM_USER + ")"))
-            .simpSubscribeDestMatchers("/*/assistant" + TOPIC_ELEMENT_PROJECT + "{" + PARAM_PROJECT + "}")
+            .simpDestMatchers("/*/assistant" + TOPIC_ELEMENT_PROJECT + "{" + PARAM_PROJECT + "}")
                 .access(expression(mah, "@projectAccess.canAccessProject(#" + PARAM_PROJECT + ")"))
             // authenticated users can subscribe
             .simpTypeMatchers(SUBSCRIBE).authenticated()

@@ -1,14 +1,52 @@
+// Licensed to the Technische Universität Darmstadt under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The Technische Universität Darmstadt 
+// licenses this file to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.
+//  
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 [[sect_projects_layers]]
 = Layers 
 
-All annotations belong to an annotation *layer*. 
-Each layer has a structural *type* that defines if it is a *span*, a *relation*, or a *chain*. 
-It also defines how the annotations behave and what kind of features it carries.
+[.i7n-assistant]
+--
+**Annotation layers** define the structure of the annotations in a project.
+Each layer belongs to structural **type** that defines whether it is a span, a relation, a chain, or a document metadata layer.
+**Span layers** are used to annotate continuous segments of text.
+**Relation layers** are used to annotate relations between spans.
+**Chain layers** are used to annotate directed sequences of connected spans.
+**Document metadata layers** are used to annotate document-level information.
+Each layer can have **features** that carry additional information about the annotations.
+Typically, a layer will have at least one feature that carries the annotation label.
+--
+
+== Adding a pre-defined layer
+
+[.i7n-assistant]
+--
+{product-name} comes with a set of pre-defined layers that allow you to start annotating immediately.
+To add a pre-defined layer to your project, use the **Add** button at the top of the **Layers** tab in your project settings.
+Once a layer has been added, you can configure its features and behaviors.
+--
 
 == Creating a custom layer
 
-This section provides a short walk-through on the creation of a custom layer.
-The following sections act as reference documentation providing additional details on each step.
+[.i7n-assistant]
+--
+To create a cuastom layer, use the **Create** button at the top of the **Layers** tab in your project settings.
+Set at least a **name** and a **type** for the layer in order to save and thereby create the layer.
+Once a layer has been created, you can configure its features and behaviors.
+--
+
 In the following example, we will create a custom layer called *Sentiment* with a feature called *Polarity* that can be *negative*, *neutral*, or *positive*.
 
 . Create the layer _Sentiment_
@@ -16,28 +54,31 @@ In the following example, we will create a custom layer called *Sentiment* with 
   * Enter the name of the layer in *Layer name*: _Sentiment_
   * Choose the *type* of the layer: _Span_
   * Enable *Allow multiple tokens* because we want to mark sentiments on spans longer than a single token.
-  * Press the *Save layer* button
+  * Click the *Save layer* button
 . Create the feature _Polarity_
-  * Press the *New feature* button
+  * Click the *New feature* button
   * Choose the *type* of the feature: _Primitive: String_
   * Enter the *name* of the feature: _Polarity_
-  * Press *Save feature*
+  * Click *Save feature*
 . Create the tagset _Polarity values_
   * Go to the *Tagsets* tab and press *Create tagset*
   * Enter the *name* of the tagset: _Polarity values_
-  * Press *Save tagset*
-  * Press *Create tag*, enter the *name* of the tag: _negative_, press *Save tag*
-  * Repeat for _neutra_ and _positive_
+  * Click *Save tagset*
+  * Click *Create tag*, enter the *name* of the tag: _negative_, press *Save tag*
+  * Repeat for _neutral_ and _positive_
 . Assign the tagset _Polarity values_ to the feature _Polarity_
   * Back in the *Layers* tab, select the layer: _Sentiment_ and select the feature: _Polarity_
   * Set the *tagset* to _Polarity values_
-  * Press *Save feature*
+  * Click *Save feature*
 
 Now you have created your first custom layer.
 
 == Built-in layers
 
-{product-name} comes with a set of built-in layers that allow you to start annotating immediately. Also, many import/export formats only work with these layers as their semantics are known. For this reason, the ability to customize the behaviors of built-in layers is limited and it is not possible to extend them with custom features.
+{product-name} comes with a set of built-in layers that allow you to start annotating immediately. Also, many import/export formats only work with these layers as their semantics are known.
+For this reason, the ability to customize the behaviors of built-in layers is limited and it is not possible to extend them with custom features.
+
+NOTE: The built-in layers are a subset of the pre-defined layers.
 
 .Built-in layers
 [cols="1,2,2v", options="header"]
@@ -94,22 +135,24 @@ The coloring of the layers signal the following:
 | disabled annotation layer
 |===
 
-To create a custom layer, select *Create Layer* in the *Layers* frame. Then, the following frame will be displayed. 
+To create a custom layer, select *Create Layer* in the *Layers* frame.
+Then, the following frame will be displayed. 
 
 .Exporting layers
 At times, it is useful to export the configuration of a layer or of all layers, e.g. to copy them
-to another project. There are two options:
+to another project.
+There are two options:
 
-* **JSON (selected layer)**: exports the currently selected layer as JSON. If the layer depends on
-  other layers, these are included as well in the JSON export.
+* **JSON (selected layer)**: exports the currently selected layer as JSON.
+  If the layer depends on other layers, these are included as well in the JSON export.
 * **UIMA (all layers)**: exports a UIMA type system description containing all layers of the project.
   This includes built-in types (i.e. DKPro Core types) and it may include additional types required
-  to allow loading the type system description file again. However, this type system description
-  is usually not sufficient to interpret XMI files produced by {product-name}. Be sure to load XMI
-  files together with the type system description file which was included in the XMI export.
+  to allow loading the type system description file again.
+  However, this type system description is usually not sufficient to interpret XMI files produced by {product-name}.
+  Be sure to load XMI files together with the type system description file which was included in the XMI export.
   
-Both types of files can be imported back into {product-name}. Note that any built-in types that
-have have been included in the files are ignored on import.
+Both types of files can be imported back into {product-name}.
+Note that any built-in types that have have been included in the files are ignored on import.
 
 [[sect_projects_layers_properties]]
 == Properties 
@@ -134,10 +177,13 @@ This information will be shown in a tooltip when the mouse hovers over the layer
 Layers can currently not be deleted, but they can be disabled.
 |====
 
-NOTE: When a layer is first created, only ASCII characters are allowed for the layer name because the internal UIMA type name is derived from the initial layer name. After the layer has been created, the name can be changed arbitrarily. The internal UIMA type name will not be updated. The internal UIMA name is
-e.g. used when exporting data or in constraint rules.
+NOTE: When a layer is first created, only ASCII characters are allowed for the layer name because the internal UIMA type name is derived from the initial layer name.
+After the layer has been created, the name can be changed arbitrarily.
+The internal UIMA type name will not be updated.
+The internal UIMA name is e.g. used when exporting data or in constraint rules.
 
-The layer type defines the structure of the layer. Three different types are supported: spans, relations, and chains.
+The layer type defines the structure of the layer.
+Three different types are supported: spans, relations, and chains.
 
 .Layer types
 [cols="1,2,3", options="header"]
@@ -147,16 +193,22 @@ The layer type defines the structure of the layer. Three different types are sup
 | Example
 
 | Span
-| Continuous segment of text delimited by a start and end character offset. The example shows two spans.
+| Continuous segment of text delimited by a start and end character offset.
+The example shows two spans.
 | image:images/project_layer_type_span.png[]
 
 | Relation
-| Binary relation between two spans visualized as an arc between spans. The example shows a relation between two spans. For relation annotations the type of the spans which are to be connected can be chosen in the field *Attach to layer*. Here, only non-default layers are displayed. To create a relation, first the span annotation needs to be created.
+| Binary relation between two spans visualized as an arc between spans.
+The example shows a relation between two spans.
+For relation annotations the type of the spans which are to be connected can be chosen in the field *Attach to layer*.
+Here, only non-default layers are displayed.
+To create a relation, first the span annotation needs to be created.
 
 | image:images/project_layer_type_relation.png[]
 
 | Chain
-| Directed sequence of connected spans in which each span connects to the following one. The example shows a single chain consisting of three connected spans.
+| Directed sequence of connected spans in which each span connects to the following one.
+The example shows a single chain consisting of three connected spans.
 | image:images/project_layer_type_chain.png[]
 |====
 
@@ -221,28 +273,25 @@ image::images/layer_behaviours.png[align="center"]
 
 === Key bindings
 
-Some types of features support key bindings. This means, you can assigning a combination of keys to a
-particular feature value. Pressing these keys on the annotation page while a annotation is selected
-will set the feature to the assigned value. E.g. you could assign the key combo `CTRL P` to the 
-value `PER` for the `value` feature on the *Named Entity* layer. So when you create a *Named Entity*
-annotation and then press the `CTRL P`, the value would be set to `PER`.
+Key bindings can be used to quickly set feature values on the currently selected annotation.
+They are supported for certain feature types such as string and concept features.
+E.g. you could assign the shortcut `CTRL P` to the value `PER` for the *value* feature of the *Named Entity* layer.
+So when you create a *Named Entity* annotation and then press the kbd:[CTRL + P], the value would be set to `PER`.
 
-If the focus is on an input field, the key bindings are suppressed. That means, you could even
-assign single key shortcuts like `p` for `PER` while still be able to use `p` when entering text 
-manually into an input field. Normally, the focus would jump directly to the first feature editor
-after selecting an annotation. But this is not the case if any features have key bindings defined,
-because it would render the key bindings useless (i.e. you would have to click outside of the
-feature editor input field so it looses the focus, thus activating the key bindings).
+NOTE: If the input focus is on an input field, the key bindings are suppressed.
+      That means, you could even assign single key shortcuts like kbd:[p] for `PER` while still be able to use kbd:[p] when entering text manually into an input field.
+      Normally, the focus would jump directly to the first feature editor after selecting an annotation. 
+      But this is not the case if any features have key bindings, because it would render the key bindings useless (i.e. you would have to click outside of the feature editor input field so it looses the focus, thus activating the key bindings).
 
 When defining a key binding, you have to enter a key combo consisting of one or more of the 
 following key names:
 
-* Modifier keys: `Ctrl`, `Shift`, `Alt`, `Meta`
-* Letter keys: `a`, `b`, `c`, `d`, `e`, `f`, `g`, `h`, `i`, `j`, `k`, `l`, `m`, `n`, `o`, `p`, `q`, `r`, `s`, `t`, `u`, `v`, `w`, `x`, `y`, `z`
-* Number keys: `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`
-* Function keys: `F1`, `F2`, `F3`, `F4`, `F5`, `F6`, `F7`, `F8`, `F9`, `F10`, `F11`, `F12`
-* Navigation keys: `Home`, `End`, `Page_up`, `Page_down`, `Left`, `Up`, `Right`, `Down`
-* Other keys: `Escape`, `Tab`, `Space`, `Return`, `Enter`, `Backspace`, `Scroll_lock`, `Caps_lock`, `Num_lock`, `Pause`, `Insert`, `Delete`
+* Modifier keys: kbd:[Ctrl], kbd:[Shift], kbd:[Alt], kbd:[Meta]
+* Letter keys: kbd:[a], kbd:[b], kbd:[c], kbd:[d], kbd:[e], kbd:[f], kbd:[g], kbd:[h], kbd:[i], kbd:[j], kbd:[k], kbd:[l], kbd:[m], kbd:[n], kbd:[o], kbd:[p], kbd:[q], kbd:[r], kbd:[s], kbd:[t], kbd:[u], kbd:[v], kbd:[w], kbd:[x], kbd:[y], kbd:[z]
+* Number keys: kbd:[0], kbd:[1], kbd:[2], kbd:[3], kbd:[4], kbd:[5], kbd:[6], kbd:[7], kbd:[8], kbd:[9]
+* Function keys: kbd:[F1], kbd:[F2], kbd:[F3], kbd:[F4], kbd:[F5], kbd:[F6], kbd:[F7], kbd:[F8], kbd:[F9], kbd:[F10], kbd:[F11], kbd:[F12]
+* Navigation keys: kbd:[Home], kbd:[End], kbd:[Page_up], kbd:[Page_down], kbd:[Left], kbd:[Up], kbd:[Right], kbd:[Down]
+* Other keys: kbd:[Escape], kbd:[Tab], kbd:[Space], kbd:[Return], kbd:[Enter], kbd:[Backspace], kbd:[Scroll_lock], kbd:[Caps_lock], kbd:[Num_lock], kbd:[Pause], kbd:[Insert], kbd:[Delete]
 
 Typically you would combine zero or more modifier keys with a *regular* key (letter, number, 
 function key, etc). A combination of multiple number or letter keys does not work.
@@ -252,19 +301,26 @@ Duplicate definitions are only sensible if you can ensure that the features on w
       
 === Coloring rules
 
-Coloring rules can be used to control the coloring of annotations. 
+[.i7n-assistant]
+--
+Coloring rules can be used to control the coloring of annotations.
+The coloring rules are defined at the level of the annotation layer.
+Select an annotation layer from the list of layers in the project settings, then look for the *Coloring rules* section in the layer settings.
+
 A rule consists of two parts:
-1) a regular expression that matches the label of an annotation, 
+1) a regular expression pattern that matches the annotation label,
 2) a hexadecimal color code.
 
-A simple color rule could be use the pattern `PER` and the color code `#0000ff` (blue). 
-This would display all annotations with the label `PER` on the given layer in blue.
+A simple rule could be use the pattern `PER` and the color code `#0000ff` (blue).
+This would display all annotations with the label `PER` belonging to the layer in blue.
 
-In order to assign a specific color to all annotations from the given layer, use the pattern `.*`.
+In order to assign the same color to all annotations belonging to the layer, use the pattern `.*`.
+--
 
 It is also possible to assign a color to multiple label at once by exploiting the fact that the pattern is a regular expression.
 E.g. `PER|OTH` would match annotations with the label `PER` as well as with the label `OTH`.
 Mind not to add extra space such as `PER | OTH` - this would not work!
 
 Be careful when creating coloring rules on layers with multiple features.
-If there are two features with the values `a` and `b`, the label will be `a | b`. In order to match this label in a coloring rule, the pipe symbol (`|`) must be escaped - otherwise it is interpreted as a regular expression `OR` operator: `a \| b`. 
+If there are two features with the values `a` and `b`, the label will be `a | b`.
+In order to match this label in a coloring rule, the pipe symbol (`|`) must be escaped - otherwise it is interpreted as a regular expression `OR` operator: `a \| b`. 

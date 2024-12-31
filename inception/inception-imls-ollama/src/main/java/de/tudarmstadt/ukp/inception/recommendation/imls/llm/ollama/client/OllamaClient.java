@@ -19,10 +19,20 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.function.Consumer;
 
 public interface OllamaClient
 {
     String generate(String aUrl, OllamaGenerateRequest aRequest) throws IOException;
 
+    String generate(String aUrl, OllamaGenerateRequest aRequest,
+            Consumer<OllamaGenerateResponse> aCallback)
+        throws IOException;
+
+    String generate(String aUrl, OllamaChatRequest aRequest, Consumer<OllamaChatResponse> aCallback)
+        throws IOException;
+
     List<OllamaModel> listModels(String aUrl) throws IOException;
+
+    float[][] generateEmbeddings(String aUrl, OllamaEmbedRequest aRequest) throws IOException;
 }

@@ -533,7 +533,7 @@ public class SchedulingServiceImpl
         getEnqueuedTasks().forEach(t -> LOG.debug("Queued      : {}", t));
         getScheduledTasks().forEach(t -> LOG.debug("Scheduled   : {}", t));
         getRunningTasks().forEach(t -> LOG.debug("Running     : {}", t));
-        getTasksPendingAcknowledgment().forEach(t -> LOG.debug("Pending ack : {}", t));
+        getTasksPendingAcknowledgment().forEach(t -> LOG.trace("Pending ack : {}", t));
     }
 
     @Override

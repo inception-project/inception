@@ -223,11 +223,17 @@ public abstract class Task
     @Override
     public String toString()
     {
-        StringBuilder sb = new StringBuilder(getName());
+        var sb = new StringBuilder(getName());
         sb.append('[');
         sb.append("user=").append(sessionOwner != null ? sessionOwner.getUsername() : "<SYSTEM>");
         sb.append(", project=").append(project.getName());
         sb.append(", trigger=\"").append(trigger);
+        if (monitor != null) {
+            sb.append(", ");
+            sb.append(monitor.getProgress());
+            sb.append("/");
+            sb.append(monitor.getMaxProgress());
+        }
         sb.append("\"]");
         return sb.toString();
     }

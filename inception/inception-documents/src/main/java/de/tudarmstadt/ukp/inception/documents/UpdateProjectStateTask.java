@@ -100,7 +100,7 @@ public class UpdateProjectStateTask
     {
         protected Builder()
         {
-            withDebounceMillis(ofSeconds(3));
+            withDebounceDelay(ofSeconds(3));
         }
 
         public UpdateProjectStateTask build()

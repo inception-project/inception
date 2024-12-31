@@ -1,0 +1,30 @@
+// Licensed to the Technische Universität Darmstadt under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The Technische Universität Darmstadt 
+// licenses this file to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.
+//  
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+[[sect_assistant]]
+= 🧪 Assistant
+
+====
+CAUTION: Experimental feature. To use this functionality, you need to enable it first by adding `assistant.enabled=true` to the `settings.properties` file (see the <<admin-guide.adoc#sect_settings_assistant, Admin Guide>>). While this feature introduces a new level of flexibility, it can also interact with existing features in unexpected and untested ways.
+====
+
+The assistant sidebar on the annotation page allows you to integrate an LLM-based AI assistant into {product-name}.
+Currently, the assistant is only accessible on the annotation page, not in other parts of the application.
+The assistant has limited access to the user manual and can provide some guideance on how to use {product.name}.
+It also has access to the documents contained in the project and use this information to provide more context-aware responses.
+
+Currently, the assistant is only able to connect to an Ollama service that does not require authentication.
+The service already needs to be running when you start {product-name} and the models need to be available in the service.

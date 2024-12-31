@@ -176,28 +176,6 @@ public class WebSocketSessionTestHandler
             // Construct only via factory method
         }
 
-        /**
-         * @deprecated Use {@link WebSocketStompTestClient#subscribe(String)}
-         */
-        @Deprecated
-        public Builder subscribe(String aDestination)
-        {
-            destination = aDestination;
-            return this;
-        }
-
-        /**
-         * @deprecated Use
-         *             {@link WebSocketStompTestClient#connect(String, StompSessionHandlerAdapter)}
-         *             and then perform your callback code
-         */
-        @Deprecated
-        public Builder afterConnected(FailableRunnable<Throwable> aCallback)
-        {
-            afterConnectedAction = aCallback;
-            return this;
-        }
-
         @SuppressWarnings("unchecked")
         public <T> Builder expect(Class<T> aType, BiConsumer<StompHeaders, T> aCallback)
         {

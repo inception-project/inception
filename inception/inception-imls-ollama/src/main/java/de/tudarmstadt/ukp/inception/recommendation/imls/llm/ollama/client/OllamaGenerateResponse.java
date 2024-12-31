@@ -24,6 +24,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class OllamaGenerateResponse
+    implements OllamaTokenMetrics
 {
     private @JsonProperty("model") String model;
     private @JsonProperty("created_at") String createdAt;
@@ -87,6 +88,7 @@ public class OllamaGenerateResponse
         context = aContext;
     }
 
+    @Override
     public long getTotalDuration()
     {
         return totalDuration;
@@ -97,6 +99,7 @@ public class OllamaGenerateResponse
         totalDuration = aTotalDuration;
     }
 
+    @Override
     public long getLoadDuration()
     {
         return loadDuration;
@@ -107,6 +110,7 @@ public class OllamaGenerateResponse
         loadDuration = aLoadDuration;
     }
 
+    @Override
     public long getPromptEvalDuration()
     {
         return promptEvalDuration;
@@ -117,6 +121,7 @@ public class OllamaGenerateResponse
         promptEvalDuration = aPromptEvalDuration;
     }
 
+    @Override
     public long getEvalDuration()
     {
         return evalDuration;
@@ -127,6 +132,7 @@ public class OllamaGenerateResponse
         evalDuration = aEvalDuration;
     }
 
+    @Override
     public int getPromptEvalCount()
     {
         return promptEvalCount;
@@ -137,6 +143,7 @@ public class OllamaGenerateResponse
         promptEvalCount = aPromptEvalCount;
     }
 
+    @Override
     public int getEvalCount()
     {
         return evalCount;

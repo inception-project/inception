@@ -96,7 +96,7 @@ public class RecalculateProjectStateTask
     {
         protected Builder()
         {
-            withDebounceMillis(ofSeconds(3));
+            withDebounceDelay(ofSeconds(3));
         }
 
         public RecalculateProjectStateTask build()

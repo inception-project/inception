@@ -40,16 +40,13 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
-import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.function.FailableConsumer;
 import org.apache.commons.lang3.function.FailableRunnable;
 import org.assertj.core.api.Assertions;
 import org.awaitility.Awaitility;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.lang.Nullable;
 import org.springframework.messaging.Message;
-import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.converter.MappingJackson2MessageConverter;
 import org.springframework.messaging.converter.MessageConversionException;
 import org.springframework.messaging.converter.MessageConverter;
@@ -57,6 +54,7 @@ import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompFrameHandler;
 import org.springframework.messaging.simp.stomp.StompHeaders;
 import org.springframework.messaging.simp.stomp.StompSession;
+import org.springframework.messaging.simp.stomp.StompSession.Receiptable;
 import org.springframework.messaging.simp.stomp.StompSession.Subscription;
 import org.springframework.messaging.simp.stomp.StompSessionHandlerAdapter;
 import org.springframework.web.socket.WebSocketHttpHeaders;
@@ -125,29 +123,6 @@ public class WebSocketStompTestClient
         LOG.trace("Session established");
 
         return session;
-    }
-
-    @Deprecated
-    public StompSession connect(String aUrl, StompSessionHandlerAdapter aHandler)
-        throws InterruptedException, ExecutionException, TimeoutException
-    {
-        session = stompClient //
-                .connectAsync(aUrl, getHeaders(), aHandler) //
-                .get(connectTimeout.getSeconds(), SECONDS);
-        return session;
-    }
-
-    @Deprecated
-    public void expectFrame(FailableConsumer<NoPayloadResponse, Exception> aAction)
-    {
-        expectations.add(new Expectation<>(NoPayloadResponse.class, false, frame -> {
-            try {
-                aAction.accept(frame);
-            }
-            catch (Exception e) {
-                fail(e);
-            }
-        }));
     }
 
     public WebSocketStompTestClient expectSuccessfulConnection()
@@ -225,6 +200,11 @@ public class WebSocketStompTestClient
         waitForMessages();
 
         handleExpectations();
+    }
+
+    public Receiptable send(String aTopic, Object aPayload)
+    {
+        return session.send(aTopic, aPayload);
     }
 
     public void assertExpectations()
@@ -306,20 +286,13 @@ public class WebSocketStompTestClient
     }
 
     private final class Message2MessageConverter
-        implements MessageConverter
+        extends MappingJackson2MessageConverter
     {
         @Override
-        @Nullable
-        public Object fromMessage(Message<?> message, Class<?> targetClass)
+        protected Object convertFromInternal(Message<?> aMessage, Class<?> aTargetClass,
+                Object aConversionHint)
         {
-            return message;
-        }
-
-        @Override
-        @Nullable
-        public Message<?> toMessage(Object payload, @Nullable MessageHeaders headers)
-        {
-            throw new NotImplementedException();
+            return aMessage;
         }
     }
 

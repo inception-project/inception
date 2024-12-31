@@ -1,4 +1,3 @@
-////
 // Licensed to the Technische Universität Darmstadt under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -14,7 +13,6 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-////
 
 = Navigation
 
@@ -26,8 +24,7 @@ The arrow buttons *first page*, *next page*, *previous page*, *last page*, and *
 
 The *Prev.* and *Next* buttons in the *Document* frame allow you to go to the previous or next document on your project list. 
 
-When an annotation is selected, there are additional arrow buttons in the right sidebar
-which can be used to navigate between annotations on the selected layer within the current document.
+When an annotation is selected, there are additional arrow buttons in the right sidebar which can be used to navigate between annotations on the selected layer within the current document.
 
 You can also use the following keyboard assignments in order to navigate only using your keyboard.
 
@@ -53,7 +50,7 @@ You can also use the following keyboard assignments in order to navigate only us
 | kbd:[Shift + Page-Up]
 | go to previous document in project, if available
 
-| kbd:[Shuft + Cursor-Left]
+| kbd:[Shift + Cursor-Left]
 | go to previous annotation on the current layer, if available
 
 | kbd:[Shift + Cursor-Right]

@@ -607,7 +607,7 @@ public class SearchServiceImpl
             int aMaxTokenPerDoc, Set<AnnotationFeature> aFeatures)
         throws IOException, ExecutionException
     {
-        try (PooledIndex pooledIndex = acquireIndex(aProject.getId())) {
+        try (var pooledIndex = acquireIndex(aProject.getId())) {
             var index = pooledIndex.get();
             ensureIndexIsCreatedAndValid(aProject, index);
 
@@ -637,9 +637,7 @@ public class SearchServiceImpl
             var statisticsMap = new HashMap<String, LayerStatistics>();
             statisticsMap.put("query." + aQuery, statistics);
 
-            StatisticsResult results = new StatisticsResult(statRequest, statisticsMap, aFeatures);
-
-            return results;
+            return new StatisticsResult(statRequest, statisticsMap, aFeatures);
         }
     }
 
@@ -809,6 +807,9 @@ public class SearchServiceImpl
         }
     }
 
+    /**
+     * @return the aggregate progress of all currently active indexing tasks (if any).
+     */
     @Override
     public Optional<Progress> getIndexProgress(Project aProject)
     {
@@ -992,11 +993,17 @@ public class SearchServiceImpl
             return delegate;
         }
 
+        /**
+         * Borrow the index from the pool.
+         */
         public void borrow()
         {
             refCount.incrementAndGet();
         }
 
+        /**
+         * Return the borrowed index to the pool.
+         */
         @Override
         public void close()
         {
@@ -1004,11 +1011,17 @@ public class SearchServiceImpl
             lastAccess.set(currentTimeMillis());
         }
 
+        /**
+         * Mark the index for forced rebuilding.
+         */
         public void forceRecycle()
         {
             forceRecycle.set(true);
         }
 
+        /**
+         * @return if the index needs to re-built.
+         */
         public boolean isForceRecycle()
         {
             return forceRecycle.get();
@@ -1019,26 +1032,41 @@ public class SearchServiceImpl
             return lastAccess.get();
         }
 
+        /**
+         * @return if the index is currently idle (not being used).
+         */
         public boolean isIdle()
         {
             return refCount.get() == 0;
         }
 
+        /**
+         * Marks index as unloaded/deactivated.
+         */
         public void dead()
         {
             dead.set(true);
         }
 
+        /**
+         * @return whether index is unloaded/deactivated.
+         */
         public boolean isDead()
         {
             return dead.get();
         }
 
+        /**
+         * Marks index as deleted. Deleted indices should not be used anymore or re-created.
+         */
         public void tombstone()
         {
             tombstone.set(true);
         }
 
+        /**
+         * @return if index has been deleted.
+         */
         public boolean isTombstone()
         {
             return tombstone.get();

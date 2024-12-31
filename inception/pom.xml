@@ -313,6 +313,8 @@
     <!-- Versioning -->
     <module>inception-versioning</module>
     <module>inception-websocket</module>
+    <!-- Assistant -->
+    <module>inception-assistant</module>
   </modules>
 
   <build>

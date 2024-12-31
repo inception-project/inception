@@ -35,16 +35,16 @@ In both cases, do not forget to save your changes by pressing the *Save* button.
 . User roles
 |====
 | Role | Description
-| ROLE_USER
+| `ROLE_USER`
 | *User.* Required to log in to the application. Removal of this role from an account will prevent
   login even for users that additionally hold the ROLE_ADMIN!
 
-| ROLE_ADMIN
+| `ROLE_ADMIN`
 | *Administrator.* Can manage users and has access to all other functionalities.
 
-| ROLE_PROJECT_CREATOR
+| `ROLE_PROJECT_CREATOR`
 | *Project creator.* Can create new projects.
 
-| ROLE_REMOTE
+| `ROLE_REMOTE`
 | *Remote API access.* Can access the remote API.
 |====

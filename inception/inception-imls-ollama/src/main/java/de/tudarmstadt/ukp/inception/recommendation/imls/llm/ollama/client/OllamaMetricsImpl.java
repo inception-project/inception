@@ -38,7 +38,7 @@ public class OllamaMetricsImpl
     private int evalCount;
 
     @Override
-    public void handleResponse(OllamaGenerateResponse aResponse)
+    public void handleResponse(OllamaTokenMetrics aResponse)
     {
         responseCount++;
         totalDuration += aResponse.getTotalDuration();

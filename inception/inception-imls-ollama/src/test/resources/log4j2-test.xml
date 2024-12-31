@@ -7,7 +7,7 @@
   </Appenders>
 
   <Loggers>
-<!--     <Logger name="de.tudarmstadt.ukp.inception.recommendation.imls.ollama" level="TRACE"/> -->
+    <Logger name="de.tudarmstadt.ukp.inception.recommendation.imls.ollama" level="TRACE"/>
 
     <Root level="ERROR">
       <AppenderRef ref="ConsoleAppender" />

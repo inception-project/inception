@@ -32,6 +32,7 @@ import java.net.http.HttpRequest.BodyPublishers;
 import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.List;
+import java.util.function.Consumer;
 
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
@@ -94,6 +95,14 @@ public class OllamaClientImpl
     @Override
     public String generate(String aUrl, OllamaGenerateRequest aRequest) throws IOException
     {
+        return generate(aUrl, aRequest, null);
+    }
+
+    @Override
+    public String generate(String aUrl, OllamaGenerateRequest aRequest,
+            Consumer<OllamaGenerateResponse> aCallback)
+        throws IOException
+    {
         var request = HttpRequest.newBuilder() //
                 .uri(URI.create(appendIfMissing(aUrl, "/") + "api/generate")) //
                 .header(CONTENT_TYPE, "application/json")
@@ -110,32 +119,121 @@ public class OllamaClientImpl
             while (iter.hasNext()) {
                 var response = (OllamaGenerateResponse) iter.nextValue();
 
-                if (LOG.isDebugEnabled()) {
-                    var loadDuration = response.getLoadDuration() / 1_000_000_000;
-                    var promptEvalDuration = response.getPromptEvalDuration() / 1_000_000_000d;
-                    var promptEvalTokenPerSecond = response.getPromptEvalCount()
-                            / promptEvalDuration;
-                    var evalDuration = response.getEvalDuration() / 1_000_000_000d;
-                    var evalTokenPerSecond = response.getEvalCount() / evalDuration;
-                    var totalDuration = response.getTotalDuration() / 1_000_000_000;
-                    LOG.debug("Tokens  - prompt: {} ({} per sec) response: {} ({} per sec)", //
-                            response.getPromptEvalCount(), //
-                            promptEvalTokenPerSecond, //
-                            response.getEvalCount(), //
-                            evalTokenPerSecond);
-                    LOG.debug("Timings - load: {}sec  prompt: {}sec  response: {}s  total: {}sec", //
-                            loadDuration, promptEvalDuration, evalDuration, totalDuration);
-                }
-
-                if (metrics != null) {
-                    metrics.handleResponse(response);
+                if (response.isDone()) {
+                    collectMetrics(response);
                 }
 
                 result.append(response.getResponse());
+
+                if (aCallback != null) {
+                    aCallback.accept(response);
+                }
             }
         }
 
         return result.toString().trim();
+    }
+
+    @Override
+    public String generate(String aUrl, OllamaChatRequest aRequest,
+            Consumer<OllamaChatResponse> aCallback)
+        throws IOException
+    {
+        if (LOG.isTraceEnabled()) {
+            LOG.trace("Sending chat request: {}", JSONUtil.toPrettyJsonString(aRequest));
+        }
+
+        var request = HttpRequest.newBuilder() //
+                .uri(URI.create(appendIfMissing(aUrl, "/") + "api/chat")) //
+                .header(CONTENT_TYPE, "application/json")
+                .POST(BodyPublishers.ofString(JSONUtil.toJsonString(aRequest), UTF_8)) //
+                .build();
+
+        var rawResponse = sendRequest(request);
+
+        handleError(rawResponse);
+
+        var result = new StringBuilder();
+        try (var is = rawResponse.body()) {
+            var iter = objectMapper.readerFor(OllamaChatResponse.class).readValues(is);
+            while (iter.hasNext()) {
+                var response = (OllamaChatResponse) iter.nextValue();
+
+                if (response.isDone()) {
+                    collectMetrics(response);
+                }
+
+                result.append(response.getMessage().content());
+
+                if (aCallback != null) {
+                    aCallback.accept(response);
+                }
+            }
+        }
+
+        return result.toString().trim();
+    }
+
+    @Override
+    public float[][] generateEmbeddings(String aUrl, OllamaEmbedRequest aRequest) throws IOException
+    {
+        var request = HttpRequest.newBuilder() //
+                .uri(URI.create(appendIfMissing(aUrl, "/") + "api/embed")) //
+                .header(CONTENT_TYPE, "application/json")
+                .POST(BodyPublishers.ofString(JSONUtil.toJsonString(aRequest), UTF_8)) //
+                .build();
+
+        var rawResponse = sendRequest(request);
+
+        handleError(rawResponse);
+
+        try (var is = rawResponse.body()) {
+            var response = objectMapper.readValue(is, OllamaEmbedResponse.class);
+
+            collectMetrics(response);
+
+            return response.embeddings();
+        }
+    }
+
+    private void collectMetrics(OllamaTokenMetrics response)
+    {
+        if (LOG.isDebugEnabled()) {
+            var loadDuration = response.getLoadDuration() / 1_000_000_000;
+            var promptEvalDuration = response.getPromptEvalDuration() / 1_000_000_000d;
+            var promptEvalTokenPerSecond = response.getPromptEvalCount() / promptEvalDuration;
+            var evalDuration = response.getEvalDuration() / 1_000_000_000d;
+            var evalTokenPerSecond = evalDuration > 0 ? response.getEvalCount() / evalDuration : 0;
+            var totalDuration = response.getTotalDuration() / 1_000_000_000;
+            LOG.debug("Tokens  - prompt: {} ({} per sec) response: {} ({} per sec)", //
+                    response.getPromptEvalCount(), //
+                    promptEvalTokenPerSecond, //
+                    response.getEvalCount(), //
+                    evalTokenPerSecond);
+            LOG.debug("Timings - load: {}sec  prompt: {}sec  response: {}s  total: {}sec", //
+                    loadDuration, promptEvalDuration, evalDuration, totalDuration);
+        }
+
+        if (metrics != null) {
+            metrics.handleResponse(response);
+        }
+    }
+
+    private void collectMetrics(OllamaEmbedResponse response)
+    {
+        if (LOG.isDebugEnabled()) {
+            var loadDuration = response.loadDuration() / 1_000_000_000;
+            var totalDuration = response.totalDuration() / 1_000_000_000;
+            var evalDuration = (response.totalDuration() - response.loadDuration()) / 1_000_000_000;
+            var promptEvalTokenPerSecond = evalDuration > 0
+                    ? response.promptEvalCount() / evalDuration
+                    : 0;
+            LOG.debug("Tokens  - prompt: {} ({} per sec)", //
+                    response.promptEvalCount(), //
+                    promptEvalTokenPerSecond);
+            LOG.debug("Timings - load: {}sec  response: {}s  total: {}sec", //
+                    loadDuration, evalDuration, totalDuration);
+        }
     }
 
     @Override

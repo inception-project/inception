@@ -16,6 +16,7 @@
 
 :include-dir: user-guide/
 :imagesdir: user-guide/
+:doctype: book
 
 = {product-name} User Guide
 The {product-name} Team
@@ -29,19 +30,17 @@ include::{include-dir}getting-started.adoc[leveloffset=+1]
 [[sect_core_funct]]
 = Core functionalities
 
-include::{include-dir}workflow.adoc[leveloffset=+1]
+include::{include-dir}project-lifecycle.adoc[leveloffset=+1]
 
 include::{include-dir}login.adoc[leveloffset=+1]
 
 <<<
 
-include::{include-dir}dashboard.adoc[]
+include::{include-dir}menubar.adoc[leveloffset=+1]
 
-include::{include-dir}dashboard_menubar.adoc[leveloffset=+1]
+include::{include-dir}project-overview.adoc[leveloffset=+1]
 
-include::{include-dir}dashboard_projects-list.adoc[leveloffset=+1]
-
-include::{include-dir}dashboard_project-view.adoc[leveloffset=+1]
+include::{include-dir}project-dashboard.adoc[leveloffset=+1]
 
 <<<
 
@@ -112,9 +111,6 @@ include::{include-dir}workload_dynamic.adoc[leveloffset=+2]
 <<<
 
 include::{include-dir}agreement.adoc[leveloffset=+1]
-
-<<<
-include::{include-dir}evaluation.adoc[leveloffset=+1]
 
 <<<
 
@@ -235,6 +231,10 @@ include::{include-dir}cross-layer-relations.adoc[leveloffset=+1]
 <<<
 
 include::{include-dir}editable-segmentation.adoc[leveloffset=+1]
+
+<<<
+
+include::{include-dir}assistant.adoc[leveloffset=+1]
 
 <<<
 
