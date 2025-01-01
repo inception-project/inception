@@ -21,6 +21,8 @@ import java.io.IOException;
 import java.util.List;
 import java.util.function.Consumer;
 
+import org.apache.commons.lang3.tuple.Pair;
+
 public interface OllamaClient
 {
     String generate(String aUrl, OllamaGenerateRequest aRequest) throws IOException;
@@ -34,5 +36,6 @@ public interface OllamaClient
 
     List<OllamaModel> listModels(String aUrl) throws IOException;
 
-    float[][] generateEmbeddings(String aUrl, OllamaEmbedRequest aRequest) throws IOException;
+    List<Pair<String, float[]>> embed(String aUrl, OllamaEmbedRequest aRequest)
+        throws IOException;
 }

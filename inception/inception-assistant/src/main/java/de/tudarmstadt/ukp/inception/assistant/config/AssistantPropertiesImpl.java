@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.assistant.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @ConfigurationProperties("assistant")
@@ -31,6 +32,20 @@ public class AssistantPropertiesImpl
 
     private AssistantChatProperties chat = new AssistantChatPropertiesImpl();
     private AssistantEmbeddingProperties embedding = new AssistantEmbeddingPropertiesImpl();
+
+    @Value("${inception.dev:false}") // Inject system property or use default if not provided
+    private boolean devMode;
+
+    @Override
+    public boolean isDevMode()
+    {
+        return devMode;
+    }
+
+    public void setDevMode(boolean aDevMode)
+    {
+        devMode = aDevMode;
+    }
 
     @Override
     public String getUrl()
@@ -108,6 +123,7 @@ public class AssistantPropertiesImpl
         private double repeatPenalty = 1.1;
         private double temperature = 0.1;
         private int contextLength = 4096;
+        private String encoding = "cl100k_base";
 
         @Override
         public String getModel()
@@ -174,6 +190,17 @@ public class AssistantPropertiesImpl
         {
             contextLength = aContextLength;
         }
+
+        @Override
+        public String getEncoding()
+        {
+            return encoding;
+        }
+
+        public void setEncoding(String aEncoding)
+        {
+            encoding = aEncoding;
+        }
     }
 
     public static class AssistantEmbeddingPropertiesImpl
@@ -186,6 +213,10 @@ public class AssistantPropertiesImpl
         private int topK = 1000;
         private double repeatPenalty = 1.0;
         private double temperature = 0.0;
+        private int contextLength = 768;
+        private int batchSize = 16;
+        private String encoding = "cl100k_base";
+        private int dimension = AUTO_DETECT_DIMENSION;
 
         @Override
         public String getModel()
@@ -251,6 +282,50 @@ public class AssistantPropertiesImpl
         public void setSeed(int aSeed)
         {
             seed = aSeed;
+        }
+
+        @Override
+        public int getContextLength()
+        {
+            return contextLength;
+        }
+
+        public void setContextLength(int aContextLength)
+        {
+            contextLength = aContextLength;
+        }
+        
+        @Override
+        public int getBatchSize()
+        {
+            return batchSize;
+        }
+        
+        public void setBatchSize(int aBatchSize)
+        {
+            batchSize = aBatchSize;
+        }
+
+        @Override
+        public String getEncoding()
+        {
+            return encoding;
+        }
+
+        public void setEncoding(String aEncoding)
+        {
+            encoding = aEncoding;
+        }
+
+        @Override
+        public int getDimension()
+        {
+            return dimension;
+        }
+
+        public void setDimension(int aDimension)
+        {
+            dimension = aDimension;
         }
     }
 }

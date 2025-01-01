@@ -19,22 +19,28 @@ package de.tudarmstadt.ukp.inception.scheduling;
 
 import static de.tudarmstadt.ukp.inception.scheduling.MatchResult.NO_MATCH;
 import static de.tudarmstadt.ukp.inception.scheduling.MatchResult.UNQUEUE_EXISTING_AND_QUEUE_THIS;
+import static java.lang.System.currentTimeMillis;
+import static java.lang.System.identityHashCode;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 
 import org.apache.commons.lang3.Validate;
@@ -76,6 +82,7 @@ public class SchedulingServiceImpl
     private final List<Task> enqueuedTasks;
     private final List<Task> pendingAcknowledgement;
     private final Set<Project> deletionPending;
+    private final Map<Project, AtomicInteger> suspended;
 
     @Autowired
     public SchedulingServiceImpl(ApplicationContext aApplicationContext,
@@ -89,6 +96,7 @@ public class SchedulingServiceImpl
         enqueuedTasks = Collections.synchronizedList(new ArrayList<>());
         pendingAcknowledgement = Collections.synchronizedList(new ArrayList<>());
         deletionPending = Collections.synchronizedSet(new LinkedHashSet<>());
+        suspended = Collections.synchronizedMap(new LinkedHashMap<>());
         watchdog = Executors.newScheduledThreadPool(1);
         watchdog.scheduleAtFixedRate(this::scheduleEligibleTasks, 5, 5, SECONDS);
         watchdog.scheduleAtFixedRate(this::cleanUpTasks, 10, 10, SECONDS);
@@ -97,7 +105,14 @@ public class SchedulingServiceImpl
     private void beforeExecute(Thread aThread, Runnable aRunnable)
     {
         Validate.notNull(aRunnable, "Task cannot be null");
-        runningTasks.add((Task) aRunnable);
+        synchronized (runningTasks) {
+            if (!runningTasks.contains((Task) aRunnable)) {
+                runningTasks.add((Task) aRunnable);
+            }
+            else {
+                LOG.warn("Task running: {}", aRunnable);
+            }
+        }
         LOG.debug("Starting task: {} ", aRunnable);
     }
 
@@ -115,7 +130,10 @@ public class SchedulingServiceImpl
 
     private void handleTaskEnded(Task aTask)
     {
-        runningTasks.remove(aTask);
+        synchronized (runningTasks) {
+            runningTasks.remove(aTask);
+        }
+
         if (aTask.getMonitor().isCancelled() || !aTask.getScope().isDestroyOnEnd()) {
             pendingAcknowledgement.add(aTask);
         }
@@ -233,7 +251,7 @@ public class SchedulingServiceImpl
             }
         }
 
-        for (Task taskToUnqueue : tasksToUnqueue) {
+        for (var taskToUnqueue : tasksToUnqueue) {
             LOG.debug("Matching task already queued - unqueuing exsting: [{}] in favor of "
                     + "incoming [{}]", taskToUnqueue, aTask);
             enqueuedTasks.remove(taskToUnqueue);
@@ -257,9 +275,81 @@ public class SchedulingServiceImpl
             return;
         }
 
+        if (aTask.getProject() != null && suspended.containsKey(aTask.getProject())) {
+            LOG.debug("Tasks for project suspended - adding to queue: [{}]", aTask);
+            enqueuedTasks.add(aTask);
+            return;
+        }
+
         schedule(aTask);
 
         logState();
+    }
+
+    @Override
+    public void suspendTasks(Project aProject) throws TimeoutException
+    {
+        synchronized (suspended) {
+            var suspendCount = suspended.computeIfAbsent(aProject, v -> new AtomicInteger(0));
+            suspendCount.incrementAndGet();
+            LOG.debug("Suspending tasks for {} [{}] [{}]", aProject, identityHashCode(aProject),
+                    suspendCount);
+        }
+
+        var startTime = currentTimeMillis();
+        var timeout = Duration.ofMinutes(1);
+        var timeoutMillis = timeout.toMillis();
+
+        while (runningTasks.stream().anyMatch(t -> aProject.equals(t.getProject()))) {
+            LOG.trace(
+                    "Waiting for running tasks to end before proceeding with suspension on project {}",
+                    aProject);
+
+            if (currentTimeMillis() - startTime > timeoutMillis) {
+                resumeTasks(aProject);
+                throw new TimeoutException(
+                        "Waiting for tasks to finish took longer than " + timeout);
+            }
+
+            try {
+                Thread.sleep(100);
+            }
+            catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                LOG.error("Thread was interrupted while waiting for tasks to end.", e);
+            }
+        }
+    }
+
+    @Override
+    public void resumeTasks(Project aProject)
+    {
+        synchronized (suspended) {
+            var suspendCount = suspended.get(aProject);
+            if (suspendCount != null) {
+                LOG.debug("Resuming tasks for {} [{}] [{}]", aProject, identityHashCode(aProject),
+                        suspendCount);
+                if (suspendCount.decrementAndGet() == 0) {
+                    suspended.remove(aProject);
+                    scheduleEligibleTasks();
+                }
+            }
+        }
+    }
+
+    @Override
+    public SuspensionContext whileSuspended(Project aProject) throws TimeoutException
+    {
+        suspendTasks(aProject);
+
+        return new SuspensionContext()
+        {
+            @Override
+            public void close()
+            {
+                resumeTasks(aProject);
+            }
+        };
     }
 
     private MatchResult matchTask(Task aTask, Task aEnqueueTask)
@@ -339,14 +429,24 @@ public class SchedulingServiceImpl
 
     private synchronized void scheduleEligibleTasks()
     {
-        Iterator<Task> i = enqueuedTasks.iterator();
+        var i = enqueuedTasks.iterator();
 
         while (i.hasNext()) {
-            Task t = i.next();
-            if (!getScheduledAndRunningTasks().contains(t) && t.isReadyToStart()) {
-                i.remove();
-                schedule(t);
+            var t = i.next();
+            if (!t.isReadyToStart()) {
+                continue;
             }
+
+            if (getScheduledAndRunningTasks().contains(t)) {
+                continue;
+            }
+
+            if (t.getProject() != null && suspended.containsKey(t.getProject())) {
+                continue;
+            }
+
+            i.remove();
+            schedule(t);
         }
 
         logState();
@@ -530,10 +630,19 @@ public class SchedulingServiceImpl
 
     private void logState()
     {
-        getEnqueuedTasks().forEach(t -> LOG.debug("Queued      : {}", t));
-        getScheduledTasks().forEach(t -> LOG.debug("Scheduled   : {}", t));
-        getRunningTasks().forEach(t -> LOG.debug("Running     : {}", t));
-        getTasksPendingAcknowledgment().forEach(t -> LOG.trace("Pending ack : {}", t));
+        if (LOG.isDebugEnabled()) {
+            var lines = new ArrayList<String>();
+            getEnqueuedTasks().forEach(t -> lines.add("  Queued      : " + t));
+            getScheduledTasks().forEach(t -> lines.add("  Scheduled   : " + t));
+            getRunningTasks().forEach(t -> lines.add("  Running     : " + t));
+            suspended.forEach((p, c) -> lines.add("  Suspended   : " + p + " [" + c + "]"));
+            deletionPending.forEach(p -> lines.add("  Deleting    : " + p));
+            getTasksPendingAcknowledgment().forEach(t -> lines.add("  Pending ack : " + t));
+            if (!lines.isEmpty()) {
+                LOG.debug("Scheduler state:");
+                lines.forEach(LOG::debug);
+            }
+        }
     }
 
     @Override

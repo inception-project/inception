@@ -26,7 +26,6 @@ import static java.lang.invoke.MethodHandles.lookup;
 import static java.util.Arrays.asList;
 import static org.slf4j.LoggerFactory.getLogger;
 
-import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.util.List;
 
@@ -56,6 +55,7 @@ import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.project.api.ProjectInitializationRequest;
 import de.tudarmstadt.ukp.inception.project.api.ProjectInitializer;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
+import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.project.ProjectDashboardPage;
@@ -79,6 +79,7 @@ public class ProjectTemplateSelectionDialogPanel
     private @SpringBean ProjectService projectService;
     private @SpringBean UserDao userRepository;
     private @SpringBean PreferencesService preferencesService;
+    private @SpringBean SchedulingService schedulingService;
 
     private LambdaAjaxLink closeDialogButton;
     private boolean includeSampleData;
@@ -153,13 +154,14 @@ public class ProjectTemplateSelectionDialogPanel
 
     private void actionCreateProject(AjaxRequestTarget aTarget, ProjectInitializer aInitializer)
     {
-        var user = userRepository.getCurrentUser();
         aTarget.addChildren(getPage(), IFeedback.class);
+
+        var user = userRepository.getCurrentUser();
         var projectSlug = projectService.deriveSlugFromName(user.getUsername());
         projectSlug = projectService.deriveUniqueSlug(projectSlug);
 
-        try {
-            var project = new Project(projectSlug);
+        var project = new Project(projectSlug);
+        try (var ctx = schedulingService.whileSuspended(project)) {
             project.setName(user.getUsername() + " - New project");
             projectService.createProject(project);
             projectService.assignRole(project, user, ANNOTATOR, CURATOR, MANAGER);
@@ -175,7 +177,7 @@ public class ProjectTemplateSelectionDialogPanel
             ProjectPageBase.setProjectPageParameter(pageParameters, project);
             setResponsePage(ProjectDashboardPage.class, pageParameters);
         }
-        catch (IOException e) {
+        catch (Exception e) {
             LOG.error("Unable to create project [{}]", projectSlug, e);
             error("Unable to create project [" + projectSlug + "]");
         }

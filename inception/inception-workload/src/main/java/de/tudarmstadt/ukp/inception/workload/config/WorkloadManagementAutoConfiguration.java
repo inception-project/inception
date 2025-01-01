@@ -25,13 +25,13 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
-import de.tudarmstadt.ukp.inception.workload.event.exporter.WorkloadManagerExporter;
 import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtension;
 import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtensionPoint;
 import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtensionPointImpl;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementServiceImpl;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManager;
+import de.tudarmstadt.ukp.inception.workload.task.exporter.WorkloadManagerExporter;
 import jakarta.persistence.EntityManager;
 
 @Configuration

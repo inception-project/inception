@@ -47,9 +47,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.session.SessionDestroyedEvent;
 import org.springframework.security.core.session.SessionRegistry;
 
-import com.knuddels.jtokkit.Encodings;
 import com.knuddels.jtokkit.api.EncodingRegistry;
-import com.knuddels.jtokkit.api.EncodingType;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
@@ -77,13 +75,13 @@ public class AssistantServiceImpl
     private final AssistantProperties properties;
     private final UserGuideQueryService documentationIndexingService;
     private final DocumentQueryService documentQueryService;
-
-    private final EncodingRegistry registry = Encodings.newLazyEncodingRegistry();
+    private final EncodingRegistry encodingRegistry;
 
     public AssistantServiceImpl(SessionRegistry aSessionRegistry,
             SimpMessagingTemplate aMsgTemplate, OllamaClient aOllamaClient,
             AssistantProperties aProperties, UserGuideQueryService aDocumentationIndexingService,
-            DocumentQueryService aDocumentQueryService)
+            DocumentQueryService aDocumentQueryService,
+            EncodingRegistry aEncodingRegistry)
     {
         sessionRegistry = aSessionRegistry;
         msgTemplate = aMsgTemplate;
@@ -92,6 +90,7 @@ public class AssistantServiceImpl
         properties = aProperties;
         documentationIndexingService = aDocumentationIndexingService;
         documentQueryService = aDocumentQueryService;
+        encodingRegistry = aEncodingRegistry;
     }
 
     // Set order so this is handled before session info is removed from sessionRegistry
@@ -132,7 +131,7 @@ public class AssistantServiceImpl
     }
 
     @Override
-    public List<MAssistantMessage> listMessages(String aSessionOwner, Project aProject)
+    public List<MAssistantMessage> getConversationMessages(String aSessionOwner, Project aProject)
     {
         var state = getState(aSessionOwner, aProject);
         return state.getMessages();
@@ -161,14 +160,17 @@ public class AssistantServiceImpl
         try {
             var systemMessages = generateSystemMessages(aSessionOwner, aProject, aMessage);
             var transientMessages = generateTransientMessages(aSessionOwner, aProject, aMessage);
-            var recentMessages = listMessages(aSessionOwner, aProject);
+            var recentMessages = getConversationMessages(aSessionOwner, aProject);
 
             // We record the message only now to ensure it is not included in the listMessages above
             recordMessage(aSessionOwner, aProject, aMessage);
 
-            // For testing purposes we send this message to the UI
-            for (var msg : transientMessages) {
-                dispatchMessage(aSessionOwner, aProject, msg);
+            if (properties.isDevMode()) {
+                // For testing purposes we send this message to the UI but do not record it as
+                // part of the conversation
+                for (var msg : transientMessages) {
+                    dispatchMessage(aSessionOwner, aProject, msg);
+                }
             }
 
             var conversation = limitConversationToContextLength(systemMessages, transientMessages,
@@ -324,7 +326,9 @@ public class AssistantServiceImpl
         // the tokenizer we use counts fewer tokens than the one user by
         // the model and also to cover for message encoding JSON overhead,
         // we try to use only 90% of the context window.
-        var encoding = registry.getEncoding(EncodingType.CL100K_BASE);
+        var encoding = encodingRegistry.getEncoding(properties.getChat().getEncoding())
+                .orElseThrow(() -> new IllegalStateException(
+                        "Unknown encoding: " + properties.getChat().getEncoding()));
         var limit = floorDiv(aContextLength * 90, 100);
 
         var headMessages = new ArrayList<MAssistantMessage>();

@@ -37,6 +37,7 @@ import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.inception.assistant.config.AssistantProperties;
 import de.tudarmstadt.ukp.inception.assistant.config.AssistantPropertiesImpl;
+import de.tudarmstadt.ukp.inception.assistant.index.EmbeddingServiceImpl;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaClient;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaClientImpl;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
@@ -51,6 +52,7 @@ class UserGuideQueryServiceImplTest
     private AssistantProperties assistantProperties;
     private OllamaClient ollamaClient;
     private UserGuideQueryServiceImpl sut;
+    private EmbeddingServiceImpl embeddingService;
 
     private static @TempDir Path applicationHome;
     
@@ -66,7 +68,8 @@ class UserGuideQueryServiceImplTest
     {
         assistantProperties = new AssistantPropertiesImpl();
         ollamaClient = new OllamaClientImpl();
-        sut = new UserGuideQueryServiceImpl(assistantProperties, schedulingService, ollamaClient);
+        embeddingService = new EmbeddingServiceImpl(assistantProperties, ollamaClient);
+        sut = new UserGuideQueryServiceImpl(assistantProperties, schedulingService, embeddingService);
     }
 
     @AfterEach
@@ -79,9 +82,10 @@ class UserGuideQueryServiceImplTest
     void testSimpleIndexAndQuery() throws Exception
     {
         try (var iw = sut.getIndexWriter()) {
-            sut.indexBlock(iw, "Waldi is a dog.");
-            sut.indexBlock(iw, "Miau is a cat.");
-            sut.indexBlock(iw, "Tweety is a bird.");
+            sut.indexBlocks(iw, //
+                    "Waldi is a dog.",  //
+                    "Miau is a cat.",  //
+                    "Tweety is a bird.");
         }
         sut.markIndexUpToDate();
 

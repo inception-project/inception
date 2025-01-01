@@ -31,13 +31,13 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.traits.Option;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public record OllamaEmbedRequest(String model, List<String> input,
+public record OllamaEmbedRequest(String model, List<String> input, boolean truncate,
         @JsonInclude(Include.NON_EMPTY) Map<String, Object> options)
 {
 
     private OllamaEmbedRequest(Builder builder)
     {
-        this(builder.model, builder.input, builder.options);
+        this(builder.model, builder.input, builder.truncate, builder.options);
     }
 
     public static Builder builder()
@@ -48,6 +48,7 @@ public record OllamaEmbedRequest(String model, List<String> input,
     public static final class Builder
     {
         private String model;
+        private boolean truncate = true;
         private List<String> input = new ArrayList<>();
         private Map<String, Object> options = new HashMap<>();
 

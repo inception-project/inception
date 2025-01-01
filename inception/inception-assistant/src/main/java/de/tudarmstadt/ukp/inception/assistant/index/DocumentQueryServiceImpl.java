@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.assistant.index;
 
 import static de.tudarmstadt.ukp.inception.project.api.ProjectService.PROJECT_FOLDER;
 import static java.util.Collections.emptyList;
+import static org.apache.lucene.util.VectorUtil.l2normalize;
 
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
@@ -52,9 +53,6 @@ import de.tudarmstadt.ukp.inception.documents.event.AfterDocumentCreatedEvent;
 import de.tudarmstadt.ukp.inception.documents.event.BeforeDocumentRemovedEvent;
 import de.tudarmstadt.ukp.inception.project.api.event.AfterProjectRemovedEvent;
 import de.tudarmstadt.ukp.inception.project.api.event.BeforeProjectRemovedEvent;
-import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaClient;
-import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaEmbedRequest;
-import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaOptions;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 
 public class DocumentQueryServiceImpl
@@ -66,7 +64,7 @@ public class DocumentQueryServiceImpl
     private final RepositoryProperties repositoryProperties;
     private final AssistantDocumentIndexProperties indexProperties;
     private final SchedulingService schedulingService;
-    private final OllamaClient ollamaClient;
+    private final EmbeddingService embeddingService;
 
     private static final String INDEX_FOLDER = "index";
     private static final String ASSISTANT_FOLDER = "assistant";
@@ -77,13 +75,13 @@ public class DocumentQueryServiceImpl
     public DocumentQueryServiceImpl(AssistantProperties aAssistantProperties,
             RepositoryProperties aRepositoryProperties,
             AssistantDocumentIndexProperties aIndexProperties, SchedulingService aSchedulingService,
-            OllamaClient aOllamaClient)
+            EmbeddingService aEmbeddingService)
     {
         properties = aAssistantProperties;
         repositoryProperties = aRepositoryProperties;
         indexProperties = aIndexProperties;
         schedulingService = aSchedulingService;
-        ollamaClient = aOllamaClient;
+        embeddingService = aEmbeddingService;
 
         var indexPoolConfig = new GenericKeyedObjectPoolConfig<PooledIndex>();
         // We only ever want one pooled index per project
@@ -129,7 +127,7 @@ public class DocumentQueryServiceImpl
 
                 LOG.trace("KNN Query: [{}]", aQuery);
 
-                var queryEmbedding = getEmbedding(aQuery);
+                var queryEmbedding = l2normalize(embeddingService.embed(aQuery), false);
 
                 var searcher = new IndexSearcher(reader);
                 var query = new KnnFloatVectorQuery(FIELD_EMBEDDING, queryEmbedding, aTopN);
@@ -157,20 +155,6 @@ public class DocumentQueryServiceImpl
         }
     }
 
-    float[] getEmbedding(String aQuery) throws IOException
-    {
-        var request = OllamaEmbedRequest.builder() //
-                .withModel(properties.getEmbedding().getModel()) //
-                .withInput(aQuery) //
-                .withOption(OllamaOptions.TEMPERATURE, properties.getEmbedding().getTemperature()) //
-                .withOption(OllamaOptions.SEED, properties.getEmbedding().getSeed()) //
-                .withOption(OllamaOptions.TOP_P, properties.getEmbedding().getTopP()) //
-                .withOption(OllamaOptions.TOP_K, properties.getEmbedding().getTopK()) //
-                .withOption(OllamaOptions.REPEAT_PENALTY, properties.getEmbedding().getRepeatPenalty()) //
-                .build();
-        return ollamaClient.generateEmbeddings(properties.getUrl(), request)[0];
-    }
-
     private Path getIndexDirectory(Long aProjectId)
     {
         return repositoryProperties.getPath().toPath() //
@@ -180,6 +164,23 @@ public class DocumentQueryServiceImpl
                 .resolve(PROJECT_FOLDER) //
                 .resolve(ASSISTANT_FOLDER) //
                 .resolve(INDEX_FOLDER);
+    }
+
+    @Override
+    public void rebuildIndexAsync(Project aProject)
+    {
+        try (var index = borrowIndex(aProject)) {
+            index.indexWriter.deleteAll();
+            index.indexWriter.commit();
+
+            schedulingService.enqueue(UpdateDocumentIndexTask.builder() //
+                    .withTrigger("rebuildIndexAsync") //
+                    .withProject(aProject) //
+                    .build());
+        }
+        catch (Exception e) {
+            LOG.error("Error clearing index", e);
+        }
     }
 
     @EventListener
@@ -265,6 +266,7 @@ public class DocumentQueryServiceImpl
         {
             var dir = new MMapDirectory(getIndexDirectory(aKey));
             var iwc = new IndexWriterConfig();
+            iwc.setCodec(new HighDimensionLucene99Codec(embeddingService.getDimension()));
             return new PooledIndex(aKey, dir, new IndexWriter(dir, iwc));
         }
 

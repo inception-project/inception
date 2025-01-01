@@ -21,11 +21,13 @@ import static de.tudarmstadt.ukp.inception.scheduling.TaskState.COMPLETED;
 import static de.tudarmstadt.ukp.inception.scheduling.TaskState.RUNNING;
 import static java.lang.System.currentTimeMillis;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.apache.commons.collections4.ListUtils.partition;
 
 import java.lang.invoke.MethodHandles;
 import java.net.URL;
 
 import org.jsoup.Jsoup;
+import org.jsoup.nodes.Element;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -67,15 +69,18 @@ public class UserGuideIndexingTask
                 LOG.info(
                         "Started building user guide index in the background... this may take a moment");
                 var startTime = currentTimeMillis();
-                var blocks = userGuide.select(".i7n-assistant");
+                var blocks = userGuide.select(".i7n-assistant").stream() //
+                        .map(Element::text) //
+                        .toList();
+                var blockChunks = partition(blocks, 100);
 
                 var monitor = getMonitor();
                 monitor.setStateAndProgress(RUNNING, 0, blocks.size());
 
                 var blocksIndexed = 0;
-                for (var block : blocks) {
-                    blocksIndexed++;
-                    documentationIndexingService.indexBlock(iw, block.text());
+                for (var blockChunk : blockChunks) {
+                    blocksIndexed += blockChunks.size();
+                    documentationIndexingService.indexBlocks(iw, blockChunk.toArray(String[]::new));
                     monitor.setProgress(blocksIndexed);
                 }
 

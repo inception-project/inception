@@ -17,12 +17,15 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public record OllamaEmbedResponse( //
         String model, //
         float[][] embeddings, //
         @JsonProperty("total_duration") long totalDuration, //
         @JsonProperty("load_duration") long loadDuration, //
-        @JsonProperty("prompt_eval_count") long promptEvalCount)
-{}
+        @JsonProperty("prompt_eval_count") long promptEvalCount
+// @JsonAnySetter Map<String, Object> additionalFields
+) {}

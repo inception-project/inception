@@ -90,8 +90,8 @@ public abstract class Task
     {
         if (monitor == null) {
             // For tasks that have a parent task, we use a non-notifying monitor. Also, we do not
-            // report such subtasks ia the SchedulerControllerImpl - they are internal.
-            if (schedulerController != null && sessionOwner != null && parentTask == null) {
+            // report such subtasks via the SchedulerControllerImpl - they are internal.
+            if (schedulerController != null && parentTask == null) {
                 monitor = new NotifyingTaskMonitor(this, schedulerController);
             }
             else {
@@ -196,13 +196,20 @@ public abstract class Task
         }
     }
 
-    public void runSync()
+    public final void runSync()
     {
         try {
             monitor.setState(TaskState.RUNNING);
+
             execute();
+
             if (monitor.getState() == TaskState.RUNNING) {
                 monitor.setState(TaskState.COMPLETED);
+            }
+
+            if (monitor.getState() == TaskState.COMPLETED) {
+                LOG.debug("Task [{}] completed (trigger: [{}]) in {}", getTitle(), getTrigger(),
+                        monitor.getDuration());
             }
         }
         catch (Exception e) {

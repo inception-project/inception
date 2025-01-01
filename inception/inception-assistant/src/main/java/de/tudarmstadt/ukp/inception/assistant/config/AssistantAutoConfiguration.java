@@ -25,10 +25,15 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.session.SessionRegistry;
 
+import com.knuddels.jtokkit.Encodings;
+import com.knuddels.jtokkit.api.EncodingRegistry;
+
 import de.tudarmstadt.ukp.inception.assistant.AssistantService;
 import de.tudarmstadt.ukp.inception.assistant.AssistantServiceImpl;
 import de.tudarmstadt.ukp.inception.assistant.index.DocumentQueryService;
 import de.tudarmstadt.ukp.inception.assistant.index.DocumentQueryServiceImpl;
+import de.tudarmstadt.ukp.inception.assistant.index.EmbeddingService;
+import de.tudarmstadt.ukp.inception.assistant.index.EmbeddingServiceImpl;
 import de.tudarmstadt.ukp.inception.assistant.sidebar.AssistantSidebarFactory;
 import de.tudarmstadt.ukp.inception.assistant.userguide.UserGuideQueryService;
 import de.tudarmstadt.ukp.inception.assistant.userguide.UserGuideQueryServiceImpl;
@@ -47,10 +52,10 @@ public class AssistantAutoConfiguration
     public AssistantService assistantService(SessionRegistry aSessionRegistry,
             SimpMessagingTemplate aMsgTemplate, OllamaClient aOllamaClient,
             AssistantProperties aProperties, UserGuideQueryService aDocumentationIndexingService,
-            DocumentQueryService aDocumentQueryService)
+            DocumentQueryService aDocumentQueryService, EncodingRegistry aEncodingRegistry)
     {
         return new AssistantServiceImpl(aSessionRegistry, aMsgTemplate, aOllamaClient, aProperties,
-                aDocumentationIndexingService, aDocumentQueryService);
+                aDocumentationIndexingService, aDocumentQueryService, aEncodingRegistry);
     }
 
     @Bean
@@ -61,18 +66,28 @@ public class AssistantAutoConfiguration
 
     @Bean
     public UserGuideQueryService userManualQueryService(AssistantProperties aProperties,
-            SchedulingService aSchedulingService, OllamaClient aOllamaClient)
+            SchedulingService aSchedulingService, EmbeddingService aEmbeddingService)
     {
-        return new UserGuideQueryServiceImpl(aProperties, aSchedulingService, aOllamaClient);
+        return new UserGuideQueryServiceImpl(aProperties, aSchedulingService, aEmbeddingService);
+    }
+    
+    @Bean
+    public EncodingRegistry encodingRegistry() {
+        return Encodings.newLazyEncodingRegistry();
+    }
+
+    @Bean
+    public EmbeddingService EmbeddingService(AssistantProperties aProperties, OllamaClient aOllamaClient) {
+        return new EmbeddingServiceImpl(aProperties, aOllamaClient);
     }
 
     @Bean
     public DocumentQueryService documentQueryService(AssistantProperties aProperties,
             RepositoryProperties aRepositoryProperties,
             AssistantDocumentIndexProperties aIndexProperties, SchedulingService aSchedulingService,
-            OllamaClient aOllamaClient)
+            OllamaClient aOllamaClient, EmbeddingService aEmbeddingService)
     {
         return new DocumentQueryServiceImpl(aProperties, aRepositoryProperties, aIndexProperties,
-                aSchedulingService, aOllamaClient);
+                aSchedulingService, aEmbeddingService);
     }
 }

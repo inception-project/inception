@@ -21,7 +21,8 @@ import static java.nio.file.Files.exists;
 import static java.nio.file.Files.readString;
 import static java.nio.file.Files.writeString;
 import static java.util.Collections.emptyList;
-import static org.apache.lucene.index.VectorSimilarityFunction.COSINE;
+import static org.apache.lucene.index.VectorSimilarityFunction.DOT_PRODUCT;
+import static org.apache.lucene.util.VectorUtil.l2normalize;
 
 import java.io.File;
 import java.io.IOException;
@@ -48,9 +49,8 @@ import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 
 import de.tudarmstadt.ukp.inception.assistant.config.AssistantProperties;
-import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaClient;
-import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaEmbedRequest;
-import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaOptions;
+import de.tudarmstadt.ukp.inception.assistant.index.EmbeddingService;
+import de.tudarmstadt.ukp.inception.assistant.index.HighDimensionLucene99Codec;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.support.SettingsUtil;
 
@@ -62,20 +62,20 @@ public class UserGuideQueryServiceImpl
     private static final String FIELD_TEXT = "text";
     private static final String FIELD_EMBEDDING = "field";
 
-    private final OllamaClient ollamaClient;
     private final AssistantProperties properties;
     private final SchedulingService schedulingService;
+    private final EmbeddingService embeddingService;
 
     private Directory indexDir;
     private DirectoryReader indexReader;
     private volatile boolean destroyed = false;
 
     public UserGuideQueryServiceImpl(AssistantProperties aProperties,
-            SchedulingService aSchedulingService, OllamaClient aOllamaClient)
+            SchedulingService aSchedulingService, EmbeddingService aEmbeddingService)
     {
         properties = aProperties;
         schedulingService = aSchedulingService;
-        ollamaClient = aOllamaClient;
+        embeddingService = aEmbeddingService;
     }
 
     @EventListener
@@ -161,7 +161,7 @@ public class UserGuideQueryServiceImpl
         try {
             var reader = getSharedIndexReader();
 
-            var queryEmbedding = getEmbedding(aQuery);
+            var queryEmbedding = l2normalize(embeddingService.embed(aQuery), false);
 
             var searcher = new IndexSearcher(reader);
             var query = new KnnFloatVectorQuery(FIELD_EMBEDDING, queryEmbedding, aTopN);
@@ -191,6 +191,7 @@ public class UserGuideQueryServiceImpl
     IndexWriter getIndexWriter() throws IOException
     {
         var iwc = new IndexWriterConfig();
+        iwc.setCodec(new HighDimensionLucene99Codec(embeddingService.getDimension()));
         return new IndexWriter(getSharedIndexDirectory(), iwc);
     }
 
@@ -212,31 +213,19 @@ public class UserGuideQueryServiceImpl
         return indexDir;
     }
 
-    void indexBlock(IndexWriter aWriter, String aText) throws IOException
+    void indexBlocks(IndexWriter aWriter, String... aText) throws IOException
     {
         if (destroyed) {
             return;
         }
 
-        var docEmbedding = getEmbedding(aText);
-        var doc = new Document();
-        doc.add(new KnnFloatVectorField(FIELD_EMBEDDING, docEmbedding, COSINE));
-        doc.add(new StoredField(FIELD_TEXT, aText));
-        aWriter.addDocument(doc);
-    }
-
-    float[] getEmbedding(String aText) throws IOException
-    {
-        var request = OllamaEmbedRequest.builder() //
-                .withModel(properties.getEmbedding().getModel()) //
-                .withInput(aText) //
-                .withOption(OllamaOptions.TEMPERATURE, properties.getEmbedding().getTemperature()) //
-                .withOption(OllamaOptions.SEED, properties.getEmbedding().getSeed()) //
-                .withOption(OllamaOptions.TOP_P, properties.getEmbedding().getTopP()) //
-                .withOption(OllamaOptions.TOP_K, properties.getEmbedding().getTopK()) //
-                .withOption(OllamaOptions.REPEAT_PENALTY, properties.getEmbedding().getRepeatPenalty()) //
-                .build();
-        return ollamaClient.generateEmbeddings(properties.getUrl(), request)[0];
+        var docEmbeddings = embeddingService.embed(aText);
+        for (var embedding : docEmbeddings) {
+            var doc = new Document();
+            doc.add(new KnnFloatVectorField(FIELD_EMBEDDING, l2normalize(embedding.getValue(), false), DOT_PRODUCT));
+            doc.add(new StoredField(FIELD_TEXT, embedding.getKey()));
+            aWriter.addDocument(doc);
+        }
     }
 
     void deleteIndex()

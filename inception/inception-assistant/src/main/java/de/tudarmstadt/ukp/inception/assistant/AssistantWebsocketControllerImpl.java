@@ -68,7 +68,7 @@ public class AssistantWebsocketControllerImpl
         throws IOException
     {
         var project = projectService.getProject(aProjectId);
-        return assistantService.listMessages(aPrincipal.getName(), project);
+        return assistantService.getConversationMessages(aPrincipal.getName(), project);
     }
     
     @MessageMapping(PROJECT_ASSISTANT_TOPIC_TEMPLATE)

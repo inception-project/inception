@@ -24,16 +24,22 @@ import static de.tudarmstadt.ukp.inception.assistant.index.DocumentQueryService.
 import static de.tudarmstadt.ukp.inception.assistant.index.DocumentQueryService.FIELD_SOURCE_DOC_COMPLETE;
 import static de.tudarmstadt.ukp.inception.assistant.index.DocumentQueryService.FIELD_TEXT;
 import static de.tudarmstadt.ukp.inception.scheduling.TaskState.CANCELLED;
+import static de.tudarmstadt.ukp.inception.scheduling.TaskState.COMPLETED;
 import static de.tudarmstadt.ukp.inception.scheduling.TaskState.RUNNING;
+import static java.lang.Math.floorDiv;
 import static java.time.Duration.ofSeconds;
-import static org.apache.lucene.index.VectorSimilarityFunction.COSINE;
+import static org.apache.commons.collections4.ListUtils.partition;
+import static org.apache.lucene.index.VectorSimilarityFunction.DOT_PRODUCT;
+import static org.apache.lucene.util.VectorUtil.l2normalize;
 
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Objects;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.KnnFloatVectorField;
 import org.apache.lucene.document.LongPoint;
@@ -41,6 +47,7 @@ import org.apache.lucene.document.StoredField;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.search.FieldExistsQuery;
 import org.apache.lucene.search.IndexSearcher;
+import org.apache.uima.cas.CAS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,11 +55,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
+import de.tudarmstadt.ukp.inception.assistant.config.AssistantProperties;
 import de.tudarmstadt.ukp.inception.assistant.index.DocumentQueryServiceImpl.PooledIndex;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.scheduling.DebouncingTask;
 import de.tudarmstadt.ukp.inception.scheduling.ProjectTask;
 import de.tudarmstadt.ukp.inception.scheduling.TaskScope;
+import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 
 public class UpdateDocumentIndexTask
     extends DebouncingTask
@@ -63,7 +72,9 @@ public class UpdateDocumentIndexTask
     public static final String TYPE = "UpdateDocumentIndexTask";
 
     private @Autowired DocumentService documentService;
-    private @Autowired DocumentQueryServiceImpl indexService;
+    private @Autowired DocumentQueryServiceImpl documentQueryService;
+    private @Autowired EmbeddingService embeddingService;
+    private @Autowired AssistantProperties properties;
 
     public UpdateDocumentIndexTask(Builder<? extends Builder<?>> aBuilder)
     {
@@ -85,7 +96,7 @@ public class UpdateDocumentIndexTask
         }
 
         var monitor = getMonitor();
-        try (var index = indexService.borrowIndex(getProject())) {
+        try (var index = documentQueryService.borrowIndex(getProject())) {
             try (var reader = DirectoryReader.open(index.getIndexWriter())) {
                 var searcher = new IndexSearcher(reader);
                 var query = new FieldExistsQuery(FIELD_SOURCE_DOC_COMPLETE);
@@ -107,8 +118,9 @@ public class UpdateDocumentIndexTask
                     }
                 }
 
-                monitor.setStateAndProgress(RUNNING, 0,
-                        documentsToUnindex.size() + documentsToIndex.size());
+                var toProcess = documentsToUnindex.size() + documentsToIndex.size() * 100;
+                var processed = 0;
+                monitor.setStateAndProgress(RUNNING, processed * 100, toProcess);
 
                 for (var sourceDocumentId : documentsToUnindex) {
                     if (monitor.isCancelled()) {
@@ -116,8 +128,10 @@ public class UpdateDocumentIndexTask
                         break;
                     }
 
-                    monitor.incrementProgress();
+                    monitor.setProgressWithMessage(processed * 100, toProcess,
+                            LogMessage.info(this, "Unindexing..."));
                     unindexDocument(index, sourceDocumentId);
+                    processed++;
                 }
 
                 try (var session = CasStorageSession.openNested()) {
@@ -127,12 +141,15 @@ public class UpdateDocumentIndexTask
                             break;
                         }
 
+                        monitor.setProgressWithMessage(processed * 100, toProcess,
+                                LogMessage.info(this, "Indexing: %s", sourceDocument.getName()));
                         indexDocument(index, sourceDocument);
-                        monitor.incrementProgress();
+                        processed++;
                     }
                 }
 
                 if (!monitor.isCancelled()) {
+                    monitor.setStateAndProgress(COMPLETED, processed * 100, toProcess);
                     index.getIndexWriter().commit();
                     // We can probably live with a partial index, so we do not roll back if
                     // cancelled
@@ -161,18 +178,51 @@ public class UpdateDocumentIndexTask
             var cas = documentService.createOrReadInitialCas(aSourceDocument, AUTO_CAS_UPGRADE,
                     SHARED_READ_ONLY_ACCESS);
 
-            for (var sentence : cas.select(Sentence.class)) {
-                var text = sentence.getCoveredText();
-                var docEmbedding = indexService.getEmbedding(text);
-                var doc = new Document();
-                doc.add(new KnnFloatVectorField(FIELD_EMBEDDING, docEmbedding, COSINE));
-                doc.add(new StoredField(FIELD_TEXT, text));
-                aIndex.getIndexWriter().addDocument(doc);
+            var chunks = chunk(cas);
+            var batches = partition(chunks, properties.getEmbedding().getBatchSize());
+
+            var totalBatches = batches.size();
+            var processedBatches = 0;
+            var sentencesSeen = 0;
+            var progressOffset = getMonitor().getProgress();
+            for (var batch : batches) {
+                try {
+                    var docEmbeddings = embeddingService.embed(batch.toArray(String[]::new));
+                    for (var embedding : docEmbeddings) {
+                        addToIndex(aIndex, embedding);
+                    }
+                }
+                catch (IOException e) {
+                    LOG.error("Error indexing document {} chunks {}-{} ", aSourceDocument,
+                            sentencesSeen, sentencesSeen + batch.size(), e);
+                }
+
+                getMonitor().setStateAndProgress(RUNNING,
+                        progressOffset + floorDiv(processedBatches * 100, totalBatches));
+
+                sentencesSeen += batch.size();
+                processedBatches++;
             }
         }
         catch (IOException e) {
-            LOG.error("Error indexing document {}", aSourceDocument, e);
+            LOG.error("Error indexing document", aSourceDocument, e);
         }
+    }
+
+    private List<String> chunk(CAS cas)
+    {
+        return cas.select(Sentence.class) //
+                .map(Sentence::getCoveredText) //
+                .toList();
+    }
+
+    private void addToIndex(PooledIndex aIndex, Pair<String, float[]> embedding) throws IOException
+    {
+        var doc = new Document();
+        var normalizedEmbedding = l2normalize(embedding.getValue(), false);
+        doc.add(new KnnFloatVectorField(FIELD_EMBEDDING, normalizedEmbedding, DOT_PRODUCT));
+        doc.add(new StoredField(FIELD_TEXT, embedding.getKey()));
+        aIndex.getIndexWriter().addDocument(doc);
     }
 
     @Override

@@ -25,6 +25,7 @@ import de.tudarmstadt.ukp.inception.documents.event.AfterDocumentCreatedEvent;
 import de.tudarmstadt.ukp.inception.documents.event.BeforeDocumentRemovedEvent;
 import de.tudarmstadt.ukp.inception.documents.event.DocumentStateChangedEvent;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
+import de.tudarmstadt.ukp.inception.workload.task.UpdateProjectStateTask;
 
 /**
  * Watches the document state in of projects using matrix workload.

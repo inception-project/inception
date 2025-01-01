@@ -27,18 +27,27 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.OllamaRecomme
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaClient;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaClientImpl;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaMetrics;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaMetricsImpl;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
 @Configuration
-@ConditionalOnProperty(prefix = "recommender.ollama", name = "enabled", havingValue = "true", matchIfMissing = false)
 public class OllamaRecommenderAutoConfiguration
 {
+    // We need this for the assistant atm, so it's not covered by the feature flag
     @Bean
     public OllamaClient ollamaClient(OllamaMetrics aMetrics)
     {
         return new OllamaClientImpl(HttpClient.newBuilder().build(), aMetrics);
     }
 
+    @Bean
+    public OllamaMetrics ollamaMetrics()
+    {
+        return new OllamaMetricsImpl();
+    }
+
+    @ConditionalOnProperty(prefix = "recommender.ollama", name = "enabled", havingValue = "true", //
+            matchIfMissing = false)
     @Bean
     public OllamaRecommenderFactory ollamaRecommenderFactory(OllamaClient aClient,
             AnnotationSchemaService aSchemaService)

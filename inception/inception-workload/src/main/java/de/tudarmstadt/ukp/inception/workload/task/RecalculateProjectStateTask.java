@@ -15,8 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.documents;
+package de.tudarmstadt.ukp.inception.workload.task;
 
+import static de.tudarmstadt.ukp.inception.scheduling.MatchResult.NO_MATCH;
+import static de.tudarmstadt.ukp.inception.scheduling.MatchResult.UNQUEUE_EXISTING_AND_QUEUE_THIS;
 import static java.time.Duration.ofSeconds;
 
 import java.util.Objects;
@@ -24,24 +26,26 @@ import java.util.Objects;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
-import de.tudarmstadt.ukp.inception.documents.api.SourceDocumentStateStats;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.scheduling.DebouncingTask;
-import jakarta.persistence.EntityManager;
+import de.tudarmstadt.ukp.inception.scheduling.MatchResult;
+import de.tudarmstadt.ukp.inception.scheduling.MatchableTask;
+import de.tudarmstadt.ukp.inception.scheduling.Task;
+import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtension;
+import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 import jakarta.persistence.NoResultException;
-import jakarta.persistence.PersistenceContext;
 
-public class UpdateProjectStateTask
+public class RecalculateProjectStateTask
     extends DebouncingTask
+    implements MatchableTask
+
 {
-    public static final String TYPE = "UpdateProjectStateTask";
+    public static final String TYPE = "RecalculateProjectStateTask";
 
-    private @PersistenceContext EntityManager entityManager;
     private @Autowired ProjectService projectService;
-    private @Autowired DocumentService documentService;
+    private @Autowired WorkloadManagementService workloadService;
 
-    public UpdateProjectStateTask(Builder<? extends Builder<?>> aBuilder)
+    public RecalculateProjectStateTask(Builder<? extends Builder<?>> aBuilder)
     {
         super(aBuilder.withType(TYPE));
     }
@@ -66,9 +70,23 @@ public class UpdateProjectStateTask
             return;
         }
 
-        SourceDocumentStateStats stats = documentService.getSourceDocumentStats(project);
+        WorkloadManagerExtension<?> ext = workloadService.getWorkloadManagerExtension(project);
+        ext.recalculate(project);
+    }
 
-        projectService.setProjectState(project, stats.getProjectState());
+    @Override
+    public MatchResult matches(Task aTask)
+    {
+        // If a recalculation task for a project is coming in, we can throw out any scheduled tasks
+        // for updating in the project.
+        if (aTask instanceof RecalculateProjectStateTask
+                || aTask instanceof UpdateProjectStateTask) {
+            if (Objects.equals(getProject().getId(), aTask.getProject().getId())) {
+                return UNQUEUE_EXISTING_AND_QUEUE_THIS;
+            }
+        }
+
+        return NO_MATCH;
     }
 
     @Override
@@ -80,7 +98,7 @@ public class UpdateProjectStateTask
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        UpdateProjectStateTask task = (UpdateProjectStateTask) o;
+        RecalculateProjectStateTask task = (RecalculateProjectStateTask) o;
         return getProject().equals(task.getProject());
     }
 
@@ -103,9 +121,9 @@ public class UpdateProjectStateTask
             withDebounceDelay(ofSeconds(3));
         }
 
-        public UpdateProjectStateTask build()
+        public RecalculateProjectStateTask build()
         {
-            return new UpdateProjectStateTask(this);
+            return new RecalculateProjectStateTask(this);
         }
     }
 }

@@ -15,21 +15,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.assistant.config;
+package de.tudarmstadt.ukp.inception.assistant.index;
 
-public interface AssistantChatProperties
+import java.io.IOException;
+import java.util.List;
+
+import org.apache.commons.lang3.tuple.Pair;
+
+public interface EmbeddingService
 {
-    String getModel();
+    float[] embed(String aQuery) throws IOException;
 
-    double getTopP();
+    List<Pair<String, float[]>> embed(String... aStrings) throws IOException;
 
-    int getTopK();
-
-    double getRepeatPenalty();
-
-    double getTemperature();
-
-    int getContextLength();
-    
-    String getEncoding();
+    int getDimension();
 }

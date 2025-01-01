@@ -19,6 +19,8 @@ package de.tudarmstadt.ukp.inception.assistant.config;
 
 public interface AssistantEmbeddingProperties
 {
+    public static final int AUTO_DETECT_DIMENSION = -1;
+    
     String getModel();
 
     double getTopP();
@@ -30,4 +32,14 @@ public interface AssistantEmbeddingProperties
     double getTemperature();
 
     int getSeed();
+
+    int getContextLength();
+
+    int getBatchSize();
+
+    String getEncoding();
+
+    int getDimension();
+
+    void setDimension(int aI);
 }

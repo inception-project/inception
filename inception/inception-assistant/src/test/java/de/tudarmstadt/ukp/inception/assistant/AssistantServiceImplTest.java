@@ -67,9 +67,9 @@ import de.tudarmstadt.ukp.inception.documents.api.RepositoryAutoConfiguration;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
 import de.tudarmstadt.ukp.inception.documents.config.DocumentServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.log.config.EventLoggingAutoConfiguration;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
-import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaClient;
-import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaClientImpl;
+import de.tudarmstadt.ukp.inception.search.config.SearchServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.support.logging.Logging;
 import de.tudarmstadt.ukp.inception.support.spring.ApplicationContextProvider;
 import de.tudarmstadt.ukp.inception.support.test.websocket.WebSocketStompTestClient;
@@ -86,7 +86,9 @@ import jakarta.persistence.EntityManager;
                 "websocket.enabled=true"})
 @SpringBootApplication( //
         exclude = { //
-                LiquibaseAutoConfiguration.class })
+                LiquibaseAutoConfiguration.class, //
+                SearchServiceAutoConfiguration.class, //
+                EventLoggingAutoConfiguration.class })
 @ImportAutoConfiguration({ //
         SecurityAutoConfiguration.class, //
         WebsocketAutoConfiguration.class, //
@@ -238,11 +240,6 @@ class AssistantServiceImplTest
             return authProvider;
         }
         
-        @Bean
-        public OllamaClient ollamaClient() {
-            return new OllamaClientImpl();
-        }
-
         @Order(100)
         @Bean
         public SecurityFilterChain wsFilterChain(HttpSecurity aHttp) throws Exception

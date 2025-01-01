@@ -70,6 +70,7 @@ import de.tudarmstadt.ukp.inception.documents.event.AfterDocumentCreatedEvent;
 import de.tudarmstadt.ukp.inception.documents.event.BeforeDocumentRemovedEvent;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
+import de.tudarmstadt.ukp.inception.project.api.event.AfterProjectCreatedEvent;
 import de.tudarmstadt.ukp.inception.project.api.event.AfterProjectRemovedEvent;
 import de.tudarmstadt.ukp.inception.project.api.event.BeforeProjectRemovedEvent;
 import de.tudarmstadt.ukp.inception.scheduling.Progress;
@@ -81,7 +82,6 @@ import de.tudarmstadt.ukp.inception.schema.api.event.LayerConfigurationChangedEv
 import de.tudarmstadt.ukp.inception.search.config.SearchServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.search.config.SearchServiceProperties;
 import de.tudarmstadt.ukp.inception.search.index.IndexRebuildRequiredException;
-import de.tudarmstadt.ukp.inception.search.index.PhysicalIndexFactory;
 import de.tudarmstadt.ukp.inception.search.index.PhysicalIndexRegistry;
 import de.tudarmstadt.ukp.inception.search.model.BulkIndexingContext;
 import de.tudarmstadt.ukp.inception.search.model.Index;
@@ -271,8 +271,7 @@ public class SearchServiceImpl
         }
 
         // Get the index factory
-        PhysicalIndexFactory indexFactory = physicalIndexRegistry
-                .getIndexFactory(DEFAULT_PHSYICAL_INDEX_FACTORY);
+        var indexFactory = physicalIndexRegistry.getIndexFactory(DEFAULT_PHSYICAL_INDEX_FACTORY);
 
         if (indexFactory == null) {
             return null;
@@ -284,6 +283,17 @@ public class SearchServiceImpl
         return index;
     }
 
+    @EventListener
+    public void onAfterProjectCreated(AfterProjectCreatedEvent aEvent)
+    {
+        LOG.trace("Starting onAfterProjectCreated");
+
+        // This will help us block off individual indexDocument tasks that are being triggered
+        // while the project is imported or initialized (if those processes run in a tasks-suspended
+        // context.
+        enqueueReindexTask(aEvent.getProject(), "onAfterProjectCreated");
+    }
+
     /**
      * Triggered before a project is removed.
      * 
@@ -293,9 +303,9 @@ public class SearchServiceImpl
      *             if the index cannot be removed.
      */
     @EventListener
-    public void beforeProjectRemove(BeforeProjectRemovedEvent aEvent) throws IOException
+    public void onBeforeProjectRemove(BeforeProjectRemovedEvent aEvent) throws IOException
     {
-        Project project = aEvent.getProject();
+        var project = aEvent.getProject();
 
         if (isBeingDeleted(project.getId())) {
             LOG.trace(
@@ -325,7 +335,7 @@ public class SearchServiceImpl
     }
 
     @EventListener
-    public void afterProjectRemove(AfterProjectRemovedEvent aEvent) throws IOException
+    public void onAfterProjectRemove(AfterProjectRemovedEvent aEvent) throws IOException
     {
         synchronized (indexes) {
             indexes.remove(aEvent.getProject().getId());
@@ -388,7 +398,7 @@ public class SearchServiceImpl
     }
 
     @EventListener
-    public void beforeDocumentRemove(BeforeDocumentRemovedEvent aEvent) throws IOException
+    public void onBeforeDocumentRemove(BeforeDocumentRemovedEvent aEvent) throws IOException
     {
         var document = aEvent.getDocument();
         var project = document.getProject();

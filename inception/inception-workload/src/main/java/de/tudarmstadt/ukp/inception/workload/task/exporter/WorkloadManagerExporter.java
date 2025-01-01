@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.workload.event.exporter;
+package de.tudarmstadt.ukp.inception.workload.task.exporter;
 
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;

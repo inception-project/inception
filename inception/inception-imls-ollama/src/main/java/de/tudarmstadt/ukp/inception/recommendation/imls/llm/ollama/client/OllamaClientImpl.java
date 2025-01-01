@@ -31,10 +31,12 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpRequest.BodyPublishers;
 import java.net.http.HttpResponse;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -72,11 +74,7 @@ public class OllamaClientImpl
     protected HttpResponse<InputStream> sendRequest(HttpRequest aRequest) throws IOException
     {
         try {
-            var response = client.send(aRequest, HttpResponse.BodyHandlers.ofInputStream());
-
-            handleError(response);
-
-            return response;
+            return client.send(aRequest, HttpResponse.BodyHandlers.ofInputStream());
         }
         catch (IOException | InterruptedException e) {
             throw new IOException("Error while sending request: " + e.getMessage(), e);
@@ -175,7 +173,8 @@ public class OllamaClientImpl
     }
 
     @Override
-    public float[][] generateEmbeddings(String aUrl, OllamaEmbedRequest aRequest) throws IOException
+    public List<Pair<String, float[]>> embed(String aUrl, OllamaEmbedRequest aRequest)
+        throws IOException
     {
         var request = HttpRequest.newBuilder() //
                 .uri(URI.create(appendIfMissing(aUrl, "/") + "api/embed")) //
@@ -185,6 +184,10 @@ public class OllamaClientImpl
 
         var rawResponse = sendRequest(request);
 
+        if (aRequest.input().size() == 1 && rawResponse.statusCode() >= HTTP_BAD_REQUEST) {
+            LOG.error("Error embedding string [{}]", aRequest.input().get(0));
+        }
+
         handleError(rawResponse);
 
         try (var is = rawResponse.body()) {
@@ -192,7 +195,12 @@ public class OllamaClientImpl
 
             collectMetrics(response);
 
-            return response.embeddings();
+            var result = new ArrayList<Pair<String, float[]>>();
+            for (int i = 0; i < response.embeddings().length; i++) {
+                result.add(Pair.of(aRequest.input().get(i), response.embeddings()[i]));
+            }
+
+            return result;
         }
     }
 
@@ -222,17 +230,17 @@ public class OllamaClientImpl
     private void collectMetrics(OllamaEmbedResponse response)
     {
         if (LOG.isDebugEnabled()) {
-            var loadDuration = response.loadDuration() / 1_000_000_000;
-            var totalDuration = response.totalDuration() / 1_000_000_000;
-            var evalDuration = (response.totalDuration() - response.loadDuration()) / 1_000_000_000;
-            var promptEvalTokenPerSecond = evalDuration > 0
-                    ? response.promptEvalCount() / evalDuration
+            var loadDurationMs = response.loadDuration() / 1_000_000;
+            var evalDurationMs = (response.totalDuration() - response.loadDuration()) / 1_000_000d;
+            var promptEvalTokenPerSecond = evalDurationMs > 0
+                    ? (double) response.promptEvalCount() / evalDurationMs * 1000.0
                     : 0;
+            var totalDurationMs = response.totalDuration() / 1_000_000d;
             LOG.debug("Tokens  - prompt: {} ({} per sec)", //
                     response.promptEvalCount(), //
-                    promptEvalTokenPerSecond);
-            LOG.debug("Timings - load: {}sec  response: {}s  total: {}sec", //
-                    loadDuration, evalDuration, totalDuration);
+                    format("%.2f", promptEvalTokenPerSecond));
+            LOG.debug("Timings - load: {}ms  response: {}ms  total: {}ms", //
+                    loadDurationMs, evalDurationMs, totalDurationMs);
         }
     }
 

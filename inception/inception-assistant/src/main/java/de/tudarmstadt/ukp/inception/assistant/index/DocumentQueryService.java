@@ -32,4 +32,6 @@ public interface DocumentQueryService
     PooledIndex borrowIndex(Project aProject) throws Exception;
 
     List<String> query(Project aProject, String aQuery, int aTopN, double aScoreThreshold);
+
+    void rebuildIndexAsync(Project aProject);
 }

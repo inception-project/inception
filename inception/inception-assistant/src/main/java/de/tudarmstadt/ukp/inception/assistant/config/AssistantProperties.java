@@ -30,4 +30,6 @@ public interface AssistantProperties
     AssistantChatProperties getChat();
 
     AssistantEmbeddingProperties getEmbedding();
+
+    boolean isDevMode();
 }
