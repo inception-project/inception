@@ -15,23 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.assistant.index;
+package de.tudarmstadt.ukp.inception.assistant.model;
 
-import java.util.List;
-
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.inception.assistant.index.DocumentQueryServiceImpl.PooledIndex;
-
-public interface DocumentQueryService
+public sealed interface MAssistantCommand
+    extends MAssistantMessage
+    permits MAssistantClearCommand
 {
-    final String FIELD_TEXT = "text";
-    final String FIELD_EMBEDDING = "field";
-    final String FIELD_SOURCE_DOC = "sourceDoc";
-    final String FIELD_SOURCE_DOC_COMPLETE = "sourceDocComplete";
-
-    PooledIndex borrowIndex(Project aProject) throws Exception;
-
-    List<String> query(Project aProject, String aQuery, int aTopN, double aScoreThreshold);
-
-    void rebuildIndexAsync(Project aProject);
+    
 }

@@ -30,10 +30,10 @@ import com.knuddels.jtokkit.api.EncodingRegistry;
 
 import de.tudarmstadt.ukp.inception.assistant.AssistantService;
 import de.tudarmstadt.ukp.inception.assistant.AssistantServiceImpl;
-import de.tudarmstadt.ukp.inception.assistant.index.DocumentQueryService;
-import de.tudarmstadt.ukp.inception.assistant.index.DocumentQueryServiceImpl;
-import de.tudarmstadt.ukp.inception.assistant.index.EmbeddingService;
-import de.tudarmstadt.ukp.inception.assistant.index.EmbeddingServiceImpl;
+import de.tudarmstadt.ukp.inception.assistant.documents.DocumentQueryService;
+import de.tudarmstadt.ukp.inception.assistant.documents.DocumentQueryServiceImpl;
+import de.tudarmstadt.ukp.inception.assistant.embedding.EmbeddingService;
+import de.tudarmstadt.ukp.inception.assistant.embedding.EmbeddingServiceImpl;
 import de.tudarmstadt.ukp.inception.assistant.sidebar.AssistantSidebarFactory;
 import de.tudarmstadt.ukp.inception.assistant.userguide.UserGuideQueryService;
 import de.tudarmstadt.ukp.inception.assistant.userguide.UserGuideQueryServiceImpl;

@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.assistant;
 
-import static de.tudarmstadt.ukp.inception.assistant.model.MAssistantRoles.ASSISTANT;
-import static de.tudarmstadt.ukp.inception.assistant.model.MAssistantRoles.SYSTEM;
+import static de.tudarmstadt.ukp.inception.assistant.model.MAssistantChatRoles.ASSISTANT;
+import static de.tudarmstadt.ukp.inception.assistant.model.MAssistantChatRoles.SYSTEM;
 import static java.lang.Math.floorDiv;
 import static java.lang.String.join;
 import static java.util.Arrays.asList;
@@ -52,8 +52,10 @@ import com.knuddels.jtokkit.api.EncodingRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.assistant.config.AssistantProperties;
-import de.tudarmstadt.ukp.inception.assistant.index.DocumentQueryService;
+import de.tudarmstadt.ukp.inception.assistant.documents.DocumentQueryService;
+import de.tudarmstadt.ukp.inception.assistant.model.MAssistantClearCommand;
 import de.tudarmstadt.ukp.inception.assistant.model.MAssistantMessage;
+import de.tudarmstadt.ukp.inception.assistant.model.MAssistantTextMessage;
 import de.tudarmstadt.ukp.inception.assistant.userguide.UserGuideQueryService;
 import de.tudarmstadt.ukp.inception.project.api.event.AfterProjectRemovedEvent;
 import de.tudarmstadt.ukp.inception.project.api.event.BeforeProjectRemovedEvent;
@@ -131,13 +133,13 @@ public class AssistantServiceImpl
     }
 
     @Override
-    public List<MAssistantMessage> getConversationMessages(String aSessionOwner, Project aProject)
+    public List<MAssistantTextMessage> getConversationMessages(String aSessionOwner, Project aProject)
     {
         var state = getState(aSessionOwner, aProject);
         return state.getMessages();
     }
 
-    void recordMessage(String aSessionOwner, Project aProject, MAssistantMessage aMessage)
+    void recordMessage(String aSessionOwner, Project aProject, MAssistantTextMessage aMessage)
     {
         var state = getState(aSessionOwner, aProject);
         state.addMessage(aMessage);
@@ -157,11 +159,13 @@ public class AssistantServiceImpl
             states.keySet().removeIf(key -> aSessionOwner.equals(key.user())
                     && Objects.equals(aProject.getId(), key.projectId));
         }
+
+        dispatchMessage(aSessionOwner, aProject, new MAssistantClearCommand());
     }
     
     @Override
     public void processUserMessage(String aSessionOwner, Project aProject,
-            MAssistantMessage aMessage)
+            MAssistantTextMessage aMessage)
     {
         dispatchMessage(aSessionOwner, aProject, aMessage);
 
@@ -201,7 +205,7 @@ public class AssistantServiceImpl
             var response = ollamaClient.generate(properties.getUrl(), request,
                     r -> handleStreamedMessageFragment(aSessionOwner, aProject, responseId, r));
 
-            var responseMessage = MAssistantMessage.builder() //
+            var responseMessage = MAssistantTextMessage.builder() //
                     .withId(responseId) //
                     .withRole(ASSISTANT) //
                     .withMessage(response) //
@@ -210,7 +214,7 @@ public class AssistantServiceImpl
             dispatchMessage(aSessionOwner, aProject, responseMessage);
         }
         catch (IOException e) {
-            var errorMessage = MAssistantMessage.builder() //
+            var errorMessage = MAssistantTextMessage.builder() //
                     .withId(responseId) //
                     .withRole(SYSTEM) //
                     .withMessage("Error: " + e.getMessage()) //
@@ -223,7 +227,7 @@ public class AssistantServiceImpl
     private void handleStreamedMessageFragment(String aSessionOwner, Project aProject,
             UUID responseId, OllamaChatResponse r)
     {
-        var responseMessage = MAssistantMessage.builder() //
+        var responseMessage = MAssistantTextMessage.builder() //
                 .withId(responseId) //
                 .withRole(ASSISTANT) //
                 .withMessage(r.getMessage().content()) //
@@ -233,17 +237,17 @@ public class AssistantServiceImpl
         dispatchMessage(aSessionOwner, aProject, responseMessage);
     }
 
-    private List<MAssistantMessage> generateTransientMessages(String aSessionOwner,
-            Project aProject, MAssistantMessage aMessage)
+    private List<MAssistantTextMessage> generateTransientMessages(String aSessionOwner,
+            Project aProject, MAssistantTextMessage aMessage)
     {
-        var transientMessages = new ArrayList<MAssistantMessage>();
+        var transientMessages = new ArrayList<MAssistantTextMessage>();
 
         addTransientContextFromUserManual(aSessionOwner, aProject, transientMessages, aMessage);
 
         addTransientContextFromDocuments(aSessionOwner, aProject, transientMessages, aMessage);
 
         var dtf = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM);
-        transientMessages.add(MAssistantMessage.builder() //
+        transientMessages.add(MAssistantTextMessage.builder() //
                 .withRole(SYSTEM).internal() //
                 .withMessage("The current time is " + LocalDateTime.now(ZoneOffset.UTC).format(dtf)) //
                 .build());
@@ -252,7 +256,7 @@ public class AssistantServiceImpl
     }
 
     private void addTransientContextFromUserManual(String aSessionOwner, Project aProject,
-            List<MAssistantMessage> aConversation, MAssistantMessage aMessage)
+            List<MAssistantTextMessage> aConversation, MAssistantTextMessage aMessage)
     {
         var messageBody = new StringBuilder();
         var passages = documentationIndexingService.query(aMessage.message(), 3, 0.8);
@@ -260,15 +264,15 @@ public class AssistantServiceImpl
             messageBody.append("\n```user-manual\n").append(passage).append("\n```\n\n");
         }
 
-        MAssistantMessage message;
+        MAssistantTextMessage message;
         if (messageBody.isEmpty()) {
-            message = MAssistantMessage.builder() //
+            message = MAssistantTextMessage.builder() //
                     .withRole(SYSTEM).internal() //
                     .withMessage("There seems to be no relevant information in the user manual.") //
                     .build();
         }
         else {
-            message = MAssistantMessage.builder() //
+            message = MAssistantTextMessage.builder() //
                     .withRole(SYSTEM).internal() //
                     .withMessage(
                             """
@@ -281,7 +285,7 @@ public class AssistantServiceImpl
     }
 
     private void addTransientContextFromDocuments(String aSessionOwner, Project aProject,
-            List<MAssistantMessage> aConversation, MAssistantMessage aMessage)
+            List<MAssistantTextMessage> aConversation, MAssistantTextMessage aMessage)
     {
         var messageBody = new StringBuilder();
         var passages = documentQueryService.query(aProject, aMessage.message(), 10,
@@ -291,7 +295,7 @@ public class AssistantServiceImpl
         }
 
         if (!messageBody.isEmpty()) {
-            var message = MAssistantMessage.builder() //
+            var message = MAssistantTextMessage.builder() //
                     .withRole(SYSTEM).internal() //
                     .withMessage(
                             """
@@ -304,8 +308,8 @@ public class AssistantServiceImpl
         }
     }
 
-    private List<MAssistantMessage> generateSystemMessages(String aSessionOwner, Project aProject,
-            MAssistantMessage aMessage)
+    private List<MAssistantTextMessage> generateSystemMessages(String aSessionOwner, Project aProject,
+            MAssistantTextMessage aMessage)
     {
         var primeDirectives = asList(
                 "You are Dominick, a helpful assistant within the annotation tool INCEpTION.",
@@ -321,15 +325,15 @@ public class AssistantServiceImpl
         // """
         );
 
-        return asList(MAssistantMessage.builder() //
+        return asList(MAssistantTextMessage.builder() //
                 .withRole(SYSTEM).internal() //
                 .withMessage(join("\n\n", primeDirectives)) //
                 .build());
     }
 
-    private List<MAssistantMessage> limitConversationToContextLength(
-            List<MAssistantMessage> aSystemMessages, List<MAssistantMessage> aTransientMessages,
-            List<MAssistantMessage> aRecentMessages, MAssistantMessage aLatestUserMessage,
+    private List<MAssistantTextMessage> limitConversationToContextLength(
+            List<MAssistantTextMessage> aSystemMessages, List<MAssistantTextMessage> aTransientMessages,
+            List<MAssistantTextMessage> aRecentMessages, MAssistantTextMessage aLatestUserMessage,
             int aContextLength)
     {
         // We don't really know which tokenizer the LLM uses. In case
@@ -341,8 +345,8 @@ public class AssistantServiceImpl
                         "Unknown encoding: " + properties.getChat().getEncoding()));
         var limit = floorDiv(aContextLength * 90, 100);
 
-        var headMessages = new ArrayList<MAssistantMessage>();
-        var tailMessages = new LinkedList<MAssistantMessage>();
+        var headMessages = new ArrayList<MAssistantTextMessage>();
+        var tailMessages = new LinkedList<MAssistantTextMessage>();
 
         var totalMessages = aSystemMessages.size() + aTransientMessages.size()
                 + aRecentMessages.size() + 1;
@@ -445,14 +449,14 @@ public class AssistantServiceImpl
 
     private static class AssistentState
     {
-        private LinkedList<MAssistantMessage> messages = new LinkedList<>();
+        private LinkedList<MAssistantTextMessage> messages = new LinkedList<>();
 
-        public List<MAssistantMessage> getMessages()
+        public List<MAssistantTextMessage> getMessages()
         {
             return new ArrayList<>(messages);
         }
 
-        public void addMessage(MAssistantMessage aMessage)
+        public void addMessage(MAssistantTextMessage aMessage)
         {
             synchronized (messages) {
                 var found = false;

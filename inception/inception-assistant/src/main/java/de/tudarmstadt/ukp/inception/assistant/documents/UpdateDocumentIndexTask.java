@@ -15,14 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.assistant.index;
+package de.tudarmstadt.ukp.inception.assistant.documents;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.AUTO_CAS_UPGRADE;
-import static de.tudarmstadt.ukp.inception.assistant.index.DocumentQueryService.FIELD_EMBEDDING;
-import static de.tudarmstadt.ukp.inception.assistant.index.DocumentQueryService.FIELD_SOURCE_DOC;
-import static de.tudarmstadt.ukp.inception.assistant.index.DocumentQueryService.FIELD_SOURCE_DOC_COMPLETE;
-import static de.tudarmstadt.ukp.inception.assistant.index.DocumentQueryService.FIELD_TEXT;
+import static de.tudarmstadt.ukp.inception.assistant.documents.DocumentQueryService.FIELD_EMBEDDING;
+import static de.tudarmstadt.ukp.inception.assistant.documents.DocumentQueryService.FIELD_SOURCE_DOC;
+import static de.tudarmstadt.ukp.inception.assistant.documents.DocumentQueryService.FIELD_SOURCE_DOC_COMPLETE;
+import static de.tudarmstadt.ukp.inception.assistant.documents.DocumentQueryService.FIELD_TEXT;
 import static de.tudarmstadt.ukp.inception.scheduling.TaskState.CANCELLED;
 import static de.tudarmstadt.ukp.inception.scheduling.TaskState.COMPLETED;
 import static de.tudarmstadt.ukp.inception.scheduling.TaskState.RUNNING;
@@ -59,7 +59,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
 import de.tudarmstadt.ukp.inception.assistant.config.AssistantProperties;
-import de.tudarmstadt.ukp.inception.assistant.index.DocumentQueryServiceImpl.PooledIndex;
+import de.tudarmstadt.ukp.inception.assistant.documents.DocumentQueryServiceImpl.PooledIndex;
+import de.tudarmstadt.ukp.inception.assistant.embedding.EmbeddingService;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.scheduling.DebouncingTask;
 import de.tudarmstadt.ukp.inception.scheduling.ProjectTask;

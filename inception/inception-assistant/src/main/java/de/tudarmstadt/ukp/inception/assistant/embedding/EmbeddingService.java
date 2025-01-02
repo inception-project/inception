@@ -15,22 +15,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.assistant.model;
+package de.tudarmstadt.ukp.inception.assistant.embedding;
 
-import static com.fasterxml.jackson.annotation.JsonTypeInfo.As.PROPERTY;
-import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME;
+import java.io.IOException;
+import java.util.List;
+import java.util.Optional;
 
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import org.apache.commons.lang3.tuple.Pair;
 
-@JsonSerialize
-@JsonTypeInfo(use = NAME, include = PROPERTY, property = "type")
-@JsonSubTypes({ //
-        @JsonSubTypes.Type(value = MAssistantTextMessage.class, name = "textMessage"), //
-        @JsonSubTypes.Type(value = MAssistantClearCommand.class, name = "clearCmd") //
-})
-public sealed interface MAssistantMessage permits MAssistantTextMessage, MAssistantCommand
+public interface EmbeddingService
 {
+    Optional<float[]> embed(String aQuery) throws IOException;
 
+    List<Pair<String, float[]>> embed(String... aStrings) throws IOException;
+
+    int getDimension();
 }

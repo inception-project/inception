@@ -49,7 +49,7 @@ import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 
 import de.tudarmstadt.ukp.inception.assistant.config.AssistantProperties;
-import de.tudarmstadt.ukp.inception.assistant.index.EmbeddingService;
+import de.tudarmstadt.ukp.inception.assistant.embedding.EmbeddingService;
 import de.tudarmstadt.ukp.inception.assistant.index.HighDimensionLucene99Codec;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.support.SettingsUtil;

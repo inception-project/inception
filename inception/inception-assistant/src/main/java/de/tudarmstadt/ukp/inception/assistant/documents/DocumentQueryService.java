@@ -15,19 +15,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.assistant.index;
+package de.tudarmstadt.ukp.inception.assistant.documents;
 
-import java.io.IOException;
 import java.util.List;
-import java.util.Optional;
 
-import org.apache.commons.lang3.tuple.Pair;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.inception.assistant.documents.DocumentQueryServiceImpl.PooledIndex;
 
-public interface EmbeddingService
+public interface DocumentQueryService
 {
-    Optional<float[]> embed(String aQuery) throws IOException;
+    final String FIELD_TEXT = "text";
+    final String FIELD_EMBEDDING = "field";
+    final String FIELD_SOURCE_DOC = "sourceDoc";
+    final String FIELD_SOURCE_DOC_COMPLETE = "sourceDocComplete";
 
-    List<Pair<String, float[]>> embed(String... aStrings) throws IOException;
+    PooledIndex borrowIndex(Project aProject) throws Exception;
 
-    int getDimension();
+    List<String> query(Project aProject, String aQuery, int aTopN, double aScoreThreshold);
+
+    void rebuildIndexAsync(Project aProject);
 }

@@ -25,7 +25,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase2;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
 import de.tudarmstadt.ukp.inception.assistant.AssistantService;
-import de.tudarmstadt.ukp.inception.assistant.index.DocumentQueryService;
+import de.tudarmstadt.ukp.inception.assistant.documents.DocumentQueryService;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 
@@ -63,7 +63,5 @@ public class AssistantSidebar
         var sessionOwner = userService.getCurrentUsername();
         var project = getAnnotationPage().getProject();
         assistantService.clearConversation(sessionOwner, project);
-        // FIXME instead of reloading the chat, we should send a clearing message in the assistant service
-        aTarget.add(chat);
     }
 }

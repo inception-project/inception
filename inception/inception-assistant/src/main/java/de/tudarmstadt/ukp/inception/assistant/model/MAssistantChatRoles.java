@@ -17,20 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.assistant.model;
 
-import static com.fasterxml.jackson.annotation.JsonTypeInfo.As.PROPERTY;
-import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME;
-
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-
-@JsonSerialize
-@JsonTypeInfo(use = NAME, include = PROPERTY, property = "type")
-@JsonSubTypes({ //
-        @JsonSubTypes.Type(value = MAssistantTextMessage.class, name = "textMessage"), //
-        @JsonSubTypes.Type(value = MAssistantClearCommand.class, name = "clearCmd") //
-})
-public sealed interface MAssistantMessage permits MAssistantTextMessage, MAssistantCommand
+public interface MAssistantChatRoles
 {
-
+    String ASSISTANT = "assistant";
+    String SYSTEM = "system";
+    String USER = "user";
 }

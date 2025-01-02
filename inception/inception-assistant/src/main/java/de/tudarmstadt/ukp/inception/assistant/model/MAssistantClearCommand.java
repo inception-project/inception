@@ -17,9 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.assistant.model;
 
-public interface MAssistantRoles
-{
-    String ASSISTANT = "assistant";
-    String SYSTEM = "system";
-    String USER = "user";
+public record MAssistantClearCommand() implements MAssistantCommand {
+
 }

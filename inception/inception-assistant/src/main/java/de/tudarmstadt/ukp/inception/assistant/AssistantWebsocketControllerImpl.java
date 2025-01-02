@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.assistant;
 
-import static de.tudarmstadt.ukp.inception.assistant.model.MAssistantRoles.USER;
+import static de.tudarmstadt.ukp.inception.assistant.model.MAssistantChatRoles.USER;
 import static de.tudarmstadt.ukp.inception.websocket.config.WebSocketConstants.PARAM_PROJECT;
 
 import java.io.IOException;
@@ -39,7 +39,7 @@ import org.springframework.messaging.simp.annotation.SubscribeMapping;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-import de.tudarmstadt.ukp.inception.assistant.model.MAssistantMessage;
+import de.tudarmstadt.ukp.inception.assistant.model.MAssistantTextMessage;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import jakarta.servlet.ServletContext;
 
@@ -62,7 +62,7 @@ public class AssistantWebsocketControllerImpl
     }
 
     @SubscribeMapping(PROJECT_ASSISTANT_TOPIC_TEMPLATE)
-    public List<MAssistantMessage> onSubscribeToAssistantMessages(SimpMessageHeaderAccessor aHeaderAccessor,
+    public List<MAssistantTextMessage> onSubscribeToAssistantMessages(SimpMessageHeaderAccessor aHeaderAccessor,
             Principal aPrincipal, //
             @DestinationVariable(PARAM_PROJECT) long aProjectId)
         throws IOException
@@ -79,12 +79,12 @@ public class AssistantWebsocketControllerImpl
         throws IOException
     {
         var project = projectService.getProject(aProjectId);
-        var message = MAssistantMessage.builder().withRole(USER).withMessage(aMessage).build();
+        var message = MAssistantTextMessage.builder().withRole(USER).withMessage(aMessage).build();
         assistantService.processUserMessage(aPrincipal.getName(), project, message);
     }
 
     @SendTo(PROJECT_ASSISTANT_TOPIC_TEMPLATE)
-    public MAssistantMessage send(MAssistantMessage aUpdate)
+    public MAssistantTextMessage send(MAssistantTextMessage aUpdate)
     {
         return aUpdate;
     }

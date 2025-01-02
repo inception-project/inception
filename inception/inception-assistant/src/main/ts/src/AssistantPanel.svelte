@@ -23,7 +23,7 @@
     import { marked } from 'marked'
     import DOMPurify from 'dompurify'
 
-    interface MAssistantMessage {
+    interface MAssistantTextMessage {
         id: string,
         role: string,
         message: string,
@@ -42,7 +42,7 @@
     let element = null;
     let chatContainer = null;
     let self = get_current_component()
-    let messages = [] as MAssistantMessage[];
+    let messages = [] as MAssistantTextMessage[];
     let messageInput;
     let waitingForResponse = false;
     let autoScroll = true;
@@ -79,11 +79,11 @@
                 );
             }
         );
-        stompClient.subscribe("/app" + topicChannel, (msg) => messageRecieved(msg));
-        stompClient.subscribe("/topic" + topicChannel, (msg) => messageRecieved(msg));
+        stompClient.subscribe("/app" + topicChannel, (msg) => onMessageRecieved(msg));
+        stompClient.subscribe("/topic" + topicChannel, (msg) => onMessageRecieved(msg));
     }
 
-    export function messageRecieved(msg) {
+    export function onMessageRecieved(msg) {
         if (!document.body.contains(element)) {
             console.debug("Element is not part of the DOM anymore. Disconnecting and suiciding.")
             self.$destroy()
@@ -97,30 +97,43 @@
         }
 
         msgBody.forEach(incomingMessage => {
-            if (waitingForResponse && incomingMessage.role == "assistant" && !incomingMessage.internal) {
-                waitingForResponse = false
-            }
-
-            const index = messages.findIndex(message => message.id === incomingMessage.id);
-            if (index !== -1) {
-                if (incomingMessage.done) {
-                    messages = [
-                        ...messages.slice(0, index),
-                        incomingMessage,
-                        ...messages.slice(index + 1)
-                    ];
-                }
-                else {
-                    messages = [
-                        ...messages.slice(0, index),
-                        { ...messages[index], message: messages[index].message + incomingMessage.message },
-                        ...messages.slice(index + 1)
-                    ];
-                }
-            } else {
-                messages = [...messages, incomingMessage];
-            }
+            handleMessage(incomingMessage);
         });
+    }
+
+    function handleMessage(incomingMessage: any) {
+        if (incomingMessage.type === "textMessage") {
+            onTextMessage(incomingMessage);
+        }
+        else if (incomingMessage.type === "clearCmd") {
+            messages = []
+        }
+    }
+
+    function onTextMessage(incomingMessage: MAssistantTextMessage) {
+        if(waitingForResponse&&incomingMessage.role=="assistant"&&!incomingMessage.internal) {
+            waitingForResponse=false;
+        }
+        
+        const index=messages.findIndex(message => message.id===incomingMessage.id);
+        if(index!==-1) {
+            if(incomingMessage.done) {
+                messages=[
+                ...messages.slice(0,index),
+                incomingMessage,
+                ...messages.slice(index+1)
+                ];
+            }
+            else {
+                messages=[
+                ...messages.slice(0,index),
+                { ...messages[index],message: messages[index].message+incomingMessage.message },
+                ...messages.slice(index+1)
+                ];
+            }
+        } else {
+            messages=[...messages,incomingMessage];
+        }
     }
 
     export function disconnect() {
@@ -157,7 +170,7 @@
         scrollToBottom();
     });
 
-    function renderMessage(message: MAssistantMessage) {
+    function renderMessage(message: MAssistantTextMessage) {
         const rawHtml = marked(message.message) as string
         return DOMPurify.sanitize(rawHtml, { RETURN_DOM: false })
     }

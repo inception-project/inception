@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.assistant.index;
+package de.tudarmstadt.ukp.inception.assistant.documents;
 
 import static de.tudarmstadt.ukp.inception.project.api.ProjectService.PROJECT_FOLDER;
 import static java.util.Collections.emptyList;
@@ -48,6 +48,8 @@ import org.springframework.context.event.EventListener;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.assistant.config.AssistantDocumentIndexProperties;
 import de.tudarmstadt.ukp.inception.assistant.config.AssistantProperties;
+import de.tudarmstadt.ukp.inception.assistant.embedding.EmbeddingService;
+import de.tudarmstadt.ukp.inception.assistant.index.HighDimensionLucene99Codec;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
 import de.tudarmstadt.ukp.inception.documents.event.AfterDocumentCreatedEvent;
 import de.tudarmstadt.ukp.inception.documents.event.BeforeDocumentRemovedEvent;
@@ -166,7 +168,6 @@ public class DocumentQueryServiceImpl
                 .toAbsolutePath() //
                 .resolve(PROJECT_FOLDER) //
                 .resolve(Long.toString(aProjectId)) //
-                .resolve(PROJECT_FOLDER) //
                 .resolve(ASSISTANT_FOLDER) //
                 .resolve(INDEX_FOLDER);
     }

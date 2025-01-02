@@ -37,7 +37,7 @@ import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.inception.assistant.config.AssistantProperties;
 import de.tudarmstadt.ukp.inception.assistant.config.AssistantPropertiesImpl;
-import de.tudarmstadt.ukp.inception.assistant.index.EmbeddingServiceImpl;
+import de.tudarmstadt.ukp.inception.assistant.embedding.EmbeddingServiceImpl;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaClient;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaClientImpl;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
