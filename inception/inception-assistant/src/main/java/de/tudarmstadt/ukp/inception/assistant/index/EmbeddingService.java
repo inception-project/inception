@@ -19,12 +19,13 @@ package de.tudarmstadt.ukp.inception.assistant.index;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.commons.lang3.tuple.Pair;
 
 public interface EmbeddingService
 {
-    float[] embed(String aQuery) throws IOException;
+    Optional<float[]> embed(String aQuery) throws IOException;
 
     List<Pair<String, float[]>> embed(String... aStrings) throws IOException;
 

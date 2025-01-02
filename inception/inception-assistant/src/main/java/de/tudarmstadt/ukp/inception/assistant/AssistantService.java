@@ -28,4 +28,6 @@ public interface AssistantService
 
     void processUserMessage(String aSessionOwner, Project aProject,
             MAssistantMessage aMessage);
+
+    void clearConversation(String aSessionOwner, Project aProject);
 }

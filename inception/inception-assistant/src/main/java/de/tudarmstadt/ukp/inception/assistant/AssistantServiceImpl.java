@@ -151,6 +151,15 @@ public class AssistantServiceImpl
     }
 
     @Override
+    public void clearConversation(String aSessionOwner, Project aProject)
+    {
+        synchronized (states) {
+            states.keySet().removeIf(key -> aSessionOwner.equals(key.user())
+                    && Objects.equals(aProject.getId(), key.projectId));
+        }
+    }
+    
+    @Override
     public void processUserMessage(String aSessionOwner, Project aProject,
             MAssistantMessage aMessage)
     {
@@ -275,7 +284,8 @@ public class AssistantServiceImpl
             List<MAssistantMessage> aConversation, MAssistantMessage aMessage)
     {
         var messageBody = new StringBuilder();
-        var passages = documentQueryService.query(aProject, aMessage.message(), 10, 0.8);
+        var passages = documentQueryService.query(aProject, aMessage.message(), 10,
+                properties.getEmbedding().getChunkScoreThreshold());
         for (var passage : passages) {
             messageBody.append("```context\n").append(passage).append("\n```\n\n");
         }

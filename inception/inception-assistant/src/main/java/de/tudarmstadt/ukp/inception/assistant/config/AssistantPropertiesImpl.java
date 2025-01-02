@@ -214,9 +214,11 @@ public class AssistantPropertiesImpl
         private double repeatPenalty = 1.0;
         private double temperature = 0.0;
         private int contextLength = 768;
+        private int chunkSize = 128;
         private int batchSize = 16;
         private String encoding = "cl100k_base";
         private int dimension = AUTO_DETECT_DIMENSION;
+        private double chunkScoreThreshold = 0.6;
 
         @Override
         public String getModel()
@@ -323,9 +325,32 @@ public class AssistantPropertiesImpl
             return dimension;
         }
 
+        @Override
         public void setDimension(int aDimension)
         {
             dimension = aDimension;
+        }
+
+        @Override
+        public int getChunkSize()
+        {
+            return chunkSize;
+        }
+
+        public void setChunkSize(int aChunkSize)
+        {
+            chunkSize = aChunkSize;
+        }
+        
+        @Override
+        public double getChunkScoreThreshold()
+        {
+            return chunkScoreThreshold;
+        }
+        
+        public void setChunkScoreThreshold(double aChunkScoreThreshold)
+        {
+            chunkScoreThreshold = aChunkScoreThreshold;
         }
     }
 }

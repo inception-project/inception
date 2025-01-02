@@ -127,7 +127,12 @@ public class DocumentQueryServiceImpl
 
                 LOG.trace("KNN Query: [{}]", aQuery);
 
-                var queryEmbedding = l2normalize(embeddingService.embed(aQuery), false);
+                var maybeEmbedding = embeddingService.embed(aQuery);
+                if (!maybeEmbedding.isPresent()) {
+                    return emptyList();
+                }
+                
+                var queryEmbedding = l2normalize(maybeEmbedding.get(), false);
 
                 var searcher = new IndexSearcher(reader);
                 var query = new KnnFloatVectorQuery(FIELD_EMBEDDING, queryEmbedding, aTopN);

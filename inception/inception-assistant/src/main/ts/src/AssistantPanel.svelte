@@ -270,6 +270,11 @@
         margin-bottom: 0;
       }
 
+      :global(pre) {
+        background-color: #ffffff80;
+        border: solid grey 1px;
+      }
+
       :global(code) {
         white-space: break-spaces;
       }

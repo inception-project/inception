@@ -29,6 +29,7 @@ import static de.tudarmstadt.ukp.inception.scheduling.TaskState.RUNNING;
 import static java.lang.Math.floorDiv;
 import static java.time.Duration.ofSeconds;
 import static org.apache.commons.collections4.ListUtils.partition;
+import static org.apache.commons.lang3.StringUtils.abbreviateMiddle;
 import static org.apache.lucene.index.VectorSimilarityFunction.DOT_PRODUCT;
 import static org.apache.lucene.util.VectorUtil.l2normalize;
 
@@ -51,6 +52,8 @@ import org.apache.uima.cas.CAS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import com.knuddels.jtokkit.api.EncodingRegistry;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
@@ -75,6 +78,7 @@ public class UpdateDocumentIndexTask
     private @Autowired DocumentQueryServiceImpl documentQueryService;
     private @Autowired EmbeddingService embeddingService;
     private @Autowired AssistantProperties properties;
+    private @Autowired EncodingRegistry encodingRegistry;
 
     public UpdateDocumentIndexTask(Builder<? extends Builder<?>> aBuilder)
     {
@@ -211,13 +215,48 @@ public class UpdateDocumentIndexTask
 
     private List<String> chunk(CAS cas)
     {
-        return cas.select(Sentence.class) //
+        var encoding = encodingRegistry.getEncoding(properties.getChat().getEncoding())
+                .orElseThrow(() -> new IllegalStateException(
+                        "Unknown encoding: " + properties.getChat().getEncoding()));
+        var limit = floorDiv(properties.getEmbedding().getChunkSize() * 90, 100);
+
+        var unitIterator = cas.select(Sentence.class) //
                 .map(Sentence::getCoveredText) //
-                .toList();
+                .toList().iterator();
+
+        var chunks = new ArrayList<String>();
+
+        var currentChunk = new StringBuilder();
+        var chunkTokens = 0;
+        while (unitIterator.hasNext()) {
+            var unit = unitIterator.next();
+            var unitTokens = encoding.countTokensOrdinary(unit);
+
+            if (chunkTokens + unitTokens > limit) {
+                chunks.add(currentChunk.toString());
+                currentChunk.setLength(0);
+                chunkTokens = 0;
+            }
+            currentChunk.append(unit);
+            currentChunk.append("\n");
+            chunkTokens += unitTokens;
+        }
+
+        // Add the final chunk (unless empty)
+        if (currentChunk.length() > 0) {
+            chunks.add(currentChunk.toString());
+        }
+
+        return chunks;
     }
 
     private void addToIndex(PooledIndex aIndex, Pair<String, float[]> embedding) throws IOException
     {
+        if (LOG.isTraceEnabled()) {
+            LOG.trace("Indexing chunk: [{}]",
+                    abbreviateMiddle(embedding.getKey().replaceAll("\\s+", " "), " … ", 60));
+        }
+
         var doc = new Document();
         var normalizedEmbedding = l2normalize(embedding.getValue(), false);
         doc.add(new KnnFloatVectorField(FIELD_EMBEDDING, normalizedEmbedding, DOT_PRODUCT));

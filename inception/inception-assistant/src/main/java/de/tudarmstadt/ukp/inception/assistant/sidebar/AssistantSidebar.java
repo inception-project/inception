@@ -21,8 +21,10 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase2;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
+import de.tudarmstadt.ukp.inception.assistant.AssistantService;
 import de.tudarmstadt.ukp.inception.assistant.index.DocumentQueryService;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
@@ -32,20 +34,36 @@ public class AssistantSidebar
 {
     private static final long serialVersionUID = -1585047099720374119L;
 
+    private @SpringBean UserDao userService;
+    private @SpringBean AssistantService assistantService;
     private @SpringBean DocumentQueryService documentQueryService;
+    
+    private AssistantPanel chat;
 
     public AssistantSidebar(String aId, AnnotationActionHandler aActionHandler,
             CasProvider aCasProvider, AnnotationPageBase2 aAnnotationPage)
     {
         super(aId, aActionHandler, aCasProvider, aAnnotationPage);
 
-        add(new AssistantPanel("chat"));
+        chat = new AssistantPanel("chat");
+        queue(chat);
 
-        add(new LambdaAjaxLink("reindex", this::actionReindex));
-    }
+        queue(new LambdaAjaxLink("reindex", this::actionReindex));
+
+        queue(new LambdaAjaxLink("clear", this::actionClear));
+}
 
     private void actionReindex(AjaxRequestTarget aTarget)
     {
         documentQueryService.rebuildIndexAsync(getAnnotationPage().getProject());
+    }
+
+    private void actionClear(AjaxRequestTarget aTarget)
+    {
+        var sessionOwner = userService.getCurrentUsername();
+        var project = getAnnotationPage().getProject();
+        assistantService.clearConversation(sessionOwner, project);
+        // FIXME instead of reloading the chat, we should send a clearing message in the assistant service
+        aTarget.add(chat);
     }
 }

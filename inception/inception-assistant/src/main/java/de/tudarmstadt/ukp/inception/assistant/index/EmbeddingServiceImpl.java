@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
@@ -53,15 +54,22 @@ public class EmbeddingServiceImpl
         autoDetectEmbeddingDimension();
     }
     
+    @Override
     public int getDimension() {
         autoDetectEmbeddingDimension();
         return properties.getEmbedding().getDimension();
     }
 
     @Override
-    public float[] embed(String aQuery) throws IOException
+    public Optional<float[]> embed(String aQuery) throws IOException
     {
-        return embed(new String[] { aQuery }).get(0).getValue();
+        var result = embed(new String[] { aQuery });
+
+        if (result.isEmpty()) {
+            return Optional.empty();
+        }
+        
+        return Optional.of(result.get(0).getValue());
     }
 
     @Override
