@@ -15,19 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.assistant.model;
+package de.tudarmstadt.ukp.inception.assistant.documents;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonTypeName;
+import java.util.List;
 
-@JsonTypeName(MAssistantClearCommand.TYPE_CLEAR_CMD)
-public record MAssistantClearCommand()
-    implements MAssistantCommand
+public interface Chunker<T>
 {
-    private static final String TYPE_CLEAR_CMD = "clearCmd";
-    
-    @JsonProperty(MAssistantMessage.TYPE_FIELD)
-    public String getType() {
-        return TYPE_CLEAR_CMD;
-    }
+    List<Chunk> process(T aObject);
 }

@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -47,9 +48,9 @@ import org.springframework.context.event.EventListener;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.assistant.config.AssistantDocumentIndexProperties;
-import de.tudarmstadt.ukp.inception.assistant.config.AssistantProperties;
 import de.tudarmstadt.ukp.inception.assistant.embedding.EmbeddingService;
 import de.tudarmstadt.ukp.inception.assistant.index.HighDimensionLucene99Codec;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
 import de.tudarmstadt.ukp.inception.documents.event.AfterDocumentCreatedEvent;
 import de.tudarmstadt.ukp.inception.documents.event.BeforeDocumentRemovedEvent;
@@ -62,11 +63,11 @@ public class DocumentQueryServiceImpl
 {
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
-    private final AssistantProperties properties;
     private final RepositoryProperties repositoryProperties;
     private final AssistantDocumentIndexProperties indexProperties;
     private final SchedulingService schedulingService;
     private final EmbeddingService embeddingService;
+    private final DocumentService documentService;
 
     private static final String INDEX_FOLDER = "index";
     private static final String ASSISTANT_FOLDER = "assistant";
@@ -74,16 +75,16 @@ public class DocumentQueryServiceImpl
     private final GenericKeyedObjectPool<Long, PooledIndex> indexPool;
     private final Set<Project> projectsPendingDeletion = new HashSet<>();
 
-    public DocumentQueryServiceImpl(AssistantProperties aAssistantProperties,
+    public DocumentQueryServiceImpl(
             RepositoryProperties aRepositoryProperties,
             AssistantDocumentIndexProperties aIndexProperties, SchedulingService aSchedulingService,
-            EmbeddingService aEmbeddingService)
+            EmbeddingService aEmbeddingService, DocumentService aDocumentService)
     {
-        properties = aAssistantProperties;
         repositoryProperties = aRepositoryProperties;
         indexProperties = aIndexProperties;
         schedulingService = aSchedulingService;
         embeddingService = aEmbeddingService;
+        documentService = aDocumentService;
 
         var indexPoolConfig = new GenericKeyedObjectPoolConfig<PooledIndex>();
         // We only ever want one pooled index per project
@@ -115,7 +116,7 @@ public class DocumentQueryServiceImpl
     }
 
     @Override
-    public List<String> query(Project aProject, String aQuery, int aTopN, double aScoreThreshold)
+    public List<Chunk> query(Project aProject, String aQuery, int aTopN, double aScoreThreshold)
     {
         try (var index = borrowIndex(aProject)) {
             try (var reader = DirectoryReader.open(index.getIndexWriter())) {
@@ -140,25 +141,43 @@ public class DocumentQueryServiceImpl
                 var query = new KnnFloatVectorQuery(FIELD_EMBEDDING, queryEmbedding, aTopN);
                 var result = searcher.search(query, aTopN);
 
-                var passages = new ArrayList<String>();
+                var documentNameCache = new HashMap<Long, String>();
+                var chunks = new ArrayList<Chunk>();
                 for (var scoreDoc : result.scoreDocs) {
                     if (scoreDoc.score >= aScoreThreshold) {
                         var doc = reader.storedFields().document(scoreDoc.doc);
-                        var text = doc.get(FIELD_TEXT);
-                        passages.add(text);
-                        LOG.trace("Score {} above threshold: [{}]", scoreDoc.score, text);
+                        var docId = doc.getField(FIELD_SOURCE_DOC_ID).numericValue().longValue();
+                        var docName = getDocumentName(aProject, documentNameCache, docId);
+                        chunks.add(Chunk.builder() //
+                                .withDocumentName(docName) //
+                                .withSection(doc.get(FIELD_SECTION))
+                                .withText(doc.get(FIELD_TEXT)) //
+                                .withScore(scoreDoc.score) //
+                                .build());
+                        LOG.trace("Score {} above threshold: [{}]", scoreDoc.score, doc.get(FIELD_TEXT));
                     }
                     else if (LOG.isTraceEnabled()) {
                         var doc = reader.storedFields().document(scoreDoc.doc);
-                        LOG.trace("Score {} too low: [{}]", scoreDoc.score, doc.get("text"));
+                        LOG.trace("Score {} too low: [{}]", scoreDoc.score, doc.get(FIELD_TEXT));
                     }
                 }
-                return passages;
+                return chunks;
             }
         }
         catch (Exception e) {
             LOG.error("Unable to query index", e);
             return emptyList();
+        }
+    }
+
+    private String getDocumentName(Project aProject, HashMap<Long, String> documentNameCache, long docId)
+    {
+        try {
+            return documentNameCache.computeIfAbsent(docId, id -> documentService
+                    .getSourceDocument(aProject.getId(), id).getName());
+        }
+        catch (Exception e) {
+            return "";
         }
     }
 

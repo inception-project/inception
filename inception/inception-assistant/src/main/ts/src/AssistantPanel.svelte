@@ -102,38 +102,44 @@
     }
 
     function handleMessage(incomingMessage: any) {
-        if (incomingMessage.type === "textMessage") {
+        const type = incomingMessage['@type']
+        if (type === "textMessage") {
             onTextMessage(incomingMessage);
         }
-        else if (incomingMessage.type === "clearCmd") {
+        else if (type === "clearCmd") {
             messages = []
         }
     }
 
-    function onTextMessage(incomingMessage: MAssistantTextMessage) {
-        if(waitingForResponse&&incomingMessage.role=="assistant"&&!incomingMessage.internal) {
-            waitingForResponse=false;
+    function onTextMessage(msg: MAssistantTextMessage) {
+        if (waitingForResponse && msg.role === "assistant" && !msg.internal) {
+            waitingForResponse = false
         }
         
-        const index=messages.findIndex(message => message.id===incomingMessage.id);
-        if(index!==-1) {
-            if(incomingMessage.done) {
-                messages=[
+        const index = messages.findIndex(message => message.id === msg.id)
+
+        // If message is new, add it
+        if (index === -1) {
+            messages = [...messages, msg]
+            return
+        } 
+
+        // If done, replace existing message
+        if (msg.done) {
+            messages = [
                 ...messages.slice(0,index),
-                incomingMessage,
+                msg,
                 ...messages.slice(index+1)
-                ];
-            }
-            else {
-                messages=[
-                ...messages.slice(0,index),
-                { ...messages[index],message: messages[index].message+incomingMessage.message },
-                ...messages.slice(index+1)
-                ];
-            }
-        } else {
-            messages=[...messages,incomingMessage];
+            ]
+            return
         }
+
+        // Merge with existing message
+        messages = [
+            ...messages.slice(0,index),
+            { ...messages[index],message: messages[index].message+msg.message },
+            ...messages.slice(index+1)
+        ];
     }
 
     export function disconnect() {
@@ -221,7 +227,7 @@
 <!-- svelte-ignore css-unused-selector -->
 <style lang="scss">
   .chat {
-    background-color: beige;
+    background-color: var(--bs-secondary-bg);
   }
 
   @keyframes dots {
@@ -246,10 +252,10 @@
   }
 
   .message {
-    color: #000;
+    color: var(--bs-body-color);
+    font-size: var(--bs-body-font-size);
+    line-height: var(--bs-body-line-height);
     clear: both;
-    line-height: 18px;
-    font-size: 15px;
     padding: 8px;
     position: relative;
     margin: 8px 0;
@@ -257,9 +263,13 @@
     width: 100%;
     max-width: 100%;
     border-radius: 0.25em;
+
+    .role {
+      font-size: smaller;
+      color: var(--bs-body-color-secondary);
+    }
     
     &.composer {
-      background: #f0f0f0;
       border-radius: 5px;
 
       input {
@@ -267,8 +277,6 @@
         background: transparent;
         width: 100%;
         padding: 8px;
-        font-size: 15px;
-        line-height: 18px;
         outline: none;
         border-radius: 5px;
         margin: 0;
@@ -283,30 +291,43 @@
         margin-bottom: 0;
       }
 
-      :global(pre) {
-        background-color: #ffffff80;
-        border: solid grey 1px;
-      }
-
       :global(code) {
         white-space: break-spaces;
       }
     }
 
     &[data-actor="user"] {
-      background: #e1ffc7;
+        background-color: var(--bs-info-bg-subtle);
     }
     
     &[data-actor="assistant"] {
-      background: #fff;
+      background-color: var(--bs-success-bg-subtle);
     }
 
     &[data-internal="true"] {
-      font-size: x-small;
-      background-color: #ffffff80;
+      background-color: var(--bs-tertiary-bg);
+
+      .message-body {
+        font-size: smaller;
+      }
+
 
       :global(pre) {
         margin-bottom: 0.2rem;
+        background-color: #00000010;
+        border: solid 1px;
+        border-color: var(--bs-border-color-translucent);
+        border-radius: 5px;
+        padding: 0.25rem;
+      }
+
+      :global(p:has(+ pre)) {
+        margin-top: 0.5rem;
+        margin-bottom: 0;
+      }
+
+      :global(code) {
+        font-family: var(--bs-body-font-family);
       }
     }
   }

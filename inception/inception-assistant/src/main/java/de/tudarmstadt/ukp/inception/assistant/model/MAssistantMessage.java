@@ -25,12 +25,12 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 @JsonSerialize
-@JsonTypeInfo(use = NAME, include = PROPERTY, property = "type")
+@JsonTypeInfo(use = NAME, include = PROPERTY, property = MAssistantMessage.TYPE_FIELD)
 @JsonSubTypes({ //
-        @JsonSubTypes.Type(value = MAssistantTextMessage.class, name = "textMessage"), //
-        @JsonSubTypes.Type(value = MAssistantClearCommand.class, name = "clearCmd") //
+        @JsonSubTypes.Type(value = MAssistantTextMessage.class), //
+        @JsonSubTypes.Type(value = MAssistantClearCommand.class) //
 })
 public sealed interface MAssistantMessage permits MAssistantTextMessage, MAssistantCommand
 {
-
+    String TYPE_FIELD = "@type";
 }

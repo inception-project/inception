@@ -17,11 +17,15 @@
  */
 package de.tudarmstadt.ukp.inception.assistant.config;
 
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.session.SessionRegistry;
 
@@ -30,13 +34,20 @@ import com.knuddels.jtokkit.api.EncodingRegistry;
 
 import de.tudarmstadt.ukp.inception.assistant.AssistantService;
 import de.tudarmstadt.ukp.inception.assistant.AssistantServiceImpl;
+import de.tudarmstadt.ukp.inception.assistant.documents.DocumentContextRetriever;
 import de.tudarmstadt.ukp.inception.assistant.documents.DocumentQueryService;
 import de.tudarmstadt.ukp.inception.assistant.documents.DocumentQueryServiceImpl;
 import de.tudarmstadt.ukp.inception.assistant.embedding.EmbeddingService;
 import de.tudarmstadt.ukp.inception.assistant.embedding.EmbeddingServiceImpl;
+import de.tudarmstadt.ukp.inception.assistant.retriever.CurrentDateTimeRetriever;
+import de.tudarmstadt.ukp.inception.assistant.retriever.Retriever;
+import de.tudarmstadt.ukp.inception.assistant.retriever.RetrieverExtensionPoint;
+import de.tudarmstadt.ukp.inception.assistant.retriever.RetrieverExtensionPointImpl;
 import de.tudarmstadt.ukp.inception.assistant.sidebar.AssistantSidebarFactory;
 import de.tudarmstadt.ukp.inception.assistant.userguide.UserGuideQueryService;
 import de.tudarmstadt.ukp.inception.assistant.userguide.UserGuideQueryServiceImpl;
+import de.tudarmstadt.ukp.inception.assistant.userguide.UserGuideRetriever;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaClient;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
@@ -51,11 +62,11 @@ public class AssistantAutoConfiguration
     @Bean
     public AssistantService assistantService(SessionRegistry aSessionRegistry,
             SimpMessagingTemplate aMsgTemplate, OllamaClient aOllamaClient,
-            AssistantProperties aProperties, UserGuideQueryService aDocumentationIndexingService,
-            DocumentQueryService aDocumentQueryService, EncodingRegistry aEncodingRegistry)
+            AssistantProperties aProperties, EncodingRegistry aEncodingRegistry,
+            RetrieverExtensionPoint aRetrieverExtensionPoint)
     {
         return new AssistantServiceImpl(aSessionRegistry, aMsgTemplate, aOllamaClient, aProperties,
-                aDocumentationIndexingService, aDocumentQueryService, aEncodingRegistry);
+                aEncodingRegistry, aRetrieverExtensionPoint);
     }
 
     @Bean
@@ -70,24 +81,53 @@ public class AssistantAutoConfiguration
     {
         return new UserGuideQueryServiceImpl(aProperties, aSchedulingService, aEmbeddingService);
     }
-    
+
     @Bean
-    public EncodingRegistry encodingRegistry() {
+    public EncodingRegistry encodingRegistry()
+    {
         return Encodings.newLazyEncodingRegistry();
     }
 
     @Bean
-    public EmbeddingService EmbeddingService(AssistantProperties aProperties, OllamaClient aOllamaClient) {
+    public EmbeddingService EmbeddingService(AssistantProperties aProperties,
+            OllamaClient aOllamaClient)
+    {
         return new EmbeddingServiceImpl(aProperties, aOllamaClient);
     }
 
     @Bean
-    public DocumentQueryService documentQueryService(AssistantProperties aProperties,
-            RepositoryProperties aRepositoryProperties,
+    public DocumentQueryService documentQueryService(RepositoryProperties aRepositoryProperties,
             AssistantDocumentIndexProperties aIndexProperties, SchedulingService aSchedulingService,
-            OllamaClient aOllamaClient, EmbeddingService aEmbeddingService)
+            OllamaClient aOllamaClient, EmbeddingService aEmbeddingService, DocumentService aDocumentService)
     {
-        return new DocumentQueryServiceImpl(aProperties, aRepositoryProperties, aIndexProperties,
-                aSchedulingService, aEmbeddingService);
+        return new DocumentQueryServiceImpl(aRepositoryProperties, aIndexProperties,
+                aSchedulingService, aEmbeddingService, aDocumentService);
+    }
+
+    @Bean
+    public RetrieverExtensionPoint retrieverExtensionPoint(
+            @Lazy @Autowired(required = false) List<Retriever> aExtensions)
+    {
+        return new RetrieverExtensionPointImpl(aExtensions);
+    }
+
+    @Bean
+    public CurrentDateTimeRetriever currentDateTimeRetriever()
+    {
+        return new CurrentDateTimeRetriever();
+    }
+
+    @Bean
+    public DocumentContextRetriever documentContextRetriever(
+            DocumentQueryService aDocumentQueryService, AssistantProperties aProperties)
+    {
+        return new DocumentContextRetriever(aDocumentQueryService, aProperties);
+    }
+
+    @Bean
+    public UserGuideRetriever userGuideRetriever(
+            UserGuideQueryService aDocumentationIndexingService)
+    {
+        return new UserGuideRetriever(aDocumentationIndexingService);
     }
 }

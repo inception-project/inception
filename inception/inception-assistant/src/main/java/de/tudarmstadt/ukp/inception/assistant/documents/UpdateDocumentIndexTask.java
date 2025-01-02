@@ -20,7 +20,8 @@ package de.tudarmstadt.ukp.inception.assistant.documents;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.AUTO_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.inception.assistant.documents.DocumentQueryService.FIELD_EMBEDDING;
-import static de.tudarmstadt.ukp.inception.assistant.documents.DocumentQueryService.FIELD_SOURCE_DOC;
+import static de.tudarmstadt.ukp.inception.assistant.documents.DocumentQueryService.FIELD_SECTION;
+import static de.tudarmstadt.ukp.inception.assistant.documents.DocumentQueryService.FIELD_SOURCE_DOC_ID;
 import static de.tudarmstadt.ukp.inception.assistant.documents.DocumentQueryService.FIELD_SOURCE_DOC_COMPLETE;
 import static de.tudarmstadt.ukp.inception.assistant.documents.DocumentQueryService.FIELD_TEXT;
 import static de.tudarmstadt.ukp.inception.scheduling.TaskState.CANCELLED;
@@ -37,7 +38,6 @@ import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Objects;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -56,7 +56,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import com.knuddels.jtokkit.api.EncodingRegistry;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
 import de.tudarmstadt.ukp.inception.assistant.config.AssistantProperties;
 import de.tudarmstadt.ukp.inception.assistant.documents.DocumentQueryServiceImpl.PooledIndex;
@@ -99,6 +98,8 @@ public class UpdateDocumentIndexTask
         if (documents.isEmpty()) {
             return;
         }
+
+        var chunker = new CasChunker(encodingRegistry, properties);
 
         var monitor = getMonitor();
         try (var index = documentQueryService.borrowIndex(getProject())) {
@@ -148,7 +149,7 @@ public class UpdateDocumentIndexTask
 
                         monitor.setProgressWithMessage(processed * 100, toProcess,
                                 LogMessage.info(this, "Indexing: %s", sourceDocument.getName()));
-                        indexDocument(index, sourceDocument);
+                        indexDocument(index, chunker, sourceDocument);
                         processed++;
                     }
                 }
@@ -169,99 +170,78 @@ public class UpdateDocumentIndexTask
     private void unindexDocument(PooledIndex aIndex, long aSourceDocumentId)
     {
         try {
-            aIndex.getIndexWriter()
-                    .deleteDocuments(LongPoint.newExactQuery(FIELD_SOURCE_DOC, aSourceDocumentId));
+            aIndex.getIndexWriter().deleteDocuments(
+                    LongPoint.newExactQuery(FIELD_SOURCE_DOC_ID, aSourceDocumentId));
         }
         catch (IOException e) {
             LOG.error("Error unindexing document [{}]", aSourceDocumentId, e);
         }
     }
 
-    private void indexDocument(PooledIndex aIndex, SourceDocument aSourceDocument)
+    private void indexDocument(PooledIndex aIndex, Chunker<CAS> aChunker,
+            SourceDocument aSourceDocument)
     {
         try {
             var cas = documentService.createOrReadInitialCas(aSourceDocument, AUTO_CAS_UPGRADE,
                     SHARED_READ_ONLY_ACCESS);
 
-            var chunks = chunk(cas);
+            var chunks = aChunker.process(cas);
             var batches = partition(chunks, properties.getEmbedding().getBatchSize());
 
             var totalBatches = batches.size();
             var processedBatches = 0;
-            var sentencesSeen = 0;
+            var chunksSeen = 0;
             var progressOffset = getMonitor().getProgress();
             for (var batch : batches) {
                 try {
-                    var docEmbeddings = embeddingService.embed(batch.toArray(String[]::new));
+                    var docEmbeddings = embeddingService
+                            .embed(batch.stream().map(Chunk::text).toArray(String[]::new));
                     for (var embedding : docEmbeddings) {
-                        addToIndex(aIndex, embedding);
+                        indexChunks(aIndex, aSourceDocument, embedding);
                     }
                 }
                 catch (IOException e) {
                     LOG.error("Error indexing document {} chunks {}-{} ", aSourceDocument,
-                            sentencesSeen, sentencesSeen + batch.size(), e);
+                            chunksSeen, chunksSeen + batch.size(), e);
                 }
 
                 getMonitor().setStateAndProgress(RUNNING,
                         progressOffset + floorDiv(processedBatches * 100, totalBatches));
 
-                sentencesSeen += batch.size();
+                chunksSeen += batch.size();
                 processedBatches++;
             }
+
+            markDocumentAsIndexed(aIndex, aSourceDocument);
         }
         catch (IOException e) {
             LOG.error("Error indexing document", aSourceDocument, e);
         }
     }
 
-    private List<String> chunk(CAS cas)
+    private void markDocumentAsIndexed(PooledIndex aIndex, SourceDocument aSourceDocument)
+        throws IOException
     {
-        var encoding = encodingRegistry.getEncoding(properties.getChat().getEncoding())
-                .orElseThrow(() -> new IllegalStateException(
-                        "Unknown encoding: " + properties.getChat().getEncoding()));
-        var limit = floorDiv(properties.getEmbedding().getChunkSize() * 90, 100);
-
-        var unitIterator = cas.select(Sentence.class) //
-                .map(Sentence::getCoveredText) //
-                .toList().iterator();
-
-        var chunks = new ArrayList<String>();
-
-        var currentChunk = new StringBuilder();
-        var chunkTokens = 0;
-        while (unitIterator.hasNext()) {
-            var unit = unitIterator.next();
-            var unitTokens = encoding.countTokensOrdinary(unit);
-
-            if (chunkTokens + unitTokens > limit) {
-                chunks.add(currentChunk.toString());
-                currentChunk.setLength(0);
-                chunkTokens = 0;
-            }
-            currentChunk.append(unit);
-            currentChunk.append("\n");
-            chunkTokens += unitTokens;
-        }
-
-        // Add the final chunk (unless empty)
-        if (currentChunk.length() > 0) {
-            chunks.add(currentChunk.toString());
-        }
-
-        return chunks;
+        var doc = new Document();
+        doc.add(new StoredField(FIELD_SOURCE_DOC_COMPLETE, aSourceDocument.getId()));
+        aIndex.getIndexWriter().addDocument(doc);
     }
 
-    private void addToIndex(PooledIndex aIndex, Pair<String, float[]> embedding) throws IOException
+    private void indexChunks(PooledIndex aIndex, SourceDocument aSourceDocument,
+            Pair<String, float[]> aEmbeddedChunks)
+        throws IOException
     {
         if (LOG.isTraceEnabled()) {
             LOG.trace("Indexing chunk: [{}]",
-                    abbreviateMiddle(embedding.getKey().replaceAll("\\s+", " "), " … ", 60));
+                    abbreviateMiddle(aEmbeddedChunks.getKey().replaceAll("\\s+", " "), " … ", 60));
         }
 
         var doc = new Document();
-        var normalizedEmbedding = l2normalize(embedding.getValue(), false);
+        var normalizedEmbedding = l2normalize(aEmbeddedChunks.getValue(), false);
         doc.add(new KnnFloatVectorField(FIELD_EMBEDDING, normalizedEmbedding, DOT_PRODUCT));
-        doc.add(new StoredField(FIELD_TEXT, embedding.getKey()));
+        doc.add(new StoredField(FIELD_SOURCE_DOC_ID, aSourceDocument.getId()));
+        doc.add(new StoredField(FIELD_SECTION, ""));
+        doc.add(new StoredField(FIELD_TEXT, aEmbeddedChunks.getKey()));
         aIndex.getIndexWriter().addDocument(doc);
     }
 

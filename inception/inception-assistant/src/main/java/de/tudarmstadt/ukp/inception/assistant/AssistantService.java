@@ -24,7 +24,9 @@ import de.tudarmstadt.ukp.inception.assistant.model.MAssistantTextMessage;
 
 public interface AssistantService
 {
-    List<MAssistantTextMessage> getConversationMessages(String aSessionOwner, Project aProject);
+    List<MAssistantTextMessage> getAllChatMessages(String aSessionOwner, Project aProject);
+
+    List<MAssistantTextMessage> getChatMessages(String aSessionOwner, Project aProject);
 
     void processUserMessage(String aSessionOwner, Project aProject,
             MAssistantTextMessage aMessage);

@@ -22,6 +22,9 @@ import java.util.UUID;
 
 import org.apache.commons.lang3.Validate;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeName;
+
 /**
  * @param id
  *            the ID of the message, important when streaming as the UI needs to concatenate all
@@ -36,9 +39,12 @@ import org.apache.commons.lang3.Validate;
  *            if the message is part of the inner monolog, RAG or similarly not normally exposed to
  *            the user
  */
+@JsonTypeName(MAssistantTextMessage.TYPE_TEXT_MESSAGE)
 public record MAssistantTextMessage(UUID id, String role, String message, boolean done,
-        boolean internal) implements MAssistantMessage
+        boolean internal)
+    implements MAssistantMessage
 {
+    private static final String TYPE_TEXT_MESSAGE = "textMessage";
 
     private MAssistantTextMessage(Builder aBuilder)
     {
@@ -54,8 +60,14 @@ public record MAssistantTextMessage(UUID id, String role, String message, boolea
         Validate.isTrue(Objects.equals(aMessage.internal(), internal()));
         Validate.isTrue(!done());
 
-        return new MAssistantTextMessage(id(), role(), message() + aMessage.message(), aMessage.done(),
-                internal());
+        return new MAssistantTextMessage(id(), role(), message() + aMessage.message(),
+                aMessage.done(), internal());
+    }
+
+    @JsonProperty(MAssistantMessage.TYPE_FIELD)
+    public String getType()
+    {
+        return TYPE_TEXT_MESSAGE;
     }
 
     public static Builder builder()

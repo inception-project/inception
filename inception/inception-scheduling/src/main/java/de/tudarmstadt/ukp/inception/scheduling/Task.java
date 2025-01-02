@@ -208,7 +208,7 @@ public abstract class Task
             }
 
             if (monitor.getState() == TaskState.COMPLETED) {
-                LOG.debug("Task [{}] completed (trigger: [{}]) in {}", getTitle(), getTrigger(),
+                LOG.debug("Task [{}] completed (trigger: [{}]) in {}ms", getTitle(), getTrigger(),
                         monitor.getDuration());
             }
         }

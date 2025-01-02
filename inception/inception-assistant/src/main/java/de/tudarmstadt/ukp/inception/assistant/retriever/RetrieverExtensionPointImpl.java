@@ -15,19 +15,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.assistant.model;
+package de.tudarmstadt.ukp.inception.assistant.retriever;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonTypeName;
+import java.util.List;
 
-@JsonTypeName(MAssistantClearCommand.TYPE_CLEAR_CMD)
-public record MAssistantClearCommand()
-    implements MAssistantCommand
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
+
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.inception.support.extensionpoint.ExtensionPoint_ImplBase;
+
+public class RetrieverExtensionPointImpl
+    extends ExtensionPoint_ImplBase<Project, Retriever>
+    implements RetrieverExtensionPoint
 {
-    private static final String TYPE_CLEAR_CMD = "clearCmd";
-    
-    @JsonProperty(MAssistantMessage.TYPE_FIELD)
-    public String getType() {
-        return TYPE_CLEAR_CMD;
+    public RetrieverExtensionPointImpl(
+            @Lazy @Autowired(required = false) List<Retriever> aExtensions)
+    {
+        super(aExtensions);
     }
 }

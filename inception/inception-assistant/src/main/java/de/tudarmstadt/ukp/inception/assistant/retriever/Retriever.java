@@ -15,19 +15,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.assistant.model;
+package de.tudarmstadt.ukp.inception.assistant.retriever;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonTypeName;
+import java.util.List;
 
-@JsonTypeName(MAssistantClearCommand.TYPE_CLEAR_CMD)
-public record MAssistantClearCommand()
-    implements MAssistantCommand
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.inception.assistant.model.MAssistantTextMessage;
+import de.tudarmstadt.ukp.inception.support.extensionpoint.Extension;
+
+public interface Retriever extends Extension<Project>
 {
-    private static final String TYPE_CLEAR_CMD = "clearCmd";
-    
-    @JsonProperty(MAssistantMessage.TYPE_FIELD)
-    public String getType() {
-        return TYPE_CLEAR_CMD;
-    }
+    List<MAssistantTextMessage> retrieve(String aSessionOwner, Project aProject,
+            MAssistantTextMessage aMessage);
 }

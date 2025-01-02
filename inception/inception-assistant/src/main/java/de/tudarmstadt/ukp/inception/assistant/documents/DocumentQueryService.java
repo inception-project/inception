@@ -24,14 +24,15 @@ import de.tudarmstadt.ukp.inception.assistant.documents.DocumentQueryServiceImpl
 
 public interface DocumentQueryService
 {
+    final String FIELD_SECTION = "section";
     final String FIELD_TEXT = "text";
     final String FIELD_EMBEDDING = "field";
-    final String FIELD_SOURCE_DOC = "sourceDoc";
+    final String FIELD_SOURCE_DOC_ID = "sourceDoc";
     final String FIELD_SOURCE_DOC_COMPLETE = "sourceDocComplete";
 
     PooledIndex borrowIndex(Project aProject) throws Exception;
 
-    List<String> query(Project aProject, String aQuery, int aTopN, double aScoreThreshold);
+    List<Chunk> query(Project aProject, String aQuery, int aTopN, double aScoreThreshold);
 
     void rebuildIndexAsync(Project aProject);
 }
