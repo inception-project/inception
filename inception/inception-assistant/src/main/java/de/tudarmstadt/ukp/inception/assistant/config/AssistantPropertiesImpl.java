@@ -25,6 +25,7 @@ public class AssistantPropertiesImpl
     implements AssistantProperties
 {
     private String url = "http://localhost:11434";
+    private String nickname = "INCEpTION";
 
     private boolean forceRebuildUserManualIndex = false;
     private int maxUserManualPassages = 3;
@@ -35,6 +36,17 @@ public class AssistantPropertiesImpl
 
     @Value("${inception.dev:false}") // Inject system property or use default if not provided
     private boolean devMode;
+
+    @Override
+    public String getNickname()
+    {
+        return nickname;
+    }
+
+    public void setNickname(String aNickname)
+    {
+        nickname = aNickname;
+    }
 
     @Override
     public boolean isDevMode()

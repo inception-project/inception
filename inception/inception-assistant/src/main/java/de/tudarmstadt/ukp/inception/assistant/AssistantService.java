@@ -20,16 +20,16 @@ package de.tudarmstadt.ukp.inception.assistant;
 import java.util.List;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.inception.assistant.model.MAssistantTextMessage;
+import de.tudarmstadt.ukp.inception.assistant.model.MTextMessage;
 
 public interface AssistantService
 {
-    List<MAssistantTextMessage> getAllChatMessages(String aSessionOwner, Project aProject);
+    List<MTextMessage> getAllChatMessages(String aSessionOwner, Project aProject);
 
-    List<MAssistantTextMessage> getChatMessages(String aSessionOwner, Project aProject);
+    List<MTextMessage> getChatMessages(String aSessionOwner, Project aProject);
 
     void processUserMessage(String aSessionOwner, Project aProject,
-            MAssistantTextMessage aMessage);
+            MTextMessage aMessage);
 
     void clearConversation(String aSessionOwner, Project aProject);
 }

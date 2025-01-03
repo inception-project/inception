@@ -133,7 +133,7 @@ public class OllamaClientImpl
     }
 
     @Override
-    public String generate(String aUrl, OllamaChatRequest aRequest,
+    public OllamaChatResponse generate(String aUrl, OllamaChatRequest aRequest,
             Consumer<OllamaChatResponse> aCallback)
         throws IOException
     {
@@ -152,6 +152,7 @@ public class OllamaClientImpl
         handleError(rawResponse);
 
         var result = new StringBuilder();
+        OllamaChatResponse finalResponse = null;
         try (var is = rawResponse.body()) {
             var iter = objectMapper.readerFor(OllamaChatResponse.class).readValues(is);
             while (iter.hasNext()) {
@@ -159,6 +160,7 @@ public class OllamaClientImpl
 
                 if (response.isDone()) {
                     collectMetrics(response);
+                    finalResponse = response;
                 }
 
                 result.append(response.getMessage().content());
@@ -169,7 +171,10 @@ public class OllamaClientImpl
             }
         }
 
-        return result.toString().trim();
+        var role = finalResponse.getMessage().role();
+        finalResponse.setMessage(new OllamaChatMessage(role, result.toString().trim()));
+
+        return finalResponse;
     }
 
     @Override
@@ -218,7 +223,7 @@ public class OllamaClientImpl
                     promptEvalTokenPerSecond, //
                     response.getEvalCount(), //
                     evalTokenPerSecond);
-            LOG.debug("Timings - load: {}sec  prompt: {}sec  response: {}s  total: {}sec", //
+            LOG.debug("Timings - load: {}sec  prompt: {}sec  response: {}sec  total: {}sec", //
                     loadDuration, promptEvalDuration, evalDuration, totalDuration);
         }
 

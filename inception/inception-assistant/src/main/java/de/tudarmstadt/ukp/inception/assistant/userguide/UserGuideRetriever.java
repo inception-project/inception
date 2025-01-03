@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.assistant.userguide;
 
-import static de.tudarmstadt.ukp.inception.assistant.model.MAssistantChatRoles.SYSTEM;
+import static de.tudarmstadt.ukp.inception.assistant.model.MChatRoles.SYSTEM;
 import static java.util.Arrays.asList;
 
 import java.util.List;
@@ -25,8 +25,9 @@ import java.util.List;
 import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.inception.assistant.ChatContext;
 import de.tudarmstadt.ukp.inception.assistant.documents.DocumentContextRetriever;
-import de.tudarmstadt.ukp.inception.assistant.model.MAssistantTextMessage;
+import de.tudarmstadt.ukp.inception.assistant.model.MTextMessage;
 import de.tudarmstadt.ukp.inception.assistant.retriever.Retriever;
 
 @Order(1000)
@@ -53,24 +54,27 @@ public class UserGuideRetriever
     }
 
     @Override
-    public List<MAssistantTextMessage> retrieve(String aSessionOwner, Project aProject,
-            MAssistantTextMessage aMessage)
+    public List<MTextMessage> retrieve(ChatContext aAssistant, MTextMessage aMessage)
     {
         var messageBody = new StringBuilder();
         var passages = documentationIndexingService.query(aMessage.message(), 3, 0.8);
         for (var passage : passages) {
-            messageBody.append("\n```user-manual\n").append(passage).append("\n```\n\n");
+            messageBody.append("\n```user-manual\n") //
+                    .append(passage) //
+                    .append("\n```\n\n");
         }
 
-        MAssistantTextMessage message;
+        MTextMessage message;
         if (messageBody.isEmpty()) {
-            message = MAssistantTextMessage.builder() //
+            message = MTextMessage.builder() //
+                    .withActor("User guide") //
                     .withRole(SYSTEM).internal() //
                     .withMessage("There seems to be no relevant information in the user manual.") //
                     .build();
         }
         else {
-            message = MAssistantTextMessage.builder() //
+            message = MTextMessage.builder() //
+                    .withActor("User guide") //
                     .withRole(SYSTEM).internal() //
                     .withMessage(
                             """

@@ -15,17 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.assistant.retriever;
+package de.tudarmstadt.ukp.inception.assistant.model;
 
-import java.util.List;
-
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.inception.assistant.ChatContext;
-import de.tudarmstadt.ukp.inception.assistant.model.MTextMessage;
-import de.tudarmstadt.ukp.inception.support.extensionpoint.Extension;
-
-public interface Retriever
-    extends Extension<Project>
+public interface MChatRoles
 {
-    List<MTextMessage> retrieve(ChatContext aAssistant, MTextMessage aMessage);
+    String ASSISTANT = "assistant";
+    String SYSTEM = "system";
+    String USER = "user";
 }

@@ -23,12 +23,18 @@
     import { marked } from 'marked'
     import DOMPurify from 'dompurify'
 
-    interface MAssistantTextMessage {
+    interface MPerformanceMetrics {
+        duration: number,
+    }
+
+    interface MTextMessage {
         id: string,
         role: string,
+        actor?: string,
         message: string,
         done: boolean,
         internal: boolean
+        performance?: MPerformanceMetrics
     }
 
     export let wsEndpointUrl: string; // should this be full ws://... url
@@ -42,7 +48,7 @@
     let element = null;
     let chatContainer = null;
     let self = get_current_component()
-    let messages = [] as MAssistantTextMessage[];
+    let messages = [] as MTextMessage[];
     let messageInput;
     let waitingForResponse = false;
     let autoScroll = true;
@@ -111,7 +117,7 @@
         }
     }
 
-    function onTextMessage(msg: MAssistantTextMessage) {
+    function onTextMessage(msg: MTextMessage) {
         if (waitingForResponse && msg.role === "assistant" && !msg.internal) {
             waitingForResponse = false
         }
@@ -176,7 +182,7 @@
         scrollToBottom();
     });
 
-    function renderMessage(message: MAssistantTextMessage) {
+    function renderMessage(message: MTextMessage) {
         const rawHtml = marked(message.message) as string
         return DOMPurify.sanitize(rawHtml, { RETURN_DOM: false })
     }
@@ -196,30 +202,54 @@
             messageInput.value = '';
         }
     }
+
+    function toggleMessage(event) {
+        const messageElement = event.currentTarget;
+        messageElement.classList.toggle('collapsed');
+    }
 </script>
 
 <div bind:this={element} class="d-flex flex-column flex-content chat">
     <div class="scrolling flex-content px-3 py-1" bind:this={chatContainer} on:scroll={handleScroll}>
         {#each messages as message}
-            <div class="message" data-actor="{message.role}" data-internal="{message.internal}">
-                <div class="role text-body-secondary">{message.role}
+            <!-- svelte-ignore a11y-click-events-have-key-events -->
+            <div class="message" data-role="{message.role}" data-internal="{message.internal}" 
+                 class:collapsed={message.internal}
+                 on:click={message.internal ? toggleMessage : null} 
+                 role="button" tabindex="0">
+                <div class="message-header text-body-secondary">
+                    {#if message.role === "assistant"}
+                      <i class="fas fa-robot me-1" title="Assistant message"/>
+                    {:else if message.role === "user"}
+                        <i class="fas fa-user me-1" title="User message"/>
+                    {:else if message.role === "system"}
+                        <i class="fas fa-cog me-1" title="System message"/>
+                    {/if}
+                    {message.actor ? message.actor : message.role}
                     {#if message.internal}
-                    <span class="ms-2 text-body-secondary">(internal)</span>
+                        <span class="mx-2 text-body-secondary float-end fw-lighter">
+                            <i class="fas fa-info" title="Internal message"/>
+                        </span>
                     {/if}
                 </div>
                 <div class="message-body" class:dots="{!message.done}">{@html renderMessage(message)}</div>
+                {#if message.performance}
+                    <div class="message-footer">
+                        <span><i class="far fa-clock me-1"/>{message.performance.duration / 1000}s</span>
+                    </div>
+                {/if}
             </div>
         {/each}
         {#if waitingForResponse}
-            <div class="message" data-actor="assistant">
-                <div class="role text-body-secondary">assistant</div>
+            <div class="message" data-role="assistant">
                 <div class="message-body"><span class="dots"></span></div>
             </div>
         {/if}
     </div>
     <div class="px-3 py-1">
-        <div class="message composer" data-actor="user">
-            <input type="text" placeholder="Type your message here" bind:this={messageInput} on:keydown={handleKeyDown}/>
+        <div class="message composer" data-role="user">
+            <input type="text" placeholder="Type your message here" bind:this={messageInput} 
+                   on:keydown={handleKeyDown}/>
         </div>
     </div>
 </div>
@@ -263,11 +293,6 @@
     width: 100%;
     max-width: 100%;
     border-radius: 0.25em;
-
-    .role {
-      font-size: smaller;
-      color: var(--bs-body-color-secondary);
-    }
     
     &.composer {
       border-radius: 5px;
@@ -284,6 +309,12 @@
       }
     }
 
+    .message-header {
+      display: block;
+      font-size: smaller;
+      color: var(--bs-body-color-secondary);
+    }
+
     .message-body {
       display: block;
 
@@ -296,16 +327,23 @@
       }
     }
 
-    &[data-actor="user"] {
+    .message-footer {
+      display: block;
+      font-size: x-small;
+      color: var(--bs-body-color-secondary);
+    }
+
+    &[data-role="user"] {
         background-color: var(--bs-info-bg-subtle);
     }
     
-    &[data-actor="assistant"] {
+    &[data-role="assistant"] {
       background-color: var(--bs-success-bg-subtle);
     }
 
     &[data-internal="true"] {
       background-color: var(--bs-tertiary-bg);
+      padding: 4px;
 
       .message-body {
         font-size: smaller;
@@ -329,6 +367,14 @@
       :global(code) {
         font-family: var(--bs-body-font-family);
       }
+    }
+
+    &.collapsed .message-body {
+      display: none;
+    }
+
+    &.collapsed .role {
+      cursor: pointer;
     }
   }
 </style>

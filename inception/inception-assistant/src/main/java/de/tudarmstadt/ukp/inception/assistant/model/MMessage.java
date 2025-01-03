@@ -17,17 +17,20 @@
  */
 package de.tudarmstadt.ukp.inception.assistant.model;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonTypeName;
+import static com.fasterxml.jackson.annotation.JsonTypeInfo.As.PROPERTY;
+import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME;
 
-@JsonTypeName(MAssistantClearCommand.TYPE_CLEAR_CMD)
-public record MAssistantClearCommand()
-    implements MAssistantCommand
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+
+@JsonSerialize
+@JsonTypeInfo(use = NAME, include = PROPERTY, property = MMessage.TYPE_FIELD)
+@JsonSubTypes({ //
+        @JsonSubTypes.Type(value = MTextMessage.class), //
+        @JsonSubTypes.Type(value = MRemoveConversationCommand.class) //
+})
+public sealed interface MMessage permits MChatMessage, MCommandMessage
 {
-    private static final String TYPE_CLEAR_CMD = "clearCmd";
-    
-    @JsonProperty(MAssistantMessage.TYPE_FIELD)
-    public String getType() {
-        return TYPE_CLEAR_CMD;
-    }
+    String TYPE_FIELD = "@type";
 }

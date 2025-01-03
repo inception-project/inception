@@ -17,9 +17,20 @@
  */
 package de.tudarmstadt.ukp.inception.assistant.model;
 
-public sealed interface MAssistantCommand
-    extends MAssistantMessage
-    permits MAssistantClearCommand
+public sealed interface MChatMessage
+    extends MMessage
+    permits MTextMessage
 {
+    /**
+     * @return the role of the message author
+     */
+    String role();
+
+    /**
+     * @return if the message is part of the inner monolog, RAG or similarly not normally exposed to
+     *         the user
+     */
+    boolean internal();
     
+    MPerformanceMetrics performance();
 }

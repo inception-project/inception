@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.assistant;
 
-import static de.tudarmstadt.ukp.inception.assistant.model.MAssistantChatRoles.USER;
+import static de.tudarmstadt.ukp.inception.assistant.model.MChatRoles.USER;
 import static de.tudarmstadt.ukp.inception.websocket.config.WebSocketConstants.PARAM_PROJECT;
 
 import java.io.IOException;
@@ -39,7 +39,8 @@ import org.springframework.messaging.simp.annotation.SubscribeMapping;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-import de.tudarmstadt.ukp.inception.assistant.model.MAssistantTextMessage;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.inception.assistant.model.MTextMessage;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import jakarta.servlet.ServletContext;
 
@@ -52,17 +53,20 @@ public class AssistantWebsocketControllerImpl
 {
     private final AssistantService assistantService;
     private final ProjectService projectService;
+    private final UserDao userService;
 
     @Autowired
     public AssistantWebsocketControllerImpl(ServletContext aServletContext,
-            SimpMessagingTemplate aMsgTemplate, AssistantService aAssistantService, ProjectService aProjectService)
+            SimpMessagingTemplate aMsgTemplate, AssistantService aAssistantService, ProjectService aProjectService
+            , UserDao aUserService)
     {
         assistantService = aAssistantService;
         projectService = aProjectService;
+        userService = aUserService;
     }
 
     @SubscribeMapping(PROJECT_ASSISTANT_TOPIC_TEMPLATE)
-    public List<MAssistantTextMessage> onSubscribeToAssistantMessages(SimpMessageHeaderAccessor aHeaderAccessor,
+    public List<MTextMessage> onSubscribeToAssistantMessages(SimpMessageHeaderAccessor aHeaderAccessor,
             Principal aPrincipal, //
             @DestinationVariable(PARAM_PROJECT) long aProjectId)
         throws IOException
@@ -79,12 +83,17 @@ public class AssistantWebsocketControllerImpl
         throws IOException
     {
         var project = projectService.getProject(aProjectId);
-        var message = MAssistantTextMessage.builder().withRole(USER).withMessage(aMessage).build();
+        var user = userService.get(aPrincipal.getName());
+        var message = MTextMessage.builder() //
+                .withActor(user.getUiName()) //
+                .withRole(USER) //
+                .withMessage(aMessage) //
+                .build();
         assistantService.processUserMessage(aPrincipal.getName(), project, message);
     }
 
     @SendTo(PROJECT_ASSISTANT_TOPIC_TEMPLATE)
-    public MAssistantTextMessage send(MAssistantTextMessage aUpdate)
+    public MTextMessage send(MTextMessage aUpdate)
     {
         return aUpdate;
     }

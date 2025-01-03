@@ -95,7 +95,7 @@ class OllamaClientImplTest
         };
 
         var response = sut.generate(DEFAULT_OLLAMA_URL, request, callback);
-        LOG.info("Response: [{}]", response.trim());
+        LOG.info("Response: [{}]", response.getMessage().content());
     }
 
     @Test

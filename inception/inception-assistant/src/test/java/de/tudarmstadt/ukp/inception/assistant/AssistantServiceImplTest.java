@@ -62,7 +62,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageServiceAutoConfiguration;
-import de.tudarmstadt.ukp.inception.assistant.model.MAssistantTextMessage;
+import de.tudarmstadt.ukp.inception.assistant.model.MTextMessage;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryAutoConfiguration;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
 import de.tudarmstadt.ukp.inception.documents.config.DocumentServiceAutoConfiguration;
@@ -177,7 +177,7 @@ class AssistantServiceImplTest
 
         var channel = "/topic" + AssistantWebsocketController.getChannel(project);
 
-        var message = MAssistantTextMessage.builder() //
+        var message = MTextMessage.builder() //
                 .withRole("assistant") //
                 .withMessage("Test message") //
                 .build();
@@ -198,7 +198,7 @@ class AssistantServiceImplTest
 
         var broadcastChannel = "/topic" + AssistantWebsocketController.getChannel(project);
 
-        var message = MAssistantTextMessage.builder() //
+        var message = MTextMessage.builder() //
                 .withRole("assistant") //
                 .withMessage("Test message") //
                 .build();

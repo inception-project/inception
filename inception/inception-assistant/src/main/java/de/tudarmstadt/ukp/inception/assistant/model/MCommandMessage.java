@@ -17,20 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.assistant.model;
 
-import static com.fasterxml.jackson.annotation.JsonTypeInfo.As.PROPERTY;
-import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME;
-
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-
-@JsonSerialize
-@JsonTypeInfo(use = NAME, include = PROPERTY, property = MAssistantMessage.TYPE_FIELD)
-@JsonSubTypes({ //
-        @JsonSubTypes.Type(value = MAssistantTextMessage.class), //
-        @JsonSubTypes.Type(value = MAssistantClearCommand.class) //
-})
-public sealed interface MAssistantMessage permits MAssistantTextMessage, MAssistantCommand
+public sealed interface MCommandMessage
+    extends MMessage
+    permits MRemoveConversationCommand
 {
-    String TYPE_FIELD = "@type";
+    
 }

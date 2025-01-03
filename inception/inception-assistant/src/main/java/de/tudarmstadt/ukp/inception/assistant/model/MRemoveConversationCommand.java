@@ -17,9 +17,17 @@
  */
 package de.tudarmstadt.ukp.inception.assistant.model;
 
-public interface MAssistantChatRoles
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeName;
+
+@JsonTypeName(MRemoveConversationCommand.TYPE_CLEAR_CMD)
+public record MRemoveConversationCommand()
+    implements MCommandMessage
 {
-    String ASSISTANT = "assistant";
-    String SYSTEM = "system";
-    String USER = "user";
+    static final String TYPE_CLEAR_CMD = "clearCmd";
+    
+    @JsonProperty(MMessage.TYPE_FIELD)
+    public String getType() {
+        return TYPE_CLEAR_CMD;
+    }
 }

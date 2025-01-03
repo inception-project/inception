@@ -35,23 +35,28 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
  *            the message or message fragment
  * @param role
  *            the message role
+ * @param actor
+ *            name of the actor sending the message
  * @param internal
  *            if the message is part of the inner monolog, RAG or similarly not normally exposed to
  *            the user
+ * @param performance
+ *            optional performance metrics
  */
-@JsonTypeName(MAssistantTextMessage.TYPE_TEXT_MESSAGE)
-public record MAssistantTextMessage(UUID id, String role, String message, boolean done,
-        boolean internal)
-    implements MAssistantMessage
+@JsonTypeName(MTextMessage.TYPE_TEXT_MESSAGE)
+public record MTextMessage(UUID id, String role, String actor, String message, boolean done, boolean internal,
+        MPerformanceMetrics performance)
+    implements MChatMessage
 {
-    private static final String TYPE_TEXT_MESSAGE = "textMessage";
+    static final String TYPE_TEXT_MESSAGE = "textMessage";
 
-    private MAssistantTextMessage(Builder aBuilder)
+    private MTextMessage(Builder aBuilder)
     {
-        this(aBuilder.id, aBuilder.role, aBuilder.message, aBuilder.done, aBuilder.internal);
+        this(aBuilder.id, aBuilder.role, aBuilder.actor, aBuilder.message, aBuilder.done, aBuilder.internal,
+                aBuilder.performance);
     }
 
-    public MAssistantTextMessage append(MAssistantTextMessage aMessage)
+    public MTextMessage append(MTextMessage aMessage)
     {
         Objects.nonNull(id());
         Objects.nonNull(id());
@@ -60,11 +65,14 @@ public record MAssistantTextMessage(UUID id, String role, String message, boolea
         Validate.isTrue(Objects.equals(aMessage.internal(), internal()));
         Validate.isTrue(!done());
 
-        return new MAssistantTextMessage(id(), role(), message() + aMessage.message(),
-                aMessage.done(), internal());
+        var perf = performance() != null ? performance().merge(aMessage.performance())
+                : aMessage.performance();
+
+        return new MTextMessage(id(), role(), actor(), message() + aMessage.message(), aMessage.done(),
+                internal(), perf);
     }
 
-    @JsonProperty(MAssistantMessage.TYPE_FIELD)
+    @JsonProperty(MMessage.TYPE_FIELD)
     public String getType()
     {
         return TYPE_TEXT_MESSAGE;
@@ -78,10 +86,12 @@ public record MAssistantTextMessage(UUID id, String role, String message, boolea
     public static final class Builder
     {
         private UUID id;
+        private String actor;
         private String role;
         private String message;
         private boolean done = true;
         private boolean internal = false;
+        private MPerformanceMetrics performance;
 
         private Builder()
         {
@@ -117,19 +127,31 @@ public record MAssistantTextMessage(UUID id, String role, String message, boolea
             return this;
         }
 
+        public Builder withActor(String aActor)
+        {
+            actor = aActor;
+            return this;
+        }
+
         public Builder withMessage(String aMessage)
         {
             message = aMessage;
             return this;
         }
 
-        public MAssistantTextMessage build()
+        public Builder withPerformance(MPerformanceMetrics aPerformance)
+        {
+            performance = aPerformance;
+            return this;
+        }
+
+        public MTextMessage build()
         {
             if (id == null) {
                 id = UUID.randomUUID();
             }
 
-            return new MAssistantTextMessage(this);
+            return new MTextMessage(this);
         }
     }
 }

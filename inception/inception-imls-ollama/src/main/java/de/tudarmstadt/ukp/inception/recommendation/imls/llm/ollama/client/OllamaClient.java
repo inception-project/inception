@@ -31,11 +31,11 @@ public interface OllamaClient
             Consumer<OllamaGenerateResponse> aCallback)
         throws IOException;
 
-    String generate(String aUrl, OllamaChatRequest aRequest, Consumer<OllamaChatResponse> aCallback)
+    OllamaChatResponse generate(String aUrl, OllamaChatRequest aRequest,
+            Consumer<OllamaChatResponse> aCallback)
         throws IOException;
 
     List<OllamaModel> listModels(String aUrl) throws IOException;
 
-    List<Pair<String, float[]>> embed(String aUrl, OllamaEmbedRequest aRequest)
-        throws IOException;
+    List<Pair<String, float[]>> embed(String aUrl, OllamaEmbedRequest aRequest) throws IOException;
 }

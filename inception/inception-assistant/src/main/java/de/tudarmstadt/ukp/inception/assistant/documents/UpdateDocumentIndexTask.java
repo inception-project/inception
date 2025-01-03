@@ -21,8 +21,8 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHA
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.AUTO_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.inception.assistant.documents.DocumentQueryService.FIELD_EMBEDDING;
 import static de.tudarmstadt.ukp.inception.assistant.documents.DocumentQueryService.FIELD_SECTION;
-import static de.tudarmstadt.ukp.inception.assistant.documents.DocumentQueryService.FIELD_SOURCE_DOC_ID;
 import static de.tudarmstadt.ukp.inception.assistant.documents.DocumentQueryService.FIELD_SOURCE_DOC_COMPLETE;
+import static de.tudarmstadt.ukp.inception.assistant.documents.DocumentQueryService.FIELD_SOURCE_DOC_ID;
 import static de.tudarmstadt.ukp.inception.assistant.documents.DocumentQueryService.FIELD_TEXT;
 import static de.tudarmstadt.ukp.inception.scheduling.TaskState.CANCELLED;
 import static de.tudarmstadt.ukp.inception.scheduling.TaskState.COMPLETED;

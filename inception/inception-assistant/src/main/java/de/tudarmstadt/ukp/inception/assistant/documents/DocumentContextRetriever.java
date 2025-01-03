@@ -17,20 +17,21 @@
  */
 package de.tudarmstadt.ukp.inception.assistant.documents;
 
-import static com.nimbusds.oauth2.sdk.util.StringUtils.isNotBlank;
-import static de.tudarmstadt.ukp.inception.assistant.model.MAssistantChatRoles.SYSTEM;
+import static de.tudarmstadt.ukp.inception.assistant.model.MChatRoles.SYSTEM;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Locale.ROOT;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import java.util.List;
 
 import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.inception.assistant.ChatContext;
 import de.tudarmstadt.ukp.inception.assistant.config.AssistantProperties;
-import de.tudarmstadt.ukp.inception.assistant.model.MAssistantTextMessage;
+import de.tudarmstadt.ukp.inception.assistant.model.MTextMessage;
 import de.tudarmstadt.ukp.inception.assistant.retriever.Retriever;
 
 @Order(2000)
@@ -60,10 +61,10 @@ public class DocumentContextRetriever
     }
 
     @Override
-    public List<MAssistantTextMessage> retrieve(String aSessionOwner, Project aProject,
-            MAssistantTextMessage aMessage)
+    public List<MTextMessage> retrieve(ChatContext aAssistant, MTextMessage aMessage)
     {
-        var chunks = documentQueryService.query(aProject, aMessage.message(), 10,
+        var project = aAssistant.getProject();
+        var chunks = documentQueryService.query(project, aMessage.message(), 10,
                 properties.getEmbedding().getChunkScoreThreshold());
 
         var body = new StringBuilder();
@@ -92,7 +93,8 @@ public class DocumentContextRetriever
             return emptyList();
         }
 
-        return asList(MAssistantTextMessage.builder() //
+        return asList(MTextMessage.builder() //
+                .withActor("Document context retriever")
                 .withRole(SYSTEM).internal() //
                 .withMessage("""
                              Use the context information from the following documents to respond.
