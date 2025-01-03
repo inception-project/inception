@@ -152,8 +152,8 @@ public class ProjectServiceImpl
         try (var logCtx = withProjectLogger(aProject)) {
             LOG.info("Created project {}", aProject);
 
-            String path = repositoryProperties.getPath().getAbsolutePath() + "/" + PROJECT_FOLDER
-                    + "/" + aProject.getId();
+            var path = repositoryProperties.getPath().getAbsolutePath() + "/" + PROJECT_FOLDER + "/"
+                    + aProject.getId();
             FileUtils.forceMkdir(new File(path));
 
             applicationEventPublisher.publishEvent(new AfterProjectCreatedEvent(this, aProject));
@@ -675,7 +675,7 @@ public class ProjectServiceImpl
 
             applicationEventPublisher.publishEvent(new BeforeProjectRemovedEvent(this, aProject));
 
-            for (ProjectPermission permissions : getProjectPermissions(aProject)) {
+            for (var permissions : getProjectPermissions(aProject)) {
                 entityManager.remove(permissions);
             }
 

@@ -296,19 +296,22 @@ public class SchedulingServiceImpl
                     suspendCount);
         }
 
+        waitForProjectTasksToEnd(aProject, Duration.ofMinutes(1));
+    }
+
+    private void waitForProjectTasksToEnd(Project aProject, Duration aTimeout)
+        throws TimeoutException
+    {
         var startTime = currentTimeMillis();
-        var timeout = Duration.ofMinutes(1);
-        var timeoutMillis = timeout.toMillis();
+        var timeoutMillis = aTimeout.toMillis();
 
         while (runningTasks.stream().anyMatch(t -> aProject.equals(t.getProject()))) {
-            LOG.trace(
-                    "Waiting for running tasks to end before proceeding with suspension on project {}",
-                    aProject);
+            LOG.trace("Waiting for running tasks to end on project {}", aProject);
 
             if (currentTimeMillis() - startTime > timeoutMillis) {
                 resumeTasks(aProject);
                 throw new TimeoutException(
-                        "Waiting for tasks to finish took longer than " + timeout);
+                        "Waiting for tasks to finish took longer than " + aTimeout);
             }
 
             try {
@@ -316,7 +319,11 @@ public class SchedulingServiceImpl
             }
             catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
-                LOG.error("Thread was interrupted while waiting for tasks to end.", e);
+                LOG.error("Thread was interrupted while waiting for tasks to end on project {}",
+                        aProject, e);
+                throw new IllegalStateException(
+                        "Thread was interrupted while waiting for tasks to end on project ["
+                                + aProject.getName() + "]");
             }
         }
     }
@@ -529,10 +536,11 @@ public class SchedulingServiceImpl
     }
 
     @EventListener
-    public void beforeProjectRemoved(BeforeProjectRemovedEvent aEvent) throws IOException
+    public void beforeProjectRemoved(BeforeProjectRemovedEvent aEvent) throws TimeoutException
     {
         deletionPending.add(aEvent.getProject());
         stopAllTasksForProject(aEvent.getProject());
+        waitForProjectTasksToEnd(aEvent.getProject(), Duration.ofMinutes(1));
     }
 
     @EventListener
