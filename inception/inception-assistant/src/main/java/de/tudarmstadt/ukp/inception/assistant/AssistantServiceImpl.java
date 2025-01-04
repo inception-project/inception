@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.assistant;
 
-import static de.tudarmstadt.ukp.inception.assistant.model.MChatRoles.ASSISTANT;
 import static de.tudarmstadt.ukp.inception.assistant.model.MChatRoles.SYSTEM;
 import static java.lang.Math.floorDiv;
 import static java.lang.String.join;
@@ -54,7 +53,6 @@ import de.tudarmstadt.ukp.inception.assistant.model.MTextMessage;
 import de.tudarmstadt.ukp.inception.assistant.retriever.RetrieverExtensionPoint;
 import de.tudarmstadt.ukp.inception.project.api.event.AfterProjectRemovedEvent;
 import de.tudarmstadt.ukp.inception.project.api.event.BeforeProjectRemovedEvent;
-import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaChatResponse;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaClient;
 
 public class AssistantServiceImpl
@@ -148,7 +146,7 @@ public class AssistantServiceImpl
     void recordMessage(String aSessionOwner, Project aProject, MMessage aMessage)
     {
         var state = getState(aSessionOwner, aProject);
-        state.addMessage(aMessage);
+        state.upsertMessage(aMessage);
     }
 
     void dispatchMessage(String aSessionOwner, Project aProject, MMessage aMessage)
@@ -215,15 +213,8 @@ public class AssistantServiceImpl
     }
 
     private void handleStreamedMessageFragment(String aSessionOwner, Project aProject,
-            UUID responseId, OllamaChatResponse r)
+            UUID responseId, MTextMessage responseMessage)
     {
-        var responseMessage = MTextMessage.builder() //
-                .withId(responseId) //
-                .withActor(properties.getNickname()) //
-                .withRole(ASSISTANT) //
-                .withMessage(r.getMessage().content()) //
-                .notDone() //
-                .build();
         recordMessage(aSessionOwner, aProject, responseMessage);
         dispatchMessage(aSessionOwner, aProject, responseMessage);
     }
@@ -245,7 +236,10 @@ public class AssistantServiceImpl
                 "You are " + properties.getNickname() + ", a helpful assistant within the annotation tool INCEpTION.",
                 "INCEpTION always refers to the annotation tool, never anything else such as the movie.",
                 "Do not include references to INCEpTION unless the user explicitly asks about the environment itself.",
-                "If the source of an information is known, provide it in your response."
+                "If the source of an information is known, provide it in your response.",
+                "The document retriever automatically provides you with relevant information from the current project.",
+                "The user guide retriever automatically provides you with relevant information from the user guide.",
+                "Use this relevant information when responding to the user."
         // If you use information from the user manual in your response, prepend it with
         // "According to the user manual".
         // """,
@@ -387,7 +381,7 @@ public class AssistantServiceImpl
             return new ArrayList<>(messages);
         }
 
-        public void addMessage(MMessage aMessage)
+        public void upsertMessage(MMessage aMessage)
         {
             synchronized (messages) {
                 var found = false;

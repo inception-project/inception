@@ -126,8 +126,8 @@ public class AssistantAutoConfiguration
 
     @Bean
     public UserGuideRetriever userGuideRetriever(
-            UserGuideQueryService aDocumentationIndexingService)
+            UserGuideQueryService aDocumentationIndexingService, AssistantProperties aProperties)
     {
-        return new UserGuideRetriever(aDocumentationIndexingService);
+        return new UserGuideRetriever(aDocumentationIndexingService, aProperties);
     }
 }

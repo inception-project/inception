@@ -27,6 +27,14 @@
         duration: number,
     }
 
+    interface MReference {
+        id: string, 
+        type: string,
+        title: string, 
+        target: string,
+        score: number
+    }
+
     interface MTextMessage {
         id: string,
         role: string,
@@ -35,6 +43,7 @@
         done: boolean,
         internal: boolean
         performance?: MPerformanceMetrics
+        references?: MReference[]
     }
 
     export let wsEndpointUrl: string; // should this be full ws://... url
@@ -143,7 +152,7 @@
         // Merge with existing message
         messages = [
             ...messages.slice(0,index),
-            { ...messages[index],message: messages[index].message+msg.message },
+            { ...messages[index],message: (messages[index].message || '') + (msg.message || '') },
             ...messages.slice(index+1)
         ];
     }
@@ -183,8 +192,39 @@
     });
 
     function renderMessage(message: MTextMessage) {
+        if (!message?.message) {
+            return '';
+        }
+
         const rawHtml = marked(message.message) as string
-        return DOMPurify.sanitize(rawHtml, { RETURN_DOM: false })
+        var pureHtml = DOMPurify.sanitize(rawHtml, { RETURN_DOM: false });
+
+        // Replace all `{{ref::X}}` with the respective reference link
+        pureHtml = pureHtml.replace(/\s*{{ref::(\w+)}}(\.*)/g, (match, refId, dots) => {
+            const reference = message.references.find(ref => ref.id === refId);
+            if (reference) {
+                return `${dots}<a href="${escapeXML(reference.target)}" class="footnote" title="${escapeXML(reference.title)}">${escapeXML(reference.id)}</a>`;
+            }
+
+            // If no matching reference is found, keep the original text
+            console.log(`Reference with id ${refId} not found in message ${message.id}`);
+            return match;
+        });
+
+        return pureHtml;
+    }
+
+    function escapeXML(str) {
+        return str.replace(/[<>&'"]/g, (char) => {
+            switch (char) {
+                case '<': return '&lt;';
+                case '>': return '&gt;';
+                case '&': return '&amp;';
+                case '\'': return '&apos;';
+                case '"': return '&quot;';
+                default: return char;
+            }
+        });
     }
 
     function sendMessage(message: string, inputElement: HTMLInputElement) {
@@ -213,10 +253,12 @@
     <div class="scrolling flex-content px-3 py-1" bind:this={chatContainer} on:scroll={handleScroll}>
         {#each messages as message}
             <!-- svelte-ignore a11y-click-events-have-key-events -->
+            <!-- svelte-ignore a11y-no-noninteractive-tabindex -->
             <div class="message" data-role="{message.role}" data-internal="{message.internal}" 
                  class:collapsed={message.internal}
                  on:click={message.internal ? toggleMessage : null} 
-                 role="button" tabindex="0">
+                 role={message.internal ? "button" : undefined}
+                 tabIndex={message.internal ? 0 : undefined}>
                 <div class="message-header text-body-secondary">
                     {#if message.role === "assistant"}
                       <i class="fas fa-robot me-1" title="Assistant message"/>
@@ -308,6 +350,17 @@
         box-sizing: border-box;
       }
     }
+    
+    :global(a.footnote) {
+        font-size: x-small;
+        vertical-align: top;
+    }
+
+      :global(a.footnote:has(+ a.footnote))::after {
+        margin-top: 0.5rem;
+        margin-bottom: 0;
+        content: ", ";
+      }
 
     .message-header {
       display: block;
@@ -371,10 +424,6 @@
 
     &.collapsed .message-body {
       display: none;
-    }
-
-    &.collapsed .role {
-      cursor: pointer;
     }
   }
 </style>

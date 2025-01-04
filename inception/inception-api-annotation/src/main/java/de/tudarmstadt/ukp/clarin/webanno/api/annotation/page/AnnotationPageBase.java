@@ -85,6 +85,7 @@ public abstract class AnnotationPageBase
     public static final String PAGE_PARAM_DOCUMENT = "d";
     public static final String PAGE_PARAM_DATA_OWNER = "u";
     public static final String PAGE_PARAM_FOCUS = "f";
+    public static final String PAGE_PARAM_TEXT_HIGHLIGHT = "hl";
 
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean DocumentService documentService;

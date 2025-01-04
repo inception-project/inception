@@ -15,27 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.assistant.documents;
+package de.tudarmstadt.ukp.inception.assistant.model;
 
-import java.util.List;
+public record MReference(String id, String type, String title, String target, double score) {
 
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-
-public interface DocumentQueryService
-{
-    // Search fields
-    final String FIELD_EMBEDDING = "field";
-    final String FIELD_RANGE = "range";
-
-    // Stored fields    
-    final String FIELD_SOURCE_DOC_COMPLETE = "sourceDocComplete";
-    final String FIELD_SOURCE_DOC_ID = "sourceDoc";
-    final String FIELD_SECTION = "section";
-    final String FIELD_TEXT = "text";
-    final String FIELD_BEGIN = "begin";
-    final String FIELD_END = "end";
-
-    List<Chunk> query(Project aProject, String aQuery, int aTopN, double aScoreThreshold);
-
-    void rebuildIndexAsync(Project aProject);
 }

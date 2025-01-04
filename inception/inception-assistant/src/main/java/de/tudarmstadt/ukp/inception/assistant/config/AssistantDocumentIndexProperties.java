@@ -39,4 +39,17 @@ public interface AssistantDocumentIndexProperties
      *         to open them again.
      */
     Duration getMinIdleTime();
+
+    /**
+     * @return maximum size in LLM tokens that a RAG chunk should have
+     */
+    int getMaxChunks();
+
+    /**
+     * @return the minimum score a chunk must have with respect to the user query to be used by the
+     *         RAG
+     */
+    double getMinScore();
+
+    int getChunkSize();
 }

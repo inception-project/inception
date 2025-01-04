@@ -606,7 +606,7 @@ public abstract class AnnotationPageBase2
         // If there is no change in the current document, then there is nothing to do. Mind
         // that document IDs are globally unique and a change in project does not happen unless
         // there is also a document change.
-        String dataOwner = state.getUser().getUsername();
+        var dataOwner = state.getUser().getUsername();
         if (doc != null && //
                 doc.equals(state.getDocument()) && //
                 aFocusParameter.toInt(0) == state.getFocusUnitIndex() && //

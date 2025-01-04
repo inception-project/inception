@@ -17,11 +17,14 @@
  */
 package de.tudarmstadt.ukp.inception.assistant.documents;
 
-public record Chunk(String documentName, String section, String text, double score)
+public record Chunk(long documentId, String documentName, String section, String text, int begin,
+        int end, double score)
 {
+
     private Chunk(Builder builder)
     {
-        this(builder.documentName, builder.section, builder.text, builder.score);
+        this(builder.documentId, builder.documentName, builder.section, builder.text, builder.begin,
+                builder.end, builder.score);
     }
 
     public static Builder builder()
@@ -31,9 +34,12 @@ public record Chunk(String documentName, String section, String text, double sco
 
     public static final class Builder
     {
+        private long documentId;
         private String documentName;
         private String section;
         private String text;
+        private int begin;
+        private int end;
         private double score = Double.NaN;
 
         private Builder()
@@ -63,9 +69,27 @@ public record Chunk(String documentName, String section, String text, double sco
             return this;
         }
 
-        public Builder withDocumentName(String aDocName)
+        public Builder withDocumentId(long aId)
         {
-            documentName = aDocName;
+            documentId = aId;
+            return this;
+        }
+
+        public Builder withDocumentName(String aName)
+        {
+            documentName = aName;
+            return this;
+        }
+
+        public Builder withBegin(int aBegin)
+        {
+            begin = aBegin;
+            return this;
+        }
+
+        public Builder withEnd(int aEnd)
+        {
+            end = aEnd;
             return this;
         }
     }

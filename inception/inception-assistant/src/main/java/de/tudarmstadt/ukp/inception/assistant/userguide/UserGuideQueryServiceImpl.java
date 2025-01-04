@@ -53,6 +53,7 @@ import de.tudarmstadt.ukp.inception.assistant.embedding.EmbeddingService;
 import de.tudarmstadt.ukp.inception.assistant.index.HighDimensionLucene99Codec;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.support.SettingsUtil;
+import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 
 public class UserGuideQueryServiceImpl
     implements UserGuideQueryService, DisposableBean
@@ -86,16 +87,16 @@ public class UserGuideQueryServiceImpl
 
     void init()
     {
-        if (properties.isForceRebuildUserManualIndex() || !isIndexUpToDate()) {
+        if (properties.getUserGuide().isRebuildIndexOnBoot() || !isIndexUpToDate()) {
             var htmlUrl = getClass().getResource("/public/doc/user-guide.html");
 
-//            try {
-//                htmlUrl = new URL(
-//                        "file:/Users/bluefire/git/inception-application/inception/inception-doc/target/doc-out/user-guide.html");
-//            }
-//            catch (IOException e) {
-//                LOG.debug("Unable to find specified user manual - not building index.");
-//            }
+            // try {
+            // htmlUrl = new URL(
+            // "file:/Users/bluefire/git/inception-application/inception/inception-doc/target/doc-out/user-guide.html");
+            // }
+            // catch (IOException e) {
+            // LOG.debug("Unable to find specified user manual - not building index.");
+            // }
 
             if (htmlUrl != null) {
                 LOG.debug("Building user manual index in the background...");
@@ -185,9 +186,10 @@ public class UserGuideQueryServiceImpl
                     LOG.trace("Score {} too low: [{}]", scoreDoc.score, doc.get("text"));
                 }
             }
+
             return passages;
         }
-        catch (IOException e) {
+        catch (Exception e) {
             LOG.error("Unable to query user manual", e);
             return emptyList();
         }
@@ -227,7 +229,8 @@ public class UserGuideQueryServiceImpl
         var docEmbeddings = embeddingService.embed(aText);
         for (var embedding : docEmbeddings) {
             var doc = new Document();
-            doc.add(new KnnFloatVectorField(FIELD_EMBEDDING, l2normalize(embedding.getValue(), false), DOT_PRODUCT));
+            doc.add(new KnnFloatVectorField(FIELD_EMBEDDING,
+                    l2normalize(embedding.getValue(), false), DOT_PRODUCT));
             doc.add(new StoredField(FIELD_TEXT, embedding.getKey()));
             aWriter.addDocument(doc);
         }
@@ -255,11 +258,20 @@ public class UserGuideQueryServiceImpl
         }
 
         try {
-            writeString(indexPath.resolve("version"), SettingsUtil.getVersionString());
+            var metadata = getIndexMetadata();
+            JSONUtil.toPrettyJsonString(metadata);
+            writeString(indexPath.resolve("i7n-metadata.json"),
+                    JSONUtil.toPrettyJsonString(metadata));
         }
         catch (IOException e) {
             LOG.error("Cannot mark user manual index as complete", e);
         }
+    }
+
+    private UserGuideIndexMetadata getIndexMetadata()
+    {
+        return new UserGuideIndexMetadata(SettingsUtil.getVersionString(),
+                properties.getEmbedding().getModel(), embeddingService.getDimension());
     }
 
     boolean isIndexUpToDate()
@@ -269,17 +281,18 @@ public class UserGuideQueryServiceImpl
             return false;
         }
 
-        var indexVersionFile = indexPath.resolve("version");
-        if (!exists(indexVersionFile)) {
+        var indexMetadataFile = indexPath.resolve("i7n-metadata.json");
+        if (!exists(indexMetadataFile)) {
             return false;
         }
 
         try {
-            var version = readString(indexVersionFile);
-            return SettingsUtil.getVersionString().equals(version);
+            var metadata = JSONUtil.fromJsonString(UserGuideIndexMetadata.class,
+                    readString(indexMetadataFile));
+            return getIndexMetadata().equals(metadata);
         }
         catch (IOException e) {
-            LOG.error("Unable to check index version", e);
+            LOG.error("Unable to check index metadata", e);
             return false;
         }
     }

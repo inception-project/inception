@@ -34,15 +34,19 @@ CAUTION: Experimental feature.
 | `false`
 | `true`
 
-| `assistant.force-rebuild-user-manual-index`
-| Whether to re-build the user manual index at the start of the application.
-| `false`
-| `true`
-
 | `assistant.url`
 | URL of the Ollama service
 | `http://localhost:11434`
 | _some other URL_
+|===
+
+.Settings related to the assistant chat functionality
+[cols="4*", options="header"]
+|===
+| Setting
+| Description
+| Default
+| Example
 
 | `assistant.chat.model`
 | The model to use to drive the chat functionality of the assistant
@@ -79,24 +83,127 @@ Tune the balance between more randomness (high >= 1.0) and less randomness (low,
 | `0.1`
 | `0.8`
 
+.Settings related to the assistant search functionality
+[cols="4*", options="header"]
+|===
+| Setting
+| Description
+| Default
+| Example
+
+        private double chunkScoreThreshold = 0.6;
+
 | `assistant.embedding.model`
 | The model to use to drive the search functionality of the assistant
 | `granite-embedding`
 | `snowflake-arctic-embed`
 
-| `assistant.document-index.idle-eviction-delay`
+| `assistant.embedding.encoding`
+| The token encoding used by the model. 
+  The encoding is used to estimate the number of tokens within {product-name}.
+  This can help the application chunk the text more accurately.
+  If in doubt, leave the default setting.  
+| `cl100k_base`
+| `r50k_base`, `p50k_base`, `p50k_edit`, `cl100k_base` or `o200k_base`
+
+| `assistant.embedding.dimension`
+| The dimension of the embedding vectors created by the model.
+  If this is set to `0`, the system will send a request to the LLM service during startup to auto-detect the vector size.
+  Setting this manually can be helpful if the LLM service is potentially not available during startup.
+  Changing the value will require indexes to be rebuilt.
+  It is not recommended to use embeddings with a dimension higher than 1024 as this may result in increased memory usage and reduced performance.
+| `0` (_detect automatically_)
+| `256`
+
+| `assistant.embedding.seed`
+| The random number generator seed used to ensure repeatable retrieval results.
+| `0xDEADBEEF`
+| `12345678`
+
+| `assistant.embedding.context-length`
+| The context length supported by the model in LLM tokens.
+  This controls how much of a chunk used to calculate the embedding.
+  The setting should not be lower than the `chunk-size` setting.
+| `768`
+| `256`
+
+| `assistant.embedding.chunk-size`
+| The size of a chunk in LLM tokens.
+  The setting should not be higher than the `context-length` setting to avoid truncation.
+  It can be lower thought to create more topically focused chunks.
+| `128`
+| `768`
+
+| `assistant.embedding.batch-size`
+| Maximum of chunks that should be send together to the LLM service when generating embeddings.
+  Batching multiple chunks in a single request increases indexing speed.
+| `16`
+| `32`
+|===
+
+.Settings related to the assistant search functionality accessing documents in the current project
+[cols="4*", options="header"]
+|===
+| Setting
+| Description
+| Default
+| Example
+
+| `assistant.documents.chunk-size`
+| The size of a chunk in LLM tokens.
+  The setting should not be higher than the `assistant.embedding.context-length` setting to avoid truncation.
+  It can be lower thought to create more topically focused chunks.
+| `128`
+| `768`
+
+| `assistant.documents.max-chunks`
+| Maximum number of relevant chunks from the user guide to pass to the LLM service.
+| `3`
+| `10`
+
+| `assistant.documents.min-score`
+| Minimum relevance score for chunks to be considered.
+  This should be a positive number not larger than `1.0`.
+| `0.8`
+| `0.5`
+
+| `assistant.documents.idle-eviction-delay`
 | How often the index pool is checked for idle indexes.
 | `5m`
 | `5s`
 
-| `assistant.document-index.min-idle-time`
+| `assistant.documents.min-idle-time`
 | How long an index may remain in the pool before being considered for eviction.
 | `5m`
 | `5s`
 
-| `assistant.document-index.borrow-wait-timeout`
+| `assistant.documents.borrow-wait-timeout`
 | How long to wait for access to an index before timing out.
 | `3m`
 | `15s`
 |===
 
+.Settings related to the user guide integration
+[cols="4*", options="header"]
+|===
+| Setting
+| Description
+| Default
+| Example
+
+| `assistant.user-guide.rebuild-index-on-boot`
+| Whether to re-build the user manual index at the start of the application.
+| `false`
+| `true`
+
+| `assistant.user-guide.max-chunks`
+| Maximum number of relevant chunks from the user guide to pass to the LLM service.
+| `3`
+| `10`
+
+| `assistant.user-guide.min-score`
+| Minimum relevance score for chunks to be considered.
+  This should be a positive number not larger than `1.0`.
+| `0.8`
+| `0.5`
+|===

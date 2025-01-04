@@ -28,6 +28,7 @@ import com.knuddels.jtokkit.api.EncodingRegistry;
 
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.inception.assistant.config.AssistantProperties;
+import de.tudarmstadt.ukp.inception.support.text.TrimUtils;
 
 public class CasChunker
     implements Chunker<CAS>
@@ -44,43 +45,57 @@ public class CasChunker
     @Override
     public List<Chunk> process(CAS aCas)
     {
-
+        var docText = aCas.getDocumentText();
+        
         var encoding = encodingRegistry.getEncoding(properties.getChat().getEncoding())
                 .orElseThrow(() -> new IllegalStateException(
                         "Unknown encoding: " + properties.getChat().getEncoding()));
-        var limit = floorDiv(properties.getEmbedding().getChunkSize() * 90, 100);
+        var limit = floorDiv(properties.getDocumentIndex().getChunkSize() * 90, 100);
 
         var unitIterator = aCas.select(Sentence.class) //
-                .map(Sentence::getCoveredText) //
                 .toList().iterator();
 
         var chunks = new ArrayList<Chunk>();
 
-        var currentChunk = new StringBuilder();
+        Sentence unit = null;
+        var chunk = new StringBuilder();
+        var chunkBegin = 0;
         var chunkTokens = 0;
         while (unitIterator.hasNext()) {
-            var unit = unitIterator.next();
-            var unitTokens = encoding.countTokensOrdinary(unit);
+            unit = unitIterator.next();
+            var unitTokens = encoding.countTokensOrdinary(unit.getCoveredText());
 
+            // Start a new chunk if necessary
             if (chunkTokens + unitTokens > limit) {
-                chunks.add(Chunk.builder() //
-                        .withText(currentChunk.toString()) //
-                        .build());
-                currentChunk.setLength(0);
+                if (!chunk.isEmpty()) {
+                    chunks.add(buildChunk(docText, chunkBegin, unit));
+                }
+                chunk.setLength(0);
+                chunkBegin = unit.getBegin();
                 chunkTokens = 0;
             }
-            currentChunk.append(unit);
-            currentChunk.append("\n");
+
+            chunk.append(unit.getCoveredText());
+            chunk.append("\n");
             chunkTokens += unitTokens;
         }
 
         // Add the final chunk (unless empty)
-        if (currentChunk.length() > 0) {
-            chunks.add(Chunk.builder() //
-                    .withText(currentChunk.toString()) //
-                    .build());
+        if (chunk.length() > 0 && unit != null) {
+            chunks.add(buildChunk(docText, chunkBegin, unit));
         }
 
         return chunks;
+    }
+
+    private Chunk buildChunk(String docText, int currentChunkBegin, Sentence unit)
+    {
+        var range = new int[] {currentChunkBegin, unit.getEnd()};
+        TrimUtils.trim(docText, range);
+        return Chunk.builder() //
+                .withText(docText.substring(range[0], range[1])) //
+                .withBegin(range[0]) //
+                .withEnd(range[1]) //
+                .build();
     }
 }

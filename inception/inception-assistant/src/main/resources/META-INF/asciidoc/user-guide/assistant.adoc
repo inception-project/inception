@@ -28,3 +28,13 @@ It also has access to the documents contained in the project and use this inform
 
 Currently, the assistant is only able to connect to an Ollama service that does not require authentication.
 The service already needs to be running when you start {product-name} and the models need to be available in the service.
+
+By default, the following models are used by the assistant:
+
+* `llama3.2` to drive the chat
+* `granite-embedding` for the searching the documents
+
+You can configure the system to use other models.
+When changing the embedding model, the assistant indices will need to be rebuilt.
+Any models you choose need to support at least English as a language.
+

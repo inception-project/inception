@@ -20,14 +20,18 @@ package de.tudarmstadt.ukp.inception.assistant.embedding;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 
 import org.apache.commons.lang3.tuple.Pair;
 
 public interface EmbeddingService
 {
+    int getDimension();
+    
     Optional<float[]> embed(String aQuery) throws IOException;
 
     List<Pair<String, float[]>> embed(String... aStrings) throws IOException;
 
-    int getDimension();
+    <T> List<Pair<T, float[]>> embed(Function<T, String> aExtractor, Iterable<T> aObjects)
+            throws IOException;
 }

@@ -35,6 +35,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import de.tudarmstadt.ukp.inception.assistant.config.AssistantDocumentIndexProperties;
+import de.tudarmstadt.ukp.inception.assistant.config.AssistantDocumentIndexPropertiesImpl;
 import de.tudarmstadt.ukp.inception.assistant.config.AssistantProperties;
 import de.tudarmstadt.ukp.inception.assistant.config.AssistantPropertiesImpl;
 import de.tudarmstadt.ukp.inception.assistant.embedding.EmbeddingServiceImpl;
@@ -50,6 +52,7 @@ class UserGuideQueryServiceImplTest
 
     private @Mock SchedulingService schedulingService;
     private AssistantProperties assistantProperties;
+    private AssistantDocumentIndexProperties assistantDocumentIndexProperties;
     private OllamaClient ollamaClient;
     private UserGuideQueryServiceImpl sut;
     private EmbeddingServiceImpl embeddingService;
@@ -66,7 +69,8 @@ class UserGuideQueryServiceImplTest
     @BeforeEach
     void setup()
     {
-        assistantProperties = new AssistantPropertiesImpl();
+        assistantDocumentIndexProperties = new AssistantDocumentIndexPropertiesImpl();
+        assistantProperties = new AssistantPropertiesImpl(assistantDocumentIndexProperties);
         ollamaClient = new OllamaClientImpl();
         embeddingService = new EmbeddingServiceImpl(assistantProperties, ollamaClient);
         sut = new UserGuideQueryServiceImpl(assistantProperties, schedulingService, embeddingService);

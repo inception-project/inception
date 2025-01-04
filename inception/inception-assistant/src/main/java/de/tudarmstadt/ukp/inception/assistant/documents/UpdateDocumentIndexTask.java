@@ -19,7 +19,10 @@ package de.tudarmstadt.ukp.inception.assistant.documents;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.AUTO_CAS_UPGRADE;
+import static de.tudarmstadt.ukp.inception.assistant.documents.DocumentQueryService.FIELD_BEGIN;
 import static de.tudarmstadt.ukp.inception.assistant.documents.DocumentQueryService.FIELD_EMBEDDING;
+import static de.tudarmstadt.ukp.inception.assistant.documents.DocumentQueryService.FIELD_END;
+import static de.tudarmstadt.ukp.inception.assistant.documents.DocumentQueryService.FIELD_RANGE;
 import static de.tudarmstadt.ukp.inception.assistant.documents.DocumentQueryService.FIELD_SECTION;
 import static de.tudarmstadt.ukp.inception.assistant.documents.DocumentQueryService.FIELD_SOURCE_DOC_COMPLETE;
 import static de.tudarmstadt.ukp.inception.assistant.documents.DocumentQueryService.FIELD_SOURCE_DOC_ID;
@@ -42,6 +45,7 @@ import java.util.Objects;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.lucene.document.Document;
+import org.apache.lucene.document.IntRange;
 import org.apache.lucene.document.KnnFloatVectorField;
 import org.apache.lucene.document.LongPoint;
 import org.apache.lucene.document.StoredField;
@@ -58,8 +62,8 @@ import com.knuddels.jtokkit.api.EncodingRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
 import de.tudarmstadt.ukp.inception.assistant.config.AssistantProperties;
-import de.tudarmstadt.ukp.inception.assistant.documents.DocumentQueryServiceImpl.PooledIndex;
 import de.tudarmstadt.ukp.inception.assistant.embedding.EmbeddingService;
+import de.tudarmstadt.ukp.inception.assistant.index.LuceneIndexPool;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.scheduling.DebouncingTask;
 import de.tudarmstadt.ukp.inception.scheduling.ProjectTask;
@@ -167,7 +171,7 @@ public class UpdateDocumentIndexTask
         }
     }
 
-    private void unindexDocument(PooledIndex aIndex, long aSourceDocumentId)
+    private void unindexDocument(LuceneIndexPool.PooledIndex aIndex, long aSourceDocumentId)
     {
         try {
             aIndex.getIndexWriter().deleteDocuments(
@@ -178,7 +182,7 @@ public class UpdateDocumentIndexTask
         }
     }
 
-    private void indexDocument(PooledIndex aIndex, Chunker<CAS> aChunker,
+    private void indexDocument(LuceneIndexPool.PooledIndex aIndex, Chunker<CAS> aChunker,
             SourceDocument aSourceDocument)
     {
         try {
@@ -194,8 +198,7 @@ public class UpdateDocumentIndexTask
             var progressOffset = getMonitor().getProgress();
             for (var batch : batches) {
                 try {
-                    var docEmbeddings = embeddingService
-                            .embed(batch.stream().map(Chunk::text).toArray(String[]::new));
+                    var docEmbeddings = embeddingService.embed(Chunk::text, batch);
                     for (var embedding : docEmbeddings) {
                         indexChunks(aIndex, aSourceDocument, embedding);
                     }
@@ -219,7 +222,8 @@ public class UpdateDocumentIndexTask
         }
     }
 
-    private void markDocumentAsIndexed(PooledIndex aIndex, SourceDocument aSourceDocument)
+    private void markDocumentAsIndexed(LuceneIndexPool.PooledIndex aIndex,
+            SourceDocument aSourceDocument)
         throws IOException
     {
         var doc = new Document();
@@ -227,21 +231,26 @@ public class UpdateDocumentIndexTask
         aIndex.getIndexWriter().addDocument(doc);
     }
 
-    private void indexChunks(PooledIndex aIndex, SourceDocument aSourceDocument,
-            Pair<String, float[]> aEmbeddedChunks)
+    private void indexChunks(LuceneIndexPool.PooledIndex aIndex, SourceDocument aSourceDocument,
+            Pair<Chunk, float[]> aEmbeddedChunks)
         throws IOException
     {
+        var chunk = aEmbeddedChunks.getKey();
+
         if (LOG.isTraceEnabled()) {
-            LOG.trace("Indexing chunk: [{}]",
-                    abbreviateMiddle(aEmbeddedChunks.getKey().replaceAll("\\s+", " "), " … ", 60));
+            LOG.trace("Indexing chunk: {}-{} [{}]", chunk.begin(), chunk.end(),
+                    abbreviateMiddle(chunk.text().replaceAll("\\s+", " "), " … ", 60));
         }
 
         var doc = new Document();
         var normalizedEmbedding = l2normalize(aEmbeddedChunks.getValue(), false);
         doc.add(new KnnFloatVectorField(FIELD_EMBEDDING, normalizedEmbedding, DOT_PRODUCT));
+        doc.add(new IntRange(FIELD_RANGE, new int[] { chunk.begin() }, new int[] { chunk.end() }));
         doc.add(new StoredField(FIELD_SOURCE_DOC_ID, aSourceDocument.getId()));
         doc.add(new StoredField(FIELD_SECTION, ""));
-        doc.add(new StoredField(FIELD_TEXT, aEmbeddedChunks.getKey()));
+        doc.add(new StoredField(FIELD_TEXT, chunk.text()));
+        doc.add(new StoredField(FIELD_BEGIN, chunk.begin()));
+        doc.add(new StoredField(FIELD_END, chunk.end()));
         aIndex.getIndexWriter().addDocument(doc);
     }
 

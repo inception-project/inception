@@ -18,7 +18,9 @@
 package de.tudarmstadt.ukp.inception.assistant.userguide;
 
 import static de.tudarmstadt.ukp.inception.assistant.model.MChatRoles.SYSTEM;
+import static java.lang.String.join;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 
 import java.util.List;
 
@@ -26,6 +28,7 @@ import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.assistant.ChatContext;
+import de.tudarmstadt.ukp.inception.assistant.config.AssistantProperties;
 import de.tudarmstadt.ukp.inception.assistant.documents.DocumentContextRetriever;
 import de.tudarmstadt.ukp.inception.assistant.model.MTextMessage;
 import de.tudarmstadt.ukp.inception.assistant.retriever.Retriever;
@@ -35,10 +38,13 @@ public class UserGuideRetriever
     implements Retriever
 {
     private final UserGuideQueryService documentationIndexingService;
+    private final AssistantProperties properties;
 
-    public UserGuideRetriever(UserGuideQueryService aDocumentationIndexingService)
+    public UserGuideRetriever(UserGuideQueryService aDocumentationIndexingService,
+            AssistantProperties aProperties)
     {
         documentationIndexingService = aDocumentationIndexingService;
+        properties = aProperties;
     }
 
     @Override
@@ -57,33 +63,31 @@ public class UserGuideRetriever
     public List<MTextMessage> retrieve(ChatContext aAssistant, MTextMessage aMessage)
     {
         var messageBody = new StringBuilder();
-        var passages = documentationIndexingService.query(aMessage.message(), 3, 0.8);
+        var passages = documentationIndexingService.query(aMessage.message(),
+                properties.getUserGuide().getMaxChunks(),
+                properties.getUserGuide().getMinScore());
         for (var passage : passages) {
             messageBody.append("\n```user-manual\n") //
                     .append(passage) //
                     .append("\n```\n\n");
         }
 
-        MTextMessage message;
         if (messageBody.isEmpty()) {
-            message = MTextMessage.builder() //
-                    .withActor("User guide") //
-                    .withRole(SYSTEM).internal() //
-                    .withMessage("There seems to be no relevant information in the user manual.") //
-                    .build();
-        }
-        else {
-            message = MTextMessage.builder() //
-                    .withActor("User guide") //
-                    .withRole(SYSTEM).internal() //
-                    .withMessage(
-                            """
-                            Use the context information from following user manual entries to respond.
-                            """ + messageBody
-                                    .toString()) //
-                    .build();
+            // var message = MTextMessage.builder() //
+            // .withActor("User guide") //
+            // .withRole(SYSTEM).internal() //
+            // .withMessage("There seems to be no relevant information in the user manual.") //
+            // .build();
+            return emptyList();
         }
 
-        return asList(message);
+        return asList(MTextMessage.builder() //
+                .withActor("User guide") //
+                .withRole(SYSTEM).internal() //
+                .withMessage(join("\n", asList(
+                        "The user guide retriever found the following relevant context information in the following documents.",
+                        "",
+                        messageBody.toString())))
+                .build());
     }
 }

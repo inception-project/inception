@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.assistant;
 import static de.tudarmstadt.ukp.inception.assistant.model.MChatRoles.ASSISTANT;
 
 import java.io.IOException;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.BiConsumer;
@@ -27,7 +28,9 @@ import java.util.function.BiConsumer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.assistant.config.AssistantProperties;
 import de.tudarmstadt.ukp.inception.assistant.model.MPerformanceMetrics;
+import de.tudarmstadt.ukp.inception.assistant.model.MReference;
 import de.tudarmstadt.ukp.inception.assistant.model.MTextMessage;
+import de.tudarmstadt.ukp.inception.assistant.model.MTextMessage.Builder;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaChatMessage;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaChatRequest;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaChatResponse;
@@ -49,45 +52,78 @@ public class ChatContext
         sessionOwner = aSessionOwner;
         project = aProject;
     }
-    
+
     public Project getProject()
     {
         return project;
     }
-    
+
     public String getSessionOwner()
     {
         return sessionOwner;
     }
 
     public MTextMessage generate(List<MTextMessage> aMessasges,
-            BiConsumer<UUID, OllamaChatResponse> aCallback)
+            BiConsumer<UUID, MTextMessage> aCallback)
         throws IOException
     {
         var responseId = UUID.randomUUID();
+        var chatProperties = properties.getChat();
         var request = OllamaChatRequest.builder() //
-                .withModel(properties.getChat().getModel()) //
+                .withModel(chatProperties.getModel()) //
                 .withStream(true) //
                 .withMessages(aMessasges.stream() //
                         .map(msg -> new OllamaChatMessage(msg.role(), msg.message())) //
                         .toList()) //
-                .withOption(OllamaOptions.NUM_CTX, properties.getChat().getContextLength()) //
-                .withOption(OllamaOptions.TOP_P, properties.getChat().getTopP()) //
-                .withOption(OllamaOptions.TOP_K, properties.getChat().getTopK()) //
-                .withOption(OllamaOptions.REPEAT_PENALTY, properties.getChat().getRepeatPenalty()) //
-                .withOption(OllamaOptions.TEMPERATURE, properties.getChat().getTemperature()) //
+                .withOption(OllamaOptions.NUM_CTX, chatProperties.getContextLength()) //
+                .withOption(OllamaOptions.TOP_P, chatProperties.getTopP()) //
+                .withOption(OllamaOptions.TOP_K, chatProperties.getTopK()) //
+                .withOption(OllamaOptions.REPEAT_PENALTY, chatProperties.getRepeatPenalty()) //
+                .withOption(OllamaOptions.TEMPERATURE, chatProperties.getTemperature()) //
                 .build();
 
+        var references = new LinkedHashMap<String, MReference>();
+        aMessasges.stream() //
+                .flatMap(msg -> msg.references().stream()) //
+                .forEach(r -> references.put(r.id(), r));
+
+        // Send initial message with the assistant nickname and the references
+        var firstMessage = newMessage(responseId) //
+                .withReferences(references.values()) //
+                .notDone() //
+                .build();
+        aCallback.accept(responseId, firstMessage);
+
+        // Generate the actual response
         var startTime = System.currentTimeMillis();
-        var response = ollamaClient.generate(properties.getUrl(), request, msg -> aCallback.accept(responseId, msg));
+        var response = ollamaClient.generate(properties.getUrl(), request,
+                msg -> streamMessage(aCallback, responseId, msg));
         var endTime = System.currentTimeMillis();
 
+        // Send a final and complete message also including final metrics
+        return newMessage(responseId)
+                .withMessage(response.getMessage().content()) //
+                .withPerformance(new MPerformanceMetrics(endTime - startTime)) //
+                // Include all refs in the final message again just to be sure
+                .withReferences(references.values()) // 
+                .build();
+    }
+
+    private void streamMessage(BiConsumer<UUID, MTextMessage> aCallback, UUID responseId,
+            OllamaChatResponse msg)
+    {
+        var responseMessage = newMessage(responseId) //
+                .withMessage(msg.getMessage().content()) //
+                .notDone();
+
+        aCallback.accept(responseId, responseMessage.build());
+    }
+
+    private Builder newMessage(UUID responseId)
+    {
         return MTextMessage.builder() //
                 .withId(responseId) //
                 .withActor(properties.getNickname()) //
-                .withRole(ASSISTANT) //
-                .withMessage(response.getMessage().content()) //
-                .withPerformance(new MPerformanceMetrics(endTime - startTime))
-                .build();
+                .withRole(ASSISTANT);
     }
 }

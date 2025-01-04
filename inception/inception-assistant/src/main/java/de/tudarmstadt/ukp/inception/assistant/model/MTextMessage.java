@@ -17,6 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.assistant.model;
 
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -42,10 +45,12 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
  *            the user
  * @param performance
  *            optional performance metrics
+ * @param references
+ *            optional list of references
  */
 @JsonTypeName(MTextMessage.TYPE_TEXT_MESSAGE)
 public record MTextMessage(UUID id, String role, String actor, String message, boolean done, boolean internal,
-        MPerformanceMetrics performance)
+        MPerformanceMetrics performance, List<MReference> references)
     implements MChatMessage
 {
     static final String TYPE_TEXT_MESSAGE = "textMessage";
@@ -53,7 +58,7 @@ public record MTextMessage(UUID id, String role, String actor, String message, b
     private MTextMessage(Builder aBuilder)
     {
         this(aBuilder.id, aBuilder.role, aBuilder.actor, aBuilder.message, aBuilder.done, aBuilder.internal,
-                aBuilder.performance);
+                aBuilder.performance, aBuilder.references.values().stream().toList());
     }
 
     public MTextMessage append(MTextMessage aMessage)
@@ -68,8 +73,24 @@ public record MTextMessage(UUID id, String role, String actor, String message, b
         var perf = performance() != null ? performance().merge(aMessage.performance())
                 : aMessage.performance();
 
-        return new MTextMessage(id(), role(), actor(), message() + aMessage.message(), aMessage.done(),
-                internal(), perf);
+        var refs = new LinkedHashMap<String, MReference>();
+        if (references() != null) {
+            references().forEach(r -> refs.put(r.id(), r));
+        }
+        if (aMessage.references() != null) {
+            aMessage.references().forEach(r -> refs.put(r.id(), r));
+        }
+        
+        var msg = new StringBuilder();
+        if (message() != null) {
+            msg.append(message());
+        }
+        if (aMessage.message() != null) {
+            msg.append(aMessage.message());
+        }
+
+        return new MTextMessage(id(), role(), actor(), msg.toString(), aMessage.done(),
+                internal(), perf, refs.values().stream().toList());
     }
 
     @JsonProperty(MMessage.TYPE_FIELD)
@@ -92,6 +113,7 @@ public record MTextMessage(UUID id, String role, String actor, String message, b
         private boolean done = true;
         private boolean internal = false;
         private MPerformanceMetrics performance;
+        private Map<String, MReference> references = new LinkedHashMap<>();
 
         private Builder()
         {
@@ -142,6 +164,26 @@ public record MTextMessage(UUID id, String role, String actor, String message, b
         public Builder withPerformance(MPerformanceMetrics aPerformance)
         {
             performance = aPerformance;
+            return this;
+        }
+
+        public Builder withReferences(MReference... aReferences)
+        {
+            if (aReferences != null) {
+                for (var ref : aReferences) {
+                    references.put(ref.id(), ref);
+                }
+            }
+            return this;
+        }
+
+        public Builder withReferences(Iterable<MReference> aReferences)
+        {
+            if (aReferences != null) {
+                for (var ref : aReferences) {
+                    references.put(ref.id(), ref);
+                }
+            }
             return this;
         }
 

@@ -20,13 +20,7 @@ package de.tudarmstadt.ukp.inception.assistant.config;
 public interface AssistantProperties
 {
     String getUrl();
-
-    boolean isForceRebuildUserManualIndex();
     
-    int getMaxUserManualPassages();
-    
-    double getMinUserManualPassageRelevance();
-
     AssistantChatProperties getChat();
 
     AssistantEmbeddingProperties getEmbedding();
@@ -34,4 +28,8 @@ public interface AssistantProperties
     boolean isDevMode();
 
     String getNickname();
+
+    AssitantUserGuideProperties getUserGuide();
+
+    AssistantDocumentIndexProperties getDocumentIndex();
 }

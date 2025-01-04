@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.assistant.config;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
@@ -27,12 +28,16 @@ public class AssistantPropertiesImpl
     private String url = "http://localhost:11434";
     private String nickname = "INCEpTION";
 
-    private boolean forceRebuildUserManualIndex = false;
-    private int maxUserManualPassages = 3;
-    private double minUserManualPassageRelevance = 0.8;
-
-    private AssistantChatProperties chat = new AssistantChatPropertiesImpl();
-    private AssistantEmbeddingProperties embedding = new AssistantEmbeddingPropertiesImpl();
+    private final AssistantChatProperties chat = new AssistantChatPropertiesImpl();
+    private final AssistantEmbeddingProperties embedding = new AssistantEmbeddingPropertiesImpl();
+    private final AssitantUserGuidePropertiesImpl userGuide = new AssitantUserGuidePropertiesImpl();
+    private final AssistantDocumentIndexProperties documentIndex;
+    
+    @Autowired
+    public AssistantPropertiesImpl(AssistantDocumentIndexProperties aDocumentIndex)
+    {
+        documentIndex = aDocumentIndex;
+    }
 
     @Value("${inception.dev:false}") // Inject system property or use default if not provided
     private boolean devMode;
@@ -71,47 +76,9 @@ public class AssistantPropertiesImpl
     }
 
     @Override
-    public boolean isForceRebuildUserManualIndex()
-    {
-        return forceRebuildUserManualIndex;
-    }
-
-    public void setForceRebuildUserManualIndex(boolean aForceRebuildUserManualIndex)
-    {
-        forceRebuildUserManualIndex = aForceRebuildUserManualIndex;
-    }
-
-    @Override
-    public int getMaxUserManualPassages()
-    {
-        return maxUserManualPassages;
-    }
-
-    public void setMaxUserManualPassages(int aMaxUserManualPassages)
-    {
-        maxUserManualPassages = aMaxUserManualPassages;
-    }
-
-    @Override
-    public double getMinUserManualPassageRelevance()
-    {
-        return minUserManualPassageRelevance;
-    }
-
-    public void setMinUserManualPassageRelevance(double aMinUserManualPassageRelevance)
-    {
-        minUserManualPassageRelevance = aMinUserManualPassageRelevance;
-    }
-
-    @Override
     public AssistantChatProperties getChat()
     {
         return chat;
-    }
-
-    public void setChat(AssistantChatProperties aChat)
-    {
-        chat = aChat;
     }
 
     @Override
@@ -120,22 +87,69 @@ public class AssistantPropertiesImpl
         return embedding;
     }
 
-    public void setEmbedding(AssistantEmbeddingProperties aEmbedding)
+    @Override
+    public AssitantUserGuideProperties getUserGuide()
     {
-        embedding = aEmbedding;
+        return userGuide;
+    }
+    
+    @Override
+    public AssistantDocumentIndexProperties getDocumentIndex()
+    {
+        return documentIndex;
+    }
+
+    public class AssitantUserGuidePropertiesImpl
+        implements AssitantUserGuideProperties
+    {
+        private int maxChunks = 3;
+        private double minScore = 0.8;
+        private boolean rebuildIndexOnBoot = false;
+
+        @Override
+        public int getMaxChunks()
+        {
+            return maxChunks;
+        }
+
+        public void setMaxChunks(int aCount)
+        {
+            maxChunks = aCount;
+        }
+
+        @Override
+        public double getMinScore()
+        {
+            return minScore;
+        }
+
+        public void setMinScore(double aScore)
+        {
+            minScore = aScore;
+        }
+
+        @Override
+        public boolean isRebuildIndexOnBoot()
+        {
+            return rebuildIndexOnBoot;
+        }
+
+        public void setRebuildIndexOnBoot(boolean aFlag)
+        {
+            rebuildIndexOnBoot = aFlag;
+        }
     }
 
     public static class AssistantChatPropertiesImpl
         implements AssistantChatProperties
     {
         private String model = "llama3.2";
-
+        private String encoding = "cl100k_base";
+        private int contextLength = 4096;
         private double topP = 0.3;
         private int topK = 25;
         private double repeatPenalty = 1.1;
         private double temperature = 0.1;
-        private int contextLength = 4096;
-        private String encoding = "cl100k_base";
 
         @Override
         public String getModel()
@@ -221,16 +235,10 @@ public class AssistantPropertiesImpl
         private String model = "granite-embedding";
 
         private int seed = 0xDEADBEEF;
-        private double topP = 1.0;
-        private int topK = 1000;
-        private double repeatPenalty = 1.0;
-        private double temperature = 0.0;
         private int contextLength = 768;
-        private int chunkSize = 128;
         private int batchSize = 16;
         private String encoding = "cl100k_base";
         private int dimension = AUTO_DETECT_DIMENSION;
-        private double chunkScoreThreshold = 0.6;
 
         @Override
         public String getModel()
@@ -241,50 +249,6 @@ public class AssistantPropertiesImpl
         public void setModel(String aModel)
         {
             model = aModel;
-        }
-
-        @Override
-        public double getTopP()
-        {
-            return topP;
-        }
-
-        public void setTopP(double aTopP)
-        {
-            topP = aTopP;
-        }
-
-        @Override
-        public int getTopK()
-        {
-            return topK;
-        }
-
-        public void setTopK(int aTopK)
-        {
-            topK = aTopK;
-        }
-
-        @Override
-        public double getRepeatPenalty()
-        {
-            return repeatPenalty;
-        }
-
-        public void setRepeatPenalty(double aRepeatPenalty)
-        {
-            repeatPenalty = aRepeatPenalty;
-        }
-
-        @Override
-        public double getTemperature()
-        {
-            return temperature;
-        }
-
-        public void setTemperature(double aTemperature)
-        {
-            temperature = aTemperature;
         }
 
         @Override
@@ -308,13 +272,13 @@ public class AssistantPropertiesImpl
         {
             contextLength = aContextLength;
         }
-        
+
         @Override
         public int getBatchSize()
         {
             return batchSize;
         }
-        
+
         public void setBatchSize(int aBatchSize)
         {
             batchSize = aBatchSize;
@@ -341,28 +305,6 @@ public class AssistantPropertiesImpl
         public void setDimension(int aDimension)
         {
             dimension = aDimension;
-        }
-
-        @Override
-        public int getChunkSize()
-        {
-            return chunkSize;
-        }
-
-        public void setChunkSize(int aChunkSize)
-        {
-            chunkSize = aChunkSize;
-        }
-        
-        @Override
-        public double getChunkScoreThreshold()
-        {
-            return chunkScoreThreshold;
-        }
-        
-        public void setChunkScoreThreshold(double aChunkScoreThreshold)
-        {
-            chunkScoreThreshold = aChunkScoreThreshold;
         }
     }
 }

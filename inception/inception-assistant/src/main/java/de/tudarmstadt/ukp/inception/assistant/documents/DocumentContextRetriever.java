@@ -18,26 +18,34 @@
 package de.tudarmstadt.ukp.inception.assistant.documents;
 
 import static de.tudarmstadt.ukp.inception.assistant.model.MChatRoles.SYSTEM;
-import static java.lang.String.format;
+import static java.lang.String.join;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
-import static java.util.Locale.ROOT;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import java.io.IOException;
+import java.lang.invoke.MethodHandles;
+import java.util.LinkedHashMap;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.assistant.ChatContext;
 import de.tudarmstadt.ukp.inception.assistant.config.AssistantProperties;
+import de.tudarmstadt.ukp.inception.assistant.model.MReference;
 import de.tudarmstadt.ukp.inception.assistant.model.MTextMessage;
 import de.tudarmstadt.ukp.inception.assistant.retriever.Retriever;
+import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 
 @Order(2000)
 public class DocumentContextRetriever
     implements Retriever
 {
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
     private final DocumentQueryService documentQueryService;
     private final AssistantProperties properties;
 
@@ -64,29 +72,19 @@ public class DocumentContextRetriever
     public List<MTextMessage> retrieve(ChatContext aAssistant, MTextMessage aMessage)
     {
         var project = aAssistant.getProject();
-        var chunks = documentQueryService.query(project, aMessage.message(), 10,
-                properties.getEmbedding().getChunkScoreThreshold());
+        var chunks = documentQueryService.query(project, aMessage.message(),
+                properties.getDocumentIndex().getMaxChunks(),
+                properties.getDocumentIndex().getMinScore());
 
+        var references = new LinkedHashMap<Chunk, MReference>();
         var body = new StringBuilder();
         for (var chunk : chunks) {
-            if (isNotBlank(chunk.documentName())) {
-                body.append("Document: `");
-                body.append(chunk.documentName());
-                body.append("`\n");
-            }
-            if (isNotBlank(chunk.section())) {
-                body.append("Section: `");
-                body.append(chunk.section());
-                body.append("`\n");
-            }
-            if (chunk.score() > 0.0) {
-                body.append("Score: `");
-                body.append(format(ROOT, "%.2f", chunk.score()));
-                body.append("`\n");
-            }
-            body.append("```context\n");
-            body.append(chunk.text());
-            body.append("\n```\n\n");
+            var reference = new MReference(String.valueOf(references.size() + 1), "doc",
+                    chunk.documentName(),
+                    "#!d=" + chunk.documentId() + "&hl=" + chunk.begin() + "-" + chunk.end(),
+                    chunk.score());
+            references.put(chunk, reference);
+            renderChunkJson(body, chunk, reference);
         }
 
         if (body.isEmpty()) {
@@ -94,14 +92,29 @@ public class DocumentContextRetriever
         }
 
         return asList(MTextMessage.builder() //
-                .withActor("Document context retriever")
+                .withActor("Document context retriever") //
                 .withRole(SYSTEM).internal() //
-                .withMessage("""
-                             Use the context information from the following documents to respond.
-                             The source of this information are the authors of the documents.
-                             
-                             
-                             """ + body.toString()) //
+                .withMessage(join("\n", asList(
+                        "The document retriever found the following relevant information in the following documents.",
+                        "", //
+                        body.toString(), "",
+                        "It is critical to mention the source of each document text in the form `{{ref::ref-id}}`.")))
+                .withReferences(references.values()) //
                 .build());
+    }
+
+    private void renderChunkJson(StringBuilder body, Chunk chunk, MReference aReference)
+    {
+        try {
+            var data = new LinkedHashMap<String, String>();
+            data.put("document", chunk.text());
+            data.put("ref-id", aReference.id());
+            data.entrySet().removeIf(e -> isBlank(e.getValue()));
+            body.append(JSONUtil.toPrettyJsonString(data));
+            body.append("\n");
+        }
+        catch (IOException e) {
+            LOG.error("Unable to render chunk", e);
+        }
     }
 }

@@ -22,7 +22,7 @@ import java.time.Duration;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.jmx.export.annotation.ManagedResource;
 
-@ConfigurationProperties("assistant.document-index")
+@ConfigurationProperties("assistant.documents")
 @ManagedResource
 public class AssistantDocumentIndexPropertiesImpl
     implements AssistantDocumentIndexProperties
@@ -30,6 +30,9 @@ public class AssistantDocumentIndexPropertiesImpl
     private Duration idleEvictionDelay = Duration.ofMinutes(5);
     private Duration minIdleTime = Duration.ofMinutes(5);
     private Duration borrowWaitTimeout = Duration.ofMinutes(3);
+    private int maxChunks = 10;
+    private int chunkSize = 128;
+    private double minScore = 0.6;
 
     @Override
     public Duration getIdleEvictionDelay()
@@ -62,5 +65,39 @@ public class AssistantDocumentIndexPropertiesImpl
     public void setBorrowWaitTimeout(Duration aBorrowWaitTimeout)
     {
         borrowWaitTimeout = aBorrowWaitTimeout;
+    }
+
+
+    @Override
+    public int getMaxChunks()
+    {
+        return maxChunks;
+    }
+
+    public void setMaxChunks(int aMaxChunks)
+    {
+        maxChunks = aMaxChunks;
+    }
+
+    @Override
+    public double getMinScore()
+    {
+        return minScore;
+    }
+
+    public void setMinScore(double aMinScore)
+    {
+        minScore = aMinScore;
+    }
+
+    @Override
+    public int getChunkSize()
+    {
+        return chunkSize;
+    }
+
+    public void setChunkSize(int aChunkSize)
+    {
+        chunkSize = aChunkSize;
     }
 }

@@ -19,17 +19,9 @@ package de.tudarmstadt.ukp.inception.assistant.config;
 
 public interface AssistantEmbeddingProperties
 {
-    public static final int AUTO_DETECT_DIMENSION = -1;
+    public static final int AUTO_DETECT_DIMENSION = 0;
 
     String getModel();
-
-    double getTopP();
-
-    int getTopK();
-
-    double getRepeatPenalty();
-
-    double getTemperature();
 
     int getSeed();
 
@@ -48,15 +40,4 @@ public interface AssistantEmbeddingProperties
     int getDimension();
 
     void setDimension(int aI);
-
-    /**
-     * @return maximum size in LLM tokens that a RAG chunk should have
-     */
-    int getChunkSize();
-
-    /**
-     * @return the minimum score a chunk must have with respect to the user query to be used by the
-     *         RAG
-     */
-    double getChunkScoreThreshold();
 }

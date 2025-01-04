@@ -22,6 +22,7 @@ import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
@@ -53,9 +54,10 @@ public class EmbeddingServiceImpl
     {
         autoDetectEmbeddingDimension();
     }
-    
+
     @Override
-    public int getDimension() {
+    public int getDimension()
+    {
         autoDetectEmbeddingDimension();
         return properties.getEmbedding().getDimension();
     }
@@ -68,8 +70,48 @@ public class EmbeddingServiceImpl
         if (result.isEmpty()) {
             return Optional.empty();
         }
-        
+
         return Optional.of(result.get(0).getValue());
+    }
+
+    @Override
+    public <T> List<Pair<T, float[]>> embed(Function<T, String> aExtractor, Iterable<T> aObjects) throws IOException
+    {
+        autoDetectEmbeddingDimension();
+
+        var strings = new ArrayList<String>();
+        var objects = new ArrayList<T>();
+        for (var o : aObjects) {
+            var s = removeEmptyLinesAndTrim(aExtractor.apply(o));
+
+            if (s.isEmpty() || hasHighProportionOfShortSequences(s)
+                    || hasHighProportionOfWhitespaceOrLineBreaks(s)) {
+                continue;
+            }
+
+            strings.add(s);
+            objects.add(o);
+        }
+
+        var request = OllamaEmbedRequest.builder() //
+                .withModel(properties.getEmbedding().getModel()) //
+                .withInput(strings.toArray(String[]::new)) //
+                .withOption(OllamaOptions.NUM_CTX, properties.getEmbedding().getContextLength()) //
+                .withOption(OllamaOptions.SEED, properties.getEmbedding().getSeed()) //
+                // The following options should not be relevant for embeddings
+                // .withOption(OllamaOptions.TEMPERATURE, 0.0) //
+                // .withOption(OllamaOptions.TOP_P, 0.0) //
+                // .withOption(OllamaOptions.TOP_K, 0) //
+                // .withOption(OllamaOptions.REPEAT_PENALTY, 1.0) //
+                .build();
+
+        var response = ollamaClient.embed(properties.getUrl(), request);
+        
+        var result = new ArrayList<Pair<T, float[]>>();
+        for (var i = 0; i < response.size(); i++) {
+            result.add(Pair.of(objects.get(i), response.get(i).getValue()));
+        }
+        return result;
     }
 
     @Override
@@ -93,13 +135,13 @@ public class EmbeddingServiceImpl
         var request = OllamaEmbedRequest.builder() //
                 .withModel(properties.getEmbedding().getModel()) //
                 .withInput(strings.toArray(String[]::new)) //
-                .withOption(OllamaOptions.TEMPERATURE, properties.getEmbedding().getTemperature()) //
                 .withOption(OllamaOptions.NUM_CTX, properties.getEmbedding().getContextLength()) //
                 .withOption(OllamaOptions.SEED, properties.getEmbedding().getSeed()) //
-                .withOption(OllamaOptions.TOP_P, properties.getEmbedding().getTopP()) //
-                .withOption(OllamaOptions.TOP_K, properties.getEmbedding().getTopK()) //
-                .withOption(OllamaOptions.REPEAT_PENALTY,
-                        properties.getEmbedding().getRepeatPenalty()) //
+                // The following options should not be relevant for embeddings
+                // .withOption(OllamaOptions.TEMPERATURE, 0.0) //
+                // .withOption(OllamaOptions.TOP_P, 0.0) //
+                // .withOption(OllamaOptions.TOP_K, 0) //
+                // .withOption(OllamaOptions.REPEAT_PENALTY, 1.0) //
                 .build();
         return ollamaClient.embed(properties.getUrl(), request);
     }
@@ -108,7 +150,7 @@ public class EmbeddingServiceImpl
     {
         var embeddingProperties = properties.getEmbedding();
         synchronized (embeddingProperties) {
-            if (embeddingProperties.getDimension() <= 0) {
+            if (embeddingProperties.getDimension() < 1) {
                 try {
                     var embedding = ollamaClient.embed(properties.getUrl(), OllamaEmbedRequest
                             .builder() //
