@@ -446,7 +446,7 @@ export class ApacheAnnotatorVisualizer {
     for (const pingOffset of pingRanges || []) {
       const pingRange = offsetToRange(this.root, pingOffset[0], pingOffset[1])
       if (pingRange) {
-        this.removePingMarkers.push(this.safeHighlightText(pingRange, 'mark', { class: 'iaa-ping-marker' }))
+        this.removePingMarkers.push(highlightText(pingRange, 'mark', { class: 'iaa-ping-marker' }))
       }
     }
 
@@ -511,7 +511,9 @@ export class ApacheAnnotatorVisualizer {
       // markers are still there.
       var scrollIntoViewFunc = () => { 
         finalScrollTarget.scrollIntoView({ behavior: 'auto', block: 'start', inline: 'nearest' })
-        if (this.removePingMarkers.length > 0) window.setTimeout(scrollIntoViewFunc, 100)
+        if (this.removeScrollMarkers.length > 0) {
+          window.setTimeout(scrollIntoViewFunc, 100)
+        }
         
         if (this.root instanceof HTMLElement) {
           if (this.root.scrollTop === this.lastScrollTop) {
@@ -526,17 +528,15 @@ export class ApacheAnnotatorVisualizer {
       this.scrolling = true
       this.sectionAnnotationVisualizer.suspend()
       this.sectionAnnotationCreator.suspend()
-      window.setTimeout(scrollIntoViewFunc, 100)
+      this.removeScrollMarkersTimeout = window.setTimeout(scrollIntoViewFunc, 100)
     }
-
-    this.removeScrollMarkersTimeout = window.requestIdleCallback(() => this.scrollToComplete(args.pingRanges), { timeout: 2000 })
   }
 
   private scrollToComplete(pingRanges?: Offsets[]) {
     console.log('Scrolling complete')
 
     this.clearScrollMarkers()
-    // this.renderPingMarkers(pingRanges)
+    this.renderPingMarkers(pingRanges)
     this.root.normalize() // https://github.com/apache/incubator-annotator/issues/120
 
     this.scrolling = false

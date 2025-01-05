@@ -279,7 +279,7 @@ public class ExternalSearchAnnotationSidebar
                 info("Document already present: " + aResult.getDocumentId());
             }
 
-            getAnnotationPage().actionShowSelectedDocument(aTarget,
+            getAnnotationPage().actionShowDocument(aTarget,
                     documentService.getSourceDocument(project, aResult.getDocumentId()));
         }
         catch (Exception e) {
@@ -293,7 +293,7 @@ public class ExternalSearchAnnotationSidebar
     {
         try {
             searchStateModel.getObject().setSelectedResult(aResult);
-            getAnnotationPage().actionShowSelectedDocument(aTarget,
+            getAnnotationPage().actionShowDocument(aTarget,
                     documentService.getSourceDocument(project, aResult.getDocumentId()));
         }
         catch (Exception e) {

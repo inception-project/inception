@@ -21,6 +21,7 @@
     import { get_current_component } from 'svelte/internal'
     import { Client, Stomp, IFrame } from "@stomp/stompjs"
     import { marked } from 'marked'
+    import { factory } from "@inception-project/inception-diam";
     import DOMPurify from 'dompurify'
 
     interface MPerformanceMetrics {
@@ -29,9 +30,11 @@
 
     interface MReference {
         id: string, 
-        type: string,
-        title: string, 
-        target: string,
+        counter: number,
+        documentId: number,
+        documentName: string, 
+        begin: number,
+        end: number;
         score: number
     }
 
@@ -49,6 +52,7 @@
     export let wsEndpointUrl: string; // should this be full ws://... url
     export let topicChannel: string;
     export let csrfToken: string;
+    export let ajaxEndpointUrl: string;
 
     let socket: WebSocket = null;
     let stompClient: Client = null;
@@ -61,6 +65,7 @@
     let messageInput;
     let waitingForResponse = false;
     let autoScroll = true;
+    let ajaxClient = factory().createAjaxClient(ajaxEndpointUrl);
 
     marked.setOptions({
         breaks: true,
@@ -169,15 +174,9 @@
         console.log("Additional details: " + receipt.body);
     }
 
-    function scrollToBottom() {
-        if (autoScroll) {
-            chatContainer.scrollTop = chatContainer.scrollHeight;
-        }
-    }
-
     function handleScroll() {
-        autoScroll = chatContainer.scrollTop + chatContainer.clientHeight >= chatContainer.scrollHeight;
-    }
+        let threshold = 16;
+        autoScroll = chatContainer.scrollTop + chatContainer.clientHeight >= chatContainer.scrollHeight - threshold;    }
 
     onMount(async () => {
         connect();
@@ -188,7 +187,9 @@
     });
 
     afterUpdate(() => {
-        scrollToBottom();
+        if (autoScroll) {
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
     });
 
     function renderMessage(message: MTextMessage) {
@@ -196,14 +197,18 @@
             return '';
         }
 
-        const rawHtml = marked(message.message) as string
+        const trimmedMessage = message.message.replace(/{{ref::[\w-]*}?$/, '');;
+
+        const rawHtml = marked(trimmedMessage) as string
         var pureHtml = DOMPurify.sanitize(rawHtml, { RETURN_DOM: false });
+        var refNum = 0;
 
         // Replace all `{{ref::X}}` with the respective reference link
-        pureHtml = pureHtml.replace(/\s*{{ref::(\w+)}}(\.*)/g, (match, refId, dots) => {
+        pureHtml = pureHtml.replace(/\s*{{ref::([\w-]+)}}(\.*)/g, (match, refId, dots) => {
             const reference = message.references.find(ref => ref.id === refId);
             if (reference) {
-                return `${dots}<a href="${escapeXML(reference.target)}" class="footnote" title="${escapeXML(reference.title)}">${escapeXML(reference.id)}</a>`;
+                refNum++
+                return `${dots}<span class="reference badge rounded-pill text-bg-secondary mx-1" data-msg="${message.id}" data-ref="${reference.id}" title="${escapeXML(reference.documentName)}">${refNum}</span>`;
             }
 
             // If no matching reference is found, keep the original text
@@ -244,8 +249,22 @@
     }
 
     function toggleMessage(event) {
-        const messageElement = event.currentTarget;
+        const messageElement = event.currentTarget.parentElement;
         messageElement.classList.toggle('collapsed');
+    }
+
+    function handleClick(event) {
+        const target = event.target;
+        const msgId = target.getAttribute('data-msg');
+        const refId = target.getAttribute('data-ref');
+        if (msgId && refId) {
+            event.preventDefault();
+            const message = messages.find(msg => msg.id === msgId);
+            const reference = message.references.find(ref => ref.id === refId);
+            if (reference) {
+                ajaxClient.scrollTo({docId: reference.documentId, offset: [reference.begin, reference.end]});
+            }
+        }
     }
 </script>
 
@@ -256,10 +275,10 @@
             <!-- svelte-ignore a11y-no-noninteractive-tabindex -->
             <div class="message" data-role="{message.role}" data-internal="{message.internal}" 
                  class:collapsed={message.internal}
-                 on:click={message.internal ? toggleMessage : null} 
-                 role={message.internal ? "button" : undefined}
                  tabIndex={message.internal ? 0 : undefined}>
-                <div class="message-header text-body-secondary">
+                <div class="message-header text-body-secondary"
+                    on:click={message.internal ? toggleMessage : null} 
+                    role={message.internal ? "button" : undefined}>
                     {#if message.role === "assistant"}
                       <i class="fas fa-robot me-1" title="Assistant message"/>
                     {:else if message.role === "user"}
@@ -274,7 +293,10 @@
                         </span>
                     {/if}
                 </div>
-                <div class="message-body" class:dots="{!message.done}">{@html renderMessage(message)}</div>
+                <!-- svelte-ignore a11y-no-static-element-interactions -->
+                <div class="message-body" class:dots="{!message.done}" on:click={handleClick}>
+                    {@html renderMessage(message)}
+                </div>
                 {#if message.performance}
                     <div class="message-footer">
                         <span><i class="far fa-clock me-1"/>{message.performance.duration / 1000}s</span>
@@ -351,16 +373,13 @@
       }
     }
     
-    :global(a.footnote) {
-        font-size: x-small;
+    :global(.reference) {
+        font-size-adjust: 0.5;
+//        font-size: x-small;
         vertical-align: top;
+        border-radius: 0.25em;
+        cursor: pointer;
     }
-
-      :global(a.footnote:has(+ a.footnote))::after {
-        margin-top: 0.5rem;
-        margin-bottom: 0;
-        content: ", ";
-      }
 
     .message-header {
       display: block;
@@ -370,13 +389,26 @@
 
     .message-body {
       display: block;
+      font-size: smaller;
 
-      :global(p):last-child {
-        margin-bottom: 0;
+      :global(p) {
+        margin-bottom: 0.5em;
       }
 
       :global(code) {
         white-space: break-spaces;
+      }
+
+      :global(h1), :global(h2), :global(h3), :global(h4), :global(h5), :global(h6) {
+        font-size: var(--bs-body-font-size);
+        line-height: var(--bs-body-line-height);
+        font-weight: bolder;
+        font-variant: small-caps;
+      }
+
+      :global(ol), :global(ul) {
+        margin-bottom: 1.5em;
+        padding-left: 1.5em;
       }
     }
 
@@ -408,7 +440,6 @@
         background-color: #00000010;
         border: solid 1px;
         border-color: var(--bs-border-color-translucent);
-        border-radius: 5px;
         padding: 0.25rem;
       }
 

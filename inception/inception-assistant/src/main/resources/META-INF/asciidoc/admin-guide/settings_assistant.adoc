@@ -38,6 +38,11 @@ CAUTION: Experimental feature.
 | URL of the Ollama service
 | `http://localhost:11434`
 | _some other URL_
+
+| `assistant.nickname`
+| The by which the assistant should identify itself.
+| `INCEpTION`
+| `Dominick`
 |===
 
 .Settings related to the assistant chat functionality
@@ -83,6 +88,15 @@ Tune the balance between more randomness (high >= 1.0) and less randomness (low,
 | `0.1`
 | `0.8`
 
+| `assistant.chat.encoding`
+| The token encoding used by the model. 
+  The encoding is used to estimate the number of tokens within {product-name}.
+  This can help the application chunk the text more accurately.
+  If in doubt, leave the default setting.  
+| `cl100k_base`
+| `r50k_base`, `p50k_base`, `p50k_edit`, `cl100k_base` or `o200k_base`
+|===
+
 .Settings related to the assistant search functionality
 [cols="4*", options="header"]
 |===
@@ -90,8 +104,6 @@ Tune the balance between more randomness (high >= 1.0) and less randomness (low,
 | Description
 | Default
 | Example
-
-        private double chunkScoreThreshold = 0.6;
 
 | `assistant.embedding.model`
 | The model to use to drive the search functionality of the assistant
@@ -127,18 +139,12 @@ Tune the balance between more randomness (high >= 1.0) and less randomness (low,
 | `768`
 | `256`
 
-| `assistant.embedding.chunk-size`
-| The size of a chunk in LLM tokens.
-  The setting should not be higher than the `context-length` setting to avoid truncation.
-  It can be lower thought to create more topically focused chunks.
-| `128`
-| `768`
-
 | `assistant.embedding.batch-size`
 | Maximum of chunks that should be send together to the LLM service when generating embeddings.
   Batching multiple chunks in a single request increases indexing speed.
 | `16`
 | `32`
+
 |===
 
 .Settings related to the assistant search functionality accessing documents in the current project

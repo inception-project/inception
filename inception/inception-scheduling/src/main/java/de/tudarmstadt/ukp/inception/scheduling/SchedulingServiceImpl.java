@@ -309,9 +309,18 @@ public class SchedulingServiceImpl
             LOG.trace("Waiting for running tasks to end on project {}", aProject);
 
             if (currentTimeMillis() - startTime > timeoutMillis) {
+                var msg = new StringBuilder();
+                msg.append("Waiting for tasks related to project ");
+                msg.append(aProject);
+                msg.append(" to finish took longer than ");
+                msg.append(aTimeout);
+                msg.append("\n");
+                msg.append("The following tasks are still running:\n");
+                runningTasks.stream() //
+                        .filter(t -> aProject.equals(t.getProject())) //
+                        .forEach(t -> msg.append("- ").append(t).append("\n"));
                 resumeTasks(aProject);
-                throw new TimeoutException(
-                        "Waiting for tasks to finish took longer than " + aTimeout);
+                throw new TimeoutException(msg.toString());
             }
 
             try {

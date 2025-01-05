@@ -233,10 +233,10 @@ public class AssistantServiceImpl
     private List<MTextMessage> generateSystemMessages()
     {
         var primeDirectives = asList(
-                "You are " + properties.getNickname() + ", a helpful assistant within the annotation tool INCEpTION.",
+                "Your name is " + properties.getNickname() + ".",
+                "You are a helpful assistant within the annotation tool INCEpTION.",
                 "INCEpTION always refers to the annotation tool, never anything else such as the movie.",
                 "Do not include references to INCEpTION unless the user explicitly asks about the environment itself.",
-                "If the source of an information is known, provide it in your response.",
                 "The document retriever automatically provides you with relevant information from the current project.",
                 "The user guide retriever automatically provides you with relevant information from the user guide.",
                 "Use this relevant information when responding to the user."

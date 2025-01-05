@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -79,10 +80,15 @@ public class DocumentContextRetriever
         var references = new LinkedHashMap<Chunk, MReference>();
         var body = new StringBuilder();
         for (var chunk : chunks) {
-            var reference = new MReference(String.valueOf(references.size() + 1), "doc",
-                    chunk.documentName(),
-                    "#!d=" + chunk.documentId() + "&hl=" + chunk.begin() + "-" + chunk.end(),
-                    chunk.score());
+            var reference = MReference.builder() //
+                    //.withId(String.valueOf(references.size() + 1)) //
+                    .withId(UUID.randomUUID().toString()) //
+                    .withDocumentId(chunk.documentId()) //
+                    .withDocumentName(chunk.documentName()) //
+                    .withBegin(chunk.begin()) //
+                    .withEnd(chunk.end()) //
+                    .withScore(chunk.score()) //
+                    .build();
             references.put(chunk, reference);
             renderChunkJson(body, chunk, reference);
         }
@@ -91,16 +97,40 @@ public class DocumentContextRetriever
             return emptyList();
         }
 
-        return asList(MTextMessage.builder() //
+        var msg = MTextMessage.builder() //
                 .withActor("Document context retriever") //
                 .withRole(SYSTEM).internal() //
-                .withMessage(join("\n", asList(
-                        "The document retriever found the following relevant information in the following documents.",
-                        "", //
-                        body.toString(), "",
-                        "It is critical to mention the source of each document text in the form `{{ref::ref-id}}`.")))
-                .withReferences(references.values()) //
-                .build());
+                .withReferences(references.values());
+
+        // Works good with qwen72b but not with granite 8b
+//        msg.withMessage(join("\n", asList(
+//                "The document retriever found the following relevant information in the documents of this project.",
+//                "", //
+//                body.toString(), "",
+//                "It is critical to mention the source of each document text in the form `{{ref::ref-id}}`.")));
+
+        msg.withMessage(join("\n", asList(
+                """
+                Use the following documents from this project to respond.
+                It is absolutely critital to mention the `{{ref::ref-id}}` after each individual information from a document.
+                Here is an example of how to include the ref-id:
+
+                Input:
+                {
+                  "document": "The Eiffel Tower is located in Paris, France. It is one of the most famous landmarks in the world.",
+                  "ref-id": "123"
+                }
+                
+                Response:
+                The Eiffel Tower is located in Paris, France {{ref::123}}. 
+                It is one of the most famous landmarks in the world {{ref::123}}.
+                
+                Now, use the same pattern to process the following document:
+                """,
+                "", //
+                body.toString())));
+
+        return asList(msg.build());
     }
 
     private void renderChunkJson(StringBuilder body, Chunk chunk, MReference aReference)

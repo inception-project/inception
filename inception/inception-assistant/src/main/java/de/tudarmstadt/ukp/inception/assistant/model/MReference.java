@@ -17,6 +17,72 @@
  */
 package de.tudarmstadt.ukp.inception.assistant.model;
 
-public record MReference(String id, String type, String title, String target, double score) {
+public record MReference(String id, long documentId, String documentName, int begin, int end,
+        double score)
+{
+    private MReference(Builder builder)
+    {
+        this(builder.id, builder.documentId, builder.documentName, builder.begin, builder.end,
+                builder.score);
+    }
 
+    public static Builder builder()
+    {
+        return new Builder();
+    }
+
+    public static final class Builder
+    {
+        private String id;
+        private long documentId;
+        private String documentName;
+        private int begin;
+        private int end;
+        private double score;
+
+        private Builder()
+        {
+        }
+
+        public Builder withId(String aId)
+        {
+            id = aId;
+            return this;
+        }
+
+        public Builder withDocumentId(long aDocumentId)
+        {
+            documentId = aDocumentId;
+            return this;
+        }
+
+        public Builder withDocumentName(String aDocumentName)
+        {
+            documentName = aDocumentName;
+            return this;
+        }
+
+        public Builder withBegin(int aBegin)
+        {
+            begin = aBegin;
+            return this;
+        }
+
+        public Builder withEnd(int aEnd)
+        {
+            end = aEnd;
+            return this;
+        }
+
+        public Builder withScore(double aScore)
+        {
+            score = aScore;
+            return this;
+        }
+
+        public MReference build()
+        {
+            return new MReference(this);
+        }
+    }
 }

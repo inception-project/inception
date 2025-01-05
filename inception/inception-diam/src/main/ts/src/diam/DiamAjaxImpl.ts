@@ -83,7 +83,7 @@ export class DiamAjaxImpl implements DiamAjax {
     })
   }
 
-  scrollTo (args: { id?: VID, offset?: Offsets, offsets?: Array<Offsets> }): void {
+  scrollTo (args: { docId?: number, id?: VID, offset?: Offsets, offsets?: Array<Offsets> }): void {
     let effectiveOffsets: Array<Offsets> | undefined
     if (args.offset) {
       effectiveOffsets = [args.offset]
@@ -98,6 +98,7 @@ export class DiamAjaxImpl implements DiamAjax {
         u: this.ajaxEndpoint,
         ep: {
           action: 'scrollTo',
+          docId: args.docId,
           id: args.id,
           offsets: JSON.stringify(effectiveOffsets)
         }

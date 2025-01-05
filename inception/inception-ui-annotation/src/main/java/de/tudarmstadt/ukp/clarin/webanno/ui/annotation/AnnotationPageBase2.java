@@ -695,7 +695,7 @@ public abstract class AnnotationPageBase2
             return;
         }
 
-        // never had set a document or is a new one
+        // Never had set a document or is a new one
         if (aPreviousDocument == null || !aPreviousDocument.equals(currentDocument)
                 || aPreviousDataOwner == null || !aPreviousDataOwner.equals(dataOwner)) {
             LOG.trace(
@@ -705,6 +705,7 @@ public abstract class AnnotationPageBase2
             return;
         }
 
+        // No change of document, just change of focus
         try {
             getModelObject().moveToUnit(getEditorCas(), focus, TOP);
             actionRefreshDocument(aTarget);

@@ -36,6 +36,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.assistant.AssistantService;
 import de.tudarmstadt.ukp.inception.assistant.AssistantWebsocketController;
+import de.tudarmstadt.ukp.inception.diam.editor.DiamAjaxBehavior;
 import de.tudarmstadt.ukp.inception.support.svelte.SvelteBehavior;
 import jakarta.servlet.ServletContext;
 
@@ -50,18 +51,22 @@ public class AssistantPanel
     private @SpringBean UserDao userService;
     private @SpringBean AssistantService assistantService;
 
+    private DiamAjaxBehavior diamBehavior;
+
     public AssistantPanel(String aId)
     {
         super(aId);
         setOutputMarkupPlaceholderTag(true);
     }
-    
+
     @Override
     protected void onInitialize()
     {
         super.onInitialize();
 
         add(new SvelteBehavior());
+
+        add(diamBehavior = new DiamAjaxBehavior(null));
     }
 
     @Override
@@ -77,6 +82,7 @@ public class AssistantPanel
         }
 
         Map<String, Object> properties = Map.of( //
+                "ajaxEndpointUrl", diamBehavior.getCallbackUrl(), //
                 "wsEndpointUrl", constructEndpointUrl(), //
                 "documentId", state.getDocument().getId(), //
                 "csrfToken", getCsrfTokenFromSession(), //

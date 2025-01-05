@@ -37,7 +37,7 @@ public class AssistantSidebar
     private @SpringBean UserDao userService;
     private @SpringBean AssistantService assistantService;
     private @SpringBean DocumentQueryService documentQueryService;
-    
+
     private AssistantPanel chat;
 
     public AssistantSidebar(String aId, AnnotationActionHandler aActionHandler,
@@ -51,7 +51,7 @@ public class AssistantSidebar
         queue(new LambdaAjaxLink("reindex", this::actionReindex));
 
         queue(new LambdaAjaxLink("clear", this::actionClear));
-}
+    }
 
     private void actionReindex(AjaxRequestTarget aTarget)
     {

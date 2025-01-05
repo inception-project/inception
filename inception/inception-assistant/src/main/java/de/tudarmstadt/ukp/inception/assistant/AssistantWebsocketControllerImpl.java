@@ -57,8 +57,8 @@ public class AssistantWebsocketControllerImpl
 
     @Autowired
     public AssistantWebsocketControllerImpl(ServletContext aServletContext,
-            SimpMessagingTemplate aMsgTemplate, AssistantService aAssistantService, ProjectService aProjectService
-            , UserDao aUserService)
+            SimpMessagingTemplate aMsgTemplate, AssistantService aAssistantService,
+            ProjectService aProjectService, UserDao aUserService)
     {
         assistantService = aAssistantService;
         projectService = aProjectService;
@@ -66,20 +66,18 @@ public class AssistantWebsocketControllerImpl
     }
 
     @SubscribeMapping(PROJECT_ASSISTANT_TOPIC_TEMPLATE)
-    public List<MTextMessage> onSubscribeToAssistantMessages(SimpMessageHeaderAccessor aHeaderAccessor,
-            Principal aPrincipal, //
+    public List<MTextMessage> onSubscribeToAssistantMessages(
+            SimpMessageHeaderAccessor aHeaderAccessor, Principal aPrincipal, //
             @DestinationVariable(PARAM_PROJECT) long aProjectId)
         throws IOException
     {
         var project = projectService.getProject(aProjectId);
         return assistantService.getAllChatMessages(aPrincipal.getName(), project);
     }
-    
+
     @MessageMapping(PROJECT_ASSISTANT_TOPIC_TEMPLATE)
-    public void onUserMessage(SimpMessageHeaderAccessor aHeaderAccessor,
-            Principal aPrincipal, //
-            @DestinationVariable(PARAM_PROJECT) long aProjectId,
-            @Payload String aMessage)
+    public void onUserMessage(SimpMessageHeaderAccessor aHeaderAccessor, Principal aPrincipal, //
+            @DestinationVariable(PARAM_PROJECT) long aProjectId, @Payload String aMessage)
         throws IOException
     {
         var project = projectService.getProject(aProjectId);

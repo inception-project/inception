@@ -18,6 +18,8 @@
     "url": "https://github.com/inception-project/issues"
   },
   "dependencies": {
+    "@inception-project/inception-js-api": "${semver}",
+    "@inception-project/inception-diam": "${semver}",
     "@stomp/stompjs": "${stomp-stompjs.version}",
     "@types/stompjs": "${types-stompjs.version}"
   },
