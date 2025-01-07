@@ -1353,7 +1353,7 @@ public class DocumentServiceImpl
         // .getSingleResult();
 
         // @formatter:off
-        String query = 
+        var query = 
                 "SELECT new " + SourceDocumentStateStats.class.getName() + "(" +
                 "COUNT(*), " +
                 "SUM(CASE WHEN state = '" + NEW.getId() + "' THEN 1 ELSE 0 END), " +

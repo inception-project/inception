@@ -58,6 +58,7 @@ public abstract class Task
     private final String type;
     private final boolean cancellable;
 
+    private volatile Thread thread;
     private TaskMonitor monitor;
     private Task parentTask;
 
@@ -98,6 +99,11 @@ public abstract class Task
                 monitor = new TaskMonitor(this);
             }
         }
+    }
+
+    Thread getThread()
+    {
+        return thread;
     }
 
     public boolean isCancellable()
@@ -199,6 +205,12 @@ public abstract class Task
     public final void runSync()
     {
         try {
+            if (thread != null) {
+                throw new IllegalStateException("Task " + this + " already bound to thread "
+                        + thread + " when trying to start on thread " + Thread.currentThread());
+            }
+
+            thread = Thread.currentThread();
             monitor.setState(TaskState.RUNNING);
 
             execute();
@@ -222,6 +234,9 @@ public abstract class Task
             monitor.setState(TaskState.FAILED);
             LOG.error("Task [{}] failed with a serious error (trigger: [{}])", getTitle(),
                     getTrigger(), e);
+        }
+        finally {
+            thread = null;
         }
     }
 
