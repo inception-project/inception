@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [ "main", "release/**" ]
 
+permissions:
+  contents: read
+
 concurrency:
   group: ${{ github.ref }}
   cancel-in-progress: true
@@ -24,7 +27,26 @@ jobs:
     - name: Harden Runner
       uses: step-security/harden-runner@0080882f6c36860b6ba35c610c98ce87d4e2f26f # v2.10.2
       with:
-        egress-policy: audit
+        # egress-policy: audit
+        egress-policy: block
+        disable-sudo: true
+        allowed-endpoints: >
+          archive.ics.uci.edu:80
+          auth.docker.io:443
+          build.shibboleth.net:443
+          eastus.data.mcr.microsoft.com:443
+          github.com:443
+          mcr.microsoft.com:443
+          nodejs.org:443
+          oss.sonatype.org:443
+          production.cloudflare.docker.com:443
+          registry-1.docker.io:443
+          registry.npmjs.org:443
+          repo.maven.apache.org:443
+          westus.data.mcr.microsoft.com:443
+          westus2.data.mcr.microsoft.com:443
+          www.ims.uni-stuttgart.de:443
+          zoidberg.ukp.informatik.tu-darmstadt.de:443
 
     - name: Checkout repository
       uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
