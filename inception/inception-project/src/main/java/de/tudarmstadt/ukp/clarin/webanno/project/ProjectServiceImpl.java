@@ -44,6 +44,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.invoke.MethodHandles;
 import java.nio.file.NoSuchFileException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -113,7 +114,7 @@ import jakarta.persistence.NoResultException;
 public class ProjectServiceImpl
     implements ProjectService
 {
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private final EntityManager entityManager;
     private final UserDao userRepository;
@@ -149,10 +150,10 @@ public class ProjectServiceImpl
         entityManager.persist(aProject);
 
         try (var logCtx = withProjectLogger(aProject)) {
-            log.info("Created project [{}]({})", aProject.getName(), aProject.getId());
+            LOG.info("Created project {}", aProject);
 
-            String path = repositoryProperties.getPath().getAbsolutePath() + "/" + PROJECT_FOLDER
-                    + "/" + aProject.getId();
+            var path = repositoryProperties.getPath().getAbsolutePath() + "/" + PROJECT_FOLDER + "/"
+                    + aProject.getId();
             FileUtils.forceMkdir(new File(path));
 
             applicationEventPublisher.publishEvent(new AfterProjectCreatedEvent(this, aProject));
@@ -176,7 +177,7 @@ public class ProjectServiceImpl
         try (var logCtx = withProjectLogger(aPermission.getProject())) {
             entityManager.persist(aPermission);
 
-            log.info("Created permission [{}] for user [{}] on project {}", aPermission.getLevel(),
+            LOG.info("Created permission [{}] for user [{}] on project {}", aPermission.getLevel(),
                     aPermission.getUser(), aPermission.getProject());
 
             applicationEventPublisher.publishEvent(new ProjectPermissionsChangedEvent(this,
@@ -498,8 +499,8 @@ public class ProjectServiceImpl
             Collection<PermissionLevel> aLevels)
     {
         try (var logCtx = withProjectLogger(aProject)) {
-            Set<PermissionLevel> levelsToBeGranted = new HashSet<>(aLevels);
-            List<ProjectPermission> permissions = new ArrayList<>();
+            var levelsToBeGranted = new HashSet<PermissionLevel>(aLevels);
+            var permissions = new ArrayList<ProjectPermission>();
             try {
                 permissions.addAll(listProjectPermissionLevel(aUser, aProject));
             }
@@ -508,14 +509,14 @@ public class ProjectServiceImpl
             }
 
             // Remove permissions that no longer exist
-            List<ProjectPermission> revokedPermissions = new ArrayList<>();
-            for (ProjectPermission permission : permissions) {
+            var revokedPermissions = new ArrayList<ProjectPermission>();
+            for (var permission : permissions) {
                 if (!aLevels.contains(permission.getLevel())) {
                     revokedPermissions.add(permission);
 
                     entityManager.remove(permission);
 
-                    log.info("Removed permission [{}] for user [{}] on project {}",
+                    LOG.info("Removed permission [{}] for user [{}] on project {}",
                             permission.getLevel(), permission.getUser(), permission.getProject());
                 }
                 else {
@@ -524,15 +525,15 @@ public class ProjectServiceImpl
             }
 
             // Grant new permissions
-            List<ProjectPermission> grantedPermissions = new ArrayList<>();
-            for (PermissionLevel level : levelsToBeGranted) {
-                ProjectPermission permission = new ProjectPermission(aProject, aUser, level);
+            var grantedPermissions = new ArrayList<ProjectPermission>();
+            for (var level : levelsToBeGranted) {
+                var permission = new ProjectPermission(aProject, aUser, level);
 
                 grantedPermissions.add(permission);
 
                 entityManager.persist(permission);
 
-                log.info("Granted permission [{}] for user {} on project {}", level, aUser,
+                LOG.info("Granted permission [{}] for user {} on project {}", level, aUser,
                         aProject);
             }
 
@@ -674,7 +675,7 @@ public class ProjectServiceImpl
 
             applicationEventPublisher.publishEvent(new BeforeProjectRemovedEvent(this, aProject));
 
-            for (ProjectPermission permissions : getProjectPermissions(aProject)) {
+            for (var permissions : getProjectPermissions(aProject)) {
                 entityManager.remove(permissions);
             }
 
@@ -687,12 +688,12 @@ public class ProjectServiceImpl
                 FastIOUtils.delete(new File(path));
             }
             catch (FileNotFoundException | NoSuchFileException e) {
-                log.info("Project directory to be deleted was not found: [{}]. Ignoring.", path);
+                LOG.info("Project directory to be deleted was not found: [{}]. Ignoring.", path);
             }
 
             applicationEventPublisher.publishEvent(new AfterProjectRemovedEvent(this, aProject));
 
-            log.info("Removed project {} ({})", aProject,
+            LOG.info("Removed project {} ({})", aProject,
                     formatDurationWords(System.currentTimeMillis() - start, true, true));
         }
     }
@@ -705,7 +706,7 @@ public class ProjectServiceImpl
         try (var logCtx = withProjectLogger(aPermission.getProject())) {
             entityManager.remove(aPermission);
 
-            log.info("Removed permission [{}] for user [{}] on project {}", aPermission.getLevel(),
+            LOG.info("Removed permission [{}] for user [{}] on project {}", aPermission.getLevel(),
                     aPermission.getUser(), aPermission.getProject());
 
             applicationEventPublisher.publishEvent(new ProjectPermissionsChangedEvent(this,
@@ -814,7 +815,7 @@ public class ProjectServiceImpl
             Set<Class<? extends ProjectInitializer>> initializerClasses = new HashSet<>();
             for (ProjectInitializer init : inits) {
                 if (initializerClasses.add(init.getClass())) {
-                    log.debug("Found project initializer: {}",
+                    LOG.debug("Found project initializer: {}",
                             ClassUtils.getAbbreviatedName(init.getClass(), 20));
                 }
                 else {
@@ -837,13 +838,13 @@ public class ProjectServiceImpl
         for (Project project : projects) {
             String slug = deriveSlugFromName(project.getName());
             if (!isValidProjectSlug(slug)) {
-                log.warn("Attempt to derive slug from project name [{}] resulted in invalid slug "
+                LOG.warn("Attempt to derive slug from project name [{}] resulted in invalid slug "
                         + "[{}], generating random slug...", project.getName(), slug);
                 slug = generateRandomSlug();
             }
             slug = deriveUniqueSlug(slug);
             project.setSlug(slug);
-            log.info("Auto-generated slug [{}] for project {}", slug, project);
+            LOG.info("Auto-generated slug [{}] for project {}", slug, project);
         }
     }
 
@@ -925,7 +926,7 @@ public class ProjectServiceImpl
             var initializerName = initializer.getName();
 
             if (applied.contains(initializer.getClass())) {
-                log.debug("Skipping project initializer that was already applied: [{}]",
+                LOG.debug("Skipping project initializer that was already applied: [{}]",
                         initializerName);
                 continue;
             }
@@ -943,13 +944,13 @@ public class ProjectServiceImpl
             }
 
             if (applied.containsAll(initializer.getDependencies())) {
-                log.debug("Applying project initializer: [{}]", initializerName);
+                LOG.debug("Applying project initializer: [{}]", initializerName);
                 initializer.configure(aRequest);
                 applied.add(initializer.getClass());
                 initsDeferred.clear();
             }
             else {
-                log.debug("Deferring project initializer as dependencies are not yet fulfilled: {}",
+                LOG.debug("Deferring project initializer as dependencies are not yet fulfilled: {}",
                         initializer);
                 toApply.add(initializer);
                 initsDeferred.add(initializer);

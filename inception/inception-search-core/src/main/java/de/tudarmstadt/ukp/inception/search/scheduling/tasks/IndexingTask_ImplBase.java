@@ -62,15 +62,19 @@ public abstract class IndexingTask_ImplBase
         var builder = new StringBuilder();
         builder.append(getClass().getSimpleName());
         builder.append(" [project=");
-        builder.append(getProject().getName());
+        builder.append(getProject());
         if (getUser().isPresent()) {
             builder.append(", user=");
             builder.append(getUser().get());
         }
-        builder.append(", sourceDocument=");
-        builder.append(sourceDocument == null ? "null" : sourceDocument.getName());
-        builder.append(", annotationDocument=");
-        builder.append(annotationDocument == null ? "null" : annotationDocument.getName());
+        if (sourceDocument != null) {
+            builder.append(", sourceDocument=");
+            builder.append(sourceDocument.getName());
+        }
+        if (annotationDocument != null) {
+            builder.append(", annotationDocument=");
+            builder.append(annotationDocument.getName());
+        }
         builder.append(", trigger=");
         builder.append(getTrigger());
         builder.append("]");

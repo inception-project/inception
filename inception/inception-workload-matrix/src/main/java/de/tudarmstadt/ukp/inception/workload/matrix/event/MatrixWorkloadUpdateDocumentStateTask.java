@@ -129,7 +129,7 @@ public class MatrixWorkloadUpdateDocumentStateTask
 
         protected Builder()
         {
-            withDebounceMillis(ofSeconds(2));
+            withDebounceDelay(ofSeconds(2));
         }
 
         @SuppressWarnings("unchecked")

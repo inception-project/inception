@@ -185,6 +185,7 @@
     <cross-env.version>^7.0.3</cross-env.version>
     <color-convert.version>^2.0.1</color-convert.version>
     <dayjs.version>^1.11.13</dayjs.version>
+    <dompurify.version>^3.2.3</dompurify.version>
     <esbuild.version>^0.23.1</esbuild.version>
     <esbuild-sass-plugin.version>^3.3.1</esbuild-sass-plugin.version>
     <esbuild-svelte.version>^0.8.2</esbuild-svelte.version>
@@ -202,6 +203,7 @@
     <jsdom-global.version>^3.0.2</jsdom-global.version>
     <jquery.version>3.7.1</jquery.version>
     <jquery-ui.version>1.14.0</jquery-ui.version>
+    <marked.version>^15.0.4</marked.version>
     <pdfjs.version>2.14.305</pdfjs.version>
     <popperjs.version>2.11.8</popperjs.version>
     <recogitojs.version>1.8.2</recogitojs.version>

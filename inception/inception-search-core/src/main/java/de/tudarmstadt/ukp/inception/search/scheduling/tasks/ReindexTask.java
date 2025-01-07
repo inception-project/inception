@@ -21,6 +21,7 @@
  */
 package de.tudarmstadt.ukp.inception.search.scheduling.tasks;
 
+import static de.tudarmstadt.ukp.inception.scheduling.MatchResult.DISCARD_OR_QUEUE_THIS;
 import static de.tudarmstadt.ukp.inception.scheduling.MatchResult.NO_MATCH;
 import static de.tudarmstadt.ukp.inception.scheduling.MatchResult.UNQUEUE_EXISTING_AND_QUEUE_THIS;
 import static de.tudarmstadt.ukp.inception.scheduling.TaskScope.PROJECT;
@@ -82,11 +83,17 @@ public class ReindexTask
     public MatchResult matches(Task aTask)
     {
         // If a re-indexing task for a project is coming in, we can throw out any scheduled tasks
-        // for re-indexing and for indexing individual source/annotation documents in the project.
-        if (aTask instanceof ReindexTask || aTask instanceof IndexSourceDocumentTask
+        // for indexing individual source/annotation documents in the project.
+        if (aTask instanceof IndexSourceDocumentTask
                 || aTask instanceof IndexAnnotationDocumentTask) {
             if (Objects.equals(getProject().getId(), aTask.getProject().getId())) {
                 return UNQUEUE_EXISTING_AND_QUEUE_THIS;
+            }
+        }
+
+        if (aTask instanceof ReindexTask) {
+            if (Objects.equals(getProject().getId(), aTask.getProject().getId())) {
+                return DISCARD_OR_QUEUE_THIS;
             }
         }
 

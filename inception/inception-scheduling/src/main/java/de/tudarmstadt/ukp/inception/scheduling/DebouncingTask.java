@@ -42,7 +42,7 @@ public abstract class DebouncingTask
     {
         private long debounceMillis;
 
-        public T withDebounceMillis(Duration aDebounceDelay)
+        public T withDebounceDelay(Duration aDebounceDelay)
         {
             debounceMillis = aDebounceDelay.toMillis();
             return (T) this;

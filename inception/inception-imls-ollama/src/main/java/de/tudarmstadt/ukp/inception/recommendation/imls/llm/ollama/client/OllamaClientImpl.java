@@ -31,9 +31,12 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpRequest.BodyPublishers;
 import java.net.http.HttpResponse;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -71,11 +74,7 @@ public class OllamaClientImpl
     protected HttpResponse<InputStream> sendRequest(HttpRequest aRequest) throws IOException
     {
         try {
-            var response = client.send(aRequest, HttpResponse.BodyHandlers.ofInputStream());
-
-            handleError(response);
-
-            return response;
+            return client.send(aRequest, HttpResponse.BodyHandlers.ofInputStream());
         }
         catch (IOException | InterruptedException e) {
             throw new IOException("Error while sending request: " + e.getMessage(), e);
@@ -94,6 +93,14 @@ public class OllamaClientImpl
     @Override
     public String generate(String aUrl, OllamaGenerateRequest aRequest) throws IOException
     {
+        return generate(aUrl, aRequest, null);
+    }
+
+    @Override
+    public String generate(String aUrl, OllamaGenerateRequest aRequest,
+            Consumer<OllamaGenerateResponse> aCallback)
+        throws IOException
+    {
         var request = HttpRequest.newBuilder() //
                 .uri(URI.create(appendIfMissing(aUrl, "/") + "api/generate")) //
                 .header(CONTENT_TYPE, "application/json")
@@ -110,32 +117,136 @@ public class OllamaClientImpl
             while (iter.hasNext()) {
                 var response = (OllamaGenerateResponse) iter.nextValue();
 
-                if (LOG.isDebugEnabled()) {
-                    var loadDuration = response.getLoadDuration() / 1_000_000_000;
-                    var promptEvalDuration = response.getPromptEvalDuration() / 1_000_000_000d;
-                    var promptEvalTokenPerSecond = response.getPromptEvalCount()
-                            / promptEvalDuration;
-                    var evalDuration = response.getEvalDuration() / 1_000_000_000d;
-                    var evalTokenPerSecond = response.getEvalCount() / evalDuration;
-                    var totalDuration = response.getTotalDuration() / 1_000_000_000;
-                    LOG.debug("Tokens  - prompt: {} ({} per sec) response: {} ({} per sec)", //
-                            response.getPromptEvalCount(), //
-                            promptEvalTokenPerSecond, //
-                            response.getEvalCount(), //
-                            evalTokenPerSecond);
-                    LOG.debug("Timings - load: {}sec  prompt: {}sec  response: {}s  total: {}sec", //
-                            loadDuration, promptEvalDuration, evalDuration, totalDuration);
-                }
-
-                if (metrics != null) {
-                    metrics.handleResponse(response);
+                if (response.isDone()) {
+                    collectMetrics(response);
                 }
 
                 result.append(response.getResponse());
+
+                if (aCallback != null) {
+                    aCallback.accept(response);
+                }
             }
         }
 
         return result.toString().trim();
+    }
+
+    @Override
+    public OllamaChatResponse generate(String aUrl, OllamaChatRequest aRequest,
+            Consumer<OllamaChatResponse> aCallback)
+        throws IOException
+    {
+        if (LOG.isTraceEnabled()) {
+            LOG.trace("Sending chat request: {}", JSONUtil.toPrettyJsonString(aRequest));
+        }
+
+        var request = HttpRequest.newBuilder() //
+                .uri(URI.create(appendIfMissing(aUrl, "/") + "api/chat")) //
+                .header(CONTENT_TYPE, "application/json")
+                .POST(BodyPublishers.ofString(JSONUtil.toJsonString(aRequest), UTF_8)) //
+                .build();
+
+        var rawResponse = sendRequest(request);
+
+        handleError(rawResponse);
+
+        var result = new StringBuilder();
+        OllamaChatResponse finalResponse = null;
+        try (var is = rawResponse.body()) {
+            var iter = objectMapper.readerFor(OllamaChatResponse.class).readValues(is);
+            while (iter.hasNext()) {
+                var response = (OllamaChatResponse) iter.nextValue();
+
+                if (response.isDone()) {
+                    collectMetrics(response);
+                    finalResponse = response;
+                }
+
+                result.append(response.getMessage().content());
+
+                if (aCallback != null) {
+                    aCallback.accept(response);
+                }
+            }
+        }
+
+        var role = finalResponse.getMessage().role();
+        finalResponse.setMessage(new OllamaChatMessage(role, result.toString().trim()));
+
+        return finalResponse;
+    }
+
+    @Override
+    public List<Pair<String, float[]>> embed(String aUrl, OllamaEmbedRequest aRequest)
+        throws IOException
+    {
+        var request = HttpRequest.newBuilder() //
+                .uri(URI.create(appendIfMissing(aUrl, "/") + "api/embed")) //
+                .header(CONTENT_TYPE, "application/json")
+                .POST(BodyPublishers.ofString(JSONUtil.toJsonString(aRequest), UTF_8)) //
+                .build();
+
+        var rawResponse = sendRequest(request);
+
+        if (aRequest.input().size() == 1 && rawResponse.statusCode() >= HTTP_BAD_REQUEST) {
+            LOG.error("Error embedding string [{}]", aRequest.input().get(0));
+        }
+
+        handleError(rawResponse);
+
+        try (var is = rawResponse.body()) {
+            var response = objectMapper.readValue(is, OllamaEmbedResponse.class);
+
+            collectMetrics(response);
+
+            var result = new ArrayList<Pair<String, float[]>>();
+            for (int i = 0; i < response.embeddings().length; i++) {
+                result.add(Pair.of(aRequest.input().get(i), response.embeddings()[i]));
+            }
+
+            return result;
+        }
+    }
+
+    private void collectMetrics(OllamaTokenMetrics response)
+    {
+        if (LOG.isDebugEnabled()) {
+            var loadDuration = response.getLoadDuration() / 1_000_000_000;
+            var promptEvalDuration = response.getPromptEvalDuration() / 1_000_000_000d;
+            var promptEvalTokenPerSecond = response.getPromptEvalCount() / promptEvalDuration;
+            var evalDuration = response.getEvalDuration() / 1_000_000_000d;
+            var evalTokenPerSecond = evalDuration > 0 ? response.getEvalCount() / evalDuration : 0;
+            var totalDuration = response.getTotalDuration() / 1_000_000_000;
+            LOG.debug("Tokens  - prompt: {} ({} per sec) response: {} ({} per sec)", //
+                    response.getPromptEvalCount(), //
+                    promptEvalTokenPerSecond, //
+                    response.getEvalCount(), //
+                    evalTokenPerSecond);
+            LOG.debug("Timings - load: {}sec  prompt: {}sec  response: {}sec  total: {}sec", //
+                    loadDuration, promptEvalDuration, evalDuration, totalDuration);
+        }
+
+        if (metrics != null) {
+            metrics.handleResponse(response);
+        }
+    }
+
+    private void collectMetrics(OllamaEmbedResponse response)
+    {
+        if (LOG.isDebugEnabled()) {
+            var loadDurationMs = response.loadDuration() / 1_000_000;
+            var evalDurationMs = (response.totalDuration() - response.loadDuration()) / 1_000_000d;
+            var promptEvalTokenPerSecond = evalDurationMs > 0
+                    ? (double) response.promptEvalCount() / evalDurationMs * 1000.0
+                    : 0;
+            var totalDurationMs = response.totalDuration() / 1_000_000d;
+            LOG.debug("Tokens  - prompt: {} ({} per sec)", //
+                    response.promptEvalCount(), //
+                    format("%.2f", promptEvalTokenPerSecond));
+            LOG.debug("Timings - load: {}ms  response: {}ms  total: {}ms", //
+                    loadDurationMs, evalDurationMs, totalDurationMs);
+        }
     }
 
     @Override

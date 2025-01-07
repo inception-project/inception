@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.page;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.ValidationMode.NEVER;
+import static de.tudarmstadt.ukp.inception.rendering.model.Range.rangeClippedToDocument;
 import static de.tudarmstadt.ukp.inception.rendering.selection.FocusPosition.CENTERED;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
 import static java.lang.String.format;
@@ -85,6 +86,7 @@ public abstract class AnnotationPageBase
     public static final String PAGE_PARAM_DOCUMENT = "d";
     public static final String PAGE_PARAM_DATA_OWNER = "u";
     public static final String PAGE_PARAM_FOCUS = "f";
+    public static final String PAGE_PARAM_TEXT_HIGHLIGHT = "hl";
 
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean DocumentService documentService;
@@ -212,6 +214,7 @@ public abstract class AnnotationPageBase
 
                 var previousDoc = getModelObject().getDocument();
                 var aPreviousUser = getModelObject().getUser();
+
                 handleParameters(document, focus, user);
 
                 updateDocumentView(aTarget, previousDoc, aPreviousUser, focus);
@@ -264,24 +267,24 @@ public abstract class AnnotationPageBase
      *            the document to open
      * @return whether the document had to be switched or not.
      */
-    public boolean actionShowSelectedDocument(AjaxRequestTarget aTarget, SourceDocument aDocument)
+    public boolean actionShowDocument(AjaxRequestTarget aTarget, SourceDocument aDocument)
     {
-        if (!Objects.equals(aDocument.getId(), getModelObject().getDocument().getId())) {
-            List<SourceDocument> docs = getListOfDocs();
-            if (!docs.contains(aDocument)) {
-                error("The document [" + aDocument.getName() + "] is not accessible");
-                if (aTarget != null) {
-                    aTarget.addChildren(getPage(), IFeedback.class);
-                }
-                return false;
-            }
-
-            getModelObject().setDocument(aDocument, docs);
-            actionLoadDocument(aTarget);
-            return true;
+        if (Objects.equals(aDocument.getId(), getModelObject().getDocument().getId())) {
+            return false;
         }
 
-        return false;
+        var docs = getListOfDocs();
+        if (!docs.contains(aDocument)) {
+            error("The document [" + aDocument.getName() + "] is not accessible");
+            if (aTarget != null) {
+                aTarget.addChildren(getPage(), IFeedback.class);
+            }
+            return false;
+        }
+
+        getModelObject().setDocument(aDocument, docs);
+        actionLoadDocument(aTarget);
+        return true;
     }
 
     /**
@@ -302,13 +305,14 @@ public abstract class AnnotationPageBase
             int aBegin, int aEnd)
         throws IOException
     {
-        boolean switched = actionShowSelectedDocument(aTarget, aDocument);
+        boolean switched = actionShowDocument(aTarget, aDocument);
 
         var state = getModelObject();
 
         var cas = getEditorCas();
-        state.getPagingStrategy().moveToOffset(state, cas, aBegin, new VRange(aBegin, aEnd),
-                CENTERED);
+        var range = rangeClippedToDocument(cas, aBegin, aEnd);
+        state.getPagingStrategy().moveToOffset(state, cas, aBegin,
+                new VRange(range.getBegin(), range.getEnd()), CENTERED);
 
         if (!switched && state.getPagingStrategy() instanceof NoPagingStrategy) {
             return;
@@ -495,7 +499,7 @@ public abstract class AnnotationPageBase
 
     private boolean loadAnnotationFinished()
     {
-        AnnotatorState state = getModelObject();
+        var state = getModelObject();
         return documentService.isAnnotationFinished(state.getDocument(), state.getUser());
     }
 

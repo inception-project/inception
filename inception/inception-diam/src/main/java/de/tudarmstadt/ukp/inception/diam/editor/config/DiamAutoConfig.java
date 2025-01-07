@@ -49,6 +49,7 @@ import de.tudarmstadt.ukp.inception.diam.editor.lazydetails.LazyDetailsLookupSer
 import de.tudarmstadt.ukp.inception.diam.editor.lazydetails.LazyDetailsLookupServiceImpl;
 import de.tudarmstadt.ukp.inception.diam.model.compact.CompactSerializer;
 import de.tudarmstadt.ukp.inception.diam.model.compact.CompactSerializerImpl;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorExtensionRegistry;
 import de.tudarmstadt.ukp.inception.preferences.ClientSiderUserPreferencesProviderRegistry;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
@@ -76,9 +77,9 @@ public class DiamAutoConfig
     }
 
     @Bean
-    public ScrollToHandler scrollToHandler()
+    public ScrollToHandler scrollToHandler(DocumentService aDocumentService)
     {
-        return new ScrollToHandler();
+        return new ScrollToHandler(aDocumentService);
     }
 
     @Bean

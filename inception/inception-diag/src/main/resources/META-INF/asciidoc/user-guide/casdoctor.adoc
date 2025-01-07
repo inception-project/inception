@@ -17,36 +17,35 @@
 [[sect_casdoctor]]
 = CAS Doctor
 
-The CAS Doctor is an essential development tool. When enabled, it checks the CAS for
-consistency when loading or saving a CAS. It can also automatically repair inconsistencies when
-configured to do so. This section gives an overview of the available checks and repairs.
+The CAS Doctor is an essential development tool.
+When enabled, it checks the CAS for consistency when loading or saving a CAS.
+It can also automatically repair inconsistencies when configured to do so.
+This section gives an overview of the available checks and repairs.
 
-It is safe to enable any <<sect_checks,checks>>. However, active checks may considerably slow down 
-the application, in particular for large documents or for actions that work with many documents, e.g. 
-curation or the calculation of agreement. Thus, checks should not be enabled on a production system
-unless the application behaves strangely and it is necessary to check the documents for consistency.
+It is safe to enable any <<sect_checks,checks>>.
+However, active checks may considerably slow down the application, in particular for large documents or for actions that work with many documents, e.g. curation or the calculation of agreement.
+Thus, checks should not be enabled on a production system unless the application behaves strangely and it is necessary to check the documents for consistency.
 
 Enabling <<sect_repairs,repairs>> should be done with great care as most repairs are performing
-destructive actions. Repairs should never be enabled on a production system. The repairs are
-executed in the order in which they are appear in the `debug.casDoctor.repairs` setting. This is
-important in particular when applying destructive repairs.
+destructive actions.
+Repairs should never be enabled on a production system.
+The repairs are executed in the order in which they are appear in the `debug.casDoctor.repairs` setting. 
+This is important in particular when applying destructive repairs.
 
 When documents are loaded, CAS Doctor first tries to apply any enabled <<sect_repairs,repairs>>
 and afterwards applies enabled <<sect_checks,checks>> to ensure that the potentially repaired
 document is consistent.
 
-Additionally, CAS Doctor applies enabled <<sect_checks,checks>> *before* saving a document. This
-ensures that a bug in the user interface introduces inconsistencies into the document on disk. I.e.
-the consistency of the persisted document is protected! Of course, it requires that relevant checks
-have been implemented and are actually enabled.
+Additionally, CAS Doctor applies enabled <<sect_checks,checks>> *before* saving a document.
+This ensures that a bug in the user interface introduces inconsistencies into the document on disk. 
+I.e. the consistency of the persisted document is protected! Of course, it requires that relevant checks have been implemented and are actually enabled.
 
-By default, CAS Doctor generates an exception when a check or repair fails. This ensures that
-inconsistencies are contained and do not propagate further. In some cases, e.g. when it is known
-that by its nature an inconsistency does not propagate and can be avoided by the user, it may be
-convenient to allow the user to continue working with the application while a repair is being developed.
+By default, CAS Doctor generates an exception when a check or repair fails.
+This ensures that inconsistencies are contained and do not propagate further.
+In some cases, e.g. when it is known that by its nature an inconsistency does not propagate and can be avoided by the user, it may be convenient to allow the user to continue working with the application while a repair is being developed.
 In such a case, CAS Doctor can be configured to be non-fatal. Mind that users can always continue
-to work on documents that are consistent. CAS Doctor only prevents loading inconsistent documents
-and saving inconsistent documents.
+to work on documents that are consistent.
+CAS Doctor only prevents loading inconsistent documents and saving inconsistent documents.
 
 == Configuration
 
@@ -57,36 +56,36 @@ and saving inconsistent documents.
 | Default
 | Example
 
-| debug.casDoctor.fatal
+| `debug.cas-doctor.fatal`
 | If the extra checks trigger an exception
-| true
-| false
+| `true`
+| `false`
 
-| debug.casDoctor.checks
+| `debug.cas-doctor.checks`
 | Extra checks to perform when a CAS is saved (also on load if any repairs are enabled)
 | _unset_
 | list of <<sect_checks,checks>>
 
-| debug.casDoctor.repairs
+| `debug.cas-doctor.repairs`
 | Repairs to be performed when a CAS is loaded - order matters!
 | _unset_
 | list of <<sect_repairs,repairs>>
 
-| debug.casDoctor.forceReleaseBehavior
+| `debug.cas-doctor.force-release-behavior`
 | Behave as like a release version even if it is a beta or snapshot version.
-| false
-| true
+| `false`
+| `true`
 |===
 
 To specify a list of repairs or checks in the `settings.properties` file, use the following syntax:
 
 ----
-debug.casDoctor.checks[0]=Check1
-debug.casDoctor.checks[1]=Check2
-debug.casDoctor.checks[...]=CheckN
-debug.casDoctor.repairs[0]=Repair1
-debug.casDoctor.repairs[1]=Repair2
-debug.casDoctor.repairs[...]=RepairN
+debug.cas-doctor.checks[0]=Check1
+debug.cas-doctor.checks[1]=Check2
+debug.cas-doctor.checks[...]=CheckN
+debug.cas-doctor.repairs[0]=Repair1
+debug.cas-doctor.repairs[1]=Repair2
+debug.cas-doctor.repairs[...]=RepairN
 ----
 
 [[sect_checks]]
@@ -99,9 +98,9 @@ debug.casDoctor.repairs[...]=RepairN
 ID:: `AllFeatureStructuresIndexedCheck`
 Related repairs:: <<repair_RemoveDanglingChainLinksRepair>>, <<repair_RemoveDanglingRelationsRepair>>, <<repair_ReindexFeatureAttachedSpanAnnotationsRepair>>, <<repair_RemoveDanglingFeatureAttachedSpanAnnotationsRepair>>
 
-This check verifies if all reachable feature structures in the CAS are also indexed. We do not
-currently use any un-indexed feature structures. If there are any un-indexed feature structures in the
-CAS, it is likely due to a bug in the application and can cause undefined behavior.
+This check verifies if all reachable feature structures in the CAS are also indexed.
+We do not currently use any un-indexed feature structures.
+If there are any un-indexed feature structures in the CAS, it is likely due to a bug in the application and can cause undefined behavior.
 
 For example, older versions of {product-name} had a bug that caused deleted spans still to be
 accessible through relations which had used the span as a source or target.
@@ -116,10 +115,9 @@ This check is very extensive and slow.
 ID:: `FeatureAttachedSpanAnnotationsTrulyAttachedCheck`
 Related repairs:: <<repair_ReattachFeatureAttachedSpanAnnotationsRepair>>, <<repair_ReattachFeatureAttachedSpanAnnotationsAndDeleteExtrasRepair>>
 
-Certain span layers are attached to another span layer through a feature reference
-from that second layer. For example, annotations in the POS layer must always be referenced from
-a Token annotation via the Token feature `pos`. This check ensures that annotations on layers such
-as the POS layer are properly referenced from the attaching layer (e.g. the Token layer).
+Certain span layers are attached to another span layer through a feature reference from that second layer.
+For example, annotations in the POS layer must always be referenced from a Token annotation via the Token feature `pos`.
+This check ensures that annotations on layers such as the POS layer are properly referenced from the attaching layer (e.g. the Token layer).
 
 
 [[check_LinksReachableThroughChainsCheck]]
@@ -129,9 +127,9 @@ as the POS layer are properly referenced from the attaching layer (e.g. the Toke
 ID:: `LinksReachableThroughChainsCheck`
 Related repairs:: <<repair_RemoveDanglingChainLinksRepair>>
 
-Each chain in a chain layers consist of a *chain* and several *links*. The chain
-points to the first link and each link points to the following link. If the CAS contains any links
-that are not reachable through a chain, then this is likely due to a bug.
+Each chain in a chain layers consist of a *chain* and several *links*.
+The chain points to the first link and each link points to the following link.
+If the CAS contains any links that are not reachable through a chain, then this is likely due to a bug.
 
 
 [[check_NoMultipleIncomingRelationsCheck]]

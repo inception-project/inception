@@ -22,10 +22,8 @@ import static org.springframework.jmx.support.MetricType.COUNTER;
 import org.springframework.jmx.export.annotation.ManagedMetric;
 import org.springframework.jmx.export.annotation.ManagedOperation;
 import org.springframework.jmx.export.annotation.ManagedResource;
-import org.springframework.stereotype.Component;
 
 @ManagedResource
-@Component
 public class OllamaMetricsImpl
     implements OllamaMetrics
 {
@@ -38,7 +36,7 @@ public class OllamaMetricsImpl
     private int evalCount;
 
     @Override
-    public void handleResponse(OllamaGenerateResponse aResponse)
+    public void handleResponse(OllamaTokenMetrics aResponse)
     {
         responseCount++;
         totalDuration += aResponse.getTotalDuration();

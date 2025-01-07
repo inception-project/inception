@@ -293,15 +293,41 @@ export class Visualizer {
       // console.log('Scrolling to ', chunkElement)
       chunkElement.scrollIntoView({ behavior: 'smooth', block: 'center' })
 
+      // Remove any current pings
       this.svg.node.querySelectorAll('.ping').forEach((ping) => ping.remove())
-      const ping = this.svg.rect(this.data?.sizes.texts.widths[chunk.text], this.data?.sizes.texts.height)
-        .addClass('ping')
-        .move(chunk.textX, chunk.row.textY + (this.data?.sizes.texts.y || 0))
-        .addTo(this.highlightGroup)
-      ping.animate(5000, 0, 'now').attr({ opacity: 0 }).after(() => ping.remove())
+
+      // Render new pings
+      if (args.pingRanges) {
+        for (const range of args.pingRanges) {
+          this.renderPingMarker([range[0] - (this.sourceData?.windowBegin || 0), 
+            range[1] - (this.sourceData?.windowBegin || 0)])
+        }
+      }
+
+      // const ping = this.svg.rect(this.data?.sizes.texts.widths[chunk.text], this.data?.sizes.texts.height)
+      //   .addClass('ping')
+      //   .move(chunk.textX, chunk.row.textY + (this.data?.sizes.texts.y || 0))
+      //   .addTo(this.highlightGroup)
+      // ping.animate(5000, 0, 'now').attr({ opacity: 0 }).after(() => ping.remove())
     }
   }
 
+  renderPingMarker(range: Offsets): void {
+    const overlappingChunks = this.findChunksInRange(range);
+  
+    for (const chunk of overlappingChunks) {
+      const ping = this.svg
+        .rect(this.data?.sizes.texts.widths[chunk.text], this.data?.sizes.texts.height)
+        .addClass('ping')
+        .move(chunk.textX, chunk.row.textY + (this.data?.sizes.texts.y || 0))
+        .addTo(this.highlightGroup);
+  
+      ping
+        .animate(5000, 0, 'now')
+        .attr({ opacity: 0 })
+        .after(() => ping.remove());
+    }
+  }
   /**
    * Get the priority of the given comment class.
    *
@@ -4204,6 +4230,18 @@ export class Visualizer {
     return closestNonVirtualChunk || closestChunk;
   }
 
+  findChunksInRange(range: Offsets): Chunk[] {
+    const overlappingChunks: Chunk[] = [];
+  
+    for (const chunk of this.data?.chunks || []) {
+      // Check if the chunk overlaps with the range [begin, end]
+      if (chunk.from <= range[1] && chunk.to >= range[0]) {
+        overlappingChunks.push(chunk);
+      }
+    }
+  
+    return overlappingChunks;
+  }
   getChunkElementWithId (id: VID): Element | null {
     return this.svg.node.querySelector(`text:not(.spacing)[data-chunk-id="${id}"]`)
   }

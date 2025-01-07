@@ -21,6 +21,7 @@ import static de.tudarmstadt.ukp.inception.scheduling.TaskState.CANCELLED;
 import static de.tudarmstadt.ukp.inception.scheduling.TaskState.COMPLETED;
 import static de.tudarmstadt.ukp.inception.scheduling.TaskState.FAILED;
 import static de.tudarmstadt.ukp.inception.scheduling.TaskState.NOT_STARTED;
+import static java.lang.System.currentTimeMillis;
 import static java.util.Arrays.asList;
 
 import java.util.Deque;
@@ -60,7 +61,7 @@ public class TaskMonitor
         user = aTask.getUser().map(User::getUsername).orElse(null);
         project = aTask.getProject();
         title = aTask.getTitle();
-        createTime = System.currentTimeMillis();
+        createTime = currentTimeMillis();
         cancellable = aTask.isCancellable();
     }
 
@@ -96,15 +97,15 @@ public class TaskMonitor
 
     public synchronized void setState(TaskState aState)
     {
-        state = aState;
-
         if (state == NOT_STARTED && aState != NOT_STARTED) {
-            startTime = System.currentTimeMillis();
+            startTime = currentTimeMillis();
         }
 
         if (asList(COMPLETED, CANCELLED, FAILED).contains(aState)) {
-            endTime = System.currentTimeMillis();
+            endTime = currentTimeMillis();
         }
+
+        state = aState;
     }
 
     public synchronized long getCreateTime()
@@ -218,5 +219,18 @@ public class TaskMonitor
     public synchronized Progress toProgress()
     {
         return new Progress(progress, maxProgress);
+    }
+
+    public long getDuration()
+    {
+        if (startTime < 0) {
+            return -1;
+        }
+
+        if (endTime > 0) {
+            return endTime - startTime;
+        }
+
+        return currentTimeMillis() - startTime;
     }
 }

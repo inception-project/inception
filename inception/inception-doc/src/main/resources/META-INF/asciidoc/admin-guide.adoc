@@ -67,7 +67,7 @@ include::{include-dir}security-authentication-auto-login.adoc[leveloffset=+1]
 
 include::{include-dir}security-authentication-preauth.adoc[leveloffset=+1]
 
-include::{include-dir}settings_security-csp.adoc[]
+include::{include-dir}settings_security-csp.adoc[leveloffset=+1]
 
 <<<
 
@@ -144,3 +144,5 @@ include::{include-dir}settings_sharing.adoc[leveloffset=+1]
 include::{include-dir}settings_versioning.adoc[leveloffset=+1]
 
 include::{include-dir}settings_websocket.adoc[leveloffset=+1]
+
+include::{include-dir}settings_assistant.adoc[leveloffset=+1]

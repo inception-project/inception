@@ -106,6 +106,10 @@
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-support-bootstrap</artifactId>
     </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-scheduling</artifactId>
+    </dependency>
   
     <dependency>
       <groupId>org.apache.commons</groupId>

@@ -85,9 +85,7 @@ public class NotifyingTaskMonitor
     protected void onDestroy()
     {
         var msg = new MTaskStateUpdate(this, true);
-        if (getUser() != null) {
-            schedulerWebsocketController.dispatch(msg);
-        }
+        schedulerWebsocketController.dispatch(msg);
     }
 
     protected void sendNotification()
@@ -98,9 +96,7 @@ public class NotifyingTaskMonitor
 
         var msg = new MTaskStateUpdate(this);
         if (lastUpdate == null || !lastUpdate.equals(msg)) {
-            if (getUser() != null) {
-                schedulerWebsocketController.dispatch(msg);
-            }
+            schedulerWebsocketController.dispatch(msg);
             lastUpdate = msg;
         }
     }

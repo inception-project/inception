@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging;
 import static org.apache.wicket.event.Broadcast.BREADTH;
 
 import java.util.List;
-import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.Page;
@@ -54,7 +53,7 @@ public abstract class PagingStrategy_ImplBase
             List<Unit> units = units(aCas);
 
             // Find the unit containing the given offset
-            Unit unit = units.stream() //
+            var unit = units.stream() //
                     .filter(u -> u.getBegin() <= aOffset && aOffset <= u.getEnd()) //
                     .findFirst() //
                     .orElseThrow(() -> new IllegalArgumentException(
@@ -63,7 +62,7 @@ public abstract class PagingStrategy_ImplBase
             // How many rows to display before the unit such that the unit is centered?
             int rowsInPageBeforeUnit = aState.getPreferences().getWindowSize() / 2;
             // The -1 below is because unit.getIndex() is 1-based
-            Unit firstUnit = units.get(Math.max(0, unit.getIndex() - rowsInPageBeforeUnit - 1));
+            var firstUnit = units.get(Math.max(0, unit.getIndex() - rowsInPageBeforeUnit - 1));
 
             aState.setPageBegin(aCas, firstUnit.getBegin());
             aState.setFocusUnitIndex(unit.getIndex());
@@ -77,15 +76,15 @@ public abstract class PagingStrategy_ImplBase
 
     private void fireScrollToEvent(int aOffset, VRange aPingRange, FocusPosition aPos)
     {
-        RequestCycle requestCycle = RequestCycle.get();
+        var requestCycle = RequestCycle.get();
 
         if (requestCycle == null) {
             return;
         }
 
-        Optional<IPageRequestHandler> handler = requestCycle.find(IPageRequestHandler.class);
+        var handler = requestCycle.find(IPageRequestHandler.class);
         if (handler.isPresent() && handler.get().isPageInstanceCreated()) {
-            Page page = (Page) handler.get().getPage();
+            var page = (Page) handler.get().getPage();
             var target = requestCycle.find(AjaxRequestTarget.class).orElse(null);
             page.send(page, BREADTH, new ScrollToEvent(target, aOffset, aPingRange, aPos));
         }

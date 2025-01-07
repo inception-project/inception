@@ -37,9 +37,9 @@ import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.inception.workload.event.exporter.WorkloadManagerExporter;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManager;
+import de.tudarmstadt.ukp.inception.workload.task.exporter.WorkloadManagerExporter;
 
 @ExtendWith(MockitoExtension.class)
 public class WorkloadManagerExporterTest

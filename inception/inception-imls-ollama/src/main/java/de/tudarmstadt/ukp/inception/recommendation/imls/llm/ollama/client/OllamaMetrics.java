@@ -19,5 +19,5 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client;
 
 public interface OllamaMetrics
 {
-    void handleResponse(OllamaGenerateResponse aResponse);
+    void handleResponse(OllamaTokenMetrics aResponse);
 }

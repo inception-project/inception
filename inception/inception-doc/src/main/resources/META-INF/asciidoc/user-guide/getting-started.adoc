@@ -14,7 +14,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 This _Getting Started_ Guide helps new users to install, start and work with {product-name}.
 It gives a quick overview (estimated time for reading only: approx. 20-30 minutes) on the key functionalities in order to get familiar with the tool.
 It excludes special cases and details due to simplicity and focuses on the first steps. <<See our documentation for further reading>> on any topic.
@@ -25,8 +24,8 @@ For quick overviews, also see our https://www.youtube.com/playlist?list=PL5Hz5pt
 _Getting Started_ will refer to them wherever it might be helpful.
 
 NOTE: *Boxes:* In _Getting Started_, these boxes provide additional information.
-They may be skipped for fast reading if background knowledge exists.
-Also, they may be consulted later on for a quick look-up on basic concepts.
+      They may be skipped for fast reading if background knowledge exists.
+      Also, they may be consulted later on for a quick look-up on basic concepts.
 
 After the <<Introduction>>, _Getting Started_ leads you to using {product-name} in three steps:
 
@@ -56,8 +55,7 @@ image::images/getting_started_example_for_annotations.png[width=400]
 You might have one already and import it or create it in {product-name}.
 Second, you might want to annotate the corpus (*Annotation*) and/or merge the annotations which different annotators made (*Curation*).
 Third, you might want to integrate external knowledge used for annotating (*Knowledge Bases*).
-You can do all three steps with
-{product-name} or only one or two. +
+You can do all three steps with {product-name} or only one or two. +
 In addition, {product-name} is extendable and adaptable to individual requirements.
 Often, it provides predefined elements, like xref:knowledge_bases_in_getting_started[knowledge bases], xref:layers_and_features_in_getting_started[layers] and xref:tagsets_in_getting_started[tagsets] to give you a starting point but you can also modify them or create your own from scratch.
 You may for example integrate a knowledge base of your choice; create and modify custom knowledge bases; create and modify custom layers and tagsets to annotate your individual task; build custom so-called xref:recommenders_in_getting_started[recommenders] which automatically suggest annotations to you so you will work quicker and easier; and much more.

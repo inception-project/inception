@@ -249,12 +249,6 @@
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-recommendation</artifactId>
     </dependency>
-    <!--
-      <dependency>
-      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-imls-dl4j</artifactId>
-      </dependency>
-    -->
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-imls-external</artifactId>
@@ -271,12 +265,6 @@
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-imls-ollama</artifactId>
     </dependency>
-    <!--  
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-imls-lapps</artifactId>
-    </dependency>
-    -->
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-imls-azureai-openai</artifactId>
@@ -296,6 +284,12 @@
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-imls-weblicht</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-assistant</artifactId>
+      <version>${project.version}</version>
     </dependency>
 
     <!-- INCEPTION - ACTIVE LEARNING FUNCTIONALITY -->
@@ -993,6 +987,7 @@
             </ignoredNonTestScopedDependencies>
             <usedDependencies>
               <!-- INCEpTION backend modules - used via Spring -->
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-assistant</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-guidelines</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-documents</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-image</usedDependency>
