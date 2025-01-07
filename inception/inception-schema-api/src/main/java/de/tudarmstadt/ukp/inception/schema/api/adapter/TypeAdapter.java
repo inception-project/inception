@@ -125,7 +125,7 @@ public interface TypeAdapter
     /**
      * @return the features defined for this layer.
      * 
-     * @see AnnotationSchemaService#listAnnotationFeature(AnnotationLayer)
+     * @see AnnotationSchemaService#listSupportedFeatures(AnnotationLayer)
      */
     Collection<AnnotationFeature> listFeatures();
 

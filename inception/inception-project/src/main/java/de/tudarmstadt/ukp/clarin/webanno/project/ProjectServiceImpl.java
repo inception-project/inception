@@ -1014,7 +1014,7 @@ public class ProjectServiceImpl
     @Transactional
     public void setProjectState(Project aProject, ProjectState aState)
     {
-        ProjectState oldState = aProject.getState();
+        var oldState = aProject.getState();
 
         aProject.setState(aState);
         updateProject(aProject);

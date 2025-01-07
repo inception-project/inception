@@ -318,7 +318,12 @@ public class SchedulingServiceImpl
                 msg.append("The following tasks are still running:\n");
                 runningTasks.stream() //
                         .filter(t -> aProject.equals(t.getProject())) //
-                        .forEach(t -> msg.append("- ").append(t).append("\n"));
+                        .forEach(t -> {
+                            msg.append("- ").append(t).append("\n");
+                            for (var frame : t.getThread().getStackTrace()) {
+                                msg.append("  " + frame);
+                            }
+                        });
                 resumeTasks(aProject);
                 throw new TimeoutException(msg.toString());
             }

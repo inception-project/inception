@@ -44,7 +44,6 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.AnnotationAutoConfiguration;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
 import de.tudarmstadt.ukp.inception.rendering.coloring.ColoringService;
@@ -180,7 +179,7 @@ public class ColoringServiceImpl
 
     private boolean loadHasLinkFeature(AnnotationLayer aLayer)
     {
-        for (AnnotationFeature feature : schemaService.listAnnotationFeature(aLayer)) {
+        for (var feature : schemaService.listAnnotationFeature(aLayer)) {
             if (!LinkMode.NONE.equals(feature.getLinkMode())) {
                 return true;
             }
