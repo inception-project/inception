@@ -1,8 +1,24 @@
+// Licensed to the Technische Universität Darmstadt under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The Technische Universität Darmstadt 
+// licenses this file to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.
+//  
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 = Users
 
 After clicking on the *Users* tab, you are displayed with a new pane in which you can add new users by clicking on the *Add users* text field. You get a dropdown list of enabled users in the system which can be added to the project. Any users which are already part of the project are not offered. As you type the dropdown list with the users is filtered to match your input. By clicking on a username or by pressing enter you can select the corresponding user. You can keep typing to add more users to the project. When you press the *Add* button the selected users are added to your project.
 
-image::new_userSelection.png[align="center"]
+image::images/new_userSelection.png[align="center"]
 
 NOTE: For privacy reasons, the administrator may choose to restrict the users shown in the dropdown. 
       If this is the case, you have to enter the full name of a user before it appears in the dropdown and
@@ -11,7 +27,7 @@ NOTE: For privacy reasons, the administrator may choose to restrict the users sh
 By default, the users are added to the project as annotators. If you want to assign additional roles,
 you can do so by clicking on the user and then on *Permissions* pane select the appropriate permissions.
 
-image::new_userPermissions.png[align="center"]
+image::images/new_userPermissions.png[align="center"]
 
 After ticking the wished permissions, click on *Save*.
 To remove a user, remove all the permissions and then click on *Save*.

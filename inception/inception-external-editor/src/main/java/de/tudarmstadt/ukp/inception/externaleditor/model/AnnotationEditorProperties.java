@@ -25,6 +25,7 @@ public class AnnotationEditorProperties
     private String editorFactory;
     private String diamAjaxCallbackUrl;
     private String diamWsUrl;
+    private String csrfToken;
     private String userPreferencesKey;
     private List<String> scriptSources;
     private List<String> stylesheetSources;
@@ -119,5 +120,15 @@ public class AnnotationEditorProperties
     public void setSectionElements(List<String> aSectionElements)
     {
         sectionElements = aSectionElements;
+    }
+
+    public String getCsrfToken()
+    {
+        return csrfToken;
+    }
+
+    public void setCsrfToken(String aCsrfToken)
+    {
+        csrfToken = aCsrfToken;
     }
 }

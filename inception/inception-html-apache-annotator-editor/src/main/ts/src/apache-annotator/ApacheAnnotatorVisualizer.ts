@@ -39,7 +39,7 @@ export class ApacheAnnotatorVisualizer {
   private tracker: ViewportTracker
   private showInlineLabels = false
   private showEmptyHighlights = false
-  private observer: IntersectionObserver
+
   private sectionSelector: string
   private sectionAnnotationVisualizer: SectionAnnotationVisualizer
   private sectionAnnotationCreator: SectionAnnotationCreator
@@ -47,8 +47,12 @@ export class ApacheAnnotatorVisualizer {
 
   private data? : AnnotatedText
 
-  private removeTransientMarkers: (() => void)[] = []
-  private removeTransientMarkersTimeout: number | undefined = undefined
+  private scrolling = false
+  private lastScrollTop: number | undefined = undefined
+  private removeScrollMarkers: (() => void)[] = []
+  private removeScrollMarkersTimeout: number | undefined = undefined
+  private removePingMarkers: (() => void)[] = []
+  private removePingMarkersTimeout: number | undefined = undefined
 
   private alpha = '55'
 
@@ -129,6 +133,11 @@ export class ApacheAnnotatorVisualizer {
   }
 
   loadAnnotations (): void {
+    // scrollTo uses a timeout to work around the problem that the browser does not always properly
+    // scroll to the target element. We want to avoid loading annotations while scrolling is still
+    // in progress. Once scrolling is complete, we should get triggered by the ViewportTracker.
+    if (this.scrolling) return
+
     const options: DiamLoadAnnotationsOptions = {
       range: this.tracker.currentRange,
       includeText: false,
@@ -146,7 +155,8 @@ export class ApacheAnnotatorVisualizer {
   }
 
   private renderAnnotations (doc: AnnotatedText): void {
-    const startTime = new Date().getTime()
+    console.log(`Client-side starting`)
+    const startTime = performance.now()
 
     this.clearHighlights()
     this.resizer.hide()
@@ -181,8 +191,8 @@ export class ApacheAnnotatorVisualizer {
       this.renderSelectedRelationEndpointHighlights(doc)
     }
 
-    const endTime = new Date().getTime()
-    console.log(`Client-side rendering took ${Math.abs(endTime - startTime)}ms`)
+    const endTime = performance.now()
+    console.log(`Client-side rendering took ${endTime - startTime}ms`)
   }
 
   private renderVerticalSelectionMarker (doc: AnnotatedText) {
@@ -262,12 +272,17 @@ export class ApacheAnnotatorVisualizer {
    * Some highlights may only contain whitepace. This method removes such highlights.
    */
   private removeWhitepaceOnlyHighlights (selector: string = '.iaa-highlighted') {
-    this.root.querySelectorAll(selector).forEach(e => {
+    const start = performance.now();
+    const candidates = this.root.querySelectorAll(selector)
+    console.log(`Found ${candidates.length} elements matching [${selector}] to remove whitespace-only highlights`)
+    candidates.forEach(e => {
       if (!e.classList.contains('iaa-zero-width') && !e.textContent?.trim()) {
         e.after(...e.childNodes)
         e.remove()
       }
     })
+    const end = performance.now();
+    console.log(`Removing whitespace only highlights took ${end - start}ms`)
   }
 
   private postProcessHighlights () {
@@ -368,14 +383,14 @@ export class ApacheAnnotatorVisualizer {
 
     if (viewportBegin <= begin && end <= viewportEnd) {
       // Quick and easy if the annotation fits entirely into the visible viewport
-      const startTime = new Date().getTime()
+      const startTime = performance.now()
       this.renderHighlight(span, begin, end, attributes)
-      const endTime = new Date().getTime()
-      console.debug(`Rendering span with size ${end - begin} took ${Math.abs(endTime - startTime)}ms`)
+      const endTime = performance.now()
+      // console.debug(`Rendering span with size ${end - begin} took ${Math.abs(endTime - startTime)}ms`)
     } else {
       // Try optimizing for long spans to improve rendering performance
       let fragmentCount = 0
-      const startTime = new Date().getTime()
+      const startTime = performance.now()
 
       const coreBegin = Math.max(begin, viewportBegin)
       const coreEnd = Math.min(end, viewportEnd)
@@ -394,8 +409,8 @@ export class ApacheAnnotatorVisualizer {
         this.renderHighlight(span, end, end, attributes)
         fragmentCount++
       }
-      const endTime = new Date().getTime()
-      console.debug(`Rendering span with size ${end - begin} took ${Math.abs(endTime - startTime)}ms (${fragmentCount} fragments)`)
+      const endTime = performance.now()
+      // console.debug(`Rendering span with size ${end - begin} took ${Math.abs(endTime - startTime)}ms (${fragmentCount} fragments)`)
     }
   }
 
@@ -414,21 +429,56 @@ export class ApacheAnnotatorVisualizer {
     this.toCleanUp.add(highlightText(range, 'mark', attributes))
   }
 
+  private clearScrollMarkers () {
+    if (this.removeScrollMarkersTimeout) {
+      window.cancelIdleCallback(this.removeScrollMarkersTimeout)
+      this.removeScrollMarkersTimeout = undefined
+      this.removeScrollMarkers.forEach(remove => remove())
+      this.removeScrollMarkers = []
+    }
+  }
+
+  private renderPingMarkers(pingRanges?: Offsets[]) {
+    if (!pingRanges) return
+
+    console.log('Rendering ping markers')
+
+    for (const pingOffset of pingRanges || []) {
+      const pingRange = offsetToRange(this.root, pingOffset[0], pingOffset[1])
+      if (pingRange) {
+        this.removePingMarkers.push(highlightText(pingRange, 'mark', { class: 'iaa-ping-marker' }))
+      }
+    }
+
+    this.removeWhitepaceOnlyHighlights('.iaa-ping-marker')
+    this.removeSpuriousZeroWidthHighlights()
+
+    if (this.removePingMarkers.length > 0) {
+      this.removePingMarkersTimeout = window.setTimeout(() => this.clearPingMarkers(), 2000)
+    }
+ }
+
+  private clearPingMarkers () {
+    console.log('Clearing ping markers');
+    
+    if (this.removePingMarkersTimeout) {
+      window.clearTimeout(this.removePingMarkersTimeout)
+      this.removePingMarkersTimeout = undefined
+      this.removePingMarkers.forEach(remove => remove())
+      this.removePingMarkers = []
+    }
+  }
+
   scrollTo (args: { offset: number, position?: string, pingRanges?: Offsets[] }): void {
     const range = offsetToRange(this.root, args.offset, args.offset)
     if (!range) return
 
-    window.clearTimeout(this.removeTransientMarkersTimeout)
-    this.removeTransientMarkers.forEach(remove => remove())
-    this.root.normalize() // https://github.com/apache/incubator-annotator/issues/120
+    this.clearScrollMarkers()
+    this.clearPingMarkers()
 
+    // Add scroll marker
     const removeScrollMarker = highlightText(range, 'mark', { id: 'iaa-scroll-marker' })
-    this.removeTransientMarkers = [removeScrollMarker]
-    for (const pingOffset of args.pingRanges || []) {
-      const pingRange = offsetToRange(this.root, pingOffset[0], pingOffset[1])
-      if (!pingRange) continue
-      this.removeTransientMarkers.push(highlightText(pingRange, 'mark', { class: 'iaa-ping-marker' }))
-    }
+    this.removeScrollMarkers = [removeScrollMarker]
 
     if (!this.showEmptyHighlights) {
       this.removeWhitepaceOnlyHighlights('.iaa-ping-marker')
@@ -461,17 +511,38 @@ export class ApacheAnnotatorVisualizer {
       // markers are still there.
       var scrollIntoViewFunc = () => { 
         finalScrollTarget.scrollIntoView({ behavior: 'auto', block: 'start', inline: 'nearest' })
-        if (this.removeTransientMarkers.length > 0) window.setTimeout(scrollIntoViewFunc, 100)
+        if (this.removeScrollMarkers.length > 0) {
+          window.setTimeout(scrollIntoViewFunc, 100)
+        }
+        
+        if (this.root instanceof HTMLElement) {
+          if (this.root.scrollTop === this.lastScrollTop) {
+            this.scrollToComplete(args.pingRanges)
+          }
+          else {
+            this.lastScrollTop = this.root.scrollTop
+          }
+        }
       }
 
-      window.setTimeout(scrollIntoViewFunc, 100)
+      this.scrolling = true
+      this.sectionAnnotationVisualizer.suspend()
+      this.sectionAnnotationCreator.suspend()
+      this.removeScrollMarkersTimeout = window.setTimeout(scrollIntoViewFunc, 100)
     }
+  }
 
-    this.removeTransientMarkersTimeout = window.setTimeout(() => {
-      this.removeTransientMarkers.forEach(remove => remove())
-      this.removeTransientMarkers = []
-      this.root.normalize() // https://github.com/apache/incubator-annotator/issues/120
-    }, 2000)
+  private scrollToComplete(pingRanges?: Offsets[]) {
+    console.log('Scrolling complete')
+
+    this.clearScrollMarkers()
+    this.renderPingMarkers(pingRanges)
+    this.root.normalize() // https://github.com/apache/incubator-annotator/issues/120
+
+    this.scrolling = false
+    this.sectionAnnotationCreator.resume()
+    this.sectionAnnotationVisualizer.resume()
+    this.lastScrollTop = undefined
   }
 
   private clearHighlights (): void {
@@ -481,20 +552,19 @@ export class ApacheAnnotatorVisualizer {
       return
     }
 
-    const startTime = new Date().getTime()
+    const startTime = performance.now()
     const highlightCount = this.toCleanUp.size
     this.toCleanUp.forEach(cleanup => cleanup())
     this.toCleanUp.clear()
     this.root.normalize() // https://github.com/apache/incubator-annotator/issues/120
-    const endTime = new Date().getTime()
+    const endTime = performance.now()
     console.log(`Cleaning up ${highlightCount} annotations and normalizing DOM took ${Math.abs(endTime - startTime)}ms`)
   }
 
   destroy (): void {
-    if (this.observer) {
-      this.observer.disconnect()
-    }
-
+    this.sectionAnnotationCreator.destroy()
+    this.sectionAnnotationVisualizer.destroy()
+    this.tracker.disconnect()
     this.clearHighlights()
   }
 }

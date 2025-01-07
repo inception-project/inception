@@ -44,6 +44,7 @@ import org.apache.uima.fit.util.CasUtil;
 import org.dkpro.statistics.agreement.coding.CodingAnnotationStudy;
 import org.dkpro.statistics.agreement.coding.ICodingAnnotationStudy;
 
+import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasure;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.FullCodingAgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.Configuration;
@@ -106,7 +107,8 @@ public class AgreementUtils
 
         // This happens in our test cases when we feed the process with uninitialized CASes.
         // We should just do the right thing here which is: do nothing
-        if (ts.getType(aType) == null) {
+        var type = ts.getType(aType);
+        if (type == null) {
             // All positions are irrelevant
             var irrelevantSets = aDiff.getPositions().stream() //
                     .map(aDiff::getConfigurationSet) //
@@ -118,13 +120,14 @@ public class AgreementUtils
         }
 
         // Check that the feature really exists instead of just getting a NPE later
-        if (ts.getType(aType).getFeatureByBaseName(aFeature) == null) {
+        if (aFeature != null && type.getFeatureByBaseName(aFeature) == null) {
             throw new IllegalArgumentException(
                     "Type [" + aType + "] has no feature called [" + aFeature + "]");
         }
 
-        var isPrimitiveFeature = ts.getType(aType).getFeatureByBaseName(aFeature).getRange()
-                .isPrimitive();
+        var isPrimitiveFeature = aFeature != null
+                ? type.getFeatureByBaseName(aFeature).getRange().isPrimitive()
+                : true;
 
         nextPosition: for (var p : aDiff.getPositions()) {
             var cfgSet = aDiff.getConfigurationSet(p);
@@ -136,7 +139,7 @@ public class AgreementUtils
             }
 
             // If the feature on a position is set, then it is a subposition
-            var isSubPosition = p.getFeature() != null;
+            var isSubPosition = p.getLinkFeature() != null;
 
             // Check if this position is irrelevant:
             // - if we are looking for a primitive type and encounter a subposition
@@ -149,7 +152,8 @@ public class AgreementUtils
 
             // Check if subposition is for the feature we are looking for or for a different
             // feature
-            if (isSubPosition && !aFeature.equals(cfgSet.getPosition().getFeature())) {
+            if (isSubPosition && (aFeature == null
+                    || !aFeature.equals(cfgSet.getPosition().getLinkFeature()))) {
                 cfgSet.addTags(Tag.IRRELEVANT);
                 continue nextPosition;
             }
@@ -203,7 +207,7 @@ public class AgreementUtils
                 if (cfg.getPosition() instanceof RelationPosition pos) {
                     var arc = cfg.getFs(user, aCasMap);
 
-                    var adapter = (RelationDiffAdapter) aDiff.getTypeAdapters().get(pos.getType());
+                    var adapter = (RelationDiffAdapter) aDiff.getAdapters().get(pos.getType());
 
                     // Check if the source of the relation is stacked
                     var source = getFeature(arc, adapter.getSourceFeature(), AnnotationFS.class);
@@ -238,8 +242,8 @@ public class AgreementUtils
 
             // If the position feature is set (subposition), then it must match the feature we
             // are calculating agreement over
-            assert cfgSet.getPosition().getFeature() == null
-                    || cfgSet.getPosition().getFeature().equals(aFeature);
+            assert cfgSet.getPosition().getLinkFeature() == null
+                    || cfgSet.getPosition().getLinkFeature().equals(aFeature);
 
             if (!containsAny(cfgSet.getTags(), INCOMPLETE_LABEL, INCOMPLETE_POSITION)) {
                 cfgSet.addTags(COMPLETE);
@@ -262,17 +266,20 @@ public class AgreementUtils
     private static Object extractValueForAgreement(Configuration cfg, String user,
             Map<String, CAS> aCasMap, String aFeature)
     {
+        if (aFeature == null) {
+            return AgreementMeasure.POSITION;
+        }
+
         var fs = cfg.getFs(user, aCasMap);
         var linkIndex = cfg.getAID(user).index;
-        var isPrimitiveFeature = fs.getType().getFeatureByBaseName(aFeature).getRange()
-                .isPrimitive();
+        var type = fs.getType();
+        var isPrimitiveFeature = type.getFeatureByBaseName(aFeature).getRange().isPrimitive();
 
         // If the feature on a position is set, then it is a subposition
         var isSubPosition = linkIndex != -1;
 
         // BEGIN PARANOIA
-        assert fs.getType().getFeatureByBaseName(aFeature).getRange()
-                .isPrimitive() == isPrimitiveFeature;
+        assert type.getFeatureByBaseName(aFeature).getRange().isPrimitive() == isPrimitiveFeature;
         // primitive implies not subposition - if this is primitive and subposition, we
         // should never have gotten here in the first place.
         assert !isPrimitiveFeature || !isSubPosition;
@@ -286,12 +293,12 @@ public class AgreementUtils
         if (!isPrimitiveFeature && isSubPosition) {
             // Link feature / sub-position
             return extractLinkFeatureValueForAgreement(fs, aFeature, linkIndex,
-                    cfg.getPosition().getLinkCompareBehavior());
+                    cfg.getPosition().getLinkFeatureMultiplicityMode());
         }
 
         throw new IllegalStateException("Should never get here: primitive: "
-                + fs.getType().getFeatureByBaseName(aFeature).getRange().isPrimitive()
-                + "; subpos: " + isSubPosition);
+                + type.getFeatureByBaseName(aFeature).getRange().isPrimitive() + "; subpos: "
+                + isSubPosition);
     }
 
     private static Object extractLinkFeatureValueForAgreement(FeatureStructure aFs, String aFeature,

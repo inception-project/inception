@@ -30,6 +30,7 @@ import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.security.WicketSecurityUtils;
 import de.tudarmstadt.ukp.inception.support.svelte.SvelteBehavior;
 import jakarta.servlet.ServletContext;
 
@@ -56,6 +57,7 @@ public class RunningExportsPanel
 
         setDefaultModel(Model.ofMap(Map.of( //
                 "wsEndpointUrl", constructEndpointUrl(), //
+                "csrfToken", WicketSecurityUtils.getCsrfTokenFromSession(), //
                 "topicChannel", "/p/" + project.getObject().getId() + "/exports")));
 
         add(new SvelteBehavior());

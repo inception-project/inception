@@ -18,14 +18,47 @@
 package de.tudarmstadt.ukp.inception.schema.api.feature;
 
 import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectAnnotationByAddr;
+import static java.util.Collections.emptyList;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.uima.cas.ArrayFS;
 import org.apache.uima.cas.FeatureStructure;
+import org.apache.uima.jcas.tcas.Annotation;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 
 public record MaterializedLink(String feature, String role, String targetType, int targetBegin,
         int targetEnd)
 {
+    public static List<MaterializedLink> toMaterializedLinks(FeatureStructure aSourceFS,
+            String aSlotFeature, String aRoleFeature, String aTargetFeature)
+    {
+        var slotFeature = aSourceFS.getType().getFeatureByBaseName(aSlotFeature);
+        if (slotFeature == null) {
+            return emptyList();
+        }
+
+        var values = aSourceFS.getFeatureValue(slotFeature);
+        if (values instanceof ArrayFS array) {
+            var links = new ArrayList<MaterializedLink>();
+            for (var link : array.toArray()) {
+                var roleFeature = link.getType().getFeatureByBaseName(aRoleFeature);
+                var targetFeature = link.getType().getFeatureByBaseName(aTargetFeature);
+                if (link.getFeatureValue(targetFeature) instanceof Annotation target) {
+                    var role = link.getStringValue(roleFeature);
+                    var m = new MaterializedLink(aSlotFeature, role, target.getType().getName(),
+                            target.getBegin(), target.getEnd());
+                    links.add(m);
+                }
+            }
+            return links;
+        }
+
+        return emptyList();
+    }
+
     public static MaterializedLink toMaterializedLink(FeatureStructure aSourceFS,
             AnnotationFeature aSlotFeature, LinkWithRoleModel aLink)
     {

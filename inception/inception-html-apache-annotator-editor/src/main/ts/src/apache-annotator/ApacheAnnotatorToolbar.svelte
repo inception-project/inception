@@ -16,7 +16,7 @@
   limitations under the License.
 -->
 <script lang="ts">
-  import { showLabels, showAggregatedLabels, showEmptyHighlights } from './ApacheAnnotatorState'
+  import { showLabels, showAggregatedLabels, showEmptyHighlights, showImages, showTables } from './ApacheAnnotatorState'
 
   export let sectionSelector : string
 </script>
@@ -27,7 +27,7 @@
       <input class="form-check-input" type="checkbox" role="switch" id="inlineLabelsEnabled" bind:checked={$showLabels}>
       <label class="form-check-label" for="inlineLabelsEnabled">Inline labels</label>
     </div>
-    {#if sectionSelector}      
+    {#if sectionSelector}
       <div class="form-check form-switch mx-2">
         <input class="form-check-input" type="checkbox" role="switch" id="aggregatedLabelsEnabled" bind:checked={$showAggregatedLabels}>
         <label class="form-check-label" for="aggregatedLabelsEnabled">Section labels</label>
@@ -39,6 +39,14 @@
       <label class="form-check-label" for="showEmptyHighlights">Empties</label>
     </div>
     -->
+    <div class="form-check form-switch mx-2">
+      <input class="form-check-input" type="checkbox" role="switch" id="imagesEnabled" bind:checked={$showImages}>
+      <label class="form-check-label" for="imagesEnabled">Images</label>
+    </div>
+    <div class="form-check form-switch mx-2">
+      <input class="form-check-input" type="checkbox" role="switch" id="tablesEnabled" bind:checked={$showTables}>
+      <label class="form-check-label" for="tablesEnabled">Tables</label>
+    </div>
   </div>
 </div>
 

@@ -165,6 +165,10 @@ public class BulkRecommenderPanel
             var factory = maybeFactory.get();
             var engine = factory.build(recommender);
 
+            if (factory.isInteractive(recommender)) {
+                continue;
+            }
+
             // If a recommender requires training, it would yield no results if the user has not yet
             // annotated any documents. So in this case, we do currently not offer it for
             // processing.

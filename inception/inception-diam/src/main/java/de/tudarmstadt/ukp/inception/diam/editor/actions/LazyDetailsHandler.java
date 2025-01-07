@@ -87,7 +87,7 @@ public class LazyDetailsHandler
             // old document are still being loaded while the backend editor state has already been
             // configured for the new document. If no suitable annotation with the given ID exists
             // in the new document, this exception will be thrown. As part of switching the
-            // document, the popover will be destroyed and re-created anyway, so in any case, the
+            // document, the pop-over will be destroyed and re-created anyway, so in any case, the
             // user should never see this data.
             // So, we ignore this exception.
             return new DefaultAjaxResponse(COMMAND);

@@ -458,7 +458,7 @@ public class AeroRemoteApiController
         }
 
         var request = new FullProjectExportRequest(project, aFormat.orElse(null), true);
-        var monitor = new ProjectExportTaskMonitor(project, null, "report-export");
+        var monitor = new ProjectExportTaskMonitor(project, null, "report-export", "");
         File exportedFile = exportService.exportProject(request, monitor);
 
         // Turn the file into a resource and auto-delete the file when the resource closes the

@@ -29,7 +29,7 @@
     import LabelBadge from "./LabelBadge.svelte";
     import SpanText from "./SpanText.svelte";
     import {
-    debounce,
+        debounce,
         groupRelationsByPosition,
         groupSpansByPosition,
         uniqueOffsets,
@@ -59,7 +59,7 @@
     }
 
     function scrollToRelation(relation: Relation) {
-        ajaxClient.scrollTo({ id: relation.vid });
+        ajaxClient.scrollTo({ id: relation.vid, offset: relation.arguments[0].target.offsets[0] });
     }
 
     function mouseOverAnnotation(event: MouseEvent, annotation: Annotation) {

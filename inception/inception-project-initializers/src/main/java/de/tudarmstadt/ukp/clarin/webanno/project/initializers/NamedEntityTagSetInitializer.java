@@ -28,6 +28,7 @@ import org.springframework.core.io.ClassPathResource;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.config.ProjectInitializersAutoConfiguration;
+import de.tudarmstadt.ukp.inception.project.api.ProjectInitializationRequest;
 import de.tudarmstadt.ukp.inception.project.api.ProjectInitializer;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
@@ -70,9 +71,10 @@ public class NamedEntityTagSetInitializer
     }
 
     @Override
-    public void configure(Project aProject) throws IOException
+    public void configure(ProjectInitializationRequest aRequest) throws IOException
     {
-        importTagSetFromJson(aProject,
+        var project = aRequest.getProject();
+        importTagSetFromJson(project,
                 new ClassPathResource("/tagsets/de-ne-webanno.json").getInputStream(),
                 annotationSchemaService);
     }

@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.ui.core.dashboard.settings.annotation;
 
+import static de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.SidebarTabbedPanel.KEY_SIDEBAR_STATE;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 import static java.util.stream.Collectors.toList;
 
@@ -37,7 +38,6 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebarFactory;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebarRegistry;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.SidebarTabbedPanel;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaForm;
@@ -61,13 +61,13 @@ public class DefaultAnnotationSidebarStatePanel
 
         LambdaForm<Void> form = new LambdaForm<>("form");
 
-        Label description = new Label("description", defaultTab.map(SidebarHandle::getDescription));
+        var description = new Label("description", defaultTab.map(SidebarHandle::getDescription));
         description.setOutputMarkupPlaceholderTag(true);
         description.add(visibleWhen(defaultTab.isPresent()));
         form.add(description);
 
-        DropDownChoice<SidebarHandle> defaultTabSelect = new DropDownChoice<>("defaultTab",
-                defaultTab, LoadableDetachableModel.of(this::listAvailableSidebars),
+        var defaultTabSelect = new DropDownChoice<SidebarHandle>("defaultTab", defaultTab,
+                LoadableDetachableModel.of(this::listAvailableSidebars),
                 new ChoiceRenderer<>("displayName", "id"));
         defaultTabSelect.setNullValid(true);
         defaultTabSelect.add(new LambdaAjaxFormComponentUpdatingBehavior("change",
@@ -89,8 +89,8 @@ public class DefaultAnnotationSidebarStatePanel
 
     private void actionLoad()
     {
-        var state = preferencesService.loadDefaultTraitsForProject(
-                SidebarTabbedPanel.KEY_SIDEBAR_STATE, getModel().getObject());
+        var state = preferencesService.loadDefaultTraitsForProject(KEY_SIDEBAR_STATE,
+                getModel().getObject());
 
         var factory = annotationSidebarRegistry.getExtension(state.getSelectedTab());
         defaultTab.setObject(factory.map(SidebarHandle::new).orElse(null));
@@ -98,14 +98,14 @@ public class DefaultAnnotationSidebarStatePanel
 
     private void actionSave(AjaxRequestTarget aTarget, Form<Void> aDummy)
     {
-        var state = preferencesService.loadDefaultTraitsForProject(
-                SidebarTabbedPanel.KEY_SIDEBAR_STATE, getModel().getObject());
+        var state = preferencesService.loadDefaultTraitsForProject(KEY_SIDEBAR_STATE,
+                getModel().getObject());
 
         state.setSelectedTab(defaultTab.map(SidebarHandle::getId).orElse(null).getObject());
         state.setExpanded(defaultTab.isPresent().getObject());
 
-        preferencesService.saveDefaultTraitsForProject(SidebarTabbedPanel.KEY_SIDEBAR_STATE,
-                getModel().getObject(), state);
+        preferencesService.saveDefaultTraitsForProject(KEY_SIDEBAR_STATE, getModel().getObject(),
+                state);
     }
 
     private List<SidebarHandle> listAvailableSidebars()

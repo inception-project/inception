@@ -95,12 +95,14 @@ public class CuratedDocumentsExporter
     }
 
     /**
-     * Copy, if exists, curation documents to a folder that will be exported as Zip file
+     * Copy, if exists, curation documents to a folder that will be exported as ZIP file
      * 
      * @param aStage
-     *            The folder where curated documents are copied to be exported as Zip File
+     *            The folder where curated documents are copied to be exported as ZIP File
      * @throws IOException
+     *             if there was a problem writing the data
      * @throws ProjectExportException
+     *             if there was a problem preparing the data
      */
     @Override
     public void exportData(FullProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,

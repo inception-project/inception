@@ -243,7 +243,7 @@ public class RecommenderInfoPanel
 
     private void actionShowDetails(AjaxRequestTarget aTarget, Recommender aRecommender)
     {
-        var panel = new RecommenderStatusDetailPanel(ModalDialog.CONTENT_ID,
+        var panel = new ConfusionMatrixDialogContent(ModalDialog.CONTENT_ID,
                 LoadableDetachableModel.of(() -> recommendationService
                         .getEvaluatedRecommender(userService.getCurrentUser(), aRecommender).get())
                         .map(EvaluatedRecommender::getEvaluationResult));

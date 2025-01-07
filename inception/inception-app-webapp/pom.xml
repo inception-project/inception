@@ -21,7 +21,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>34.0-SNAPSHOT</version>
+    <version>35.0-SNAPSHOT</version>
     <relativePath>..</relativePath>
   </parent>
 
@@ -127,6 +127,10 @@
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-project-initializers-doclabeling</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-project-initializers-phi</artifactId>
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
@@ -245,12 +249,6 @@
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-recommendation</artifactId>
     </dependency>
-    <!--
-      <dependency>
-      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-imls-dl4j</artifactId>
-      </dependency>
-    -->
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-imls-external</artifactId>
@@ -267,12 +265,6 @@
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-imls-ollama</artifactId>
     </dependency>
-    <!--  
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-imls-lapps</artifactId>
-    </dependency>
-    -->
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-imls-azureai-openai</artifactId>
@@ -292,6 +284,12 @@
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-imls-weblicht</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-assistant</artifactId>
+      <version>${project.version}</version>
     </dependency>
 
     <!-- INCEPTION - ACTIVE LEARNING FUNCTIONALITY -->
@@ -408,6 +406,10 @@
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-io-conll</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-io-docx</artifactId>
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
@@ -802,7 +804,7 @@
                 <toc>left</toc>
                 <include-dir>./user-guide/</include-dir>
                 <source-dir>${project.basedir}/../</source-dir>
-                <imagesDir>./user-guide/images</imagesDir>
+                <imagesDir>./user-guide/</imagesDir>
               </attributes>
             </configuration>
           </execution>
@@ -819,7 +821,7 @@
                 <toc>left</toc>
                 <include-dir>./developer-guide/</include-dir>
                 <source-dir>${project.basedir}/../</source-dir>
-                <imagesDir>./developer-guide/images</imagesDir>
+                <imagesDir>./developer-guide/</imagesDir>
               </attributes>
             </configuration>
           </execution>
@@ -836,7 +838,7 @@
                 <toc>left</toc>
                 <include-dir>./admin-guide/</include-dir>
                 <source-dir>${project.basedir}/../</source-dir>
-                <imagesDir>./admin-guide/images</imagesDir>
+                <imagesDir>./admin-guide/</imagesDir>
               </attributes>
             </configuration>
           </execution>
@@ -985,6 +987,7 @@
             </ignoredNonTestScopedDependencies>
             <usedDependencies>
               <!-- INCEpTION backend modules - used via Spring -->
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-assistant</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-guidelines</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-documents</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-image</usedDependency>
@@ -1031,6 +1034,7 @@
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-processing</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-project-initializers-basic</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-project-initializers-doclabeling</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-project-initializers-phi</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-project-initializers-sentencelabeling</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-project-initializers-ud</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-project-initializers-wikidatalinking</usedDependency>
@@ -1047,6 +1051,7 @@
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-io-bioc</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-io-brat</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-io-conll</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-io-docx</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-io-imscwb</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-io-html</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-io-intertext</usedDependency>
@@ -1315,7 +1320,7 @@
                       <toc>preamble</toc>
                       <include-dir>./user-guide/</include-dir>
                       <source-dir>${project.basedir}/../</source-dir>
-                      <imagesDir>./user-guide/images</imagesDir>
+                      <imagesDir>./user-guide/</imagesDir>
                     </attributes>
                   </configuration>
                 </execution>
@@ -1332,7 +1337,7 @@
                       <toc>preamble</toc>
                       <include-dir>./developer-guide/</include-dir>
                       <source-dir>${project.basedir}/../</source-dir>
-                      <imagesDir>./developer-guide/images</imagesDir>
+                      <imagesDir>./developer-guide/</imagesDir>
                     </attributes>
                   </configuration>
                 </execution>
@@ -1349,6 +1354,7 @@
                       <toc>preamble</toc>
                       <include-dir>./admin-guide/</include-dir>
                       <source-dir>${project.basedir}/../</source-dir>
+                      <imagesDir>./admin-guide/</imagesDir>
                     </attributes>
                   </configuration>
                 </execution>

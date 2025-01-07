@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.scheduling;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Predicate;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -92,4 +93,17 @@ public interface SchedulingService
      *            the task to be executed.
      */
     void executeSync(Task aTask);
+
+    void suspendTasks(Project aProject) throws TimeoutException;
+
+    void resumeTasks(Project aProject);
+
+    SuspensionContext whileSuspended(Project aProject) throws TimeoutException;
+
+    interface SuspensionContext
+        extends AutoCloseable
+    {
+        @Override
+        void close();
+    }
 }

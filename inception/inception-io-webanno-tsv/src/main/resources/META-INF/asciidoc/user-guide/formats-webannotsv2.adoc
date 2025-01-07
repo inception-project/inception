@@ -19,14 +19,13 @@
 
 Allows importing files produced using WebAnno version 2.
 
-[cols="2,1,1,1,3"]
+[cols="2,1,1,3"]
 |====
-| Format | Read | Write | Custom Layers | Description
+| Format | Import | Export | Supported layers
 
 | WebAnno TSV 2 (`ctsv`)
 | yes
 | no
-| yes
-| token, multiple token, and arc annotations supported. No chain annotation is supported. no sub-token annotation is supported
+| Any layer/feature supported by WebAnno 2
 |====
 

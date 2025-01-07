@@ -34,8 +34,8 @@ import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
-import de.tudarmstadt.ukp.inception.curation.merge.MergeStrategyFactory;
-import de.tudarmstadt.ukp.inception.curation.merge.MergeStrategyFactoryExtensionPoint;
+import de.tudarmstadt.ukp.inception.curation.merge.strategy.MergeStrategyFactory;
+import de.tudarmstadt.ukp.inception.curation.merge.strategy.MergeStrategyFactoryExtensionPoint;
 import de.tudarmstadt.ukp.inception.curation.model.CurationWorkflow;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaModelAdapter;

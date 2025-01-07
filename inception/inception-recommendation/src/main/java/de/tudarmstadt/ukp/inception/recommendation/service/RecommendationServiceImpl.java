@@ -43,7 +43,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.commons.collections4.MapIterator;
 import org.apache.commons.collections4.MultiValuedMap;
 import org.apache.commons.collections4.multimap.HashSetValuedHashMap;
 import org.apache.commons.lang3.Validate;
@@ -800,23 +799,23 @@ public class RecommendationServiceImpl
             return;
         }
 
-        var anySyncRan = false;
+        var syncRecommenders = new ArrayList<Recommender>();
         for (var recommender : recommenders) {
             var factory = getRecommenderFactory(recommender);
             if (factory.map($ -> $.isSynchronous(recommender)).orElse(false)) {
-                schedulingService.executeSync(PredictionTask.builder() //
-                        .withSessionOwner(sessionOwner) //
-                        .withTrigger(aTrigger) //
-                        .withCurrentDocument(aDocument) //
-                        .withDataOwner(aDataOwner) //
-                        .withRecommender(recommender) //
-                        .build());
-
-                anySyncRan = true;
+                syncRecommenders.add(recommender);
             }
         }
 
-        if (anySyncRan) {
+        if (!syncRecommenders.isEmpty()) {
+            schedulingService.executeSync(PredictionTask.builder() //
+                    .withSessionOwner(sessionOwner) //
+                    .withTrigger(aTrigger) //
+                    .withCurrentDocument(aDocument) //
+                    .withDataOwner(aDataOwner) //
+                    .withRecommender(syncRecommenders.toArray(Recommender[]::new)) //
+                    .build());
+
             var switched = forceSwitchPredictions(sessionOwner.getUsername(),
                     aDocument.getProject());
             if (switched) {
@@ -1406,10 +1405,9 @@ public class RecommendationServiceImpl
 
         public MultiValuedMap<AnnotationLayer, EvaluatedRecommender> getActiveRecommenders()
         {
-            MultiValuedMap<AnnotationLayer, EvaluatedRecommender> active = new HashSetValuedHashMap<>();
+            var active = new HashSetValuedHashMap<AnnotationLayer, EvaluatedRecommender>();
 
-            MapIterator<AnnotationLayer, EvaluatedRecommender> i = evaluatedRecommenders
-                    .mapIterator();
+            var i = evaluatedRecommenders.mapIterator();
             while (i.hasNext()) {
                 i.next();
                 if (i.getValue().isActive()) {
@@ -1554,8 +1552,8 @@ public class RecommendationServiceImpl
             var it = evaluatedRecommenders.mapIterator();
 
             while (it.hasNext()) {
-                AnnotationLayer layer = it.next();
-                EvaluatedRecommender rec = it.getValue();
+                var layer = it.next();
+                var rec = it.getValue();
                 if (!rec.getRecommender().equals(aRecommender)) {
                     newEvaluatedRecommenders.put(layer, rec);
                 }

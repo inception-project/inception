@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.project.export.task.curated;
 import static de.tudarmstadt.ukp.clarin.webanno.api.export.FullProjectExportRequest.FORMAT_AUTO;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
 import static java.lang.invoke.MethodHandles.lookup;
+import static org.apache.commons.io.FileUtils.forceDelete;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.File;
@@ -37,7 +38,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportException;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
@@ -69,7 +69,7 @@ public class CuratedDocumentsProjectExportTask
             ProjectExportTaskMonitor aMonitor)
         throws ProjectExportException
     {
-        Project project = aRequest.getProject();
+        var project = aRequest.getProject();
         File exportFile = null;
         File exportTempDir = null;
         try {
@@ -92,7 +92,7 @@ public class CuratedDocumentsProjectExportTask
         catch (Exception e) {
             if (exportFile != null) {
                 try {
-                    FileUtils.forceDelete(exportTempDir);
+                    forceDelete(exportTempDir);
                 }
                 catch (IOException ex) {
                     aMonitor.addMessage(LogMessage.error(this,
@@ -104,7 +104,7 @@ public class CuratedDocumentsProjectExportTask
         finally {
             if (exportTempDir != null) {
                 try {
-                    FileUtils.forceDelete(exportTempDir);
+                    forceDelete(exportTempDir);
                 }
                 catch (IOException e) {
                     aMonitor.addMessage(LogMessage.error(this, "Unable to delete temp file: %s",
@@ -128,7 +128,7 @@ public class CuratedDocumentsProjectExportTask
             boolean aIncludeInProgress, ProjectExportTaskMonitor aMonitor)
         throws ProjectExportException, IOException, InterruptedException
     {
-        Project project = aModel.getProject();
+        var project = aModel.getProject();
 
         // Get all the source documents from the project
         List<SourceDocument> documents = documentService.listSourceDocuments(project);
@@ -149,13 +149,13 @@ public class CuratedDocumentsProjectExportTask
 
         int initProgress = aMonitor.getProgress() - 1;
         int i = 1;
-        for (SourceDocument sourceDocument : documents) {
+        for (var sourceDocument : documents) {
             // check if the export has been cancelled
             if (Thread.interrupted()) {
                 throw new InterruptedException();
             }
 
-            try (CasStorageSession session = CasStorageSession.openNested()) {
+            try (var session = CasStorageSession.openNested()) {
                 File curationCasDir = new File(
                         aCopyDir + CURATION_AS_SERIALISED_CAS + sourceDocument.getName());
                 FileUtils.forceMkdir(curationCasDir);
@@ -182,7 +182,7 @@ public class CuratedDocumentsProjectExportTask
                                     sourceDocument, WebAnnoConst.CURATION_USER, format,
                                     WebAnnoConst.CURATION_USER, Mode.CURATION);
                             FileUtils.copyFileToDirectory(curationFile, curationDir);
-                            FileUtils.forceDelete(curationFile);
+                            forceDelete(curationFile);
                         }
                         catch (Exception e) {
                             // error("Unexpected error while exporting project: " +

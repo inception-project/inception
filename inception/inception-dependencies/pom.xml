@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception</artifactId>
-    <version>34.0-SNAPSHOT</version>
+    <version>35.0-SNAPSHOT</version>
     <relativePath>../../pom.xml</relativePath>
   </parent>
 
@@ -34,6 +34,14 @@
         <groupId>org.slf4j</groupId>
         <artifactId>slf4j-bom</artifactId>
         <version>${slf4j.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+
+      <dependency>
+        <groupId>org.apache.logging.log4j</groupId>
+        <artifactId>log4j-bom</artifactId>
+        <version>${log4j2.version}</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -390,7 +398,7 @@
       <dependency>
         <groupId>org.mozilla</groupId>
         <artifactId>rhino-runtime</artifactId>
-        <version>1.7.14</version>
+        <version>1.7.15</version>
       </dependency>
 
       <dependency>
@@ -579,6 +587,20 @@
         <version>${jena.version}</version>
         <type>pom</type>
         <scope>import</scope>
+        <exclusions>
+          <exclusion>
+            <groupId>org.junit</groupId>
+            <artifactId>*</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>*</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.junitplatform</groupId>
+            <artifactId>*</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.apache.jena</groupId>
@@ -774,6 +796,16 @@
         <version>${opensaml.version}</version>
         <type>pom</type>
         <scope>import</scope>
+        <exclusions>
+          <exclusion>
+            <groupId>com.fasterxml.jackson</groupId>
+            <artifactId>*</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>*</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
 
       <!-- Springdoc -->
@@ -1128,6 +1160,16 @@
         <version>${rdf4j.version}</version>
         <type>pom</type>
         <scope>import</scope>
+        <exclusions>
+          <exclusion>
+            <groupId>com.fasterxml.jackson</groupId>
+            <artifactId>*</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>*</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.eclipse.rdf4j</groupId>
@@ -1182,37 +1224,15 @@
 
       <dependency>
         <groupId>net.sourceforge.owlapi</groupId>
-        <artifactId>owlapi-api</artifactId>
+        <artifactId>owlapi-bom</artifactId>
         <version>${owlapi-version}</version>
+        <type>pom</type>
+        <scope>import</scope>
       </dependency>
       <dependency>
+        <!-- See https://github.com/owlcs/owlapi/issues/1154 -->
         <groupId>net.sourceforge.owlapi</groupId>
         <artifactId>owlapi-apibinding</artifactId>
-        <version>${owlapi-version}</version>
-      </dependency>
-      <dependency>
-        <groupId>net.sourceforge.owlapi</groupId>
-        <artifactId>owlapi-impl</artifactId>
-        <version>${owlapi-version}</version>
-      </dependency>
-      <dependency>
-        <groupId>net.sourceforge.owlapi</groupId>
-        <artifactId>owlapi-oboformat</artifactId>
-        <version>${owlapi-version}</version>
-      </dependency>
-      <dependency>
-        <groupId>net.sourceforge.owlapi</groupId>
-        <artifactId>owlapi-parsers</artifactId>
-        <version>${owlapi-version}</version>
-      </dependency>
-      <dependency>
-        <groupId>net.sourceforge.owlapi</groupId>
-        <artifactId>owlapi-rio</artifactId>
-        <version>${owlapi-version}</version>
-      </dependency>
-      <dependency>
-        <groupId>net.sourceforge.owlapi</groupId>
-        <artifactId>owlapi-tools</artifactId>
         <version>${owlapi-version}</version>
       </dependency>
 
@@ -1235,6 +1255,25 @@
       <dependency>
         <groupId>org.opensearch</groupId>
         <artifactId>opensearch</artifactId>
+        <version>${opensearch.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.apache.lucene</groupId>
+            <artifactId>lucene-spatial</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.apache.lucene</groupId>
+            <artifactId>lucene-spatial-extras</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.apache.lucene</groupId>
+            <artifactId>lucene-spatial3d</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.opensearch</groupId>
+        <artifactId>opensearch-common</artifactId>
         <version>${opensearch.version}</version>
         <exclusions>
           <exclusion>
@@ -1394,7 +1433,7 @@
       <dependency>
         <groupId>org.apache.ant</groupId>
         <artifactId>ant</artifactId>
-        <version>1.10.14</version>
+        <version>${ant-version}</version>
       </dependency>
 
       <dependency>
@@ -1425,27 +1464,57 @@
       </dependency>
 
       <dependency>
-        <groupId>org.apache.uima</groupId>
-        <artifactId>uimafit-bom</artifactId>
-        <version>${uimafit.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
-
-      <dependency>
-        <groupId>org.apache.logging.log4j</groupId>
-        <artifactId>log4j-bom</artifactId>
-        <version>${log4j2.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
-
-      <dependency>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-dependencies</artifactId>
         <version>${spring.boot.version}</version>
         <type>pom</type>
         <scope>import</scope>
+        <exclusions>
+          <exclusion>
+            <groupId>org.apache.maven.plugin-tools</groupId>
+            <artifactId>*</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.seleniumhq.selenium</groupId>
+            <artifactId>*</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.jetbrains.kotlinx</groupId>
+            <artifactId>*</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>*</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>*</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.infinispan</groupId>
+            <artifactId>*</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>*</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.junit.platform</groupId>
+            <artifactId>*</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.junit.vintage</groupId>
+            <artifactId>*</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>*</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.slf4j</groupId>
+            <artifactId>*</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
 
       <dependency>

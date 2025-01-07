@@ -30,7 +30,7 @@ import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.text.AnnotationFS;
 
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.Repair.Safe;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationAdapter;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
@@ -58,7 +58,8 @@ public class RemoveDanglingRelationsRepair
     }
 
     @Override
-    public void repair(Project aProject, CAS aCas, List<LogMessage> aMessages)
+    public void repair(SourceDocument aDocument, String aDataOwner, CAS aCas,
+            List<LogMessage> aMessages)
     {
         var nonIndexed = getNonIndexedFSes(aCas);
 
@@ -72,7 +73,7 @@ public class RemoveDanglingRelationsRepair
             TypeAdapter adapter = null;
             try {
                 adapter = adapterCache.computeIfAbsent(t.getName(),
-                        $ -> annotationService.findAdapter(aProject, fs));
+                        $ -> annotationService.findAdapter(aDocument.getProject(), fs));
             }
             catch (NoResultException e) {
                 // Ignore

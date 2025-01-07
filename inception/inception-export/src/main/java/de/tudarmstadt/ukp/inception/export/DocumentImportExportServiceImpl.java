@@ -21,6 +21,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXC
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.UNMANAGED_ACCESS;
 import static de.tudarmstadt.ukp.inception.project.api.ProjectService.withProjectLogger;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
 import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.exists;
 import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.getRealCas;
 import static java.util.Arrays.asList;
@@ -335,8 +336,11 @@ public class DocumentImportExportServiceImpl
 
         // Create sentence / token annotations if they are missing - sentences first because
         // tokens are then generated inside the sentences
-        splitSenencesIfNecssaryAndCheckQuota(cas, format);
-        splitTokensIfNecssaryAndCheckQuota(cas, format);
+        splitSenencesIfNecssary(cas, format);
+        checkSentenceQuota(cas, format);
+
+        splitTokens(cas, format);
+        checkTokenQuota(cas, format);
 
         LOG.info("Imported CAS with [{}] tokens and [{}] sentences from file [{}] (size: {} bytes)",
                 cas.getAnnotationIndex(getType(cas, Token.class)).size(),
@@ -360,17 +364,21 @@ public class DocumentImportExportServiceImpl
         var casDoctor = new CasDoctor(checksRegistry, repairsRegistry);
         casDoctor.setActiveChecks(
                 checksRegistry.getExtensions().stream().map(c -> c.getId()).toArray(String[]::new));
-        casDoctor.analyze(aDocument.getProject(), aCas, messages, true);
+        casDoctor.analyze(aDocument, INITIAL_CAS_PSEUDO_USER, aCas, messages, true);
     }
 
-    private void splitTokensIfNecssaryAndCheckQuota(CAS cas, FormatSupport aFormat)
-        throws IOException
+    private void splitTokens(CAS cas, FormatSupport aFormat) throws IOException
     {
         var tokenType = getType(cas, Token.class);
 
         if (!exists(cas, tokenType)) {
             SegmentationUtils.tokenize(cas);
         }
+    }
+
+    private void checkTokenQuota(CAS cas, FormatSupport aFormat) throws IOException
+    {
+        var tokenType = getType(cas, Token.class);
 
         if (properties.getMaxTokens() > 0) {
             var tokenCount = cas.getAnnotationIndex(tokenType).size();
@@ -388,14 +396,18 @@ public class DocumentImportExportServiceImpl
         }
     }
 
-    private void splitSenencesIfNecssaryAndCheckQuota(CAS cas, FormatSupport aFormat)
-        throws IOException
+    private void splitSenencesIfNecssary(CAS cas, FormatSupport aFormat) throws IOException
     {
         var sentenceType = getType(cas, Sentence.class);
 
         if (!exists(cas, sentenceType)) {
             SegmentationUtils.splitSentences(cas);
         }
+    }
+
+    private void checkSentenceQuota(CAS cas, FormatSupport aFormat) throws IOException
+    {
+        var sentenceType = getType(cas, Sentence.class);
 
         if (properties.getMaxSentences() > 0) {
             var sentenceCount = cas.getAnnotationIndex(sentenceType).size();

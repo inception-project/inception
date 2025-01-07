@@ -1,7 +1,3 @@
-// Copyright 2019
-// Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
-// Technische Universität Darmstadt
-// 
 // Licensed to the Technische Universität Darmstadt under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -29,15 +25,15 @@ to a specific set of columns that must appear exactly in a specific order: *toke
 *part-of-speech tag*, *lemma*. Also only specific pseudo-XML elements and attributes are supported:
 `text` (including an `id` attribute), `s`.
 
-[cols="2,1,1,1,3"]
+[cols="2,1,1,3"]
 |====
-| Format | Read | Write | Custom Layers | Description
+| Format | Import | Export | Supported layers
 
 | IMS CWB VRT (`imscwb`)
 | yes
 | no
-| no
-|
+| Part-of-speech tagging (built-in), +
+  Lemmatization (built-ion)
 |====
 
 .Example

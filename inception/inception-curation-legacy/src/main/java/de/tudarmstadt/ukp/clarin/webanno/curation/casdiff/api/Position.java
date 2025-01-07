@@ -34,12 +34,20 @@ public interface Position
      */
     String getType();
 
+    String getCollectionId();
+
+    String getDocumentId();
+
+    String toMinimalString();
+
+    boolean isLinkFeaturePosition();
+
     /**
      * @return the feature if this is a sub-position for a link feature.
      */
-    String getFeature();
+    String getLinkFeature();
 
-    String getRole();
+    String getLinkRole();
 
     int getLinkTargetBegin();
 
@@ -48,13 +56,5 @@ public interface Position
     /**
      * @return the way in which links are compared and labels for links are generated.
      */
-    LinkFeatureMultiplicityMode getLinkCompareBehavior();
-
-    String getCollectionId();
-
-    String getDocumentId();
-
-    String toMinimalString();
-
-    boolean isLinkFeaturePosition();
+    LinkFeatureMultiplicityMode getLinkFeatureMultiplicityMode();
 }

@@ -1,7 +1,3 @@
-// Copyright 2019
-// Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
-// Technische Universität Darmstadt
-// 
 // Licensed to the Technische Universität Darmstadt under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -23,15 +19,16 @@
 
 An XML format used by the link:https://github.com/PerseusDL/treebank_data/tree/master/v2.1[Perseus Ancient Greek and Latin Dependency Treebank].
 
-[cols="2,1,1,1,3"]
+[cols="2,1,1,3"]
 |====
-| Format | Read | Write | Custom Layers | Description
+| Format | Import | Export | Supported layers
 
 | Perseus Ancient Greek and Latin Dependency Treebank 2.1 XML (`perseus_2.1`)
 | yes
 | no
-| no
-| 
+| Part-of-speech tagging (built-in), +
+  Lemmatization (built-ion), +
+  Dependency parsing (built-in)
 |====
 
 .Example (excerpt from link:https://github.com/PerseusDL/treebank_data/blob/master/v2.1/Greek/texts/tlg0013.tlg002.perseus-grc1.tb.xml[tlg0013.tlg002.perseus-grc1.tb.xml])

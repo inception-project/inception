@@ -36,6 +36,7 @@ import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.AttributeModifier;
@@ -83,6 +84,7 @@ import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorBase;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorExtensionRegistry;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorRegistry;
+import de.tudarmstadt.ukp.inception.editor.ContextMenuLookup;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.editor.state.AnnotatorStateImpl;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
@@ -604,7 +606,7 @@ public abstract class AnnotationPageBase2
         // If there is no change in the current document, then there is nothing to do. Mind
         // that document IDs are globally unique and a change in project does not happen unless
         // there is also a document change.
-        String dataOwner = state.getUser().getUsername();
+        var dataOwner = state.getUser().getUsername();
         if (doc != null && //
                 doc.equals(state.getDocument()) && //
                 aFocusParameter.toInt(0) == state.getFocusUnitIndex() && //
@@ -693,7 +695,7 @@ public abstract class AnnotationPageBase2
             return;
         }
 
-        // never had set a document or is a new one
+        // Never had set a document or is a new one
         if (aPreviousDocument == null || !aPreviousDocument.equals(currentDocument)
                 || aPreviousDataOwner == null || !aPreviousDataOwner.equals(dataOwner)) {
             LOG.trace(
@@ -703,6 +705,7 @@ public abstract class AnnotationPageBase2
             return;
         }
 
+        // No change of document, just change of focus
         try {
             getModelObject().moveToUnit(getEditorCas(), focus, TOP);
             actionRefreshDocument(aTarget);
@@ -755,5 +758,11 @@ public abstract class AnnotationPageBase2
         }
 
         return allDocuments;
+    }
+
+    @Override
+    public Optional<ContextMenuLookup> getContextMenuLookup()
+    {
+        return annotationEditor.getContextMenuLookup();
     }
 }

@@ -104,7 +104,8 @@ public class CheckTask
                     casStorageService.forceActionOnCas(sd, INITIAL_CAS_PSEUDO_USER,
                             (doc, user) -> createOrReadInitialCasWithoutSavingOrChecks(doc,
                                     messageSet),
-                            (cas) -> casDoctor.analyze(project, cas, messageSet.getMessages()), //
+                            (doc, user, cas) -> casDoctor.analyze(doc, user, cas,
+                                    messageSet.getMessages()), //
                             false);
                 }
                 catch (Exception e) {
@@ -126,7 +127,8 @@ public class CheckTask
                     casStorageService.forceActionOnCas(sd, CURATION_USER,
                             (doc, user) -> casStorageService.readCas(doc, user,
                                     UNMANAGED_NON_INITIALIZING_ACCESS),
-                            (cas) -> casDoctor.analyze(project, cas, messageSet.getMessages()), //
+                            (doc, user, cas) -> casDoctor.analyze(doc, user, cas,
+                                    messageSet.getMessages()), //
                             false);
                 }
                 catch (FileNotFoundException e) {
@@ -156,7 +158,8 @@ public class CheckTask
                         casStorageService.forceActionOnCas(ad.getDocument(), ad.getUser(),
                                 (doc, user) -> casStorageService.readCas(doc, user,
                                         UNMANAGED_NON_INITIALIZING_ACCESS),
-                                (cas) -> casDoctor.analyze(project, cas, messageSet.getMessages()), //
+                                (doc, user, cas) -> casDoctor.analyze(doc, user, cas,
+                                        messageSet.getMessages()), //
                                 false);
                     }
                 }

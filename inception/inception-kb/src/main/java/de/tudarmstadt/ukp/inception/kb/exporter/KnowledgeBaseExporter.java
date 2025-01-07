@@ -132,6 +132,7 @@ public class KnowledgeBaseExporter
             exportedKB.setRootConcepts(new ArrayList<>(kb.getRootConcepts()));
             exportedKB.setAdditionalMatchingProperties(
                     new ArrayList<>(kb.getAdditionalMatchingProperties()));
+            exportedKB.setAdditionalLanguages(new ArrayList<>(kb.getAdditionalLanguages()));
             exportedKB.setDefaultLanguage(kb.getDefaultLanguage());
             exportedKB.setDefaultDatasetIri(
                     kb.getDefaultDatasetIri() != null ? kb.getDefaultDatasetIri() : null);
@@ -240,6 +241,13 @@ public class KnowledgeBaseExporter
             }
             else {
                 kb.setAdditionalMatchingProperties(new ArrayList<>());
+            }
+
+            if (exportedKB.getAdditionalLanguages() != null) {
+                kb.setAdditionalLanguages(exportedKB.getAdditionalLanguages());
+            }
+            else {
+                kb.setAdditionalLanguages(new ArrayList<>());
             }
 
             kb.setDefaultLanguage(exportedKB.getDefaultLanguage());

@@ -30,6 +30,7 @@ public interface EditorAjaxRequestHandler
 {
     int PRIO_CONTEXT_MENU = -10;
     int PRIO_RENDER_HANDLER = 0;
+    int PRIO_NAVIGATE_HANDLER = 50;
     int PRIO_SLOT_FILLER_HANDLER = 100;
     int PRIO_UNARM_SLOT_HANDLER = 180;
     int PRIO_EXTENSION_HANDLER = 190;
@@ -38,6 +39,7 @@ public interface EditorAjaxRequestHandler
     String PARAM_ACTION = "action";
     String PARAM_ARC_ID = "arcId";
     String PARAM_ID = "id";
+    String PARAM_DOCUMENT_ID = "docId";
     String PARAM_SCROLL_TO = "scrollTo";
     String PARAM_OFFSETS = "offsets";
     String PARAM_TARGET_SPAN_ID = "targetSpanId";

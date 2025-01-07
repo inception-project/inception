@@ -17,14 +17,14 @@
  */
 import { DiamWebsocketImpl } from './DiamWebsocketImpl'
 import { DiamAjaxImpl } from './DiamAjaxImpl'
-import { DiamClientFactory } from '@inception-project/inception-js-api'
+import { DiamAjaxConnectOptions, DiamClientFactory } from '@inception-project/inception-js-api'
 
 export class DiamClientFactoryImpl implements DiamClientFactory {
   createWebsocketClient () : DiamWebsocketImpl {
     return new DiamWebsocketImpl()
   }
 
-  createAjaxClient (ajaxEndpoint: string) : DiamAjaxImpl {
-    return new DiamAjaxImpl(ajaxEndpoint)
+  createAjaxClient (options: string | DiamAjaxConnectOptions) : DiamAjaxImpl {
+    return new DiamAjaxImpl(options)
   }
 }

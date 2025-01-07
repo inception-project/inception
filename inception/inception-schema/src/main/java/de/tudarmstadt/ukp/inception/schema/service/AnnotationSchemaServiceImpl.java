@@ -1640,6 +1640,7 @@ public class AnnotationSchemaServiceImpl
     }
 
     @Override
+    @Transactional
     public boolean isSentenceLayerEditable(Project aProject)
     {
         if (!annotationEditorProperties.isSentenceLayerEditable()) {
@@ -1656,6 +1657,7 @@ public class AnnotationSchemaServiceImpl
     }
 
     @Override
+    @Transactional
     public boolean isTokenLayerEditable(Project aProject)
     {
         if (!annotationEditorProperties.isTokenLayerEditable()) {

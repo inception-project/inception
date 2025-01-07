@@ -17,9 +17,6 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.project.initializers;
 
-import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SINGLE_TOKEN;
-import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.NO_OVERLAP;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.SPAN_TYPE;
 import static java.util.Arrays.asList;
 
 import java.io.IOException;
@@ -33,12 +30,12 @@ import org.apache.wicket.request.resource.ResourceReference;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.config.ProjectInitializersAutoConfiguration;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.inception.annotation.layer.LayerFactory;
+import de.tudarmstadt.ukp.inception.project.api.ProjectInitializationRequest;
 import de.tudarmstadt.ukp.inception.project.api.ProjectInitializer;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.wicket.resource.Strings;
@@ -98,31 +95,28 @@ public class PartOfSpeechLayerInitializer
     }
 
     @Override
-    public void configure(Project aProject) throws IOException
+    public void configure(ProjectInitializationRequest aRequest) throws IOException
     {
-        TagSet posTagSet = annotationSchemaService
-                .getTagSet(PartOfSpeechTagSetInitializer.TAG_SET_NAME, aProject);
+        var project = aRequest.getProject();
+        var posTagSet = annotationSchemaService
+                .getTagSet(PartOfSpeechTagSetInitializer.TAG_SET_NAME, project);
 
-        AnnotationLayer tokenLayer = annotationSchemaService.findLayer(aProject,
-                Token.class.getName());
+        var tokenLayer = annotationSchemaService.findLayer(project, Token.class.getName());
 
-        AnnotationLayer posLayer = new AnnotationLayer(POS.class.getName(), "Part of speech",
-                SPAN_TYPE, aProject, true, SINGLE_TOKEN, NO_OVERLAP);
-
-        AnnotationFeature tokenPosFeature = new AnnotationFeature(aProject, tokenLayer, "pos",
-                "pos", POS.class.getName());
+        var tokenPosFeature = new AnnotationFeature(project, tokenLayer, "pos", "pos",
+                POS.class.getName());
         annotationSchemaService.createFeature(tokenPosFeature);
 
-        posLayer.setAttachType(tokenLayer);
-        posLayer.setAttachFeature(tokenPosFeature);
+        var posLayer = LayerFactory.partOfSpeechLayer(project, tokenPosFeature).build();
+
         annotationSchemaService.createOrUpdateLayer(posLayer);
 
-        AnnotationFeature xpos = new AnnotationFeature(aProject, posLayer, "PosValue", "XPOS",
+        var xpos = new AnnotationFeature(project, posLayer, "PosValue", "XPOS",
                 CAS.TYPE_NAME_STRING, "XPOS", null);
         xpos.setDescription("Language-specific part-of-speech tag");
         annotationSchemaService.createFeature(xpos);
 
-        AnnotationFeature upos = new AnnotationFeature(aProject, posLayer, "coarseValue", "UPOS",
+        var upos = new AnnotationFeature(project, posLayer, "coarseValue", "UPOS",
                 CAS.TYPE_NAME_STRING, "UPOS", posTagSet);
         upos.setDescription("Universal part-of-speech tag");
         annotationSchemaService.createFeature(upos);

@@ -52,7 +52,7 @@ public class PostActionScrollToAndHighlight
     public void apply(Component aContextComponent, AjaxRequestTarget aTarget)
     {
         try {
-            AnnotationPageBase page = aContextComponent.findParent(AnnotationPageBase.class);
+            var page = aContextComponent.findParent(AnnotationPageBase.class);
             page.getAnnotationActionHandler().actionClear(aTarget);
             page.actionShowSelectedDocument(aTarget, document, range.getBegin(), range.getEnd());
         }

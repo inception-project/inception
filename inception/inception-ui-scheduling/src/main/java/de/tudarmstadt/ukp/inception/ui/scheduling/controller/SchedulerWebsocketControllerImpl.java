@@ -62,7 +62,7 @@ public class SchedulerWebsocketControllerImpl
         schedulingService = aSchedulingService;
     }
 
-    @SubscribeMapping(SchedulerWebsocketController.USER_TASKS_TOPIC)
+    @SubscribeMapping(USER_TASKS_TOPIC)
     public List<MTaskStateUpdate> onSubscribeToUserTaskUpdates(Principal user)
         throws AccessDeniedException
     {
@@ -97,8 +97,8 @@ public class SchedulerWebsocketControllerImpl
     public void dispatch(MTaskStateUpdate aUpdate)
     {
         if (aUpdate.getUsername() != null) {
-            msgTemplate.convertAndSendToUser(aUpdate.getUsername(),
-                    "/queue" + SchedulerWebsocketController.USER_TASKS_TOPIC, aUpdate);
+            msgTemplate.convertAndSendToUser(aUpdate.getUsername(), "/queue" + USER_TASKS_TOPIC,
+                    aUpdate);
         }
 
         if (aUpdate.getProjectId() > 0) {

@@ -404,7 +404,7 @@ public class UserPreferencesServiceImpl
     {
         private static final long serialVersionUID = 8809856241481077303L;
 
-        private int defaultPageSize = 10;
+        private int defaultPageSize = 20;
 
         public BratAnnotationEditorManagerPrefs()
         {

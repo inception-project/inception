@@ -1,22 +1,37 @@
+// Licensed to the Technische Universität Darmstadt under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The Technische Universität Darmstadt 
+// licenses this file to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.
+//  
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 [[sect_search-core]]
 == Search
 
 The search module allows to search for words, passages and annotations made in the 
-documents of a given project. Currently, the default search is provided by *MTAS*
-(Multi Tier Annotation Search), a Lucene/Solr based search and indexing mechanism 
-(https://github.com/textexploration/mtas).
+documents of a given project.
+Currently, the default search is provided by *MTAS* (Multi Tier Annotation Search), a Lucene-based search and indexing mechanism (https://github.com/textexploration/mtas).
 
 To perform a search, access the search sidebar located at the left of the screen, write a query and
-press the *Search* button. The results are shown below the query in a KWIC (keyword in context)
-style grouped by document. Clicking on a result will open the match in the main annotation editor.
+press the *Search* button.
+The results are shown below the query in a KWIC (keyword in context) style grouped by document. 
+Clicking on a result will open the match in the main annotation editor.
 
-image::search-core-search.png[Search sidebar]
+image::images/search-core-search.png[Search sidebar]
 
 The search only considers documents in the current project and only matches annotations made by
 the current user.
 
-NOTE: Very long annotations and tokens (longer than several thousand characters) are not indexed and 
-       cannot be found by the search.
+NOTE: Very long annotations and tokens (longer than several thousand characters) are not indexed and cannot be found by the search.
 
 Clicking on the search settings button (cog wheel) shows additional options:
 
@@ -45,13 +60,13 @@ results.
 
 This means that annotations will be created/deleted at the token offsets of the selected search
 results.
-Search results can be selected via the checkbox on the left. Per default all search
-results are selected. If a result originates from a document which the user has already marked as
-*finished*, there is no checkbox since such documents cannot be modified anyway.
+Search results can be selected via the checkbox on the left.
+Per default all search results are selected.
+If a result originates from a document which the user has already marked as *finished*, there is no checkbox since such documents cannot be modified anyway.
 
 The currently selected annotation in the annotation editor serves as template for the annotations
-that are to be created/deleted. Note that selecting an annotation first is necessary for
-creating/deleting annotations in this way.
+that are to be created/deleted.
+Note that selecting an annotation first is necessary for creating/deleting annotations in this way.
 
 NOTE: The slots and slot fillers of slot features are not copied from the template to newly created
       annotations.
@@ -59,14 +74,13 @@ NOTE: The slots and slot fillers of slot features are not copied from the templa
 Clicking on the create settings button (cog wheel) shows additional options:
 
 * **Override existing** will override an existing annotation of the same layer at a target location.
-    If this option is disabled, annotations of the same layer will be stacked if stacking is enabled
-    for this layer. Otherwise no annotation will be created.
+    If this option is disabled, annotations of the same layer will be stacked if stacking is enabled for this layer.
+    Otherwise no annotation will be created.
 
 Clicking on the delete settings button (cog wheel) shows additional options:
 
 * **Delete only matching feature values** will only delete annotations at search results that
-    exactly match the currently selected annotation including all feature values. If this option is
-    disabled all annotations with the same layer as the currently selected annotation will be
-    deleted regardless of their feature values. Note that slot features are not taken into account
-    when matching the selected annotation against candidates to be deleted.
+    exactly match the currently selected annotation including all feature values.
+    If this option is disabled all annotations with the same layer as the currently selected annotation will be deleted regardless of their feature values.
+    Note that slot features are not taken into account when matching the selected annotation against candidates to be deleted.
 

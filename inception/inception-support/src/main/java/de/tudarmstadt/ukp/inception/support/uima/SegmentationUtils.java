@@ -20,7 +20,8 @@ package de.tudarmstadt.ukp.inception.support.uima;
 import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.createSentence;
 import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.createToken;
 import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.selectSentences;
-import static org.apache.uima.fit.util.CasUtil.getType;
+import static java.text.BreakIterator.DONE;
+import static java.util.Locale.US;
 
 import java.text.BreakIterator;
 import java.util.Locale;
@@ -28,7 +29,6 @@ import java.util.Locale;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
 
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.inception.support.text.TrimUtils;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 
@@ -41,13 +41,13 @@ public abstract class SegmentationUtils
 
     public static void segment(CAS aCas)
     {
-        splitSentences(aCas, null);
+        splitSentences(aCas);
         tokenize(aCas);
     }
 
     public static void splitSentences(CAS aCas)
     {
-        splitSentences(aCas, null);
+        splitSentences(aCas, 0, aCas.getDocumentText().length(), null);
     }
 
     public static void splitSentences(CAS aCas, int aBegin, int aEnd)
@@ -56,85 +56,111 @@ public abstract class SegmentationUtils
         bi.setText(aCas.getDocumentText().substring(aBegin, aEnd));
         var last = bi.first();
         var cur = bi.next();
-        while (cur != BreakIterator.DONE) {
-            var sentence = aCas.createAnnotation(getType(aCas, Sentence.class), last + aBegin,
-                    cur + aBegin);
-            sentence.trim();
-            if (sentence.getBegin() != sentence.getEnd()) {
-                aCas.addFsToIndexes(sentence);
+        while (cur != DONE) {
+            var span = new int[] { last + aBegin, cur + aBegin };
+            TrimUtils.trim(aCas.getDocumentText(), span);
+            if (!isEmpty(span[0], span[1])) {
+                aCas.addFsToIndexes(createSentence(aCas, span[0], span[1]));
             }
             last = cur;
             cur = bi.next();
         }
     }
 
-    public static void splitSentences(CAS aCas, Iterable<? extends AnnotationFS> aZones)
+    public static void splitSentences(CAS aCas, int aBegin, int aEnd,
+            Iterable<? extends AnnotationFS> aZones)
     {
         if (aCas.getDocumentText() == null) {
             return;
         }
 
-        int[] sortedZoneBoundaries = null;
-
-        if (aZones != null) {
-            var zoneBoundaries = new IntArrayList();
-            for (var zone : aZones) {
-                zoneBoundaries.add(zone.getBegin());
-                zoneBoundaries.add(zone.getEnd());
-            }
-
-            sortedZoneBoundaries = zoneBoundaries.intStream().distinct().sorted().toArray();
-        }
-
-        if (sortedZoneBoundaries == null || sortedZoneBoundaries.length < 2) {
-            sortedZoneBoundaries = new int[] { 0, aCas.getDocumentText().length() };
-        }
+        int[] sortedZoneBoundaries = sortedZoneBoundaries(aCas, aBegin, aEnd, aZones);
 
         for (int i = 1; i < sortedZoneBoundaries.length; i++) {
             var begin = sortedZoneBoundaries[i - 1];
             var end = sortedZoneBoundaries[i];
-            var bi = BreakIterator.getSentenceInstance(Locale.US);
-            bi.setText(aCas.getDocumentText().substring(begin, end));
-            var last = bi.first();
-            var cur = bi.next();
-            while (cur != BreakIterator.DONE) {
-                var span = new int[] { last + begin, cur + begin };
-                TrimUtils.trim(aCas.getDocumentText(), span);
-                if (!isEmpty(span[0], span[1])) {
-                    aCas.addFsToIndexes(createSentence(aCas, span[0], span[1]));
-                }
-                last = cur;
-                cur = bi.next();
-            }
+
+            splitSentences(aCas, begin, end);
         }
     }
 
     public static void tokenize(CAS aCas)
     {
+        tokenize(aCas, 0, aCas.getDocumentText().length(), null);
+    }
+
+    public static void tokenize(CAS aCas, int aBegin, int aEnd,
+            Iterable<? extends AnnotationFS> aZones)
+    {
         if (aCas.getDocumentText() == null) {
             return;
         }
 
-        BreakIterator bi = BreakIterator.getWordInstance(Locale.US);
-        for (AnnotationFS s : selectSentences(aCas)) {
-            bi.setText(s.getCoveredText());
-            int last = bi.first();
-            int cur = bi.next();
-            while (cur != BreakIterator.DONE) {
-                int[] span = new int[] { last, cur };
-                TrimUtils.trim(s.getCoveredText(), span);
-                if (!isEmpty(span[0], span[1])) {
-                    aCas.addFsToIndexes(
-                            createToken(aCas, span[0] + s.getBegin(), span[1] + s.getBegin()));
+        var sortedZoneBoundaries = sortedZoneBoundaries(aCas, aBegin, aEnd, aZones);
+        var zbi = 0;
+
+        for (var s : selectSentences(aCas)) {
+            var innerZoneBoundariesBuffer = new IntArrayList();
+            innerZoneBoundariesBuffer.add(s.getBegin());
+            innerZoneBoundariesBuffer.add(s.getEnd());
+
+            while (zbi < sortedZoneBoundaries.length && sortedZoneBoundaries[zbi] < s.getEnd()) {
+                if (sortedZoneBoundaries[zbi] >= s.getBegin()) {
+                    innerZoneBoundariesBuffer.add(sortedZoneBoundaries[zbi]);
                 }
-                last = cur;
-                cur = bi.next();
+                zbi++;
             }
+
+            var innerZoneBoundaries = innerZoneBoundariesBuffer.intStream()
+                    .filter(i -> aBegin <= i && i <= aEnd) //
+                    .distinct().sorted().toArray();
+
+            for (int i = 1; i < innerZoneBoundaries.length; i++) {
+                var begin = innerZoneBoundaries[i - 1];
+                var end = innerZoneBoundaries[i];
+                tokenize(aCas, begin, end);
+            }
+        }
+    }
+
+    private static void tokenize(CAS aCas, int aBegin, int aEnd)
+    {
+        var bi = BreakIterator.getWordInstance(US);
+        bi.setText(aCas.getDocumentText().substring(aBegin, aEnd));
+        var last = bi.first();
+        var cur = bi.next();
+        while (cur != DONE) {
+            var span = new int[] { last + aBegin, cur + aBegin };
+            TrimUtils.trim(aCas.getDocumentText(), span);
+            if (!isEmpty(span[0], span[1])) {
+                aCas.addFsToIndexes(createToken(aCas, span[0], span[1]));
+            }
+            last = cur;
+            cur = bi.next();
         }
     }
 
     public static boolean isEmpty(int aBegin, int aEnd)
     {
         return aBegin >= aEnd;
+    }
+
+    private static int[] sortedZoneBoundaries(CAS aCas, int aBegin, int aEnd,
+            Iterable<? extends AnnotationFS> aZones)
+    {
+        var zoneBoundaries = new IntArrayList();
+        zoneBoundaries.add(aBegin);
+        zoneBoundaries.add(aEnd);
+
+        if (aZones != null) {
+            for (var zone : aZones) {
+                zoneBoundaries.add(zone.getBegin());
+                zoneBoundaries.add(zone.getEnd());
+            }
+        }
+
+        return zoneBoundaries.intStream() //
+                .filter(i -> aBegin <= i && i <= aEnd) //
+                .distinct().sorted().toArray();
     }
 }

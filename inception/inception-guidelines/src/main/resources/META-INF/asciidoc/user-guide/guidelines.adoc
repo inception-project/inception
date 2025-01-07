@@ -1,3 +1,20 @@
+// Licensed to the Technische Universität Darmstadt under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The Technische Universität Darmstadt 
+// licenses this file to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.
+//  
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+[sect_annotation_guidelines]
 = Annotation Guidelines
 
 Providing your annotation team with guidelines helps assuring that every team member knows exactly
@@ -6,6 +23,6 @@ what is expected of them.
 *Annotators* can access the guidelines via the *Guidelines* button on the *annotation page*.
 
 *Project managers* can provide these guidelines via the *Guidelines* tab in the 
-*project settings*. Guidelines are provided as files (e.g. PDF files). To upload guidelines, 
-click on *Choose files*, select a file from your local disc and then click *Import guidelines*. 
+*project settings*.
+Guidelines are provided as files (e.g. PDF files). To upload guidelines, click on *Choose files*, select a file from your local disc and then click *Import guidelines*. 
 Remove a guideline document by selecting it and pressing the *Delete* button.

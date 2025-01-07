@@ -99,7 +99,7 @@ public class CompactSerializerV2Impl
                 continue;
             }
 
-            layers.add(new CompactLayer(layer.getId(), layer.getUiName()));
+            layers.add(new CompactLayer(layer.getId(), layer.getUiName(), layer.getType()));
 
             for (VSpan vspan : aVDoc.spans(layer.getId())) {
                 var cspan = renderSpan(aRequest, vspan);

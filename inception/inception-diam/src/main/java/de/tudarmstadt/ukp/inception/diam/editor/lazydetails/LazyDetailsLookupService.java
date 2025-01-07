@@ -35,12 +35,12 @@ import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 public interface LazyDetailsLookupService
 {
     List<LazyDetailGroup> lookupLazyDetails(IRequestParameters request, VID paramId,
-            CasProvider aCas, SourceDocument aSourceDocument, User aUser, int windowBeginOffset,
-            int windowEndOffset)
+            CasProvider aCas, SourceDocument aSourceDocument, User aDataOwner,
+            int windowBeginOffset, int windowEndOffset)
         throws AnnotationException, IOException;
 
     List<VLazyDetailGroup> lookupAnnotationLevelDetails(VID aVid, SourceDocument aDocument,
-            User aUser, AnnotationLayer aLayer, CAS aCas)
+            User aDataOwner, AnnotationLayer aLayer, CAS aCas)
         throws AnnotationException, IOException;
 
     List<VLazyDetailGroup> lookupFeatureLevelDetails(VID aVid, CAS aCas,

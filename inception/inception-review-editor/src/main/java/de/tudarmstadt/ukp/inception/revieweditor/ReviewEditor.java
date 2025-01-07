@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.revieweditor;
 
 import java.io.IOException;
+import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -30,6 +31,7 @@ import org.wicketstuff.event.annotation.OnEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorBase;
+import de.tudarmstadt.ukp.inception.editor.ContextMenuLookup;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
@@ -95,4 +97,9 @@ public class ReviewEditor
         }
     }
 
+    @Override
+    public Optional<ContextMenuLookup> getContextMenuLookup()
+    {
+        return Optional.empty();
+    }
 }

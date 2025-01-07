@@ -23,6 +23,7 @@ import java.io.IOException;
 
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.request.IRequestParameters;
 import org.apache.wicket.request.Request;
 import org.springframework.core.annotation.Order;
@@ -76,11 +77,19 @@ public class CreateSpanAnnotationHandler
             var page = getPage();
             page.ensureIsEditable();
 
-            var cas = page.getEditorCas();
             var state = getAnnotatorState();
+            var layer = state.getDefaultAnnotationLayer();
+            if (layer == null) {
+                page.info(
+                        "Cannot create annotation: this project does not define any span annotation layers.");
+                aTarget.addChildren(page, IFeedback.class);
+                return new DefaultAjaxResponse(getAction(aRequest));
+            }
+
+            var cas = page.getEditorCas();
             var range = getRangeFromRequest(state, aRequest.getRequestParameters(), cas);
 
-            var adapter = schemaService.getAdapter(state.getDefaultAnnotationLayer());
+            var adapter = schemaService.getAdapter(layer);
 
             var request = new CreateSpanAnnotationRequest(state.getDocument(),
                     state.getUser().getUsername(), cas, range.getBegin(), range.getEnd());

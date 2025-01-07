@@ -1,39 +1,84 @@
+// Licensed to the Technische Universität Darmstadt under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The Technische Universität Darmstadt 
+// licenses this file to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.
+//  
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 [[sect_projects_layers]]
 = Layers 
 
-All annotations belong to an annotation *layer*. Each layer has a structural *type* that defines if it is a *span*, a *relation*, or a *chain*. It also defines how the annotations behave and what kind of features it carries.
+[.i7n-assistant]
+--
+**Annotation layers** define the structure of the annotations in a project.
+Each layer belongs to structural **type** that defines whether it is a span, a relation, a chain, or a document metadata layer.
+**Span layers** are used to annotate continuous segments of text.
+**Relation layers** are used to annotate relations between spans.
+**Chain layers** are used to annotate directed sequences of connected spans.
+**Document metadata layers** are used to annotate document-level information.
+Each layer can have **features** that carry additional information about the annotations.
+Typically, a layer will have at least one feature that carries the annotation label.
+--
+
+== Adding a pre-defined layer
+
+[.i7n-assistant]
+--
+{product-name} comes with a set of pre-defined layers that allow you to start annotating immediately.
+To add a pre-defined layer to your project, use the **Add** button at the top of the **Layers** tab in your project settings.
+Once a layer has been added, you can configure its features and behaviors.
+--
 
 == Creating a custom layer
 
-This section provides a short walk-through on the creation of a custom layer. The following sections act as reference documentation providing additional details on each step. In the following example, we will create a custom layer called *Sentiment* with a feature called *Polarity* that can be *negative*, *neutral*, or *positive*.
+[.i7n-assistant]
+--
+To create a cuastom layer, use the **Create** button at the top of the **Layers** tab in your project settings.
+Set at least a **name** and a **type** for the layer in order to save and thereby create the layer.
+Once a layer has been created, you can configure its features and behaviors.
+--
+
+In the following example, we will create a custom layer called *Sentiment* with a feature called *Polarity* that can be *negative*, *neutral*, or *positive*.
 
 . Create the layer _Sentiment_
   * Go to the *Layers* tab in your project's settings and press the *Create layer* button
   * Enter the name of the layer in *Layer name*: _Sentiment_
   * Choose the *type* of the layer: _Span_
   * Enable *Allow multiple tokens* because we want to mark sentiments on spans longer than a single token.
-  * Press the *Save layer* button
+  * Click the *Save layer* button
 . Create the feature _Polarity_
-  * Press the *New feature* button
+  * Click the *New feature* button
   * Choose the *type* of the feature: _Primitive: String_
   * Enter the *name* of the feature: _Polarity_
-  * Press *Save feature*
+  * Click *Save feature*
 . Create the tagset _Polarity values_
   * Go to the *Tagsets* tab and press *Create tagset*
   * Enter the *name* of the tagset: _Polarity values_
-  * Press *Save tagset*
-  * Press *Create tag*, enter the *name* of the tag: _negative_, press *Save tag*
-  * Repeat for _neutra_ and _positive_
+  * Click *Save tagset*
+  * Click *Create tag*, enter the *name* of the tag: _negative_, press *Save tag*
+  * Repeat for _neutral_ and _positive_
 . Assign the tagset _Polarity values_ to the feature _Polarity_
   * Back in the *Layers* tab, select the layer: _Sentiment_ and select the feature: _Polarity_
   * Set the *tagset* to _Polarity values_
-  * Press *Save feature*
+  * Click *Save feature*
 
 Now you have created your first custom layer.
 
 == Built-in layers
 
-{product-name} comes with a set of built-in layers that allow you to start annotating immediately. Also, many import/export formats only work with these layers as their semantics are known. For this reason, the ability to customize the behaviors of built-in layers is limited and it is not possible to extend them with custom features.
+{product-name} comes with a set of built-in layers that allow you to start annotating immediately. Also, many import/export formats only work with these layers as their semantics are known.
+For this reason, the ability to customize the behaviors of built-in layers is limited and it is not possible to extend them with custom features.
+
+NOTE: The built-in layers are a subset of the pre-defined layers.
 
 .Built-in layers
 [cols="1,2,2v", options="header"]
@@ -90,22 +135,24 @@ The coloring of the layers signal the following:
 | disabled annotation layer
 |===
 
-To create a custom layer, select *Create Layer* in the *Layers* frame. Then, the following frame will be displayed. 
+To create a custom layer, select *Create Layer* in the *Layers* frame.
+Then, the following frame will be displayed. 
 
 .Exporting layers
 At times, it is useful to export the configuration of a layer or of all layers, e.g. to copy them
-to another project. There are two options:
+to another project.
+There are two options:
 
-* **JSON (selected layer)**: exports the currently selected layer as JSON. If the layer depends on
-  other layers, these are included as well in the JSON export.
+* **JSON (selected layer)**: exports the currently selected layer as JSON.
+  If the layer depends on other layers, these are included as well in the JSON export.
 * **UIMA (all layers)**: exports a UIMA type system description containing all layers of the project.
   This includes built-in types (i.e. DKPro Core types) and it may include additional types required
-  to allow loading the type system description file again. However, this type system description
-  is usually not sufficient to interpret XMI files produced by {product-name}. Be sure to load XMI
-  files together with the type system description file which was included in the XMI export.
+  to allow loading the type system description file again.
+  However, this type system description is usually not sufficient to interpret XMI files produced by {product-name}.
+  Be sure to load XMI files together with the type system description file which was included in the XMI export.
   
-Both types of files can be imported back into {product-name}. Note that any built-in types that
-have have been included in the files are ignored on import.
+Both types of files can be imported back into {product-name}.
+Note that any built-in types that have have been included in the files are ignored on import.
 
 [[sect_projects_layers_properties]]
 == Properties 
@@ -115,43 +162,28 @@ have have been included in the files are ignored on import.
 |====
 | Property | Description
 
-| Layer name
-| The name of the layer (obligatory)
-
-| Description
-| A description of the layer. This information will be shown in a tooltip when the mouse hovers over the layer name in the annotation detail editor panel.
-
-| Enabled
-| Whether the layer is enabled or not. Layers can currently not be deleted, but they can be disabled.
-|====
-
-NOTE: When a layer is first created, only ASCII characters are allowed for the layer name because the internal UIMA type name is derived from the initial layer name. After the layer has been created, the name can be changed arbitrarily. The internal UIMA type name will not be updated. The internal UIMA name is
-e.g. used when exporting data or in constraint rules.
-
-image::layer_details.png[align="center"]
-
-[[sect_projects_layers_technical_properties]]
-== Technical Properties 
-
-In the frame *Technical Properties*, the user may select the type of annation that will be made with this layer: span, relation, or chain.
-
-.Technical Properites
-[cols="1v,2", options="header"]
-|====
-| Property | Description
-
-| Internal name
-| Internal UIMA type name
+| Name
+| The name of the layer (obligatory).
 
 | Type
-| The type of the layer (obligatory, see below)
+| The type of the layer (see below).
 
-| Attach to layer
-_(Relations)_
-| Determines which span layer a relation attaches to. Relations can only be created between annotations of this span layer.
+| Description
+| A description of the layer. 
+This information will be shown in a tooltip when the mouse hovers over the layer name in the annotation detail editor panel.
+
+| Enabled
+| Whether the layer is enabled or not. 
+Layers can currently not be deleted, but they can be disabled.
 |====
 
-The layer type defines the structure of the layer. Three different types are supported: spans, relations, and chains.
+NOTE: When a layer is first created, only ASCII characters are allowed for the layer name because the internal UIMA type name is derived from the initial layer name.
+After the layer has been created, the name can be changed arbitrarily.
+The internal UIMA type name will not be updated.
+The internal UIMA name is e.g. used when exporting data or in constraint rules.
+
+The layer type defines the structure of the layer.
+Three different types are supported: spans, relations, and chains.
 
 .Layer types
 [cols="1,2,3", options="header"]
@@ -161,23 +193,26 @@ The layer type defines the structure of the layer. Three different types are sup
 | Example
 
 | Span
-| Continuous segment of text delimited by a start and end character offset. The example shows two spans.
-| image:project_layer_type_span.png[]
+| Continuous segment of text delimited by a start and end character offset.
+The example shows two spans.
+| image:images/project_layer_type_span.png[]
 
 | Relation
-| Binary relation between two spans visualized as an arc between spans. The example shows a relation between two spans.
-| image:project_layer_type_relation.png[]
+| Binary relation between two spans visualized as an arc between spans.
+The example shows a relation between two spans.
+For relation annotations the type of the spans which are to be connected can be chosen in the field *Attach to layer*.
+Here, only non-default layers are displayed.
+To create a relation, first the span annotation needs to be created.
+
+| image:images/project_layer_type_relation.png[]
 
 | Chain
-| Directed sequence of connected spans in which each span connects to the following one. The example shows a single chain consisting of three connected spans.
-| image:project_layer_type_chain.png[]
+| Directed sequence of connected spans in which each span connects to the following one.
+The example shows a single chain consisting of three connected spans.
+| image:images/project_layer_type_chain.png[]
 |====
 
-For relation annotations the type of the spans which are to be connected can be chosen in the field *Attach to layer*. Here, only non-default layers are displayed. To create a relation, first the span annotation needs to be created.
-
-NOTE: Currently for each span layer there can be at most one relation layer attaching to it.
-
-NOTE: It is currently not possible to create relations between spans in different layers. For example if you define span layers called *Men* and *Women*, it is impossible to define a relation layer *Married to* between the two. To work around this limitation, create a single span layer *Person* with a feature *Gender* instead. You can now set the feature *Gender* to *Man* or *Woman* and eventually define a relation layer *Married to* attaching to the *Person* layer.
+image::images/layer_properties.png[align="center"]
 
 [[sect_projects_layers_behaviours]]
 == Behaviours
@@ -188,280 +223,104 @@ NOTE: It is currently not possible to create relations between spans in differen
 | Behavior | Description
 
 | Read-only
-| The layer may be viewed but not edited.
+| Annotations on this layer may be viewed but not edited.
 
 | Show text on hover
-| Whether the text covered by the annotation is shown in the popup panel that appears when hovering with the mouse over an annotation label. Note that this popup may not be supported by all annotation editors.
+| Whether the text covered by the annotation is shown in the popup panel that appears when hovering with the mouse over an annotation label. 
+Note that this popup may not be supported by all annotation editors.
 
 | Render mode (relation)
-| Determines when to render relations as arcs. Possible settings are **Always** (always render arcs), **Never** (never render arcs), and **When selected** (render arcs only when one of the relation endpoints or the relation itself is selected). Note that this setting is only available for relation layers.
+| Determines when to render relations as arcs. 
+Possible settings are **Always** (always render arcs), **Never** (never render arcs), and **When selected** (render arcs only when one of the relation endpoints or the relation itself is selected). 
+Note that this setting is only available for relation layers.
 
 | Validation
 | When pre-annotated data is imported or when the  behaviors settings are changed, it is possible that annotations exist which are not conforming to the current behavior settings. This setting controls when a validation of annotations is performed. Possible settings are **Never** (no validation when a user marks a document as finished) and **Always** (validation is performed when a user marks a document as finished). Mind that changing the document state via the Monitoring page does not trigger a validation. Also, problematic annotations are highlighted using an error marker in the annotation interface. **NOTE:** the default setting for new projects/layers is **Always**, but for any existing projects or for projects imported from versions of {product-name} where this setting did not exist yet, the setting is initialized with **Never**.
 
 | Granularity
 _(span, chain)_
-| The granularity controls at which level annotations can be created. When set to **Character-level**, annotations can be created anywhere. Zero-width annotations are permitted. When set to **Token-level** or **Sentence-level** annotation boundaries are forced to coincide with token/sentence boundaries. If the selection is smaller, the annotation is expanded to the next larger token/sentence covering the selection. Again, zero-width annotations are permitted. When set to **Single tokens only** may be applied only to a single token. If the selection covers multiple tokens, the annotation is reduced to the first covered token at a time. Zero-width annotations are not permitted in this mode. Note that
-in order for the **Sentence-level** mode to allow annotating multiple sentences, the 
-**Allow crossing sentence boundary** setting must be enabled, otherwise only individual sentences
-can be annotated.
+| The granularity controls at which level annotations can be created. When set to **Character-level**, annotations can be created anywhere. Zero-width annotations are permitted.
+When set to **Token-level** or **Sentence-level** annotation boundaries are forced to coincide with token/sentence boundaries.
+If the selection is smaller, the annotation is expanded to the next larger token/sentence covering the selection.
+Again, zero-width annotations are permitted. When set to **Single tokens only** may be applied only to a single token.
+If the selection covers multiple tokens, the annotation is reduced to the first covered token at a time. 
+Zero-width annotations are not permitted in this mode.
+Note that in order for the **Sentence-level** mode to allow annotating multiple sentences, the **Allow crossing sentence boundary** setting must be enabled, otherwise only individual sentences can be annotated.
 
 | Overlap
-| This setting controls if and how annotations may overlap. For **span layers**, overlap is defined in terms of the span offsets. If any character offset that is part of span A is also part of span B, then they are considered to be **overlapping**. If two spans have exactly the same offsets, then they are considered to be **stacking**. For **relation layers**, overlap is defined in terms of the end points of the relation. If two relations share any end point (source or target), they are considered to be **overlapping**. If two relations have exactly the same end points, they are considered to be **stacking**. Note that some export formats are unable to deal with stacked or overlapping annotations. E.g. the CoNLL formats cannot deal with overlapping or stacked named entities.
+| This setting controls if and how annotations may overlap.
+For **span layers**, overlap is defined in terms of the span offsets. 
+If any character offset that is part of span *A* is also part of span *B*, then they are considered to be **overlapping**.
+If two spans have exactly the same offsets, then they are considered to be **stacking**.
+For **relation layers**, overlap is defined in terms of the end points of the relation.
+If two relations share any end point (source or target), they are considered to be **overlapping**.
+If two relations have exactly the same end points, they are considered to be **stacking**.
+Note that some export formats are unable to deal with stacked or overlapping annotations.
+E.g. the CoNLL formats cannot deal with overlapping or stacked named entities.
 
 | Allow crossing sentence boundary
 | Allow annotations to cross sentence boundaries.
 
 | Behave like a linked list
 _(chain)_
-| Controls what happens when two chains are connected with each other. If this option is *disabled*, then the two entire chains will be merged into one large chain. Links between spans will be changed so that each span connects to the closest following span -  no arc labels are displayed. If this option is *enabled*, then the chains will be split if necessary at the source and target points, reconnecting the spans such that exactly the newly created connection is made - arc labels are available.
+| Controls what happens when two chains are connected with each other.
+If this option is *disabled*, then the two entire chains will be merged into one large chain.
+Links between spans will be changed so that each span connects to the closest following span -  no arc labels are displayed.
+If this option is *enabled*, then the chains will be split if necessary at the source and target points, reconnecting the spans such that exactly the newly created connection is made - arc labels are available.
 |====
 
-[[sect_projects_layers_features]]
-== Features
-
-image::layer_feature_details.png[align="center"]
-
-In this section, features and their properties can be configured. 
-
-NOTE: When a feature is first created, only ASCII characters are allowed for the feature name because the internal UIMA name is derived from the initial layer name. After the feature has been created, the name can be changed arbitrarily. The internal UIMA feature name will not be updated. The internal UIMA name is
-e.g. used when exporting data or in constraint rules.
-
-NOTE: Features cannot be added to or deleted from built-in layers.
-
-The following feature types are supported.
-
-.Feature types
-[cols="1v,2", options="header"]
-|====
-| Type | Description
-
-| `uima.cas.String`
-| Textual feature that can optionally be controlled by a tagset. It is rendered as a text field or as a combobox if a tagset is defined.
-
-| `uima.cas.Boolean`
-| Boolean feature that can be true or false and is rendered as a checkbox.
-
-| `uima.cas.Integer`
-| Numeric feature for integer numbers.
-
-| `uima.cas.Float`
-| Numeric feature for decimal numbers.
-
-| `uima.tcas.Annotation`
-_(Span layers)_
-| Link feature that can point to any arbitrary span annotation
-
-| _other span layers_
-_(Span layers)_
-| Link feature that can point only to the selected span layer.
-|====
-
-
-.General feature properties
-[cols="1v,2", options="header"]
-|====
-| Property | Description
-
-| Internal name
-| Internal UIMA feature name
-
-| Type
-| The type of the feature (obligatory, see below)
-
-| Name
-| The name of the feature (obligatory)
-
-| Description
-| A description that is shown when the mouse hovers over the feature name in the annotation detail editor panel.
-
-| Enabled
-| Features cannot be deleted, but they can be disabled
-
-| Show in label
-| Whether the feature value is shown in the annotation label. If this is disabled, the feature is only visible in the annotation detail editor panel.
-
-| Show on hover
-| Whether the feature value is shown in the popup panel that appears when hovering with the mouse over an annotation label. Note that this popup may not be supported by all annotation editors.
-
-| Remember
-| Whether the annotation detail editor should carry values of this feature
-over when creating a new annotation of the same type. This can be useful when creating many annotations
-of the same type in a row.
-
-| Curatable
-| Whether the feature is considered when comparing whether annotations are equal and can be
-pre-merged during curation. This flag is enabled by default. When it is disabled, two annotations
-will be treated as the same for the purpose of curation, even if the feature value is different.
-The feature value will also not be copied to a pre-merged or manually merged annotation. Disabling
-this flag on all features of a layer will cause annotations to be only compared by their positions.
-|====
-
-
-=== String features
-
-A string feature either holds a short tag (optionally from a restricted tag set) or a note (i.e.
-a multi-line text).
-
-When no tagset is associated with the string feature, it is displayed to the user simply as a
-single line input field. You can enable the *multiple rows* option to turn it into a multi-line
-text area. If you do so, additional options appear allowing to configure the size of the text area
-which can be fixed or dynamic (i.e. automatically adjust to the text area content).
-
-Optionally, a <<sect_projects_tagsets,tagset>> can be associated with a string feature (unless you enabled multiple rows). If string feature is associated with a tagset, there are different options
-as to which type of *editor type* (i.e. input field) is displayed to the user.
-
-.Editor types for string features with tagsets
-[cols="1v,2", options="header"]
-|====
-| Editor type | Description
-
-| Auto
-| An editor is chosen automatically depending on the size of the tagset and whether annotators can add to it.
-
-| Radio group
-| Each tag is shown as a button. Only one button can be active at a time. Best for quick access to small tagsets. Does not allow annotators to add new tags (yet).
-
-| Combo box
-| A text field with auto-completion and button that opens a drop-down list showing all possible tags and their descriptions. Best for mid-sized tagsets.
-
-| Autocomplete
-| A text field with auto-completion. A dropdown opens when the user starts typing into the field and it displays matching tags. There is no way to browse all available tags. Best for large tagsets.
-
-|====
-
-The tagset size thresholds used by the *Auto* mode to determine which editor to choose can be
-globally configured by an administrator via the <<admin_guide.adoc#sect_settings_annotation,`settings.properties`>>
-file. Because the radio group editor does not support adding new tags (yet), it chosen automatically
-only if the associated tagset does not allow annotators to add new tags.
-
-.String feature properties
-[cols="1v,2", options="header"]
-|====
-| Property | Description
-
-| Tagset
-| The tagset controlling the possible values for a string feature.
-
-| Show only when constraints apply
-| Display the feature only if any constraint rules apply to it (cf. <<sect_constraints_conditional_features>>)
-
-| Editor type
-| The type of input field shown to the annotators.
-
-| Multiple Rows
-| If enabled the textfield will be replaced by a textarea which expands on focus. This also enables options to set the size of the textarea and disables tagsets.
-
-| Dynamic Size
-| If enabled the textfield will dynamically resize itself based on the content. This disables collapsed and expanded row settings. 
-
-| Collapsed Rows
-| Set the number of rows for the textarea when it is collapsed and not focused.
-
-| Expanded Rows
-| Set the number of rows for the textarea when it is expanded and not focused.
-|====
-
-
-=== Number features
-
-.Number feature properties
-[cols="1v,2", options="header"]
-|====
-| Property | Description
-
-| Limited
-| If enabled a minimum and maximum value can be set for the number feature.
-
-| Minimum
-| Only visible if *Limited* is enabled. Determines the minimum value of the limited number feature.
-
-| Maximum
-| Only visible if *Limited* is enabled. Determines the maximum value of the limited number feature.
-
-| Editor Type
-| Select which editor should be used for modifying this features value.
-|====
-
-=== Boolean features
-
-=== Link features
-
-.Link feature properties
-[cols="1v,2", options="header"]
-|====
-| Property | Description
-
-| Role labels
-| Allows users to add a role label to each slot when linking anntations. 
-  If disabled the UI labels of annotations will be displayed instead of role labels. 
-  This property is enabled by default.
-
-| Multiplicity
-| Determines how links are compared to each other e.g. when calulating agreement or when merging annotations during curation.
-  Use *Target can be linked in multiple different roles* if a link target can appear in multiple roles with respect to the same source span.
-  In this mode, if an annotator links multiple targets using the same role, the links will be considered stacked and not be not auto-merged by curation or used for agreement calculation.
-  Use *Target should be linked in only one role* if you expect that a link target should only appear in a single roles with respect to the same source span.
-  In this mode, if an annotator links the same target in multiple roles, the links will be considered stacked and not be auto-merged by curation or used for agreement calculation.
-  Use *Target can be linked in multiple roles (same or different)* if you expect that a link target should be linked multiple times with different roles as well as different targets can be linked with the same role.
-  In this mode, there is no stacking.
-
-| Tagset
-| The tagset controlling the possible values for the link roles.
-
-| Default slots
-| For each of the specificed roles, an empty slot will be visible in the UI. 
-  This can save the annotator time to create a slot for frequently used slots.
-|====
+image::images/layer_behaviours.png[align="center"]
 
 === Key bindings
 
-Some types of features support key bindings. This means, you can assigning a combination of keys to a
-particular feature value. Pressing these keys on the annotation page while a annotation is selected
-will set the feature to the assigned value. E.g. you could assign the key combo `CTRL P` to the 
-value `PER` for the `value` feature on the *Named Entity* layer. So when you create a *Named Entity*
-annotation and then press the `CTRL P`, the value would be set to `PER`.
+Key bindings can be used to quickly set feature values on the currently selected annotation.
+They are supported for certain feature types such as string and concept features.
+E.g. you could assign the shortcut `CTRL P` to the value `PER` for the *value* feature of the *Named Entity* layer.
+So when you create a *Named Entity* annotation and then press the kbd:[CTRL + P], the value would be set to `PER`.
 
-If the focus is on an input field, the key bindings are suppressed. That means, you could even
-assign single key shortcuts like `p` for `PER` while still be able to use `p` when entering text 
-manually into an input field. Normally, the focus would jump directly to the first feature editor
-after selecting an annotation. But this is not the case if any features have key bindings defined,
-because it would render the key bindings useless (i.e. you would have to click outside of the
-feature editor input field so it looses the focus, thus activating the key bindings).
+NOTE: If the input focus is on an input field, the key bindings are suppressed.
+      That means, you could even assign single key shortcuts like kbd:[p] for `PER` while still be able to use kbd:[p] when entering text manually into an input field.
+      Normally, the focus would jump directly to the first feature editor after selecting an annotation. 
+      But this is not the case if any features have key bindings, because it would render the key bindings useless (i.e. you would have to click outside of the feature editor input field so it looses the focus, thus activating the key bindings).
 
 When defining a key binding, you have to enter a key combo consisting of one or more of the 
 following key names:
 
-* Modifier keys: `Ctrl`, `Shift`, `Alt`, `Meta`
-* Letter keys: `a`, `b`, `c`, `d`, `e`, `f`, `g`, `h`, `i`, `j`, `k`, `l`, `m`, `n`, `o`, `p`, `q`, `r`, `s`, `t`, `u`, `v`, `w`, `x`, `y`, `z`
-* Number keys: `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`
-* Function keys: `F1`, `F2`, `F3`, `F4`, `F5`, `F6`, `F7`, `F8`, `F9`, `F10`, `F11`, `F12`
-* Navigation keys: `Home`, `End`, `Page_up`, `Page_down`, `Left`, `Up`, `Right`, `Down`
-* Other keys: `Escape`, `Tab`, `Space`, `Return`, `Enter`, `Backspace`, `Scroll_lock`, `Caps_lock`, `Num_lock`, `Pause`, `Insert`, `Delete`
+* Modifier keys: kbd:[Ctrl], kbd:[Shift], kbd:[Alt], kbd:[Meta]
+* Letter keys: kbd:[a], kbd:[b], kbd:[c], kbd:[d], kbd:[e], kbd:[f], kbd:[g], kbd:[h], kbd:[i], kbd:[j], kbd:[k], kbd:[l], kbd:[m], kbd:[n], kbd:[o], kbd:[p], kbd:[q], kbd:[r], kbd:[s], kbd:[t], kbd:[u], kbd:[v], kbd:[w], kbd:[x], kbd:[y], kbd:[z]
+* Number keys: kbd:[0], kbd:[1], kbd:[2], kbd:[3], kbd:[4], kbd:[5], kbd:[6], kbd:[7], kbd:[8], kbd:[9]
+* Function keys: kbd:[F1], kbd:[F2], kbd:[F3], kbd:[F4], kbd:[F5], kbd:[F6], kbd:[F7], kbd:[F8], kbd:[F9], kbd:[F10], kbd:[F11], kbd:[F12]
+* Navigation keys: kbd:[Home], kbd:[End], kbd:[Page_up], kbd:[Page_down], kbd:[Left], kbd:[Up], kbd:[Right], kbd:[Down]
+* Other keys: kbd:[Escape], kbd:[Tab], kbd:[Space], kbd:[Return], kbd:[Enter], kbd:[Backspace], kbd:[Scroll_lock], kbd:[Caps_lock], kbd:[Num_lock], kbd:[Pause], kbd:[Insert], kbd:[Delete]
 
 Typically you would combine zero or more modifier keys with a *regular* key (letter, number, 
 function key, etc). A combination of multiple number or letter keys does not work.
 
-NOTE: Mind that you need to take care not to define the same key binding multiple times. Duplicate
-      definitions are only sensible if you can ensure that the features on which they are defined will never
-      be visible on screen simultaneously. 
+NOTE: Mind that you need to take care not to define the same key binding multiple times.
+Duplicate definitions are only sensible if you can ensure that the features on which they are defined will never be visible on screen simultaneously. 
       
 === Coloring rules
 
-Coloring rules can be used to control the coloring of annotations. A rule consists of two parts:
-1) a regular expression that matches the label of an annotation, 2) a hexadecimal color code.
+[.i7n-assistant]
+--
+Coloring rules can be used to control the coloring of annotations.
+The coloring rules are defined at the level of the annotation layer.
+Select an annotation layer from the list of layers in the project settings, then look for the *Coloring rules* section in the layer settings.
 
-A simple color rule could be use the pattern `PER` and the color code `#0000ff` (blue). This would 
-display all annotations with the label `PER` on the given layer in blue.
+A rule consists of two parts:
+1) a regular expression pattern that matches the annotation label,
+2) a hexadecimal color code.
 
-In order to assign a specific color to all annotations from the given layer, use the pattern `.*`.
+A simple rule could be use the pattern `PER` and the color code `#0000ff` (blue).
+This would display all annotations with the label `PER` belonging to the layer in blue.
 
-It is also possible to assign a color to multiple label at once by exploiting the fact that the
-pattern is a regular expression. E.g. `PER|OTH` would match annotations with the label `PER` as well
-as with the label `OTH`. Mind not to add extra space such as `PER | OTH` - this would not work!
+In order to assign the same color to all annotations belonging to the layer, use the pattern `.*`.
+--
 
-Be careful when creating coloring rules on layers with multiple features. If there are two features
-with the values `a` and `b`, the label will be `a | b`. In order to match this label in a coloring 
-rule, the pipe symbol (`|`) must be escaped - otherwise it is interpreted as a regular expression 
-`OR` operator: `a \| b`. 
+It is also possible to assign a color to multiple label at once by exploiting the fact that the pattern is a regular expression.
+E.g. `PER|OTH` would match annotations with the label `PER` as well as with the label `OTH`.
+Mind not to add extra space such as `PER | OTH` - this would not work!
 
+Be careful when creating coloring rules on layers with multiple features.
+If there are two features with the values `a` and `b`, the label will be `a | b`.
+In order to match this label in a coloring rule, the pipe symbol (`|`) must be escaped - otherwise it is interpreted as a regular expression `OR` operator: `a \| b`. 

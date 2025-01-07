@@ -32,6 +32,7 @@ import de.tudarmstadt.ukp.clarin.webanno.agreement.results.perdoc.PerDocumentAgr
 import de.tudarmstadt.ukp.clarin.webanno.agreement.results.unitizing.FullUnitizingAgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.results.unitizing.PairwiseUnitizingAgreementTable;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
 
 public class KrippendorffAlphaUnitizingAgreementMeasureSupport
@@ -55,11 +56,9 @@ public class KrippendorffAlphaUnitizingAgreementMeasureSupport
     }
 
     @Override
-    public boolean accepts(AnnotationFeature aFeature)
+    public boolean accepts(AnnotationLayer aLayer, AnnotationFeature aFeature)
     {
-        var layer = aFeature.getLayer();
-
-        if (SpanLayerSupport.TYPE.equals(layer.getType())) {
+        if (SpanLayerSupport.TYPE.equals(aLayer.getType())) {
             return true;
         }
 
@@ -67,15 +66,15 @@ public class KrippendorffAlphaUnitizingAgreementMeasureSupport
     }
 
     @Override
-    public AgreementMeasure<FullUnitizingAgreementResult> createMeasure(AnnotationFeature aFeature,
-            DefaultAgreementTraits aTraits)
+    public AgreementMeasure<FullUnitizingAgreementResult> createMeasure(AnnotationLayer aLayer,
+            AnnotationFeature aFeature, DefaultAgreementTraits aTraits)
     {
-        return new KrippendorffAlphaUnitizingAgreementMeasure(aFeature, aTraits);
+        return new KrippendorffAlphaUnitizingAgreementMeasure(aLayer, aFeature, aTraits);
     }
 
     @Override
-    public Panel createTraitsEditor(String aId, IModel<AnnotationFeature> aFeature,
-            IModel<DefaultAgreementTraits> aModel)
+    public Panel createTraitsEditor(String aId, IModel<AnnotationLayer> aLayer,
+            IModel<AnnotationFeature> aFeature, IModel<DefaultAgreementTraits> aModel)
     {
         return new KrippendorffAlphaUnitizingAgreementTraitsEditor(aId, aFeature, aModel);
     }

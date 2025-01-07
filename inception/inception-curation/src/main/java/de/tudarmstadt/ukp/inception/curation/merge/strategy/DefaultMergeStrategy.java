@@ -43,9 +43,7 @@ public class DefaultMergeStrategy
     public List<Configuration> chooseConfigurationsToMerge(DiffResult aDiff, ConfigurationSet aCfgs,
             AnnotationLayer aLayer)
     {
-        var stacked = aCfgs.getConfigurations().stream() //
-                .filter(Configuration::isStacked) //
-                .findAny().isPresent();
+        var stacked = aCfgs.containsStackedConfigurations();
 
         if (stacked) {
             LOG.trace(" `-> Not merging stacked annotation ({})", getClass().getSimpleName());

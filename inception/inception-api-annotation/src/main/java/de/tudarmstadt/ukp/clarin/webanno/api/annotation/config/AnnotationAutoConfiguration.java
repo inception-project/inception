@@ -17,10 +17,13 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.config;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.AnnotationEditorDefaultPreferencesProperties;
@@ -35,6 +38,10 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRendererImp
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderNotificationRenderStep;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationEndpointFeatureSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.TokenAttachedSpanChangeListener;
+import de.tudarmstadt.ukp.inception.annotation.menu.ContextMenuItemExtension;
+import de.tudarmstadt.ukp.inception.annotation.menu.ContextMenuItemRegistry;
+import de.tudarmstadt.ukp.inception.annotation.menu.ContextMenuItemRegistryImpl;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.rendering.coloring.ColoringService;
@@ -102,5 +109,19 @@ public class AnnotationAutoConfiguration
     public RelationEndpointFeatureSupport relationEndpointFeatureSupport()
     {
         return new RelationEndpointFeatureSupport();
+    }
+
+    @Bean
+    public TokenAttachedSpanChangeListener tokenAttachedSpanChangeListener(
+            AnnotationSchemaService aSchemaService)
+    {
+        return new TokenAttachedSpanChangeListener(aSchemaService);
+    }
+
+    @Bean
+    ContextMenuItemRegistry contextMenuItemRegistry(
+            @Lazy @Autowired(required = false) List<ContextMenuItemExtension> aExtensions)
+    {
+        return new ContextMenuItemRegistryImpl(aExtensions);
     }
 }

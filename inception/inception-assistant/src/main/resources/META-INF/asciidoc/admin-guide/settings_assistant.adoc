@@ -1,0 +1,215 @@
+// Licensed to the Technische Universität Darmstadt under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The Technische Universität Darmstadt 
+// licenses this file to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.
+//  
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+[[sect_settings_assistant]]
+= 🧪 Assistant
+
+====
+CAUTION: Experimental feature.
+====
+
+.Settings related to the assistant
+[cols="4*", options="header"]
+|===
+| Setting
+| Description
+| Default
+| Example
+
+| `assistant.enabled`
+| Whether to enable the assistant
+| `false`
+| `true`
+
+| `assistant.url`
+| URL of the Ollama service
+| `http://localhost:11434`
+| _some other URL_
+
+| `assistant.nickname`
+| The by which the assistant should identify itself.
+| `INCEpTION`
+| `Dominick`
+|===
+
+.Settings related to the assistant chat functionality
+[cols="4*", options="header"]
+|===
+| Setting
+| Description
+| Default
+| Example
+
+| `assistant.chat.model`
+| The model to use to drive the chat functionality of the assistant
+| `llama3.2`
+| `mistral-nemo`
+
+| `assistant.chat.context-length`
+| The context length supported by the model. 
+This controls how much chat history will be preserved.
+| `4096`
+| `16000`
+
+| `assistant.chat.top-p`
+| Controls the diversity of output by sampling tokens from the smallest set whose probabilities sum to the threshold. 
+Tune the balance between diversity (high, 0.9) and coherence (low, 0.3-0.5).
+| `0.3`
+| `0.90`
+
+| `assistant.chat.top-k`
+| Controls the number of top-ranked tokens considered for sampling during text generation. 
+Tune the balance between diversity (high >= 50) and coherence (low e.g. 5).
+| `25`
+| `50`
+
+| `assistant.chat.repeat-penalty`
+| Discourages the model from repeating the same words or phrases by reducing the probability of tokens already generated, promoting more varied and coherent outputs. 
+Tune the balance between less repetition (high >= 1.5) and more repetition (low, 1.0).
+| `1.1`
+| `1.5`
+
+| `assistant.chat.temperature`
+| Temperature controls the randomness of the model's output by adjusting the probability distribution of the next word. 
+Tune the balance between more randomness (high >= 1.0) and less randomness (low, 0.5).
+| `0.1`
+| `0.8`
+
+| `assistant.chat.encoding`
+| The token encoding used by the model. 
+  The encoding is used to estimate the number of tokens within {product-name}.
+  This can help the application chunk the text more accurately.
+  If in doubt, leave the default setting.  
+| `cl100k_base`
+| `r50k_base`, `p50k_base`, `p50k_edit`, `cl100k_base` or `o200k_base`
+|===
+
+.Settings related to the assistant search functionality
+[cols="4*", options="header"]
+|===
+| Setting
+| Description
+| Default
+| Example
+
+| `assistant.embedding.model`
+| The model to use to drive the search functionality of the assistant
+| `granite-embedding`
+| `snowflake-arctic-embed`
+
+| `assistant.embedding.encoding`
+| The token encoding used by the model. 
+  The encoding is used to estimate the number of tokens within {product-name}.
+  This can help the application chunk the text more accurately.
+  If in doubt, leave the default setting.  
+| `cl100k_base`
+| `r50k_base`, `p50k_base`, `p50k_edit`, `cl100k_base` or `o200k_base`
+
+| `assistant.embedding.dimension`
+| The dimension of the embedding vectors created by the model.
+  If this is set to `0`, the system will send a request to the LLM service during startup to auto-detect the vector size.
+  Setting this manually can be helpful if the LLM service is potentially not available during startup.
+  Changing the value will require indexes to be rebuilt.
+  It is not recommended to use embeddings with a dimension higher than 1024 as this may result in increased memory usage and reduced performance.
+| `0` (_detect automatically_)
+| `256`
+
+| `assistant.embedding.seed`
+| The random number generator seed used to ensure repeatable retrieval results.
+| `0xDEADBEEF`
+| `12345678`
+
+| `assistant.embedding.context-length`
+| The context length supported by the model in LLM tokens.
+  This controls how much of a chunk used to calculate the embedding.
+  The setting should not be lower than the `chunk-size` setting.
+| `768`
+| `256`
+
+| `assistant.embedding.batch-size`
+| Maximum of chunks that should be send together to the LLM service when generating embeddings.
+  Batching multiple chunks in a single request increases indexing speed.
+| `16`
+| `32`
+
+|===
+
+.Settings related to the assistant search functionality accessing documents in the current project
+[cols="4*", options="header"]
+|===
+| Setting
+| Description
+| Default
+| Example
+
+| `assistant.documents.chunk-size`
+| The size of a chunk in LLM tokens.
+  The setting should not be higher than the `assistant.embedding.context-length` setting to avoid truncation.
+  It can be lower thought to create more topically focused chunks.
+| `128`
+| `768`
+
+| `assistant.documents.max-chunks`
+| Maximum number of relevant chunks from the user guide to pass to the LLM service.
+| `3`
+| `10`
+
+| `assistant.documents.min-score`
+| Minimum relevance score for chunks to be considered.
+  This should be a positive number not larger than `1.0`.
+| `0.8`
+| `0.5`
+
+| `assistant.documents.idle-eviction-delay`
+| How often the index pool is checked for idle indexes.
+| `5m`
+| `5s`
+
+| `assistant.documents.min-idle-time`
+| How long an index may remain in the pool before being considered for eviction.
+| `5m`
+| `5s`
+
+| `assistant.documents.borrow-wait-timeout`
+| How long to wait for access to an index before timing out.
+| `3m`
+| `15s`
+|===
+
+.Settings related to the user guide integration
+[cols="4*", options="header"]
+|===
+| Setting
+| Description
+| Default
+| Example
+
+| `assistant.user-guide.rebuild-index-on-boot`
+| Whether to re-build the user manual index at the start of the application.
+| `false`
+| `true`
+
+| `assistant.user-guide.max-chunks`
+| Maximum number of relevant chunks from the user guide to pass to the LLM service.
+| `3`
+| `10`
+
+| `assistant.user-guide.min-score`
+| Minimum relevance score for chunks to be considered.
+  This should be a positive number not larger than `1.0`.
+| `0.8`
+| `0.5`
+|===

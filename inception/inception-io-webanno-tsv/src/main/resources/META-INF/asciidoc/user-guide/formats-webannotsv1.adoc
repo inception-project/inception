@@ -19,13 +19,12 @@
 
 TAllows importing files produced using WebAnno version 1 and earlier.
 
-[cols="2,1,1,1,3"]
+[cols="2,1,1,3"]
 |====
-| Format | Read | Write | Custom Layers | Description
+| Format | Import | Export | Supported layers
 
 | WebAnno TSV 1 (`tsv`)
 | yes
 | no
-| no
-| 
+| Any layer/feature supported by WebAnno 1
 |====

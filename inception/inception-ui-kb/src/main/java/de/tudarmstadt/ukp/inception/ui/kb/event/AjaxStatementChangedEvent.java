@@ -30,7 +30,6 @@ import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 public class AjaxStatementChangedEvent
     extends AbstractAjaxAwareEvent
 {
-
     /**
      * Statement editor component of the changed statement.
      */

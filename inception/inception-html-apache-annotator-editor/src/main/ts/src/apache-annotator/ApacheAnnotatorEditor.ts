@@ -15,11 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { AnnotationEditor, DiamAjax, calculateStartOffset } from '@inception-project/inception-js-api'
+import { AnnotationEditor, DiamAjax, Offsets, calculateStartOffset } from '@inception-project/inception-js-api'
 import { highlights, ApacheAnnotatorVisualizer } from './ApacheAnnotatorVisualizer'
 import { ApacheAnnotatorSelector } from './ApacheAnnotatorSelector'
 import ApacheAnnotatorToolbar from './ApacheAnnotatorToolbar.svelte'
-import { showDocumentStructure, documentStructureWidth, showLabels, showEmptyHighlights, showAggregatedLabels } from './ApacheAnnotatorState'
+import { showDocumentStructure, documentStructureWidth, showLabels, showImages, showTables, showEmptyHighlights, showAggregatedLabels } from './ApacheAnnotatorState'
 import AnnotationDetailPopOver from '@inception-project/inception-js-api/src/widget/AnnotationDetailPopOver.svelte'
 import { Writable } from 'svelte/store'
 
@@ -51,6 +51,8 @@ export class ApacheAnnotatorEditor implements AnnotationEditor {
       showAggregatedLabels: true,
       showEmptyHighlights: false,
       showDocumentStructure: false,
+      showImages: true,
+      showTables: true,
       documentStructureWidth: 0.2,
     }
     let preferences = Object.assign({}, defaultPreferences)
@@ -84,6 +86,8 @@ export class ApacheAnnotatorEditor implements AnnotationEditor {
       bindPreference(showAggregatedLabels, "showAggregatedLabels")
       bindPreference(showEmptyHighlights, "showEmptyHighlights")
       bindPreference(showDocumentStructure, "showDocumentStructure")
+      bindPreference(showImages, "showImages")
+      bindPreference(showTables, "showTables")
       bindPreference(documentStructureWidth, "documentStructureWidth")
     }).then(() => {
       this.ensureSectionElementsHaveAnId()
@@ -132,6 +136,24 @@ export class ApacheAnnotatorEditor implements AnnotationEditor {
 
       showDocumentStructure.subscribe(enabled => {
         navigatorContainer.style.display = enabled ? 'flex' : 'none'
+      })
+
+      showImages.subscribe(enabled => {
+        if (enabled) {
+          this.root.classList.remove("iaa-hide-images")
+        }
+        else {
+          this.root.classList.add("iaa-hide-images")
+        }
+      })
+
+      showTables.subscribe(enabled => {
+        if (enabled) {
+          this.root.classList.remove("iaa-hide-tables")
+        }
+        else {
+          this.root.classList.add("iaa-hide-tables")
+        }
       })
 
       // Delay subscription a bit so the browser has time to render and we can obtain the width
@@ -228,7 +250,7 @@ export class ApacheAnnotatorEditor implements AnnotationEditor {
     return new ApacheAnnotatorToolbar({ target: toolbarContainer, props: { sectionSelector: this.sectionSelector } })
   }
 
-  private createDocumentNavigator (target: HTMLElement): DocumentStructureNavigator {
+  private createDocumentNavigator (target: HTMLElement) {
     return this.root.ownerDocument.createElement('div');
   }
 

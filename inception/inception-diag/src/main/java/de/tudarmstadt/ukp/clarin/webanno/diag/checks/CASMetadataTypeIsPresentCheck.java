@@ -22,7 +22,7 @@ import java.util.List;
 import org.apache.uima.cas.CAS;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.type.CASMetadata;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 
 /**
@@ -33,7 +33,8 @@ public class CASMetadataTypeIsPresentCheck
     implements Check
 {
     @Override
-    public boolean check(Project aProject, CAS aCas, List<LogMessage> aMessages)
+    public boolean check(SourceDocument aDocument, String aDataOwner, CAS aCas,
+            List<LogMessage> aMessages)
     {
         if (aCas.getTypeSystem().getType(CASMetadata._TypeName) == null) {
             aMessages.add(LogMessage.info(this, "CAS needs upgrade to support CASMetadata which is "

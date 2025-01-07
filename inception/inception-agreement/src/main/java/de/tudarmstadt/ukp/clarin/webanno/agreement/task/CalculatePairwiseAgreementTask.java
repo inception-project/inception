@@ -45,6 +45,7 @@ import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasure;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.DefaultAgreementTraits;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
@@ -228,6 +229,7 @@ public class CalculatePairwiseAgreementTask
     {
         private List<String> annotators;
         private DefaultAgreementTraits traits;
+        private AnnotationLayer layer;
         private AnnotationFeature feature;
         private AgreementMeasure<?> measure;
         private Map<SourceDocument, List<AnnotationDocument>> allAnnDocs;
@@ -248,6 +250,13 @@ public class CalculatePairwiseAgreementTask
         public T withTraits(DefaultAgreementTraits aTraits)
         {
             traits = aTraits;
+            return (T) this;
+        }
+
+        @SuppressWarnings("unchecked")
+        public T withLayer(AnnotationLayer aLayer)
+        {
+            layer = aLayer;
             return (T) this;
         }
 

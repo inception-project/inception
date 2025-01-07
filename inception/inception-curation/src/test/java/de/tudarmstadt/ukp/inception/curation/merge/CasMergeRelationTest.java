@@ -19,9 +19,9 @@ package de.tudarmstadt.ukp.inception.curation.merge;
 
 import static de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS._FeatName_PosValue;
 import static de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token._FeatName_pos;
+import static de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport.FEAT_REL_SOURCE;
+import static de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport.FEAT_REL_TARGET;
 import static de.tudarmstadt.ukp.inception.curation.merge.CasMergeOperationResult.ResultState.CREATED;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.FEAT_REL_SOURCE;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.FEAT_REL_TARGET;
 import static de.tudarmstadt.ukp.inception.support.uima.AnnotationBuilder.buildAnnotation;
 import static org.apache.uima.fit.factory.CasFactory.createCas;
 import static org.apache.uima.fit.util.FSUtil.getFeature;

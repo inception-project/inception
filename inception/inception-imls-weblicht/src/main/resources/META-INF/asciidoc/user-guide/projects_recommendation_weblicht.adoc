@@ -46,7 +46,7 @@ The simplest way to build a chain is this:
   good idea to rename the file to something less cryptic than the default auto-generated ID, e.g.
   we might rename the file to `WebLicht_Named_Entities_English.xml`.
 
-image::weblicht_chain_builder.png[align="center"]
+image::images/weblicht_chain_builder.png[align="center"]
 
 Back in the recommender settings, click **Browse** in the **Upload chain** field and select the processing chain definition file you have just generated. Then click the **Upload** button that appears in the field.
 

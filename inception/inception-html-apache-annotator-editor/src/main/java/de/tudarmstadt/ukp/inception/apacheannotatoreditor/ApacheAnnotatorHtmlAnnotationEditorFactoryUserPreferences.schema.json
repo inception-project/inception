@@ -8,6 +8,12 @@
     "showAggregatedLabels": {
       "type": "boolean"
     },
+    "showImages": {
+      "type": "boolean"
+    },
+    "showTables": {
+      "type": "boolean"
+    },
     "showEmptyHighlights": {
       "type": "boolean"
     },
@@ -16,6 +22,12 @@
     },
     "documentStructureWidth": {
       "type": "number"
+    },
+    "showImages": {
+      "type": "boolean"
+    },
+    "showTables": {
+      "type": "boolean"
     }
   },
   "additionalProperties": false

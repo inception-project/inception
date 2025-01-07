@@ -23,13 +23,14 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.inception.annotation.feature.string.StringFeatureSupport;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.project.initializers.neannotation.EntityAnnotationProjectInitializer;
+import de.tudarmstadt.ukp.inception.project.initializers.neannotation.NamedEntitySampleDataTagSetInitializer;
 import de.tudarmstadt.ukp.inception.project.initializers.neannotation.NamedEntitySequenceClassifierRecommenderInitializer;
 import de.tudarmstadt.ukp.inception.project.initializers.neannotation.NamedEntityStringRecommenderInitializer;
 import de.tudarmstadt.ukp.inception.project.initializers.wikidatalinking.EntityLinkingProjectInitializer;
@@ -78,11 +79,11 @@ public class WikiDataLinkingProjectInitializersAutoConfiguration
     @Bean
     public EntityAnnotationProjectInitializer entityAnnotationProjectInitializer(
             ApplicationContext aContext, AnnotationSchemaService aAnnotationService,
-            DocumentService aDocumentService,
-            DocumentImportExportService aDocumentImportExportService, UserDao aUserService)
+            DocumentService aDocumentService, UserDao aUserService,
+            StringFeatureSupport aStringFeatureSupport)
     {
         return new EntityAnnotationProjectInitializer(aContext, aAnnotationService,
-                aDocumentService, aDocumentImportExportService, aUserService);
+                aDocumentService, aUserService, aStringFeatureSupport);
     }
 
     @ConditionalOnBean(RecommendationService.class)
@@ -103,5 +104,12 @@ public class WikiDataLinkingProjectInitializersAutoConfiguration
     {
         return new NamedEntitySequenceClassifierRecommenderInitializer(aRecommenderService,
                 aAnnotationService, aRecommenderFactory);
+    }
+
+    @Bean
+    public NamedEntitySampleDataTagSetInitializer namedEntitySampleDataTagSetInitializer(
+            AnnotationSchemaService aAnnotationSchemaService)
+    {
+        return new NamedEntitySampleDataTagSetInitializer(aAnnotationSchemaService);
     }
 }

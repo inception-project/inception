@@ -14,26 +14,42 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-[[sect_monitoring_agreement]]
+[[sect_agreement]]
 = Agreement
 
-NOTE: This functionality is only available to *curators* and *managers*. Agreement can only be calculated for span and relation layers. The set of available agreement measures depends on the layer configuration.
+NOTE: This functionality is only available to *curators* and *managers*. 
+Agreement can only be calculated for span and relation layers. 
+The set of available agreement measures depends on the layer configuration.
 
-This page allows you to calculate inter-annotator agreement between users.
-Agreement can be inspected on a per-feature basis and is calculated pair-wise between all annotators across all documents. 
+[.i7n-assistant]
+--
+The agreement calculation functionality allows curators and managers to measure the consistency of annotations made by different users. 
+It computes inter-annotator agreement for span and relation layers on a per-feature basis, providing pair-wise agreement scores across all documents. 
+This helps in assessing the reliability and accuracy of the annotations.
 
-image::agreement_table.png[align="center"]
+image::images/agreement_table.png[align="center"]
 
-The *Feature* dropdown allows the selection of layers and features for which an agreement shall be computed. 
+To use the agreement calculation functionality you need to select a *Feature* and a *Measure*.
 
-A measure for the inter-annotator-agreement can be selected by opening the *Measure* dropdown menu. A short description of available measures and their differences follows in the <<sect_agreement_measures, Measures>> section. 
+The *Feature* indicates which layer and feature should be used for the agreement calculation.
 
-Optionally, you can choose to limit the process to specific *annotators* or *documents*. If you do not make any selection here, all annotators and documents are considered. If you select annotators, at least two annotators must be selected. To select multiple annotators or documents, hold e.g. the kbd:[Shift] or kbd:[CTRL]/kbd:[CMD] keys while clicking depending on your browser and operating system.
+The *Measure* indicates which agreement measure should be used for the calculation.
+A default measure is selected based on the feature.
+Depending on the feature settings, only certain measures may be available.
+A short description of available measures and their differences follows in the <<sect_agreement_measures, Measures>> section. 
 
-The *Calculate...*  button can be used to start the agreement calculation and the results will be shown in a <<sect_agreement_matrix,Pairwise agreement matrix>>. Mind that the calculation may take a moment. You can inspect the progress of the calculation by clicking on the background tasks indicator in the page footer.
+Optionally, you can choose to limit the process to specific *annotators* or *documents*. 
+If you do not make any selection here, all annotators and documents are considered. 
+If you select annotators, at least two annotators must be selected. 
+To select multiple annotators or documents, hold e.g. the kbd:[Shift] or kbd:[CTRL]/kbd:[CMD] keys while clicking depending on your browser and operating system.
 
-The *Export diff...* button can be used to export a CSV file comparing the annotations across all (selected) annotators and documents in a tabular fashion. Alternatively, a CSV file of the pair-wise comparison between two specific annotators can be exported by clicking on the agreement score in the upper triangle of the pairwise agreement table.
+The *Calculate...*  button can be used to start the agreement calculation and the results will be shown in a <<sect_agreement_matrix,Pairwise agreement matrix>>. 
+Mind that the calculation may take a moment. 
+You can inspect the progress of the calculation by clicking on the background tasks indicator in the page footer.
 
+The *Export diff...* button can be used to export a CSV file comparing the annotations across all (selected) annotators and documents in a tabular fashion.
+Alternatively, a CSV file of the pair-wise comparison between two specific annotators can be exported by clicking on the agreement score in the upper triangle of the pairwise agreement table.
+--
 
 [[sect_agreement_measures]]
 == Measures
@@ -46,55 +62,64 @@ Several agreement measures are supported.
 
 | Cohen's kappa
 | Coding
-| Chance-corrected inter-annotator agreement for two annotators. The measure assumes a different probability distribution for all raters. Incomplete annotations are always excluded.
+| Chance-corrected inter-annotator agreement for two annotators.
+The measure assumes a different probability distribution for all raters.
+Incomplete annotations are always excluded.
 
 | Fleiss' kappa
 | Coding
-| Generalization of Scott's pi-measure for calculating a chance-corrected inter-rater agreement for multiple raters, which is known as Fleiss' kappa and Carletta's K. The measure assumes the same probability distribution for all raters. Incomplete annotations are always excluded.
+| Generalization of Scott's pi-measure for calculating a chance-corrected inter-rater agreement for multiple raters, which is known as Fleiss' kappa and Carletta's K.
+The measure assumes the same probability distribution for all raters.
+Incomplete annotations are always excluded.
 
 | Krippendorff's alpha (nominal)
 | Coding
-| Chance-corrected inter-rater agreement for multiple raters for nominal categories (i.e. categories are either equal (distance 0) or unequal (distance 1). The basic idea is to divide the estimated variance of within the items by the estimated total variance.
+| Chance-corrected inter-rater agreement for multiple raters for nominal categories (i.e. categories are either equal (distance 0) or unequal (distance 1).
+The basic idea is to divide the estimated variance of within the items by the estimated total variance.
 
 | Krippendorff's alpha (unitizing)
 | Unitizing
-| Chance-corrected inter-rater agreement for unitizing studies with multiple raters. As a model for expected disagreement, all possible unitizations for the given continuum and raters are considered. Note that
-units coded with the same categories by a single annotator may not overlap with each other.
+| Chance-corrected inter-rater agreement for unitizing studies with multiple raters.
+As a model for expected disagreement, all possible unitizations for the given continuum and raters are considered.
+Note that units coded with the same categories by a single annotator may not overlap with each other.
 |====
 
 
 == Coding vs. Unitizing
 
-Coding measures are based on positions. I.e. two annotations are either at the same position or not.
-If they are, they can be compared - otherwise they cannot be compared. This makes coding measures
-unsuitable in cases where partial overlap of annotations needs to be considered, e.g. in the case
-of named entity annotations where it is common that annotators do not agree on the boundaries of the
-entity. In order to calculate the positions, all documents are scanned for annotations and  annotations located at the same positions are collected in configuration sets. To determine if two annotations are at the same position, different approaches are used depending on the layer type. For a span layer, the begin and end offsets are used. For a relation layer, the begin and end offsets of the source and target annotation are used. Chains are currently not supported. 
+Coding measures are based on positions.
+I.e. two annotations are either at the same position or not.
+If they are, they can be compared - otherwise they cannot be compared.
+This makes coding measures unsuitable in cases where partial overlap of annotations needs to be considered, e.g. in the case of named entity annotations where it is common that annotators do not agree on the boundaries of the entity.
+In order to calculate the positions, all documents are scanned for annotations and  annotations located at the same positions are collected in configuration sets.
+To determine if two annotations are at the same position, different approaches are used depending on the layer type.
+For a span layer, the begin and end offsets are used.
+For a relation layer, the begin and end offsets of the source and target annotation are used.
+Chains are currently not supported. 
 
-Unitizing measures basically work by internally concatenating all documents into a single long virtual document and then consider partial overlaps of annotations from different annotations. I.e. there is no averaging over documents. The partial overlap agreement is calculated based on character positions, not on token positions. So if one annotator annotates *the blackboard* and another annotator just *blackboard*, then the partial overlap is comparatively high because *blackboard* is a longish word. Relation and chain layers are presently not supported by the unitizing measures.
+Unitizing measures basically work by internally concatenating all documents into a single long virtual document and then consider partial overlaps of annotations from different annotations.
+I.e. there is no averaging over documents.
+The partial overlap agreement is calculated based on character positions, not on token positions.
+So if one annotator annotates *the blackboard* and another annotator just *blackboard*, then the partial overlap is comparatively high because *blackboard* is a longish word.
+Relation and chain layers are presently not supported by the unitizing measures.
 
 == Incomplete annotations
 
-When working with coding measures, there is the concept of *incomplete annotations*. For a given
-position, the annotation is incomplete if at least one annotator has *not* provided a label. In the
-case of the pairwise comparisons that are used to generate the agreement table, this means that one
-annotator has produced a label and the other annotator has not. Due to the way that positions are
-generated, it also means that if one annotator annotates *the blackboard* and another annotator just
-*blackboard*, we are actually dealing with two positions (*the blackboard*, offsets 0-15 and 
-*blackboard*, offsets 4-14), and both of them are incompletely annotated. Some measurs cannot deal
-with incomplete annotations because they require that every annotator has produced an annotation. In these
-cases, the incomplete annotations are *excluded* from the agreement calculation. The effect is that
-in the *(the) blackboard* example, there is actually no data to be compared. If we augment that
-example with some other word on which the annotators agree, then only this word is considered, 
-meaning that we have a perfect agreement despite the annotators not having agreed on *(the) blackboard*.
+When working with coding measures, there is the concept of *incomplete annotations*.
+For a given position, the annotation is incomplete if at least one annotator has *not* provided a label.
+In the case of the pairwise comparisons that are used to generate the agreement table, this means that one annotator has produced a label and the other annotator has not.
+Due to the way that positions are generated, it also means that if one annotator annotates *the blackboard* and another annotator just *blackboard*, we are actually dealing with two positions (*the blackboard*, offsets 0-15 and *blackboard*, offsets 4-14), and both of them are incompletely annotated.
+Some measurs cannot deal with incomplete annotations because they require that every annotator has produced an annotation.
+In these cases, the incomplete annotations are *excluded* from the agreement calculation.
+The effect is that in the *(the) blackboard* example, there is actually no data to be compared.
+If we augment that example with some other word on which the annotators agree, then only this word is considered, meaning that we have a perfect agreement despite the annotators not having agreed on *(the) blackboard*.
 Thus, one should avoid measure that cannot deal with incomplete annotations such as Fleiss' kappa
 and Cohen's kappa except for tasks such as part-of-speech tagging where it is known that positions
 are the same for all annotators and all annotators are required (not expected) to provide an annotation.
 
-The agreement calculations considers an unset feature (with a `null` value) to be equivalent to a
-feature with the value of an empty string. Empty strings are considered valid labels and are not
-excluded from agreement calculation. Thus, an *incomplete* annotation is not one where the label is
-missing, but rather one where the entire annotation is missing.
+The agreement calculations considers an unset feature (with a `null` value) to be equivalent to a feature with the value of an empty string.
+Empty strings are considered valid labels and are not excluded from agreement calculation.
+Thus, an *incomplete* annotation is not one where the label is missing, but rather one where the entire annotation is missing.
 
 In general, it is a good idea to use at least a measure that supports incomplete data (i.e. missing
 labels) or even a unitizing measure which is able to produce partial agreement scores.
@@ -143,22 +168,20 @@ labels) or even a unitizing measure which is able to produce partial agreement s
 == Stacked annotations
 
 Multiple interpretations in the form of stacked annotations are not supported in the agreement 
-calculation! This also includes relations for which source or targets spans are stacked.
+calculation! 
+This also includes relations for which source or targets spans are stacked.
 
 
 [[sect_agreement_matrix]]
 == Pairwise agreement matrix
 
-To calculate the pairwise agreement, the measure is applied pairs of documents, each document containing annotations from
-one annotator. If an annotator has not yet annotated a document, the original state of the document after the import
-is considered. To calculate the overall agreement between two annotators over all documents, the average of the
-per-document agreements is used. 
+To calculate the pairwise agreement, the measure is applied pairs of documents, each document containing annotations from one annotator.
+If an annotator has not yet annotated a document, the original state of the document after the import is considered.
+To calculate the overall agreement between two annotators over all documents, the average of the per-document agreements is used. 
 
-The lower part of the agreement matrix displays how many configuration sets were used to calculate
-agreement and how many were found in total. The upper part of the agreement matrix displays the
-pairwise agreement scores.
+The lower part of the agreement matrix displays how many configuration sets were used to calculate agreement and how many were found in total. 
+The upper part of the agreement matrix displays the pairwise agreement scores.
 
-Annotations for a given position are considered complete when both annotators have made an
-annotation. Unless the agreement measure supports `null` values (i.e. missing annotations),
-incomplete annotations are implicitly excluded from the agreement calculation. If the agreement
-measure does support incomplete annotations, then excluding them or not is the users' choice.
+Annotations for a given position are considered complete when both annotators have made an annotation. 
+Unless the agreement measure supports `null` values (i.e. missing annotations), incomplete annotations are implicitly excluded from the agreement calculation.
+If the agreement measure does support incomplete annotations, then excluding them or not is the users' choice.

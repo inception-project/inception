@@ -39,6 +39,7 @@
     }
 
     export let wsEndpointUrl: string  // should this be full ws://... url
+    export let csrfToken: string
     export let topicChannel: string
     export let exports: MProjectExportStateUpdate[]
     export let connected = false
@@ -57,6 +58,9 @@
       wsEndpoint.protocol = protocol
 
       stompClient = Stomp.over(() => socket = new WebSocket(wsEndpoint.toString()))
+      stompClient.connectHeaders = {
+        'X-CSRF-TOKEN': csrfToken
+      }
       stompClient.onConnect = () => { 
           connected = true
           stompClient.subscribe('/user/queue/errors', function (msg) {
@@ -174,9 +178,14 @@
                 {/if}
                 {#if item.state === 'COMPLETED'}
                     <div class="text-center">
+                        <a href="{item.url + '/data'}" class="animated pulse btn btn-primary">
+                            <i class="fas fa-download"></i> Download
+                        </a>
+                        <!--
                         <button type="button" class="animated pulse btn btn-primary" on:click="{download(item)}">
                         <i class="fas fa-download"></i> Download
                         </button>
+                        -->
                     </div>
                 {/if}
                 {#if item.messages?.length}

@@ -70,6 +70,7 @@ import de.tudarmstadt.ukp.inception.documents.event.AfterDocumentCreatedEvent;
 import de.tudarmstadt.ukp.inception.documents.event.BeforeDocumentRemovedEvent;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
+import de.tudarmstadt.ukp.inception.project.api.event.AfterProjectCreatedEvent;
 import de.tudarmstadt.ukp.inception.project.api.event.AfterProjectRemovedEvent;
 import de.tudarmstadt.ukp.inception.project.api.event.BeforeProjectRemovedEvent;
 import de.tudarmstadt.ukp.inception.scheduling.Progress;
@@ -81,10 +82,10 @@ import de.tudarmstadt.ukp.inception.schema.api.event.LayerConfigurationChangedEv
 import de.tudarmstadt.ukp.inception.search.config.SearchServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.search.config.SearchServiceProperties;
 import de.tudarmstadt.ukp.inception.search.index.IndexRebuildRequiredException;
-import de.tudarmstadt.ukp.inception.search.index.PhysicalIndexFactory;
 import de.tudarmstadt.ukp.inception.search.index.PhysicalIndexRegistry;
 import de.tudarmstadt.ukp.inception.search.model.BulkIndexingContext;
 import de.tudarmstadt.ukp.inception.search.model.Index;
+import de.tudarmstadt.ukp.inception.search.model.Index_;
 import de.tudarmstadt.ukp.inception.search.scheduling.tasks.IndexAnnotationDocumentTask;
 import de.tudarmstadt.ukp.inception.search.scheduling.tasks.IndexSourceDocumentTask;
 import de.tudarmstadt.ukp.inception.search.scheduling.tasks.IndexingTask_ImplBase;
@@ -242,11 +243,14 @@ public class SearchServiceImpl
      * 
      * @param aProjectId
      *            the project ID
+     * @param aPersist
+     *            whether to persist the index in the DB - should be false when acquiring the index
+     *            as part of deleting a project
      * @return the index or {@code null} if there is no suitable index factory.
      */
-    private synchronized Index loadIndex(long aProjectId)
+    private synchronized Index loadIndex(long aProjectId, boolean aPersist)
     {
-        Project aProject = projectService.getProject(aProjectId);
+        var aProject = projectService.getProject(aProjectId);
 
         LOG.trace("Loading index for project {}", aProject);
 
@@ -267,12 +271,13 @@ public class SearchServiceImpl
             index.setInvalid(false);
             index.setProject(aProject);
             index.setPhysicalProvider(DEFAULT_PHSYICAL_INDEX_FACTORY);
-            entityManager.persist(index);
+            if (aPersist) {
+                entityManager.persist(index);
+            }
         }
 
         // Get the index factory
-        PhysicalIndexFactory indexFactory = physicalIndexRegistry
-                .getIndexFactory(DEFAULT_PHSYICAL_INDEX_FACTORY);
+        var indexFactory = physicalIndexRegistry.getIndexFactory(DEFAULT_PHSYICAL_INDEX_FACTORY);
 
         if (indexFactory == null) {
             return null;
@@ -284,6 +289,17 @@ public class SearchServiceImpl
         return index;
     }
 
+    @EventListener
+    public void onAfterProjectCreated(AfterProjectCreatedEvent aEvent)
+    {
+        LOG.trace("Starting onAfterProjectCreated");
+
+        // This will help us block off individual indexDocument tasks that are being triggered
+        // while the project is imported or initialized (if those processes run in a tasks-suspended
+        // context.
+        enqueueReindexTask(aEvent.getProject(), "onAfterProjectCreated");
+    }
+
     /**
      * Triggered before a project is removed.
      * 
@@ -293,9 +309,9 @@ public class SearchServiceImpl
      *             if the index cannot be removed.
      */
     @EventListener
-    public void beforeProjectRemove(BeforeProjectRemovedEvent aEvent) throws IOException
+    public void onBeforeProjectRemove(BeforeProjectRemovedEvent aEvent) throws IOException
     {
-        Project project = aEvent.getProject();
+        var project = aEvent.getProject();
 
         if (isBeingDeleted(project.getId())) {
             LOG.trace(
@@ -306,26 +322,38 @@ public class SearchServiceImpl
 
         LOG.trace("Removing index for project {} because project is being removed", project);
 
-        try (PooledIndex pooledIndex = acquireIndex(project.getId())) {
+        try (var pooledIndex = acquireIndex(project.getId(), false)) {
             pooledIndex.tombstone();
 
             // Remove the index entry from the memory map
             unloadIndex(pooledIndex);
 
             // Physical index exists, drop it
-            Index index = pooledIndex.get();
+            var index = pooledIndex.get();
             if (index.getPhysicalIndex().isCreated()) {
                 index.getPhysicalIndex().delete();
             }
 
-            // Delete the index entry from the DB
-            entityManager
-                    .remove(entityManager.contains(index) ? index : entityManager.merge(index));
+            deleteIndexFromDb(index);
+        }
+    }
+
+    private void deleteIndexFromDb(Index aIndex)
+    {
+        var cb = entityManager.getCriteriaBuilder();
+        var delete = cb.createCriteriaDelete(Index.class);
+        var root = delete.from(Index.class);
+        delete.where(cb.equal(root.get(Index_.ID), aIndex.getId()));
+        int rowsDeleted = entityManager.createQuery(delete).executeUpdate();
+
+        if (rowsDeleted == 0) {
+            LOG.debug("Unable to delete index with ID {} from database - not found.",
+                    aIndex.getId());
         }
     }
 
     @EventListener
-    public void afterProjectRemove(AfterProjectRemovedEvent aEvent) throws IOException
+    public void onAfterProjectRemove(AfterProjectRemovedEvent aEvent) throws IOException
     {
         synchronized (indexes) {
             indexes.remove(aEvent.getProject().getId());
@@ -346,6 +374,11 @@ public class SearchServiceImpl
     }
 
     private PooledIndex acquireIndex(long aProjectId)
+    {
+        return acquireIndex(aProjectId, true);
+    }
+
+    private PooledIndex acquireIndex(long aProjectId, boolean aPersist)
     {
         synchronized (indexes) {
             var pooledIndex = indexes.get(aProjectId);
@@ -376,7 +409,7 @@ public class SearchServiceImpl
             }
 
             if (pooledIndex == null) {
-                var index = loadIndex(aProjectId);
+                var index = loadIndex(aProjectId, aPersist);
                 pooledIndex = new PooledIndex(index);
                 indexes.put(aProjectId, pooledIndex);
             }
@@ -388,7 +421,7 @@ public class SearchServiceImpl
     }
 
     @EventListener
-    public void beforeDocumentRemove(BeforeDocumentRemovedEvent aEvent) throws IOException
+    public void onBeforeDocumentRemove(BeforeDocumentRemovedEvent aEvent) throws IOException
     {
         var document = aEvent.getDocument();
         var project = document.getProject();
@@ -414,7 +447,7 @@ public class SearchServiceImpl
         }
     }
 
-    @TransactionalEventListener(fallbackExecution = true)
+    @EventListener
     public void onAfterDocumentCreated(AfterDocumentCreatedEvent aEvent)
     {
         LOG.trace("Starting afterDocumentCreate");
@@ -423,7 +456,7 @@ public class SearchServiceImpl
         enqueueIndexDocument(aEvent.getDocument(), "onAfterDocumentCreated");
     }
 
-    @TransactionalEventListener(fallbackExecution = true)
+    @EventListener
     public void onAfterCasWritten(AfterCasWrittenEvent aEvent)
     {
         LOG.trace("Starting afterAnnotationUpdate");
@@ -607,7 +640,7 @@ public class SearchServiceImpl
             int aMaxTokenPerDoc, Set<AnnotationFeature> aFeatures)
         throws IOException, ExecutionException
     {
-        try (PooledIndex pooledIndex = acquireIndex(aProject.getId())) {
+        try (var pooledIndex = acquireIndex(aProject.getId())) {
             var index = pooledIndex.get();
             ensureIndexIsCreatedAndValid(aProject, index);
 
@@ -637,9 +670,7 @@ public class SearchServiceImpl
             var statisticsMap = new HashMap<String, LayerStatistics>();
             statisticsMap.put("query." + aQuery, statistics);
 
-            StatisticsResult results = new StatisticsResult(statRequest, statisticsMap, aFeatures);
-
-            return results;
+            return new StatisticsResult(statRequest, statisticsMap, aFeatures);
         }
     }
 
@@ -809,6 +840,9 @@ public class SearchServiceImpl
         }
     }
 
+    /**
+     * @return the aggregate progress of all currently active indexing tasks (if any).
+     */
     @Override
     public Optional<Progress> getIndexProgress(Project aProject)
     {
@@ -992,11 +1026,17 @@ public class SearchServiceImpl
             return delegate;
         }
 
+        /**
+         * Borrow the index from the pool.
+         */
         public void borrow()
         {
             refCount.incrementAndGet();
         }
 
+        /**
+         * Return the borrowed index to the pool.
+         */
         @Override
         public void close()
         {
@@ -1004,11 +1044,17 @@ public class SearchServiceImpl
             lastAccess.set(currentTimeMillis());
         }
 
+        /**
+         * Mark the index for forced rebuilding.
+         */
         public void forceRecycle()
         {
             forceRecycle.set(true);
         }
 
+        /**
+         * @return if the index needs to re-built.
+         */
         public boolean isForceRecycle()
         {
             return forceRecycle.get();
@@ -1019,26 +1065,41 @@ public class SearchServiceImpl
             return lastAccess.get();
         }
 
+        /**
+         * @return if the index is currently idle (not being used).
+         */
         public boolean isIdle()
         {
             return refCount.get() == 0;
         }
 
+        /**
+         * Marks index as unloaded/deactivated.
+         */
         public void dead()
         {
             dead.set(true);
         }
 
+        /**
+         * @return whether index is unloaded/deactivated.
+         */
         public boolean isDead()
         {
             return dead.get();
         }
 
+        /**
+         * Marks index as deleted. Deleted indices should not be used anymore or re-created.
+         */
         public void tombstone()
         {
             tombstone.set(true);
         }
 
+        /**
+         * @return if index has been deleted.
+         */
         public boolean isTombstone()
         {
             return tombstone.get();

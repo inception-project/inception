@@ -48,7 +48,7 @@ public class ProjectKnowledgeBasePanel
         add(detailsPanel);
 
         selectedKnowledgeBaseModel = Model.of();
-        KnowledgeBaseListPanel listPanel = new KnowledgeBaseListPanel("list", projectModel,
+        var listPanel = new KnowledgeBaseListPanel("list", projectModel,
                 selectedKnowledgeBaseModel);
         listPanel.setChangeAction(t -> {
             addOrReplace(detailsPanel);

@@ -1,7 +1,3 @@
-// Copyright 2019
-// Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
-// Technische Universität Darmstadt
-// 
 // Licensed to the Technische Universität Darmstadt under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -27,13 +23,14 @@ The link:https://tei-c.org/guidelines/p5/[TEI P5 XML] format is a widely used st
 
 When importing TEI files using this format, the XML structure of the document is **not** retained. When exporting an annotated document in this format, the XML structure is generated from scratch.
 
-[cols="2,1,1,1,3"]
+[cols="2,1,1,3"]
 |====
-| Format | Read | Write | Custom Layers | Description
+| Format | Import | Export | Supported layers
 
 | link:https://www.tei-c.org/release/doc/tei-p5-doc/en/html/index.html[TEI P5] (`dkpro-core-tei`)
 | yes
 | yes
-| no
-| Lemma, POS (xpos), named entities (value)
+| Part-of-speech tagging (built-in), +
+  Lemmatization (built-ion), +
+  Named entity tagging (built-in)
 |====

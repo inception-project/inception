@@ -31,7 +31,7 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Type;
 import org.apache.uima.jcas.tcas.Annotation;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 import de.tudarmstadt.ukp.inception.support.text.TrimUtils;
@@ -47,9 +47,10 @@ public class TrimAnnotationsRepair
     }
 
     @Override
-    public void repair(Project aProject, CAS aCas, List<LogMessage> aMessages)
+    public void repair(SourceDocument aDocument, String aDataOwner, CAS aCas,
+            List<LogMessage> aMessages)
     {
-        var allAnnoLayers = annotationService.listAnnotationLayer(aProject);
+        var allAnnoLayers = annotationService.listAnnotationLayer(aDocument.getProject());
         if (isEmpty(allAnnoLayers)) {
             return;
         }

@@ -27,3 +27,5 @@
 *.ser binary
 *.png binary
 *.jpg binary
+*.pptx binary
+*.svg binary

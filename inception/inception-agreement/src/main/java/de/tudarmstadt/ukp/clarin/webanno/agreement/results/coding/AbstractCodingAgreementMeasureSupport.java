@@ -45,17 +45,31 @@ public abstract class AbstractCodingAgreementMeasureSupport<T extends DefaultAgr
     extends AgreementMeasureSupport_ImplBase<T, FullCodingAgreementResult, ICodingAnnotationStudy>
 {
     @Override
-    public boolean accepts(AnnotationFeature aFeature)
+    public boolean accepts(AnnotationLayer aLayer, AnnotationFeature aFeature)
     {
-        AnnotationLayer layer = aFeature.getLayer();
+        if (aFeature == null) {
+            return false;
+        }
 
-        return asList(SpanLayerSupport.TYPE, RelationLayerSupport.TYPE,
-                DocumentMetadataLayerSupport.TYPE).contains(layer.getType())
-                && asList(SINGLE_TOKEN, TOKENS, SENTENCES).contains(layer.getAnchoringMode())
-                // Link features are supported (because the links generate sub-positions in the diff
-                // but multi-value primitives (e.g. multi-value strings) are not supported
-                && (aFeature.getMultiValueMode() == MultiValueMode.NONE
-                        || aFeature.getLinkMode() != NONE);
+        if (!asList(SpanLayerSupport.TYPE, RelationLayerSupport.TYPE,
+                DocumentMetadataLayerSupport.TYPE).contains(aLayer.getType())) {
+            return false;
+        }
+
+        if (!asList(SINGLE_TOKEN, TOKENS, SENTENCES).contains(aLayer.getAnchoringMode())) {
+            return false;
+        }
+
+        if (aFeature != null) {
+            // Link features are supported (because the links generate sub-positions in the diff
+            // but multi-value primitives (e.g. multi-value strings) are not supported
+            if (aFeature.getMultiValueMode() != MultiValueMode.NONE
+                    && aFeature.getLinkMode() == NONE) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     @Override
