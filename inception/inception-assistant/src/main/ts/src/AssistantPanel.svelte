@@ -26,6 +26,7 @@
 
     interface MPerformanceMetrics {
         duration: number,
+        tokens: number
     }
 
     interface MReference {
@@ -300,6 +301,7 @@
                 {#if message.performance}
                     <div class="message-footer">
                         <span><i class="far fa-clock me-1"/>{message.performance.duration / 1000}s</span>
+                        <span><i class="far me-1"/>{(message.performance.tokens / (message.performance.duration / 1000)).toFixed(2)}tps</span>
                     </div>
                 {/if}
             </div>

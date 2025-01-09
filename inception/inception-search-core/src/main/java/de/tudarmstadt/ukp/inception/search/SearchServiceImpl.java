@@ -214,7 +214,7 @@ public class SearchServiceImpl
 
         aIndex.dead();
 
-        Index index = aIndex.get();
+        var index = aIndex.get();
 
         LOG.trace("Unloading index for project {}", index.getProject());
 
@@ -261,6 +261,10 @@ public class SearchServiceImpl
                 .setParameter("project", aProject) //
                 .getResultStream() //
                 .findFirst().orElse(null);
+
+        if (!aPersist) {
+            entityManager.detach(index);
+        }
 
         // If no index state has been saved in the database yet, create one and save it
         if (index == null) {
