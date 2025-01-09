@@ -321,7 +321,9 @@ public class SchedulingServiceImpl
                         .forEach(t -> {
                             msg.append("- ").append(t).append("\n");
                             for (var frame : t.getThread().getStackTrace()) {
-                                msg.append("  " + frame);
+                                msg.append("  ");
+                                msg.append(frame);
+                                msg.append("\n");
                             }
                         });
                 resumeTasks(aProject);

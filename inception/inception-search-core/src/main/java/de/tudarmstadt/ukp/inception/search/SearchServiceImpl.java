@@ -17,23 +17,13 @@
  */
 package de.tudarmstadt.ukp.inception.search;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.UNMANAGED_ACCESS;
-import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.UNMANAGED_NON_INITIALIZING_ACCESS;
-import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.NO_CAS_UPGRADE;
-import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
-import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.inception.scheduling.TaskState.RUNNING;
 import static de.tudarmstadt.ukp.inception.search.model.AnnotationSearchState.KEY_SEARCH_STATE;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
-import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.casToByteArray;
 import static java.lang.Integer.MAX_VALUE;
 import static java.lang.System.currentTimeMillis;
-import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static java.util.stream.Collectors.toUnmodifiableSet;
 import static org.springframework.transaction.annotation.Propagation.REQUIRES_NEW;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
@@ -52,7 +42,6 @@ import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionalEventListener;
@@ -63,7 +52,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.documents.event.AfterCasWrittenEvent;
 import de.tudarmstadt.ukp.inception.documents.event.AfterDocumentCreatedEvent;
@@ -75,22 +63,16 @@ import de.tudarmstadt.ukp.inception.project.api.event.AfterProjectRemovedEvent;
 import de.tudarmstadt.ukp.inception.project.api.event.BeforeProjectRemovedEvent;
 import de.tudarmstadt.ukp.inception.scheduling.Progress;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
-import de.tudarmstadt.ukp.inception.scheduling.TaskMonitor;
-import de.tudarmstadt.ukp.inception.scheduling.TaskState;
-import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.event.LayerConfigurationChangedEvent;
 import de.tudarmstadt.ukp.inception.search.config.SearchServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.search.config.SearchServiceProperties;
 import de.tudarmstadt.ukp.inception.search.index.IndexRebuildRequiredException;
 import de.tudarmstadt.ukp.inception.search.index.PhysicalIndexRegistry;
-import de.tudarmstadt.ukp.inception.search.model.BulkIndexingContext;
 import de.tudarmstadt.ukp.inception.search.model.Index;
 import de.tudarmstadt.ukp.inception.search.model.Index_;
 import de.tudarmstadt.ukp.inception.search.scheduling.tasks.IndexAnnotationDocumentTask;
 import de.tudarmstadt.ukp.inception.search.scheduling.tasks.IndexSourceDocumentTask;
 import de.tudarmstadt.ukp.inception.search.scheduling.tasks.IndexingTask_ImplBase;
-import de.tudarmstadt.ukp.inception.search.scheduling.tasks.ReindexTask;
-import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 
@@ -109,7 +91,6 @@ public class SearchServiceImpl
     private @PersistenceContext EntityManager entityManager;
 
     private final DocumentService documentService;
-    private final AnnotationSchemaService schemaService;
     private final ProjectService projectService;
     private final PhysicalIndexRegistry physicalIndexRegistry;
     private final SchedulingService schedulingService;
@@ -122,14 +103,11 @@ public class SearchServiceImpl
 
     private boolean shutdown = false;
 
-    @Autowired
-    public SearchServiceImpl(DocumentService aDocumentService,
-            AnnotationSchemaService aSchemaService, ProjectService aProjectService,
+    public SearchServiceImpl(DocumentService aDocumentService, ProjectService aProjectService,
             PhysicalIndexRegistry aPhysicalIndexRegistry, SchedulingService aSchedulingService,
             SearchServiceProperties aProperties, PreferencesService aPreferencesService)
     {
         documentService = aDocumentService;
-        schemaService = aSchemaService;
         projectService = aProjectService;
         physicalIndexRegistry = aPhysicalIndexRegistry;
         schedulingService = aSchedulingService;
@@ -377,7 +355,7 @@ public class SearchServiceImpl
         }
     }
 
-    private PooledIndex acquireIndex(long aProjectId)
+    PooledIndex acquireIndex(long aProjectId)
     {
         return acquireIndex(aProjectId, true);
     }
@@ -421,6 +399,23 @@ public class SearchServiceImpl
             pooledIndex.borrow();
 
             return pooledIndex;
+        }
+    }
+
+    @Transactional
+    void writeIndex(PooledIndex aIndex)
+    {
+        if (aIndex.isTombstone()) {
+            return;
+        }
+
+        var index = aIndex.get();
+
+        if (index.getId() == null) {
+            entityManager.persist(index);
+        }
+        else {
+            entityManager.merge(index);
         }
     }
 
@@ -479,9 +474,9 @@ public class SearchServiceImpl
 
         try (var pooledIndex = acquireIndex(project.getId())) {
             pooledIndex.forceRecycle();
-            Index index = pooledIndex.get();
+            var index = pooledIndex.get();
             index.setInvalid(true);
-            entityManager.merge(index);
+            writeIndex(pooledIndex);
         }
 
         // Schedule re-indexing of the physical index
@@ -497,8 +492,7 @@ public class SearchServiceImpl
         }
     }
 
-    private void indexDocument(PooledIndex aPooledIndex, SourceDocument aSourceDocument,
-            byte[] aBinaryCas)
+    void indexDocument(PooledIndex aPooledIndex, SourceDocument aSourceDocument, byte[] aBinaryCas)
     {
         var project = aSourceDocument.getProject();
 
@@ -548,16 +542,16 @@ public class SearchServiceImpl
         }
     }
 
-    private boolean isPerformNoMoreActions(PooledIndex aPooledIndex)
+    boolean isPerformNoMoreActions(PooledIndex aPooledIndex)
     {
-        // If the index is dead or marked to force-recycle, we shouldn't waste time
-        // rebuilding the index on it. Either we shut down or there is another
-        // re-indexing scheduled that will cover for us.
+        // If the index is dead or marked to force-recycle, we shouldn't waste time rebuilding the
+        // index on it. Either we shut down or there is another re-indexing scheduled that will
+        // cover for us.
         return aPooledIndex.isTombstone() || aPooledIndex.isDead() || aPooledIndex.isForceRecycle()
                 || shutdown;
     }
 
-    private void indexDocument(PooledIndex aPooledIndex, AnnotationDocument aAnnotationDocument,
+    void indexDocument(PooledIndex aPooledIndex, AnnotationDocument aAnnotationDocument,
             String aTrigger, byte[] aBinaryCas)
     {
         var project = aAnnotationDocument.getProject();
@@ -675,155 +669,6 @@ public class SearchServiceImpl
             statisticsMap.put("query." + aQuery, statistics);
 
             return new StatisticsResult(statRequest, statisticsMap, aFeatures);
-        }
-    }
-
-    /**
-     * Re-index the project. If there is no physical index, create a new one.
-     */
-    @Override
-    @Transactional
-    public void reindex(Project aProject, TaskMonitor aMonitor) throws IOException
-    {
-        LOG.info("Re-indexing project {}. This may take a while...", aProject);
-
-        try (var pooledIndex = acquireIndex(aProject.getId())) {
-            if (isPerformNoMoreActions(pooledIndex)) {
-                return;
-            }
-
-            var index = pooledIndex.get();
-            index.setInvalid(true);
-
-            // Clear the index
-            try {
-                index.getPhysicalIndex().clear();
-            }
-            catch (IndexRebuildRequiredException e) {
-                // We can ignore this since we are rebuilding the index already anyway
-            }
-
-            var usersWithPermissions = projectService.listProjectUsersWithPermissions(aProject)
-                    .stream() //
-                    .map(User::getUsername) //
-                    .collect(toUnmodifiableSet());
-            var annotationDocuments = documentService.listAnnotationDocuments(aProject).stream()
-                    .filter(annDoc -> usersWithPermissions.contains(annDoc.getUser())) //
-                    .toList();
-            var sourceDocuments = documentService.listSourceDocuments(aProject);
-
-            var progress = 0;
-            int maxProgress = annotationDocuments.size() + sourceDocuments.size();
-
-            // We do not need write access and do not want to add to the exclusive access CAS cache,
-            // so we would normally use SHARED_READ_ONLY_ACCESS. However, that mode can only be used
-            // with AUTO_CAS_UPGRADE which makes things slow. We want NO_CAS_UPGRADE.
-            // So we use UNMANAGED_NON_INITIALIZING_ACCESS for the annotation CASes to avoid
-            // initializing CASes for users who have not started working on a document but for which
-            // an AnnotationDocument item exists (e.g. locked documents).
-            // For INITIAL_CASes, we use UNMANAGED_ACCESS since the INITIAL_CAS should always
-            // exist.
-            final var accessModeAnnotationCas = UNMANAGED_NON_INITIALIZING_ACCESS;
-            final var accessModeInitialCas = UNMANAGED_ACCESS;
-            final var casUpgradeMode = NO_CAS_UPGRADE;
-
-            var prefs = preferencesService.loadDefaultTraitsForProject(KEY_SEARCH_STATE, aProject);
-            try (var indexContext = BulkIndexingContext.init(aProject, schemaService, true,
-                    prefs)) {
-                // Index all the source documents
-                for (var doc : sourceDocuments) {
-                    progress++;
-
-                    if (isPerformNoMoreActions(pooledIndex)) {
-                        return;
-                    }
-
-                    if (aMonitor != null) {
-                        if (aMonitor.isCancelled()) {
-                            aMonitor.setProgressWithMessage(progress, maxProgress, LogMessage
-                                    .info(this, "Indexing aborted. Search cannot be used."));
-                            if (aMonitor.isCancelled()) {
-                                aMonitor.setState(TaskState.CANCELLED);
-                            }
-                            break;
-                        }
-
-                        aMonitor.setProgressWithMessage(progress, maxProgress,
-                                LogMessage.info(this, "Source document: %s", doc.getName()));
-                    }
-
-                    try (var session = CasStorageSession.openNested()) {
-                        // Index source document
-                        var casAsByteArray = casToByteArray(documentService
-                                .createOrReadInitialCas(doc, casUpgradeMode, accessModeInitialCas));
-                        indexDocument(pooledIndex, doc, casAsByteArray);
-
-                        // Index curation document (if available)
-                        if (documentService.existsCas(doc, CURATION_USER)
-                                && asList(CURATION_IN_PROGRESS, CURATION_FINISHED)
-                                        .contains(doc.getState())) {
-                            var aDoc = documentService.getAnnotationDocument(doc, CURATION_USER);
-                            var curationCasAsByteArray = casToByteArray(
-                                    documentService.readAnnotationCas(doc, CURATION_USER,
-                                            casUpgradeMode, accessModeInitialCas));
-                            indexDocument(pooledIndex, aDoc, "reindex", curationCasAsByteArray);
-                        }
-                    }
-                    catch (Exception e) {
-                        LOG.error("Error indexing document {}", doc, e);
-                    }
-                }
-
-                // Index all the annotation documents (from annotators)
-                for (var doc : annotationDocuments) {
-                    progress++;
-
-                    if (isPerformNoMoreActions(pooledIndex)) {
-                        return;
-                    }
-
-                    if (aMonitor != null) {
-                        if (aMonitor.isCancelled()) {
-                            aMonitor.setProgressWithMessage(progress, maxProgress, LogMessage
-                                    .info(this, "Indexing aborted. Search cannot be used."));
-                            if (aMonitor.isCancelled()) {
-                                aMonitor.setState(TaskState.CANCELLED);
-                            }
-                            break;
-                        }
-
-                        aMonitor.setProgressWithMessage(progress, maxProgress, LogMessage.info(this,
-                                "Annotation document: %s @ %s", doc.getUser(), doc.getName()));
-                    }
-
-                    try (var session = CasStorageSession.openNested()) {
-                        var casAsByteArray = casToByteArray(
-                                documentService.readAnnotationCas(doc.getDocument(), doc.getUser(),
-                                        casUpgradeMode, accessModeAnnotationCas));
-                        indexDocument(pooledIndex, doc, "reindex", casAsByteArray);
-                    }
-                    catch (FileNotFoundException e) {
-                        // Ignore it if a annotation CAS does not exist yet
-                    }
-                    catch (Exception e) {
-                        LOG.error("Error indexing document {}", doc, e);
-                    }
-                }
-            }
-
-            // After re-indexing, reset the invalid flag
-            if (aMonitor == null || !aMonitor.isCancelled()) {
-                index.setInvalid(false);
-            }
-
-            entityManager.merge(index);
-        }
-
-        if (aMonitor == null || !aMonitor.isCancelled()) {
-            LOG.info("Re-indexing project {} complete!", aProject);
-        }
-        else {
-            LOG.info("Re-indexing project {} aborted!", aProject);
         }
     }
 
@@ -1004,7 +849,7 @@ public class SearchServiceImpl
                 .anyMatch(task -> task instanceof IndexingTask_ImplBase);
     }
 
-    private class PooledIndex
+    static class PooledIndex
         implements AutoCloseable
     {
         private final Index delegate;
@@ -1109,4 +954,5 @@ public class SearchServiceImpl
             return tombstone.get();
         }
     }
+
 }
