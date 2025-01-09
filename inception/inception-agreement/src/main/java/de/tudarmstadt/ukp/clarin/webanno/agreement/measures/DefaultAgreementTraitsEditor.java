@@ -17,27 +17,18 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.agreement.measures;
 
-import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
-import static java.util.Arrays.asList;
-
 import org.apache.wicket.markup.html.form.CheckBox;
-import org.apache.wicket.markup.html.form.DropDownChoice;
-import org.apache.wicket.markup.html.form.EnumChoiceRenderer;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
-import de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureMultiplicityMode;
 
 public class DefaultAgreementTraitsEditor<T extends DefaultAgreementTraits>
     extends Panel
 {
     private static final long serialVersionUID = 7780019891761754494L;
-
-    private final DropDownChoice<LinkFeatureMultiplicityMode> linkCompareBehaviorDropDown;
 
     private final Form<T> form;
 
@@ -46,24 +37,7 @@ public class DefaultAgreementTraitsEditor<T extends DefaultAgreementTraits>
     {
         super(aId, aModel);
 
-        form = new Form<T>("form", CompoundPropertyModel.of(aModel))
-        {
-            private static final long serialVersionUID = -1422265935439298212L;
-
-            @Override
-            protected void onSubmit()
-            {
-                // TODO Auto-generated method stub
-                super.onSubmit();
-            }
-        };
-
-        linkCompareBehaviorDropDown = new DropDownChoice<>("linkCompareBehavior",
-                asList(LinkFeatureMultiplicityMode.values()), new EnumChoiceRenderer<>(this));
-        linkCompareBehaviorDropDown.add(
-                visibleWhen(aFeature.map(f -> LinkMode.NONE != f.getLinkMode()).orElse(false)));
-        linkCompareBehaviorDropDown.setOutputMarkupPlaceholderTag(true);
-        form.add(linkCompareBehaviorDropDown);
+        form = new Form<T>("form", CompoundPropertyModel.of(aModel));
 
         form.add(new CheckBox("limitToFinishedDocuments").setOutputMarkupId(true));
 
