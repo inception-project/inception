@@ -35,6 +35,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Method;
 import java.util.List;
 
@@ -55,6 +56,8 @@ import org.eclipse.rdf4j.rio.Rio;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.TestInfo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.inception.kb.RepositoryType;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
@@ -62,6 +65,8 @@ import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
 public class SPARQLQueryBuilderLocalTestScenarios
 {
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
     static final String TURTLE_PREFIX = String.join("\n", //
             "@base <http://example.org/> .", //
             "@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .", //
@@ -224,8 +229,7 @@ public class SPARQLQueryBuilderLocalTestScenarios
     public void testWatcher(TestInfo aTestInfo)
     {
         String methodName = aTestInfo.getTestMethod().map(Method::getName).orElse("<unknown>");
-        System.out.printf("\n=== %s === %s =====================\n", methodName,
-                aTestInfo.getDisplayName());
+        LOG.info("=== {} === {} =====================", methodName, aTestInfo.getDisplayName());
 
         suspendSslVerification();
     }
@@ -1330,7 +1334,7 @@ public class SPARQLQueryBuilderLocalTestScenarios
         // Detect the file format
         var format = Rio.getParserFormatForFileName(aFilename).orElse(RDFXML);
 
-        System.out.printf("Loading %s data from %s%n", format, aFilename);
+        LOG.info("Loading {} data from {}", format, aFilename);
 
         // Load files into the repository
         try (var is = new FileInputStream(aFilename)) {

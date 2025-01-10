@@ -69,10 +69,11 @@ import de.tudarmstadt.ukp.inception.workload.config.WorkloadManagementAutoConfig
 import de.tudarmstadt.ukp.inception.workload.dynamic.config.DynamicWorkloadManagerAutoConfiguration;
 import de.tudarmstadt.ukp.inception.workload.dynamic.trait.DynamicWorkloadTraits;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
-import de.tudarmstadt.ukp.inception.workload.model.WorkloadManager;
 
 @EnableAutoConfiguration
-@DataJpaTest(excludeAutoConfiguration = LiquibaseAutoConfiguration.class, showSql = false, //
+@DataJpaTest( //
+        excludeAutoConfiguration = LiquibaseAutoConfiguration.class, //
+        showSql = false, //
         properties = { //
                 "spring.main.banner-mode=off", //
                 "workload.dynamic.enabled=true", //
@@ -128,7 +129,7 @@ public class DynamicWorkloadExtensionImpl2Test
 
         Fixtures.importTestSourceDocumentAndAddNamedEntity(documentService, annotationDocument);
 
-        WorkloadManager workloadManager = workloadManagementService
+        var workloadManager = workloadManagementService
                 .loadOrCreateWorkloadManagerConfiguration(project);
         workloadManager.setType(DynamicWorkloadExtension.DYNAMIC_WORKLOAD_MANAGER_EXTENSION_ID);
     }

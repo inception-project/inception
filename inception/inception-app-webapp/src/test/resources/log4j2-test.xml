@@ -7,12 +7,11 @@
   </Appenders>
 
   <Loggers>
+<!--     <Logger name="de.tudarmstadt.ukp.dkpro.core.api.datasets.DatasetFactory" level="INFO"/> -->
+<!--     <Logger name="de.tudarmstadt.ukp.inception.recommendation" level="TRACE"/> -->
+
     <Root level="WARN">
       <AppenderRef ref="ConsoleAppender" />
     </Root>
-    
-<!--     <Logger name="de.tudarmstadt.ukp.clarin.webanno.curation.casdiff" level="TRACE" /> -->
-<!--     <Logger name="de.tudarmstadt.ukp.inception.curation.merge" level="TRACE" /> -->
-<!--     <Logger name="de.tudarmstadt.ukp.inception.curation.merge.strategy" level="TRACE" /> -->
   </Loggers>
 </Configuration>

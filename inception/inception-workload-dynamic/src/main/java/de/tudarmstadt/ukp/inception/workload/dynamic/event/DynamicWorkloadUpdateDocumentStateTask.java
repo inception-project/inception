@@ -32,9 +32,7 @@ import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.scheduling.DebouncingTask;
 import de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExtension;
-import de.tudarmstadt.ukp.inception.workload.dynamic.trait.DynamicWorkloadTraits;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
-import de.tudarmstadt.ukp.inception.workload.model.WorkloadManager;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.NoResultException;
 import jakarta.persistence.PersistenceContext;
@@ -87,21 +85,21 @@ public class DynamicWorkloadUpdateDocumentStateTask
 
         // We check this here instead of checking at task submission to avoid hammering the
         // DB if there is a high event frequency
-        WorkloadManager workloadManager = workloadManagementService
+        var workloadManager = workloadManagementService
                 .loadOrCreateWorkloadManagerConfiguration(project);
         if (!DYNAMIC_WORKLOAD_MANAGER_EXTENSION_ID.equals(workloadManager.getType())) {
             return;
         }
 
         // Get the latest state
-        SourceDocument doc = documentService.getSourceDocument(project.getId(), document.getId());
+        var doc = documentService.getSourceDocument(project.getId(), document.getId());
 
         // If the source document is already in curation, we do not touch the state anymore
         if (doc.getState() == CURATION_FINISHED || doc.getState() == CURATION_IN_PROGRESS) {
             return;
         }
 
-        DynamicWorkloadTraits traits = dynamicWorkloadExtension.readTraits(workloadManager);
+        var traits = dynamicWorkloadExtension.readTraits(workloadManager);
         int requiredAnnotatorCount = traits.getDefaultNumberOfAnnotations();
 
         dynamicWorkloadExtension.updateDocumentState(doc, requiredAnnotatorCount);
@@ -116,7 +114,7 @@ public class DynamicWorkloadUpdateDocumentStateTask
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        DynamicWorkloadUpdateDocumentStateTask task = (DynamicWorkloadUpdateDocumentStateTask) o;
+        var task = (DynamicWorkloadUpdateDocumentStateTask) o;
         return document.equals(task.document) && getProject().equals(task.getProject());
     }
 
