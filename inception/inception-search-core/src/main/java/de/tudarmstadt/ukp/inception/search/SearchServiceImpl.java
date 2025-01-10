@@ -74,6 +74,7 @@ import de.tudarmstadt.ukp.inception.search.scheduling.tasks.IndexAnnotationDocum
 import de.tudarmstadt.ukp.inception.search.scheduling.tasks.IndexSourceDocumentTask;
 import de.tudarmstadt.ukp.inception.search.scheduling.tasks.IndexingTask_ImplBase;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.NoResultException;
 import jakarta.persistence.PersistenceContext;
 
 /**
@@ -228,33 +229,42 @@ public class SearchServiceImpl
      */
     private synchronized Index loadIndex(long aProjectId, boolean aPersist)
     {
-        var aProject = projectService.getProject(aProjectId);
+        Project project = null;
+        try {
+            project = projectService.getProject(aProjectId);
+        }
+        catch (NoResultException e) {
+            throw new IllegalStateException(
+                    "Project [" + aProjectId + "] does not exit, index not accessible.");
+        }
 
-        LOG.trace("Loading index for project {}", aProject);
+        LOG.trace("Loading index for project {}", project);
 
         // Check if an index state has already been stored in the database
         // Currently, we assume that a project can have only a single index
         var sql = "FROM " + Index.class.getName() + " WHERE project = :project";
         var index = entityManager.createQuery(sql, Index.class) //
-                .setParameter("project", aProject) //
+                .setParameter("project", project) //
                 .getResultStream() //
                 .findFirst().orElse(null);
-
-        if (!aPersist) {
-            entityManager.detach(index);
-        }
 
         // If no index state has been saved in the database yet, create one and save it
         if (index == null) {
             // Not found in the DB, create new index instance and store it in DB
-            LOG.trace("Initializing persistent index state in project {}", aProject);
+            LOG.trace("Initializing persistent index state in project {}", project);
 
             index = new Index();
             index.setInvalid(false);
-            index.setProject(aProject);
+            index.setProject(project);
             index.setPhysicalProvider(DEFAULT_PHSYICAL_INDEX_FACTORY);
+
             if (aPersist) {
                 entityManager.persist(index);
+            }
+        }
+        else {
+            if (!aPersist) {
+                entityManager.detach(index);
             }
         }
 
@@ -266,7 +276,7 @@ public class SearchServiceImpl
         }
 
         // Acquire the low-level index object and attach it to the index state (transient)
-        index.setPhysicalIndex(indexFactory.getPhysicalIndex(aProject));
+        index.setPhysicalIndex(indexFactory.getPhysicalIndex(project));
 
         return index;
     }

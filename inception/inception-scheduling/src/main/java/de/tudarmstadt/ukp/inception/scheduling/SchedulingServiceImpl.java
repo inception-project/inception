@@ -551,6 +551,7 @@ public class SchedulingServiceImpl
         });
     }
 
+    @Order(Ordered.HIGHEST_PRECEDENCE)
     @EventListener
     public void beforeProjectRemoved(BeforeProjectRemovedEvent aEvent) throws TimeoutException
     {
@@ -559,6 +560,7 @@ public class SchedulingServiceImpl
         waitForProjectTasksToEnd(aEvent.getProject(), Duration.ofMinutes(1));
     }
 
+    @Order(Ordered.HIGHEST_PRECEDENCE)
     @EventListener
     public void afterProjectRemoved(AfterProjectRemovedEvent aEvent) throws IOException
     {

@@ -45,7 +45,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
@@ -55,7 +54,6 @@ import de.tudarmstadt.ukp.inception.scheduling.MatchResult;
 import de.tudarmstadt.ukp.inception.scheduling.Progress;
 import de.tudarmstadt.ukp.inception.scheduling.ProjectTask;
 import de.tudarmstadt.ukp.inception.scheduling.Task;
-import de.tudarmstadt.ukp.inception.scheduling.TaskMonitor;
 import de.tudarmstadt.ukp.inception.scheduling.TaskState;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.search.index.IndexRebuildRequiredException;
@@ -64,6 +62,7 @@ import de.tudarmstadt.ukp.inception.search.scheduling.tasks.IndexAnnotationDocum
 import de.tudarmstadt.ukp.inception.search.scheduling.tasks.IndexSourceDocumentTask;
 import de.tudarmstadt.ukp.inception.search.scheduling.tasks.IndexingTask_ImplBase;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
+import jakarta.persistence.NoResultException;
 
 /**
  * Search indexer task. Runs the re-indexing process for a given project
@@ -98,14 +97,20 @@ public class ReindexTask
     @Override
     public void execute() throws IOException
     {
-        reindex(super.getProject(), getMonitor());
-    }
+        var project = getProject();
+        var monitor = getMonitor();
 
-    public void reindex(Project aProject, TaskMonitor aMonitor) throws IOException
-    {
-        LOG.info("Re-indexing project {}. This may take a while...", aProject);
+        LOG.info("Re-indexing project {}. This may take a while...", project);
 
-        try (var pooledIndex = searchService.acquireIndex(aProject.getId())) {
+        try {
+            project = projectService.getProject(getProject().getId());
+        }
+        catch (NoResultException e) {
+            LOG.info("Re-indexing project {} skipped - project no longer exists", project);
+            return;
+        }
+
+        try (var pooledIndex = searchService.acquireIndex(project.getId())) {
             if (searchService.isPerformNoMoreActions(pooledIndex)) {
                 return;
             }
@@ -122,14 +127,14 @@ public class ReindexTask
                 // We can ignore this since we are rebuilding the index already anyway
             }
 
-            var usersWithPermissions = projectService.listProjectUsersWithPermissions(aProject)
+            var usersWithPermissions = projectService.listProjectUsersWithPermissions(project)
                     .stream() //
                     .map(User::getUsername) //
                     .collect(toUnmodifiableSet());
-            var annotationDocuments = documentService.listAnnotationDocuments(aProject).stream()
+            var annotationDocuments = documentService.listAnnotationDocuments(project).stream()
                     .filter(annDoc -> usersWithPermissions.contains(annDoc.getUser())) //
                     .toList();
-            var sourceDocuments = documentService.listSourceDocuments(aProject);
+            var sourceDocuments = documentService.listSourceDocuments(project);
 
             var progress = 0;
             int maxProgress = annotationDocuments.size() + sourceDocuments.size();
@@ -146,9 +151,8 @@ public class ReindexTask
             final var accessModeInitialCas = UNMANAGED_ACCESS;
             final var casUpgradeMode = NO_CAS_UPGRADE;
 
-            var prefs = preferencesService.loadDefaultTraitsForProject(KEY_SEARCH_STATE, aProject);
-            try (var indexContext = BulkIndexingContext.init(aProject, schemaService, true,
-                    prefs)) {
+            var prefs = preferencesService.loadDefaultTraitsForProject(KEY_SEARCH_STATE, project);
+            try (var indexContext = BulkIndexingContext.init(project, schemaService, true, prefs)) {
                 // Index all the source documents
                 for (var doc : sourceDocuments) {
                     progress++;
@@ -157,17 +161,17 @@ public class ReindexTask
                         return;
                     }
 
-                    if (aMonitor != null) {
-                        if (aMonitor.isCancelled()) {
-                            aMonitor.setProgressWithMessage(progress, maxProgress, LogMessage
+                    if (monitor != null) {
+                        if (monitor.isCancelled()) {
+                            monitor.setProgressWithMessage(progress, maxProgress, LogMessage
                                     .info(this, "Indexing aborted. Search cannot be used."));
-                            if (aMonitor.isCancelled()) {
-                                aMonitor.setState(TaskState.CANCELLED);
+                            if (monitor.isCancelled()) {
+                                monitor.setState(TaskState.CANCELLED);
                             }
                             break;
                         }
 
-                        aMonitor.setProgressWithMessage(progress, maxProgress,
+                        monitor.setProgressWithMessage(progress, maxProgress,
                                 LogMessage.info(this, "Source document: %s", doc.getName()));
                     }
 
@@ -202,17 +206,17 @@ public class ReindexTask
                         return;
                     }
 
-                    if (aMonitor != null) {
-                        if (aMonitor.isCancelled()) {
-                            aMonitor.setProgressWithMessage(progress, maxProgress, LogMessage
+                    if (monitor != null) {
+                        if (monitor.isCancelled()) {
+                            monitor.setProgressWithMessage(progress, maxProgress, LogMessage
                                     .info(this, "Indexing aborted. Search cannot be used."));
-                            if (aMonitor.isCancelled()) {
-                                aMonitor.setState(TaskState.CANCELLED);
+                            if (monitor.isCancelled()) {
+                                monitor.setState(TaskState.CANCELLED);
                             }
                             break;
                         }
 
-                        aMonitor.setProgressWithMessage(progress, maxProgress, LogMessage.info(this,
+                        monitor.setProgressWithMessage(progress, maxProgress, LogMessage.info(this,
                                 "Annotation document: %s @ %s", doc.getUser(), doc.getName()));
                     }
 
@@ -232,18 +236,21 @@ public class ReindexTask
             }
 
             // After re-indexing, reset the invalid flag
-            if (aMonitor == null || !aMonitor.isCancelled()) {
+            if (monitor == null || !monitor.isCancelled()) {
                 index.setInvalid(false);
             }
 
             searchService.writeIndex(pooledIndex);
         }
+        catch (IOException e) {
+            LOG.error("Re-indexing project {} failed!", project, e);
+        }
 
-        if (aMonitor == null || !aMonitor.isCancelled()) {
-            LOG.info("Re-indexing project {} complete!", aProject);
+        if (monitor == null || !monitor.isCancelled()) {
+            LOG.info("Re-indexing project {} complete!", project);
         }
         else {
-            LOG.info("Re-indexing project {} aborted!", aProject);
+            LOG.info("Re-indexing project {} aborted!", project);
         }
     }
 
