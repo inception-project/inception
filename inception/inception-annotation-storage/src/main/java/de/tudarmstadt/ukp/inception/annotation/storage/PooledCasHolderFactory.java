@@ -23,6 +23,9 @@ import org.apache.commons.pool2.BaseKeyedPooledObjectFactory;
 import org.apache.commons.pool2.PooledObject;
 import org.apache.commons.pool2.impl.DefaultPooledObject;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasHolder;
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasKey;
+
 public class PooledCasHolderFactory
     extends BaseKeyedPooledObjectFactory<CasKey, CasHolder>
 {

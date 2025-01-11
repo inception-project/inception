@@ -75,7 +75,7 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-annotation-storage</artifactId>
+      <artifactId>inception-annotation-storage-api</artifactId>
     </dependency>
 
     <dependency>
@@ -250,6 +250,11 @@
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-documents</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-annotation-storage</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>

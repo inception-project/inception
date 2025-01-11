@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.diag.checks;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
+import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.AUTO_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMessage;
 
@@ -26,6 +28,7 @@ import java.util.List;
 import org.apache.uima.cas.CAS;
 import org.dkpro.core.api.xml.type.XmlDocument;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
@@ -54,8 +57,9 @@ public class XmlStructurePresentInCurationCasCheck
             return true;
         }
 
-        try {
-            var initialCas = documentService.createOrReadInitialCas(aDocument);
+        try (var session = CasStorageSession.openNested()) {
+            var initialCas = documentService.createOrReadInitialCas(aDocument, AUTO_CAS_UPGRADE,
+                    SHARED_READ_ONLY_ACCESS);
 
             if (initialCas.select(XmlDocument.class).isEmpty()) {
                 // Initial CAS also does not contain a document structure, so we are good
