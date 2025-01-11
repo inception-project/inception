@@ -8,6 +8,8 @@
 
   <Loggers>
 <!--     <Logger name="de.tudarmstadt.ukp.inception.recommendation" level="TRACE"/> -->
+<!--     <Logger name="de.tudarmstadt.ukp.inception.support.test.websocket" level="TRACE"/> -->
+    
     <Root level="WARN">
       <AppenderRef ref="ConsoleAppender" />
     </Root>

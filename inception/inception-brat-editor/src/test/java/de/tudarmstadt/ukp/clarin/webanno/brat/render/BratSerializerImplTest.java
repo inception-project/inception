@@ -65,7 +65,6 @@ import de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureSupport;
 import de.tudarmstadt.ukp.inception.annotation.feature.number.NumberFeatureSupport;
 import de.tudarmstadt.ukp.inception.annotation.feature.string.StringFeatureSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.behaviors.LayerBehaviorRegistryImpl;
-import de.tudarmstadt.ukp.inception.annotation.layer.behaviors.LayerSupportRegistryImpl;
 import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainLayerSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
@@ -73,7 +72,8 @@ import de.tudarmstadt.ukp.inception.editor.state.AnnotatorStateImpl;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.inception.schema.service.FeatureSupportRegistryImpl;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistryImpl;
+import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistryImpl;
 import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 
 @ExtendWith(MockitoExtension.class)

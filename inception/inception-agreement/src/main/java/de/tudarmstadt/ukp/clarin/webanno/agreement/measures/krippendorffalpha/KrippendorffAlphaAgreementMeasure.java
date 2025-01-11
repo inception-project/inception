@@ -19,7 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.agreement.measures.krippendorffalpha;
 
 import static de.tudarmstadt.ukp.clarin.webanno.agreement.AgreementUtils.makeCodingStudy;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
-import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.getDiffAdapters;
+import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.DiffAdapterRegistry.getDiffAdapters;
 import static java.lang.Double.NaN;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toCollection;

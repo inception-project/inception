@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>34.6-SNAPSHOT</version>
+    <version>35.0-SNAPSHOT</version>
   </parent>
   <artifactId>inception-remote</artifactId>
   <name>INCEpTION - Core - Remote API</name>
@@ -317,6 +317,11 @@
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-search-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-ui-dashboard</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>

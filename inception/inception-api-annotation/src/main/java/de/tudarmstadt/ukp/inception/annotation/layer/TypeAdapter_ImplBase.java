@@ -82,7 +82,7 @@ public abstract class TypeAdapter_ImplBase
      *            the layer for which the adapter is created.
      * @param aFeatures
      *            supplier for the features, typically
-     *            {@link AnnotationSchemaService#listAnnotationFeature(AnnotationLayer)}. Since the
+     *            {@link AnnotationSchemaService#listSupportedFeatures(AnnotationLayer)}. Since the
      *            features are not always needed, we use a supplied here so they can be loaded
      *            lazily. To facilitate testing, we do not pass the entire
      *            {@link AnnotationSchemaService}.
@@ -162,7 +162,9 @@ public abstract class TypeAdapter_ImplBase
     public final boolean isFeatureValueEqual(AnnotationFeature aFeature, FeatureStructure aFS1,
             FeatureStructure aFS2)
     {
-        var featureSupport = featureSupportRegistry.findExtension(aFeature).orElseThrow();
+        var featureSupport = featureSupportRegistry.findExtension(aFeature)
+                .orElseThrow(() -> new NoSuchElementException("Support for feature " + aFeature
+                        + " of type [" + aFeature.getType() + "] not found"));
 
         return featureSupport.isFeatureValueEqual(aFeature, aFS1, aFS2);
     }

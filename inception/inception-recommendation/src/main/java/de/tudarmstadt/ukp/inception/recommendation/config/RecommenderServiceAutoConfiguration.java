@@ -161,7 +161,6 @@ public class RecommenderServiceAutoConfiguration
     }
 
     @Bean(name = RecommendationEditorExtension.BEAN_NAME)
-    @Autowired
     public RecommendationEditorExtension recommendationEditorExtension(
             AnnotationSchemaService aAnnotationService,
             RecommendationService aRecommendationService,
@@ -181,7 +180,6 @@ public class RecommenderServiceAutoConfiguration
 
     @ConditionalOnWebApplication
     @Bean
-    @Autowired
     @ConditionalOnProperty(prefix = "monitoring.metrics", name = "enabled", havingValue = "true")
     public RecommendationMetricsImpl recommendationMetricsImpl(RecommendationService aRecService)
     {

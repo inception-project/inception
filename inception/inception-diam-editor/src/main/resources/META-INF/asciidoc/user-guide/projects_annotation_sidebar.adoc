@@ -22,14 +22,13 @@ This setting allows configuring groups which are always visible in the annotatio
 annotation page when the sidebar is in **group by label** mode.
 
 Consider a situation where annotators should always locate one or more mentions of a particular 
-concept in every document. Configuring the labels of these concepts as pinned groups will show 
-them in the sidebar, even if the annotator has not yet created an annotation for them. This can
-help the annotator to see which concepts still need to be located and annotated in the text.
+concept in every document.
+Configuring the labels of these concepts as pinned groups will show them in the sidebar, even if the annotator has not yet created an annotation for them.
+This can help the annotator to see which concepts still need to be located and annotated in the text.
 
 This functionality can also be used to enforce a particular order of groups if the automatic alphabetic sorting is not convenient.
 
-Note that groups are formed by the label of an annotation which consists of the concatenated feature 
-values. Thus, for annotations that have multiple features included in their labels, you need to pay
-close attention to exactly match the rendered labels in your pinned groups (wildcards are not 
-supported!). You might consider excluding non-essential features from the label by unchecking the 
-option **Visible** in the settings for the respective feature.
+Note that groups are formed by the label of an annotation which consists of the concatenated feature values.
+Thus, for annotations that have multiple features included in their labels, you need to pay close attention to exactly match the rendered labels in your pinned groups (wildcards are not 
+supported!).
+You might consider excluding non-essential features from the label by unchecking the option **Visible** in the settings for the respective feature.

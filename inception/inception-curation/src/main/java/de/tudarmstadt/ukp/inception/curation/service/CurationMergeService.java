@@ -46,6 +46,8 @@ public interface CurationMergeService
      *            the merge strategy
      * @param aLayers
      *            the layers to be merged
+     * @param aClearTargetCas
+     *            whether to clear the target CAS before merging
      * @return any messages generated during the merge process.
      * @throws UIMAException
      *             if there was an UIMA-level problem

@@ -18,7 +18,7 @@
 package de.tudarmstadt.ukp.inception.ui.curation.sidebar.render;
 
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
-import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.getDiffAdapters;
+import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.DiffAdapterRegistry.getDiffAdapters;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.ANNOTATION;
 import static de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationRenderer.REL_EXTENSION_ID;
 import static java.util.function.Function.identity;
@@ -336,7 +336,7 @@ public class CurationSidebarRenderer
     {
         if (cfg.getPosition() instanceof SpanPosition spanPosition
                 && spanPosition.isLinkFeaturePosition()) {
-            arc.setSource(resolveVisibleLinkHost(targetUser, diff, cfg, arc.getSource(), showAll));
+            arc.setSource(resolveVisibleLinkHost(targetUser, diff, cfg, arc.getSource()));
         }
         else {
             arc.setSource(resolveVisibleEndpoint(targetUser, diff, cfg, arc.getSource(), showAll));
@@ -346,41 +346,13 @@ public class CurationSidebarRenderer
     }
 
     private VID resolveVisibleLinkHost(String aTargetUser, DiffResult aDiff, Configuration aCfg,
-            VID aVid, boolean showAll)
+            VID aVid)
     {
         if (REL_EXTENSION_ID.equals(aVid.getExtensionId())) {
             return aVid;
         }
 
         var representativeCasGroupId = aCfg.getRepresentativeCasGroupId();
-
-        if (showAll) {
-            return new CurationVID(representativeCasGroupId, aVid);
-        }
-
-        // If this is a link feature position, derive the base span position (i.e. the span
-        // which owns the link feature) and check if that has already been merged. If yes, we
-        // need to return the merged position instead of the curator's position.
-        if (false && aCfg.getPosition() instanceof SpanPosition spanPosition
-                && spanPosition.isLinkFeaturePosition()) {
-            var originalSpanPosition = spanPosition.getBasePosition();
-            var cfgSet = aDiff.getConfigurationSet(originalSpanPosition);
-            if (cfgSet != null) {
-                var targetConfigurations = cfgSet.getConfigurations(aTargetUser);
-                if (!targetConfigurations.isEmpty()) {
-                    // FIXME: This is probably sub-optimal. What if the target user has multiple
-                    // configurations at this position? Currently, we simply attach to the first
-                    // one - which may not be the best matching one.
-                    // In particular, it may not be the one onto which the link will eventually
-                    // be merged...
-                    var curatedAID = targetConfigurations.get(0).getAID(aTargetUser);
-                    if (curatedAID != null) {
-                        return new VID(curatedAID.addr);
-                    }
-                }
-            }
-        }
-
         return new CurationVID(representativeCasGroupId, aVid);
     }
 

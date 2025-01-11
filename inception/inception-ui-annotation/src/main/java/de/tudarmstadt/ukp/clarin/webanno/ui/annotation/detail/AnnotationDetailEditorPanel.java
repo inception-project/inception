@@ -765,6 +765,7 @@ public abstract class AnnotationDetailEditorPanel
 
     private void deleteAnnotation(CAS aCas, AnnotatorState state, VID aVid, AnnotationLayer layer,
             TypeAdapter adapter)
+        throws AnnotationException
     {
         RequestCycle.get().find(AjaxRequestTarget.class)
                 .ifPresent(_target -> _target.addChildren(getPage(), IFeedback.class));

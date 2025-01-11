@@ -14,7 +14,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 This _Getting Started_ Guide helps new users to install, start and work with {product-name}.
 It gives a quick overview (estimated time for reading only: approx. 20-30 minutes) on the key functionalities in order to get familiar with the tool.
 It excludes special cases and details due to simplicity and focuses on the first steps. <<See our documentation for further reading>> on any topic.
@@ -25,8 +24,8 @@ For quick overviews, also see our https://www.youtube.com/playlist?list=PL5Hz5pt
 _Getting Started_ will refer to them wherever it might be helpful.
 
 NOTE: *Boxes:* In _Getting Started_, these boxes provide additional information.
-They may be skipped for fast reading if background knowledge exists.
-Also, they may be consulted later on for a quick look-up on basic concepts.
+      They may be skipped for fast reading if background knowledge exists.
+      Also, they may be consulted later on for a quick look-up on basic concepts.
 
 After the <<Introduction>>, _Getting Started_ leads you to using {product-name} in three steps:
 
@@ -50,14 +49,13 @@ The following picture gives you a first impression on how annotated texts look l
 In this example, text xref:layers_and_features_in_getting_started[spans] have been annotated as whether they refer to a person (PER), location (LOC), organization (ORG) or any other (OTH).
 
 [.right]
-image::getting_started_example_for_annotations.png[width=400]
+image::images/getting_started_example_for_annotations.png[width=400]
 
 {product-name}'s key features are: First, before you annotate, you need a corpus to be annotated (*Corpus Creation*).
 You might have one already and import it or create it in {product-name}.
 Second, you might want to annotate the corpus (*Annotation*) and/or merge the annotations which different annotators made (*Curation*).
 Third, you might want to integrate external knowledge used for annotating (*Knowledge Bases*).
-You can do all three steps with
-{product-name} or only one or two. +
+You can do all three steps with {product-name} or only one or two. +
 In addition, {product-name} is extendable and adaptable to individual requirements.
 Often, it provides predefined elements, like xref:knowledge_bases_in_getting_started[knowledge bases], xref:layers_and_features_in_getting_started[layers] and xref:tagsets_in_getting_started[tagsets] to give you a starting point but you can also modify them or create your own from scratch.
 You may for example integrate a knowledge base of your choice; create and modify custom knowledge bases; create and modify custom layers and tagsets to annotate your individual task; build custom so-called xref:recommenders_in_getting_started[recommenders] which automatically suggest annotations to you so you will work quicker and easier; and much more.
@@ -125,7 +123,7 @@ After a moment, a splash screen will display.
 It shows that the application is loading.
 
 [.right]
-image::getting_started_starting_the_jar_I.png[align="center",width=400]
+image::images/getting_started_starting_the_jar_I.png[align="center",width=400]
 
 NOTE: *In case {product-name} does not start:* If double-clicking the JAR file does not start {product-name}, you might need to make the file executable first.
 Right-click on the JAR file and navigate through the settings and permissions.
@@ -134,7 +132,7 @@ There, you can mark it as executable.
 Once the initialization is complete, a dialog appears.
 Here, you can open the application in your default browser or shut it down again:
 
-image::getting_started_starting_the_jar_II.png[align="center"]
+image::images/getting_started_starting_the_jar_II.png[align="center"]
 
 *Step 2b - Open via terminal:* If you prefer the command line, you may enter this command instead of double-clicking.
 Make sure that instead of "`x.xx.x`", you enter the version you downloaded:
@@ -152,7 +150,7 @@ You need to enter this password into two separate fields.
 Only if the same password has been entered into both fields, it will be accepted and saved. 
 After the password has been set, you will be redirected to the regular login screen where you can log in using the username **admin** and the password you have just set.
 
-image::getting_started_set_password.png[align="center"]
+image::images/getting_started_set_password.png[align="center"]
 
 *You have finished the installation.*
 
@@ -167,7 +165,7 @@ We created several example projects for you to play with.
 You find them in the section https://inception-project.github.io/example-projects/[Example Projects^] on our website.
 
 [.right]
-image::getting_started_download_example_project.png[width=400]
+image::images/getting_started_download_example_project.png[width=400]
 
 
 *Step 1 - Download:* For this guide, we use the _Interactive Concept Linking_ project.
@@ -188,7 +186,7 @@ Also see <<Concept Linking>> in the User Guide.
 {product-name}, click on the _Import project_ button on the top left (next to _Create new project_) and browse for the example project you have downloaded in Step 1. Finally, click _Import_.
 The project has now been added and you can use it to follow the explanations of the next section.
 
-image::getting_started_import_project.png[align="center"]
+image::images/getting_started_import_project.png[align="center"]
 
 [[sect_intro_settings]]
 == Project Settings
@@ -216,14 +214,14 @@ There are more tabs but we focus on the most important ones to get started.
 You reach the settings after logging in when you click on the name of a project and then on _Settings_ on the left.
 If you have not imported the example project yet, we propose to follow the instruction in <<Download and import an Example Project>> first.
 
-image::getting_started_settings.png[align="center"]
+image::images/getting_started_settings.png[align="center"]
 
 [[documents_in_getting_started]]
 === Documents
 Here, you may upload your files to be annotated.
 Make sure that the format selected in the dropdown on the right is the same as the one of the file to be uploaded.
 
-image::getting_started_documents.png[align="center"]
+image::images/getting_started_documents.png[align="center"]
 
 NOTE: *Formats:* For details on the different formats {product-name} provides for importing and exporting single documents as well as whole projects, you may check the main documentation, xref:sect_formats[Appendix A: Formats].
 
@@ -241,13 +239,13 @@ You can only add users to a project from the dropdown at the left if they exist 
 Click on the *administration* button in the very top right corner and select section *Users* on the left.
 For *user roles* (for an _instance_ of {product-name}) see the <<User Management>> in the main documentation.
 +
-image::getting_started_create_users.png[align="center"]
+image::images/getting_started_create_users.png[align="center"]
 +
 * *Giving rights to users:* After selecting a user from the dropdown in the project settings section *Users*, you can check and uncheck the user's rights on the right side.
 User rights count for that _project_ only and are different from user roles which count for the whole {product-name} _instance_.
 Any combination of rights is possible and the user will always have the sum of all rights given.
 +
-image::getting_started_users.png[align="center"]
+image::images/getting_started_users.png[align="center"]
 +
 [[User_rights]]
 
@@ -281,7 +279,7 @@ In this section, you may create custom layers and modify them later.
 Built-in layers should not be changed.
 In case you do not want to work on built-in layers only but wish to create custom layers designed for your individual task, we recommend reading the documentation for details on <<Layers>>.
 
-image::getting_started_layers.png[align="center"]
+image::images/getting_started_layers.png[align="center"]
 
 [[box_layers_and_features_in_getting_started]]
 NOTE: *Layers and Features:* There are different "`aspects`" or "`categories`" you might want to annotate.
@@ -339,7 +337,7 @@ Let's have "`CAT`" for the name and "`This tag is to be used for every mention o
 Click the save-button and the tag has now been added to your set.
 As another example, create a new tag for the name "`DOG`" and description "`This tag is to be used for every mention of a dog and only for mentions of dogs.`".
 +
-image::getting_started_tagset_create.png[align="center"]
+image::images/getting_started_tagset_create.png[align="center"]
 +
 [[link_to_a_layer_and_feature]]
 * In order to use the tagset, it is necessary to *link it to a layer and feature*.
@@ -353,7 +351,7 @@ When you click on it, the panel _Feature details_ opens.
 In this panel, scroll down to _Tagset_ and choose your tagset (to stick with our example: _Example_Tagset_) from the dropdown and click _Save_.
 The tagset which was selected before is not linked to the layer any more but the new one is.
 +
-image::getting_started_tagset_link.png[align="center"]
+image::images/getting_started_tagset_link.png[align="center"]
 +
 * From now on, you can select your tags for annotating.
 Navigate to the annotation page (click _INCEpTION_ on the top left -> _Annotation_ and choose the document _pets2.txt_).
@@ -361,7 +359,7 @@ On the layer dropdown on the right, choose the layer _Named entity_.
 When you double-click on any part in the text, for example "`Socke`" in line one, and click on the dropdown _value_ on the right, you find the tags "`DOG`" and "`CAT`" to choose from.
 (For details on how to annotate, see <<First Annotations with {product-name}>>).
 +
-image::getting_started_tagset_use.png[align="center"]
+image::images/getting_started_tagset_use.png[align="center"]
 +
 * You might want to link Named Entity tags again to the _Named entity_ Layer and _value_ feature in order to use them like they were before our little experiment.
 
@@ -381,7 +379,7 @@ The latter will be empty at first.
 It will not be filled here in the settings but at the knowledge base page ( -> _Dashboard_, -> _Knowledge base_; also see the part xref:knowledge_bases_in_getting_started_in_structrue[Knowledge Base] in <<Structure of an Annotation Project>>).
 In order to import or create a knowledge base, just click the _Create_ button and {product-name} will lead you.
 
-image::getting_started_kbs.png[align="center"]
+image::images/getting_started_kbs.png[align="center"]
 
 NOTE: *Knowledge Bases* are data bases for knowledge.
 Let's assume, the mention "`Paris`" is to be annotated.
@@ -397,7 +395,7 @@ Using many little knowledge bases in one project will slow down the performance 
 * Via the Dashboard (click the Dashboard-button at the top centre), you get to the *knowledge base page*.
 This is a page different from the one in the project settings where you can modify and work on your knowledge bases.
 +
-image::getting_started_kb_page.png[align="center"]
+image::images/getting_started_kb_page.png[align="center"]
 +
 
 * *For details* on knowledge bases, see our main documentation on <<Knowledge Base>>s, or our https://www.youtube.com/watch?v=wp4AN3p23mQ&list=PL5Hz5pttaj96SlXHGRZf8KzlYvpVHIoL-&index=3&t=0s../[tutorial video “Overview“^] mentioning knowledge bases.
@@ -413,14 +411,14 @@ For details on how to _use_ recommenders, see our main documentation on xref:sec
 For details on _how to create and adjust_ them, see xref:sect_projects_recommendation[Recommenders] in the Projects section.
 Or check the https://www.youtube.com/watch?v=Xz3Hs8Lyoeg&list=PL5Hz5pttaj96SlXHGRZf8KzlYvpVHIoL-&index=3/[tutorial video “Recommender Basics”^].
 
-image::getting_started_recommenders.png[align="center"]
+image::images/getting_started_recommenders.png[align="center"]
 
 === Guidelines
 In this section, you may import files with annotation guidelines.
 There is no automatic correction or warning from {product-name} if guidelines are violated but it is a short way for every user in the project to read and check the team guidelines while working.
 On the annotation page (→ _Dashboard_ → _Annotation_ → open any document), annotators can quickly look them up by clicking on the guidelines button on the top which looks like a book (this button only appears if at least one guideline was imported).
 
-image::getting_started_guidelines.png[align="center"]
+image::images/getting_started_guidelines.png[align="center"]
 
 [[export_in_getting_started]]
 === Export
@@ -465,7 +463,7 @@ Mark the document as finished.
 Differences are highlighted.
 You can accept an annotation by clicking on it.
 
-image::getting_started_curation.png[align="center"]
+image::images/getting_started_curation.png[align="center"]
 
 * As a curator, you can also create new annotations on this page.
 It works exactly like on the Annotation page.
@@ -486,13 +484,13 @@ NOTE: *Agreement:* The annotations of different annotators usually do not match 
 This aspect of difference / similarity is called agreement.
 For agreement, some common measures are provided.
 
-image::getting_started_agreement.png[align="center"]
+image::images/getting_started_agreement.png[align="center"]
 
 === Workload
 Here you can check the overall progress of your project; see which user is working on or has finished which document; and toggle for each user the status of each document between *Done / In Progress* or between *New / Locked*.
 For details, see <<sect_workload>> in the main documentation.
 
-image::getting_started_monitoring.png[align="center"]
+image::images/getting_started_monitoring.png[align="center"]
 
 === Settings
 Here, you can organize, manage and adjust all the details of your project.
@@ -524,7 +522,7 @@ Here, you can see all the projects which you have access to.
 Right now, this will be only the example project.
 Choose the example project by clicking on its name and you will be on the *Dashboard* of this project.
 
-image::getting_started_open_a_project.png[align="center"]
+image::images/getting_started_open_a_project.png[align="center"]
 
 
 NOTE: *Instructions to Example Projects:* In case of the example project, on the dashboard you also find instructions how to use it.
@@ -546,7 +544,7 @@ Then, use the mouse to select a word in the annotation area, e.g. _in my home_ i
 When you release the mouse button, the annotation will immediately be created and you can edit its details in the right sidebar (see next paragraph).
 These "`details`" are the features we mentioned before.
 
-image::getting_started_first_annotation.png[align="center"]
+image::images/getting_started_first_annotation.png[align="center"]
 
 *_Note:_* All annotations will be saved automatically without clicking an extra save-button.
 
@@ -567,7 +565,7 @@ In order to learn how to adjust and create them for your purpose, see section <<
 In the *Annotation* panel, you see the details of a selected annotation.
 They are called features.
 
-image::getting_started_annotation_panel.png[align="center"]
+image::images/getting_started_annotation_panel.png[align="center"]
 
 It shows the layer the annotation is made in (field _Layer_; here: _Named entity_) and what part of the text has been annotated (field _Text_; here _in my home_).
 Below, you can see and modify what has been entered for each of the so-called *Features*.
@@ -586,9 +584,9 @@ functionalities are available to you is determined by the project settings. The 
 opened by clicking on one of the sidebar icons and they can be closed by clicking on the arrow icon at the top.
 
 
-image::getting_started_Sidebar_closed.png[align="center"]
+image::images/getting_started_Sidebar_closed.png[align="center"]
 
-image::getting_started_Sidebar_open.png[align="center"]
+image::images/getting_started_Sidebar_open.png[align="center"]
 
 There are several features you might want to check the main documentation for.
 Especially the *Recommender* section of the sidebar (the black speech bubble) is worth a look in case you use recommenders (see xref:recommenders_in_getting_started[Recommenders in the section Project Settings]).

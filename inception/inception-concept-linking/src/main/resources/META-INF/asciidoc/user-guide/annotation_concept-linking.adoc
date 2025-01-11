@@ -36,7 +36,7 @@ the concept feature in the right sidebar of the annotation editor and start typi
 a concept. A ranked list of candidates is then displayed in the form of a drop-down menu.
 In order to make the disambiguation process easier, descriptions are shown for each candidate.
 
-image::concept-linking2.png[align="center"]
+image::images/concept-linking2.png[align="center"]
 
 The suggestions are updated every time it receives new input.
 
@@ -50,4 +50,4 @@ It is possible to combine the NEL with the existing Named Entity Recommenders fo
 which makes the annotation process even faster.
 The recommender needs to be set up in the <<sect_projects_recommendation, Project Settings>>.
 
-image::concept-linking4.png[align="center"]
+image::images/concept-linking4.png[align="center"]

@@ -22,22 +22,29 @@ NOTE: This functionality is only available to *managers* of existing projects,
       Project managers only see projects in which they hold the respective roles. Project creators
       only see projects in which they hold the project manager role.
 
-This is the place to specify/edit annotation projects.  
+This is the place to define/edit annotation projects.  
 You can either select one of the existing projects for editing, or click *Create Project* to add a project.
 
 Click on *Create Project* to create a new project. 
 
-image::project_creation.png[align="center"]
+image::images/project_creation.png[align="center"]
 
-Here, you can specify the name of your project. 
+Here, you can define the name of your project. 
 
-A suitable URL slug is automatically derived from the project name if you do not provide one yourself. The URL slug will be used in the browser URLs for the different pages belonging to the project. For example, if you project has the URL slug `my-project`, then it will be accessible under
-an URL ending in `/p/myproject`. The URL slug must be unique for all projects. Only lower-case characters (a-z), numbers (0-9), dashes (`-`) and underscores (`_`) are allowed for the slug. Also, it must be at least 3 characters and can be at most 40 characters long. The slug must start with a letter.
+A suitable URL slug is automatically derived from the project name if you do not provide one yourself.
+The URL slug will be used in the browser URLs for the different pages belonging to the project.
+For example, if you project has the URL slug `my-project`, then it will be accessible under
+an URL ending in `/p/myproject`.
+The URL slug must be unique for all projects.
+Only lower-case characters (a-z), numbers (0-9), dashes (`-`) and underscores (`_`) are allowed for the slug.
+Also, it must be at least 3 characters and can be at most 40 characters long.
+The slug must start with a letter.
 
 Finally, you can provide a project description here which is displayed on the project dashboard.
 
-When you have not save the project yet, you can cancel the creation of the project via the *Close* button. To delete a project after you have saved (i.e. created) it, use the *Delete* button.
+When you have not save the project yet, you can cancel the creation of the project via the *Close* button.
+To delete a project after you have saved (i.e. created) it, use the *Delete* button.
 
-image::project_details.png[align="center"]
+image::images/project_details.png[align="center"]
 
 After saving the project, additional panes will appear where you can further configure the project.

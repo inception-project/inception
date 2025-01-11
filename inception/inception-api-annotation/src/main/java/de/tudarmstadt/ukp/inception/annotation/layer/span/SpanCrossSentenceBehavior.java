@@ -39,6 +39,7 @@ import org.apache.uima.cas.text.AnnotationFS;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.MultipleSentenceCoveredException;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainLayerSupport;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VComment;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
@@ -87,6 +88,11 @@ public class SpanCrossSentenceBehavior
             T aRequest)
         throws AnnotationException
     {
+        if (Token.class.getName().equals(aAdapter.getAnnotationTypeName())
+                || Sentence.class.getName().equals(aAdapter.getAnnotationTypeName())) {
+            return aRequest;
+        }
+
         if (aAdapter.getLayer().isCrossSentence()) {
             return aRequest;
         }

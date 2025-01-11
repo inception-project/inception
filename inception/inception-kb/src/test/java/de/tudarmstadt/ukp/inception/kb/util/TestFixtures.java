@@ -28,6 +28,7 @@ import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.invoke.MethodHandles;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -56,6 +57,8 @@ import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.Rio;
 import org.eclipse.rdf4j.sail.lucene.LuceneSail;
 import org.eclipse.rdf4j.sail.memory.MemoryStore;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 
@@ -73,6 +76,8 @@ import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 
 public class TestFixtures
 {
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
     private static final Set<String> UNREACHABLE_ENDPOINTS = new LinkedHashSet<>();
 
     private TestEntityManager entityManager;
@@ -245,7 +250,7 @@ public class TestFixtures
             }
         }
         catch (Exception e) {
-            System.out.printf("[%s] Network-level check: %s%n", aUrl, e.getMessage());
+            LOG.error("[{}] Network-level check: {}", aUrl, e.getMessage());
             UNREACHABLE_ENDPOINTS.add(aUrl);
             return false;
         }
@@ -261,8 +266,7 @@ public class TestFixtures
             }
         }
         catch (Exception e) {
-            System.out.printf("[%s] Repository-level check: %s%n", aUrl, e.getMessage());
-            // e.printStackTrace();
+            LOG.error("[{}] Repository-level check: {}", aUrl, e.getMessage());
             UNREACHABLE_ENDPOINTS.add(aUrl);
             return false;
         }

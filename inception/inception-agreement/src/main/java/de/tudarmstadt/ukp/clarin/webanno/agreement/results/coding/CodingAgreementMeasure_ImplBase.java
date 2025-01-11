@@ -26,6 +26,6 @@ public abstract class CodingAgreementMeasure_ImplBase<T extends DefaultAgreement
 {
     public CodingAgreementMeasure_ImplBase(AnnotationFeature aFeature, T aTraits)
     {
-        super(aFeature, aTraits);
+        super(aFeature.getLayer(), aFeature, aTraits);
     }
 }

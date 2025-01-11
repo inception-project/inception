@@ -1,3 +1,18 @@
+// Licensed to the Technische Universität Darmstadt under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The Technische Universität Darmstadt 
+// licenses this file to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.
+//  
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 [[sect_knowledge_base]]
 == Knowledge Base 
 
@@ -16,7 +31,7 @@ The knowledge base page provides a concept tree hierarchy with a list of instanc
 The knowledge base page provides the specific mentions of concepts and instances annotated in the text in the *Mentions* panel which integrates the knowledge base page with the annotated text.  
 
 [.thumb]
-image::kb4.png[align="center"]
+image::images/kb4.png[align="center"]
 
 
 The concept tree in this page is designed using the *subClass* relationship for the configured mapping. Each concept associates itself with a list of instances (in case it has one) on the *Instance* panel which appear when we click on a specific concept along with the *Mentions* of the concept in the annotated text. The click on a specific instance shows the panel for the list of statements associated with the instance along with *Mentions* of the instance in the annotated text. In the left bottom side of the page, it lists the set of properties from the knowledge base. Clicking on the property showcases the statements associated with the property such as labels, domains, ranges, etc. 
@@ -49,7 +64,7 @@ Concept features are features that allow referencing concepts in the knowledge b
 To create a new concept feature, a new feature has to be created under *Projects Settings* -> *Layers*. The type of the new feature should be *KB: Concept/Instance/Property*. Features of this type also can be configured to either take *only concepts*, *only instances*, *only properties* or either (select *any*).
 
 [.thumb]
-image::kb5.png[align="center"]
+image::images/kb5.png[align="center"]
 
 When creating a new annotation with this feature, then the user is offered a dropdown with possible entities from the knowledge base. This dropdown is then limited to only concepts or features or both when selecting the respective filter in the feature configuration.
 

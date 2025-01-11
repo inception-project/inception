@@ -41,4 +41,9 @@ public interface QuickProjectInitializer
     {
         return Optional.empty();
     }
+
+    default boolean hasExamples()
+    {
+        return false;
+    }
 }

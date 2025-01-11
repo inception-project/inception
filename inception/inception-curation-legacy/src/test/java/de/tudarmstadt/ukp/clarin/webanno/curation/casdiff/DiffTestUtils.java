@@ -18,7 +18,8 @@
 
 package de.tudarmstadt.ukp.clarin.webanno.curation.casdiff;
 
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.RELATION_TYPE;
+import static de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport.FEAT_REL_SOURCE;
+import static de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport.FEAT_REL_TARGET;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
 
@@ -48,8 +49,8 @@ import org.dkpro.core.io.xmi.XmiReader;
 
 import de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoTsv2Reader;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
-import de.tudarmstadt.ukp.inception.support.WebAnnoConst;
 
 public class DiffTestUtils
 {
@@ -204,19 +205,19 @@ public class DiffTestUtils
             List<String> aFeatures, String aAttacheType)
         throws Exception
     {
-        TypeSystemDescription type = new TypeSystemDescription_impl();
+        var type = new TypeSystemDescription_impl();
         if (SpanLayerSupport.TYPE.equals(aType)) {
-            TypeDescription td = type.addType(aTypeName, "", CAS.TYPE_NAME_ANNOTATION);
+            var td = type.addType(aTypeName, "", CAS.TYPE_NAME_ANNOTATION);
             for (String feature : aFeatures) {
                 td.addFeature(feature, "", CAS.TYPE_NAME_STRING);
             }
 
         }
-        else if (aType.equals(RELATION_TYPE)) {
-            TypeDescription td = type.addType(aTypeName, "", CAS.TYPE_NAME_ANNOTATION);
+        else if (aType.equals(RelationLayerSupport.TYPE)) {
+            var td = type.addType(aTypeName, "", CAS.TYPE_NAME_ANNOTATION);
 
-            td.addFeature(WebAnnoConst.FEAT_REL_TARGET, "", aAttacheType);
-            td.addFeature(WebAnnoConst.FEAT_REL_SOURCE, "", aAttacheType);
+            td.addFeature(FEAT_REL_TARGET, "", aAttacheType);
+            td.addFeature(FEAT_REL_SOURCE, "", aAttacheType);
 
             for (String feature : aFeatures) {
                 td.addFeature(feature, "", "uima.cas.String");

@@ -1,0 +1,88 @@
+<!--
+  Licensed to the Technische Universität Darmstadt under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The Technische Universität Darmstadt 
+  licenses this file to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.
+   
+  http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<html xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
+<wicket:panel>
+  <form wicket:id="form" class="form-horizontal">
+    <div class="row form-row">
+      <label class="col-4 col-form-label">
+        Quick preset
+      </label>
+      <div class="col-8">
+        <button class="btn btn-outline-secondary" type="button" wicket:id="presetMajorityVote">
+          Majority vote
+        </button>
+        <button class="btn btn-outline-secondary" type="button" wicket:id="presetUnanimousVote">
+          Unanimous vote
+        </button>
+      </div>
+    </div>
+    <div class="row form-row" wicket:enclosure="userThreshold">
+      <label class="col-sm-4 col-form-label" wicket:for="userThreshold">
+        User threshold
+      </label>
+      <div class="col-sm-8">
+        <input wicket:id="userThreshold" type="number" class="form-control"></input>
+        <div class="form-text">
+          The minimum amount of annotators that must have voted for a given label for the label to be considered at all. 
+          If fewer annotators have voted for the label, then it is completely ignored.
+        </div>
+      </div>
+    </div>
+    <div class="row form-row" wicket:enclosure="topRanks">
+      <label class="col-sm-4 col-form-label" wicket:for="topRanks">
+        Top-voted
+      </label>
+      <div class="col-sm-8">
+        <input wicket:id="topRanks" type="number" class="form-control"></input>
+        <div class="form-text">
+          Note that this setting only affects annotations on layers that allow stacking annotations. 
+          For non-stacking other layers, an implicit setting of <code>1</code> is used here.<br>
+          When set to <code>0</code>, all labels are merged.<br/>
+          When set to <code>1</code>, only the single most-voted label is merged. If there is a tie on the most-voted 
+          label, then nothing is merged.<br/>
+          When set to <code>2</code> or higher, the respective <code>n</code> most-voted labels are pre-merged. 
+          If there is any tie within the <code>n</code> most-voted labels, then all labels that still meet the lowest score of the tie are merged as well. <br/>
+          For example, if set to <code>2</code> and three annotators voted for label <code>X</code> and another two anotators voted for <code>Y</code> and <code>Z</code>
+          respectively, then <code>Y</code> and <code>Z</code> have a tie at the second rank, so both of them are merged.
+        </div>
+      </div>
+    </div>
+    <div class="row form-row" wicket:enclosure="confidenceThreshold">
+      <label class="col-sm-4 col-form-label" wicket:for="confidenceThreshold">
+        Confidence threshold
+      </label>
+      <div class="col-sm-8">
+        <div class="input-group">
+          <input wicket:id="confidenceThreshold" type="number" class="form-control"></input>
+          <span class="input-group-text">%</span>
+        </div>
+        <div class="form-text">
+          The confidence for a label is calculated by dividing the number of annotators that chose a given label
+          by the number annotators that annotated a given position (<code>votes(label) / all_votes</code>). 
+          The user threshold is applied before counting votes to calculate confidence. 
+          The confidence interacts with the number of valid labels you expect. 
+          E.g. if you expect that there could be four valid labels (and therefore set the top-voted 
+          parameter to <code>4</code>), then the best confidence that a single label can have is <code>25%</code>
+          (<code>= 100% / 4</code>).
+        </div>
+      </div>
+    </div>
+  </form>
+</wicket:panel>
+</html>

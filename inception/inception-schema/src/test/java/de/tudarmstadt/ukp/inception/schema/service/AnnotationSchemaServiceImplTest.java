@@ -40,8 +40,8 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.util.FileSystemUtils;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
@@ -86,8 +86,8 @@ class AnnotationSchemaServiceImplTest
 
     static final String TEST_OUTPUT_FOLDER = "target/test-output/AnnotationSchemaServiceImplTest";
 
-    private @MockBean DocumentService documentService;
-    private @MockBean DocumentImportExportService documentImportExportService;
+    private @MockitoBean DocumentService documentService;
+    private @MockitoBean DocumentImportExportService documentImportExportService;
 
     private @Autowired ProjectService projectService;
     private @Autowired UserDao userRepository;

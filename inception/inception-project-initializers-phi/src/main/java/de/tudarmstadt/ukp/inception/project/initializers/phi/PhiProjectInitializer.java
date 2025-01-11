@@ -91,6 +91,12 @@ public class PhiProjectInitializer
     }
 
     @Override
+    public boolean hasExamples()
+    {
+        return true;
+    }
+
+    @Override
     public boolean alreadyApplied(Project aProject)
     {
         return false;

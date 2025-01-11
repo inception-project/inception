@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.kb.factlinking.config;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -43,7 +42,6 @@ public class FactLinkingAutoConfiguration
 {
     @Deprecated
     @Bean
-    @Autowired
     public PropertyFeatureSupport propertyFeatureSupport(KnowledgeBaseService aKbService)
     {
         return new PropertyFeatureSupport(aKbService);
@@ -65,7 +63,6 @@ public class FactLinkingAutoConfiguration
 
     @Deprecated
     @Bean
-    @Autowired
     public FactLayerInitializer factLayerInitializer(
             AnnotationSchemaService aAnnotationSchemaService)
     {

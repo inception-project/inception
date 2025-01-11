@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 import { Annotation, DiamAjax, Offsets, VID, LazyDetailGroup } from '@inception-project/inception-js-api'
-import { DiamLoadAnnotationsOptions, DiamSelectAnnotationOptions } from '@inception-project/inception-js-api/src/diam/DiamAjax'
+import { DiamAjaxConnectOptions, DiamLoadAnnotationsOptions, DiamSelectAnnotationOptions } from '@inception-project/inception-js-api/src/diam/DiamAjax'
 
 declare const Wicket: any
 
@@ -31,9 +31,16 @@ const TRANSPORT_BUFFER: any = (document as any).DIAM_TRANSPORT_BUFFER
 
 export class DiamAjaxImpl implements DiamAjax {
   private ajaxEndpoint: string
+  private csrfToken: string
 
-  constructor (ajaxEndpoint: string) {
-    this.ajaxEndpoint = ajaxEndpoint
+  constructor (options: string | DiamAjaxConnectOptions) {
+    if (options instanceof String || typeof options === 'string') {
+      this.ajaxEndpoint = options as string
+    }
+    else {
+      this.ajaxEndpoint = options.url
+      this.csrfToken = options.csrfToken
+    }
   }
 
   /**
@@ -76,7 +83,7 @@ export class DiamAjaxImpl implements DiamAjax {
     })
   }
 
-  scrollTo (args: { id?: VID, offset?: Offsets, offsets?: Array<Offsets> }): void {
+  scrollTo (args: { docId?: number, id?: VID, offset?: Offsets, offsets?: Array<Offsets> }): void {
     let effectiveOffsets: Array<Offsets> | undefined
     if (args.offset) {
       effectiveOffsets = [args.offset]
@@ -91,6 +98,7 @@ export class DiamAjaxImpl implements DiamAjax {
         u: this.ajaxEndpoint,
         ep: {
           action: 'scrollTo',
+          docId: args.docId,
           id: args.id,
           offsets: JSON.stringify(effectiveOffsets)
         }

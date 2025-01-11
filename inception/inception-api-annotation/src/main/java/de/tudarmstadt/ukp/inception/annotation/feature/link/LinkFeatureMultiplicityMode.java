@@ -37,11 +37,11 @@ public enum LinkFeatureMultiplicityMode
     ONE_TARGET_MULTIPLE_ROLES,
 
     /**
-     * Include role and target into considered part of the position. There can be multiple links to
-     * the same target with the same or different roles.
+     * Role and target are considered to be part of the position. There can be multiple links to the
+     * same target with the same or different roles.
      */
     @JsonProperty("n-targets-n-roles")
     MULTIPLE_TARGETS_MULTIPLE_ROLES;
 
-    public static final LinkFeatureMultiplicityMode DEFAULT_LINK_MULTIPLICITY = ONE_TARGET_MULTIPLE_ROLES;
+    public static final LinkFeatureMultiplicityMode DEFAULT_LINK_MULTIPLICITY_MODE = ONE_TARGET_MULTIPLE_ROLES;
 }

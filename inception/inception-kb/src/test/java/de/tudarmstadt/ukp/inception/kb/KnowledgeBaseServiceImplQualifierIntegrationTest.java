@@ -22,6 +22,8 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 import java.io.File;
+import java.io.StringWriter;
+import java.lang.invoke.MethodHandles;
 import java.util.List;
 
 import org.eclipse.rdf4j.rio.RDFFormat;
@@ -31,6 +33,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -63,6 +67,8 @@ import jakarta.persistence.EntityManager;
         excludeAutoConfiguration = LiquibaseAutoConfiguration.class)
 public class KnowledgeBaseServiceImplQualifierIntegrationTest
 {
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
     static {
         System.setProperty("org.eclipse.rdf4j.repository.debug", "true");
         System.setProperty("spring.main.banner-mode", "off");
@@ -156,9 +162,10 @@ public class KnowledgeBaseServiceImplQualifierIntegrationTest
         sut.upsertQualifier(kb, qualifier);
 
         sut.read(kb, conn -> {
-            RDFWriter rdfWriter = Rio.createWriter(RDFFormat.TURTLE, System.out);
+            var buffer = new StringWriter();
+            RDFWriter rdfWriter = Rio.createWriter(RDFFormat.TURTLE, buffer);
             conn.export(rdfWriter);
-            System.out.println("------");
+            LOG.info("{}", buffer);
             return null;
         });
 

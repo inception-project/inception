@@ -17,11 +17,15 @@
  */
 package de.tudarmstadt.ukp.inception.kb.reification;
 
+import static java.lang.System.currentTimeMillis;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.lang.invoke.MethodHandles;
 import java.util.List;
 
 import org.apache.commons.io.IOUtils;
@@ -37,6 +41,8 @@ import org.eclipse.rdf4j.sail.lucene.LuceneSail;
 import org.eclipse.rdf4j.sail.memory.MemoryStore;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.inception.kb.RepositoryType;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
@@ -45,6 +51,8 @@ import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
 public class NoReificationTest
 {
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
     private static final String TURTLE_PREFIX = String.join("\n", //
             "@base <http://example.org/> .", //
             "@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .", //
@@ -117,13 +125,15 @@ public class NoReificationTest
     public List<KBStatement> listStatements(Repository aRepo, KBHandle aItem) throws Exception
     {
         try (var conn = aRepo.getConnection()) {
-            var startTime = System.currentTimeMillis();
+            var startTime = currentTimeMillis();
 
             var results = sut.listStatements(conn, kb, aItem, true);
 
-            System.out.printf("Results : %d in %dms%n", results.size(),
-                    System.currentTimeMillis() - startTime);
-            results.forEach(r -> System.out.printf("          %s%n", r));
+            var buf = new StringWriter();
+            var out = new PrintWriter(buf);
+            out.printf("Results : %d in %dms%n", results.size(), currentTimeMillis() - startTime);
+            results.forEach(r -> out.printf("          %s%n", r));
+            LOG.info("{}", buf);
 
             return results;
         }

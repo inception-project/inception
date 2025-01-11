@@ -39,6 +39,7 @@ public interface EditorAjaxRequestHandler
     String PARAM_ACTION = "action";
     String PARAM_ARC_ID = "arcId";
     String PARAM_ID = "id";
+    String PARAM_DOCUMENT_ID = "docId";
     String PARAM_SCROLL_TO = "scrollTo";
     String PARAM_OFFSETS = "offsets";
     String PARAM_TARGET_SPAN_ID = "targetSpanId";

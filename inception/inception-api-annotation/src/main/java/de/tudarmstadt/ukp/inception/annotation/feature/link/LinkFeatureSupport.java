@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.annotation.feature.link;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.LinkMode.WITH_ROLE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode.ARRAY;
+import static de.tudarmstadt.ukp.inception.schema.api.feature.MaterializedLink.toMaterializedLink;
 import static org.apache.commons.collections4.CollectionUtils.disjunction;
 import static org.apache.uima.cas.CAS.TYPE_NAME_FS_ARRAY;
 import static org.apache.uima.cas.CAS.TYPE_NAME_STRING;
@@ -61,7 +62,6 @@ import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureEditor;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupport;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureType;
 import de.tudarmstadt.ukp.inception.schema.api.feature.LinkWithRoleModel;
-import de.tudarmstadt.ukp.inception.schema.api.feature.MaterializedLink;
 import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
 
 /**
@@ -243,6 +243,7 @@ public class LinkFeatureSupport
         FeatureSupport.super.setFeatureValue(aCas, aFeature, aAddress, aValue);
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public List<LinkWithRoleModel> unwrapFeatureValue(AnnotationFeature aFeature, CAS aCAS,
             Object aValue)
@@ -327,12 +328,14 @@ public class LinkFeatureSupport
             FeatureStructure aFS2)
     {
         List<LinkWithRoleModel> links1 = getFeatureValue(aFeature, aFS1);
-        var matLinks1 = links1.stream()
-                .map(link -> MaterializedLink.toMaterializedLink(aFS1, aFeature, link)).toList();
+        var matLinks1 = links1.stream() //
+                .map(link -> toMaterializedLink(aFS1, aFeature, link))//
+                .toList();
 
         List<LinkWithRoleModel> links2 = getFeatureValue(aFeature, aFS2);
-        var matLinks2 = links2.stream()
-                .map(link -> MaterializedLink.toMaterializedLink(aFS2, aFeature, link)).toList();
+        var matLinks2 = links2.stream()//
+                .map(link -> toMaterializedLink(aFS2, aFeature, link))//
+                .toList();
 
         return disjunction(matLinks1, matLinks2).isEmpty();
     }

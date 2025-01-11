@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>34.6-SNAPSHOT</version>
+    <version>35.0-SNAPSHOT</version>
   </parent>
   <artifactId>inception-testing</artifactId>
   <name>INCEpTION - Test Support library</name>
@@ -71,6 +71,15 @@
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-messaging</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-websocket</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.apache.tomcat.embed</groupId>
+      <artifactId>tomcat-embed-websocket</artifactId>
     </dependency>
   </dependencies>
 </project>

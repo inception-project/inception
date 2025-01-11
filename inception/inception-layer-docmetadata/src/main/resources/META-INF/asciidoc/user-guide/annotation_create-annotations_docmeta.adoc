@@ -1,11 +1,4 @@
-= 🧪 Document metadata
-
-====
-CAUTION: Experimental feature. To use this functionality, you need to enable it first by adding `documentmetadata.enabled=true` to the `settings.properties` file (see the <<admin-guide.adoc#sect_settings_documentmetadata, Admin Guide>>).
-
-Curation of document metadata annotations is not possible. Import and export of document metadata
-annotations is only supported in the UIMA CAS formats, but not in WebAnno TSV.
-====
+= Document-level annotations
 
 Before being able to configure document-level annotations, you need to define an annotation layer of 
 type *Document metadata* on the project *Settings*, *Layers* tab. For this:
@@ -23,7 +16,12 @@ On the annotation page, you can now:
 * Choose the newly created annotation layer in the dropdown.
 * Clicking the plus sign will add a new annotation whose feature you can fill in.
 
-image::metadata-sidebar.png[align="center"]
+image::images/metadata-sidebar.png[align="center"]
+
+====
+NOTE: Curation of document-level annotations is not possible. Import and export of document-level
+annotations is only supported in the UIMA CAS XMI and UIMA CAS JSON formats.
+====
 
 == Singletons
 

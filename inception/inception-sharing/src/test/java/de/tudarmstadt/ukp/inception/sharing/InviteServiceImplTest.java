@@ -47,6 +47,7 @@ import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtension;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 
 @DataJpaTest( //
+        showSql = false, //
         properties = { //
                 "spring.main.banner-mode=off" }, //
         excludeAutoConfiguration = LiquibaseAutoConfiguration.class)

@@ -58,6 +58,7 @@ public abstract class Task
     private final String type;
     private final boolean cancellable;
 
+    private volatile Thread thread;
     private TaskMonitor monitor;
     private Task parentTask;
 
@@ -90,14 +91,19 @@ public abstract class Task
     {
         if (monitor == null) {
             // For tasks that have a parent task, we use a non-notifying monitor. Also, we do not
-            // report such subtasks ia the SchedulerControllerImpl - they are internal.
-            if (schedulerController != null && sessionOwner != null && parentTask == null) {
+            // report such subtasks via the SchedulerControllerImpl - they are internal.
+            if (schedulerController != null && parentTask == null) {
                 monitor = new NotifyingTaskMonitor(this, schedulerController);
             }
             else {
                 monitor = new TaskMonitor(this);
             }
         }
+    }
+
+    Thread getThread()
+    {
+        return thread;
     }
 
     public boolean isCancellable()
@@ -196,13 +202,26 @@ public abstract class Task
         }
     }
 
-    public void runSync()
+    public final void runSync()
     {
         try {
+            if (thread != null) {
+                throw new IllegalStateException("Task " + this + " already bound to thread "
+                        + thread + " when trying to start on thread " + Thread.currentThread());
+            }
+
+            thread = Thread.currentThread();
             monitor.setState(TaskState.RUNNING);
+
             execute();
+
             if (monitor.getState() == TaskState.RUNNING) {
                 monitor.setState(TaskState.COMPLETED);
+            }
+
+            if (monitor.getState() == TaskState.COMPLETED) {
+                LOG.debug("Task [{}] completed (trigger: [{}]) in {}ms", getTitle(), getTrigger(),
+                        monitor.getDuration());
             }
         }
         catch (Exception e) {
@@ -216,6 +235,9 @@ public abstract class Task
             LOG.error("Task [{}] failed with a serious error (trigger: [{}])", getTitle(),
                     getTrigger(), e);
         }
+        finally {
+            thread = null;
+        }
     }
 
     public abstract void execute() throws Exception;
@@ -223,11 +245,17 @@ public abstract class Task
     @Override
     public String toString()
     {
-        StringBuilder sb = new StringBuilder(getName());
+        var sb = new StringBuilder(getName());
         sb.append('[');
         sb.append("user=").append(sessionOwner != null ? sessionOwner.getUsername() : "<SYSTEM>");
         sb.append(", project=").append(project.getName());
         sb.append(", trigger=\"").append(trigger);
+        if (monitor != null) {
+            sb.append(", ");
+            sb.append(monitor.getProgress());
+            sb.append("/");
+            sb.append(monitor.getMaxProgress());
+        }
         sb.append("\"]");
         return sb.toString();
     }

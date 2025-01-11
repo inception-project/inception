@@ -17,8 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.annotation.layer.span;
 
+import static de.tudarmstadt.ukp.inception.annotation.layer.span.SpanAdapter.SpanOption.TRIM;
 import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectByAddr;
 import static java.lang.System.currentTimeMillis;
+import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.apache.uima.cas.text.AnnotationPredicates.colocated;
 import static org.apache.uima.fit.util.CasUtil.getType;
@@ -35,6 +37,7 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
+import org.apache.uima.jcas.tcas.Annotation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
@@ -52,6 +55,7 @@ import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
+import de.tudarmstadt.ukp.inception.support.text.TrimUtils;
 
 /**
  * Manage interactions with annotations on a span layer.
@@ -59,9 +63,16 @@ import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 public class SpanAdapter
     extends TypeAdapter_ImplBase
 {
+    public enum SpanOption
+    {
+        TRIM;
+    }
+
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private final List<SpanLayerBehavior> behaviors;
+
+    private final SegmentationUnitAdapter segmentationUnitAdapter;
 
     public SpanAdapter(LayerSupportRegistry aLayerSupportRegistry,
             FeatureSupportRegistry aFeatureSupportRegistry,
@@ -80,6 +91,8 @@ public class SpanAdapter
                     .sorted(AnnotationAwareOrderComparator.INSTANCE) //
                     .toList();
         }
+
+        segmentationUnitAdapter = new SegmentationUnitAdapter(this);
     }
 
     /**
@@ -108,6 +121,10 @@ public class SpanAdapter
 
     public AnnotationFS handle(CreateSpanAnnotationRequest aRequest) throws AnnotationException
     {
+        if (segmentationUnitAdapter.accepts(getAnnotationTypeName())) {
+            return segmentationUnitAdapter.handle(aRequest);
+        }
+
         var request = aRequest;
 
         // Adjust the creation request (e.g. adjust offsets to the configured granularity) or
@@ -155,6 +172,16 @@ public class SpanAdapter
 
     public AnnotationFS handle(MoveSpanAnnotationRequest aRequest) throws AnnotationException
     {
+        if (segmentationUnitAdapter.accepts(getAnnotationTypeName())) {
+            return segmentationUnitAdapter.handle(aRequest);
+        }
+
+        var ann = aRequest.getAnnotation();
+        if (aRequest.getBegin() == ann.getBegin() && aRequest.getEnd() == ann.getEnd()) {
+            // NOP
+            return ann;
+        }
+
         var request = aRequest;
 
         // Adjust the move request (e.g. adjust offsets to the configured granularity) or
@@ -176,11 +203,15 @@ public class SpanAdapter
         return request.getAnnotation();
     }
 
-    private AnnotationFS createSpanAnnotation(CAS aCas, int aBegin, int aEnd)
+    AnnotationFS createSpanAnnotation(CAS aCas, int aBegin, int aEnd, SpanOption... aOptions)
         throws AnnotationException
     {
         var type = CasUtil.getType(aCas, getAnnotationTypeName());
-        var newAnnotation = aCas.createAnnotation(type, aBegin, aEnd);
+        var newAnnotation = (Annotation) aCas.createAnnotation(type, aBegin, aEnd);
+
+        if (asList(aOptions).contains(TRIM)) {
+            TrimUtils.trim(aCas.getDocumentText(), newAnnotation);
+        }
 
         LOG.trace("Created span annotation {}-{} [{}]", newAnnotation.getBegin(),
                 newAnnotation.getEnd(), newAnnotation.getCoveredText());
@@ -196,8 +227,8 @@ public class SpanAdapter
         return newAnnotation;
     }
 
-    private AnnotationFS moveSpanAnnotation(CAS aCas, AnnotationFS aAnnotation, int aBegin,
-            int aEnd)
+    AnnotationFS moveSpanAnnotation(CAS aCas, AnnotationFS aAnnotation, int aBegin, int aEnd,
+            SpanOption... aOptions)
     {
         var oldCoveredText = aAnnotation.getCoveredText();
         var oldBegin = aAnnotation.getBegin();
@@ -206,6 +237,10 @@ public class SpanAdapter
         aCas.removeFsFromIndexes(aAnnotation);
         aAnnotation.setBegin(aBegin);
         aAnnotation.setEnd(aEnd);
+
+        if (asList(aOptions).contains(TRIM)) {
+            TrimUtils.trim(aCas.getDocumentText(), (Annotation) aAnnotation);
+        }
 
         LOG.trace("Moved span annotation from {}-{} [{}] to {}-{} [{}]", oldBegin, oldEnd,
                 oldCoveredText, aAnnotation.getBegin(), aAnnotation.getEnd(),
@@ -218,16 +253,27 @@ public class SpanAdapter
 
     @Override
     public void delete(SourceDocument aDocument, String aDocumentOwner, CAS aCas, VID aVid)
+        throws AnnotationException
     {
         var fs = selectByAddr(aCas, AnnotationFS.class, aVid.getId());
-        aCas.removeFsFromIndexes(fs);
+        handle(new DeleteSpanAnnotationRequest(aDocument, aDocumentOwner, aCas, fs));
+    }
+
+    public void handle(DeleteSpanAnnotationRequest aRequest) throws AnnotationException
+    {
+        if (segmentationUnitAdapter.accepts(getAnnotationTypeName())) {
+            segmentationUnitAdapter.handle(aRequest);
+        }
+
+        aRequest.getCas().removeFsFromIndexes(aRequest.getAnnotation());
 
         // delete associated attachFeature
         if (getAttachTypeName() != null) {
-            detatch(aCas, fs);
+            detatch(aRequest.getCas(), aRequest.getAnnotation());
         }
 
-        publishEvent(() -> new SpanDeletedEvent(this, aDocument, aDocumentOwner, getLayer(), fs));
+        publishEvent(() -> new SpanDeletedEvent(this, aRequest.getDocument(),
+                aRequest.getDocumentOwner(), getLayer(), aRequest.getAnnotation()));
     }
 
     public AnnotationFS restore(SourceDocument aDocument, String aDocumentOwner, CAS aCas, VID aVid)

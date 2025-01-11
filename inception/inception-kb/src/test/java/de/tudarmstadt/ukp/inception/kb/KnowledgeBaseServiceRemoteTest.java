@@ -25,6 +25,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import java.io.File;
 import java.io.InputStream;
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -44,6 +45,8 @@ import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -74,6 +77,7 @@ import jakarta.persistence.EntityManager;
         excludeAutoConfiguration = LiquibaseAutoConfiguration.class)
 public class KnowledgeBaseServiceRemoteTest
 {
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private KnowledgeBaseServiceImpl sut;
 
@@ -92,9 +96,8 @@ public class KnowledgeBaseServiceRemoteTest
     @BeforeEach
     public void testWatcher(TestInfo aTestInfo)
     {
-        String methodName = aTestInfo.getTestMethod().map(Method::getName).orElse("<unknown>");
-        System.out.printf("\n=== %s === %s =====================\n", methodName,
-                aTestInfo.getDisplayName());
+        var methodName = aTestInfo.getTestMethod().map(Method::getName).orElse("<unknown>");
+        LOG.info("=== {} === {} =====================", methodName, aTestInfo.getDisplayName());
 
         suspendSslVerification();
     }
@@ -153,19 +156,19 @@ public class KnowledgeBaseServiceRemoteTest
     {
         setUp(aSutConfig);
 
-        KnowledgeBase kb = aSutConfig.getKnowledgeBase();
+        var kb = aSutConfig.getKnowledgeBase();
 
-        long duration = System.currentTimeMillis();
+        var duration = System.currentTimeMillis();
         List<KBHandle> rootConceptKBHandle = sut.listRootConcepts(kb, true);
         duration = System.currentTimeMillis() - duration;
 
-        System.out.printf("Root concepts retrieved : %d%n", rootConceptKBHandle.size());
-        System.out.printf("Time required           : %d ms%n", duration);
-        rootConceptKBHandle.stream().limit(10).forEach(h -> System.out.printf("   %s%n", h));
+        LOG.info("Root concepts retrieved : {}", rootConceptKBHandle.size());
+        LOG.info("Time required           : {} ms", duration);
+        rootConceptKBHandle.stream().limit(10).forEach(h -> LOG.info("   {}", h));
 
         assertThat(rootConceptKBHandle).as("Check that root concept list is not empty")
                 .isNotEmpty();
-        for (String expectedRoot : aSutConfig.getRootIdentifier()) {
+        for (var expectedRoot : aSutConfig.getRootIdentifier()) {
             assertThat(rootConceptKBHandle.stream().map(KBHandle::getIdentifier))
                     .as("Check that root concept is retrieved").contains(expectedRoot);
         }
@@ -177,15 +180,15 @@ public class KnowledgeBaseServiceRemoteTest
     {
         setUp(aSutConfig);
 
-        KnowledgeBase kb = aSutConfig.getKnowledgeBase();
+        var kb = aSutConfig.getKnowledgeBase();
 
-        long duration = System.currentTimeMillis();
+        var duration = System.currentTimeMillis();
         List<KBProperty> propertiesKBHandle = sut.listProperties(kb, true);
         duration = System.currentTimeMillis() - duration;
 
-        System.out.printf("Properties retrieved : %d%n", propertiesKBHandle.size());
-        System.out.printf("Time required        : %d ms%n", duration);
-        propertiesKBHandle.stream().limit(10).forEach(h -> System.out.printf("   %s%n", h));
+        LOG.info("Properties retrieved : {}", propertiesKBHandle.size());
+        LOG.info("Time required        : {} ms", duration);
+        propertiesKBHandle.stream().limit(10).forEach(h -> LOG.info("   {}", h));
 
         assertThat(propertiesKBHandle).as("Check that property list is not empty").isNotEmpty();
     }
@@ -203,18 +206,17 @@ public class KnowledgeBaseServiceRemoteTest
                 true);
         duration = System.currentTimeMillis() - duration;
 
-        System.out.printf("Parents for          : %s%n", aSutConfig.getTestIdentifier());
-        System.out.printf("Parents retrieved    : %d%n", parentList.size());
-        System.out.printf("Time required        : %d ms%n", duration);
-        parentList.stream().limit(10).forEach(h -> System.out.printf("   %s%n", h));
+        LOG.info("Parents for          : {}", aSutConfig.getTestIdentifier());
+        LOG.info("Parents retrieved    : {}", parentList.size());
+        LOG.info("Time required        : {} ms", duration);
+        parentList.stream().limit(10).forEach(h -> LOG.info("   {}", h));
 
         assertThat(parentList).as("Check that parent list is not empty").isNotEmpty();
     }
 
     public static List<TestConfiguration> data() throws Exception
     {
-        Map<String, KnowledgeBaseProfile> PROFILES = KnowledgeBaseProfile
-                .readKnowledgeBaseProfiles();
+        var PROFILES = KnowledgeBaseProfile.readKnowledgeBaseProfiles();
         int maxResults = 1000;
 
         Set<String> rootConcepts;
@@ -222,8 +224,8 @@ public class KnowledgeBaseServiceRemoteTest
         List<TestConfiguration> kbList = new ArrayList<>();
 
         {
-            KnowledgeBaseProfile profile = PROFILES.get("wine_ontology");
-            KnowledgeBase kb_wine = new KnowledgeBase();
+            var profile = PROFILES.get("wine_ontology");
+            var kb_wine = new KnowledgeBase();
             kb_wine.setName("Wine ontology (OWL)");
             kb_wine.setType(profile.getType());
             kb_wine.setReification(profile.getReification());
@@ -461,7 +463,8 @@ public class KnowledgeBaseServiceRemoteTest
 
     @SpringBootConfiguration
     @EnableAutoConfiguration
-    @EntityScan(basePackages = { "de.tudarmstadt.ukp.inception.kb.model",
+    @EntityScan(basePackages = { //
+            "de.tudarmstadt.ukp.inception.kb.model", //
             "de.tudarmstadt.ukp.clarin.webanno.model" })
     public static class SpringConfig
     {

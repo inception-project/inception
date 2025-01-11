@@ -17,25 +17,26 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.project.initializers;
 
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CHAIN_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
+import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.ANY_OVERLAP;
 import static java.util.Arrays.asList;
+import static org.apache.uima.cas.CAS.TYPE_NAME_STRING;
 
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.util.List;
 import java.util.Optional;
 
-import org.apache.uima.cas.CAS;
 import org.apache.wicket.request.resource.PackageResourceReference;
 import org.apache.wicket.request.resource.ResourceReference;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.config.ProjectInitializersAutoConfiguration;
+import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainLayerSupport;
+import de.tudarmstadt.ukp.inception.project.api.ProjectInitializationRequest;
 import de.tudarmstadt.ukp.inception.project.api.ProjectInitializer;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.wicket.resource.Strings;
@@ -87,7 +88,8 @@ public class CoreferenceLayerInitializer
                 // Because locks to token boundaries
                 TokenLayerInitializer.class,
                 // Tagsets
-                CoreferenceTypeTagSetInitializer.class, CoreferenceRelationTagSetInitializer.class);
+                CoreferenceTypeTagSetInitializer.class, //
+                CoreferenceRelationTagSetInitializer.class);
     }
 
     @Override
@@ -97,15 +99,16 @@ public class CoreferenceLayerInitializer
     }
 
     @Override
-    public void configure(Project aProject) throws IOException
+    public void configure(ProjectInitializationRequest aRequest) throws IOException
     {
+        var project = aRequest.getProject();
         var corefTypeTagSet = annotationSchemaService
-                .getTagSet(CoreferenceTypeTagSetInitializer.TAG_SET_NAME, aProject);
+                .getTagSet(CoreferenceTypeTagSetInitializer.TAG_SET_NAME, project);
         var corefRelTagSet = annotationSchemaService
-                .getTagSet(CoreferenceRelationTagSetInitializer.TAG_SET_NAME, aProject);
+                .getTagSet(CoreferenceRelationTagSetInitializer.TAG_SET_NAME, project);
 
-        var base = new AnnotationLayer(COREFERENCE_LAYER_NAME, "Coreference", CHAIN_TYPE, aProject,
-                true, AnchoringMode.TOKENS, OverlapMode.ANY_OVERLAP);
+        var base = new AnnotationLayer(COREFERENCE_LAYER_NAME, "Coreference",
+                ChainLayerSupport.TYPE, project, true, TOKENS, ANY_OVERLAP);
         base.setCrossSentence(true);
         annotationSchemaService.createOrUpdateLayer(base);
 
@@ -113,10 +116,10 @@ public class CoreferenceLayerInitializer
         // annotationSchemaService.getAdapter(base)
         // .initializeLayerConfiguration(annotationSchemaService);
 
-        annotationSchemaService.createFeature(new AnnotationFeature(aProject, base, "referenceType",
-                "referenceType", CAS.TYPE_NAME_STRING, "Coreference type", corefTypeTagSet));
+        annotationSchemaService.createFeature(new AnnotationFeature(project, base, "referenceType",
+                "referenceType", TYPE_NAME_STRING, "Coreference type", corefTypeTagSet));
         annotationSchemaService.createFeature(
-                new AnnotationFeature(aProject, base, "referenceRelation", "referenceRelation",
-                        CAS.TYPE_NAME_STRING, "Coreference relation", corefRelTagSet));
+                new AnnotationFeature(project, base, "referenceRelation", "referenceRelation",
+                        TYPE_NAME_STRING, "Coreference relation", corefRelTagSet));
     }
 }

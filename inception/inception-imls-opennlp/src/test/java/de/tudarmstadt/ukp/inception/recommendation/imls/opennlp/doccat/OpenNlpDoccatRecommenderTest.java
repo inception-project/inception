@@ -28,6 +28,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -44,6 +45,8 @@ import org.dkpro.core.api.resources.CompressionUtils;
 import org.dkpro.core.tokit.BreakIteratorSegmenter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -60,6 +63,8 @@ import de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderTestH
 
 public class OpenNlpDoccatRecommenderTest
 {
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
     private static final File cache = DkproTestHelper.getCacheFolder();
     private static final DatasetFactory loader = new DatasetFactory(cache);
 
@@ -125,10 +130,10 @@ public class OpenNlpDoccatRecommenderTest
         var precision = result.computePrecisionScore();
         var recall = result.computeRecallScore();
 
-        System.out.printf("F1-Score: %f%n", fscore);
-        System.out.printf("Accuracy: %f%n", accuracy);
-        System.out.printf("Precision: %f%n", precision);
-        System.out.printf("Recall: %f%n", recall);
+        LOG.info("F1-Score:  {}", fscore);
+        LOG.info("Accuracy:  {}", accuracy);
+        LOG.info("Precision: {}", precision);
+        LOG.info("Recall:    {}", recall);
 
         assertThat(fscore).isStrictlyBetween(0.0, 1.0);
         assertThat(precision).isStrictlyBetween(0.0, 1.0);
@@ -149,7 +154,7 @@ public class OpenNlpDoccatRecommenderTest
 
             var score = sut.evaluate(casList, splitStrategy).computeF1Score();
 
-            System.out.printf("Score: %f%n", score);
+            LOG.info("Score:  {}", score);
 
             assertThat(score).isStrictlyBetween(0.0, 1.0);
 

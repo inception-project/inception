@@ -40,7 +40,6 @@ import de.tudarmstadt.ukp.inception.annotation.feature.string.StringFeatureSuppo
 import de.tudarmstadt.ukp.inception.annotation.layer.behaviors.LayerBehavior;
 import de.tudarmstadt.ukp.inception.annotation.layer.behaviors.LayerBehaviorRegistry;
 import de.tudarmstadt.ukp.inception.annotation.layer.behaviors.LayerBehaviorRegistryImpl;
-import de.tudarmstadt.ukp.inception.annotation.layer.behaviors.LayerSupportRegistryImpl;
 import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainLayerSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationAttachmentBehavior;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationCrossSentenceBehavior;
@@ -57,14 +56,15 @@ import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.config.AnnotationSchemaProperties;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupport;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistryImpl;
 import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupport;
 import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistry;
+import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistryImpl;
 import de.tudarmstadt.ukp.inception.schema.exporters.AnnotationDocumentExporter;
 import de.tudarmstadt.ukp.inception.schema.exporters.LayerExporter;
 import de.tudarmstadt.ukp.inception.schema.exporters.TagSetExporter;
 import de.tudarmstadt.ukp.inception.schema.service.AnnotationSchemaServiceEventAdapter;
 import de.tudarmstadt.ukp.inception.schema.service.AnnotationSchemaServiceImpl;
-import de.tudarmstadt.ukp.inception.schema.service.FeatureSupportRegistryImpl;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 
