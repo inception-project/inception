@@ -59,8 +59,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import com.knuddels.jtokkit.api.EncodingRegistry;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
 import de.tudarmstadt.ukp.inception.assistant.config.AssistantProperties;
 import de.tudarmstadt.ukp.inception.assistant.embedding.EmbeddingService;
 import de.tudarmstadt.ukp.inception.assistant.index.LuceneIndexPool;

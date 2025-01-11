@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.casstorage;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasSessionException;
+
 /**
  * Indicates that a modification to a read-only CAS was attempted.
  */

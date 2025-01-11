@@ -28,8 +28,8 @@ import java.util.List;
 import org.apache.uima.cas.CAS;
 import org.dkpro.core.api.xml.type.XmlDocument;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 

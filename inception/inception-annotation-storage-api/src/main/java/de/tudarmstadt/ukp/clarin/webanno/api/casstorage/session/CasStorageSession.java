@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.annotation.storage;
+package de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableList;
@@ -32,7 +32,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode;
-import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSessionException;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.WriteAccessNotPermittedException;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
