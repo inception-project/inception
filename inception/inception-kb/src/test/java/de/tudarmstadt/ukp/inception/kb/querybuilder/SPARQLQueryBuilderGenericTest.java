@@ -28,6 +28,7 @@ import static java.util.stream.Collectors.toSet;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -38,6 +39,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
@@ -45,6 +48,8 @@ import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 @Tag("slow")
 public class SPARQLQueryBuilderGenericTest
 {
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
     // YAGO seems to have problem atm 29-04-2023
     private static final List<String> SKIPPED_PROFILES = asList("babel_net", "yago", "hpo",
             "snomed-ct");
@@ -101,7 +106,7 @@ public class SPARQLQueryBuilderGenericTest
 
         assertThat(roots).extracting(KBHandle::getIdentifier).allMatch(_root -> {
             try (RepositoryConnection conn = repo.getConnection()) {
-                System.out.printf("R: %s%n", _root);
+                LOG.info("R: {}", _root);
                 List<KBHandle> children = SPARQLQueryBuilder.forClasses(kb).childrenOf(_root)
                         .asHandles(conn, true);
 
@@ -132,9 +137,9 @@ public class SPARQLQueryBuilderGenericTest
             var builder = SPARQLQueryBuilder.forItems(kb)
                     .withLabelMatchingExactlyAnyOf(".[]*+{}()lala").limit(3);
 
-            System.out.printf("Query   : %n");
+            LOG.info("Query   :");
             Arrays.stream(builder.selectQuery().getQueryString().split("\n"))
-                    .forEachOrdered(l -> System.out.printf("          %s%n", l));
+                    .forEachOrdered(l -> LOG.info("          {}", l));
 
             builder.asHandles(conn, true);
 
@@ -161,9 +166,9 @@ public class SPARQLQueryBuilderGenericTest
                     .withLabelMatchingExactlyAnyOf("Lord\n\r\tLady") //
                     .limit(3);
 
-            System.out.printf("Query   : %n");
+            LOG.info("Query   :");
             Arrays.stream(builder.selectQuery().getQueryString().split("\n"))
-                    .forEachOrdered(l -> System.out.printf("          %s%n", l));
+                    .forEachOrdered(l -> LOG.info("          {}", l));
 
             builder.asHandles(conn, true);
 

@@ -98,12 +98,16 @@ public class ChatContext
         var startTime = System.currentTimeMillis();
         var response = ollamaClient.generate(properties.getUrl(), request,
                 msg -> streamMessage(aCallback, responseId, msg));
+        var tokens = response.getEvalCount();
         var endTime = System.currentTimeMillis();
 
         // Send a final and complete message also including final metrics
         return newMessage(responseId)
                 .withMessage(response.getMessage().content()) //
-                .withPerformance(new MPerformanceMetrics(endTime - startTime)) //
+                .withPerformance(MPerformanceMetrics.builder() //
+                        .withDuration(endTime - startTime) //
+                        .withTokens(tokens) //
+                        .build()) //
                 // Include all refs in the final message again just to be sure
                 .withReferences(references.values()) // 
                 .build();

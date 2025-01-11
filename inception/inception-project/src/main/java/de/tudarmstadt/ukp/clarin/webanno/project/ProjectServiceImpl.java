@@ -668,22 +668,22 @@ public class ProjectServiceImpl
             long start = System.currentTimeMillis();
 
             // remove metadata from DB
-            Project project = aProject;
+            var project = aProject;
             if (!entityManager.contains(project)) {
                 project = entityManager.merge(project);
             }
 
-            applicationEventPublisher.publishEvent(new BeforeProjectRemovedEvent(this, aProject));
+            applicationEventPublisher.publishEvent(new BeforeProjectRemovedEvent(this, project));
 
-            for (var permissions : getProjectPermissions(aProject)) {
+            for (var permissions : getProjectPermissions(project)) {
                 entityManager.remove(permissions);
             }
 
             entityManager.remove(project);
 
             // remove the project directory from the file system
-            String path = repositoryProperties.getPath().getAbsolutePath() + "/" + PROJECT_FOLDER
-                    + "/" + aProject.getId();
+            var path = repositoryProperties.getPath().getAbsolutePath() + "/" + PROJECT_FOLDER + "/"
+                    + project.getId();
             try {
                 FastIOUtils.delete(new File(path));
             }
@@ -691,9 +691,9 @@ public class ProjectServiceImpl
                 LOG.info("Project directory to be deleted was not found: [{}]. Ignoring.", path);
             }
 
-            applicationEventPublisher.publishEvent(new AfterProjectRemovedEvent(this, aProject));
+            applicationEventPublisher.publishEvent(new AfterProjectRemovedEvent(this, project));
 
-            LOG.info("Removed project {} ({})", aProject,
+            LOG.info("Removed project {} ({})", project,
                     formatDurationWords(System.currentTimeMillis() - start, true, true));
         }
     }

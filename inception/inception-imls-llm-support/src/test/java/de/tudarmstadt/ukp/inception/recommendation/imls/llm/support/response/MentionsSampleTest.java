@@ -46,8 +46,6 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.NonTrainableR
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.PredictionContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
-import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.response.MentionsFromJsonExtractor;
-import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.response.MentionsSample;
 import de.tudarmstadt.ukp.inception.rendering.model.Range;
 
 class MentionsSampleTest
@@ -116,7 +114,7 @@ class MentionsSampleTest
                         {% endfor %}
                         {% endfor %}""";
 
-        System.out.println(render(examples, template1));
+        // System.out.println(render(examples, template1));
 
         var template2 = """
                         {% for sentence, example in examples.items() %}
@@ -131,7 +129,7 @@ class MentionsSampleTest
                         {{ example.getLabelledMentions() | tojson }}
                         {% endfor %}""";
 
-        System.out.println(render(examples, template2));
+        // System.out.println(render(examples, template2));
     }
 
     private String render(Map<String, MentionsSample> examples, String template)

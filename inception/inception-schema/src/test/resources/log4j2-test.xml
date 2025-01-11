@@ -10,9 +10,5 @@
     <Root level="WARN">
       <AppenderRef ref="ConsoleAppender" />
     </Root>
-    
-<!--     <Logger name="de.tudarmstadt.ukp.clarin.webanno.curation.casdiff" level="TRACE" /> -->
-<!--     <Logger name="de.tudarmstadt.ukp.inception.curation.merge" level="TRACE" /> -->
-<!--     <Logger name="de.tudarmstadt.ukp.inception.curation.merge.strategy" level="TRACE" /> -->
   </Loggers>
 </Configuration>

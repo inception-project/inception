@@ -81,7 +81,7 @@ public class ProjectDangerZonePanel
     private void actionDeletePerform(AjaxRequestTarget aTarget)
     {
         try {
-            boolean deletingCurrentProject = false;
+            var deletingCurrentProject = false;
             var projectPageBase = findParent(ProjectPageBase.class);
             if (projectPageBase != null) {
                 deletingCurrentProject = getModel().getObject()

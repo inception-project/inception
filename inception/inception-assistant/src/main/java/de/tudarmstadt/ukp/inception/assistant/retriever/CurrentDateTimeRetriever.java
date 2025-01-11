@@ -54,7 +54,8 @@ public class CurrentDateTimeRetriever
     {
         var dtf = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM);
         return asList(MTextMessage.builder() //
-                .withActor("Current time provider").withRole(SYSTEM).internal() //
+                .withActor("Current time provider") //
+                .withRole(SYSTEM).internal() //
                 .withMessage("The current time is " + LocalDateTime.now(ZoneOffset.UTC).format(dtf)) //
                 .build());
     }

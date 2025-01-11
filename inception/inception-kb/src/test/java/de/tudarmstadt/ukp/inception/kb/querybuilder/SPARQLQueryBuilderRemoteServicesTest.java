@@ -31,6 +31,7 @@ import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderLoc
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderLocalTestScenarios.initWikidataMapping;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Method;
 
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
@@ -41,6 +42,8 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.inception.kb.RepositoryType;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
@@ -48,6 +51,8 @@ import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
 public class SPARQLQueryBuilderRemoteServicesTest
 {
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
     private KnowledgeBase kb;
     private Repository ukpVirtuosoRepo;
     private Repository zbwStw;
@@ -85,9 +90,8 @@ public class SPARQLQueryBuilderRemoteServicesTest
     @BeforeEach
     public void testWatcher(TestInfo aTestInfo)
     {
-        String methodName = aTestInfo.getTestMethod().map(Method::getName).orElse("<unknown>");
-        System.out.printf("\n=== %s === %s =====================\n", methodName,
-                aTestInfo.getDisplayName());
+        var methodName = aTestInfo.getTestMethod().map(Method::getName).orElse("<unknown>");
+        LOG.info("=== {} === {} =====================", methodName, aTestInfo.getDisplayName());
 
         suspendSslVerification();
     }

@@ -59,9 +59,9 @@ import de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderLocalTestS
 @Testcontainers(disabledWithoutDocker = true)
 public class AllegroGraphRepositoryTest
 {
-    private static final String GRAPH_IRI = "http://testgraph";
-
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
+    private static final String GRAPH_IRI = "http://testgraph";
 
     private static final String USER = "dba";
     private static final String PASSWORD = "secret";
@@ -104,8 +104,7 @@ public class AllegroGraphRepositoryTest
     public void setUp(TestInfo aTestInfo) throws Exception
     {
         var methodName = aTestInfo.getTestMethod().map(Method::getName).orElse("<unknown>");
-        System.out.printf("\n=== %s === %s =====================\n", methodName,
-                aTestInfo.getDisplayName());
+        LOG.info("=== {} === {} =====================", methodName, aTestInfo.getDisplayName());
 
         suspendSslVerification();
 

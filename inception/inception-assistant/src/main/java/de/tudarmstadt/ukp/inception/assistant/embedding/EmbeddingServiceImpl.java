@@ -163,7 +163,12 @@ public class EmbeddingServiceImpl
                             embeddingProperties.getModel(), embeddingProperties.getDimension());
                 }
                 catch (Exception e) {
-                    LOG.error("Unable to auto-detect embedding dimension - using default", e);
+                    if (LOG.isDebugEnabled()) {
+                        LOG.warn("Unable to auto-detect embedding dimension - using default", e);
+                    }
+                    else {
+                        LOG.warn("Unable to auto-detect embedding dimension - using default");
+                    }
                     embeddingProperties.setDimension(1024);
                 }
             }

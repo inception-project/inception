@@ -18,6 +18,8 @@
 
 package de.tudarmstadt.ukp.clarin.webanno.curation.casdiff;
 
+import static de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport.FEAT_REL_SOURCE;
+import static de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport.FEAT_REL_TARGET;
 import static de.tudarmstadt.ukp.inception.support.uima.AnnotationBuilder.buildAnnotation;
 import static de.tudarmstadt.ukp.inception.support.uima.FeatureStructureBuilder.buildFS;
 import static java.util.Arrays.asList;
@@ -49,7 +51,6 @@ import de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoTsv2Reader;
 import de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoTsv3XReader;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
-import de.tudarmstadt.ukp.inception.support.WebAnnoConst;
 
 public class CurationTestUtils
 {
@@ -202,8 +203,8 @@ public class CurationTestUtils
         else if (RelationLayerSupport.TYPE.equals(aType)) {
             var td = type.addType(aTypeName, "", TYPE_NAME_ANNOTATION);
 
-            td.addFeature(WebAnnoConst.FEAT_REL_TARGET, "", aAttacheType);
-            td.addFeature(WebAnnoConst.FEAT_REL_SOURCE, "", aAttacheType);
+            td.addFeature(FEAT_REL_TARGET, "", aAttacheType);
+            td.addFeature(FEAT_REL_SOURCE, "", aAttacheType);
 
             for (var feature : aFeatures) {
                 td.addFeature(feature, "", TYPE_NAME_STRING);

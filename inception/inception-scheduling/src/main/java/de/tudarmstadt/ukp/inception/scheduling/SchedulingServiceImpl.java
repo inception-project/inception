@@ -321,7 +321,9 @@ public class SchedulingServiceImpl
                         .forEach(t -> {
                             msg.append("- ").append(t).append("\n");
                             for (var frame : t.getThread().getStackTrace()) {
-                                msg.append("  " + frame);
+                                msg.append("  ");
+                                msg.append(frame);
+                                msg.append("\n");
                             }
                         });
                 resumeTasks(aProject);
@@ -329,7 +331,7 @@ public class SchedulingServiceImpl
             }
 
             try {
-                Thread.sleep(100);
+                Thread.sleep(50);
             }
             catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
@@ -549,16 +551,36 @@ public class SchedulingServiceImpl
         });
     }
 
+    @Order(Ordered.HIGHEST_PRECEDENCE)
     @EventListener
-    public void beforeProjectRemoved(BeforeProjectRemovedEvent aEvent) throws TimeoutException
+    public void onBeforeProjectRemoved(BeforeProjectRemovedEvent aEvent) throws TimeoutException
     {
         deletionPending.add(aEvent.getProject());
         stopAllTasksForProject(aEvent.getProject());
-        waitForProjectTasksToEnd(aEvent.getProject(), Duration.ofMinutes(1));
+        var timeout = Duration.ofMinutes(1);
+        try {
+            waitForProjectTasksToEnd(aEvent.getProject(), timeout);
+        }
+        catch (TimeoutException e) {
+            LOG.warn(
+                    "Running tasks for project {} did not terminate after {} - trying to interrupt them",
+                    timeout);
+            // Try interrupting running threads
+            runningTasks.forEach(task -> {
+                try {
+                    task.getThread().interrupt();
+                }
+                catch (Throwable t) {
+                    LOG.error("Error while interrupting hanging task {}", t, e);
+                }
+            });
+            waitForProjectTasksToEnd(aEvent.getProject(), timeout);
+        }
     }
 
+    @Order(Ordered.HIGHEST_PRECEDENCE)
     @EventListener
-    public void afterProjectRemoved(AfterProjectRemovedEvent aEvent) throws IOException
+    public void onAfterProjectRemoved(AfterProjectRemovedEvent aEvent) throws IOException
     {
         stopAllTasksForProject(aEvent.getProject());
         deletionPending.remove(aEvent.getProject());

@@ -40,9 +40,9 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.util.FileSystemUtils;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageService;
@@ -84,9 +84,9 @@ class MatrixWorkloadServiceImplIntegrationTest
 
     static final String TEST_OUTPUT_FOLDER = "target/test-output/MatrixWorkloadServiceImplIntegrationTest";
 
-    private @MockBean AnnotationDocumentExporter annotationDocumentExporter;
-    private @MockBean CasStorageService casStorageService;
-    private @MockBean DocumentImportExportService documentImportExportService;
+    private @MockitoBean AnnotationDocumentExporter annotationDocumentExporter;
+    private @MockitoBean CasStorageService casStorageService;
+    private @MockitoBean DocumentImportExportService documentImportExportService;
 
     private @Autowired ProjectService projectService;
     private @Autowired UserDao userDao;

@@ -204,7 +204,7 @@ public class AssistantServiceImpl
         catch (IOException e) {
             var errorMessage = MTextMessage.builder() //
                     .withActor("Error")
-                    .withRole(SYSTEM) //
+                    .withRole(SYSTEM).internal() //
                     .withMessage("Error: " + e.getMessage()) //
                     .build();
             recordMessage(aSessionOwner, aProject, errorMessage);
@@ -350,8 +350,19 @@ public class AssistantServiceImpl
     {
         synchronized (states) {
             return states.computeIfAbsent(new AssistentStateKey(aSessionOwner, aProject.getId()),
-                    (v) -> new AssistentState());
+                    (v) -> newState());
         }
+    }
+
+    private AssistentState newState()
+    {
+        var state = new AssistentState();
+//        state.upsertMessage(MTextMessage.builder() //
+//                .withActor(properties.getNickname()) //
+//                .withRole(SYSTEM) //
+//                .withMessage("Hi") //
+//                .build());
+        return state;
     }
 
     private void clearState(Project aProject)

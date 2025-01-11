@@ -82,7 +82,7 @@ public class DocumentContextRetriever
         for (var chunk : chunks) {
             var reference = MReference.builder() //
                     //.withId(String.valueOf(references.size() + 1)) //
-                    .withId(UUID.randomUUID().toString()) //
+                    .withId(UUID.randomUUID().toString().substring(0,8)) //
                     .withDocumentId(chunk.documentId()) //
                     .withDocumentName(chunk.documentName()) //
                     .withBegin(chunk.begin()) //
@@ -117,13 +117,21 @@ public class DocumentContextRetriever
 
                 Input:
                 {
-                  "document": "The Eiffel Tower is located in Paris, France. It is one of the most famous landmarks in the world.",
-                  "ref-id": "123"
+                  "document": "The Eiffel Tower is located in Paris, France.",
+                  "ref-id": "917"
+                }
+                {
+                  "document": "It is one of the most famous landmarks in the world.",
+                  "ref-id": "735"
+                }
+                {
+                  "document": The Eiffel Tower was built from 1887 to 1889.",
+                  "ref-id": "582"
                 }
                 
                 Response:
-                The Eiffel Tower is located in Paris, France {{ref::123}}. 
-                It is one of the most famous landmarks in the world {{ref::123}}.
+                The Eiffel Tower is a famous landmark located in Paris, France {{ref::917}} {{ref::735}}.
+                It was built from 1887 to 1889 {{ref::582}}.
                 
                 Now, use the same pattern to process the following document:
                 """,
