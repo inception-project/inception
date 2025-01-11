@@ -25,7 +25,7 @@
   <artifactId>inception-imls-opennlp</artifactId>
   <name>INCEpTION - ML - OpenNLP (v ${opennlp.version})</name>
   <properties>
-    <opennlp.version>2.5.1</opennlp.version>
+    <opennlp.version>2.5.3</opennlp.version>
   </properties>
   <dependencies>
     <dependency>

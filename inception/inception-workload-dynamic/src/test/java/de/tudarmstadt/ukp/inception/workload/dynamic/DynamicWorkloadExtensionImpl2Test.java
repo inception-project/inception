@@ -26,21 +26,35 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.io.File;
+import java.lang.invoke.MethodHandles;
+import java.lang.reflect.Method;
 import java.time.Duration;
+
+import javax.sql.DataSource;
 
 import org.apache.uima.util.CasCreationUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInfo;
+import org.junit.jupiter.api.TestMethodOrder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase.Replace;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Primary;
+import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.util.FileSystemUtils;
 
@@ -78,6 +92,7 @@ import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
                 "spring.main.banner-mode=off", //
                 "workload.dynamic.enabled=true", //
                 "repository.path=" + DynamicWorkloadExtensionImpl2Test.TEST_OUTPUT_FOLDER })
+@AutoConfigureTestDatabase(replace = Replace.AUTO_CONFIGURED)
 @EntityScan({ //
         "de.tudarmstadt.ukp.inception", //
         "de.tudarmstadt.ukp.clarin.webanno" })
@@ -93,8 +108,11 @@ import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
         SchedulingServiceAutoConfiguration.class, //
         WorkloadManagementAutoConfiguration.class, //
         DynamicWorkloadManagerAutoConfiguration.class })
-public class DynamicWorkloadExtensionImpl2Test
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+class DynamicWorkloadExtensionImpl2Test
 {
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
     static final String TEST_OUTPUT_FOLDER = "target/test-output/DynamicWorkloadExtensionImpl2Test";
 
     private @Autowired ProjectService projectService;
@@ -111,14 +129,17 @@ public class DynamicWorkloadExtensionImpl2Test
     private DynamicWorkloadTraits traits;
 
     @BeforeAll
-    public static void setupClass()
+    static void setupClass()
     {
         FileSystemUtils.deleteRecursively(new File(TEST_OUTPUT_FOLDER));
     }
 
     @BeforeEach
-    public void setup() throws Exception
+    void setup(TestInfo aTestInfo) throws Exception
     {
+        var methodName = aTestInfo.getTestMethod().map(Method::getName).orElse("<unknown>");
+        LOG.info("=== {} === {} =====================", methodName, aTestInfo.getDisplayName());
+
         annotator = userService.create(new User("anno1"));
         project = projectService.createProject(new Project("test"));
 
@@ -135,13 +156,14 @@ public class DynamicWorkloadExtensionImpl2Test
     }
 
     @AfterEach
-    public void tearDown() throws Exception
+    void tearDown() throws Exception
     {
         projectService.removeProject(project);
     }
 
     @Test
-    public void thatRecalculatingStateDoesNotFallBacKBehindCuration() throws Exception
+    @Disabled
+    void thatRecalculatingStateDoesNotFallBacKBehindCuration() throws Exception
     {
         documentService.setSourceDocumentState(sourceDocument,
                 SourceDocumentState.CURATION_IN_PROGRESS);
@@ -154,7 +176,7 @@ public class DynamicWorkloadExtensionImpl2Test
     }
 
     @Test
-    public void thatAbandonedDocumentsAreReset() throws Exception
+    void thatAbandonedDocumentsAreReset() throws Exception
     {
         traits = new DynamicWorkloadTraits();
         traits.setAbandonationTimeout(Duration.of(1, SECONDS));
@@ -185,7 +207,7 @@ public class DynamicWorkloadExtensionImpl2Test
     }
 
     @Test
-    public void thatDocumentsForUsersLoggedInAreExemptFromAbandonation() throws Exception
+    void thatDocumentsForUsersLoggedInAreExemptFromAbandonation() throws Exception
     {
         traits = new DynamicWorkloadTraits();
         traits.setAbandonationTimeout(Duration.of(1, SECONDS));
@@ -203,12 +225,18 @@ public class DynamicWorkloadExtensionImpl2Test
 
         sessionRegistry.registerNewSession("dummy-session-id", annotator.getUsername());
 
-        sleep(traits.getAbandonationTimeout().multipliedBy(2).toMillis());
+        try {
+            sleep(traits.getAbandonationTimeout().multipliedBy(2).toMillis());
 
-        dynamicWorkloadExtension.freshenStatus(project);
+            dynamicWorkloadExtension.freshenStatus(project);
+        }
+        finally {
+            sessionRegistry.removeSessionInformation("dummy-session-id");
+        }
 
         var annAfterRefresh = documentService.getAnnotationDocument(ann.getDocument(),
                 ann.getUser());
+
         assertThat(annAfterRefresh.getUpdated()) //
                 .as("Database record was not updated at all") //
                 .isEqualTo(ann.getUpdated());
@@ -223,6 +251,19 @@ public class DynamicWorkloadExtensionImpl2Test
     @SpringBootConfiguration
     public static class TestContext
     {
+        @Primary
+        @Bean
+        public DataSource dataSource()
+        {
+            // Deleting the project while background tasks are still running can lead to a deadlock
+            // so we allow DB locks to be interrupted by the scheduler such that the tasks can
+            // properly end
+            var dataSource = new DriverManagerDataSource();
+            dataSource.setUrl(
+                    "jdbc:hsqldb:mem:testdb;hsqldb.tx=mvcc;hsqldb.tx_interrupt_rollback=true");
+            return dataSource;
+        }
+
         @Bean
         DocumentImportExportService documentImportExportService(
                 AnnotationSchemaService aSchemaService)

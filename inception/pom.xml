@@ -1138,6 +1138,7 @@
                   <exclude>src/main/ts_template/*.json</exclude>
                   <exclude>src/main/ts/node_modules/**/*</exclude>
                   <exclude>**/mocha-test-report.xml</exclude>
+                  <exclude>**/vite.config.js.timestamp*</exclude>
                 </excludes>
               </configuration>
             </plugin>
