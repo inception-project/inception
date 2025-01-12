@@ -296,17 +296,18 @@ public class SchedulingServiceImpl
                     suspendCount);
         }
 
-        waitForProjectTasksToEnd(aProject, Duration.ofMinutes(1));
+        waitForProjectTasksToEnd(aProject, Duration.ofMinutes(1), true);
     }
 
-    private void waitForProjectTasksToEnd(Project aProject, Duration aTimeout)
+    private void waitForProjectTasksToEnd(Project aProject, Duration aTimeout,
+            boolean aResumeOnTimeout)
         throws TimeoutException
     {
         var startTime = currentTimeMillis();
         var timeoutMillis = aTimeout.toMillis();
 
         while (runningTasks.stream().anyMatch(t -> aProject.equals(t.getProject()))) {
-            LOG.trace("Waiting for running tasks to end on project {}", aProject);
+            // LOG.trace("Waiting for running tasks to end on project {}", aProject);
 
             if (currentTimeMillis() - startTime > timeoutMillis) {
                 var msg = new StringBuilder();
@@ -326,7 +327,11 @@ public class SchedulingServiceImpl
                                 msg.append("\n");
                             }
                         });
-                resumeTasks(aProject);
+
+                if (aResumeOnTimeout) {
+                    resumeTasks(aProject);
+                }
+
                 throw new TimeoutException(msg.toString());
             }
 
@@ -519,6 +524,7 @@ public class SchedulingServiceImpl
     {
         enqueuedTasks.removeIf(task -> {
             if (aPredicate.test(task)) {
+                LOG.debug("Destroying queued task: {}", task);
                 task.destroy();
                 return true;
             }
@@ -528,6 +534,7 @@ public class SchedulingServiceImpl
         executor.getQueue().removeIf(runnable -> {
             var task = (Task) runnable;
             if (aPredicate.test(task)) {
+                LOG.debug("Destroying scheduled task: {}", task);
                 task.destroy();
                 return true;
             }
@@ -536,6 +543,7 @@ public class SchedulingServiceImpl
 
         runningTasks.forEach(task -> {
             if (aPredicate.test(task)) {
+                LOG.debug("Canceling running task: {}", task);
                 task.getMonitor().cancel();
                 // The task will be destroyed if necessary by the afterExecute callback
             }
@@ -544,6 +552,7 @@ public class SchedulingServiceImpl
         pendingAcknowledgement.removeIf(runnable -> {
             var task = (Task) runnable;
             if (aPredicate.test(task)) {
+                LOG.debug("Destroying ack-pending task: {}", task);
                 task.destroy();
                 return true;
             }
@@ -559,22 +568,23 @@ public class SchedulingServiceImpl
         stopAllTasksForProject(aEvent.getProject());
         var timeout = Duration.ofMinutes(1);
         try {
-            waitForProjectTasksToEnd(aEvent.getProject(), timeout);
+            waitForProjectTasksToEnd(aEvent.getProject(), timeout, false);
         }
         catch (TimeoutException e) {
             LOG.warn(
                     "Running tasks for project {} did not terminate after {} - trying to interrupt them",
-                    timeout);
+                    aEvent.getProject(), timeout);
             // Try interrupting running threads
             runningTasks.forEach(task -> {
                 try {
+                    LOG.warn("Interrupting: {}", task);
                     task.getThread().interrupt();
                 }
                 catch (Throwable t) {
                     LOG.error("Error while interrupting hanging task {}", t, e);
                 }
             });
-            waitForProjectTasksToEnd(aEvent.getProject(), timeout);
+            waitForProjectTasksToEnd(aEvent.getProject(), timeout, false);
         }
     }
 

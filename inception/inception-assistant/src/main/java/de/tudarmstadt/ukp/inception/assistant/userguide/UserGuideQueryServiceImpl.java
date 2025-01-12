@@ -50,7 +50,7 @@ import org.springframework.context.event.EventListener;
 
 import de.tudarmstadt.ukp.inception.assistant.config.AssistantProperties;
 import de.tudarmstadt.ukp.inception.assistant.embedding.EmbeddingService;
-import de.tudarmstadt.ukp.inception.assistant.index.HighDimensionLucene99Codec;
+import de.tudarmstadt.ukp.inception.assistant.index.HighDimensionLucene912Codec;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.support.SettingsUtil;
 import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
@@ -198,7 +198,7 @@ public class UserGuideQueryServiceImpl
     IndexWriter getIndexWriter() throws IOException
     {
         var iwc = new IndexWriterConfig();
-        iwc.setCodec(new HighDimensionLucene99Codec(embeddingService.getDimension()));
+        iwc.setCodec(new HighDimensionLucene912Codec(embeddingService.getDimension()));
         return new IndexWriter(getSharedIndexDirectory(), iwc);
     }
 

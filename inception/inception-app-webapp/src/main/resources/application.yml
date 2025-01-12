@@ -25,7 +25,7 @@ spring:
           max-age: 31536000
 
   datasource:
-    url: ${database.url:${INCEPTION_DB_URL:jdbc:hsqldb:file:${inception.home:${user.home}/.inception}/db/inception;hsqldb.default_table_type=cached}}
+    url: ${database.url:${INCEPTION_DB_URL:jdbc:hsqldb:file:${inception.home:${user.home}/.inception}/db/inception;hsqldb.default_table_type=cached;hsqldb.tx=mvcc}}
     username: ${database.username:${INCEPTION_DB_USERNAME:sa}}
     password: ${database.password:${INCEPTION_DB_PASSWORD:}}
     driver-class-name: ${database.driver:${INCEPTION_DB_DRIVER:}}
