@@ -35,8 +35,8 @@ import org.testcontainers.utility.DockerImageName;
 class InceptionMSSQLServerIntegrationTest
 {
     static final DockerImageName image = DockerImageName.parse("mcr.microsoft.com/mssql/server")
-            .withTag(
-                    "2022-latest@sha256:45a1a9d13ca5574cf8e0fe4ae73ab77248b66d9c3132ac9658fb6c16dd72a8af");
+            .withTag("2022-latest");
+    // .withTag("@sha256:45a1a9d13ca5574cf8e0fe4ae73ab77248b66d9c3132ac9658fb6c16dd72a8af");
     @SuppressWarnings("resource")
     static final MSSQLServerContainer<?> dbContainer = new MSSQLServerContainer<>(image) //
             .acceptLicense();
