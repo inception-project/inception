@@ -32,24 +32,13 @@ If the link feature is configured to any layer, an existing span annotation need
 | Property | Description
 
 | Role labels
-| Allows users to add a role label to each slot when linking anntations. 
-  If disabled the UI labels of annotations will be displayed instead of role labels. 
-  This property is enabled by default.
+| Enabled/disable role labels.
 
 | Comparison
 | Determines whether to consider this link feature when comparing the annotations of the layer to which this feature belongs. 
-By default, link featurse are **ignored when comparing annotations**. That means, two annotations at the same position with the same feature values but different links will be considered equal. 
-If you want to consider the links when comparing annotations, you can change this setting to **consider when comparing annotations**.
-Note that even when the links are considered, two annotations at the same position are still considered to be stacked and will not be auto-merge by any merge strategies that do not support stacking.
 
 | Multiplicity
 | Determines how links are compared to each other e.g. when calulating agreement or when merging annotations during curation.
-  Use *Target can be linked in multiple different roles* if a link target can appear in multiple roles with respect to the same source span.
-  In this mode, if an annotator links multiple targets using the same role, the links will be considered stacked and not be not auto-merged by curation or used for agreement calculation.
-  Use *Target should be linked in only one role* if you expect that a link target should only appear in a single roles with respect to the same source span.
-  In this mode, if an annotator links the same target in multiple roles, the links will be considered stacked and not be auto-merged by curation or used for agreement calculation.
-  Use *Target can be linked in multiple roles (same or different)* if you expect that a link target should be linked multiple times with different roles as well as different targets can be linked with the same role.
-  In this mode, there is no stacking.
 
 | Tagset
 | The tagset controlling the possible values for the link roles.
@@ -58,3 +47,49 @@ Note that even when the links are considered, two annotations at the same positi
 | For each of the specificed roles, an empty slot will be visible in the UI. 
   This can save the annotator time to create a slot for frequently used slots.
 |====
+
+== Role Labels
+
+Allows users to add a role label to each slot when linking anntations. 
+If disabled the UI labels of annotations will be displayed instead of role labels. 
+This property is enabled by default.
+
+== Comparison
+
+By default, link features are **ignored when comparing annotations**. 
+That means, two annotations at the same position with the same feature values but different links will be considered equal.
+If you want to consider the links when comparing annotations, you can change this setting to **consider when comparing annotations**.
+Note that even when the links are considered, two annotations at the same position are still considered to be stacked and will not be auto-merge by any merge strategies that do not support stacking.
+
+.Link feature comparison modes example
+|===
+| Considering mode | Ignoring mode
+a| image::images/LinkFeatureDiffMode_INCLUDE.png[] 
+a| image::images/LinkFeatureDiffMode_EXCLUDE.png[]
+|===
+
+== Multiplicity
+
+Determines how links are compared to each other e.g. when calulating agreement or when merging annotations during curation.
+
+Use *Target should be linked in only one role* if you expect that a link target should only appear in a single roles with respect to the same source span - but the same role may be assigned to different targets.
+In this mode, if an annotator links the same target in multiple roles, the links will be considered stacked and not be auto-merged by curation or used for agreement calculation.
+
+.When the `slot1` link is merge, the `slot2` link to the same target disappears because each target can only be assigned a single role. The second `slot1` link remains available because it has a different target.
+video::images/MULTIPLE_TARGETS_ONE_ROLE.mp4[]
+
+Use *Target can be linked in multiple different roles* if a link target can appear in multiple roles with respect to the same source span - but a role may only be used once.
+In this mode, if an annotator links multiple targets using the same role, the links will be considered stacked and not be not auto-merged by curation or used for agreement calculation.
+
+.When first link labelled `slot1` is linked, the second `slot1` link disappears because each role can only be assigned to a single target. The `slot2` link remains available because it has a different role.
+video::images/ONE_TARGET_MULTIPLE_ROLES.mp4[]
+
+Use *Target can be linked in multiple roles (same or different)* if you expect that a link target should be linked multiple times with different roles as well as different targets can be linked with the same role.
+In this mode, there is no stacking.
+Note that the order in which you merge the links and whether you create stacked annotations or not can affect the final result.
+
+.Merging all slots to the same source annotation.
+video::images/MULTIPLE_TARGETS_MULTIPLE_ROLES_1.mp4[]
+
+.Creating two stacked source annotations and merging the slots to both.
+video::images/MULTIPLE_TARGETS_MULTIPLE_ROLES_2.mp4[]
