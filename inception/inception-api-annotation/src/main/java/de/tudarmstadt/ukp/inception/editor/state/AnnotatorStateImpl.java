@@ -520,7 +520,7 @@ public class AnnotatorStateImpl
     {
         rememberedSpanFeatures = new HashMap<>();
         if (aModels != null) {
-            for (FeatureState fm : aModels) {
+            for (var fm : aModels) {
                 // Do not remember values unless this feature is enabled
                 if (!fm.feature.isRemember()) {
                     continue;
