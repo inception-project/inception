@@ -21,12 +21,14 @@ import static java.util.Collections.reverse;
 import static java.util.Collections.sort;
 import static java.util.Comparator.comparing;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.normalizeSpace;
 
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,6 +41,8 @@ import org.apache.uima.fit.util.FSUtil;
 import org.apache.uima.jcas.tcas.Annotation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.fasterxml.jackson.databind.node.TextNode;
 
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
@@ -115,6 +119,15 @@ public class MentionsFromJsonExtractor
             labelsSeen.addAll(sentenceAndLabels.getValue());
         }
 
+        // Generate a fake sample to demonstrate how a result should look
+        // if (examples.isEmpty()) {
+        // var text = "This sentence contains a secret and a hint.";
+        // var sample = new MentionsSample(text);
+        // sample.addMention("secret", "mystery");
+        // sample.addMention("hint", "clue");
+        // examples.put(text, sample);
+        // }
+
         return examples;
     }
 
@@ -147,20 +160,51 @@ public class MentionsFromJsonExtractor
                             mentions.add(Pair.of(item.asText(), fieldEntry.getKey()));
                         }
                         if (item.isObject()) {
-                            // Looks like this
-                            // "politicians": [
-                            // { "name": "President Livingston" },
-                            // { "name": "John" },
-                            // { "name": "Don Horny" }
-                            // ]
-                            var subFieldIterator = item.fields();
-                            while (subFieldIterator.hasNext()) {
-                                var subEntry = subFieldIterator.next();
-                                if (subEntry.getValue().isTextual()) {
-                                    mentions.add(Pair.of(subEntry.getValue().asText(),
-                                            fieldEntry.getKey()));
+                            var fields = toList(item.fields());
+                            if (fields.size() == 1) {
+                                // Looks like this
+                                // "politicians": [
+                                // { "name": "President Livingston" },
+                                // { "name": "John" },
+                                // { "name": "Don Horny" }
+                                // ]
+                                var nestedFieldIterator = item.fields();
+                                while (nestedFieldIterator.hasNext()) {
+                                    var nestedEntry = nestedFieldIterator.next();
+                                    if (nestedEntry.getValue().isTextual()) {
+                                        mentions.add(Pair.of(nestedEntry.getValue().asText(),
+                                                fieldEntry.getKey()));
+                                    }
+                                    break;
                                 }
-                                break;
+                            }
+                            else if (fields.size() >= 2) {
+                                // Looks like this
+                                // "politicians": [
+                                // { "text": "President Livingston", "type"="politician" },
+                                // { "text": "John", "type"="politician" },
+                                // { "text": "Don Horny", "type"="politician" }
+                                // ]
+                                String text = null;
+                                String label = null;
+                                if (item.get("text") instanceof TextNode tn) {
+                                    text = tn.asText();
+                                }
+                                else if (item.get("name") instanceof TextNode tn) {
+                                    text = tn.asText();
+                                }
+                                if (item.get("type") instanceof TextNode tn) {
+                                    label = tn.asText();
+                                }
+                                else if (item.get("value") instanceof TextNode tn) {
+                                    label = tn.asText();
+                                }
+                                else if (item.get("label") instanceof TextNode tn) {
+                                    label = tn.asText();
+                                }
+                                if (isNotBlank(text) && isNotBlank(label)) {
+                                    mentions.add(Pair.of(text, label));
+                                }
                             }
                         }
                     }
@@ -196,6 +240,13 @@ public class MentionsFromJsonExtractor
             LOG.error("Unable to extract mentions - not valid JSON: [" + aResponse + "]");
         }
         return mentions;
+    }
+
+    private <T> List<T> toList(Iterator<T> aIterator)
+    {
+        var list = new ArrayList<T>();
+        aIterator.forEachRemaining(list::add);
+        return list;
     }
 
     private void mentionsToPredictions(RecommendationEngine aEngine, CAS aCas,
