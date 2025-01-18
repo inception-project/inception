@@ -1,5 +1,5 @@
 ---
-name: Refactoring (for developers)
+name: "⚙️ Refactoring (for developers)" 
 about: Refactor the application
 type: "⚙️ Refactoring"
 labels: ["⚙️ Refactoring"]
