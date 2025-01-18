@@ -1,6 +1,6 @@
 ---
 name: "⭐️ Enhancement (feature request)"
-about: Suggest an idea for this project
+about: Suggest a feature or improvement
 type: "⭐️ Enhancement"
 labels: ["⭐️ Enhancement"]
 ---
