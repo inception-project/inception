@@ -1,7 +1,8 @@
 ---
 name: Refactoring (for developers)
 about: Refactor the application
-
+type: "⚙️ Refactoring"
+labels: ["⚙️ Refactoring"]
 ---
 
 **Describe the refactoring action**

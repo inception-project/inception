@@ -1,6 +1,7 @@
 name: Bug report (form)
 description: Create a report to help us improve
-labels: ["🐛Bug", "Triage"]
+type: "🐛 Bug"
+labels: ["🐛 Bug", "Triage"]
 body:
   - type: textarea
     id: description
