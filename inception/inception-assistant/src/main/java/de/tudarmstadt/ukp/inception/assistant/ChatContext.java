@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.assistant;
 
 import static de.tudarmstadt.ukp.inception.assistant.model.MChatRoles.ASSISTANT;
+import static java.lang.System.currentTimeMillis;
 
 import java.io.IOException;
 import java.util.LinkedHashMap;
@@ -95,21 +96,21 @@ public class ChatContext
         aCallback.accept(responseId, firstMessage);
 
         // Generate the actual response
-        var startTime = System.currentTimeMillis();
-        var response = ollamaClient.generate(properties.getUrl(), request,
+        var startTime = currentTimeMillis();
+        var response = ollamaClient.chat(properties.getUrl(), request,
                 msg -> streamMessage(aCallback, responseId, msg));
         var tokens = response.getEvalCount();
-        var endTime = System.currentTimeMillis();
+        var endTime = currentTimeMillis();
 
         // Send a final and complete message also including final metrics
-        return newMessage(responseId)
+        return newMessage(responseId) //
                 .withMessage(response.getMessage().content()) //
                 .withPerformance(MPerformanceMetrics.builder() //
                         .withDuration(endTime - startTime) //
                         .withTokens(tokens) //
                         .build()) //
                 // Include all refs in the final message again just to be sure
-                .withReferences(references.values()) // 
+                .withReferences(references.values()) //
                 .build();
     }
 

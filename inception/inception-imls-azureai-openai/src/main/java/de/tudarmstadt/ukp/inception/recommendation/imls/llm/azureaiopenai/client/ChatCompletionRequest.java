@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.llm.azureaiopenai.clien
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 import static java.util.Arrays.asList;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -57,11 +58,9 @@ public class ChatCompletionRequest
 
     private ChatCompletionRequest(Builder builder)
     {
-        messages = asList(new ChatCompletionMessage("user", builder.prompt));
-
+        messages = builder.messages;
         model = builder.model;
         apiKey = builder.apiKey;
-
         format = builder.format;
         frequencyPenalty = FREQUENCY_PENALTY.get(builder.options);
         temperature = TEMPERATURE.get(builder.options);
@@ -97,9 +96,9 @@ public class ChatCompletionRequest
     {
         private String model;
         private String apiKey;
-        private String prompt;
         private GenerateResponseFormat format;
         private Map<Option<?>, Object> options = new HashMap<>();
+        private List<ChatCompletionMessage> messages = new ArrayList<>();
 
         private Builder()
         {
@@ -117,9 +116,19 @@ public class ChatCompletionRequest
             return this;
         }
 
-        public Builder withPrompt(String aPrompt)
+        public Builder withUserPrompt(String aPrompt)
         {
-            prompt = aPrompt;
+            messages.add(new ChatCompletionMessage("user", aPrompt));
+            return this;
+        }
+
+        public Builder withMessages(ChatCompletionMessage... aMessages)
+        {
+            if (aMessages != null) {
+                for (var msg : aMessages) {
+                    messages.add(msg);
+                }
+            }
             return this;
         }
 

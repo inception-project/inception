@@ -133,7 +133,7 @@ public class OllamaClientImpl
     }
 
     @Override
-    public OllamaChatResponse generate(String aUrl, OllamaChatRequest aRequest,
+    public OllamaChatResponse chat(String aUrl, OllamaChatRequest aRequest,
             Consumer<OllamaChatResponse> aCallback)
         throws IOException
     {
@@ -171,8 +171,12 @@ public class OllamaClientImpl
             }
         }
 
-        var role = finalResponse.getMessage().role();
-        finalResponse.setMessage(new OllamaChatMessage(role, result.toString().trim()));
+        if (finalResponse == null) {
+            throw new IOException("Request returned without a response");
+        }
+
+        finalResponse.setMessage(
+                new OllamaChatMessage(finalResponse.getMessage().role(), result.toString().trim()));
 
         return finalResponse;
     }

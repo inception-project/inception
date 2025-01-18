@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -43,6 +44,7 @@ import org.springframework.security.core.session.SessionDestroyedEvent;
 import org.springframework.security.core.session.SessionRegistry;
 
 import com.knuddels.jtokkit.api.EncodingRegistry;
+import com.networknt.schema.JsonSchema;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
@@ -51,12 +53,17 @@ import de.tudarmstadt.ukp.inception.assistant.model.MMessage;
 import de.tudarmstadt.ukp.inception.assistant.model.MRemoveConversationCommand;
 import de.tudarmstadt.ukp.inception.assistant.model.MTextMessage;
 import de.tudarmstadt.ukp.inception.assistant.retriever.RetrieverExtensionPoint;
+import de.tudarmstadt.ukp.inception.preferences.ClientSidePreferenceKey;
+import de.tudarmstadt.ukp.inception.preferences.ClientSidePreferenceMapValue;
+import de.tudarmstadt.ukp.inception.preferences.ClientSideUserPreferencesProvider;
 import de.tudarmstadt.ukp.inception.project.api.event.AfterProjectRemovedEvent;
 import de.tudarmstadt.ukp.inception.project.api.event.BeforeProjectRemovedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaClient;
+import de.tudarmstadt.ukp.inception.support.io.WatchedResourceFile;
+import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 
 public class AssistantServiceImpl
-    implements AssistantService
+    implements AssistantService, ClientSideUserPreferencesProvider
 {
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
@@ -67,6 +74,11 @@ public class AssistantServiceImpl
     private final AssistantProperties properties;
     private final EncodingRegistry encodingRegistry;
     private final RetrieverExtensionPoint retrieverExtensionPoint;
+
+    private static final ClientSidePreferenceKey<ClientSidePreferenceMapValue> KEY_ASSISTANT_PREFS = //
+            new ClientSidePreferenceKey<>(ClientSidePreferenceMapValue.class, "assistant/general");
+
+    private WatchedResourceFile<JsonSchema> userPreferencesSchema;
 
     public AssistantServiceImpl(SessionRegistry aSessionRegistry,
             SimpMessagingTemplate aMsgTemplate, OllamaClient aOllamaClient,
@@ -80,6 +92,11 @@ public class AssistantServiceImpl
         properties = aProperties;
         encodingRegistry = aEncodingRegistry;
         retrieverExtensionPoint = aRetrieverExtensionPoint;
+
+        var userPreferencesSchemaFile = getClass()
+                .getResource("AssistantServiceUserPreferences.schema.json");
+        userPreferencesSchema = new WatchedResourceFile<>(userPreferencesSchemaFile,
+                JSONUtil::loadJsonSchema);
     }
 
     // Set order so this is handled before session info is removed from sessionRegistry
@@ -168,11 +185,10 @@ public class AssistantServiceImpl
     }
 
     @Override
-    public void processUserMessage(String aSessionOwner, Project aProject,
-            MTextMessage aMessage)
+    public void processUserMessage(String aSessionOwner, Project aProject, MTextMessage aMessage)
     {
         var assistant = new ChatContext(properties, ollamaClient, aSessionOwner, aProject);
-        
+
         // Dispatch message early so the front-end can enter waiting state
         dispatchMessage(aSessionOwner, aProject, aMessage);
 
@@ -197,14 +213,14 @@ public class AssistantServiceImpl
 
             var responseMessage = assistant.generate(recentConversation,
                     (id, r) -> handleStreamedMessageFragment(aSessionOwner, aProject, id, r));
-            
+
             recordMessage(aSessionOwner, aProject, responseMessage);
-            dispatchMessage(aSessionOwner, aProject, responseMessage);
+
+            dispatchMessage(aSessionOwner, aProject, responseMessage.withoutContent());
         }
         catch (IOException e) {
             var errorMessage = MTextMessage.builder() //
-                    .withActor("Error")
-                    .withRole(SYSTEM).internal() //
+                    .withActor("Error").withRole(SYSTEM).internal() //
                     .withMessage("Error: " + e.getMessage()) //
                     .build();
             recordMessage(aSessionOwner, aProject, errorMessage);
@@ -219,7 +235,8 @@ public class AssistantServiceImpl
         dispatchMessage(aSessionOwner, aProject, responseMessage);
     }
 
-    private List<MTextMessage> generateTransientMessages(ChatContext aAssistant, MTextMessage aMessage)
+    private List<MTextMessage> generateTransientMessages(ChatContext aAssistant,
+            MTextMessage aMessage)
     {
         var transientMessages = new ArrayList<MTextMessage>();
 
@@ -232,8 +249,7 @@ public class AssistantServiceImpl
 
     private List<MTextMessage> generateSystemMessages()
     {
-        var primeDirectives = asList(
-                "Your name is " + properties.getNickname() + ".",
+        var primeDirectives = asList("Your name is " + properties.getNickname() + ".",
                 "You are a helpful assistant within the annotation tool INCEpTION.",
                 "INCEpTION always refers to the annotation tool, never anything else such as the movie.",
                 "Do not include references to INCEpTION unless the user explicitly asks about the environment itself.",
@@ -255,11 +271,9 @@ public class AssistantServiceImpl
                 .build());
     }
 
-    private List<MTextMessage> limitConversationToContextLength(
-            List<MTextMessage> aSystemMessages,
-            List<MTextMessage> aTransientMessages,
-            List<MTextMessage> aRecentMessages, MTextMessage aLatestUserMessage,
-            int aContextLength)
+    private List<MTextMessage> limitConversationToContextLength(List<MTextMessage> aSystemMessages,
+            List<MTextMessage> aTransientMessages, List<MTextMessage> aRecentMessages,
+            MTextMessage aLatestUserMessage, int aContextLength)
     {
         // We don't really know which tokenizer the LLM uses. In case
         // the tokenizer we use counts fewer tokens than the one user by
@@ -346,6 +360,19 @@ public class AssistantServiceImpl
         return allMessages;
     }
 
+    @SuppressWarnings({ "unchecked" })
+    @Override
+    public Optional<ClientSidePreferenceKey<ClientSidePreferenceMapValue>> getUserPreferencesKey()
+    {
+        return Optional.of(KEY_ASSISTANT_PREFS);
+    }
+
+    @Override
+    public Optional<JsonSchema> getUserPreferencesSchema() throws IOException
+    {
+        return userPreferencesSchema.get();
+    }
+
     private AssistentState getState(String aSessionOwner, Project aProject)
     {
         synchronized (states) {
@@ -357,11 +384,11 @@ public class AssistantServiceImpl
     private AssistentState newState()
     {
         var state = new AssistentState();
-//        state.upsertMessage(MTextMessage.builder() //
-//                .withActor(properties.getNickname()) //
-//                .withRole(SYSTEM) //
-//                .withMessage("Hi") //
-//                .build());
+        // state.upsertMessage(MTextMessage.builder() //
+        // .withActor(properties.getNickname()) //
+        // .withRole(SYSTEM) //
+        // .withMessage("Hi") //
+        // .build());
         return state;
     }
 

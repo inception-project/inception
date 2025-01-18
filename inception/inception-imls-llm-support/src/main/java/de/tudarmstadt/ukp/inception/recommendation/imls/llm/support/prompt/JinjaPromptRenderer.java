@@ -41,7 +41,7 @@ public class JinjaPromptRenderer
                     JinjavaInterpreter aInterpreter)
                 throws IOException
             {
-                throw new ResourceNotFoundException("Couldn't find resource: " + aFullName);
+                throw new ResourceNotFoundException("Resource not found: " + aFullName);
             }
         });
     }

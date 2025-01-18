@@ -50,13 +50,7 @@ public class OllamaRecommender
     @Override
     protected String exchange(String aPrompt) throws IOException
     {
-        OllamaGenerateResponseFormat format = null;
-        if (traits.getFormat() != null) {
-            format = switch (traits.getFormat()) {
-            case JSON -> OllamaGenerateResponseFormat.JSON;
-            default -> null;
-            };
-        }
+        var format = getResponseFormat();
 
         LOG.trace("Querying ollama [{}]: [{}]", traits.getModel(), aPrompt);
         var request = OllamaGenerateRequest.builder() //
@@ -70,5 +64,17 @@ public class OllamaRecommender
         LOG.trace("Ollama [{}] responds ({} ms): [{}]", traits.getModel(),
                 currentTimeMillis() - startTime, response);
         return response;
+    }
+
+    private OllamaGenerateResponseFormat getResponseFormat()
+    {
+        OllamaGenerateResponseFormat format = null;
+        if (traits.getFormat() != null) {
+            format = switch (traits.getFormat()) {
+            case JSON -> OllamaGenerateResponseFormat.JSON;
+            default -> null;
+            };
+        }
+        return format;
     }
 }

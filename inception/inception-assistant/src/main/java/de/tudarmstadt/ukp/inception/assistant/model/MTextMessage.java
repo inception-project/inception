@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.assistant.model;
 
+import static java.util.Collections.emptyList;
+
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -49,16 +51,18 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
  *            optional list of references
  */
 @JsonTypeName(MTextMessage.TYPE_TEXT_MESSAGE)
-public record MTextMessage(UUID id, String role, String actor, String message, boolean done, boolean internal,
-        MPerformanceMetrics performance, List<MReference> references)
+public record MTextMessage(UUID id, String role, String actor, String message, boolean done,
+        boolean internal, MPerformanceMetrics performance, List<MReference> references)
     implements MChatMessage
 {
+
     static final String TYPE_TEXT_MESSAGE = "textMessage";
 
     private MTextMessage(Builder aBuilder)
     {
-        this(aBuilder.id, aBuilder.role, aBuilder.actor, aBuilder.message, aBuilder.done, aBuilder.internal,
-                aBuilder.performance, aBuilder.references.values().stream().toList());
+        this(aBuilder.id, aBuilder.role, aBuilder.actor, aBuilder.message, aBuilder.done,
+                aBuilder.internal, aBuilder.performance,
+                aBuilder.references.values().stream().toList());
     }
 
     public MTextMessage append(MTextMessage aMessage)
@@ -80,7 +84,7 @@ public record MTextMessage(UUID id, String role, String actor, String message, b
         if (aMessage.references() != null) {
             aMessage.references().forEach(r -> refs.put(r.id(), r));
         }
-        
+
         var msg = new StringBuilder();
         if (message() != null) {
             msg.append(message());
@@ -89,8 +93,14 @@ public record MTextMessage(UUID id, String role, String actor, String message, b
             msg.append(aMessage.message());
         }
 
-        return new MTextMessage(id(), role(), actor(), msg.toString(), aMessage.done(),
-                internal(), perf, refs.values().stream().toList());
+        return new MTextMessage(id(), role(), actor(), msg.toString(), aMessage.done(), internal(),
+                perf, refs.values().stream().toList());
+    }
+
+    public MTextMessage withoutContent()
+    {
+        return new MTextMessage(id(), role(), actor(), "", done(), internal(), performance(),
+                emptyList());
     }
 
     @JsonProperty(MMessage.TYPE_FIELD)
