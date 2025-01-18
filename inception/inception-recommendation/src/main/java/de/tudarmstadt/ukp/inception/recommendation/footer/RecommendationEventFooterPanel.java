@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.footer;
 
+import static de.tudarmstadt.ukp.clarin.webanno.security.WicketSecurityUtils.getCsrfTokenFromSession;
 import static de.tudarmstadt.ukp.inception.websocket.config.WebSocketConstants.TOPIC_ELEMENT_PROJECT;
 import static de.tudarmstadt.ukp.inception.websocket.config.WebSocketConstants.TOPIC_ELEMENT_USER;
 import static de.tudarmstadt.ukp.inception.websocket.config.WebSocketConstants.TOPIC_RECOMMENDER;
@@ -76,6 +77,7 @@ public class RecommendationEventFooterPanel
         if (maybeProject.isPresent()) {
             setVisible(maybeProject.isPresent());
             setDefaultModel(Model.ofMap(Map.of( //
+                    "csrfToken", getCsrfTokenFromSession(), //
                     "wsEndpointUrl", constructEndpointUrl(), //
                     "topicChannel",
                     TOPIC_ELEMENT_PROJECT + getProject().get().getId() + TOPIC_ELEMENT_USER
@@ -107,9 +109,8 @@ public class RecommendationEventFooterPanel
 
     private String constructEndpointUrl()
     {
-        Url endPointUrl = Url.parse(format("%s%s", servletContext.getContextPath(), WS_ENDPOINT));
+        var endPointUrl = Url.parse(format("%s%s", servletContext.getContextPath(), WS_ENDPOINT));
         endPointUrl.setProtocol("ws");
-        String fullUrl = RequestCycle.get().getUrlRenderer().renderFullUrl(endPointUrl);
-        return fullUrl;
+        return RequestCycle.get().getUrlRenderer().renderFullUrl(endPointUrl);
     }
 }

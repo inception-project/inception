@@ -27,7 +27,6 @@ import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectFsByAddr;
 import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.getSentenceNumber;
 import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.isSame;
 import static java.util.Arrays.asList;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.uima.fit.util.CasUtil.selectAt;
 import static wicket.contrib.input.events.EventType.click;
 import static wicket.contrib.input.events.key.KeyType.Delete;
@@ -804,8 +803,6 @@ public abstract class AnnotationDetailEditorPanel
 
                 relationAdapter.delete(state.getDocument(), state.getUser().getUsername(), aCas,
                         VID.of(rel.getRelation()));
-
-                info(generateMessage(relationAdapter.getLayer(), null, true));
             }
         }
 
@@ -826,8 +823,6 @@ public abstract class AnnotationDetailEditorPanel
 
         // Actually delete annotation
         adapter.delete(state.getDocument(), state.getUser().getUsername(), aCas, aVid);
-
-        info(generateMessage(adapter.getLayer(), null, true));
     }
 
     private void cleanUpLinkFeatures(CAS aCas, FeatureStructure fs, SpanAdapter adapter,
@@ -1075,8 +1070,11 @@ public abstract class AnnotationDetailEditorPanel
         setVisible(getModelObject() != null && getModelObject().getDocument() != null);
 
         // Set read only if annotation is finished or the user is viewing other's work
-        var selectedLayerIsReadOnly = getModel().map(AnnotatorState::getSelectedAnnotationLayer)
-                .map(AnnotationLayer::isReadonly).orElse(true).getObject();
+        var selectedLayerIsReadOnly = getModel() //
+                .map(AnnotatorState::getSelectedAnnotationLayer) //
+                .map(AnnotationLayer::isReadonly) //
+                .orElse(true) //
+                .getObject();
         setEnabled(editorPage.isEditable() && !selectedLayerIsReadOnly);
     }
 
@@ -1121,8 +1119,8 @@ public abstract class AnnotationDetailEditorPanel
 
         try {
             var selection = getModelObject().getSelection();
-            int id = selection.getAnnotation().getId();
-            boolean annotationStillExists = getEditorCas().select(Annotation.class) //
+            var id = selection.getAnnotation().getId();
+            var annotationStillExists = getEditorCas().select(Annotation.class) //
                     .at(selection.getBegin(), selection.getEnd()) //
                     .anyMatch(ann -> ann._id() == id);
 
@@ -1215,7 +1213,7 @@ public abstract class AnnotationDetailEditorPanel
     private static List<ReorderableTag> compareSortAndAdd(List<PossibleValue> aPossibleValues,
             List<ReorderableTag> aTags, RulesIndicator aRulesIndicator)
     {
-        List<ReorderableTag> returnList = new ArrayList<>();
+        var returnList = new ArrayList<ReorderableTag>();
 
         // if no possible values, means didn't satisfy conditions
         if (aPossibleValues.isEmpty()) {
@@ -1223,13 +1221,13 @@ public abstract class AnnotationDetailEditorPanel
             return aTags;
         }
 
-        Map<String, ReorderableTag> tagIndex = new LinkedHashMap<>();
+        var tagIndex = new LinkedHashMap<String, ReorderableTag>();
         for (ReorderableTag tag : aTags) {
             tagIndex.put(tag.getName(), tag);
         }
 
-        for (PossibleValue value : aPossibleValues) {
-            ReorderableTag tag = tagIndex.get(value.getValue());
+        for (var value : aPossibleValues) {
+            var tag = tagIndex.get(value.getValue());
             if (tag == null) {
                 continue;
             }
@@ -1323,18 +1321,6 @@ public abstract class AnnotationDetailEditorPanel
         }
     }
 
-    private static String generateMessage(AnnotationLayer aLayer, String aLabel, boolean aDeleted)
-    {
-        var action = aDeleted ? "deleted" : "created/updated";
-
-        var msg = "The [" + aLayer.getUiName() + "] annotation has been " + action + ".";
-        if (isNotBlank(aLabel)) {
-            msg += " Label: [" + aLabel + "]";
-        }
-
-        return msg;
-    }
-
     private LambdaAjaxLink createClearButton()
     {
         var link = new LambdaAjaxLink("clear", this::actionClear);
@@ -1346,7 +1332,7 @@ public abstract class AnnotationDetailEditorPanel
 
     private Component createReverseButton()
     {
-        LambdaAjaxLink link = new LambdaAjaxLink("reverse", this::actionReverse);
+        var link = new LambdaAjaxLink("reverse", this::actionReverse);
         link.setOutputMarkupPlaceholderTag(true);
         link.add(LambdaBehavior.onConfigure(_this -> {
             AnnotatorState state = getModelObject();

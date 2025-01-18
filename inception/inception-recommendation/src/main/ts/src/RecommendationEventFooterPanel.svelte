@@ -31,6 +31,7 @@
     export let wsEndpointUrl: string; // should this be full ws://... url
     export let topicChannel: string;
     export let feedbackPanelId = null;
+    export let csrfToken: string;
 
     let socket: WebSocket = null;
     let stompClient: Client = null;
@@ -48,6 +49,9 @@
         wsEndpoint.protocol = protocol;
 
         stompClient = Stomp.over(() => (socket = new WebSocket(wsEndpoint.toString())));
+        stompClient.connectHeaders = {
+            'X-CSRF-TOKEN': csrfToken
+        } 
         stompClient.onConnect = () => onConnect();
         stompClient.onStompError = handleBrokerError;
         stompClient.activate();
@@ -74,7 +78,7 @@
         }
 
         var msgBody = JSON.parse(msg.body) as RRecommenderLogMessage;
-        console.log(msgBody)
+        // console.log(msgBody)
         msgBody.removeClasses?.forEach(c => document.body.classList.remove(c))
         msgBody.addClasses?.forEach(c => document.body.classList.add(c))
         switch (msgBody.level) {

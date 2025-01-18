@@ -30,6 +30,7 @@ public class RecommenderPropertiesImpl
 {
     private boolean enabled;
     private boolean actionButtonsEnabled;
+    private Messages messages = new Messages();
 
     @Override
     public boolean isEnabled()
@@ -51,5 +52,71 @@ public class RecommenderPropertiesImpl
     public void setActionButtonsEnabled(boolean aActionButtonsEnabled)
     {
         actionButtonsEnabled = aActionButtonsEnabled;
+    }
+
+    @Override
+    public Messages getMessages()
+    {
+        return messages;
+    }
+
+    public class Messages
+    {
+        private boolean noNewPredictionsAvailable = false;
+        private boolean newPredictionsAvailable = false;
+        private boolean evaluationSuccessful = false;
+        private boolean evaluationFailed = true;
+        private boolean nonTrainableRecommenderActivation = false;
+
+        public boolean isNoNewPredictionsAvailable()
+        {
+            return noNewPredictionsAvailable;
+        }
+
+        public void setNoNewPredictionsAvailable(boolean aNoNewPredictionsAvailable)
+        {
+            noNewPredictionsAvailable = aNoNewPredictionsAvailable;
+        }
+
+        public boolean isNewPredictionsAvailable()
+        {
+            return newPredictionsAvailable;
+        }
+
+        public void setNewPredictionsAvailable(boolean aNewPredictionsAvailable)
+        {
+            newPredictionsAvailable = aNewPredictionsAvailable;
+        }
+
+        public boolean isEvaluationSuccessful()
+        {
+            return evaluationSuccessful;
+        }
+
+        public void setEvaluationSuccessful(boolean aEvaluationSuccessful)
+        {
+            evaluationSuccessful = aEvaluationSuccessful;
+        }
+
+        public boolean isEvaluationFailed()
+        {
+            return evaluationFailed;
+        }
+
+        public void setEvaluationFailed(boolean aEvaluationFailed)
+        {
+            evaluationFailed = aEvaluationFailed;
+        }
+
+        public boolean isNonTrainableRecommenderActivation()
+        {
+            return nonTrainableRecommenderActivation;
+        }
+
+        public void setNonTrainableRecommenderActivation(boolean aNonTrainableRecommenderActivation)
+        {
+            nonTrainableRecommenderActivation = aNonTrainableRecommenderActivation;
+        }
+
     }
 }

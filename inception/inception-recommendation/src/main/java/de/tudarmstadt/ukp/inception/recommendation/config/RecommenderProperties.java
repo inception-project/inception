@@ -17,9 +17,13 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.config;
 
+import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderPropertiesImpl.Messages;
+
 public interface RecommenderProperties
 {
     boolean isActionButtonsEnabled();
 
     boolean isEnabled();
+
+    Messages getMessages();
 }
