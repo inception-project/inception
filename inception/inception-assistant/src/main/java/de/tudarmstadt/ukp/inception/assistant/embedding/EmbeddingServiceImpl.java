@@ -75,7 +75,8 @@ public class EmbeddingServiceImpl
     }
 
     @Override
-    public <T> List<Pair<T, float[]>> embed(Function<T, String> aExtractor, Iterable<T> aObjects) throws IOException
+    public <T> List<Pair<T, float[]>> embed(Function<T, String> aExtractor, Iterable<T> aObjects)
+        throws IOException
     {
         autoDetectEmbeddingDimension();
 
@@ -106,7 +107,7 @@ public class EmbeddingServiceImpl
                 .build();
 
         var response = ollamaClient.embed(properties.getUrl(), request);
-        
+
         var result = new ArrayList<Pair<T, float[]>>();
         for (var i = 0; i < response.size(); i++) {
             result.add(Pair.of(objects.get(i), response.get(i).getValue()));
@@ -152,6 +153,8 @@ public class EmbeddingServiceImpl
         synchronized (embeddingProperties) {
             if (embeddingProperties.getDimension() < 1) {
                 try {
+                    LOG.info("Contacting [{}] to auto-detect dimension of model [{}]...",
+                            properties.getUrl(), embeddingProperties.getModel());
                     var embedding = ollamaClient.embed(properties.getUrl(), OllamaEmbedRequest
                             .builder() //
                             .withModel(embeddingProperties.getModel()) //
