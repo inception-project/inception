@@ -94,7 +94,7 @@ class OllamaClientImplTest
             LOG.info("Callback: [{}]", response.getMessage().content());
         };
 
-        var response = sut.generate(DEFAULT_OLLAMA_URL, request, callback);
+        var response = sut.chat(DEFAULT_OLLAMA_URL, request, callback);
         LOG.info("Response: [{}]", response.getMessage().content());
     }
 

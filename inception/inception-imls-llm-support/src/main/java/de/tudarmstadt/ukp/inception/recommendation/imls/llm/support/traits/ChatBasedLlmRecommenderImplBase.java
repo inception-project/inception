@@ -43,7 +43,7 @@ import de.tudarmstadt.ukp.inception.rendering.model.Range;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 
-public abstract class LlmRecommenderImplBase<T extends LlmRecommenderTraits>
+public abstract class ChatBasedLlmRecommenderImplBase<T extends LlmRecommenderTraits>
     extends NonTrainableRecommenderEngineImplBase
 {
     private static final int MAX_FEW_SHOT_EXAMPLES = 10;
@@ -54,7 +54,7 @@ public abstract class LlmRecommenderImplBase<T extends LlmRecommenderTraits>
     protected final AnnotationSchemaService schemaService;
     protected final JinjaPromptRenderer promptRenderer;
 
-    public LlmRecommenderImplBase(Recommender aRecommender, T aTraits,
+    public ChatBasedLlmRecommenderImplBase(Recommender aRecommender, T aTraits,
             AnnotationSchemaService aSchemaService)
     {
         super(aRecommender);

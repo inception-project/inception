@@ -50,6 +50,21 @@ public class AzureAiOpenAiRecommender
     @Override
     protected String exchange(String aPrompt) throws IOException
     {
+        var format = getResponseFormat();
+
+        LOG.trace("Querying Azure AI OpenAI: [{}]", aPrompt);
+        var request = ChatCompletionRequest.builder() //
+                .withApiKey(((ApiKeyAuthenticationTraits) traits.getAuthentication()).getApiKey()) //
+                .withUserPrompt(aPrompt) //
+                .withFormat(format) //
+                .build();
+        var response = client.generate(traits.getUrl(), request).trim();
+        LOG.trace("Azure AI OpenAI responds: [{}]", response);
+        return response;
+    }
+
+    private GenerateResponseFormat getResponseFormat()
+    {
         GenerateResponseFormat format = null;
         if (traits.getFormat() != null) {
             format = switch (traits.getFormat()) {
@@ -57,15 +72,6 @@ public class AzureAiOpenAiRecommender
             default -> null;
             };
         }
-
-        LOG.trace("Querying Azure AI OpenAI: [{}]", aPrompt);
-        var request = ChatCompletionRequest.builder() //
-                .withApiKey(((ApiKeyAuthenticationTraits) traits.getAuthentication()).getApiKey()) //
-                .withPrompt(aPrompt) //
-                .withFormat(format) //
-                .build();
-        var response = client.generate(traits.getUrl(), request).trim();
-        LOG.trace("Azure AI OpenAI responds: [{}]", response);
-        return response;
+        return format;
     }
 }
