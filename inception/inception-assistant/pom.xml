@@ -15,7 +15,9 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
@@ -138,7 +140,7 @@
       <groupId>de.agilecoders.wicket</groupId>
       <artifactId>wicket-bootstrap-extensions</artifactId>
     </dependency>
-    
+
     <dependency>
       <groupId>org.apache.uima</groupId>
       <artifactId>uimaj-core</artifactId>
@@ -286,6 +288,11 @@
       <artifactId>inception-annotation-storage</artifactId>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.apache.uima</groupId>
+      <artifactId>uimafit-core</artifactId>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <build>
@@ -301,7 +308,8 @@
             </goals>
             <phase>${ts-link-dependency-phase}</phase>
             <configuration>
-              <arguments>link @inception-project/inception-js-api @inception-project/inception-diam</arguments>
+              <arguments>link @inception-project/inception-js-api
+                @inception-project/inception-diam</arguments>
             </configuration>
           </execution>
           <execution>
@@ -340,7 +348,8 @@
               <!-- Needed but the dependency plugin doesn't get it -->
               <ignoredDependency>jakarta.persistence:jakarta.persistence-api</ignoredDependency>
               <ignoredDependency>org.springframework.boot:spring-boot</ignoredDependency>
-              <ignoredDependency>org.springframework.boot:spring-boot-test-autoconfigure</ignoredDependency>
+              <ignoredDependency>
+                org.springframework.boot:spring-boot-test-autoconfigure</ignoredDependency>
               <ignoredDependency>org.springframework:spring-core</ignoredDependency>
               <ignoredDependency>org.springframework:spring-websocket</ignoredDependency>
             </ignoredDependencies>
