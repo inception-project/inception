@@ -52,8 +52,81 @@ public class VisualPdfReader
      * @see VisualPDFTextStripper#setSortByPosition(boolean)
      */
     public static final String PARAM_SORT_BY_POSITION = "sortByPosition";
-    @ConfigurationParameter(name = PARAM_SORT_BY_POSITION, mandatory = false, defaultValue = "false")
+    @ConfigurationParameter(name = PARAM_SORT_BY_POSITION, defaultValue = "false")
     private boolean sortByPosition;
+
+    /**
+     * By default the text stripper will attempt to remove text that overlapps each other. Word
+     * paints the same character several times in order to make it look bold. By setting this to
+     * false all text will be extracted, which means that certain sections will be duplicated, but
+     * better performance will be noticed.
+     * 
+     * @see VisualPDFTextStripper#setSuppressDuplicateOverlappingText(boolean)
+     */
+    public static final String PARAM_SUPPRESS_DUPLICATE_OVERLAPPING_TEXT = "suppressDuplicateOverlappingText";
+    @ConfigurationParameter(name = PARAM_SUPPRESS_DUPLICATE_OVERLAPPING_TEXT, defaultValue = "true")
+    private boolean suppressDuplicateOverlappingText;
+
+    /**
+     * Set if the text stripper should group the text output by a list of beads.
+     * 
+     * @see VisualPDFTextStripper#setShouldSeparateByBeads(boolean)
+     */
+    public static final String PARAM_SHOULD_SEPARATE_BY_BEADS = "shouldSeparateByBeads";
+    @ConfigurationParameter(name = PARAM_SHOULD_SEPARATE_BY_BEADS, defaultValue = "true")
+    private boolean shouldSeparateByBeads;
+
+    /**
+     * There will some additional text formatting be added.
+     * 
+     * @see VisualPDFTextStripper#setAddMoreFormatting(boolean)
+     */
+    public static final String PARAM_ADD_MORE_FORMATTING = "addMoreFormatting";
+    @ConfigurationParameter(name = PARAM_ADD_MORE_FORMATTING, defaultValue = "true")
+    private boolean addMoreFormatting;
+
+    /**
+     * sets the multiple of whitespace character widths for the current text which the current line
+     * start can be indented from the previous line start beyond which the current line start is
+     * considered to be a paragraph start.
+     * 
+     * @see VisualPDFTextStripper#setIndentThreshold(float)
+     */
+    public static final String PARAM_INDENT_THRESHOLD = "indentThreshold";
+    @ConfigurationParameter(name = PARAM_INDENT_THRESHOLD, defaultValue = "2.0")
+    private float indentThreshold;
+
+    /**
+     * Sets the minimum whitespace, as a multiple of the max height of the current characters beyond
+     * which the current line start is considered to be a paragraph start.
+     * 
+     * @see VisualPDFTextStripper#setDropThreshold(float)
+     */
+    public static final String PARAM_DROP_THRESHOLD = "dropThreshold";
+    @ConfigurationParameter(name = PARAM_DROP_THRESHOLD, defaultValue = "2.5")
+    private float dropThreshold;
+
+    /**
+     * Set the character width-based tolerance value that is used to estimate where spaces in text
+     * should be added. Note that the default value for this has been determined from trial and
+     * error. Setting this value larger will reduce the number of spaces added.
+     * 
+     * @see VisualPDFTextStripper#setAverageCharTolerance(float)
+     */
+    public static final String PARAM_AVERAGE_CHAR_TOLERANCE = "averageCharTolerance";
+    @ConfigurationParameter(name = PARAM_AVERAGE_CHAR_TOLERANCE, defaultValue = "0.3")
+    private float averageCharTolerance;
+
+    /**
+     * Set the space width-based tolerance value that is used to estimate where spaces in text
+     * should be added. Note that the default value for this has been determined from trial and
+     * error. Setting this value larger will reduce the number of spaces added.
+     * 
+     * @see VisualPDFTextStripper#setSpacingTolerance(float)
+     */
+    public static final String PARAM_SPACING_TOLERANCE = "spacingTolerance";
+    @ConfigurationParameter(name = PARAM_SPACING_TOLERANCE, defaultValue = "0.5")
+    private float spacingTolerance;
 
     @Override
     public void getNext(JCas aJCas) throws IOException, CollectionException
@@ -67,8 +140,21 @@ public class VisualPdfReader
         try (var is = resource.getInputStream()) {
             try (var doc = Loader.loadPDF(IOUtils.toByteArray(is))) {
                 var stripper = new VisualPDFTextStripper();
+
                 stripper.setSortByPosition(sortByPosition);
+
+                stripper.setSuppressDuplicateOverlappingText(suppressDuplicateOverlappingText);
+                stripper.setShouldSeparateByBeads(shouldSeparateByBeads);
+                stripper.setAddMoreFormatting(addMoreFormatting);
+
+                stripper.setDropThreshold(dropThreshold);
+                stripper.setIndentThreshold(indentThreshold);
+
+                stripper.setAverageCharTolerance(averageCharTolerance);
+                stripper.setSpacingTolerance(spacingTolerance);
+
                 stripper.writeText(doc, textBuffer);
+
                 vModel = stripper.getVisualModel();
             }
         }
