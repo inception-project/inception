@@ -103,7 +103,12 @@ public class UpdateDocumentIndexTask
             return;
         }
 
-        var chunker = new CasChunker(encodingRegistry, properties);
+        var encoding = encodingRegistry.getEncoding(properties.getChat().getEncoding())
+                .orElseThrow(() -> new IllegalStateException(
+                        "Unknown encoding: " + properties.getChat().getEncoding()));
+        var limit = floorDiv(properties.getDocumentIndex().getChunkSize() * 90, 100);
+
+        var chunker = new CasChunker(encoding, limit);
 
         var monitor = getMonitor();
         try (var index = documentQueryService.borrowIndex(getProject())) {
