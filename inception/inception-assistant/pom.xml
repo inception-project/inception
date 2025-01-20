@@ -297,6 +297,11 @@
       <artifactId>inception-annotation-storage</artifactId>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.apache.uima</groupId>
+      <artifactId>uimafit-core</artifactId>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <build>
