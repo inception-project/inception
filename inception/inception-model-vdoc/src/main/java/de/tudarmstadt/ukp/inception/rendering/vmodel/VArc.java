@@ -159,7 +159,7 @@ public class VArc
     {
         private AnnotationLayer layer;
         private VID vid;
-        private int equivalenceSet;
+        private int equivalenceSet = -1;
         private Map<String, String> features = Collections.emptyMap();
         private VID source;
         private VID target;
@@ -178,61 +178,61 @@ public class VArc
 
         public Builder withLayer(AnnotationLayer aLayer)
         {
-            this.layer = aLayer;
+            layer = aLayer;
             return this;
         }
 
         public Builder withVid(VID aVid)
         {
-            this.vid = aVid;
+            vid = aVid;
             return this;
         }
 
         public Builder withEquivalenceSet(int aEquivalenceSet)
         {
-            this.equivalenceSet = aEquivalenceSet;
+            equivalenceSet = aEquivalenceSet;
             return this;
         }
 
         public Builder withFeatures(Map<String, String> aFeatures)
         {
-            this.features = aFeatures;
+            features = aFeatures;
             return this;
         }
 
         public Builder withSource(FeatureStructure aSource)
         {
-            this.source = VID.of(aSource);
+            source = VID.of(aSource);
             return this;
         }
 
         public Builder withSource(VID aSource)
         {
-            this.source = aSource;
+            source = aSource;
             return this;
         }
 
         public Builder withTarget(FeatureStructure aTarget)
         {
-            this.target = VID.of(aTarget);
+            target = VID.of(aTarget);
             return this;
         }
 
         public Builder withTarget(VID aTarget)
         {
-            this.target = aTarget;
+            target = aTarget;
             return this;
         }
 
         public Builder withLabel(String aLabel)
         {
-            this.label = aLabel;
+            label = aLabel;
             return this;
         }
 
         public Builder placeholder()
         {
-            this.placeholder = true;
+            placeholder = true;
             return this;
         }
 
