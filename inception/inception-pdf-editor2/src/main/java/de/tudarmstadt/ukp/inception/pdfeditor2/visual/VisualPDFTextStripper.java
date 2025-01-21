@@ -29,6 +29,7 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
 import java.io.IOException;
 import java.io.StringWriter;
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -38,6 +39,7 @@ import java.util.Map;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.translate.UnicodeEscaper;
+import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.text.PDFTextStripper;
@@ -53,7 +55,7 @@ import de.tudarmstadt.ukp.inception.pdfeditor2.visual.model.VPage;
 public class VisualPDFTextStripper
     extends PDFTextStripper
 {
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private final List<VPage> pages = new ArrayList<>();
 
@@ -64,6 +66,8 @@ public class VisualPDFTextStripper
     private List<VChunk> chunks;
 
     private Map<TextPosition, Rectangle2D.Double> fontPositionCache;
+
+    private PdfEventHandler eventHandler;
 
     public VisualPDFTextStripper() throws IOException
     {
@@ -80,7 +84,7 @@ public class VisualPDFTextStripper
     @Override
     public void processPage(PDPage aPage) throws IOException
     {
-        log.trace("Processing page {}", getCurrentPageNo());
+        LOG.trace("Processing page {}", getCurrentPageNo());
 
         fontPositionCache = new HashMap<>();
 
@@ -98,9 +102,9 @@ public class VisualPDFTextStripper
 
         int pageEndOffset = getBuffer().length();
 
-        String pageText = getBuffer().subSequence(pageBeginOffset, pageEndOffset).toString();
+        var pageText = getBuffer().subSequence(pageBeginOffset, pageEndOffset).toString();
 
-        PDRectangle visibleArea = getCurrentPage().getCropBox();
+        var visibleArea = getCurrentPage().getCropBox();
 
         // When we recover chunks from the CAS, they are sorted by the usual annotation order.
         // We sort here already to have the same order as when we recover from the CAS.
@@ -158,7 +162,7 @@ public class VisualPDFTextStripper
         }
 
         if (removed > 0) {
-            log.debug("Removed {} of {} characters because they are outside the visible area ({})",
+            LOG.debug("Removed {} of {} characters because they are outside the visible area ({})",
                     removed, total, visibleArea, visibleArea);
         }
     }
@@ -244,7 +248,7 @@ public class VisualPDFTextStripper
                         // We calculate the tolerance based on the font size (line height)
                         var tolerance = protoGlyph.getCoExtent() * 0.025;
                         if (Math.abs(gap) > tolerance) {
-                            log.debug("Gap/overlap too large [abs({}) > {}] - starting new chunk",
+                            LOG.debug("Gap/overlap too large [abs({}) > {}] - starting new chunk",
                                     gap, tolerance);
                             chunks.add(cs.endChunk(gPos, dir, rtl));
                         }
@@ -272,6 +276,82 @@ public class VisualPDFTextStripper
         super.writeString(aText, aTextPositions);
     }
 
+    @Override
+    protected void startDocument(PDDocument aDocument) throws IOException
+    {
+        if (eventHandler != null) {
+            eventHandler.documentStart();
+        }
+
+        super.startDocument(aDocument);
+    }
+
+    @Override
+    protected void endDocument(PDDocument aDocument) throws IOException
+    {
+        super.endDocument(aDocument);
+
+        if (eventHandler != null) {
+            eventHandler.documentEnd();
+        }
+    }
+
+    @Override
+    protected void writeParagraphStart() throws IOException
+    {
+        if (eventHandler != null) {
+            eventHandler.beforeStartParagraph(getBuffer());
+        }
+
+        super.writeParagraphStart();
+
+        if (eventHandler != null) {
+            eventHandler.afterStartParagraph(getBuffer());
+        }
+    }
+
+    @Override
+    protected void writeParagraphEnd() throws IOException
+    {
+        if (eventHandler != null) {
+            eventHandler.beforeEndParagraph(getBuffer());
+        }
+
+        super.writeParagraphEnd();
+
+        if (eventHandler != null) {
+            eventHandler.afterEndParagraph(getBuffer());
+        }
+    }
+
+    @Override
+    protected void writePageStart() throws IOException
+    {
+        if (eventHandler != null) {
+            eventHandler.beforeStartPage(getBuffer());
+        }
+
+        super.writePageStart();
+
+        if (eventHandler != null) {
+            eventHandler.afterStartPage(getBuffer());
+        }
+    }
+
+    @Override
+    protected void writePageEnd() throws IOException
+    {
+        if (eventHandler != null) {
+            eventHandler.beforeEndPage(getBuffer());
+        }
+
+        super.writePageEnd();
+
+        if (eventHandler != null) {
+            eventHandler.afterEndPage(getBuffer());
+        }
+    }
+
     private String reconcileGlyphWithText(String aText, boolean rtl, String normalizedUnicode,
             int begin)
     {
@@ -295,7 +375,7 @@ public class VisualPDFTextStripper
                 var nue = UnicodeEscaper.above(0).translate(normalizedUnicode);
                 var ase = UnicodeEscaper.above(0).translate(actualSubstring);
 
-                log.warn(
+                LOG.warn(
                         "Glyph [{}]({}) misaligned with text [{}]({}) - using actual text for glyph",
                         normalizedUnicode, nue, actualSubstring, ase);
 

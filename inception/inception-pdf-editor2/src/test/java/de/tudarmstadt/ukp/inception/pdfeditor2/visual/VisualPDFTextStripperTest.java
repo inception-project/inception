@@ -30,7 +30,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.pdfbox.Loader;
 import org.apache.uima.cas.CASException;
 import org.apache.uima.fit.factory.JCasFactory;
-import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.dkpro.core.api.pdf.type.PdfPage;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -109,10 +108,10 @@ class VisualPDFTextStripperTest
             expected = extractor.getVisualModel();
         }
 
-        JCas jCas = JCasFactory.createJCas();
+        var jCas = JCasFactory.createJCas();
         jCas.setDocumentText(textBuffer.toString());
         VisualPdfReader.visualModelToCas(expected, jCas);
-        VModel actual = VisualPdfReader.visualModelFromCas(jCas.getCas(),
+        var actual = VisualPdfReader.visualModelFromCas(jCas.getCas(),
                 jCas.select(PdfPage.class).asList());
 
         assertThat(actual.getPages()).hasSameSizeAs(expected.getPages());

@@ -261,24 +261,22 @@ user can choose one of the pre-configured mapping or provide a custom mapping.
 
 === Root Concepts
 
-The knowledge base browser displays a class tree. By default, it tries to automatically determine the root classes of
-this tree. However, for very large KBs this can be slow. Also you might not be interested in browsing the entire KB
-but would rather focus on specific subtrees. In such cases, you can define the root concepts explicitly here.
+The knowledge base browser displays a class tree.
+By default, it tries to automatically determine the root classes of this tree.
+However, for very large KBs this can be slow. Also you might not be interested in browsing the entire KB but would rather focus on specific subtrees.
+In such cases, you can define the root concepts explicitly here.
 
-NOTE: This setting currently affects **only class tree in the knowledge base browser**. You can still search for concepts
-      that are outside of the subtrees induced by the root concepts using the search field on the knowledge-base page and you
-      can also still link concept features. to concepts outside the subtrees. In order to limit a concept feature to a particular
-      subtree, use the **Scope** setting in the <<sect_concept_features,concept feature settings>>.
+NOTE: This setting currently affects **only class tree in the knowledge base browser**.
+      You can still search for concepts that are outside of the subtrees induced by the root concepts using the search field on the knowledge-base page and you can also still link concept features to concepts outside the subtrees. 
+      In order to limit a concept feature to a particular subtree, use the **Scope** setting in the <<sect_concept_features,concept feature settings>>.
 
 
 === Additional Matching Properties (Synonyms)
 
-When searching for a concept e.g. in the annotation editor, by default the search terms are matched only against the concept name (label). There should only be one label for each concept
-(although there can be multiple label entries for a concept in the knowledge base, but theses
-should refer to different languages). However, it is common that this one label is actually only
-the preferred label and there could be any number of synonyms through which the concept can 
-also be found. Thus, here you can enter a list of properties which should also be considered
-when searching for a concept.
+When searching for a concept e.g. in the annotation editor, by default the search terms are matched only against the concept name (label).
+There should only be one label for each concept (although there can be multiple label entries for a concept in the knowledge base, but theses should refer to different languages).
+However, it is common that this one label is actually only the preferred label and there could be any number of synonyms through which the concept can also be found.
+Thus, here you can enter a list of properties which should also be considered when searching for a concept.
 
 NOTE: Not all remote SPARQL knowledge bases may support additional matching properties. 
       If a full text index is used (recommended!), then the full text index may have to be configured to index 
@@ -299,7 +297,8 @@ Unfortunately, the SPARQL standard does not define a uniform way to perform full
 * link:https://docs.openlinksw.com/virtuoso/rdfsparqlrulefulltext/[Virtuoso]
 * link:https://www.mediawiki.org/wiki/Wikidata_Query_Service/User_Manual/MWAPI[Wikidata (MediaWiki API Query Service EntitySearch)]
 
-If you select an FTS support that does not match the SPARQL server you are connecting to, you will likely get errors. If you are not sure, select **Unknown** to fall back to using standard SPARQL operations only - this will be very slow though and unviable for larger knowledge bases.
+If you select an FTS support that does not match the SPARQL server you are connecting to, you will likely get errors.
+If you are not sure, select **Unknown** to fall back to using standard SPARQL operations only - this will be very slow though and unviable for larger knowledge bases.
 
 ==== Apache Jena Fuseki
 
@@ -324,8 +323,8 @@ You may have to specify credentials as part of the URL to gain access.
 
 ==== SPARQL Endpoint Authentication
 
-{product-name} supports endpoints require authentication. The following authentication mechanisms
-are supported.
+{product-name} supports endpoints require authentication.
+The following authentication mechanisms are supported.
 
 * HTTP basic authentication
 * OAuth (client credentials)
@@ -345,9 +344,8 @@ used for subsequent requests. Once the token expires, a new token is requested.
 ====
 CAUTION: Legacy feature. It is also possible to use HTTP basic authentication by prefixing the 
       SPARQL URL with the username and password (`http://USERNAME:PASSWORD@localhost:5820/mock/query`). 
-      However, this is not recommended. For example, the password will be visible to anybody being able to 
-      access the knowledge base settings. This option is only supported for backwards compatibility and will
-      be removed in future versions.
+      However, this is not recommended. For example, the password will be visible to anybody being able to access the knowledge base settings.
+      This option is only supported for backwards compatibility and will be removed in future versions.
 ====
 
 === Importing RDF
@@ -360,7 +358,7 @@ So make sure the files have the correct extension when you import them, otherwis
 The application supports GZIP compressed files (ending in `.gz`, so e.g. `.ttl.gz`), so we recommend compressing the files before uploading them as this can significantly improve the import time due to a reduced transfer time across the network.
 
 |====
-| Format | Extension
+| Format | Extension
 
 | RDF (XML)
 | `.rdf`
@@ -369,16 +367,16 @@ The application supports GZIP compressed files (ending in `.gz`, so e.g. `.ttl.g
 | `.rdfs`
 
 | OBO
-| `.obo`
+| `.obo`
 
 | OWL (XML)
-| `.owl`
+| `.owl`
 
 | OWL Functional Syntax
-| `.ofn`
+| `.ofn`
 
 | N-Triples
-| `.nt`
+| `.nt`
 
 | Turtle 
 | `.ttl`
