@@ -81,8 +81,8 @@ public class DocumentContextRetriever
         var body = new StringBuilder();
         for (var chunk : chunks) {
             var reference = MReference.builder() //
-                    //.withId(String.valueOf(references.size() + 1)) //
-                    .withId(UUID.randomUUID().toString().substring(0,8)) //
+                    // .withId(String.valueOf(references.size() + 1)) //
+                    .withId(UUID.randomUUID().toString().substring(0, 8)) //
                     .withDocumentId(chunk.documentId()) //
                     .withDocumentName(chunk.documentName()) //
                     .withBegin(chunk.begin()) //
@@ -102,41 +102,32 @@ public class DocumentContextRetriever
                 .withRole(SYSTEM).internal() //
                 .withReferences(references.values());
 
-        // Works good with qwen72b but not with granite 8b
-//        msg.withMessage(join("\n", asList(
-//                "The document retriever found the following relevant information in the documents of this project.",
-//                "", //
-//                body.toString(), "",
-//                "It is critical to mention the source of each document text in the form `{{ref::ref-id}}`.")));
-
-        msg.withMessage(join("\n", asList(
-                """
+        var instruction = """
                 Use the following documents from this project to respond.
                 It is absolutely critital to mention the `{{ref::ref-id}}` after each individual information from a document.
-                Here is an example of how to include the ref-id:
+                Here is an example:
 
                 Input:
                 {
+                  "id": "{{ref::917}}"
                   "document": "The Eiffel Tower is located in Paris, France.",
-                  "ref-id": "917"
                 }
                 {
+                  "id": "{{ref::735}}"
                   "document": "It is one of the most famous landmarks in the world.",
-                  "ref-id": "735"
                 }
                 {
+                  "id": "{{ref::582}}"
                   "document": The Eiffel Tower was built from 1887 to 1889.",
-                  "ref-id": "582"
                 }
-                
+
                 Response:
                 The Eiffel Tower is a famous landmark located in Paris, France {{ref::917}} {{ref::735}}.
                 It was built from 1887 to 1889 {{ref::582}}.
-                
+
                 Now, use the same pattern to process the following document:
-                """,
-                "", //
-                body.toString())));
+                """;
+        msg.withMessage(join("\n", asList(instruction, "", body.toString())));
 
         return asList(msg.build());
     }
@@ -145,8 +136,8 @@ public class DocumentContextRetriever
     {
         try {
             var data = new LinkedHashMap<String, String>();
+            data.put("id", "{{ref::" + aReference.id() + "}}");
             data.put("document", chunk.text());
-            data.put("ref-id", aReference.id());
             data.entrySet().removeIf(e -> isBlank(e.getValue()));
             body.append(JSONUtil.toPrettyJsonString(data));
             body.append("\n");

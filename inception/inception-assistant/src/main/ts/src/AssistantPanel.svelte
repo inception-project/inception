@@ -348,25 +348,37 @@
         var pureHtml = DOMPurify.sanitize(rawHtml, { RETURN_DOM: false });
         var refNum = 0;
 
-        // Replace all `{{ref::X}}` with the respective reference link
-        pureHtml = pureHtml.replace(
-            /\s*{{ref::([\w-]+)}}(\.*)/g,
-            (match, refId, dots) => {
-                const reference = message.references.find(
-                    (ref) => ref.id === refId,
-                );
-                if (reference) {
-                    refNum++;
-                    return `${dots}<span class="reference badge rounded-pill text-bg-secondary mx-1" data-msg="${message.id}" data-ref="${reference.id}" title="${escapeXML(reference.documentName)}">${refNum}</span>`;
-                }
+        function replaceReferences(text, pattern) {
+            return text.replace(
+                pattern,
+                (match, refId, dots) => {
+                    const reference = message.references.find(
+                        (ref) => ref.id === refId,
+                    );
+                    if (reference) {
+                        refNum++;
+                        return `${dots}<span class="reference badge rounded-pill text-bg-secondary mx-1" data-msg="${message.id}" data-ref="${reference.id}" title="${escapeXML(reference.documentName)}">${refNum}</span>`;
+                    }
 
-                // If no matching reference is found, keep the original text
-                // console.trace(
-                //     `Reference with id ${refId} not found in message ${message.id}`
-                // );
-                return match;
-            },
-        );
+                    // If no matching reference is found, keep the original text
+                    // console.trace(
+                    //     `Reference with id ${refId} not found in message ${message.id}`
+                    // );
+                    return match;
+                },
+            );
+        }
+
+        // Our canonical reference format
+        const refIdReplacementPattern = /\s*{{ref::([\w-]+)}}(\.*)/g
+
+        // Some models (deepseek-r1) can't be bothered to properly use our reference syntax
+        // and keep referring to documents using the "Document XXXXXXXX" syntax...
+        const docIdReplacementPattern = /\s*[Dd]ocument[\s,]+([0-9a-f]{8})(\.*)/g
+
+        // Replace all references with the respective reference link
+        pureHtml = replaceReferences(pureHtml, refIdReplacementPattern);
+        pureHtml = replaceReferences(pureHtml, docIdReplacementPattern);
 
         return pureHtml;
     }
