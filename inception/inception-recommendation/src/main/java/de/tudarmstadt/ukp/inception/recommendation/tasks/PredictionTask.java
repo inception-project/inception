@@ -546,19 +546,19 @@ public class PredictionTask
         // Extract the suggestions from the data which the recommender has written into the CAS
         // We need this only for the extraction, but there is no point in investing the time for
         // the prediction if we cannot extract the data afterwards - hence we obtain it now and
-        // skip the prediciton if it is not available
+        // skip the prediction if it is not available
         var maybeSuggestionSupport = suggestionSupportRegistry.findGenericExtension(rec);
         if (maybeSuggestionSupport.isEmpty()) {
             logNoSuggestionSupportAvailable(aIncomingPredictions, rec);
             return;
         }
-        var suggestionSupport = maybeSuggestionSupport.get();
 
         // Perform the actual prediction
         var startTime = System.currentTimeMillis();
         var predictedRange = predict(aIncomingPredictions, aCtx, aEngine, aPredictionCas,
                 aPredictionRange);
 
+        var suggestionSupport = maybeSuggestionSupport.get();
         var generatedSuggestions = extractSuggestions(aIncomingPredictions, aDocument, aOriginalCas,
                 aPredictionCas, rec, suggestionSupport);
 
