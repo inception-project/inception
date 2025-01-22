@@ -31,8 +31,9 @@ public class AssistantPropertiesImpl
     private final AssistantChatProperties chat = new AssistantChatPropertiesImpl();
     private final AssistantEmbeddingProperties embedding = new AssistantEmbeddingPropertiesImpl();
     private final AssitantUserGuidePropertiesImpl userGuide = new AssitantUserGuidePropertiesImpl();
+    private final AssistantToolPropertiesImpl tool = new AssistantToolPropertiesImpl();
     private final AssistantDocumentIndexProperties documentIndex;
-    
+
     @Autowired
     public AssistantPropertiesImpl(AssistantDocumentIndexProperties aDocumentIndex)
     {
@@ -92,7 +93,12 @@ public class AssistantPropertiesImpl
     {
         return userGuide;
     }
-    
+
+    public AssistantToolPropertiesImpl getTool()
+    {
+        return tool;
+    }
+
     @Override
     public AssistantDocumentIndexProperties getDocumentIndex()
     {
@@ -305,6 +311,23 @@ public class AssistantPropertiesImpl
         public void setDimension(int aDimension)
         {
             dimension = aDimension;
+        }
+    }
+
+    public static class AssistantToolPropertiesImpl
+        implements AssistantToolProperties
+    {
+        private String model = "granite3-dense";
+
+        @Override
+        public String getModel()
+        {
+            return model;
+        }
+
+        public void setModel(String aModel)
+        {
+            model = aModel;
         }
     }
 }

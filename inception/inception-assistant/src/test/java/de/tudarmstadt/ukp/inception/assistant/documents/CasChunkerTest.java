@@ -32,11 +32,11 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 class CasChunkerTest
 {
     @Test
-    void test() throws Exception
+    void testChunking() throws Exception
     {
         var encodingRegistry = Encodings.newLazyEncodingRegistry();
 
-        var sut = new CasChunker(encodingRegistry.getEncoding(EncodingType.CL100K_BASE), 5);
+        var sut = new CasChunker(encodingRegistry.getEncoding(EncodingType.CL100K_BASE), 5, 0);
 
         var cas = JCasFactory.createJCas();
 
@@ -70,5 +70,66 @@ class CasChunkerTest
                         "This is sentence 8.", //
                         "This is sentence 9.", //
                         "This is sentence 10.");
+    }
+
+    @Test
+    void testChunkingWithReasonableOverlap() throws Exception
+    {
+        var encodingRegistry = Encodings.newLazyEncodingRegistry();
+
+        var sut = new CasChunker(encodingRegistry.getEncoding(EncodingType.CL100K_BASE), 20, 1);
+
+        var cas = JCasFactory.createJCas();
+
+        var text = """
+                This is sentence 1.
+                This is sentence 2.
+                This is sentence 3.
+                This is sentence 4.
+                This is sentence 5.
+                This is sentence 6.
+                """;
+        var builder = TokenBuilder.create(Token.class, Sentence.class);
+        builder.buildTokens(cas, text);
+
+        var chunks = sut.process(cas.getCas());
+
+        assertThat(chunks) //
+                .extracting(Chunk::text) //
+                .containsExactly( //
+                        "This is sentence 1.\nThis is sentence 2.\nThis is sentence 3.", //
+                        "This is sentence 3.\nThis is sentence 4.\nThis is sentence 5.", //
+                        "This is sentence 5.\nThis is sentence 6.");
+    }
+
+    @Test
+    void thatWithTooMuchOverlapWeStillAlwaysMoveForward() throws Exception
+    {
+        var encodingRegistry = Encodings.newLazyEncodingRegistry();
+
+        var sut = new CasChunker(encodingRegistry.getEncoding(EncodingType.CL100K_BASE), 20, 4);
+
+        var cas = JCasFactory.createJCas();
+
+        var text = """
+                This is sentence 1.
+                This is sentence 2.
+                This is sentence 3.
+                This is sentence 4.
+                This is sentence 5.
+                This is sentence 6.
+                """;
+        var builder = TokenBuilder.create(Token.class, Sentence.class);
+        builder.buildTokens(cas, text);
+
+        var chunks = sut.process(cas.getCas());
+
+        assertThat(chunks) //
+                .extracting(Chunk::text) //
+                .containsExactly( //
+                        "This is sentence 1.\nThis is sentence 2.\nThis is sentence 3.", //
+                        "This is sentence 2.\nThis is sentence 3.\nThis is sentence 4.", //
+                        "This is sentence 3.\nThis is sentence 4.\nThis is sentence 5.", //
+                        "This is sentence 4.\nThis is sentence 5.\nThis is sentence 6.");
     }
 }

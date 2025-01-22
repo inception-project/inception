@@ -33,6 +33,7 @@ public class AssistantDocumentIndexPropertiesImpl
     private int maxChunks = 10;
     private int chunkSize = 128;
     private double minScore = 0.6;
+    private int unitOverlap = 0;
 
     @Override
     public Duration getIdleEvictionDelay()
@@ -67,7 +68,6 @@ public class AssistantDocumentIndexPropertiesImpl
         borrowWaitTimeout = aBorrowWaitTimeout;
     }
 
-
     @Override
     public int getMaxChunks()
     {
@@ -99,5 +99,16 @@ public class AssistantDocumentIndexPropertiesImpl
     public void setChunkSize(int aChunkSize)
     {
         chunkSize = aChunkSize;
+    }
+
+    @Override
+    public int getUnitOverlap()
+    {
+        return unitOverlap;
+    }
+
+    public void setUnitOverlap(int aUnitOverlap)
+    {
+        unitOverlap = aUnitOverlap;
     }
 }

@@ -108,7 +108,8 @@ public class UpdateDocumentIndexTask
                         "Unknown encoding: " + properties.getChat().getEncoding()));
         var limit = floorDiv(properties.getDocumentIndex().getChunkSize() * 90, 100);
 
-        var chunker = new CasChunker(encoding, limit);
+        var chunker = new CasChunker(encoding, limit,
+                properties.getDocumentIndex().getUnitOverlap());
 
         var monitor = getMonitor();
         try (var index = documentQueryService.borrowIndex(getProject())) {

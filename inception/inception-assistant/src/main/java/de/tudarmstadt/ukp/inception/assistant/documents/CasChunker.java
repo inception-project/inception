@@ -34,11 +34,13 @@ public class CasChunker
     private Class<? extends Annotation> unitType = Sentence.class;
     private final Encoding encoding;
     private final int chunkSize;
+    private final int unitOverlap;
 
-    public CasChunker(Encoding aEncoding, int aChunkSize)
+    public CasChunker(Encoding aEncoding, int aChunkSize, int aUnitOverlap)
     {
         encoding = aEncoding;
         chunkSize = aChunkSize;
+        unitOverlap = aUnitOverlap;
     }
 
     @Override
@@ -47,12 +49,12 @@ public class CasChunker
         var docText = aCas.getDocumentText();
 
         var unitIterator = aCas.select(unitType) //
-                .toList().iterator();
+                .toList().listIterator();
 
         var chunks = new ArrayList<Chunk>();
 
         Annotation unit = null;
-        var chunk = new StringBuilder();
+        var chunkText = new StringBuilder();
         var chunkBegin = 0;
         var chunkEnd = 0;
         var chunkTokens = 0;
@@ -60,24 +62,37 @@ public class CasChunker
             unit = unitIterator.next();
             var unitTokens = encoding.countTokensOrdinary(unit.getCoveredText());
 
-            // Start a new chunk if necessary
-            if (chunkTokens + unitTokens > chunkSize) {
-                if (!chunk.isEmpty()) {
-                    chunks.add(buildChunk(docText, chunkBegin, chunkEnd));
+            // Does the unit still fit into the current chunk? If not, start a new chunk
+            if (chunkTokens + unitTokens > chunkSize && !chunkText.isEmpty()) {
+                chunks.add(buildChunk(docText, chunkBegin, chunkEnd));
+
+                var rewindCount = 0;
+                while (rewindCount <= unitOverlap && unitIterator.hasPrevious()) {
+                    rewindCount++;
+                    unit = unitIterator.previous();
+                    if (unit.getBegin() <= chunkBegin) {
+                        // We cannot go back further than the start of the current chunk, otherwise
+                        // we would just repeat the entire chunk
+                        unit = unitIterator.next();
+                        break;
+                    }
                 }
-                chunk.setLength(0);
+                unit = unitIterator.next();
+
+                chunkText.setLength(0);
                 chunkBegin = unit.getBegin();
                 chunkTokens = 0;
+                unitTokens = encoding.countTokensOrdinary(unit.getCoveredText());
             }
 
-            chunk.append(unit.getCoveredText());
-            chunk.append("\n");
+            chunkText.append(unit.getCoveredText());
+            chunkText.append("\n");
             chunkTokens += unitTokens;
             chunkEnd = unit.getEnd();
         }
 
         // Add the final chunk (unless empty)
-        if (chunk.length() > 0 && unit != null) {
+        if (chunkText.length() > 0 && unit != null) {
             chunks.add(buildChunk(docText, chunkBegin, unit.getEnd()));
         }
 

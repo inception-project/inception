@@ -52,4 +52,6 @@ public interface AssistantDocumentIndexProperties
     double getMinScore();
 
     int getChunkSize();
+
+    int getUnitOverlap();
 }

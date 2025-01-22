@@ -252,10 +252,7 @@ public class AssistantServiceImpl
         var primeDirectives = asList("Your name is " + properties.getNickname() + ".",
                 "You are a helpful assistant within the annotation tool INCEpTION.",
                 "INCEpTION always refers to the annotation tool, never anything else such as the movie.",
-                "Do not include references to INCEpTION unless the user explicitly asks about the environment itself.",
-                "The document retriever automatically provides you with relevant information from the current project.",
-                "The user guide retriever automatically provides you with relevant information from the user guide.",
-                "Use this relevant information when responding to the user."
+                "Do not include references to INCEpTION unless the user explicitly asks about the environment itself."
         // If you use information from the user manual in your response, prepend it with
         // "According to the user manual".
         // """,
