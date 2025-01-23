@@ -29,7 +29,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.LegacyCurationPage;
 import de.tudarmstadt.ukp.inception.ui.curation.actionbar.opendocument.CurationOpenDocumentDialog;
 import de.tudarmstadt.ukp.inception.ui.curation.page.CurationPage;
 
-@Order(0)
+@Order(ActionBarExtension.ORDER_DOCUMENT_NAVIGATOR)
 public class CurationDocumentNavigatorActionBarExtension
     implements ActionBarExtension
 {

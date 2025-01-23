@@ -22,6 +22,7 @@ import static de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExten
 
 import org.apache.wicket.markup.html.panel.Panel;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBarExtension;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
@@ -37,6 +38,7 @@ import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
  * {@link DynamicWorkloadManagerAutoConfiguration#dynamicWorkflowActionBarExtension}
  * </p>
  */
+@Order(1000)
 public class DynamicWorkflowActionBarExtension
     implements ActionBarExtension
 {

@@ -33,7 +33,7 @@ import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
  * {@link RecommenderServiceAutoConfiguration#recommenderActionBarExtension}.
  * </p>
  */
-@Order(2000)
+@Order(ActionBarExtension.ORDER_RECOMMENDER)
 public class RecommenderActionBarExtension
     implements ActionBarExtension
 {
