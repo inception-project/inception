@@ -78,6 +78,13 @@
     let utteranceQueue: SpeechSynthesisUtterance[] = [];
     let isSpeaking = false;
 
+    // Our canonical reference format
+    const refIdReplacementPattern = /\s*{{ref::([\w-]+)}}(\.*)/g
+
+    // Some models (deepseek-r1) can't be bothered to properly use our reference syntax
+    // and keep referring to documents using the "Document XXXXXXXX" syntax...
+    const docIdReplacementPattern = /\s*[Dd]ocument[\s,]+([0-9a-f]{8})(\.*)/g
+
     marked.setOptions({
         breaks: true,
         gfm: true,
@@ -323,6 +330,43 @@
             chatContainer.scrollHeight - threshold;
     }
 
+    function copyToClipboard(message: MTextMessage) {
+        let usedReferences = {};
+        let text = message.message.replace(
+            refIdReplacementPattern,
+            (match: string, refId: string, dots: string) => {
+                const refSelector = (ref) => ref.id === refId;
+                const reference = message.references.find(refSelector);
+                const refNum = message.references.findIndex(refSelector) + 1;
+
+                if (reference) {
+                    usedReferences[refNum] = reference;
+                    return `[^${refNum}]`;
+                }
+
+                return match;
+            },
+        );
+
+        if (Object.keys(usedReferences).length > 0) {
+            text += "\n\nReferences:";
+        }
+
+        for (let refNum in usedReferences) {
+            const reference = usedReferences[refNum];
+            text += `\n[^${refNum}]: ${reference.documentName} (score: ${reference.score.toFixed(4)})`;
+        }
+
+        navigator.clipboard.writeText(text).then(
+            () => {
+                console.log("Copied to clipboard successfully!");
+            },
+            (err) => {
+                console.error("Could not copy text: ", err);
+            }
+        );
+    }
+
     onMount(async () => {
         connect();
     });
@@ -346,41 +390,29 @@
 
         const rawHtml = marked(trimmedMessage) as string;
         var pureHtml = DOMPurify.sanitize(rawHtml, { RETURN_DOM: false });
-        var refNum = 0;
-
-        function replaceReferences(text, pattern) {
-            return text.replace(
-                pattern,
-                (match, refId, dots) => {
-                    const reference = message.references.find(
-                        (ref) => ref.id === refId,
-                    );
-                    if (reference) {
-                        refNum++;
-                        return `${dots}<span class="reference badge rounded-pill text-bg-secondary mx-1" data-msg="${message.id}" data-ref="${reference.id}" title="${escapeXML(reference.documentName)}">${refNum}</span>`;
-                    }
-
-                    // If no matching reference is found, keep the original text
-                    // console.trace(
-                    //     `Reference with id ${refId} not found in message ${message.id}`
-                    // );
-                    return match;
-                },
-            );
-        }
-
-        // Our canonical reference format
-        const refIdReplacementPattern = /\s*{{ref::([\w-]+)}}(\.*)/g
-
-        // Some models (deepseek-r1) can't be bothered to properly use our reference syntax
-        // and keep referring to documents using the "Document XXXXXXXX" syntax...
-        const docIdReplacementPattern = /\s*[Dd]ocument[\s,]+([0-9a-f]{8})(\.*)/g
 
         // Replace all references with the respective reference link
-        pureHtml = replaceReferences(pureHtml, refIdReplacementPattern);
-        pureHtml = replaceReferences(pureHtml, docIdReplacementPattern);
+        pureHtml = replaceReferencesWithHtmlLinks(message, pureHtml, refIdReplacementPattern);
+        pureHtml = replaceReferencesWithHtmlLinks(message, pureHtml, docIdReplacementPattern);
 
         return pureHtml;
+    }
+
+    function replaceReferencesWithHtmlLinks(message, text, pattern) {
+        return text.replace(
+            pattern,
+            (match: string, refId: string, dots: string) => {
+                const refSelector = (ref) => ref.id === refId;
+                const reference = message.references.find(refSelector);
+                const refNum = message.references.findIndex(refSelector) + 1;
+
+                if (reference) {
+                    return `${dots}<span class="reference badge rounded-pill text-bg-secondary mx-1" data-msg="${message.id}" data-ref="${reference.id}" title="${escapeXML(reference.documentName)} (score: ${reference.score.toFixed(4)})">${refNum}</span>`;
+                }
+
+                return match;
+            },
+        );
     }
 
     function escapeXML(str) {
@@ -484,6 +516,14 @@
                         <i class="fas fa-cog me-1" title="System message" />
                     {/if}
                     {message.actor ? message.actor : message.role}
+                    {#if !message.internal}
+                        <button
+                            class="btn btn-sm btn-link text-body-secondary float-end fw-lighter p-0 copy-button"
+                            on:click={() => copyToClipboard(message)}
+                        >
+                            <i class="far fa-copy" title="Copy message"></i>
+                        </button>
+                    {/if}
                     {#if message.internal}
                         <span
                             class="mx-2 text-body-secondary float-end fw-lighter"
@@ -501,13 +541,13 @@
                     {@html renderMessage(message)}
                 </div>
                 {#if message.performance}
-                    <div class="message-footer">
+                    <div class="message-footer fw-ligher">
                         <span
-                            ><i class="far fa-clock me-1" />{message.performance
-                                .duration / 1000}s</span
+                            ><i class="far fa-clock me-1" />{(message.performance
+                                .duration / 1000).toFixed(2)}s</span
                         >
                         <span
-                            ><i class="far me-1" />{(
+                            ><i class="fas fa-stream ms-2 me-1" />{(
                                 message.performance.tokens /
                                 (message.performance.duration / 1000)
                             ).toFixed(2)}t/s</span
@@ -625,6 +665,10 @@
                 margin-bottom: 0.5em;
             }
 
+            :global(p:last-child) {
+                margin-bottom: 0px;
+            }
+
             :global(code) {
                 white-space: break-spaces;
             }
@@ -651,6 +695,7 @@
         .message-footer {
             display: block;
             font-size: x-small;
+            padding-top: 0.25em;
             color: var(--bs-body-color-secondary);
         }
 
@@ -664,7 +709,7 @@
 
         &[data-internal="true"] {
             background-color: var(--bs-tertiary-bg);
-            padding: 4px;
+            padding: 4px 8px;
 
             .message-body {
                 font-size: smaller;
@@ -690,6 +735,14 @@
 
         &.collapsed .message-body {
             display: none;
+        }
+
+        .copy-button {
+            visibility: hidden
+        }
+
+        &:hover .copy-button {
+            visibility: visible
         }
     }
 </style>
