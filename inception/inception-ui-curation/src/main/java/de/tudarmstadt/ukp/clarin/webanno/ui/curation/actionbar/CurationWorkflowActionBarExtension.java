@@ -27,7 +27,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.LegacyCurationPage;
 import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtension;
 
-@Order(1000)
+@Order(ActionBarExtension.ORDER_WORKFLOW)
 public class CurationWorkflowActionBarExtension
     implements ActionBarExtension
 {

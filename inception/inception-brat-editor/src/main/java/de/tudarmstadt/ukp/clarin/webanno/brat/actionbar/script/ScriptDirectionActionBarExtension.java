@@ -36,7 +36,7 @@ import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
  * {@link BratAnnotationEditorAutoConfiguration#scriptDirectionActionBarExtension}.
  * </p>
  */
-@Order(900)
+@Order(ActionBarExtension.ORDER_SCRIPT_DIRECTION)
 public class ScriptDirectionActionBarExtension
     implements ActionBarExtension
 {

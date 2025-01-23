@@ -31,7 +31,7 @@ import de.tudarmstadt.ukp.inception.workload.matrix.config.MatrixWorkloadManager
  * {@link MatrixWorkloadManagerAutoConfiguration#matrixWorkflowActionBarExtension}
  * </p>
  */
-@Order(1000)
+@Order(ActionBarExtension.ORDER_WORKFLOW)
 public class MatrixWorkflowActionBarExtension
     implements ActionBarExtension
 {

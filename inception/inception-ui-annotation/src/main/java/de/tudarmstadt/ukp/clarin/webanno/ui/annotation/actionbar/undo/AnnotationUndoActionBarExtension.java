@@ -31,7 +31,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.config.AnnotationUIAutoCo
  * {@link AnnotationUIAutoConfiguration#annotationUndoActionBarExtension}.
  * </p>
  */
-@Order(0)
+@Order(ActionBarExtension.ORDER_UNDO)
 public class AnnotationUndoActionBarExtension
     implements ActionBarExtension
 {
