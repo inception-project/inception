@@ -64,6 +64,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.PredictionCon
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
+import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderProperties;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderTaskNotificationEvent;
 import de.tudarmstadt.ukp.inception.rendering.model.Range;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
@@ -87,6 +88,7 @@ public class PredictionTask
     private @Autowired DocumentService documentService;
     private @Autowired ApplicationEventPublisher appEventPublisher;
     private @Autowired SuggestionSupportRegistry suggestionSupportRegistry;
+    private @Autowired RecommenderProperties properties;
 
     private final SourceDocument currentDocument;
     private final int predictionBegin;
@@ -146,23 +148,40 @@ public class PredictionTask
                 recommendationService.putIncomingPredictions(sessionOwner, project, predictions);
 
                 if (predictions.hasNewSuggestions()) {
-                    appEventPublisher.publishEvent(RecommenderTaskNotificationEvent
-                            .builder(this, project, sessionOwner.getUsername()) //
-                            .withMessage(LogMessage.info(this,
-                                    predictions.getNewSuggestionCount()
-                                            + " new predictions available" //
-                                            + " (some may be hidden/merged)")) //
-                            .build());
+                    logNewPredictionsAvailable(project, sessionOwner);
                 }
                 else {
-                    appEventPublisher.publishEvent(RecommenderTaskNotificationEvent
-                            .builder(this, project, sessionOwner.getUsername()) //
-                            .withMessage(LogMessage.info(this,
-                                    "Prediction run produced no new suggestions")) //
-                            .build());
+                    logNoNewPredictionsAvailable(project, sessionOwner);
                 }
             }
         }
+    }
+
+    private void logNoNewPredictionsAvailable(Project project, User sessionOwner)
+    {
+        if (properties.getMessages().isNoNewPredictionsAvailable()) {
+            appEventPublisher.publishEvent(RecommenderTaskNotificationEvent
+                    .builder(this, project, sessionOwner.getUsername()) //
+                    .withMessage(
+                            LogMessage.info(this, "Prediction run produced no new suggestions")) //
+                    .build());
+        }
+    }
+
+    private void logNewPredictionsAvailable(Project project, User sessionOwner)
+    {
+        var event = RecommenderTaskNotificationEvent.builder(this, project,
+                sessionOwner.getUsername());
+
+        if (properties.getMessages().isNewPredictionsAvailable()) {
+            event.withMessage(LogMessage.info(this,
+                    predictions.getNewSuggestionCount() + " new predictions available" //
+                            + " (some may be hidden/merged)"));
+
+        }
+
+        // Send the event anyway (even without message) to trigger the refresh button to wriggle
+        appEventPublisher.publishEvent(event.build());
     }
 
     public Predictions getPredictions()

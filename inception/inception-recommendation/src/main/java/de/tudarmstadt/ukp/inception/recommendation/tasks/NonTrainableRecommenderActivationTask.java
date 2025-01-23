@@ -37,6 +37,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
+import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderProperties;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderEvaluationResultEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderTaskNotificationEvent;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
@@ -56,6 +57,7 @@ public class NonTrainableRecommenderActivationTask
     private @Autowired AnnotationSchemaService annoService;
     private @Autowired RecommendationService recommendationService;
     private @Autowired ApplicationEventPublisher appEventPublisher;
+    private @Autowired RecommenderProperties properties;
 
     public NonTrainableRecommenderActivationTask(Builder<? extends Builder<?>> aBuilder)
     {
@@ -120,13 +122,14 @@ public class NonTrainableRecommenderActivationTask
 
             recommendationService.setEvaluatedRecommenders(user, layer, evaluatedRecommenders);
 
-            appEventPublisher
-                    .publishEvent(
-                            RecommenderTaskNotificationEvent
-                                    .builder(this, getProject(), user.getUsername()) //
-                                    .withMessage(LogMessage.info(this,
-                                            "Activation of non-trainable recommenders complete"))
-                                    .build());
+            if (properties.getMessages().isNonTrainableRecommenderActivation()) {
+                appEventPublisher
+                        .publishEvent(RecommenderTaskNotificationEvent
+                                .builder(this, getProject(), user.getUsername()) //
+                                .withMessage(LogMessage.info(this,
+                                        "Activation of non-trainable recommenders complete"))
+                                .build());
+            }
         }
     }
 

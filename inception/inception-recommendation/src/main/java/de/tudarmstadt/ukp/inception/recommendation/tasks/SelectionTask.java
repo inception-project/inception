@@ -49,6 +49,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.PercentageBase
 import de.tudarmstadt.ukp.inception.recommendation.api.model.EvaluatedRecommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
+import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderProperties;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderEvaluationResultEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderTaskNotificationEvent;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
@@ -77,6 +78,7 @@ public class SelectionTask
     private @Autowired RecommendationService recommendationService;
     private @Autowired ApplicationEventPublisher appEventPublisher;
     private @Autowired SchedulingService schedulingService;
+    private @Autowired RecommenderProperties properties;
 
     private final SourceDocument currentDocument;
     private final String dataOwner;
@@ -241,20 +243,24 @@ public class SelectionTask
     private void logEvaluationSuccessful(User sessionOwner)
     {
         LOG.info("[{}]: Evaluation complete", sessionOwner.getUsername());
-        appEventPublisher.publishEvent(RecommenderTaskNotificationEvent
-                .builder(this, getProject(), sessionOwner.getUsername()) //
-                .withMessage(LogMessage.info(this, "Evaluation complete")) //
-                .build());
+        if (properties.getMessages().isEvaluationSuccessful()) {
+            appEventPublisher.publishEvent(RecommenderTaskNotificationEvent
+                    .builder(this, getProject(), sessionOwner.getUsername()) //
+                    .withMessage(LogMessage.info(this, "Evaluation complete")) //
+                    .build());
+        }
     }
 
     private void logEvaluationFailed(Project project, User sessionOwner, String recommenderName,
             Throwable e)
     {
         LOG.error("[{}][{}]: Evaluation failed", sessionOwner.getUsername(), recommenderName, e);
-        appEventPublisher.publishEvent(
-                RecommenderTaskNotificationEvent.builder(this, project, sessionOwner.getUsername()) //
-                        .withMessage(LogMessage.error(this, e.getMessage())) //
-                        .build());
+        if (properties.getMessages().isEvaluationFailed()) {
+            appEventPublisher.publishEvent(RecommenderTaskNotificationEvent
+                    .builder(this, project, sessionOwner.getUsername()) //
+                    .withMessage(LogMessage.error(this, e.getMessage())) //
+                    .build());
+        }
     }
 
     private void logNoRecommenders(String sessionOwnerName, AnnotationLayer layer)
