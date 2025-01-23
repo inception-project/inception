@@ -64,8 +64,7 @@ public class UserGuideRetriever
     {
         var messageBody = new StringBuilder();
         var passages = documentationIndexingService.query(aMessage.message(),
-                properties.getUserGuide().getMaxChunks(),
-                properties.getUserGuide().getMinScore());
+                properties.getUserGuide().getMaxChunks(), properties.getUserGuide().getMinScore());
         for (var passage : passages) {
             messageBody.append("\n```user-manual\n") //
                     .append(passage) //
@@ -85,8 +84,8 @@ public class UserGuideRetriever
                 .withActor("User guide") //
                 .withRole(SYSTEM).internal() //
                 .withMessage(join("\n", asList(
-                        "The user guide retriever found the following relevant context information in the following documents.",
-                        "",
+                        "The user guide retriever automatically provides you with relevant sources from the user guide.",
+                        "Use the following sources from the user guide to respond.", "",
                         messageBody.toString())))
                 .build());
     }

@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.assistant.documents;
 
+import java.util.Objects;
+
 public record Chunk(long documentId, String documentName, String section, String text, int begin,
         int end, double score)
 {
@@ -25,6 +27,20 @@ public record Chunk(long documentId, String documentName, String section, String
     {
         this(builder.documentId, builder.documentName, builder.section, builder.text, builder.begin,
                 builder.end, builder.score);
+    }
+
+    public Chunk merge(Chunk aChunk)
+    {
+        assert documentId == aChunk.documentId;
+        assert Objects.equals(documentName, aChunk.documentName);
+        assert Objects.equals(section, aChunk.section);
+
+        var mText = text + "\n" + aChunk.text;
+        var mScore = (score + aChunk.score) / 2.0;
+        var mBegin = Math.min(begin, aChunk.begin);
+        var mEnd = Math.max(end, aChunk.end);
+
+        return new Chunk(documentId, documentName, section, mText, mBegin, mEnd, mScore);
     }
 
     public static Builder builder()
