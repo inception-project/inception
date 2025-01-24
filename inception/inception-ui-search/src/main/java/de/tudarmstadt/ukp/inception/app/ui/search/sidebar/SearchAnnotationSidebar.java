@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.app.ui.search.sidebar;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.AUTO_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateChangeFlag.EXPLICIT_ANNOTATOR_USER_ACTION;
 import static de.tudarmstadt.ukp.inception.rendering.vmodel.VMarker.MATCH_FOCUS;
@@ -82,11 +83,13 @@ import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase2;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.annotation.events.BulkAnnotationEvent;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanAdapter;
 import de.tudarmstadt.ukp.inception.app.ui.search.sidebar.options.CreateAnnotationsOptions;
@@ -854,15 +857,8 @@ public class SearchAnnotationSidebar
                             .getProject();
                     var result = aItem.getModelObject();
 
-                    var lambdaAjaxLink = new LambdaAjaxLink("showSelectedDocument", t -> {
-                        selectedResult = aItem.getModelObject();
-                        actionShowSelectedDocument(t,
-                                documentService.getSourceDocument(currentProject,
-                                        selectedResult.getDocumentTitle()),
-                                selectedResult.getOffsetStart(), selectedResult.getOffsetEnd());
-                        // Need to re-render because we want to highlight the match
-                        getAnnotationPage().actionRefreshDocument(t);
-                    });
+                    var lambdaAjaxLink = new LambdaAjaxLink("showSelectedDocument",
+                            t -> actionJumpToResult(aItem, currentProject, t));
                     aItem.add(lambdaAjaxLink);
 
                     var selected = new AjaxCheckBox("selected",
@@ -885,9 +881,47 @@ public class SearchAnnotationSidebar
                     selected.setVisible(!result.isReadOnly());
                     aItem.add(selected);
 
-                    lambdaAjaxLink.add(new Label("leftContext", result.getLeftContext()));
-                    lambdaAjaxLink.add(new Label("match", result.getText()));
-                    lambdaAjaxLink.add(new Label("rightContext", result.getRightContext()));
+                    try {
+                        var doc = documentService.getSourceDocument(currentProject,
+                                result.getDocumentTitle());
+                        var cas = documentService.createOrReadInitialCas(doc, AUTO_CAS_UPGRADE,
+                                SHARED_READ_ONLY_ACCESS);
+                        var text = cas.getDocumentText();
+                        var begin = result.getOffsetStart();
+                        int end = result.getOffsetEnd();
+                        var precedingContext = cas.select(Token.class).preceding(begin).limit(3)
+                                .asList();
+                        var preBegin = precedingContext.isEmpty() ? begin
+                                : precedingContext.get(0).getBegin();
+                        var trailingContext = cas.select(Token.class).following(end).limit(3)
+                                .asList();
+                        var trailEnd = trailingContext.isEmpty() ? end
+                                : trailingContext.get(trailingContext.size() - 1).getEnd();
+                        var leftContext = text.substring(preBegin, begin);
+                        var match = text.substring(begin, end);
+                        var rightContext = text.substring(end, trailEnd);
+                        lambdaAjaxLink.add(new Label("leftContext", leftContext));
+                        lambdaAjaxLink.add(new Label("match", match));
+                        lambdaAjaxLink.add(new Label("rightContext", rightContext));
+                    }
+                    catch (Exception e) {
+                        lambdaAjaxLink.add(new Label("leftContext", result.getLeftContext()));
+                        lambdaAjaxLink.add(new Label("match", result.getText()));
+                        lambdaAjaxLink.add(new Label("rightContext", result.getRightContext()));
+                    }
+                }
+
+                private void actionJumpToResult(ListItem<SearchResult> aItem,
+                        Project currentProject, AjaxRequestTarget t)
+                    throws IOException
+                {
+                    selectedResult = aItem.getModelObject();
+                    actionShowSelectedDocument(t,
+                            documentService.getSourceDocument(currentProject,
+                                    selectedResult.getDocumentTitle()),
+                            selectedResult.getOffsetStart(), selectedResult.getOffsetEnd());
+                    // Need to re-render because we want to highlight the match
+                    getAnnotationPage().actionRefreshDocument(t);
                 }
             };
             statementList

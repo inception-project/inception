@@ -31,7 +31,7 @@ public class AnnotationSearchState
 
     private static final long serialVersionUID = 6273739145955045285L;
 
-    private boolean caseSensitive = true;
+    private boolean caseSensitive = false;
 
     public boolean isCaseSensitive()
     {

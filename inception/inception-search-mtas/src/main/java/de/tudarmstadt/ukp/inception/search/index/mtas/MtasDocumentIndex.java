@@ -482,9 +482,10 @@ public class MtasDocumentIndex
         try {
             searcher = getSearcherManager().acquire();
             var reader = searcher.getIndexReader();
+            var storedFields = reader.storedFields();
 
             for (var i = 0; i < reader.maxDoc(); i++) {
-                var rawSourceDocumentId = reader.document(i).get(FIELD_SOURCE_DOCUMENT_ID);
+                var rawSourceDocumentId = storedFields.document(i).get(FIELD_SOURCE_DOCUMENT_ID);
                 var sourceDocumentId = Long.valueOf(rawSourceDocumentId);
                 var sourceDocument = sourceDocumentIndex.get(sourceDocumentId);
                 if (sourceDocument == null) {
@@ -492,10 +493,11 @@ public class MtasDocumentIndex
                     continue;
                 }
 
-                var rawAnnotationDocumentId = reader.document(i).get(FIELD_ANNOTATION_DOCUMENT_ID);
+                var rawAnnotationDocumentId = storedFields.document(i)
+                        .get(FIELD_ANNOTATION_DOCUMENT_ID);
                 var annotationDocumentId = Long.valueOf(rawAnnotationDocumentId);
                 var matchInSourceDocument = annotationDocumentId == -1L;
-                var documentOwner = reader.document(i).get(FIELD_USER);
+                var documentOwner = storedFields.document(i).get(FIELD_USER);
 
                 var annotationDocument = sourceAnnotationDocPairs.get(sourceDocument);
                 // If there is no annotation document or the annotation document is NEW, we use the
@@ -772,7 +774,8 @@ public class MtasDocumentIndex
             MtasSpanQuery q)
         throws IOException
     {
-        var leafReaderContextIterator = searcher.getIndexReader().leaves().listIterator();
+        var indexReader = searcher.getIndexReader();
+        var leafReaderContextIterator = indexReader.leaves().listIterator();
 
         var annotatableDocuments = documentService.listAnnotatableDocuments(aRequest.getProject(),
                 aRequest.getUser());
@@ -781,8 +784,7 @@ public class MtasDocumentIndex
                 .forEach(e -> sourceDocumentIndex.put(e.getKey().getId(), e.getKey()));
 
         final var boost = 0;
-        var spanweight = q.rewrite(searcher.getIndexReader()).createWeight(searcher,
-                COMPLETE_NO_SCORES, boost);
+        var spanweight = q.rewrite(indexReader).createWeight(searcher, COMPLETE_NO_SCORES, boost);
 
         var numResults = 0;
         var limitedToDocument = aRequest.getLimitedToDocument();
@@ -792,6 +794,8 @@ public class MtasDocumentIndex
             try {
                 var spans = spanweight.getSpans(leafReaderContext, SpanWeight.Postings.POSITIONS);
                 var segmentReader = (SegmentReader) leafReaderContext.reader();
+                var storedFields = segmentReader.storedFields();
+
                 if (spans == null) {
                     continue;
                 }
@@ -799,7 +803,7 @@ public class MtasDocumentIndex
                 while (spans.nextDoc() != Spans.NO_MORE_DOCS) {
                     if (segmentReader.numDocs() == segmentReader.maxDoc()
                             || segmentReader.getLiveDocs().get(spans.docID())) {
-                        var document = segmentReader.document(spans.docID());
+                        var document = storedFields.document(spans.docID());
 
                         // Retrieve user
                         var user = document.get(FIELD_USER);
@@ -916,6 +920,7 @@ public class MtasDocumentIndex
         for (var leafReaderContext : aLeaves) {
             var spans = spanweight.getSpans(leafReaderContext, SpanWeight.Postings.POSITIONS);
             var segmentReader = (SegmentReader) leafReaderContext.reader();
+            var storedFields = segmentReader.storedFields();
             var idList = new LongArrayList();
             // no spans -> no docs
             if (spans != null) {
@@ -926,7 +931,7 @@ public class MtasDocumentIndex
                     if (segmentReader.numDocs() == segmentReader.maxDoc()
                             || segmentReader.getLiveDocs().get(spans.docID())) {
                         // get a document
-                        var document = segmentReader.document(spans.docID());
+                        var document = storedFields.document(spans.docID());
 
                         var rawSourceDocumentId = document.get(FIELD_SOURCE_DOCUMENT_ID);
                         // go to the next document if the docId is not set
@@ -975,7 +980,7 @@ public class MtasDocumentIndex
         var limitedToDocument = aRequest.getLimitedToDocument();
 
         resultIteration: while (leafReaderContextIterator.hasNext()) {
-            LeafReaderContext leafReaderContext = leafReaderContextIterator.next();
+            var leafReaderContext = leafReaderContextIterator.next();
 
             try {
                 var spans = spanweight.getSpans(leafReaderContext, SpanWeight.Postings.POSITIONS);
@@ -984,12 +989,13 @@ public class MtasDocumentIndex
                 }
 
                 var segmentReader = (SegmentReader) leafReaderContext.reader();
+                var storedFields = segmentReader.storedFields();
                 var terms = segmentReader.terms(FIELD_CONTENT);
                 var mtasCodecInfo = CodecInfo.getCodecInfoFromTerms(terms);
                 while (spans.nextDoc() != Spans.NO_MORE_DOCS) {
                     if (segmentReader.numDocs() == segmentReader.maxDoc()
                             || segmentReader.getLiveDocs().get(spans.docID())) {
-                        var document = segmentReader.document(spans.docID());
+                        var document = storedFields.document(spans.docID());
 
                         // Retrieve user
                         var user = document.get(FIELD_USER);
@@ -1465,6 +1471,7 @@ public class MtasDocumentIndex
         var searchManager = getSearcherManager();
         searchManager.maybeRefresh();
         var indexSearcher = searchManager.acquire();
+        var storedFields = indexSearcher.storedFields();
         try {
             // Prepare query for the annotation document for this annotation document
             var term = new Term(FIELD_ID, String.format("%d/%d", aSrcDocId, aAnnoDocId));
@@ -1477,7 +1484,7 @@ public class MtasDocumentIndex
             if (docs.scoreDocs.length > 0) {
                 // If there are results, retrieve first document, since all results should come
                 // from the same document
-                var document = indexSearcher.doc(docs.scoreDocs[0].doc);
+                var document = storedFields.document(docs.scoreDocs[0].doc);
 
                 // Retrieve the timestamp field if it exists
                 if (document.getField(FIELD_TIMESTAMP) != null) {

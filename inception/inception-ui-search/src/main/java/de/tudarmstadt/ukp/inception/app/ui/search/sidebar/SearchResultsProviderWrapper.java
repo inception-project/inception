@@ -64,7 +64,7 @@ public class SearchResultsProviderWrapper
             return searchResultsProvider.iterator(first, count);
         }
 
-        List<ResultsGroup> subList = resultsGroupsSublist(first, count);
+        var subList = resultsGroupsSublist(first, count);
         searchResultsProvider.getPagesCacheModel().getObject().putPage(first, count, subList);
         return subList.iterator();
     }
@@ -87,14 +87,14 @@ public class SearchResultsProviderWrapper
      */
     private List<ResultsGroup> resultsGroupsSublist(long first, long count)
     {
-        List<ResultsGroup> resultsGroupsSubList = new ArrayList<>();
+        var resultsGroupsSubList = new ArrayList<ResultsGroup>();
         int counter = 0;
-        for (ResultsGroup resultsGroup : resultGroups) {
+        for (var resultsGroup : resultGroups) {
             if (counter - first + 1 > count) {
                 break;
             }
-            List<SearchResult> sublist = new ArrayList<>();
-            for (SearchResult result : resultsGroup.getResults()) {
+            var sublist = new ArrayList<SearchResult>();
+            for (var result : resultsGroup.getResults()) {
                 if (counter < first) {
                     counter++;
                     continue;
@@ -106,7 +106,7 @@ public class SearchResultsProviderWrapper
                 counter++;
             }
             if (!(counter <= first)) {
-                ResultsGroup group = new ResultsGroup(resultsGroup.getGroupKey(), sublist);
+                var group = new ResultsGroup(resultsGroup.getGroupKey(), sublist);
                 resultsGroupsSubList.add(group);
             }
         }
@@ -127,7 +127,7 @@ public class SearchResultsProviderWrapper
 
     public long groupSize(String aGroupKey)
     {
-        for (ResultsGroup group : resultGroups) {
+        for (var group : resultGroups) {
             if (group.getGroupKey().equals(aGroupKey)) {
                 return group.getResults().size();
             }
@@ -153,8 +153,8 @@ public class SearchResultsProviderWrapper
 
     public List<ResultsGroup> getAllResults()
     {
-        Iterator<ResultsGroup> resultsIterator = searchResultsProvider.iterator(0, Long.MAX_VALUE);
-        ArrayList<ResultsGroup> resultsList = new ArrayList<>();
+        var resultsIterator = searchResultsProvider.iterator(0, Long.MAX_VALUE);
+        var resultsList = new ArrayList<ResultsGroup>();
         resultsIterator.forEachRemaining(r -> resultsList.add(r));
         return resultsList;
     }
