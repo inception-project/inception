@@ -26,6 +26,7 @@ import org.apache.wicket.markup.html.panel.EmptyPanel;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBarExtension;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
@@ -46,6 +47,7 @@ import jakarta.persistence.EntityManager;
  * {@link MatrixWorkloadManagerAutoConfiguration#matrixWorkflowNoRandomAccessDocumentNavigationActionBarExtension}
  * </p>
  */
+@Order(ActionBarExtension.ORDER_WORKFLOW)
 public class MatrixWorkflowNoRandomAccessDocumentNavigationActionBarExtension
     implements ActionBarExtension, Serializable
 {

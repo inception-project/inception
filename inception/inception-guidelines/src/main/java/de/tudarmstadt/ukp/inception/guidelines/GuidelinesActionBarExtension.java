@@ -24,7 +24,7 @@ import org.springframework.stereotype.Component;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBarExtension;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 
-@Order(800)
+@Order(ActionBarExtension.ORDER_GUIDELINES)
 @Component
 public class GuidelinesActionBarExtension
     implements ActionBarExtension

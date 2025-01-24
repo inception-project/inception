@@ -31,7 +31,7 @@ import de.tudarmstadt.ukp.inception.ui.core.menubar.MenuBar;
  * {@link AnnotationUIAutoConfiguration#closeSessionActionBarExtension}.
  * </p>
  */
-@Order(10000)
+@Order(ActionBarExtension.ORDER_CLOSE_SESSION)
 public class CloseSessionActionBarExtension
     implements ActionBarExtension
 {
