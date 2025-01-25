@@ -31,15 +31,32 @@ public class AnnotationSearchState
 
     private static final long serialVersionUID = 6273739145955045285L;
 
-    private boolean caseSensitive = false;
-
-    public boolean isCaseSensitive()
-    {
-        return caseSensitive;
-    }
+    private boolean caseSensitiveDocumentText = false;
+    private boolean caseSensitiveFeatureValues = true;
 
     public void setCaseSensitive(boolean aCaseSensitive)
     {
-        caseSensitive = aCaseSensitive;
+        caseSensitiveDocumentText = aCaseSensitive;
+        caseSensitiveFeatureValues = aCaseSensitive;
+    }
+
+    public boolean isCaseSensitiveDocumentText()
+    {
+        return caseSensitiveDocumentText;
+    }
+
+    public void setCaseSensitiveDocumentText(boolean aCaseSensitiveDocumentText)
+    {
+        caseSensitiveDocumentText = aCaseSensitiveDocumentText;
+    }
+
+    public boolean isCaseSensitiveFeatureValues()
+    {
+        return caseSensitiveFeatureValues;
+    }
+
+    public void setCaseSensitiveFeatureValues(boolean aCaseSensitiveFeatureValues)
+    {
+        caseSensitiveFeatureValues = aCaseSensitiveFeatureValues;
     }
 }

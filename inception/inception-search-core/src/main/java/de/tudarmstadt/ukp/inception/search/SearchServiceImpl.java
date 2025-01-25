@@ -633,13 +633,23 @@ public class SearchServiceImpl
     {
         LOG.trace("Query [{}] for user {} in project {}", aQuery, aUser, aProject);
 
-        try (var pooledIndex = acquireIndex(aProject.getId())) {
-            var index = pooledIndex.get();
-            ensureIndexIsCreatedAndValid(aProject, index);
+        var prefs = preferencesService.loadDefaultTraitsForProject(KEY_SEARCH_STATE, aProject);
 
-            var prefs = preferencesService.loadDefaultTraitsForProject(KEY_SEARCH_STATE, aProject);
-            return index.getPhysicalIndex().executeQuery(new SearchQueryRequest(aProject, aUser,
-                    aQuery, aDocument, aAnnotationLayer, aAnnotationFeature, offset, count, prefs));
+        return query(new SearchQueryRequest(aProject, aUser, aQuery, aDocument, aAnnotationLayer,
+                aAnnotationFeature, offset, count, prefs));
+    }
+
+    // This is not public because it includes the preferences (case sensitivity) and these must be
+    // consistent during indexing and query time. We cannot simply ask for case-insensitive search
+    // if the index has been written with mixed case
+    private Map<String, List<SearchResult>> query(SearchQueryRequest aRequest)
+        throws ExecutionException, IOException
+    {
+        try (var pooledIndex = acquireIndex(aRequest.getProject().getId())) {
+            var index = pooledIndex.get();
+            ensureIndexIsCreatedAndValid(aRequest.getProject(), index);
+
+            return index.getPhysicalIndex().executeQuery(aRequest);
         }
     }
 

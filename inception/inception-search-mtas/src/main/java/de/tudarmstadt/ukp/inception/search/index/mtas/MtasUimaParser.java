@@ -441,7 +441,7 @@ public class MtasUimaParser
     {
         var field = MTAS_TOKEN_LABEL;
         var value = aAnnotation.getCoveredText();
-        value = prefs.isCaseSensitive() ? value : toRootLowerCase(value);
+        value = prefs.isCaseSensitiveDocumentText() ? value : toRootLowerCase(value);
         var mt = new MtasTokenString(aMtasId, field, value, aRange.getBegin());
         mt.setOffset(aRange.getBeginOffset(), aRange.getEndOffset());
         mt.addPositionRange(aRange.getBegin(), aRange.getEnd());
@@ -454,7 +454,7 @@ public class MtasUimaParser
     {
         var field = MTAS_SENTENCE_LABEL;
         var value = aAnnotation.getCoveredText();
-        value = prefs.isCaseSensitive() ? value : toRootLowerCase(value);
+        value = prefs.isCaseSensitiveDocumentText() ? value : toRootLowerCase(value);
         var mt = new MtasTokenString(aMtasId, field, value, aRange.getBegin());
         mt.setOffset(aRange.getBeginOffset(), aRange.getEndOffset());
         mt.addPositionRange(aRange.getBegin(), aRange.getEnd());
@@ -467,7 +467,7 @@ public class MtasUimaParser
             int aFSAddress)
     {
         var field = getIndexedName(aField);
-        var value = prefs.isCaseSensitive() ? aValue : toRootLowerCase(aValue);
+        var value = prefs.isCaseSensitiveDocumentText() ? aValue : toRootLowerCase(aValue);
         var mt = new MtasTokenString(aMtasId, field, value, aRange.getBegin());
         mt.setOffset(aRange.getBeginOffset(), aRange.getEndOffset());
         mt.addPositionRange(aRange.getBegin(), aRange.getEnd());
@@ -484,7 +484,7 @@ public class MtasUimaParser
             int aEndOffset, Range aRange, int aFSAddress)
     {
         var field = getIndexedName(aField);
-        var value = prefs.isCaseSensitive() ? aValue : toRootLowerCase(aValue);
+        var value = prefs.isCaseSensitiveFeatureValues() ? aValue : toRootLowerCase(aValue);
         var mt = new MtasTokenString(aMtasId, field, value, aRange.getBegin());
         mt.setOffset(aRange.getBeginOffset(), aRange.getEndOffset());
         mt.addPositionRange(aRange.getBegin(), aRange.getEnd());

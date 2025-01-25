@@ -229,7 +229,7 @@ public class MtasUimaParserTest
     @Test
     public void testSentencesAndTokens() throws Exception
     {
-        TokenBuilder<Token, Sentence> builder = TokenBuilder.create(Token.class, Sentence.class);
+        var builder = TokenBuilder.create(Token.class, Sentence.class);
         builder.buildTokens(jcas, "This is a test . \n This is sentence two .");
 
         var sut = new MtasUimaParser(asList(), annotationSchemaService,
@@ -244,18 +244,18 @@ public class MtasUimaParserTest
                 .filteredOn(t -> "Token".equals(t.getPrefix())) //
                 .extracting(MtasToken::getPostfix) //
                 .containsExactly( //
-                        "This", "is", "a", "test", ".", "This", "is", "sentence", "two", ".");
+                        "this", "is", "a", "test", ".", "this", "is", "sentence", "two", ".");
 
         assertThat(tokens) //
                 .filteredOn(t -> "s".equals(t.getPrefix())) //
                 .extracting(MtasToken::getPostfix)
-                .containsExactly("This is a test .", "This is sentence two .");
+                .containsExactly("this is a test .", "this is sentence two .");
     }
 
     @Test
     public void testNamedEnity() throws Exception
     {
-        JCasBuilder builder = new JCasBuilder(jcas);
+        var builder = new JCasBuilder(jcas);
         builder.add("I", Token.class);
         builder.add(" ");
         builder.add("am", Token.class);

@@ -60,7 +60,8 @@ public class AnnotationSearchStatePanel
         queue(new LambdaForm<>("form", CompoundPropertyModel.of(state)) //
                 .onSubmit(this::actionSave));
 
-        queue(new CheckBox("caseSensitive").setOutputMarkupId(true));
+        queue(new CheckBox("caseSensitiveDocumentText").setOutputMarkupId(true));
+        queue(new CheckBox("caseSensitiveFeatureValues").setOutputMarkupId(true));
 
         queue(new LambdaAjaxLink(CID_REINDEX_PROJECT, this::actionRebuildIndex));
     }

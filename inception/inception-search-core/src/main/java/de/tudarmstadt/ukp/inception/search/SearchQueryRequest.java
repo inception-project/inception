@@ -39,7 +39,20 @@ public class SearchQueryRequest
     private final AnnotationFeature annotationFeature;
 
     private final long offset;
-    private final long count;
+    private final long limit;
+
+    private SearchQueryRequest(Builder builder)
+    {
+        this.project = builder.project;
+        this.user = builder.user;
+        this.query = builder.query;
+        this.prefs = builder.options;
+        this.limitedToDocument = builder.limitedToDocument;
+        this.annoationLayer = builder.annoationLayer;
+        this.annotationFeature = builder.annotationFeature;
+        this.offset = builder.offset;
+        this.limit = builder.limit;
+    }
 
     public SearchQueryRequest(Project aProject, User aUser, String aQuery,
             AnnotationSearchState aPrefs)
@@ -66,7 +79,7 @@ public class SearchQueryRequest
         annoationLayer = aAnnotationLayer;
         annotationFeature = aAnnotationFeature;
         offset = aOffset;
-        count = aCount;
+        limit = aCount;
         prefs = aPrefs;
     }
 
@@ -105,13 +118,103 @@ public class SearchQueryRequest
         return offset;
     }
 
+    /**
+     * @deprecated use {@link #limit}
+     */
+    @Deprecated
     public long getCount()
     {
-        return count;
+        return getLimit();
+    }
+
+    public long getLimit()
+    {
+        return limit;
     }
 
     public AnnotationSearchState getSearchSettings()
     {
         return prefs;
+    }
+
+    public static Builder builder()
+    {
+        return new Builder();
+    }
+
+    public static final class Builder
+    {
+        private Project project;
+        private User user;
+        private String query;
+        private AnnotationSearchState options;
+        private SourceDocument limitedToDocument;
+        private AnnotationLayer annoationLayer;
+        private AnnotationFeature annotationFeature;
+        private long offset;
+        private long limit;
+
+        private Builder()
+        {
+        }
+
+        public Builder withProject(Project aProject)
+        {
+            this.project = aProject;
+            return this;
+        }
+
+        public Builder withUser(User aUser)
+        {
+            this.user = aUser;
+            return this;
+        }
+
+        public Builder withQuery(String aQuery)
+        {
+            this.query = aQuery;
+            return this;
+        }
+
+        public Builder withOptions(AnnotationSearchState aOptions)
+        {
+            this.options = aOptions;
+            return this;
+        }
+
+        public Builder withLimitedToDocument(SourceDocument aLimitedToDocument)
+        {
+            this.limitedToDocument = aLimitedToDocument;
+            return this;
+        }
+
+        public Builder withAnnoationLayer(AnnotationLayer aAnnoationLayer)
+        {
+            this.annoationLayer = aAnnoationLayer;
+            return this;
+        }
+
+        public Builder withAnnotationFeature(AnnotationFeature aAnnotationFeature)
+        {
+            this.annotationFeature = aAnnotationFeature;
+            return this;
+        }
+
+        public Builder withOffset(long aOffset)
+        {
+            this.offset = aOffset;
+            return this;
+        }
+
+        public Builder withLimit(long aLimit)
+        {
+            this.limit = aLimit;
+            return this;
+        }
+
+        public SearchQueryRequest build()
+        {
+            return new SearchQueryRequest(this);
+        }
     }
 }

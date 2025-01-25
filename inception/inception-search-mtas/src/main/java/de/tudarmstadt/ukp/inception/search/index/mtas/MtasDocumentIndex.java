@@ -30,6 +30,7 @@ import static de.tudarmstadt.ukp.inception.search.Metrics.VIRTUAL_LAYER_SEGMENTA
 import static de.tudarmstadt.ukp.inception.search.index.mtas.MtasUimaParser.PARAM_PROJECT_ID;
 import static de.tudarmstadt.ukp.inception.search.index.mtas.MtasUimaParser.getIndexedName;
 import static de.tudarmstadt.ukp.inception.search.index.mtas.MtasUtils.decodeFSAddress;
+import static java.util.Comparator.comparing;
 import static java.util.Comparator.comparingLong;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static mtas.analysis.util.MtasTokenizerFactory.ARGUMENT_PARSER;
@@ -46,7 +47,6 @@ import java.lang.invoke.MethodHandles;
 import java.lang.reflect.InvocationTargetException;
 import java.text.BreakIterator;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -744,7 +744,7 @@ public class MtasDocumentIndex
         while (end != BreakIterator.DONE) {
             var word = aQuery.substring(start, end);
 
-            if (!aPrefs.isCaseSensitive()) {
+            if (!aPrefs.isCaseSensitiveDocumentText()) {
                 word = toRootLowerCase(word);
             }
 
@@ -955,14 +955,14 @@ public class MtasDocumentIndex
         return mapToDocIds.stream().map(Pair::getKey).collect(Collectors.toList());
     }
 
-    private Map<String, List<SearchResult>> doQuery(IndexSearcher searcher,
-            SearchQueryRequest aRequest, MtasSpanQuery q)
+    private Map<String, List<SearchResult>> doQuery(IndexSearcher aSearcher,
+            SearchQueryRequest aRequest, MtasSpanQuery aQuery)
         throws IOException
     {
         var results = new LinkedHashMap<String, List<SearchResult>>();
 
-        var leafReaderContextIterator = sortLeaves(searcher.getIndexReader().leaves(), searcher, q)
-                .listIterator();
+        var leafReaderContextIterator = sortLeaves(aSearcher.getIndexReader().leaves(), aSearcher,
+                aQuery).listIterator();
 
         var sourceAnnotationDocPairs = documentService
                 .listAnnotatableDocuments(aRequest.getProject(), aRequest.getUser());
@@ -971,7 +971,7 @@ public class MtasDocumentIndex
                 .forEach(e -> sourceDocumentIndex.put(e.getKey().getId(), e.getKey()));
 
         final var boost = 0;
-        var spanweight = q.rewrite(searcher.getIndexReader()).createWeight(searcher,
+        var spanweight = aQuery.rewrite(aSearcher.getIndexReader()).createWeight(aSearcher,
                 COMPLETE_NO_SCORES, boost);
 
         var offset = aRequest.getOffset();
@@ -1046,7 +1046,7 @@ public class MtasDocumentIndex
                         }
 
                         // Retrieve document title
-                        String documentTitle = document.get(FIELD_TITLE);
+                        var documentTitle = document.get(FIELD_TITLE);
 
                         // String idValue = segmentReader.document(spans.docID())
                         // .getField(FIELD_ID).stringValue();
@@ -1071,7 +1071,7 @@ public class MtasDocumentIndex
                             var tokens = mtasCodecInfo.getObjectsByPositions(FIELD_CONTENT,
                                     spans.docID(), windowStart, windowEnd);
 
-                            tokens.sort(Comparator.comparing(MtasTokenString::getOffsetStart));
+                            tokens.sort(comparing(MtasTokenString::getOffsetStart));
 
                             if (tokens.isEmpty()) {
                                 continue;
@@ -1100,14 +1100,14 @@ public class MtasDocumentIndex
                             result.setSelectedForAnnotation(!result.isReadOnly());
 
                             MtasTokenString prevToken = null;
-                            for (MtasTokenString token : tokens) {
+                            for (var token : tokens) {
                                 if (!token.getPrefix().equals(DEFAULT_PREFIX)) {
                                     continue;
                                 }
 
                                 // When searching for an annotation, we don't get the matching
                                 // text back... not sure why...
-                                String tokenText = CodecUtil.termValue(token.getValue());
+                                var tokenText = CodecUtil.termValue(token.getValue());
                                 if (tokenText == null) {
                                     continue;
                                 }
@@ -1144,7 +1144,7 @@ public class MtasDocumentIndex
                             if (groupingLayer != null && groupingFeature != null) {
                                 var featureValues = featureValuesAtMatch(tokens, matchStart,
                                         matchEnd, groupingLayer, groupingFeature);
-                                for (String featureValue : featureValues) {
+                                for (var featureValue : featureValues) {
                                     addToResults(results, featureValue, result);
                                 }
                             }
