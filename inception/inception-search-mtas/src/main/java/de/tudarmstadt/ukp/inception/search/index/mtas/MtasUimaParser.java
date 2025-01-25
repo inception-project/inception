@@ -21,7 +21,6 @@ import static de.tudarmstadt.ukp.inception.search.FeatureIndexingSupport.SPECIAL
 import static de.tudarmstadt.ukp.inception.search.index.mtas.MtasUtils.charsToBytes;
 import static de.tudarmstadt.ukp.inception.search.index.mtas.MtasUtils.encodeFSAddress;
 import static de.tudarmstadt.ukp.inception.search.model.AnnotationSearchState.KEY_SEARCH_STATE;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.RELATION_TYPE;
 import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.getRealCas;
 import static java.lang.invoke.MethodHandles.lookup;
 import static mtas.analysis.util.MtasTokenizerFactory.ARGUMENT_PARSER_ARGS;
@@ -38,7 +37,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.NavigableMap;
 import java.util.Optional;
 import java.util.TreeMap;
@@ -62,10 +60,10 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationAdapter;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.inception.search.FeatureIndexingSupport;
 import de.tudarmstadt.ukp.inception.search.FeatureIndexingSupportRegistry;
 import de.tudarmstadt.ukp.inception.search.model.AnnotationSearchState;
 import de.tudarmstadt.ukp.inception.search.model.BulkIndexingContext;
@@ -73,7 +71,6 @@ import de.tudarmstadt.ukp.inception.support.spring.ApplicationContextProvider;
 import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
 import de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil;
 import mtas.analysis.parser.MtasParser;
-import mtas.analysis.token.MtasToken;
 import mtas.analysis.token.MtasTokenCollection;
 import mtas.analysis.token.MtasTokenString;
 import mtas.analysis.util.MtasConfigException;
@@ -321,22 +318,21 @@ public class MtasUimaParser
             indexSentenceText(aAnnotation, getRange(aAnnotation), mtasId++);
         }
         else {
-            AnnotationLayer layer = layers.get(aAnnotation.getType().getName());
+            var layer = layers.get(aAnnotation.getType().getName());
 
             // If the layer is not in the layers index, then it is not enabled.
             if (layer == null) {
                 return mtasId;
             }
 
-            if (RELATION_TYPE.equals(layer.getType())) {
-                RelationAdapter adapter = (RelationAdapter) annotationSchemaService
-                        .getAdapter(layer);
+            if (RelationLayerSupport.TYPE.equals(layer.getType())) {
+                var adapter = (RelationAdapter) annotationSchemaService.getAdapter(layer);
 
-                AnnotationFS sourceFs = FSUtil.getFeature(aAnnotation,
-                        adapter.getSourceFeatureName(), AnnotationFS.class);
+                var sourceFs = FSUtil.getFeature(aAnnotation, adapter.getSourceFeatureName(),
+                        AnnotationFS.class);
 
-                AnnotationFS targetFs = FSUtil.getFeature(aAnnotation,
-                        adapter.getTargetFeatureName(), AnnotationFS.class);
+                var targetFs = FSUtil.getFeature(aAnnotation, adapter.getTargetFeatureName(),
+                        AnnotationFS.class);
 
                 // If the relation layer uses an attach-feature, index the annotation
                 // referenced by that feature
@@ -409,19 +405,18 @@ public class MtasUimaParser
         int mtasId = aMtasId;
 
         // If there are no features on the layer, do not attempt to index them
-        List<AnnotationFeature> features = layerFeatures.get(aAnnotation.getType().getName());
+        var features = layerFeatures.get(aAnnotation.getType().getName());
         if (features == null) {
             return mtasId;
         }
 
         // Iterate over the features of this layer and index them one-by-one
-        for (AnnotationFeature feature : features) {
-            Optional<FeatureIndexingSupport> fis = featureIndexingSupportRegistry
-                    .getIndexingSupport(feature);
+        for (var feature : features) {
+            var fis = featureIndexingSupportRegistry.getIndexingSupport(feature);
             if (fis.isPresent()) {
                 MultiValuedMap<String, String> fieldsAndValues = fis.get().indexFeatureValue(aLayer,
                         aAnnotation, aPrefix, feature);
-                for (Entry<String, String> e : fieldsAndValues.entries()) {
+                for (var e : fieldsAndValues.entries()) {
                     indexFeatureValue(getIndexedName(e.getKey()), e.getValue(), mtasId++,
                             aAnnotation.getBegin(), aAnnotation.getEnd(), aRange, aFSAddress);
                 }
@@ -444,10 +439,10 @@ public class MtasUimaParser
 
     private void indexTokenText(AnnotationFS aAnnotation, Range aRange, int aMtasId)
     {
-        String field = MTAS_TOKEN_LABEL;
-        String value = aAnnotation.getCoveredText();
-        value = prefs.isCaseSensitive() ? value : toRootLowerCase(value);
-        MtasToken mt = new MtasTokenString(aMtasId, field, value, aRange.getBegin());
+        var field = MTAS_TOKEN_LABEL;
+        var value = aAnnotation.getCoveredText();
+        value = prefs.isCaseSensitiveDocumentText() ? value : toRootLowerCase(value);
+        var mt = new MtasTokenString(aMtasId, field, value, aRange.getBegin());
         mt.setOffset(aRange.getBeginOffset(), aRange.getEndOffset());
         mt.addPositionRange(aRange.getBegin(), aRange.getEnd());
         tokenCollection.add(mt);
@@ -457,10 +452,10 @@ public class MtasUimaParser
 
     private void indexSentenceText(AnnotationFS aAnnotation, Range aRange, int aMtasId)
     {
-        String field = MTAS_SENTENCE_LABEL;
-        String value = aAnnotation.getCoveredText();
-        value = prefs.isCaseSensitive() ? value : toRootLowerCase(value);
-        MtasToken mt = new MtasTokenString(aMtasId, field, value, aRange.getBegin());
+        var field = MTAS_SENTENCE_LABEL;
+        var value = aAnnotation.getCoveredText();
+        value = prefs.isCaseSensitiveDocumentText() ? value : toRootLowerCase(value);
+        var mt = new MtasTokenString(aMtasId, field, value, aRange.getBegin());
         mt.setOffset(aRange.getBeginOffset(), aRange.getEndOffset());
         mt.addPositionRange(aRange.getBegin(), aRange.getEnd());
         tokenCollection.add(mt);
@@ -471,9 +466,9 @@ public class MtasUimaParser
     private void indexAnnotationText(String aField, String aValue, Range aRange, int aMtasId,
             int aFSAddress)
     {
-        String field = getIndexedName(aField);
-        var value = prefs.isCaseSensitive() ? aValue : toRootLowerCase(aValue);
-        MtasToken mt = new MtasTokenString(aMtasId, field, value, aRange.getBegin());
+        var field = getIndexedName(aField);
+        var value = prefs.isCaseSensitiveDocumentText() ? aValue : toRootLowerCase(aValue);
+        var mt = new MtasTokenString(aMtasId, field, value, aRange.getBegin());
         mt.setOffset(aRange.getBeginOffset(), aRange.getEndOffset());
         mt.addPositionRange(aRange.getBegin(), aRange.getEnd());
         // Store the FS address as payload so we can identify which MtasTokens were generated from
@@ -488,9 +483,9 @@ public class MtasUimaParser
     private void indexFeatureValue(String aField, String aValue, int aMtasId, int aBeginOffset,
             int aEndOffset, Range aRange, int aFSAddress)
     {
-        String field = getIndexedName(aField);
-        var value = prefs.isCaseSensitive() ? aValue : toRootLowerCase(aValue);
-        MtasToken mt = new MtasTokenString(aMtasId, field, value, aRange.getBegin());
+        var field = getIndexedName(aField);
+        var value = prefs.isCaseSensitiveFeatureValues() ? aValue : toRootLowerCase(aValue);
+        var mt = new MtasTokenString(aMtasId, field, value, aRange.getBegin());
         mt.setOffset(aRange.getBeginOffset(), aRange.getEndOffset());
         mt.addPositionRange(aRange.getBegin(), aRange.getEnd());
         // Store the FS address as payload so we can identify which MtasTokens were generated from

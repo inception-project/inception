@@ -36,7 +36,6 @@ import java.util.concurrent.TimeUnit;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.fit.factory.JCasBuilder;
 import org.apache.uima.fit.factory.JCasFactory;
-import org.apache.uima.jcas.JCas;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -62,7 +61,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasStorageSessio
 import de.tudarmstadt.ukp.clarin.webanno.conll.config.ConllFormatsAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.config.ConstraintsServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.diag.config.CasDoctorAutoConfiguration;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -178,7 +176,8 @@ public class MtasDocumentIndexTest
     }
 
     @SafeVarargs
-    private final void uploadDocument(Pair<SourceDocument, String>... aDocuments) throws Exception
+    private final void uploadAndIndexDocument(Pair<SourceDocument, String>... aDocuments)
+        throws Exception
     {
         Project project = null;
         try (var casStorageSession = CasStorageSession.open()) {
@@ -194,7 +193,7 @@ public class MtasDocumentIndexTest
 
         // Avoid the compiler complaining about project not being an effectively final variable
         LOG.info("Waiting for uploaded documents to be indexed...");
-        Project p = project;
+        var p = project;
         await("Waiting for indexing process to complete") //
                 .atMost(60, SECONDS) //
                 .pollInterval(200, TimeUnit.MILLISECONDS) //
@@ -209,9 +208,9 @@ public class MtasDocumentIndexTest
         LOG.info("Preparing annotated document....");
 
         // Manually build annotated CAS
-        JCas jCas = JCasFactory.createJCas();
+        var jCas = JCasFactory.createJCas();
 
-        JCasBuilder builder = new JCasBuilder(jCas);
+        var builder = new JCasBuilder(jCas);
 
         builder.add("The", Token.class);
         builder.add(" ");
@@ -220,10 +219,10 @@ public class MtasDocumentIndexTest
         builder.add("of", Token.class);
         builder.add(" ");
 
-        int begin = builder.getPosition();
+        var begin = builder.getPosition();
         builder.add("Galicia", Token.class);
 
-        NamedEntity ne = new NamedEntity(jCas, begin, builder.getPosition());
+        var ne = new NamedEntity(jCas, begin, builder.getPosition());
         ne.setValue("LOC");
         ne.addToIndexes();
 
@@ -240,8 +239,8 @@ public class MtasDocumentIndexTest
         builder.close();
 
         // Create annotation document
-        AnnotationDocument annotationDocument = documentService
-                .createOrGetAnnotationDocument(aSourceDocument, aUser);
+        var annotationDocument = documentService.createOrGetAnnotationDocument(aSourceDocument,
+                aUser);
 
         // Write annotated CAS to annotated document
         try (CasStorageSession casStorageSession = CasStorageSession.open()) {
@@ -265,9 +264,9 @@ public class MtasDocumentIndexTest
         LOG.info("Preparing annotated document....");
 
         // Manually build annotated CAS
-        JCas jCas = JCasFactory.createJCas();
+        var jCas = JCasFactory.createJCas();
 
-        JCasBuilder builder = new JCasBuilder(jCas);
+        var builder = new JCasBuilder(jCas);
 
         builder.add("The", Token.class);
         builder.add(" ");
@@ -276,10 +275,10 @@ public class MtasDocumentIndexTest
         builder.add("of", Token.class);
         builder.add(" ");
 
-        int begin = builder.getPosition();
+        var begin = builder.getPosition();
         builder.add("Galicia", Token.class);
 
-        NamedEntity ne = new NamedEntity(jCas, begin, builder.getPosition());
+        var ne = new NamedEntity(jCas, begin, builder.getPosition());
         ne.setValue("LOC");
         ne.addToIndexes();
 
@@ -302,12 +301,12 @@ public class MtasDocumentIndexTest
         builder.add(" ");
         builder.add(".", Token.class);
 
-        Sentence sent = new Sentence(jCas, 0, builder.getPosition());
+        var sent = new Sentence(jCas, 0, builder.getPosition());
         sent.addToIndexes();
 
         // Create annotation document
-        AnnotationDocument annotationDocument = documentService
-                .createOrGetAnnotationDocument(aSourceDocument, aUser);
+        var annotationDocument = documentService.createOrGetAnnotationDocument(aSourceDocument,
+                aUser);
 
         // Write annotated CAS to annotated document
         try (CasStorageSession casStorageSession = CasStorageSession.open()) {
@@ -327,23 +326,23 @@ public class MtasDocumentIndexTest
     @Test
     public void testRawTextQuery() throws Exception
     {
-        Project project = new Project("raw-text-query");
+        var project = new Project("raw-text-query");
 
         createProject(project);
 
-        SourceDocument sourceDocument = new SourceDocument("Raw text document", project, "text");
+        var sourceDocument = new SourceDocument("Raw text document", project, "text");
 
-        String fileContent = "The capital of Galicia is Santiago de Compostela.";
+        var fileContent = "The capital of Galicia is Santiago de Compostela.";
 
-        uploadDocument(Pair.of(sourceDocument, fileContent));
+        uploadAndIndexDocument(Pair.of(sourceDocument, fileContent));
 
-        String query = "Galicia";
+        var query = "Galicia";
 
         // Execute query
-        List<SearchResult> results = searchService.query(user, project, query);
+        var results = searchService.query(user, project, query);
 
         // Test results
-        SearchResult expectedResult = new SearchResult();
+        var expectedResult = new SearchResult();
         expectedResult.setDocumentId(sourceDocument.getId());
         expectedResult.setDocumentTitle("Raw text document");
         expectedResult.setLeftContext("The capital of ");
@@ -360,27 +359,27 @@ public class MtasDocumentIndexTest
     @Test
     public void thatLastTokenInDocumentCanBeFound() throws Exception
     {
-        Project project = new Project("last-token-in-document-can-be-found");
+        var project = new Project("last-token-in-document-can-be-found");
 
         createProject(project);
 
-        SourceDocument sourceDocument = new SourceDocument();
+        var sourceDocument = new SourceDocument();
 
         sourceDocument.setName("Raw text document");
         sourceDocument.setProject(project);
         sourceDocument.setFormat("text");
 
-        String fileContent = "The capital of Galicia is Santiago de Compostela.";
+        var fileContent = "The capital of Galicia is Santiago de Compostela.";
 
-        uploadDocument(Pair.of(sourceDocument, fileContent));
+        uploadAndIndexDocument(Pair.of(sourceDocument, fileContent));
 
-        String query = "\"\\.\"";
+        var query = "\"\\.\"";
 
         // Execute query
-        List<SearchResult> results = searchService.query(user, project, query);
+        var results = searchService.query(user, project, query);
 
         // Test results
-        SearchResult expectedResult = new SearchResult();
+        var expectedResult = new SearchResult();
         expectedResult.setDocumentId(sourceDocument.getId());
         expectedResult.setDocumentTitle("Raw text document");
         expectedResult.setLeftContext("Santiago de Compostela");
@@ -397,30 +396,28 @@ public class MtasDocumentIndexTest
     @Test
     public void testLimitQueryToDocument() throws Exception
     {
-        Project project = new Project("limit-query-to-document");
+        var project = new Project("limit-query-to-document");
 
         createProject(project);
 
-        SourceDocument sourceDocument1 = new SourceDocument("Raw text document 1", project, "text");
-        String fileContent1 = "The capital of Galicia is Santiago de Compostela.";
+        var sourceDocument1 = new SourceDocument("Raw text document 1", project, "text");
+        var fileContent1 = "The capital of Galicia is Santiago de Compostela.";
 
-        SourceDocument sourceDocument2 = new SourceDocument("Raw text document 2", project, "text");
-        String fileContent2 = "The capital of Portugal is Lissabon.";
+        var sourceDocument2 = new SourceDocument("Raw text document 2", project, "text");
+        var fileContent2 = "The capital of Portugal is Lissabon.";
 
-        uploadDocument(Pair.of(sourceDocument1, fileContent1));
-        uploadDocument(Pair.of(sourceDocument2, fileContent2));
+        uploadAndIndexDocument(Pair.of(sourceDocument1, fileContent1));
+        uploadAndIndexDocument(Pair.of(sourceDocument2, fileContent2));
 
-        String query = "capital";
+        var query = "capital";
 
         // Execute query
-        SourceDocument sourceDocument = documentService.getSourceDocument(project,
-                "Raw text document 1");
-        List<SearchResult> resultsNotLimited = searchService.query(user, project, query);
-        List<SearchResult> resultsLimited = searchService.query(user, project, query,
-                sourceDocument);
+        var sourceDocument = documentService.getSourceDocument(project, "Raw text document 1");
+        var resultsNotLimited = searchService.query(user, project, query);
+        var resultsLimited = searchService.query(user, project, query, sourceDocument);
 
         // Test results
-        SearchResult expectedResult1 = new SearchResult();
+        var expectedResult1 = new SearchResult();
         expectedResult1.setDocumentId(sourceDocument1.getId());
         expectedResult1.setDocumentTitle("Raw text document 1");
         expectedResult1.setText("capital");
@@ -431,7 +428,7 @@ public class MtasDocumentIndexTest
         expectedResult1.setTokenStart(1);
         expectedResult1.setTokenLength(1);
 
-        SearchResult expectedResult2 = new SearchResult();
+        var expectedResult2 = new SearchResult();
         expectedResult2.setDocumentId(sourceDocument2.getId());
         expectedResult2.setDocumentTitle("Raw text document 2");
         expectedResult2.setText("capital");
@@ -450,27 +447,27 @@ public class MtasDocumentIndexTest
     @Test
     public void testSimplifiedTokenTextQuery() throws Exception
     {
-        Project project = new Project("simplified-token-text-query");
+        var project = new Project("simplified-token-text-query");
 
         createProject(project);
 
-        SourceDocument sourceDocument = new SourceDocument();
+        var sourceDocument = new SourceDocument();
 
         sourceDocument.setName("Raw text document");
         sourceDocument.setProject(project);
         sourceDocument.setFormat("text");
 
-        String fileContent = "The capital of Galicia is Santiago de Compostela.";
+        var fileContent = "The capital of Galicia is Santiago de Compostela.";
 
-        uploadDocument(Pair.of(sourceDocument, fileContent));
+        uploadAndIndexDocument(Pair.of(sourceDocument, fileContent));
 
-        String query = "\"Galicia\"";
+        var query = "\"galicia\"";
 
         // Execute query
-        List<SearchResult> results = searchService.query(user, project, query);
+        var results = searchService.query(user, project, query);
 
         // Test results
-        SearchResult expectedResult = new SearchResult();
+        var expectedResult = new SearchResult();
         expectedResult.setDocumentId(sourceDocument.getId());
         expectedResult.setDocumentTitle("Raw text document");
         expectedResult.setText("Galicia");
@@ -495,7 +492,7 @@ public class MtasDocumentIndexTest
 
         var fileContent = "The capital of Galicia is Santiago de Compostela.";
 
-        uploadDocument(Pair.of(sourceDocument, fileContent));
+        uploadAndIndexDocument(Pair.of(sourceDocument, fileContent));
         annotateDocument(project, user, sourceDocument);
 
         var query = "<Named_entity.value=\"LOC\"/>";
@@ -530,7 +527,7 @@ public class MtasDocumentIndexTest
 
         String fileContent = "The capital of Galicia is Santiago de Compostela.";
 
-        uploadDocument(Pair.of(sourceDocument, fileContent));
+        uploadAndIndexDocument(Pair.of(sourceDocument, fileContent));
         annotateDocument(project, user, sourceDocument);
 
         String query = "<Named_entity=\".*\"/>";
@@ -565,7 +562,7 @@ public class MtasDocumentIndexTest
 
         String fileContent = "The capital of Galicia is Santiago de Compostela.";
 
-        uploadDocument(Pair.of(sourceDocument, fileContent));
+        uploadAndIndexDocument(Pair.of(sourceDocument, fileContent));
         annotateDocument(project, user, sourceDocument);
 
         String query = "<Named_entity/>";
@@ -601,7 +598,7 @@ public class MtasDocumentIndexTest
 
         String fileContent1 = "The capital of Galicia is Santiago de Compostela.";
 
-        uploadDocument(Pair.of(sourceDocument1, fileContent1));
+        uploadAndIndexDocument(Pair.of(sourceDocument1, fileContent1));
         annotateDocument(project, user, sourceDocument1);
 
         SourceDocument sourceDocument2 = new SourceDocument("Annotation document 2", project,
@@ -609,7 +606,7 @@ public class MtasDocumentIndexTest
 
         String fileContent2 = "The capital of Galicia is Santiago de Compostela.";
 
-        uploadDocument(Pair.of(sourceDocument2, fileContent2));
+        uploadAndIndexDocument(Pair.of(sourceDocument2, fileContent2));
         annotateDocument(project, user, sourceDocument2);
 
         String query = "<Named_entity.value=\"LOC\"/>";
@@ -642,13 +639,13 @@ public class MtasDocumentIndexTest
 
         String sourceContent = "The capital of Galicia is Santiago de Compostela.";
 
-        uploadDocument(Pair.of(sourceDocument, sourceContent));
+        uploadAndIndexDocument(Pair.of(sourceDocument, sourceContent));
         annotateDocumentAdvanced(project, user, sourceDocument);
 
         SourceDocument otherDocument = new SourceDocument("Other document", project, "text");
 
         String otherContent = "Goodbye moon. Hello World.";
-        uploadDocument(Pair.of(otherDocument, otherContent));
+        uploadAndIndexDocument(Pair.of(otherDocument, otherContent));
 
         // Define input for the statistics methods
         int minTokenPerDoc = Integer.MIN_VALUE;
