@@ -134,7 +134,12 @@ export class ExternalEditorFactory implements AnnotationEditorFactory {
 
       // Make sure body is accessible via body property - seems the browser does not always ensure
       // this...
-      if (win.document instanceof HTMLDocument) {
+      if (win.document instanceof HTMLDocument || document.documentElement.constructor.name) {
+        if (win.document.head == null) {
+          const head = win.document.createElement('head')
+          win.document.documentElement.insertBefore(head, win.document.body)
+        }
+  
         if (!document.body) {
           win.document.body = win.document.getElementsByTagName('body')[0]
         }
@@ -197,6 +202,10 @@ export class ExternalEditorFactory implements AnnotationEditorFactory {
       if (headElements.length > 0) {
         headElements[0].appendChild(css)
       }
+      else {
+        console.warn(`Unable to register stylesheet: ${styleSheetSource} - no head element found`)
+        resolve()
+      }
     })
   }
 
@@ -215,6 +224,10 @@ export class ExternalEditorFactory implements AnnotationEditorFactory {
       const headElements = document.getElementsByTagName('head')
       if (headElements.length > 0) {
         document.getElementsByTagName('head')[0].appendChild(script)
+      }
+      else {
+        console.warn(`Unable to register script: ${scriptSource} - no head element found`)
+        resolve()
       }
     })
   }
