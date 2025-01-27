@@ -19,23 +19,53 @@ package de.tudarmstadt.ukp.inception.pdfeditor2.visual;
 
 public interface PdfEventHandler
 {
-    void documentStart();
+    default void documentStart() throws Exception
+    {
+        // Nothing by default
+    }
 
-    void documentEnd();
+    default void documentEnd() throws Exception
+    {
+        // Nothing by default
+    }
 
-    void beforeStartParagraph(CharSequence aCharSequence);
+    default void beforeStartParagraph() throws Exception
+    {
+        // Nothing by default
+    }
 
-    void afterEndParagraph(CharSequence aCharSequence);
+    default void afterEndParagraph() throws Exception
+    {
+        // Nothing by default
+    }
 
-    void beforeStartPage(CharSequence aCharSequence);
+    default void beforeStartPage() throws Exception
+    {
+        // Nothing by default
+    }
 
-    void afterEndPage(CharSequence aCharSequence);
+    default void afterEndPage() throws Exception
+    {
+        // Nothing by default
+    }
 
-    void afterStartParagraph(CharSequence aCharSequence);
+    default void afterStartParagraph() throws Exception
+    {
+        // Nothing by default
+    }
 
-    void beforeEndParagraph(CharSequence aCharSequence);
+    default void beforeEndParagraph() throws Exception
+    {
+        // Nothing by default
+    }
 
-    void afterStartPage(CharSequence aCharSequence);
+    default void afterStartPage() throws Exception
+    {
+        // Nothing by default
+    }
 
-    void beforeEndPage(CharSequence aCharSequence);
+    default void beforeEndPage() throws Exception
+    {
+        // Nothing by default
+    }
 }

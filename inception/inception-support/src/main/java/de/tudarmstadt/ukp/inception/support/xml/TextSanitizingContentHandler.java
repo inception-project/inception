@@ -44,20 +44,9 @@ public class TextSanitizingContentHandler
 
     private String sanitizeVisibleText(String aText)
     {
-        char[] chars = aText.toCharArray();
-        for (int i = 0; i < chars.length; i++) {
-            switch (chars[i]) {
-            // Replace newline characters before sending to the browser to avoid the character
-            // offsets in the browser to get out-of-sync with the server-side offsets. E.g. some
-            // browsers tend to completely discard the `\r`.
-            case '\r':
-                chars[i] = ' ';
-                break;
-            default:
-                // Nothing to do
-            }
-        }
-
-        return new String(chars);
+        // Replace newline characters before sending to the browser to avoid the character
+        // offsets in the browser to get out-of-sync with the server-side offsets. E.g. some
+        // browsers tend to completely discard the `\r`.
+        return aText.replace('\r', ' ');
     }
 }

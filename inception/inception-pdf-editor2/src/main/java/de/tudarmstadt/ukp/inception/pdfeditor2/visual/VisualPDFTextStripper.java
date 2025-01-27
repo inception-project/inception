@@ -24,7 +24,6 @@ import static de.tudarmstadt.ukp.inception.pdfeditor2.pdfbox.GlyphPositionUtils.
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.joining;
 
-import java.awt.Shape;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
 import java.io.IOException;
@@ -74,6 +73,11 @@ public class VisualPDFTextStripper
         setAddMoreFormatting(true);
         setSortByPosition(false);
         setShouldSeparateByBeads(true);
+    }
+
+    public void setEventHandler(PdfEventHandler aEventHandler)
+    {
+        eventHandler = aEventHandler;
     }
 
     private CharSequence getBuffer()
@@ -127,8 +131,8 @@ public class VisualPDFTextStripper
     private void calculateCharacterPositions() throws IOException
     {
         for (List<TextPosition> article : charactersByArticle) {
-            for (TextPosition tp : article) {
-                Shape fontShape = calculateFontBounds(tp, flipAT, rotateAT);
+            for (var tp : article) {
+                var fontShape = calculateFontBounds(tp, flipAT, rotateAT);
                 Rectangle2D.Double f = (Rectangle2D.Double) fontShape.getBounds2D();
                 fontPositionCache.put(tp, f);
             }
@@ -280,7 +284,12 @@ public class VisualPDFTextStripper
     protected void startDocument(PDDocument aDocument) throws IOException
     {
         if (eventHandler != null) {
-            eventHandler.documentStart();
+            try {
+                eventHandler.documentStart();
+            }
+            catch (Exception e) {
+                throw handleEventHandlerException(e);
+            }
         }
 
         super.startDocument(aDocument);
@@ -292,7 +301,12 @@ public class VisualPDFTextStripper
         super.endDocument(aDocument);
 
         if (eventHandler != null) {
-            eventHandler.documentEnd();
+            try {
+                eventHandler.documentEnd();
+            }
+            catch (Exception e) {
+                throw handleEventHandlerException(e);
+            }
         }
     }
 
@@ -300,13 +314,24 @@ public class VisualPDFTextStripper
     protected void writeParagraphStart() throws IOException
     {
         if (eventHandler != null) {
-            eventHandler.beforeStartParagraph(getBuffer());
+            try {
+                eventHandler.beforeStartParagraph();
+            }
+            catch (Exception e) {
+                throw handleEventHandlerException(e);
+            }
+
         }
 
         super.writeParagraphStart();
 
         if (eventHandler != null) {
-            eventHandler.afterStartParagraph(getBuffer());
+            try {
+                eventHandler.afterStartParagraph();
+            }
+            catch (Exception e) {
+                throw handleEventHandlerException(e);
+            }
         }
     }
 
@@ -314,13 +339,23 @@ public class VisualPDFTextStripper
     protected void writeParagraphEnd() throws IOException
     {
         if (eventHandler != null) {
-            eventHandler.beforeEndParagraph(getBuffer());
+            try {
+                eventHandler.beforeEndParagraph();
+            }
+            catch (Exception e) {
+                throw handleEventHandlerException(e);
+            }
         }
 
         super.writeParagraphEnd();
 
         if (eventHandler != null) {
-            eventHandler.afterEndParagraph(getBuffer());
+            try {
+                eventHandler.afterEndParagraph();
+            }
+            catch (Exception e) {
+                throw handleEventHandlerException(e);
+            }
         }
     }
 
@@ -328,13 +363,23 @@ public class VisualPDFTextStripper
     protected void writePageStart() throws IOException
     {
         if (eventHandler != null) {
-            eventHandler.beforeStartPage(getBuffer());
+            try {
+                eventHandler.beforeStartPage();
+            }
+            catch (Exception e) {
+                throw handleEventHandlerException(e);
+            }
         }
 
         super.writePageStart();
 
         if (eventHandler != null) {
-            eventHandler.afterStartPage(getBuffer());
+            try {
+                eventHandler.afterStartPage();
+            }
+            catch (Exception e) {
+                throw handleEventHandlerException(e);
+            }
         }
     }
 
@@ -342,14 +387,33 @@ public class VisualPDFTextStripper
     protected void writePageEnd() throws IOException
     {
         if (eventHandler != null) {
-            eventHandler.beforeEndPage(getBuffer());
+            try {
+                eventHandler.beforeEndPage();
+            }
+            catch (Exception e) {
+                throw handleEventHandlerException(e);
+            }
         }
 
         super.writePageEnd();
 
         if (eventHandler != null) {
-            eventHandler.afterEndPage(getBuffer());
+            try {
+                eventHandler.afterEndPage();
+            }
+            catch (Exception e) {
+                throw handleEventHandlerException(e);
+            }
         }
+    }
+
+    private IOException handleEventHandlerException(Exception aException)
+    {
+        if (aException instanceof IOException ioException) {
+            return ioException;
+        }
+
+        return new IOException(aException);
     }
 
     private String reconcileGlyphWithText(String aText, boolean rtl, String normalizedUnicode,
