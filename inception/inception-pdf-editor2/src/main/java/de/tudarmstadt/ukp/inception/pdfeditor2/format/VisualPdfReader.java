@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.pdfeditor2.format;
 
+import static java.lang.Character.isSurrogatePair;
+
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -73,7 +75,18 @@ public class VisualPdfReader
             }
         }
 
-        aJCas.setDocumentText(textBuffer.toString());
+        // Try working around PDFBOX-5747 until we have 3.0.5
+        var buf = textBuffer.getBuffer();
+        var len = buf.length();
+        for (int i = 0; i < len - 2; i++) {
+            if (isSurrogatePair(buf.charAt(i), buf.charAt(i + 2))) {
+                var c = buf.charAt(i + 2);
+                buf.setCharAt(i + 2, buf.charAt(i + 1));
+                buf.setCharAt(i + 1, c);
+            }
+        }
+
+        aJCas.setDocumentText(buf.toString());
 
         visualModelToCas(vModel, aJCas);
     }
