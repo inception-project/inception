@@ -8,11 +8,12 @@ on:
 
 permissions:
   contents: read
+  checks: write
 
 concurrency:
   group: ${{ github.ref }}
   cancel-in-progress: true
-  
+
 jobs:
   build:
     strategy:
@@ -35,6 +36,7 @@ jobs:
           auth.docker.io:443
           build.shibboleth.net:443
           eastus.data.mcr.microsoft.com:443
+          api.github.com:443
           github.com:443
           mcr.microsoft.com:443
           nodejs.org:443
@@ -52,7 +54,7 @@ jobs:
       uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       with:
         ref: ${{ github.head_ref || github.ref }}
-        
+
     - name: Set up JDK ${{ matrix.jdk }}
       uses: actions/setup-java@7a6d8a8234af8eb26422e24e3006232cccaa061b # v4.6.0
       with:
@@ -79,6 +81,30 @@ jobs:
         key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}-${{ env.CACHE_DATE }}
         restore-keys: |
           ${{ runner.os }}-maven-
+
+    - name: Cache Docker layers
+      uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57 # v4.2.0
+      with:
+        path: /var/lib/docker
+        key: docker-cache-${{ runner.os }}-${{ github.sha }}
+        restore-keys: |
+          docker-cache-${{ runner.os }}-
+
+    - name: Cache DKPro Core Dataset Cache
+      uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57 # v4.2.0
+      with:
+        path: cache
+        key: dkpro-dataset-cache-${{ runner.os }}-${{ github.sha }}
+        restore-keys: |
+          dkpro-dataset-cache-${{ runner.os }}-
+
+    - name: Cache Nodejs
+      uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57 # v4.2.0
+      with:
+        path: nodejs
+        key: nodejs-cache-${{ runner.os }}-${{ github.sha }}
+        restore-keys: |
+          nodejs-cache-${{ runner.os }}-
 
     - name: Build with Maven
       if: "!(matrix.os == 'ubuntu-latest' && github.event_name != 'pull_request')"
