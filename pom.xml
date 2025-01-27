@@ -87,7 +87,7 @@
     <uima.version>3.6.0</uima.version>
     <uima-json.version>0.5.0</uima-json.version>
 
-    <pdfbox.version>3.0.3</pdfbox.version>
+    <pdfbox.version>3.0.4</pdfbox.version>
 
     <spring.version>6.2.0</spring.version>
     <spring.boot.version>3.4.1</spring.boot.version>
@@ -113,7 +113,7 @@
     <hibernate.version>6.6.3.Final</hibernate.version>
     <hibernate.validator.version>8.0.2.Final</hibernate.validator.version>
 
-    <wicket.version>10.3.0</wicket.version>
+    <wicket.version>10.4.0</wicket.version>
     <wicketstuff.version>10.3.0</wicketstuff.version>
     <wicket-bootstrap.version>7.0.9</wicket-bootstrap.version>
     <wicket-jquery-selectors.version>4.0.7</wicket-jquery-selectors.version>
