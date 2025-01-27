@@ -50,7 +50,6 @@ import org.apache.lucene.document.KnnFloatVectorField;
 import org.apache.lucene.document.LongPoint;
 import org.apache.lucene.document.StoredField;
 import org.apache.lucene.index.DirectoryReader;
-import org.apache.lucene.search.FieldExistsQuery;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.uima.cas.CAS;
 import org.slf4j.Logger;
@@ -100,6 +99,10 @@ public class UpdateDocumentIndexTask
     {
         var documents = documentService.listSourceDocuments(getProject());
         if (documents.isEmpty()) {
+            try (var index = documentQueryService.borrowIndex(getProject())) {
+                index.getIndexWriter().deleteAll();
+                index.getIndexWriter().commit();
+            }
             return;
         }
 
@@ -114,15 +117,16 @@ public class UpdateDocumentIndexTask
         try (var index = documentQueryService.borrowIndex(getProject())) {
             try (var reader = DirectoryReader.open(index.getIndexWriter())) {
                 var searcher = new IndexSearcher(reader);
-                var query = new FieldExistsQuery(FIELD_SOURCE_DOC_COMPLETE);
+                var query = LongPoint.newRangeQuery(FIELD_SOURCE_DOC_COMPLETE, Long.MIN_VALUE,
+                        Long.MAX_VALUE);
                 var result = searcher.search(query, Integer.MAX_VALUE);
 
                 var documentsToIndex = new HashMap<Long, SourceDocument>();
                 for (var doc : documents) {
                     documentsToIndex.put(doc.getId(), doc);
                 }
-                var documentsToUnindex = new ArrayList<Long>();
 
+                var documentsToUnindex = new ArrayList<Long>();
                 for (var doc : result.scoreDocs) {
                     var fields = searcher.getIndexReader().storedFields().document(doc.doc);
                     var sourceDocId = fields.getField(FIELD_SOURCE_DOC_COMPLETE).numericValue()
@@ -181,6 +185,8 @@ public class UpdateDocumentIndexTask
         try {
             aIndex.getIndexWriter().deleteDocuments(
                     LongPoint.newExactQuery(FIELD_SOURCE_DOC_ID, aSourceDocumentId));
+            aIndex.getIndexWriter().deleteDocuments(
+                    LongPoint.newExactQuery(FIELD_SOURCE_DOC_COMPLETE, aSourceDocumentId));
         }
         catch (IOException e) {
             LOG.error("Error unindexing document [{}]", aSourceDocumentId, e);
@@ -232,6 +238,7 @@ public class UpdateDocumentIndexTask
         throws IOException
     {
         var doc = new Document();
+        doc.add(new LongPoint(FIELD_SOURCE_DOC_COMPLETE, aSourceDocument.getId()));
         doc.add(new StoredField(FIELD_SOURCE_DOC_COMPLETE, aSourceDocument.getId()));
         aIndex.getIndexWriter().addDocument(doc);
     }
@@ -251,6 +258,7 @@ public class UpdateDocumentIndexTask
         var normalizedEmbedding = l2normalize(aEmbeddedChunks.getValue(), false);
         doc.add(new KnnFloatVectorField(FIELD_EMBEDDING, normalizedEmbedding, DOT_PRODUCT));
         doc.add(new IntRange(FIELD_RANGE, new int[] { chunk.begin() }, new int[] { chunk.end() }));
+        doc.add(new LongPoint(FIELD_SOURCE_DOC_ID, aSourceDocument.getId()));
         doc.add(new StoredField(FIELD_SOURCE_DOC_ID, aSourceDocument.getId()));
         doc.add(new StoredField(FIELD_SECTION, ""));
         doc.add(new StoredField(FIELD_TEXT, chunk.text()));
