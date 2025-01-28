@@ -35,7 +35,11 @@ import org.apache.uima.jcas.cas.IntegerArray;
 import org.dkpro.core.api.io.JCasResourceCollectionReader_ImplBase;
 import org.dkpro.core.api.pdf.type.PdfChunk;
 import org.dkpro.core.api.pdf.type.PdfPage;
+import org.xml.sax.SAXException;
+import org.xml.sax.helpers.AttributesImpl;
 
+import de.tudarmstadt.ukp.inception.io.xml.dkprocore.CasXmlHandler;
+import de.tudarmstadt.ukp.inception.pdfeditor2.visual.PdfEventHandler;
 import de.tudarmstadt.ukp.inception.pdfeditor2.visual.VisualPDFTextStripper;
 import de.tudarmstadt.ukp.inception.pdfeditor2.visual.model.VChunk;
 import de.tudarmstadt.ukp.inception.pdfeditor2.visual.model.VGlyph;
@@ -130,6 +134,10 @@ public class VisualPdfReader
     @ConfigurationParameter(name = PARAM_SPACING_TOLERANCE, defaultValue = "0.5")
     private float spacingTolerance;
 
+    public static final String PARAM_GENERATE_HTML_STRUCTURE = "generateHtmlStructure";
+    @ConfigurationParameter(name = PARAM_GENERATE_HTML_STRUCTURE, defaultValue = "false")
+    private boolean generateHtmlStructure;
+
     @Override
     public void getNext(JCas aJCas) throws IOException, CollectionException
     {
@@ -154,6 +162,12 @@ public class VisualPdfReader
 
                 stripper.setAverageCharTolerance(averageCharTolerance);
                 stripper.setSpacingTolerance(spacingTolerance);
+
+                if (generateHtmlStructure) {
+                    var capture = new PdfStructureCapturer(aJCas);
+                    textBuffer = capture;
+                    stripper.setEventHandler(capture);
+                }
 
                 stripper.writeText(doc, textBuffer);
 
@@ -295,4 +309,81 @@ public class VisualPdfReader
         return vModel;
     }
 
+    private static class PdfStructureCapturer
+        extends StringWriter
+        implements PdfEventHandler
+    {
+        private final JCas jCas;
+        private CasXmlHandler xmlCas;
+
+        private PdfStructureCapturer(JCas aJCas)
+        {
+            jCas = aJCas;
+            xmlCas = new CasXmlHandler(jCas);
+            xmlCas.setCommitText(false);
+        }
+
+        @Override
+        public void documentStart() throws SAXException
+        {
+            xmlCas.startDocument();
+            xmlCas.startElement("", "", "html", new AttributesImpl());
+            xmlCas.startElement("", "", "body", new AttributesImpl());
+        }
+
+        @Override
+        public void afterStartParagraph() throws Exception
+        {
+            xmlCas.startElement("", "", "p", new AttributesImpl());
+        }
+
+        @Override
+        public void beforeEndParagraph() throws Exception
+        {
+            xmlCas.endElement("", "", "p");
+        }
+
+        @Override
+        public void documentEnd() throws SAXException
+        {
+            xmlCas.endElement("", "", "body");
+            xmlCas.endElement("", "", "html");
+            xmlCas.endDocument();
+        }
+
+        @Override
+        public void write(String aStr, int aOff, int aLen)
+        {
+            super.write(aStr, aOff, aLen);
+            xmlCas.characters(aStr.toCharArray(), aOff, aLen);
+        }
+
+        @Override
+        public void write(char[] aCbuf) throws IOException
+        {
+            super.write(aCbuf);
+            xmlCas.characters(aCbuf, 0, aCbuf.length);
+        }
+
+        @Override
+        public void write(char[] aCbuf, int aOff, int aLen)
+        {
+            super.write(aCbuf, aOff, aLen);
+            xmlCas.characters(aCbuf, aOff, aLen);
+        }
+
+        @Override
+        public void write(int aC)
+        {
+            super.write(aC);
+            xmlCas.characters(new char[] { (char) aC }, 0, 1);
+        }
+
+        @Override
+        public void write(String aStr)
+        {
+            super.write(aStr);
+            xmlCas.characters(aStr.toCharArray(), 0, aStr.length());
+        }
+    }
 }

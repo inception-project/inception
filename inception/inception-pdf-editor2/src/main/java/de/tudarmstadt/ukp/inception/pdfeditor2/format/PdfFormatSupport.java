@@ -63,6 +63,7 @@ public class PdfFormatSupport
             TypeSystemDescription aTSD)
         throws ResourceInitializationException
     {
-        return createReaderDescription(VisualPdfReader.class, aTSD);
+        return createReaderDescription(VisualPdfReader.class, aTSD, //
+                VisualPdfReader.PARAM_GENERATE_HTML_STRUCTURE, true);
     }
 }
