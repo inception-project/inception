@@ -45,11 +45,27 @@
         <type>pom</type>
         <scope>import</scope>
       </dependency>
+
+      <dependency>
+        <groupId>org.apache.groovy</groupId>
+        <artifactId>groovy-bom</artifactId>
+        <version>${build-groovy-version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
     
       <dependency>
         <groupId>org.springframework</groupId>
         <artifactId>spring-framework-bom</artifactId>
         <version>${spring.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+
+      <dependency>
+        <groupId>org.eclipse.jetty</groupId>
+        <artifactId>jetty-bom</artifactId>
+        <version>${jetty.version}</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -750,11 +766,6 @@
         <type>pom</type>
         <scope>import</scope>
       </dependency>
-      <dependency>
-        <groupId>com.fasterxml.jackson</groupId>
-        <artifactId>jackson-databind</artifactId>
-        <version>${jackson.version}.2</version>
-      </dependency>
 
       <dependency>
         <groupId>com.networknt</groupId>
@@ -865,15 +876,6 @@
         <groupId>org.apache.tomcat</groupId>
         <artifactId>tomcat-annotations-api</artifactId>
         <version>${tomcat.version}</version>
-      </dependency>
-
-      <!-- Jetty -->
-      <dependency>
-        <groupId>org.eclipse.jetty</groupId>
-        <artifactId>jetty-bom</artifactId>
-        <version>${jetty.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
       </dependency>
 
       <dependency>
@@ -1358,7 +1360,7 @@
       <dependency>
         <groupId>org.codelibs.opensearch</groupId>
         <artifactId>opensearch-runner</artifactId>
-        <version>${opensearch.version}.0</version>
+        <version>${opensearch-runner.version}</version>
       </dependency>
       <dependency>
         <groupId>net.java.dev.jna</groupId>
@@ -1370,6 +1372,12 @@
         <groupId>org.eclipse.jgit</groupId>
         <artifactId>org.eclipse.jgit</artifactId>
         <version>${jgit.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.flipkart.zjsonpatch</groupId>
+        <artifactId>zjsonpatch</artifactId>
+        <version>${zjsonpatch.version}</version>
       </dependency>
 
       <dependency>
@@ -1489,6 +1497,22 @@
       </dependency>
 
       <dependency>
+        <groupId>org.apache.wicket</groupId>
+        <artifactId>wicket-parent</artifactId>
+        <version>${wicket.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+
+      <dependency>
+        <groupId>org.dkpro.core</groupId>
+        <artifactId>dkpro-core-bom-asl</artifactId>
+        <version>${dkpro.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+
+      <dependency>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-dependencies</artifactId>
         <version>${spring.boot.version}</version>
@@ -1539,23 +1563,11 @@
             <groupId>org.slf4j</groupId>
             <artifactId>*</artifactId>
           </exclusion>
+          <exclusion>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>*</artifactId>
+          </exclusion>
         </exclusions>
-      </dependency>
-
-      <dependency>
-        <groupId>org.apache.wicket</groupId>
-        <artifactId>wicket-parent</artifactId>
-        <version>${wicket.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
-
-      <dependency>
-        <groupId>org.dkpro.core</groupId>
-        <artifactId>dkpro-core-bom-asl</artifactId>
-        <version>${dkpro.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
       </dependency>
     </dependencies>
   </dependencyManagement>
