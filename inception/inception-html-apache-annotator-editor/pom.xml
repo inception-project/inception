@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>35.1</version>
+    <version>35.2-SNAPSHOT</version>
   </parent>
   <artifactId>inception-html-apache-annotator-editor</artifactId>
   <name>INCEpTION - Editor - HTML + Apache Annotator (v${apache-annotator.version})</name>
