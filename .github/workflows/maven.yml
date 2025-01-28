@@ -28,8 +28,8 @@ jobs:
     - name: Harden Runner
       uses: step-security/harden-runner@0080882f6c36860b6ba35c610c98ce87d4e2f26f # v2.10.2
       with:
-        egress-policy: audit
-        # egress-policy: block
+        # egress-policy: audit
+        egress-policy: block
         disable-sudo: true
         allowed-endpoints: >
           api.github.com:443
@@ -46,6 +46,7 @@ jobs:
           registry-1.docker.io:443
           registry.npmjs.org:443
           repo.maven.apache.org:443
+          repo1.maven.org:443
           westus.data.mcr.microsoft.com:443
           westus2.data.mcr.microsoft.com:443
           www.ims.uni-stuttgart.de:443
@@ -94,6 +95,15 @@ jobs:
         key: nodejs-cache-${{ runner.os }}-${{ github.sha }}
         restore-keys: |
           nodejs-cache-${{ runner.os }}-
+
+    - name: Install Graphviz on Linux
+      if: runner.os == 'Linux'
+      run: sudo apt-get update && sudo apt-get install -y graphviz
+
+    - name: Install Graphviz on Windows
+      if: runner.os == 'Windows'
+      run: choco install graphviz -y
+      shell: cmd
 
     - name: Build with Maven
       if: "!(matrix.os == 'ubuntu-latest' && github.event_name != 'pull_request')"
