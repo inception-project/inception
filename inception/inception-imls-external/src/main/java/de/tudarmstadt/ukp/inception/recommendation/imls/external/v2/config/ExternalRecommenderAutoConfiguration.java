@@ -15,23 +15,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.config;
+package de.tudarmstadt.ukp.inception.recommendation.imls.external.v2.config;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.ExternalRecommenderFactory;
+import de.tudarmstadt.ukp.inception.recommendation.imls.external.v2.ExternalRecommenderFactory;
 
 @Configuration
-@ConditionalOnProperty(prefix = "recommender.external.v1", name = "enabled", havingValue = "true", //
+@ConditionalOnProperty(prefix = "recommender.external.v2", name = "enabled", havingValue = "true", //
         matchIfMissing = true)
 @EnableConfigurationProperties(ExternalRecommenderPropertiesImpl.class)
 public class ExternalRecommenderAutoConfiguration
 {
     @Bean
-    public ExternalRecommenderFactory externalRecommenderFactoryV1(
+    public ExternalRecommenderFactory externalRecommenderFactoryV2(
             ExternalRecommenderProperties aProperties)
     {
         return new ExternalRecommenderFactory(aProperties);
