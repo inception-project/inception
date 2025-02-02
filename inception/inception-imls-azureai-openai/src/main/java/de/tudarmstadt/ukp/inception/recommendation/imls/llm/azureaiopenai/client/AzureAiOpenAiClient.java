@@ -21,5 +21,5 @@ import java.io.IOException;
 
 public interface AzureAiOpenAiClient
 {
-    String generate(String aUrl, ChatCompletionRequest aRequest) throws IOException;
+    String generate(String aUrl, AzureAiChatCompletionRequest aRequest) throws IOException;
 }

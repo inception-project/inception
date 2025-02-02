@@ -57,15 +57,15 @@ public class SymbolicRulesTest
     {
         var constraints = parse(
                 """
-                import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS as pos;
-                import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma as lemma;
-                import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency as DEPENDENCY;
+                        import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS as pos;
+                        import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma as lemma;
+                        import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency as DEPENDENCY;
 
 
-                lemma{
-                  @DEPENDENCY.@pos.@pos.PosValue="pronoun" -> value = "good" (!);
-                }
-                """);
+                        lemma{
+                          @DEPENDENCY.@pos.@pos.PosValue="pronoun" -> value = "good" (!);
+                        }
+                        """);
 
         loadConll(jcas.get(), "src/test/resources/text/1.conll");
 
@@ -85,15 +85,15 @@ public class SymbolicRulesTest
     {
         var constraints = parse(
                 """
-                import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS as pos;
-                import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma as lemma;
-                import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency as DEPENDENCY;
+                        import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS as pos;
+                        import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma as lemma;
+                        import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency as DEPENDENCY;
 
 
-                lemma{
-                  @DEPENDENCY.@pos.@pos.text()="a" -> value = "good" (!);
-                }
-                """);
+                        lemma{
+                          @DEPENDENCY.@pos.@pos.text()="a" -> value = "good" (!);
+                        }
+                        """);
 
         loadConll(jcas.get(), "src/test/resources/text/1.conll");
 
@@ -111,8 +111,7 @@ public class SymbolicRulesTest
     @Test
     void thatFeatureValueIsValid() throws Exception
     {
-        var constraints = parse(
-                """
+        var constraints = parse("""
                 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma as Lemma;
 
 

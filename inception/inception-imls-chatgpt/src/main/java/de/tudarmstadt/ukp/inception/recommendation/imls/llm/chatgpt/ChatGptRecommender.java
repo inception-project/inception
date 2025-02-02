@@ -17,25 +17,31 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.llm.chatgpt;
 
-import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.chatgpt.client.ResponseFormatType.JSON_OBJECT;
-import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.response.ResponseFormat.JSON;
+import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.chatgpt.client.ChatGptResponseFormatType.JSON_SCHEMA;
 
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.databind.JsonNode;
+
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.chatgpt.client.ChatCompletionMessage;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.chatgpt.client.ChatCompletionRequest;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.chatgpt.client.ChatGptClient;
-import de.tudarmstadt.ukp.inception.recommendation.imls.llm.chatgpt.client.ResponseFormat;
-import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.traits.LlmRecommenderImplBase;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.chatgpt.client.ChatGptResponseFormat;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.chatgpt.client.ChatGptResponseFormatType;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.response.ResponseFormat;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.traits.ChatBasedLlmRecommenderImplBase;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.traits.ChatMessage;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.security.client.auth.apikey.ApiKeyAuthenticationTraits;
 
 public class ChatGptRecommender
-    extends LlmRecommenderImplBase<ChatGptRecommenderTraits>
+    extends ChatBasedLlmRecommenderImplBase<ChatGptRecommenderTraits>
 {
     private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
@@ -50,24 +56,42 @@ public class ChatGptRecommender
     }
 
     @Override
-    protected String exchange(String aPrompt) throws IOException
+    protected String exchange(List<ChatMessage> aMessages,
+            de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.response.ResponseFormat aFormat,
+            JsonNode aJsonSchema)
+        throws IOException
     {
-        LOG.trace("Query: [{}]", aPrompt);
+        var messages = aMessages.stream() //
+                .map(m -> new ChatCompletionMessage(m.role().getName(), m.content())) //
+                .toList();
+
         var request = ChatCompletionRequest.builder() //
                 .withApiKey(((ApiKeyAuthenticationTraits) traits.getAuthentication()).getApiKey()) //
-                .withPrompt(aPrompt) //
+                .withMessages(messages) //
+                .withResponseFormat(getResponseFormat(aFormat, aJsonSchema)) //
                 .withOptions(traits.getOptions()) //
                 .withModel(traits.getModel());
 
-        if (traits.getFormat() == JSON) {
-            request.withPrompt(
-                    "Respond with a JSON object using the words as the key and the label as the value.\n\n"
-                            + aPrompt);
-            request.withResponseFormat(ResponseFormat.builder().withType(JSON_OBJECT).build());
-        }
-
-        var response = client.generate(traits.getUrl(), request.build()).trim();
+        var response = client.chat(traits.getUrl(), request.build()).trim();
         LOG.trace("Response: [{}]", response);
         return response;
+    }
+
+    private ChatGptResponseFormat getResponseFormat(ResponseFormat aFormat, JsonNode aSchema)
+    {
+        if (aSchema != null) {
+            return ChatGptResponseFormat.builder() //
+                    .withType(JSON_SCHEMA) //
+                    .withSchema("response", aSchema) //
+                    .build();
+        }
+
+        if (aFormat == ResponseFormat.JSON) {
+            return ChatGptResponseFormat.builder() //
+                    .withType(ChatGptResponseFormatType.JSON_OBJECT) //
+                    .build();
+        }
+
+        return null;
     }
 }

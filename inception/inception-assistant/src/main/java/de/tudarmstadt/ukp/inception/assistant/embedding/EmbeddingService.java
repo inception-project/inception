@@ -27,11 +27,11 @@ import org.apache.commons.lang3.tuple.Pair;
 public interface EmbeddingService
 {
     int getDimension();
-    
+
     Optional<float[]> embed(String aQuery) throws IOException;
 
     List<Pair<String, float[]>> embed(String... aStrings) throws IOException;
 
     <T> List<Pair<T, float[]>> embed(Function<T, String> aExtractor, Iterable<T> aObjects)
-            throws IOException;
+        throws IOException;
 }

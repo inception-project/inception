@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.inception.recommendation.imls.ollama.client;
 
 import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.OllamaRecommenderTraits.DEFAULT_OLLAMA_URL;
-import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaGenerateResponseFormat.JSON;
 import static org.assertj.core.api.Assumptions.assumeThat;
 
 import java.lang.invoke.MethodHandles;
@@ -28,6 +27,8 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaChatMessage;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaChatRequest;
@@ -116,7 +117,7 @@ class OllamaClientImplTest
                 .withModel("mistral") //
                 .withPrompt("Generate a JSON map with the key/value pairs `a = 1` and `b = 2`") //
                 .withStream(false) //
-                .withFormat(JSON) //
+                .withFormat(JsonNodeFactory.instance.textNode("json")) //
                 .build());
         LOG.info("Response: [{}]", response.trim());
     }

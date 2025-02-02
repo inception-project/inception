@@ -15,49 +15,45 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.imls.llm.chatgpt.client;
+package de.tudarmstadt.ukp.inception.recommendation.imls.llm.azureaiopenai.client;
 
-public class ResponseFormat
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class AzureAiChatCompletionMessage
 {
-    private ResponseFormatType type;
+    private @JsonProperty("role") String role;
+    private @JsonProperty("content") String content;
 
-    private ResponseFormat(Builder builder)
+    public AzureAiChatCompletionMessage()
     {
-        type = builder.type;
+        // No args
     }
 
-    public ResponseFormatType getType()
+    public AzureAiChatCompletionMessage(String aRole, String aContent)
     {
-        return type;
+        role = aRole;
+        content = aContent;
     }
 
-    public void setType(ResponseFormatType aType)
+    public String getRole()
     {
-        type = aType;
+        return role;
     }
 
-    public static Builder builder()
+    public void setRole(String aRole)
     {
-        return new Builder();
+        role = aRole;
     }
 
-    public static final class Builder
+    public String getContent()
     {
-        private ResponseFormatType type;
+        return content;
+    }
 
-        private Builder()
-        {
-        }
-
-        public Builder withType(ResponseFormatType aType)
-        {
-            type = aType;
-            return this;
-        }
-
-        public ResponseFormat build()
-        {
-            return new ResponseFormat(this);
-        }
+    public void setContent(String aContent)
+    {
+        content = aContent;
     }
 }

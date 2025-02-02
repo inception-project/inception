@@ -27,7 +27,6 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.Recommendatio
 public class PerDocumentContextGenerator
     implements PromptContextGenerator
 {
-
     @Override
     public Stream<PromptContext> generate(RecommendationEngine aEngine, CAS aCas, int aBegin,
             int aEnd, Map<String, ? extends Object> aBindings)

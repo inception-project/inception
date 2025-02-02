@@ -41,7 +41,7 @@ public class DocxDocumentReader
     {
         var res = nextFile();
         initCas(aJCas, res);
-        
+
         try (var zipFile = new ZipFile(res.getResource().getFile())) {
             for (var entries = zipFile.entries(); entries.hasMoreElements();) {
                 var entry = (ZipEntry) entries.nextElement();

@@ -17,23 +17,29 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama;
 
-import static java.lang.System.currentTimeMillis;
-
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaChatMessage;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaChatRequest;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaClient;
-import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaGenerateRequest;
-import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaGenerateResponseFormat;
-import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.traits.LlmRecommenderImplBase;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaOptions;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.response.ResponseFormat;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.traits.ChatBasedLlmRecommenderImplBase;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.traits.ChatMessage;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
 public class OllamaRecommender
-    extends LlmRecommenderImplBase<OllamaRecommenderTraits>
+    extends ChatBasedLlmRecommenderImplBase<OllamaRecommenderTraits>
 {
     private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
@@ -48,33 +54,39 @@ public class OllamaRecommender
     }
 
     @Override
-    protected String exchange(String aPrompt) throws IOException
+    protected String exchange(List<ChatMessage> aMessages, ResponseFormat aFormat, JsonNode aSchema)
+        throws IOException
     {
-        var format = getResponseFormat();
+        var format = getResponseFormat(aFormat, aSchema);
+        var messages = aMessages.stream() //
+                .map(m -> new OllamaChatMessage(m.role().getName(), m.content())) //
+                .toList();
 
-        LOG.trace("Querying ollama [{}]: [{}]", traits.getModel(), aPrompt);
-        var request = OllamaGenerateRequest.builder() //
+        var request = OllamaChatRequest.builder() //
                 .withModel(traits.getModel()) //
-                .withPrompt(aPrompt) //
+                .withMessages(messages) //
                 .withFormat(format) //
                 .withStream(false) //
+                .withOption(OllamaOptions.TEMPERATURE, 0.0d) //
+                .withOption(OllamaOptions.SEED, 0xdeadbeef) //
                 .build();
-        var startTime = currentTimeMillis();
-        var response = client.generate(traits.getUrl(), request).trim();
-        LOG.trace("Ollama [{}] responds ({} ms): [{}]", traits.getModel(),
-                currentTimeMillis() - startTime, response);
+
+        var response = client.chat(traits.getUrl(), request, null).getMessage().content();
+
         return response;
     }
 
-    private OllamaGenerateResponseFormat getResponseFormat()
+    private JsonNode getResponseFormat(ResponseFormat aFormat, JsonNode aSchema)
+        throws JsonProcessingException
     {
-        OllamaGenerateResponseFormat format = null;
-        if (traits.getFormat() != null) {
-            format = switch (traits.getFormat()) {
-            case JSON -> OllamaGenerateResponseFormat.JSON;
-            default -> null;
-            };
+        if (aSchema != null) {
+            return aSchema;
         }
-        return format;
+
+        if (aFormat == ResponseFormat.JSON) {
+            return JsonNodeFactory.instance.textNode("json_object");
+        }
+
+        return null;
     }
 }

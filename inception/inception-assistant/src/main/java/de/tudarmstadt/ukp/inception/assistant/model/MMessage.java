@@ -30,7 +30,8 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
         @JsonSubTypes.Type(value = MTextMessage.class), //
         @JsonSubTypes.Type(value = MRemoveConversationCommand.class) //
 })
-public sealed interface MMessage permits MChatMessage, MCommandMessage
+public sealed interface MMessage
+    permits MChatMessage, MCommandMessage
 {
     String TYPE_FIELD = "@type";
 }

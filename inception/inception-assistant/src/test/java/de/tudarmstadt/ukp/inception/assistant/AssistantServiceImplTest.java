@@ -83,7 +83,7 @@ import jakarta.persistence.EntityManager;
                 "server.address=127.0.0.1", //
                 "spring.main.banner-mode=off", //
                 "assistant.enabled=true", //
-                "websocket.enabled=true"})
+                "websocket.enabled=true" })
 @SpringBootApplication( //
         exclude = { //
                 LiquibaseAutoConfiguration.class, //
@@ -98,8 +98,7 @@ import jakarta.persistence.EntityManager;
         RepositoryAutoConfiguration.class, //
         CasDoctorAutoConfiguration.class, //
         DocumentImportExportServiceAutoConfiguration.class, //
-        DocumentServiceAutoConfiguration.class
-})
+        DocumentServiceAutoConfiguration.class })
 @EntityScan({ //
         "de.tudarmstadt.ukp.clarin.webanno.model", //
         "de.tudarmstadt.ukp.clarin.webanno.security.model" })
@@ -137,7 +136,7 @@ class AssistantServiceImplTest
         if (project != null) {
             return;
         }
-        
+
         repositoryProperties.setPath(repositoryDir);
         MDC.put(Logging.KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
 
@@ -202,7 +201,7 @@ class AssistantServiceImplTest
                 .withRole("assistant") //
                 .withMessage("Test message") //
                 .build();
-        
+
         try (var client = new WebSocketStompTestClient(USER, PASS)) {
             client.expectSuccessfulConnection().connect(websocketUrl);
             client.subscribe(broadcastChannel);
@@ -239,7 +238,7 @@ class AssistantServiceImplTest
             authProvider.setPasswordEncoder(aEncoder);
             return authProvider;
         }
-        
+
         @Order(100)
         @Bean
         public SecurityFilterChain wsFilterChain(HttpSecurity aHttp) throws Exception

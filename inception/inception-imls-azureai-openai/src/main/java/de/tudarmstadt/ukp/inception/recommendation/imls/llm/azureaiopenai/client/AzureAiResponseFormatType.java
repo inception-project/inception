@@ -17,43 +17,15 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.llm.azureaiopenai.client;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
-public class ChatCompletionChoice
+public enum AzureAiResponseFormatType
 {
-    private @JsonProperty("index") int index;
-    private @JsonProperty("message") ChatCompletionMessage message;
-    private @JsonProperty("finish_reason") String finishReason;
+    @JsonProperty("json_schema")
+    JSON_SCHEMA,
 
-    public int getIndex()
-    {
-        return index;
-    }
-
-    public void setIndex(int aIndex)
-    {
-        index = aIndex;
-    }
-
-    public ChatCompletionMessage getMessage()
-    {
-        return message;
-    }
-
-    public void setMessage(ChatCompletionMessage aMessage)
-    {
-        message = aMessage;
-    }
-
-    public String getFinishReason()
-    {
-        return finishReason;
-    }
-
-    public void setFinishReason(String aFinishReason)
-    {
-        finishReason = aFinishReason;
-    }
+    @JsonProperty("json_object")
+    @JsonAlias({ "json" })
+    JSON_OBJECT;
 }

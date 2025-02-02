@@ -21,39 +21,39 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class ChatCompletionMessage
+public class AzureAiChatCompletionChoice
 {
-    private @JsonProperty("role") String role;
-    private @JsonProperty("content") String content;
+    private @JsonProperty("index") int index;
+    private @JsonProperty("message") AzureAiChatCompletionMessage message;
+    private @JsonProperty("finish_reason") String finishReason;
 
-    public ChatCompletionMessage()
+    public int getIndex()
     {
-        // No args
+        return index;
     }
 
-    public ChatCompletionMessage(String aRole, String aContent)
+    public void setIndex(int aIndex)
     {
-        role = aRole;
-        content = aContent;
+        index = aIndex;
     }
 
-    public String getRole()
+    public AzureAiChatCompletionMessage getMessage()
     {
-        return role;
+        return message;
     }
 
-    public void setRole(String aRole)
+    public void setMessage(AzureAiChatCompletionMessage aMessage)
     {
-        role = aRole;
+        message = aMessage;
     }
 
-    public String getContent()
+    public String getFinishReason()
     {
-        return content;
+        return finishReason;
     }
 
-    public void setContent(String aContent)
+    public void setFinishReason(String aFinishReason)
     {
-        content = aContent;
+        finishReason = aFinishReason;
     }
 }

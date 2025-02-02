@@ -20,6 +20,8 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.llm.chatgpt.client;
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 import static java.util.Arrays.asList;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -45,11 +47,11 @@ public class ChatCompletionRequest
     private final @JsonIgnore String apiKey;
     private final String model;
     private final List<ChatCompletionMessage> messages;
-    private final @JsonProperty("response_format") @JsonInclude(NON_NULL) ResponseFormat format;
+    private final @JsonProperty("response_format") @JsonInclude(NON_NULL) ChatGptResponseFormat format;
 
     private ChatCompletionRequest(Builder builder)
     {
-        messages = asList(new ChatCompletionMessage("user", builder.prompt));
+        messages = builder.messages;
         format = builder.format;
         model = builder.model;
         apiKey = builder.apiKey;
@@ -65,7 +67,7 @@ public class ChatCompletionRequest
         return model;
     }
 
-    public ResponseFormat getFormat()
+    public ChatGptResponseFormat getFormat()
     {
         return format;
     }
@@ -84,9 +86,9 @@ public class ChatCompletionRequest
     {
         private String model;
         private String apiKey;
-        private String prompt;
-        private ResponseFormat format;
-        private Map<String, Object> options = new HashMap<>();
+        private ChatGptResponseFormat format;
+        private final List<ChatCompletionMessage> messages = new ArrayList<>();
+        private final Map<String, Object> options = new HashMap<>();
 
         private Builder()
         {
@@ -106,11 +108,35 @@ public class ChatCompletionRequest
 
         public Builder withPrompt(String aPrompt)
         {
-            prompt = aPrompt;
+            withMessages(new ChatCompletionMessage("user", aPrompt));
             return this;
         }
 
-        public Builder withResponseFormat(ResponseFormat aFormat)
+        public Builder withMessages(Collection<ChatCompletionMessage> aChatCompletionMessages)
+        {
+            messages.clear();
+            if (aChatCompletionMessages != null) {
+                messages.addAll(aChatCompletionMessages);
+            }
+            return this;
+        }
+
+        public Builder withMessages(ChatCompletionMessage... aChatCompletionMessages)
+        {
+            messages.clear();
+            addMessages(aChatCompletionMessages);
+            return this;
+        }
+
+        public Builder addMessages(ChatCompletionMessage... aChatCompletionMessages)
+        {
+            if (aChatCompletionMessages != null) {
+                messages.addAll(asList(aChatCompletionMessages));
+            }
+            return this;
+        }
+
+        public Builder withResponseFormat(ChatGptResponseFormat aFormat)
         {
             format = aFormat;
             return this;

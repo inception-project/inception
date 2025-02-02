@@ -23,27 +23,35 @@ public enum PromptingMode
 {
     @JsonProperty("per-annotation")
     PER_ANNOTATION("""
-                   Template variables:
+            Template variables:
 
-                   * `text`: annotation text
-                   * `tags`: tagset (if available)
-                   * `sentence`: sentence containing annotation
-                   * `examples`: labeled annotations"""),
+            * `text`: annotation text
+            * `tags`: tagset (if available)
+            * `sentence`: sentence containing annotation
+            * `examples`: labeled annotations"""),
 
     @JsonProperty("per-sentence")
     PER_SENTENCE("""
-                 Template variables:
+            Template variables:
 
-                 * `text`: sentence text
-                 * `tags`: tagset (if available)
-                 * `examples`: labeled annotations"""),
+            * `text`: sentence text
+            * `tags`: tagset (if available)
+            * `examples`: labeled annotations"""),
+
+    @JsonProperty("per-paragraph")
+    PER_PARAGRAPH("""
+            Template variables:
+
+            * `text`: paragraph text
+            * `tags`: tagset (if available)
+            * `examples`: labeled annotations"""),
 
     @JsonProperty("per-document")
     PER_DOCUMENT("""
-                 Template variables:
+            Template variables:
 
-                 * `text`: document text,
-                 * `tags`: tagset (if available)""");
+            * `text`: document text,
+            * `tags`: tagset (if available)""");
 
     private final String hints;
 

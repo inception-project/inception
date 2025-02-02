@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.azureaiopenai.client;
 
-import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.azureaiopenai.client.GenerateResponseFormat.JSON;
+import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.azureaiopenai.client.AzureAiGenerateResponseFormat.JSON_OBJECT;
 import static org.assertj.core.api.Assumptions.assumeThat;
 
 import java.lang.invoke.MethodHandles;
@@ -27,8 +27,8 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.azureaiopenai.client.AzureAiChatCompletionRequest;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.azureaiopenai.client.AzureAiOpenAiClientImpl;
-import de.tudarmstadt.ukp.inception.recommendation.imls.llm.azureaiopenai.client.ChatCompletionRequest;
 
 class OpenAiClientTest
 {
@@ -49,10 +49,10 @@ class OpenAiClientTest
     @Test
     void testNonStream() throws Exception
     {
-        var response = sut.generate(OPENAI_BASE_URL, ChatCompletionRequest.builder() //
+        var response = sut.generate(OPENAI_BASE_URL, AzureAiChatCompletionRequest.builder() //
                 // .withModel("gpt-35-turbo-0301") //
                 .withApiKey(OPENAI_API_KEY) //
-                .withUserPrompt("Tell me a joke.") //
+                .withPrompt("Tell me a joke.") //
                 .build());
         LOG.info("Response: [{}]", response.trim());
     }
@@ -60,11 +60,11 @@ class OpenAiClientTest
     @Test
     void testJson() throws Exception
     {
-        var response = sut.generate(OPENAI_BASE_URL, ChatCompletionRequest.builder() //
+        var response = sut.generate(OPENAI_BASE_URL, AzureAiChatCompletionRequest.builder() //
                 // .withModel("gpt-35-turbo-0301") //
                 .withApiKey(OPENAI_API_KEY) //
-                .withUserPrompt("Generate a JSON map with the key/value pairs `a = 1` and `b = 2`") //
-                .withFormat(JSON) //
+                .withPrompt("Generate a JSON map with the key/value pairs `a = 1` and `b = 2`") //
+                .withFormat(JSON_OBJECT) //
                 .build());
         LOG.info("Response: [{}]", response.trim());
     }

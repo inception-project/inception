@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client;
 
 import static java.lang.String.format;
+import static java.lang.System.currentTimeMillis;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.commons.lang3.StringUtils.appendIfMissing;
 import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
@@ -137,6 +138,8 @@ public class OllamaClientImpl
             Consumer<OllamaChatResponse> aCallback)
         throws IOException
     {
+        var startTime = currentTimeMillis();
+
         if (LOG.isTraceEnabled()) {
             LOG.trace("Sending chat request: {}", JSONUtil.toPrettyJsonString(aRequest));
         }
@@ -177,6 +180,9 @@ public class OllamaClientImpl
 
         finalResponse.setMessage(
                 new OllamaChatMessage(finalResponse.getMessage().role(), result.toString().trim()));
+
+        LOG.trace("[{}] responds ({} ms): [{}]", aRequest.getModel(),
+                currentTimeMillis() - startTime, finalResponse.getMessage().content());
 
         return finalResponse;
     }

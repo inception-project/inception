@@ -772,6 +772,16 @@
         <artifactId>json-schema-validator</artifactId>
         <version>${json-schema-validator.version}</version>
       </dependency>
+      <dependency>
+        <groupId>com.github.victools</groupId>
+        <artifactId>jsonschema-generator</artifactId>
+        <version>${json-schema-generator.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.github.victools</groupId>
+        <artifactId>jsonschema-module-jackson</artifactId>
+        <version>${json-schema-generator.version}</version>
+      </dependency>
 
       <!-- SPRING SECURITY -->
       <dependency>
@@ -1247,6 +1257,12 @@
         <groupId>org.cyberborean</groupId>
         <artifactId>rdfbeans</artifactId>
         <version>2.2</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.knuddels</groupId>
+        <artifactId>jtokkit</artifactId>
+        <version>1.1.0</version>
       </dependency>
 
       <dependency>

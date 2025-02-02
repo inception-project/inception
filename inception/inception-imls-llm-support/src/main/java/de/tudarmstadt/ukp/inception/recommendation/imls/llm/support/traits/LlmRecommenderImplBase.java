@@ -26,7 +26,9 @@ import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMess
 
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -39,10 +41,17 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.NonTrainableR
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.PredictionContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.prompt.JinjaPromptRenderer;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.response.MentionsSample;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.response.ResponseExtractor;
 import de.tudarmstadt.ukp.inception.rendering.model.Range;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 
+/**
+ * @deprecated No longer used. We use the {@link ChatBasedLlmRecommenderImplBase} now.
+ * @forRemoval 37.0
+ */
+@Deprecated(since = "36.0")
 public abstract class LlmRecommenderImplBase<T extends LlmRecommenderTraits>
     extends NonTrainableRecommenderEngineImplBase
 {
@@ -88,9 +97,24 @@ public abstract class LlmRecommenderImplBase<T extends LlmRecommenderTraits>
 
     private void provideExamples(Map<String, Object> globalBindings, CAS aCas)
     {
-        var responseExtractor = getResponseExtractor(traits.getExtractionMode());
-        var examples = responseExtractor.generate(this, aCas, MAX_FEW_SHOT_EXAMPLES);
+        var responseExtractor = getResponseExtractor(traits);
+        var examples = generateExamples(aCas, responseExtractor);
         globalBindings.put(VAR_EXAMPLES, examples);
+    }
+
+    private List<MentionsSample> generateExamples(CAS aCas, ResponseExtractor responseExtractor)
+    {
+        var examples = responseExtractor.generateExamples(this, aCas, MAX_FEW_SHOT_EXAMPLES);
+
+        var mentionSamples = new ArrayList<MentionsSample>();
+        for (var e : examples.entrySet()) {
+            var sample = new MentionsSample(e.getKey());
+            for (var m : e.getValue().getMentions()) {
+                sample.addMention(m.getCoveredText(), m.getLabel());
+            }
+        }
+
+        return mentionSamples;
     }
 
     @Override
@@ -99,7 +123,7 @@ public abstract class LlmRecommenderImplBase<T extends LlmRecommenderTraits>
     {
         var globalBindings = prepareGlobalBindings(aCas);
 
-        var responseExtractor = getResponseExtractor(traits.getExtractionMode());
+        var responseExtractor = getResponseExtractor(traits);
 
         var contexts = getPromptContextGenerator(traits.getPromptingMode()) //
                 .generate(this, aCas, aBegin, aEnd, globalBindings);
@@ -108,7 +132,7 @@ public abstract class LlmRecommenderImplBase<T extends LlmRecommenderTraits>
             try {
                 var prompt = promptRenderer.render(traits.getPrompt(), promptContext);
                 var response = exchange(prompt);
-                responseExtractor.extract(this, aCas, promptContext, response);
+                responseExtractor.extractMentions(this, aCas, promptContext, response);
             }
             catch (IOException e) {
                 aContext.log(LogMessage.warn(getRecommender().getName(),

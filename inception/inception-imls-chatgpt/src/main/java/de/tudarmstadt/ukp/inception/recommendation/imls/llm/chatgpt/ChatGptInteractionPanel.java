@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.llm.chatgpt;
 
-import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.response.ExtractionMode.MENTIONS_FROM_JSON;
 import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CHANGE_EVENT;
 
 import java.util.List;
@@ -40,9 +39,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.Recommendatio
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.preset.Preset;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.prompt.PromptingModeSelect;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.response.ExtractionModeSelect;
-import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.response.ResponseFormat;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
-import de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.inception.support.markdown.MarkdownLabel;
 
 public class ChatGptInteractionPanel
@@ -54,7 +51,6 @@ public class ChatGptInteractionPanel
     private static final String MID_PROMPT = "prompt";
     private static final String MID_NAME = "name";
     private static final String MID_PRESET = "preset";
-    private static final String MID_FORMAT = "format";
     private static final String MID_EXTRACTION_MODE = "extractionMode";
     private static final String MID_PROMPTING_MODE = "promptingMode";
     private static final String MID_PROMPT_HINTS = "promptHints";
@@ -105,30 +101,10 @@ public class ChatGptInteractionPanel
                 .add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT,
                         _target -> _target.add(markdownLabel))));
 
-        var responseFormat = new ChatGptResponseFormatSelect(MID_FORMAT);
-        responseFormat.setOutputMarkupPlaceholderTag(true);
-        responseFormat.add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT));
-        responseFormat.add(LambdaBehavior
-                .visibleWhen(traits.map(t -> t.getExtractionMode() != MENTIONS_FROM_JSON)));
-        form.add(responseFormat);
-
         form.add(new ExtractionModeSelect(MID_EXTRACTION_MODE, traits.bind(MID_EXTRACTION_MODE),
-                getModel())
-                        .add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT,
-                                _target -> actionExtractionModeChanged(markdownLabel,
-                                        responseFormat, _target))));
+                getModel()));
 
         add(form);
-    }
-
-    private void actionExtractionModeChanged(MarkdownLabel markdownLabel,
-            ChatGptResponseFormatSelect responseFormat, AjaxRequestTarget _target)
-    {
-        if (traits.getObject().getExtractionMode() == MENTIONS_FROM_JSON) {
-            traits.getObject().setFormat(ResponseFormat.JSON);
-        }
-
-        _target.add(markdownLabel, responseFormat);
     }
 
     private void applyPreset(Form<ChatGptRecommenderTraits> aForm, Preset aPreset,
@@ -138,7 +114,6 @@ public class ChatGptInteractionPanel
             var settings = traits.getObject();
             settings.setPrompt(aPreset.getPrompt());
             settings.setExtractionMode(aPreset.getExtractionMode());
-            settings.setFormat(aPreset.getFormat());
             settings.setPromptingMode(aPreset.getPromptingMode());
         }
         aTarget.add(aForm);

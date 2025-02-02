@@ -31,15 +31,15 @@ public class ChatGptRecommenderTraits
 {
     private static final long serialVersionUID = 6433061638746045602L;
 
-    public static final String OPENAI_API_URL = "https://api.openai.com/v1";
-    public static final String LOCAL_OLLAMA_API_URL = "http://localhost:11434/v1";
-    public static final String GROQ_API_URL = "https://api.groq.com/openai/v1";
-    public static final String CEREBRAS_API_URL = "https://api.cerebras.ai/v1";
+    public static final String OPENAI_API_URL = "https://api.openai.com";
+    public static final String LOCAL_OLLAMA_API_URL = "http://localhost:11434";
+    public static final String GROQ_API_URL = "https://api.groq.com/openai";
+    public static final String CEREBRAS_API_URL = "https://api.cerebras.ai";
 
     public ChatGptRecommenderTraits()
     {
         setUrl(OPENAI_API_URL);
-        setModel("gpt-3.5-turbo");
+        setModel("gpt-4o-mini");
         setAuthentication(new ApiKeyAuthenticationTraits());
     }
 }

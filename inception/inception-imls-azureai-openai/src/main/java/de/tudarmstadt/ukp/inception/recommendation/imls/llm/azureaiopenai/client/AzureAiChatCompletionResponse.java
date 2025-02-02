@@ -15,11 +15,47 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.assistant.userguide;
+package de.tudarmstadt.ukp.inception.recommendation.imls.llm.azureaiopenai.client;
+
+import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-@JsonSerialize
 @JsonIgnoreProperties(ignoreUnknown = true)
-public record UserGuideIndexMetadata(String version, String model, int dimension) {}
+public class AzureAiChatCompletionResponse
+{
+    private @JsonProperty("model") String model;
+    private @JsonProperty("created") long createdAt;
+    private @JsonProperty("choices") List<AzureAiChatCompletionChoice> choices;
+
+    public String getModel()
+    {
+        return model;
+    }
+
+    public void setModel(String aModel)
+    {
+        model = aModel;
+    }
+
+    public long getCreatedAt()
+    {
+        return createdAt;
+    }
+
+    public void setCreatedAt(long aCreatedAt)
+    {
+        createdAt = aCreatedAt;
+    }
+
+    public List<AzureAiChatCompletionChoice> getChoices()
+    {
+        return choices;
+    }
+
+    public void setChoices(List<AzureAiChatCompletionChoice> aChoices)
+    {
+        choices = aChoices;
+    }
+}

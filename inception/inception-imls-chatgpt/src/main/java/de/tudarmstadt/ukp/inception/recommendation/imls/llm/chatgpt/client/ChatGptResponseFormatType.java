@@ -20,7 +20,7 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.llm.chatgpt.client;
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public enum ResponseFormatType
+public enum ChatGptResponseFormatType
 {
     @JsonProperty("json_schema")
     JSON_SCHEMA,

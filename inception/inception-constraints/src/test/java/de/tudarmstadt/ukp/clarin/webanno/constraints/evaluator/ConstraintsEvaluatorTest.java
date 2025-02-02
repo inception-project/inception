@@ -91,14 +91,14 @@ class ConstraintsEvaluatorTest
             cas.setDocumentText("text");
 
             constraints = parse("""
-                                import my.Span as Span;
+                    import my.Span as Span;
 
-                                Span {
-                                  X = "A" -> Y = "1";
-                                  Z = "B" -> Y = "2";
-                                  X = "C" & Z = "D" -> Y = "3";
-                                }
-                                """);
+                    Span {
+                      X = "A" -> Y = "1";
+                      Z = "B" -> Y = "2";
+                      X = "C" & Z = "D" -> Y = "3";
+                    }
+                    """);
             featX = AnnotationFeature.builder() //
                     .withName(spanFeatX.getName()) //
                     .build();
@@ -164,8 +164,7 @@ class ConstraintsEvaluatorTest
         void setup() throws Exception
         {
             cas = CasFactory.createText("text");
-            constraints = parse(
-                    """
+            constraints = parse("""
                     import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS as POS;
 
                     POS {
@@ -221,8 +220,7 @@ class ConstraintsEvaluatorTest
     @Test
     void testSimpleFeature() throws Exception
     {
-        var constraints = parse(
-                """
+        var constraints = parse("""
                 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma as Lemma;
 
                 Lemma {
@@ -246,12 +244,12 @@ class ConstraintsEvaluatorTest
     {
         var constraints = parse(
                 """
-                import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency as DEPENDENCY;
+                        import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency as DEPENDENCY;
 
-                DEPENDENCY {
-                  Governor.pos.PosValue = "NN" & Dependent.pos.PosValue = "DET" -> DependencyType = "det";
-                }
-                """);
+                        DEPENDENCY {
+                          Governor.pos.PosValue = "NN" & Dependent.pos.PosValue = "DET" -> DependencyType = "det";
+                        }
+                        """);
 
         var jcas = JCasFactory.createJCas();
         jcas.setDocumentText("The sun.");
@@ -291,8 +289,7 @@ class ConstraintsEvaluatorTest
     @Test
     void testTwoConditions() throws Exception
     {
-        var constraints = parse(
-                """
+        var constraints = parse("""
                 import webanno.custom.Relation as RELATIONS;
 
                 RELATIONS {

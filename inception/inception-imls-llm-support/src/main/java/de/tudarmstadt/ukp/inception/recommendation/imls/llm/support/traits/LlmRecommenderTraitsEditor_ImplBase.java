@@ -54,7 +54,6 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.Recommendatio
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.preset.Preset;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.prompt.PromptingModeSelect;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.response.ExtractionModeSelect;
-import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.response.ResponseFormatSelect;
 import de.tudarmstadt.ukp.inception.security.client.auth.AuthenticationTraitsEditor;
 import de.tudarmstadt.ukp.inception.security.client.auth.NoAuthenticationTraitsEditor;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
@@ -70,7 +69,6 @@ public abstract class LlmRecommenderTraitsEditor_ImplBase
     private static final String MID_PROMPT_CONTAINER = "promptContainer";
     private static final String MID_PROMPT_HINTS = "promptHints";
     private static final String MID_PROMPT = "prompt";
-    private static final String MID_FORMAT = "format";
     private static final String MID_EXTRACTION_MODE = "extractionMode";
     private static final String MID_PROMPTING_MODE = "promptingMode";
     private static final String MID_URL = "url";
@@ -168,7 +166,6 @@ public abstract class LlmRecommenderTraitsEditor_ImplBase
                         _target -> _target.add(markdownLabel))));
         promptContainer.add(new ExtractionModeSelect(MID_EXTRACTION_MODE,
                 traits.bind(MID_EXTRACTION_MODE), getModel()));
-        promptContainer.add(new ResponseFormatSelect(MID_FORMAT));
         add(form);
 
         authenticationTraitsEditor = createAuthenticationTraitsEditor("authentication");
@@ -179,11 +176,17 @@ public abstract class LlmRecommenderTraitsEditor_ImplBase
                 .add(visibleWhen(properties::isEnabled)) //
                 .add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT,
                         $ -> $.add(promptContainer))));
+
+        form.add(new CheckBox("structuredOutputSupported") //
+                .setOutputMarkupId(true));
+
     }
 
     protected AuthenticationTraitsEditor createAuthenticationTraitsEditor(String aId)
     {
-        return new NoAuthenticationTraitsEditor(aId);
+        var editor = new NoAuthenticationTraitsEditor(aId);
+        editor.setVisible(false);
+        return editor;
     }
 
     protected void onSubmit()
@@ -204,7 +207,6 @@ public abstract class LlmRecommenderTraitsEditor_ImplBase
             var settings = traits.getObject();
             settings.setPrompt(aPreset.getPrompt());
             settings.setExtractionMode(aPreset.getExtractionMode());
-            settings.setFormat(aPreset.getFormat());
             settings.setPromptingMode(aPreset.getPromptingMode());
         }
         aTarget.add(aForm);

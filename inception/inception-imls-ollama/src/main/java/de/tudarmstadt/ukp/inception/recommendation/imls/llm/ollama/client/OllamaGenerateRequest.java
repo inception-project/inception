@@ -22,6 +22,7 @@ import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.databind.JsonNode;
 
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.traits.Option;
 
@@ -30,7 +31,7 @@ public class OllamaGenerateRequest
     private String model;
     private String prompt;
     private boolean stream;
-    private @JsonInclude(Include.NON_NULL) OllamaGenerateResponseFormat format;
+    private @JsonInclude(Include.NON_NULL) JsonNode format;
     private @JsonInclude(Include.NON_DEFAULT) boolean raw;
     private @JsonInclude(Include.NON_EMPTY) Map<String, Object> options = new HashMap<>();
 
@@ -44,7 +45,7 @@ public class OllamaGenerateRequest
         options = builder.options;
     }
 
-    public OllamaGenerateResponseFormat getFormat()
+    public JsonNode getFormat()
     {
         return format;
     }
@@ -83,7 +84,7 @@ public class OllamaGenerateRequest
     {
         private String model;
         private String prompt;
-        private OllamaGenerateResponseFormat format;
+        private JsonNode format;
         private boolean raw;
         private boolean stream;
         private Map<String, Object> options = new HashMap<>();
@@ -104,7 +105,7 @@ public class OllamaGenerateRequest
             return this;
         }
 
-        public Builder withFormat(OllamaGenerateResponseFormat aFormat)
+        public Builder withFormat(JsonNode aFormat)
         {
             format = aFormat;
             return this;
