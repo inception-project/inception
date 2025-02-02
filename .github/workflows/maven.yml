@@ -36,6 +36,7 @@ jobs:
           archive.ics.uci.edu:80
           auth.docker.io:443
           build.shibboleth.net:443
+          centralus.data.mcr.microsoft.com:443
           download.eclipse.org:443
           eastus.data.mcr.microsoft.com:443
           github.com:443
@@ -46,6 +47,7 @@ jobs:
           registry-1.docker.io:443
           registry.npmjs.org:443
           repo.maven.apache.org:443
+          repo.spring.io:443
           repo1.maven.org:443
           westus.data.mcr.microsoft.com:443
           westus2.data.mcr.microsoft.com:443
