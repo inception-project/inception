@@ -15,33 +15,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.io.docx;
+package de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.traits;
 
-import java.io.IOException;
-import java.io.InputStream;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-import javax.xml.parsers.ParserConfigurationException;
-
-import org.apache.uima.jcas.JCas;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
-
-import de.tudarmstadt.ukp.inception.io.xml.dkprocore.CasXmlHandler;
-import de.tudarmstadt.ukp.inception.support.xml.XmlParserUtils;
-
-public class DocxToCas
-{
-    public void loadXml(JCas aJCas, InputStream aInputStream) throws IOException
+@JsonIgnoreProperties(ignoreUnknown = true)
+public record ChatMessage(Role role, String content) {
+    public static enum Role
     {
-        CasXmlHandler handler = new CasXmlHandler(aJCas);
-        handler.captureText(true);
+        SYSTEM("system"), //
+        ASSISTANT("assistant"), //
+        USER("user");
 
-        try {
-            var parser = XmlParserUtils.newSaxParser();
-            parser.parse(new InputSource(aInputStream), handler);
+        private final String name;
+
+        private Role(String aName)
+        {
+            name = aName;
         }
-        catch (ParserConfigurationException | SAXException e) {
-            throw new IOException(e);
+
+        public String getName()
+        {
+            return name;
         }
     }
+
 }

@@ -21,5 +21,5 @@ import java.io.IOException;
 
 public interface ChatGptClient
 {
-    String generate(String aUrl, ChatCompletionRequest aRequest) throws IOException;
+    String chat(String aUrl, ChatCompletionRequest aRequest) throws IOException;
 }

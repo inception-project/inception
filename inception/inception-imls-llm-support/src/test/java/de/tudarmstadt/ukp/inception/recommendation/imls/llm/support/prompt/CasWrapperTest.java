@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.imls.support.llm.prompt;
+package de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.prompt;
 
 import static de.tudarmstadt.ukp.inception.support.uima.AnnotationBuilder.buildAnnotation;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -30,7 +30,6 @@ import com.hubspot.jinjava.Jinjava;
 import com.hubspot.jinjava.JinjavaConfig;
 
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
-import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.prompt.CasWrapper;
 
 class CasWrapperTest
 {
@@ -47,15 +46,15 @@ class CasWrapperTest
     void thatSelectCanAccessAnnotationsFromCas() throws Exception
     {
         var script = """
-                     {% for x in cas.select('NamedEntity') %}
-                     {{ x }}{% endfor %}""";
+                {% for x in cas.select('NamedEntity') %}
+                {{ x }}{% endfor %}""";
 
         var bindings = Map.of("test", "test");
 
         var cas = CasFactory.createCas();
         cas.setDocumentText("""
-                            My name is John McCain.
-                            His name is Mickey.""");
+                My name is John McCain.
+                His name is Mickey.""");
         buildAnnotation(cas, NamedEntity.class).on("John McCain").buildAndAddToIndexes();
         buildAnnotation(cas, NamedEntity.class).on("Mickey").buildAndAddToIndexes();
 

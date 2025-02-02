@@ -22,20 +22,36 @@ import java.util.Map;
 
 import org.apache.uima.cas.text.AnnotationFS;
 
+import de.tudarmstadt.ukp.inception.rendering.model.Range;
+
 public class PromptContext
 {
-    private final AnnotationFS candidate;
+    private final Range range;
+    private final String text;
     private final Map<String, Object> bindings;
 
     public PromptContext(AnnotationFS aCandidate)
     {
-        candidate = aCandidate;
+        range = new Range(aCandidate);
+        text = aCandidate.getCoveredText().replace("\r\n", "\n");
         bindings = new HashMap<>();
     }
 
-    public AnnotationFS getCandidate()
+    public PromptContext(int aBegin, int aEnd, String aText)
     {
-        return candidate;
+        range = new Range(aBegin, aEnd);
+        text = aText;
+        bindings = new HashMap<>();
+    }
+
+    public Range getRange()
+    {
+        return range;
+    }
+
+    public String getText()
+    {
+        return text;
     }
 
     public void set(String aKey, Object aValue)

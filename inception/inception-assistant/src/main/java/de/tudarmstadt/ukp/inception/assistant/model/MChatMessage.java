@@ -31,6 +31,6 @@ public sealed interface MChatMessage
      *         the user
      */
     boolean internal();
-    
+
     MPerformanceMetrics performance();
 }

@@ -15,47 +15,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.imls.llm.azureaiopenai.client;
+package de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.response;
 
-import java.util.List;
-
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
-public class ChatCompletionResponse
+public class Mention
 {
-    private @JsonProperty("model") String model;
-    private @JsonProperty("created") long createdAt;
-    private @JsonProperty("choices") List<ChatCompletionChoice> choices;
+    private final @JsonProperty(required = true) String coveredText;
+    private final @JsonProperty(required = true) String label;
 
-    public String getModel()
+    @JsonCreator
+    public Mention( //
+            @JsonProperty("coveredText") String aCoveredText, //
+            @JsonProperty("label") String aLabel)
     {
-        return model;
+        coveredText = aCoveredText;
+        label = aLabel;
     }
 
-    public void setModel(String aModel)
+    public String getCoveredText()
     {
-        model = aModel;
+        return coveredText;
     }
 
-    public long getCreatedAt()
+    public String getLabel()
     {
-        return createdAt;
-    }
-
-    public void setCreatedAt(long aCreatedAt)
-    {
-        createdAt = aCreatedAt;
-    }
-
-    public List<ChatCompletionChoice> getChoices()
-    {
-        return choices;
-    }
-
-    public void setChoices(List<ChatCompletionChoice> aChoices)
-    {
-        choices = aChoices;
+        return label;
     }
 }

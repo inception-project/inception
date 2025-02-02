@@ -18,27 +18,31 @@
 package de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.traits;
 
 import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.prompt.PromptContextGenerator.VAR_EXAMPLES;
-import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.prompt.PromptContextGenerator.VAR_TAGS;
 import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.prompt.PromptContextGenerator.getPromptContextGenerator;
 import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.response.ResponseExtractor.getResponseExtractor;
-import static java.util.stream.Collectors.toMap;
+import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.traits.ChatMessage.Role.SYSTEM;
+import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.traits.ChatMessage.Role.USER;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMessage;
 
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 import org.apache.uima.cas.CAS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.fasterxml.jackson.databind.JsonNode;
 
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.NonTrainableRecommenderEngineImplBase;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.PredictionContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.prompt.JinjaPromptRenderer;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.response.ResponseFormat;
 import de.tudarmstadt.ukp.inception.rendering.model.Range;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
@@ -69,27 +73,14 @@ public abstract class ChatBasedLlmRecommenderImplBase<T extends LlmRecommenderTr
         var globalBindings = new LinkedHashMap<String, Object>();
 
         provideExamples(globalBindings, aCas);
-        provideTagSet(globalBindings);
 
         return globalBindings;
     }
 
-    private void provideTagSet(Map<String, Object> globalBindings)
-    {
-        var tagset = getRecommender().getFeature().getTagset();
-        if (tagset != null) {
-            var tags = schemaService.listTags(tagset).stream() //
-                    .collect(toMap( //
-                            tag -> tag.getName(), //
-                            tag -> Objects.toString(tag.getDescription(), "")));
-            globalBindings.put(VAR_TAGS, tags);
-        }
-    }
-
     private void provideExamples(Map<String, Object> globalBindings, CAS aCas)
     {
-        var responseExtractor = getResponseExtractor(traits.getExtractionMode());
-        var examples = responseExtractor.generate(this, aCas, MAX_FEW_SHOT_EXAMPLES);
+        var responseExtractor = getResponseExtractor(traits);
+        var examples = responseExtractor.generateExamples(this, aCas, MAX_FEW_SHOT_EXAMPLES);
         globalBindings.put(VAR_EXAMPLES, examples);
     }
 
@@ -97,18 +88,28 @@ public abstract class ChatBasedLlmRecommenderImplBase<T extends LlmRecommenderTr
     public Range predict(PredictionContext aContext, CAS aCas, int aBegin, int aEnd)
         throws RecommendationException
     {
+        var responseExtractor = getResponseExtractor(traits);
+
+        var staticMessages = new ArrayList<ChatMessage>();
+
+        staticMessages.addAll(
+                responseExtractor.getFormatDefiningMessages(getRecommender(), schemaService));
+
+        var responseformat = responseExtractor.getResponseFormat();
+        var jsonSchema = responseExtractor.getJsonSchema();
+
         var globalBindings = prepareGlobalBindings(aCas);
-
-        var responseExtractor = getResponseExtractor(traits.getExtractionMode());
-
         var contexts = getPromptContextGenerator(traits.getPromptingMode()) //
                 .generate(this, aCas, aBegin, aEnd, globalBindings);
 
         contexts.forEach(promptContext -> {
             try {
-                var prompt = promptRenderer.render(traits.getPrompt(), promptContext);
-                var response = exchange(prompt);
-                responseExtractor.extract(this, aCas, promptContext, response);
+                var messages = new ArrayList<>(staticMessages);
+                messages.add(new ChatMessage(SYSTEM, "# Context\n\n" + promptContext.getText()));
+                messages.add(new ChatMessage(USER, traits.getPrompt()));
+                var response = exchange(messages, responseformat.orElse(null),
+                        jsonSchema.orElse(null));
+                responseExtractor.extractMentions(this, aCas, promptContext, response);
             }
             catch (IOException e) {
                 aContext.log(LogMessage.warn(getRecommender().getName(),
@@ -120,5 +121,7 @@ public abstract class ChatBasedLlmRecommenderImplBase<T extends LlmRecommenderTr
         return new Range(aBegin, aEnd);
     }
 
-    protected abstract String exchange(String aPrompt) throws IOException;
+    protected abstract String exchange(List<ChatMessage> aPrompt, ResponseFormat aResponseformat,
+            JsonNode aJsonSchema)
+        throws IOException;
 }

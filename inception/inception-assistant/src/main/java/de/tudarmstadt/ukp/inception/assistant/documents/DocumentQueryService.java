@@ -27,7 +27,7 @@ public interface DocumentQueryService
     final String FIELD_EMBEDDING = "field";
     final String FIELD_RANGE = "range";
 
-    // Stored fields    
+    // Stored fields
     final String FIELD_SOURCE_DOC_COMPLETE = "sourceDocComplete";
     final String FIELD_SOURCE_DOC_ID = "sourceDoc";
     final String FIELD_SECTION = "section";

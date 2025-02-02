@@ -15,37 +15,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.response;
+package de.tudarmstadt.ukp.inception.recommendation.imls.llm.azureaiopenai.client;
 
-import static java.util.Arrays.asList;
+import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 
-import org.apache.wicket.markup.html.form.DropDownChoice;
-import org.apache.wicket.markup.html.form.EnumChoiceRenderer;
-import org.apache.wicket.model.IModel;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.JsonNode;
 
-public class ResponseFormatSelect
-    extends DropDownChoice<ResponseFormat>
+@JsonInclude(NON_NULL)
+public class AzureAiSchemaResponseDefinition
 {
-    private static final long serialVersionUID = 3115872987735239823L;
+    private final @JsonProperty("name") String name;
+    private final @JsonProperty("schema") JsonNode schema;
 
-    public ResponseFormatSelect(String aId)
+    public AzureAiSchemaResponseDefinition(String aName, JsonNode aSchema)
     {
-        super(aId);
+        name = aName;
+        schema = aSchema;
     }
 
-    public ResponseFormatSelect(String aId, IModel<ResponseFormat> aModel)
+    public String getName()
     {
-        super(aId);
-        setModel(aModel);
+        return name;
     }
 
-    @Override
-    protected void onInitialize()
+    public JsonNode getSchema()
     {
-        super.onInitialize();
-
-        setChoiceRenderer(new EnumChoiceRenderer<>(this));
-        setChoices(asList(ResponseFormat.values()));
-        setNullValid(true);
+        return schema;
     }
 }

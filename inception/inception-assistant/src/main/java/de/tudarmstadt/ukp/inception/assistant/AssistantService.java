@@ -28,8 +28,7 @@ public interface AssistantService
 
     List<MTextMessage> getChatMessages(String aSessionOwner, Project aProject);
 
-    void processUserMessage(String aSessionOwner, Project aProject,
-            MTextMessage aMessage);
+    void processUserMessage(String aSessionOwner, Project aProject, MTextMessage aMessage);
 
     void clearConversation(String aSessionOwner, Project aProject);
 }

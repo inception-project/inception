@@ -179,35 +179,35 @@ public class SPARQLQueryBuilderLocalTestScenarios
             "    <#implicit-property-1> 'value1' .");
 
     static final String DATA_DEPRECATED = """
-                                          <#class-1>
-                                              rdf:type rdfs:Class ;
-                                              rdfs:label 'Class 1' ;
-                                              owl:deprecated true .
-                                          <#class-2>
-                                              rdf:type rdfs:Class ;
-                                              rdfs:label 'Class 2' ;
-                                              owl:deprecated false .
-                                          <#class-3>
-                                              rdf:type rdfs:Class ;
-                                              rdfs:label 'Class 3' ;
-                                              owl:deprecated 'lala' .
-                                          <#class-4>
-                                              rdf:type rdfs:Class ;
-                                              rdfs:label 'Class 4' ;
-                                              owl:deprecated 0 .
-                                          <#class-5>
-                                              rdf:type rdfs:Class ;
-                                              rdfs:label 'Class 5' ;
-                                              owl:deprecated 1 .
-                                          <#instance-1>
-                                              rdf:type <#class-1> ;
-                                              rdfs:label 'Instance 1' ;
-                                              owl:deprecated true .
-                                          <#property-1>
-                                              rdf:type rdf:Property ;
-                                              rdfs:label 'Property 1' ;
-                                              owl:deprecated true .
-                                          """;
+            <#class-1>
+                rdf:type rdfs:Class ;
+                rdfs:label 'Class 1' ;
+                owl:deprecated true .
+            <#class-2>
+                rdf:type rdfs:Class ;
+                rdfs:label 'Class 2' ;
+                owl:deprecated false .
+            <#class-3>
+                rdf:type rdfs:Class ;
+                rdfs:label 'Class 3' ;
+                owl:deprecated 'lala' .
+            <#class-4>
+                rdf:type rdfs:Class ;
+                rdfs:label 'Class 4' ;
+                owl:deprecated 0 .
+            <#class-5>
+                rdf:type rdfs:Class ;
+                rdfs:label 'Class 5' ;
+                owl:deprecated 1 .
+            <#instance-1>
+                rdf:type <#class-1> ;
+                rdfs:label 'Instance 1' ;
+                owl:deprecated true .
+            <#property-1>
+                rdf:type rdf:Property ;
+                rdfs:label 'Property 1' ;
+                owl:deprecated true .
+            """;
 
     private KnowledgeBase kb;
 

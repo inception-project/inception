@@ -18,7 +18,7 @@
 package de.tudarmstadt.ukp.inception.recommendation.imls.azureaiopenai.client;
 
 import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.chatgpt.ChatGptRecommenderTraits.OPENAI_API_URL;
-import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.chatgpt.client.ResponseFormatType.JSON_OBJECT;
+import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.chatgpt.client.ChatGptResponseFormatType.JSON_OBJECT;
 import static org.assertj.core.api.Assumptions.assumeThat;
 
 import java.lang.invoke.MethodHandles;
@@ -30,8 +30,8 @@ import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.chatgpt.client.ChatCompletionRequest;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.chatgpt.client.ChatGptClientImpl;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.chatgpt.client.ChatGptResponseFormat;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.chatgpt.client.ListModelsRequest;
-import de.tudarmstadt.ukp.inception.recommendation.imls.llm.chatgpt.client.ResponseFormat;
 
 class OpenAiClientTest
 {
@@ -53,7 +53,7 @@ class OpenAiClientTest
     @Test
     void testNonStream() throws Exception
     {
-        var response = sut.generate(CHATGPT_BASE_URL, ChatCompletionRequest.builder() //
+        var response = sut.chat(CHATGPT_BASE_URL, ChatCompletionRequest.builder() //
                 .withApiKey(CHATGPT_API_KEY) //
                 .withPrompt("Tell me a joke.") //
                 .build());
@@ -63,10 +63,10 @@ class OpenAiClientTest
     @Test
     void testJson() throws Exception
     {
-        var response = sut.generate(CHATGPT_BASE_URL, ChatCompletionRequest.builder() //
+        var response = sut.chat(CHATGPT_BASE_URL, ChatCompletionRequest.builder() //
                 .withApiKey(CHATGPT_API_KEY) //
                 .withPrompt("Generate a JSON map with the key/value pairs `a = 1` and `b = 2`") //
-                .withResponseFormat(ResponseFormat.builder().withType(JSON_OBJECT).build()) //
+                .withResponseFormat(ChatGptResponseFormat.builder().withType(JSON_OBJECT).build()) //
                 .build());
         LOG.info("Response: [{}]", response.trim());
     }

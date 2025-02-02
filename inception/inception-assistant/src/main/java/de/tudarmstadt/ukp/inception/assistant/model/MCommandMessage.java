@@ -21,5 +21,5 @@ public sealed interface MCommandMessage
     extends MMessage
     permits MRemoveConversationCommand
 {
-    
+
 }

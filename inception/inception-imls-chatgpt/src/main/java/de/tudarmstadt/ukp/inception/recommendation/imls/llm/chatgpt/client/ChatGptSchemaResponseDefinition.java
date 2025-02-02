@@ -15,12 +15,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.imls.llm.azureaiopenai.client;
+package de.tudarmstadt.ukp.inception.recommendation.imls.llm.chatgpt.client;
 
+import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.JsonNode;
 
-public enum GenerateResponseFormat
+@JsonInclude(NON_NULL)
+public class ChatGptSchemaResponseDefinition
 {
-    @JsonProperty("json")
-    JSON
+    private final @JsonProperty("name") String name;
+    private final @JsonProperty("schema") JsonNode schema;
+
+    public ChatGptSchemaResponseDefinition(String aName, JsonNode aSchema)
+    {
+        name = aName;
+        schema = aSchema;
+    }
+
+    public String getName()
+    {
+        return name;
+    }
+
+    public JsonNode getSchema()
+    {
+        return schema;
+    }
 }

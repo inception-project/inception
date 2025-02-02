@@ -17,22 +17,32 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.llm.azureaiopenai;
 
+import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.azureaiopenai.client.AzureAiResponseFormatType.JSON_OBJECT;
+import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.azureaiopenai.client.AzureAiResponseFormatType.JSON_SCHEMA;
+import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.response.ResponseFormat.JSON;
+
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.databind.JsonNode;
+
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.azureaiopenai.client.AzureAiChatCompletionMessage;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.azureaiopenai.client.AzureAiChatCompletionRequest;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.azureaiopenai.client.AzureAiGenerateResponseFormat;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.azureaiopenai.client.AzureAiOpenAiClient;
-import de.tudarmstadt.ukp.inception.recommendation.imls.llm.azureaiopenai.client.ChatCompletionRequest;
-import de.tudarmstadt.ukp.inception.recommendation.imls.llm.azureaiopenai.client.GenerateResponseFormat;
-import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.traits.LlmRecommenderImplBase;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.response.ResponseFormat;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.traits.ChatBasedLlmRecommenderImplBase;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.traits.ChatMessage;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.security.client.auth.apikey.ApiKeyAuthenticationTraits;
 
 public class AzureAiOpenAiRecommender
-    extends LlmRecommenderImplBase<AzureAiOpenAiRecommenderTraits>
+    extends ChatBasedLlmRecommenderImplBase<AzureAiOpenAiRecommenderTraits>
 {
     private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
@@ -48,14 +58,20 @@ public class AzureAiOpenAiRecommender
     }
 
     @Override
-    protected String exchange(String aPrompt) throws IOException
+    protected String exchange(List<ChatMessage> aMessages, ResponseFormat aResponseformat,
+            JsonNode aJsonSchema)
+        throws IOException
     {
-        var format = getResponseFormat();
+        var format = getResponseFormat(aResponseformat, aJsonSchema);
 
-        LOG.trace("Querying Azure AI OpenAI: [{}]", aPrompt);
-        var request = ChatCompletionRequest.builder() //
+        var messages = aMessages.stream() //
+                .map(m -> new AzureAiChatCompletionMessage(m.role().getName(), m.content())) //
+                .toList();
+
+        LOG.trace("Querying Azure AI OpenAI: [{}]", aMessages);
+        var request = AzureAiChatCompletionRequest.builder() //
                 .withApiKey(((ApiKeyAuthenticationTraits) traits.getAuthentication()).getApiKey()) //
-                .withUserPrompt(aPrompt) //
+                .withMessages(messages) //
                 .withFormat(format) //
                 .build();
         var response = client.generate(traits.getUrl(), request).trim();
@@ -63,15 +79,22 @@ public class AzureAiOpenAiRecommender
         return response;
     }
 
-    private GenerateResponseFormat getResponseFormat()
+    private AzureAiGenerateResponseFormat getResponseFormat(ResponseFormat aResponseformat,
+            JsonNode aSchema)
     {
-        GenerateResponseFormat format = null;
-        if (traits.getFormat() != null) {
-            format = switch (traits.getFormat()) {
-            case JSON -> GenerateResponseFormat.JSON;
-            default -> null;
-            };
+        if (aSchema != null) {
+            return AzureAiGenerateResponseFormat.builder() //
+                    .withType(JSON_SCHEMA) //
+                    .withSchema("response", aSchema) //
+                    .build();
         }
-        return format;
+
+        if (aResponseformat == JSON) {
+            return AzureAiGenerateResponseFormat.builder() //
+                    .withType(JSON_OBJECT) //
+                    .build();
+        }
+
+        return null;
     }
 }

@@ -25,9 +25,10 @@ public record MRemoveConversationCommand()
     implements MCommandMessage
 {
     static final String TYPE_CLEAR_CMD = "clearCmd";
-    
+
     @JsonProperty(MMessage.TYPE_FIELD)
-    public String getType() {
+    public String getType()
+    {
         return TYPE_CLEAR_CMD;
     }
 }

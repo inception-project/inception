@@ -168,6 +168,7 @@
     <woodstox-core.version>6.7.0</woodstox-core.version>
     <nimbus-jose-jwt.version>9.48</nimbus-jose-jwt.version>
     <json-schema-validator.version>1.5.5</json-schema-validator.version>
+    <json-schema-generator.version>4.37.0</json-schema-generator.version>
     <jgit.version>6.10.0.202406032230-r</jgit.version>
     <jaxb.version>4.0.5</jaxb.version>
     <snappy.version>1.1.10.7</snappy.version>

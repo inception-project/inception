@@ -15,12 +15,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client;
+package de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.response;
 
+import static java.util.Collections.emptyList;
+import static java.util.Collections.unmodifiableList;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public enum OllamaGenerateResponseFormat
+public class MentionResult
 {
-    @JsonProperty("json")
-    JSON
+    private final @JsonProperty(required = true) List<Mention> mentions;
+
+    @JsonCreator
+    public MentionResult(@JsonProperty("mentions") List<Mention> aMentions)
+    {
+        if (aMentions != null) {
+            mentions = unmodifiableList(new ArrayList<>(aMentions));
+        }
+        else {
+            mentions = emptyList();
+        }
+    }
+
+    public List<Mention> getMentions()
+    {
+        return mentions;
+    }
 }

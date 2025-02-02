@@ -179,20 +179,20 @@ public class EntityAnnotationProjectInitializer
 
         var description = //
                 """
-                This project comes pre-configured for **entity annotation**.
+                        This project comes pre-configured for **entity annotation**.
 
-                To annotate an entity, mark the text with the mouse, then assign a category in annotation detail
-                panel on the right.
-                """;
+                        To annotate an entity, mark the text with the mouse, then assign a category in annotation detail
+                        panel on the right.
+                        """;
 
         if (isSequenceClassifierRecommenderAvailable() || isStringRecommenderAvailable()) {
             description += //
                     """
 
-                    The project includes recommenders that will learn from the annotations you make and suggest further
-                    entities to annotate in the text. These suggestions will appear in gray. You can accept a
-                    suggestion by a single click. A double-click will instead reject the suggestion.
-                    """;
+                            The project includes recommenders that will learn from the annotations you make and suggest further
+                            entities to annotate in the text. These suggestions will appear in gray. You can accept a
+                            suggestion by a single click. A double-click will instead reject the suggestion.
+                            """;
         }
 
         if (aRequest.isIncludeSampleData()) {
@@ -205,10 +205,10 @@ public class EntityAnnotationProjectInitializer
 
             description += """
 
-                           The project includes example documents.
-                           Open the **Annotation** page from the left sidbar menu to dive right in.
-                           Two of the three documents come pre-annotated.
-                           """;
+                    The project includes example documents.
+                    Open the **Annotation** page from the left sidbar menu to dive right in.
+                    Two of the three documents come pre-annotated.
+                    """;
         }
 
         project.setDescription(description);

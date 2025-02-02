@@ -21,6 +21,7 @@ import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 import static java.util.Arrays.asList;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,7 +33,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.traits.DoubleOption;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.traits.Option;
 
-public class ChatCompletionRequest
+public class AzureAiChatCompletionRequest
 {
     // See https://platform.openai.com/docs/api-reference/chat/create
     public static final Option<Integer> MAX_TOKENS = new Option<>(Integer.class, "max_tokens");
@@ -49,14 +50,14 @@ public class ChatCompletionRequest
     private final @JsonIgnore String apiKey;
     private final @JsonIgnore String model;
 
-    private final @JsonInclude(NON_NULL) GenerateResponseFormat format;
+    private final @JsonInclude(NON_NULL) AzureAiGenerateResponseFormat format;
     private final @JsonInclude(NON_NULL) @JsonProperty("frequency_penalty") Double frequencyPenalty;
     private final @JsonInclude(NON_NULL) @JsonProperty("temperature") Double temperature;
     private final @JsonInclude(NON_NULL) @JsonProperty("seed") Integer seed;
 
-    private final List<ChatCompletionMessage> messages;
+    private final List<AzureAiChatCompletionMessage> messages;
 
-    private ChatCompletionRequest(Builder builder)
+    private AzureAiChatCompletionRequest(Builder builder)
     {
         messages = builder.messages;
         model = builder.model;
@@ -77,12 +78,12 @@ public class ChatCompletionRequest
         return model;
     }
 
-    public GenerateResponseFormat getFormat()
+    public AzureAiGenerateResponseFormat getFormat()
     {
         return format;
     }
 
-    public List<ChatCompletionMessage> getMessages()
+    public List<AzureAiChatCompletionMessage> getMessages()
     {
         return messages;
     }
@@ -96,9 +97,9 @@ public class ChatCompletionRequest
     {
         private String model;
         private String apiKey;
-        private GenerateResponseFormat format;
+        private AzureAiGenerateResponseFormat format;
         private Map<Option<?>, Object> options = new HashMap<>();
-        private List<ChatCompletionMessage> messages = new ArrayList<>();
+        private List<AzureAiChatCompletionMessage> messages = new ArrayList<>();
 
         private Builder()
         {
@@ -116,23 +117,32 @@ public class ChatCompletionRequest
             return this;
         }
 
-        public Builder withUserPrompt(String aPrompt)
+        public Builder withPrompt(String aPrompt)
         {
-            messages.add(new ChatCompletionMessage("user", aPrompt));
+            messages.clear();
+            messages.add(new AzureAiChatCompletionMessage("user", aPrompt));
             return this;
         }
 
-        public Builder withMessages(ChatCompletionMessage... aMessages)
+        public Builder withMessages(AzureAiChatCompletionMessage... aMessages)
         {
+            messages.clear();
             if (aMessages != null) {
-                for (var msg : aMessages) {
-                    messages.add(msg);
-                }
+                messages.addAll(asList(aMessages));
             }
             return this;
         }
 
-        public Builder withFormat(GenerateResponseFormat aFormat)
+        public Builder withMessages(Collection<AzureAiChatCompletionMessage> aMessages)
+        {
+            messages.clear();
+            if (aMessages != null) {
+                messages.addAll(aMessages);
+            }
+            return this;
+        }
+
+        public Builder withFormat(AzureAiGenerateResponseFormat aFormat)
         {
             format = aFormat;
             return this;
@@ -149,9 +159,9 @@ public class ChatCompletionRequest
             return this;
         }
 
-        public ChatCompletionRequest build()
+        public AzureAiChatCompletionRequest build()
         {
-            return new ChatCompletionRequest(this);
+            return new AzureAiChatCompletionRequest(this);
         }
     }
 }

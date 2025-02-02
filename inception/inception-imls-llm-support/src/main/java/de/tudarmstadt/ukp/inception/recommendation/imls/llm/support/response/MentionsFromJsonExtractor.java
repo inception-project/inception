@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.response;
 
+import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.traits.ChatMessage.Role.SYSTEM;
 import static java.util.Collections.reverse;
 import static java.util.Collections.sort;
 import static java.util.Comparator.comparing;
@@ -32,11 +33,13 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.cas.Feature;
+import org.apache.uima.cas.Type;
 import org.apache.uima.fit.util.FSUtil;
 import org.apache.uima.jcas.tcas.Annotation;
 import org.slf4j.Logger;
@@ -45,8 +48,11 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.databind.node.TextNode;
 
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.prompt.PromptContext;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.traits.ChatMessage;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 
 public class MentionsFromJsonExtractor
@@ -55,44 +61,17 @@ public class MentionsFromJsonExtractor
     private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     @Override
-    public List<MentionsSample> generate(RecommendationEngine aEngine, CAS aCas, int aNum)
-    {
-        var examples = generateSamples(aEngine, aCas, aNum);
-
-        return new ArrayList<>(examples.values());
-    }
-
-    Map<String, MentionsSample> generateSamples(RecommendationEngine aEngine, CAS aCas, int aNum)
+    public Map<String, MentionResult> generateExamples(RecommendationEngine aEngine, CAS aCas,
+            int aNum)
     {
         var predictedType = aEngine.getPredictedType(aCas);
         var predictedFeature = aEngine.getPredictedFeature(aCas);
 
-        var examples = new LinkedHashMap<String, MentionsSample>();
-
-        var sentencesAndLabels = new ArrayList<Pair<Sentence, Set<String>>>();
-        for (var sentence : aCas.select(Sentence.class)) {
-            if (isBlank(sentence.getCoveredText())) {
-                continue;
-            }
-
-            var labels = new HashSet<String>();
-            var mentions = aCas.<Annotation> select(predictedType).coveredBy(sentence);
-            if (mentions.isEmpty()) {
-                continue;
-            }
-
-            for (var mention : mentions) {
-                labels.add(FSUtil.getFeature(mention, predictedFeature, String.class));
-            }
-
-            sentencesAndLabels.add(Pair.of(sentence, labels));
-        }
-
-        sort(sentencesAndLabels, comparing(e -> e.getValue().size()));
-        reverse(sentencesAndLabels);
+        var contextsWithLabels = generateContextsWithLabels(aCas, predictedType, predictedFeature);
 
         var labelsSeen = new HashSet<String>();
-        for (var sentenceAndLabels : sentencesAndLabels) {
+        var examples = new LinkedHashMap<String, MentionResult>();
+        for (var contextWithLabels : contextsWithLabels) {
             // Stop once we have sufficient samples
             if (examples.size() >= aNum) {
                 break;
@@ -101,22 +80,22 @@ public class MentionsFromJsonExtractor
             // Skip if we already have examples for all the labels - except if there are null
             // labels, then we go on because we might otherwise end up only with a single
             // example
-            if (!sentenceAndLabels.getValue().contains(null)
-                    && labelsSeen.containsAll(sentenceAndLabels.getValue())) {
+            if (!contextWithLabels.getValue().contains(null)
+                    && labelsSeen.containsAll(contextWithLabels.getValue())) {
                 continue;
             }
 
-            var sentence = sentenceAndLabels.getKey();
-            var sample = new MentionsSample(sentence.getCoveredText());
-            for (var mention : aCas.<Annotation> select(predictedType).coveredBy(sentence)) {
+            var context = contextWithLabels.getKey();
+            var mentions = new ArrayList<Mention>();
+            for (var mention : aCas.<Annotation> select(predictedType).coveredBy(context)) {
                 var label = FSUtil.getFeature(mention, predictedFeature, String.class);
-                var mentionText = mention.getCoveredText();
-                mentionText = normalizeSpace(mentionText);
-                sample.addMention(mentionText, label);
+                var text = normalizeSpace(mention.getCoveredText());
+                mentions.add(new Mention(text, label));
             }
+            var result = new MentionResult(mentions);
 
-            examples.put(sentence.getCoveredText(), sample);
-            labelsSeen.addAll(sentenceAndLabels.getValue());
+            examples.put(context.getCoveredText(), result);
+            labelsSeen.addAll(contextWithLabels.getValue());
         }
 
         // Generate a fake sample to demonstrate how a result should look
@@ -132,11 +111,84 @@ public class MentionsFromJsonExtractor
     }
 
     @Override
-    public void extract(RecommendationEngine aEngine, CAS aCas, PromptContext aContext,
+    public Optional<ResponseFormat> getResponseFormat()
+    {
+        return Optional.of(ResponseFormat.JSON);
+    }
+
+    @Override
+    public List<? extends ChatMessage> getFormatDefiningMessages(Recommender aRecommender,
+            AnnotationSchemaService aSchemaService)
+    {
+        var staticMessages = new ArrayList<ChatMessage>();
+
+        staticMessages.add(new ChatMessage(SYSTEM, """
+                Your task is to identify and label mentions in the given document.
+                The user will specify how to identify the mentions how to label them.
+                Respond using JSON objects.
+                """));
+
+        var tagset = aRecommender.getFeature().getTagset();
+        if (tagset != null) {
+            var tagsMessageContent = new StringBuilder();
+
+            if (tagset.isCreateTag()) {
+                tagsMessageContent.append(
+                        "You can use the following categories for the `label` or come up with a new one if none "
+                                + "of the existing categories is appropriate:\n");
+            }
+            else {
+                tagsMessageContent
+                        .append("You assign either of the following categories to the `label`:\n");
+            }
+
+            for (var tag : aSchemaService.listTags(tagset)) {
+                tagsMessageContent.append("* `" + tag.getName() + "`");
+                if (isNotBlank(tag.getDescription())) {
+                    tagsMessageContent.append(": " + tag.getDescription());
+                }
+                tagsMessageContent.append("\n");
+            }
+            staticMessages.add(new ChatMessage(SYSTEM, tagsMessageContent.toString()));
+        }
+
+        return staticMessages;
+    }
+
+    private ArrayList<Pair<Sentence, Set<String>>> generateContextsWithLabels(CAS aCas,
+            Type predictedType, Feature predictedFeature)
+    {
+        var contextsWithLabels = new ArrayList<Pair<Sentence, Set<String>>>();
+        for (var context : aCas.select(Sentence.class)) {
+            if (isBlank(context.getCoveredText())) {
+                continue;
+            }
+
+            var mentions = aCas.<Annotation> select(predictedType).coveredBy(context);
+            if (mentions.isEmpty()) {
+                continue;
+            }
+
+            var labels = new HashSet<String>();
+            for (var mention : mentions) {
+                labels.add(FSUtil.getFeature(mention, predictedFeature, String.class));
+            }
+
+            contextsWithLabels.add(Pair.of(context, labels));
+        }
+
+        sort(contextsWithLabels, comparing(e -> e.getValue().size()));
+        reverse(contextsWithLabels);
+        return contextsWithLabels;
+    }
+
+    @Override
+    public void extractMentions(RecommendationEngine aEngine, CAS aCas, PromptContext aContext,
             String aResponse)
     {
         var mentions = extractMentionFromJson(aResponse);
-        mentionsToPredictions(aEngine, aCas, aContext.getCandidate(), mentions);
+
+        mentionsToPredictions(aEngine, aCas, aContext, mentions);
     }
 
     List<Pair<String, String>> extractMentionFromJson(String aResponse)
@@ -250,9 +302,9 @@ public class MentionsFromJsonExtractor
     }
 
     private void mentionsToPredictions(RecommendationEngine aEngine, CAS aCas,
-            AnnotationFS aCandidate, List<Pair<String, String>> mentions)
+            PromptContext aContext, List<Pair<String, String>> mentions)
     {
-        var text = aCandidate.getCoveredText();
+        var text = aContext.getText();
         var predictedType = aEngine.getPredictedType(aCas);
         var predictedFeature = aEngine.getPredictedFeature(aCas);
         var isPredictionFeature = aEngine.getIsPredictionFeature(aCas);
@@ -269,7 +321,7 @@ public class MentionsFromJsonExtractor
             var index = text.indexOf(mention, lastIndex);
             var hitCount = 0;
             while (index >= 0) {
-                int begin = aCandidate.getBegin() + index;
+                int begin = aContext.getRange().getBegin() + index;
                 var prediction = aCas.createAnnotation(predictedType, begin,
                         begin + mention.length());
                 prediction.setBooleanValue(isPredictionFeature, true);

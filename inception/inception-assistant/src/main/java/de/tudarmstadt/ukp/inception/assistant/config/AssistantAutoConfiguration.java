@@ -98,7 +98,8 @@ public class AssistantAutoConfiguration
     @Bean
     public DocumentQueryService documentQueryService(RepositoryProperties aRepositoryProperties,
             AssistantDocumentIndexProperties aIndexProperties, SchedulingService aSchedulingService,
-            OllamaClient aOllamaClient, EmbeddingService aEmbeddingService, DocumentService aDocumentService)
+            OllamaClient aOllamaClient, EmbeddingService aEmbeddingService,
+            DocumentService aDocumentService)
     {
         return new DocumentQueryServiceImpl(aRepositoryProperties, aIndexProperties,
                 aSchedulingService, aEmbeddingService, aDocumentService);

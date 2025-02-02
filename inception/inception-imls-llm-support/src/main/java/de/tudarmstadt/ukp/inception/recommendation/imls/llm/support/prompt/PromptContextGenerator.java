@@ -43,11 +43,12 @@ public interface PromptContextGenerator
             return new PerAnnotationContextGenerator();
         case PER_SENTENCE:
             return new PerSentenceContextGenerator();
+        case PER_PARAGRAPH:
+            return new PerParagraphContextGenerator();
         case PER_DOCUMENT:
             return new PerDocumentContextGenerator();
         default:
             throw new IllegalArgumentException("Unsupported mode [" + aMode + "]");
         }
     }
-
 }

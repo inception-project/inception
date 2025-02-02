@@ -134,8 +134,9 @@ public class SanitizingContentHandler
         }
     }
 
-    private void startElement(QName aElement, Attributes aAtts, Optional<QNameElementPolicy> aPolicy,
-            ElementAction aAction, Map<String, String> aLocalNamespaces)
+    private void startElement(QName aElement, Attributes aAtts,
+            Optional<QNameElementPolicy> aPolicy, ElementAction aAction,
+            Map<String, String> aLocalNamespaces)
         throws SAXException
     {
         var element = aElement;
