@@ -27,19 +27,17 @@ import org.junit.jupiter.api.io.TempDir;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
-import org.testcontainers.containers.MSSQLServerContainer;
+import org.testcontainers.containers.MariaDBContainer;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.utility.DockerImageName;
 
 @Testcontainers(disabledWithoutDocker = true)
-class InceptionMSSQLServerIntegrationTest
+class InceptionMariadb_11_6_IntegrationTest
 {
-    static final DockerImageName image = DockerImageName.parse("mcr.microsoft.com/mssql/server")
-            .withTag("2022-latest");
-    // .withTag("@sha256:45a1a9d13ca5574cf8e0fe4ae73ab77248b66d9c3132ac9658fb6c16dd72a8af");
     @SuppressWarnings("resource")
-    static final MSSQLServerContainer<?> dbContainer = new MSSQLServerContainer<>(image) //
-            .acceptLicense();
+    static final MariaDBContainer<?> dbContainer = new MariaDBContainer<>("mariadb:11.6.2") //
+            .withDatabaseName("testdb") //
+            .withUsername("test") //
+            .withPassword("test");
 
     static @TempDir Path tempDir;
 

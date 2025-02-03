@@ -27,14 +27,14 @@ import org.junit.jupiter.api.io.TempDir;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
-import org.testcontainers.containers.MariaDBContainer;
+import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 @Testcontainers(disabledWithoutDocker = true)
-class InceptionMariadbIntegrationTest
+class InceptionMySql_8_0_IntegrationTest
 {
     @SuppressWarnings("resource")
-    static final MariaDBContainer<?> dbContainer = new MariaDBContainer<>("mariadb:11.4.2") //
+    static final MySQLContainer<?> dbContainer = new MySQLContainer<>("mysql:8.0") //
             .withDatabaseName("testdb") //
             .withUsername("test") //
             .withPassword("test");
