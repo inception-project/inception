@@ -23,12 +23,17 @@ import static de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeServ
 import static de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeService.PROFILE_PRODUCTION_MODE;
 import static java.util.Arrays.asList;
 
+import java.lang.invoke.MethodHandles;
 import java.util.zip.ZipFile;
 
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -62,10 +67,14 @@ import de.tudarmstadt.ukp.inception.support.logging.Logging;
         PROFILE_INTERNAL_SERVER, //
         PROFILE_PRODUCTION_MODE })
 @ExtendWith(SpringExtension.class)
-@SpringBootTest(classes = { INCEpTION.class })
+@SpringBootTest( //
+        classes = { INCEpTION.class }, //
+        properties = { "spring.main.banner-mode=off" })
 @ContextConfiguration(initializers = { InceptionApplicationContextInitializer.class })
 public abstract class InceptionIntegrationTest_ImplBase
 {
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
     @Autowired
     ProjectService projectService;
 
@@ -87,14 +96,22 @@ public abstract class InceptionIntegrationTest_ImplBase
     @Autowired
     LearningRecordService learningRecordService;
 
+    @BeforeAll
+    static void setupClass(TestInfo aInfo)
+    {
+        LOG.info("============================================================");
+        LOG.info("= Running {}", aInfo.getTestClass().get().getSimpleName());
+        LOG.info("============================================================");
+    }
+
     @BeforeEach
-    void setupClass()
+    void setup()
     {
         MDC.put(Logging.KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
     }
 
     @AfterEach
-    void tearDownClass()
+    void tearDown()
     {
         MDC.clear();
     }
@@ -149,16 +166,19 @@ public abstract class InceptionIntegrationTest_ImplBase
         var project = Project.builder() //
                 .withName("test") //
                 .build();
+
         var layer = AnnotationLayer.builder() //
                 .withProject(project) //
                 .withName("Layer") //
                 .withUiName("Layer") //
                 .withType(SpanLayerSupport.TYPE) //
                 .build();
+
         var doc = SourceDocument.builder() //
                 .withProject(project) //
                 .withName("Blah") //
                 .build();
+
         var learningRecord = LearningRecord.builder() //
                 .withLayer(layer) //
                 .withSourceDocument(doc) //
