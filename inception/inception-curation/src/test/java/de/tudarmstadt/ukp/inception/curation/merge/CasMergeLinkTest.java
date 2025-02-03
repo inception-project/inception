@@ -21,6 +21,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.ANY_OVERLAP;
 import static de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureDiffMode.INCLUDE;
 import static de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureMultiplicityMode.ONE_TARGET_MULTIPLE_ROLES;
+import static de.tudarmstadt.ukp.inception.curation.merge.CurationTestUtils.ALT_LINKS_FEATURE;
 import static de.tudarmstadt.ukp.inception.curation.merge.CurationTestUtils.HOST_TYPE;
 import static de.tudarmstadt.ukp.inception.curation.merge.CurationTestUtils.LINKS_FEATURE;
 import static de.tudarmstadt.ukp.inception.curation.merge.CurationTestUtils.TARGET_FEATURE;
@@ -277,6 +278,44 @@ public class CasMergeLinkTest
                 .as("There is still only a single link from the host to the filler")
                 .containsExactly( //
                         new LinkWithRoleModel("role1", null, targetFiller.getAddress()));
+    }
+
+    @Test
+    public void thatLinkIsAttachedToCorrectStackedTargetWhenOtherLinkFeatureDiffers()
+        throws Exception
+    {
+        // Set up source CAS
+        var sourceFs = buildAnnotation(sourceCas1.getCas(), HOST_TYPE) //
+                .at(0, 0) //
+                .withFeature(LINKS_FEATURE, asList(makeLinkFS(sourceCas1, "role1", 1, 1)))
+                .withFeature(ALT_LINKS_FEATURE, asList(makeLinkFS(sourceCas1, "role1", 2, 2)))
+                .buildAndAddToIndexes();
+
+        // Set up target CAS
+        new NamedEntity(targetCas, 2, 2).addToIndexes();
+        var targetCandidateFs1 = buildAnnotation(targetCas.getCas(), HOST_TYPE) //
+                .at(sourceFs) //
+                .withFeature(LINKS_FEATURE, asList(makeLinkFS(targetCas, "role1", 3, 3))) //
+                .buildAndAddToIndexes();
+        var targetCandidateFs2 = buildAnnotation(targetCas.getCas(), HOST_TYPE) //
+                .at(sourceFs) //
+                .withFeature(LINKS_FEATURE, asList(makeLinkFS(targetCas, "role1", 1, 1))) //
+                .buildAndAddToIndexes();
+
+        // Perform merge
+        sut.mergeSlotFeature(document, DUMMY_USER, slotLayer, targetCas.getCas(), sourceFs,
+                ALT_LINKS_FEATURE, 0);
+
+        var adapter = schemaService.getAdapter(slotLayer);
+        var altLinksFeature = adapter.getFeature(ALT_LINKS_FEATURE).get();
+        List<LinkWithRoleModel> mergedLinks1 = adapter.getFeatureValue(altLinksFeature,
+                targetCandidateFs1);
+        assertThat(mergedLinks1) //
+                .as("Link has NOT been merged to the first candidate").isEmpty();
+        List<LinkWithRoleModel> mergedLinks2 = adapter.getFeatureValue(altLinksFeature,
+                targetCandidateFs2);
+        assertThat(mergedLinks2) //
+                .as("Link has been merged to the second candidate").isNotEmpty();
     }
 
     @Nested

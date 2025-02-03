@@ -56,6 +56,7 @@ public class CurationTestUtils
     public static final String TARGET_FEATURE = "target";
     public static final String ROLE_FEATURE = "role";
     public static final String LINKS_FEATURE = "links";
+    public static final String ALT_LINKS_FEATURE = "altLinks";
     public static final String HOST_TYPE = "webanno.custom.LinkHost";
     public static final String LINK_TYPE = "webanno.custom.LinkType";
 
@@ -271,12 +272,12 @@ public class CurationTestUtils
     public static FeatureStructure makeLinkFS(JCas aCas, String aRole, int aTargetBegin,
             int aTargetEnd)
     {
-        var token = new NamedEntity(aCas, aTargetBegin, aTargetEnd);
-        token.addToIndexes();
+        var filler = new NamedEntity(aCas, aTargetBegin, aTargetEnd);
+        filler.addToIndexes();
 
         return buildFS(aCas.getCas(), LINK_TYPE) //
                 .withFeature(ROLE_FEATURE, aRole) //
-                .withFeature(TARGET_FEATURE, token) //
+                .withFeature(TARGET_FEATURE, filler) //
                 .buildAndAddToIndexes();
     }
 }
