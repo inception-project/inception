@@ -1,451 +1,170 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <typeSystemDescription xmlns="http://uima.apache.org/resourceSpecifier">
-        
-  
   <name>webannoTestTypes</name>
-        
-  
-  <description/>
-        
-  
+  <description />
   <version>1.0</version>
-        
-  
-  <vendor/>
-      
-  
+  <vendor />
   <types>
-            
-    
     <typeDescription>
-                  
-      
       <name>webanno.custom.SimpleSpan</name>
-                  
-      
-      <description/>
-                  
-      
+      <description />
       <supertypeName>uima.tcas.Annotation</supertypeName>
-                
-    
     </typeDescription>
-          
-    
     <typeDescription>
-                  
-      
       <name>webanno.custom.SimpleRelation</name>
-                  
-      
-      <description/>
-                  
-      
+      <description />
       <supertypeName>uima.tcas.Annotation</supertypeName>
-                
-      
       <features>
-                        
-        
         <featureDescription>
-                              
-          
           <name>Governor</name>
-                              
-          
-          <description/>
-                              
-          
+          <description />
           <rangeTypeName>uima.tcas.Annotation</rangeTypeName>
-                            
-        
         </featureDescription>
-                        
-        
         <featureDescription>
-                              
-          
           <name>Dependent</name>
-                              
-          
-          <description/>
-                              
-          
+          <description />
           <rangeTypeName>uima.tcas.Annotation</rangeTypeName>
-                            
-        
         </featureDescription>
-                      
-      
       </features>
-                
-    
     </typeDescription>
-            
-    
     <typeDescription>
-                  
-      
       <name>webanno.custom.Relation</name>
-                  
-      
-      <description/>
-                  
-      
+      <description />
       <supertypeName>uima.tcas.Annotation</supertypeName>
-                  
-      
       <features>
-                        
-        
         <featureDescription>
-                              
-          
           <name>Governor</name>
-                              
-          
-          <description/>
-                              
-          
+          <description />
           <rangeTypeName>uima.tcas.Annotation</rangeTypeName>
-                            
-        
         </featureDescription>
-                        
-        
         <featureDescription>
-                              
-          
           <name>Dependent</name>
-                              
-          
-          <description/>
-                              
-          
+          <description />
           <rangeTypeName>uima.tcas.Annotation</rangeTypeName>
-                            
-        
         </featureDescription>
-                      
-        
         <featureDescription>
-                              
-          
           <name>value</name>
-                              
-          
-          <description/>
-                              
-          
+          <description />
           <rangeTypeName>uima.cas.String</rangeTypeName>
-                            
-        
         </featureDescription>
-                      
-      
       </features>
-                
-    
     </typeDescription>
-          
-    
     <typeDescription>
-                  
-      
       <name>webanno.custom.ComplexRelation</name>
-                  
-      
-      <description/>
-                  
-      
+      <description />
       <supertypeName>uima.tcas.Annotation</supertypeName>
-                  
-      
       <features>
-                        
-        
         <featureDescription>
-                              
-          
           <name>Governor</name>
-                              
-          
-          <description/>
-                              
-          
+          <description />
           <rangeTypeName>uima.tcas.Annotation</rangeTypeName>
-                            
-        
         </featureDescription>
-                        
-        
         <featureDescription>
-                              
-          
           <name>Dependent</name>
-                              
-          
-          <description/>
-                              
-          
+          <description />
           <rangeTypeName>uima.tcas.Annotation</rangeTypeName>
-                            
-        
         </featureDescription>
-                        
-        
         <featureDescription>
-                              
-          
           <name>value</name>
-                              
-          
-          <description/>
-                              
-          
+          <description />
           <rangeTypeName>uima.cas.String</rangeTypeName>
-                            
-        
         </featureDescription>
-                        
-        
         <featureDescription>
-                              
-          
           <name>boolValue</name>
-                              
-          
-          <description/>
-                              
-          
+          <description />
           <rangeTypeName>uima.cas.Boolean</rangeTypeName>
-                            
-        
         </featureDescription>
-                        
-        
         <featureDescription>
-                              
-          
           <name>intValue</name>
-                              
-          
-          <description/>
-                              
-          
+          <description />
           <rangeTypeName>uima.cas.Integer</rangeTypeName>
-                            
-        
         </featureDescription>
-                      
-      
       </features>
-                
-    
     </typeDescription>
-          
-    
     <typeDescription>
-                  
-      
       <name>webanno.custom.Multivalrel</name>
-                  
-      
-      <description/>
-                  
-      
+      <description />
       <supertypeName>uima.tcas.Annotation</supertypeName>
-                  
-      
       <features>
-                        
-        
         <featureDescription>
-                              
-          
           <name>Governor</name>
-                              
-          
-          <description/>
-                              
-          
+          <description />
           <rangeTypeName>webanno.custom.Multivalspan</rangeTypeName>
-                            
-        
         </featureDescription>
-                        
-        
         <featureDescription>
-                              
-          
           <name>Dependent</name>
-                              
-          
-          <description/>
-                              
-          
+          <description />
           <rangeTypeName>webanno.custom.Multivalspan</rangeTypeName>
-                            
-        
         </featureDescription>
-                        
-        
         <featureDescription>
-                              
-          
           <name>rel1</name>
-                              
-          
-          <description/>
-                              
-          
+          <description />
           <rangeTypeName>uima.cas.String</rangeTypeName>
-                            
-        
         </featureDescription>
-                        
-        
         <featureDescription>
-                              
-          
           <name>rel2</name>
-                              
-          
-          <description/>
-                              
-          
+          <description />
           <rangeTypeName>uima.cas.String</rangeTypeName>
-                            
-        
         </featureDescription>
-                      
-      
       </features>
-                
-    
     </typeDescription>
-            
-    
     <typeDescription>
-                  
-      
       <name>webanno.custom.Multivalspan</name>
-                  
-      
-      <description/>
-                  
-      
+      <description />
       <supertypeName>uima.tcas.Annotation</supertypeName>
-                  
-      
       <features>
-                        
-        
         <featureDescription>
-                              
-          
           <name>f1</name>
-                              
-          
-          <description/>
-                              
-          
+          <description />
           <rangeTypeName>uima.cas.String</rangeTypeName>
-                            
-        
         </featureDescription>
-                        
-        
         <featureDescription>
-                              
-          
           <name>f2</name>
-                              
-          
-          <description/>
-                              
-          
+          <description />
           <rangeTypeName>uima.cas.String</rangeTypeName>
-                            
-        
         </featureDescription>
-                      
-      
       </features>
-                
-    
     </typeDescription>
-      
     <typeDescription>
-            
       <name>webanno.custom.LinkHost</name>
-            
-      <description/>
-            
+      <description />
       <supertypeName>uima.tcas.Annotation</supertypeName>
-            
       <features>
-                
         <featureDescription>
-                    
           <name>links</name>
-                    
-          <description/>
-                    
+          <description />
           <rangeTypeName>uima.cas.FSArray</rangeTypeName>
-                    
           <elementType>webanno.custom.LinkType</elementType>
-                  
         </featureDescription>
-                
         <featureDescription>
-                    
+          <name>altLinks</name>
+          <description />
+          <rangeTypeName>uima.cas.FSArray</rangeTypeName>
+          <elementType>webanno.custom.LinkType</elementType>
+        </featureDescription>
+        <featureDescription>
           <name>f1</name>
-                    
-          <description/>
-                    
+          <description />
           <rangeTypeName>uima.cas.String</rangeTypeName>
-                  
         </featureDescription>
-              
       </features>
-          
     </typeDescription>
-        
     <typeDescription>
-            
       <name>webanno.custom.LinkType</name>
-            
-      <description/>
-            
+      <description />
       <supertypeName>uima.cas.TOP</supertypeName>
-            
       <features>
-                
         <featureDescription>
-                    
           <name>role</name>
-                    
-          <description/>
-                    
+          <description />
           <rangeTypeName>uima.cas.String</rangeTypeName>
-                  
         </featureDescription>
-                
         <featureDescription>
-                    
           <name>target</name>
-                    
-          <description/>
-                    
+          <description />
           <rangeTypeName>uima.tcas.Annotation</rangeTypeName>
-                  
         </featureDescription>
-              
       </features>
-          
     </typeDescription>
   </types>
-    
-
 </typeSystemDescription>

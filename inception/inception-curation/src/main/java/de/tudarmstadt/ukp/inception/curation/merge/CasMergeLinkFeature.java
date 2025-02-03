@@ -117,14 +117,15 @@ public class CasMergeLinkFeature
     {
         var candidateHosts = selectBestCandidateSlotHost(aTargetCas, adapter, aSourceFs,
                 slotFeature, sourceLink);
+
         if (candidateHosts.isEmpty()) {
             throw new UnfulfilledPrerequisitesException(
                     "There is no suitable [" + adapter.getLayer().getUiName() + "] annotation at ["
                             + aSourceFs.getBegin() + "," + aSourceFs.getEnd()
                             + "] into which the link could be merged. Please add one first.");
         }
-        var targetFS = candidateHosts.get();
-        return targetFS;
+
+        return candidateHosts.get();
     }
 
     private static AnnotationFS findLinkTargetInTargetCas(CasMergeContext aContext,
@@ -164,9 +165,8 @@ public class CasMergeLinkFeature
         return null;
     }
 
-    private static Optional<Annotation> selectBestCandidateSlotHost(CAS aTargetCas,
-            TypeAdapter aAdapter, AnnotationFS aSourceFS, AnnotationFeature aSlotFeature,
-            LinkWithRoleModel aSourceLink)
+    static Optional<Annotation> selectBestCandidateSlotHost(CAS aTargetCas, TypeAdapter aAdapter,
+            AnnotationFS aSourceFS, AnnotationFeature aSlotFeature, LinkWithRoleModel aSourceLink)
     {
         var targetType = aAdapter.getAnnotationType(aTargetCas);
         if (targetType.isEmpty()) {
@@ -207,10 +207,7 @@ public class CasMergeLinkFeature
         }
 
         // Still more than one, then we need to look at the slots...
-        List<LinkWithRoleModel> sourceLinks = aAdapter.getFeatureValue(aSlotFeature, aSourceFS);
-        var matSourceLinks = sourceLinks.stream() //
-                .map(link -> toMaterializedLink(aSourceFS, aSlotFeature, link)) //
-                .toList();
+        var matSourceLinks = getMaterializedLinks(aAdapter, aSourceFS);
 
         var filterestCandidateTargets2 = filteredCandidateTargets.stream() //
                 .sorted(comparing(candidateTarget -> countLinkDifference(aAdapter, aSourceFS,
@@ -224,11 +221,7 @@ public class CasMergeLinkFeature
             AnnotationFeature aSlotFeature, LinkWithRoleModel aSourceLink,
             List<MaterializedLink> matSourceLinks, Annotation candidateTarget)
     {
-        List<LinkWithRoleModel> targetLinks = aAdapter.getFeatureValue(aSlotFeature,
-                candidateTarget);
-        var matTargetLinks = targetLinks.stream() //
-                .map(link -> toMaterializedLink(candidateTarget, aSlotFeature, link)) //
-                .collect(toCollection(ArrayList::new));
+        var matTargetLinks = getMaterializedLinks(aAdapter, candidateTarget);
 
         // Let's assume we would already have merged the link - this may in the best case either
         // reduce the difference to 0 or increase it to 1 if we added it once to often
@@ -244,5 +237,23 @@ public class CasMergeLinkFeature
         }
 
         return unmatchedSourceLinks.size() + matTargetLinks.size();
+    }
+
+    private static ArrayList<MaterializedLink> getMaterializedLinks(TypeAdapter aAdapter,
+            AnnotationFS candidateTarget)
+    {
+        var matTargetLinks = new ArrayList<MaterializedLink>();
+        var linkFeatures = aAdapter.listFeatures().stream() //
+                .filter(f -> f.getLinkMode() != LinkMode.NONE) //
+                .toList();
+        for (var linkFeature : linkFeatures) {
+            List<LinkWithRoleModel> targetLinks = aAdapter.getFeatureValue(linkFeature,
+                    candidateTarget);
+            targetLinks.stream() //
+                    .map(link -> toMaterializedLink(candidateTarget, linkFeature, link)) //
+                    .forEach(matTargetLinks::add);
+        }
+
+        return matTargetLinks;
     }
 }
