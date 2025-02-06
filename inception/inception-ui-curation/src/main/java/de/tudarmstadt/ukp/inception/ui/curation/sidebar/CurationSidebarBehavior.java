@@ -132,6 +132,8 @@ public class CurationSidebarBehavior
         handleSessionActivationPageParameters(page, params, doc, sessionOwner);
 
         ensureDataOwnerMatchesCurationTarget(page, project, sessionOwner, dataOwner);
+        curationSidebarService.setDefaultSelectedUsersForDocument(aEvent.getSessionOwner(),
+                aEvent.getDocument());
 
         var prefs = preferencesService
                 .loadDefaultTraitsForProject(KEY_CURATION_SIDEBAR_MANAGER_PREFS, project);
