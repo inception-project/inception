@@ -3,6 +3,10 @@
     "1097504|pdfjs-dist": {
       "decision": "ignore",
       "madeAt": 1718722800964
+    },
+    "1101853|pdfjs-dist": {
+      "decision": "postpone",
+      "madeAt": 1738823619016
     }
   },
   "rules": {},

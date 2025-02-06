@@ -139,46 +139,48 @@ public class StandaloneUserInterface
 
     public static void actionShowLog(String applicationName)
     {
-        JFrame frame = new JFrame(applicationName + " - Log");
+        var frame = new JFrame(applicationName + " - Log");
 
-        JPanel contentPanel = new JPanel();
-        Border padding = BorderFactory.createEmptyBorder(10, 10, 10, 10);
+        var contentPanel = new JPanel();
+        var padding = BorderFactory.createEmptyBorder(10, 10, 10, 10);
         contentPanel.setBorder(padding);
         contentPanel.setLayout(new BoxLayout(contentPanel, PAGE_AXIS));
 
-        JLabel info = new JLabel(
+        var info = new JLabel(
                 "Only recent log messages are displayed here. For more information, check the log file.");
         contentPanel.add(info);
 
-        JTextArea logArea = new JTextArea(20, 80);
+        var logArea = new JTextArea(20, 80);
         logArea.setTabSize(2);
         logArea.setEditable(false);
         // Set text before setting the caret policy so we start in follow mode
         logArea.setText(getLog());
-        DefaultCaret caret = (DefaultCaret) logArea.getCaret();
+
+        var caret = (DefaultCaret) logArea.getCaret();
         caret.setUpdatePolicy(DefaultCaret.NEVER_UPDATE);
-        JScrollPane scroll = new JScrollPane(logArea);
+
+        var scroll = new JScrollPane(logArea);
         scroll.setVerticalScrollBarPolicy(VERTICAL_SCROLLBAR_ALWAYS);
         scroll.setHorizontalScrollBarPolicy(HORIZONTAL_SCROLLBAR_ALWAYS);
         contentPanel.add(scroll);
 
-        JPanel buttonPanel = new JPanel();
+        var buttonPanel = new JPanel();
         buttonPanel.setLayout(new BoxLayout(buttonPanel, LINE_AXIS));
         contentPanel.add(buttonPanel);
 
-        JButton copyToClipboardButton = new JButton("Copy to clipboard");
+        var copyToClipboardButton = new JButton("Copy to clipboard");
         copyToClipboardButton.addActionListener(StandaloneUserInterface::actionCopyLogToClipboard);
         buttonPanel.add(copyToClipboardButton);
 
         if (getGlobalLogFolder().isPresent() && Desktop.isDesktopSupported()) {
             if (getDesktop().isSupported(Desktop.Action.BROWSE_FILE_DIR)) {
-                JButton openLogFolderButton = new JButton("Open log folder");
+                var openLogFolderButton = new JButton("Open log folder");
                 openLogFolderButton.addActionListener(StandaloneUserInterface::actionOpenLogFolder);
                 buttonPanel.add(openLogFolderButton);
             }
 
             if (getDesktop().isSupported(Desktop.Action.OPEN)) {
-                JButton openLogFileButton = new JButton("Open log file");
+                var openLogFileButton = new JButton("Open log file");
                 openLogFileButton.addActionListener(StandaloneUserInterface::actionOpenLogFile);
                 buttonPanel.add(openLogFileButton);
             }
@@ -192,11 +194,11 @@ public class StandaloneUserInterface
         bringToFront(frame);
 
         // Watch the log and if the log has scrolled down all the way to the bottom, follow
-        Timer timer = new Timer(250, e -> {
+        var timer = new Timer(250, e -> {
             int savedHorizontal = scroll.getHorizontalScrollBar().getValue();
             int vpos = scroll.getVerticalScrollBar().getValue() + scroll.getHeight()
                     - scroll.getHorizontalScrollBar().getHeight() /*- (lineHeight / 2)*/;
-            boolean atBottom = vpos >= scroll.getVerticalScrollBar().getMaximum();
+            var atBottom = vpos >= scroll.getVerticalScrollBar().getMaximum();
             logArea.setText(getLog());
             if (savedHorizontal != 0) {
                 scroll.getHorizontalScrollBar().setValue(savedHorizontal);
