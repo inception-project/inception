@@ -40,7 +40,7 @@ public class OllamaChatRequest
     private boolean stream;
     private @JsonInclude(Include.NON_NULL) JsonNode format;
     private @JsonInclude(Include.NON_DEFAULT) boolean raw;
-    private @JsonInclude(Include.NON_EMPTY) Map<Option<?>, Object> options = new HashMap<>();
+    private @JsonInclude(Include.NON_EMPTY) Map<String, Object> options = new HashMap<>();
 
     private OllamaChatRequest(Builder builder)
     {
@@ -49,7 +49,9 @@ public class OllamaChatRequest
         format = builder.format;
         stream = builder.stream;
         raw = builder.raw;
-        options = builder.options;
+        for (var opt : builder.options.entrySet()) {
+            options.put(opt.getKey().getName(), opt.getValue());
+        }
     }
 
     public JsonNode getFormat()
@@ -77,7 +79,7 @@ public class OllamaChatRequest
         return stream;
     }
 
-    public Map<Option<?>, Object> getOptions()
+    public Map<String, Object> getOptions()
     {
         return options;
     }

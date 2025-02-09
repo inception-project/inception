@@ -73,14 +73,26 @@ class PredictionTaskTest
     @BeforeEach
     void setup()
     {
-        sessionOwner = User.builder().withUsername("user").build();
-        project = Project.builder().build();
-        document = SourceDocument.builder().withId(1l).withName("doc1").withProject(project)
+        sessionOwner = User.builder() //
+                .withUsername("user") //
                 .build();
-        layer = AnnotationLayer.builder().withId(1l).forJCasClass(NamedEntity.class)
-                .withType(SpanLayerSupport.TYPE).build();
-        feature = AnnotationFeature.builder().withId(1l).withName(NamedEntity._FeatName_value)
-                .withType(CAS.TYPE_NAME_STRING).withLayer(layer).build();
+        project = Project.builder().build();
+        document = SourceDocument.builder() //
+                .withId(1l) //
+                .withName("doc1") //
+                .withProject(project) //
+                .build();
+        layer = AnnotationLayer.builder() //
+                .withId(1l) //
+                .forJCasClass(NamedEntity.class) //
+                .withType(SpanLayerSupport.TYPE) //
+                .build();
+        feature = AnnotationFeature.builder() //
+                .withId(1l) //
+                .withName(NamedEntity._FeatName_value) //
+                .withType(CAS.TYPE_NAME_STRING) //
+                .withLayer(layer) //
+                .build();
     }
 
     @Test
@@ -126,8 +138,12 @@ class PredictionTaskTest
     @Test
     void testReconciliation() throws Exception
     {
-        var rec = Recommender.builder().withId(1l).withName("rec").withLayer(layer)
-                .withFeature(feature).build();
+        var rec = Recommender.builder() //
+                .withId(1l) //
+                .withName("rec") //
+                .withLayer(layer) //
+                .withFeature(feature) //
+                .build();
 
         var existingSuggestions = Arrays.<AnnotationSuggestion> asList( //
                 SpanSuggestion.builder() //
@@ -167,8 +183,11 @@ class PredictionTaskTest
                 newSuggestions);
 
         assertThat(result.suggestions()) //
-                .extracting(AnnotationSuggestion::getId, AnnotationSuggestion::getLabel,
+                .extracting( //
+                        AnnotationSuggestion::getId, //
+                        AnnotationSuggestion::getLabel, //
                         AnnotationSuggestion::getAge) //
-                .containsExactlyInAnyOrder(tuple(0, "aged", 1), tuple(3, "added", 0));
+                .containsExactlyInAnyOrder( //
+                        tuple(0, "aged", 1), tuple(3, "added", 0));
     }
 }

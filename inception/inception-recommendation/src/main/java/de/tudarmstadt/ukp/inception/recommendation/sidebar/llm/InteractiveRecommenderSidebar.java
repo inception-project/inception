@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.recommendation.sidebar.llm;
 
 import static de.tudarmstadt.ukp.inception.recommendation.sidebar.llm.InteractiveRecommenderSidebarPrefs.KEY_INTERACTIVE_RECOMMENDER_SIDEBAR_PREFS;
+import static de.tudarmstadt.ukp.inception.recommendation.tasks.PredictionTask.ReconciliationOption.KEEP_EXISTING;
 import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CHANGE_EVENT;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 import static java.util.Collections.emptyList;
@@ -28,6 +29,7 @@ import java.util.Objects;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.WebMarkupContainer;
+import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
@@ -88,6 +90,7 @@ public class InteractiveRecommenderSidebar
     private WebMarkupContainer traitsContainer;
 
     private final IModel<Recommender> recommender;
+    private final IModel<Boolean> keepExisting;
 
     private DropDownChoice<Recommender> recommenderChoice;
 
@@ -104,6 +107,7 @@ public class InteractiveRecommenderSidebar
 
         sidebarPrefs = new CompoundPropertyModel<>(Model.of(loadSidebarPrefs()));
 
+        keepExisting = new Model<>(false);
         recommender = new Model<>();
         loadLastUsedRecommender(recommender);
 
@@ -150,6 +154,8 @@ public class InteractiveRecommenderSidebar
 
         form.add(traitsContainer = new WebMarkupContainer(MID_TRAITS_CONTAINER));
         traitsContainer.setOutputMarkupPlaceholderTag(true);
+
+        form.add(new CheckBox("keepExistingSuggestions", keepExisting).setOutputMarkupId(true));
 
         actionChangeRecommender(null);
 
@@ -402,6 +408,7 @@ public class InteractiveRecommenderSidebar
                 .withCurrentDocument(document) //
                 .withDataOwner(dataOwner) //
                 .withRecommender(rec) //
+                .withReconciliationOptions(KEEP_EXISTING) //
                 .build();
 
         schedulingService.enqueue(predictionTask);

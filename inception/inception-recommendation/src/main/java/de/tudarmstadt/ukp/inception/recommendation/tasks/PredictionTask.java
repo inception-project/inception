@@ -22,6 +22,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHA
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.AUTO_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.PredictionCapability.PREDICTION_USES_TEXT_ONLY;
 import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapability.TRAINING_NOT_SUPPORTED;
+import static de.tudarmstadt.ukp.inception.recommendation.tasks.PredictionTask.ReconciliationOption.KEEP_EXISTING;
 import static de.tudarmstadt.ukp.inception.rendering.model.Range.rangeCoveringDocument;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Arrays.asList;
@@ -32,10 +33,12 @@ import static java.util.stream.Collectors.toList;
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
 import org.apache.commons.lang3.Validate;
 import org.apache.uima.UIMAException;
@@ -98,6 +101,7 @@ public class PredictionTask
     private final List<Recommender> recommenders;
     private final boolean synchronousRecommenders;
     private final boolean asynchronousRecommenders;
+    private final Set<ReconciliationOption> reconciliationOptions;
 
     private Predictions predictions;
 
@@ -113,6 +117,7 @@ public class PredictionTask
         recommenders = aBuilder.recommenders;
         synchronousRecommenders = aBuilder.synchronousRecommenders;
         asynchronousRecommenders = aBuilder.asynchronousRecommenders;
+        reconciliationOptions = new HashSet<>(aBuilder.reconciliationOptions);
     }
 
     /**
@@ -139,7 +144,7 @@ public class PredictionTask
             var project = getProject();
             var sessionOwner = getSessionOwner();
 
-            var startTime = System.currentTimeMillis();
+            var startTime = currentTimeMillis();
             predictions = generatePredictions();
             predictions.inheritLog(getLogMessages());
             logPredictionComplete(predictions, startTime);
@@ -155,33 +160,6 @@ public class PredictionTask
                 }
             }
         }
-    }
-
-    private void logNoNewPredictionsAvailable(Project project, User sessionOwner)
-    {
-        if (properties.getMessages().isNoNewPredictionsAvailable()) {
-            appEventPublisher.publishEvent(RecommenderTaskNotificationEvent
-                    .builder(this, project, sessionOwner.getUsername()) //
-                    .withMessage(
-                            LogMessage.info(this, "Prediction run produced no new suggestions")) //
-                    .build());
-        }
-    }
-
-    private void logNewPredictionsAvailable(Project project, User sessionOwner)
-    {
-        var event = RecommenderTaskNotificationEvent.builder(this, project,
-                sessionOwner.getUsername());
-
-        if (properties.getMessages().isNewPredictionsAvailable()) {
-            event.withMessage(LogMessage.info(this,
-                    predictions.getNewSuggestionCount() + " new predictions available" //
-                            + " (some may be hidden/merged)"));
-
-        }
-
-        // Send the event anyway (even without message) to trigger the refresh button to wriggle
-        appEventPublisher.publishEvent(event.build());
     }
 
     public Predictions getPredictions()
@@ -573,17 +551,17 @@ public class PredictionTask
         }
 
         // Perform the actual prediction
-        var startTime = System.currentTimeMillis();
+        var startTime = currentTimeMillis();
         var predictedRange = predict(aIncomingPredictions, aCtx, aEngine, aPredictionCas,
                 aPredictionRange);
 
-        var suggestionSupport = maybeSuggestionSupport.get();
+        // Extract suggestions from the prediction CAS
         var generatedSuggestions = extractSuggestions(aIncomingPredictions, aDocument, aOriginalCas,
-                aPredictionCas, rec, suggestionSupport);
+                aPredictionCas, rec, maybeSuggestionSupport.get());
 
         // Reconcile new suggestions with suggestions from previous run
         var reconciliationResult = reconcile(aActivePredictions, aDocument, rec, predictedRange,
-                generatedSuggestions);
+                generatedSuggestions, reconciliationOptions.toArray(ReconciliationOption[]::new));
 
         logGeneratedPredictions(aIncomingPredictions, aDocument, rec, predictedRange,
                 generatedSuggestions, reconciliationResult, currentTimeMillis() - startTime);
@@ -662,6 +640,7 @@ public class PredictionTask
             aged++;
             suggestion.incrementAge();
         }
+
         suggestions.addAll(inheritableSuggestions);
         return aged;
     }
@@ -699,7 +678,7 @@ public class PredictionTask
 
     static ReconciliationResult reconcile(Predictions aActivePredictions, SourceDocument aDocument,
             Recommender recommender, Range predictedRange,
-            List<AnnotationSuggestion> aNewProtoSuggestions)
+            List<AnnotationSuggestion> aNewProtoSuggestions, ReconciliationOption... aOptions)
     {
         if (aActivePredictions == null) {
             return new ReconciliationResult(aNewProtoSuggestions.size(), 0, 0,
@@ -708,7 +687,7 @@ public class PredictionTask
 
         var reconciledSuggestions = new LinkedHashSet<AnnotationSuggestion>();
         var addedSuggestions = new ArrayList<AnnotationSuggestion>();
-        int agedSuggestionsCount = 0;
+        var agedSuggestionsCount = 0;
 
         var predictionsByRecommenderAndDocument = aActivePredictions
                 .getPredictionsByRecommenderAndDocument(recommender, aDocument.getName());
@@ -721,7 +700,7 @@ public class PredictionTask
             var existingSuggestions = existingSuggestionsByPosition
                     .getOrDefault(newSuggestion.getPosition(), emptyList()).stream() //
                     .filter(s -> matchesForReconciliation(newSuggestion, s)) //
-                    .limit(2) // One to use, the second to warn that there was more than one
+                    .limit(2) // First to use, the second to warn that there was more than one
                     .toList();
 
             if (existingSuggestions.isEmpty()) {
@@ -747,6 +726,15 @@ public class PredictionTask
                 .filter(s -> !reconciledSuggestions.contains(s)) //
                 .toList();
 
+        if (asList(aOptions).contains(KEEP_EXISTING)) {
+            for (var s : removedSuggestions) {
+                s.incrementAge();
+                agedSuggestionsCount++;
+                reconciledSuggestions.add(s);
+            }
+            removedSuggestions = emptyList();
+        }
+
         var finalSuggestions = new ArrayList<>(reconciledSuggestions);
         finalSuggestions.addAll(addedSuggestions);
         return new ReconciliationResult(addedSuggestions.size(), removedSuggestions.size(),
@@ -758,6 +746,64 @@ public class PredictionTask
     {
         return aNew.getRecommenderId() == aExisting.getRecommenderId() && //
                 Objects.equals(aExisting.getLabel(), aNew.getLabel());
+    }
+
+    /**
+     * Clones the source CAS to the target CAS while adding the features required for encoding
+     * predictions to the respective types.
+     * 
+     * @param aProject
+     *            the project to which the CASes belong.
+     * @param aSourceCas
+     *            the source CAS.
+     * @param aTargetCas
+     *            the target CAS which is meant to be sent off to a recommender.
+     * @return the target CAS which is meant to be sent off to a recommender.
+     * @throws UIMAException
+     *             if there was a CAS-related error.
+     * @throws IOException
+     *             if there was a serialization-related errror.
+     */
+    CAS cloneAndMonkeyPatchCAS(Project aProject, CAS aSourceCas, CAS aTargetCas)
+        throws UIMAException, IOException
+    {
+        try (var watch = new StopWatch(LOG, "adding score features")) {
+            var tsd = schemaService.getFullProjectTypeSystem(aProject);
+            var features = schemaService.listAnnotationFeature(aProject);
+
+            RecommenderTypeSystemUtils.addPredictionFeaturesToTypeSystem(tsd, features);
+
+            schemaService.upgradeCas(aSourceCas, aTargetCas, tsd);
+        }
+
+        return aTargetCas;
+    }
+
+    private void logNoNewPredictionsAvailable(Project project, User sessionOwner)
+    {
+        if (properties.getMessages().isNoNewPredictionsAvailable()) {
+            appEventPublisher.publishEvent(RecommenderTaskNotificationEvent
+                    .builder(this, project, sessionOwner.getUsername()) //
+                    .withMessage(
+                            LogMessage.info(this, "Prediction run produced no new suggestions")) //
+                    .build());
+        }
+    }
+
+    private void logNewPredictionsAvailable(Project project, User sessionOwner)
+    {
+        var event = RecommenderTaskNotificationEvent.builder(this, project,
+                sessionOwner.getUsername());
+
+        if (properties.getMessages().isNewPredictionsAvailable()) {
+            event.withMessage(LogMessage.info(this,
+                    predictions.getNewSuggestionCount() + " new predictions available" //
+                            + " (some may be hidden/merged)"));
+
+        }
+
+        // Send the event anyway (even without message) to trigger the refresh button to wriggle
+        appEventPublisher.publishEvent(event.build());
     }
 
     private void logNoSuggestionSupportAvailable(Predictions aIncomingPredictions,
@@ -981,37 +1027,6 @@ public class PredictionTask
                 aRecommender.getName());
     }
 
-    /**
-     * Clones the source CAS to the target CAS while adding the features required for encoding
-     * predictions to the respective types.
-     * 
-     * @param aProject
-     *            the project to which the CASes belong.
-     * @param aSourceCas
-     *            the source CAS.
-     * @param aTargetCas
-     *            the target CAS which is meant to be sent off to a recommender.
-     * @return the target CAS which is meant to be sent off to a recommender.
-     * @throws UIMAException
-     *             if there was a CAS-related error.
-     * @throws IOException
-     *             if there was a serialization-related errror.
-     */
-    CAS cloneAndMonkeyPatchCAS(Project aProject, CAS aSourceCas, CAS aTargetCas)
-        throws UIMAException, IOException
-    {
-        try (var watch = new StopWatch(LOG, "adding score features")) {
-            var tsd = schemaService.getFullProjectTypeSystem(aProject);
-            var features = schemaService.listAnnotationFeature(aProject);
-
-            RecommenderTypeSystemUtils.addPredictionFeaturesToTypeSystem(tsd, features);
-
-            schemaService.upgradeCas(aSourceCas, aTargetCas, tsd);
-        }
-
-        return aTargetCas;
-    }
-
     private class LazyCas
     {
         private final SourceDocument document;
@@ -1056,6 +1071,11 @@ public class PredictionTask
             List<AnnotationSuggestion> suggestions)
     {}
 
+    public static enum ReconciliationOption
+    {
+        KEEP_EXISTING
+    }
+
     public static Builder<Builder<?>> builder()
     {
         return new Builder<>();
@@ -1072,6 +1092,7 @@ public class PredictionTask
         private boolean isolated = false;
         private boolean asynchronousRecommenders = true;
         private boolean synchronousRecommenders = true;
+        private Set<ReconciliationOption> reconciliationOptions = new HashSet<>();
 
         /**
          * Generate predictions only for the specified recommender. If this is not set, then
@@ -1150,6 +1171,15 @@ public class PredictionTask
         public T withSynchronousRecommenders(boolean aFlag)
         {
             synchronousRecommenders = aFlag;
+            return (T) this;
+        }
+
+        @SuppressWarnings("unchecked")
+        public T withReconciliationOptions(ReconciliationOption... aOptions)
+        {
+            if (aOptions != null) {
+                reconciliationOptions.addAll(asList(aOptions));
+            }
             return (T) this;
         }
 

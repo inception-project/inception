@@ -31,6 +31,8 @@ class PerParagraphContextGeneratorTest
     {
         var cas = CasFactory.createCas();
         cas.setDocumentText("""
+
+
                 This is paragraph 1.
 
                 This is paragraph 2 sentence 1.\r
@@ -51,11 +53,11 @@ class PerParagraphContextGeneratorTest
                         c -> c.getRange().getEnd(), //
                         PromptContext::getText) //
                 .containsExactly( //
-                        tuple(0, 20, "This is paragraph 1."), //
-                        tuple(22, 86,
+                        tuple(2, 24, "This is paragraph 1."), //
+                        tuple(24, 91,
                                 "This is paragraph 2 sentence 1.\r\nThis is paragraph 2 sentence 2."), //
-                        tuple(89, 120, "This is paragraph 3 sentence 1."), //
-                        tuple(122, 153, "This is paragraph 4 sentence 1."));
+                        tuple(91, 124, "This is paragraph 3 sentence 1."), //
+                        tuple(124, 156, "This is paragraph 4 sentence 1."));
     }
 
 }

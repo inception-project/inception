@@ -31,6 +31,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.uima.cas.CAS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -103,6 +104,10 @@ public abstract class ChatBasedLlmRecommenderImplBase<T extends LlmRecommenderTr
                 .generate(this, aCas, aBegin, aEnd, globalBindings);
 
         contexts.forEach(promptContext -> {
+            if (StringUtils.isBlank(promptContext.getText())) {
+                return;
+            }
+
             try {
                 var messages = new ArrayList<>(staticMessages);
                 messages.add(new ChatMessage(SYSTEM, "# Context\n\n" + promptContext.getText()));
