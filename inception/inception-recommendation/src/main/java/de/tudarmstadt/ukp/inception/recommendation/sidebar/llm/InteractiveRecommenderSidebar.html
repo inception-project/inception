@@ -29,6 +29,18 @@
               <wicket:label key="recommender" />
             </label>
           </div>
+          <div class="form-floating mb-3" wicket:enclosure="layer">
+            <select wicket:id="layer" class="form-select"  wicket:message="placeholder:layer"/>
+            <label wicket:for="layer">
+              <wicket:label key="layer"/>
+            </label>
+          </div>
+          <div class="form-floating mb-3" wicket:enclosure="feature">
+            <select wicket:id="feature" class="form-select"  wicket:message="placeholder:feature"/>
+            <label wicket:for="feature">
+              <wicket:label key="feature"/>
+            </label>
+          </div>
           <div wicket:id="traitsContainer">
             <div wicket:id="traits" />
           </div>

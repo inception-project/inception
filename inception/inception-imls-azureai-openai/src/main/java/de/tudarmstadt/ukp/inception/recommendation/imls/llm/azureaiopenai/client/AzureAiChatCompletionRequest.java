@@ -41,6 +41,7 @@ public class AzureAiChatCompletionRequest
     public static final Option<Double> FREQUENCY_PENALTY = new DoubleOption("frequency_penalty",
             -2.0d, 2.0d);
     public static final Option<Double> TEMPERATURE = new DoubleOption("temperature", 0.0d, 2.0d);
+    public static final Option<Double> TOP_P = new DoubleOption("top_p", 0.0d, 1.0d);
 
     public static List<Option<?>> getAllOptions()
     {
@@ -53,6 +54,7 @@ public class AzureAiChatCompletionRequest
     private final @JsonInclude(NON_NULL) AzureAiGenerateResponseFormat format;
     private final @JsonInclude(NON_NULL) @JsonProperty("frequency_penalty") Double frequencyPenalty;
     private final @JsonInclude(NON_NULL) @JsonProperty("temperature") Double temperature;
+    private final @JsonInclude(NON_NULL) @JsonProperty("top_p") Double topP;
     private final @JsonInclude(NON_NULL) @JsonProperty("seed") Integer seed;
 
     private final List<AzureAiChatCompletionMessage> messages;
@@ -66,6 +68,7 @@ public class AzureAiChatCompletionRequest
         frequencyPenalty = FREQUENCY_PENALTY.get(builder.options);
         temperature = TEMPERATURE.get(builder.options);
         seed = SEED.get(builder.options);
+        topP = TOP_P.get(builder.options);
     }
 
     public String getApiKey()
@@ -86,6 +89,26 @@ public class AzureAiChatCompletionRequest
     public List<AzureAiChatCompletionMessage> getMessages()
     {
         return messages;
+    }
+
+    public Double getFrequencyPenalty()
+    {
+        return frequencyPenalty;
+    }
+
+    public Double getTemperature()
+    {
+        return temperature;
+    }
+
+    public Double getTopP()
+    {
+        return topP;
+    }
+
+    public Integer getSeed()
+    {
+        return seed;
     }
 
     public static Builder builder()
@@ -156,6 +179,21 @@ public class AzureAiChatCompletionRequest
             else {
                 options.remove(aOption);
             }
+            return this;
+        }
+
+        public <T> Builder withExtraOptions(Map<String, Object> aOptions)
+        {
+            if (aOptions != null) {
+                for (var setting : aOptions.entrySet()) {
+                    var opt = getAllOptions().stream()
+                            .filter(o -> o.getName().equals(setting.getKey())).findFirst();
+                    if (opt.isPresent()) {
+                        withOption((Option) opt.get(), setting.getValue());
+                    }
+                }
+            }
+
             return this;
         }
 

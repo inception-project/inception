@@ -70,11 +70,28 @@ public class OllamaRecommenderFactory
     }
 
     @Override
-    public boolean accepts(AnnotationLayer aLayer, AnnotationFeature aFeature)
+    public boolean accepts(AnnotationLayer aLayer)
     {
-        return (SpanLayerSupport.TYPE.equals(aFeature.getLayer().getType())
-                || DocumentMetadataLayerSupport.TYPE.equals(aFeature.getLayer().getType()))
-                && TYPE_NAME_STRING.equals(aFeature.getType());
+        if (aLayer == null) {
+            return false;
+        }
+
+        return (SpanLayerSupport.TYPE.equals(aLayer.getType())
+                || DocumentMetadataLayerSupport.TYPE.equals(aLayer.getType()));
+    }
+
+    @Override
+    public boolean accepts(AnnotationFeature aFeature)
+    {
+        if (aFeature == null) {
+            return false;
+        }
+
+        if (!accepts(aFeature.getLayer())) {
+            return false;
+        }
+
+        return TYPE_NAME_STRING.equals(aFeature.getType());
     }
 
     @Override

@@ -43,9 +43,9 @@ public class LlmRecommenderTraits
 
     private String prompt;
 
-    private PromptingMode promptingMode = PromptingMode.PER_ANNOTATION;
+    private PromptingMode promptingMode = PromptingMode.PER_PARAGRAPH;
 
-    private ExtractionMode extractionMode = ExtractionMode.RESPONSE_AS_LABEL;
+    private ExtractionMode extractionMode = ExtractionMode.MENTIONS_FROM_JSON;
 
     private @JsonInclude(NON_EMPTY) Map<String, Object> options = new LinkedHashMap<String, Object>();
 

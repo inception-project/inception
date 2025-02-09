@@ -263,7 +263,7 @@ public class RecommendationSidebar
                     continue;
                 }
 
-                if (!factory.accepts(recommender.getLayer(), recommender.getFeature())) {
+                if (!factory.accepts(recommender)) {
                     mismatchedRecommenderNames.add(recommender.getName());
                 }
             }

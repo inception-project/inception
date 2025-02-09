@@ -72,9 +72,19 @@ public class AzureAiOpenAiRecommender
         var request = AzureAiChatCompletionRequest.builder() //
                 .withApiKey(((ApiKeyAuthenticationTraits) traits.getAuthentication()).getApiKey()) //
                 .withMessages(messages) //
-                .withFormat(format) //
-                .build();
-        var response = client.generate(traits.getUrl(), request).trim();
+                .withFormat(format);
+
+        var options = traits.getOptions();
+        // https://platform.openai.com/docs/api-reference/chat/create recommends to set temperature
+        // or top_p but not both.
+        if (!options.containsKey(AzureAiChatCompletionRequest.TEMPERATURE.getName())
+                && !options.containsKey(AzureAiChatCompletionRequest.TOP_P.getName())) {
+            request.withOption(AzureAiChatCompletionRequest.TEMPERATURE, 0.0d);
+        }
+        request.withOption(AzureAiChatCompletionRequest.SEED, 0xdeadbeef);
+        request.withExtraOptions(options);
+
+        var response = client.generate(traits.getUrl(), request.build()).trim();
         LOG.trace("Azure AI OpenAI responds: [{}]", response);
         return response;
     }

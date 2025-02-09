@@ -61,15 +61,25 @@ public class DataMajorityRecommenderFactory
     }
 
     @Override
-    public boolean accepts(AnnotationLayer aLayer, AnnotationFeature aFeature)
+    public boolean accepts(AnnotationLayer aLayer)
     {
-        if (aLayer == null || aFeature == null) {
+        if (aLayer == null) {
             return false;
         }
 
         return (asList(SINGLE_TOKEN, TOKENS).contains(aLayer.getAnchoringMode()))
-                && !aLayer.isCrossSentence() && SpanLayerSupport.TYPE.equals(aLayer.getType())
-                && CAS.TYPE_NAME_STRING.equals(aFeature.getType()) || aFeature.isVirtualFeature();
+                && !aLayer.isCrossSentence() && SpanLayerSupport.TYPE.equals(aLayer.getType());
+    }
+
+    @Override
+    public boolean accepts(AnnotationFeature aFeature)
+    {
+        if (aFeature == null) {
+            return false;
+        }
+
+        return accepts(aFeature.getLayer()) && CAS.TYPE_NAME_STRING.equals(aFeature.getType())
+                || aFeature.isVirtualFeature();
     }
 }
 // end::classDefinition[]

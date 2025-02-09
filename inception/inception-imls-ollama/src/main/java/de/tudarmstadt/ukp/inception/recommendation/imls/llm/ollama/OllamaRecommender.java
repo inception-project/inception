@@ -17,6 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama;
 
+import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaOptions.SEED;
+import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaOptions.TEMPERATURE;
+import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaOptions.TOP_P;
+
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.util.List;
@@ -32,7 +36,6 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaChatMessage;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaChatRequest;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaClient;
-import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaOptions;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.response.ResponseFormat;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.traits.ChatBasedLlmRecommenderImplBase;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.traits.ChatMessage;
@@ -66,12 +69,18 @@ public class OllamaRecommender
                 .withModel(traits.getModel()) //
                 .withMessages(messages) //
                 .withFormat(format) //
-                .withStream(false) //
-                .withOption(OllamaOptions.TEMPERATURE, 0.0d) //
-                .withOption(OllamaOptions.SEED, 0xdeadbeef) //
-                .build();
+                .withStream(false);
 
-        var response = client.chat(traits.getUrl(), request, null).getMessage().content();
+        var options = traits.getOptions();
+        // https://platform.openai.com/docs/api-reference/chat/create recommends to set temperature
+        // or top_p but not both.
+        if (!options.containsKey(TEMPERATURE.getName()) && !options.containsKey(TOP_P.getName())) {
+            request.withOption(TEMPERATURE, 0.0d);
+        }
+        request.withOption(SEED, 0xdeadbeef);
+        request.withExtraOptions(options);
+
+        var response = client.chat(traits.getUrl(), request.build(), null).getMessage().content();
 
         return response;
     }

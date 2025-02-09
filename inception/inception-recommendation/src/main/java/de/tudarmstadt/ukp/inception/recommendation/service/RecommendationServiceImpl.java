@@ -1096,6 +1096,10 @@ public class RecommendationServiceImpl
     @Override
     public Optional<RecommendationEngineFactory<?>> getRecommenderFactory(Recommender aRecommender)
     {
+        if (aRecommender == null) {
+            return Optional.empty();
+        }
+
         return Optional.ofNullable(recommenderFactoryRegistry.getFactory(aRecommender.getTool()));
     }
 

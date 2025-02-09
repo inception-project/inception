@@ -24,7 +24,6 @@ import java.io.Serializable;
 
 import org.apache.wicket.markup.html.panel.EmptyPanel;
 import org.apache.wicket.markup.html.panel.Panel;
-import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
 
@@ -36,7 +35,6 @@ import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.workload.matrix.MatrixWorkloadExtension;
 import de.tudarmstadt.ukp.inception.workload.matrix.config.MatrixWorkloadManagerAutoConfiguration;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
-import jakarta.persistence.EntityManager;
 
 /**
  * This extension disables random access to documents for non-managers if random access is disabled
@@ -57,9 +55,6 @@ public class MatrixWorkflowNoRandomAccessDocumentNavigationActionBarExtension
     private final MatrixWorkloadExtension matrixWorkloadExtension;
     private final ProjectService projectService;
     private final UserDao userService;
-
-    // SpringBeans
-    private @SpringBean EntityManager entityManager;
 
     @Autowired
     public MatrixWorkflowNoRandomAccessDocumentNavigationActionBarExtension(

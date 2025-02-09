@@ -282,7 +282,7 @@ public class SelectionTask
         }
 
         var factory = optFactory.get();
-        if (!factory.accepts(recommender.getLayer(), recommender.getFeature())) {
+        if (!factory.accepts(recommender)) {
             return Optional.of(skipRecommenderWithInvalidSettings(user, recommender));
         }
 
