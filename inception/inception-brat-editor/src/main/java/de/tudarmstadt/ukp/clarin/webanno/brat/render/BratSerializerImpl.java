@@ -279,17 +279,17 @@ public class BratSerializerImpl
         int last = bi.first();
         int cur = bi.next();
         while (cur != BreakIterator.DONE) {
-            Offsets offsets = new Offsets(last, cur);
-            trim(visibleText, offsets);
-            if (offsets.getBegin() < offsets.getEnd()) {
-                bratTokenOffsets.add(offsets);
+            var offsets = new int[] { last, cur };
+            TrimUtils.trim(visibleText, offsets);
+            if (offsets[0] < offsets[1]) {
+                bratTokenOffsets.add(new Offsets(offsets[0], offsets[1]));
             }
             last = cur;
             cur = bi.next();
         }
 
         var rows = aResponse.getSentenceOffsets();
-        for (Offsets offsets : bratTokenOffsets) {
+        for (var offsets : bratTokenOffsets) {
             var ranges = split(rows, visibleText, aVDoc.getWindowBegin(), offsets.getBegin(),
                     offsets.getEnd());
             for (var range : ranges) {
@@ -374,25 +374,26 @@ public class BratSerializerImpl
 
         var segments = new ArrayList<Offsets>();
         for (var row : coveredRows) {
-            Offsets segment;
+            int[] segment;
 
             if (covering(aBegin, aEnd, row.getBegin(), row.getEnd())) {
-                segment = new Offsets(row.getBegin(), row.getEnd());
+                segment = new int[] { row.getBegin(), row.getEnd() };
             }
             else if (overlappingAtBegin(row.getBegin(), row.getEnd(), aBegin, aEnd)) {
-                segment = new Offsets(aBegin, row.getEnd());
+                segment = new int[] { aBegin, row.getEnd() };
             }
             else if (overlappingAtEnd(row.getBegin(), row.getEnd(), aBegin, aEnd)) {
-                segment = new Offsets(row.getBegin(), aEnd);
+                segment = new int[] { row.getBegin(), aEnd };
             }
             else {
                 continue;
             }
 
-            trim(aText, segment);
+            TrimUtils.trim(aText, segment);
 
-            if (!segment.isEmpty()) {
-                segments.add(segment);
+            var segmentOffsets = new Offsets(segment[0], segment[1]);
+            if (!segmentOffsets.isEmpty()) {
+                segments.add(segmentOffsets);
             }
         }
 
@@ -437,87 +438,4 @@ public class BratSerializerImpl
         return abbr.toString();
     }
 
-    /**
-     * Remove trailing or leading whitespace from the annotation.
-     * 
-     * @param aText
-     *            the text.
-     * @param aOffsets
-     *            the offsets.
-     */
-    static void trim(CharSequence aText, Offsets aOffsets)
-    {
-        if (aOffsets.getBegin() == aOffsets.getEnd()) {
-            // Nothing to do on empty spans
-            return;
-        }
-
-        int begin = aOffsets.getBegin();
-        int end = aOffsets.getEnd();
-
-        // First we trim at the end. If a trimmed span is empty, we want to return the original
-        // begin as the begin/end of the trimmed span
-        while ((end > 0) && end > begin && trimChar(aText.charAt(end - 1))) {
-            end--;
-        }
-
-        // Then, trim at the start
-        while ((begin < (aText.length() - 1)) && begin < end && trimChar(aText.charAt(begin))) {
-            begin++;
-        }
-
-        aOffsets.setBegin(begin);
-        aOffsets.setEnd(end);
-    }
-
-    static boolean trimChar(final char aChar)
-    {
-        switch (aChar) {
-        case '\n': // Line break
-        case '\r': // Carriage return
-        case '\t': // Tab
-        case '\u2000': // EN QUAD
-        case '\u2001': // EM QUAD
-        case '\u2002': // EN SPACE
-        case '\u2003': // EM SPACE
-        case '\u2004': // THREE-PER-EM SPACE
-        case '\u2005': // FOUR-PER-EM SPACE
-        case '\u2006': // SIX-PER-EM SPACE
-        case '\u2007': // FIGURE SPACE
-        case '\u2008': // PUNCTUATION SPACE
-        case '\u2009': // THIN SPACE
-        case '\u200A': // HAIR SPACE
-        case '\u200B': // ZERO WIDTH SPACE
-        case '\u200C': // ZERO WIDTH NON-JOINER
-        case '\u200D': // ZERO WIDTH JOINER
-        case '\u200E': // LEFT-TO-RIGHT MARK
-        case '\u200F': // RIGHT-TO-LEFT MARK
-        case '\u2028': // LINE SEPARATOR
-        case '\u2029': // PARAGRAPH SEPARATOR
-        case '\u202A': // LEFT-TO-RIGHT EMBEDDING
-        case '\u202B': // RIGHT-TO-LEFT EMBEDDING
-        case '\u202C': // POP DIRECTIONAL FORMATTING
-        case '\u202D': // LEFT-TO-RIGHT OVERRIDE
-        case '\u202E': // RIGHT-TO-LEFT OVERRIDE
-        case '\u202F': // NARROW NO-BREAK SPACE
-        case '\u2060': // WORD JOINER
-        case '\u2061': // FUNCTION APPLICATION
-        case '\u2062': // INVISIBLE TIMES
-        case '\u2063': // INVISIBLE SEPARATOR
-        case '\u2064': // INVISIBLE PLUS
-        case '\u2065': // <unassigned>
-        case '\u2066': // LEFT-TO-RIGHT ISOLATE
-        case '\u2067': // RIGHT-TO-LEFT ISOLATE
-        case '\u2068': // FIRST STRONG ISOLATE
-        case '\u2069': // POP DIRECTIONAL ISOLATE
-        case '\u206A': // INHIBIT SYMMETRIC SWAPPING
-        case '\u206B': // ACTIVATE SYMMETRIC SWAPPING
-        case '\u206C': // INHIBIT ARABIC FORM SHAPING
-        case '\u206D': // ACTIVATE ARABIC FORM SHAPING
-        case '\u206E': // NATIONAL DIGIT SHAPES
-        case '\u206F': // NOMINAL DIGIT SHAPES
-        default:
-            return Character.isWhitespace(aChar);
-        }
-    }
 }
