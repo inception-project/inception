@@ -40,7 +40,7 @@ public class OllamaChatRequest
     private boolean stream;
     private @JsonInclude(Include.NON_NULL) JsonNode format;
     private @JsonInclude(Include.NON_DEFAULT) boolean raw;
-    private @JsonInclude(Include.NON_EMPTY) Map<String, Object> options = new HashMap<>();
+    private @JsonInclude(Include.NON_EMPTY) Map<Option<?>, Object> options = new HashMap<>();
 
     private OllamaChatRequest(Builder builder)
     {
@@ -77,7 +77,7 @@ public class OllamaChatRequest
         return stream;
     }
 
-    public Map<String, Object> getOptions()
+    public Map<Option<?>, Object> getOptions()
     {
         return options;
     }
@@ -94,7 +94,7 @@ public class OllamaChatRequest
         private JsonNode format;
         private boolean raw;
         private boolean stream;
-        private Map<String, Object> options = new HashMap<>();
+        private Map<Option<?>, Object> options = new HashMap<>();
 
         private Builder()
         {
@@ -143,19 +143,26 @@ public class OllamaChatRequest
         public <T> Builder withOption(Option<T> aOption, T aValue)
         {
             if (aValue != null) {
-                options.put(aOption.getName(), aValue);
+                options.put(aOption, aValue);
             }
             else {
-                options.remove(aOption.getName());
+                options.remove(aOption);
             }
             return this;
         }
 
-        public <T> Builder withOptions(Map<String, Object> aOptions)
+        public <T> Builder withExtraOptions(Map<String, Object> aOptions)
         {
             if (aOptions != null) {
-                options.putAll(aOptions);
+                for (var setting : aOptions.entrySet()) {
+                    var opt = OllamaOptions.getAllOptions().stream()
+                            .filter(o -> o.getName().equals(setting.getKey())).findFirst();
+                    if (opt.isPresent()) {
+                        withOption((Option) opt.get(), setting.getValue());
+                    }
+                }
             }
+
             return this;
         }
 

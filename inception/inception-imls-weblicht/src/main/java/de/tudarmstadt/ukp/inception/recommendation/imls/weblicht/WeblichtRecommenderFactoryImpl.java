@@ -77,25 +77,56 @@ public class WeblichtRecommenderFactoryImpl
     }
 
     @Override
-    public boolean accepts(AnnotationLayer aLayer, AnnotationFeature aFeature)
+    public boolean accepts(AnnotationLayer aLayer)
     {
+        if (aLayer == null) {
+            return false;
+        }
+
         if (Lemma.class.getName().equals(aLayer.getName())) {
-            if ("value".equals(aFeature.getName())) {
-                return true;
-            }
+            return true;
         }
 
         if (POS.class.getName().equals(aLayer.getName())) {
-            if ("PosValue".equals(aFeature.getName())) {
-                return true;
-            }
-            if ("coarseValue".equals(aFeature.getName())) {
+            return true;
+        }
+
+        if (NamedEntity.class.getName().equals(aLayer.getName())) {
+            return true;
+        }
+
+        return false;
+    }
+
+    @Override
+    public boolean accepts(AnnotationFeature aFeature)
+    {
+        if (aFeature == null) {
+            return false;
+        }
+
+        if (!accepts(aFeature.getLayer())) {
+            return false;
+        }
+
+        var layer = aFeature.getLayer();
+        if (Lemma._TypeName.equals(layer.getName())) {
+            if (Lemma._FeatName_value.equals(aFeature.getName())) {
                 return true;
             }
         }
 
-        if (NamedEntity.class.getName().equals(aLayer.getName())) {
-            if ("value".equals(aFeature.getName())) {
+        if (POS._TypeName.equals(layer.getName())) {
+            if (POS._FeatName_PosValue.equals(aFeature.getName())) {
+                return true;
+            }
+            if (POS._FeatName_coarseValue.equals(aFeature.getName())) {
+                return true;
+            }
+        }
+
+        if (NamedEntity._TypeName.equals(layer.getName())) {
+            if (NamedEntity._FeatName_value.equals(aFeature.getName())) {
                 return true;
             }
         }

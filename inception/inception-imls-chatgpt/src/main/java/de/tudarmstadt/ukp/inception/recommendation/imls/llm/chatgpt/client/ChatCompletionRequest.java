@@ -38,16 +38,21 @@ public class ChatCompletionRequest
     public static final Option<Integer> MAX_TOKENS = new Option<>(Integer.class, "max_tokens");
     public static final Option<Integer> SEED = new Option<>(Integer.class, "seed");
     public static final Option<Integer> N = new Option<>(Integer.class, "n");
+    public static final Option<Double> TEMPERATURE = new Option<>(Double.class, "temperature");
+    public static final Option<Double> TOP_P = new Option<>(Double.class, "top_p");
 
     public static List<Option<?>> getAllOptions()
     {
-        return asList(MAX_TOKENS, SEED, N);
+        return asList(SEED, TEMPERATURE, TOP_P);
     }
 
     private final @JsonIgnore String apiKey;
     private final String model;
     private final List<ChatCompletionMessage> messages;
     private final @JsonProperty("response_format") @JsonInclude(NON_NULL) ChatGptResponseFormat format;
+    private final @JsonInclude(NON_NULL) @JsonProperty("temperature") Double temperature;
+    private final @JsonInclude(NON_NULL) @JsonProperty("top_p") Double topP;
+    private final @JsonInclude(NON_NULL) @JsonProperty("seed") Integer seed;
 
     private ChatCompletionRequest(Builder builder)
     {
@@ -55,6 +60,9 @@ public class ChatCompletionRequest
         format = builder.format;
         model = builder.model;
         apiKey = builder.apiKey;
+        temperature = TEMPERATURE.get(builder.options);
+        seed = SEED.get(builder.options);
+        topP = TOP_P.get(builder.options);
     }
 
     public String getApiKey()
@@ -88,7 +96,7 @@ public class ChatCompletionRequest
         private String apiKey;
         private ChatGptResponseFormat format;
         private final List<ChatCompletionMessage> messages = new ArrayList<>();
-        private final Map<String, Object> options = new HashMap<>();
+        private final Map<Option<?>, Object> options = new HashMap<>();
 
         private Builder()
         {
@@ -145,17 +153,26 @@ public class ChatCompletionRequest
         public <T> Builder withOption(Option<T> aOption, T aValue)
         {
             if (aValue != null) {
-                options.put(aOption.getName(), aValue);
+                options.put(aOption, aValue);
             }
             else {
-                options.remove(aOption.getName());
+                options.remove(aOption);
             }
             return this;
         }
 
-        public Builder withOptions(Map<String, Object> aOptions)
+        public <T> Builder withExtraOptions(Map<String, Object> aOptions)
         {
-            options.putAll(aOptions);
+            if (aOptions != null) {
+                for (var setting : aOptions.entrySet()) {
+                    var opt = getAllOptions().stream()
+                            .filter(o -> o.getName().equals(setting.getKey())).findFirst();
+                    if (opt.isPresent()) {
+                        withOption((Option) opt.get(), setting.getValue());
+                    }
+                }
+            }
+
             return this;
         }
 

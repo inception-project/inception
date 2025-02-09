@@ -434,7 +434,7 @@ public class PredictionTask
         var factory = maybeFactory.get();
 
         // Check that configured layer and feature are accepted by this type of recommender
-        if (!factory.accepts(aRecommender.getLayer(), aRecommender.getFeature())) {
+        if (!factory.accepts(aRecommender)) {
             logInvalidRecommenderConfiguration(aPredictions, aRecommender);
             return;
         }

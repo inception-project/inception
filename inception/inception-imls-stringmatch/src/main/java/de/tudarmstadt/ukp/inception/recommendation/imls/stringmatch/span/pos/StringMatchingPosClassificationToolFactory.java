@@ -22,12 +22,11 @@
 package de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.pos;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SINGLE_TOKEN;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.SPAN_TYPE;
-
-import org.apache.uima.cas.CAS;
+import static org.apache.uima.cas.CAS.TYPE_NAME_STRING;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactoryImplBase;
@@ -68,14 +67,28 @@ public class StringMatchingPosClassificationToolFactory
     }
 
     @Override
-    public boolean accepts(AnnotationLayer aLayer, AnnotationFeature aFeature)
+    public boolean accepts(AnnotationLayer aLayer)
     {
-        if (aLayer == null || aFeature == null) {
+        if (aLayer == null) {
             return false;
         }
 
-        return SINGLE_TOKEN.equals(aLayer.getAnchoringMode()) && SPAN_TYPE.equals(aLayer.getType())
-                && (CAS.TYPE_NAME_STRING.equals(aFeature.getType()) || aFeature.isVirtualFeature());
+        return SINGLE_TOKEN.equals(aLayer.getAnchoringMode())
+                && SpanLayerSupport.TYPE.equals(aLayer.getType());
+    }
+
+    @Override
+    public boolean accepts(AnnotationFeature aFeature)
+    {
+        if (aFeature == null) {
+            return false;
+        }
+
+        if (!accepts(aFeature.getLayer())) {
+            return false;
+        }
+
+        return TYPE_NAME_STRING.equals(aFeature.getType()) || aFeature.isVirtualFeature();
     }
 
     @Override

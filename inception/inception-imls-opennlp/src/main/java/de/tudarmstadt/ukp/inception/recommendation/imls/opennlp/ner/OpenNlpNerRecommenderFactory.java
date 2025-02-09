@@ -25,8 +25,8 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SENTENCES;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SINGLE_TOKEN;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
 import static java.util.Arrays.asList;
-
-import org.apache.uima.cas.CAS;
+import static org.apache.uima.cas.CAS.TYPE_NAME_BOOLEAN;
+import static org.apache.uima.cas.CAS.TYPE_NAME_STRING;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -62,16 +62,29 @@ public class OpenNlpNerRecommenderFactory
     }
 
     @Override
-    public boolean accepts(AnnotationLayer aLayer, AnnotationFeature aFeature)
+    public boolean accepts(AnnotationLayer aLayer)
     {
-        if (aLayer == null || aFeature == null) {
+        if (aLayer == null) {
             return false;
         }
 
         return (asList(SINGLE_TOKEN, TOKENS, SENTENCES).contains(aLayer.getAnchoringMode()))
-                && SpanLayerSupport.TYPE.equals(aLayer.getType())
-                && (asList(CAS.TYPE_NAME_STRING, CAS.TYPE_NAME_BOOLEAN).contains(aFeature.getType())
-                        || aFeature.isVirtualFeature());
+                && SpanLayerSupport.TYPE.equals(aLayer.getType());
+    }
+
+    @Override
+    public boolean accepts(AnnotationFeature aFeature)
+    {
+        if (aFeature == null) {
+            return false;
+        }
+
+        if (!accepts(aFeature.getLayer())) {
+            return false;
+        }
+
+        return asList(TYPE_NAME_STRING, TYPE_NAME_BOOLEAN).contains(aFeature.getType())
+                || aFeature.isVirtualFeature();
     }
 
     @Override

@@ -1,6 +1,5 @@
 - name: Named entity recognition
   promptingMode: per-paragraph
-  format: json
   extractionMode: mentions-from-json
   prompt: |-
     Identify all named entities and categorize them.

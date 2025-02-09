@@ -21,13 +21,12 @@ import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationServ
 import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CHANGE_EVENT;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.enabledWhenNot;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
+import static java.lang.String.format;
 import static java.util.Collections.emptyList;
-import static java.util.stream.Collectors.toList;
 
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
-import java.util.Optional;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -309,10 +308,10 @@ public class RecommenderEditorPanel
         var recommender = recommenderModel.getObject();
         // check if recommender and layer still match
         var factory = recommenderRegistry.getFactory(aToolModel.getObject().getKey());
-        if (!factory.accepts(recommender.getLayer(), recommender.getFeature())) {
-            error(String.format("Recommender %s configured with invalid layer or feature.",
+        if (!factory.accepts(recommender)) {
+            error(format("Recommender %s configured with invalid layer or feature.",
                     recommender.getName()));
-            Optional<AjaxRequestTarget> target = RequestCycle.get().find(AjaxRequestTarget.class);
+            var target = RequestCycle.get().find(AjaxRequestTarget.class);
             if (target.isPresent()) {
                 target.get().addChildren(getPage(), IFeedback.class);
             }
@@ -330,7 +329,7 @@ public class RecommenderEditorPanel
 
         var factoryName = factory != null ? factory.getName() : "NO FACTORY!";
 
-        return String.format(Locale.US, "[%s@%s] %s", aRecommender.getLayer().getUiName(),
+        return format(Locale.US, "[%s@%s] %s", aRecommender.getLayer().getUiName(),
                 aRecommender.getFeature().getUiName(), factoryName);
     }
 
@@ -391,7 +390,7 @@ public class RecommenderEditorPanel
         return annotationSchemaService.listSupportedFeatures(layer).stream()
                 .filter(feat -> feat.getType() != null) //
                 .filter(feat -> featureSupportRegistry.isAccessible(feat)) //
-                .collect(toList());
+                .toList();
     }
 
     private List<Pair<String, String>> listTools()
@@ -400,16 +399,10 @@ public class RecommenderEditorPanel
             return emptyList();
         }
 
-        var layer = recommenderModel.getObject().getLayer();
-        var feature = recommenderModel.getObject().getFeature();
-        if (layer == null || feature == null) {
-            return emptyList();
-        }
-
-        return recommenderRegistry.getFactories(layer, feature).stream()
+        return recommenderRegistry.getFactories(recommenderModel.getObject()).stream() //
                 .filter(f -> !f.isDeprecated()) //
                 .map(f -> Pair.of(f.getId(), f.getName())) //
-                .collect(toList());
+                .toList();
     }
 
     private void actionSave(AjaxRequestTarget aTarget)

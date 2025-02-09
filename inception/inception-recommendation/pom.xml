@@ -129,6 +129,10 @@
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-support-bootstrap</artifactId>
     </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-imls-llm-support</artifactId>
+    </dependency>
 
     <dependency>
       <groupId>org.dkpro.core</groupId>
@@ -214,6 +218,10 @@
     <dependency>
       <groupId>org.wicketstuff</groupId>
       <artifactId>wicketstuff-jquery-ui-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.wicketstuff</groupId>
+      <artifactId>wicketstuff-input-events</artifactId>
     </dependency>
     <dependency>
       <groupId>org.wicketstuff</groupId>

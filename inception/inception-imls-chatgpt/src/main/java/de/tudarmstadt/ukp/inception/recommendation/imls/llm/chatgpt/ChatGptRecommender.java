@@ -17,6 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.llm.chatgpt;
 
+import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.chatgpt.client.ChatCompletionRequest.SEED;
+import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.chatgpt.client.ChatCompletionRequest.TEMPERATURE;
+import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.chatgpt.client.ChatCompletionRequest.TOP_P;
 import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.chatgpt.client.ChatGptResponseFormatType.JSON_SCHEMA;
 
 import java.io.IOException;
@@ -69,8 +72,16 @@ public class ChatGptRecommender
                 .withApiKey(((ApiKeyAuthenticationTraits) traits.getAuthentication()).getApiKey()) //
                 .withMessages(messages) //
                 .withResponseFormat(getResponseFormat(aFormat, aJsonSchema)) //
-                .withOptions(traits.getOptions()) //
                 .withModel(traits.getModel());
+
+        var options = traits.getOptions();
+        // https://platform.openai.com/docs/api-reference/chat/create recommends to set temperature
+        // or top_p but not both.
+        if (!options.containsKey(TEMPERATURE.getName()) && !options.containsKey(TOP_P.getName())) {
+            request.withOption(TEMPERATURE, 0.0d);
+        }
+        request.withOption(SEED, 0xdeadbeef);
+        request.withExtraOptions(options);
 
         var response = client.chat(traits.getUrl(), request.build()).trim();
         LOG.trace("Response: [{}]", response);

@@ -121,6 +121,7 @@ public class ChatGptInteractionPanel
 
     private String getPromptHints()
     {
-        return traits.getObject().getPromptingMode().getHints();
+        var promptingMode = traits.getObject().getPromptingMode();
+        return promptingMode != null ? promptingMode.getHints() : null;
     }
 }

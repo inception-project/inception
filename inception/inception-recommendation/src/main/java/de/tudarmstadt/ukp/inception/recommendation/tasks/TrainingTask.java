@@ -178,7 +178,7 @@ public class TrainingTask
         }
 
         var factory = maybeFactory.get();
-        if (!factory.accepts(aRecommender.getLayer(), aRecommender.getFeature())) {
+        if (!factory.accepts(aRecommender)) {
             logInvalidRecommenderConfiguration(aRecommender);
             return;
         }

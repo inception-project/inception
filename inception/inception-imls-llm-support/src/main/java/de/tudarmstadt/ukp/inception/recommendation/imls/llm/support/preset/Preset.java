@@ -32,8 +32,6 @@ public class Preset
 
     private String name;
 
-    private String model;
-
     private String prompt;
 
     private PromptingMode promptingMode = PromptingMode.PER_ANNOTATION;
@@ -48,16 +46,6 @@ public class Preset
     public void setName(String aName)
     {
         name = aName;
-    }
-
-    public String getModel()
-    {
-        return model;
-    }
-
-    public void setModel(String aModel)
-    {
-        model = aModel;
     }
 
     public String getPrompt()

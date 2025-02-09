@@ -223,7 +223,7 @@ public abstract class AnnotationSuggestion
 
     public VID getVID()
     {
-        String payload = new VID(layerId, (int) recommenderId, id).toString();
+        var payload = new VID(layerId, (int) recommenderId, id).toString();
         return new VID(EXTENSION_ID, layerId, (int) recommenderId, id, payload);
     }
 
