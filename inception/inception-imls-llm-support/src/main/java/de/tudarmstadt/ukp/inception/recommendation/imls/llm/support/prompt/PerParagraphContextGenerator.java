@@ -52,38 +52,44 @@ public class PerParagraphContextGenerator
             });
         }
 
-        return Stream.iterate(new PromptContext(0, 0, ""), state -> state != null, state -> {
-            var text = aCas.getDocumentText();
+        return Stream
+                .iterate(new PromptContext(0, 0, ""), state -> state != null,
+                        state -> nextContext(aCas, state)) //
+                .filter(pc -> !pc.getText().isBlank());
+    }
 
-            if (text.substring(state.getRange().getEnd(), aCas.getDocumentText().length())
-                    .isBlank()) {
-                return null;
+    private PromptContext nextContext(CAS aCas, PromptContext state)
+    {
+        var text = aCas.getDocumentText();
+
+        if (text.substring(state.getRange().getEnd(), aCas.getDocumentText().length()).isBlank()) {
+            return null;
+        }
+
+        var lineBreakSequenceLength = 0;
+        var i = state.getRange().getEnd();
+        var seenContent = false;
+        while (i < text.length()) {
+            if (text.charAt(i) == '\n') {
+                lineBreakSequenceLength++;
+            }
+            else if (text.charAt(i) != '\r') {
+                if (lineBreakSequenceLength > 1 && seenContent) {
+                    break;
+                }
+
+                lineBreakSequenceLength = 0;
+                seenContent = true;
             }
 
-            var lineBreakSequenceLength = 0;
-            var i = state.getRange().getEnd();
-            var seenContent = false;
-            while (i < text.length()) {
-                if (text.charAt(i) == '\n') {
-                    lineBreakSequenceLength++;
-                }
-                else if (text.charAt(i) != '\r') {
-                    if (lineBreakSequenceLength > 1 && seenContent) {
-                        break;
-                    }
+            i++;
+        }
 
-                    lineBreakSequenceLength = 0;
-                    seenContent = true;
-                }
+        var offset = new int[] { state.getRange().getEnd(), Math.min(i, text.length()) };
+        var contextEnd = offset[1];
 
-                i++;
-            }
+        TrimUtils.trim(text, offset);
 
-            var offset = new int[] { state.getRange().getEnd(), Math.min(i, text.length()) };
-
-            TrimUtils.trim(text, offset);
-
-            return new PromptContext(offset[0], offset[1], text.substring(offset[0], offset[1]));
-        }).skip(1);
+        return new PromptContext(offset[0], contextEnd, text.substring(offset[0], offset[1]));
     }
 }
