@@ -17,9 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.export;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SINGLE_TOKEN;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.ANY_OVERLAP;
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.OVERLAP_ONLY;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CHAIN_TYPE;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.COREFERENCE_RELATION_FEATURE;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.COREFERENCE_TYPE_FEATURE;
 
@@ -39,7 +40,6 @@ import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedAnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedAnnotationLayerReference;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedTag;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedTagSet;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -50,6 +50,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.morph.MorphologicalFeatures;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainLayerSupport;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 
@@ -246,14 +247,7 @@ public class LayerImportExportUtils
     private static void setFeature(AnnotationSchemaService aAnnotationService,
             AnnotationFeature aFeature, ExportedAnnotationFeature aExFeature, Project aProject)
     {
-        aFeature.setDescription(aExFeature.getDescription());
-        aFeature.setEnabled(aExFeature.isEnabled());
-        aFeature.setVisible(aExFeature.isVisible());
-        aFeature.setUiName(aExFeature.getUiName());
-        aFeature.setProject(aProject);
-        aFeature.setName(aExFeature.getName());
-
-        var isItChainedLayer = CHAIN_TYPE.equals(aFeature.getLayer().getType());
+        var isItChainedLayer = ChainLayerSupport.TYPE.equals(aFeature.getLayer().getType());
         if (isItChainedLayer && (COREFERENCE_TYPE_FEATURE.equals(aExFeature.getName())
                 || COREFERENCE_RELATION_FEATURE.equals(aExFeature.getName()))) {
             aFeature.setType(CAS.TYPE_NAME_STRING);
@@ -268,9 +262,16 @@ public class LayerImportExportUtils
             aFeature.setType(aExFeature.getType());
         }
 
+        aFeature.setDescription(aExFeature.getDescription());
+        aFeature.setEnabled(aExFeature.isEnabled());
+        aFeature.setVisible(aExFeature.isVisible());
+        aFeature.setUiName(aExFeature.getUiName());
+        aFeature.setProject(aProject);
+        aFeature.setName(aExFeature.getName());
         aFeature.setRemember(aExFeature.isRemember());
         aFeature.setRequired(aExFeature.isRequired());
         aFeature.setHideUnconstraintFeature(aExFeature.isHideUnconstraintFeature());
+        aFeature.setIncludeInHover(aExFeature.isIncludeInHover());
         aFeature.setMode(aExFeature.getMultiValueMode());
         aFeature.setLinkMode(aExFeature.getLinkMode());
         aFeature.setLinkTypeName(aExFeature.getLinkTypeName());
@@ -291,8 +292,8 @@ public class LayerImportExportUtils
     {
         var exLayer = new ExportedAnnotationLayer();
         exLayer.setAllowStacking(aLayer.isAllowStacking());
-        exLayer.setLockToTokenOffset(AnchoringMode.SINGLE_TOKEN.equals(aLayer.getAnchoringMode()));
-        exLayer.setMultipleTokens(AnchoringMode.TOKENS.equals(aLayer.getAnchoringMode()));
+        exLayer.setLockToTokenOffset(SINGLE_TOKEN.equals(aLayer.getAnchoringMode()));
+        exLayer.setMultipleTokens(TOKENS.equals(aLayer.getAnchoringMode()));
         exLayer.setBuiltIn(aLayer.isBuiltIn());
         exLayer.setReadonly(aLayer.isReadonly());
         exLayer.setCrossSentence(aLayer.isCrossSentence());
@@ -325,6 +326,7 @@ public class LayerImportExportUtils
             exFeature.setType(feature.getType());
             exFeature.setUiName(feature.getUiName());
             exFeature.setVisible(feature.isVisible());
+            exFeature.setIncludeInHover(feature.isIncludeInHover());
             exFeature.setMultiValueMode(feature.getMultiValueMode());
             exFeature.setLinkMode(feature.getLinkMode());
             exFeature.setLinkTypeName(feature.getLinkTypeName());
