@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.curation.merge;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.ANY_OVERLAP;
 import static de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureDiffMode.INCLUDE;
+import static de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureMultiplicityMode.MULTIPLE_TARGETS_ONE_ROLE;
 import static de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureMultiplicityMode.ONE_TARGET_MULTIPLE_ROLES;
 import static de.tudarmstadt.ukp.inception.curation.merge.CurationTestUtils.ALT_LINKS_FEATURE;
 import static de.tudarmstadt.ukp.inception.curation.merge.CurationTestUtils.HOST_TYPE;
@@ -49,6 +50,7 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureTraits;
 import de.tudarmstadt.ukp.inception.curation.merge.strategy.ThresholdBasedMergeStrategy;
@@ -195,7 +197,7 @@ public class CasMergeLinkTest
         // Set up source CAS
         var sourceFs = buildAnnotation(sourceCas1.getCas(), HOST_TYPE) //
                 .at(0, 0) //
-                .withFeature(LINKS_FEATURE, asList(makeLinkFS(sourceCas1, null, 0, 0)))
+                .withFeature(LINKS_FEATURE, makeLinkFS(sourceCas1, null, 0, 0))
                 .buildAndAddToIndexes();
 
         // Set up target CAS
@@ -203,7 +205,7 @@ public class CasMergeLinkTest
         var targetFiller = getFeature(targetLink, TARGET_FEATURE, Annotation.class);
         var targetFs = buildAnnotation(targetCas.getCas(), HOST_TYPE) //
                 .at(sourceFs) //
-                .withFeature(LINKS_FEATURE, asList(targetLink)) //
+                .withFeature(LINKS_FEATURE, targetLink) //
                 .buildAndAddToIndexes();
 
         // Perform merge
@@ -225,7 +227,7 @@ public class CasMergeLinkTest
         // Set up source CAS
         var sourceFs = buildAnnotation(sourceCas1.getCas(), HOST_TYPE) //
                 .at(0, 0) //
-                .withFeature(LINKS_FEATURE, asList(makeLinkFS(sourceCas1, "role1", 0, 0)))
+                .withFeature(LINKS_FEATURE, makeLinkFS(sourceCas1, "role1", 0, 0))
                 .buildAndAddToIndexes();
 
         // Set up target CAS
@@ -233,7 +235,7 @@ public class CasMergeLinkTest
         var targetFiller = getFeature(targetLink, TARGET_FEATURE, Annotation.class);
         var targetFs = buildAnnotation(targetCas.getCas(), HOST_TYPE) //
                 .at(sourceFs) //
-                .withFeature(LINKS_FEATURE, asList(targetLink)) //
+                .withFeature(LINKS_FEATURE, targetLink) //
                 .buildAndAddToIndexes();
 
         // Perform merge
@@ -256,7 +258,7 @@ public class CasMergeLinkTest
         // Set up source CAS
         var sourceFs = buildAnnotation(sourceCas1.getCas(), HOST_TYPE) //
                 .at(0, 0) //
-                .withFeature(LINKS_FEATURE, asList(makeLinkFS(sourceCas1, "role1", 0, 0)))
+                .withFeature(LINKS_FEATURE, makeLinkFS(sourceCas1, "role1", 0, 0))
                 .buildAndAddToIndexes();
 
         // Set up target CAS
@@ -264,7 +266,7 @@ public class CasMergeLinkTest
         var targetFiller = getFeature(targetLink, TARGET_FEATURE, Annotation.class);
         var targetFs = buildAnnotation(targetCas.getCas(), HOST_TYPE) //
                 .at(sourceFs) //
-                .withFeature(LINKS_FEATURE, asList(targetLink)) //
+                .withFeature(LINKS_FEATURE, targetLink) //
                 .buildAndAddToIndexes();
 
         // Perform merge
@@ -287,19 +289,19 @@ public class CasMergeLinkTest
         // Set up source CAS
         var sourceFs = buildAnnotation(sourceCas1.getCas(), HOST_TYPE) //
                 .at(0, 0) //
-                .withFeature(LINKS_FEATURE, asList(makeLinkFS(sourceCas1, "role1", 1, 1)))
-                .withFeature(ALT_LINKS_FEATURE, asList(makeLinkFS(sourceCas1, "role1", 2, 2)))
+                .withFeature(LINKS_FEATURE, makeLinkFS(sourceCas1, "role1", 1, 1)) //
+                .withFeature(ALT_LINKS_FEATURE, makeLinkFS(sourceCas1, "role1", 2, 2)) //
                 .buildAndAddToIndexes();
 
         // Set up target CAS
         new NamedEntity(targetCas, 2, 2).addToIndexes();
         var targetCandidateFs1 = buildAnnotation(targetCas.getCas(), HOST_TYPE) //
                 .at(sourceFs) //
-                .withFeature(LINKS_FEATURE, asList(makeLinkFS(targetCas, "role1", 3, 3))) //
+                .withFeature(LINKS_FEATURE, makeLinkFS(targetCas, "role1", 3, 3)) //
                 .buildAndAddToIndexes();
         var targetCandidateFs2 = buildAnnotation(targetCas.getCas(), HOST_TYPE) //
                 .at(sourceFs) //
-                .withFeature(LINKS_FEATURE, asList(makeLinkFS(targetCas, "role1", 1, 1))) //
+                .withFeature(LINKS_FEATURE, makeLinkFS(targetCas, "role1", 1, 1)) //
                 .buildAndAddToIndexes();
 
         // Perform merge
@@ -325,12 +327,14 @@ public class CasMergeLinkTest
         void setup() throws Exception
         {
             slotLayer.setOverlapMode(ANY_OVERLAP);
+
             var traits = new LinkFeatureTraits();
             traits.setDiffMode(INCLUDE);
+            slotFeature.setTraits(toJsonString(traits));
+
             slotHostDiffAdapter.addLinkFeature("links", "role", "target", ONE_TARGET_MULTIPLE_ROLES,
                     INCLUDE);
 
-            slotFeature.setTraits(toJsonString(traits));
             sut.setMergeStrategy(ThresholdBasedMergeStrategy.builder() //
                     .withUserThreshold(1) //
                     .withConfidenceThreshold(0) //
@@ -343,12 +347,12 @@ public class CasMergeLinkTest
         {
             buildAnnotation(sourceCas1.getCas(), HOST_TYPE) //
                     .at(0, 0) //
-                    .withFeature(LINKS_FEATURE, asList(makeLinkFS(sourceCas1, "role1", 1, 1)))
+                    .withFeature(LINKS_FEATURE, makeLinkFS(sourceCas1, "role1", 1, 1))
                     .buildAndAddToIndexes();
 
             buildAnnotation(sourceCas1.getCas(), HOST_TYPE) //
                     .at(0, 0) //
-                    .withFeature(LINKS_FEATURE, asList(makeLinkFS(sourceCas1, "role2", 1, 1)))
+                    .withFeature(LINKS_FEATURE, makeLinkFS(sourceCas1, "role2", 1, 1))
                     .buildAndAddToIndexes();
 
             var casMap = Map.of("source", sourceCas1.getCas());
@@ -358,13 +362,126 @@ public class CasMergeLinkTest
             var targetHosts = targetCas.select(HOST_TYPE).asList();
             assertThat(targetHosts) //
                     .as("Links by host in target CAS") //
-                    .hasSize(2) //
                     .extracting(host -> toMaterializedLinks(host, LINKS_FEATURE, "role", "target")) //
                     .containsExactlyInAnyOrder( //
-                            asList(new MaterializedLink(LINKS_FEATURE, "role1",
-                                    NamedEntity._TypeName, 1, 1)), //
-                            asList(new MaterializedLink(LINKS_FEATURE, "role2",
-                                    NamedEntity._TypeName, 1, 1)));
+                            asList(matLink(LINKS_FEATURE, "role1", NamedEntity.class, 1, 1)), //
+                            asList(matLink(LINKS_FEATURE, "role2", NamedEntity.class, 1, 1)));
+        }
+
+        @Test
+        public void thatMultipleMatchingStackedLinksWithRoleAreMerged() throws Exception
+        {
+            slotHostDiffAdapter.addLinkFeature("links", "role", "target", MULTIPLE_TARGETS_ONE_ROLE,
+                    INCLUDE);
+
+            buildAnnotation(sourceCas1.getCas(), HOST_TYPE) //
+                    .at(0, 0) //
+                    .withFeature(LINKS_FEATURE, //
+                            makeLinkFS(sourceCas1, "role1", 1, 1), //
+                            makeLinkFS(sourceCas1, "role1", 2, 2), //
+                            makeLinkFS(sourceCas1, "role1", 3, 3))
+                    .buildAndAddToIndexes();
+
+            buildAnnotation(sourceCas1, HOST_TYPE) //
+                    .at(0, 0) //
+                    .withFeature(LINKS_FEATURE, makeLinkFS(sourceCas1, "role1", 1, 1))
+                    .buildAndAddToIndexes();
+
+            buildAnnotation(sourceCas1, HOST_TYPE) //
+                    .at(0, 0) //
+                    .withFeature(LINKS_FEATURE, //
+                            makeLinkFS(sourceCas1, "role1", 1, 1), //
+                            makeLinkFS(sourceCas1, "role1", 2, 2))
+                    .buildAndAddToIndexes();
+
+            buildAnnotation(sourceCas1, HOST_TYPE) //
+                    .at(0, 0) //
+                    .withFeature(LINKS_FEATURE, //
+                            makeLinkFS(sourceCas1, "role1", 1, 1), //
+                            makeLinkFS(sourceCas1, "role1", 3, 3))
+                    .buildAndAddToIndexes();
+
+            var casMap = Map.of("source1", sourceCas1.getCas());
+            var diff = doDiff(diffAdapters, casMap).toResult();
+            sut.mergeCas(diff, document, DUMMY_USER, targetCas.getCas(), casMap);
+
+            assertThat(targetCas.select(HOST_TYPE).asList()) //
+                    .as("Links by host in target CAS") //
+                    .extracting(host -> toMaterializedLinks(host, LINKS_FEATURE, "role", "target")) //
+                    .containsExactlyInAnyOrder( //
+                            asList( //
+                                    matLink(LINKS_FEATURE, "role1", NamedEntity.class, 1, 1)),
+                            asList( //
+                                    matLink(LINKS_FEATURE, "role1", NamedEntity.class, 2, 2), //
+                                    matLink(LINKS_FEATURE, "role1", NamedEntity.class, 1, 1)), //
+                            asList( //
+                                    matLink(LINKS_FEATURE, "role1", NamedEntity.class, 3, 3), //
+                                    matLink(LINKS_FEATURE, "role1", NamedEntity.class, 1, 1)),
+                            asList( //
+                                    matLink(LINKS_FEATURE, "role1", NamedEntity.class, 3, 3), //
+                                    matLink(LINKS_FEATURE, "role1", NamedEntity.class, 2, 2), //
+                                    matLink(LINKS_FEATURE, "role1", NamedEntity.class, 1, 1)));
+        }
+
+        @Test
+        public void thatMultipleMatchingStackedLinksWithoutRoleAreMerged() throws Exception
+        {
+            var traits = new LinkFeatureTraits();
+            traits.setDiffMode(INCLUDE);
+            traits.setEnableRoleLabels(false);
+            slotFeature.setTraits(toJsonString(traits));
+
+            slotFeature.setLinkMode(LinkMode.WITH_ROLE);
+            slotHostDiffAdapter.addLinkFeature("links", "role", "target",
+                    traits.getMultiplicityMode(), INCLUDE);
+
+            buildAnnotation(sourceCas1, HOST_TYPE) //
+                    .at(0, 0) //
+                    .withFeature(LINKS_FEATURE, //
+                            makeLinkFS(sourceCas1, 1, 1), //
+                            makeLinkFS(sourceCas1, 2, 2))
+                    .buildAndAddToIndexes();
+
+            buildAnnotation(sourceCas1.getCas(), HOST_TYPE) //
+                    .at(0, 0) //
+                    .withFeature(LINKS_FEATURE, //
+                            makeLinkFS(sourceCas1, 1, 1), //
+                            makeLinkFS(sourceCas1, 2, 2), //
+                            makeLinkFS(sourceCas1, 3, 3))
+                    .buildAndAddToIndexes();
+
+            buildAnnotation(sourceCas1, HOST_TYPE) //
+                    .at(0, 0) //
+                    .withFeature(LINKS_FEATURE, //
+                            makeLinkFS(sourceCas1, 1, 1), //
+                            makeLinkFS(sourceCas1, 3, 3))
+                    .buildAndAddToIndexes();
+
+            buildAnnotation(sourceCas1, HOST_TYPE) //
+                    .at(0, 0) //
+                    .withFeature(LINKS_FEATURE, makeLinkFS(sourceCas1, null, 1, 1))
+                    .buildAndAddToIndexes();
+
+            var casMap = Map.of("source1", sourceCas1.getCas());
+            var diff = doDiff(diffAdapters, casMap).toResult();
+            sut.mergeCas(diff, document, DUMMY_USER, targetCas.getCas(), casMap);
+
+            assertThat(targetCas.select(HOST_TYPE).asList()) //
+                    .as("Links by host in target CAS") //
+                    .extracting(host -> toMaterializedLinks(host, LINKS_FEATURE, "role", "target")) //
+                    .containsExactlyInAnyOrder( //
+                            asList( //
+                                    matLink(LINKS_FEATURE, NamedEntity.class, 1, 1)),
+                            asList( //
+                                    matLink(LINKS_FEATURE, NamedEntity.class, 1, 1), //
+                                    matLink(LINKS_FEATURE, NamedEntity.class, 2, 2)), //
+                            asList( //
+                                    matLink(LINKS_FEATURE, NamedEntity.class, 1, 1), //
+                                    matLink(LINKS_FEATURE, NamedEntity.class, 3, 3)),
+                            asList( //
+                                    matLink(LINKS_FEATURE, NamedEntity.class, 1, 1), //
+                                    matLink(LINKS_FEATURE, NamedEntity.class, 2, 2), //
+                                    matLink(LINKS_FEATURE, NamedEntity.class, 3, 3)));
         }
     }
 
@@ -375,12 +492,14 @@ public class CasMergeLinkTest
         void setup() throws Exception
         {
             slotLayer.setOverlapMode(ANY_OVERLAP);
+
             var traits = new LinkFeatureTraits();
             traits.setDiffMode(INCLUDE);
+            slotFeature.setTraits(toJsonString(traits));
+
             slotHostDiffAdapter.addLinkFeature("links", "role", "target", ONE_TARGET_MULTIPLE_ROLES,
                     INCLUDE);
 
-            slotFeature.setTraits(toJsonString(traits));
             sut.setMergeStrategy(ThresholdBasedMergeStrategy.builder() //
                     .withUserThreshold(2) //
                     .withConfidenceThreshold(0) //
@@ -393,17 +512,17 @@ public class CasMergeLinkTest
         {
             buildAnnotation(sourceCas1.getCas(), HOST_TYPE) //
                     .at(0, 0) //
-                    .withFeature(LINKS_FEATURE, asList(makeLinkFS(sourceCas1, "role1", 1, 1)))
+                    .withFeature(LINKS_FEATURE, makeLinkFS(sourceCas1, "role1", 1, 1))
                     .buildAndAddToIndexes();
 
             buildAnnotation(sourceCas1.getCas(), HOST_TYPE) //
                     .at(0, 0) //
-                    .withFeature(LINKS_FEATURE, asList(makeLinkFS(sourceCas1, "role2", 1, 1)))
+                    .withFeature(LINKS_FEATURE, makeLinkFS(sourceCas1, "role2", 1, 1))
                     .buildAndAddToIndexes();
 
             buildAnnotation(sourceCas2.getCas(), HOST_TYPE) //
                     .at(0, 0) //
-                    .withFeature(LINKS_FEATURE, asList(makeLinkFS(sourceCas2, "role1", 1, 1)))
+                    .withFeature(LINKS_FEATURE, makeLinkFS(sourceCas2, "role1", 1, 1))
                     .buildAndAddToIndexes();
 
             var casMap = Map.of("source1", sourceCas1.getCas(), "source2", sourceCas2.getCas());
@@ -413,11 +532,104 @@ public class CasMergeLinkTest
             var targetHosts = targetCas.select(HOST_TYPE).asList();
             assertThat(targetHosts) //
                     .as("Links by host in target CAS") //
-                    .hasSize(1) //
                     .extracting(host -> toMaterializedLinks(host, LINKS_FEATURE, "role", "target")) //
                     .containsExactlyInAnyOrder( //
-                            asList(new MaterializedLink(LINKS_FEATURE, "role1",
-                                    NamedEntity._TypeName, 1, 1)));
+                            asList(matLink(LINKS_FEATURE, "role1", NamedEntity.class, 1, 1)));
         }
+
+        @Test
+        public void thatMultipleMatchingStackedLinksAreMerged() throws Exception
+        {
+            slotHostDiffAdapter.addLinkFeature("links", "role", "target", MULTIPLE_TARGETS_ONE_ROLE,
+                    INCLUDE);
+
+            buildAnnotation(sourceCas1, HOST_TYPE) //
+                    .at(0, 0) //
+                    .withFeature(LINKS_FEATURE, //
+                            makeLinkFS(sourceCas1, "role1", 1, 1))
+                    .buildAndAddToIndexes();
+
+            buildAnnotation(sourceCas1, HOST_TYPE) //
+                    .at(0, 0) //
+                    .withFeature(LINKS_FEATURE, //
+                            makeLinkFS(sourceCas1, "role1", 1, 1), //
+                            makeLinkFS(sourceCas1, "role1", 2, 2))
+                    .buildAndAddToIndexes();
+
+            buildAnnotation(sourceCas1, HOST_TYPE) //
+                    .at(0, 0) //
+                    .withFeature(LINKS_FEATURE, //
+                            makeLinkFS(sourceCas1, "role1", 1, 1), //
+                            makeLinkFS(sourceCas1, "role1", 3, 3))
+                    .buildAndAddToIndexes();
+
+            buildAnnotation(sourceCas1.getCas(), HOST_TYPE) //
+                    .at(0, 0) //
+                    .withFeature(LINKS_FEATURE, //
+                            makeLinkFS(sourceCas1, "role1", 1, 1), //
+                            makeLinkFS(sourceCas1, "role1", 2, 2), //
+                            makeLinkFS(sourceCas1, "role1", 3, 3))
+                    .buildAndAddToIndexes();
+
+            buildAnnotation(sourceCas2.getCas(), HOST_TYPE) //
+                    .at(0, 0) //
+                    .withFeature(LINKS_FEATURE, //
+                            makeLinkFS(sourceCas2, "role1", 2, 2), //
+                            makeLinkFS(sourceCas2, "role1", 3, 3), //
+                            makeLinkFS(sourceCas2, "role1", 1, 1))
+                    .buildAndAddToIndexes();
+
+            buildAnnotation(sourceCas2, HOST_TYPE) //
+                    .at(0, 0) //
+                    .withFeature(LINKS_FEATURE, //
+                            makeLinkFS(sourceCas2, "role1", 1, 1))
+                    .buildAndAddToIndexes();
+
+            buildAnnotation(sourceCas2, HOST_TYPE) //
+                    .at(0, 0) //
+                    .withFeature(LINKS_FEATURE, //
+                            makeLinkFS(sourceCas2, "role1", 2, 2), //
+                            makeLinkFS(sourceCas2, "role1", 1, 1))
+                    .buildAndAddToIndexes();
+
+            buildAnnotation(sourceCas2, HOST_TYPE) //
+                    .at(0, 0) //
+                    .withFeature(LINKS_FEATURE, //
+                            makeLinkFS(sourceCas2, "role1", 1, 1), //
+                            makeLinkFS(sourceCas2, "role1", 3, 3))
+                    .buildAndAddToIndexes();
+
+            var casMap = Map.of("source1", sourceCas1.getCas(), "source2", sourceCas2.getCas());
+            var diff = doDiff(diffAdapters, casMap).toResult();
+            sut.mergeCas(diff, document, DUMMY_USER, targetCas.getCas(), casMap);
+
+            assertThat(targetCas.select(HOST_TYPE).asList()) //
+                    .as("Links by host in target CAS") //
+                    .extracting(host -> toMaterializedLinks(host, LINKS_FEATURE, "role", "target")) //
+                    .containsExactlyInAnyOrder( //
+                            asList( //
+                                    matLink(LINKS_FEATURE, "role1", NamedEntity.class, 1, 1)),
+                            asList( //
+                                    matLink(LINKS_FEATURE, "role1", NamedEntity.class, 2, 2), //
+                                    matLink(LINKS_FEATURE, "role1", NamedEntity.class, 1, 1)), //
+                            asList( //
+                                    matLink(LINKS_FEATURE, "role1", NamedEntity.class, 3, 3), //
+                                    matLink(LINKS_FEATURE, "role1", NamedEntity.class, 1, 1)),
+                            asList( //
+                                    matLink(LINKS_FEATURE, "role1", NamedEntity.class, 3, 3), //
+                                    matLink(LINKS_FEATURE, "role1", NamedEntity.class, 2, 2), //
+                                    matLink(LINKS_FEATURE, "role1", NamedEntity.class, 1, 1)));
+        }
+    }
+
+    MaterializedLink matLink(String feature, Class<?> targetType, int targetBegin, int targetEnd)
+    {
+        return new MaterializedLink(feature, null, targetType.getName(), targetBegin, targetEnd);
+    }
+
+    MaterializedLink matLink(String feature, String role, Class<?> targetType, int targetBegin,
+            int targetEnd)
+    {
+        return new MaterializedLink(feature, role, targetType.getName(), targetBegin, targetEnd);
     }
 }

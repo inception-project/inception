@@ -17,7 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.support.uima;
 
+import static java.util.Arrays.asList;
+
 import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -47,6 +50,15 @@ public class FeatureStructureBuilder<T extends FeatureStructure>
     public FeatureStructureBuilder<T> withFeature(String aName, Object aValue)
     {
         features.put(aName, aValue);
+        return this;
+    }
+
+    public FeatureStructureBuilder<T> withFeature(String aName, Object aValue, Object... aAdditionalValues)
+    {
+        var values = new ArrayList<Object>();
+        values.add(aValue);
+        values.addAll(asList(aAdditionalValues));
+        features.put(aName, values);
         return this;
     }
 

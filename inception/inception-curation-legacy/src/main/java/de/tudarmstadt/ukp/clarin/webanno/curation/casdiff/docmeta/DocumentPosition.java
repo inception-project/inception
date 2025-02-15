@@ -52,8 +52,11 @@ public class DocumentPosition
     public String toString()
     {
         var builder = new StringBuilder();
-        builder.append("Document [");
         toStringFragment(builder);
+        if (!builder.isEmpty()) {
+            builder.append(", ");
+        }
+        builder.insert(0, "Document [");
         builder.append(']');
         return builder.toString();
     }

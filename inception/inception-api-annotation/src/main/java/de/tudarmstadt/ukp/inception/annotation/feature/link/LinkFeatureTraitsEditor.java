@@ -19,7 +19,7 @@ package de.tudarmstadt.ukp.inception.annotation.feature.link;
 
 import static de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureDiffMode.DEFAULT_LINK_DIFF_MODE;
 import static de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureMultiplicityMode.DEFAULT_LINK_MULTIPLICITY_MODE;
-import static de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureMultiplicityMode.ONE_TARGET_MULTIPLE_ROLES;
+import static de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureMultiplicityMode.MULTIPLE_TARGETS_ONE_ROLE;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 import static java.util.Arrays.asList;
 
@@ -198,7 +198,7 @@ public class LinkFeatureTraitsEditor
             t.setMultiplicityMode(traits.getObject().getCompareMode());
         }
         else {
-            t.setMultiplicityMode(ONE_TARGET_MULTIPLE_ROLES);
+            t.setMultiplicityMode(MULTIPLE_TARGETS_ONE_ROLE);
         }
 
         getFeatureSupport().writeTraits(feature.getObject(), t);
