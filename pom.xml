@@ -189,7 +189,7 @@
     <color-convert.version>^2.0.1</color-convert.version>
     <dayjs.version>^1.11.13</dayjs.version>
     <dompurify.version>^3.2.3</dompurify.version>
-    <esbuild.version>^0.23.1</esbuild.version>
+    <esbuild.version>^0.25.0</esbuild.version>
     <esbuild-sass-plugin.version>^3.3.1</esbuild-sass-plugin.version>
     <esbuild-svelte.version>^0.8.2</esbuild-svelte.version>
     <eslint.version>^8.57.1</eslint.version>
@@ -216,13 +216,13 @@
     <sass.version>^1.75.0</sass.version>
     <stomp-stompjs.version>^6.1.2</stomp-stompjs.version>
     <svelte.version>^4.2.19</svelte.version>
+    <svelte-preprocess.version>^5.1.4</svelte-preprocess.version>
     <sveltejs-vite-plugin-svelte.version>^3.1.2</sveltejs-vite-plugin-svelte.version>
     <svgdotjs-svg-js.version>^3.2.4</svgdotjs-svg-js.version>
-    <svelte-preprocess.version>^5.1.4</svelte-preprocess.version>
     <svgdotjs-svg-filter-js.version>^3.0.8</svgdotjs-svg-filter-js.version>
     <temp-write.version>^5.0.0</temp-write.version>
     <testing-library-svelte.version>^5.0.1</testing-library-svelte.version>
-    <typescript.version>^5.4.5</typescript.version>
+    <typescript.version>^5.7.3</typescript.version>
     <typescript-eslint-eslint-plugin.version>^7.7.0</typescript-eslint-eslint-plugin.version>
     <typescript-eslint-parser.version>^7.7.0</typescript-eslint-parser.version>
     <types-events.version>^3.0.1</types-events.version>
@@ -231,7 +231,7 @@
     <types-urijs.version>^1.19.20</types-urijs.version>
     <uuid.version>^9.0.1</uuid.version>
     <urijs.version>^1.19.11</urijs.version>
-    <vitest.version>^2.1.1</vitest.version>
+    <vitest.version>^2.1.9</vitest.version>
     <yargs.version>^17.7.2</yargs.version>
   </properties>
 
