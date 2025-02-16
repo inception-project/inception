@@ -407,10 +407,12 @@ public class InteractiveRecommenderSidebar
                 .withTrigger("Interactivce recommender") //
                 .withCurrentDocument(document) //
                 .withDataOwner(dataOwner) //
-                .withRecommender(rec) //
-                .withReconciliationOptions(KEEP_EXISTING) //
-                .build();
+                .withRecommender(rec); //
 
-        schedulingService.enqueue(predictionTask);
+        if (keepExisting.getObject()) {
+            predictionTask.withReconciliationOptions(KEEP_EXISTING);
+        }
+
+        schedulingService.enqueue(predictionTask.build());
     }
 }

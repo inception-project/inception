@@ -167,26 +167,29 @@ public class MentionsFromStructuredOutputExtractor
 
         var tagset = aRecommender.getFeature().getTagset();
         if (tagset != null) {
-            var tagsMessageContent = new StringBuilder();
+            var tags = aSchemaService.listTags(tagset);
+            if (!tags.isEmpty()) {
+                var tagsMessageContent = new StringBuilder();
 
-            if (tagset.isCreateTag()) {
-                tagsMessageContent.append(
-                        "You can use the following values for the `label` property or come up with a new one if none "
-                                + "of the existing values is appropriate:\n");
-            }
-            else {
-                tagsMessageContent.append(
-                        "You assign either of the following values to the `label` property:\n");
-            }
-
-            for (var tag : aSchemaService.listTags(tagset)) {
-                tagsMessageContent.append("* `" + tag.getName() + "`");
-                if (isNotBlank(tag.getDescription())) {
-                    tagsMessageContent.append(": " + tag.getDescription());
+                if (tagset.isCreateTag()) {
+                    tagsMessageContent.append(
+                            "You can use the following values for the `label` property or come up with a new one if none "
+                                    + "of the existing values is appropriate:\n");
                 }
-                tagsMessageContent.append("\n");
+                else {
+                    tagsMessageContent.append(
+                            "You assign either of the following values to the `label` property:\n");
+                }
+
+                for (var tag : tags) {
+                    tagsMessageContent.append("* `" + tag.getName() + "`");
+                    if (isNotBlank(tag.getDescription())) {
+                        tagsMessageContent.append(": " + tag.getDescription());
+                    }
+                    tagsMessageContent.append("\n");
+                }
+                messages.add(new ChatMessage(SYSTEM, tagsMessageContent.toString()));
             }
-            messages.add(new ChatMessage(SYSTEM, tagsMessageContent.toString()));
         }
 
         return messages;
