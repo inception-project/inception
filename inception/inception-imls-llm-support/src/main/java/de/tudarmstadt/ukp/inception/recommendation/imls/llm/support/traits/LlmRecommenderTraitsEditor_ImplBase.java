@@ -25,6 +25,7 @@ import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Optional;
 
@@ -144,11 +145,11 @@ public abstract class LlmRecommenderTraitsEditor_ImplBase
                 optionSettingsList.add(new OptionSetting(option, e.getValue()));
             });
         }
-        optionSettings = new ListModel<>(optionSettingsList);
 
+        optionSettings = new ListModel<>(optionSettingsList);
         optionSettingsContainer = new OptionsPanel(MID_OPTIONS_PANEL, options, optionSettings);
         optionSettingsContainer.setOutputMarkupPlaceholderTag(true);
-        promptContainer.add(optionSettingsContainer);
+        form.add(optionSettingsContainer);
 
         var presetSelect = new DropDownChoice<Preset>(MID_PRESET);
         presetSelect.setModel(Model.of());
@@ -189,6 +190,12 @@ public abstract class LlmRecommenderTraitsEditor_ImplBase
     protected void onSubmit()
     {
         authenticationTraitsEditor.commit();
+        var optionsMap = new LinkedHashMap<String, Object>();
+        for (var optionSetting : optionSettings.getObject()) {
+            var option = optionSetting.getOption();
+            optionsMap.put(option.getName(), option.parseValue(optionSetting.getValue()));
+        }
+        traits.getObject().setOptions(optionsMap);
         getToolFactory().writeTraits(getModelObject(), traits.getObject());
     }
 
