@@ -138,10 +138,13 @@ public class RelationPosition
     @Override
     public String toString()
     {
-        StringBuilder builder = new StringBuilder();
-        builder.append("Relation [");
+        var builder = new StringBuilder();
         toStringFragment(builder);
-        builder.append(", source=(").append(sourceBegin).append('-').append(sourceEnd).append(')');
+        if (!builder.isEmpty()) {
+            builder.append(", ");
+        }
+        builder.insert(0, "Relation [");
+        builder.append("source=(").append(sourceBegin).append('-').append(sourceEnd).append(')');
         builder.append('[').append(sourceText).append(']');
         builder.append(", target=(").append(targetBegin).append('-').append(targetEnd).append(')');
         builder.append('[').append(targetText).append(']');

@@ -268,36 +268,56 @@ public abstract class Position_ImplBase
     protected void toStringFragment(StringBuilder builder)
     {
         if (getCollectionId() != null) {
-            builder.append(", coll=");
+            if (!builder.isEmpty()) {
+                builder.append(", ");
+            }
+            builder.append("coll=");
             builder.append(getCollectionId());
         }
+
         if (getDocumentId() != null) {
-            builder.append(", doc=");
+            if (!builder.isEmpty()) {
+                builder.append(", ");
+            }
+            builder.append("doc=");
             builder.append(getDocumentId());
         }
-        builder.append(", type=");
+
+        if (!builder.isEmpty()) {
+            builder.append(", ");
+        }
+        builder.append("type=");
+
         if (getType().contains(".")) {
             builder.append(StringUtils.substringAfterLast(getType(), "."));
         }
         else {
             builder.append(getType());
         }
+
         if (getLinkFeature() != null) {
-            builder.append(", linkFeature=");
+            if (!builder.isEmpty()) {
+                builder.append(", ");
+            }
+            builder.append("linkFeature=");
             builder.append(getLinkFeature());
+
+            if (!builder.isEmpty()) {
+                builder.append(", ");
+            }
             switch (getLinkFeatureMultiplicityMode()) {
             case ONE_TARGET_MULTIPLE_ROLES:
-                builder.append(", role=");
+                builder.append("role=");
                 builder.append(getLinkRole());
                 break;
             case MULTIPLE_TARGETS_ONE_ROLE:
-                builder.append(", linkTarget=(");
+                builder.append("linkTarget=(");
                 builder.append(getLinkTargetBegin()).append('-').append(getLinkTargetEnd());
                 builder.append(')');
                 builder.append('[').append(linkTargetText).append(']');
                 break;
             case MULTIPLE_TARGETS_MULTIPLE_ROLES:
-                builder.append(", role=");
+                builder.append("role=");
                 builder.append(getLinkRole());
                 builder.append(", linkTarget=(");
                 builder.append(getLinkTargetBegin()).append('-').append(getLinkTargetEnd());

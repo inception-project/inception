@@ -30,6 +30,7 @@ import java.util.TreeMap;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
+import org.apache.uima.jcas.cas.AnnotationBase;
 
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.Position;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.internal.AID;
@@ -109,10 +110,10 @@ public class Configuration
         return e.getValue();
     }
 
-    public FeatureStructure getRepresentative(Map<String, CAS> aCasMap)
+    public AnnotationBase getRepresentative(Map<String, CAS> aCasMap)
     {
         var e = fsAddresses.entrySet().iterator().next();
-        return selectFsByAddr(aCasMap.get(e.getKey()), e.getValue().addr);
+        return (AnnotationBase) selectFsByAddr(aCasMap.get(e.getKey()), e.getValue().addr);
     }
 
     public AID getAID(String aCasGroupId)
@@ -202,28 +203,40 @@ public class Configuration
     public String toString()
     {
         var sb = new StringBuilder();
-        sb.append('[');
-        for (var e : fsAddresses.entrySet()) {
-            if (sb.length() > 1) {
-                sb.append(", ");
-            }
-            sb.append(e.getKey());
-            sb.append(": ");
-            sb.append(e.getValue());
-            if (duplicates != null) {
-                sb.append(" (duplicates: ");
-                for (var entries : duplicates.entrySet()) {
-                    sb.append(" {");
-                    sb.append(entries.getKey());
-                    sb.append(entries.getValue().stream().map(String::valueOf)
-                            .collect(joining(", ")));
-                    sb.append("} ");
+        if (!fsAddresses.isEmpty()) {
+            for (var e : fsAddresses.entrySet()) {
+                if (sb.length() > 1) {
+                    sb.append(", ");
                 }
-                sb.append(")");
+
+                sb.append(e.getKey());
+                sb.append(": ");
+                sb.append(e.getValue());
+                if (duplicates != null) {
+                    sb.append(" (duplicates: ");
+                    for (var entries : duplicates.entrySet()) {
+                        sb.append(" {");
+                        sb.append(entries.getKey());
+                        sb.append(entries.getValue().stream() //
+                                .map(String::valueOf) //
+                                .collect(joining(", ")));
+                        sb.append("} ");
+                    }
+                    sb.append(")");
+                }
             }
+
+            sb.insert(0, " ~= [");
+            sb.insert(0, getRepresentativeAID());
+            sb.append("]");
         }
-        sb.append("] -> ");
-        sb.append(getRepresentativeAID());
+        else {
+            sb.append("empty");
+        }
+
+        sb.insert(0, ": ");
+        sb.insert(0, position);
+
         return sb.toString();
     }
 }
