@@ -275,7 +275,7 @@ public class AnnotatorsPanel
                     continue nextAnnotation;
                 }
 
-                switch (result.getState()) {
+                switch (result.state()) {
                 case CREATED:
                     created++;
                     break;

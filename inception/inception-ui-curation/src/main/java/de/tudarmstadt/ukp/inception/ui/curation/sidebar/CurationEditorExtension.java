@@ -249,7 +249,7 @@ public class CurationEditorExtension
                 sourceAnnotation, feature.getName(), aVid.getSlot());
 
         // open created/updates FS in annotation detail editor panel
-        var mergedAnno = selectAnnotationByAddr(aTargetCas, mergeResult.getTargetFSAddress());
+        var mergedAnno = selectAnnotationByAddr(aTargetCas, mergeResult.targetAddress());
         aState.getSelection().selectSpan(mergedAnno);
     }
 
@@ -263,7 +263,7 @@ public class CurationEditorExtension
                 sourceAnnotation);
 
         // open created/updates FS in annotation detail editor panel
-        var mergedAnno = selectAnnotationByAddr(aTargetCas, mergeResult.getTargetFSAddress());
+        var mergedAnno = selectAnnotationByAddr(aTargetCas, mergeResult.targetAddress());
         aState.getSelection().selectArc(mergedAnno);
     }
 
@@ -277,7 +277,7 @@ public class CurationEditorExtension
                 sourceAnnotation);
 
         // open created/updates FS in annotation detail editor panel
-        var mergedAnno = selectAnnotationByAddr(aTargetCas, mergeResult.getTargetFSAddress());
+        var mergedAnno = selectAnnotationByAddr(aTargetCas, mergeResult.targetAddress());
         aState.getSelection().selectSpan(mergedAnno);
     }
 

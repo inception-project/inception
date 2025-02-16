@@ -72,19 +72,19 @@ a| image::images/LinkFeatureDiffMode_EXCLUDE.png[]
 
 Determines how links are compared to each other e.g. when calulating agreement or when merging annotations during curation.
 
-Use *Target should be linked in only one role* if you expect that a link target should only appear in a single roles with respect to the same source span - but the same role may be assigned to different targets.
+Use *Each target should be linked in only one role* if you expect that a link target should only appear in a single roles with respect to the same source span - but the same role may be assigned to different targets.
 In this mode, if an annotator links the same target in multiple roles, the links will be considered stacked and not be auto-merged by curation or used for agreement calculation.
 
 .When the `slot1` link is merge, the `slot2` link to the same target disappears because each target can only be assigned a single role. The second `slot1` link remains available because it has a different target.
 video::images/MULTIPLE_TARGETS_ONE_ROLE.mp4[]
 
-Use *Target can be linked in multiple different roles* if a link target can appear in multiple roles with respect to the same source span - but a role may only be used once.
+Use *Each Ttrget can be linked in multiple different roles* if a link target can appear in multiple roles with respect to the same source span - but a role may only be used once.
 In this mode, if an annotator links multiple targets using the same role, the links will be considered stacked and not be not auto-merged by curation or used for agreement calculation.
 
 .When first link labelled `slot1` is linked, the second `slot1` link disappears because each role can only be assigned to a single target. The `slot2` link remains available because it has a different role.
 video::images/ONE_TARGET_MULTIPLE_ROLES.mp4[]
 
-Use *Target can be linked in multiple roles (same or different)* if you expect that a link target should be linked multiple times with different roles as well as different targets can be linked with the same role.
+Use *Each target can be linked in multiple roles (same or different)* if you expect that a link target should be linked multiple times with different roles as well as different targets can be linked with the same role.
 In this mode, there is no stacking.
 Note that the order in which you merge the links and whether you create stacked annotations or not can affect the final result.
 

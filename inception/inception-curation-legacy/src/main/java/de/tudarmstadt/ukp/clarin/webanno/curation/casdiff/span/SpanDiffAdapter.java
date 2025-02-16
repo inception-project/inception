@@ -90,6 +90,10 @@ public class SpanDiffAdapter
 
         for (var decl : getLinkFeaturesDecls()) {
             var linkFeature = aFs.getType().getFeatureByBaseName(decl.getName());
+            if (linkFeature == null) {
+                continue;
+            }
+
             var array = FSUtil.getFeature(aFs, linkFeature, ArrayFS.class);
 
             if (array == null) {

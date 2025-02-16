@@ -269,6 +269,16 @@ public class CurationTestUtils
                 .buildAndAddToIndexes();
     }
 
+    public static FeatureStructure makeLinkFS(JCas aCas, int aTargetBegin, int aTargetEnd)
+    {
+        var filler = new NamedEntity(aCas, aTargetBegin, aTargetEnd);
+        filler.addToIndexes();
+
+        return buildFS(aCas.getCas(), LINK_TYPE) //
+                .withFeature(TARGET_FEATURE, filler) //
+                .buildAndAddToIndexes();
+    }
+
     public static FeatureStructure makeLinkFS(JCas aCas, String aRole, int aTargetBegin,
             int aTargetEnd)
     {

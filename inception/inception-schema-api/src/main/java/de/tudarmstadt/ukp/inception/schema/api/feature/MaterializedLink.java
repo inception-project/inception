@@ -32,15 +32,15 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 public record MaterializedLink(String feature, String role, String targetType, int targetBegin,
         int targetEnd)
 {
-    public static List<MaterializedLink> toMaterializedLinks(FeatureStructure aSourceFS,
+    public static List<MaterializedLink> toMaterializedLinks(FeatureStructure aLinkHost,
             String aSlotFeature, String aRoleFeature, String aTargetFeature)
     {
-        var slotFeature = aSourceFS.getType().getFeatureByBaseName(aSlotFeature);
+        var slotFeature = aLinkHost.getType().getFeatureByBaseName(aSlotFeature);
         if (slotFeature == null) {
             return emptyList();
         }
 
-        var values = aSourceFS.getFeatureValue(slotFeature);
+        var values = aLinkHost.getFeatureValue(slotFeature);
         if (values instanceof ArrayFS array) {
             var links = new ArrayList<MaterializedLink>();
             for (var link : array.toArray()) {
@@ -59,10 +59,17 @@ public record MaterializedLink(String feature, String role, String targetType, i
         return emptyList();
     }
 
-    public static MaterializedLink toMaterializedLink(FeatureStructure aSourceFS,
+    @Override
+    public final String toString()
+    {
+        return "Link [" + feature + ", " + role + ", " + targetType + ", " + targetBegin + ", "
+                + targetEnd + "]";
+    }
+
+    public static MaterializedLink toMaterializedLink(FeatureStructure aLinkHost,
             AnnotationFeature aSlotFeature, LinkWithRoleModel aLink)
     {
-        var cas = aSourceFS.getCAS();
+        var cas = aLinkHost.getCAS();
         var linkTarget = selectAnnotationByAddr(cas, aLink.targetAddr);
         return new MaterializedLink(aSlotFeature.getName(), aLink.role,
                 linkTarget.getType().getName(), linkTarget.getBegin(), linkTarget.getEnd());

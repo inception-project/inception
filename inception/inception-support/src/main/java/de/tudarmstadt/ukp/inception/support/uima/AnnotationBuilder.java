@@ -159,6 +159,11 @@ public class AnnotationBuilder<T extends AnnotationFS>
         return buildAnnotation(aCas, CAS.TYPE_NAME_ANNOTATION);
     }
 
+    public static AnnotationBuilder<AnnotationFS> buildAnnotation(JCas aJCas, String aType)
+    {
+        return buildAnnotation(aJCas.getCas(), aType);
+    }
+
     public static AnnotationBuilder<AnnotationFS> buildAnnotation(CAS aCas, String aType)
     {
         return new AnnotationBuilder<AnnotationFS>(aCas, getAnnotationType(aCas, aType));

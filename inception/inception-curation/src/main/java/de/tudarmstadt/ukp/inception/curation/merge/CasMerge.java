@@ -279,15 +279,15 @@ public class CasMerge
                 var result = mergeRelationAnnotation(aTargetDocument, aTargetUsername,
                         type2layer.get(relationPosition.getType()), aTargetCas, sourceFS);
 
-                switch (result.getState()) {
+                switch (result.state()) {
                 case CREATED:
                     LOG.trace(" `-> merged relation annotation [{}] (created) -> [{}]",
-                            sourceFS.getAddress(), result.getTargetFSAddress());
+                            sourceFS.getAddress(), result.targetAddress());
                     localContext.created++;
                     break;
                 case UPDATED:
                     LOG.trace(" `-> merged relation annotation [{}] (updated) -> [{}]",
-                            sourceFS.getAddress(), result.getTargetFSAddress());
+                            sourceFS.getAddress(), result.targetAddress());
                     localContext.updated++;
                     break;
                 }
@@ -337,19 +337,19 @@ public class CasMerge
         var layer = type2layer.get(slotPosition.getType());
         var cfgs = aDiff.getConfigurationSet(slotPosition);
 
-        for (var cfgToMerge : mergeStrategy.chooseConfigurationsToMerge(aDiff, cfgs, layer)) {
+        var cfgsToMerge = mergeStrategy.chooseConfigurationsToMerge(aDiff, cfgs, layer);
+        for (var cfgToMerge : cfgsToMerge) {
             var sourceFS = (AnnotationFS) cfgToMerge.getRepresentative(aCasMap);
             try {
-                var sourceFsAid = cfgs.getConfigurations().get(0).getRepresentativeAID();
+                var sourceFsAid = cfgToMerge.getRepresentativeAID();
                 var result = mergeSlotFeature(aTargetDocument, aTargetUsername,
                         type2layer.get(slotPosition.getType()), aTargetCas, sourceFS,
                         sourceFsAid.feature, sourceFsAid.index);
-                LOG.trace(" `-> merged link annotation [{}] -> [{}]", sourceFS.getAddress(),
-                        result.getTargetFSAddress());
+                LOG.trace(" `-> merged link [{}] into span [{}]", sourceFS.getAddress(),
+                        result.targetAddress());
             }
             catch (AnnotationException e) {
-                LOG.trace(" `-> not merged link annotation [{}]: {}", sourceFS.getAddress(),
-                        e.getMessage());
+                LOG.trace(" `-> not merged link [{}]: {}", sourceFS.getAddress(), e.getMessage());
                 localContext.messages.add(LogMessage.error(this, "%s", e.getMessage()));
             }
         }
@@ -400,15 +400,15 @@ public class CasMerge
                 var result = mergeSpanAnnotation(aTargetDocument, aTargetUsername,
                         type2layer.get(spanPosition.getType()), aTargetCas, sourceFS);
 
-                switch (result.getState()) {
+                switch (result.state()) {
                 case CREATED:
                     LOG.trace(" `-> merged span annotation [{}] (created) -> [{}]",
-                            sourceFS.getAddress(), result.getTargetFSAddress());
+                            sourceFS.getAddress(), result.targetAddress());
                     localContext.created++;
                     break;
                 case UPDATED:
                     LOG.trace(" `-> merged span annotation [{}] (updated) -> [{}]",
-                            sourceFS.getAddress(), result.getTargetFSAddress());
+                            sourceFS.getAddress(), result.targetAddress());
                     localContext.updated++;
                     break;
                 }

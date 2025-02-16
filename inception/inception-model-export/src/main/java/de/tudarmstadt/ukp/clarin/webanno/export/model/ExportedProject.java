@@ -178,9 +178,9 @@ public class ExportedProject
         return version;
     }
 
-    public void setVersion(int version)
+    public void setVersion(int aVersion)
     {
-        this.version = version;
+        version = aVersion;
     }
 
     public boolean isDisableExport()
@@ -188,9 +188,9 @@ public class ExportedProject
         return disableExport;
     }
 
-    public void setDisableExport(boolean disableExport)
+    public void setDisableExport(boolean aDisableExport)
     {
-        this.disableExport = disableExport;
+        disableExport = aDisableExport;
     }
 
     public List<ExportedAnnotationLayer> getLayers()
@@ -198,9 +198,9 @@ public class ExportedProject
         return layers;
     }
 
-    public void setLayers(List<ExportedAnnotationLayer> layers)
+    public void setLayers(List<ExportedAnnotationLayer> aLayers)
     {
-        this.layers = layers;
+        layers = aLayers;
     }
 
     public ScriptDirection getScriptDirection()

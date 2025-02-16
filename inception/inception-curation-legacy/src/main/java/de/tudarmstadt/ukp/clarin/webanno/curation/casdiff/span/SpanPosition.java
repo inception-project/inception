@@ -127,9 +127,13 @@ public class SpanPosition
     public String toString()
     {
         var builder = new StringBuilder();
-        builder.append("Span [");
         toStringFragment(builder);
-        builder.append(", span=(").append(begin).append('-').append(end).append(')');
+        if (!builder.isEmpty()) {
+            builder.append(", ");
+        }
+
+        builder.insert(0, "Span [");
+        builder.append("span=(").append(begin).append('-').append(end).append(')');
         builder.append('[').append(text).append(']');
         builder.append(']');
         return builder.toString();

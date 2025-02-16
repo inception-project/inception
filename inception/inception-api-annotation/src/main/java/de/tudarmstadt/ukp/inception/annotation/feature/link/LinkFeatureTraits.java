@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.annotation.feature.link;
 
 import static de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureDiffMode.DEFAULT_LINK_DIFF_MODE;
 import static de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureMultiplicityMode.DEFAULT_LINK_MULTIPLICITY_MODE;
+import static de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureMultiplicityMode.MULTIPLE_TARGETS_ONE_ROLE;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -75,6 +76,10 @@ public class LinkFeatureTraits
 
     public LinkFeatureMultiplicityMode getMultiplicityMode()
     {
+        if (!enableRoleLabels) {
+            return MULTIPLE_TARGETS_ONE_ROLE;
+        }
+
         return compareMode;
     }
 

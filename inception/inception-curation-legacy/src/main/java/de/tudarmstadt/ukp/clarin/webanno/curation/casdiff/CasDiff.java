@@ -208,7 +208,7 @@ public class CasDiff
         }
 
         if (LOG.isDebugEnabled()) {
-            LOG.debug("Processing CAS group [{}]", aCasGroupId);
+            LOG.debug("Analyzing CAS group [{}]", aCasGroupId);
 
             String collectionId = null;
             String documentId = null;
@@ -261,6 +261,8 @@ public class CasDiff
             positions.addAll(adapter.generateSubPositions(ann));
 
             for (var pos : positions) {
+                LOG.trace("Analyzing {}", pos);
+
                 var configSet = configSets.get(pos);
                 if (configSet == null) {
                     configSet = new ConfigurationSet(pos);
@@ -282,7 +284,7 @@ public class CasDiff
         }
     }
 
-    private void addConfiguration(ConfigurationSet aSet, String aCasGroupId, FeatureStructure aFS)
+    private void addConfiguration(ConfigurationSet aSet, String aCasGroupId, AnnotationBase aFS)
     {
         if (aFS instanceof SofaFS) {
             return;
@@ -298,10 +300,10 @@ public class CasDiff
     }
 
     private void addLinkConfiguration(ConfigurationSet aSet, String aCasGroupId,
-            FeatureStructure aFS)
+            AnnotationBase aHost)
     {
         var position = aSet.getPosition();
-        var feat = aFS.getType().getFeatureByBaseName(position.getLinkFeature());
+        var feat = aHost.getType().getFeatureByBaseName(position.getLinkFeature());
 
         // If the CAS has not been upgraded yet to include the feature, then there are no
         // configurations for it.
@@ -311,11 +313,13 @@ public class CasDiff
 
         // For each slot at the given position in the FS-to-be-added, we need find a
         // corresponding configuration
-        var links = getFeature(aFS, feat, ArrayFS.class);
+        var links = getFeature(aHost, feat, ArrayFS.class);
         linkLoop: for (var i = 0; i < links.size(); i++) {
             var link = links.get(i);
-            var adapter = getAdapter(aFS.getType().getName());
+            var adapter = getAdapter(aHost.getType().getName());
             var decl = adapter.getLinkFeature(position.getLinkFeature());
+
+            LOG.trace("`-> link {}", decl);
 
             // Check if this configuration is already present
             Configuration configuration = null;
@@ -324,6 +328,7 @@ public class CasDiff
                 var role = link
                         .getStringValue(link.getType().getFeatureByBaseName(decl.getRoleFeature()));
                 if (!Objects.equals(role, position.getLinkRole())) {
+                    LOG.trace("    `-> role mismatch", decl);
                     continue linkLoop;
                 }
 
@@ -340,8 +345,10 @@ public class CasDiff
                             repLink.getType().getFeatureByBaseName(decl.getTargetFeature()));
 
                     // Compare targets
-                    if (samePosition(repTarget, target)) {
+                    if (samePosition(repTarget, target) && equalsFS(aHost, repFS)) {
                         configuration = cfg;
+                        LOG.trace("    `-> target position match");
+                        LOG.trace("    `-> host match");
                         break cfgLoop;
                     }
                 }
@@ -352,6 +359,7 @@ public class CasDiff
                         link.getType().getFeatureByBaseName(decl.getTargetFeature()));
                 if (!(target.getBegin() == position.getLinkTargetBegin()
                         && target.getEnd() == position.getLinkTargetEnd())) {
+                    LOG.trace("    `-> target offset mismatch", decl);
                     continue linkLoop;
                 }
 
@@ -368,8 +376,10 @@ public class CasDiff
                             repLink.getType().getFeatureByBaseName(decl.getRoleFeature()));
 
                     // Compare roles
-                    if (Objects.equals(role, linkRole)) {
+                    if (Objects.equals(role, linkRole) && equalsFS(aHost, repFS)) {
                         configuration = cfg;
+                        LOG.trace("    `-> role match: [{}]", linkRole);
+                        LOG.trace("    `-> host match");
                         break cfgLoop;
                     }
                 }
@@ -380,12 +390,14 @@ public class CasDiff
                         link.getType().getFeatureByBaseName(decl.getTargetFeature()));
                 if (!(target.getBegin() == position.getLinkTargetBegin()
                         && target.getEnd() == position.getLinkTargetEnd())) {
+                    LOG.trace("    `-> target offset mismatch", decl);
                     continue linkLoop;
                 }
 
                 var role = link
                         .getStringValue(link.getType().getFeatureByBaseName(decl.getRoleFeature()));
                 if (!Objects.equals(role, position.getLinkRole())) {
+                    LOG.trace("    `-> role mismatch", decl);
                     continue linkLoop;
                 }
 
@@ -401,8 +413,12 @@ public class CasDiff
                             repLink.getType().getFeatureByBaseName(decl.getTargetFeature()));
 
                     // Compare role and target
-                    if (Objects.equals(role, linkRole) && samePosition(repTarget, target)) {
+                    if (Objects.equals(role, linkRole) && samePosition(repTarget, target)
+                            && equalsFS(aHost, repFS)) {
                         configuration = cfg;
+                        LOG.trace("    `-> role match: [{}]", linkRole);
+                        LOG.trace("    `-> target position match");
+                        LOG.trace("    `-> host match");
                         break cfgLoop;
                     }
                 }
@@ -417,9 +433,13 @@ public class CasDiff
             if (configuration == null) {
                 configuration = new Configuration(position);
                 aSet.addConfiguration(configuration);
+                LOG.trace("    `-> Link configuration created: {}", configuration);
+            }
+            else {
+                LOG.trace("    `-> Link configuration found  : {}", configuration);
             }
 
-            configuration.add(aCasGroupId, aFS, position.getLinkFeature(), i);
+            configuration.add(aCasGroupId, aHost, position.getLinkFeature(), i);
             aSet.addCasGroupId(aCasGroupId);
         }
     }
@@ -440,6 +460,10 @@ public class CasDiff
         if (configuration == null) {
             configuration = new Configuration(aSet.getPosition());
             aSet.addConfiguration(configuration);
+            LOG.trace("`-> Base configuration created: {}", configuration);
+        }
+        else {
+            LOG.trace("`-> Base configuration found  : {}", configuration);
         }
 
         configuration.add(aCasGroupId, aFS);
@@ -669,7 +693,7 @@ public class CasDiff
         return null;
     }
 
-    private boolean samePosition(Annotation aFS1, Annotation aFS2)
+    private boolean samePosition(AnnotationBase aFS1, AnnotationBase aFS2)
     {
         // Null check
         if (aFS1 == null || aFS2 == null) {
