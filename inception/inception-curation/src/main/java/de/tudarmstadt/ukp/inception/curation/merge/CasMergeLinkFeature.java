@@ -72,8 +72,8 @@ public class CasMergeLinkFeature
 
         var targetLinkHost = findLinkHostInTargetCas(aTargetCas, aSourceFs, adapter, slotFeature,
                 sourceLink);
-        var targetLinkTarget = findLinkTargetInTargetCas(aContext, adapter, aSourceFs, sourceLink,
-                slotFeature, aSourceSlotIndex, aTargetCas);
+        var targetLinkTarget = findLinkTargetInTargetCas(aTargetCas, aSourceFs, adapter, slotFeature,
+                sourceLink, aSourceSlotIndex, aContext);
 
         List<LinkWithRoleModel> targetLinks = adapter.getFeatureValue(slotFeature, targetLinkHost);
 
@@ -134,9 +134,9 @@ public class CasMergeLinkFeature
         return null;
     }
 
-    private static AnnotationFS findLinkTargetInTargetCas(CasMergeContext aContext,
-            TypeAdapter aAdapter, AnnotationFS aSourceFS, LinkWithRoleModel aSourceLink,
-            AnnotationFeature aSlotFeature, int aSourceSlotIndex, CAS aTargetCas)
+    private static AnnotationFS findLinkTargetInTargetCas(CAS aTargetCas,
+            AnnotationFS aSourceFS, TypeAdapter aAdapter, AnnotationFeature aSlotFeature,
+            LinkWithRoleModel aSourceLink, int aSourceSlotIndex, CasMergeContext aContext)
         throws UnfulfilledPrerequisitesException
     {
         var sourceCas = aSourceFS.getCAS();
@@ -144,8 +144,8 @@ public class CasMergeLinkFeature
         var sourceLinkTargetAdapter = aContext.getAdapter(aContext
                 .findLayer(aAdapter.getLayer().getProject(), sourceLinkTarget.getType().getName()));
 
-        var candidateTarget = selectBestCandidateTarget(aContext, aAdapter, aSourceFS, aSourceLink,
-                aSlotFeature, aSourceSlotIndex, aTargetCas);
+        var candidateTarget = selectBestCandidateTarget(aTargetCas, aAdapter, aSourceFS, aContext,
+                aSourceLink, aSlotFeature, aSourceSlotIndex);
 
         if (candidateTarget.isEmpty()) {
             throw new UnfulfilledPrerequisitesException("There is no ["
@@ -157,9 +157,9 @@ public class CasMergeLinkFeature
         return candidateTarget.get();
     }
 
-    private static Optional<Annotation> selectBestCandidateTarget(CasMergeContext aContext,
-            TypeAdapter aAdapter, AnnotationFS aSourceFS, LinkWithRoleModel aSourceLink,
-            AnnotationFeature aSlotFeature, int aSourceSlotIndex, CAS aTargetCas)
+    private static Optional<Annotation> selectBestCandidateTarget(CAS aTargetCas,
+            TypeAdapter aAdapter, AnnotationFS aSourceFS, CasMergeContext aContext,
+            LinkWithRoleModel aSourceLink, AnnotationFeature aSlotFeature, int aSourceSlotIndex)
         throws UnfulfilledPrerequisitesException
     {
         var sourceCas = aSourceFS.getCAS();
