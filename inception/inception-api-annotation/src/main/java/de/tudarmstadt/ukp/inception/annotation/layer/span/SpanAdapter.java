@@ -263,13 +263,14 @@ public class SpanAdapter
     {
         if (segmentationUnitAdapter.accepts(getAnnotationTypeName())) {
             segmentationUnitAdapter.handle(aRequest);
+            return;
         }
 
         aRequest.getCas().removeFsFromIndexes(aRequest.getAnnotation());
 
         // delete associated attachFeature
         if (getAttachTypeName() != null) {
-            detatch(aRequest.getCas(), aRequest.getAnnotation());
+            detach(aRequest.getCas(), aRequest.getAnnotation());
         }
 
         publishEvent(() -> new SpanDeletedEvent(this, aRequest.getDocument(),
@@ -305,7 +306,7 @@ public class SpanAdapter
                 newAnnotation);
     }
 
-    private void detatch(CAS aCas, AnnotationFS fs)
+    private void detach(CAS aCas, AnnotationFS fs)
     {
         var theType = getType(aCas, getAttachTypeName());
         var attachFeature = theType.getFeatureByBaseName(getAttachFeatureName());

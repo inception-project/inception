@@ -457,7 +457,7 @@ public class AnnotatorStateImpl
     {
         selectableLayers.clear();
 
-        for (AnnotationLayer layer : getAnnotationLayers()) {
+        for (var layer : getAnnotationLayers()) {
             if (!layer.isEnabled() || layer.isReadonly() || isLayerBlocked.test(layer)) {
                 continue;
             }
