@@ -60,6 +60,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.SentenceComment;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.SentenceMarker;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.TextMarker;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VAnnotationMarker;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
@@ -113,7 +114,7 @@ public class BratSerializerImpl
         // cross-row spans into multiple ranges
         renderBratRowsFromUnits(aResponse, aRequest);
 
-        renderBratTokensFromText(aResponse, aVDoc);
+        renderBratTokensFromText(aResponse, aRequest, aVDoc);
 
         renderLayers(aResponse, aVDoc);
 
@@ -262,23 +263,67 @@ public class BratSerializerImpl
         aResponse.setText(visibleText);
     }
 
-    private void renderBratTokensFromText(GetDocumentResponse aResponse, VDocument aVDoc)
+    private void renderBratTokensFromText(GetDocumentResponse aResponse, RenderRequest aRequest,
+            VDocument aVDoc)
     {
         if (isEmpty(aVDoc.getText())) {
             return;
         }
 
+        // Collect additional split points based on where two tokens are directly adjacent
+        var extraSplits = new ArrayList<Integer>();
+        var tokenIterator = aRequest.getCas().select(Token.class) //
+                .coveredBy(aVDoc.getWindowBegin(), aVDoc.getWindowEnd()) //
+                .iterator();
+        if (tokenIterator.hasNext()) {
+            var prevToken = tokenIterator.next();
+            while (tokenIterator.hasNext()) {
+                var token = tokenIterator.next();
+                if (prevToken.getEnd() == token.getBegin()) {
+                    extraSplits.add(token.getBegin());
+                }
+                prevToken = token;
+            }
+        }
+
+        var extraSplitIterator = extraSplits.listIterator();
         var bratTokenOffsets = new ArrayList<Offsets>();
         var visibleText = aVDoc.getText();
         var bi = BreakIterator.getWordInstance(Locale.ROOT);
         bi.setText(visibleText);
-        int last = bi.first();
-        int cur = bi.next();
+        var last = bi.first();
+        var cur = bi.next();
         while (cur != BreakIterator.DONE) {
             var offsets = new int[] { last, cur };
             trim(visibleText, offsets);
             if (offsets[0] < offsets[1]) {
-                bratTokenOffsets.add(new Offsets(offsets[0], offsets[1]));
+
+                // The idea here is that if somebody has created a token boundary inside a word, it
+                // may look better if brat would be able to pull the word apart. This, however, only
+                // works if for brat there is a token boundary at this location.
+                while (extraSplitIterator.hasNext()) {
+                    var candidateSplit = extraSplitIterator.next();
+                    if (candidateSplit < offsets[0]) {
+                        continue;
+                    }
+
+                    if (candidateSplit > offsets[1]) {
+                        extraSplitIterator.previous();
+                        break;
+                    }
+
+                    if (covering(offsets[0], offsets[1], candidateSplit, candidateSplit)) {
+                        if (offsets[0] < candidateSplit) {
+                            bratTokenOffsets.add(new Offsets(offsets[0], candidateSplit));
+                        }
+                        offsets[0] = candidateSplit;
+                        continue;
+                    }
+                }
+
+                if (offsets[0] < offsets[1]) {
+                    bratTokenOffsets.add(new Offsets(offsets[0], offsets[1]));
+                }
             }
             last = cur;
             cur = bi.next();
