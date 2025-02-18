@@ -28,6 +28,7 @@ import java.util.Objects;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.jcas.JCas;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -40,6 +41,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.annotation.layer.LayerFactory;
 import de.tudarmstadt.ukp.inception.annotation.layer.behaviors.LayerBehaviorRegistryImpl;
@@ -126,21 +128,47 @@ class TokenAttachedSpanChangeListenerTest
         });
     }
 
-    @Test
-    void testAdjustTokenAnchoredAnnotations()
+    @Nested
+    class TokenAnchoredAnnotations
     {
-        cas.setDocumentText("1 2 3 4");
+        @Test
+        void testSplitWithinSentenceNoSentenceCrossing()
+        {
+            cas.setDocumentText("1 2 3 4");
 
-        var ne = new NamedEntity(cas, 0, 3);
-        var token1 = new Token(cas, 0, 1);
-        var token2 = new Token(cas, 2, 5);
-        asList(ne, token1, token2).forEach(cas::addFsToIndexes);
+            var s = new Sentence(cas, 0, cas.getDocumentText().length());
+            var ne = new NamedEntity(cas, 0, 3);
+            var token1 = new Token(cas, 0, 1);
+            var token2 = new Token(cas, 2, 5);
+            asList(s, token1, token2, ne).forEach(cas::addFsToIndexes);
 
-        sut.adjustTokenAnchoredAnnotations(
-                new SpanMovedEvent(this, doc, "user", tokenLayer, token2, 2, 3));
+            namedEntityLayer.setCrossSentence(false);
 
-        assertThat(ne.getBegin()).isEqualTo(token1.getBegin()).isEqualTo(0);
-        assertThat(ne.getEnd()).isEqualTo(token2.getEnd()).isEqualTo(5);
+            sut.onSpanMovedEvent(new SpanMovedEvent(this, doc, "user", tokenLayer, token2, 2, 3));
+
+            assertThat(ne.getBegin()).isEqualTo(token1.getBegin()).isEqualTo(0);
+            assertThat(ne.getEnd()).isEqualTo(token2.getEnd()).isEqualTo(5);
+        }
+
+        @Test
+        void testMergeAtEndOfSentenceNoSentenceCrossing()
+        {
+            cas.setDocumentText("1 2 3 4");
+
+            var s1 = new Sentence(cas, 0, 3);
+            var s2 = new Sentence(cas, 4, 7);
+            var ne = new NamedEntity(cas, 0, 3);
+            var token1 = new Token(cas, 0, 1);
+            var token2 = new Token(cas, 2, 5);
+            asList(s1, s2, token1, token2, ne).forEach(cas::addFsToIndexes);
+
+            namedEntityLayer.setCrossSentence(false);
+
+            sut.onSpanMovedEvent(new SpanMovedEvent(this, doc, "user", tokenLayer, token2, 2, 3));
+
+            assertThat(ne.getBegin()).isEqualTo(token1.getBegin()).isEqualTo(0);
+            assertThat(ne.getEnd()).isEqualTo(token2.getEnd()).isEqualTo(5);
+        }
     }
 
     @Test
@@ -152,8 +180,7 @@ class TokenAttachedSpanChangeListenerTest
         var token = new Token(cas, 0, 3);
         asList(pos, token).forEach(cas::addFsToIndexes);
 
-        sut.adjustSingleTokenAnchoredAnnotations(
-                new SpanMovedEvent(this, doc, "user", tokenLayer, token, 0, 1));
+        sut.onSpanMovedEvent(new SpanMovedEvent(this, doc, "user", tokenLayer, token, 0, 1));
 
         assertThat(pos.getBegin()).isEqualTo(token.getBegin()).isEqualTo(0);
         assertThat(pos.getEnd()).isEqualTo(token.getEnd()).isEqualTo(3);
@@ -169,8 +196,7 @@ class TokenAttachedSpanChangeListenerTest
         token.setPos(pos);
         asList(pos, token).forEach(cas::addFsToIndexes);
 
-        sut.adjustAttachedAnnotations(
-                new SpanMovedEvent(this, doc, "user", tokenLayer, token, 0, 1));
+        sut.onSpanMovedEvent(new SpanMovedEvent(this, doc, "user", tokenLayer, token, 0, 1));
 
         assertThat(pos.getBegin()).isEqualTo(token.getBegin()).isEqualTo(0);
         assertThat(pos.getEnd()).isEqualTo(token.getEnd()).isEqualTo(3);

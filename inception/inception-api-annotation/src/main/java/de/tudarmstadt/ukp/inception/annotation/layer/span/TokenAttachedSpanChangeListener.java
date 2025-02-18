@@ -131,5 +131,4 @@ public class TokenAttachedSpanChangeListener
         aAnn.setEnd(aUnit.getEnd());
         aAnn.addToIndexes();
     }
-
 }
