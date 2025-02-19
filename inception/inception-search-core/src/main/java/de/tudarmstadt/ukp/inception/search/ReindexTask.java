@@ -40,6 +40,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -136,7 +137,7 @@ public class ReindexTask
                     .toList();
             var sourceDocuments = documentService.listSourceDocuments(project);
 
-            var progress = 0;
+            var progress = new AtomicInteger(0);
             int maxProgress = annotationDocuments.size() + sourceDocuments.size();
 
             // We do not need write access and do not want to add to the exclusive access CAS cache,
@@ -155,7 +156,7 @@ public class ReindexTask
             try (var indexContext = BulkIndexingContext.init(project, schemaService, true, prefs)) {
                 // Index all the source documents
                 for (var doc : sourceDocuments) {
-                    progress++;
+                    progress.incrementAndGet();
 
                     if (searchService.isPerformNoMoreActions(pooledIndex)) {
                         return;
@@ -163,16 +164,20 @@ public class ReindexTask
 
                     if (monitor != null) {
                         if (monitor.isCancelled()) {
-                            monitor.setProgressWithMessage(progress, maxProgress, LogMessage
-                                    .info(this, "Indexing aborted. Search cannot be used."));
+                            monitor.update(up2 -> up2.setProgress(progress.get()) //
+                                    .setMaxProgress(maxProgress) //
+                                    .addMessage(LogMessage.info(this,
+                                            "Indexing aborted. Search cannot be used.")));
                             if (monitor.isCancelled()) {
-                                monitor.setState(TaskState.CANCELLED);
+                                monitor.update(up1 -> up1.setState(TaskState.CANCELLED));
                             }
                             break;
                         }
 
-                        monitor.setProgressWithMessage(progress, maxProgress,
-                                LogMessage.info(this, "Source document: %s", doc.getName()));
+                        monitor.update(up -> up.setProgress(progress.get()) //
+                                .setMaxProgress(maxProgress) //
+                                .addMessage(LogMessage.info(this, "Source document: %s",
+                                        doc.getName())));
                     }
 
                     try (var session = CasStorageSession.openNested()) {
@@ -200,7 +205,7 @@ public class ReindexTask
 
                 // Index all the annotation documents (from annotators)
                 for (var doc : annotationDocuments) {
-                    progress++;
+                    progress.incrementAndGet();
 
                     if (searchService.isPerformNoMoreActions(pooledIndex)) {
                         return;
@@ -208,16 +213,20 @@ public class ReindexTask
 
                     if (monitor != null) {
                         if (monitor.isCancelled()) {
-                            monitor.setProgressWithMessage(progress, maxProgress, LogMessage
-                                    .info(this, "Indexing aborted. Search cannot be used."));
+                            monitor.update(up1 -> up1.setProgress(progress.get()) //
+                                    .setMaxProgress(maxProgress) //
+                                    .addMessage(LogMessage.info(this,
+                                            "Indexing aborted. Search cannot be used.")));
                             if (monitor.isCancelled()) {
-                                monitor.setState(TaskState.CANCELLED);
+                                monitor.update(up2 -> up2.setState(TaskState.CANCELLED));
                             }
                             break;
                         }
 
-                        monitor.setProgressWithMessage(progress, maxProgress, LogMessage.info(this,
-                                "Annotation document: %s @ %s", doc.getUser(), doc.getName()));
+                        monitor.update(up -> up.setProgress(progress.get()) //
+                                .setMaxProgress(maxProgress) //
+                                .addMessage(LogMessage.info(this, "Annotation document: %s @ %s",
+                                        doc.getUser(), doc.getName())));
                     }
 
                     try (var session = CasStorageSession.openNested()) {

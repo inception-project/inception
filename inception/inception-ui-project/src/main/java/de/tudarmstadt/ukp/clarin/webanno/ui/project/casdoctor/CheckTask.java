@@ -27,6 +27,7 @@ import java.io.FileNotFoundException;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
@@ -83,16 +84,18 @@ public class CheckTask
         var sourceDocuments = documentService.listSourceDocuments(project);
 
         var monitor = getMonitor();
-        var progress = 0;
+        var progress = new AtomicInteger(0);
         var maxProgress = sourceDocuments.size();
 
         for (var sd : sourceDocuments) {
-            progress++;
+            progress.incrementAndGet();
 
-            monitor.setProgressWithMessage(progress, maxProgress,
-                    LogMessage.info(this, "Processing [%s]...", sd.getName()));
+            monitor.update(up -> up.setProgress(progress.get()) //
+                    .setMaxProgress(maxProgress) //
+                    .addMessage(LogMessage.info(this, "Processing [%s]...", sd.getName())));
+
             if (monitor.isCancelled()) {
-                monitor.setState(TaskState.CANCELLED);
+                monitor.update(up -> up.setState(TaskState.CANCELLED));
             }
 
             // Check INITIAL CAS
@@ -176,8 +179,9 @@ public class CheckTask
             }
         }
 
-        monitor.setProgressWithMessage(progress, maxProgress,
-                LogMessage.info(this, "Checks complete"));
+        monitor.update(up -> up.setProgress(progress.get()) //
+                .setMaxProgress(maxProgress) //
+                .addMessage(LogMessage.info(this, "Checks complete")));
     }
 
     public int getObjectCount()

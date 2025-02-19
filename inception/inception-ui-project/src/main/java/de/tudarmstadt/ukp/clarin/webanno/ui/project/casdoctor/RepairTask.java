@@ -29,6 +29,7 @@ import java.io.FileNotFoundException;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
@@ -84,16 +85,17 @@ public class RepairTask
         var sourceDocuments = documentService.listSourceDocuments(project);
 
         var monitor = getMonitor();
-        var progress = 0;
+        var progress = new AtomicInteger(0);
         var maxProgress = sourceDocuments.size();
 
         for (var sd : sourceDocuments) {
-            progress++;
+            progress.incrementAndGet();
 
-            monitor.setProgressWithMessage(progress, maxProgress,
-                    LogMessage.info(this, "Processing [%s]...", sd.getName()));
+            monitor.update(up2 -> up2.setProgress(progress.get()) //
+                    .setMaxProgress(maxProgress) //
+                    .addMessage(LogMessage.info(this, "Processing [%s]...", sd.getName())));
             if (monitor.isCancelled()) {
-                monitor.setState(TaskState.CANCELLED);
+                monitor.update(up1 -> up1.setState(TaskState.CANCELLED));
             }
 
             // Repair INITIAL CAS
@@ -178,8 +180,9 @@ public class RepairTask
             }
         }
 
-        monitor.setProgressWithMessage(progress, maxProgress,
-                LogMessage.info(this, "Repairs complete"));
+        monitor.update(up -> up.setProgress(progress.get()) //
+                .setMaxProgress(maxProgress) //
+                .addMessage(LogMessage.info(this, "Repairs complete")));
     }
 
     public static Builder<Builder<?>> builder()

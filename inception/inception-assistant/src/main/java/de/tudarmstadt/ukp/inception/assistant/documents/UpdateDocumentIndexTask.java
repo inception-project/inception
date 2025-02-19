@@ -42,6 +42,7 @@ import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.lucene.document.Document;
@@ -139,37 +140,42 @@ public class UpdateDocumentIndexTask
                 }
 
                 var toProcess = documentsToUnindex.size() + documentsToIndex.size() * 100;
-                var processed = 0;
-                monitor.setStateAndProgress(RUNNING, processed * 100, toProcess);
+                var processed = new AtomicInteger(0);
+                monitor.update(up1 -> up1.setState(RUNNING) //
+                        .setProgress(processed.get() * 100).setMaxProgress(toProcess));
 
                 for (var sourceDocumentId : documentsToUnindex) {
                     if (monitor.isCancelled()) {
-                        monitor.setState(CANCELLED);
+                        monitor.update(up -> up.setState(CANCELLED));
                         break;
                     }
 
-                    monitor.setProgressWithMessage(processed * 100, toProcess,
-                            LogMessage.info(this, "Unindexing..."));
+                    monitor.update(up -> up.setProgress(processed.get() * 100) //
+                            .setMaxProgress(toProcess) //
+                            .addMessage(LogMessage.info(this, "Unindexing...")));
                     unindexDocument(index, sourceDocumentId);
-                    processed++;
+                    processed.incrementAndGet();
                 }
 
                 try (var session = CasStorageSession.openNested()) {
                     for (var sourceDocument : documentsToIndex.values()) {
                         if (monitor.isCancelled()) {
-                            monitor.setState(CANCELLED);
+                            monitor.update(up -> up.setState(CANCELLED));
                             break;
                         }
 
-                        monitor.setProgressWithMessage(processed * 100, toProcess,
-                                LogMessage.info(this, "Indexing: %s", sourceDocument.getName()));
+                        monitor.update(up -> up.setProgress(processed.get() * 100) //
+                                .setMaxProgress(toProcess) //
+                                .addMessage(LogMessage.info(this, "Indexing: %s",
+                                        sourceDocument.getName())));
                         indexDocument(index, chunker, sourceDocument);
-                        processed++;
+                        processed.incrementAndGet();
                     }
                 }
 
                 if (!monitor.isCancelled()) {
-                    monitor.setStateAndProgress(COMPLETED, processed * 100, toProcess);
+                    monitor.update(up -> up.setState(COMPLETED).setProgress(processed.get() * 100)
+                            .setMaxProgress(toProcess));
                     index.getIndexWriter().commit();
                     // We can probably live with a partial index, so we do not roll back if
                     // cancelled
@@ -205,7 +211,7 @@ public class UpdateDocumentIndexTask
             var batches = partition(chunks, properties.getEmbedding().getBatchSize());
 
             var totalBatches = batches.size();
-            var processedBatches = 0;
+            var processedBatches = new AtomicInteger(0);
             var chunksSeen = 0;
             var progressOffset = getMonitor().getProgress();
             for (var batch : batches) {
@@ -220,11 +226,12 @@ public class UpdateDocumentIndexTask
                             chunksSeen, chunksSeen + batch.size(), e);
                 }
 
-                getMonitor().setStateAndProgress(RUNNING,
-                        progressOffset + floorDiv(processedBatches * 100, totalBatches));
+                getMonitor().update(up -> up.setState(RUNNING) //
+                        .setProgress(progressOffset
+                                + floorDiv(processedBatches.get() * 100, totalBatches)));
 
                 chunksSeen += batch.size();
-                processedBatches++;
+                processedBatches.incrementAndGet();
             }
 
             markDocumentAsIndexed(aIndex, aSourceDocument);

@@ -18,11 +18,10 @@
 package de.tudarmstadt.ukp.inception.scheduling;
 
 import java.lang.invoke.MethodHandles;
+import java.util.function.Consumer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 
 public class LoggingTaskMonitor
     extends TaskMonitor
@@ -38,48 +37,9 @@ public class LoggingTaskMonitor
     }
 
     @Override
-    public synchronized void setProgress(int aProgress)
+    public synchronized void update(Consumer<MonitorUpdater> aUpdater)
     {
-        super.setProgress(aProgress);
-        sendNotification();
-    }
-
-    @Override
-    public void addMessage(LogMessage aMessage)
-    {
-        super.addMessage(aMessage);
-        sendNotification();
-    }
-
-    @Override
-    public synchronized void setProgressWithMessage(int aProgress, int aMaxProgress,
-            LogMessage aMessage)
-    {
-        super.setProgressWithMessage(aProgress, aMaxProgress, aMessage);
-        sendNotification();
-    }
-
-    @Override
-    public synchronized void setState(TaskState aState)
-    {
-        super.setState(aState);
-        sendNotification();
-    }
-
-    @Override
-    public synchronized void setStateAndProgress(TaskState aState, int aProgress)
-    {
-        super.setState(aState);
-        super.setProgress(aProgress);
-        sendNotification();
-    }
-
-    @Override
-    public synchronized void setStateAndProgress(TaskState aState, int aProgress, int aMaxProgress)
-    {
-        super.setState(aState);
-        super.setProgress(aProgress);
-        super.setMaxProgress(aMaxProgress);
+        super.update(aUpdater);
         sendNotification();
     }
 

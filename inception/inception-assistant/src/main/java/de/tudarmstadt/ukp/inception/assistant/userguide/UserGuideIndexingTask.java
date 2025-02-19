@@ -25,6 +25,7 @@ import static org.apache.commons.collections4.ListUtils.partition;
 
 import java.lang.invoke.MethodHandles;
 import java.net.URL;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Element;
@@ -72,23 +73,28 @@ public class UserGuideIndexingTask
                 var blocks = userGuide.select(".i7n-assistant").stream() //
                         .map(Element::text) //
                         .toList();
+                var blocksCount = blocks.size();
                 var blockChunks = partition(blocks, 100);
 
                 var monitor = getMonitor();
-                monitor.setStateAndProgress(RUNNING, 0, blocks.size());
+                monitor.update(up -> up.setState(RUNNING) //
+                        .setProgress(0) //
+                        .setMaxProgress(blocksCount));
 
-                var blocksIndexed = 0;
+                var blocksIndexed = new AtomicInteger(0);
                 for (var blockChunk : blockChunks) {
-                    blocksIndexed += blockChunks.size();
+                    blocksIndexed.addAndGet(blockChunks.size());
                     documentationIndexingService.indexBlocks(iw, blockChunk.toArray(String[]::new));
-                    monitor.setProgress(blocksIndexed);
+                    monitor.update(up -> up.setProgress(blocksIndexed.get()));
                 }
 
                 var endTime = currentTimeMillis();
                 LOG.info("User guide index complete in {}ms ({} blocks)", endTime - startTime,
                         blocksIndexed);
 
-                monitor.setStateAndProgress(COMPLETED, blocks.size(), blocks.size());
+                monitor.update(up -> up.setState(COMPLETED) //
+                        .setProgress(blocksCount) //
+                        .setMaxProgress(blocksCount));
             }
         }
 

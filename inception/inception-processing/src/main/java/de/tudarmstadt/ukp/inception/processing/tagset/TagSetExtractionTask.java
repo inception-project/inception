@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.Validate;
@@ -131,18 +132,21 @@ public class TagSetExtractionTask
         var tags = new HashSet<String>();
 
         var documents = documentService.listSourceDocuments(getProject());
-        var processedDocumentsCount = 0;
+        var processedDocumentsCount = new AtomicInteger(0);
         var totalDocumentsCount = documents.size();
 
         for (var srcDoc : documents) {
-            processedDocumentsCount++;
-            monitor.setStateAndProgress(RUNNING, processedDocumentsCount, totalDocumentsCount);
+            processedDocumentsCount.incrementAndGet();
+            monitor.update(up -> up.setState(RUNNING) //
+                    .setProgress(processedDocumentsCount.get()) //
+                    .setMaxProgress(totalDocumentsCount));
 
             extractTagsFromDocument(tags, srcDoc);
         }
 
-        monitor.setProgressWithMessage(processedDocumentsCount, totalDocumentsCount,
-                LogMessage.info(this, "Tag extraction complete"));
+        monitor.update(up -> up.setProgress(processedDocumentsCount.get()) //
+                .setMaxProgress(totalDocumentsCount) //
+                .addMessage(LogMessage.info(this, "Tag extraction complete")));
 
         return tags;
     }
@@ -170,8 +174,8 @@ public class TagSetExtractionTask
             }
         }
         catch (IOException e) {
-            getMonitor().addMessage(
-                    LogMessage.error(this, "Unable to process document [%s].", srcDoc.getName()));
+            getMonitor().update(up -> up.addMessage(
+                    LogMessage.error(this, "Unable to process document [%s].", srcDoc.getName())));
         }
     }
 

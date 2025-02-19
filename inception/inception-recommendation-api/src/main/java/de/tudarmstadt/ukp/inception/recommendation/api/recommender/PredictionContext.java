@@ -23,18 +23,27 @@ import java.util.List;
 import java.util.Optional;
 
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext.Key;
+import de.tudarmstadt.ukp.inception.scheduling.TaskMonitor;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 
 public class PredictionContext
 {
-    private RecommenderContext modelContext;
+    private final RecommenderContext modelContext;
+    private final TaskMonitor monitor;
+
     private List<LogMessage> messages;
     private boolean closed = false;
 
     public PredictionContext(RecommenderContext aCtx)
     {
+        this(aCtx, null);
+    }
+
+    public PredictionContext(RecommenderContext aCtx, TaskMonitor aMonitor)
+    {
         modelContext = aCtx;
         messages = new ArrayList<>();
+        monitor = aMonitor;
     }
 
     synchronized public <T> Optional<T> get(Key<T> aKey)
@@ -54,6 +63,11 @@ public class PredictionContext
     public List<LogMessage> getMessages()
     {
         return messages;
+    }
+
+    public Optional<TaskMonitor> getMonitor()
+    {
+        return Optional.ofNullable(monitor);
     }
 
     /**

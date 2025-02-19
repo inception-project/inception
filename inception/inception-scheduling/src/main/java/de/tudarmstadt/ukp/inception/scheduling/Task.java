@@ -17,6 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.scheduling;
 
+import static de.tudarmstadt.ukp.inception.scheduling.TaskState.COMPLETED;
+import static de.tudarmstadt.ukp.inception.scheduling.TaskState.FAILED;
+import static de.tudarmstadt.ukp.inception.scheduling.TaskState.RUNNING;
 import static de.tudarmstadt.ukp.inception.support.logging.Logging.KEY_PROJECT_ID;
 import static de.tudarmstadt.ukp.inception.support.logging.Logging.KEY_REPOSITORY_PATH;
 import static de.tudarmstadt.ukp.inception.support.logging.Logging.KEY_USERNAME;
@@ -211,27 +214,27 @@ public abstract class Task
             }
 
             thread = Thread.currentThread();
-            monitor.setState(TaskState.RUNNING);
+            monitor.update(up -> up.setState(RUNNING));
 
             execute();
 
-            if (monitor.getState() == TaskState.RUNNING) {
-                monitor.setState(TaskState.COMPLETED);
+            if (monitor.getState() == RUNNING) {
+                monitor.update(up -> up.setState(COMPLETED));
             }
 
-            if (monitor.getState() == TaskState.COMPLETED) {
+            if (monitor.getState() == COMPLETED) {
                 LOG.debug("Task [{}] completed (trigger: [{}]) in {}ms", getTitle(), getTrigger(),
                         monitor.getDuration());
             }
         }
         catch (Exception e) {
-            monitor.addMessage(LogMessage.error(this, "Task failed."));
-            monitor.setState(TaskState.FAILED);
+            monitor.update(up -> up.setState(FAILED) //
+                    .addMessage(LogMessage.error(this, "Task failed.")));
             LOG.error("Task [{}] failed (trigger: [{}])", getTitle(), getTrigger(), e);
         }
         catch (Throwable e) {
-            monitor.addMessage(LogMessage.error(this, "Task failed with a serious error."));
-            monitor.setState(TaskState.FAILED);
+            monitor.update(up -> up.setState(FAILED) //
+                    .addMessage(LogMessage.error(this, "Task failed with a serious error.")));
             LOG.error("Task [{}] failed with a serious error (trigger: [{}])", getTitle(),
                     getTrigger(), e);
         }

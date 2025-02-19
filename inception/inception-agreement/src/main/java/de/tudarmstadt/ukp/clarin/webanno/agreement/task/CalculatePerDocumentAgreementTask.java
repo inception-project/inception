@@ -33,6 +33,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.fit.util.FSUtil;
@@ -48,7 +49,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasStorageSessio
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.scheduling.Task;
@@ -89,7 +89,7 @@ public class CalculatePerDocumentAgreementTask
         summary = new PerDocumentAgreementResult(feature, traits);
 
         var maxProgress = allAnnDocs.size();
-        var progress = 0;
+        var progress = new AtomicInteger(0);
 
         var docs = allAnnDocs.keySet().stream() //
                 .sorted(comparing(SourceDocument::getName)) //
@@ -101,8 +101,9 @@ public class CalculatePerDocumentAgreementTask
                 break;
             }
 
-            monitor.setProgressWithMessage(progress, maxProgress,
-                    LogMessage.info(this, doc.getName()));
+            monitor.update(up -> up.setProgress(progress.get()) //
+                    .setMaxProgress(maxProgress) //
+                    .addMessage(LogMessage.info(this, doc.getName())));
 
             try (var session = CasStorageSession.openNested()) {
                 var casMap = new LinkedHashMap<String, CAS>();
@@ -123,7 +124,7 @@ public class CalculatePerDocumentAgreementTask
                 var agreementResult = AgreementSummary.of(measure.getAgreement(casMap));
                 summary.mergeResult(doc, agreementResult);
 
-                progress++;
+                progress.incrementAndGet();
             }
             catch (Exception e) {
                 LOG.error("Unable to load data", e);

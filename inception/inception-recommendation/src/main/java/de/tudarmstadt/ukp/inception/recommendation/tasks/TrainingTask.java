@@ -114,11 +114,12 @@ public class TrainingTask
         // recommender requires evaluation.
         var casLoader = new LazyCasLoader(documentService, getProject(), dataOwner);
 
-        getMonitor().setMaxProgress(activeRecommenders.size());
+        getMonitor().update(up -> up.setMaxProgress(activeRecommenders.size()));
+
         for (var activeRecommender : activeRecommenders) {
-            getMonitor().incrementProgress();
-            getMonitor().addMessage(
-                    LogMessage.info(this, "%s", activeRecommender.getRecommender().getName()));
+            getMonitor().update(up -> up.increment() //
+                    .addMessage(LogMessage.info(this, "%s",
+                            activeRecommender.getRecommender().getName())));
 
             // Make sure we have the latest recommender config from the DB - the one from
             // the active recommenders list may be outdated
@@ -388,7 +389,8 @@ public class TrainingTask
             List<CAS> cassesForTraining)
         throws ConcurrentException
     {
-        getMonitor().addMessage(LogMessage.info(this, "%s", recommender.getName()));
+        getMonitor()
+                .update(up -> up.addMessage(LogMessage.info(this, "%s", recommender.getName())));
 
         LOG.debug("[{}][{}][{}]: Training model on [{}] out of [{}] documents ...", getId(),
                 getSessionOwner().getUsername(), recommender.getName(), cassesForTraining.size(),
@@ -427,7 +429,7 @@ public class TrainingTask
          * @param aCurrentDocuemnt
          *            the document currently open in the editor of the user triggering the task.
          */
-        @SuppressWarnings("unchecked")
+        @SuppressWarnings({ "unchecked", "javadoc" })
         public T withCurrentDocument(SourceDocument aCurrentDocuemnt)
         {
             currentDocument = aCurrentDocuemnt;
@@ -441,7 +443,7 @@ public class TrainingTask
          *            annotations or a curator is performing curation to the
          *            {@link WebAnnoConst#CURATION_USER})
          */
-        @SuppressWarnings("unchecked")
+        @SuppressWarnings({ "unchecked", "javadoc" })
         public T withDataOwner(String aDataOwner)
         {
             dataOwner = aDataOwner;

@@ -119,11 +119,11 @@ public class SelectionTask
             };
 
             var listAnnotationLayers = annoService.listAnnotationLayer(getProject());
-            getMonitor().setMaxProgress(listAnnotationLayers.size());
+            getMonitor().update(up -> up.setMaxProgress(listAnnotationLayers.size()));
             var seenRecommender = false;
             var layers = annoService.listAnnotationLayer(getProject());
             for (var layer : layers) {
-                getMonitor().incrementProgress();
+                getMonitor().update(up -> up.increment());
 
                 if (!layer.isEnabled()) {
                     continue;
@@ -154,7 +154,8 @@ public class SelectionTask
                     try {
                         long start = System.currentTimeMillis();
 
-                        getMonitor().addMessage(LogMessage.info(this, "%s", recommender.getName()));
+                        getMonitor().update(up -> up
+                                .addMessage(LogMessage.info(this, "%s", recommender.getName())));
                         evaluate(sessionOwner, recommender, casLoader)
                                 .ifPresent(evaluatedRecommender -> {
                                     var result = evaluatedRecommender.getEvaluationResult();

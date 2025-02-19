@@ -39,6 +39,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.lang3.Validate;
 import org.apache.uima.UIMAException;
@@ -214,7 +215,7 @@ public class PredictionTask
                 : new Predictions(sessionOwner, dataOwner, project);
 
         var maxProgress = aDocuments.size();
-        var progress = 0;
+        var progress = new AtomicInteger(0);
 
         try (var casHolder = new PredictionCasHolder()) {
             for (var document : aDocuments) {
@@ -222,15 +223,17 @@ public class PredictionTask
                     break;
                 }
 
-                monitor.setProgressWithMessage(progress, maxProgress,
-                        LogMessage.info(this, "%s", document.getName()));
+                monitor.update(up -> up.setProgress(progress.get()) //
+                        .setMaxProgress(maxProgress) //
+                        .addMessage(LogMessage.info(this, "%s", document.getName())));
                 applyActiveRecommendersToDocument(activePredictions, incomingPredictions,
                         casHolder.cas, document, -1, -1);
-                progress++;
+                progress.incrementAndGet();
             }
 
-            monitor.setProgressWithMessage(progress, maxProgress,
-                    LogMessage.info(this, "%d documents processed", progress));
+            monitor.update(up -> up.setProgress(progress.get()) //
+                    .setMaxProgress(maxProgress) //
+                    .addMessage(LogMessage.info(this, "%d documents processed", progress)));
 
             return incomingPredictions;
         }
@@ -260,7 +263,7 @@ public class PredictionTask
                 ? new Predictions(predecessorPredictions)
                 : new Predictions(sessionOwner, dataOwner, project);
 
-        getMonitor().setMaxProgress(1);
+        getMonitor().update(up -> up.setMaxProgress(1));
 
         if (predecessorPredictions != null) {
             // Limit prediction to a single document and inherit the rest
@@ -304,7 +307,7 @@ public class PredictionTask
             logErrorCreationPredictionCas(incomingPredictions);
         }
 
-        getMonitor().setProgress(1);
+        getMonitor().update(up -> up.setProgress(1));
 
         return incomingPredictions;
     }
@@ -500,7 +503,7 @@ public class PredictionTask
             // loaded, then we skip to the next document.
             var originalCas = aOriginalCas.get();
 
-            var ctx = new PredictionContext(context.get());
+            var ctx = new PredictionContext(context.get(), getMonitor());
             cloneAndMonkeyPatchCAS(getProject(), originalCas, predictionCas);
             var predictionRange = new Range(aPredictionBegin < 0 ? 0 : aPredictionBegin,
                     aPredictionEnd < 0 ? originalCas.getDocumentText().length() : aPredictionEnd);
@@ -1101,7 +1104,7 @@ public class PredictionTask
          * @param aRecommenders
          *            the recommenders to run.
          */
-        @SuppressWarnings("unchecked")
+        @SuppressWarnings({ "unchecked", "javadoc" })
         public T withRecommender(Recommender... aRecommenders)
         {
             if (aRecommenders != null) {
@@ -1114,7 +1117,7 @@ public class PredictionTask
          * @param aCurrentDocuemnt
          *            the document currently open in the editor of the user triggering the task.
          */
-        @SuppressWarnings("unchecked")
+        @SuppressWarnings({ "unchecked", "javadoc" })
         public T withCurrentDocument(SourceDocument aCurrentDocuemnt)
         {
             currentDocument = aCurrentDocuemnt;
@@ -1128,7 +1131,7 @@ public class PredictionTask
          *            annotations or a curator is performing curation to the
          *            {@link WebAnnoConst#CURATION_USER})
          */
-        @SuppressWarnings("unchecked")
+        @SuppressWarnings({ "unchecked", "javadoc" })
         public T withDataOwner(String aDataOwner)
         {
             dataOwner = aDataOwner;
@@ -1153,7 +1156,7 @@ public class PredictionTask
          * @param aIsolated
          *            whether to run the task in isolation.
          */
-        @SuppressWarnings("unchecked")
+        @SuppressWarnings({ "unchecked", "javadoc" })
         public T withIsolated(boolean aIsolated)
         {
             isolated = aIsolated;

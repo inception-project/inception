@@ -37,6 +37,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.lang3.Validate;
 import org.apache.uima.cas.AnnotationBaseFS;
@@ -112,10 +113,10 @@ public class BulkPredictionTask
         var dataOwnerUser = userService.get(dataOwner);
         var monitor = getMonitor();
         var visitedDocuments = new HashSet<SourceDocument>();
-        var processedDocumentsCount = 0;
-        var annotationsCount = 0;
-        var suggestionsCount = 0;
-        var maxProgress = 0;
+        var processedDocumentsCount = new AtomicInteger(0);
+        var annotationsCount = new AtomicInteger(0);
+        var suggestionsCount = new AtomicInteger(0);
+        var maxProgress = new AtomicInteger(0);
 
         while (true) {
             // Find all documents currently in the project (which may have changed since the last
@@ -129,15 +130,16 @@ public class BulkPredictionTask
                     .map(e -> e.getKey()) //
                     .toList();
 
-            maxProgress = annotatableDocuments.size();
-            var progress = maxProgress - documentsToProcess.size();
+            maxProgress.set(annotatableDocuments.size());
+            var progress = maxProgress.get() - documentsToProcess.size();
             if (documentsToProcess.isEmpty() || monitor.isCancelled()) {
-                monitor.setProgressWithMessage(progress, maxProgress,
-                        LogMessage.info(this,
+                monitor.update(up1 -> up1.setProgress(progress) //
+                        .setMaxProgress(maxProgress.get()) //
+                        .addMessage(LogMessage.info(this,
                                 "%d annotations generated from %d suggestions in %d documents",
-                                annotationsCount, suggestionsCount, processedDocumentsCount));
+                                annotationsCount, suggestionsCount, processedDocumentsCount)));
                 if (monitor.isCancelled()) {
-                    monitor.setState(CANCELLED);
+                    monitor.update(up -> up.setState(CANCELLED));
                 }
                 break;
             }
@@ -146,12 +148,13 @@ public class BulkPredictionTask
             visitedDocuments.add(doc);
             var annDoc = documentService.createOrGetAnnotationDocument(doc, dataOwnerUser);
 
-            monitor.setProgressWithMessage(progress, maxProgress,
-                    LogMessage.info(this, "%s", doc.getName()));
+            monitor.update(up -> up.setProgress(progress) //
+                    .setMaxProgress(maxProgress.get()) //
+                    .addMessage(LogMessage.info(this, "%s", doc.getName())));
 
             try (var session = CasStorageSession.openNested()) {
                 var predictions = generatePredictions(doc);
-                suggestionsCount += predictions.getNewSuggestionCount();
+                suggestionsCount.addAndGet(predictions.getNewSuggestionCount());
 
                 documentService.setAnnotationDocumentState(annDoc, IN_PROGRESS,
                         EXPLICIT_ANNOTATOR_USER_ACTION);
@@ -161,7 +164,7 @@ public class BulkPredictionTask
                 addProcessingMetadataAnnotation(doc, cas);
 
                 int autoAcceptedSuggestions = autoAccept(doc, predictions, cas);
-                annotationsCount += autoAcceptedSuggestions;
+                annotationsCount.addAndGet(autoAcceptedSuggestions);
 
                 if (autoAcceptedSuggestions > 0) {
                     documentService.writeAnnotationCas(cas, doc, dataOwner,
@@ -173,7 +176,7 @@ public class BulkPredictionTask
                             EXPLICIT_ANNOTATOR_USER_ACTION);
                 }
 
-                processedDocumentsCount++;
+                processedDocumentsCount.incrementAndGet();
             }
             catch (IOException e) {
                 LOG.error("Error loading/saving CAS for [{}]@{}: {}", dataOwner, doc);
@@ -183,10 +186,11 @@ public class BulkPredictionTask
             }
         }
 
-        monitor.setProgressWithMessage(processedDocumentsCount, maxProgress,
-                LogMessage.info(this,
+        monitor.update(up -> up.setProgress(processedDocumentsCount.get()) //
+                .setMaxProgress(maxProgress.get()) //
+                .addMessage(LogMessage.info(this,
                         "%d annotations generated from %d suggestions in %d documents",
-                        annotationsCount, suggestionsCount, processedDocumentsCount));
+                        annotationsCount, suggestionsCount, processedDocumentsCount)));
     }
 
     private boolean isInProcessableState(SourceDocument aSourceDocument,

@@ -31,6 +31,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.lang3.concurrent.LazyInitializer;
 import org.apache.uima.cas.CAS;
@@ -46,7 +47,6 @@ import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.DefaultAgreementTrai
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.scheduling.Task;
@@ -87,7 +87,7 @@ public class CalculatePairwiseAgreementTask
         summary = new PairwiseAgreementResult(feature, traits);
 
         var maxProgress = allAnnDocs.size();
-        var progress = 0;
+        var progress = new AtomicInteger(0);
 
         var docs = allAnnDocs.keySet().stream() //
                 .sorted(comparing(SourceDocument::getName)) //
@@ -99,8 +99,9 @@ public class CalculatePairwiseAgreementTask
                 break;
             }
 
-            monitor.setProgressWithMessage(progress, maxProgress,
-                    LogMessage.info(this, doc.getName()));
+            monitor.update(up -> up.setProgress(progress.get()) //
+                    .setMaxProgress(maxProgress) //
+                    .addMessage(LogMessage.info(this, doc.getName())));
 
             try (var session = CasStorageSession.openNested()) {
                 for (int m = 0; m < annotators.size(); m++) {
@@ -153,7 +154,7 @@ public class CalculatePairwiseAgreementTask
                     }
                 }
 
-                progress++;
+                progress.incrementAndGet();
             }
             catch (Exception e) {
                 LOG.error("Unable to load data", e);

@@ -34,6 +34,7 @@ import java.lang.invoke.MethodHandles;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.uima.UIMAException;
@@ -97,15 +98,16 @@ public class BulkCurationTask
 
         var curatableDocuments = curationDocumentService.listCuratableSourceDocuments(getProject());
 
-        var progress = 0;
+        var progress = new AtomicInteger(0);
         var maxProgress = curatableDocuments.size();
 
         var mergeStrategy = createMergeStrategy();
 
         for (var doc : curatableDocuments) {
-            progress++;
-            monitor.setProgressWithMessage(progress, maxProgress,
-                    LogMessage.info(this, "%s", doc.getName()));
+            progress.incrementAndGet();
+            monitor.update(up1 -> up1.setProgress(progress.get()) //
+                    .setMaxProgress(maxProgress) //
+                    .addMessage(LogMessage.info(this, "%s", doc.getName())));
 
             try (var session = CasStorageSession.openNested()) {
                 var users = curationDocumentService.listCuratableUsers(doc);
@@ -142,8 +144,9 @@ public class BulkCurationTask
             }
         }
 
-        monitor.setProgressWithMessage(progress, maxProgress,
-                LogMessage.info(this, "Curation complete"));
+        monitor.update(up -> up.setProgress(progress.get()) //
+                .setMaxProgress(maxProgress) //
+                .addMessage(LogMessage.info(this, "Curation complete")));
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })

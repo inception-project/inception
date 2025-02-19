@@ -26,12 +26,14 @@ import static java.util.Arrays.asList;
 
 import java.util.Deque;
 import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.function.Consumer;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 
 public class TaskMonitor
+    implements Monitor
 {
     private final Deque<LogMessage> messages = new ConcurrentLinkedDeque<>();
 
@@ -54,6 +56,8 @@ public class TaskMonitor
     private boolean cancelled = false;
     private boolean destroyed = false;
 
+    private MonitorUpdater updater;
+
     public TaskMonitor(Task aTask)
     {
         handle = aTask.getHandle();
@@ -63,6 +67,55 @@ public class TaskMonitor
         title = aTask.getTitle();
         createTime = currentTimeMillis();
         cancellable = aTask.isCancellable();
+        updater = new MonitorUpdater()
+        {
+            @Override
+            public MonitorUpdater setProgress(int aProgress)
+            {
+                progress = aProgress;
+                return this;
+            }
+
+            @Override
+            public MonitorUpdater setMaxProgress(int aMaxProgress)
+            {
+                maxProgress = aMaxProgress;
+                return this;
+            }
+
+            @Override
+            public MonitorUpdater addMessage(LogMessage aMessage)
+            {
+                // Avoid repeating the same message over for different users
+                if (!messages.contains(aMessage)) {
+                    messages.add(aMessage);
+                }
+                return this;
+            }
+
+            @Override
+            public MonitorUpdater increment()
+            {
+                progress++;
+
+                return this;
+            }
+
+            @Override
+            public MonitorUpdater setState(TaskState aState)
+            {
+                if (state == NOT_STARTED && aState != NOT_STARTED) {
+                    startTime = currentTimeMillis();
+                }
+
+                if (asList(COMPLETED, CANCELLED, FAILED).contains(aState)) {
+                    endTime = currentTimeMillis();
+                }
+
+                state = aState;
+                return this;
+            }
+        };
     }
 
     public TaskHandle getHandle()
@@ -95,19 +148,6 @@ public class TaskMonitor
         return type;
     }
 
-    public synchronized void setState(TaskState aState)
-    {
-        if (state == NOT_STARTED && aState != NOT_STARTED) {
-            startTime = currentTimeMillis();
-        }
-
-        if (asList(COMPLETED, CANCELLED, FAILED).contains(aState)) {
-            endTime = currentTimeMillis();
-        }
-
-        state = aState;
-    }
-
     public synchronized long getCreateTime()
     {
         return createTime;
@@ -123,63 +163,27 @@ public class TaskMonitor
         return endTime;
     }
 
+    @Override
     public synchronized int getProgress()
     {
         return progress;
     }
 
-    public synchronized void setStateAndProgress(TaskState aState, int aProgress)
-    {
-        setState(aState);
-        setProgress(aProgress);
-    }
-
-    public synchronized void setStateAndProgress(TaskState aState, int aProgress, int aMaxProgress)
-    {
-        setState(aState);
-        setProgress(aProgress);
-        setMaxProgress(aMaxProgress);
-    }
-
-    public synchronized void incrementProgress()
-    {
-        setProgress(progress + 1);
-    }
-
-    public synchronized void setProgress(int aProgress)
-    {
-        progress = aProgress;
-    }
-
+    @Override
     public int getMaxProgress()
     {
         return maxProgress;
     }
 
-    public synchronized void setMaxProgress(int aMaxProgress)
-    {
-        maxProgress = aMaxProgress;
-    }
-
-    public void addMessage(LogMessage aMessage)
-    {
-        // Avoid repeating the same message over for different users
-        if (!messages.contains(aMessage)) {
-            messages.add(aMessage);
-        }
-    }
-
-    public synchronized void setProgressWithMessage(int aProgress, int aMaxProgress,
-            LogMessage aMessage)
-    {
-        setProgress(aProgress);
-        setMaxProgress(aMaxProgress);
-        addMessage(aMessage);
-    }
-
     public Deque<LogMessage> getMessages()
     {
         return messages;
+    }
+
+    @Override
+    public synchronized void update(Consumer<MonitorUpdater> aUpdater)
+    {
+        aUpdater.accept(updater);
     }
 
     public synchronized void destroy()
@@ -210,6 +214,7 @@ public class TaskMonitor
         cancelled = true;
     }
 
+    @Override
     public boolean isCancelled()
     {
         return cancelled;
@@ -221,6 +226,7 @@ public class TaskMonitor
         return new Progress(progress, maxProgress);
     }
 
+    @Override
     public long getDuration()
     {
         if (startTime < 0) {
