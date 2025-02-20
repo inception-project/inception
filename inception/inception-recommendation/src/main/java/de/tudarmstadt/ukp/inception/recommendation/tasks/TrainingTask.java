@@ -105,7 +105,7 @@ public class TrainingTask
             return;
         }
 
-        long overallStartTime = currentTimeMillis();
+        var overallStartTime = currentTimeMillis();
 
         logTrainingOverallStart();
 
@@ -114,46 +114,47 @@ public class TrainingTask
         // recommender requires evaluation.
         var casLoader = new LazyCasLoader(documentService, getProject(), dataOwner);
 
-        getMonitor().setMaxProgress(activeRecommenders.size());
-        for (var activeRecommender : activeRecommenders) {
-            getMonitor().incrementProgress();
-            getMonitor().addMessage(
-                    LogMessage.info(this, "%s", activeRecommender.getRecommender().getName()));
+        try (var progress = getMonitor().openScope("recommenders", activeRecommenders.size())) {
+            for (var activeRecommender : activeRecommenders) {
+                progress.update(up -> up.increment() //
+                        .addMessage(LogMessage.info(this, "%s",
+                                activeRecommender.getRecommender().getName())));
 
-            // Make sure we have the latest recommender config from the DB - the one from
-            // the active recommenders list may be outdated
-            Recommender recommender;
-            try {
-                recommender = recommenderService
-                        .getRecommender(activeRecommender.getRecommender().getId());
-            }
-            catch (NoResultException e) {
-                logRecommenderGone(activeRecommender);
-                continue;
-            }
+                // Make sure we have the latest recommender config from the DB - the one from
+                // the active recommenders list may be outdated
+                Recommender recommender;
+                try {
+                    recommender = recommenderService
+                            .getRecommender(activeRecommender.getRecommender().getId());
+                }
+                catch (NoResultException e) {
+                    logRecommenderGone(activeRecommender);
+                    continue;
+                }
 
-            if (!recommender.isEnabled()) {
-                logRecommenderDisabled(recommender);
-                continue;
-            }
+                if (!recommender.isEnabled()) {
+                    logRecommenderDisabled(recommender);
+                    continue;
+                }
 
-            if (!recommender.getLayer().isEnabled()) {
-                logLayerDisabled(recommender);
-                continue;
-            }
+                if (!recommender.getLayer().isEnabled()) {
+                    logLayerDisabled(recommender);
+                    continue;
+                }
 
-            if (!recommender.getFeature().isEnabled()) {
-                logFeatureDisabled(recommender);
-                continue;
-            }
+                if (!recommender.getFeature().isEnabled()) {
+                    logFeatureDisabled(recommender);
+                    continue;
+                }
 
-            try {
-                trainRecommender(recommender, casLoader);
-            }
-            // Catching Throwable is intentional here as we want to continue the execution
-            // even if a particular recommender fails.
-            catch (Throwable e) {
-                handleError(recommender, e);
+                try {
+                    trainRecommender(recommender, casLoader);
+                }
+                // Catching Throwable is intentional here as we want to continue the execution
+                // even if a particular recommender fails.
+                catch (Throwable e) {
+                    handleError(recommender, e);
+                }
             }
         }
 
@@ -388,7 +389,8 @@ public class TrainingTask
             List<CAS> cassesForTraining)
         throws ConcurrentException
     {
-        getMonitor().addMessage(LogMessage.info(this, "%s", recommender.getName()));
+        getMonitor()
+                .update(up -> up.addMessage(LogMessage.info(this, "%s", recommender.getName())));
 
         LOG.debug("[{}][{}][{}]: Training model on [{}] out of [{}] documents ...", getId(),
                 getSessionOwner().getUsername(), recommender.getName(), cassesForTraining.size(),
@@ -427,7 +429,7 @@ public class TrainingTask
          * @param aCurrentDocuemnt
          *            the document currently open in the editor of the user triggering the task.
          */
-        @SuppressWarnings("unchecked")
+        @SuppressWarnings({ "unchecked", "javadoc" })
         public T withCurrentDocument(SourceDocument aCurrentDocuemnt)
         {
             currentDocument = aCurrentDocuemnt;
@@ -441,7 +443,7 @@ public class TrainingTask
          *            annotations or a curator is performing curation to the
          *            {@link WebAnnoConst#CURATION_USER})
          */
-        @SuppressWarnings("unchecked")
+        @SuppressWarnings({ "unchecked", "javadoc" })
         public T withDataOwner(String aDataOwner)
         {
             dataOwner = aDataOwner;

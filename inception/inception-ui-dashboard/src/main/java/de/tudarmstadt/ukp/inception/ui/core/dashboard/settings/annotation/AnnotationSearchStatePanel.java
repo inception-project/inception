@@ -46,12 +46,18 @@ public class AnnotationSearchStatePanel
 
     private @SpringBean AnnotationEditorRegistry annotationEditorRegistry;
     private @SpringBean PreferencesService preferencesService;
-    private @SpringBean SearchService searchService;
+    private @SpringBean(required = false) SearchService searchService;
     private @SpringBean UserDao userService;
 
     public AnnotationSearchStatePanel(String aId, IModel<Project> aProjectModel)
     {
         super(aId, aProjectModel);
+
+        if (searchService == null) {
+            setVisibilityAllowed(false);
+            return;
+        }
+
         setOutputMarkupPlaceholderTag(true);
 
         var state = preferencesService.loadDefaultTraitsForProject(KEY_SEARCH_STATE,

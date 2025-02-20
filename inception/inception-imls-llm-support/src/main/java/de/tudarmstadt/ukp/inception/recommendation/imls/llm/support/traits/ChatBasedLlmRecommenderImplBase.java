@@ -22,6 +22,8 @@ import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.promp
 import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.response.ResponseExtractor.getResponseExtractor;
 import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.traits.ChatMessage.Role.SYSTEM;
 import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.traits.ChatMessage.Role.USER;
+import static de.tudarmstadt.ukp.inception.scheduling.ProgressScope.SCOPE_UNITS;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMessage;
 
 import java.io.IOException;
@@ -31,7 +33,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.uima.cas.CAS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -101,27 +102,37 @@ public abstract class ChatBasedLlmRecommenderImplBase<T extends LlmRecommenderTr
 
         var globalBindings = prepareGlobalBindings(aCas);
         var contexts = getPromptContextGenerator(traits.getPromptingMode()) //
-                .generate(this, aCas, aBegin, aEnd, globalBindings);
+                .generate(this, aCas, aBegin, aEnd, globalBindings) //
+                .toList();
 
-        contexts.forEach(promptContext -> {
-            if (StringUtils.isBlank(promptContext.getText())) {
-                return;
-            }
+        try (var progress = aContext.getMonitor().openScope(SCOPE_UNITS, contexts.size())) {
+            for (var promptContext : contexts) {
+                if (aContext.getMonitor().isCancelled()) {
+                    break;
+                }
 
-            try {
-                var messages = new ArrayList<>(staticMessages);
-                messages.add(new ChatMessage(SYSTEM, "# Context\n\n" + promptContext.getText()));
-                messages.add(new ChatMessage(USER, traits.getPrompt()));
-                var response = exchange(messages, responseformat.orElse(null),
-                        jsonSchema.orElse(null));
-                responseExtractor.extractMentions(this, aCas, promptContext, response);
+                progress.update(up -> up.increment());
+
+                if (isBlank(promptContext.getText())) {
+                    continue;
+                }
+
+                try {
+                    var messages = new ArrayList<>(staticMessages);
+                    messages.add(
+                            new ChatMessage(SYSTEM, "# Context\n\n" + promptContext.getText()));
+                    messages.add(new ChatMessage(USER, traits.getPrompt()));
+                    var response = exchange(messages, responseformat.orElse(null),
+                            jsonSchema.orElse(null));
+                    responseExtractor.extractMentions(this, aCas, promptContext, response);
+                }
+                catch (IOException e) {
+                    aContext.log(LogMessage.warn(getRecommender().getName(),
+                            "Remote failed to respond: %s", getRootCauseMessage(e)));
+                    LOG.error("Remote failed to respond: {}", getRootCauseMessage(e));
+                }
             }
-            catch (IOException e) {
-                aContext.log(LogMessage.warn(getRecommender().getName(),
-                        "Remote failed to respond: %s", getRootCauseMessage(e)));
-                LOG.error("Remote failed to respond: {}", getRootCauseMessage(e));
-            }
-        });
+        }
 
         return new Range(aBegin, aEnd);
     }

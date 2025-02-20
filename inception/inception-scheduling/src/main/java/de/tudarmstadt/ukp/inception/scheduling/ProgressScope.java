@@ -17,14 +17,19 @@
  */
 package de.tudarmstadt.ukp.inception.scheduling;
 
-public record Progress(String unit, int progress, int maxProgress) {
-    public int percent()
-    {
-        if (maxProgress > 0) {
-            return progress * 100 / maxProgress;
-        }
-        else {
-            return 0;
-        }
-    }
+import java.util.function.Consumer;
+
+public interface ProgressScope
+    extends AutoCloseable
+{
+    String SCOPE_DOCUMENTS = "docs";
+    String SCOPE_LAYERS = "layers";
+    String SCOPE_UNITS = "units";
+
+    int getProgress();
+
+    void update(Consumer<ProgressUpdate> aUpdater);
+
+    @Override
+    void close();
 }

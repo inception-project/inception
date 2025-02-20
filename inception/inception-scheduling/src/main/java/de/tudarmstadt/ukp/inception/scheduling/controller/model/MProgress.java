@@ -15,16 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.scheduling;
+package de.tudarmstadt.ukp.inception.scheduling.controller.model;
 
-public record Progress(String unit, int progress, int maxProgress) {
-    public int percent()
-    {
-        if (maxProgress > 0) {
-            return progress * 100 / maxProgress;
-        }
-        else {
-            return 0;
-        }
-    }
+import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+
+@JsonInclude(NON_NULL)
+public record MProgress(String unit, int progress, int maxProgress) {
+
 }

@@ -134,11 +134,13 @@ public class SchedulingServiceImpl
             runningTasks.remove(aTask);
         }
 
-        if (aTask.getMonitor().isCancelled() || !aTask.getScope().isDestroyOnEnd()) {
+        synchronized (pendingAcknowledgement) {
+            // if (aTask.getMonitor().isCancelled() || !aTask.getScope().isDestroyOnEnd()) {
             pendingAcknowledgement.add(aTask);
-        }
-        else {
-            aTask.destroy();
+            // }
+            // else {
+            // aTask.destroy();
+            // }
         }
     }
 
@@ -423,6 +425,19 @@ public class SchedulingServiceImpl
 
     private synchronized void cleanUpTasks()
     {
+        pendingAcknowledgement.removeIf(runnable -> {
+            var task = (Task) runnable;
+
+            if (task.getScope().isDestroyOnEnd()
+                    && currentTimeMillis() - task.getMonitor().getEndTime() > 5000) {
+                LOG.debug("Destroying self-destrucing task after quiet period: {}", task);
+                task.destroy();
+                return true;
+            }
+
+            return false;
+        });
+
         // var activeSessionCount = 0;
         var activeUsers = new HashSet<String>();
         for (var principal : sessionRegistry.getAllPrincipals()) {

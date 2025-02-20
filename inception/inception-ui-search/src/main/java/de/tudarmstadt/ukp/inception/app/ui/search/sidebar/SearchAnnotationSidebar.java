@@ -559,7 +559,7 @@ public class SearchAnnotationSidebar
         if (maybeProgress.isPresent()) {
             var p = maybeProgress.get();
             info("Indexing in progress... cannot perform query at this time. " + p.percent() + "% ("
-                    + p.getDone() + "/" + p.getTotal() + ")");
+                    + p.progress() + "/" + p.maxProgress() + ")");
             aTarget.addChildren(getPage(), IFeedback.class);
             return;
         }

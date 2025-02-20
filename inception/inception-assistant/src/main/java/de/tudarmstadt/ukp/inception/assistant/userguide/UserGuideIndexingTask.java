@@ -17,8 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.assistant.userguide;
 
-import static de.tudarmstadt.ukp.inception.scheduling.TaskState.COMPLETED;
-import static de.tudarmstadt.ukp.inception.scheduling.TaskState.RUNNING;
+import static de.tudarmstadt.ukp.inception.scheduling.ProgressScope.SCOPE_UNITS;
 import static java.lang.System.currentTimeMillis;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.commons.collections4.ListUtils.partition;
@@ -74,21 +73,18 @@ public class UserGuideIndexingTask
                         .toList();
                 var blockChunks = partition(blocks, 100);
 
-                var monitor = getMonitor();
-                monitor.setStateAndProgress(RUNNING, 0, blocks.size());
+                try (var progress = getMonitor().openScope(SCOPE_UNITS, blocks.size())) {
+                    for (var blockChunk : blockChunks) {
+                        progress.update(up -> up.increment(blockChunk.size()));
 
-                var blocksIndexed = 0;
-                for (var blockChunk : blockChunks) {
-                    blocksIndexed += blockChunks.size();
-                    documentationIndexingService.indexBlocks(iw, blockChunk.toArray(String[]::new));
-                    monitor.setProgress(blocksIndexed);
+                        documentationIndexingService.indexBlocks(iw,
+                                blockChunk.toArray(String[]::new));
+                    }
+
+                    var endTime = currentTimeMillis();
+                    LOG.info("User guide index complete in {}ms ({} blocks)", endTime - startTime,
+                            progress.getProgress());
                 }
-
-                var endTime = currentTimeMillis();
-                LOG.info("User guide index complete in {}ms ({} blocks)", endTime - startTime,
-                        blocksIndexed);
-
-                monitor.setStateAndProgress(COMPLETED, blocks.size(), blocks.size());
             }
         }
 

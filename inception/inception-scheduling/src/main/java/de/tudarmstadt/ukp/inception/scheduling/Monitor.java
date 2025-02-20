@@ -17,14 +17,22 @@
  */
 package de.tudarmstadt.ukp.inception.scheduling;
 
-public record Progress(String unit, int progress, int maxProgress) {
-    public int percent()
-    {
-        if (maxProgress > 0) {
-            return progress * 100 / maxProgress;
-        }
-        else {
-            return 0;
-        }
-    }
+import java.util.List;
+import java.util.function.Consumer;
+
+public interface Monitor
+{
+    ProgressScope openScope(String aUnit, int aMaxProgress);
+
+    void update(Consumer<MonitorUpdate> aUpdate);
+
+    List<Progress> getProgressList();
+
+    int getMaxProgress();
+
+    int getProgress();
+
+    boolean isCancelled();
+
+    long getDuration();
 }

@@ -92,7 +92,7 @@ public class IndexSourceDocumentTask
     @Override
     public Progress getProgress()
     {
-        return new Progress(done, 1);
+        return new Progress("", done, 1);
     }
 
     @Override
