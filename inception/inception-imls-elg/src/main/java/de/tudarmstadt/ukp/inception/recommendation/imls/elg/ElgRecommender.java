@@ -26,9 +26,6 @@ import java.util.Map.Entry;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.CASRuntimeException;
-import org.apache.uima.cas.Feature;
-import org.apache.uima.cas.Type;
-import org.apache.uima.cas.text.AnnotationFS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -72,7 +69,7 @@ public class ElgRecommender
     {
         ElgServiceResponse response;
         try {
-            String text = aCas.getDocumentText().substring(aBegin, aEnd);
+            var text = aCas.getDocumentText().substring(aBegin, aEnd);
             response = elgService.invokeService(session, traits.getServiceUrlSync(), text);
         }
         catch (IOException e) {
@@ -80,15 +77,15 @@ public class ElgRecommender
                     "Error invoking ELG service: " + getRootCauseMessage(e), e);
         }
 
-        Type predictedType = getPredictedType(aCas);
-        Feature predictedFeature = getPredictedFeature(aCas);
-        Feature isPredictionFeature = getIsPredictionFeature(aCas);
-        Feature explanationFeature = getScoreExplanationFeature(aCas);
+        var predictedType = getPredictedType(aCas);
+        var predictedFeature = getPredictedFeature(aCas);
+        var isPredictionFeature = getIsPredictionFeature(aCas);
+        var explanationFeature = getScoreExplanationFeature(aCas);
 
         for (Entry<String, List<ElgAnnotation>> group : getAnnotationGroups(response).entrySet()) {
-            String tag = group.getKey();
-            for (ElgAnnotation elgAnn : group.getValue()) {
-                AnnotationFS ann = aCas.createAnnotation(predictedType, elgAnn.getStart() + aBegin,
+            var tag = group.getKey();
+            for (var elgAnn : group.getValue()) {
+                var ann = aCas.createAnnotation(predictedType, elgAnn.getStart() + aBegin,
                         elgAnn.getEnd() + aBegin);
                 ann.setStringValue(predictedFeature, tag);
                 ann.setBooleanValue(isPredictionFeature, true);

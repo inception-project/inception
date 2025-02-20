@@ -17,14 +17,11 @@
  */
 package de.tudarmstadt.ukp.inception.scheduling;
 
-public record Progress(String unit, int progress, int maxProgress) {
-    public int percent()
-    {
-        if (maxProgress > 0) {
-            return progress * 100 / maxProgress;
-        }
-        else {
-            return 0;
-        }
-    }
+import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
+
+public interface MonitorUpdate
+{
+    MonitorUpdate addMessage(LogMessage aMessage);
+
+    MonitorUpdate setState(TaskState aState);
 }

@@ -17,11 +17,16 @@
  */
 package de.tudarmstadt.ukp.inception.scheduling;
 
+import java.util.List;
 import java.util.function.Consumer;
 
 public interface Monitor
 {
-    void update(Consumer<MonitorUpdater> aUpdater);
+    ProgressScope openScope(String aUnit, int aMaxProgress);
+
+    void update(Consumer<MonitorUpdate> aUpdate);
+
+    List<Progress> getProgressList();
 
     int getMaxProgress();
 

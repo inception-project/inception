@@ -19,8 +19,8 @@ package de.tudarmstadt.ukp.inception.processing.tagset;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.AUTO_CAS_UPGRADE;
+import static de.tudarmstadt.ukp.inception.scheduling.ProgressScope.SCOPE_DOCUMENTS;
 import static de.tudarmstadt.ukp.inception.scheduling.TaskScope.PROJECT;
-import static de.tudarmstadt.ukp.inception.scheduling.TaskState.RUNNING;
 import static java.util.Arrays.asList;
 import static org.apache.uima.cas.CAS.TYPE_NAME_STRING_ARRAY;
 
@@ -30,7 +30,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.Validate;
@@ -127,26 +126,18 @@ public class TagSetExtractionTask
 
     private Set<String> extractTags()
     {
-        var monitor = getMonitor();
-
         var tags = new HashSet<String>();
 
         var documents = documentService.listSourceDocuments(getProject());
-        var processedDocumentsCount = new AtomicInteger(0);
-        var totalDocumentsCount = documents.size();
+        try (var progress = getMonitor().openScope(SCOPE_DOCUMENTS, documents.size())) {
+            for (var srcDoc : documents) {
+                progress.update(up -> up.increment());
 
-        for (var srcDoc : documents) {
-            processedDocumentsCount.incrementAndGet();
-            monitor.update(up -> up.setState(RUNNING) //
-                    .setProgress(processedDocumentsCount.get()) //
-                    .setMaxProgress(totalDocumentsCount));
+                extractTagsFromDocument(tags, srcDoc);
+            }
 
-            extractTagsFromDocument(tags, srcDoc);
+            progress.update(up -> up.addMessage(LogMessage.info(this, "Tag extraction complete")));
         }
-
-        monitor.update(up -> up.setProgress(processedDocumentsCount.get()) //
-                .setMaxProgress(totalDocumentsCount) //
-                .addMessage(LogMessage.info(this, "Tag extraction complete")));
 
         return tags;
     }

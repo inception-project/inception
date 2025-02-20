@@ -27,9 +27,9 @@ import static de.tudarmstadt.ukp.inception.assistant.documents.DocumentQueryServ
 import static de.tudarmstadt.ukp.inception.assistant.documents.DocumentQueryService.FIELD_SOURCE_DOC_COMPLETE;
 import static de.tudarmstadt.ukp.inception.assistant.documents.DocumentQueryService.FIELD_SOURCE_DOC_ID;
 import static de.tudarmstadt.ukp.inception.assistant.documents.DocumentQueryService.FIELD_TEXT;
+import static de.tudarmstadt.ukp.inception.scheduling.ProgressScope.SCOPE_DOCUMENTS;
+import static de.tudarmstadt.ukp.inception.scheduling.ProgressScope.SCOPE_UNITS;
 import static de.tudarmstadt.ukp.inception.scheduling.TaskState.CANCELLED;
-import static de.tudarmstadt.ukp.inception.scheduling.TaskState.COMPLETED;
-import static de.tudarmstadt.ukp.inception.scheduling.TaskState.RUNNING;
 import static java.lang.Math.floorDiv;
 import static java.time.Duration.ofSeconds;
 import static org.apache.commons.collections4.ListUtils.partition;
@@ -42,7 +42,6 @@ import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Objects;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.lucene.document.Document;
@@ -139,46 +138,38 @@ public class UpdateDocumentIndexTask
                     }
                 }
 
-                var toProcess = documentsToUnindex.size() + documentsToIndex.size() * 100;
-                var processed = new AtomicInteger(0);
-                monitor.update(up1 -> up1.setState(RUNNING) //
-                        .setProgress(processed.get() * 100).setMaxProgress(toProcess));
-
-                for (var sourceDocumentId : documentsToUnindex) {
-                    if (monitor.isCancelled()) {
-                        monitor.update(up -> up.setState(CANCELLED));
-                        break;
-                    }
-
-                    monitor.update(up -> up.setProgress(processed.get() * 100) //
-                            .setMaxProgress(toProcess) //
-                            .addMessage(LogMessage.info(this, "Unindexing...")));
-                    unindexDocument(index, sourceDocumentId);
-                    processed.incrementAndGet();
-                }
-
-                try (var session = CasStorageSession.openNested()) {
-                    for (var sourceDocument : documentsToIndex.values()) {
+                try (var progress = getMonitor().openScope(SCOPE_DOCUMENTS,
+                        documentsToUnindex.size() + documentsToIndex.size())) {
+                    progress.update(up -> up.addMessage(LogMessage.info(this, "Unindexing...")));
+                    for (var sourceDocumentId : documentsToUnindex) {
                         if (monitor.isCancelled()) {
                             monitor.update(up -> up.setState(CANCELLED));
                             break;
                         }
 
-                        monitor.update(up -> up.setProgress(processed.get() * 100) //
-                                .setMaxProgress(toProcess) //
-                                .addMessage(LogMessage.info(this, "Indexing: %s",
-                                        sourceDocument.getName())));
-                        indexDocument(index, chunker, sourceDocument);
-                        processed.incrementAndGet();
+                        progress.update(up -> up.increment());
+                        unindexDocument(index, sourceDocumentId);
                     }
-                }
 
-                if (!monitor.isCancelled()) {
-                    monitor.update(up -> up.setState(COMPLETED).setProgress(processed.get() * 100)
-                            .setMaxProgress(toProcess));
-                    index.getIndexWriter().commit();
-                    // We can probably live with a partial index, so we do not roll back if
-                    // cancelled
+                    try (var session = CasStorageSession.openNested()) {
+                        for (var sourceDocument : documentsToIndex.values()) {
+                            if (monitor.isCancelled()) {
+                                monitor.update(up -> up.setState(CANCELLED));
+                                break;
+                            }
+
+                            progress.update(up -> up.increment() //
+                                    .addMessage(LogMessage.info(this, "Indexing: %s",
+                                            sourceDocument.getName())));
+                            indexDocument(index, chunker, sourceDocument);
+                        }
+                    }
+
+                    if (!monitor.isCancelled()) {
+                        index.getIndexWriter().commit();
+                        // We can probably live with a partial index, so we do not roll back if
+                        // cancelled
+                    }
                 }
             }
         }
@@ -210,28 +201,21 @@ public class UpdateDocumentIndexTask
             var chunks = aChunker.process(cas);
             var batches = partition(chunks, properties.getEmbedding().getBatchSize());
 
-            var totalBatches = batches.size();
-            var processedBatches = new AtomicInteger(0);
-            var chunksSeen = 0;
-            var progressOffset = getMonitor().getProgress();
-            for (var batch : batches) {
-                try {
-                    var docEmbeddings = embeddingService.embed(Chunk::text, batch);
-                    for (var embedding : docEmbeddings) {
-                        indexChunks(aIndex, aSourceDocument, embedding);
+            try (var progress = getMonitor().openScope(SCOPE_UNITS, chunks.size())) {
+                for (var batch : batches) {
+                    progress.update(up -> up.increment(batch.size()));
+
+                    try {
+                        var docEmbeddings = embeddingService.embed(Chunk::text, batch);
+                        for (var embedding : docEmbeddings) {
+                            indexChunks(aIndex, aSourceDocument, embedding);
+                        }
+                    }
+                    catch (IOException e) {
+                        LOG.error("Error indexing document {} chunks {}-{} ", aSourceDocument,
+                                progress.getProgress(), progress.getProgress() + batch.size(), e);
                     }
                 }
-                catch (IOException e) {
-                    LOG.error("Error indexing document {} chunks {}-{} ", aSourceDocument,
-                            chunksSeen, chunksSeen + batch.size(), e);
-                }
-
-                getMonitor().update(up -> up.setState(RUNNING) //
-                        .setProgress(progressOffset
-                                + floorDiv(processedBatches.get() * 100, totalBatches)));
-
-                chunksSeen += batch.size();
-                processedBatches.incrementAndGet();
             }
 
             markDocumentAsIndexed(aIndex, aSourceDocument);

@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.scheduling;
 
+import static de.tudarmstadt.ukp.inception.scheduling.TaskState.CANCELLED;
 import static de.tudarmstadt.ukp.inception.scheduling.TaskState.COMPLETED;
 import static de.tudarmstadt.ukp.inception.scheduling.TaskState.FAILED;
 import static de.tudarmstadt.ukp.inception.scheduling.TaskState.RUNNING;
@@ -218,7 +219,10 @@ public abstract class Task
 
             execute();
 
-            if (monitor.getState() == RUNNING) {
+            if (monitor.isCancelled()) {
+                monitor.update(up -> up.setState(CANCELLED));
+            }
+            else if (monitor.getState() == RUNNING) {
                 monitor.update(up -> up.setState(COMPLETED));
             }
 

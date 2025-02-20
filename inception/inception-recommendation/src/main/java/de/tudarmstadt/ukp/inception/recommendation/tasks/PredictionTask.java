@@ -24,6 +24,7 @@ import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.Predic
 import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapability.TRAINING_NOT_SUPPORTED;
 import static de.tudarmstadt.ukp.inception.recommendation.tasks.PredictionTask.ReconciliationOption.KEEP_EXISTING;
 import static de.tudarmstadt.ukp.inception.rendering.model.Range.rangeCoveringDocument;
+import static de.tudarmstadt.ukp.inception.scheduling.ProgressScope.SCOPE_DOCUMENTS;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
@@ -39,7 +40,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.lang3.Validate;
 import org.apache.uima.UIMAException;
@@ -211,31 +211,31 @@ public class PredictionTask
         var sessionOwner = getSessionOwner();
         var project = getProject();
         var activePredictions = getPredecessorPredictions(sessionOwner, project);
-        var incomingPredictions = activePredictions != null ? new Predictions(activePredictions)
+        var incomingPredictions = activePredictions != null //
+                ? new Predictions(activePredictions) //
                 : new Predictions(sessionOwner, dataOwner, project);
 
         var maxProgress = aDocuments.size();
-        var progress = new AtomicInteger(0);
 
         try (var casHolder = new PredictionCasHolder()) {
-            for (var document : aDocuments) {
-                if (monitor.isCancelled()) {
-                    break;
+            try (var progress = monitor.openScope(SCOPE_DOCUMENTS, maxProgress)) {
+                for (var document : aDocuments) {
+                    if (monitor.isCancelled()) {
+                        break;
+                    }
+
+                    progress.update(up -> up.increment() //
+                            .addMessage(LogMessage.info(this, "%s", document.getName())));
+
+                    applyActiveRecommendersToDocument(activePredictions, incomingPredictions,
+                            casHolder.cas, document, -1, -1);
                 }
 
-                monitor.update(up -> up.setProgress(progress.get()) //
-                        .setMaxProgress(maxProgress) //
-                        .addMessage(LogMessage.info(this, "%s", document.getName())));
-                applyActiveRecommendersToDocument(activePredictions, incomingPredictions,
-                        casHolder.cas, document, -1, -1);
-                progress.incrementAndGet();
+                progress.update(up -> up.addMessage(
+                        LogMessage.info(this, "%d documents processed", monitor.getProgress())));
+
+                return incomingPredictions;
             }
-
-            monitor.update(up -> up.setProgress(progress.get()) //
-                    .setMaxProgress(maxProgress) //
-                    .addMessage(LogMessage.info(this, "%d documents processed", progress)));
-
-            return incomingPredictions;
         }
         catch (ResourceInitializationException e) {
             logErrorCreationPredictionCas(incomingPredictions);
@@ -263,51 +263,54 @@ public class PredictionTask
                 ? new Predictions(predecessorPredictions)
                 : new Predictions(sessionOwner, dataOwner, project);
 
-        getMonitor().update(up -> up.setMaxProgress(1));
+        try (var progress = getMonitor().openScope("document", 1)) {
+            progress.update(up -> up.increment());
 
-        if (predecessorPredictions != null) {
-            // Limit prediction to a single document and inherit the rest
-            var documentsToInheritSuggestionsFor = aDocuments.stream() //
-                    .filter(d -> !d.equals(currentDocument)) //
-                    .toList();
+            if (predecessorPredictions != null) {
+                // Limit prediction to a single document and inherit the rest
+                var documentsToInheritSuggestionsFor = aDocuments.stream() //
+                        .filter(d -> !d.equals(currentDocument)) //
+                        .toList();
 
-            logPredictionStartedForOneDocumentWithInheritance(documentsToInheritSuggestionsFor);
+                logPredictionStartedForOneDocumentWithInheritance(documentsToInheritSuggestionsFor);
 
-            for (var document : documentsToInheritSuggestionsFor) {
-                inheritSuggestionsAtDocumentLevel(project, document, predecessorPredictions,
-                        incomingPredictions);
-            }
-        }
-        else {
-            logPredictionStartedForOneDocumentWithoutInheritance();
-        }
-
-        try (var casHolder = new PredictionCasHolder()) {
-            var predictionCas = casHolder.cas;
-
-            if (isolated) {
-                var originalCas = new LazyCas(aCurrentDocument);
-                for (var recommender : recommenders) {
-                    try {
-                        applySingleRecomenderToDocument(originalCas, recommender,
-                                predecessorPredictions, incomingPredictions, predictionCas,
-                                aCurrentDocument, predictionBegin, predictionEnd);
-                    }
-                    catch (IOException e) {
-                        logUnableToReadAnnotations(incomingPredictions, aCurrentDocument, e);
-                    }
+                for (var document : documentsToInheritSuggestionsFor) {
+                    inheritSuggestionsAtDocumentLevel(project, document, predecessorPredictions,
+                            incomingPredictions);
                 }
             }
             else {
-                applyActiveRecommendersToDocument(predecessorPredictions, incomingPredictions,
-                        predictionCas, aCurrentDocument, predictionBegin, predictionEnd);
+                logPredictionStartedForOneDocumentWithoutInheritance();
             }
-        }
-        catch (ResourceInitializationException e) {
-            logErrorCreationPredictionCas(incomingPredictions);
-        }
 
-        getMonitor().update(up -> up.setProgress(1));
+            try (var casHolder = new PredictionCasHolder()) {
+                var predictionCas = casHolder.cas;
+
+                if (isolated) {
+                    var originalCas = new LazyCas(aCurrentDocument);
+                    for (var recommender : recommenders) {
+                        try {
+                            applySingleRecomenderToDocument(originalCas, recommender,
+                                    predecessorPredictions, incomingPredictions, predictionCas,
+                                    aCurrentDocument, predictionBegin, predictionEnd);
+                        }
+                        catch (IOException e) {
+                            logUnableToReadAnnotations(incomingPredictions, aCurrentDocument, e);
+                        }
+                    }
+                }
+                else {
+                    applyActiveRecommendersToDocument(predecessorPredictions, incomingPredictions,
+                            predictionCas, aCurrentDocument, predictionBegin, predictionEnd);
+                }
+            }
+            catch (ResourceInitializationException e) {
+                logErrorCreationPredictionCas(incomingPredictions);
+            }
+
+            progress.update(up -> up.addMessage(
+                    LogMessage.info(this, "%d documents processed", progress.getProgress())));
+        }
 
         return incomingPredictions;
     }

@@ -21,6 +21,7 @@ import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.promp
 import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.prompt.PromptContextGenerator.VAR_TAGS;
 import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.prompt.PromptContextGenerator.getPromptContextGenerator;
 import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.response.ResponseExtractor.getResponseExtractor;
+import static de.tudarmstadt.ukp.inception.scheduling.ProgressScope.SCOPE_UNITS;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMessage;
 
@@ -126,20 +127,22 @@ public abstract class LlmRecommenderImplBase<T extends LlmRecommenderTraits>
         var responseExtractor = getResponseExtractor(traits);
 
         var contexts = getPromptContextGenerator(traits.getPromptingMode()) //
-                .generate(this, aCas, aBegin, aEnd, globalBindings);
+                .generate(this, aCas, aBegin, aEnd, globalBindings).toList();
 
-        contexts.forEach(promptContext -> {
-            try {
-                var prompt = promptRenderer.render(traits.getPrompt(), promptContext);
-                var response = exchange(prompt);
-                responseExtractor.extractMentions(this, aCas, promptContext, response);
-            }
-            catch (IOException e) {
-                aContext.log(LogMessage.warn(getRecommender().getName(),
-                        "Remote failed to respond: %s", getRootCauseMessage(e)));
-                LOG.error("Remote failed to respond: {}", getRootCauseMessage(e));
-            }
-        });
+        try (var progress = aContext.getMonitor().openScope(SCOPE_UNITS, contexts.size())) {
+            contexts.forEach(promptContext -> {
+                try {
+                    var prompt = promptRenderer.render(traits.getPrompt(), promptContext);
+                    var response = exchange(prompt);
+                    responseExtractor.extractMentions(this, aCas, promptContext, response);
+                }
+                catch (IOException e) {
+                    aContext.log(LogMessage.warn(getRecommender().getName(),
+                            "Remote failed to respond: %s", getRootCauseMessage(e)));
+                    LOG.error("Remote failed to respond: {}", getRootCauseMessage(e));
+                }
+            });
+        }
 
         return new Range(aBegin, aEnd);
     }

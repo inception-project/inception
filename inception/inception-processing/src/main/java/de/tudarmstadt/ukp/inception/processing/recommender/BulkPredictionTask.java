@@ -24,8 +24,8 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IN
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateChangeFlag.EXPLICIT_ANNOTATOR_USER_ACTION;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation.AUTO_ACCEPT;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.ACCEPTED;
+import static de.tudarmstadt.ukp.inception.scheduling.ProgressScope.SCOPE_DOCUMENTS;
 import static de.tudarmstadt.ukp.inception.scheduling.TaskScope.PROJECT;
-import static de.tudarmstadt.ukp.inception.scheduling.TaskState.CANCELLED;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -118,79 +118,78 @@ public class BulkPredictionTask
         var suggestionsCount = new AtomicInteger(0);
         var maxProgress = new AtomicInteger(0);
 
-        while (true) {
-            // Find all documents currently in the project (which may have changed since the last
-            // iteration)
-            var annotatableDocuments = documentService.listAnnotatableDocuments(getProject(),
-                    dataOwnerUser);
+        try (var progress = getMonitor().openScope(SCOPE_DOCUMENTS, 0)) {
+            while (true) {
+                // Find all documents currently in the project (which may have changed since the
+                // last iteration)
+                var annotatableDocuments = documentService.listAnnotatableDocuments(getProject(),
+                        dataOwnerUser);
 
-            var documentsToProcess = annotatableDocuments.entrySet().stream() //
-                    .filter(e -> isInProcessableState(e.getKey(), e.getValue())) //
-                    .filter(e -> !visitedDocuments.contains(e.getKey())) //
-                    .map(e -> e.getKey()) //
-                    .toList();
+                var documentsToProcess = annotatableDocuments.entrySet().stream() //
+                        .filter(e -> isInProcessableState(e.getKey(), e.getValue())) //
+                        .filter(e -> !visitedDocuments.contains(e.getKey())) //
+                        .map(e -> e.getKey()) //
+                        .toList();
 
-            maxProgress.set(annotatableDocuments.size());
-            var progress = maxProgress.get() - documentsToProcess.size();
-            if (documentsToProcess.isEmpty() || monitor.isCancelled()) {
-                monitor.update(up1 -> up1.setProgress(progress) //
-                        .setMaxProgress(maxProgress.get()) //
-                        .addMessage(LogMessage.info(this,
-                                "%d annotations generated from %d suggestions in %d documents",
-                                annotationsCount, suggestionsCount, processedDocumentsCount)));
-                if (monitor.isCancelled()) {
-                    monitor.update(up -> up.setState(CANCELLED));
+                if (documentsToProcess.isEmpty() || monitor.isCancelled()) {
+                    progress.update(up -> up //
+                            .setProgress(maxProgress.get() - documentsToProcess.size()) //
+                            .setMaxProgress(annotatableDocuments.size()) //
+                            .addMessage(LogMessage.info(this,
+                                    "%d annotations generated from %d suggestions in %d documents",
+                                    annotationsCount, suggestionsCount, processedDocumentsCount)));
+                    break;
                 }
-                break;
+
+                var doc = documentsToProcess.get(0);
+                visitedDocuments.add(doc);
+                var annDoc = documentService.createOrGetAnnotationDocument(doc, dataOwnerUser);
+
+                progress.update(up -> up //
+                        .setProgress(maxProgress.get() - documentsToProcess.size()) //
+                        .setMaxProgress(annotatableDocuments.size()) //
+                        .addMessage(LogMessage.info(this, "%s", doc.getName())));
+
+                try (var session = CasStorageSession.openNested()) {
+                    var predictions = generatePredictions(doc);
+                    suggestionsCount.addAndGet(predictions.getNewSuggestionCount());
+
+                    documentService.setAnnotationDocumentState(annDoc, IN_PROGRESS,
+                            EXPLICIT_ANNOTATOR_USER_ACTION);
+                    var cas = documentService.readAnnotationCas(doc, dataOwner, AUTO_CAS_UPGRADE,
+                            EXCLUSIVE_WRITE_ACCESS);
+
+                    addProcessingMetadataAnnotation(doc, cas);
+
+                    int autoAcceptedSuggestions = autoAccept(doc, predictions, cas);
+                    annotationsCount.addAndGet(autoAcceptedSuggestions);
+
+                    if (autoAcceptedSuggestions > 0) {
+                        documentService.writeAnnotationCas(cas, doc, dataOwner,
+                                EXPLICIT_ANNOTATOR_USER_ACTION);
+                    }
+
+                    if (autoAcceptedSuggestions > 0 || finishDocumentsWithoutRecommendations) {
+                        documentService.setAnnotationDocumentState(annDoc, FINISHED,
+                                EXPLICIT_ANNOTATOR_USER_ACTION);
+                    }
+
+                    processedDocumentsCount.incrementAndGet();
+                }
+                catch (IOException e) {
+                    LOG.error("Error loading/saving CAS for [{}]@{}: {}", dataOwner, doc);
+                }
+                catch (AnnotationException e) {
+                    LOG.error("Error creating processing metadata annotation", e);
+                }
             }
 
-            var doc = documentsToProcess.get(0);
-            visitedDocuments.add(doc);
-            var annDoc = documentService.createOrGetAnnotationDocument(doc, dataOwnerUser);
-
-            monitor.update(up -> up.setProgress(progress) //
+            progress.update(up -> up.setProgress(processedDocumentsCount.get()) //
                     .setMaxProgress(maxProgress.get()) //
-                    .addMessage(LogMessage.info(this, "%s", doc.getName())));
-
-            try (var session = CasStorageSession.openNested()) {
-                var predictions = generatePredictions(doc);
-                suggestionsCount.addAndGet(predictions.getNewSuggestionCount());
-
-                documentService.setAnnotationDocumentState(annDoc, IN_PROGRESS,
-                        EXPLICIT_ANNOTATOR_USER_ACTION);
-                var cas = documentService.readAnnotationCas(doc, dataOwner, AUTO_CAS_UPGRADE,
-                        EXCLUSIVE_WRITE_ACCESS);
-
-                addProcessingMetadataAnnotation(doc, cas);
-
-                int autoAcceptedSuggestions = autoAccept(doc, predictions, cas);
-                annotationsCount.addAndGet(autoAcceptedSuggestions);
-
-                if (autoAcceptedSuggestions > 0) {
-                    documentService.writeAnnotationCas(cas, doc, dataOwner,
-                            EXPLICIT_ANNOTATOR_USER_ACTION);
-                }
-
-                if (autoAcceptedSuggestions > 0 || finishDocumentsWithoutRecommendations) {
-                    documentService.setAnnotationDocumentState(annDoc, FINISHED,
-                            EXPLICIT_ANNOTATOR_USER_ACTION);
-                }
-
-                processedDocumentsCount.incrementAndGet();
-            }
-            catch (IOException e) {
-                LOG.error("Error loading/saving CAS for [{}]@{}: {}", dataOwner, doc);
-            }
-            catch (AnnotationException e) {
-                LOG.error("Error creating processing metadata annotation", e);
-            }
+                    .addMessage(LogMessage.info(this,
+                            "%d annotations generated from %d suggestions in %d documents",
+                            annotationsCount, suggestionsCount, processedDocumentsCount)));
         }
-
-        monitor.update(up -> up.setProgress(processedDocumentsCount.get()) //
-                .setMaxProgress(maxProgress.get()) //
-                .addMessage(LogMessage.info(this,
-                        "%d annotations generated from %d suggestions in %d documents",
-                        annotationsCount, suggestionsCount, processedDocumentsCount)));
     }
 
     private boolean isInProcessableState(SourceDocument aSourceDocument,

@@ -26,6 +26,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IN
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateChangeFlag.EXPLICIT_ANNOTATOR_USER_ACTION;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
+import static de.tudarmstadt.ukp.inception.scheduling.ProgressScope.SCOPE_DOCUMENTS;
 import static de.tudarmstadt.ukp.inception.scheduling.TaskScope.PROJECT;
 import static java.util.Objects.requireNonNull;
 
@@ -34,7 +35,6 @@ import java.lang.invoke.MethodHandles;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.uima.UIMAException;
@@ -94,59 +94,53 @@ public class BulkCurationTask
     @Override
     public void execute() throws IOException, UIMAException
     {
-        var monitor = getMonitor();
-
-        var curatableDocuments = curationDocumentService.listCuratableSourceDocuments(getProject());
-
-        var progress = new AtomicInteger(0);
-        var maxProgress = curatableDocuments.size();
-
         var mergeStrategy = createMergeStrategy();
 
-        for (var doc : curatableDocuments) {
-            progress.incrementAndGet();
-            monitor.update(up1 -> up1.setProgress(progress.get()) //
-                    .setMaxProgress(maxProgress) //
-                    .addMessage(LogMessage.info(this, "%s", doc.getName())));
+        var curatableDocuments = curationDocumentService.listCuratableSourceDocuments(getProject());
+        try (var progress = getMonitor().openScope(SCOPE_DOCUMENTS, curatableDocuments.size())) {
+            for (var doc : curatableDocuments) {
+                progress.update(up -> up.increment() //
+                        .addMessage(LogMessage.info(this, "%s", doc.getName())));
 
-            try (var session = CasStorageSession.openNested()) {
-                var users = curationDocumentService.listCuratableUsers(doc);
-                users.removeIf(u -> targetUser.equals(u.getUsername()));
+                try (var session = CasStorageSession.openNested()) {
+                    var users = curationDocumentService.listCuratableUsers(doc);
+                    users.removeIf(u -> targetUser.equals(u.getUsername()));
 
-                var targetCas = documentService.readAnnotationCas(doc, targetUser,
-                        FORCE_CAS_UPGRADE, EXCLUSIVE_WRITE_ACCESS);
+                    var targetCas = documentService.readAnnotationCas(doc, targetUser,
+                            FORCE_CAS_UPGRADE, EXCLUSIVE_WRITE_ACCESS);
 
-                var annotatorCasses = documentService.readAllCasesSharedNoUpgrade(doc, users);
+                    var annotatorCasses = documentService.readAllCasesSharedNoUpgrade(doc, users);
 
-                // FIXME: should merging not overwrite the current users annos? (can result in
-                // deleting the users annotations!!!), currently fixed by warn message to user
-                // prepare merged CAS
-                curationMergeService.mergeCasses(doc, targetUser, targetCas, annotatorCasses,
-                        mergeStrategy, annotationLayers, true);
+                    // FIXME: should merging not overwrite the current users annos? (can result in
+                    // deleting the users annotations!!!), currently fixed by warn message to user
+                    // prepare merged CAS
+                    curationMergeService.mergeCasses(doc, targetUser, targetCas, annotatorCasses,
+                            mergeStrategy, annotationLayers, true);
 
-                var targetAnnDoc = documentService.createOrGetAnnotationDocument(doc, targetUser);
-                documentService.writeAnnotationCas(targetCas, targetAnnDoc,
-                        EXPLICIT_ANNOTATOR_USER_ACTION);
-
-                var allIsCurated = noUncuratedDifferencesRemaining(targetCas, annotatorCasses);
-                if (allIsCurated) {
-                    LOG.info("{} has been fully curated", doc);
-                    documentService.setAnnotationDocumentState(targetAnnDoc, FINISHED,
+                    var targetAnnDoc = documentService.createOrGetAnnotationDocument(doc,
+                            targetUser);
+                    documentService.writeAnnotationCas(targetCas, targetAnnDoc,
                             EXPLICIT_ANNOTATOR_USER_ACTION);
-                    documentService.setSourceDocumentState(doc, CURATION_FINISHED);
-                }
-                else {
-                    LOG.info("{} has remaining differences that need to be curated manually", doc);
-                    documentService.setAnnotationDocumentState(targetAnnDoc, IN_PROGRESS,
-                            EXPLICIT_ANNOTATOR_USER_ACTION);
-                    documentService.setSourceDocumentState(doc, CURATION_IN_PROGRESS);
+
+                    var allIsCurated = noUncuratedDifferencesRemaining(targetCas, annotatorCasses);
+                    if (allIsCurated) {
+                        LOG.info("{} has been fully curated", doc);
+                        documentService.setAnnotationDocumentState(targetAnnDoc, FINISHED,
+                                EXPLICIT_ANNOTATOR_USER_ACTION);
+                        documentService.setSourceDocumentState(doc, CURATION_FINISHED);
+                    }
+                    else {
+                        LOG.info("{} has remaining differences that need to be curated manually",
+                                doc);
+                        documentService.setAnnotationDocumentState(targetAnnDoc, IN_PROGRESS,
+                                EXPLICIT_ANNOTATOR_USER_ACTION);
+                        documentService.setSourceDocumentState(doc, CURATION_IN_PROGRESS);
+                    }
                 }
             }
-        }
 
-        monitor.update(up -> up.setProgress(progress.get()) //
-                .setMaxProgress(maxProgress) //
-                .addMessage(LogMessage.info(this, "Curation complete")));
+            progress.update(up -> up.addMessage(LogMessage.info(this, "Curation complete")));
+        }
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })

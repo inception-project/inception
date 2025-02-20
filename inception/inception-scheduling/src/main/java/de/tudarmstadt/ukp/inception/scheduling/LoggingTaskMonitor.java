@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.inception.scheduling;
 
 import java.lang.invoke.MethodHandles;
-import java.util.function.Consumer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,13 +36,7 @@ public class LoggingTaskMonitor
     }
 
     @Override
-    public synchronized void update(Consumer<MonitorUpdater> aUpdater)
-    {
-        super.update(aUpdater);
-        sendNotification();
-    }
-
-    protected void sendNotification()
+    protected void commit()
     {
         if (isDestroyed()) {
             return;

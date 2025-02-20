@@ -33,7 +33,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.fit.util.FSUtil;
@@ -88,46 +87,42 @@ public class CalculatePerDocumentAgreementTask
     {
         summary = new PerDocumentAgreementResult(feature, traits);
 
-        var maxProgress = allAnnDocs.size();
-        var progress = new AtomicInteger(0);
-
         var docs = allAnnDocs.keySet().stream() //
                 .sorted(comparing(SourceDocument::getName)) //
                 .toList();
 
-        for (var doc : docs) {
-            var monitor = getMonitor();
-            if (monitor.isCancelled()) {
-                break;
-            }
+        try (var progress = getMonitor().openScope("documents", allAnnDocs.size())) {
+            for (var doc : docs) {
+                if (getMonitor().isCancelled()) {
+                    break;
+                }
 
-            monitor.update(up -> up.setProgress(progress.get()) //
-                    .setMaxProgress(maxProgress) //
-                    .addMessage(LogMessage.info(this, doc.getName())));
+                progress.update(up -> up.increment() //
+                        .addMessage(LogMessage.info(this, doc.getName())));
 
-            try (var session = CasStorageSession.openNested()) {
-                var casMap = new LinkedHashMap<String, CAS>();
-                for (var annDoc : allAnnDocs.get(doc)) {
-                    var dataOwner = annDoc.getUser();
-                    if (!annotators.contains(dataOwner)) {
-                        continue;
+                try (var session = CasStorageSession.openNested()) {
+                    var casMap = new LinkedHashMap<String, CAS>();
+                    for (var annDoc : allAnnDocs.get(doc)) {
+                        var dataOwner = annDoc.getUser();
+                        if (!annotators.contains(dataOwner)) {
+                            continue;
+                        }
+
+                        casMap.put(dataOwner, loadCas(annDoc.getDocument(), dataOwner));
                     }
 
-                    casMap.put(dataOwner, loadCas(annDoc.getDocument(), dataOwner));
+                    if (annotators.contains(CURATION_USER)) {
+                        casMap.put(CURATION_USER, loadCas(doc, CURATION_USER));
+                    }
+
+                    LOG.trace("Calculating agreement on {} for [{}] annotators", doc,
+                            casMap.size());
+                    var agreementResult = AgreementSummary.of(measure.getAgreement(casMap));
+                    summary.mergeResult(doc, agreementResult);
                 }
-
-                if (annotators.contains(CURATION_USER)) {
-                    casMap.put(CURATION_USER, loadCas(doc, CURATION_USER));
+                catch (Exception e) {
+                    LOG.error("Unable to load data", e);
                 }
-
-                LOG.trace("Calculating agreement on {} for [{}] annotators", doc, casMap.size());
-                var agreementResult = AgreementSummary.of(measure.getAgreement(casMap));
-                summary.mergeResult(doc, agreementResult);
-
-                progress.incrementAndGet();
-            }
-            catch (Exception e) {
-                LOG.error("Unable to load data", e);
             }
         }
     }
@@ -185,7 +180,6 @@ public class CalculatePerDocumentAgreementTask
     {
         private List<String> annotators;
         private DefaultAgreementTraits traits;
-        private AnnotationLayer layer;
         private AnnotationFeature feature;
         private AgreementMeasure<?> measure;
         private Map<SourceDocument, List<AnnotationDocument>> allAnnDocs;
@@ -207,13 +201,6 @@ public class CalculatePerDocumentAgreementTask
         public T withTraits(DefaultAgreementTraits aTraits)
         {
             traits = aTraits;
-            return (T) this;
-        }
-
-        @SuppressWarnings("unchecked")
-        public T withLayer(AnnotationLayer aLayer)
-        {
-            layer = aLayer;
             return (T) this;
         }
 

@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.doccat;
 
 import static de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult.toEvaluationResult;
 import static de.tudarmstadt.ukp.inception.rendering.model.Range.rangeCoveringAnnotations;
+import static de.tudarmstadt.ukp.inception.scheduling.ProgressScope.SCOPE_UNITS;
 import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.selectOverlapping;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.uima.fit.util.CasUtil.getType;
@@ -156,31 +157,36 @@ public class OpenNlpDoccatRecommender
         var units = selectOverlapping(aCas, sampleUnitType, aBegin, aEnd);
         var predictionCount = 0;
 
-        for (var unit : units) {
-            if (predictionCount >= traits.getPredictionLimit()) {
-                break;
-            }
-            predictionCount++;
+        try (var progress = aContext.getMonitor().openScope(SCOPE_UNITS, units.size())) {
+            for (var unit : units) {
+                progress.update(up -> up.increment());
 
-            var tokenAnnotations = selectCovered(tokenType, unit);
-            var tokens = tokenAnnotations.stream() //
-                    .map(AnnotationFS::getCoveredText) //
-                    .toArray(String[]::new);
+                if (predictionCount >= traits.getPredictionLimit()) {
+                    break;
+                }
+                predictionCount++;
 
-            var outcome = finder.categorize(tokens);
-            var label = finder.getBestCategory(outcome);
+                var tokenAnnotations = selectCovered(tokenType, unit);
+                var tokens = tokenAnnotations.stream() //
+                        .map(AnnotationFS::getCoveredText) //
+                        .toArray(String[]::new);
 
-            FeatureStructure annotation;
-            if (isPredictingAnnotation) {
-                annotation = aCas.createAnnotation(predictedType, unit.getBegin(), unit.getEnd());
+                var outcome = finder.categorize(tokens);
+                var label = finder.getBestCategory(outcome);
+
+                FeatureStructure annotation;
+                if (isPredictingAnnotation) {
+                    annotation = aCas.createAnnotation(predictedType, unit.getBegin(),
+                            unit.getEnd());
+                }
+                else {
+                    annotation = aCas.createFS(predictedType);
+                }
+                annotation.setFeatureValueFromString(predictedFeature, label);
+                annotation.setDoubleValue(scoreFeature, NumberUtils.max(outcome));
+                annotation.setBooleanValue(isPredictionFeature, true);
+                aCas.addFsToIndexes(annotation);
             }
-            else {
-                annotation = aCas.createFS(predictedType);
-            }
-            annotation.setFeatureValueFromString(predictedFeature, label);
-            annotation.setDoubleValue(scoreFeature, NumberUtils.max(outcome));
-            annotation.setBooleanValue(isPredictionFeature, true);
-            aCas.addFsToIndexes(annotation);
         }
 
         return rangeCoveringAnnotations(units);

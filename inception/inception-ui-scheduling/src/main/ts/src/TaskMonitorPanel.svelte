@@ -194,7 +194,7 @@
                 {#each tasks as item}
                     <li class="list-group-item py-1 px-3">
                         <div
-                            class="d-flex w-100 justify-content-between"
+                            class="d-flex w-100 justify-content-between align-items-center"
                         >
                             {item.title}
                             <span class="d-flex">
@@ -209,26 +209,35 @@
                             {/if}
                             {#if endpointUrl && item.state !== 'RUNNING' && item.state !== 'NOT_STARTED'}
                                 <!-- svelte-ignore a11y-click-events-have-key-events -->
-                                <i class="fas fa-times-circle ms-2 text-secondary" style="cursor: pointer;" on:click={() => acknowledgeResult(item)} />
+                                <i class="fas fa-times-circle ms-2 text-secondary align-content-center" style="cursor: pointer;" on:click={() => acknowledgeResult(item)} />
                             {/if}
-                            </span>
+                            {#if item.state === "RUNNING" || item.state === 'NOT_STARTED'}
+                                {#if item.cancellable && endpointUrl}
+                                <!-- svelte-ignore a11y-click-events-have-key-events -->
+                                <i class="far fa-stop-circle ms-3 text-secondary align-content-center" style="cursor: pointer;" on:click={() => cancelTask(item)} />
+                                {/if}
+                            {/if}
+                        </span>
                         </div>
                         {#if item.state === "RUNNING" || item.state === 'NOT_STARTED'}
-                            <div class="d-flex flex-row">
-                                {#if item.maxProgress}
-                                    <progress
-                                        max={item.maxProgress}
-                                        value={item.progress}
-                                        class="flex-grow-1"
-                                    />
-                                {:else}
-                                    <progress class="flex-grow-1" />
-                                {/if}
-                                {#if item.cancellable && endpointUrl}
-                                    <!-- svelte-ignore a11y-click-events-have-key-events -->
-                                    <i class="far fa-stop-circle ms-3 text-secondary" style="cursor: pointer;" on:click={() => cancelTask(item)} />
-                                {/if}
-                            </div>
+                            {#each item.progresses as progress}
+                                <div class="d-flex flex-row">
+                                    {#if progress.maxProgress}
+                                        <progress
+                                            max={progress.maxProgress}
+                                            value={progress.progress}
+                                            class="flex-grow-1"
+                                        />
+                                    {:else}
+                                        <progress class="flex-grow-1" />
+                                    {/if}
+                                </div>
+                                {#if progress.unit}
+                                <div class="text-muted small fw-light">
+                                    {progress.progress} / {progress.maxProgress} {progress.unit}
+                                </div>
+                            {/if}
+                    {/each}
                         {/if}
                         {#if item.latestMessage}
                             <div class="text-muted small">

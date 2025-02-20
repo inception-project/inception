@@ -137,23 +137,23 @@ public class DataMajorityNerRecommender
     public Range predict(PredictionContext aContext, CAS aCas, int aBegin, int aEnd)
         throws RecommendationException
     {
-        DataMajorityModel model = aContext.get(KEY_MODEL).orElseThrow(
+        var model = aContext.get(KEY_MODEL).orElseThrow(
                 () -> new RecommendationException("Key [" + KEY_MODEL + "] not found in context"));
 
         // Make the predictions
-        Type tokenType = CasUtil.getAnnotationType(aCas, DATAPOINT_UNIT);
-        Collection<AnnotationFS> candidates = selectOverlapping(aCas, tokenType, aBegin, aEnd);
-        List<Annotation> predictions = predict(candidates, model);
+        var tokenType = CasUtil.getAnnotationType(aCas, DATAPOINT_UNIT);
+        var candidates = selectOverlapping(aCas, tokenType, aBegin, aEnd);
+        var predictions = predict(candidates, model);
 
         // Add predictions to the CAS
-        Type predictedType = getPredictedType(aCas);
+        var predictedType = getPredictedType(aCas);
         Feature scoreFeature = getScoreFeature(aCas);
         Feature scoreExplanationFeature = getScoreExplanationFeature(aCas);
         Feature predictedFeature = getPredictedFeature(aCas);
         Feature isPredictionFeature = getIsPredictionFeature(aCas);
 
-        for (Annotation ann : predictions) {
-            AnnotationFS annotation = aCas.createAnnotation(predictedType, ann.begin, ann.end);
+        for (var ann : predictions) {
+            var annotation = aCas.createAnnotation(predictedType, ann.begin, ann.end);
             annotation.setStringValue(predictedFeature, ann.label);
             annotation.setDoubleValue(scoreFeature, ann.score);
             annotation.setStringValue(scoreExplanationFeature, ann.explanation);

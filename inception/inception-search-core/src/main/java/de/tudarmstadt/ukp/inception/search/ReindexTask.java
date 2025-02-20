@@ -40,7 +40,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.util.Objects;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,7 +54,6 @@ import de.tudarmstadt.ukp.inception.scheduling.MatchResult;
 import de.tudarmstadt.ukp.inception.scheduling.Progress;
 import de.tudarmstadt.ukp.inception.scheduling.ProjectTask;
 import de.tudarmstadt.ukp.inception.scheduling.Task;
-import de.tudarmstadt.ukp.inception.scheduling.TaskState;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.search.index.IndexRebuildRequiredException;
 import de.tudarmstadt.ukp.inception.search.model.BulkIndexingContext;
@@ -99,7 +97,6 @@ public class ReindexTask
     public void execute() throws IOException
     {
         var project = getProject();
-        var monitor = getMonitor();
 
         LOG.info("Re-indexing project {}. This may take a while...", project);
 
@@ -137,9 +134,6 @@ public class ReindexTask
                     .toList();
             var sourceDocuments = documentService.listSourceDocuments(project);
 
-            var progress = new AtomicInteger(0);
-            int maxProgress = annotationDocuments.size() + sourceDocuments.size();
-
             // We do not need write access and do not want to add to the exclusive access CAS cache,
             // so we would normally use SHARED_READ_ONLY_ACCESS. However, that mode can only be used
             // with AUTO_CAS_UPGRADE which makes things slow. We want NO_CAS_UPGRADE.
@@ -153,109 +147,97 @@ public class ReindexTask
             final var casUpgradeMode = NO_CAS_UPGRADE;
 
             var prefs = preferencesService.loadDefaultTraitsForProject(KEY_SEARCH_STATE, project);
-            try (var indexContext = BulkIndexingContext.init(project, schemaService, true, prefs)) {
-                // Index all the source documents
-                for (var doc : sourceDocuments) {
-                    progress.incrementAndGet();
 
-                    if (searchService.isPerformNoMoreActions(pooledIndex)) {
-                        return;
-                    }
+            try (var progress = getMonitor().openScope("documents",
+                    annotationDocuments.size() + sourceDocuments.size())) {
+                try (var indexContext = BulkIndexingContext.init(project, schemaService, true,
+                        prefs)) {
+                    // Index all the source documents
+                    for (var doc : sourceDocuments) {
+                        if (searchService.isPerformNoMoreActions(pooledIndex)) {
+                            return;
+                        }
 
-                    if (monitor != null) {
-                        if (monitor.isCancelled()) {
-                            monitor.update(up2 -> up2.setProgress(progress.get()) //
-                                    .setMaxProgress(maxProgress) //
-                                    .addMessage(LogMessage.info(this,
-                                            "Indexing aborted. Search cannot be used.")));
-                            if (monitor.isCancelled()) {
-                                monitor.update(up1 -> up1.setState(TaskState.CANCELLED));
-                            }
+                        if (getMonitor().isCancelled()) {
+                            progress.update(up -> up.addMessage(LogMessage.info(this,
+                                    "Indexing aborted. Search cannot be used.")));
                             break;
                         }
 
-                        monitor.update(up -> up.setProgress(progress.get()) //
-                                .setMaxProgress(maxProgress) //
+                        progress.update(up -> up.increment() //
                                 .addMessage(LogMessage.info(this, "Source document: %s",
                                         doc.getName())));
-                    }
 
-                    try (var session = CasStorageSession.openNested()) {
-                        // Index source document
-                        var casAsByteArray = casToByteArray(documentService
-                                .createOrReadInitialCas(doc, casUpgradeMode, accessModeInitialCas));
-                        searchService.indexDocument(pooledIndex, doc, casAsByteArray);
+                        try (var session = CasStorageSession.openNested()) {
+                            // Index source document
+                            var casAsByteArray = casToByteArray(
+                                    documentService.createOrReadInitialCas(doc, casUpgradeMode,
+                                            accessModeInitialCas));
+                            searchService.indexDocument(pooledIndex, doc, casAsByteArray);
 
-                        // Index curation document (if available)
-                        if (documentService.existsCas(doc, CURATION_USER)
-                                && asList(CURATION_IN_PROGRESS, CURATION_FINISHED)
-                                        .contains(doc.getState())) {
-                            var aDoc = documentService.getAnnotationDocument(doc, CURATION_USER);
-                            var curationCasAsByteArray = casToByteArray(
-                                    documentService.readAnnotationCas(doc, CURATION_USER,
-                                            casUpgradeMode, accessModeInitialCas));
-                            searchService.indexDocument(pooledIndex, aDoc, "reindex",
-                                    curationCasAsByteArray);
+                            // Index curation document (if available)
+                            if (documentService.existsCas(doc, CURATION_USER)
+                                    && asList(CURATION_IN_PROGRESS, CURATION_FINISHED)
+                                            .contains(doc.getState())) {
+                                var aDoc = documentService.getAnnotationDocument(doc,
+                                        CURATION_USER);
+                                var curationCasAsByteArray = casToByteArray(
+                                        documentService.readAnnotationCas(doc, CURATION_USER,
+                                                casUpgradeMode, accessModeInitialCas));
+                                searchService.indexDocument(pooledIndex, aDoc, "reindex",
+                                        curationCasAsByteArray);
+                            }
+                        }
+                        catch (Exception e) {
+                            LOG.error("Error indexing document {}", doc, e);
                         }
                     }
-                    catch (Exception e) {
-                        LOG.error("Error indexing document {}", doc, e);
-                    }
-                }
 
-                // Index all the annotation documents (from annotators)
-                for (var doc : annotationDocuments) {
-                    progress.incrementAndGet();
+                    // Index all the annotation documents (from annotators)
+                    for (var doc : annotationDocuments) {
+                        if (searchService.isPerformNoMoreActions(pooledIndex)) {
+                            return;
+                        }
 
-                    if (searchService.isPerformNoMoreActions(pooledIndex)) {
-                        return;
-                    }
-
-                    if (monitor != null) {
-                        if (monitor.isCancelled()) {
-                            monitor.update(up1 -> up1.setProgress(progress.get()) //
-                                    .setMaxProgress(maxProgress) //
-                                    .addMessage(LogMessage.info(this,
-                                            "Indexing aborted. Search cannot be used.")));
-                            if (monitor.isCancelled()) {
-                                monitor.update(up2 -> up2.setState(TaskState.CANCELLED));
-                            }
+                        if (getMonitor().isCancelled()) {
+                            progress.update(up -> up.addMessage(LogMessage.info(this,
+                                    "Indexing aborted. Search cannot be used.")));
                             break;
                         }
 
-                        monitor.update(up -> up.setProgress(progress.get()) //
-                                .setMaxProgress(maxProgress) //
+                        progress.update(up -> up.increment() //
                                 .addMessage(LogMessage.info(this, "Annotation document: %s @ %s",
                                         doc.getUser(), doc.getName())));
-                    }
 
-                    try (var session = CasStorageSession.openNested()) {
-                        var casAsByteArray = casToByteArray(
-                                documentService.readAnnotationCas(doc.getDocument(), doc.getUser(),
-                                        casUpgradeMode, accessModeAnnotationCas));
-                        searchService.indexDocument(pooledIndex, doc, "reindex", casAsByteArray);
-                    }
-                    catch (FileNotFoundException e) {
-                        // Ignore it if a annotation CAS does not exist yet
-                    }
-                    catch (Exception e) {
-                        LOG.error("Error indexing document {}", doc, e);
+                        try (var session = CasStorageSession.openNested()) {
+                            var casAsByteArray = casToByteArray(documentService.readAnnotationCas(
+                                    doc.getDocument(), doc.getUser(), casUpgradeMode,
+                                    accessModeAnnotationCas));
+                            searchService.indexDocument(pooledIndex, doc, "reindex",
+                                    casAsByteArray);
+                        }
+                        catch (FileNotFoundException e) {
+                            // Ignore it if a annotation CAS does not exist yet
+                        }
+                        catch (Exception e) {
+                            LOG.error("Error indexing document {}", doc, e);
+                        }
                     }
                 }
-            }
 
-            // After re-indexing, reset the invalid flag
-            if (monitor == null || !monitor.isCancelled()) {
-                index.setInvalid(false);
-            }
+                // After re-indexing, reset the invalid flag
+                if (!getMonitor().isCancelled()) {
+                    index.setInvalid(false);
+                }
 
-            searchService.writeIndex(pooledIndex);
+                searchService.writeIndex(pooledIndex);
+            }
         }
         catch (IOException e) {
             LOG.error("Re-indexing project {} failed!", project, e);
         }
 
-        if (monitor == null || !monitor.isCancelled()) {
+        if (!getMonitor().isCancelled()) {
             LOG.info("Re-indexing project {} complete!", project);
         }
         else {

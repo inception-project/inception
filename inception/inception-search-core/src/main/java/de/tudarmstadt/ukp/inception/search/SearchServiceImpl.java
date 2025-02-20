@@ -732,11 +732,11 @@ public class SearchServiceImpl
         var done = 0;
         for (var task : tasks) {
             var p = task.getProgress();
-            total += p.getTotal();
-            done += p.getDone();
+            total += p.maxProgress();
+            done += p.progress();
         }
 
-        return Optional.of(new Progress(done, total));
+        return Optional.of(new Progress("", done, total));
     }
 
     @Override

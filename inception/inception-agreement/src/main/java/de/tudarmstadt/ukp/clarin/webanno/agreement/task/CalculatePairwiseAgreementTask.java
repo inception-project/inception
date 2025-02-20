@@ -31,7 +31,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.lang3.concurrent.LazyInitializer;
 import org.apache.uima.cas.CAS;
@@ -86,78 +85,76 @@ public class CalculatePairwiseAgreementTask
     {
         summary = new PairwiseAgreementResult(feature, traits);
 
-        var maxProgress = allAnnDocs.size();
-        var progress = new AtomicInteger(0);
-
         var docs = allAnnDocs.keySet().stream() //
                 .sorted(comparing(SourceDocument::getName)) //
                 .toList();
 
-        for (var doc : docs) {
-            var monitor = getMonitor();
-            if (monitor.isCancelled()) {
-                break;
-            }
-
-            monitor.update(up -> up.setProgress(progress.get()) //
-                    .setMaxProgress(maxProgress) //
-                    .addMessage(LogMessage.info(this, doc.getName())));
-
-            try (var session = CasStorageSession.openNested()) {
-                for (int m = 0; m < annotators.size(); m++) {
-                    var annotator1 = annotators.get(m);
-                    var maybeCas1 = LazyInitializer.<Optional<CAS>> builder()
-                            .setInitializer(() -> loadCas(doc, annotator1, allAnnDocs)).get();
-
-                    for (int n = 0; n < annotators.size(); n++) {
-                        if (!(n < m)) {
-                            // Triangle matrix mirrored
-                            continue;
-                        }
-
-                        var annotator2 = annotators.get(n);
-
-                        if ((CURATION_USER.equals(annotator1) || CURATION_USER.equals(annotator2))
-                                && !asList(CURATION_IN_PROGRESS, CURATION_FINISHED)
-                                        .contains(doc.getState())) {
-                            LOG.trace("Skipping combination {}/{}@{}: {} not in a curation state",
-                                    annotator1, annotator2, doc, annotator1);
-                            summary.mergeResult(annotator1, annotator2, AgreementSummary
-                                    .skipped(feature.getLayer().getName(), feature.getName()));
-                            continue;
-                        }
-
-                        if (maybeCas1.get().isEmpty()) {
-                            LOG.trace("Skipping combination {}/{}@{}: {} has no data", annotator1,
-                                    annotator2, doc, annotator1);
-                            summary.mergeResult(annotator1, annotator2, AgreementSummary
-                                    .skipped(feature.getLayer().getName(), feature.getName()));
-                            continue;
-                        }
-
-                        var maybeCas2 = LazyInitializer.<Optional<CAS>> builder()
-                                .setInitializer(() -> loadCas(doc, annotator2, allAnnDocs)).get();
-
-                        if (maybeCas2.get().isEmpty()) {
-                            LOG.trace("Skipping combination {}/{}@{}: {} has no data", annotator1,
-                                    annotator2, doc, annotator2);
-                            summary.mergeResult(annotator1, annotator2, AgreementSummary
-                                    .skipped(feature.getLayer().getName(), feature.getName()));
-                            continue;
-                        }
-
-                        var casMap = new LinkedHashMap<String, CAS>();
-                        casMap.put(annotator1, maybeCas1.get().get());
-                        casMap.put(annotator2, maybeCas2.get().get());
-                        var res = AgreementSummary.of(measure.getAgreement(casMap));
-                        summary.mergeResult(annotator1, annotator2, res);
-                    }
+        try (var progress = getMonitor().openScope("documents", allAnnDocs.size())) {
+            for (var doc : docs) {
+                if (getMonitor().isCancelled()) {
+                    break;
                 }
 
-                progress.incrementAndGet();
-            }
-            catch (Exception e) {
-                LOG.error("Unable to load data", e);
+                progress.update(up -> up.increment() //
+                        .addMessage(LogMessage.info(this, doc.getName())));
+
+                try (var session = CasStorageSession.openNested()) {
+                    for (int m = 0; m < annotators.size(); m++) {
+                        var annotator1 = annotators.get(m);
+                        var maybeCas1 = LazyInitializer.<Optional<CAS>> builder()
+                                .setInitializer(() -> loadCas(doc, annotator1, allAnnDocs)).get();
+
+                        for (int n = 0; n < annotators.size(); n++) {
+                            if (!(n < m)) {
+                                // Triangle matrix mirrored
+                                continue;
+                            }
+
+                            var annotator2 = annotators.get(n);
+
+                            if ((CURATION_USER.equals(annotator1)
+                                    || CURATION_USER.equals(annotator2))
+                                    && !asList(CURATION_IN_PROGRESS, CURATION_FINISHED)
+                                            .contains(doc.getState())) {
+                                LOG.trace(
+                                        "Skipping combination {}/{}@{}: {} not in a curation state",
+                                        annotator1, annotator2, doc, annotator1);
+                                summary.mergeResult(annotator1, annotator2, AgreementSummary
+                                        .skipped(feature.getLayer().getName(), feature.getName()));
+                                continue;
+                            }
+
+                            if (maybeCas1.get().isEmpty()) {
+                                LOG.trace("Skipping combination {}/{}@{}: {} has no data",
+                                        annotator1, annotator2, doc, annotator1);
+                                summary.mergeResult(annotator1, annotator2, AgreementSummary
+                                        .skipped(feature.getLayer().getName(), feature.getName()));
+                                continue;
+                            }
+
+                            var maybeCas2 = LazyInitializer.<Optional<CAS>> builder()
+                                    .setInitializer(() -> loadCas(doc, annotator2, allAnnDocs))
+                                    .get();
+
+                            if (maybeCas2.get().isEmpty()) {
+                                LOG.trace("Skipping combination {}/{}@{}: {} has no data",
+                                        annotator1, annotator2, doc, annotator2);
+                                summary.mergeResult(annotator1, annotator2, AgreementSummary
+                                        .skipped(feature.getLayer().getName(), feature.getName()));
+                                continue;
+                            }
+
+                            var casMap = new LinkedHashMap<String, CAS>();
+                            casMap.put(annotator1, maybeCas1.get().get());
+                            casMap.put(annotator2, maybeCas2.get().get());
+                            var res = AgreementSummary.of(measure.getAgreement(casMap));
+                            summary.mergeResult(annotator1, annotator2, res);
+                        }
+                    }
+                }
+                catch (Exception e) {
+                    LOG.error("Unable to load data", e);
+                }
             }
         }
     }
@@ -230,7 +227,6 @@ public class CalculatePairwiseAgreementTask
     {
         private List<String> annotators;
         private DefaultAgreementTraits traits;
-        private AnnotationLayer layer;
         private AnnotationFeature feature;
         private AgreementMeasure<?> measure;
         private Map<SourceDocument, List<AnnotationDocument>> allAnnDocs;
@@ -251,13 +247,6 @@ public class CalculatePairwiseAgreementTask
         public T withTraits(DefaultAgreementTraits aTraits)
         {
             traits = aTraits;
-            return (T) this;
-        }
-
-        @SuppressWarnings("unchecked")
-        public T withLayer(AnnotationLayer aLayer)
-        {
-            layer = aLayer;
             return (T) this;
         }
 

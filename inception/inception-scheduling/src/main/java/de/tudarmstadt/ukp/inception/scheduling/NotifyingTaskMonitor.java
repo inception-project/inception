@@ -17,8 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.scheduling;
 
-import java.util.function.Consumer;
-
 import de.tudarmstadt.ukp.inception.scheduling.controller.SchedulerWebsocketController;
 import de.tudarmstadt.ukp.inception.scheduling.controller.model.MTaskStateUpdate;
 
@@ -37,20 +35,14 @@ public class NotifyingTaskMonitor
     }
 
     @Override
-    public synchronized void update(Consumer<MonitorUpdater> aUpdater)
-    {
-        super.update(aUpdater);
-        sendNotification();
-    }
-
-    @Override
     protected void onDestroy()
     {
         var msg = new MTaskStateUpdate(this, true);
         schedulerWebsocketController.dispatch(msg);
     }
 
-    protected void sendNotification()
+    @Override
+    protected void commit()
     {
         if (isDestroyed()) {
             return;

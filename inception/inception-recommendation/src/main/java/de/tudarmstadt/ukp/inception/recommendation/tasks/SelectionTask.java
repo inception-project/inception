@@ -118,68 +118,70 @@ public class SelectionTask
                 }
             };
 
-            var listAnnotationLayers = annoService.listAnnotationLayer(getProject());
-            getMonitor().update(up -> up.setMaxProgress(listAnnotationLayers.size()));
             var seenRecommender = false;
             var layers = annoService.listAnnotationLayer(getProject());
-            for (var layer : layers) {
-                getMonitor().update(up -> up.increment());
+            try (var progress = getMonitor().openScope("layers", layers.size())) {
+                for (var layer : layers) {
+                    progress.update(up -> up.increment());
 
-                if (!layer.isEnabled()) {
-                    continue;
-                }
-
-                var recommenders = recommendationService.listRecommenders(layer);
-                if (recommenders == null || recommenders.isEmpty()) {
-                    logNoRecommenders(sessionOwnerName, layer);
-                    continue;
-                }
-
-                var evaluatedRecommenders = new ArrayList<EvaluatedRecommender>();
-                for (var r : recommenders) {
-                    // Make sure we have the latest recommender config from the DB - the one from
-                    // the active recommenders list may be outdated
-                    var optRecommender = freshenRecommender(sessionOwner, r);
-                    if (optRecommender.isEmpty()) {
-                        logRecommenderGone(sessionOwner, r);
+                    if (!layer.isEnabled()) {
                         continue;
                     }
 
-                    if (!seenRecommender) {
-                        logSelectionStarted(sessionOwner);
-                        seenRecommender = true;
+                    var recommenders = recommendationService.listRecommenders(layer);
+                    if (recommenders == null || recommenders.isEmpty()) {
+                        logNoRecommenders(sessionOwnerName, layer);
+                        continue;
                     }
 
-                    var recommender = optRecommender.get();
-                    try {
-                        long start = System.currentTimeMillis();
+                    var evaluatedRecommenders = new ArrayList<EvaluatedRecommender>();
+                    for (var r : recommenders) {
+                        // Make sure we have the latest recommender config from the DB - the one
+                        // from
+                        // the active recommenders list may be outdated
+                        var optRecommender = freshenRecommender(sessionOwner, r);
+                        if (optRecommender.isEmpty()) {
+                            logRecommenderGone(sessionOwner, r);
+                            continue;
+                        }
 
-                        getMonitor().update(up -> up
-                                .addMessage(LogMessage.info(this, "%s", recommender.getName())));
-                        evaluate(sessionOwner, recommender, casLoader)
-                                .ifPresent(evaluatedRecommender -> {
-                                    var result = evaluatedRecommender.getEvaluationResult();
+                        if (!seenRecommender) {
+                            logSelectionStarted(sessionOwner);
+                            seenRecommender = true;
+                        }
 
-                                    evaluatedRecommenders.add(evaluatedRecommender);
-                                    appEventPublisher
-                                            .publishEvent(new RecommenderEvaluationResultEvent(this,
-                                                    recommender, sessionOwner.getUsername(), result,
-                                                    currentTimeMillis() - start,
-                                                    evaluatedRecommender.isActive()));
-                                });
+                        var recommender = optRecommender.get();
+                        try {
+                            long start = System.currentTimeMillis();
+
+                            getMonitor().update(up -> up.addMessage(
+                                    LogMessage.info(this, "%s", recommender.getName())));
+                            evaluate(sessionOwner, recommender, casLoader)
+                                    .ifPresent(evaluatedRecommender -> {
+                                        var result = evaluatedRecommender.getEvaluationResult();
+
+                                        evaluatedRecommenders.add(evaluatedRecommender);
+                                        appEventPublisher.publishEvent(
+                                                new RecommenderEvaluationResultEvent(this,
+                                                        recommender, sessionOwner.getUsername(),
+                                                        result, currentTimeMillis() - start,
+                                                        evaluatedRecommender.isActive()));
+                                    });
+                        }
+
+                        // Catching Throwable is intentional here as we want to continue the
+                        // execution
+                        // even if a particular recommender fails.
+                        catch (Throwable e) {
+                            logEvaluationFailed(project, sessionOwner, recommender.getName(), e);
+                        }
                     }
 
-                    // Catching Throwable is intentional here as we want to continue the execution
-                    // even if a particular recommender fails.
-                    catch (Throwable e) {
-                        logEvaluationFailed(project, sessionOwner, recommender.getName(), e);
-                    }
+                    recommendationService.setEvaluatedRecommenders(sessionOwner, layer,
+                            evaluatedRecommenders);
+
+                    logEvaluationSuccessful(sessionOwner);
                 }
-
-                recommendationService.setEvaluatedRecommenders(sessionOwner, layer,
-                        evaluatedRecommenders);
-
-                logEvaluationSuccessful(sessionOwner);
             }
 
             if (!seenRecommender) {

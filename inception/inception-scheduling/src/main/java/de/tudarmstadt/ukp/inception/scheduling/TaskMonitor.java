@@ -24,7 +24,9 @@ import static de.tudarmstadt.ukp.inception.scheduling.TaskState.NOT_STARTED;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Arrays.asList;
 
+import java.util.ArrayList;
 import java.util.Deque;
+import java.util.List;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.function.Consumer;
 
@@ -35,6 +37,8 @@ import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 public class TaskMonitor
     implements Monitor
 {
+    private static final String ROOT_UNIT = "";
+
     private final Deque<LogMessage> messages = new ConcurrentLinkedDeque<>();
 
     private final TaskHandle handle;
@@ -47,8 +51,7 @@ public class TaskMonitor
     private long startTime = -1;
     private long endTime = -1;
 
-    private int progress = 0;
-    private int maxProgress = 0;
+    private final List<MutableProgress> progresses = new ArrayList<>();
 
     private TaskState state = NOT_STARTED;
 
@@ -56,7 +59,7 @@ public class TaskMonitor
     private boolean cancelled = false;
     private boolean destroyed = false;
 
-    private MonitorUpdater updater;
+    private MonitorUpdate updater;
 
     public TaskMonitor(Task aTask)
     {
@@ -67,42 +70,10 @@ public class TaskMonitor
         title = aTask.getTitle();
         createTime = currentTimeMillis();
         cancellable = aTask.isCancellable();
-        updater = new MonitorUpdater()
+        updater = new MonitorUpdate()
         {
             @Override
-            public MonitorUpdater setProgress(int aProgress)
-            {
-                progress = aProgress;
-                return this;
-            }
-
-            @Override
-            public MonitorUpdater setMaxProgress(int aMaxProgress)
-            {
-                maxProgress = aMaxProgress;
-                return this;
-            }
-
-            @Override
-            public MonitorUpdater addMessage(LogMessage aMessage)
-            {
-                // Avoid repeating the same message over for different users
-                if (!messages.contains(aMessage)) {
-                    messages.add(aMessage);
-                }
-                return this;
-            }
-
-            @Override
-            public MonitorUpdater increment()
-            {
-                progress++;
-
-                return this;
-            }
-
-            @Override
-            public MonitorUpdater setState(TaskState aState)
+            public MonitorUpdate setState(TaskState aState)
             {
                 if (state == NOT_STARTED && aState != NOT_STARTED) {
                     startTime = currentTimeMillis();
@@ -113,6 +84,16 @@ public class TaskMonitor
                 }
 
                 state = aState;
+                return this;
+            }
+
+            @Override
+            public MonitorUpdate addMessage(LogMessage aMessage)
+            {
+                // Avoid repeating the same message over for different users
+                if (!messages.contains(aMessage)) {
+                    messages.add(aMessage);
+                }
                 return this;
             }
         };
@@ -164,26 +145,70 @@ public class TaskMonitor
     }
 
     @Override
-    public synchronized int getProgress()
+    public synchronized List<Progress> getProgressList()
     {
-        return progress;
+        return progresses.stream() //
+                .map(p -> new Progress(p.unit, p.progress, p.maxProgress)) //
+                .toList();
     }
 
     @Override
-    public int getMaxProgress()
+    public synchronized ProgressScope openScope(String aUnit, int aMaxProgress)
     {
-        return maxProgress;
+        var scope = new MutableProgress(aUnit);
+        scope.maxProgress = aMaxProgress;
+        progresses.add(scope);
+        return scope;
+    }
+
+    private synchronized void closeScope(ProgressScope aScope)
+    {
+        progresses.remove(aScope);
+    }
+
+    @Override
+    public void update(Consumer<MonitorUpdate> aUpdate)
+    {
+        aUpdate.accept(updater);
+        commit();
+    }
+
+    @Override
+    public synchronized int getProgress()
+    {
+        if (progresses.isEmpty()) {
+            return 0;
+        }
+
+        var p = progresses.get(0);
+        return p.progress;
+    }
+
+    @Override
+    public synchronized int getMaxProgress()
+    {
+        if (progresses.isEmpty()) {
+            return 0;
+        }
+
+        var p = progresses.get(0);
+        return p.maxProgress;
+    }
+
+    @Deprecated
+    public synchronized Progress toProgress()
+    {
+        if (progresses.isEmpty()) {
+            return new Progress("", 0, 0);
+        }
+
+        var p = progresses.get(0);
+        return new Progress(ROOT_UNIT, p.progress, p.maxProgress);
     }
 
     public Deque<LogMessage> getMessages()
     {
         return messages;
-    }
-
-    @Override
-    public synchronized void update(Consumer<MonitorUpdater> aUpdater)
-    {
-        aUpdater.accept(updater);
     }
 
     public synchronized void destroy()
@@ -220,12 +245,6 @@ public class TaskMonitor
         return cancelled;
     }
 
-    @Deprecated
-    public synchronized Progress toProgress()
-    {
-        return new Progress(progress, maxProgress);
-    }
-
     @Override
     public long getDuration()
     {
@@ -238,5 +257,85 @@ public class TaskMonitor
         }
 
         return currentTimeMillis() - startTime;
+    }
+
+    protected void commit()
+    {
+        // Nothing by default
+    }
+
+    private class MutableProgress
+        implements ProgressScope
+    {
+        private final String unit;
+        private final ProgressUpdate progressUpdater;
+        private int progress = 0;
+        private int maxProgress = 0;
+
+        public MutableProgress(String aUnit)
+        {
+            unit = aUnit;
+            progressUpdater = new ProgressUpdate()
+            {
+                @Override
+                public ProgressUpdate setProgress(int aProgress)
+                {
+                    progress = aProgress;
+                    return this;
+                }
+
+                @Override
+                public ProgressUpdate setMaxProgress(int aMaxProgress)
+                {
+                    maxProgress = aMaxProgress;
+                    return this;
+                }
+
+                @Override
+                public ProgressUpdate addMessage(LogMessage aMessage)
+                {
+                    // Avoid repeating the same message over for different users
+                    if (!messages.contains(aMessage)) {
+                        messages.add(aMessage);
+                    }
+                    return this;
+                }
+
+                @Override
+                public ProgressUpdate increment()
+                {
+                    progress++;
+
+                    return this;
+                }
+
+                @Override
+                public ProgressUpdate increment(int aIncrement)
+                {
+                    progress += aIncrement;
+
+                    return this;
+                }
+            };
+        }
+
+        @Override
+        public int getProgress()
+        {
+            return progress;
+        }
+
+        @Override
+        public void update(Consumer<ProgressUpdate> aUpdater)
+        {
+            aUpdater.accept(progressUpdater);
+            commit();
+        }
+
+        @Override
+        public void close()
+        {
+            closeScope(this);
+        }
     }
 }

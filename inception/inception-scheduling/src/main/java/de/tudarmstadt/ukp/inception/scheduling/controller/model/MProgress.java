@@ -15,19 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.scheduling;
+package de.tudarmstadt.ukp.inception.scheduling.controller.model;
 
-import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
+import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 
-public interface MonitorUpdater
-{
-    MonitorUpdater setProgress(int aProgress);
+import com.fasterxml.jackson.annotation.JsonInclude;
 
-    MonitorUpdater setMaxProgress(int aMaxProgress);
+@JsonInclude(NON_NULL)
+public record MProgress(String unit, int progress, int maxProgress) {
 
-    MonitorUpdater addMessage(LogMessage aMessage);
-
-    MonitorUpdater setState(TaskState aState);
-
-    MonitorUpdater increment();
 }

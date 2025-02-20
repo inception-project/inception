@@ -16,19 +16,8 @@
 * limitations under the License.
 */
 
-import { MProgress } from './MProgress'
-import { RLogMessage } from './RLogMessage'
-
-export interface MTaskStateUpdate {
-  timestamp: number
-  id: string
-  type: string
+export interface MProgress {
+  unit: string
   progress: number
   maxProgress: number
-  progresses?: MProgress[]
-  state: 'NOT_STARTED' | 'RUNNING' | 'COMPLETED' | 'CANCELLED' | 'FAILED'
-  title: string
-  removed?: boolean
-  cancellable?: boolean
-  latestMessage?: RLogMessage
 }
