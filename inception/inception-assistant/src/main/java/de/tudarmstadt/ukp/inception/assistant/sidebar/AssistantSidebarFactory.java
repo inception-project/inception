@@ -23,6 +23,7 @@ import org.springframework.core.annotation.Order;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.Icon;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase2;
@@ -67,9 +68,9 @@ public class AssistantSidebarFactory
     }
 
     @Override
-    public boolean applies(AnnotatorState aState)
+    public boolean accepts(AnnotationPageBase aContext)
     {
-        return available(aState.getProject());
+        return available(aContext.getProject());
     }
 
     @Override

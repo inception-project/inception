@@ -192,8 +192,9 @@ public class DiamAutoConfig
     }
 
     @Bean
-    public LinkToContextMenuItem linkToContextMenuItem()
+    public LinkToContextMenuItem linkToContextMenuItem(AnnotationSchemaService aSchemaService,
+            CreateRelationAnnotationHandler aCreateRelationAnnotationHandler)
     {
-        return new LinkToContextMenuItem();
+        return new LinkToContextMenuItem(aSchemaService, aCreateRelationAnnotationHandler);
     }
 }

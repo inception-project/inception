@@ -22,11 +22,10 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.inception.support.extensionpoint.ExtensionPoint_ImplBase;
 
 public class ContextMenuItemRegistryImpl
-    extends ExtensionPoint_ImplBase<AnnotationPageBase, ContextMenuItemExtension>
+    extends ExtensionPoint_ImplBase<ContextMenuItemContext, ContextMenuItemExtension>
     implements ContextMenuItemRegistry
 {
     public ContextMenuItemRegistryImpl(

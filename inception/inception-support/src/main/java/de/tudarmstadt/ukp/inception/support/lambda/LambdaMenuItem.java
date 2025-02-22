@@ -42,6 +42,13 @@ public class LambdaMenuItem
         action = aCallback;
     }
 
+    public LambdaMenuItem(String aTitle, String aIconCss, AjaxCallback aCallback)
+    {
+        super(aTitle, aIconCss);
+
+        action = aCallback;
+    }
+
     @Override
     public void onClick(AjaxRequestTarget aTarget)
     {
