@@ -272,17 +272,19 @@ public class BratSerializerImpl
 
         // Collect additional split points based on where two tokens are directly adjacent
         var extraSplits = new ArrayList<Integer>();
-        var tokenIterator = aRequest.getCas().select(Token.class) //
-                .coveredBy(aVDoc.getWindowBegin(), aVDoc.getWindowEnd()) //
-                .iterator();
-        if (tokenIterator.hasNext()) {
-            var prevToken = tokenIterator.next();
-            while (tokenIterator.hasNext()) {
-                var token = tokenIterator.next();
-                if (prevToken.getEnd() == token.getBegin()) {
-                    extraSplits.add(token.getBegin());
+        if (aRequest.getCas() != null) {
+            var tokenIterator = aRequest.getCas().select(Token.class) //
+                    .coveredBy(aVDoc.getWindowBegin(), aVDoc.getWindowEnd()) //
+                    .iterator();
+            if (tokenIterator.hasNext()) {
+                var prevToken = tokenIterator.next();
+                while (tokenIterator.hasNext()) {
+                    var token = tokenIterator.next();
+                    if (prevToken.getEnd() == token.getBegin()) {
+                        extraSplits.add(token.getBegin());
+                    }
+                    prevToken = token;
                 }
-                prevToken = token;
             }
         }
 
