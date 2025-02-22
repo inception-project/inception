@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.assistant;
 
+import java.io.IOException;
 import java.util.List;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -28,7 +29,13 @@ public interface AssistantService
 
     List<MTextMessage> getChatMessages(String aSessionOwner, Project aProject);
 
-    void processUserMessage(String aSessionOwner, Project aProject, MTextMessage aMessage);
+    void processUserMessage(String aSessionOwner, Project aProject, MTextMessage aMessage,
+            MTextMessage... aTransientMessage);
+
+    MTextMessage processInternalMessageSync(String aSessionOwner, Project aProject,
+            MTextMessage aMessage)
+        throws IOException;
 
     void clearConversation(String aSessionOwner, Project aProject);
+
 }

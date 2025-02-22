@@ -64,6 +64,11 @@ public class ChatContext
         return sessionOwner;
     }
 
+    public MTextMessage generate(List<MTextMessage> aMessasges) throws IOException
+    {
+        return generate(aMessasges, null);
+    }
+
     public MTextMessage generate(List<MTextMessage> aMessasges,
             BiConsumer<UUID, MTextMessage> aCallback)
         throws IOException
@@ -89,16 +94,18 @@ public class ChatContext
                 .forEach(r -> references.put(r.id(), r));
 
         // Send initial message with the assistant nickname and the references
-        var firstMessage = newMessage(responseId) //
-                .withReferences(references.values()) //
-                .notDone() //
-                .build();
-        aCallback.accept(responseId, firstMessage);
+        if (aCallback != null) {
+            var firstMessage = newMessage(responseId) //
+                    .withReferences(references.values()) //
+                    .notDone() //
+                    .build();
+            aCallback.accept(responseId, firstMessage);
+        }
 
         // Generate the actual response
         var startTime = currentTimeMillis();
         var response = ollamaClient.chat(properties.getUrl(), request,
-                msg -> streamMessage(aCallback, responseId, msg));
+                aCallback != null ? msg -> streamMessage(aCallback, responseId, msg) : null);
         var tokens = response.getEvalCount();
         var endTime = currentTimeMillis();
 

@@ -17,9 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.annotation.menu;
 
-import de.tudarmstadt.ukp.inception.support.extensionpoint.ExtensionPoint;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 
-public interface ContextMenuItemRegistry
-    extends ExtensionPoint<ContextMenuItemContext, ContextMenuItemExtension>
-{
+public record ContextMenuItemContext(VID vid, AnnotationPageBase page) {
+
 }

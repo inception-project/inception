@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.diam.editor.actions;
+package de.tudarmstadt.ukp.inception.assistant.contextmenu;
 
 import static de.tudarmstadt.ukp.inception.support.spring.ApplicationContextProvider.getApplicationContext;
 import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectAnnotationByAddr;
@@ -26,25 +26,33 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.wicketstuff.jquery.ui.widget.menu.IMenuItem;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.SidebarPanel;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.annotation.menu.ContextMenuItemContext;
 import de.tudarmstadt.ukp.inception.annotation.menu.ContextMenuItemExtension;
+import de.tudarmstadt.ukp.inception.assistant.sidebar.AssistantSidebarFactory;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
+import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaMenuItem;
 
-public class LinkToContextMenuItem
+public class CheckAnnotationContextMenuItem
     implements ContextMenuItemExtension
 {
+    private final SchedulingService schedulingService;
+    private final AssistantSidebarFactory assistantSidebarFactory;
     private final AnnotationSchemaService schemaService;
-    private final CreateRelationAnnotationHandler createRelationAnnotationHandler;
+    private final UserDao userService;
 
-    public LinkToContextMenuItem(AnnotationSchemaService aSchemaService,
-            CreateRelationAnnotationHandler aCreateRelationAnnotationHandler)
+    public CheckAnnotationContextMenuItem(SchedulingService aSchedulingService,
+            AssistantSidebarFactory aAssistantSidebarFactory,
+            AnnotationSchemaService aSchemaService, UserDao aUserService)
     {
+        schedulingService = aSchedulingService;
+        assistantSidebarFactory = aAssistantSidebarFactory;
         schemaService = aSchemaService;
-        createRelationAnnotationHandler = aCreateRelationAnnotationHandler;
+        userService = aUserService;
     }
 
     @Override
@@ -52,12 +60,6 @@ public class LinkToContextMenuItem
     {
         var state = aCtx.page().getModelObject();
 
-        // Origin of the relation needs to be a span
-        if (!state.getSelection().isSpan()) {
-            return false;
-        }
-
-        // Target also needs to be a span
         try {
             var cas = aCtx.page().getEditorCas();
             var ann = selectAnnotationByAddr(cas, aCtx.vid().getId());
@@ -76,16 +78,18 @@ public class LinkToContextMenuItem
     @Override
     public IMenuItem createMenuItem(VID aVid, int aClientX, int aClientY)
     {
-        return new LambdaMenuItem("Link to ...", $ -> {
-            // Ensure that lambda is serializable
+        return new LambdaMenuItem("Check ...", "fa-regular fa-comments", $ -> {
+            // Need to fetch the item from the application context statically to make the
+            // lambda
+            // serializable
             getApplicationContext() //
-                    .getBean(LinkToContextMenuItem.class) //
-                    .actionLinkTo($, aVid, aClientX, aClientY);
+                    .getBean(CheckAnnotationContextMenuItem.class) //
+                    .actionCheck($, aVid, aClientX, aClientY);
         });
     }
 
-    private void actionLinkTo(AjaxRequestTarget aTarget, VID paramId, int aClientX, int aClientY)
-        throws IOException, AnnotationException
+    private void actionCheck(AjaxRequestTarget aTarget, VID paramId, int aClientX, int aClientY)
+        throws IOException
     {
         var page = (AnnotationPageBase) aTarget.getPage();
 
@@ -94,15 +98,18 @@ public class LinkToContextMenuItem
             return;
         }
 
-        page.ensureIsEditable();
+        page.visitChildren(SidebarPanel.class,
+                (c, v) -> ((SidebarPanel) c).showTab(aTarget, assistantSidebarFactory.getId()));
 
+        var sessionOwner = userService.getCurrentUser();
         var state = page.getModelObject();
-
-        if (!state.getSelection().isSpan()) {
-            return;
-        }
-
-        createRelationAnnotationHandler.actionArc(maybeContextMenuLookup.get(), aTarget,
-                state.getSelection().getAnnotation(), paramId, aClientX, aClientY);
+        schedulingService.enqueue(CheckAnnotationTask.builder() //
+                .withTrigger("Context menu") //
+                .withSessionOwner(sessionOwner) //
+                .withProject(state.getProject()) //
+                .withDocument(state.getDocument()) //
+                .withDataOwner(state.getUser().getUsername()) //
+                .withAnnotation(paramId) //
+                .build());
     }
 }

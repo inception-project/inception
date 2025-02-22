@@ -21,6 +21,8 @@ import static de.tudarmstadt.ukp.inception.assistant.model.MChatRoles.SYSTEM;
 import static java.lang.Math.floorDiv;
 import static java.lang.String.join;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
+import static org.apache.commons.lang3.ArrayUtils.isNotEmpty;
 
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
@@ -185,7 +187,24 @@ public class AssistantServiceImpl
     }
 
     @Override
-    public void processUserMessage(String aSessionOwner, Project aProject, MTextMessage aMessage)
+    public MTextMessage processInternalMessageSync(String aSessionOwner, Project aProject,
+            MTextMessage aMessage)
+        throws IOException
+    {
+        Validate.isTrue(aMessage.internal());
+
+        if (properties.isDevMode()) {
+            recordMessage(aSessionOwner, aProject, aMessage);
+            dispatchMessage(aSessionOwner, aProject, aMessage);
+        }
+
+        var assistant = new ChatContext(properties, ollamaClient, aSessionOwner, aProject);
+        return assistant.generate(asList(aMessage));
+    }
+
+    @Override
+    public void processUserMessage(String aSessionOwner, Project aProject, MTextMessage aMessage,
+            MTextMessage... aContextMessages)
     {
         var assistant = new ChatContext(properties, ollamaClient, aSessionOwner, aProject);
 
@@ -194,8 +213,16 @@ public class AssistantServiceImpl
 
         try {
             var systemMessages = generateSystemMessages();
-            var transientMessages = generateTransientMessages(assistant, aMessage);
-            var conversationMessages = getChatMessages(aSessionOwner, aProject);
+
+            List<MTextMessage> contextMessages = isNotEmpty(aContextMessages)
+                    ? asList(aContextMessages)
+                    : emptyList();
+            List<MTextMessage> transientMessages = contextMessages.isEmpty()
+                    ? generateTransientMessages(assistant, aMessage)
+                    : contextMessages;
+            List<MTextMessage> conversationMessages = contextMessages.isEmpty()
+                    ? getChatMessages(aSessionOwner, aProject)
+                    : emptyList();
 
             // We record the message only now to ensure it is not included in the listMessages above
             recordMessage(aSessionOwner, aProject, aMessage);
