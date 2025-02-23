@@ -85,6 +85,7 @@ public abstract class Task
         cancellable = builder.cancellable;
         parentTask = builder.parentTask;
         scope = builder.scope;
+
         if (builder.monitor != null) {
             monitor = builder.monitor.apply(this);
         }
