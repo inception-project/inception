@@ -185,12 +185,20 @@ public class ReindexTask
                         if (documentService.existsCas(doc, CURATION_USER)
                                 && asList(CURATION_IN_PROGRESS, CURATION_FINISHED)
                                         .contains(doc.getState())) {
-                            var aDoc = documentService.getAnnotationDocument(doc, CURATION_USER);
-                            var curationCasAsByteArray = casToByteArray(
-                                    documentService.readAnnotationCas(doc, CURATION_USER,
-                                            casUpgradeMode, accessModeInitialCas));
-                            searchService.indexDocument(pooledIndex, aDoc, "reindex",
-                                    curationCasAsByteArray);
+                            try {
+                                var aDoc = documentService.getAnnotationDocument(doc,
+                                        CURATION_USER);
+                                var curationCasAsByteArray = casToByteArray(
+                                        documentService.readAnnotationCas(doc, CURATION_USER,
+                                                casUpgradeMode, accessModeInitialCas));
+                                searchService.indexDocument(pooledIndex, aDoc, "reindex",
+                                        curationCasAsByteArray);
+                            }
+                            catch (NoResultException e) {
+                                LOG.warn(
+                                        "Found curation CAS for document {} but no annotation document",
+                                        doc);
+                            }
                         }
                     }
                     catch (Exception e) {
