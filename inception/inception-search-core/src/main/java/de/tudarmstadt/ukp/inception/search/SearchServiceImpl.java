@@ -721,6 +721,7 @@ public class SearchServiceImpl
                 .filter(task -> task instanceof IndexingTask_ImplBase)
                 .map(task -> (IndexingTask_ImplBase) task)
                 .filter(task -> aProject.equals(task.getProject())) //
+                .filter(task -> task.getMonitor() != null) //
                 .filter(task -> task.getMonitor().getState() == RUNNING) //
                 .toList();
 
