@@ -74,7 +74,7 @@ public class UserGuideRetriever
         if (messageBody.isEmpty()) {
             // var message = MTextMessage.builder() //
             // .withActor("User guide") //
-            // .withRole(SYSTEM).internal() //
+            // .withRole(SYSTEM).internal().ephemeral() //
             // .withMessage("There seems to be no relevant information in the user manual.") //
             // .build();
             return emptyList();
@@ -82,7 +82,7 @@ public class UserGuideRetriever
 
         return asList(MTextMessage.builder() //
                 .withActor("User guide") //
-                .withRole(SYSTEM).internal() //
+                .withRole(SYSTEM).internal().ephemeral() //
                 .withMessage(join("\n", asList(
                         "The user guide retriever automatically provides you with relevant sources from the user guide.",
                         "Use the following sources from the user guide to respond.", "",

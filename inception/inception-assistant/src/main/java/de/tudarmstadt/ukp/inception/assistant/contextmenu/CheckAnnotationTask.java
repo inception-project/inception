@@ -88,7 +88,7 @@ public class CheckAnnotationTask
 
             var rewriteTask = MTextMessage.builder() //
                     .withActor("Annotation checker") //
-                    .withRole(USER).internal() //
+                    .withRole(USER).internal().ephemeral() //
                     .withMessage(join("\n", //
                             "Rewrite into a question about whether the annotation is correct with respect to the "
                                     + "span marked in the context.", //
@@ -104,7 +104,7 @@ public class CheckAnnotationTask
 
             var contextMessage = MTextMessage.builder() //
                     .withActor("Annotation checker") //
-                    .withRole(SYSTEM).internal() //
+                    .withRole(SYSTEM).internal().ephemeral() //
                     .withMessage(join("\n", //
                             "The user will ask whether the following annotation is correct.", //
                             "Give one response per annotation.", //

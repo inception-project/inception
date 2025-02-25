@@ -106,7 +106,7 @@ public class DocumentContextRetriever
         if (body.isEmpty()) {
             return asList(MTextMessage.builder() //
                     .withActor("Source context retriever") //
-                    .withRole(SYSTEM).internal() //
+                    .withRole(SYSTEM).internal().ephemeral() //
                     .withMessage(
                             "The source context retriever found no relevant information in the documents of the current project.") //
                     .build());
@@ -114,7 +114,7 @@ public class DocumentContextRetriever
 
         var msg = MTextMessage.builder() //
                 .withActor("Source context retriever") //
-                .withRole(SYSTEM).internal() //
+                .withRole(SYSTEM).internal().ephemeral() //
                 .withReferences(references.values());
 
         var instruction = """

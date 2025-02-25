@@ -51,6 +51,7 @@ import com.networknt.schema.JsonSchema;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.assistant.config.AssistantProperties;
+import de.tudarmstadt.ukp.inception.assistant.model.MChatMessage;
 import de.tudarmstadt.ukp.inception.assistant.model.MMessage;
 import de.tudarmstadt.ukp.inception.assistant.model.MRemoveConversationCommand;
 import de.tudarmstadt.ukp.inception.assistant.model.MTextMessage;
@@ -162,14 +163,24 @@ public class AssistantServiceImpl
                 .toList();
     }
 
-    void recordMessage(String aSessionOwner, Project aProject, MMessage aMessage)
+    void recordMessage(String aSessionOwner, Project aProject, MChatMessage aMessage)
     {
+        if (!properties.isDevMode() && aMessage.ephemeral()) {
+            return;
+        }
+
         var state = getState(aSessionOwner, aProject);
         state.upsertMessage(aMessage);
     }
 
     void dispatchMessage(String aSessionOwner, Project aProject, MMessage aMessage)
     {
+        if (aMessage instanceof MChatMessage chatMessage) {
+            if (!properties.isDevMode() && chatMessage.internal()) {
+                return;
+            }
+        }
+
         // LOG.trace("Dispatching assistant message: {}", aMessage);
         var topic = AssistantWebsocketController.getChannel(aProject);
         msgTemplate.convertAndSend("/topic" + topic, aMessage);
@@ -217,8 +228,8 @@ public class AssistantServiceImpl
             List<MTextMessage> contextMessages = isNotEmpty(aContextMessages)
                     ? asList(aContextMessages)
                     : emptyList();
-            List<MTextMessage> transientMessages = contextMessages.isEmpty()
-                    ? generateTransientMessages(assistant, aMessage)
+            List<MTextMessage> ephemeralMessages = contextMessages.isEmpty()
+                    ? generateEphemeralMessages(assistant, aMessage)
                     : contextMessages;
             List<MTextMessage> conversationMessages = contextMessages.isEmpty()
                     ? getChatMessages(aSessionOwner, aProject)
@@ -228,14 +239,14 @@ public class AssistantServiceImpl
             recordMessage(aSessionOwner, aProject, aMessage);
 
             if (properties.isDevMode()) {
-                for (var msg : transientMessages) {
+                for (var msg : ephemeralMessages) {
                     recordMessage(aSessionOwner, aProject, msg);
                     dispatchMessage(aSessionOwner, aProject, msg);
                 }
             }
 
             var recentConversation = limitConversationToContextLength(systemMessages,
-                    transientMessages, conversationMessages, aMessage,
+                    ephemeralMessages, conversationMessages, aMessage,
                     properties.getChat().getContextLength());
 
             var responseMessage = assistant.generate(recentConversation,
@@ -247,7 +258,7 @@ public class AssistantServiceImpl
         }
         catch (IOException e) {
             var errorMessage = MTextMessage.builder() //
-                    .withActor("Error").withRole(SYSTEM).internal() //
+                    .withActor("Error").withRole(SYSTEM).internal().ephemeral() //
                     .withMessage("Error: " + e.getMessage()) //
                     .build();
             recordMessage(aSessionOwner, aProject, errorMessage);
@@ -262,16 +273,16 @@ public class AssistantServiceImpl
         dispatchMessage(aSessionOwner, aProject, responseMessage);
     }
 
-    private List<MTextMessage> generateTransientMessages(ChatContext aAssistant,
+    private List<MTextMessage> generateEphemeralMessages(ChatContext aAssistant,
             MTextMessage aMessage)
     {
-        var transientMessages = new ArrayList<MTextMessage>();
+        var messages = new ArrayList<MTextMessage>();
 
         for (var retriever : retrieverExtensionPoint.getExtensions(aAssistant.getProject())) {
-            transientMessages.addAll(retriever.retrieve(aAssistant, aMessage));
+            messages.addAll(retriever.retrieve(aAssistant, aMessage));
         }
 
-        return transientMessages;
+        return messages;
     }
 
     private List<MTextMessage> generateSystemMessages()
@@ -290,13 +301,13 @@ public class AssistantServiceImpl
         );
 
         return asList(MTextMessage.builder() //
-                .withRole(SYSTEM).internal() //
+                .withRole(SYSTEM).internal().ephemeral() //
                 .withMessage(join("\n\n", primeDirectives)) //
                 .build());
     }
 
     private List<MTextMessage> limitConversationToContextLength(List<MTextMessage> aSystemMessages,
-            List<MTextMessage> aTransientMessages, List<MTextMessage> aRecentMessages,
+            List<MTextMessage> aEphemeralMessages, List<MTextMessage> aRecentMessages,
             MTextMessage aLatestUserMessage, int aContextLength)
     {
         // We don't really know which tokenizer the LLM uses. In case
@@ -311,12 +322,12 @@ public class AssistantServiceImpl
         var headMessages = new ArrayList<MTextMessage>();
         var tailMessages = new LinkedList<MTextMessage>();
 
-        var totalMessages = aSystemMessages.size() + aTransientMessages.size()
+        var totalMessages = aSystemMessages.size() + aEphemeralMessages.size()
                 + aRecentMessages.size() + 1;
         var allTokens = 0;
         var systemTokens = 0;
         var recentTokens = 0;
-        var transientTokens = 0;
+        var ephemeralTokens = 0;
 
         // System prompts from the start as context limit allows
         var systemMsgIterator = aSystemMessages.iterator();
@@ -343,19 +354,19 @@ public class AssistantServiceImpl
         allTokens += latestUserMsgTokens;
         tailMessages.addLast(aLatestUserMessage);
 
-        // Add transient messages as context limit allows
-        var transientMsgIterator = aTransientMessages.listIterator(aTransientMessages.size());
-        while (transientMsgIterator.hasPrevious() && allTokens < limit) {
-            var msg = transientMsgIterator.previous();
+        // Add ephemeral messages as context limit allows
+        var ephemeralMsgIterator = aEphemeralMessages.listIterator(aEphemeralMessages.size());
+        while (ephemeralMsgIterator.hasPrevious() && allTokens < limit) {
+            var msg = ephemeralMsgIterator.previous();
             var msgTokens = encoding.countTokensOrdinary(msg.message());
             if (allTokens + msgTokens > limit) {
-                LOG.trace("Transient message exceeds remaining token limit ({}): [{}]", msgTokens,
+                LOG.trace("Ephemeral message exceeds remaining token limit ({}): [{}]", msgTokens,
                         msg.message());
                 continue;
             }
 
             allTokens += msgTokens;
-            transientTokens += msgTokens;
+            ephemeralTokens += msgTokens;
             tailMessages.addFirst(msg);
         }
 
@@ -377,9 +388,9 @@ public class AssistantServiceImpl
         allMessages.addAll(tailMessages);
 
         LOG.trace(
-                "Reduced from {} to {} messages with a total of {} / {} tokens (system: {}, transient: {}, recent: {} )",
+                "Reduced from {} to {} messages with a total of {} / {} tokens (system: {}, ephemeral: {}, recent: {} )",
                 totalMessages, headMessages.size() + tailMessages.size(), allTokens, limit,
-                systemTokens, transientTokens, recentTokens);
+                systemTokens, ephemeralTokens, recentTokens);
 
         return allMessages;
     }
