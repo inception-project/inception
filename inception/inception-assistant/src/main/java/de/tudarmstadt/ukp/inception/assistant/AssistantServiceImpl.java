@@ -18,10 +18,12 @@
 package de.tudarmstadt.ukp.inception.assistant;
 
 import static de.tudarmstadt.ukp.inception.assistant.model.MChatRoles.SYSTEM;
+import static de.tudarmstadt.ukp.inception.support.json.JSONUtil.toPrettyJsonString;
 import static java.lang.Math.floorDiv;
 import static java.lang.String.join;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.unmodifiableList;
 import static org.apache.commons.lang3.ArrayUtils.isNotEmpty;
 
 import java.io.IOException;
@@ -29,6 +31,7 @@ import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
@@ -51,6 +54,7 @@ import com.networknt.schema.JsonSchema;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.assistant.config.AssistantProperties;
+import de.tudarmstadt.ukp.inception.assistant.model.MCallResponse;
 import de.tudarmstadt.ukp.inception.assistant.model.MChatMessage;
 import de.tudarmstadt.ukp.inception.assistant.model.MMessage;
 import de.tudarmstadt.ukp.inception.assistant.model.MRemoveConversationCommand;
@@ -147,6 +151,7 @@ public class AssistantServiceImpl
         return state.getMessages().stream() //
                 .filter(MTextMessage.class::isInstance) //
                 .map(MTextMessage.class::cast) //
+                .filter(msg -> state.isDebugMode() || !msg.internal()) //
                 .toList();
     }
 
@@ -165,7 +170,7 @@ public class AssistantServiceImpl
 
     void recordMessage(String aSessionOwner, Project aProject, MChatMessage aMessage)
     {
-        if (!properties.isDevMode() && aMessage.ephemeral()) {
+        if (!isDebugMode(aSessionOwner, aProject) && aMessage.ephemeral()) {
             return;
         }
 
@@ -173,10 +178,11 @@ public class AssistantServiceImpl
         state.upsertMessage(aMessage);
     }
 
-    void dispatchMessage(String aSessionOwner, Project aProject, MMessage aMessage)
+    @Override
+    public void dispatchMessage(String aSessionOwner, Project aProject, MMessage aMessage)
     {
         if (aMessage instanceof MChatMessage chatMessage) {
-            if (!properties.isDevMode() && chatMessage.internal()) {
+            if (!isDebugMode(aSessionOwner, aProject) && chatMessage.internal()) {
                 return;
             }
         }
@@ -190,11 +196,30 @@ public class AssistantServiceImpl
     public void clearConversation(String aSessionOwner, Project aProject)
     {
         synchronized (states) {
-            states.keySet().removeIf(key -> aSessionOwner.equals(key.user())
-                    && Objects.equals(aProject.getId(), key.projectId));
+            states.entrySet().stream() //
+                    .filter(e -> aSessionOwner.equals(e.getKey().user())
+                            && Objects.equals(aProject.getId(), e.getKey().projectId)) //
+                    .map(Entry::getValue) //
+                    .forEach(state -> state.clearMessages());
         }
 
         dispatchMessage(aSessionOwner, aProject, new MRemoveConversationCommand());
+    }
+
+    @Override
+    public void setDebugMode(String aSessionOwner, Project aProject, boolean aOnOff)
+    {
+        synchronized (states) {
+            getState(aSessionOwner, aProject).setDebugMode(aOnOff);
+        }
+    }
+
+    @Override
+    public boolean isDebugMode(String aSessionOwner, Project aProject)
+    {
+        synchronized (states) {
+            return getState(aSessionOwner, aProject).isDebugMode();
+        }
     }
 
     @Override
@@ -204,13 +229,76 @@ public class AssistantServiceImpl
     {
         Validate.isTrue(aMessage.internal());
 
-        if (properties.isDevMode()) {
+        if (isDebugMode(aSessionOwner, aProject)) {
             recordMessage(aSessionOwner, aProject, aMessage);
             dispatchMessage(aSessionOwner, aProject, aMessage);
         }
 
         var assistant = new ChatContext(properties, ollamaClient, aSessionOwner, aProject);
-        return assistant.generate(asList(aMessage));
+        return assistant.chat(asList(aMessage));
+    }
+
+    @Override
+    public <T> MCallResponse<T> processInternalCallSync(String aSessionOwner, Project aProject,
+            Class<T> aType, MTextMessage aMessage)
+        throws IOException
+    {
+        Validate.isTrue(aMessage.internal());
+
+        if (isDebugMode(aSessionOwner, aProject)) {
+            recordMessage(aSessionOwner, aProject, aMessage);
+            dispatchMessage(aSessionOwner, aProject, aMessage);
+        }
+
+        var assistant = new ChatContext(properties, ollamaClient, aSessionOwner, aProject);
+        var result = assistant.call(aType, asList(aMessage));
+
+        if (isDebugMode(aSessionOwner, aProject)) {
+            var resultMessage = MTextMessage.builder() //
+                    .withRole(SYSTEM).internal().ephemeral() //
+                    .withActor(aMessage.actor()) //
+                    .withMessage("```json\n" + toPrettyJsonString(result.payload()) + "\n```") //
+                    .withPerformance(result.performance()) //
+                    .build();
+            recordMessage(aSessionOwner, aProject, resultMessage);
+            dispatchMessage(aSessionOwner, aProject, resultMessage);
+        }
+
+        return result;
+    }
+
+    @Override
+    public void processAgentMessage(String aSessionOwner, Project aProject, MTextMessage aMessage,
+            MTextMessage... aContextMessages)
+    {
+        var assistant = new ChatContext(properties, ollamaClient, aSessionOwner, aProject);
+
+        // Dispatch message early so the front-end can enter waiting state
+        dispatchMessage(aSessionOwner, aProject, aMessage);
+
+        try {
+            var systemMessages = generateSystemMessages();
+
+            recordMessage(aSessionOwner, aProject, aMessage);
+
+            var recentConversation = limitConversationToContextLength(systemMessages, emptyList(),
+                    emptyList(), aMessage, properties.getChat().getContextLength());
+
+            var responseMessage = assistant.chat(recentConversation,
+                    (id, r) -> handleStreamedMessageFragment(aSessionOwner, aProject, id, r));
+
+            recordMessage(aSessionOwner, aProject, responseMessage);
+
+            dispatchMessage(aSessionOwner, aProject, responseMessage.withoutContent());
+        }
+        catch (IOException e) {
+            var errorMessage = MTextMessage.builder() //
+                    .withActor("Error").withRole(SYSTEM).internal().ephemeral() //
+                    .withMessage("Error: " + e.getMessage()) //
+                    .build();
+            recordMessage(aSessionOwner, aProject, errorMessage);
+            dispatchMessage(aSessionOwner, aProject, errorMessage);
+        }
     }
 
     @Override
@@ -238,7 +326,7 @@ public class AssistantServiceImpl
             // We record the message only now to ensure it is not included in the listMessages above
             recordMessage(aSessionOwner, aProject, aMessage);
 
-            if (properties.isDevMode()) {
+            if (isDebugMode(aSessionOwner, aProject)) {
                 for (var msg : ephemeralMessages) {
                     recordMessage(aSessionOwner, aProject, msg);
                     dispatchMessage(aSessionOwner, aProject, msg);
@@ -249,7 +337,7 @@ public class AssistantServiceImpl
                     ephemeralMessages, conversationMessages, aMessage,
                     properties.getChat().getContextLength());
 
-            var responseMessage = assistant.generate(recentConversation,
+            var responseMessage = assistant.chat(recentConversation,
                     (id, r) -> handleStreamedMessageFragment(aSessionOwner, aProject, id, r));
 
             recordMessage(aSessionOwner, aProject, responseMessage);
@@ -448,10 +536,28 @@ public class AssistantServiceImpl
     private static class AssistentState
     {
         private LinkedList<MMessage> messages = new LinkedList<>();
+        private boolean debugMode;
 
         public List<MMessage> getMessages()
         {
-            return new ArrayList<>(messages);
+            return unmodifiableList(new ArrayList<>(messages));
+        }
+
+        public void clearMessages()
+        {
+            synchronized (messages) {
+                messages.clear();
+            }
+        }
+
+        public void setDebugMode(boolean aOnOff)
+        {
+            debugMode = aOnOff;
+        }
+
+        public boolean isDebugMode()
+        {
+            return debugMode;
         }
 
         public void upsertMessage(MMessage aMessage)

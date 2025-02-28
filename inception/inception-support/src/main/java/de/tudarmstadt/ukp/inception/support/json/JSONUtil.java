@@ -93,12 +93,14 @@ public class JSONUtil
     public static String toJsonString(ObjectMapper aMapper, boolean aPretty, Object aObject)
         throws IOException
     {
-        StringWriter out = new StringWriter();
+        var out = new StringWriter();
 
-        JsonGenerator jsonGenerator = aMapper.getFactory().createGenerator(out);
+        var jsonGenerator = aMapper.getFactory().createGenerator(out);
+
         if (aPretty) {
-            jsonGenerator.setPrettyPrinter(new DefaultPrettyPrinter()
-                    .withObjectIndenter(new DefaultIndenter().withLinefeed("\n")));
+            jsonGenerator.setPrettyPrinter(new DefaultPrettyPrinter() //
+                    .withObjectIndenter(new DefaultIndenter() //
+                            .withLinefeed("\n")));
         }
 
         jsonGenerator.writeObject(aObject);
@@ -110,9 +112,8 @@ public class JSONUtil
         if (aJSON == null) {
             return null;
         }
-        else {
-            return getObjectMapper().readValue(aJSON, aClass);
-        }
+
+        return getObjectMapper().readValue(aJSON, aClass);
     }
 
     public static <T> T fromValidatedJsonString(Class<T> aClass, String aJSON, JsonSchema aSchema)

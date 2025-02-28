@@ -247,6 +247,10 @@ public class SchedulingServiceImpl
                 // the incoming task supersedes them).
                 tasksToUnqueue.add(enqueuedTask);
                 break;
+            case QUEUE_THIS:
+                // Queue this task to be run potentially after other matching tasks have been
+                // completed
+                break;
             case NO_MATCH:
                 // Ignore
                 break;

@@ -383,7 +383,7 @@ public class InteractiveRecommenderSidebar
     private void execute(AjaxRequestTarget aTarget, Form<Recommender> aForm) throws Exception
     {
         var sessionOwner = userService.getCurrentUser();
-        var state = getAnnotationPage().getModelObject();
+        var state = getModelObject();
         var document = state.getDocument();
         var dataOwner = state.getUser().getUsername();
         var rec = aForm.getModelObject();

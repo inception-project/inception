@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.inception.assistant.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @ConfigurationProperties("assistant")
@@ -40,9 +39,6 @@ public class AssistantPropertiesImpl
         documentIndex = aDocumentIndex;
     }
 
-    @Value("${inception.dev:false}") // Inject system property or use default if not provided
-    private boolean devMode;
-
     @Override
     public String getNickname()
     {
@@ -52,17 +48,6 @@ public class AssistantPropertiesImpl
     public void setNickname(String aNickname)
     {
         nickname = aNickname;
-    }
-
-    @Override
-    public boolean isDevMode()
-    {
-        return devMode;
-    }
-
-    public void setDevMode(boolean aDevMode)
-    {
-        devMode = aDevMode;
     }
 
     @Override
