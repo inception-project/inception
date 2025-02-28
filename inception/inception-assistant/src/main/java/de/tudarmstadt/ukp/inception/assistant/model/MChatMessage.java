@@ -32,5 +32,10 @@ public sealed interface MChatMessage
      */
     boolean internal();
 
+    /**
+     * @return if the message should disappear at once (i.e. it is not recorded)
+     */
+    boolean ephemeral();
+
     MPerformanceMetrics performance();
 }
