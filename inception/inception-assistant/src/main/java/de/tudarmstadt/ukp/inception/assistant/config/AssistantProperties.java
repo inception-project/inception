@@ -25,8 +25,6 @@ public interface AssistantProperties
 
     AssistantEmbeddingProperties getEmbedding();
 
-    boolean isDevMode();
-
     String getNickname();
 
     AssitantUserGuideProperties getUserGuide();

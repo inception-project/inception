@@ -15,12 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.assistant.contextmenu;
+package de.tudarmstadt.ukp.inception.assistant.sidebar;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.AUTO_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.inception.assistant.model.MChatRoles.SYSTEM;
-import static de.tudarmstadt.ukp.inception.assistant.model.MChatRoles.USER;
 import static de.tudarmstadt.ukp.inception.scheduling.MatchResult.NO_MATCH;
 import static de.tudarmstadt.ukp.inception.scheduling.MatchResult.QUEUE_THIS;
 import static de.tudarmstadt.ukp.inception.support.json.JSONUtil.toPrettyJsonString;
@@ -28,12 +27,10 @@ import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectAnnotatio
 import static java.lang.String.join;
 import static java.util.Objects.requireNonNull;
 import static org.apache.commons.lang3.StringUtils.normalizeSpace;
-import static org.apache.uima.cas.CAS.TYPE_NAME_BOOLEAN;
 
 import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Objects;
-import java.util.UUID;
 
 import org.apache.commons.lang3.Validate;
 import org.apache.uima.jcas.tcas.Annotation;
@@ -44,7 +41,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.inception.assistant.AssistantService;
 import de.tudarmstadt.ukp.inception.assistant.model.MTextMessage;
-import de.tudarmstadt.ukp.inception.assistant.sidebar.WatchAnnotationTask;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.scheduling.MatchResult;
@@ -52,13 +48,12 @@ import de.tudarmstadt.ukp.inception.scheduling.MatchableTask;
 import de.tudarmstadt.ukp.inception.scheduling.Task;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
-public class CheckAnnotationTask
+public class WatchAnnotationTask
     extends Task
     implements MatchableTask
 {
-
-    public static final String TYPE = "CheckAnnotationTask";
-    private static final String ACTOR = "Annotation checker";
+    public static final String TYPE = "WatchAnnotationTask";
+    private static final String ACTOR = "Annotation watcher";
 
     private @Autowired AnnotationSchemaService schemaService;
     private @Autowired AssistantService assistantService;
@@ -68,7 +63,7 @@ public class CheckAnnotationTask
     private final String dataOwner;
     private final VID annotation;
 
-    public CheckAnnotationTask(Builder<? extends Builder<?>> aBuilder)
+    public WatchAnnotationTask(Builder<? extends Builder<?>> aBuilder)
     {
         super(aBuilder.withType(TYPE));
 
@@ -109,40 +104,33 @@ public class CheckAnnotationTask
                 return;
             }
 
-            var inquiryMsgId = UUID.randomUUID();
-            var sessionOwner = getUser().get().getUsername();
-            assistantService.dispatchMessage(sessionOwner, getProject(), MTextMessage.builder() //
-                    .withId(inquiryMsgId) //
-                    .withActor(getUser().get().getUiName()) //
-                    .withRole(USER) //
-                    .notDone() //
-                    .build());
-
             var instance = annotationToJson(ann, contextSentence);
 
-            var rewriteQuestionTask = MTextMessage.builder() //
+            var checkQuestion = MTextMessage.builder() //
                     .withActor(ACTOR) //
-                    .withRole(USER).internal().ephemeral() //
+                    .withRole(SYSTEM).internal().ephemeral() //
                     .withMessage(join("\n", //
-                            "Rewrite into a question about whether the annotation is correct with respect to the "
-                                    + "span marked in the context.", //
-                            "Do not answer the question yet.", //
+                            "Is the following annotation correct or not. Answer true or false.", //
                             "\n", //
                             "```json", //
                             instance, //
                             "```")) //
                     .build();
 
-            var rewrittenQuestion = assistantService.processInternalMessageSync(sessionOwner,
-                    getProject(), rewriteQuestionTask);
+            var checkResult = assistantService.processInternalCallSync(
+                    getUser().get().getUsername(), getProject(), BooleanQuestion.class,
+                    checkQuestion);
+
+            if (checkResult.payload().answer()) {
+                return;
+            }
 
             var inquiryContext = MTextMessage.builder() //
                     .withActor(ACTOR) //
                     .withRole(SYSTEM).internal().ephemeral() //
                     .withMessage(join("\n", //
-                            "The user will ask whether the following annotation is correct.", //
+                            "Your task is to advise the user about potential problems with the following annotation.", //
                             "Give one response per annotation.", //
-                            "Start each response with yes, no, or unsure, then very briefly explain.", //
                             "If expanding or reducing the span seems appropriate, mention that.", //
                             "Use markdown for formatting.", //
                             "", //
@@ -151,14 +139,7 @@ public class CheckAnnotationTask
                             "```")) //
                     .build();
 
-            var inquiryTask = MTextMessage.builder() //
-                    .withId(inquiryMsgId) //
-                    .withActor(getUser().get().getUiName()) //
-                    .withRole(USER) //
-                    .withMessage(rewrittenQuestion.message()) //
-                    .build();
-
-            assistantService.processUserMessage(sessionOwner, getProject(), inquiryTask,
+            assistantService.processAgentMessage(getUser().get().getUsername(), getProject(),
                     inquiryContext);
         }
     }
@@ -178,21 +159,17 @@ public class CheckAnnotationTask
         instance.put("context", normalizeSpace(context));
 
         var adapter = schemaService.findAdapter(getProject(), aAnnotation);
-        var attributes = new LinkedHashMap<String, Object>();
+        var attributes = new LinkedHashMap<String, String>();
         for (var feature : adapter.listFeatures()) {
-            if (TYPE_NAME_BOOLEAN.equals(feature.getType())) {
-                attributes.put(normalizeSpace(feature.getUiName()),
-                        adapter.getFeatureValue(feature, aAnnotation));
-                continue;
-            }
-
             attributes.put(normalizeSpace(feature.getUiName()),
-                    normalizeSpace(adapter.renderFeatureValue(aAnnotation, feature.getName())));
+                    normalizeSpace(adapter.getFeatureValue(feature, aAnnotation)));
         }
         instance.put("annotation", attributes);
 
         return toPrettyJsonString(instance);
     }
+
+    private static record BooleanQuestion(boolean answer) {};
 
     public static Builder<Builder<?>> builder()
     {
@@ -231,11 +208,11 @@ public class CheckAnnotationTask
             return (T) this;
         }
 
-        public CheckAnnotationTask build()
+        public WatchAnnotationTask build()
         {
             Validate.notNull(project, "Parameter [project] must be specified");
 
-            return new CheckAnnotationTask(this);
+            return new WatchAnnotationTask(this);
         }
     }
 }

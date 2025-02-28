@@ -22,14 +22,16 @@
     <div class="flex-content card">
       <div class="card-header">
         <wicket:message key="assistant"/>
-        <div class="actions">
+        <form wicket:id="form" class="actions">
+          <span wicket:id="watchMode"/>
+          <span wicket:id="debugMode"/>
           <button wicket:id="clear" class="btn btn-action btn-secondary" type="button">
             Clear
           </button>
           <button wicket:id="reindex" class="btn btn-action btn-secondary" type="button">
             Reindex
           </button>
-        </div>
+        </form>
       </div>
       
       <div class="card-body flex-v-container m-0 p-0">

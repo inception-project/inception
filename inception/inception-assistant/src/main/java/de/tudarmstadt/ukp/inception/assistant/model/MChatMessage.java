@@ -19,7 +19,7 @@ package de.tudarmstadt.ukp.inception.assistant.model;
 
 public sealed interface MChatMessage
     extends MMessage
-    permits MTextMessage
+    permits MTextMessage, MCallResponse
 {
     /**
      * @return the role of the message author

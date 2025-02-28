@@ -226,9 +226,9 @@ public class MetadataSuggestionSupport
                     sugGroup.hideAll(FLAG_OVERLAP);
                 }
                 else {
-                    for (var sug : sugGroup) {
-                        if (label.equals(sug.getLabel())) {
-                            sug.hide(FLAG_OVERLAP);
+                    for (var suggestion : sugGroup) {
+                        if (label.equals(suggestion.getLabel())) {
+                            suggestion.hide(FLAG_OVERLAP);
                         }
                     }
                 }

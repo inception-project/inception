@@ -15,30 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.scheduling;
+package de.tudarmstadt.ukp.inception.recommendation.api.recommender;
 
-public enum MatchResult
+public interface TrainingInstance
 {
-    /**
-     * Task does not match.
-     */
-    NO_MATCH,
 
-    /**
-     * Unqueue any existing matching tasks. Scheduled and running tasks as left alone. Enqueue the
-     * new task.
-     */
-    UNQUEUE_EXISTING_AND_QUEUE_THIS,
-
-    /**
-     * Discard the incoming task if it matches an already enqueued task. If a matching task is
-     * already scheduled or running, then queue the incoming task.
-     */
-    DISCARD_OR_QUEUE_THIS,
-
-    /**
-     * Queue this task. It will be run immediately or after other matching tasks have been run. It
-     * will not run parallel to matching tasks.
-     */
-    QUEUE_THIS;
 }
