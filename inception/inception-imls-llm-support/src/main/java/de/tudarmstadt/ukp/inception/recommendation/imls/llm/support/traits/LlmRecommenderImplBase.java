@@ -30,6 +30,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.uima.cas.CAS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -86,6 +87,10 @@ public abstract class LlmRecommenderImplBase<T extends LlmRecommenderTraits>
     public Range predict(PredictionContext aContext, CAS aCas, int aBegin, int aEnd)
         throws RecommendationException
     {
+        if (StringUtils.isBlank(traits.getPrompt())) {
+            throw new RecommendationException("No prompt has been provided");
+        }
+
         var globalBindings = prepareGlobalBindings(aCas);
 
         var responseExtractor = getResponseExtractor(traits.getExtractionMode());

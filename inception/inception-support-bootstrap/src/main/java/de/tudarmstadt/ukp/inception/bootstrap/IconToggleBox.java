@@ -17,16 +17,18 @@
  */
 package de.tudarmstadt.ukp.inception.bootstrap;
 
+import static org.apache.wicket.event.Broadcast.BUBBLE;
+
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
 import org.apache.wicket.behavior.AttributeAppender;
 import org.apache.wicket.behavior.Behavior;
-import org.apache.wicket.event.Broadcast;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.FormComponentUpdatingBehavior;
 import org.apache.wicket.markup.html.panel.GenericPanel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.Model;
 import org.wicketstuff.event.annotation.AbstractAjaxAwareEvent;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
@@ -41,9 +43,9 @@ public class IconToggleBox
 
     private IconType checked = FontAwesome5IconType.check_s;
     private IconType unchecked = NoIcon.NO_ICON;
-    private IModel<String> checkedTitle;
-    private IModel<String> uncheckedTitle;
-    private IModel<String> postLabelText;
+    private IModel<String> checkedTitle = Model.of();
+    private IModel<String> uncheckedTitle = Model.of();
+    private IModel<String> postLabelText = Model.of();
     private CheckBoxX checkBox;
     private Label postLabel;
 
@@ -66,7 +68,7 @@ public class IconToggleBox
             protected void onChange(Boolean aValue, AjaxRequestTarget aTarget)
             {
                 aTarget.add(IconToggleBox.this);
-                IconToggleBox.this.send(IconToggleBox.this, Broadcast.BUBBLE,
+                IconToggleBox.this.send(IconToggleBox.this, BUBBLE,
                         new IconToggleBoxChangedEvent(aTarget, IconToggleBox.this));
             }
         });
