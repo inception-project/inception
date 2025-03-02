@@ -20,15 +20,20 @@ package de.tudarmstadt.ukp.inception.project.initializers.wikidatalinking;
 import static java.util.Collections.emptyList;
 
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.util.List;
+import java.util.Optional;
 
-import org.eclipse.rdf4j.repository.config.RepositoryImplConfig;
+import org.apache.wicket.request.resource.PackageResourceReference;
+import org.apache.wicket.request.resource.ResourceReference;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.project.initializers.KnowledgeBaseInitializer;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
+import de.tudarmstadt.ukp.inception.project.api.ProjectInitializationRequest;
 import de.tudarmstadt.ukp.inception.project.api.ProjectInitializer;
 import de.tudarmstadt.ukp.inception.project.initializers.wikidatalinking.config.WikiDataLinkingProjectInitializersAutoConfiguration;
 
@@ -39,9 +44,12 @@ import de.tudarmstadt.ukp.inception.project.initializers.wikidatalinking.config.
  * </p>
  */
 public class WikiDataKnowledgeBaseInitializer
-    implements ProjectInitializer
+    implements KnowledgeBaseInitializer
 {
     private static final String WIKIDATA_PROFILE = "wikidata";
+
+    private static final PackageResourceReference THUMBNAIL = new PackageResourceReference(
+            MethodHandles.lookup().lookupClass(), "WikiDataKnowledgeBaseInitializer.svg");
 
     private final KnowledgeBaseService kbService;
     private final KnowledgeBaseProfile wikidataProfile;
@@ -69,6 +77,18 @@ public class WikiDataKnowledgeBaseInitializer
     }
 
     @Override
+    public Optional<String> getDescription()
+    {
+        return Optional.ofNullable(wikidataProfile.getInfo().getDescription());
+    }
+
+    @Override
+    public Optional<ResourceReference> getThumbnail()
+    {
+        return Optional.of(THUMBNAIL);
+    }
+
+    @Override
     public boolean applyByDefault()
     {
         return false;
@@ -87,16 +107,15 @@ public class WikiDataKnowledgeBaseInitializer
     }
 
     @Override
-    public void configure(Project aProject) throws IOException
+    public void configure(ProjectInitializationRequest aRequest) throws IOException
     {
         // set all the fields according to the chosen profile
-        RepositoryImplConfig cfg = kbService
-                .getRemoteConfig(wikidataProfile.getAccess().getAccessUrl());
+        var cfg = kbService.getRemoteConfig(wikidataProfile.getAccess().getAccessUrl());
 
         // sets root concepts list - if null then an empty list otherwise change the
         // values to IRI and populate the list
-        KnowledgeBase kb = new KnowledgeBase();
-        kb.setProject(aProject);
+        var kb = new KnowledgeBase();
+        kb.setProject(aRequest.getProject());
         kb.setReadOnly(true);
         kb.setMaxResults(kbProperties.getDefaultMaxResults());
         kb.setType(wikidataProfile.getType());
