@@ -296,23 +296,19 @@ public class SpanSuggestionSupport
             var pair = oi.next();
             var suggestionOffset = pair.getKey();
             var annotationOffset = pair.getValue();
+
             // Fetch the current suggestion and annotation
             var group = suggestions.get(suggestionOffset);
             for (var annotation : annotations.get(annotationOffset)) {
-                Iterable<Object> labelObjects;
                 var featureSupport = featureSupportRegistry.findExtension(feature).get();
                 var wrappedValue = featureSupport.getFeatureValue(feature, annotation);
                 var value = featureSupport.unwrapFeatureValue(feature, annotation.getCAS(),
                         wrappedValue);
-                if (value instanceof Iterable iterableValues) {
-                    labelObjects = iterableValues;
-                }
-                else {
-                    labelObjects = asList(value);
-                }
+
+                var labelObjects = value instanceof Iterable values ? values : asList(value);
 
                 for (var labelObject : labelObjects) {
-                    var label = labelObject != null ? String.valueOf(labelObject) : null;
+                    var label = Objects.toString(labelObject, null);
 
                     for (var suggestion : group) {
                         // The suggestion would just create an annotation and not set any
@@ -352,8 +348,10 @@ public class SpanSuggestionSupport
                             // Does the suggested label match the label of an existing annotation
                             // at the same position then we hide
                             if (label != null && label.equals(suggestion.getLabel()) && colocated) {
-                                suggestion.hide(FLAG_OVERLAP);
-                                hiddenForOverlap.add(suggestion);
+                                if (!suggestion.isCorrection()) {
+                                    suggestion.hide(FLAG_OVERLAP);
+                                    hiddenForOverlap.add(suggestion);
+                                }
                                 continue;
                             }
 

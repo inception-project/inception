@@ -84,6 +84,7 @@ public abstract class AnnotationSuggestion
     protected final String uiLabel;
     protected final double score;
     protected final String scoreExplanation;
+    protected final boolean correction;
 
     private AutoAcceptMode autoAcceptMode;
     private int hidingFlags = 0;
@@ -92,7 +93,7 @@ public abstract class AnnotationSuggestion
     public AnnotationSuggestion(int aId, int aGeneration, int aAge, long aRecommenderId,
             String aRecommenderName, long aLayerId, String aFeature, String aDocumentName,
             String aLabel, String aUiLabel, double aScore, String aScoreExplanation,
-            AutoAcceptMode aAutoAcceptMode, int aHidingFlags)
+            AutoAcceptMode aAutoAcceptMode, int aHidingFlags, boolean aCorrection)
     {
         generation = aGeneration;
         age = aAge;
@@ -108,6 +109,7 @@ public abstract class AnnotationSuggestion
         documentName = aDocumentName;
         autoAcceptMode = aAutoAcceptMode != null ? aAutoAcceptMode : AutoAcceptMode.NEVER;
         hidingFlags = aHidingFlags;
+        correction = aCorrection;
     }
 
     public int getId()
@@ -209,6 +211,16 @@ public abstract class AnnotationSuggestion
     public boolean isVisible()
     {
         return hidingFlags == 0;
+    }
+
+    /**
+     * @return whether the suggestion is a correction suggestion for an existing annotation.
+     *         Corrections should not be hidden for overlap with an existing annotation unless the
+     *         label matches.
+     */
+    public boolean isCorrection()
+    {
+        return correction;
     }
 
     public AutoAcceptMode getAutoAcceptMode()

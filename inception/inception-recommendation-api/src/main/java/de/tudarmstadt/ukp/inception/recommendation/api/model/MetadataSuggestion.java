@@ -32,7 +32,7 @@ public class MetadataSuggestion
         super(builder.id, builder.generation, builder.age, builder.recommenderId,
                 builder.recommenderName, builder.layerId, builder.feature, builder.documentName,
                 builder.label, builder.uiLabel, builder.score, builder.scoreExplanation,
-                builder.autoAcceptMode, builder.hidingFlags);
+                builder.autoAcceptMode, builder.hidingFlags, builder.correction);
     }
 
     @Override
@@ -99,6 +99,7 @@ public class MetadataSuggestion
         private String scoreExplanation;
         private AutoAcceptMode autoAcceptMode;
         private int hidingFlags;
+        boolean correction;
 
         private Builder()
         {
@@ -205,6 +206,12 @@ public class MetadataSuggestion
         public Builder withHidingFlags(int aFlags)
         {
             this.hidingFlags = aFlags;
+            return this;
+        }
+
+        public Builder withCorrection(boolean aCorrection)
+        {
+            this.correction = aCorrection;
             return this;
         }
 
