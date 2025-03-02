@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<!--
+  Licensed to the Technische Universität Darmstadt under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The Technische Universität Darmstadt 
+  licenses this file to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.
+   
+  http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<html xmlns:wicket="http://wicket.apache.org">
+<wicket:head>
+  <style>
+    .thumbnail {
+      height: auto;
+      object-fit: scale-down;
+    }
+    .thumbnail-wrapper {
+      height: 125px;
+      width: 125px;
+    }
+    .template-card {
+      transition: box-shadow .3s;
+      border-color: var(--bs-secondary-color) !important;
+    }
+
+    .template-card:hover {
+      box-shadow: 0 0 10px var(--bs-tertiary-color); 
+    }
+  </style>
+</wicket:head>
+<wicket:panel>
+  <div class="modal-header">
+    <h5 class="modal-title">
+      <wicket:message key="addFeatureDialogTitle"/>
+    </h5>
+    <button wicket:id="closeDialog" type="button" class="btn-close" aria-label="Close"></button>
+  </div>
+  <div class="modal-body overflow-auto pt-0">
+    <div wicket:id="container" class="row m-0 g-3">
+      <div wicket:id="templates" class="d-flex">
+        <button wicket:id="create" class="card template-card d-flex flex-row flex-grow-1 p-0 overflow-hidden">
+          <div class="bg-light d-flex flex-grow-0 align-content-center justify-content-center thumbnail-wrapper">
+            <img wicket:id="thumbnail" type="button" class="thumbnail">
+          </div>
+          <div class="card-body w-100">
+            <h5 wicket:id="name" class="card-title text-start"/>
+            <div class="card-text text-start">
+              <wicket:container wicket:id="description"/>
+            </div>
+          </div>
+        </button>
+      </div>
+    </div>
+  </div>
+</wicket:panel>
+</html>
