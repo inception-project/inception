@@ -210,6 +210,7 @@
       <div class="flex-content flex-v-container flex-gutter">
         <form wicket:id="featureSelectionForm" class="card">
           <div class="card-header">
+            <div wicket:id="dialog"/>
             <wicket:message key="features"/>
             <a wicket:id="featuresHelpLink"/>
             <div class="actions">
@@ -222,6 +223,10 @@
               <button wicket:id="new" class="btn btn-primary">
                 <i class="fas fa-plus-square"></i>&nbsp;
                 <wicket:message key="create"/>
+              </button>
+              <button wicket:id="add" class="btn btn-primary btn-action">
+                <i class="fas fa-list"></i>&nbsp;
+                <wicket:message key="add"/>
               </button>
             </div>
           </div>

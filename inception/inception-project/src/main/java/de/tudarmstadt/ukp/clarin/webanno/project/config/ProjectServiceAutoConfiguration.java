@@ -32,6 +32,7 @@ import de.tudarmstadt.ukp.clarin.webanno.project.ProjectServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.project.exporters.ProjectPermissionsExporter;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
+import de.tudarmstadt.ukp.inception.project.api.FeatureInitializer;
 import de.tudarmstadt.ukp.inception.project.api.ProjectInitializer;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import jakarta.persistence.EntityManager;
@@ -46,10 +47,12 @@ public class ProjectServiceAutoConfiguration
     public ProjectServiceImpl projectService(UserDao aUserRepository,
             ApplicationEventPublisher aApplicationEventPublisher,
             RepositoryProperties aRepositoryProperties,
-            @Lazy @Autowired(required = false) List<ProjectInitializer> aInitializerProxy)
+            @Lazy @Autowired(required = false) List<ProjectInitializer> aProjectInitializerProxy,
+            @Lazy @Autowired(required = false) List<FeatureInitializer> aFeatureInitializerProxy)
     {
         return new ProjectServiceImpl(aUserRepository, aApplicationEventPublisher,
-                aRepositoryProperties, aInitializerProxy, entityManager);
+                aRepositoryProperties, aProjectInitializerProxy, aFeatureInitializerProxy,
+                entityManager);
     }
 
     @Bean
