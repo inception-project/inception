@@ -331,7 +331,7 @@ public class InteractiveRecommenderSidebar
 
     private List<AnnotationFeature> listFeatures()
     {
-        if (recommender == null) {
+        if (recommender == null && recommender.getObject() != null) {
             return emptyList();
         }
 
