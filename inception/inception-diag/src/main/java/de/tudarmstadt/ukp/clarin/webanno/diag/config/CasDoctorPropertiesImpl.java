@@ -29,7 +29,7 @@ public class CasDoctorPropertiesImpl
     private List<String> checks = Collections.emptyList();
     private List<String> repairs = Collections.emptyList();
     private boolean fatal = true;
-    private boolean forceReleaseBehavior = false;
+    // private boolean forceReleaseBehavior = false;
 
     @Override
     public List<String> getChecks()
@@ -64,14 +64,14 @@ public class CasDoctorPropertiesImpl
         fatal = aFatal;
     }
 
-    @Override
-    public boolean isForceReleaseBehavior()
-    {
-        return forceReleaseBehavior;
-    }
-
-    public void setForceReleaseBehavior(boolean aForceReleaseBehavior)
-    {
-        forceReleaseBehavior = aForceReleaseBehavior;
-    }
+    // @Override
+    // public boolean isForceReleaseBehavior()
+    // {
+    // return forceReleaseBehavior;
+    // }
+    //
+    // public void setForceReleaseBehavior(boolean aForceReleaseBehavior)
+    // {
+    // forceReleaseBehavior = aForceReleaseBehavior;
+    // }
 }

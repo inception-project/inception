@@ -36,7 +36,6 @@ import org.springframework.context.event.EventListener;
 
 import de.tudarmstadt.ukp.clarin.webanno.diag.config.CasDoctorProperties;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.inception.support.SettingsUtil;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 
 public class CasDoctor
@@ -50,7 +49,7 @@ public class CasDoctor
     private Set<String> activeRepairs;
 
     private boolean fatalChecks = true;
-    private boolean disableAutoScan = false;
+    // private boolean disableAutoScan = false;
 
     public CasDoctor(CasDoctorProperties aProperties, ChecksRegistry aChecksRegistry,
             RepairsRegistry aRepairsRegistry)
@@ -59,7 +58,7 @@ public class CasDoctor
         repairsRegistry = aRepairsRegistry;
 
         fatalChecks = aProperties.isFatal();
-        disableAutoScan = aProperties.isForceReleaseBehavior();
+        // disableAutoScan = aProperties.isForceReleaseBehavior();
 
         activeChecks = new LinkedHashSet<>();
         if (isNotEmpty(aProperties.getChecks())) {
@@ -78,7 +77,7 @@ public class CasDoctor
         repairsRegistry = aRepairsRegistry;
 
         fatalChecks = false;
-        disableAutoScan = true;
+        // disableAutoScan = true;
 
         activeChecks = new LinkedHashSet<>();
         activeRepairs = new LinkedHashSet<>();
@@ -216,18 +215,18 @@ public class CasDoctor
     public void onApplicationStartedEvent(ApplicationStartedEvent aEvent)
     {
         // When under development, automatically enable all checks.
-        var version = SettingsUtil.getVersionProperties().getProperty(SettingsUtil.PROP_VERSION);
-        if ("unknown".equals(version) || version.contains("-SNAPSHOT")
-                || version.contains("-beta-")) {
-            if (disableAutoScan) {
-                LOG.info("Detected SNAPSHOT/beta version - but FORCING release mode and NOT "
-                        + "auto-enabling checks");
-            }
-            else {
-                checksRegistry.getExtensions().forEach(check -> activeChecks.add(check.getId()));
-                LOG.info("Detected SNAPSHOT/beta version - automatically enabling all checks");
-            }
-        }
+        // var version = SettingsUtil.getVersionProperties().getProperty(SettingsUtil.PROP_VERSION);
+        // if ("unknown".equals(version) || version.contains("-SNAPSHOT")
+        // || version.contains("-beta-")) {
+        // if (disableAutoScan) {
+        // LOG.info("Detected SNAPSHOT/beta version - but FORCING release mode and NOT "
+        // + "auto-enabling checks");
+        // }
+        // else {
+        // checksRegistry.getExtensions().forEach(check -> activeChecks.add(check.getId()));
+        // LOG.info("Detected SNAPSHOT/beta version - automatically enabling all checks");
+        // }
+        // }
 
         for (var checkId : activeChecks) {
             LOG.info("Check activated: " + checkId);
