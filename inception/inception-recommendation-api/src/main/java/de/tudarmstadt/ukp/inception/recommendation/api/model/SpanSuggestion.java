@@ -37,7 +37,8 @@ public class SpanSuggestion
         super(builder.id, builder.generation, builder.age, builder.recommenderId,
                 builder.recommenderName, builder.layerId, builder.feature, builder.documentName,
                 builder.label, builder.uiLabel, builder.score, builder.scoreExplanation,
-                builder.autoAcceptMode, builder.hidingFlags, builder.correction);
+                builder.autoAcceptMode, builder.hidingFlags, builder.correction,
+                builder.correctionExplanation);
 
         position = builder.position;
         coveredText = builder.coveredText;
@@ -128,6 +129,8 @@ public class SpanSuggestion
                 .withUiLabel(uiLabel) //
                 .withScore(score) //
                 .withScoreExplanation(scoreExplanation) //
+                .withCorrection(correction) //
+                .withCorrectionExplanation(correctionExplanation) //
                 .withPosition(position) //
                 .withCoveredText(coveredText) //
                 .withAutoAcceptMode(getAutoAcceptMode()) //
@@ -153,6 +156,7 @@ public class SpanSuggestion
         private AutoAcceptMode autoAcceptMode = AutoAcceptMode.NEVER;
         private int hidingFlags;
         private boolean correction;
+        private String correctionExplanation;
 
         private Builder()
         {
@@ -283,6 +287,12 @@ public class SpanSuggestion
         public Builder withCorrection(boolean aCorrection)
         {
             this.correction = aCorrection;
+            return this;
+        }
+
+        public Builder withCorrectionExplanation(String aCorrectionExplanation)
+        {
+            this.correctionExplanation = aCorrectionExplanation;
             return this;
         }
 

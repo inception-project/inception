@@ -365,7 +365,11 @@ public class RecommendationEditorExtension
                 }
                 if (ao.getScoreExplanation().isPresent()) {
                     detailGroup.addDetail(
-                            new VLazyDetail("Explanation", ao.getScoreExplanation().get()));
+                            new VLazyDetail("Score explanation", ao.getScoreExplanation().get()));
+                }
+                if (ao.getCorrectionExplanation().isPresent()) {
+                    detailGroup.addDetail(new VLazyDetail("Correction explanation",
+                            ao.getCorrectionExplanation().get()));
                 }
                 if (pref.isShowAllPredictions() && !ao.isVisible()) {
                     detailGroup.addDetail(new VLazyDetail("Hidden", ao.getReasonForHiding()));

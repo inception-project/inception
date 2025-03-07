@@ -35,6 +35,8 @@ public class OpenNlpNerRecommenderTraits
     private @JsonInclude(Include.NON_DEFAULT) int trainingSetSizeLimit = 0;
     private @JsonInclude(Include.NON_DEFAULT) int predictionLimit = 0;
     private @JsonInclude(Include.NON_DEFAULT) int windowSize = 0;
+    private @JsonInclude(Include.NON_DEFAULT) double correctionThreshold = 0.95;
+    private @JsonInclude(Include.NON_DEFAULT) boolean correctionsEnabled = false;
 
     private int numThreads = 1;
 
@@ -76,6 +78,26 @@ public class OpenNlpNerRecommenderTraits
     public int getWindowSize()
     {
         return windowSize;
+    }
+
+    public double getCorrectionThreshold()
+    {
+        return correctionThreshold;
+    }
+
+    public void setCorrectionThreshold(double aCorrectionThreshold)
+    {
+        correctionThreshold = aCorrectionThreshold;
+    }
+
+    public boolean isCorrectionsEnabled()
+    {
+        return correctionsEnabled;
+    }
+
+    public void setCorrectionsEnabled(boolean aCorrectionsEnabled)
+    {
+        correctionsEnabled = aCorrectionsEnabled;
     }
 
     @JsonIgnore

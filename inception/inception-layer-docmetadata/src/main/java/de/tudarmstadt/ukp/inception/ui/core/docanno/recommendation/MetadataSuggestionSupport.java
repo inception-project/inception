@@ -291,6 +291,9 @@ public class MetadataSuggestionSupport
                     ctx.isMultiLabels());
             var score = predictedFS.getDoubleValue(ctx.getScoreFeature());
             var scoreExplanation = predictedFS.getStringValue(ctx.getScoreExplanationFeature());
+            var correction = predictedFS.getBooleanValue(ctx.getCorrectionFeature());
+            var correctionExplanation = predictedFS
+                    .getStringValue(ctx.getCorrectionExplanationFeature());
 
             for (var label : labels) {
                 var suggestion = MetadataSuggestion.builder() //
@@ -300,6 +303,8 @@ public class MetadataSuggestionSupport
                         .withDocument(ctx.getDocument()) //
                         .withLabel(label) //
                         .withUiLabel(label) //
+                        .withCorrection(correction) //
+                        .withCorrectionExplanation(correctionExplanation) //
                         .withScore(score) //
                         .withScoreExplanation(scoreExplanation) //
                         .withAutoAcceptMode(autoAcceptMode) //

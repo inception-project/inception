@@ -85,6 +85,7 @@ public abstract class AnnotationSuggestion
     protected final double score;
     protected final String scoreExplanation;
     protected final boolean correction;
+    protected final String correctionExplanation;
 
     private AutoAcceptMode autoAcceptMode;
     private int hidingFlags = 0;
@@ -93,7 +94,8 @@ public abstract class AnnotationSuggestion
     public AnnotationSuggestion(int aId, int aGeneration, int aAge, long aRecommenderId,
             String aRecommenderName, long aLayerId, String aFeature, String aDocumentName,
             String aLabel, String aUiLabel, double aScore, String aScoreExplanation,
-            AutoAcceptMode aAutoAcceptMode, int aHidingFlags, boolean aCorrection)
+            AutoAcceptMode aAutoAcceptMode, int aHidingFlags, boolean aCorrection,
+            String aCorrectionExplanation)
     {
         generation = aGeneration;
         age = aAge;
@@ -110,6 +112,7 @@ public abstract class AnnotationSuggestion
         autoAcceptMode = aAutoAcceptMode != null ? aAutoAcceptMode : AutoAcceptMode.NEVER;
         hidingFlags = aHidingFlags;
         correction = aCorrection;
+        correctionExplanation = aCorrectionExplanation;
     }
 
     public int getId()
@@ -157,6 +160,11 @@ public abstract class AnnotationSuggestion
     public Optional<String> getScoreExplanation()
     {
         return Optional.ofNullable(scoreExplanation);
+    }
+
+    public Optional<String> getCorrectionExplanation()
+    {
+        return Optional.ofNullable(correctionExplanation);
     }
 
     public long getRecommenderId()

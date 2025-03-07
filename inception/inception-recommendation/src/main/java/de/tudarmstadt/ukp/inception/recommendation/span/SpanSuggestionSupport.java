@@ -348,16 +348,14 @@ public class SpanSuggestionSupport
                             // Does the suggested label match the label of an existing annotation
                             // at the same position then we hide
                             if (label != null && label.equals(suggestion.getLabel()) && colocated) {
-                                if (!suggestion.isCorrection()) {
-                                    suggestion.hide(FLAG_OVERLAP);
-                                    hiddenForOverlap.add(suggestion);
-                                }
+                                suggestion.hide(FLAG_OVERLAP);
+                                hiddenForOverlap.add(suggestion);
                                 continue;
                             }
 
                             // Would accepting the suggestion create a new annotation but
                             // stacking is not enabled - then we need to hide
-                            if (!stackableSuggestions) {
+                            if (!stackableSuggestions && !suggestion.isCorrection()) {
                                 suggestion.hide(FLAG_OVERLAP);
                                 hiddenForOverlap.add(suggestion);
                                 continue;
@@ -471,6 +469,9 @@ public class SpanSuggestionSupport
             var autoAcceptMode = getAutoAcceptMode(predictedFS, ctx.getModeFeature());
             var labels = getPredictedLabels(predictedFS, ctx.getLabelFeature(),
                     ctx.isMultiLabels());
+            var correction = predictedFS.getBooleanValue(ctx.getCorrectionFeature());
+            var correctionExplanation = predictedFS
+                    .getStringValue(ctx.getCorrectionExplanationFeature());
             var score = predictedFS.getDoubleValue(ctx.getScoreFeature());
             var scoreExplanation = predictedFS.getStringValue(ctx.getScoreExplanationFeature());
             var offsets = targetOffsets.get();
@@ -486,6 +487,8 @@ public class SpanSuggestionSupport
                         .withCoveredText(coveredText) //
                         .withLabel(label) //
                         .withUiLabel(label) //
+                        .withCorrection(correction) //
+                        .withCorrectionExplanation(correctionExplanation) //
                         .withScore(score) //
                         .withScoreExplanation(scoreExplanation) //
                         .withAutoAcceptMode(autoAcceptMode) //

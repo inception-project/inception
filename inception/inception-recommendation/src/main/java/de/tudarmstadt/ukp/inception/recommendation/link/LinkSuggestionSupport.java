@@ -258,6 +258,9 @@ public class LinkSuggestionSupport
             var autoAcceptMode = getAutoAcceptMode(predictedFS, ctx.getModeFeature());
             var score = predictedFS.getDoubleValue(ctx.getScoreFeature());
             var scoreExplanation = predictedFS.getStringValue(ctx.getScoreExplanationFeature());
+            var correction = predictedFS.getBooleanValue(ctx.getCorrectionFeature());
+            var correctionExplanation = predictedFS
+                    .getStringValue(ctx.getCorrectionExplanationFeature());
             var position = new LinkPosition(feature.getName(), originalSource.get(),
                     originalTarget.get());
 
@@ -269,6 +272,8 @@ public class LinkSuggestionSupport
                     .withPosition(position) //
                     .withLabel(link.role) //
                     .withUiLabel(link.role) //
+                    .withCorrection(correction) //
+                    .withCorrectionExplanation(correctionExplanation) //
                     .withScore(score) //
                     .withScoreExplanation(scoreExplanation) //
                     .withAutoAcceptMode(autoAcceptMode) //

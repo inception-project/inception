@@ -36,7 +36,8 @@ public abstract class ArcSuggestion_ImplBase<P extends ArcPosition_ImplBase<?>>
         super(builder.id, builder.generation, builder.age, builder.recommenderId,
                 builder.recommenderName, builder.layerId, builder.feature, builder.documentName,
                 builder.label, builder.uiLabel, builder.score, builder.scoreExplanation,
-                builder.autoAcceptMode, builder.hidingFlags, builder.correction);
+                builder.autoAcceptMode, builder.hidingFlags, builder.correction,
+                builder.correctionExplanation);
 
         this.position = builder.position;
     }
@@ -115,6 +116,7 @@ public abstract class ArcSuggestion_ImplBase<P extends ArcPosition_ImplBase<?>>
         protected AutoAcceptMode autoAcceptMode;
         protected int hidingFlags;
         private boolean correction;
+        protected String correctionExplanation;
 
         protected Builder()
         {
@@ -230,9 +232,15 @@ public abstract class ArcSuggestion_ImplBase<P extends ArcPosition_ImplBase<?>>
             return (T) this;
         }
 
-        public Builder withCorrection(boolean aCorrection)
+        public T withCorrection(boolean aCorrection)
         {
             this.correction = aCorrection;
+            return (T) this;
+        }
+
+        public T withCorrectionExplanation(String aCorrectionExplanation)
+        {
+            this.correctionExplanation = aCorrectionExplanation;
             return (T) this;
         }
 

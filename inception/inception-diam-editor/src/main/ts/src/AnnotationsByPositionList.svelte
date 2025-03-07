@@ -112,6 +112,7 @@
                                             mouseOutAnnotation(ev, span)}
                                     >
                                         <LabelBadge
+                                            {data}
                                             annotation={span}
                                             {ajaxClient}
                                         />
@@ -146,6 +147,7 @@
                                 >
                                     <div class="float-end labels">
                                         <LabelBadge
+                                            {data}
                                             annotation={relation}
                                             {ajaxClient}
                                         />

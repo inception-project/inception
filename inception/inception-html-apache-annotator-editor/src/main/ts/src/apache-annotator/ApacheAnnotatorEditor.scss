@@ -180,8 +180,12 @@ html > body {
 	}
 }
 
-.iaa-error-marker {
+.iaa-marker.-error {
   filter: drop-shadow(0 0 clamp(3px, 0.3em, 10px) var(--i7n-error-color)) brightness(var(--hover-brightness));
+}
+
+.iaa-marker-warn {
+  filter: drop-shadow(0 0 clamp(3px, 0.3em, 10px) var(--i7n-warn-color)) brightness(var(--hover-brightness));
 }
 
 .iaa-ping-marker {

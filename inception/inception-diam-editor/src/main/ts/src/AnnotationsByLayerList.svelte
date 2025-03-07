@@ -222,6 +222,7 @@
                                             <div class="flex-grow-1 my-1 mx-2 position-relative overflow-hidden"  on:click={() => scrollToSpan(ann)}>
                                                 <div class="float-end labels">
                                                     <LabelBadge
+                                                        {data}
                                                         annotation={ann}
                                                         {ajaxClient}
                                                         showText={true}
@@ -256,6 +257,7 @@
                                                     >
                                                         <div class="float-end labels">
                                                             <LabelBadge
+                                                                {data}
                                                                 annotation={relation}
                                                                 {ajaxClient}
                                                             />
@@ -277,6 +279,7 @@
                                             <div class="flex-grow-1 my-1 mx-0 position-relative overflow-hidden">
                                                 <div class="me-2">
                                                     <LabelBadge
+                                                        {data}
                                                         annotation={ann}
                                                         {ajaxClient}
                                                         showText={true}

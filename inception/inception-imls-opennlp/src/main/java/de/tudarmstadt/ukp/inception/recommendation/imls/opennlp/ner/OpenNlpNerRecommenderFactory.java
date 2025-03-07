@@ -28,10 +28,13 @@ import static java.util.Arrays.asList;
 import static org.apache.uima.cas.CAS.TYPE_NAME_BOOLEAN;
 import static org.apache.uima.cas.CAS.TYPE_NAME_STRING;
 
+import org.apache.wicket.model.IModel;
+
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.AbstractTraitsEditor;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactoryImplBase;
 
@@ -85,6 +88,12 @@ public class OpenNlpNerRecommenderFactory
 
         return asList(TYPE_NAME_STRING, TYPE_NAME_BOOLEAN).contains(aFeature.getType())
                 || aFeature.isVirtualFeature();
+    }
+
+    @Override
+    public AbstractTraitsEditor createTraitsEditor(String aId, IModel<Recommender> aModel)
+    {
+        return new OpenNlpNerRecommenderTraitsEditor(aId, aModel);
     }
 
     @Override
