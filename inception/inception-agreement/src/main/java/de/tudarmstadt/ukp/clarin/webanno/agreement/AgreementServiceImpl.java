@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.ui.agreement.page;
+package de.tudarmstadt.ukp.clarin.webanno.agreement;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.AUTO_CAS_UPGRADE;
@@ -54,10 +54,12 @@ import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.io.output.CloseShieldOutputStream;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.fit.util.FSUtil;
+import org.apache.uima.jcas.tcas.Annotation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.tudarmstadt.ukp.clarin.webanno.agreement.AgreementUtils;
+import com.fasterxml.jackson.core.JsonFactory;
+
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.DefaultAgreementTraits;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.FullCodingAgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasStorageSession;
@@ -69,7 +71,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil;
@@ -124,28 +126,74 @@ public class AgreementServiceImpl
     }
 
     @Override
-    public void exportDiff(OutputStream aOut, AnnotationLayer aLayer, DefaultAgreementTraits traits,
-            User aCurrentUser, List<SourceDocument> aDocuments, List<String> aAnnotators)
+    public void exportSpanLayerDataAsJson(OutputStream aOut, AnnotationLayer aLayer,
+            AnnotationFeature aFeature, DefaultAgreementTraits aTraits,
+            List<SourceDocument> aDocuments, List<String> aAnnotators)
+        throws IOException
     {
-        exportDiff(aOut, aLayer, null, traits, aCurrentUser, aDocuments, aAnnotators);
+        if (!SpanLayerSupport.TYPE.equals(aLayer.getType())) {
+            throw new IllegalArgumentException(
+                    "Only span layers supported but got [" + aLayer.getType() + "]");
+        }
+
+        var project = aLayer.getProject();
+
+        var allAnnDocs = getDocumentsToEvaluate(project, aDocuments, aTraits);
+        var docs = allAnnDocs.keySet().stream() //
+                .sorted(comparing(SourceDocument::getName)) //
+                .toList();
+
+        var featureName = aFeature != null ? aFeature.getName() : null;
+
+        var jsonFactory = new JsonFactory();
+
+        var adapter = schemaService.getAdapter(aLayer);
+
+        try (var jg = jsonFactory.createGenerator(CloseShieldOutputStream.wrap(aOut))) {
+            jg.useDefaultPrettyPrinter();
+
+            jg.writeStartArray();
+
+            for (var doc : docs) {
+                var annDocs = allAnnDocs.get(doc);
+                try (var session = CasStorageSession.openNested()) {
+                    var casMap = loadCasForAnnotators(doc, annDocs, aAnnotators);
+
+                    for (var mapEntry : casMap.entrySet()) {
+                        var dataOwner = mapEntry.getKey();
+                        var cas = mapEntry.getValue();
+
+                        for (var ann : cas.<Annotation> select(adapter.getAnnotationTypeName())) {
+                            jg.writeStartObject();
+                            jg.writeStringField("doc", doc.getName());
+                            jg.writeStringField("user", dataOwner);
+                            jg.writeNumberField("begin", ann.getBegin());
+                            jg.writeNumberField("end", ann.getEnd());
+                            if (featureName != null) {
+                                var label = adapter.renderFeatureValue(ann, featureName);
+                                jg.writeStringField("label", label);
+                            }
+                            jg.writeEndObject();
+                        }
+
+                        jg.flush();
+                    }
+                }
+            }
+
+            jg.writeEndArray();
+            jg.flush();
+        }
     }
 
     @Override
-    public void exportDiff(OutputStream aOut, AnnotationFeature aFeature,
-            DefaultAgreementTraits traits, User aCurrentUser, List<SourceDocument> aDocuments,
-            List<String> aAnnotators)
-    {
-        exportDiff(aOut, aFeature.getLayer(), aFeature, traits, aCurrentUser, aDocuments,
-                aAnnotators);
-    }
-
     public void exportDiff(OutputStream aOut, AnnotationLayer aLayer, AnnotationFeature aFeature,
-            DefaultAgreementTraits traits, User aCurrentUser, List<SourceDocument> aDocuments,
+            DefaultAgreementTraits aTraits, List<SourceDocument> aDocuments,
             List<String> aAnnotators)
     {
         var project = aLayer.getProject();
-        var allAnnDocs = getDocumentsToEvaluate(project, aDocuments, traits);
 
+        var allAnnDocs = getDocumentsToEvaluate(project, aDocuments, aTraits);
         var docs = allAnnDocs.keySet().stream() //
                 .sorted(comparing(SourceDocument::getName)) //
                 .toList();
@@ -158,21 +206,18 @@ public class AgreementServiceImpl
                         .collect(toCollection(LinkedHashSet::new))
                 : emptySet();
 
+        var featureName = aFeature != null ? aFeature.getName() : null;
+
         var countWritten = 0;
         for (var doc : docs) {
+            var annDocs = allAnnDocs.get(doc);
             try (var session = CasStorageSession.openNested()) {
-                var casMap = new LinkedHashMap<String, CAS>();
-                for (var annotator : aAnnotators) {
-                    var maybeCas = loadCas(doc, annotator, allAnnDocs);
-                    var cas = maybeCas.isPresent() ? maybeCas.get() : loadInitialCas(doc);
-                    casMap.put(annotator, cas);
-                }
+                var casMap = loadCasForAnnotators(doc, annDocs, aAnnotators);
 
                 var diff = doDiff(adapters, casMap);
 
-                var featureName = aFeature != null ? aFeature.getName() : null;
                 var result = AgreementUtils.makeCodingStudy(diff, aLayer.getName(), featureName,
-                        tagset, traits.isExcludeIncomplete(), casMap);
+                        tagset, aTraits.isExcludeIncomplete(), casMap);
 
                 try (var printer = new CSVPrinter(
                         new OutputStreamWriter(CloseShieldOutputStream.wrap(aOut), UTF_8),
@@ -190,26 +235,23 @@ public class AgreementServiceImpl
         }
     }
 
-    @Override
-    public void exportPairwiseDiff(OutputStream aOut, AnnotationLayer aLayer, String aMeasure,
-            DefaultAgreementTraits aTraits, User aCurrentUser, List<SourceDocument> aDocuments,
-            String aAnnotator1, String aAnnotator2)
+    private LinkedHashMap<String, CAS> loadCasForAnnotators(SourceDocument aDocument,
+            List<AnnotationDocument> aAnnDocs, List<String> aAnnotators)
+        throws IOException
     {
-        exportDiff(aOut, aLayer, null, aTraits, aCurrentUser, aDocuments,
-                asList(aAnnotator1, aAnnotator2));
-    }
+        var casMap = new LinkedHashMap<String, CAS>();
 
-    @Override
-    public void exportPairwiseDiff(OutputStream aOut, AnnotationFeature aFeature, String aMeasure,
-            DefaultAgreementTraits aTraits, User aCurrentUser, List<SourceDocument> aDocuments,
-            String aAnnotator1, String aAnnotator2)
-    {
-        exportDiff(aOut, aFeature.getLayer(), aFeature, aTraits, aCurrentUser, aDocuments,
-                asList(aAnnotator1, aAnnotator2));
+        for (var annotator : aAnnotators) {
+            var maybeCas = loadCas(aDocument, annotator, aAnnDocs);
+            var cas = maybeCas.isPresent() ? maybeCas.get() : loadInitialCas(aDocument);
+            casMap.put(annotator, cas);
+        }
+
+        return casMap;
     }
 
     private Optional<CAS> loadCas(SourceDocument aDocument, String aDataOwner,
-            Map<SourceDocument, List<AnnotationDocument>> aAllAnnDocs)
+            List<AnnotationDocument> aAnnDocs)
         throws IOException
     {
         if (CURATION_USER.equals(aDataOwner)) {
@@ -220,9 +262,7 @@ public class AgreementServiceImpl
             return loadCas(aDocument, aDataOwner);
         }
 
-        var annDocs = aAllAnnDocs.get(aDocument);
-
-        if (annDocs.stream().noneMatch(annDoc -> aDataOwner.equals(annDoc.getUser()))) {
+        if (aAnnDocs.stream().noneMatch(annDoc -> aDataOwner.equals(annDoc.getUser()))) {
             return Optional.empty();
         }
 
