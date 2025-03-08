@@ -17,22 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.ui.agreement.config;
 
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
-import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.inception.ui.agreement.page.AgreementService;
-import de.tudarmstadt.ukp.inception.ui.agreement.page.AgreementServiceImpl;
 
 @Configuration
 public class AgreementUiAutoConfiguration
 {
-    @Bean
-    public AgreementService agreementService(DocumentService aDocumentService,
-            AnnotationSchemaService aSchemaService, UserDao aUserService)
-    {
-        return new AgreementServiceImpl(aDocumentService, aSchemaService, aUserService);
-    }
 }

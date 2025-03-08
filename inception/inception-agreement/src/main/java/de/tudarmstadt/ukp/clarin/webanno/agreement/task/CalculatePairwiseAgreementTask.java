@@ -100,11 +100,19 @@ public class CalculatePairwiseAgreementTask
 
                 try (var session = CasStorageSession.openNested()) {
                     for (int m = 0; m < annotators.size(); m++) {
+                        if (getMonitor().isCancelled()) {
+                            break;
+                        }
+
                         var annotator1 = annotators.get(m);
                         var maybeCas1 = LazyInitializer.<Optional<CAS>> builder()
                                 .setInitializer(() -> loadCas(doc, annotator1, allAnnDocs)).get();
 
                         for (int n = 0; n < annotators.size(); n++) {
+                            if (getMonitor().isCancelled()) {
+                                break;
+                            }
+
                             if (!(n < m)) {
                                 // Triangle matrix mirrored
                                 continue;

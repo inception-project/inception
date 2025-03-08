@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.ui.agreement.page;
+package de.tudarmstadt.ukp.clarin.webanno.agreement;
 
 import static de.tudarmstadt.ukp.clarin.webanno.agreement.AgreementUtils.makeCodingStudy;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
@@ -35,6 +35,7 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.fit.factory.CasFactory;
 import org.junit.jupiter.api.Test;
 
+import de.tudarmstadt.ukp.clarin.webanno.agreement.AgreementServiceImpl;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.inception.support.uima.AnnotationBuilder;
 

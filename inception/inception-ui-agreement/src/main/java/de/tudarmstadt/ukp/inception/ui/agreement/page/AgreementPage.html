@@ -63,9 +63,23 @@
             </div>
             <div class="card-footer flex-h-container">
               <div class="flex-content text-end">
-                <button wicket:id="export" class="btn btn-secondary">
-                  <i class="fas fa-file-download me-2"/><wicket:message key="export"/>
-                </button>
+                <div class="btn-group dropup">
+                  <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="fas fa-file-download me-2"/><wicket:message key="export"/>
+                  </button>
+                  <ul class="dropdown-menu">
+                    <li>
+                      <a wicket:id="exportJson" class="dropdown-item">
+                        <wicket:message key="exportJson"/>
+                      </a>
+                    </li>
+                    <li>
+                      <a wicket:id="exportCsvDiff" class="dropdown-item">
+                        <wicket:message key="exportCsvDiff"/>
+                      </a>
+                    </li>
+                  </ul>
+                </div>
                 <button wicket:id="calculatePairwiseAgreement" class="btn btn-primary">
                   <i class="fas fa-play me-2"/><wicket:message key="calculatePairwiseAgreement"/>
                 </button>
