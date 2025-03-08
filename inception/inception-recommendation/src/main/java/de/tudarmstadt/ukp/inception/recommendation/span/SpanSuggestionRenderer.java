@@ -32,7 +32,9 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionDocumentGroup;
 import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderProperties;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VAnnotationMarker;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VMarker;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VRange;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VSpan;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
@@ -116,8 +118,9 @@ public class SpanSuggestionRenderer
                 v.setScore(suggestion.getScore());
                 v.setHideScore(isRanker);
                 v.setActionButtons(recommenderProperties.isActionButtonsEnabled());
-
                 vdoc.add(v);
+
+                vdoc.add(new VAnnotationMarker(VMarker.WARN, v.getVid()));
             }
         }
     }

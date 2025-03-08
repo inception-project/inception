@@ -18,6 +18,8 @@
 package de.tudarmstadt.ukp.inception.recommendation.api.recommender;
 
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_AUTO_ACCEPT_MODE_SUFFIX;
+import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_CORRECTION_EXPLANATION_SUFFIX;
+import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_CORRECTION_SUFFIX;
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_IS_PREDICTION;
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_SCORE_EXPLANATION_SUFFIX;
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_SCORE_SUFFIX;
@@ -207,20 +209,31 @@ public abstract class RecommendationEngine
 
     protected Feature getScoreFeature(CAS aCas)
     {
-        String scoreFeatureName = featureName + FEATURE_NAME_SCORE_SUFFIX;
-        return getPredictedType(aCas).getFeatureByBaseName(scoreFeatureName);
+        return getPredictedType(aCas).getFeatureByBaseName(featureName + FEATURE_NAME_SCORE_SUFFIX);
     }
 
     protected Feature getScoreExplanationFeature(CAS aCas)
     {
-        String scoreExplanationFeature = featureName + FEATURE_NAME_SCORE_EXPLANATION_SUFFIX;
-        return getPredictedType(aCas).getFeatureByBaseName(scoreExplanationFeature);
+        return getPredictedType(aCas)
+                .getFeatureByBaseName(featureName + FEATURE_NAME_SCORE_EXPLANATION_SUFFIX);
+    }
+
+    protected Feature getCorrectionFeature(CAS aCas)
+    {
+        return getPredictedType(aCas)
+                .getFeatureByBaseName(featureName + FEATURE_NAME_CORRECTION_SUFFIX);
+    }
+
+    protected Feature getCorrectionExplanationFeature(CAS aCas)
+    {
+        return getPredictedType(aCas)
+                .getFeatureByBaseName(featureName + FEATURE_NAME_CORRECTION_EXPLANATION_SUFFIX);
     }
 
     protected Feature getModeFeature(CAS aCas)
     {
-        String scoreExplanationFeature = featureName + FEATURE_NAME_AUTO_ACCEPT_MODE_SUFFIX;
-        return getPredictedType(aCas).getFeatureByBaseName(scoreExplanationFeature);
+        return getPredictedType(aCas)
+                .getFeatureByBaseName(featureName + FEATURE_NAME_AUTO_ACCEPT_MODE_SUFFIX);
     }
 
     public Feature getIsPredictionFeature(CAS aCas)

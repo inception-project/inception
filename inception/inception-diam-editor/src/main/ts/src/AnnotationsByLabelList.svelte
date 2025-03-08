@@ -52,7 +52,7 @@
         const spans = data?.spans.values() || []
         groupedAnnotations = groupBy(
             [...spans, ...relations],
-            (s) => renderLabel(s)
+            (s) => renderLabel(data, s)
         )
 
         for (let [key, items] of Object.entries(groupedAnnotations)) {
@@ -233,6 +233,7 @@
                                         >
                                             <div class="float-end labels">
                                                 <LabelBadge
+                                                    {data}
                                                     annotation={ann}
                                                     {ajaxClient}
                                                     showText={false}

@@ -30,6 +30,7 @@ export const CLASS_RELATED = 'iaa-related'
 export const NO_LABEL = '◌'
 export const ERROR_LABEL = '🔴'
 export const INFO_LABEL = 'ℹ️'
+export const WARN_LABEL = '⚠️'
 
 export class ApacheAnnotatorVisualizer {
   private ajax: DiamAjax
@@ -349,19 +350,12 @@ export class ApacheAnnotatorVisualizer {
 
     if (begin === end) classList.push('iaa-zero-width')
 
-    var decorations = ''
-
     const hasError = span.comments?.find(comment => comment.type === 'error')
-    if (hasError) {
-      classList.push('iaa-error-marker')
-      decorations += ERROR_LABEL
-    }
+    if (hasError) classList.push('iaa-marker-error')
 
     const hasInfo = span.comments?.find(comment => comment.type === 'info')
-    if (hasInfo) {
-      classList.push('iaa-info-marker')
-      decorations += INFO_LABEL
-    }
+    if (hasInfo) classList.push('iaa-marker-info')
+    
 
     const styleList = [
       `--iaa-color: ${bgToFgColor(span.color || '#000000')}`,
@@ -369,7 +363,11 @@ export class ApacheAnnotatorVisualizer {
       `--iaa-border-color: ${span.color || '#000000'}`
     ]
 
-    decorations += ' '
+    var decorations = ''
+    if (classList.includes('iaa-marker-info')) decorations += INFO_LABEL
+    if (classList.includes('iaa-marker-warn')) decorations += WARN_LABEL
+    if (classList.includes('iaa-marker-error')) decorations += ERROR_LABEL
+    if (decorations) decorations += ' '
 
     const attributes = {
       'data-iaa-id': `${span.vid}`,

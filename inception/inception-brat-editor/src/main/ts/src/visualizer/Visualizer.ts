@@ -50,7 +50,7 @@ import { Row } from './Row'
 import { RectBox } from './RectBox'
 import { AttributeType, ValType } from './AttributeType'
 import { CollectionLoadedResponse } from './CollectionLoadedResponse'
-import { RelationTypeDto, EntityTypeDto, EntityDto, CommentDto, SourceData, TriggerDto, AttributeDto, EquivDto, ColorCode, MarkerType, MarkerDto, RelationDto, EDITED, FOCUS, MATCH_FOCUS, MATCH, RoleDto, VID } from '../protocol/Protocol'
+import { RelationTypeDto, EntityTypeDto, EntityDto, CommentDto, SourceData, TriggerDto, AttributeDto, EquivDto, ColorCode, MarkerType, MarkerDto, RelationDto, EDITED, FOCUS, MATCH_FOCUS, MATCH, RoleDto, VID, WARN } from '../protocol/Protocol'
 import type { Dispatcher, Message } from '../dispatcher/Dispatcher'
 import * as jsonpatch from 'fast-json-patch'
 import { Operation } from 'fast-json-patch'
@@ -349,50 +349,60 @@ export class Visualizer {
   }
 
   setMarked (docData: DocumentData, sourceData: SourceData, markedType: MarkerType) {
-    if (!this.args[markedType]) {
+    if (!this.data || !this.args[markedType]) {
       return
     }
 
     for (const marker of this.args[markedType]) {
+      // Sentence marker
       if (marker[0] === 'sent') {
         docData.markedSent[marker[1]] = true
         continue
       }
 
-      if (marker[0] === 'equiv') { // [equiv, Equiv, T1]
-        for (const equiv of sourceData.equivs) {
-          if (equiv[1] === marker[1]) {
-            let len = equiv.length
-            for (let i = 2; i < len; i++) {
-              if (equiv[i] === marker[2]) {
-                // found it
-                len -= 3
-                for (let n = 1; n <= len; n++) {
-                  const arc = docData.eventDescs[equiv[0] + '*' + n].equivArc
-                  arc.marked = markedType
-                }
-                continue // next equiv
-              }
-            }
-          }
-        }
+      // INCEpTION does not use equivs, so we should not need this
+      // if (marker[0] === 'equiv') { // [equiv, Equiv, T1]
+      //   for (const equiv of sourceData.equivs) {
+      //     if (equiv[1] === marker[1]) {
+      //       let len = equiv.length
+      //       for (let i = 2; i < len; i++) {
+      //         if (equiv[i] === marker[2]) {
+      //           // found it
+      //           len -= 3
+      //           for (let n = 1; n <= len; n++) {
+      //             const arc = docData.eventDescs[equiv[0] + '*' + n].equivArc
+      //             arc.marked = markedType
+      //           }
+      //           continue // next equiv
+      //         }
+      //       }
+      //     }
+      //   }
 
+      //   continue
+      // }
+
+      if (!Array.isArray(marker)) {
         continue
       }
 
+      // Text marker
       if (marker.length === 2) {
-        this.markedText.push([parseInt(marker[0], 10), parseInt(marker[1], 10), markedType])
+        const begin = parseInt(marker[0], 10)
+        const end = parseInt(marker[1], 10)
+        this.markedText.push([begin, end, markedType])
         continue
       }
 
+      // Annotation marker (span or arc)
       const span = this.data.spans[marker[0]]
       if (span) {
         if (marker.length === 3) { // arc
-          $.each(span.outgoing, (arcNo, arc) => {
+          for (const arc of span.outgoing) {
             if (arc.target === marker[2] && arc.type === marker[1]) {
-              arc.marked = markedType
+              arc.marked = markedType;
             }
-          })
+          }
         } else { // span
           span.marked = markedType
         }
@@ -438,9 +448,10 @@ export class Visualizer {
   applyHighlighting (docData: DocumentData, sourceData: SourceData) {
     this.markedText = []
     this.setMarked(docData, sourceData, EDITED) // set by editing process
-    this.setMarked(docData, sourceData, FOCUS) // set by URL
     this.setMarked(docData, sourceData, MATCH_FOCUS) // set by search process, focused match
     this.setMarked(docData, sourceData, MATCH) // set by search process, other (non-focused) match
+    this.setMarked(docData, sourceData, WARN) // set by editing process
+    this.setMarked(docData, sourceData, FOCUS) // set by URL
   }
 
   /**
@@ -1289,7 +1300,6 @@ export class Visualizer {
       textMeasureGroup.addClass(cssClass)
     }
 
-    // changed from $.each because of #264 ('length' can appear)
     for (const text in textsHash) {
       if (Object.prototype.hasOwnProperty.call(textsHash, text)) {
         this.svg.plain(text).addTo(textMeasureGroup)
@@ -1360,8 +1370,9 @@ export class Visualizer {
       // Adjust for the browser collapsing whitespace
       let lastCharSpace = true
       let collapsedSpaces = 0
+      const tc = text.textContent || "";
       for (let i = 0; i < fragment[2]; i++) {
-        const c = text.textContent[i]
+        const c = tc[i]
         if (/\s/.test(c)) {
           if (lastCharSpace) {
             collapsedSpaces++
@@ -1637,8 +1648,8 @@ export class Visualizer {
     let width = 5
     let height = 5
     let color = 'black'
-    if ($.isNumeric(parsedSpec[1]) && parsedSpec[2]) {
-      if ($.isNumeric(parsedSpec[2]) && parsedSpec[3]) {
+    if (!isNaN(parseFloat(parsedSpec[1])) && parsedSpec[2]) {
+      if (!isNaN(parseFloat(parsedSpec[2])) && parsedSpec[3]) {
         // 3 args, 2 numeric: assume width, height, color
         width = parseFloat(parsedSpec[1])
         height = parseFloat(parsedSpec[2])
@@ -1734,7 +1745,8 @@ export class Visualizer {
       const thisCurlyHeight = span.drawCurly ? Configuration.visual.curlyHeight : 0
       const height = docData.sizes.fragments.height + thisCurlyHeight + Configuration.visual.boxSpacing +
         2 * Configuration.visual.margin.y - 3
-      $.each(floors, (floorNo, floor) => {
+      
+      for (const floor in floors) {
         let floorAvailable = true
         for (let i = i1; i <= i2; i++) {
           if (!(reservations[i] && reservations[i][floor])) {
@@ -1760,7 +1772,7 @@ export class Visualizer {
         } else {
           carpet = null
         }
-      })
+      }
 
       const reslen = reservations.length
       const makeNewFloorIfNeeded = function (floor: number) {
@@ -1919,7 +1931,7 @@ export class Visualizer {
         hh -= 2 * this.boxTextMargin.y
         xx += this.boxTextMargin.x
         ww -= 2 * this.boxTextMargin.x
-        let rectClass = 'span_' + (span.cue || span.type) + ' span_default' // TODO XXX first part unneeded I think; remove
+        let rectClass = 'span_default'
 
         // attach e.g. "False_positive" into the type
         if (span.comment && span.comment.type) {
@@ -2196,18 +2208,18 @@ export class Visualizer {
       }
 
       // open text highlights
-      $.each(chunk.markedTextStart, (textNo, textDesc) => {
-        textDesc[3] += currentX + (this.rtlmode ? -boxX : boxX)
-        openTextHighlights[textDesc[0]] = textDesc
-      })
+      for (const textDesc of chunk.markedTextStart) {
+        textDesc[3] += currentX + (this.rtlmode ? -boxX : boxX);
+        openTextHighlights[textDesc[0]] = textDesc;
+      }
 
       // close text highlights
-      $.each(chunk.markedTextEnd, (textNo, textDesc) => {
-        textDesc[3] += currentX + (this.rtlmode ? -boxX : boxX)
-        const startDesc = openTextHighlights[textDesc[0]]
-        delete openTextHighlights[textDesc[0]]
-        textMarkedRows.push([row, startDesc[3], textDesc[3], startDesc[4]])
-      })
+      for (const textDesc of chunk.markedTextEnd) {
+        textDesc[3] += currentX + (this.rtlmode ? -boxX : boxX);
+        const startDesc = openTextHighlights[textDesc[0]];
+        delete openTextHighlights[textDesc[0]];
+        textMarkedRows.push([row, startDesc[3], textDesc[3], startDesc[4]]);
+      }
 
       // XXX check this - is it used? should it be lastRow?
       if (hasAnnotations) {
@@ -3975,23 +3987,24 @@ export class Visualizer {
     }
   }
 
-  loadAttributeTypes (responseTypes) {
-    const processed = {}
-    $.each(responseTypes, (aTypeNo, aType) => {
-      processed[aType.type] = aType
-      // count the values; if only one, it's a boolean attribute
-      const values: string[] = []
-      for (const i in aType.values) {
-        if (Object.prototype.hasOwnProperty.call(aType.values, i)) {
-          values.push(i)
-        }
-      }
-      if (values.length === 1) {
-        aType.bool = values[0]
-      }
-    })
-    return processed
-  }
+  // INCEpTION does not use event attributes and entity attributes
+  //   loadAttributeTypes (responseTypes) {
+  //   const processed = {}
+  //   for (const type of responseTypes) {
+  //     processed[type.type] = type
+  //     // count the values; if only one, it's a boolean attribute
+  //     const values: string[] = []
+  //     for (const i in type.values) {
+  //       if (Object.prototype.hasOwnProperty.call(type.values, i)) {
+  //         values.push(i)
+  //       }
+  //     }
+  //     if (values.length === 1) {
+  //       type.bool = values[0]
+  //     }
+  //   }
+  //   return processed
+  // }
 
   loadRelationTypes (relationTypes: RelationTypeDto[]) {
     for (const relType of relationTypes) {

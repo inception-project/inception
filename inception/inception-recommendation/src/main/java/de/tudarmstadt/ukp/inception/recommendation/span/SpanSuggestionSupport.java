@@ -296,23 +296,19 @@ public class SpanSuggestionSupport
             var pair = oi.next();
             var suggestionOffset = pair.getKey();
             var annotationOffset = pair.getValue();
+
             // Fetch the current suggestion and annotation
             var group = suggestions.get(suggestionOffset);
             for (var annotation : annotations.get(annotationOffset)) {
-                Iterable<Object> labelObjects;
                 var featureSupport = featureSupportRegistry.findExtension(feature).get();
                 var wrappedValue = featureSupport.getFeatureValue(feature, annotation);
                 var value = featureSupport.unwrapFeatureValue(feature, annotation.getCAS(),
                         wrappedValue);
-                if (value instanceof Iterable iterableValues) {
-                    labelObjects = iterableValues;
-                }
-                else {
-                    labelObjects = asList(value);
-                }
+
+                var labelObjects = value instanceof Iterable values ? values : asList(value);
 
                 for (var labelObject : labelObjects) {
-                    var label = labelObject != null ? String.valueOf(labelObject) : null;
+                    var label = Objects.toString(labelObject, null);
 
                     for (var suggestion : group) {
                         // The suggestion would just create an annotation and not set any
@@ -359,7 +355,7 @@ public class SpanSuggestionSupport
 
                             // Would accepting the suggestion create a new annotation but
                             // stacking is not enabled - then we need to hide
-                            if (!stackableSuggestions) {
+                            if (!stackableSuggestions && !suggestion.isCorrection()) {
                                 suggestion.hide(FLAG_OVERLAP);
                                 hiddenForOverlap.add(suggestion);
                                 continue;
@@ -473,6 +469,9 @@ public class SpanSuggestionSupport
             var autoAcceptMode = getAutoAcceptMode(predictedFS, ctx.getModeFeature());
             var labels = getPredictedLabels(predictedFS, ctx.getLabelFeature(),
                     ctx.isMultiLabels());
+            var correction = predictedFS.getBooleanValue(ctx.getCorrectionFeature());
+            var correctionExplanation = predictedFS
+                    .getStringValue(ctx.getCorrectionExplanationFeature());
             var score = predictedFS.getDoubleValue(ctx.getScoreFeature());
             var scoreExplanation = predictedFS.getStringValue(ctx.getScoreExplanationFeature());
             var offsets = targetOffsets.get();
@@ -488,6 +487,8 @@ public class SpanSuggestionSupport
                         .withCoveredText(coveredText) //
                         .withLabel(label) //
                         .withUiLabel(label) //
+                        .withCorrection(correction) //
+                        .withCorrectionExplanation(correctionExplanation) //
                         .withScore(score) //
                         .withScoreExplanation(scoreExplanation) //
                         .withAutoAcceptMode(autoAcceptMode) //

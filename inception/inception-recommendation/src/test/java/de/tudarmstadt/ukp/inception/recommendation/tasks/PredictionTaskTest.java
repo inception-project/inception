@@ -18,6 +18,8 @@
 package de.tudarmstadt.ukp.inception.recommendation.tasks;
 
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_AUTO_ACCEPT_MODE_SUFFIX;
+import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_CORRECTION_EXPLANATION_SUFFIX;
+import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_CORRECTION_SUFFIX;
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_IS_PREDICTION;
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_SCORE_EXPLANATION_SUFFIX;
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_SCORE_SUFFIX;
@@ -130,6 +132,8 @@ class PredictionTaskTest
                         "value", //
                         feature.getName() + FEATURE_NAME_SCORE_SUFFIX, //
                         feature.getName() + FEATURE_NAME_SCORE_EXPLANATION_SUFFIX, //
+                        feature.getName() + FEATURE_NAME_CORRECTION_SUFFIX, //
+                        feature.getName() + FEATURE_NAME_CORRECTION_EXPLANATION_SUFFIX, //
                         feature.getName() + FEATURE_NAME_AUTO_ACCEPT_MODE_SUFFIX, //
                         "identifier", //
                         FEATURE_NAME_IS_PREDICTION);

@@ -16,10 +16,11 @@
      * See the License for the specific language governing permissions and
      * limitations under the License.
      */
-    import { Annotation, DiamAjax } from "@inception-project/inception-js-api";
+    import { AnnotatedText, Annotation, DiamAjax } from "@inception-project/inception-js-api";
     import { bgToFgColor } from "@inception-project/inception-js-api/src/util/Coloring";
-    import { renderLabel } from "./Utils";
+    import { renderDecorations, renderLabel } from "./Utils";
 
+    export let data: AnnotatedText
     export let annotation: Annotation;
     export let ajaxClient: DiamAjax;
     export let showText: boolean = true;
@@ -60,6 +61,7 @@
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 {#if annotation.vid.toString().startsWith("rec:")}
+    {@const decorations = renderDecorations(data, annotation)}
     <div class="btn-group mb-1 ms-0 btn-group-recommendation bg-body" role="group">
         <button
             type="button"
@@ -68,8 +70,11 @@
             title="Accept"
         >
             <i class="far fa-check-circle" />
+            {#if decorations}
+                <span  class="me-1">{decorations}</span>
+            {/if}
             {#if showText}
-                <span class="label">{renderLabel(annotation)}</span>
+                <span class="label">{renderLabel(data, annotation)}</span>
             {/if}
             <!-- Negative scores used only for sorting/ranking but not shown -->
             {#if annotation.score && !annotation.hideScore}
@@ -88,6 +93,7 @@
         </button>
     </div>
 {:else if annotation.vid.toString().startsWith("cur:")}
+    {@const decorations = renderDecorations(data, annotation)}
     <button
         type="button"
         class="btn-merge btn btn-colored btn-sm pt-0 mb-1 px-1 border-dark mb-1"
@@ -96,8 +102,11 @@
         title="Merge"
     >
         <i class="fas fa-clipboard-check" />
+        {#if decorations}
+            <span  class="me-1">{decorations}</span>
+        {/if}
         {#if showText}
-            <span class="label">{renderLabel(annotation)}</span>
+            <span class="label">{renderLabel(data, annotation)}</span>
         {/if}
         <!-- Negative scores used only for sorting/ranking but not shown -->
         {#if annotation.score && !annotation.hideScore}
@@ -107,6 +116,7 @@
         {/if}
     </button>
 {:else}
+    {@const decorations = renderDecorations(data, annotation)}
     <div class="input-group mb-1 ms-1 bg-body flex-nowrap text-break" role="group">
         {#if hasError || hasInfo}
             <span class="input-group-text py-0 px-1">
@@ -122,8 +132,11 @@
             on:contextmenu={handleContextMenu}
             title="Select"
         >
+            {#if decorations}
+                <span  class="me-1">{decorations}</span>
+            {/if}
             {#if showText}
-                {renderLabel(annotation)}
+                {renderLabel(data, annotation)}
             {:else}
                 <i class="fas fa-crosshairs" />
             {/if}
