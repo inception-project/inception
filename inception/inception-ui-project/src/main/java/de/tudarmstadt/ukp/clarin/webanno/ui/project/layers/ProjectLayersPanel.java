@@ -31,6 +31,7 @@ import static org.apache.commons.collections4.CollectionUtils.isEmpty;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -108,7 +109,8 @@ import jakarta.persistence.NoResultException;
 public class ProjectLayersPanel
     extends ProjectSettingsPanelBase
 {
-    static final Logger LOG = LoggerFactory.getLogger(ProjectLayersPanel.class);
+    static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
     private static final long serialVersionUID = -7870526462864489252L;
 
     public static final String MID_FEATURE_SELECTION_FORM = "featureSelectionForm";
