@@ -20,9 +20,8 @@ package de.tudarmstadt.ukp.inception.support.io;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
+import java.lang.invoke.MethodHandles;
 import java.net.URL;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import org.apache.commons.io.FileUtils;
@@ -36,9 +35,9 @@ import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 
 public class FileUploadDownloadHelper
 {
-    private static final String INCEPTION_TMP_FILE_PREFIX = "inception_file";
+    public static final String INCEPTION_TMP_FILE_PREFIX = "inception_file";
 
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private final IFileCleaner fileTracker;
 
@@ -63,11 +62,11 @@ public class FileUploadDownloadHelper
     public File writeFileUploadToTemporaryFile(FileUpload fileUpload, Object marker)
         throws IOException
     {
-        String fileName = fileUpload.getClientFileName();
-        File tmpFile = File.createTempFile(INCEPTION_TMP_FILE_PREFIX, fileName);
-        log.debug("Creating temporary file for [{}] in [{}]", fileName, tmpFile.getAbsolutePath());
+        var fileName = fileUpload.getClientFileName();
+        var tmpFile = File.createTempFile(INCEPTION_TMP_FILE_PREFIX, fileName);
+        LOG.debug("Creating temporary file for [{}] in [{}]", fileName, tmpFile.getAbsolutePath());
         fileTracker.track(tmpFile, marker);
-        try (InputStream is = fileUpload.getInputStream()) {
+        try (var is = fileUpload.getInputStream()) {
             FileUtils.copyInputStreamToFile(is, tmpFile);
         }
         return tmpFile;
@@ -76,10 +75,10 @@ public class FileUploadDownloadHelper
     public File writeFileDownloadToTemporaryFile(String downloadUrl, Object marker)
         throws IOException
     {
-        Path pathName = Paths.get(downloadUrl);
-        String fileName = pathName.getFileName().toString();
-        File tmpFile = File.createTempFile(INCEPTION_TMP_FILE_PREFIX, fileName);
-        log.debug("Creating temporary file for [{}] in [{}]", fileName, tmpFile.getAbsolutePath());
+        var pathName = Paths.get(downloadUrl);
+        var fileName = pathName.getFileName().toString();
+        var tmpFile = File.createTempFile(INCEPTION_TMP_FILE_PREFIX, fileName);
+        LOG.debug("Creating temporary file for [{}] in [{}]", fileName, tmpFile.getAbsolutePath());
         fileTracker.track(tmpFile, marker);
         FileUtils.copyURLToFile(new URL(downloadUrl), tmpFile);
         return tmpFile;
@@ -88,12 +87,12 @@ public class FileUploadDownloadHelper
     public File writeClasspathResourceToTemporaryFile(String aLocation, Object marker)
         throws IOException
     {
-        String fileName = getNameFromClassPathResource(aLocation);
-        PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
-        File tmpFile = File.createTempFile(INCEPTION_TMP_FILE_PREFIX, fileName);
+        var fileName = getNameFromClassPathResource(aLocation);
+        var resolver = new PathMatchingResourcePatternResolver();
+        var tmpFile = File.createTempFile(INCEPTION_TMP_FILE_PREFIX, fileName);
         fileTracker.track(tmpFile, marker);
-        log.debug("Creating temporary file for [{}] in [{}]", fileName, tmpFile.getAbsolutePath());
-        try (InputStream is = resolver.getResource(aLocation).getInputStream();
+        LOG.debug("Creating temporary file for [{}] in [{}]", fileName, tmpFile.getAbsolutePath());
+        try (var is = resolver.getResource(aLocation).getInputStream();
                 FileOutputStream os = new FileOutputStream(tmpFile)) {
             IOUtils.copy(is, os);
         }

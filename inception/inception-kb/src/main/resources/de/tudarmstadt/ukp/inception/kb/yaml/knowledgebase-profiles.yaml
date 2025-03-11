@@ -17,6 +17,48 @@
 # PROFILES FOR REMOTE KNOWLEDGE BASES
 #
 # ##################################################################################################
+agrovoc:
+  name: AGROVOC Thesaurus
+  type: REMOTE
+  default-language: en
+  access:
+    access-url: https://agrovoc.fao.org/sparql
+    full-text-search: text:query
+  mapping:
+    class: http://www.w3.org/2004/02/skos/core#Concept
+    subclass-of: http://www.w3.org/2004/02/skos/core#broader
+    instance-of: http://www.w3.org/1999/02/22-rdf-syntax-ns#type
+    label: http://www.w3.org/2004/02/skos/core#prefLabel
+    description: http://www.w3.org/2000/01/rdf-schema#comment
+    property-type: http://www.w3.org/1999/02/22-rdf-syntax-ns#Property
+    subproperty-of: http://www.w3.org/2000/01/rdf-schema#subPropertyOf
+    property-label: http://www.w3.org/2004/02/skos/core#prefLabel
+    property-description: http://www.w3.org/2000/01/rdf-schema#comment
+    deprecation-property: http://www.w3.org/2002/07/owl#deprecated
+  additional-matching-properties:
+    - http://www.w3.org/2004/02/skos/core#altLabel
+  info:
+    description: |
+      AGROVOC is a multilingual and controlled vocabulary designed to cover concepts and 
+      terminology under FAO's areas of interest. It is the largest Linked Open Data set 
+      about agriculture available for public use and its greatest impact is through providing 
+      the access and visibility of data across domains and languages.
+
+      It offers a structured collection of agricultural concepts, terms, definitions and 
+      relationships which are used to unambiguously identify resources, allowing standardized 
+      indexing processes and making searches more efficient. The thesaurus is hierarchically 
+      organized under 25 top concepts.
+
+      AGROVOC uses semantic web technologies, linking to other multilingual knowledge 
+      organization systems and building bridges between datasets. AGROVOC is edited using 
+      VocBench 3, a web-based vocabulary management tool.
+
+      For more information, please consult <http://www.fao.org/agrovoc/>.
+      
+      Source: <https://agrovoc.fao.org/browse/en/about>
+    host-institution-name: Food and Agriculture Organization (FAO) of the United Nations
+    author-name: Food and Agriculture Organization (FAO) of the United Nations
+    website-url: http://www.fao.org/agrovoc/
 
 babel_net:
   name: BabelNet
@@ -181,49 +223,6 @@ zbw-gnd:
     website-url: http://zbw.eu/stw/version/9.02/mapping/gnd/about.en.html
   root-concepts:
     - https://d-nb.info/standards/elementset/gnd#AuthorityResource
-
-agrovoc:
-  name: AGROVOC Thesaurus
-  type: REMOTE
-  default-language: en
-  access:
-    access-url: https://agrovoc.fao.org/sparql
-    full-text-search: text:query
-  mapping:
-    class: http://www.w3.org/2004/02/skos/core#Concept
-    subclass-of: http://www.w3.org/2004/02/skos/core#broader
-    instance-of: http://www.w3.org/1999/02/22-rdf-syntax-ns#type
-    label: http://www.w3.org/2004/02/skos/core#prefLabel
-    description: http://www.w3.org/2000/01/rdf-schema#comment
-    property-type: http://www.w3.org/1999/02/22-rdf-syntax-ns#Property
-    subproperty-of: http://www.w3.org/2000/01/rdf-schema#subPropertyOf
-    property-label: http://www.w3.org/2004/02/skos/core#prefLabel
-    property-description: http://www.w3.org/2000/01/rdf-schema#comment
-    deprecation-property: http://www.w3.org/2002/07/owl#deprecated
-  additional-matching-properties:
-    - http://www.w3.org/2004/02/skos/core#altLabel
-  info:
-    description: |
-      AGROVOC is a multilingual and controlled vocabulary designed to cover concepts and 
-      terminology under FAO's areas of interest. It is the largest Linked Open Data set 
-      about agriculture available for public use and its greatest impact is through providing 
-      the access and visibility of data across domains and languages.
-
-      It offers a structured collection of agricultural concepts, terms, definitions and 
-      relationships which are used to unambiguously identify resources, allowing standardized 
-      indexing processes and making searches more efficient. The thesaurus is hierarchically 
-      organized under 25 top concepts.
-
-      AGROVOC uses semantic web technologies, linking to other multilingual knowledge 
-      organization systems and building bridges between datasets. AGROVOC is edited using 
-      VocBench 3, a web-based vocabulary management tool.
-
-      For more information, please consult <http://www.fao.org/agrovoc/>.
-      
-      Source: <https://agrovoc.fao.org/browse/en/about>
-    host-institution-name: Food and Agriculture Organization (FAO) of the United Nations
-    author-name: Food and Agriculture Organization (FAO) of the United Nations
-    website-url: http://www.fao.org/agrovoc/
 
 
 # ##################################################################################################

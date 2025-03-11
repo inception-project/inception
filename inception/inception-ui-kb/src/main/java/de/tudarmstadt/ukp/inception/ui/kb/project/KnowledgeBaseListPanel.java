@@ -37,13 +37,12 @@ import org.wicketstuff.event.annotation.OnEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.KnowledgeBaseInitializer;
-import de.tudarmstadt.ukp.clarin.webanno.ui.project.layers.LayerTemplateSelectedEvent;
 import de.tudarmstadt.ukp.inception.bootstrap.BootstrapModalDialog;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
+import de.tudarmstadt.ukp.inception.kb.event.KnowledgeBaseConfigurationChangedEvent;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.project.api.ProjectInitializationRequest;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
-import de.tudarmstadt.ukp.inception.schema.api.event.LayerConfigurationChangedEvent;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior;
@@ -144,10 +143,10 @@ public class KnowledgeBaseListPanel
     }
 
     @OnEvent
-    public void onLayerTemplateSelected(LayerTemplateSelectedEvent aEvent)
+    public void onLayerTemplateSelected(KnowledgeBaseTemplateSelectedEvent aEvent)
     {
         var target = aEvent.getTarget();
-        var initializer = aEvent.getLayerInitializer();
+        var initializer = aEvent.getKnowledgeBaseInitializer();
         try {
             // target.add(initializersContainer);
             target.add(overviewList);
@@ -166,6 +165,6 @@ public class KnowledgeBaseListPanel
         }
 
         applicationEventPublisherHolder.get()
-                .publishEvent(new LayerConfigurationChangedEvent(this, getModelObject()));
+                .publishEvent(new KnowledgeBaseConfigurationChangedEvent(this, getModelObject()));
     }
 }

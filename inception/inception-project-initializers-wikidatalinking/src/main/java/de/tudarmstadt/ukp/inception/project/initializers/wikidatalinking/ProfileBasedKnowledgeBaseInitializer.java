@@ -17,12 +17,21 @@
  */
 package de.tudarmstadt.ukp.inception.project.initializers.wikidatalinking;
 
+import static de.tudarmstadt.ukp.inception.kb.RepositoryType.REMOTE;
+import static org.apache.commons.lang3.StringUtils.substringAfterLast;
+
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
+import java.net.URL;
+import java.nio.file.Paths;
 import java.util.Optional;
 
 import org.apache.wicket.request.resource.PackageResourceReference;
 import org.apache.wicket.request.resource.ResourceReference;
+import org.eclipse.rdf4j.repository.config.RepositoryImplConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.KnowledgeBaseInitializer;
@@ -30,33 +39,24 @@ import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 import de.tudarmstadt.ukp.inception.project.api.ProjectInitializationRequest;
-import de.tudarmstadt.ukp.inception.project.initializers.wikidatalinking.config.WikiDataLinkingProjectInitializersAutoConfiguration;
 
-/**
- * <p>
- * This class is exposed as a Spring Component via
- * {@link WikiDataLinkingProjectInitializersAutoConfiguration#wikiDataKnowledgeBaseInitializer}.
- * </p>
- */
-public class WikiDataKnowledgeBaseInitializer
+public class ProfileBasedKnowledgeBaseInitializer
     implements KnowledgeBaseInitializer
 {
-    private static final PackageResourceReference THUMBNAIL = new PackageResourceReference(
-            MethodHandles.lookup().lookupClass(), "WikiDataKnowledgeBaseInitializer.svg");
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
+    private static final String CLASSPATH_PREFIX = "classpath:";
+
+    private final PackageResourceReference thumbnail;
     private final KnowledgeBaseService kbService;
     private final KnowledgeBaseProfile profile;
 
-    public WikiDataKnowledgeBaseInitializer(KnowledgeBaseService aKbService)
+    public ProfileBasedKnowledgeBaseInitializer(KnowledgeBaseService aKbService,
+            KnowledgeBaseProfile aProfile, PackageResourceReference aThumbnail)
     {
         kbService = aKbService;
-
-        try {
-            profile = KnowledgeBaseProfile.readKnowledgeBaseProfiles().get("wikidata");
-        }
-        catch (IOException e) {
-            throw new IllegalStateException(e);
-        }
+        thumbnail = aThumbnail;
+        profile = aProfile;
     }
 
     @Override
@@ -74,7 +74,7 @@ public class WikiDataKnowledgeBaseInitializer
     @Override
     public Optional<ResourceReference> getThumbnail()
     {
-        return Optional.of(THUMBNAIL);
+        return Optional.of(thumbnail);
     }
 
     @Override
@@ -95,9 +95,35 @@ public class WikiDataKnowledgeBaseInitializer
         var kb = new KnowledgeBase();
         kbService.configure(kb, profile);
         kb.setProject(aRequest.getProject());
-        kb.setReadOnly(true);
+        kb.setReadOnly(profile.getType() == REMOTE);
 
-        var cfg = kbService.getRemoteConfig(profile.getAccess().getAccessUrl());
+        RepositoryImplConfig cfg;
+        if (profile.getType() == REMOTE) {
+            cfg = kbService.getRemoteConfig(profile.getAccess().getAccessUrl());
+        }
+        else {
+            cfg = kbService.getNativeConfig();
+        }
+
         kbService.registerKnowledgeBase(kb, cfg);
+
+        var accessUrl = profile.getAccess().getAccessUrl();
+        if (accessUrl == null) {
+            // Nothing to do
+        }
+        else if (accessUrl.startsWith(CLASSPATH_PREFIX)) {
+            var fileName = substringAfterLast(accessUrl, "/");
+            var resolver = new PathMatchingResourcePatternResolver();
+            try (var is = resolver.getResource(accessUrl).getInputStream()) {
+                kbService.importData(kb, fileName, is);
+            }
+        }
+        else {
+            var pathName = Paths.get(accessUrl);
+            var fileName = pathName.getFileName().toString();
+            try (var is = new URL(accessUrl).openStream()) {
+                kbService.importData(kb, fileName, is);
+            }
+        }
     }
 }
