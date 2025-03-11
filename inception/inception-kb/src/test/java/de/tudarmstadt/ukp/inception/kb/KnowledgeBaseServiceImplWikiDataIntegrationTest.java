@@ -264,17 +264,13 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest
 
     private KnowledgeBase buildKnowledgeBase(Project project, Reification reification)
     {
-        KnowledgeBase kb_wikidata_direct = new KnowledgeBase();
-        kb_wikidata_direct.setProject(project);
-        kb_wikidata_direct.setName("Wikidata (official/direct mapping)");
-        kb_wikidata_direct.setType(PROFILES.get("wikidata").getType());
-        kb_wikidata_direct.applyMapping(PROFILES.get("wikidata").getMapping());
-        kb_wikidata_direct.applyRootConcepts(PROFILES.get("wikidata"));
-        kb_wikidata_direct.setReification(reification);
-        kb_wikidata_direct.setDefaultLanguage("en");
-        kb_wikidata_direct.setMaxResults(1000);
-
-        return kb_wikidata_direct;
+        var profile = PROFILES.get("wikidata");
+        var kb = new KnowledgeBase();
+        kb.applyProfile(profile);
+        kb.setProject(project);
+        kb.setReification(reification);
+        kb.setMaxResults(1000);
+        return kb;
     }
 
     @SpringBootConfiguration

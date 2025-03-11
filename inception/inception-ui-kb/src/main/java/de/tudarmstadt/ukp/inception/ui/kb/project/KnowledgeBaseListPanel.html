@@ -22,11 +22,16 @@
 <wicket:panel>
   <div class="flex-content card">
     <div class="card-header">
+      <div wicket:id="dialog"/>
       <wicket:message key="kb.knowledgebases"/>
       <div class="actions">
         <button wicket:id="new" class="btn btn-primary">
           <i class="fas fa-plus-square"></i>
           <div class="btn-action-label"><wicket:message key="create"/></div>
+        </button>
+        <button wicket:id="add" class="btn btn-primary btn-action">
+          <i class="fas fa-list"></i>&nbsp;
+          <wicket:message key="add"/>
         </button>
       </div>
     </div>

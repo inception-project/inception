@@ -1280,12 +1280,6 @@ public class KnowledgeBaseServiceImpl
         return read(aKB, conn -> getReificationStrategy(aKB).exists(conn, aKB, mockStatement));
     }
 
-    @Override
-    public Map<String, KnowledgeBaseProfile> readKnowledgeBaseProfiles() throws IOException
-    {
-        return KnowledgeBaseProfile.readKnowledgeBaseProfiles();
-    }
-
     /**
      * Read identifier IRI and return {@link Optional} of {@link KBObject}
      * 
@@ -1659,6 +1653,14 @@ public class KnowledgeBaseServiceImpl
         try (var logCtx = withProjectLogger(project)) {
             LOG.info("Removed all knowledge bases from project {} being deleted", project);
         }
+    }
+
+    @Override
+    public void configure(KnowledgeBase aKB, KnowledgeBaseProfile aProfile)
+    {
+        aKB.setMaxResults(properties.getDefaultMaxResults());
+
+        aKB.applyProfile(aProfile);
     }
 
     private static final class QueryKey

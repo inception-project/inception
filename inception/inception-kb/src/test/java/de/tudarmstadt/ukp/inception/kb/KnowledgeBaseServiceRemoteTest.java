@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.kb;
 
+import static de.tudarmstadt.ukp.inception.kb.RepositoryType.LOCAL;
+import static de.tudarmstadt.ukp.inception.kb.RepositoryType.REMOTE;
 import static de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClientUtils.restoreSslVerification;
 import static de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClientUtils.suspendSslVerification;
 import static de.tudarmstadt.ukp.inception.kb.util.TestFixtures.assumeEndpointIsAvailable;
@@ -56,17 +58,13 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.transaction.annotation.Transactional;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryPropertiesImpl;
-import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBasePropertiesImpl;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.kb.util.TestFixtures;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
-import jakarta.persistence.EntityManager;
 
 @Tag("slow")
 @Transactional
@@ -105,27 +103,26 @@ public class KnowledgeBaseServiceRemoteTest
     public void setUp(TestConfiguration aSutConfig) throws Exception
     {
         assumeTrue(
-                aSutConfig.getKnowledgeBase().getType() != RepositoryType.REMOTE
+                aSutConfig.getKnowledgeBase().getType() != REMOTE
                         || TestFixtures.isReachable(aSutConfig.getDataUrl()),
                 "Remote repository at [" + aSutConfig.getDataUrl() + "] is not reachable");
 
-        KnowledgeBase kb = aSutConfig.getKnowledgeBase();
+        var kb = aSutConfig.getKnowledgeBase();
 
-        RepositoryProperties repoProps = new RepositoryPropertiesImpl();
+        var repoProps = new RepositoryPropertiesImpl();
         repoProps.setPath(repoPath);
-        KnowledgeBaseProperties kbProperties = new KnowledgeBasePropertiesImpl();
-        EntityManager entityManager = testEntityManager.getEntityManager();
-        TestFixtures testFixtures = new TestFixtures(testEntityManager);
+        var kbProperties = new KnowledgeBasePropertiesImpl();
+        var entityManager = testEntityManager.getEntityManager();
+        var testFixtures = new TestFixtures(testEntityManager);
         sut = new KnowledgeBaseServiceImpl(repoProps, kbProperties, entityManager);
-        String PROJECT_NAME = "Test project";
-        Project project = testFixtures.createProject(PROJECT_NAME);
+        var project = testFixtures.createProject("Test project");
         kb.setProject(project);
-        if (kb.getType() == RepositoryType.LOCAL) {
+        if (kb.getType() == LOCAL) {
             sut.registerKnowledgeBase(kb, sut.getNativeConfig());
             sut.updateKnowledgeBase(kb, sut.getKnowledgeBaseConfig(kb));
             importKnowledgeBase(aSutConfig.getKnowledgeBase(), aSutConfig.getDataUrl());
         }
-        else if (kb.getType() == RepositoryType.REMOTE) {
+        else if (kb.getType() == REMOTE) {
             assumeEndpointIsAvailable(aSutConfig.getDataUrl());
             sut.registerKnowledgeBase(kb, sut.getRemoteConfig(aSutConfig.getDataUrl()));
             sut.updateKnowledgeBase(kb, sut.getKnowledgeBaseConfig(kb));
@@ -274,8 +271,8 @@ public class KnowledgeBaseServiceRemoteTest
         // }
 
         {
-            KnowledgeBaseProfile profile = PROFILES.get("wikidata");
-            KnowledgeBase kb_wikidata_direct = new KnowledgeBase();
+            var profile = PROFILES.get("wikidata");
+            var kb_wikidata_direct = new KnowledgeBase();
             kb_wikidata_direct.setName("Wikidata (official/direct mapping)");
             kb_wikidata_direct.setType(profile.getType());
             kb_wikidata_direct.setReification(profile.getReification());
