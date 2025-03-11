@@ -15,8 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.ui.agreement.page;
+package de.tudarmstadt.ukp.clarin.webanno.agreement;
 
+import java.io.IOException;
 import java.io.OutputStream;
 import java.util.List;
 import java.util.Map;
@@ -27,24 +28,33 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
 public interface AgreementService
 {
     Map<SourceDocument, List<AnnotationDocument>> getDocumentsToEvaluate(Project aProject,
             List<SourceDocument> aDocuments, DefaultAgreementTraits aTraits);
 
-    void exportPairwiseDiff(OutputStream aOut, AnnotationFeature aFeature, String aMeasure,
-            DefaultAgreementTraits aTraits, User aCurrentUser, List<SourceDocument> aDocuments,
-            String aAnnotator1, String aAnnotator2);
+    /**
+     * 
+     * @param aOut
+     *            target stream
+     * @param aLayer
+     *            the layer to diff.
+     * @param aFeature
+     *            the feature to diff. If this is null, then the diff is only based on positions.
+     * @param aTraits
+     *            the diff settings
+     * @param aDocuments
+     *            the documents to diff
+     * @param aAnnotators
+     *            the annotators to diff
+     */
+    void exportDiff(OutputStream aOut, AnnotationLayer aLayer, AnnotationFeature aFeature,
+            DefaultAgreementTraits aTraits, List<SourceDocument> aDocuments,
+            List<String> aAnnotators);
 
-    void exportPairwiseDiff(OutputStream aOut, AnnotationLayer aLayer, String aMeasure,
-            DefaultAgreementTraits aTraits, User aCurrentUser, List<SourceDocument> aDocuments,
-            String aAnnotator1, String aAnnotator2);
-
-    void exportDiff(OutputStream aOut, AnnotationFeature aFeature, DefaultAgreementTraits aTraits,
-            User aCurrentUser, List<SourceDocument> aDocuments, List<String> aAnnotators);
-
-    void exportDiff(OutputStream aOut, AnnotationLayer aLayer, DefaultAgreementTraits aTraits,
-            User aCurrentUser, List<SourceDocument> aDocuments, List<String> aAnnotators);
+    void exportSpanLayerDataAsJson(OutputStream aOut, AnnotationLayer aLayer, AnnotationFeature aFeature,
+            DefaultAgreementTraits aTraits, List<SourceDocument> aDocuments,
+            List<String> aAnnotators)
+        throws IOException;
 }
