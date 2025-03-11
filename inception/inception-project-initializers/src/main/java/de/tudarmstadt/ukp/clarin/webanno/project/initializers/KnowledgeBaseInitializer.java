@@ -35,4 +35,29 @@ public interface KnowledgeBaseInitializer
     {
         return Optional.empty();
     }
+
+    default Optional<String> getHostInstitutionName()
+    {
+        return Optional.empty();
+    }
+
+    default Optional<String> getAuthorName()
+    {
+        return Optional.empty();
+    }
+
+    default Optional<String> getWebsiteUrl()
+    {
+        return Optional.empty();
+    }
+
+    default Optional<String> getLicenseUrl()
+    {
+        return Optional.empty();
+    }
+
+    default Optional<String> getLicenseName()
+    {
+        return Optional.empty();
+    }
 }
