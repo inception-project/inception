@@ -17,15 +17,19 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.project;
 
+import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
+
 import java.lang.invoke.MethodHandles;
 import java.util.List;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.event.Broadcast;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalDialog;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.image.Image;
+import org.apache.wicket.markup.html.link.ExternalLink;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.markup.html.panel.GenericPanel;
@@ -79,6 +83,36 @@ public class KnowledgeBaseTemplateSelectionDialogPanel
                 aItem.queue(new Image("thumbnail",
                         aItem.getModel().map(KnowledgeBaseInitializer::getThumbnail)
                                 .map($ -> $.orElse(NO_THUMBNAIL))));
+
+                var hostInstitutionName = aItem.getModel() //
+                        .map(KnowledgeBaseInitializer::getHostInstitutionName) //
+                        .map($ -> $.orElse(null));
+                aItem.queue(new Label("hostInstitutionName", hostInstitutionName)
+                        .add(visibleWhen(hostInstitutionName.map(StringUtils::isNotBlank))));
+
+                var authorName = aItem.getModel() //
+                        .map(KnowledgeBaseInitializer::getAuthorName) //
+                        .map($ -> $.orElse(null));
+                aItem.queue(new Label("authorName", authorName)
+                        .add(visibleWhen(authorName.map(StringUtils::isNotBlank))));
+
+                var websiteURL = aItem.getModel() //
+                        .map(KnowledgeBaseInitializer::getWebsiteUrl) //
+                        .map($ -> $.orElse(null));
+
+                aItem.queue(new ExternalLink("websiteUrl", websiteURL, websiteURL)
+                        .add(visibleWhen(websiteURL.map(StringUtils::isNotBlank))));
+
+                var licenseUrl = aItem.getModel() //
+                        .map(KnowledgeBaseInitializer::getLicenseUrl) //
+                        .map($ -> $.orElse(null));
+
+                var licenseName = aItem.getModel() //
+                        .map(KnowledgeBaseInitializer::getLicenseName) //
+                        .map($ -> $.orElse(licenseUrl.getObject())); //
+                aItem.queue(new ExternalLink("licenseUrl", licenseUrl, licenseName)
+                        .add(visibleWhen(licenseUrl.map(StringUtils::isNotBlank))));
+
             }
         };
         queue(initializers);

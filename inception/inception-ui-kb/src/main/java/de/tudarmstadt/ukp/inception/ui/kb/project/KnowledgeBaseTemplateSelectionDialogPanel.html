@@ -48,13 +48,45 @@
     <div wicket:id="container" class="row m-0 g-3">
       <div wicket:id="templates" class="d-flex">
         <button wicket:id="create" class="card template-card d-flex flex-row flex-grow-1 p-0 overflow-hidden">
-          <div class="bg-light d-flex flex-grow-0 align-content-center justify-content-center thumbnail-wrapper">
+          <div class="bg-light d-flex flex-grow-0 align-items-start align-content-center justify-content-center thumbnail-wrapper h-100">
             <img wicket:id="thumbnail" type="button" class="thumbnail">
           </div>
           <div class="card-body w-100">
             <h5 wicket:id="name" class="card-title text-start"/>
             <div class="card-text text-start">
               <wicket:container wicket:id="description"/>
+            </div>
+          </div>
+          <div style="min-width: 20em; width: 20em; max-width: 20em;" class="text-start">
+            <div class="form-floating" wicket:enclosure="hostInstitutionName">
+              <span wicket:id="hostInstitutionName" class="form-control-plaintext h-auto"/>
+              <label>
+                <wicket:message key="kb.wizard.steps.accessSpecific.hostInstitutionName" />
+              </label>
+            </div>
+            <div class="form-floating" wicket:enclosure="authorName">
+              <span wicket:id="authorName" class="form-control-plaintext h-auto"></span>
+              <label>
+                <wicket:message key="kb.wizard.steps.accessSpecific.authorName" />
+              </label>
+            </div>
+            <div class="form-floating" wicket:enclosure="websiteUrl">
+              <div class="form-control-plaintext h-auto">
+                <a wicket:id="websiteUrl" target="_blank"></a>
+                <i class="fas fa-external-link-alt text-secondary"></i>
+              </div>
+              <label>
+                <wicket:message key="kb.wizard.steps.accessSpecific.homepage" />
+              </label>
+            </div>
+            <div class="form-floating" wicket:enclosure="licenseUrl">
+              <div class="form-control-plaintext h-auto">
+                <a wicket:id="licenseUrl" target="_blank"></a>
+                <i class="fas fa-external-link-alt text-secondary"></i>
+              </div>
+              <label>
+                <wicket:message key="kb.wizard.steps.accessSpecific.license" />
+              </label>
             </div>
           </div>
         </button>

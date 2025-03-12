@@ -78,6 +78,36 @@ public class ProfileBasedKnowledgeBaseInitializer
     }
 
     @Override
+    public Optional<String> getAuthorName()
+    {
+        return Optional.ofNullable(profile.getInfo().getAuthorName());
+    }
+
+    @Override
+    public Optional<String> getHostInstitutionName()
+    {
+        return Optional.ofNullable(profile.getInfo().getHostInstitutionName());
+    }
+
+    @Override
+    public Optional<String> getLicenseName()
+    {
+        return Optional.ofNullable(profile.getInfo().getLicenseName());
+    }
+
+    @Override
+    public Optional<String> getLicenseUrl()
+    {
+        return Optional.ofNullable(profile.getInfo().getLicenseUrl());
+    }
+
+    @Override
+    public Optional<String> getWebsiteUrl()
+    {
+        return Optional.ofNullable(profile.getInfo().getWebsiteUrl());
+    }
+
+    @Override
     public boolean applyByDefault()
     {
         return false;
