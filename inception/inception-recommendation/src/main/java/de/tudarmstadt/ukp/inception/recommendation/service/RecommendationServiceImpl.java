@@ -458,7 +458,7 @@ public class RecommendationServiceImpl
     @Transactional
     public List<Recommender> listEnabledRecommenders(Project aProject)
     {
-        String query = String.join("\n", //
+        var query = String.join("\n", //
                 "FROM Recommender WHERE", //
                 "project = :project AND", //
                 "enabled = :enabled", //
@@ -467,21 +467,27 @@ public class RecommendationServiceImpl
         return entityManager.createQuery(query, Recommender.class) //
                 .setParameter("project", aProject) //
                 .setParameter("enabled", true) //
-                .getResultList();
+                .getResultList() //
+                .stream() //
+                .filter(rec -> getRecommenderFactory(rec).isPresent()) //
+                .toList();
     }
 
     @Override
     @Transactional
     public List<Recommender> listRecommenders(AnnotationLayer aLayer)
     {
-        String query = String.join("\n", //
+        var query = String.join("\n", //
                 "FROM Recommender WHERE ", //
                 "layer = :layer", //
                 "ORDER BY name ASC");
 
         return entityManager.createQuery(query, Recommender.class) //
                 .setParameter("layer", aLayer) //
-                .getResultList();
+                .getResultList() //
+                .stream() //
+                .filter(rec -> getRecommenderFactory(rec).isPresent()) //
+                .toList();
     }
 
     @EventListener
