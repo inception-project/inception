@@ -142,7 +142,10 @@ public class GazeteerExporterTest
         var gazeteerFileCaptor = ArgumentCaptor.forClass(Gazeteer.class);
         doNothing().when(gazeteerService).importGazeteerFile(gazeteerFileCaptor.capture(), any());
 
-        var importRequest = new ProjectImportRequest(true);
+        var importRequest = ProjectImportRequest.builder() //
+                .withCreateMissingUsers(true) //
+                .withImportPermissions(true) //
+                .build();
         var zipFile = mock(ZipFile.class);
 
         sut.importData(importRequest, targetProject, exportedProject, zipFile);

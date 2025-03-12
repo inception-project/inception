@@ -154,7 +154,11 @@ public class ProjectImportPanel
 
         List<Project> importedProjects = new ArrayList<>();
         for (var exportedProject : exportedProjects) {
-            var request = new ProjectImportRequest(createMissingUsers, importPermissions, manager);
+            var request = ProjectImportRequest.builder() //
+                    .withCreateMissingUsers(createMissingUsers) //
+                    .withImportPermissions(importPermissions) //
+                    .withManager(manager) //
+                    .build();
 
             try {
                 // Workaround for WICKET-6425

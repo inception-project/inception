@@ -128,13 +128,17 @@ class MockAeroClient
                 .with(user(username).roles(roles)));
     }
 
-    ResultActions importProject(File aExportFile) throws Exception
+    ResultActions importProject(File aExportFile, boolean aCreateMissingUsers,
+            boolean aImportPermissions)
+        throws Exception
     {
-        byte[] data = FileUtils.readFileToByteArray(aExportFile);
+        var data = FileUtils.readFileToByteArray(aExportFile);
         return mvc.perform(multipart(API_BASE + "/projects/import") //
                 .file("file", data) //
                 .with(csrf().asHeader()) //
-                .with(user(username).roles(roles)));
+                .with(user(username).roles(roles)) //
+                .param("createMissingUsers", Boolean.toString(aCreateMissingUsers)) //
+                .param("importPermissions", Boolean.toString(aImportPermissions)));
     }
 
     ResultActions createAnnotations(long aProjectId, long aDocId, String aUser, String aContent)
