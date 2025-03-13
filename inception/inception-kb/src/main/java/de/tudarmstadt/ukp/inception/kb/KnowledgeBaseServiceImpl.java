@@ -29,6 +29,7 @@ import static java.lang.Math.round;
 import static java.nio.file.Files.createDirectories;
 import static java.nio.file.Files.move;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
+import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
@@ -36,6 +37,7 @@ import static org.apache.commons.lang3.StringUtils.substringAfter;
 import static org.apache.commons.lang3.StringUtils.substringBefore;
 import static org.apache.commons.lang3.reflect.FieldUtils.readField;
 import static org.apache.commons.lang3.reflect.FieldUtils.writeField;
+import static org.eclipse.rdf4j.repository.manager.LocalRepositoryManager.REPOSITORIES_DIR;
 import static org.eclipse.rdf4j.rio.RDFFormat.RDFXML;
 import static org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.iri;
 
@@ -47,12 +49,13 @@ import java.io.OutputStream;
 import java.lang.invoke.MethodHandles;
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.commons.compress.compressors.CompressorException;
@@ -75,7 +78,7 @@ import org.eclipse.rdf4j.repository.base.RepositoryConnectionWrapper;
 import org.eclipse.rdf4j.repository.config.RepositoryConfig;
 import org.eclipse.rdf4j.repository.config.RepositoryConfigException;
 import org.eclipse.rdf4j.repository.config.RepositoryImplConfig;
-import org.eclipse.rdf4j.repository.manager.RepositoryManager;
+import org.eclipse.rdf4j.repository.manager.LocalRepositoryManager;
 import org.eclipse.rdf4j.repository.manager.RepositoryProvider;
 import org.eclipse.rdf4j.repository.sail.SailRepository;
 import org.eclipse.rdf4j.repository.sail.SailRepositoryConnection;
@@ -164,7 +167,7 @@ public class KnowledgeBaseServiceImpl
     private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private @PersistenceContext EntityManager entityManager;
-    private final RepositoryManager repoManager;
+    private final LocalRepositoryManager repoManager;
     private final File kbRepositoriesRoot;
     private final KnowledgeBaseProperties properties;
 
@@ -239,15 +242,7 @@ public class KnowledgeBaseServiceImpl
     @EventListener({ ContextRefreshedEvent.class })
     void onContextRefreshed()
     {
-        var orphanedIDs = new HashSet<String>();
-        try {
-            orphanedIDs.addAll(repoManager.getRepositoryIDs());
-        }
-        catch (Exception e) {
-            LOG.error("Unable to enumerate KB repositories. This may not be a critical issue, "
-                    + "but it means that I cannot check if there are orphaned repositories. I "
-                    + "will continue loading the application. Please try to fix the problem.", e);
-        }
+        var orphanedIDs = listRepositoryIdsSafely();
 
         // We loop over all the local repositories and ensure that they have the latest
         // configuration. One effect of this is that the directory where the full text indexes
@@ -268,7 +263,7 @@ public class KnowledgeBaseServiceImpl
                     orphanedIDs.stream().sorted().collect(toList()));
 
             if (properties.isRemoveOrphansOnStart()) {
-                for (String id : orphanedIDs) {
+                for (var id : orphanedIDs) {
                     repoManager.removeRepository(id);
                     LOG.info("Deleted orphaned KB repository: {}", id);
                 }
@@ -276,6 +271,42 @@ public class KnowledgeBaseServiceImpl
         }
 
         repoManager.refresh();
+    }
+
+    private Set<String> listRepositoryIdsSafely()
+    {
+        try {
+            var repositoriesDir = new File(kbRepositoriesRoot, REPOSITORIES_DIR);
+            var dirs = repositoriesDir.list((File repositories, String name) -> {
+                var dataDir = new File(repositories, name);
+                return dataDir.isDirectory() && new File(dataDir, "config.ttl").exists();
+            });
+
+            if (dirs == null || dirs.length == 0) {
+                return emptySet();
+            }
+
+            var ids = new LinkedHashSet<String>();
+            for (var dir : dirs) {
+                try {
+                    var repInfo = repoManager.getRepositoryInfo(dir);
+                    ids.add(repInfo.getId());
+                }
+                catch (Exception e) {
+                    LOG.error("Unable to load knowledge base at [{}]. Please remove this folder to "
+                            + "allow the application to work properly. Copy it to a safe location first if you "
+                            + "believe it may still contain useful data.", dir, e);
+                }
+            }
+
+            return ids;
+        }
+        catch (Exception e) {
+            LOG.error("Unable to enumerate KB repositories. This may not be a critical issue, "
+                    + "but it means that I cannot check if there are orphaned repositories. I "
+                    + "will continue loading the application. Please try to fix the problem.", e);
+            return emptySet();
+        }
     }
 
     @Override
