@@ -90,7 +90,10 @@ public class DocumentRepositoryExporterTest
         var captor = ArgumentCaptor.forClass(DocumentRepository.class);
         doNothing().when(externalSearchService).createOrUpdateDocumentRepository(captor.capture());
 
-        var importRequest = new ProjectImportRequest(true);
+        var importRequest = ProjectImportRequest.builder() //
+                .withCreateMissingUsers(true) //
+                .withImportPermissions(true) //
+                .build();
         var zipFile = mock(ZipFile.class);
         sut.importData(importRequest, project, exportedProject, zipFile);
 

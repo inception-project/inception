@@ -43,7 +43,6 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -162,6 +161,7 @@ public class AeroRemoteApiController
     private static final String PARAM_ANNOTATOR_ID = "userId";
     private static final String PARAM_DOCUMENT_ID = "documentId";
     private static final String PARAM_CREATE_MISSING_USERS = "createMissingUsers";
+    private static final String PARAM_IMPORT_PERMISSIONS = "importPermissions";
     private static final String PARAM_ROLES = "roles";
 
     private static final String VAL_ORIGINAL = "ORIGINAL";
@@ -400,20 +400,54 @@ public class AeroRemoteApiController
             produces = APPLICATION_JSON_VALUE)
     public ResponseEntity<RResponse<RProject>> projectImport(
             @RequestParam(name = PARAM_CREATE_MISSING_USERS, defaultValue = "false") boolean aCreateMissingUsers, //
+            @RequestParam(name = PARAM_IMPORT_PERMISSIONS, defaultValue = "false") boolean aImportPermissions, //
             @RequestPart(PARAM_FILE) MultipartFile aFile)
         throws Exception
     {
         // Get current user - this will throw an exception if the current user does not exit
-        User user = getCurrentUser();
+        var user = getCurrentUser();
+        var currentUserIsAdministrator = userRepository.isAdministrator(user);
+        var currentUserIsProjectCreator = userRepository.isProjectCreator(user);
 
         // Check for the access
         assertPermission("User [" + user.getUsername() + "] is not allowed to import projects",
-                userRepository.isAdministrator(user));
+                currentUserIsAdministrator || userRepository.isProjectCreator(user));
+
+        if (!currentUserIsAdministrator) {
+            if (aCreateMissingUsers) {
+                assertPermission(
+                        "User [" + user.getUsername() + "] is not allowed to create missing users",
+                        false);
+            }
+            if (aImportPermissions) {
+                assertPermission(
+                        "User [" + user.getUsername() + "] is not allowed to import permissions",
+                        false);
+            }
+        }
+
+        // If the current user is an administrator and importing of permissions is *DISABLED*, we
+        // configure the current user as a project manager. But if importing of permissions is
+        // *ENABLED*, we do not set the admin up as a project manager because we would assume that
+        // the admin wants to restore a project (maybe one exported from another instance) and in
+        // that case we want to maintain the permissions the project originally had without adding
+        // the admin as a manager.
+        User manager = null;
+        if (currentUserIsAdministrator) {
+            if (!aImportPermissions) {
+                manager = user;
+            }
+        }
+        // If the current user is NOT an admin but a project creator then we assume that the user is
+        // importing the project for own use, so we add the user as a project manager.
+        else if (currentUserIsProjectCreator) {
+            manager = user;
+        }
 
         Project importedProject;
-        File tempFile = File.createTempFile("inception-project-import", null);
-        try (InputStream is = new BufferedInputStream(aFile.getInputStream());
-                OutputStream os = new FileOutputStream(tempFile);) {
+        var tempFile = File.createTempFile("inception-project-import", null);
+        try (var is = new BufferedInputStream(aFile.getInputStream());
+                var os = new FileOutputStream(tempFile);) {
             if (!ZipUtils.isZipStream(is)) {
                 throw new UnsupportedFormatException("Invalid ZIP file");
             }
@@ -425,8 +459,12 @@ public class AeroRemoteApiController
                         "Uploaded file is not an INCEpTION/WebAnno project archive");
             }
 
-            ProjectImportRequest request = new ProjectImportRequest(aCreateMissingUsers);
-            importedProject = exportService.importProject(request, new ZipFile(tempFile));
+            var importRequest = ProjectImportRequest.builder() //
+                    .withCreateMissingUsers(aCreateMissingUsers) //
+                    .withImportPermissions(aImportPermissions) //
+                    .withManager(manager) //
+                    .build();
+            importedProject = exportService.importProject(importRequest, new ZipFile(tempFile));
         }
         finally {
             tempFile.delete();
@@ -444,7 +482,7 @@ public class AeroRemoteApiController
         throws Exception
     {
         // Get project (this also ensures that it exists and that the current user can access it
-        Project project = getProject(aProjectId);
+        var project = getProject(aProjectId);
 
         // Check if the format is supported
         if (aFormat.isPresent()) {
@@ -459,11 +497,11 @@ public class AeroRemoteApiController
 
         var request = new FullProjectExportRequest(project, aFormat.orElse(null), true);
         var monitor = new ProjectExportTaskMonitor(project, null, "report-export", "");
-        File exportedFile = exportService.exportProject(request, monitor);
+        var exportedFile = exportService.exportProject(request, monitor);
 
         // Turn the file into a resource and auto-delete the file when the resource closes the
         // stream.
-        InputStreamResource result = new InputStreamResource(new FileInputStream(exportedFile)
+        var result = new InputStreamResource(new FileInputStream(exportedFile)
         {
             @Override
             public void close() throws IOException
@@ -473,7 +511,7 @@ public class AeroRemoteApiController
             }
         });
 
-        HttpHeaders httpHeaders = new HttpHeaders();
+        var httpHeaders = new HttpHeaders();
         httpHeaders.setContentType(MediaType.valueOf("application/zip"));
         httpHeaders.setContentLength(exportedFile.length());
         httpHeaders.set("Content-Disposition",
@@ -621,14 +659,14 @@ public class AeroRemoteApiController
         // send that back to the client
 
         // Check if the format is supported
-        FormatSupport format = importExportService.getWritableFormatById(formatId)
+        var format = importExportService.getWritableFormatById(formatId)
                 .orElseThrow(() -> new UnsupportedFormatException(
                         "Format [%s] cannot be exported. Exportable formats are %s.", formatId,
                         importExportService.getWritableFormats().stream().map(FormatSupport::getId)
                                 .sorted().collect(Collectors.toList()).toString()));
 
         // Create a temporary export file from the annotations
-        CAS cas = documentService.createOrReadInitialCas(doc);
+        var cas = documentService.createOrReadInitialCas(doc);
 
         File exportedFile = null;
         try {
@@ -1020,9 +1058,9 @@ public class AeroRemoteApiController
         // Check if the uploaded file is compatible with the source document. They are compatible
         // if the text is the same and if all the token and sentence annotations have the same
         // offsets.
-        CAS initialCas = documentService.createOrReadInitialCas(document);
-        String initialText = initialCas.getDocumentText();
-        String annotationText = annotationCas.getDocumentText();
+        var initialCas = documentService.createOrReadInitialCas(document);
+        var initialText = initialCas.getDocumentText();
+        var annotationText = annotationCas.getDocumentText();
 
         // If any of the texts contains tailing line breaks, we ignore that. We assume at the moment
         // that nobody will have created annotations over that trailing line breaks.
@@ -1037,8 +1075,8 @@ public class AeroRemoteApiController
         // SETTING THE SOFA STRING FORCEFULLY FOLLOWING THE DARK SIDE IS!
         forceOverwriteSofa(annotationCas, initialCas.getDocumentText());
 
-        Collection<AnnotationFS> annotationSentences = selectSentences(annotationCas);
-        Collection<AnnotationFS> initialSentences = selectSentences(initialCas);
+        var annotationSentences = selectSentences(annotationCas);
+        var initialSentences = selectSentences(initialCas);
         if (annotationSentences.size() != initialSentences.size()) {
             throw new IncompatibleDocumentException(
                     "Expected [%d] sentences, but annotation document contains [%d] sentences.",
@@ -1046,8 +1084,8 @@ public class AeroRemoteApiController
         }
         assertCompatibleOffsets(initialSentences, annotationSentences);
 
-        Collection<AnnotationFS> annotationTokens = selectTokens(annotationCas);
-        Collection<AnnotationFS> initialTokens = selectTokens(initialCas);
+        var annotationTokens = selectTokens(annotationCas);
+        var initialTokens = selectTokens(initialCas);
         if (annotationTokens.size() != initialTokens.size()) {
             throw new IncompatibleDocumentException(
                     "Expected [%d] tokens, but annotation document contains [%d] tokens.",

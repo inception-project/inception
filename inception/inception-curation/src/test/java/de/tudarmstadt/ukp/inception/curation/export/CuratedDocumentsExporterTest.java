@@ -122,7 +122,10 @@ public class CuratedDocumentsExporterTest
 
         // Import the project again
         var exProject = ProjectExportServiceImpl.loadExportedProject(zipFile);
-        var importRequest = new ProjectImportRequest(true);
+        var importRequest = ProjectImportRequest.builder() //
+                .withCreateMissingUsers(true) //
+                .withImportPermissions(true) //
+                .build();
         sut.importData(importRequest, targetProject, exProject, zipFile);
 
         verify(documentService, atLeastOnce()).importCas(sourceDocCaptor.capture(),

@@ -96,8 +96,11 @@ public class DefaultPreferenceExporterTest
                 .forClass(DefaultProjectPreference.class);
         doNothing().when(preferencesService).saveDefaultProjectPreference(captor.capture());
 
-        ProjectImportRequest importRequest = new ProjectImportRequest(true);
-        ZipFile zipFile = mock(ZipFile.class);
+        var importRequest = ProjectImportRequest.builder() //
+                .withCreateMissingUsers(true) //
+                .withImportPermissions(true) //
+                .build();
+        var zipFile = mock(ZipFile.class);
         sut.importData(importRequest, project, exportedProject, zipFile);
 
         return captor;
