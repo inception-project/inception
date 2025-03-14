@@ -50,6 +50,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
+import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.io.output.CloseShieldOutputStream;
 import org.apache.uima.cas.CAS;
@@ -183,6 +184,50 @@ public class AgreementServiceImpl
 
             jg.writeEndArray();
             jg.flush();
+        }
+    }
+
+    @Override
+    public void exportSpanLayerDataAsCsv(OutputStream aOut, AnnotationLayer aLayer,
+            AnnotationFeature aFeature, DefaultAgreementTraits aTraits,
+            List<SourceDocument> aDocuments, List<String> aAnnotators)
+        throws IOException
+    {
+        if (!SpanLayerSupport.TYPE.equals(aLayer.getType())) {
+            throw new IllegalArgumentException(
+                    "Only span layers supported but got [" + aLayer.getType() + "]");
+        }
+
+        var project = aLayer.getProject();
+        var allAnnDocs = getDocumentsToEvaluate(project, aDocuments, aTraits);
+        var docs = allAnnDocs.keySet().stream().sorted(comparing(SourceDocument::getName)).toList();
+        var featureName = aFeature != null ? aFeature.getName() : null;
+        var adapter = schemaService.getAdapter(aLayer);
+
+        try (var writer = new OutputStreamWriter(aOut, UTF_8);
+                var csvPrinter = new CSVPrinter(writer, CSVFormat.DEFAULT.builder()
+                        .setHeader("doc", "user", "begin", "end", "label").get())) {
+
+            for (var doc : docs) {
+                var annDocs = allAnnDocs.get(doc);
+                try (var session = CasStorageSession.openNested()) {
+                    var casMap = loadCasForAnnotators(doc, annDocs, aAnnotators);
+
+                    for (var mapEntry : casMap.entrySet()) {
+                        var dataOwner = mapEntry.getKey();
+                        var cas = mapEntry.getValue();
+
+                        for (var ann : cas.<Annotation> select(adapter.getAnnotationTypeName())) {
+                            var label = featureName != null
+                                    ? adapter.renderFeatureValue(ann, featureName)
+                                    : "";
+                            csvPrinter.printRecord(doc.getName(), dataOwner, ann.getBegin(),
+                                    ann.getEnd(), label);
+                        }
+                    }
+                }
+            }
+            csvPrinter.flush();
         }
     }
 
