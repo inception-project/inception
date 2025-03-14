@@ -130,6 +130,7 @@ public class AgreementPage
     private LambdaAjaxButton<AgreementFormModel> calculatePerDocumentAgreement;
     private LambdaAjaxButton<AgreementFormModel> exportCsvDiffButton;
     private LambdaAjaxButton<AgreementFormModel> exportJsonButton;
+    private LambdaAjaxButton<AgreementFormModel> exportCsvButton;
     private WebMarkupContainer traitsContainer;
 
     public AgreementPage(final PageParameters aPageParameters)
@@ -212,6 +213,11 @@ public class AgreementPage
         exportJsonButton.triggerAfterSubmit();
         exportJsonButton.add(enabledWhen(() -> measureDropDown.getModelObject() != null));
         queue(exportJsonButton);
+
+        exportCsvButton = new LambdaAjaxButton<>("exportCsv", this::actionExportCsv);
+        exportCsvButton.triggerAfterSubmit();
+        exportCsvButton.add(enabledWhen(() -> measureDropDown.getModelObject() != null));
+        queue(exportCsvButton);
 
         if (featureList.getChoices().size() == 1) {
             featureList.setModelObject(featureList.getChoices().get(0));
@@ -305,7 +311,7 @@ public class AgreementPage
         dropdown.add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT,
                 _target -> _target.add(calculatePairwiseAgreementButton,
                         calculatePerDocumentAgreement, exportCsvDiffButton, exportJsonButton,
-                        traitsContainer)));
+                        exportCsvButton, traitsContainer)));
         return dropdown;
     }
 
@@ -364,7 +370,7 @@ public class AgreementPage
 
         aTarget.add(measureDropDown, calculatePerDocumentAgreement,
                 calculatePairwiseAgreementButton, traitsContainer, exportCsvDiffButton,
-                exportJsonButton);
+                exportJsonButton, exportCsvButton);
     }
 
     private void actionExportDiff(AjaxRequestTarget aTarget, Form<AgreementFormModel> aForm)
@@ -433,7 +439,44 @@ public class AgreementPage
                 LOG.error("Unexpected error while exporting diff", e);
             }
         }));
+    }
 
+    private void actionExportCsv(AjaxRequestTarget aTarget, Form<AgreementFormModel> aForm)
+    {
+        var model = aForm.getModelObject();
+        var feature = model.layerAndFeature.getValue();
+        var layer = feature == null ? model.layerAndFeature.getKey() : feature.getLayer();
+
+        if (!SpanLayerSupport.TYPE.equals(layer.getType())) {
+            warn("Curently only supported for span layers");
+            aTarget.addChildren(getPage(), IFeedback.class);
+            return;
+        }
+
+        var project = getProject();
+        var annotators = getAnnotators(model);
+        var selectedDocuments = model.documents;
+        var traits = getTraits();
+
+        var filename = project.getSlug() + "-" + layer.getName();
+        if (feature != null) {
+            filename += "-" + feature.getName();
+        }
+        filename += ".csv";
+
+        downloadBehavior.initiate(aTarget, filename, new PipedStreamResource(os -> {
+            // PipedStreamResource runs the lambda in a separate thread, so we need to make
+            // sure the MDC is correctly set up here.
+            var sessionOwner = userRepository.getCurrentUser();
+            try (var ctx = new DefaultMdcSetup(repositoryProperties, project, sessionOwner)) {
+                agreementService.exportSpanLayerDataAsCsv(os, layer, feature, traits,
+                        selectedDocuments, annotators);
+            }
+            catch (Exception e) {
+                os.write("Unexpected error during export, see log for details.".getBytes(UTF_8));
+                LOG.error("Unexpected error while exporting diff", e);
+            }
+        }));
     }
 
     private void actionCalculatePairwiseAgreement(AjaxRequestTarget aTarget,

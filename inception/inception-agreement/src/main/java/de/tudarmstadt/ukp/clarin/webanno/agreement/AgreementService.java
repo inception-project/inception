@@ -53,8 +53,13 @@ public interface AgreementService
             DefaultAgreementTraits aTraits, List<SourceDocument> aDocuments,
             List<String> aAnnotators);
 
-    void exportSpanLayerDataAsJson(OutputStream aOut, AnnotationLayer aLayer, AnnotationFeature aFeature,
-            DefaultAgreementTraits aTraits, List<SourceDocument> aDocuments,
-            List<String> aAnnotators)
+    void exportSpanLayerDataAsJson(OutputStream aOut, AnnotationLayer aLayer,
+            AnnotationFeature aFeature, DefaultAgreementTraits aTraits,
+            List<SourceDocument> aDocuments, List<String> aAnnotators)
+        throws IOException;
+
+    void exportSpanLayerDataAsCsv(OutputStream aOut, AnnotationLayer aLayer,
+            AnnotationFeature aFeature, DefaultAgreementTraits aTraits,
+            List<SourceDocument> aDocuments, List<String> aAnnotators)
         throws IOException;
 }
