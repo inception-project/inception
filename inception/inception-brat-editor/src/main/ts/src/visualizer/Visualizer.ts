@@ -1409,7 +1409,7 @@ export class Visualizer {
     let startPos: number, endPos: number
     if (this.rtlmode) {
       // This rendering is much slower than the "old" version that brat uses, but it is more reliable in RTL mode.
-      [startPos, endPos] = this.calculateSubstringWidthRobust(fragment, text, firstChar, lastChar)
+      [startPos, endPos] = this.calculateSubstringPositionRobust(fragment, text, firstChar, lastChar)
       // In RTL mode, positions are negative (left to right)
       startPos = -startPos
       endPos = -endPos
@@ -1421,7 +1421,7 @@ export class Visualizer {
       // measurement is more reliable.
       // Cannot use fragment.chunk.text.length here because invisible
       // characters do not count. Using text.getNumberOfChars() instead.
-      [startPos, endPos] = this.calculateSubstringWidthFast(text, firstChar, lastChar)
+      [startPos, endPos] = this.calculateSubstringPositionFast(text, firstChar, lastChar)
     }
 
     // Make sure that startPos and endPos are properly ordered on the X axis
@@ -1431,7 +1431,11 @@ export class Visualizer {
     }
   }
 
-  private calculateSubstringWidthRobust (fragment: Fragment, text: SVGTextElement, firstChar: number, lastChar: number) {
+  private calculateSubstringPositionRobust (fragment: Fragment, text: SVGTextElement, firstChar: number, lastChar: number): [number, number] {
+    if (text.textContent === null || text.textContent.length === 0) {
+      return [0, 0]
+    }
+
     let charDirection: Array<'rtl' | 'ltr'>
     let charAttrs: Array<{ order: number, width: number, direction: 'rtl' | 'ltr' }>
     let corrFactor = 1
@@ -1448,22 +1452,20 @@ export class Visualizer {
 
       // Cannot use fragment.chunk.text.length here because invisible characters do not count.
       // Using text.getNumberOfChars() instead.
-      if (text.textContent !== null) {
-        for (let idx = 0; idx < text.getNumberOfChars(); idx++) {
-          const cw = text.getEndPositionOfChar(idx).x - text.getStartPositionOfChar(idx).x
-          const dir = isRTL(text.textContent.charCodeAt(idx)) ? 'rtl' : 'ltr'
-          charAttrs.push({
-            order: idx,
-            width: Math.abs(cw),
-            direction: dir
-          })
-          charDirection.push(dir)
-          // console.log("char " +  idx + " [" + text.textContent[idx] + "] " +
-          //   "begin:" + text.getStartPositionOfChar(idx).x +
-          //   " end:" + text.getEndPositionOfChar(idx).x +
-          //   " width:" + Math.abs(cw) +
-          //   " dir:" + charDirection[charDirection.length-1]);
-        }
+      for (let idx = 0; idx < text.getNumberOfChars(); idx++) {
+        const cw = text.getEndPositionOfChar(idx).x - text.getStartPositionOfChar(idx).x
+        const dir = isRTL(text.textContent.charCodeAt(idx)) ? 'rtl' : 'ltr'
+        charAttrs.push({
+          order: idx,
+          width: Math.abs(cw),
+          direction: dir
+        })
+        charDirection.push(dir)
+        // console.log("char " +  idx + " [" + text.textContent[idx] + "] " +
+        //   "begin:" + text.getStartPositionOfChar(idx).x +
+        //   " end:" + text.getEndPositionOfChar(idx).x +
+        //   " width:" + Math.abs(cw) +
+        //   " dir:" + charDirection[charDirection.length-1]);
       }
 
       // Re-order widths if necessary
@@ -1542,7 +1544,7 @@ export class Visualizer {
     return [startPos, endPos]
   }
 
-  private calculateSubstringWidthFast (text: SVGTextContentElement, firstChar: number, lastChar: number) {
+  private calculateSubstringPositionFast (text: SVGTextContentElement, firstChar: number, lastChar: number) {
     try {
 {      let startPos: number
       if (firstChar < text.getNumberOfChars()) {
