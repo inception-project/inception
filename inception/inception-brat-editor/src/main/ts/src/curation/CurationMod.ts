@@ -35,63 +35,63 @@ export class CurationMod {
 
   // send click to server
   onClick (evt: MouseEvent) {
-    const target = $(evt.target)
+    const target = evt.target as HTMLElement;
+
     // if clicked on a span, send ajax call to server
-    const type = target.attr('data-arc-role')
+    const type = target.getAttribute('data-arc-role');
     if (type) {
-      const originSpanId = target.attr('data-arc-origin')
-      const targetSpanId = target.attr('data-arc-target')
-      // var originSpan = data.spans[originSpanId];
-      // var targetSpan = data.spans[targetSpanId];
+      const originSpanId = target.getAttribute('data-arc-origin');
+      const targetSpanId = target.getAttribute('data-arc-target');
       this.dispatcher.post('ajax', [{
         action: 'selectArcForMerge',
         originSpanId,
         targetSpanId,
-        id: target.attr('data-arc-ed'),
+        id: target.getAttribute('data-arc-ed'),
         type
-      }])
+      }]);
     }
-    if (target.attr('data-span-id')) {
-      const id = target.attr('data-span-id')
-      const editedSpan = this.data.spans[id]
+
+    const spanId = target.getAttribute('data-span-id');
+    if (spanId) {
+      const editedSpan = this.data.spans[spanId];
       this.dispatcher.post('ajax', [{
         action: 'selectSpanForMerge',
-        id,
+        id: spanId,
         type: editedSpan.type
-      }])
+      }]);
     }
   }
 
-  contextMenu (evt: MouseEvent) {
+  contextMenu(evt: MouseEvent) {
     // If the user shift-right-clicks, open the normal browser context menu. This is useful
     // e.g. during debugging / developing
     if (evt.shiftKey) {
-      return
+      return;
     }
 
-    const target = $(evt.target)
-    let id: string
-    let type: string
+    const target = evt.target as HTMLElement;
+    let id: string | undefined;
+    let type: string | undefined;
 
-    if (target.attr('data-arc-ed')) {
-      id = target.attr('data-arc-ed')
-      type = target.attr('data-arc-role')
+    if (target.getAttribute('data-arc-ed')) {
+      id = target.getAttribute('data-arc-ed')!;
+      type = target.getAttribute('data-arc-role')!;
     }
 
-    if (target.attr('data-span-id')) {
-      id = target.attr('data-span-id')
-      type = this.data.spans[id].type
+    if (target.getAttribute('data-span-id')) {
+      id = target.getAttribute('data-span-id')!;
+      type = this.data.spans[id].type;
     }
 
     if (id) {
-      evt.preventDefault()
+      evt.preventDefault();
       this.dispatcher.post('ajax', [{
         action: 'contextMenu',
         id,
         type,
         clientX: evt.clientX,
         clientY: evt.clientY
-      }])
+      }]);
     }
   }
 
