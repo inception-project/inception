@@ -1745,7 +1745,7 @@ export class Visualizer {
       const thisCurlyHeight = span.drawCurly ? Configuration.visual.curlyHeight : 0
       const height = docData.sizes.fragments.height + thisCurlyHeight + Configuration.visual.boxSpacing +
         2 * Configuration.visual.margin.y - 3
-      for (const floor of Object.values(floors)) {
+      for (const floor of floors) {
         let floorAvailable = true
         for (let i = i1; i <= i2; i++) {
           if (!(reservations[i] && reservations[i][floor])) {
@@ -1754,7 +1754,7 @@ export class Visualizer {
           const from = (i === i1) ? x1 : -inf
           const to = (i === i2) ? x2 : inf
           
-          for (const res of Object.values(reservations[i][floor])) {
+          for (const res of reservations[i][floor]) {
             if (res[0] < to && from < res[1]) {
               floorAvailable = false
               break
