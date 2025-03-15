@@ -33,6 +33,7 @@ import static java.awt.EventQueue.invokeLater;
 import static java.lang.ProcessBuilder.Redirect.INHERIT;
 import static javax.swing.WindowConstants.DO_NOTHING_ON_CLOSE;
 import static javax.swing.WindowConstants.HIDE_ON_CLOSE;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.prependIfMissing;
 
 import java.awt.AWTException;
@@ -43,6 +44,7 @@ import java.awt.MenuItem;
 import java.awt.PopupMenu;
 import java.awt.SystemTray;
 import java.awt.TrayIcon;
+import java.lang.invoke.MethodHandles;
 import java.net.URI;
 
 import javax.swing.BorderFactory;
@@ -51,7 +53,6 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.UIManager;
-import javax.swing.border.Border;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -76,7 +77,7 @@ import de.tudarmstadt.ukp.inception.support.SettingsUtil;
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class StandaloneShutdownDialogManager
 {
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     @Autowired
     private ApplicationEventPublisher eventPublisher;
@@ -88,7 +89,7 @@ public class StandaloneShutdownDialogManager
     private String servletContextPath;
 
     @Value("${running.from.commandline}")
-    private boolean runningFromCommandline;
+    private boolean isRunningFromCommandline;
 
     @Value("${spring.application.name}")
     private String applicationName;
@@ -101,16 +102,18 @@ public class StandaloneShutdownDialogManager
     @EventListener
     public void onApplicationEvent(ApplicationReadyEvent aEvt)
     {
-        BOOT_LOG.info("Console: " + ((System.console() != null) ? "available" : "not available"));
-        BOOT_LOG.info("Headless: " + (GraphicsEnvironment.isHeadless() ? "yes" : "no"));
+        var hasConsole = System.console() != null;
+        var isHeadless = GraphicsEnvironment.isHeadless();
+        BOOT_LOG.info("Console: " + (hasConsole ? "available" : "not available"));
+        BOOT_LOG.info("Headless: " + (isHeadless ? "yes" : "no"));
 
-        boolean forceUi = System.getProperty("forceUi") != null;
+        var forceUi = System.getProperty("forceUi") != null;
 
         // Show this only when run from the standalone JAR via a double-click
-        if (forceUi || (port != -1 && System.console() == null && !GraphicsEnvironment.isHeadless()
-                && runningFromCommandline)) {
-            log.info("If you are running " + applicationName
-                    + " in a server environment, please use '-Djava.awt.headless=true'");
+        if (forceUi || (port != -1 && !hasConsole && !isHeadless && isRunningFromCommandline)) {
+            LOG.info(
+                    "If you are running {} in a server environment, consider using '-Djava.awt.headless=true'",
+                    applicationName);
             eventPublisher.publishEvent(
                     new ShutdownDialogAvailableEvent(StandaloneShutdownDialogManager.this));
 
@@ -118,7 +121,7 @@ public class StandaloneShutdownDialogManager
                 UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
             }
             catch (Exception e) {
-                log.error("Unable to set system look and feel", e);
+                LOG.error("Unable to set system look and feel", e);
             }
 
             invokeLater(() -> showShutdownDialog());
@@ -126,9 +129,13 @@ public class StandaloneShutdownDialogManager
         else {
             BOOT_LOG.info(
                     "Running in server environment or from command line: disabling interactive shutdown dialog.");
-            if (System.console() != null) {
+            if (hasConsole) {
                 BOOT_LOG.info("You can close INCEpTION from the command line by pressing Ctrl+C");
             }
+
+            invokeLater(() -> {
+                makeSystemTrayMenu();
+            });
         }
 
         BOOT_LOG.info("You can now access INCEpTION at http://localhost:{}{}", port,
@@ -143,20 +150,20 @@ public class StandaloneShutdownDialogManager
 
     private void showShutdownDialog()
     {
-        JFrame frame = new JFrame(applicationName);
+        var frame = new JFrame(applicationName);
 
         // Image icon
         frame.setIconImage(StandaloneUserInterface.getIconImage());
         frame.setResizable(false);
 
         // Content panel
-        JPanel contentPanel = new JPanel();
-        Border padding = BorderFactory.createEmptyBorder(10, 10, 10, 10);
+        var contentPanel = new JPanel();
+        var padding = BorderFactory.createEmptyBorder(10, 10, 10, 10);
         contentPanel.setBorder(padding);
         contentPanel.setLayout(new BorderLayout());
 
         // Label
-        JLabel label = new JLabel("<html>" + applicationName + " is running now and can be "
+        var label = new JLabel("<html>" + applicationName + " is running now and can be "
                 + "accessed via <b>http://localhost:" + port + "</b>." + "<br>" //
                 + applicationName + " works best with the browsers Google Chrome or Safari.<br>" //
                 + "Use this dialog to shut " + applicationName + " down.</html>");
@@ -164,16 +171,16 @@ public class StandaloneShutdownDialogManager
         contentPanel.add(label, BorderLayout.PAGE_START);
 
         // Button Layout
-        JPanel buttonPanel = new JPanel();
+        var buttonPanel = new JPanel();
 
         if (isDesktopSupported() && getDesktop().isSupported(Desktop.Action.BROWSE)) {
-            JButton browseButton = new JButton(ACTION_OPEN_BROWSER);
+            var browseButton = new JButton(ACTION_OPEN_BROWSER);
             browseButton.addActionListener(e -> actionBrowse());
             buttonPanel.add(browseButton);
             frame.getRootPane().setDefaultButton(browseButton);
         }
 
-        JButton shutdownButton = new JButton(ACTION_SHUTDOWN);
+        var shutdownButton = new JButton(ACTION_SHUTDOWN);
         shutdownButton.addActionListener(e -> actionShutdown());
         buttonPanel.add(shutdownButton);
 
@@ -191,7 +198,7 @@ public class StandaloneShutdownDialogManager
                 contentPanel.add(new JLabel("Closing this window minimizes it to tray."), CENTER);
             }
             catch (AWTException e) {
-                log.error("Could not application menu add to tray", e);
+                LOG.error("Could not application menu add to tray", e);
                 frame.setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
             }
 
@@ -212,23 +219,39 @@ public class StandaloneShutdownDialogManager
         }
     }
 
-    private void makeSystemTrayMenu(JFrame frame) throws AWTException
+    private void makeSystemTrayMenu()
     {
-        SystemTray tray = SystemTray.getSystemTray();
-        TrayIcon trayIcon = new TrayIcon(frame.getIconImage());
+        try {
+            makeSystemTrayMenu(null);
+        }
+        catch (AWTException e) {
+            LOG.error("Could not application menu add to tray", e);
+        }
+    }
+
+    private void makeSystemTrayMenu(JFrame aFrame) throws AWTException
+    {
+        var tray = SystemTray.getSystemTray();
+        var trayIcon = new TrayIcon(StandaloneUserInterface.getIconImage());
         trayIcon.setImageAutoSize(true);
+        trayIcon.setToolTip(applicationName + " " + SettingsUtil.getVersionString());
 
-        PopupMenu popupMenu = new PopupMenu();
+        var popupMenu = new PopupMenu();
 
-        MenuItem untrayItem = new MenuItem("Show/Hide");
-        popupMenu.add(untrayItem);
-        untrayItem.addActionListener(e -> frame.setVisible(!frame.isVisible()));
+        if (aFrame != null) {
+            var showHideItem = new MenuItem("Show/Hide");
+            showHideItem.addActionListener(e -> aFrame.setVisible(!aFrame.isVisible()));
+            popupMenu.add(showHideItem);
 
-        MenuItem browseItem = new MenuItem(ACTION_OPEN_BROWSER);
+            // Click should show/hide
+            trayIcon.addActionListener(e -> aFrame.setVisible(!aFrame.isVisible()));
+        }
+
+        var browseItem = new MenuItem(ACTION_OPEN_BROWSER);
         browseItem.addActionListener(e -> actionBrowse());
         popupMenu.add(browseItem);
 
-        MenuItem logItem = new MenuItem("Log...");
+        var logItem = new MenuItem("Log...");
         logItem.addActionListener(e -> actionShowLog(applicationName));
         popupMenu.add(logItem);
 
@@ -238,22 +261,18 @@ public class StandaloneShutdownDialogManager
             popupMenu.add(settingsPropertiesItem);
         }
 
-        MenuItem aboutItem = new MenuItem("About...");
+        var aboutItem = new MenuItem("About...");
         aboutItem.addActionListener(e -> actionShowAbout(applicationName));
         popupMenu.add(aboutItem);
 
-        MenuItem shutdownItem = new MenuItem(ACTION_SHUTDOWN);
+        var shutdownItem = new MenuItem(ACTION_SHUTDOWN);
         shutdownItem.addActionListener(e -> {
             tray.remove(trayIcon);
             actionShutdown();
         });
         popupMenu.add(shutdownItem);
 
-        trayIcon.setToolTip(applicationName + " " + SettingsUtil.getVersionString());
         trayIcon.setPopupMenu(popupMenu);
-
-        // Click should show/hide
-        trayIcon.addActionListener(e -> frame.setVisible(!frame.isVisible()));
 
         tray.add(trayIcon);
     }
@@ -262,13 +281,13 @@ public class StandaloneShutdownDialogManager
     {
         try {
 
-            if (!StringUtils.isBlank(openBrowserCommand)) {
-                String cmd = openBrowserCommand.replace("%u",
+            if (!isBlank(openBrowserCommand)) {
+                var cmd = openBrowserCommand.replace("%u",
                         "http://localhost:" + port + prependIfMissing(servletContextPath, "/"));
 
-                String[] cmdTokens = cmd.split("\\s(?=([^\"]*\"[^\"]*\")*[^\"]*$)");
+                var cmdTokens = cmd.split("\\s(?=([^\"]*\"[^\"]*\")*[^\"]*$)");
 
-                for (int i = 0; i < cmdTokens.length; i++) {
+                for (var i = 0; i < cmdTokens.length; i++) {
                     if (cmdTokens[i].startsWith("\"") || cmdTokens[i].endsWith("\"")) {
                         cmdTokens[i] = StringUtils.substring(cmdTokens[i], 1, -1);
                     }
@@ -285,7 +304,7 @@ public class StandaloneShutdownDialogManager
             Desktop.getDesktop().browse(URI.create("http://localhost:" + port));
         }
         catch (Exception e) {
-            log.error("Unable to open browser", e);
+            LOG.error("Unable to open browser", e);
         }
     }
 
