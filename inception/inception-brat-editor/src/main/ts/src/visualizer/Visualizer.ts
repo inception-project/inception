@@ -1745,7 +1745,7 @@ export class Visualizer {
       const thisCurlyHeight = span.drawCurly ? Configuration.visual.curlyHeight : 0
       const height = docData.sizes.fragments.height + thisCurlyHeight + Configuration.visual.boxSpacing +
         2 * Configuration.visual.margin.y - 3
-      $.each(floors, (floorNo, floor) => {
+      for (const floor of Object.values(floors)) {
         let floorAvailable = true
         for (let i = i1; i <= i2; i++) {
           if (!(reservations[i] && reservations[i][floor])) {
@@ -1753,12 +1753,13 @@ export class Visualizer {
           }
           const from = (i === i1) ? x1 : -inf
           const to = (i === i2) ? x2 : inf
-          $.each(reservations[i][floor], (resNo, res) => {
+          
+          for (const res of Object.values(reservations[i][floor])) {
             if (res[0] < to && from < res[1]) {
               floorAvailable = false
-              return false
+              break
             }
-          })
+          }
         }
 
         if (floorAvailable) {
@@ -1766,12 +1767,12 @@ export class Visualizer {
             carpet = floor
           } else if (height + carpet <= floor) {
             // found our floor!
-            return false
+            break
           }
         } else {
           carpet = null
         }
-      })
+      }
 
       const reslen = reservations.length
       const makeNewFloorIfNeeded = function (floor: number) {
