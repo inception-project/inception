@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.diam.editor.actions;
 
 import static de.tudarmstadt.ukp.inception.support.spring.ApplicationContextProvider.getApplicationContext;
 import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectAnnotationByAddr;
+import static java.util.Arrays.asList;
 
 import java.io.IOException;
 
@@ -26,6 +27,7 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.wicketstuff.jquery.ui.widget.menu.IMenuItem;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
+import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainLayerSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.annotation.menu.ContextMenuItemContext;
 import de.tudarmstadt.ukp.inception.annotation.menu.ContextMenuItemExtension;
@@ -65,8 +67,12 @@ public class LinkToContextMenuItem
                 return false;
             }
 
-            return SpanLayerSupport.TYPE
-                    .equals(schemaService.findLayer(state.getProject(), ann).getType());
+            var layer = schemaService.findLayer(state.getProject(), ann);
+            if (layer == null) {
+                return false;
+            }
+
+            return asList(SpanLayerSupport.TYPE, ChainLayerSupport.TYPE).contains(layer.getType());
         }
         catch (IOException e) {
             return false;
