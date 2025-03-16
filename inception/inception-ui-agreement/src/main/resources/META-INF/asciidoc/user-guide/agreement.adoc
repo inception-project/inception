@@ -82,6 +82,7 @@ The basic idea is to divide the estimated variance of within the items by the es
 | Chance-corrected inter-rater agreement for unitizing studies with multiple raters.
 As a model for expected disagreement, all possible unitizations for the given continuum and raters are considered.
 Note that units coded with the same categories by a single annotator may not overlap with each other.
+If such units are detected, the system will pass the unit starting earliest and being longest to the agreement and will skip all of the other overlapping units. 
 |====
 
 
@@ -97,8 +98,6 @@ For a span layer, the begin and end offsets are used.
 For a relation layer, the begin and end offsets of the source and target annotation are used.
 Chains are currently not supported. 
 
-Unitizing measures basically work by internally concatenating all documents into a single long virtual document and then consider partial overlaps of annotations from different annotations.
-I.e. there is no averaging over documents.
 The partial overlap agreement is calculated based on character positions, not on token positions.
 So if one annotator annotates *the blackboard* and another annotator just *blackboard*, then the partial overlap is comparatively high because *blackboard* is a longish word.
 Relation and chain layers are presently not supported by the unitizing measures.

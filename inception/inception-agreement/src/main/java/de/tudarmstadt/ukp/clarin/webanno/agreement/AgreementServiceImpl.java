@@ -261,7 +261,7 @@ public class AgreementServiceImpl
 
                 var diff = doDiff(adapters, casMap);
 
-                var result = AgreementUtils.makeCodingStudy(diff, aLayer.getName(), featureName,
+                var result = CodingStudyUtils.makeCodingStudy(diff, aLayer.getName(), featureName,
                         tagset, aTraits.isExcludeIncomplete(), casMap);
 
                 try (var printer = new CSVPrinter(

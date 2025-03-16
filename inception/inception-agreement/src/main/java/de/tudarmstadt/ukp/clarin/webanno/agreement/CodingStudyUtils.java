@@ -54,7 +54,7 @@ import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.relation.RelationDiffA
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.relation.RelationPosition;
 import de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureMultiplicityMode;
 
-public class AgreementUtils
+public class CodingStudyUtils
 {
     public static FullCodingAgreementResult makeCodingStudy(CasDiff aDiff, String aType,
             String aFeature, Set<String> aTagSet, boolean aExcludeIncomplete,
@@ -334,7 +334,7 @@ public class AgreementUtils
         }
     }
 
-    public static void dumpAgreementStudy(PrintStream aOut, FullCodingAgreementResult aAgreement)
+    public static void dumpCodingStudy(PrintStream aOut, FullCodingAgreementResult aAgreement)
     {
         try {
             aOut.printf("Category count: %d%n", aAgreement.getCategoryCount());
