@@ -312,7 +312,9 @@ public class SchedulingServiceImpl
         var startTime = currentTimeMillis();
         var timeoutMillis = aTimeout.toMillis();
 
-        while (runningTasks.stream().anyMatch(t -> aProject.equals(t.getProject()))) {
+        while (runningTasks.stream()
+                .anyMatch(t -> aProject.getId() != null ? aProject.equals(t.getProject())
+                        : aProject == t.getProject())) {
             // LOG.trace("Waiting for running tasks to end on project {}", aProject);
 
             if (currentTimeMillis() - startTime > timeoutMillis) {

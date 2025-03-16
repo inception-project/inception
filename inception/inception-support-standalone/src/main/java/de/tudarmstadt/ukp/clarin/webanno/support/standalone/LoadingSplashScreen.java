@@ -24,9 +24,7 @@ import static javax.swing.BorderFactory.createEmptyBorder;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.awt.AWTException;
-import java.awt.Dimension;
 import java.awt.GraphicsEnvironment;
-import java.awt.Point;
 import java.awt.SystemTray;
 import java.awt.Toolkit;
 import java.awt.TrayIcon;
@@ -68,8 +66,7 @@ public class LoadingSplashScreen
         }
 
         try {
-            SplashWindow window = new SplashWindow(aSplashScreenImageUrl, aIconUrl,
-                    aApplicationName);
+            var window = new SplashWindow(aSplashScreenImageUrl, aIconUrl, aApplicationName);
             window.setVisible(true);
 
             return Optional.of(window);
@@ -81,12 +78,14 @@ public class LoadingSplashScreen
 
     public static Optional<SplashWindow> setupScreen(String aApplicationName)
     {
-        URL splashScreenImageUrl = LoadingSplashScreen.class.getResource("/splash.png");
-        URL iconUrl = LoadingSplashScreen.class.getResource("/icon.png");
+        var splashScreenImageUrl = LoadingSplashScreen.class.getResource("/splash.png");
+        var iconUrl = LoadingSplashScreen.class.getResource("/icon.png");
+
         if (splashScreenImageUrl == null || iconUrl == null) {
             LOG.error("Unable to locate splash screen and icon resources");
             return Optional.empty();
         }
+
         return setupScreen(splashScreenImageUrl, iconUrl, aApplicationName);
     }
 
@@ -104,7 +103,7 @@ public class LoadingSplashScreen
         {
             applicationName = aApplicationName;
 
-            JLabel l = new JLabel(new ImageIcon(aSplashScreenImageUrl));
+            var l = new JLabel(new ImageIcon(aSplashScreenImageUrl));
             getContentPane().add(l, CENTER);
 
             info = new JLabel(applicationName + " is loading...", SwingConstants.CENTER);
@@ -113,14 +112,14 @@ public class LoadingSplashScreen
             info.setBorder(createEmptyBorder(5, 5, 5, 5));
             getContentPane().add(info, SOUTH);
 
-            ImageIcon img = new ImageIcon(aIconUrl);
+            var img = new ImageIcon(aIconUrl);
             setIconImage(img.getImage());
 
             setUndecorated(true);
             pack();
 
-            Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-            Dimension labelSize = l.getPreferredSize();
+            var screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+            var labelSize = l.getPreferredSize();
             setLocation(screenSize.width / 2 - (labelSize.width / 2),
                     screenSize.height / 2 - (labelSize.height / 2));
 
@@ -138,7 +137,7 @@ public class LoadingSplashScreen
                 @Override
                 public void mouseDragged(MouseEvent aEvent)
                 {
-                    Point p = SplashWindow.this.getLocation();
+                    var p = SplashWindow.this.getLocation();
                     p.x += aEvent.getXOnScreen() - mx;
                     p.y += aEvent.getYOnScreen() - my;
                     mx = aEvent.getXOnScreen();

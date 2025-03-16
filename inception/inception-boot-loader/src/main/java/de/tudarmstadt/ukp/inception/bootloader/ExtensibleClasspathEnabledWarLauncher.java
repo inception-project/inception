@@ -40,6 +40,7 @@ public class ExtensibleClasspathEnabledWarLauncher
 
     public ExtensibleClasspathEnabledWarLauncher() throws Exception
     {
+        System.setProperty("apple.awt.application.name", "INCEpTION");
     }
 
     protected ExtensibleClasspathEnabledWarLauncher(Archive archive) throws Exception
