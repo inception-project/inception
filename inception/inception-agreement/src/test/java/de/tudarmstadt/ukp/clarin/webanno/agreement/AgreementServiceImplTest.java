@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.agreement;
 
-import static de.tudarmstadt.ukp.clarin.webanno.agreement.AgreementUtils.makeCodingStudy;
+import static de.tudarmstadt.ukp.clarin.webanno.agreement.CodingStudyUtils.makeCodingStudy;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span.SpanDiffAdapter.NER_DIFF_ADAPTER;
 import static java.util.Arrays.asList;

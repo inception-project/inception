@@ -17,13 +17,21 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.agreement.measures.krippendorffalphaunitizing;
 
+import static java.util.Arrays.asList;
+import static java.util.Comparator.comparingInt;
+
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
+import java.util.TreeMap;
 
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.Feature;
 import org.apache.uima.fit.util.FSUtil;
 import org.apache.uima.jcas.tcas.Annotation;
 import org.dkpro.statistics.agreement.unitizing.KrippendorffAlphaUnitizingAgreement;
@@ -42,6 +50,8 @@ public class KrippendorffAlphaUnitizingAgreementMeasure
             FullUnitizingAgreementResult, //
             DefaultAgreementTraits>
 {
+    private static final List<Object> NULL_VALUE = asList(new Object[] { null });
+    private static final Set<String> POSITION_VALUE = Set.of(POSITION);
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     public KrippendorffAlphaUnitizingAgreementMeasure(AnnotationLayer aLayer,
@@ -79,20 +89,38 @@ public class KrippendorffAlphaUnitizingAgreementMeasure
                 continue;
             }
 
+            var annotations = cas.<Annotation> select(t).asList();
+            // // Sort annotations by start position (and by end position in case of ties). This is
+            // // more efficient for maintaining the active annotations list than using the default
+            // // UIMA sort order
+            // annotations.sort(comparingInt(Annotation::getBegin) //
+            // .thenComparingInt(Annotation::getEnd));
+            // That say, maybe the longest match being added to the study is better than the
+            // shortest match
+
+            var activeAnnotations = new TreeMap<Annotation, Set<Object>>(
+                    comparingInt(Annotation::getEnd));
+
             var raterIdx = study.addRater(set.getKey());
             var f = getFeature() != null ? t.getFeatureByBaseName(getFeature().getName()) : null;
-            for (var ann : cas.<Annotation> select(t)) {
-                var featureValue = f != null ? FSUtil.getFeature(ann, f, Object.class) : POSITION;
-                if (featureValue instanceof Collection) {
-                    for (var value : (Collection<?>) featureValue) {
-                        study.addUnit(ann.getBegin(), ann.getEnd() - ann.getBegin(), raterIdx,
-                                value);
+            for (var ann : annotations) {
+                // Remove annotations that have ended (non-overlapping anymore)
+                activeAnnotations.keySet().removeIf(a -> a.getEnd() <= ann.getBegin());
+
+                var values = getValues(ann, f);
+
+                for (var value : values) {
+                    if (activeAnnotations.values().stream().anyMatch($ -> $.contains(value))) {
+                        LOG.trace("Not adding unit at [{}-{}] with value [{}] to to overlap",
+                                ann.getBegin(), ann.getEnd(), value);
+                        continue;
                     }
+
+                    study.addUnit(ann.getBegin(), ann.getEnd() - ann.getBegin(), raterIdx, value);
                 }
-                else {
-                    study.addUnit(ann.getBegin(), ann.getEnd() - ann.getBegin(), raterIdx,
-                            featureValue);
-                }
+
+                // Add the current annotation to the active set
+                activeAnnotations.computeIfAbsent(ann, $ -> new HashSet<Object>()).addAll(values);
             }
         }
 
@@ -112,5 +140,23 @@ public class KrippendorffAlphaUnitizingAgreementMeasure
         }
 
         return result;
+    }
+
+    private Collection<?> getValues(Annotation ann, Feature f)
+    {
+        if (f == null) {
+            return POSITION_VALUE;
+        }
+
+        var featureValue = FSUtil.getFeature(ann, f, Object.class);
+        if (featureValue instanceof Collection collectionValue) {
+            return collectionValue;
+        }
+
+        if (featureValue == null) {
+            return NULL_VALUE;
+        }
+
+        return Set.of(featureValue);
     }
 }
