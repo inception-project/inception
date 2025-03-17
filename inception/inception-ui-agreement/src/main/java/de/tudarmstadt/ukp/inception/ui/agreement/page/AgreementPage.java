@@ -517,6 +517,7 @@ public class AgreementPage
                 .withTrigger("Agreement page") //
                 .withAnnotators(annotators) //
                 .withTraits(traits) //
+                .withLayer(model.layerAndFeature.getKey()) //
                 .withFeature(model.layerAndFeature.getValue()) //
                 .withMeasure(measure) //
                 .withDocuments(allAnnDocs) //

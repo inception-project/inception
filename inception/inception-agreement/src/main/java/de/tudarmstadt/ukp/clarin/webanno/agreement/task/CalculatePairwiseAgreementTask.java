@@ -46,6 +46,7 @@ import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.DefaultAgreementTrai
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.scheduling.Task;
@@ -63,6 +64,7 @@ public class CalculatePairwiseAgreementTask
 
     private final List<String> annotators;
     private final DefaultAgreementTraits traits;
+    private final AnnotationLayer layer;
     private final AnnotationFeature feature;
     private final AgreementMeasure<?> measure;
     private final Map<SourceDocument, List<AnnotationDocument>> allAnnDocs;
@@ -75,6 +77,7 @@ public class CalculatePairwiseAgreementTask
 
         annotators = aBuilder.annotators;
         traits = aBuilder.traits;
+        layer = aBuilder.layer;
         feature = aBuilder.feature;
         measure = aBuilder.measure;
         allAnnDocs = aBuilder.allAnnDocs;
@@ -127,16 +130,16 @@ public class CalculatePairwiseAgreementTask
                                 LOG.trace(
                                         "Skipping combination {}/{}@{}: {} not in a curation state",
                                         annotator1, annotator2, doc, annotator1);
-                                summary.mergeResult(annotator1, annotator2, AgreementSummary
-                                        .skipped(feature.getLayer().getName(), feature.getName()));
+                                summary.mergeResult(annotator1, annotator2,
+                                        AgreementSummary.skipped(layer, feature));
                                 continue;
                             }
 
                             if (maybeCas1.get().isEmpty()) {
                                 LOG.trace("Skipping combination {}/{}@{}: {} has no data",
                                         annotator1, annotator2, doc, annotator1);
-                                summary.mergeResult(annotator1, annotator2, AgreementSummary
-                                        .skipped(feature.getLayer().getName(), feature.getName()));
+                                summary.mergeResult(annotator1, annotator2,
+                                        AgreementSummary.skipped(layer, feature));
                                 continue;
                             }
 
@@ -147,8 +150,8 @@ public class CalculatePairwiseAgreementTask
                             if (maybeCas2.get().isEmpty()) {
                                 LOG.trace("Skipping combination {}/{}@{}: {} has no data",
                                         annotator1, annotator2, doc, annotator2);
-                                summary.mergeResult(annotator1, annotator2, AgreementSummary
-                                        .skipped(feature.getLayer().getName(), feature.getName()));
+                                summary.mergeResult(annotator1, annotator2,
+                                        AgreementSummary.skipped(layer, feature));
                                 continue;
                             }
 
@@ -235,6 +238,7 @@ public class CalculatePairwiseAgreementTask
     {
         private List<String> annotators;
         private DefaultAgreementTraits traits;
+        private AnnotationLayer layer;
         private AnnotationFeature feature;
         private AgreementMeasure<?> measure;
         private Map<SourceDocument, List<AnnotationDocument>> allAnnDocs;
@@ -255,6 +259,13 @@ public class CalculatePairwiseAgreementTask
         public T withTraits(DefaultAgreementTraits aTraits)
         {
             traits = aTraits;
+            return (T) this;
+        }
+
+        @SuppressWarnings("unchecked")
+        public T withLayer(AnnotationLayer aLayer)
+        {
+            layer = aLayer;
             return (T) this;
         }
 
