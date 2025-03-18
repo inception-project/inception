@@ -110,9 +110,13 @@ public class KrippendorffAlphaUnitizingAgreementMeasure
                 var values = getValues(ann, f);
 
                 for (var value : values) {
-                    if (activeAnnotations.values().stream().anyMatch($ -> $.contains(value))) {
-                        LOG.trace("Not adding unit at [{}-{}] with value [{}] to to overlap",
-                                ann.getBegin(), ann.getEnd(), value);
+                    var maybeOverlapAnn = activeAnnotations.entrySet().stream()
+                            .filter($ -> $.getValue().contains(value)).findFirst();
+                    if (maybeOverlapAnn.isPresent()) {
+                        var overlapAnn = maybeOverlapAnn.get().getKey();
+                        LOG.trace("[{}] Not adding unit [{}]@[{}-{}] due to overlap with [{}-{}]",
+                                set.getKey(), value, ann.getBegin(), ann.getEnd(),
+                                overlapAnn.getBegin(), overlapAnn.getEnd());
                         continue;
                     }
 
@@ -124,8 +128,31 @@ public class KrippendorffAlphaUnitizingAgreementMeasure
             }
         }
 
-        LOG.trace("Units in study : {}", study.getUnitCount());
         LOG.trace("Raters im study: {}", study.getRaterCount());
+        LOG.trace("Units in study : {}", study.getUnitCount());
+
+        // for (var u : study.getUnits()) {
+        // System.out.printf("addUnit(study, %d, %d, %d);%n", u.getOffset(), u.getEndOffset(),
+        // u.getRaterIdx());
+        // }
+        //
+        // for (var r = 0; r < study.getRaterCount(); r++) {
+        // var finalr = r;
+        // var runits = study.getUnits().stream().filter(u -> u.getRaterIdx() == finalr).toList();
+        // for (var u1 : runits) {
+        // for (var u2 : runits) {
+        // if (u1 == u2) {
+        // continue;
+        // }
+        //
+        // if (AnnotationPredicates.overlapping((int) u1.getOffset(),
+        // (int) u1.getEndOffset(), (int) u2.getOffset(), (int) u2.getEndOffset())
+        // && Objects.equals(u1.getCategory(), u2.getCategory())) {
+        // LOG.trace("Oops");
+        // }
+        // }
+        // }
+        // }
 
         var featureName = getFeature() != null ? getFeature().getName() : null;
         var result = new FullUnitizingAgreementResult(typeName, featureName, study,
