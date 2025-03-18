@@ -15,8 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- @import '~@inception-project/inception-js-api/src/style/InceptionEditorColors.scss';
- @import '~@inception-project/inception-js-api/src/style/InceptionEditorIcons.scss';
+@import '~@inception-project/inception-js-api/src/style/InceptionEditorColors.scss';
+@import '~@inception-project/inception-js-api/src/style/InceptionEditorIcons.scss';
+// @import '../../node_modules/bootstrap/scss/bootstrap.scss';
+
 
 :root {
   --hover-brightness: 1.2;
@@ -335,7 +337,7 @@ html > body {
 }
 
 .iaa-hide-images {
-  graphic {
+  img-wrap {
     border: none;
     margin: 0px;
     padding: 0px;
@@ -351,5 +353,66 @@ html > body {
       display: block;
       text-align: center;
     }
+  }
+}
+
+.i7n-markdown-document {
+  .iaa-md-d-none {
+    display: none !important;
+  }
+
+  ul {
+    li.iaa-md-checkbox-checked {
+      &::marker {
+        content: "☑ ";
+      }
+    }
+  
+    li.iaa-md-checkbox-unchecked {
+      &::marker {
+        content: "☐ ";
+      }
+    }
+ }
+
+  blockquote {
+    border-left: 3px solid var(--bs-secondary);
+    padding-left: 10px;
+    margin-left: 0px;
+    margin-right: 0px;
+  }
+
+  table {
+    $table-border: #ddd;
+    $table-header-bg: #f4f4f4;
+
+    width: 100%;
+    border-collapse: collapse;
+  
+    th, td {
+      padding: 6px 8px;
+      text-align: left;
+      border: 1px solid $table-border;
+    }
+  
+    th {
+      background-color: $table-header-bg;
+      font-weight: bold;
+    }
+  
+    // Responsive table
+    @media (max-width: 768px) {
+      th, td {
+        padding: 8px 10px;
+        font-size: 14px;
+      }
+    }
+  }
+
+  code pre {
+    background-color: var(--bs-tertiary-bg);
+    padding: 10px;
+    border-radius: 5px;
+    margin: 10px 0;
   }
 }

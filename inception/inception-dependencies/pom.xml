@@ -489,7 +489,53 @@
       <dependency>
         <groupId>com.github.rjeschke</groupId>
         <artifactId>txtmark</artifactId>
-        <version>0.13</version>
+        <version>${txtmark.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.vladsch.flexmark</groupId>
+        <artifactId>flexmark</artifactId>
+        <version>${flexmark.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.vladsch.flexmark</groupId>
+        <artifactId>flexmark-ext-tables</artifactId>
+        <version>${flexmark.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.vladsch.flexmark</groupId>
+        <artifactId>flexmark-ext-footnotes</artifactId>
+        <version>${flexmark.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.vladsch.flexmark</groupId>
+        <artifactId>flexmark-ext-gfm-strikethrough</artifactId>
+        <version>${flexmark.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.vladsch.flexmark</groupId>
+        <artifactId>flexmark-ext-gfm-tasklist</artifactId>
+        <version>${flexmark.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.vladsch.flexmark</groupId>
+        <artifactId>flexmark-util-data</artifactId>
+        <version>${flexmark.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.vladsch.flexmark</groupId>
+        <artifactId>flexmark-util-misc</artifactId>
+        <version>${flexmark.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.vladsch.flexmark</groupId>
+        <artifactId>flexmark-util-sequence</artifactId>
+        <version>${flexmark.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.vladsch.flexmark</groupId>
+        <artifactId>flexmark-util-ast</artifactId>
+        <version>${flexmark.version}</version>
       </dependency>
 
       <dependency>
@@ -501,7 +547,7 @@
       <dependency>
         <groupId>com.googlecode.owasp-java-html-sanitizer</groupId>
         <artifactId>owasp-java-html-sanitizer</artifactId>
-        <version>20220608.1</version>
+        <version>${owasp-java-html-sanitizer.version}</version>
       </dependency>
 
       <dependency>
