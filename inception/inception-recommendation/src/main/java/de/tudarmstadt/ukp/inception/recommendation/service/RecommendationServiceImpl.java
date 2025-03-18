@@ -27,6 +27,7 @@ import static java.util.Collections.emptySet;
 import static java.util.Optional.empty;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
+import static org.apache.commons.collections4.CollectionUtils.isEmpty;
 
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
@@ -110,6 +111,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingInstance;
 import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderDeletedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderUpdatedEvent;
@@ -736,7 +738,38 @@ public class RecommendationServiceImpl
             requestCycle.setMetaData(DIRTIES, dirties);
         }
 
-        dirties.add(new DirtySpot(aEvent));
+        var incrementalTrainingData = new LinkedHashMap<Recommender, List<TrainingInstance>>();
+        var sessionOwner = userRepository.getCurrentUser();
+        var recommenders = getActiveRecommenders(sessionOwner, aEvent.getProject()).stream() //
+                .map(EvaluatedRecommender::getRecommender) //
+                .filter(Recommender::isEnabled) //
+                .filter(rec -> rec.getLayer() != null) //
+                .filter(rec -> rec.getLayer().isEnabled()) //
+                .filter(rec -> rec.getFeature().isEnabled()) //
+                .filter(rec -> rec.getLayer().equals(aEvent.getLayer())) //
+                .toList();
+
+        for (var recommender : recommenders) {
+            try {
+                var maybeFactory = getRecommenderFactory(recommender);
+                if (maybeFactory.isEmpty()) {
+                    continue;
+                }
+
+                var factory = maybeFactory.get();
+                var engine = factory.build(recommender);
+
+                incrementalTrainingData.computeIfAbsent(recommender, $ -> new ArrayList<>()) //
+                        .addAll(engine.generateIncrementalTrainingInstances(aEvent));
+            }
+            catch (Exception e) {
+                LOG.warn("Unable to collect incremental training data for active recommender {}",
+                        recommender);
+                continue;
+            }
+        }
+
+        dirties.add(new DirtySpot(aEvent, incrementalTrainingData));
     }
 
     /*
@@ -952,15 +985,17 @@ public class RecommendationServiceImpl
             return;
         }
 
-        var user = userRepository.get(aSessionOwner);
-        // do not trigger training during when viewing others' work
-        if (user == null || !user.equals(userRepository.getCurrentUser())) {
+        // Do not trigger training during when viewing others' work
+        var sessionOwner = userRepository.get(aSessionOwner);
+        if (sessionOwner == null || !sessionOwner.equals(userRepository.getCurrentUser())) {
             return;
         }
 
+        commitIncrementalTrainingData(aSessionOwner, aDirties);
+
         // Update the task count
         var count = trainingTaskCounter.computeIfAbsent(
-                new RecommendationStateKey(user.getUsername(), aProject.getId()),
+                new RecommendationStateKey(aSessionOwner, aProject.getId()),
                 _key -> new AtomicInteger(0));
 
         // If there is no active recommender at all then let's try hard to make one active by
@@ -970,39 +1005,99 @@ public class RecommendationServiceImpl
         }
 
         if (aForceSelection || (count.getAndIncrement() % TRAININGS_PER_SELECTION == 0)) {
-            // If it is time for a selection task, we just start a selection task.
-            // The selection task then will start the training once its finished,
-            // i.e. we do not start it here.
-            schedulingService.enqueue(SelectionTask.builder() //
-                    .withSessionOwner(user) //
-                    .withProject(aProject) //
-                    .withTrigger(aEventName) //
-                    .withCurrentDocument(aCurrentDocument) //
-                    .withDataOwner(aDataOwner) //
-                    .build());
+            triggerSelectionRun(sessionOwner, aProject, aCurrentDocument, aDataOwner, aEventName);
+            return;
+        }
 
-            var state = getState(aSessionOwner, aProject);
-            synchronized (state) {
-                state.setPredictionsUntilNextEvaluation(TRAININGS_PER_SELECTION - 1);
-                state.setPredictionsSinceLastEvaluation(0);
+        triggerTrainingRun(sessionOwner, aProject, aCurrentDocument, aDataOwner, aEventName);
+    }
+
+    private void commitIncrementalTrainingData(String aSessionOwner, Set<DirtySpot> aDirties)
+    {
+        if (isEmpty(aDirties)) {
+            return;
+        }
+
+        var aggregatedIncrementalTrainingData = new LinkedHashMap<Recommender, List<TrainingInstance>>();
+        for (var dirtySpot : aDirties) {
+            for (var entry : dirtySpot.getIncrementalTrainingData().entrySet()) {
+                var recommender = entry.getKey();
+                aggregatedIncrementalTrainingData
+                        .computeIfAbsent(recommender, $ -> new ArrayList<>()) //
+                        .addAll(entry.getValue());
+            }
+        }
+
+        for (var entry : aggregatedIncrementalTrainingData.entrySet()) {
+            var recommender = entry.getKey();
+            var maybeContext = getContext(aSessionOwner, recommender);
+            if (maybeContext.isEmpty()) {
+                continue;
             }
 
+            try {
+                var maybeFactory = getRecommenderFactory(recommender);
+                if (maybeFactory.isEmpty()) {
+                    continue;
+                }
+
+                var factory = maybeFactory.get();
+                var engine = factory.build(recommender);
+                engine.putIncrementalTrainingData(maybeContext.get(), entry.getValue());
+            }
+            catch (Exception e) {
+                LOG.warn("Unable to collect incremental training data for active recommender {}",
+                        recommender);
+                continue;
+            }
+        }
+    }
+
+    private void triggerTrainingRun(User aSessionOwner, Project aProject, SourceDocument aDocument,
+            String aDataOwner, String aTrigger)
+    {
+        if (isSuspended(aSessionOwner.getUsername(), aProject)) {
             return;
         }
 
         schedulingService.enqueue(TrainingTask.builder() //
-                .withSessionOwner(user) //
+                .withSessionOwner(aSessionOwner) //
                 .withProject(aProject) //
-                .withTrigger(aEventName) //
-                .withCurrentDocument(aCurrentDocument) //
+                .withTrigger(aTrigger) //
+                .withCurrentDocument(aDocument) //
                 .withDataOwner(aDataOwner) //
                 .build());
 
-        var state = getState(aSessionOwner, aProject);
+        var state = getState(aSessionOwner.getUsername(), aProject);
         synchronized (state) {
             int predictions = state.getPredictionsSinceLastEvaluation() + 1;
             state.setPredictionsSinceLastEvaluation(predictions);
             state.setPredictionsUntilNextEvaluation(TRAININGS_PER_SELECTION - predictions - 1);
+        }
+    }
+
+    private void triggerSelectionRun(User aSessionOwner, Project aProject, SourceDocument aDocument,
+            String aDataOwner, String aEventName)
+    {
+        if (isSuspended(aSessionOwner.getUsername(), aProject)) {
+            return;
+        }
+
+        // If it is time for a selection task, we just start a selection task.
+        // The selection task then will start the training once its finished,
+        // i.e. we do not start it here.
+        schedulingService.enqueue(SelectionTask.builder() //
+                .withSessionOwner(aSessionOwner) //
+                .withProject(aProject) //
+                .withTrigger(aEventName) //
+                .withCurrentDocument(aDocument) //
+                .withDataOwner(aDataOwner) //
+                .build());
+
+        var state = getState(aSessionOwner.getUsername(), aProject);
+        synchronized (state) {
+            state.setPredictionsUntilNextEvaluation(TRAININGS_PER_SELECTION - 1);
+            state.setPredictionsSinceLastEvaluation(0);
         }
     }
 
