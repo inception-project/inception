@@ -51,6 +51,8 @@ policies:
   - action: PASS
     elements: ["caption", "col", "colgroup", "table", "tbody", "td", "tfoot", "th",
                "thead", "tr"]
+  - action: PASS
+    elements: ["table-wrap"]
   # Deprecated stuff
   - action: PASS
     elements: ["font", "center"]
@@ -74,6 +76,8 @@ policies:
   # Images - depending on the security configurations, the safety net may block these
   - action: PASS
     elements: ["img"]
+  - action: PASS
+    elements: ["img-wrap"]
   - on_elements: ["img"]
     action: PASS
     attributes: ["decoding", "alt", "width", "height"]

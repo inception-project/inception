@@ -17,6 +17,12 @@
  */
 package de.tudarmstadt.ukp.inception.externaleditor.xhtml;
 
+import static de.tudarmstadt.ukp.inception.externaleditor.xhtml.XHtmlConstants.BODY;
+import static de.tudarmstadt.ukp.inception.externaleditor.xhtml.XHtmlConstants.HEAD;
+import static de.tudarmstadt.ukp.inception.externaleditor.xhtml.XHtmlConstants.HTML;
+import static de.tudarmstadt.ukp.inception.externaleditor.xhtml.XHtmlConstants.P;
+import static de.tudarmstadt.ukp.inception.externaleditor.xhtml.XHtmlConstants.SPAN;
+import static de.tudarmstadt.ukp.inception.externaleditor.xhtml.XHtmlConstants.XHTML_NS_URI;
 import static java.lang.invoke.MethodHandles.lookup;
 import static java.util.Optional.ofNullable;
 import static javax.xml.XMLConstants.DEFAULT_NS_PREFIX;
@@ -78,13 +84,6 @@ public class XHtmlXmlDocumentViewControllerImpl
 
     private static final String GET_DOCUMENT_PATH = "/p/{projectId}/d/{documentId}/xml";
     private static final String GET_RESOURCE_PATH = "/p/{projectId}/d/{documentId}/res";
-
-    private static final String XHTML_NS_URI = "http://www.w3.org/1999/xhtml";
-    private static final String HTML = "html";
-    private static final String BODY = "body";
-    private static final String HEAD = "head";
-    private static final String P = "p";
-    private static final String SPAN = "span";
 
     private final DocumentService documentService;
     private final DocumentStorageService documentStorageService;
@@ -170,16 +169,11 @@ public class XHtmlXmlDocumentViewControllerImpl
             renderHead(doc, rawHandler);
 
             if (maybeXmlDocument.isEmpty()) {
-                // Gracefully handle the case that the CAS does not contain any XML structure at all
-                // and show only the document text in this case.
-                var atts = new AttributesImpl();
-                atts.addAttribute("", "", "class", "CDATA", "i7n-plain-text-document");
-                rawHandler.startElement(null, null, BODY, atts);
-                renderTextContent(cas, finalHandler);
-                rawHandler.endElement(null, null, BODY);
+                // renderTextContent(cas, finalHandler);
+                renderMarkdownContent(cas, finalHandler);
             }
             else {
-                rawHandler.startElement(null, null, BODY, null);
+                finalHandler.startElement(null, null, BODY, null);
 
                 var formatPolicy = formatRegistry.getFormatPolicy(doc);
                 var defaultNamespace = formatPolicy.flatMap(policy -> policy.getDefaultNamespace());
@@ -194,7 +188,7 @@ public class XHtmlXmlDocumentViewControllerImpl
                     finalHandler.endPrefixMapping(DEFAULT_NS_PREFIX);
                 }
 
-                rawHandler.endElement(null, null, BODY);
+                finalHandler.endElement(null, null, BODY);
             }
 
             rawHandler.endElement(null, null, HTML);
@@ -235,6 +229,12 @@ public class XHtmlXmlDocumentViewControllerImpl
 
     private void renderTextContent(CAS cas, ContentHandler ch) throws SAXException
     {
+        // Gracefully handle the case that the CAS does not contain any XML structure at all
+        // and show only the document text in this case.
+        var atts = new AttributesImpl();
+        atts.addAttribute("", "", "class", "CDATA", "i7n-plain-text-document");
+        ch.startElement(null, null, BODY, atts);
+
         var lineAttribs = new AttributesImpl();
         lineAttribs.addAttribute("", "", "class", "CDATA", "data-i7n-tracking");
 
@@ -265,6 +265,19 @@ public class XHtmlXmlDocumentViewControllerImpl
 
         ch.endElement(null, null, SPAN);
         ch.endElement(null, null, P);
+
+        ch.endElement(null, null, BODY);
+    }
+
+    private void renderMarkdownContent(CAS cas, ContentHandler ch) throws SAXException
+    {
+        var atts = new AttributesImpl();
+        atts.addAttribute("", "", "class", "CDATA", "i7n-markdown-document");
+        ch.startElement(null, null, BODY, atts);
+
+        new XHtmlXmlMarkdownProcessor().process(ch, cas.getDocumentText());
+
+        ch.endElement(null, null, BODY);
     }
 
     @PreAuthorize("@documentAccess.canViewAnnotationDocument(#aProjectId, #aDocumentId, #principal.name)")
