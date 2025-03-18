@@ -580,6 +580,12 @@ public class RecommendationServiceImpl
     private void activateNonTrainableRecommenersSync(Project project, User sessionOwner,
             String trigger)
     {
+        if (sessionOwner == null || project.getId() == null) {
+            LOG.trace("Not activating non-trainable recommenders because we are outside a user "
+                    + "session or project has not yet been persisted");
+            return;
+        }
+
         // Activate all non-trainable recommenders - execute synchronously - blocking
         schedulingService.executeSync(NonTrainableRecommenderActivationTask.builder() //
                 .withSessionOwner(sessionOwner) //

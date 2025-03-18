@@ -231,6 +231,10 @@ public class StandaloneShutdownDialogManager
 
     private void makeSystemTrayMenu(JFrame aFrame) throws AWTException
     {
+        if (GraphicsEnvironment.isHeadless()) {
+            return;
+        }
+
         var tray = SystemTray.getSystemTray();
         var trayIcon = new TrayIcon(StandaloneUserInterface.getIconImage());
         trayIcon.setImageAutoSize(true);
