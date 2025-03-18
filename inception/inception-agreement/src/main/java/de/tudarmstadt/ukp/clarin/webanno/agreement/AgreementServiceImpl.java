@@ -170,6 +170,7 @@ public class AgreementServiceImpl
                             jg.writeStringField("user", dataOwner);
                             jg.writeNumberField("begin", ann.getBegin());
                             jg.writeNumberField("end", ann.getEnd());
+                            jg.writeStringField("text", ann.getCoveredText());
                             if (featureName != null) {
                                 var label = adapter.renderFeatureValue(ann, featureName);
                                 jg.writeStringField("label", label);
@@ -206,7 +207,7 @@ public class AgreementServiceImpl
 
         try (var writer = new OutputStreamWriter(aOut, UTF_8);
                 var csvPrinter = new CSVPrinter(writer, CSVFormat.DEFAULT.builder()
-                        .setHeader("doc", "user", "begin", "end", "label").get())) {
+                        .setHeader("doc", "user", "begin", "end", "text", "label").get())) {
 
             for (var doc : docs) {
                 var annDocs = allAnnDocs.get(doc);
@@ -222,7 +223,7 @@ public class AgreementServiceImpl
                                     ? adapter.renderFeatureValue(ann, featureName)
                                     : "";
                             csvPrinter.printRecord(doc.getName(), dataOwner, ann.getBegin(),
-                                    ann.getEnd(), label);
+                                    ann.getEnd(), ann.getCoveredText(), label);
                         }
                     }
                 }
