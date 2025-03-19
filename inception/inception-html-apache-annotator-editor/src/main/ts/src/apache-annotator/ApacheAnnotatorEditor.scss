@@ -382,10 +382,10 @@ html > body {
     margin-right: 0px;
   }
 
-  table {
-    $table-border: #ddd;
-    $table-header-bg: #f4f4f4;
+  $table-border: #ddd;
+  $table-header-bg: #f4f4f4;
 
+  table {
     width: 100%;
     border-collapse: collapse;
   
@@ -409,10 +409,24 @@ html > body {
     }
   }
 
-  code pre {
-    background-color: var(--bs-tertiary-bg);
-    padding: 10px;
-    border-radius: 5px;
-    margin: 10px 0;
+  code {  
+    color: var(--bs-code-color);
+
+    &.iaa-md-codeblock {
+      border-radius: 0.5em;
+      color: var(--bs-body-color);
+      display: block;
+      background-color: var(--bs-tertiary-bg);
+      padding: 10px;
+      border-radius: 5px;
+      margin: 10px 0;
+
+      &::before {
+        float: right;
+        content: attr(data-iaa-md-info);
+        opacity: 50%;
+        font-size: 80%;
+      }
+    }
   }
 }

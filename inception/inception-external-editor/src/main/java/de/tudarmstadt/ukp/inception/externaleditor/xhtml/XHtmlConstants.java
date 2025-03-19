@@ -25,4 +25,27 @@ public class XHtmlConstants
     public static final String HEAD = "head";
     public static final String P = "p";
     public static final String SPAN = "span";
+    public static final String PRE = "pre";
+    public static final String OL = "ol";
+    public static final String UL = "ul";
+    public static final String TBODY = "tbody";
+    public static final String THEAD = "thead";
+    public static final String CODE = "code";
+    public static final String STRONG = "strong";
+    public static final String EM = "em";
+    public static final String BLOCKQUOTE = "blockquote";
+    public static final String BR = "br";
+    public static final String HR = "hr";
+    public static final String S = "s";
+    public static final String LI = "li";
+    public static final String TD = "td";
+    public static final String CDATA = "CDATA";
+    public static final String TH = "th";
+    public static final String TR = "tr";
+    public static final String TABLE = "table";
+
+    public static final String ATTR_CLASS = "class";
+
+    // INCEpTION special elements
+    public static final String TABLE_WRAP = "table-wrap";
 }
