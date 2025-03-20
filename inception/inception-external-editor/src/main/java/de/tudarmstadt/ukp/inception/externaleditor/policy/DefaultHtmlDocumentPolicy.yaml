@@ -53,6 +53,9 @@ policies:
                "thead", "tr"]
   - action: PASS
     elements: ["table-wrap"]
+  - on_elements: ["td","th"]
+    action: PASS
+    attributes: ["colspan", "rowspan"]
   # Deprecated stuff
   - action: PASS
     elements: ["font", "center"]

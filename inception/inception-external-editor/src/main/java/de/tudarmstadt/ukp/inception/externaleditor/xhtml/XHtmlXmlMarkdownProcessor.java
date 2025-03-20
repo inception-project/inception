@@ -49,6 +49,7 @@ import java.util.function.BiConsumer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.AttributesImpl;
@@ -102,6 +103,7 @@ public class XHtmlXmlMarkdownProcessor
                         TaskListExtension.create(), //
                         TablesExtension.create(), //
                         StrikethroughExtension.create())) //
+                .set(TablesExtension.COLUMN_SPANS, false) //
                 .toImmutable();
 
         var parser = Parser.builder(options).build();
@@ -317,10 +319,10 @@ public class XHtmlXmlMarkdownProcessor
             if (tableSeparator) {
                 alignStart(aHandler, aTableCell);
 
-                var attrsTd = new AttributesImpl();
-                attrsTd.addAttribute("", "", ATTR_CLASS, CDATA, IAA_MD_D_NONE);
+                var attrs = new AttributesImpl();
+                attrs.addAttribute("", "", ATTR_CLASS, CDATA, IAA_MD_D_NONE);
 
-                ch.startElement(null, null, TR, attrsTd);
+                ch.startElement(null, null, TR, attrs);
                 aProceessChildren.run();
                 ch.endElement(null, null, TR);
 
@@ -335,12 +337,17 @@ public class XHtmlXmlMarkdownProcessor
                 Runnable aProceessChildren)
             throws SAXException
         {
+            var attrs = new AttributesImpl();
+            if (aTableCell.getSpan() > 1) {
+                attrs.addAttribute("", "", "colspan", CDATA, String.valueOf(aTableCell.getSpan()));
+            }
+
             if (aTableCell.isHeader()) {
-                wrap(aHandler, aTableCell, aProceessChildren, TH);
+                wrap(aHandler, aTableCell, aProceessChildren, TH, attrs);
                 return;
             }
 
-            wrap(aHandler, aTableCell, aProceessChildren, TD);
+            wrap(aHandler, aTableCell, aProceessChildren, TD, attrs);
         }
 
         private void footnote(ContentHandler aHandler, Footnote aHeading,
@@ -357,14 +364,21 @@ public class XHtmlXmlMarkdownProcessor
         }
 
         private void wrap(ContentHandler aHandler, Node aNode, Runnable aProceessChildren,
-                String qName)
+                String aQName)
+            throws SAXException
+        {
+            wrap(aHandler, aNode, aProceessChildren, aQName, null);
+        }
+
+        private void wrap(ContentHandler aHandler, Node aNode, Runnable aProceessChildren,
+                String aQName, Attributes aAttrs)
             throws SAXException
         {
             alignStart(aHandler, aNode);
 
-            ch.startElement(null, null, qName, null);
+            ch.startElement(null, null, aQName, aAttrs);
             aProceessChildren.run();
-            ch.endElement(null, null, qName);
+            ch.endElement(null, null, aQName);
 
             alignEnd(aHandler, aNode);
         }
