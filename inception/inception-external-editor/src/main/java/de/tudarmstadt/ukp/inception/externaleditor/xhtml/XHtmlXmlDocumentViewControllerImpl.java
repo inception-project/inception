@@ -169,8 +169,12 @@ public class XHtmlXmlDocumentViewControllerImpl
             renderHead(doc, rawHandler);
 
             if (maybeXmlDocument.isEmpty()) {
-                // renderTextContent(cas, finalHandler);
+                // try {
                 renderMarkdownContent(cas, finalHandler);
+                // }
+                // catch (Exception e) {
+                // // renderTextContent(cas, finalHandler);
+                // }
             }
             else {
                 finalHandler.startElement(null, null, BODY, null);

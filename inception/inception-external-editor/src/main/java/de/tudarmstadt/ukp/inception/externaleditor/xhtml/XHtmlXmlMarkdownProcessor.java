@@ -17,6 +17,28 @@
  */
 package de.tudarmstadt.ukp.inception.externaleditor.xhtml;
 
+import static de.tudarmstadt.ukp.inception.externaleditor.xhtml.XHtmlConstants.ATTR_CLASS;
+import static de.tudarmstadt.ukp.inception.externaleditor.xhtml.XHtmlConstants.BLOCKQUOTE;
+import static de.tudarmstadt.ukp.inception.externaleditor.xhtml.XHtmlConstants.BR;
+import static de.tudarmstadt.ukp.inception.externaleditor.xhtml.XHtmlConstants.CDATA;
+import static de.tudarmstadt.ukp.inception.externaleditor.xhtml.XHtmlConstants.CODE;
+import static de.tudarmstadt.ukp.inception.externaleditor.xhtml.XHtmlConstants.EM;
+import static de.tudarmstadt.ukp.inception.externaleditor.xhtml.XHtmlConstants.HR;
+import static de.tudarmstadt.ukp.inception.externaleditor.xhtml.XHtmlConstants.LI;
+import static de.tudarmstadt.ukp.inception.externaleditor.xhtml.XHtmlConstants.OL;
+import static de.tudarmstadt.ukp.inception.externaleditor.xhtml.XHtmlConstants.P;
+import static de.tudarmstadt.ukp.inception.externaleditor.xhtml.XHtmlConstants.S;
+import static de.tudarmstadt.ukp.inception.externaleditor.xhtml.XHtmlConstants.SPAN;
+import static de.tudarmstadt.ukp.inception.externaleditor.xhtml.XHtmlConstants.STRONG;
+import static de.tudarmstadt.ukp.inception.externaleditor.xhtml.XHtmlConstants.TABLE;
+import static de.tudarmstadt.ukp.inception.externaleditor.xhtml.XHtmlConstants.TABLE_WRAP;
+import static de.tudarmstadt.ukp.inception.externaleditor.xhtml.XHtmlConstants.TBODY;
+import static de.tudarmstadt.ukp.inception.externaleditor.xhtml.XHtmlConstants.TD;
+import static de.tudarmstadt.ukp.inception.externaleditor.xhtml.XHtmlConstants.TH;
+import static de.tudarmstadt.ukp.inception.externaleditor.xhtml.XHtmlConstants.THEAD;
+import static de.tudarmstadt.ukp.inception.externaleditor.xhtml.XHtmlConstants.TR;
+import static de.tudarmstadt.ukp.inception.externaleditor.xhtml.XHtmlConstants.UL;
+import static java.lang.String.join;
 import static java.util.Arrays.asList;
 
 import java.lang.invoke.MethodHandles;
@@ -27,6 +49,7 @@ import java.util.function.BiConsumer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.AttributesImpl;
@@ -80,6 +103,7 @@ public class XHtmlXmlMarkdownProcessor
                         TaskListExtension.create(), //
                         TablesExtension.create(), //
                         StrikethroughExtension.create())) //
+                .set(TablesExtension.COLUMN_SPANS, false) //
                 .toImmutable();
 
         var parser = Parser.builder(options).build();
@@ -99,6 +123,9 @@ public class XHtmlXmlMarkdownProcessor
     static class XHtmlVisitor
         extends NodeVisitor
     {
+        private static final String IAA_MD_CHECKBOX_UNCHECKED = "iaa-md-checkbox-unchecked";
+        private static final String IAA_MD_CHECKBOX_CHECKED = "iaa-md-checkbox-checked";
+        private static final String IAA_MD_D_NONE = "iaa-md-d-none";
         private int processedText = 0;
         private ContentHandler ch;
         private Map<Class<?>, NodeHandler<?>> handlers = new HashMap<>();
@@ -113,26 +140,26 @@ public class XHtmlXmlMarkdownProcessor
             addHandler(WhiteSpace.class, this::text);
             addHandler(HardLineBreak.class, this::text);
             addHandler(Document.class, this::noop);
-            addHandler(ThematicBreak.class, (h, n, cont) -> milestoneBefore(h, n, cont, "hr"));
-            addHandler(HardLineBreak.class, (h, n, cont) -> milestoneBefore(h, n, cont, "br"));
-            addHandler(SoftLineBreak.class, (h, n, cont) -> milestoneBefore(h, n, cont, "br"));
-            addHandler(BlockQuote.class, (h, n, cont) -> wrap(h, n, cont, "blockquote"));
-            addHandler(Emphasis.class, (h, n, cont) -> wrap(h, n, cont, "em"));
-            addHandler(StrongEmphasis.class, (h, n, cont) -> wrap(h, n, cont, "strong"));
-            addHandler(Strikethrough.class, (h, n, cont) -> wrap(h, n, cont, "s"));
-            addHandler(Code.class, (h, n, cont) -> wrap(h, n, cont, "code"));
+            addHandler(ThematicBreak.class, (h, n, cont) -> milestoneBefore(h, n, cont, HR));
+            addHandler(HardLineBreak.class, (h, n, cont) -> milestoneBefore(h, n, cont, BR));
+            addHandler(SoftLineBreak.class, (h, n, cont) -> milestoneBefore(h, n, cont, BR));
+            addHandler(BlockQuote.class, (h, n, cont) -> wrap(h, n, cont, BLOCKQUOTE));
+            addHandler(Emphasis.class, (h, n, cont) -> wrap(h, n, cont, EM));
+            addHandler(StrongEmphasis.class, (h, n, cont) -> wrap(h, n, cont, STRONG));
+            addHandler(Strikethrough.class, (h, n, cont) -> wrap(h, n, cont, S));
+            addHandler(Code.class, (h, n, cont) -> wrap(h, n, cont, CODE));
             addHandler(TableBlock.class, this::tableBlock);
-            addHandler(TableHead.class, (h, n, cont) -> wrap(h, n, cont, "thead"));
+            addHandler(TableHead.class, (h, n, cont) -> wrap(h, n, cont, THEAD));
             addHandler(TableSeparator.class, this::tableSeparator);
-            addHandler(TableBody.class, (h, n, cont) -> wrap(h, n, cont, "tbody"));
+            addHandler(TableBody.class, (h, n, cont) -> wrap(h, n, cont, TBODY));
             addHandler(TableRow.class, this::tableRow);
             addHandler(TableCell.class, this::tableCell);
             addHandler(Paragraph.class, this::paragraph);
-            addHandler(BulletList.class, (h, n, cont) -> wrap(h, n, cont, "ul"));
-            addHandler(BulletListItem.class, (h, n, cont) -> wrap(h, n, cont, "li"));
+            addHandler(BulletList.class, (h, n, cont) -> wrap(h, n, cont, UL));
+            addHandler(BulletListItem.class, (h, n, cont) -> wrap(h, n, cont, LI));
             addHandler(TaskListItem.class, this::taskListItem);
-            addHandler(OrderedList.class, (h, n, cont) -> wrap(h, n, cont, "ol"));
-            addHandler(OrderedListItem.class, (h, n, cont) -> wrap(h, n, cont, "li"));
+            addHandler(OrderedList.class, (h, n, cont) -> wrap(h, n, cont, OL));
+            addHandler(OrderedListItem.class, (h, n, cont) -> wrap(h, n, cont, LI));
             addHandler(Heading.class, this::heading);
             addHandler(FencedCodeBlock.class, this::codeBlock);
             addHandler(FootnoteBlock.class, this::noop);
@@ -196,9 +223,13 @@ public class XHtmlXmlMarkdownProcessor
             alignStart(aHandler, aCodeBlock);
 
             fencedCodeBlock = true;
-            ch.startElement(null, null, "code", null);
+            var attrs = new AttributesImpl();
+            attrs.addAttribute("", "", ATTR_CLASS, CDATA, "iaa-md-codeblock");
+            attrs.addAttribute("", "", "data-iaa-md-info", CDATA, aCodeBlock.getInfo().toString());
+
+            ch.startElement(null, null, CODE, attrs);
             aProceessChildren.run();
-            ch.endElement(null, null, "code");
+            ch.endElement(null, null, CODE);
             fencedCodeBlock = false;
 
             alignEnd(aHandler, aCodeBlock);
@@ -224,9 +255,9 @@ public class XHtmlXmlMarkdownProcessor
                 }
             }
 
-            ch.startElement(null, null, "p", null);
+            ch.startElement(null, null, P, null);
             aProceessChildren.run();
-            ch.endElement(null, null, "p");
+            ch.endElement(null, null, P);
         }
 
         private void taskListItem(ContentHandler aHandler, TaskListItem aTaskListItem,
@@ -239,17 +270,17 @@ public class XHtmlXmlMarkdownProcessor
 
             var checkboxAttrs = new AttributesImpl();
             if (aTaskListItem.isItemDoneMarker()) {
-                classes.add("iaa-md-checkbox-checked");
+                classes.add(IAA_MD_CHECKBOX_CHECKED);
             }
             else {
-                classes.add("iaa-md-checkbox-unchecked");
+                classes.add(IAA_MD_CHECKBOX_UNCHECKED);
             }
 
-            checkboxAttrs.addAttribute("", "", "class", "CDATA", String.join(" ", classes));
+            checkboxAttrs.addAttribute("", "", ATTR_CLASS, CDATA, join(" ", classes));
 
-            ch.startElement(null, null, "li", checkboxAttrs);
+            ch.startElement(null, null, LI, checkboxAttrs);
             aProceessChildren.run();
-            ch.endElement(null, null, "li");
+            ch.endElement(null, null, LI);
 
             alignEnd(aHandler, aTaskListItem);
         }
@@ -272,11 +303,11 @@ public class XHtmlXmlMarkdownProcessor
         {
             alignStart(aHandler, aTable);
 
-            ch.startElement(null, null, "table-wrap", null);
-            ch.startElement(null, null, "table", null);
+            ch.startElement(null, null, TABLE_WRAP, null);
+            ch.startElement(null, null, TABLE, null);
             aProceessChildren.run();
-            ch.endElement(null, null, "table");
-            ch.endElement(null, null, "table-wrap");
+            ch.endElement(null, null, TABLE);
+            ch.endElement(null, null, TABLE_WRAP);
 
             alignEnd(aHandler, aTable);
         }
@@ -288,30 +319,35 @@ public class XHtmlXmlMarkdownProcessor
             if (tableSeparator) {
                 alignStart(aHandler, aTableCell);
 
-                var attrsTd = new AttributesImpl();
-                attrsTd.addAttribute("", "", "class", "CDATA", "iaa-md-d-none");
+                var attrs = new AttributesImpl();
+                attrs.addAttribute("", "", ATTR_CLASS, CDATA, IAA_MD_D_NONE);
 
-                ch.startElement(null, null, "tr", attrsTd);
+                ch.startElement(null, null, TR, attrs);
                 aProceessChildren.run();
-                ch.endElement(null, null, "tr");
+                ch.endElement(null, null, TR);
 
                 alignEnd(aHandler, aTableCell);
                 return;
             }
 
-            wrap(aHandler, aTableCell, aProceessChildren, "tr");
+            wrap(aHandler, aTableCell, aProceessChildren, TR);
         }
 
         private void tableCell(ContentHandler aHandler, TableCell aTableCell,
                 Runnable aProceessChildren)
             throws SAXException
         {
+            var attrs = new AttributesImpl();
+            if (aTableCell.getSpan() > 1) {
+                attrs.addAttribute("", "", "colspan", CDATA, String.valueOf(aTableCell.getSpan()));
+            }
+
             if (aTableCell.isHeader()) {
-                wrap(aHandler, aTableCell, aProceessChildren, "th");
+                wrap(aHandler, aTableCell, aProceessChildren, TH, attrs);
                 return;
             }
 
-            wrap(aHandler, aTableCell, aProceessChildren, "td");
+            wrap(aHandler, aTableCell, aProceessChildren, TD, attrs);
         }
 
         private void footnote(ContentHandler aHandler, Footnote aHeading,
@@ -320,22 +356,29 @@ public class XHtmlXmlMarkdownProcessor
         {
             alignStart(aHandler, aHeading);
 
-            ch.startElement(null, null, "span", null);
+            ch.startElement(null, null, SPAN, null);
             aProceessChildren.run();
-            ch.endElement(null, null, "span");
+            ch.endElement(null, null, SPAN);
 
             alignEnd(aHandler, aHeading);
         }
 
         private void wrap(ContentHandler aHandler, Node aNode, Runnable aProceessChildren,
-                String qName)
+                String aQName)
+            throws SAXException
+        {
+            wrap(aHandler, aNode, aProceessChildren, aQName, null);
+        }
+
+        private void wrap(ContentHandler aHandler, Node aNode, Runnable aProceessChildren,
+                String aQName, Attributes aAttrs)
             throws SAXException
         {
             alignStart(aHandler, aNode);
 
-            ch.startElement(null, null, qName, null);
+            ch.startElement(null, null, aQName, aAttrs);
             aProceessChildren.run();
-            ch.endElement(null, null, qName);
+            ch.endElement(null, null, aQName);
 
             alignEnd(aHandler, aNode);
         }
@@ -365,6 +408,10 @@ public class XHtmlXmlMarkdownProcessor
 
         private void alignStart(ContentHandler aHandler, Node aNode) throws SAXException
         {
+            if (processedText > aNode.getStartOffset()) {
+                throw new IllegalStateException("Misalignment between node and text. Aborting!");
+            }
+
             while (processedText < aNode.getStartOffset()) {
                 aHandler.characters(new char[] { ' ' }, 0, 1);
                 processedText++;
@@ -373,6 +420,10 @@ public class XHtmlXmlMarkdownProcessor
 
         private void alignEnd(ContentHandler aHandler, Node aNode) throws SAXException
         {
+            if (processedText > aNode.getEndOffset()) {
+                throw new IllegalStateException("Misalignment between node and text. Aborting!");
+            }
+
             while (processedText < aNode.getEndOffset()) {
                 aHandler.characters(new char[] { ' ' }, 0, 1);
                 processedText++;

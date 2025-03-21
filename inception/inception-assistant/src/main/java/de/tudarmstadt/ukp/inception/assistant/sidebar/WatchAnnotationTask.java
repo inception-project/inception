@@ -36,6 +36,8 @@ import org.apache.commons.lang3.Validate;
 import org.apache.uima.jcas.tcas.Annotation;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
@@ -169,7 +171,7 @@ public class WatchAnnotationTask
         return toPrettyJsonString(instance);
     }
 
-    private static record BooleanQuestion(boolean answer) {};
+    private static record BooleanQuestion(@JsonProperty(required = true) boolean answer) {};
 
     public static Builder<Builder<?>> builder()
     {
