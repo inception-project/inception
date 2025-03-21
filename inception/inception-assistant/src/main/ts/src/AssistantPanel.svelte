@@ -275,13 +275,18 @@
         }
 
         // Speak when sentence seems complete (we don't handle abbreviations)
-        if (utteranceBuffer.trimEnd().endsWith(".")) {
+        const trimmedBuffer = utteranceBuffer.trimEnd()
+        const lastChar = trimmedBuffer.charAt(trimmedBuffer.length - 1);
+        // console.log(`Checking if utterance ending in [${lastChar}] is complete: [${utteranceBuffer}]`);
+        if ([".", "!", "?", ":", ";"].includes(lastChar)) {
+            // console.log(`Enqueuing utterance at sentence end: [${utteranceBuffer}]`);
             enqueueUtterance(utteranceBuffer);
             utteranceBuffer = "";
         } else {
             // Speak line by line
             let lineBreak = utteranceBuffer.indexOf("\n");
             if (lineBreak > 0) {
+                // console.log(`Enqueuing utterance at line end: [${utteranceBuffer}]`);
                 enqueueUtterance(utteranceBuffer.substring(0, lineBreak));
                 utteranceBuffer = utteranceBuffer.substring(lineBreak);
             }
