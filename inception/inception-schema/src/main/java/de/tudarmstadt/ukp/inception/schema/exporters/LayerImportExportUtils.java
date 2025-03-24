@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.export;
+package de.tudarmstadt.ukp.inception.schema.exporters;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SINGLE_TOKEN;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
@@ -65,14 +65,14 @@ public class LayerImportExportUtils
     {
         var exLayers = new ArrayList<ExportedAnnotationLayer>();
 
-        var exMainLayer = exportLayerDetails(null, null, layer, aSchemaService);
+        var exMainLayer = exportLayerDetails(layer, aSchemaService);
         exLayers.add(exMainLayer);
 
         // If the layer is attached to another layer, then we also have to export
         // that, otherwise we would be missing it during re-import.
         if (layer.getAttachType() != null) {
             var attachLayer = layer.getAttachType();
-            var exAttachLayer = exportLayerDetails(null, null, attachLayer, aSchemaService);
+            var exAttachLayer = exportLayerDetails(attachLayer, aSchemaService);
             exMainLayer
                     .setAttachType(new ExportedAnnotationLayerReference(exAttachLayer.getName()));
             exLayers.add(exAttachLayer);
@@ -102,7 +102,7 @@ public class LayerImportExportUtils
     }
 
     @Deprecated
-    private static void createTagSet(TagSet aTagSet, ExportedTagSet aExTagSet, Project aProject,
+    private static void importTagSet(TagSet aTagSet, ExportedTagSet aExTagSet, Project aProject,
             AnnotationSchemaService aAnnotationService)
         throws IOException
     {
@@ -118,7 +118,7 @@ public class LayerImportExportUtils
             if (aAnnotationService.existsTag(exTag.getName(), aTagSet)) {
                 continue;
             }
-            Tag tag = new Tag();
+            var tag = new Tag();
             tag.setDescription(exTag.getDescription());
             tag.setTagSet(aTagSet);
             tag.setName(exTag.getName());
@@ -221,11 +221,11 @@ public class LayerImportExportUtils
             TagSet tagSet = null;
             if (exTagset != null && annotationService.existsTagSet(exTagset.getName(), project)) {
                 tagSet = annotationService.getTagSet(exTagset.getName(), project);
-                createTagSet(tagSet, exTagset, project, annotationService);
+                importTagSet(tagSet, exTagset, project, annotationService);
             }
             else if (exTagset != null) {
                 tagSet = new TagSet();
-                createTagSet(tagSet, exTagset, project, annotationService);
+                importTagSet(tagSet, exTagset, project, annotationService);
             }
             if (annotationService.existsFeature(exfeature.getName(), layer)) {
                 AnnotationFeature feature = annotationService.getFeature(exfeature.getName(),
@@ -285,10 +285,8 @@ public class LayerImportExportUtils
     }
 
     @Deprecated
-    public static ExportedAnnotationLayer exportLayerDetails(
-            Map<AnnotationLayer, ExportedAnnotationLayer> aLayerToExLayer,
-            Map<AnnotationFeature, ExportedAnnotationFeature> aFeatureToExFeature,
-            AnnotationLayer aLayer, AnnotationSchemaService aAnnotationService)
+    public static ExportedAnnotationLayer exportLayerDetails(AnnotationLayer aLayer,
+            AnnotationSchemaService aAnnotationService)
     {
         var exLayer = new ExportedAnnotationLayer();
         exLayer.setAllowStacking(aLayer.isAllowStacking());
@@ -304,14 +302,9 @@ public class LayerImportExportUtils
         exLayer.setValidationMode(aLayer.getValidationMode());
         exLayer.setLinkedListBehavior(aLayer.isLinkedListBehavior());
         exLayer.setName(aLayer.getName());
-        exLayer.setProjectName(aLayer.getProject().getName());
         exLayer.setType(aLayer.getType());
         exLayer.setUiName(aLayer.getUiName());
         exLayer.setTraits(aLayer.getTraits());
-
-        if (aLayerToExLayer != null) {
-            aLayerToExLayer.put(aLayer, exLayer);
-        }
 
         var exFeatures = new ArrayList<ExportedAnnotationFeature>();
         for (var feature : aAnnotationService.listAnnotationFeature(aLayer)) {
@@ -354,10 +347,8 @@ public class LayerImportExportUtils
                 exTagSet.setTags(exportedTags);
                 exFeature.setTagSet(exTagSet);
             }
+
             exFeatures.add(exFeature);
-            if (aFeatureToExFeature != null) {
-                aFeatureToExFeature.put(feature, exFeature);
-            }
         }
 
         exLayer.setFeatures(exFeatures);
