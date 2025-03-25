@@ -234,7 +234,7 @@
     <types-urijs.version>^1.19.20</types-urijs.version>
     <uuid.version>^9.0.1</uuid.version>
     <urijs.version>^1.19.11</urijs.version>
-    <vitest.version>^2.1.9</vitest.version>
+    <vitest.version>^3.0.9</vitest.version>
     <yargs.version>^17.7.2</yargs.version>
   </properties>
 
