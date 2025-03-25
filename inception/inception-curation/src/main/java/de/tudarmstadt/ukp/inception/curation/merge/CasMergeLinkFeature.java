@@ -47,12 +47,12 @@ import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.inception.schema.api.feature.LinkWithRoleModel;
 import de.tudarmstadt.ukp.inception.schema.api.feature.MaterializedLink;
 
-public class CasMergeLinkFeature
+class CasMergeLinkFeature
 {
     private static final Logger LOG = LoggerFactory.getLogger(CasMerge.class);
 
-    public static CasMergeOperationResult mergeSlotFeature(CasMergeContext aContext,
-            SourceDocument aDocument, String aUsername, AnnotationLayer aAnnotationLayer,
+    static CasMergeOperationResult mergeSlotFeature(CasMergeContext aContext,
+            SourceDocument aDocument, String aDataOwner, AnnotationLayer aAnnotationLayer,
             CAS aTargetCas, AnnotationFS aSourceFs, String aSourceFeature, int aSourceSlotIndex)
         throws AnnotationException
     {
@@ -72,8 +72,8 @@ public class CasMergeLinkFeature
 
         var targetLinkHost = findLinkHostInTargetCas(aTargetCas, aSourceFs, adapter, slotFeature,
                 sourceLink);
-        var targetLinkTarget = findLinkTargetInTargetCas(aTargetCas, aSourceFs, adapter, slotFeature,
-                sourceLink, aSourceSlotIndex, aContext);
+        var targetLinkTarget = findLinkTargetInTargetCas(aTargetCas, aSourceFs, adapter,
+                slotFeature, sourceLink, aSourceSlotIndex, aContext);
 
         List<LinkWithRoleModel> targetLinks = adapter.getFeatureValue(slotFeature, targetLinkHost);
 
@@ -117,7 +117,7 @@ public class CasMergeLinkFeature
             throw new AnnotationException("Feature [" + aSourceFeature + "] is not a slot feature");
         }
 
-        adapter.setFeatureValue(aDocument, aUsername, aTargetCas, getAddr(targetLinkHost),
+        adapter.setFeatureValue(aDocument, aDataOwner, aTargetCas, getAddr(targetLinkHost),
                 slotFeature, targetLinks);
 
         return new CasMergeOperationResult(UPDATED, getAddr(targetLinkHost));
@@ -134,9 +134,9 @@ public class CasMergeLinkFeature
         return null;
     }
 
-    private static AnnotationFS findLinkTargetInTargetCas(CAS aTargetCas,
-            AnnotationFS aSourceFS, TypeAdapter aAdapter, AnnotationFeature aSlotFeature,
-            LinkWithRoleModel aSourceLink, int aSourceSlotIndex, CasMergeContext aContext)
+    private static AnnotationFS findLinkTargetInTargetCas(CAS aTargetCas, AnnotationFS aSourceFS,
+            TypeAdapter aAdapter, AnnotationFeature aSlotFeature, LinkWithRoleModel aSourceLink,
+            int aSourceSlotIndex, CasMergeContext aContext)
         throws UnfulfilledPrerequisitesException
     {
         var sourceCas = aSourceFS.getCAS();
