@@ -138,13 +138,13 @@ public class CurationSidebarRenderer
         renderDiff(aVdoc, aRequest, casDiff);
     }
 
-    private void renderDiff(VDocument aVdoc, RenderRequest aRequest, CasDiff casDiff)
+    private void renderDiff(VDocument aVdoc, RenderRequest aRequest, CasDiff aCasDiff)
     {
         var project = aRequest.getProject();
         var sessionOwner = userRepository.getCurrentUsername();
         var targetUser = aRequest.getAnnotationUser().getUsername();
 
-        var diff = casDiff.toResult();
+        var diff = aCasDiff.toResult();
         var totalAnnotatorCount = diff.getCasGroupIds().stream() //
                 .filter($ -> !$.equals(targetUser)) //
                 .count();
@@ -182,7 +182,7 @@ public class CurationSidebarRenderer
 
             for (var cfg : cfgSet.getConfigurations()) {
                 LOG.trace("Processing configuration: {}", cfg);
-                var fs = cfg.getRepresentative(casDiff.getCasMap());
+                var fs = cfg.getRepresentative(aCasDiff.getCasMap());
                 if (!(fs instanceof Annotation)) {
                     continue;
                 }
@@ -331,18 +331,18 @@ public class CurationSidebarRenderer
                 aRequest.getWindowEndOffset());
     }
 
-    private void resolveArcEndpoints(String targetUser, DiffResult diff, boolean showAll,
+    private void resolveArcEndpoints(String aTargetUser, DiffResult aDiff, boolean showAll,
             Configuration cfg, VArc arc)
     {
         if (cfg.getPosition() instanceof SpanPosition spanPosition
                 && spanPosition.isLinkFeaturePosition()) {
-            arc.setSource(resolveVisibleLinkHost(targetUser, diff, cfg, arc.getSource()));
+            arc.setSource(resolveVisibleLinkHost(aTargetUser, aDiff, cfg, arc.getSource()));
         }
         else {
-            arc.setSource(resolveVisibleEndpoint(targetUser, diff, cfg, arc.getSource(), showAll));
+            arc.setSource(resolveVisibleEndpoint(aTargetUser, aDiff, cfg, arc.getSource(), showAll));
         }
 
-        arc.setTarget(resolveVisibleEndpoint(targetUser, diff, cfg, arc.getTarget(), showAll));
+        arc.setTarget(resolveVisibleEndpoint(aTargetUser, aDiff, cfg, arc.getTarget(), showAll));
     }
 
     private VID resolveVisibleLinkHost(String aTargetUser, DiffResult aDiff, Configuration aCfg,

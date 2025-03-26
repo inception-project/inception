@@ -38,10 +38,10 @@ import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
 
-public class CasMergeSpan
+class CasMergeSpan
 {
-    public static CasMergeOperationResult mergeSpanAnnotation(CasMergeContext aContext,
-            SourceDocument aDocument, String aUsername, AnnotationLayer aAnnotationLayer,
+    static CasMergeOperationResult mergeSpanAnnotation(CasMergeContext aContext,
+            SourceDocument aDocument, String aDataOwner, AnnotationLayer aAnnotationLayer,
             CAS aTargetCas, AnnotationFS aSourceFs, boolean aAllowStacking)
         throws AnnotationException
     {
@@ -62,18 +62,18 @@ public class CasMergeSpan
         if (existingAnnos.isEmpty() || aAllowStacking) {
             // Create the annotation via the adapter - this also takes care of attaching to an
             // annotation if necessary
-            var mergedSpan = adapter.add(aDocument, aUsername, aTargetCas, aSourceFs.getBegin(),
+            var mergedSpan = adapter.add(aDocument, aDataOwner, aTargetCas, aSourceFs.getBegin(),
                     aSourceFs.getEnd());
 
             var mergedSpanAddr = -1;
             try {
-                copyFeatures(aContext, aDocument, aUsername, adapter, mergedSpan, aSourceFs);
+                copyFeatures(aContext, aDocument, aDataOwner, adapter, mergedSpan, aSourceFs);
                 mergedSpanAddr = getAddr(mergedSpan);
             }
             catch (AnnotationException e) {
                 // If there was an error while setting the features, then we skip the entire
                 // annotation
-                adapter.delete(aDocument, aUsername, aTargetCas, VID.of(mergedSpan));
+                adapter.delete(aDocument, aDataOwner, aTargetCas, VID.of(mergedSpan));
                 throw e;
             }
             return new CasMergeOperationResult(CREATED, mergedSpanAddr);
@@ -81,7 +81,7 @@ public class CasMergeSpan
         // b) if stacking is not allowed, modify the existing annotation with this one
         else {
             var annoToUpdate = existingAnnos.get(0);
-            copyFeatures(aContext, aDocument, aUsername, adapter, annoToUpdate, aSourceFs);
+            copyFeatures(aContext, aDocument, aDataOwner, adapter, annoToUpdate, aSourceFs);
             var mergedSpanAddr = getAddr(annoToUpdate);
             return new CasMergeOperationResult(UPDATED, mergedSpanAddr);
         }

@@ -40,10 +40,10 @@ import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
 
-public class CasMergeRelation
+class CasMergeRelation
 {
-    public static CasMergeOperationResult mergeRelationAnnotation(CasMergeContext aContext,
-            SourceDocument aDocument, String aUsername, AnnotationLayer aAnnotationLayer,
+    static CasMergeOperationResult mergeRelationAnnotation(CasMergeContext aContext,
+            SourceDocument aDocument, String aDataOwner, AnnotationLayer aAnnotationLayer,
             CAS aTargetCas, AnnotationFS aSourceFs, boolean aAllowStacking)
         throws AnnotationException
     {
@@ -97,22 +97,23 @@ public class CasMergeRelation
         var existingAnnos = selectCandidateRelationsAt(aTargetCas, relationAdapter, aSourceFs,
                 originFs, targetFs);
         if (existingAnnos.isEmpty() || aAllowStacking) {
-            var mergedRelation = relationAdapter.add(aDocument, aUsername, originFs, targetFs,
+            var mergedRelation = relationAdapter.add(aDocument, aDataOwner, originFs, targetFs,
                     aTargetCas);
             try {
-                copyFeatures(aContext, aDocument, aUsername, relationAdapter, mergedRelation,
+                copyFeatures(aContext, aDocument, aDataOwner, relationAdapter, mergedRelation,
                         aSourceFs);
             }
             catch (AnnotationException e) {
                 // If there was an error while setting the features, then we skip the entire
                 // annotation
-                relationAdapter.delete(aDocument, aUsername, aTargetCas, VID.of(mergedRelation));
+                relationAdapter.delete(aDocument, aDataOwner, aTargetCas, VID.of(mergedRelation));
             }
             return new CasMergeOperationResult(CREATED, getAddr(mergedRelation));
         }
         else {
             var mergeTargetFS = existingAnnos.get(0);
-            copyFeatures(aContext, aDocument, aUsername, relationAdapter, mergeTargetFS, aSourceFs);
+            copyFeatures(aContext, aDocument, aDataOwner, relationAdapter, mergeTargetFS,
+                    aSourceFs);
             return new CasMergeOperationResult(UPDATED, getAddr(mergeTargetFS));
         }
     }
