@@ -33,7 +33,7 @@ public interface PdfFormatProperties
 
     /**
      * @return Whether to suppress duplicate overlapping text. By default the text stripper will
-     *         attempt to remove text that overlapps each other. Word paints the same character
+     *         attempt to remove text that overlaps each other. Word paints the same character
      *         several times in order to make it look bold. By setting this to false all text will
      *         be extracted, which means that certain sections will be duplicated, but better
      *         performance will be noticed.
@@ -90,5 +90,7 @@ public interface PdfFormatProperties
      * @see VisualPDFTextStripper#setSpacingTolerance(float)
      */
     float getSpacingTolerance();
+
+    boolean isGenerateHtmlStructure();
 
 }

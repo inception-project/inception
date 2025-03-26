@@ -26,6 +26,7 @@ import org.apache.uima.resource.metadata.TypeSystemDescription;
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.pdfeditor2.config.PdfAnnotationEditor2SupportAutoConfiguration;
+import de.tudarmstadt.ukp.inception.pdfeditor2.config.PdfFormatProperties;
 
 /**
  * Support for PDF file format.
@@ -39,6 +40,13 @@ public class PdfFormatSupport
 {
     public static final String ID = "pdf2";
     public static final String NAME = "PDF";
+
+    private final PdfFormatProperties properties;
+
+    public PdfFormatSupport(PdfFormatProperties aProperties)
+    {
+        properties = aProperties;
+    }
 
     @Override
     public String getId()
@@ -64,6 +72,16 @@ public class PdfFormatSupport
         throws ResourceInitializationException
     {
         return createReaderDescription(VisualPdfReader.class, aTSD, //
-                VisualPdfReader.PARAM_GENERATE_HTML_STRUCTURE, true);
+                VisualPdfReader.PARAM_ADD_MORE_FORMATTING, properties.isAddMoreFormatting(), //
+                VisualPdfReader.PARAM_AVERAGE_CHAR_TOLERANCE, properties.getAverageCharTolerance(), //
+                VisualPdfReader.PARAM_DROP_THRESHOLD, properties.getDropThreshold(), //
+                VisualPdfReader.PARAM_GENERATE_HTML_STRUCTURE, properties.isGenerateHtmlStructure(), //
+                VisualPdfReader.PARAM_INDENT_THRESHOLD, properties.getIndentThreshold(), //
+                VisualPdfReader.PARAM_SHOULD_SEPARATE_BY_BEADS,
+                properties.isShouldSeparateByBeads(), //
+                VisualPdfReader.PARAM_SORT_BY_POSITION, properties.isSortByPosition(), //
+                VisualPdfReader.PARAM_SPACING_TOLERANCE, properties.getSpacingTolerance(), //
+                VisualPdfReader.PARAM_SUPPRESS_DUPLICATE_OVERLAPPING_TEXT,
+                properties.isSuppressDuplicateOverlappingText());
     }
 }

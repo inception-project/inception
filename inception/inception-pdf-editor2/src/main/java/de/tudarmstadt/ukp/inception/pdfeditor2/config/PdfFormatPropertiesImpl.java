@@ -23,6 +23,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class PdfFormatPropertiesImpl
     implements PdfFormatProperties
 {
+    private boolean generateHtmlStructure = true;
+
     private boolean sortByPosition = false;
     private boolean suppressDuplicateOverlappingText = true;
     private boolean shouldSeparateByBeads = true;
@@ -120,5 +122,16 @@ public class PdfFormatPropertiesImpl
     public void setSpacingTolerance(float aSpacingTolerance)
     {
         spacingTolerance = aSpacingTolerance;
+    }
+
+    @Override
+    public boolean isGenerateHtmlStructure()
+    {
+        return generateHtmlStructure;
+    }
+
+    public void setGenerateHtmlStructure(boolean aGenerateHtmlStructure)
+    {
+        generateHtmlStructure = aGenerateHtmlStructure;
     }
 }

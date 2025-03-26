@@ -49,8 +49,8 @@ public class PdfAnnotationEditor2SupportAutoConfiguration
 
     @ConditionalOnProperty(prefix = "format.pdf", name = "enabled", havingValue = "true", matchIfMissing = true)
     @Bean
-    public PdfFormatSupport pdfFormat2Support()
+    public PdfFormatSupport pdfFormat2Support(PdfFormatProperties aProperties)
     {
-        return new PdfFormatSupport();
+        return new PdfFormatSupport(aProperties);
     }
 }
