@@ -37,6 +37,8 @@ public class ExternalEditorPropertiesImpl
     private boolean blockObject = true;
     private boolean blockEmbed = true;
 
+    private boolean interpretMarkdown = true;
+
     @Override
     public boolean isBlockStyle()
     {
@@ -134,5 +136,16 @@ public class ExternalEditorPropertiesImpl
     public Source getAllowVideoSource()
     {
         return allowVideoSource;
+    }
+
+    public void setInterpretMarkdown(boolean aInterpretMarkdown)
+    {
+        interpretMarkdown = aInterpretMarkdown;
+    }
+
+    @Override
+    public boolean isInterpretMarkdown()
+    {
+        return interpretMarkdown;
     }
 }
