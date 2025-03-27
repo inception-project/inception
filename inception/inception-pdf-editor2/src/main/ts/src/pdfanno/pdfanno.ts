@@ -181,6 +181,8 @@ function renderAnno () {
   const height = viewer.clientHeight
   const width = pageElement.clientWidth
 
+  viewer.style.position = 'relative'
+
   let markerLayer = document.getElementById('markerLayer')
   if (!markerLayer) {
     markerLayer = document.createElement('div')
@@ -207,8 +209,6 @@ function renderAnno () {
   annoLayer2.style.height = `${height}px`
   annoLayer2.style.visibility = 'hidden'
   annoLayer2.style.zIndex = '2'
-
-  viewer.style.position = 'relative'
   viewer.appendChild(annoLayer2)
 
   dispatchWindowEvent('annotationlayercreated')
@@ -229,6 +229,30 @@ function rerenderAnnotations () {
     a.render()
     a.enableViewMode()
   })
+
+  const annoLayer2 = document.getElementById(annoLayer2Id);
+  const markerLayer = document.getElementById('markerLayer');
+  
+  // Safari has a bug where it seems that elements starting out as hidden don't get rendered properly.
+  // This hack is to force a reflow by making the element visible, then hiding it again.
+  if (/^((?!chrome|android).)*safari/i.test(navigator.userAgent)) {
+    console.log('Safari detected, forcing reflow');
+    if (annoLayer2) {
+      annoLayer2.style.visibility = 'visible';
+    }
+    if (markerLayer) {
+      markerLayer.style.visibility = 'visible';
+    }
+    
+    window.requestAnimationFrame(() => {
+      if (annoLayer2) {
+        annoLayer2.style.visibility = 'hidden';
+      }
+      if (markerLayer) {
+        markerLayer.style.visibility = 'hidden';
+      }
+    });
+  }
 
   dispatchWindowEvent('annotationrendered')
 }

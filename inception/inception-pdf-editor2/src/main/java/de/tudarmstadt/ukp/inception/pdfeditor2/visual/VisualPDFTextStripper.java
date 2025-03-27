@@ -40,7 +40,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.translate.UnicodeEscaper;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
-import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.apache.pdfbox.text.TextPosition;
 import org.slf4j.Logger;
@@ -144,7 +143,7 @@ public class VisualPDFTextStripper
         int removed = 0;
         int total = 0;
 
-        PDRectangle visibleArea = getCurrentPage().getCropBox().createRetranslatedRectangle();
+        var visibleArea = getCurrentPage().getCropBox().createRetranslatedRectangle();
 
         for (List<TextPosition> article : charactersByArticle) {
             Iterator<TextPosition> i = article.iterator();
