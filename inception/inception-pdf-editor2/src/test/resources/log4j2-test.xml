@@ -7,7 +7,8 @@
   </Appenders>
 
   <Loggers>
-    <Logger name="de.tudarmstadt.ukp.inception.pdfeditor2" level="DEBUG"/>
+    <Logger name="de.tudarmstadt.ukp.inception.pdfeditor2" level="ERROR"/>
+    <Logger name="org.apache.pdfbox" level="ERROR"/>
 
     <Root level="WARN">
       <AppenderRef ref="ConsoleAppender" />

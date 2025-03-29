@@ -137,7 +137,7 @@ public class WikiDataLinkingProjectInitializersAutoConfiguration
             KnowledgeBaseService aKbService)
     {
         var thumbnail = new PackageResourceReference(WikiDataKnowledgeBaseInitializer.class,
-                "WikiDataKnowledgeBaseInitializer.svg");
+                "AgriculturalKnowledgeBase.svg");
         return new ProfileBasedKnowledgeBaseInitializer(aKbService, PROFILES.get("agrovoc"),
                 thumbnail)
         {
@@ -150,7 +150,7 @@ public class WikiDataLinkingProjectInitializersAutoConfiguration
             KnowledgeBaseService aKbService)
     {
         var thumbnail = new PackageResourceReference(WikiDataKnowledgeBaseInitializer.class,
-                "WikiDataKnowledgeBaseInitializer.svg");
+                "Dictionary.svg");
         return new ProfileBasedKnowledgeBaseInitializer(aKbService, PROFILES.get("babel_net"),
                 thumbnail)
         {
@@ -163,7 +163,7 @@ public class WikiDataLinkingProjectInitializersAutoConfiguration
             KnowledgeBaseService aKbService)
     {
         var thumbnail = new PackageResourceReference(WikiDataKnowledgeBaseInitializer.class,
-                "WikiDataKnowledgeBaseInitializer.svg");
+                "GenericKnowledgeBase.svg");
         return new ProfileBasedKnowledgeBaseInitializer(aKbService, PROFILES.get("db_pedia"),
                 thumbnail)
         {
@@ -176,7 +176,7 @@ public class WikiDataLinkingProjectInitializersAutoConfiguration
             KnowledgeBaseService aKbService)
     {
         var thumbnail = new PackageResourceReference(WikiDataKnowledgeBaseInitializer.class,
-                "WikiDataKnowledgeBaseInitializer.svg");
+                "MedicalKnowledgeBase.svg");
         return new ProfileBasedKnowledgeBaseInitializer(aKbService, PROFILES.get("hpo"), thumbnail)
         {
         };
@@ -188,7 +188,7 @@ public class WikiDataLinkingProjectInitializersAutoConfiguration
             KnowledgeBaseService aKbService)
     {
         var thumbnail = new PackageResourceReference(WikiDataKnowledgeBaseInitializer.class,
-                "WikiDataKnowledgeBaseInitializer.svg");
+                "GenericKnowledgeBase.svg");
         return new ProfileBasedKnowledgeBaseInitializer(aKbService, PROFILES.get("iao"), thumbnail)
         {
         };
@@ -200,7 +200,7 @@ public class WikiDataLinkingProjectInitializersAutoConfiguration
             KnowledgeBaseService aKbService)
     {
         var thumbnail = new PackageResourceReference(WikiDataKnowledgeBaseInitializer.class,
-                "WikiDataKnowledgeBaseInitializer.svg");
+                "Dictionary.svg");
         return new ProfileBasedKnowledgeBaseInitializer(aKbService, PROFILES.get("olia_penn.owl"),
                 thumbnail)
         {
@@ -213,7 +213,7 @@ public class WikiDataLinkingProjectInitializersAutoConfiguration
             KnowledgeBaseService aKbService)
     {
         var thumbnail = new PackageResourceReference(WikiDataKnowledgeBaseInitializer.class,
-                "WikiDataKnowledgeBaseInitializer.svg");
+                "MedicalKnowledgeBase.svg");
         return new ProfileBasedKnowledgeBaseInitializer(aKbService, PROFILES.get("snomed-ct"),
                 thumbnail)
         {
@@ -234,7 +234,7 @@ public class WikiDataLinkingProjectInitializersAutoConfiguration
             KnowledgeBaseService aKbService)
     {
         var thumbnail = new PackageResourceReference(WikiDataKnowledgeBaseInitializer.class,
-                "WikiDataKnowledgeBaseInitializer.svg");
+                "WineKnowledgeBase.svg");
         return new ProfileBasedKnowledgeBaseInitializer(aKbService, PROFILES.get("wine_ontology"),
                 thumbnail)
         {
@@ -247,7 +247,7 @@ public class WikiDataLinkingProjectInitializersAutoConfiguration
             KnowledgeBaseService aKbService)
     {
         var thumbnail = new PackageResourceReference(WikiDataKnowledgeBaseInitializer.class,
-                "WikiDataKnowledgeBaseInitializer.svg");
+                "GenericKnowledgeBase.svg");
         return new ProfileBasedKnowledgeBaseInitializer(aKbService, PROFILES.get("yago"), thumbnail)
         {
         };
@@ -259,7 +259,7 @@ public class WikiDataLinkingProjectInitializersAutoConfiguration
             KnowledgeBaseService aKbService)
     {
         var thumbnail = new PackageResourceReference(WikiDataKnowledgeBaseInitializer.class,
-                "WikiDataKnowledgeBaseInitializer.svg");
+                "GenericKnowledgeBase.svg");
         return new ProfileBasedKnowledgeBaseInitializer(aKbService, PROFILES.get("zbw-gnd"),
                 thumbnail)
         {
@@ -272,7 +272,7 @@ public class WikiDataLinkingProjectInitializersAutoConfiguration
             KnowledgeBaseService aKbService)
     {
         var thumbnail = new PackageResourceReference(WikiDataKnowledgeBaseInitializer.class,
-                "WikiDataKnowledgeBaseInitializer.svg");
+                "GenericKnowledgeBase.svg");
         return new ProfileBasedKnowledgeBaseInitializer(aKbService,
                 PROFILES.get("zbw-stw-economics"), thumbnail)
         {
