@@ -1394,4 +1394,15 @@
   <changeSet author="INCEpTION Team" id="20240629-14-pg" dbms="postgresql">
     <sql>ALTER TABLE annotation_feature ALTER "curatable" TYPE BOOLEAN USING ("curatable"::int::bool)</sql>
   </changeSet>
+
+  <changeSet author="INCEpTION Team" id="20240907-01">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="annotation_type" columnName="short_name" />
+      </not>
+    </preConditions>
+    <addColumn tableName="annotation_type">
+      <column name="short_name" type="VARCHAR(255)"/>
+    </addColumn>
+  </changeSet>
 </databaseChangeLog>
