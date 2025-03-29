@@ -18,15 +18,16 @@
 package de.tudarmstadt.ukp.inception.pdfeditor2.visual;
 
 import static java.util.Arrays.asList;
+import static org.apache.commons.lang3.StringUtils.difference;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
+import java.lang.invoke.MethodHandles;
 import java.util.Collection;
 import java.util.stream.Collectors;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.pdfbox.Loader;
 import org.apache.uima.cas.CASException;
 import org.apache.uima.fit.factory.JCasFactory;
@@ -34,15 +35,18 @@ import org.apache.uima.resource.ResourceInitializationException;
 import org.dkpro.core.api.pdf.type.PdfPage;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.inception.pdfeditor2.format.VisualPdfReader;
 import de.tudarmstadt.ukp.inception.pdfeditor2.visual.model.VChunk;
-import de.tudarmstadt.ukp.inception.pdfeditor2.visual.model.VGlyph;
 import de.tudarmstadt.ukp.inception.pdfeditor2.visual.model.VModel;
 import de.tudarmstadt.ukp.inception.pdfeditor2.visual.model.VPage;
 
 class VisualPDFTextStripperTest
 {
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
     public static Iterable<File> pdfFiles()
     {
         return asList(new File("src/test/resources/pdfbox-testfiles/").listFiles()).stream()
@@ -52,9 +56,15 @@ class VisualPDFTextStripperTest
 
     @ParameterizedTest(name = "{index}: reading PDF file {0}")
     @MethodSource("pdfFiles")
-    void thatPdfCanBeParsed(File aFile) throws Exception
+    void thatPdfCanBeParsedUsingVisualOrder(File aFile) throws Exception
     {
         assertConsistentVisualModel(aFile, true);
+    }
+
+    @ParameterizedTest(name = "{index}: reading PDF file {0}")
+    @MethodSource("pdfFiles")
+    void thatPdfCanBeParsedUsingDocumentOrder(File aFile) throws Exception
+    {
         assertConsistentVisualModel(aFile, false);
     }
 
@@ -65,18 +75,19 @@ class VisualPDFTextStripperTest
         try (var doc = Loader.loadPDF(aFile)) {
             var extractor = new VisualPDFTextStripper();
             extractor.setSortByPosition(aSortByPosition);
+            extractor.setSuppressDuplicateOverlappingText(false);
             extractor.writeText(doc, target);
             for (int i = 0; i < doc.getNumberOfPages(); i++) {
                 var page = doc.getPage(i);
-                System.out.printf("Processing page %d (%d) of %d %n", i + 1,
-                        doc.getPages().indexOf(page) + 1, doc.getNumberOfPages());
+                LOG.info("Processing page {} ({}) of {}", i + 1, doc.getPages().indexOf(page) + 1,
+                        doc.getNumberOfPages());
                 extractor.processPage(page);
             }
             vModel = extractor.getVisualModel();
         }
 
-        // System.out.println(target.toString().length());
-        // System.out.println(target.toString());
+        LOG.info("Text length: {}", target.toString().length());
+        LOG.info("Text: {}", target.toString());
 
         assertValidGlyphCoordindates(vModel);
         assertValidGlyphOffsets(vModel.getPages());
@@ -148,9 +159,9 @@ class VisualPDFTextStripperTest
 
     private void assertValidGlyphCoordindates(VModel vModel)
     {
-        for (VPage vPage : vModel.getPages()) {
-            for (VChunk vLine : vPage.getChunks()) {
-                for (VGlyph vGlyph : vLine.getGlyphs()) {
+        for (var vPage : vModel.getPages()) {
+            for (var vLine : vPage.getChunks()) {
+                for (var vGlyph : vLine.getGlyphs()) {
                     float d = vLine.getDir();
                     float x = (d == 0 || d == 180) ? vGlyph.getBase() : vLine.getX();
                     float y = (d == 0 || d == 180) ? vLine.getY() : vGlyph.getBase();
@@ -174,8 +185,8 @@ class VisualPDFTextStripperTest
 
     private void assertValidGlyphOffsets(Collection<VPage> aPages)
     {
-        for (VPage page : aPages) {
-            for (VChunk line : page.getChunks()) {
+        for (var page : aPages) {
+            for (var line : page.getChunks()) {
                 assertValidGlyphOffsets(line);
             }
         }
@@ -189,17 +200,16 @@ class VisualPDFTextStripperTest
 
         int textLength = aChunk.getText().length();
         if (textLength != cumulativePositionLength) {
-            System.out.printf("%d (%d) vs %d (%d)%n", textLength,
-                    aChunk.getText().codePoints().count(), cumulativePositionLength,
-                    aChunk.getGlyphs().size());
-            System.out.println(" Text [" + aChunk.getText() + "]");
-            StringBuilder sb = new StringBuilder();
-            for (VGlyph g : aChunk.getGlyphs()) {
+            LOG.info("{} ({}) vs {} ({})", textLength, aChunk.getText().codePoints().count(),
+                    cumulativePositionLength, aChunk.getGlyphs().size());
+            LOG.info(" Text [{}]", aChunk.getText());
+            var sb = new StringBuilder();
+            for (var g : aChunk.getGlyphs()) {
                 sb.append(g.getUnicode());
             }
-            String posText = sb.toString();
-            System.out.println(" Pos [" + posText + "]");
-            System.out.println(" Diff [" + StringUtils.difference(posText, aChunk.getText()) + "]");
+            var posText = sb.toString();
+            LOG.info(" Pos [{}]", posText);
+            LOG.info(" Diff [{}]", difference(posText, aChunk.getText()));
 
             assertThat(textLength) //
                     .as("Text positions account for a string length of [" + cumulativePositionLength
