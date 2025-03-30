@@ -291,7 +291,7 @@ include::{include-dir}formats-nif.adoc[leveloffset=+2]
 
 include::{include-dir}formats-pdf.adoc[leveloffset=+2]
 
-include::{include-dir}formats-pdf-legacy.adoc[leveloffset=+2]
+// include::{include-dir}formats-pdf-legacy.adoc[leveloffset=+2]
 
 include::{include-dir}formats-perseus.adoc[leveloffset=+2]
 
