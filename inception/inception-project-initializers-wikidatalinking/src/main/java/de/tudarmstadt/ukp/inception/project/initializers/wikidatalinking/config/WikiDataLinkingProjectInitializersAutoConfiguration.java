@@ -163,7 +163,7 @@ public class WikiDataLinkingProjectInitializersAutoConfiguration
             KnowledgeBaseService aKbService)
     {
         var thumbnail = new PackageResourceReference(WikiDataKnowledgeBaseInitializer.class,
-                "GenericKnowledgeBase.svg");
+                "Lexicon.svg");
         return new ProfileBasedKnowledgeBaseInitializer(aKbService, PROFILES.get("db_pedia"),
                 thumbnail)
         {
@@ -247,7 +247,7 @@ public class WikiDataLinkingProjectInitializersAutoConfiguration
             KnowledgeBaseService aKbService)
     {
         var thumbnail = new PackageResourceReference(WikiDataKnowledgeBaseInitializer.class,
-                "GenericKnowledgeBase.svg");
+                "Lexicon.svg");
         return new ProfileBasedKnowledgeBaseInitializer(aKbService, PROFILES.get("yago"), thumbnail)
         {
         };
