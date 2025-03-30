@@ -81,11 +81,7 @@ A line-oriented presentation of the text using inter-linear annotations. This ed
 A line-oriented presentation of the text using inter-linear annotations that also wraps lines longer than 120 characters. This editor is useful for texts using consecutive line breaks mainly to indicate paragraph boundaries but that do not use line breaks within paragraphs. It supports rendering span annotations, relations and link features. The editor uses a heavily improved version of the rendering engine of link:https://brat.nlplab.org[brat].
 
 [[sect_editors_html_apache_annotator]]
-== 🧪 HTML (Apache Annotator)
-
-====
-CAUTION: Experimental feature. To use this functionality, you need to enable it first by adding `ui.html-apacheannotator.enabled` to the `settings.properties` file.
-====
+== HTML (Apache Annotator)
 
 This editor renders documents imported using a XML/HTML-based format such as <<sect_formats_mhtml>> or <<sect_formats_htmldoc>>. It is build on top of link:https://annotator.apache.org[Apache Annotator]. It supports rendering span annotations but not relations or link features.
 
