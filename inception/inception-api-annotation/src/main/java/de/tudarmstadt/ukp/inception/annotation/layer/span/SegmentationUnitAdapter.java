@@ -29,8 +29,10 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.IllegalPlaceme
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.support.text.TrimUtils;
+import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
 
 public class SegmentationUnitAdapter
 {
@@ -104,13 +106,13 @@ public class SegmentationUnitAdapter
     {
         if (Token._TypeName.equals(spanAdapter.getAnnotationTypeName())) {
             deleteAndMergeUnit(aRequest.getDocument(), aRequest.getDocumentOwner(),
-                    aRequest.getCas(), (Annotation) aRequest.getAnnotation(), Token.class);
+                    (Annotation) aRequest.getAnnotation());
             return;
         }
 
         if (Sentence._TypeName.equals(spanAdapter.getAnnotationTypeName())) {
             deleteAndMergeUnit(aRequest.getDocument(), aRequest.getDocumentOwner(),
-                    aRequest.getCas(), (Annotation) aRequest.getAnnotation(), Sentence.class);
+                    (Annotation) aRequest.getAnnotation());
             return;
         }
 
@@ -118,12 +120,15 @@ public class SegmentationUnitAdapter
                 "Annotation type not supported: " + spanAdapter.getAnnotationTypeName());
     }
 
-    <T extends Annotation> void deleteAndMergeUnit(SourceDocument aDocument, String aDocumentOwner,
-            CAS aCas, Annotation aUnit, Class<T> aClass)
+    public <T extends Annotation> void deleteAndMergeUnit(SourceDocument aDocument,
+            String aDocumentOwner, Annotation aUnit)
         throws AnnotationException
     {
+        var cas = aUnit.getCAS();
+
         // First try to merge with the preceding unit
-        var precedingUnit = aCas.select(aClass).preceding(aUnit).limit(1).singleOrNull();
+        var precedingUnit = cas.<Annotation> select(aUnit.getType()).preceding(aUnit).limit(1)
+                .singleOrNull();
 
         if (!spanAdapter.getLayer().isCrossSentence() && !sameSentence(aUnit, precedingUnit)) {
             precedingUnit = null;
@@ -134,13 +139,14 @@ public class SegmentationUnitAdapter
             var oldEnd = precedingUnit.getEnd();
             var newBegin = precedingUnit.getBegin();
             int newEnd = aUnit.getEnd();
-            deleteAndMerge(aDocument, aDocumentOwner, aCas, aUnit, precedingUnit, oldBegin, oldEnd,
+            deleteAndMerge(aDocument, aDocumentOwner, cas, precedingUnit, aUnit, oldBegin, oldEnd,
                     newBegin, newEnd);
             return;
         }
 
         // Then try to merge with the following unit
-        var followingUnit = aCas.select(aClass).following(aUnit).limit(1).singleOrNull();
+        var followingUnit = cas.<Annotation> select(aUnit.getType()).following(aUnit).limit(1)
+                .singleOrNull();
 
         if (!spanAdapter.getLayer().isCrossSentence() && !sameSentence(aUnit, followingUnit)) {
             followingUnit = null;
@@ -151,7 +157,7 @@ public class SegmentationUnitAdapter
             var oldEnd = followingUnit.getEnd();
             var newBegin = aUnit.getBegin();
             var newEnd = followingUnit.getEnd();
-            deleteAndMerge(aDocument, aDocumentOwner, aCas, aUnit, followingUnit, oldBegin, oldEnd,
+            deleteAndMerge(aDocument, aDocumentOwner, cas, followingUnit, aUnit, oldBegin, oldEnd,
                     newBegin, newEnd);
             return;
         }
@@ -177,15 +183,13 @@ public class SegmentationUnitAdapter
     }
 
     private <T extends Annotation> void deleteAndMerge(SourceDocument aDocument,
-            String aDocumentOwner, CAS aCas, Annotation aUnit, T precedingUnit, int oldBegin,
-            int oldEnd, int newBegin, int newEnd)
+            String aDocumentOwner, CAS aCas, T aAnnToBeResized, Annotation aAnnToBeRemoved,
+            int oldBegin, int oldEnd, int newBegin, int newEnd)
     {
-        spanAdapter.moveSpanAnnotation(aCas, precedingUnit, newBegin, newEnd, TRIM);
-        spanAdapter.publishEvent(() -> new SpanMovedEvent(this, aDocument, aDocumentOwner,
-                spanAdapter.getLayer(), precedingUnit, oldBegin, oldEnd));
-        aCas.removeFsFromIndexes(aUnit);
-        spanAdapter.publishEvent(() -> new SpanDeletedEvent(this, aDocument, aDocumentOwner,
-                spanAdapter.getLayer(), aUnit));
+        aCas.removeFsFromIndexes(aAnnToBeRemoved);
+        spanAdapter.moveSpanAnnotation(aCas, aAnnToBeResized, newBegin, newEnd, TRIM);
+        spanAdapter.publishEvent(() -> new UnitMergedEvent(this, aDocument, aDocumentOwner,
+                spanAdapter.getLayer(), aAnnToBeResized, oldBegin, oldEnd, aAnnToBeRemoved));
     }
 
     AnnotationFS handleSentenceMove(MoveSpanAnnotationRequest aRequest) throws AnnotationException
@@ -274,14 +278,33 @@ public class SegmentationUnitAdapter
                     "Splitting a unit may not create a zero-width unit.");
         }
 
-        var head = spanAdapter.moveSpanAnnotation(cas, unit, headRange[0], headRange[1], TRIM);
-        spanAdapter.publishEvent(() -> new SpanMovedEvent(this, aRequest.getDocument(),
-                aRequest.getDocumentOwner(), spanAdapter.getLayer(), head, oldBegin, oldEnd));
+        var resizedUnit = spanAdapter.moveSpanAnnotation(cas, unit, headRange[0], headRange[1],
+                TRIM);
+        var newUnit = spanAdapter.createSpanAnnotation(cas, tailRange[0], tailRange[1], TRIM);
+        spanAdapter.publishEvent(
+                () -> new UnitSplitEvent(this, aRequest.getDocument(), aRequest.getDocumentOwner(),
+                        spanAdapter.getLayer(), resizedUnit, oldBegin, oldEnd, newUnit));
 
-        var tail = spanAdapter.createSpanAnnotation(cas, tailRange[0], tailRange[1], TRIM);
-        spanAdapter.publishEvent(() -> new SpanCreatedEvent(this, aRequest.getDocument(),
-                aRequest.getDocumentOwner(), spanAdapter.getLayer(), tail));
+        return newUnit;
+    }
 
-        return tail;
+    public <T extends Annotation> AnnotationFS unMerge(SourceDocument aDocument,
+            String aDocumentOwner, CAS aCas, VID aResizedUnit, int aBegin, int aEnd,
+            VID aDeletedUnit)
+        throws AnnotationException
+    {
+        var resizedUnit = ICasUtil.selectAnnotationByAddr(aCas, aResizedUnit.getId());
+        spanAdapter.moveSpanAnnotation(aCas, resizedUnit, aBegin, aEnd, TRIM);
+        return spanAdapter.restore(aDocument, aDocumentOwner, aCas, aDeletedUnit);
+    }
+
+    public <T extends Annotation> AnnotationFS unSplit(SourceDocument aDocument,
+            String aDocumentOwner, CAS aCas, VID aResizedUnit, int aBegin, int aEnd,
+            VID aNewUnit)
+        throws AnnotationException
+    {
+        spanAdapter.delete(aDocument, aDocumentOwner, aCas, aNewUnit);
+        var resizedUnit = ICasUtil.selectAnnotationByAddr(aCas, aResizedUnit.getId());
+        return spanAdapter.moveSpanAnnotation(aCas, resizedUnit, aBegin, aEnd, TRIM);
     }
 }
