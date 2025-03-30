@@ -24,30 +24,34 @@ import org.apache.uima.cas.CAS;
 
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.PostAction;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.PostActionScrollToAndSelect;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.SegmentationUnitAdapter;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanAdapter;
-import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanMovedEvent;
-import de.tudarmstadt.ukp.inception.rendering.model.Range;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.UnitSplitEvent;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
-import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
 
-public class MoveSpanAnnotationAction
+public class SplitUnitAnnotationAction
     extends AnnotationAction_ImplBase
     implements RedoableAnnotationAction, UndoableAnnotationAction
 {
     private static final long serialVersionUID = -6268918582061776355L;
 
-    private final Range range;
-    private final Range oldRange;
+    private final int oldBegin;
+    private final int oldEnd;
+    private final int newBegin;
+    private final int newEnd;
+    private final VID newUnit;
 
-    public MoveSpanAnnotationAction(long aRequestId, SpanMovedEvent aEvent)
+    public SplitUnitAnnotationAction(long aRequestId, UnitSplitEvent aEvent)
     {
-        super(aRequestId, aEvent, VID.of(aEvent.getAnnotation()));
-
-        range = new Range(aEvent.getAnnotation());
-        oldRange = new Range(aEvent.getOldBegin(), aEvent.getOldEnd());
+        super(aRequestId, aEvent, VID.of(aEvent.getResizedUnit()));
+        newBegin = aEvent.getResizedUnit().getBegin();
+        newEnd = aEvent.getResizedUnit().getEnd();
+        oldBegin = aEvent.getOldBegin();
+        oldEnd = aEvent.getOldEnd();
+        newUnit = VID.of(aEvent.getNewUnit());
     }
 
     @Override
@@ -56,9 +60,9 @@ public class MoveSpanAnnotationAction
         throws AnnotationException
     {
         var adapter = (SpanAdapter) aSchemaService.getAdapter(getLayer());
-        var fs = ICasUtil.selectAnnotationByAddr(aCas, getVid().getId());
-        adapter.move(getDocument(), getUser(), aCas, fs, oldRange.getBegin(), oldRange.getEnd());
-        aMessages.add(LogMessage.info(this, "[%s] moved back", getLayer().getUiName()));
+        var unitAdapter = new SegmentationUnitAdapter(adapter);
+        unitAdapter.unSplit(getDocument(), getUser(), aCas, getVid(), oldBegin, oldEnd, newUnit);
+        aMessages.add(LogMessage.info(this, "[%s] un-split", getLayer().getUiName()));
         return Optional.of(new PostActionScrollToAndSelect(getVid()));
     }
 
@@ -68,9 +72,9 @@ public class MoveSpanAnnotationAction
         throws AnnotationException
     {
         var adapter = (SpanAdapter) aSchemaService.getAdapter(getLayer());
-        var fs = ICasUtil.selectAnnotationByAddr(aCas, getVid().getId());
-        adapter.move(getDocument(), getUser(), aCas, fs, range.getBegin(), range.getEnd());
-        aMessages.add(LogMessage.info(this, "[%s] moved", getLayer().getUiName()));
+        var unitAdapter = new SegmentationUnitAdapter(adapter);
+        unitAdapter.unMerge(getDocument(), getUser(), aCas, getVid(), newBegin, newEnd, newUnit);
+        aMessages.add(LogMessage.info(this, "[%s] un-merged", getLayer().getUiName()));
         return Optional.of(new PostActionScrollToAndSelect(getVid()));
     }
 }
