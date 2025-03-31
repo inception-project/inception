@@ -1933,7 +1933,8 @@ export class Visualizer {
         hh -= 2 * this.boxTextMargin.y
         xx += this.boxTextMargin.x
         ww -= 2 * this.boxTextMargin.x
-        let rectClass = 'span_default'
+        // cue/type part required for adding reselect class when drawing arcs
+        let rectClass = 'span_' + (span.cue || span.type) + ' span_default'
 
         // attach e.g. "False_positive" into the type
         if (span.comment && span.comment.type) {
