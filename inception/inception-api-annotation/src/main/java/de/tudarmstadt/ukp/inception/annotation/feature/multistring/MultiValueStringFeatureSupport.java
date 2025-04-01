@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.annotation.feature.multistring;
 
 import static java.util.Arrays.asList;
 import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
+import static org.apache.commons.lang3.StringUtils.abbreviate;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.uima.cas.CAS.TYPE_NAME_STRING_ARRAY;
 
@@ -307,7 +308,8 @@ public class MultiValueStringFeatureSupport
                     }
 
                     if (tag.map(t -> isNotBlank(t.getDescription())).orElse(false)) {
-                        results.addDetail(new VLazyDetail(value, tag.get().getDescription()));
+                        results.addDetail(new VLazyDetail(value,
+                                abbreviate(tag.get().getDescription(), "…", 128)));
                     }
                 }
             }
