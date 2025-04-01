@@ -120,7 +120,9 @@ public class SpanSuggestionRenderer
                 v.setActionButtons(recommenderProperties.isActionButtonsEnabled());
                 vdoc.add(v);
 
-                vdoc.add(new VAnnotationMarker(VMarker.WARN, v.getVid()));
+                if (suggestion.isCorrection()) {
+                    vdoc.add(new VAnnotationMarker(VMarker.WARN, v.getVid()));
+                }
             }
         }
     }
