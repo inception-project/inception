@@ -32,7 +32,7 @@ import de.tudarmstadt.ukp.inception.pdfeditor2.config.PdfFormatProperties;
  * Support for PDF file format.
  * <p>
  * This class is exposed as a Spring Component via
- * {@link PdfAnnotationEditor2SupportAutoConfiguration#pdfFormat2Support()}.
+ * {@link PdfAnnotationEditor2SupportAutoConfiguration#pdfFormat2Support}.
  * </p>
  */
 public class PdfFormatSupport
