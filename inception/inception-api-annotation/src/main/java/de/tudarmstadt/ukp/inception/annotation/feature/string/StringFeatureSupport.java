@@ -22,6 +22,7 @@ import static de.tudarmstadt.ukp.inception.annotation.feature.string.StringFeatu
 import static de.tudarmstadt.ukp.inception.annotation.feature.string.StringFeatureTraits.EditorType.RADIOGROUP;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
+import static org.apache.commons.lang3.StringUtils.abbreviate;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import java.lang.invoke.MethodHandles;
@@ -229,8 +230,8 @@ public class StringFeatureSupport
             }
 
             if (tag.map(t -> isNotBlank(t.getDescription())).orElse(false)) {
-                return asList(
-                        new VLazyDetailGroup(new VLazyDetail(value, tag.get().getDescription())));
+                return asList(new VLazyDetailGroup(
+                        new VLazyDetail(value, abbreviate(tag.get().getDescription(), "…", 128))));
             }
         }
 
