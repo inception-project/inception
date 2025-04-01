@@ -22,8 +22,11 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class Mention
 {
-    private final @JsonProperty(required = true) String coveredText;
-    private final @JsonProperty(required = true) String label;
+    public static final String PROP_COVERED_TEXT = "coveredText";
+    public static final String PROP_LABEL = "label";
+
+    private final @JsonProperty(value = PROP_COVERED_TEXT, required = true) String coveredText;
+    private final @JsonProperty(value = PROP_LABEL, required = true) String label;
 
     @JsonCreator
     public Mention( //

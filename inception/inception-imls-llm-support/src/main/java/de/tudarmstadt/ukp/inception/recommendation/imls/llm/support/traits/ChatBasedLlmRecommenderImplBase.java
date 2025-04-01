@@ -98,7 +98,7 @@ public abstract class ChatBasedLlmRecommenderImplBase<T extends LlmRecommenderTr
                 responseExtractor.getFormatDefiningMessages(getRecommender(), schemaService));
 
         var responseformat = responseExtractor.getResponseFormat();
-        var jsonSchema = responseExtractor.getJsonSchema();
+        var jsonSchema = responseExtractor.getJsonSchema(getRecommender(), schemaService);
 
         var globalBindings = prepareGlobalBindings(aCas);
         var contexts = getPromptContextGenerator(traits.getPromptingMode()) //

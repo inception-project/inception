@@ -41,7 +41,8 @@ public interface ResponseExtractor
 
     Map<String, MentionResult> generateExamples(RecommendationEngine aEngine, CAS aCas, int aNum);
 
-    default Optional<JsonNode> getJsonSchema()
+    default Optional<JsonNode> getJsonSchema(Recommender aRecommender,
+            AnnotationSchemaService aSchemaService)
     {
         return Optional.empty();
     }
