@@ -28,10 +28,12 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class MentionResult
 {
-    private final @JsonProperty(required = true) List<Mention> mentions;
+    public static final String PROP_MENTIONS = "mentions";
+
+    private final @JsonProperty(value = PROP_MENTIONS, required = true) List<Mention> mentions;
 
     @JsonCreator
-    public MentionResult(@JsonProperty("mentions") List<Mention> aMentions)
+    public MentionResult(@JsonProperty(PROP_MENTIONS) List<Mention> aMentions)
     {
         if (aMentions != null) {
             mentions = unmodifiableList(new ArrayList<>(aMentions));

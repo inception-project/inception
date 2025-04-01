@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.response;
 
 import static com.github.victools.jsonschema.generator.OptionPreset.PLAIN_JSON;
 import static com.github.victools.jsonschema.generator.SchemaVersion.DRAFT_2020_12;
+import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.response.Mention.PROP_LABEL;
 import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.traits.ChatMessage.Role.SYSTEM;
 import static java.util.Collections.reverse;
 import static java.util.Collections.sort;
@@ -54,6 +55,7 @@ import com.github.victools.jsonschema.generator.SchemaGeneratorConfigBuilder;
 import com.github.victools.jsonschema.module.jackson.JacksonModule;
 import com.github.victools.jsonschema.module.jackson.JacksonOption;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
@@ -141,13 +143,62 @@ public class MentionsFromStructuredOutputExtractor
     }
 
     @Override
-    public Optional<JsonNode> getJsonSchema()
+    public Optional<JsonNode> getJsonSchema(Recommender aRecommender,
+            AnnotationSchemaService aSchemaService)
     {
-        var generator = new SchemaGenerator(
-                new SchemaGeneratorConfigBuilder(DRAFT_2020_12, PLAIN_JSON) //
-                        .with(Option.FORBIDDEN_ADDITIONAL_PROPERTIES_BY_DEFAULT) //
-                        .with(new JacksonModule(JacksonOption.RESPECT_JSONPROPERTY_REQUIRED))
-                        .build());
+        var configBuilder = new SchemaGeneratorConfigBuilder(DRAFT_2020_12, PLAIN_JSON) //
+                .with(Option.FORBIDDEN_ADDITIONAL_PROPERTIES_BY_DEFAULT) //
+                .with(new JacksonModule(JacksonOption.RESPECT_JSONPROPERTY_REQUIRED));
+
+        var tagset = aRecommender.getFeature().getTagset();
+        if (tagset != null) {
+            var tags = aSchemaService.listTags(tagset);
+
+            // If there are no tags the LLM may produce new tags freely.
+            // If there are tags, the LLM must only use these existing tags - even if the tagset
+            // allows tag creation.
+            if (!tags.isEmpty()) {
+                configBuilder.forFields().withEnumResolver(scope -> {
+                    if (scope.getDeclaringType().isInstanceOf(Mention.class)
+                            && PROP_LABEL.equals(scope.getDeclaredName())) {
+                        return tags.stream() //
+                                .map(Tag::getName) //
+                                .toList();
+                    }
+                    return null;
+                });
+            }
+
+            configBuilder.forFields().withDescriptionResolver(scope -> {
+                if (scope.getDeclaringType().isInstanceOf(Mention.class)
+                        && PROP_LABEL.equals(scope.getDeclaredName())) {
+                    var description = new StringBuilder();
+                    if (isNotBlank(tagset.getDescription())) {
+                        description.append("# Description\n\n") //
+                                .append(tagset.getDescription()) //
+                                .append("\n\n");
+                    }
+
+                    if (!tags.isEmpty()) {
+                        description.append("# Labels\n\n");
+
+                        for (var tag : tags) {
+                            description.append("* `").append(tag.getName()).append("`");
+                            if (isNotBlank(tag.getDescription())) {
+                                description.append(": ") //
+                                        .append(tag.getDescription().strip()) //
+                                        .append("\n\n");
+                            }
+                        }
+                    }
+
+                    return description.toString().strip();
+                }
+                return null;
+            });
+        }
+
+        var generator = new SchemaGenerator(configBuilder.build());
 
         return Optional.of(generator.generateSchema(MentionResult.class));
     }
@@ -164,33 +215,6 @@ public class MentionsFromStructuredOutputExtractor
                 Assign the text of the mention to the `coveredText` property.
                 Assign the label of the mention to the `label` property.
                 """));
-
-        var tagset = aRecommender.getFeature().getTagset();
-        if (tagset != null) {
-            var tags = aSchemaService.listTags(tagset);
-            if (!tags.isEmpty()) {
-                var tagsMessageContent = new StringBuilder();
-
-                if (tagset.isCreateTag()) {
-                    tagsMessageContent.append(
-                            "You can use the following values for the `label` property or come up with a new one if none "
-                                    + "of the existing values is appropriate:\n");
-                }
-                else {
-                    tagsMessageContent.append(
-                            "You assign either of the following values to the `label` property:\n");
-                }
-
-                for (var tag : tags) {
-                    tagsMessageContent.append("* `" + tag.getName() + "`");
-                    if (isNotBlank(tag.getDescription())) {
-                        tagsMessageContent.append(": " + tag.getDescription());
-                    }
-                    tagsMessageContent.append("\n");
-                }
-                messages.add(new ChatMessage(SYSTEM, tagsMessageContent.toString()));
-            }
-        }
 
         return messages;
     }

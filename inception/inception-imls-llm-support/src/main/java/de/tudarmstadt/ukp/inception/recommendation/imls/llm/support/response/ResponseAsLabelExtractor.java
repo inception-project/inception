@@ -57,7 +57,8 @@ public class ResponseAsLabelExtractor
     }
 
     @Override
-    public Optional<JsonNode> getJsonSchema()
+    public Optional<JsonNode> getJsonSchema(Recommender aRecommender,
+            AnnotationSchemaService aSchemaService)
     {
         return Optional.empty();
     }

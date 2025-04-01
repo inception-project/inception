@@ -127,6 +127,10 @@
       <groupId>com.github.victools</groupId>
       <artifactId>jsonschema-module-jackson</artifactId>
     </dependency>
+    <dependency>
+      <groupId>com.fasterxml</groupId>
+      <artifactId>classmate</artifactId>
+    </dependency>
 
     <dependency>
       <groupId>org.slf4j</groupId>
