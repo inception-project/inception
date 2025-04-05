@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.trie;
+package de.tudarmstadt.ukp.inception.support.text;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -171,7 +171,8 @@ public class Trie<V>
         if (sanitizerFactory != null) {
             sanitizer = sanitizerFactory.create();
         }
-        Node last = root;
+
+        var last = root;
         Node match = null;
         int i = offset;
         for (; i < key.length(); i++) {
@@ -180,6 +181,10 @@ public class Trie<V>
             if (sanitizer != null) {
                 k = sanitizer.map(k);
                 if (k == KeySanitizer.SKIP_CHAR) {
+                    if (i == offset) {
+                        // The first character must not be a skipped character
+                        return null;
+                    }
                     continue;
                 }
             }

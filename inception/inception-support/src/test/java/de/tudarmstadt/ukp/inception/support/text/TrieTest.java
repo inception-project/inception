@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.trie;
+package de.tudarmstadt.ukp.inception.support.text;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -25,16 +25,14 @@ import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.StringMatchingRecommender.DictEntry;
-
 public class TrieTest
 {
-    private Trie<DictEntry> sut;
+    private Trie<String> sut = new Trie<>();
 
     @BeforeEach
     public void setup()
     {
-        sut = new Trie<DictEntry>();
+        sut = new Trie<String>();
     }
 
     @Test
@@ -43,7 +41,7 @@ public class TrieTest
         List<String> keys = asList("1", "asf", "asf sadf", "dsjkla sfasd kj92");
 
         for (String key : keys) {
-            sut.put(key, new DictEntry(key));
+            sut.put(key, key);
         }
 
         assertThat(sut.size()).isEqualTo(keys.size());
@@ -62,7 +60,7 @@ public class TrieTest
     @Test
     public void thatExactMatchesCanBeFound()
     {
-        sut.put("in", new DictEntry("in"));
+        sut.put("in", "in");
 
         assertThat(sut.get("initially")).isNull();
     }
@@ -70,9 +68,9 @@ public class TrieTest
     @Test
     public void testThatKeySanitizerWorks()
     {
-        sut = new Trie<DictEntry>(WhitespaceNormalizingSanitizer.factory());
+        sut = new Trie<>(WhitespaceNormalizingSanitizer.factory());
 
-        sut.put("  this is\ta test\n  .", new DictEntry("exists"));
+        sut.put("  this is\ta test\n  .", "exists");
 
         System.out.println(sut.keys());
 
@@ -83,4 +81,5 @@ public class TrieTest
         assertThat(sut.getNode("  this is\ta test  .").node.level).isEqualTo(16);
         assertThat(sut.getNode("  this is\ta test  .").matchLength).isEqualTo(19);
     }
+
 }
