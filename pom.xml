@@ -106,11 +106,11 @@
     <jetty.version>12.0.18</jetty.version>
     <servlet-api.version>6.0.0</servlet-api.version>
 
-    <mariadb.driver.version>3.5.2</mariadb.driver.version>
+    <mariadb.driver.version>3.5.3</mariadb.driver.version>
     <mssql.driver.version>12.10.0.jre11</mssql.driver.version>
     <mysql.driver.version>9.2.0</mysql.driver.version>
     <postgres.driver.version>42.7.5</postgres.driver.version>
-    <hibernate.version>6.6.11.Final</hibernate.version>
+    <hibernate.version>6.6.12.Final</hibernate.version>
     <hibernate.validator.version>8.0.2.Final</hibernate.validator.version>
 
     <wicket.version>10.4.0</wicket.version>
@@ -125,8 +125,8 @@
       -->
     <lucene.version>9.12.1</lucene.version>
     <solr.version>9.7.0</solr.version>
-    <opensearch.version>2.18.0</opensearch.version>
-    <opensearch-runner.version>${opensearch.version}.1</opensearch-runner.version>
+    <opensearch.version>2.19.1</opensearch.version>
+    <opensearch-runner.version>${opensearch.version}.0</opensearch-runner.version>
     <jena.version>5.3.0</jena.version>
     <rdf4j.version>5.1.2</rdf4j.version> 
     <owlapi-version>5.5.1</owlapi-version>
@@ -144,7 +144,7 @@
     <snakeyaml.version>2.4</snakeyaml.version>
     <okhttp.version>4.12.0</okhttp.version>
     <okio.version>3.10.2</okio.version>
-    <byte-buddy.version>1.17.4</byte-buddy.version>
+    <byte-buddy.version>1.17.5</byte-buddy.version>
     <caffeine.version>3.2.0</caffeine.version>
     <commons-beanutils.version>1.10.1</commons-beanutils.version>
     <commons-collections4.version>4.4</commons-collections4.version>
@@ -176,7 +176,7 @@
     <jaxb.version>4.0.5</jaxb.version>
     <snappy.version>1.1.10.7</snappy.version>
     <jsonld-java.version>0.13.6</jsonld-java.version>
-    <jna.version>5.15.0</jna.version>
+    <jna.version>5.17.0</jna.version>
     <jsoup.version>1.18.3</jsoup.version>
     <mime4j.version>0.8.11</mime4j.version>
     <hsqldb.version>2.7.4</hsqldb.version>
