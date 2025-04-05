@@ -17,10 +17,11 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.response;
 
+import static java.util.Collections.emptyList;
+import static java.util.Collections.emptyMap;
 import static org.apache.commons.lang3.StringUtils.abbreviateMiddle;
 
 import java.lang.invoke.MethodHandles;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -30,15 +31,13 @@ import org.apache.uima.cas.Type;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.databind.JsonNode;
-
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.prompt.PromptContext;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.traits.ChatMessage;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
-public class ResponseAsLabelExtractor
+public final class ResponseAsLabelExtractor
     implements ResponseExtractor
 {
     private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
@@ -47,7 +46,7 @@ public class ResponseAsLabelExtractor
     public Map<String, MentionResult> generateExamples(RecommendationEngine aEngine, CAS aCas,
             int aNum)
     {
-        return Collections.emptyMap();
+        return emptyMap();
     }
 
     @Override
@@ -57,17 +56,10 @@ public class ResponseAsLabelExtractor
     }
 
     @Override
-    public Optional<JsonNode> getJsonSchema(Recommender aRecommender,
-            AnnotationSchemaService aSchemaService)
-    {
-        return Optional.empty();
-    }
-
-    @Override
     public List<? extends ChatMessage> getFormatDefiningMessages(Recommender aRecommender,
             AnnotationSchemaService aSchemaService)
     {
-        return Collections.emptyList();
+        return emptyList();
     }
 
     @Override

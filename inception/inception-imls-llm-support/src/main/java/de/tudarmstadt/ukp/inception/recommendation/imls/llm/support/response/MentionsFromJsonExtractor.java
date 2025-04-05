@@ -55,7 +55,7 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.traits.ChatM
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 
-public class MentionsFromJsonExtractor
+public final class MentionsFromJsonExtractor
     implements ResponseExtractor
 {
     private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
@@ -90,22 +90,13 @@ public class MentionsFromJsonExtractor
             for (var mention : aCas.<Annotation> select(predictedType).coveredBy(context)) {
                 var label = FSUtil.getFeature(mention, predictedFeature, String.class);
                 var text = normalizeSpace(mention.getCoveredText());
-                mentions.add(new Mention(text, label));
+                mentions.add(new Mention(text, label, null));
             }
             var result = new MentionResult(mentions);
 
             examples.put(context.getCoveredText(), result);
             labelsSeen.addAll(contextWithLabels.getValue());
         }
-
-        // Generate a fake sample to demonstrate how a result should look
-        // if (examples.isEmpty()) {
-        // var text = "This sentence contains a secret and a hint.";
-        // var sample = new MentionsSample(text);
-        // sample.addMention("secret", "mystery");
-        // sample.addMention("hint", "clue");
-        // examples.put(text, sample);
-        // }
 
         return examples;
     }
@@ -143,7 +134,7 @@ public class MentionsFromJsonExtractor
             }
 
             for (var tag : aSchemaService.listTags(tagset)) {
-                tagsMessageContent.append("* `" + tag.getName() + "`");
+                tagsMessageContent.append("* `").append(tag.getName()).append("`");
                 if (isNotBlank(tag.getDescription())) {
                     tagsMessageContent.append(": " + tag.getDescription());
                 }

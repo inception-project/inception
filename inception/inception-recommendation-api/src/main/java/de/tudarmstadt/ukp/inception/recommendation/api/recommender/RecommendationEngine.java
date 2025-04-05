@@ -209,24 +209,24 @@ public abstract class RecommendationEngine
         return getPredictedType(aCas).getFeatureByBaseName(featureName);
     }
 
-    protected Feature getScoreFeature(CAS aCas)
+    public Feature getScoreFeature(CAS aCas)
     {
         return getPredictedType(aCas).getFeatureByBaseName(featureName + FEATURE_NAME_SCORE_SUFFIX);
     }
 
-    protected Feature getScoreExplanationFeature(CAS aCas)
+    public Feature getScoreExplanationFeature(CAS aCas)
     {
         return getPredictedType(aCas)
                 .getFeatureByBaseName(featureName + FEATURE_NAME_SCORE_EXPLANATION_SUFFIX);
     }
 
-    protected Feature getCorrectionFeature(CAS aCas)
+    public Feature getCorrectionFeature(CAS aCas)
     {
         return getPredictedType(aCas)
                 .getFeatureByBaseName(featureName + FEATURE_NAME_CORRECTION_SUFFIX);
     }
 
-    protected Feature getCorrectionExplanationFeature(CAS aCas)
+    public Feature getCorrectionExplanationFeature(CAS aCas)
     {
         return getPredictedType(aCas)
                 .getFeatureByBaseName(featureName + FEATURE_NAME_CORRECTION_EXPLANATION_SUFFIX);

@@ -33,7 +33,9 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.traits.ChatM
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.traits.LlmRecommenderTraits;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
-public interface ResponseExtractor
+public sealed interface ResponseExtractor
+    permits MentionsFromStructuredOutputExtractor, MentionsFromJsonExtractor,
+    ResponseAsLabelExtractor
 {
     void extractMentions(RecommendationEngine aEngine, CAS aCas, PromptContext aCandidate,
             String aResponse)
@@ -42,25 +44,25 @@ public interface ResponseExtractor
     Map<String, MentionResult> generateExamples(RecommendationEngine aEngine, CAS aCas, int aNum);
 
     default Optional<JsonNode> getJsonSchema(Recommender aRecommender,
-            AnnotationSchemaService aSchemaService)
+            AnnotationSchemaService aSchemaService, LlmRecommenderTraits aTraits)
     {
         return Optional.empty();
     }
 
-    static ResponseExtractor getResponseExtractor(LlmRecommenderTraits aMode)
+    static ResponseExtractor getResponseExtractor(LlmRecommenderTraits aTraits)
     {
-        switch (aMode.getExtractionMode()) {
+        switch (aTraits.getExtractionMode()) {
         case RESPONSE_AS_LABEL:
             return new ResponseAsLabelExtractor();
         case MENTIONS_FROM_JSON:
-            if (aMode.isStructuredOutputSupported()) {
+            if (aTraits.isStructuredOutputSupported()) {
                 return new MentionsFromStructuredOutputExtractor();
             }
             else {
                 return new MentionsFromJsonExtractor();
             }
         default:
-            throw new IllegalArgumentException("Unsupported extraction mode [" + aMode + "]");
+            throw new IllegalArgumentException("Unsupported extraction mode [" + aTraits + "]");
         }
     }
 

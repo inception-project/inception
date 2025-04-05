@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.response;
 
 import static com.github.victools.jsonschema.generator.OptionPreset.PLAIN_JSON;
 import static com.github.victools.jsonschema.generator.SchemaVersion.DRAFT_2020_12;
+import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.response.Mention.PROP_JUSTIFICATION;
 import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.response.Mention.PROP_LABEL;
 import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.traits.ChatMessage.Role.SYSTEM;
 import static java.util.Collections.reverse;
@@ -61,9 +62,10 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.prompt.PromptContext;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.traits.ChatMessage;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.traits.LlmRecommenderTraits;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
-public class MentionsFromStructuredOutputExtractor
+public final class MentionsFromStructuredOutputExtractor
     implements ResponseExtractor
 {
     private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
@@ -98,7 +100,7 @@ public class MentionsFromStructuredOutputExtractor
             for (var mention : aCas.<Annotation> select(predictedType).coveredBy(context)) {
                 var label = FSUtil.getFeature(mention, predictedFeature, String.class);
                 var text = normalizeSpace(mention.getCoveredText());
-                mentions.add(new Mention(text, label));
+                mentions.add(new Mention(text, label, null));
             }
             var result = new MentionResult(mentions);
 
@@ -144,11 +146,21 @@ public class MentionsFromStructuredOutputExtractor
 
     @Override
     public Optional<JsonNode> getJsonSchema(Recommender aRecommender,
-            AnnotationSchemaService aSchemaService)
+            AnnotationSchemaService aSchemaService, LlmRecommenderTraits aTraits)
     {
         var configBuilder = new SchemaGeneratorConfigBuilder(DRAFT_2020_12, PLAIN_JSON) //
                 .with(Option.FORBIDDEN_ADDITIONAL_PROPERTIES_BY_DEFAULT) //
                 .with(new JacksonModule(JacksonOption.RESPECT_JSONPROPERTY_REQUIRED));
+
+        if (!aTraits.isJustificationEnabled()) {
+            configBuilder.forFields().withIgnoreCheck(scope -> {
+                if (scope.getDeclaringType().isInstanceOf(Mention.class)
+                        && PROP_JUSTIFICATION.equals(scope.getDeclaredName())) {
+                    return true;
+                }
+                return false;
+            });
+        }
 
         var tagset = aRecommender.getFeature().getTagset();
         if (tagset != null) {
@@ -231,6 +243,7 @@ public class MentionsFromStructuredOutputExtractor
         var predictedType = aEngine.getPredictedType(aCas);
         var predictedFeature = aEngine.getPredictedFeature(aCas);
         var isPredictionFeature = aEngine.getIsPredictionFeature(aCas);
+        var scoreExplanationFeature = aEngine.getScoreExplanationFeature(aCas);
 
         for (var mention : result.getMentions()) {
             var coveredText = mention.getCoveredText();
@@ -240,6 +253,7 @@ public class MentionsFromStructuredOutputExtractor
             }
 
             var label = mention.getLabel();
+            var justification = mention.getJustification();
             var lastIndex = 0;
             var index = text.indexOf(coveredText, lastIndex);
             var hitCount = 0;
@@ -248,8 +262,11 @@ public class MentionsFromStructuredOutputExtractor
                 var prediction = aCas.createAnnotation(predictedType, begin,
                         begin + coveredText.length());
                 prediction.setBooleanValue(isPredictionFeature, true);
-                if (label != null) {
+                if (isNotBlank(label)) {
                     prediction.setStringValue(predictedFeature, label);
+                }
+                if (isNotBlank(justification)) {
+                    prediction.setStringValue(scoreExplanationFeature, justification);
                 }
                 aCas.addFsToIndexes(prediction);
                 LOG.debug("Prediction generated [{}] -> [{}]", coveredText, label);

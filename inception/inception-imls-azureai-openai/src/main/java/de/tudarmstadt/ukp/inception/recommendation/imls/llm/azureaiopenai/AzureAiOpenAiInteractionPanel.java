@@ -22,6 +22,7 @@ import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CHAN
 import java.util.List;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
@@ -54,6 +55,7 @@ public class AzureAiOpenAiInteractionPanel
     private static final String MID_EXTRACTION_MODE = "extractionMode";
     private static final String MID_PROMPTING_MODE = "promptingMode";
     private static final String MID_PROMPT_HINTS = "promptHints";
+    private static final String MID_JUSTIFICATION_ENABLED = "justificationEnabled";
 
     private @SpringBean RecommendationService recommendationService;
     private @SpringBean RecommendationEngineFactory<AzureAiOpenAiRecommenderTraits> toolFactory;
@@ -104,6 +106,9 @@ public class AzureAiOpenAiInteractionPanel
         form.add(new ExtractionModeSelect(MID_EXTRACTION_MODE, traits.bind(MID_EXTRACTION_MODE),
                 getModel()));
 
+        form.add(new CheckBox(MID_JUSTIFICATION_ENABLED) //
+                .setOutputMarkupId(true));
+
         add(form);
     }
 
@@ -121,6 +126,7 @@ public class AzureAiOpenAiInteractionPanel
 
     private String getPromptHints()
     {
-        return traits.getObject().getPromptingMode().getHints();
+        var promptingMode = traits.getObject().getPromptingMode();
+        return promptingMode != null ? promptingMode.getHints() : null;
     }
 }

@@ -15,30 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.trie;
+package de.tudarmstadt.ukp.inception.support.text;
 
-public class WhitespaceNormalizingSanitizer
-    implements KeySanitizer
+public interface KeySanitizerFactory
 {
-    private boolean lastWasWhitespace = true;
-
-    @Override
-    public char map(char aChar)
-    {
-        boolean currentIsWhitespace = Character.isWhitespace(aChar);
-
-        if (lastWasWhitespace && currentIsWhitespace) {
-            return SKIP_CHAR;
-        }
-
-        char result = currentIsWhitespace && aChar != ' ' ? ' ' : aChar;
-        lastWasWhitespace = currentIsWhitespace;
-
-        return result;
-    }
-
-    public static KeySanitizerFactory factory()
-    {
-        return () -> new WhitespaceNormalizingSanitizer();
-    }
+    public KeySanitizer create();
 }

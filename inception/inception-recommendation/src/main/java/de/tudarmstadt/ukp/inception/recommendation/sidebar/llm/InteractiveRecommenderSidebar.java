@@ -26,6 +26,7 @@ import static wicket.contrib.input.events.EventType.click;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.WebMarkupContainer;
@@ -41,8 +42,11 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature_;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer_;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase2;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
@@ -53,6 +57,8 @@ import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.SuggestionSupportRegistry;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender_;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.traits.LlmRecommenderTraits;
 import de.tudarmstadt.ukp.inception.recommendation.tasks.PredictionTask;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
@@ -77,6 +83,7 @@ public class InteractiveRecommenderSidebar
     private static final String MID_TRAITS = "traits";
     private static final String MID_EXECUTE = "execute";
     private static final String MID_RECOMMENDER = "recommender";
+    private static final String MID_KEEP_EXISTING_SUGGESTIONS = "keepExistingSuggestions";
 
     private @SpringBean UserDao userService;
     private @SpringBean RecommendationService recommendationService;
@@ -117,7 +124,7 @@ public class InteractiveRecommenderSidebar
         var interactiveRecommenders = listInteractiveRecommenders();
         recommenderChoice = new DropDownChoice<Recommender>(MID_RECOMMENDER);
         recommenderChoice.setModel(recommender);
-        recommenderChoice.setChoiceRenderer(new ChoiceRenderer<>("name"));
+        recommenderChoice.setChoiceRenderer(new ChoiceRenderer<>(Recommender_.NAME));
         recommenderChoice.setChoices(interactiveRecommenders);
         recommenderChoice.setVisible(interactiveRecommenders.size() > 0);
         recommenderChoice.setEnabled(interactiveRecommenders.size() > 1);
@@ -127,7 +134,7 @@ public class InteractiveRecommenderSidebar
 
         featureChoice = new DropDownChoice<>(MID_FEATURE, this::listFeatures);
         featureChoice.setOutputMarkupPlaceholderTag(true);
-        featureChoice.setChoiceRenderer(new ChoiceRenderer<>("uiName"));
+        featureChoice.setChoiceRenderer(new ChoiceRenderer<>(AnnotationFeature_.UI_NAME));
         featureChoice.setRequired(true);
         featureChoice.add(LambdaBehavior.onConfigure(_this -> {
             if (featureChoice.getChoicesModel().getObject().size() == 1) {
@@ -136,26 +143,28 @@ public class InteractiveRecommenderSidebar
         }));
         featureChoice.add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT,
                 this::actionChangeFeature));
-        featureChoice.add(visibleWhen(
-                () -> recommender.map(Recommender::getId).isPresent().getObject() && featureChoice
-                        .getChoicesModel().map(c -> c.size() > 1).orElse(false).getObject()));
+        featureChoice.add(
+                visibleWhen(() -> recommender.map(Recommender::getId).isPresent().getObject() && //
+                        featureChoice.getChoicesModel().map(c -> c.size() > 1).orElse(false)
+                                .getObject()));
         form.add(featureChoice);
 
         layerChoice = new DropDownChoice<>(MID_LAYER, this::listLayers);
         layerChoice.setOutputMarkupPlaceholderTag(true);
-        layerChoice.setChoiceRenderer(new ChoiceRenderer<>("uiName"));
+        layerChoice.setChoiceRenderer(new ChoiceRenderer<>(AnnotationLayer_.UI_NAME));
         layerChoice.setRequired(true);
         layerChoice.add(
                 new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT, this::actionChangeLayer));
-        layerChoice.add(visibleWhen(
-                () -> recommender.map(Recommender::getId).isPresent().getObject() && layerChoice
-                        .getChoicesModel().map(c -> !c.isEmpty()).orElse(false).getObject()));
+        layerChoice.add(
+                visibleWhen(() -> recommender.map(Recommender::getId).isPresent().getObject() && //
+                        layerChoice.getChoicesModel().map(c -> !c.isEmpty()).orElse(false)
+                                .getObject()));
         form.add(layerChoice);
 
         form.add(traitsContainer = new WebMarkupContainer(MID_TRAITS_CONTAINER));
         traitsContainer.setOutputMarkupPlaceholderTag(true);
 
-        form.add(new CheckBox("keepExistingSuggestions", keepExisting).setOutputMarkupId(true));
+        form.add(new CheckBox(MID_KEEP_EXISTING_SUGGESTIONS, keepExisting).setOutputMarkupId(true));
 
         actionChangeRecommender(null);
 
@@ -235,8 +244,25 @@ public class InteractiveRecommenderSidebar
         if (prefs.getLastPromptingModeUsed() != null) {
             traits.setPromptingMode(prefs.getLastPromptingModeUsed());
         }
+        if (prefs.isLastJustificationEnabled() != null) {
+            traits.setJustificationEnabled(prefs.isLastJustificationEnabled());
+        }
 
         factory.writeTraits(aRec, traits);
+    }
+
+    private void saveLastUsedSettings(User sessionOwner, Recommender rec,
+            Optional<RecommendationEngineFactory<Object>> maybeFactory)
+    {
+        var factory = maybeFactory.get();
+        var prefs = sidebarPrefs.getObject();
+        var traits = (LlmRecommenderTraits) factory.readTraits(rec);
+        prefs.setLastPromptUsed(traits.getPrompt());
+        prefs.setLastPromptingModeUsed(traits.getPromptingMode());
+        prefs.setLastExtractionModeUsed(traits.getExtractionMode());
+        prefs.setLastJustificationEnabled(traits.isJustificationEnabled());
+        preferencesService.saveTraitsForUserAndProject(KEY_INTERACTIVE_RECOMMENDER_SIDEBAR_PREFS,
+                sessionOwner, getModelObject().getProject(), prefs);
     }
 
     private InteractiveRecommenderSidebarPrefs loadSidebarPrefs()
@@ -393,14 +419,7 @@ public class InteractiveRecommenderSidebar
             return;
         }
 
-        var factory = maybeFactory.get();
-        var prefs = sidebarPrefs.getObject();
-        var traits = (LlmRecommenderTraits) factory.readTraits(rec);
-        prefs.setLastPromptUsed(traits.getPrompt());
-        prefs.setLastPromptingModeUsed(traits.getPromptingMode());
-        prefs.setLastExtractionModeUsed(traits.getExtractionMode());
-        preferencesService.saveTraitsForUserAndProject(KEY_INTERACTIVE_RECOMMENDER_SIDEBAR_PREFS,
-                sessionOwner, getModelObject().getProject(), prefs);
+        saveLastUsedSettings(sessionOwner, rec, maybeFactory);
 
         var predictionTask = PredictionTask.builder() //
                 .withSessionOwner(sessionOwner) //

@@ -24,17 +24,21 @@ public class Mention
 {
     public static final String PROP_COVERED_TEXT = "coveredText";
     public static final String PROP_LABEL = "label";
+    public static final String PROP_JUSTIFICATION = "justification";
 
     private final @JsonProperty(value = PROP_COVERED_TEXT, required = true) String coveredText;
     private final @JsonProperty(value = PROP_LABEL, required = true) String label;
+    private final @JsonProperty(value = PROP_JUSTIFICATION, required = true) String justification;
 
     @JsonCreator
     public Mention( //
-            @JsonProperty("coveredText") String aCoveredText, //
-            @JsonProperty("label") String aLabel)
+            @JsonProperty(PROP_COVERED_TEXT) String aCoveredText, //
+            @JsonProperty(PROP_LABEL) String aLabel, //
+            @JsonProperty(PROP_JUSTIFICATION) String aJustification)
     {
         coveredText = aCoveredText;
         label = aLabel;
+        justification = aJustification;
     }
 
     public String getCoveredText()
@@ -45,5 +49,10 @@ public class Mention
     public String getLabel()
     {
         return label;
+    }
+
+    public String getJustification()
+    {
+        return justification;
     }
 }
