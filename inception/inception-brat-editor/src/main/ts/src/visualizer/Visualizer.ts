@@ -4271,6 +4271,21 @@ export class Visualizer {
     return this.svg.node.querySelectorAll(`[data-span-id="${id}"]`)
   }
 
+  selectionToPoint (sel: Selection | null) : Offsets | null {
+    if (!sel || !sel.rangeCount) return null
+
+    const anchorNode = sel.getRangeAt(0).startContainer
+    const anchorOffset = sel.getRangeAt(0).startOffset
+
+    if (!anchorNode) return null
+
+    const range = new Range()
+    range.setStart(anchorNode, anchorOffset)
+    range.setEnd(anchorNode, anchorOffset)
+
+    return this.rangeToOffsets(range)
+  }
+
   selectionToOffsets (sel: Selection | null) : Offsets | null {
     if (!sel || !sel.rangeCount) return null
 
