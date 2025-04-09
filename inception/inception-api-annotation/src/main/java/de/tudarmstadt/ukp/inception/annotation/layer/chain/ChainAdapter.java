@@ -564,7 +564,20 @@ public class ChainAdapter
     public Selection selectLink(AnnotationFS aAnno)
     {
         var selection = new Selection();
-        selection.selectArc(new VID(aAnno, 1, VID.NONE, VID.NONE), aAnno, getNextLink(aAnno));
+
+        var nextLink = getNextLink(aAnno);
+        if (nextLink != null) {
+            selection.selectArc(new VID(aAnno, 1, VID.NONE, VID.NONE), aAnno, nextLink);
+            return selection;
+        }
+
+        var chain = getChainForLink(aAnno.getCAS(), aAnno);
+        var prevLink = getPrevLink(chain, aAnno);
+        if (prevLink != null) {
+            selection.selectArc(new VID(aAnno, 1, VID.NONE, VID.NONE), prevLink, aAnno);
+            return selection;
+        }
+
         return selection;
     }
 
