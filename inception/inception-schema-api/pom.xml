@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>36.1-SNAPSHOT</version>
+    <version>36.1</version>
   </parent>
   <artifactId>inception-schema-api</artifactId>
   <name>INCEpTION - Core - Annotation Schema API</name>
