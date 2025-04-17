@@ -15,9 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { calculateEndOffset, calculateStartOffset, DiamAjax, positionToOffset, VID } from '@inception-project/inception-js-api'
+import { calculateEndOffset, calculateStartOffset, type DiamAjax, positionToOffset, type VID } from '@inception-project/inception-js-api'
 import AnnotationResizeHandle from './AnnotationResizeHandle.svelte'
-import { ApacheAnnotatorVisualizer } from './ApacheAnnotatorVisualizer'
+import { ApacheAnnotatorVisualizer } from './ApacheAnnotatorVisualizer.svelte'
+import { mount, unmount } from 'svelte'
 
 export class ResizeManager {
   private visualizer: ApacheAnnotatorVisualizer
@@ -37,21 +38,35 @@ export class ResizeManager {
 
     this.visualizer.root.addEventListener('dragover', e => this.handleDragOver(e))
 
-    this.beginHandle = new AnnotationResizeHandle({
+    this.beginHandle = mount(AnnotationResizeHandle, {
       target: this.visualizer.root,
-      props: { position: 'begin' }
+      props: { position: 'begin' },
+      events: {
+        'resize-handle-released': e => this.handleResizeHandleReleased(e)
+      }
     })
 
-    this.endHandle = new AnnotationResizeHandle({
+    this.endHandle = mount(AnnotationResizeHandle, {
       target: this.visualizer.root,
-      props: { position: 'end' }
+      props: { position: 'end' },
+      events: { 
+        'resize-handle-released': e => this.handleResizeHandleReleased(e)
+      } 
     })
-
-    this.beginHandle.$on('resize-handle-released', e => this.handleResizeHandleReleased(e))
-
-    this.endHandle.$on('resize-handle-released', e => this.handleResizeHandleReleased(e))
 
     this.hide()
+  }
+
+  public destroy() {
+    this.hide()
+    if (this.beginHandle) {
+      unmount(this.beginHandle)
+      this.beginHandle = undefined
+    }
+    if (this.endHandle) {
+      unmount(this.endHandle)
+      this.endHandle = undefined
+    }
   }
 
   show (id: VID): void {

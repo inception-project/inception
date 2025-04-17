@@ -21,7 +21,7 @@
   "devDependencies": {
     "esbuild": "${esbuild.version}",
     "eslint": "${eslint.version}",
-    "eslint-config-standard": "${eslint-config-standard.version}",
+    "neostandard": "${neostandard.version}",
     "eslint-plugin-import": "${eslint-plugin-import.version}",
     "eslint-plugin-n": "${eslint-plugin-n.version}",
     "eslint-plugin-promise": "${eslint-plugin-promise.version}",

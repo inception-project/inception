@@ -15,10 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { ApacheAnnotatorEditor } from './ApacheAnnotatorEditor'
-import { ApacheAnnotatorVisualizer } from './ApacheAnnotatorVisualizer'
 import './SectionAnnotationVisualizer.scss'
-import { AnnotatedText, bgToFgColor, DiamAjax, Span, VID } from "@inception-project/inception-js-api"
+import { AnnotatedText, bgToFgColor, type DiamAjax, Span, type VID } from "@inception-project/inception-js-api"
 
 export class SectionAnnotationVisualizer {
   private sectionSelector: string

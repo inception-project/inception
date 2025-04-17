@@ -1,4 +1,6 @@
 <script lang="ts">
+    import { run } from 'svelte/legacy';
+
     /*
      * Licensed to the Technische Universität Darmstadt under one
      * or more contributor license agreements.  See the NOTICE file
@@ -19,30 +21,34 @@
 
     import {
         AnnotatedText,
-        Annotation,
         AnnotationOverEvent,
         AnnotationOutEvent,
-        DiamAjax,
         Relation,
         Span,
         Layer,
+        compareOffsets,
+        type Annotation,
+        type DiamAjax
     } from "@inception-project/inception-js-api";
-    import { compareOffsets } from "@inception-project/inception-js-api/src/model/Offsets";
     import LabelBadge from "./LabelBadge.svelte";
     import SpanText from "./SpanText.svelte";
     import { compareSpanText, debounce, filterAnnotations, groupRelationsBySource, groupBy, uniqueLayers } from "./Utils";
-    import { sortByScore, recommendationsFirst } from "./AnnotationBrowserState"
+    import { stateStore } from "./AnnotationBrowserState.svelte"
 
-    export let ajaxClient: DiamAjax;
-    export let data: AnnotatedText;
+    interface Props {
+        ajaxClient: DiamAjax;
+        data: AnnotatedText;
+    }
 
-    let groupedRelations: Record<string, Relation[]>;
-    let groupedAnnotations: Record<string, Annotation[]>;
-    let groups: { layer: Layer, collapsed: boolean }[]
+    let { ajaxClient, data = $bindable() }: Props = $props();
+
+    let groupedRelations: Record<string, Relation[]> = $state();
+    let groupedAnnotations: Record<string, Annotation[]> = $state();
+    let groups: { layer: Layer, collapsed: boolean }[] = $state()
     let collapsedGroups = new Set<number>()
-    let filter = '';
+    let filter = $state('');
 
-    $: {
+    run(() => {
         const sortedLayers = uniqueLayers(data)
 
         groups = sortedLayers.map(layer => {
@@ -57,8 +63,10 @@
         )
 
         groupedRelations = groupRelationsBySource(data);
+    })
 
-        for (let [key, items] of Object.entries(groupedAnnotations)) {
+    run(() => {
+            for (let [key, items] of Object.entries(groupedAnnotations)) {
             items = filterAnnotations(data, items, filter)
             items.sort((a, b) => {
                 if (a instanceof Span && !(b instanceof Span)) {
@@ -71,13 +79,13 @@
 
                 const aIsRec = a.vid.toString().startsWith("rec:")
                 const bIsRec = b.vid.toString().startsWith("rec:")
-                if ($sortByScore && aIsRec && !bIsRec) {
-                    return $recommendationsFirst ? -1 : 1;
+                if (stateStore.sortByScore && aIsRec && !bIsRec) {
+                    return stateStore.recommendationsFirst ? -1 : 1;
                 }
 
                 if (a instanceof Span && b instanceof Span) {
-                    if ($sortByScore && aIsRec && bIsRec) {
-                        return b.score - a.score;
+                    if (stateStore.sortByScore && aIsRec && bIsRec) {
+                        return (b.score ?? 0) - (a.score ?? 0);
                     }
 
                     return (
@@ -87,8 +95,8 @@
                 }
 
                 if (a instanceof Relation && b instanceof Relation) {
-                    if ($sortByScore && aIsRec && bIsRec) {
-                        return b.score - a.score;
+                    if (stateStore.sortByScore && aIsRec && bIsRec) {
+                        return (b.score ?? 0) - (a.score ?? 0);
                     }
 
                     const targetA = a.arguments[0].target as Span
@@ -97,10 +105,11 @@
                 }
 
                 console.error("Unexpected annotation type combination", a, b);
+                return 0
             });
             groupedAnnotations[key] = items
         }
-    }
+    });
 
     function scrollToSpan(span: Span) {
         ajaxClient.scrollTo({ id: span.vid, offset: span.offsets[0] });
@@ -139,8 +148,8 @@
     const updateFilter = debounce(newFilter => { filter = newFilter }, 300);
 
     // Function to handle input changes
-    function handleFilterChange(event) {
-        updateFilter(event.target.value)
+    function handleFilterChange(event: Event) {
+        updateFilter((event.target as HTMLInputElement).value)
     }
 </script>
 
@@ -154,7 +163,7 @@
     </div>
 {:else}
     <div class="d-flex flex-row flex-wrap">
-        <input type="text" class="form-control rounded-0" on:input={handleFilterChange} placeholder="Filter"/>
+        <input type="text" class="form-control rounded-0" oninput={handleFilterChange} placeholder="Filter"/>
     </div>
     <div class="d-flex flex-row flex-wrap">
         <div class="form-check form-switch mx-2">
@@ -163,19 +172,19 @@
                 type="checkbox"
                 role="switch"
                 id="sortByScore"
-                bind:checked={$sortByScore}
+                bind:checked={stateStore.sortByScore}
             />
             <label class="form-check-label" for="sortByScore"
                 >Sort by score</label
             >
         </div>
-        <div class="form-check form-switch mx-2" class:d-none={!$sortByScore}>
+        <div class="form-check form-switch mx-2" class:d-none={!stateStore.sortByScore}>
             <input
                 class="form-check-input"
                 type="checkbox"
                 role="switch"
                 id="recommendationsFirst"
-                bind:checked={$recommendationsFirst}
+                bind:checked={stateStore.recommendationsFirst}
             />
             <label class="form-check-label" for="recommendationsFirst"
                 >Suggestions first</label
@@ -183,11 +192,11 @@
         </div>
     </div>
     <div class="d-flex flex-row flex-wrap">
-        <button class="btn btn-outline-secondary btn-sm p-0 m-1" style="width: 2em;" on:click={expandAll}>
-            <i class="fas fa-caret-down"/>
+        <button class="btn btn-outline-secondary btn-sm p-0 m-1" style="width: 2em;" onclick={expandAll}>
+            <i class="fas fa-caret-down"></i>
         </button>
-        <button class="btn btn-outline-secondary btn-sm p-0 m-1" style="width: 2em;" on:click={collapseAll}>
-            <i class="fas fa-caret-down group-collapsed"/>
+        <button class="btn btn-outline-secondary btn-sm p-0 m-1" style="width: 2em;" onclick={collapseAll}>
+            <i class="fas fa-caret-down group-collapsed"> </i>
         </button>
     </div>
     <div class="flex-content fit-child-snug">
@@ -195,14 +204,14 @@
             <ul class="scrolling flex-content list-group list-group-flush">
                 {#each groups as group}
                     <li class="list-group-item py-0 px-0 border-0">
-                        <!-- svelte-ignore a11y-click-events-have-key-events -->
-                        <!-- svelte-ignore a11y-no-static-element-interactions -->
+                        <!-- svelte-ignore a11y_click_events_have_key_events -->
+                        <!-- svelte-ignore a11y_no_static_element_interactions -->
                         <div
                             class="px-2 py-1 bg-light-subtle fw-bold sticky-top border-top border-bottom"
-                            on:click={() => toggleCollapsed(group)}
+                            onclick={() => toggleCollapsed(group)}
                         >
                             <button class="btn btn-link p-0" style="color: var(--bs-body-color)">
-                                <i class="fas fa-caret-down d-inline-block" class:group-collapsed={group.collapsed}/>
+                                <i class="fas fa-caret-down d-inline-block" class:group-collapsed={group.collapsed}></i>
                             </button>
                             <span class="badge rounded-pill text-bg-secondary float-end m-1">{groupedAnnotations[group.layer.name].length}</span>
                             <span>{group.layer.name} {group.layer.type}</span>
@@ -210,16 +219,16 @@
                         <ul class="px-0 list-group list-group-flush" class:d-none={group.collapsed}>
                             {#if groupedAnnotations[group.layer.name]}
                                 {#each groupedAnnotations[group.layer.name] as ann}
-                                    <!-- svelte-ignore a11y-mouse-events-have-key-events -->
+                                    <!-- svelte-ignore a11y_mouse_events_have_key_events -->
                                     {#if ann instanceof Span}
                                         <li
                                             class="list-group-item list-group-item-action p-0 d-flex"
-                                            on:mouseover={ev => mouseOverAnnotation(ev, ann)}
-                                            on:mouseout={ev => mouseOutAnnotation(ev, ann)}
+                                            onmouseover={ev => mouseOverAnnotation(ev, ann)}
+                                            onmouseout={ev => mouseOutAnnotation(ev, ann)}
                                         >
-                                            <!-- svelte-ignore a11y-click-events-have-key-events -->
-                                            <!-- svelte-ignore a11y-no-static-element-interactions -->
-                                            <div class="flex-grow-1 my-1 mx-2 position-relative overflow-hidden"  on:click={() => scrollToSpan(ann)}>
+                                            <!-- svelte-ignore a11y_click_events_have_key_events -->
+                                            <!-- svelte-ignore a11y_no_static_element_interactions -->
+                                            <div class="flex-grow-1 my-1 mx-2 position-relative overflow-hidden"  onclick={() => scrollToSpan(ann)}>
                                                 <div class="float-end labels">
                                                     <LabelBadge
                                                         {data}
@@ -236,12 +245,12 @@
                                         {#if relations}
                                             {#each relations as relation}
                                                 {@const target = relation.arguments[1].target}
-                                                <!-- svelte-ignore a11y-mouse-events-have-key-events -->
+                                                <!-- svelte-ignore a11y_mouse_events_have_key_events -->
                                                 <li
                                                     class="list-group-item list-group-item-action p-0 d-flex"
-                                                    on:mouseover={(ev) =>
+                                                    onmouseover={(ev) =>
                                                         mouseOverAnnotation(ev, relation)}
-                                                    on:mouseout={(ev) =>
+                                                    onmouseout={(ev) =>
                                                         mouseOutAnnotation(ev, relation)}
                                                 >
                                                     <div
@@ -249,11 +258,11 @@
                                                     >
                                                         <span>↳</span>
                                                     </div>
-                                                    <!-- svelte-ignore a11y-click-events-have-key-events -->
-                                                    <!-- svelte-ignore a11y-no-static-element-interactions -->
+                                                    <!-- svelte-ignore a11y_click_events_have_key_events -->
+                                                    <!-- svelte-ignore a11y_no_static_element_interactions -->
                                                     <div
                                                         class="flex-grow-1 my-1 mx-2 overflow-hidden"
-                                                        on:click={() => scrollToSpan(target)}
+                                                        onclick={() => scrollToSpan(target)}
                                                     >
                                                         <div class="float-end labels">
                                                             <LabelBadge
@@ -271,11 +280,11 @@
                                     {:else if ann instanceof Relation && group.layer.type === "relation"}
                                         <li
                                             class="list-group-item p-0 d-flex"
-                                            on:mouseover={ev => mouseOverAnnotation(ev, ann)}
-                                            on:mouseout={ev => mouseOutAnnotation(ev, ann)}
+                                            onmouseover={ev => mouseOverAnnotation(ev, ann)}
+                                            onmouseout={ev => mouseOutAnnotation(ev, ann)}
                                     >
-                                            <!-- svelte-ignore a11y-click-events-have-key-events -->
-                                            <!-- svelte-ignore a11y-no-static-element-interactions -->
+                                            <!-- svelte-ignore a11y_click_events_have_key_events -->
+                                            <!-- svelte-ignore a11y_no_static_element_interactions -->
                                             <div class="flex-grow-1 my-1 mx-0 position-relative overflow-hidden">
                                                 <div class="me-2">
                                                     <LabelBadge
@@ -285,7 +294,7 @@
                                                         showText={true}
                                                     />
                                                 </div>
-                                                <div class="d-flex flex-row list-group-item-action" on:click={() => scrollToSpan(ann.arguments[0].target)}>
+                                                <div class="d-flex flex-row list-group-item-action" onclick={() => scrollToSpan(ann.arguments[0].target)}>
                                                     <div class="text-secondary bg-light-subtle border-end px-2 d-flex align-items-center">
                                                         <span style="transform: rotate(90deg);">↳</span>
                                                     </div>
@@ -294,7 +303,7 @@
                                                         span={ann.arguments[0].target}
                                                     />
                                                 </div>
-                                                <div class="d-flex flex-row list-group-item-action" on:click={() => scrollToSpan(ann.arguments[1].target)}>
+                                                <div class="d-flex flex-row list-group-item-action" onclick={() => scrollToSpan(ann.arguments[1].target)}>
                                                     <div class="text-secondary bg-light-subtle border-end px-2 d-flex align-items-center">
                                                         <span>↳</span>
                                                     </div>

@@ -267,7 +267,7 @@
     <module>inception-diam-compactv2</module>
     <module>inception-diam-editor</module>
     <module>inception-external-editor</module>
-    <module>inception-html-editor</module>
+<!--    <module>inception-html-editor</module>-->
     <module>inception-html-apache-annotator-editor</module>
     <module>inception-html-recogito-editor</module>
     <module>inception-pdf-editor</module>

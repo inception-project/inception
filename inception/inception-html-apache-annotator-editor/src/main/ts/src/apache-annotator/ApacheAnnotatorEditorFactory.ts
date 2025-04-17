@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 import type { AnnotationEditorFactory, AnnotationEditorProperties, DiamClientFactory } from '@inception-project/inception-js-api'
-import { ApacheAnnotatorEditor } from './ApacheAnnotatorEditor'
+import { ApacheAnnotatorEditor } from './ApacheAnnotatorEditor.svelte'
 
 const PROP_EDITOR = '__editor__'
 

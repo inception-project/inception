@@ -18,7 +18,7 @@
 
 import esbuild from 'esbuild'
 import esbuildSvelte from 'esbuild-svelte'
-import sveltePreprocess from 'svelte-preprocess'
+import { sveltePreprocess } from 'svelte-preprocess'
 import yargs from 'yargs/yargs'
 import { hideBin } from 'yargs/helpers'
 import fs from 'fs-extra'
@@ -33,12 +33,16 @@ if (argv.live) {
 }
 
 const defaults = {
-  entryPoints: ['src/RunningExportsPanel.svelte'],
+  entryPoints: ['src/RunningExportsPanelFactory.ts'],
   outfile: `${outbase}/RunningExportsPanel.min.js`,
   mainFields: ['svelte', 'browser', 'module', 'main'],
   format: 'esm',
+  platform: 'browser',
   plugins: [
     esbuildSvelte({
+      compilerOptions: { 
+        runes: true
+      },
       preprocess: sveltePreprocess()
     })
   ],

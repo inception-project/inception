@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 import { AnnotatedText, Annotation, Layer, Offsets, Relation, Span, VID } from '@inception-project/inception-js-api'
-import { compareOffsets } from '@inception-project/inception-js-api/src/model/Offsets'
+import { compareOffsets } from '@inception-project/inception-js-api'
 
 export const ERROR_LABEL = '🔴'
 export const INFO_LABEL = 'ℹ️'
