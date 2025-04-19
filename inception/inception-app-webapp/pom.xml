@@ -363,10 +363,6 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-html-editor</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-html-recogito-editor</artifactId>
     </dependency>
     <dependency>
@@ -1047,7 +1043,6 @@
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-brat-editor</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-external-editor</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-html-apache-annotator-editor</usedDependency>
-              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-html-editor</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-html-recogito-editor</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-pdf-editor</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-pdf-editor2</usedDependency>

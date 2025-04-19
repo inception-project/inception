@@ -44,11 +44,6 @@ provides.
 | yes
 | no
 
-| <<sect_editors_html_annotatorjs>>
-| `ui.html-annotatorjs.enabled`
-| yes
-| no
-
 | <<sect_editors_html_recogitojs>>
 | `ui.html-recogitojs.enabled`
 | yes
@@ -84,15 +79,6 @@ A line-oriented presentation of the text using inter-linear annotations that als
 == HTML (Apache Annotator)
 
 This editor renders documents imported using a XML/HTML-based format such as <<sect_formats_mhtml>> or <<sect_formats_htmldoc>>. It is build on top of link:https://annotator.apache.org[Apache Annotator]. It supports rendering span annotations but not relations or link features.
-
-[[sect_editors_html_annotatorjs]]
-== 🪦 HTML (AnnotatorJS)
-
-====
-CAUTION: Legacy feature. To use this functionality, you need to enable it first by adding `ui.html-annotatorjs.enabled` to the `settings.properties` file.
-====
-
-This editor renders documents imported using a XML/HTML-based format such as <<sect_formats_mhtml>> or <<sect_formats_htmldoc>>. It is build on top of link:http://annotatorjs.org[AnnotatorJS]. It supports rendering span annotations but not relations or link features.
 
 [[sect_editors_html_recogitojs]]
 == 🧪 HTML (RecogitoJS)
