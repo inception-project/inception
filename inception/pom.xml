@@ -298,15 +298,8 @@
     <module>inception-workload-dynamic</module>
     <module>inception-workload-matrix</module>
     <module>inception-workload-ui</module>
-    <!-- Plug-in support -->
-    <module>inception-plugin-api</module>
-    <module>inception-plugin-manager</module>
-    <module>inception-plugin-parent</module>
     <!-- Application -->
     <module>inception-app-webapp</module>
-    <!-- Examples -->
-    <module>inception-example-imls-data-majority</module>
-    <!--<module>inception-imls-dl4j</module>-->
     <!-- Packaging -->
     <module>inception-docker</module>
     <!-- Versioning -->
