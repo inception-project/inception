@@ -15,40 +15,52 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<svelte:options accessors={true}/>
-
 <script lang="ts">
+  import { run } from 'svelte/legacy';
+
   import { caretRangeFromPoint } from '@inception-project/inception-js-api'
   import { createEventDispatcher, onMount } from 'svelte'
   import { findClosestChunkElement } from '../visualizer/Visualizer'
 
-  export let highlight: Element = undefined
-  export let position: 'begin' | 'end'
-  export let handle: Element
-  export let marker: Element
-  export let dragging = false
+  interface Props {
+    highlight?: Element;
+    position: 'begin' | 'end';
+  }
 
-  let borderRadius = 0
-  let borderWidth = 0
-  let handleX = 0
-  let handleY = 0
-  let handleHeight = 0
+  let {
+    highlight = undefined,
+    position,
+    handle = $bindable(),
+    marker = $bindable(),
+    dragging = $bindable(false)
+  }: Props = $props();
+
+  let borderRadius = $state(0)
+  let borderWidth = $state(0)
+  let handleX = $state(0)
+  let handleY = $state(0)
+  let handleHeight = $state(0)
   let handleWidth = 6
-  let markerX = 0
-  let markerY = 0
-  let markerHeight = 0
-  let opacity = 1
-  let visibility = 'hidden'
-  let markerVisibility = 'hidden'
-  let scrollContainer : Element
+  let markerX = $state(0)
+  let markerY = $state(0)
+  let markerHeight = $state(0)
+  let opacity = $state(1)
+  let visibility = $state('hidden')
+  let markerVisibility = $state('hidden')
+  let scrollContainer : Element = $state()
 
   const dispatch = createEventDispatcher();
+
+  export const isDragging = () => dragging;
+  export const getHighlight = () => highlight;
+  export const setHighlight = (h) => highlight = h;
+  export const getHandle = () => handle;
 
   onMount(() => {
     scrollContainer = handle.parentElement
   })
 
-  $: {
+  run(() => {
     const rects = highlight ? highlight.getClientRects() : []
     visibility = rects.length > 0 ? 'visible' : 'hidden'
     opacity = dragging ? 0.0 : 1
@@ -79,7 +91,7 @@
         borderRadius = 0
       }
     }
-  }
+  });
 
   function handleDragStart(event: MouseEvent) {
     event.preventDefault() // Avoid mouse down and dragging causing a text selection
@@ -166,13 +178,13 @@
 <span bind:this={handle} class="handle" role="button"
   style:visibility style:opacity style:--border-width="{borderWidth}px" style:--handle-width="{handleWidth}px"
   style:top="{handleY}px" style:left="{handleX}px" style:height="{handleHeight}px"
-  on:mousedown={handleDragStart}>
+  onmousedown={handleDragStart}>
   <span class="inner-handle {position}" style:--border-radius="{borderRadius}px" style:--border-width="{borderWidth}px"></span>
 </span>
 <span bind:this={marker} class="marker" style:visibility="{markerVisibility}"
-  style:top="{markerY}px" style:left="{markerX}px" style:height="{markerHeight}px"/>
+  style:top="{markerY}px" style:left="{markerX}px" style:height="{markerHeight}px"></span>
 
-<!-- svelte-ignore css-unused-selector -->
+<!-- svelte-ignore css_unused_selector -->
 <style lang="scss">
   .handle {
     position: absolute;

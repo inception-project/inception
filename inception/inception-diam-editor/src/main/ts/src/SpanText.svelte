@@ -1,4 +1,6 @@
 <script lang="ts">
+    import { run } from 'svelte/legacy';
+
     /*
      * Licensed to the Technische Universität Darmstadt under one
      * or more contributor license agreements.  See the NOTICE file
@@ -19,34 +21,41 @@
 
     import { AnnotatedText, Span } from "@inception-project/inception-js-api";
 
-    export let data: AnnotatedText
-    export let span: Span
+    interface Props {
+        data: AnnotatedText;
+        span: Span;
+    }
+
+    let { data, span }: Props = $props();
 
     const maxLength = 100
     const showTextAfter = true // Experimental
 
-    let begin : number
-    let end : number
-    let text : string
-    let textAfter : string
+    let begin : number = $state()
+    let end : number = $state()
+    let text : string = $state()
+    let textAfter : string = $state()
 
-    $: {
+    run(() => {
         begin = span.offsets[0][0]
         end = span.offsets[0][1]
         let rawText = data.text.substring(begin, end).replace(/\s+/g, ' ')
-        text = rawText.trimEnd()
-        if (showTextAfter && text.length < maxLength) {
-            let rawTextAfter = data.text.substring(end, end + maxLength - text.length).replace(/\s+/g, ' ')
-            textAfter = rawTextAfter.trimStart()
-            if (rawText.length > text.length || rawTextAfter.length > textAfter.length) {
-                textAfter = ' ' + textAfter
+        
+        let trimmedText = rawText.trimEnd()
+        text = trimmedText
+        
+        if (showTextAfter && trimmedText.length < maxLength) {
+            let rawTextAfter = data.text.substring(end, end + maxLength - trimmedText.length).replace(/\s+/g, ' ')
+            let trimmedTextAfter = rawTextAfter.trimStart()
+            if (rawText.length > trimmedText.length || rawTextAfter.length > trimmedTextAfter.length) {
+                trimmedTextAfter = ' ' + trimmedTextAfter
             }
-            textAfter = textAfter.trimEnd()
+            textAfter = trimmedTextAfter.trimEnd()
         }
         else {
             textAfter = ''
         }
-    }
+    });
 </script>
 
 {#if text.length === 0}

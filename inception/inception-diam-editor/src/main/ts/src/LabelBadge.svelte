@@ -16,19 +16,27 @@
      * See the License for the specific language governing permissions and
      * limitations under the License.
      */
-    import { AnnotatedText, Annotation, DiamAjax } from "@inception-project/inception-js-api";
-    import { bgToFgColor } from "@inception-project/inception-js-api/src/util/Coloring";
+    import { AnnotatedText, bgToFgColor, type Annotation, type DiamAjax } from "@inception-project/inception-js-api";
     import { renderDecorations, renderLabel } from "./Utils";
 
-    export let data: AnnotatedText
-    export let annotation: Annotation;
-    export let ajaxClient: DiamAjax;
-    export let showText: boolean = true;
+    interface Props {
+        data: AnnotatedText;
+        annotation: Annotation;
+        ajaxClient: DiamAjax;
+        showText?: boolean;
+    }
 
-    $: backgroundColor = annotation.color || "var(--bs-secondary)";
-    $: textColor = bgToFgColor(backgroundColor);
-    $: hasError = annotation.comments?.find(comment => comment.type === 'error')
-    $: hasInfo = annotation.comments?.find(comment => comment.type === 'info')
+    let {
+        data,
+        annotation,
+        ajaxClient,
+        showText = true
+    }: Props = $props();
+
+    let backgroundColor = $derived(annotation.color || "var(--bs-secondary)");
+    let textColor = $derived(bgToFgColor(backgroundColor));
+    let hasError = $derived(annotation.comments?.find(comment => comment.type === 'error'))
+    let hasInfo = $derived(annotation.comments?.find(comment => comment.type === 'info'))
 
     function handleSelect(ev: MouseEvent) {
         ajaxClient.selectAnnotation(annotation.vid, { scrollTo: true });
@@ -59,17 +67,17 @@
     }
 </script>
 
-<!-- svelte-ignore a11y-click-events-have-key-events -->
+<!-- svelte-ignore a11y_click_events_have_key_events -->
 {#if annotation.vid.toString().startsWith("rec:")}
     {@const decorations = renderDecorations(data, annotation)}
     <div class="btn-group mb-1 ms-0 btn-group-recommendation bg-body" role="group">
         <button
             type="button"
             class="btn-accept btn btn-outline-success btn-sm py-0 px-1"
-            on:click={handleAccept}
+            onclick={handleAccept}
             title="Accept"
         >
-            <i class="far fa-check-circle" />
+            <i class="far fa-check-circle"></i>
             {#if decorations}
                 <span  class="me-1">{decorations}</span>
             {/if}
@@ -86,10 +94,10 @@
         <button
             type="button"
             class="btn-reject btn btn-outline-danger btn-sm py-0 px-1"
-            on:click={handleReject}
+            onclick={handleReject}
             title="Reject"
         >
-            <i class="far fa-times-circle" />
+            <i class="far fa-times-circle"></i>
         </button>
     </div>
 {:else if annotation.vid.toString().startsWith("cur:")}
@@ -98,10 +106,10 @@
         type="button"
         class="btn-merge btn btn-colored btn-sm pt-0 mb-1 px-1 border-dark mb-1"
         style="color: {textColor}; background-color: {backgroundColor}"
-        on:click={handleMerge}
+        onclick={handleMerge}
         title="Merge"
     >
-        <i class="fas fa-clipboard-check" />
+        <i class="fas fa-clipboard-check"></i>
         {#if decorations}
             <span  class="me-1">{decorations}</span>
         {/if}
@@ -128,8 +136,8 @@
             type="button"
             class="btn-select btn btn-colored btn-sm py-0 px-1 border-dark"
             style="color: {textColor}; background-color: {backgroundColor}"
-            on:click={handleSelect}
-            on:contextmenu={handleContextMenu}
+            onclick={handleSelect}
+            oncontextmenu={handleContextMenu}
             title="Select"
         >
             {#if decorations}
@@ -138,18 +146,18 @@
             {#if showText}
                 {renderLabel(data, annotation)}
             {:else}
-                <i class="fas fa-crosshairs" />
+                <i class="fas fa-crosshairs"></i>
             {/if}
         </button>
         <button
             type="button"
             class="btn-delete btn btn-colored btn-sm py-0 px-1 border-dark"
             style="color: {textColor}; background-color: {backgroundColor}"
-            on:click={handleDelete}
-            on:contextmenu={handleContextMenu}
+            onclick={handleDelete}
+            oncontextmenu={handleContextMenu}
             title="Delete"
         >
-            <i class="far fa-times-circle" />
+            <i class="far fa-times-circle"></i>
         </button>
     </div>
 {/if}

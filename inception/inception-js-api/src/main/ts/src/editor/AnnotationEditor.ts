@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Offsets } from "@inception-project/inception-js-api"
+import type{ Offsets } from "../model/Offsets"
 
 export interface AnnotationEditor {
   loadAnnotations(): void

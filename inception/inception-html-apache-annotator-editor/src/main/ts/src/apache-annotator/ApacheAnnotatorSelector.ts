@@ -16,8 +16,8 @@
  * limitations under the License.
  */
 import type { DiamAjax, VID } from '@inception-project/inception-js-api'
-import { getInlineLabelClientRect, highlights, isPointInRect, NO_LABEL } from './ApacheAnnotatorVisualizer'
-import { createPopper, Instance } from '@popperjs/core'
+import { getInlineLabelClientRect, highlights, isPointInRect, NO_LABEL } from './ApacheAnnotatorVisualizer.svelte'
+import { createPopper, type Instance } from '@popperjs/core'
 
 export class ApacheAnnotatorSelector {
   private ajax: DiamAjax

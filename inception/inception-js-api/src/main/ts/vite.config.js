@@ -15,15 +15,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+// =======================================================================
+// File lives in 
+// /inception/inception-build/src/main/resources/inception/vite.config.js
+// =======================================================================
+
 import { defineConfig } from 'vite'
 import { svelte } from '@sveltejs/vite-plugin-svelte'
+import { svelteTesting } from '@testing-library/svelte/vite';
 
-export default defineConfig({
+export default defineConfig(({mode}) => ({
   plugins: [
-    svelte()
+    svelte(),
+    svelteTesting()
   ],
   test: {
     globals: true,
     environment: 'jsdom'
+  },
+  resolve: {
+    conditions: mode === 'test' ? ['browser'] : [],
   }
-})
+}))

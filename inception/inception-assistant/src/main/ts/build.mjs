@@ -34,7 +34,7 @@ if (argv.live) {
 }
 
 const defaults = {
-  entryPoints: ['src/AssistantPanel.svelte'],
+  entryPoints: ['src/AssistantPanelFactory.ts'],
   outfile: `${outbase}/AssistantPanel.min.js`,
   mainFields: ['svelte', 'browser', 'module', 'main'],
   format: 'esm',

@@ -18,7 +18,7 @@
 
 import esbuild from 'esbuild'
 import esbuildSvelte from 'esbuild-svelte'
-import sveltePreprocess from 'svelte-preprocess'
+import { sveltePreprocess } from 'svelte-preprocess'
 import yargs from 'yargs/yargs'
 import { hideBin } from 'yargs/helpers'
 import { sassPlugin } from 'esbuild-sass-plugin'
@@ -34,14 +34,17 @@ if (argv.live) {
 }
 
 const defaults = {
-  entryPoints: ['src/DiamAnnotationBrowser.svelte'],
+  entryPoints: ['src/DiamAnnotationBrowserFactory.ts'],
   outfile: `${outbase}/DiamAnnotationBrowser.min.js`,
   mainFields: ['svelte', 'browser', 'module', 'main'],
   format: 'esm',
+  platform: 'browser',
   plugins: [
     sassPlugin(),
     esbuildSvelte({
-      compilerOptions: { dev: argv.live },
+      compilerOptions: { 
+        runes: true
+      },
       preprocess: sveltePreprocess()
     })
   ],

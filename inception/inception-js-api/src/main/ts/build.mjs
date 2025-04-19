@@ -17,7 +17,7 @@
  */
 import esbuild from 'esbuild'
 import esbuildSvelte from 'esbuild-svelte'
-import sveltePreprocess from 'svelte-preprocess'
+import { sveltePreprocess } from 'svelte-preprocess'
 import yargs from 'yargs/yargs'
 import { hideBin } from 'yargs/helpers'
 import { sassPlugin } from 'esbuild-sass-plugin'

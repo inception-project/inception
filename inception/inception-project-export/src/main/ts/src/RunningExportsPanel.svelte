@@ -38,11 +38,22 @@
         latestMessage?: RExportLogMessage
     }
 
-    export let wsEndpointUrl: string  // should this be full ws://... url
-    export let csrfToken: string
-    export let topicChannel: string
-    export let exports: MProjectExportStateUpdate[]
-    export let connected = false
+    interface Props {
+        wsEndpointUrl: string; // should this be full ws://... url
+        csrfToken: string;
+        topicChannel: string;
+        exports: MProjectExportStateUpdate[];
+        connected?: boolean;
+    }
+
+    let {
+        wsEndpointUrl,
+        csrfToken,
+        topicChannel,
+        exports = $bindable(),
+        connected = $bindable(false)
+    }: Props = $props();
+
     let cancelPending = new Set()
     let socket: WebSocket = null
     let stompClient: Client = null
@@ -115,7 +126,13 @@
     
     export function cancel(task: MProjectExportStateUpdate): void {
       cancelPending.add(task.id);
-      stompClient.send('/app/export/' + task.id + '/cancel', {}, {});
+      stompClient.publish({
+        destination: '/app/export/' + task.id + '/cancel',
+        headers: {
+          'X-CSRF-TOKEN': csrfToken
+        },
+        body: ''
+      })
     }
 
     export function loadMessages(item: MProjectExportStateUpdate): void {
@@ -127,7 +144,6 @@
     export function closeMessages(item): void {
       item.messages = null;
     }
-
 
     onMount(async () => {
         connect()
@@ -162,7 +178,7 @@
                     <h5 class="mb-1">{item.title}</h5>
                     {#if !cancelPending.has(item.id)}
                         <div>
-                            <button type="button" class="btn-close" aria-label="Close" on:click="{cancel(item)}"/>
+                            <button type="button" class="btn-close" aria-label="Close" onclick={cancel(item)}></button>
                         </div>
                     {/if}
                     {#if cancelPending.has(item.id)}
@@ -173,7 +189,7 @@
                 </div>
                 {#if item.state === 'RUNNING'}
                     <div>
-                        <progress max="100" value="{item.progress}" class="w-100"/>
+                        <progress max="100" value="{item.progress}" class="w-100"></progress>
                     </div>
                 {/if}
                 {#if item.state === 'COMPLETED'}
@@ -192,7 +208,7 @@
                     <div class="card">
                         <div class="card-header small">
                             Messages
-                            <button type="button" class="btn-close float-end" aria-label="Close" on:click="{closeMessages(item)}"/>
+                            <button type="button" class="btn-close float-end" aria-label="Close" onclick={closeMessages(item)}></button>
                         </div>
                         <div class="card-body" style="max-height: 10em; min-height: 3em; overflow: auto;">
                             {#each item.messages as message}
@@ -223,7 +239,7 @@
                             {/if}
                             {item.latestMessage.message}
                             {#if item.messageCount > 1 && item.state !== 'RUNNING'}
-                                <span on:click="{loadMessages(item)}" class="float-end badge rounded-pill bg-light text-dark" style="cursor: pointer;">
+                                <span onclick={loadMessages(item)} class="float-end badge rounded-pill bg-light text-dark" style="cursor: pointer;">
                                     Show all {item.messageCount} messages...
                                 </span>
                             {/if}

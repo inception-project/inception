@@ -16,14 +16,17 @@
  * limitations under the License.
  */
 import type { AnnotationEditor, AnnotationEditorProperties, DiamAjax, Offsets } from '@inception-project/inception-js-api'
+// import AnnotationDetailPopOver from '@inception-project/inception-js-api/src/widget/AnnotationDetailPopOver.svelte'
+import AnnotationDetailPopOver from './annotator_ui/AnnotationDetailPopOver.svelte'
 import { Ajax } from './ajax/Ajax'
 import { AnnotatorUI } from './annotator_ui/AnnotatorUI'
-import { Dispatcher, Message } from './dispatcher/Dispatcher'
+import { Dispatcher } from './dispatcher/Dispatcher'
+import type { Message } from './dispatcher/Dispatcher'
 import { Visualizer } from './visualizer/Visualizer'
 import { VisualizerUI } from './visualizer_ui/VisualizerUI'
 import './style-vis.scss'
 import { ResizeManager } from './annotator_ui/ResizeManager'
-import AnnotationDetailPopOver from '@inception-project/inception-js-api/src/widget/AnnotationDetailPopOver.svelte'
+import { mount, unmount } from 'svelte'
 
 export class BratEditor implements AnnotationEditor {
   dispatcher: Dispatcher
@@ -56,7 +59,7 @@ export class BratEditor implements AnnotationEditor {
 
     this.resizer = new ResizeManager(this.dispatcher, this.visualizer, ajax)
 
-    this.popover = new AnnotationDetailPopOver({
+    this.popover = mount(AnnotationDetailPopOver, {
       target: document.body,
       props: {
         root: element,
@@ -81,8 +84,8 @@ export class BratEditor implements AnnotationEditor {
 
   destroy (): void {
     console.log("Destroying BratEditor")
-    if (this.popover?.$destroy) {
-      this.popover.$destroy()
+    if (this.popover) {
+      unmount(this.popover)
     }
     if (this.resizeObserver) { 
       this.resizeObserver.disconnect()

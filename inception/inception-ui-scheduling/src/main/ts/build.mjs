@@ -33,7 +33,7 @@ if (argv.live) {
 }
 
 const defaults = {
-  entryPoints: ['src/TaskMonitorPanel.svelte'],
+  entryPoints: ['src/TaskMonitorPanelFactory.ts'],
   outfile: `${outbase}/TaskMonitorPanel.min.js`,
   mainFields: ['svelte', 'browser', 'module', 'main'],
   format: 'esm',

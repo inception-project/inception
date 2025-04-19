@@ -18,7 +18,7 @@
 
 import esbuild from 'esbuild'
 import esbuildSvelte from 'esbuild-svelte'
-import sveltePreprocess from 'svelte-preprocess'
+import { sveltePreprocess } from 'svelte-preprocess'
 import yargs from 'yargs/yargs'
 import { hideBin } from 'yargs/helpers'
 import fs from 'fs-extra'
@@ -33,7 +33,7 @@ if (argv.live) {
 }
 
 const defaults = {
-  entryPoints: ['src/RecommendationEventFooterPanel.svelte'],
+  entryPoints: ['src/RecommendationEventFooterPanelFactory.ts'],
   outfile: `${outbase}/RecommendationEventFooterPanel.min.js`,
   mainFields: ['svelte', 'browser', 'module', 'main'],
   format: 'esm',
@@ -44,7 +44,7 @@ const defaults = {
     })
   ],
   bundle: true,
-  sourcemap: false,
+  sourcemap: argv.live,
   minify: !argv.live,
   target: 'es2018',
   loader: { '.ts': 'ts' },

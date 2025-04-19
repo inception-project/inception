@@ -25,9 +25,13 @@
     dayjs.extend(relativeTime)
     dayjs.extend(localizedFormat)
 
-    export let dataUrl: string
-    export let activities: any[] = [];
-    export let loading = true;
+    interface Props {
+        dataUrl: string;
+        activities?: any[];
+        loading?: boolean;
+    }
+
+    let { dataUrl, activities = $bindable([]), loading = $bindable(true) }: Props = $props();
 
     onMount(async () => {
         const res = await fetch(dataUrl)
@@ -83,13 +87,13 @@
                         <small class="text-muted flex-content">
                             {#if displayUserInfo(activity)}
                                 <span>
-                                    <i class="far fa-user" />
+                                    <i class="far fa-user"></i>
                                     {activity.annotator}
                                 </span>
                             {/if}
                         </small>
                         <small class="text-muted">
-                            <i class="far fa-clock" />&nbsp;
+                            <i class="far fa-clock"></i>&nbsp;
                             <span title={formatTime(activity.timestamp)}>
                                 {formatRelativeTime(activity.timestamp)}
                             </span>

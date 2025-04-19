@@ -60,6 +60,17 @@ export class ViewportTracker {
     this.initializeElementTracking(this.root)
   }
 
+  public disconnect() {
+    if (this.observer) {
+      this.observer.disconnect()
+    }
+    this._visibleElements.clear()
+    this._currentRange = [0, 0]
+    this.initialized = false
+    clearTimeout(this.redrawTimeoutId)
+    this.redrawTimeoutId = undefined
+  }
+
   public get currentRange (): [number, number] {
     return this._currentRange
   }

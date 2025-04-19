@@ -15,36 +15,41 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<svelte:options accessors={true} />
-
 <script lang="ts">
     import {
-        Annotation,
+        type Annotation,
         AnnotationOverEvent,
         AnnotationOutEvent,
         Relation,
         Span,
-        DiamAjax,
-        LazyDetailGroup,
+        type LazyDetailGroup,
+        type DiamAjax
     } from "../..";
     import { onDestroy, onMount } from "svelte";
 
-    export let ajax: DiamAjax;
-    export let root: Element;
-    export let top: number = 0;
-    export let left: number = 0;
-    export let width: number = 400;
-    export let annotation: Annotation | undefined = undefined;
+  interface Props {
+    ajax: DiamAjax;
+    root: Element;
+  }
+
+  let {
+    ajax,
+    root,
+  }: Props = $props();
 
     const renderDelay = 10;
     const showDelay = 1000;
     const hideDelay = 500;
     const yOffset = 32;
 
-    let popover: HTMLElement;
-    let detailGroups: LazyDetailGroup[];
+    let popover: HTMLElement = $state(undefined);
+    let detailGroups: LazyDetailGroup[] = $state(undefined);
+    let loading = $state(false);
+    let annotation = $state<Annotation | undefined>(undefined);
     let popoverTimeoutId: number | undefined;
-    let loading = false;
+    let top = $state(0);
+    let left = $state(0);
+    let width = $state(400);
 
     onMount(() => {
         root.addEventListener(AnnotationOverEvent.eventType, onAnnotationOver);
@@ -60,7 +65,7 @@
         root.removeEventListener("mousedown", onMouseDown);
     })
 
-    $: {
+    $effect(() => {
         if (annotation) {
             loading = true
             ajax.loadLazyDetails(annotation)
@@ -76,7 +81,7 @@
                     }]}]
             })
         }
-    }
+    });
 
     function onMouseMove(e: MouseEvent) {
         if (!annotation) return;
@@ -178,7 +183,7 @@
                 class="annotation-type-marker"
                 class:i7n-icon-span={annotation instanceof Span}
                 class:i7n-icon-relation={annotation instanceof Relation}
-            />
+></span>
         </div>
         <div class="flex-grow-1 px-1">{annotation?.layer?.name}</div>
         <div class="text-body-secondary px-1">ID: {annotation?.vid}</div>
@@ -222,7 +227,7 @@
     {/if}
 </div>
 
-<!-- svelte-ignore css-unused-selector -->
+<!-- svelte-ignore css_unused_selector -->
 <style lang="scss">
     @import "bootstrap/scss/bootstrap.scss";
     @import "../style/InceptionEditorIcons.scss";

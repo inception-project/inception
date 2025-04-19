@@ -15,7 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { DiamAjax, VID, caretRangeFromPoint } from '@inception-project/inception-js-api'
+import { mount, unmount } from 'svelte'
+import { caretRangeFromPoint } from '@inception-project/inception-js-api'
+import type { DiamAjax, VID } from '@inception-project/inception-js-api'
 import { Dispatcher } from '../dispatcher/Dispatcher'
 import { Visualizer } from '../visualizer/Visualizer'
 import AnnotationResizeHandle from './AnnotationResizeHandle.svelte'
@@ -40,22 +42,21 @@ export class ResizeManager {
 
     dispatcher.on('doneRendering', this, this.hide)
 
-    // @ts-expect-error - VSCode does not seem to understand the Svelte component
-    this.beginHandle = new AnnotationResizeHandle({
+    this.beginHandle = mount(AnnotationResizeHandle, {
       target: this.visualizer.svgContainer,
-      props: { position: 'begin' }
-    })
-    // @ts-expect-error - VSCode does not seem to understand the Svelte component
-    this.endHandle = new AnnotationResizeHandle({
-      target: this.visualizer.svgContainer,
-      props: { position: 'end' }
+      props: { position: 'begin' },
+      events: {
+        'resize-handle-released': e => this.handleResizeHandleReleased(e)
+      }
     })
 
-    // @ts-expect-error - VSCode does not seem to understand the Svelte component
-    this.beginHandle.$on('resize-handle-released', e => this.handleResizeHandleReleased(e))
-
-    // @ts-expect-error - VSCode does not seem to understand the Svelte component
-    this.endHandle.$on('resize-handle-released', e => this.handleResizeHandleReleased(e))
+    this.endHandle = mount(AnnotationResizeHandle, {
+      target: this.visualizer.svgContainer,
+      props: { position: 'end' },
+      events: { 
+        'resize-handle-released': e => this.handleResizeHandleReleased(e)
+      } 
+    })
 
     this.hide()
 
@@ -67,18 +68,20 @@ export class ResizeManager {
   public destroy() {
     this.hide()
     this.visualizer.svgContainer.removeEventListener('mouseover', this.showResizer)
-    if (this.beginHandle?.$destroy) {
-      this.beginHandle.$destroy()
+    if (this.beginHandle) {
+      unmount(this.beginHandle)
+      this.beginHandle = undefined
     }
-    if (this.endHandle?.$destroy) {
-      this.endHandle.$destroy()
+    if (this.endHandle) {
+      unmount(this.endHandle)
+      this.endHandle = undefined
     }
   }
 
   private showResizer (event: Event): void {
     if (!(event instanceof MouseEvent) || !(event.target instanceof Element)) return
 
-    if (this.beginHandle?.dragging || this.endHandle?.dragging) {
+    if (this.beginHandle?.isDragging() || this.endHandle?.isDragging()) {
       console.debug("Resizer is dragging, don't show resizer")
       return
     }
@@ -96,8 +99,8 @@ export class ResizeManager {
 
     const highlights = Array.from(this.visualizer.getHighlightElementsForSpan(id))
     if (!highlights.length) return
-    this.beginHandle.highlight = highlights[0]
-    this.endHandle.highlight = highlights[highlights.length - 1]
+    this.beginHandle.setHighlight(highlights[0])
+    this.endHandle.setHighlight(highlights[highlights.length - 1])
 
     this.mouseOverHandler = e => this.handleMouseOver(e)
     this.visualizer.svgContainer.addEventListener('mouseover', this.mouseOverHandler)
@@ -139,7 +142,7 @@ export class ResizeManager {
       return
     }
 
-    if (this.beginHandle?.handle.contains(e.target) || this.endHandle?.handle.contains(e.target)) {
+    if (this.beginHandle?.getHandle().contains(e.target) || this.endHandle?.getHandle().contains(e.target)) {
       this.cancelAutoHide()
       return
     }
@@ -155,7 +158,7 @@ export class ResizeManager {
 
   autoHide (): void {
     function hideOrRescheduleAutoHide (context: ResizeManager) {
-      if (context.beginHandle?.dragging || context.endHandle?.dragging) {
+      if (context.beginHandle?.isDragging() || context.endHandle?.isDragging()) {
         context.hideTimer = window.setTimeout(() => hideOrRescheduleAutoHide(context), 1000)
       } else {
         context.hide()
@@ -173,7 +176,7 @@ export class ResizeManager {
       this.mouseOverHandler = undefined
     }
     this.id = undefined
-    if (this.beginHandle) this.beginHandle.highlight = undefined
-    if (this.endHandle) this.endHandle.highlight = undefined
+    if (this.beginHandle) this.beginHandle.setHighlight(undefined)
+    if (this.endHandle) this.endHandle.setHighlight(undefined)
   }
 }

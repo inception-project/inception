@@ -205,65 +205,67 @@
         </div>
         <div class="d-flex justify-content-center overflow-auto">
             <table class="mx-3 my-2 flex-shrink-0">
-                <tr>
-                    <td></td>
-                    {#each { length: 53 } as _, week}
-                        {@const monthStartingInWeek =
-                            getMonthStartingInWeek(week)}
-                        {#if monthStartingInWeek}
-                            <td class="col-legend text-nowrap"
-                                >{monthStartingInWeek}</td
-                            >
-                        {:else}
-                            <td></td>
-                        {/if}
-                    {/each}
-                </tr>
-                {#each { length: 7 } as _, dayOfWeek}
+                <tbody>
                     <tr>
-                        {#if dayOfWeek === 0 || dayOfWeek === 1 || dayOfWeek === 3 || dayOfWeek === 5}
-                            <td
-                                class="row-legend align-top text-end"
-                                rowspan={dayOfWeek === 1 ||
-                                dayOfWeek === 3 ||
-                                dayOfWeek === 5
-                                    ? 2
-                                    : 1}
-                            >
-                                {#if dayOfWeek === 1}
-                                    Mon
-                                {:else if dayOfWeek === 3}
-                                    Wed
-                                {:else if dayOfWeek === 5}
-                                    Fri
-                                {/if}
-                            </td>
-                        {/if}
+                        <td></td>
                         {#each { length: 53 } as _, week}
-                            {@const item = getActivity(week, dayOfWeek)}
-                            <!-- svelte-ignore a11y-click-events-have-key-events -->
-                            <td
-                                class="cell"
-                                style:cursor="pointer"
-                                style:visibility={item?.outOfRange
-                                    ? "hidden"
-                                    : "visible"}
-                                style:--opacity={Math.min(
-                                    100.0,
-                                    item?.count | 1,
-                                ) / 100.0}
-                                title={dayjs(item.date).format("dddd, LL") +
-                                    " - " +
-                                    item.count +
-                                    " actions"}
-                                on:click={() =>
-                                    !item?.outOfRange &&
-                                    loadSummaryData(item.date)}
-                            >
-                            </td>
+                            {@const monthStartingInWeek =
+                                getMonthStartingInWeek(week)}
+                            {#if monthStartingInWeek}
+                                <td class="col-legend text-nowrap"
+                                    >{monthStartingInWeek}</td
+                                >
+                            {:else}
+                                <td></td>
+                            {/if}
                         {/each}
                     </tr>
-                {/each}
+                    {#each { length: 7 } as _, dayOfWeek}
+                        <tr>
+                            {#if dayOfWeek === 0 || dayOfWeek === 1 || dayOfWeek === 3 || dayOfWeek === 5}
+                                <td
+                                    class="row-legend align-top text-end"
+                                    rowspan={dayOfWeek === 1 ||
+                                    dayOfWeek === 3 ||
+                                    dayOfWeek === 5
+                                        ? 2
+                                        : 1}
+                                >
+                                    {#if dayOfWeek === 1}
+                                        Mon
+                                    {:else if dayOfWeek === 3}
+                                        Wed
+                                    {:else if dayOfWeek === 5}
+                                        Fri
+                                    {/if}
+                                </td>
+                            {/if}
+                            {#each { length: 53 } as _, week}
+                                {@const item = getActivity(week, dayOfWeek)}
+                                <!-- svelte-ignore a11y-click-events-have-key-events -->
+                                <td
+                                    class="cell"
+                                    style:cursor="pointer"
+                                    style:visibility={item?.outOfRange
+                                        ? "hidden"
+                                        : "visible"}
+                                    style:--opacity={Math.min(
+                                        100.0,
+                                        item?.count | 1,
+                                    ) / 100.0}
+                                    title={dayjs(item.date).format("dddd, LL") +
+                                        " - " +
+                                        item.count +
+                                        " actions"}
+                                    on:click={() =>
+                                        !item?.outOfRange &&
+                                        loadSummaryData(item.date)}
+                                >
+                                </td>
+                            {/each}
+                        </tr>
+                    {/each}
+                </tbody>
             </table>
         </div>
     </div>
