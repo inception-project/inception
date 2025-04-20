@@ -8,7 +8,7 @@
     "lib": [
       "DOM",
       "DOM.Iterable",
-      "ES2018"
+      "ES2019"
     ]
   }
 }

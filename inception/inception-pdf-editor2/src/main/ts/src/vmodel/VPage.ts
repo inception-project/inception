@@ -16,9 +16,9 @@
  * limitations under the License.
  */
 
-import { Offsets } from '@inception-project/inception-js-api'
+import { type Offsets } from '@inception-project/inception-js-api'
 import { VGlyph } from './VGlyph'
-import { JsonVPage } from './VModelJsonDeserializer'
+import { type JsonVPage } from './VModelJsonDeserializer'
 
 export class VPage {
   index: number
