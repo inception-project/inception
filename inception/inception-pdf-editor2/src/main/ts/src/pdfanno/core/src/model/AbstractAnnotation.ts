@@ -1,13 +1,13 @@
-import EventEmitter from 'events'
-import { appendChild } from '../render/appendChild'
+import { EventEmitter } from 'events'
 import { DEFAULT_RADIUS } from '../render/renderKnob'
 import { dispatchWindowEvent } from '../../../shared/util'
-import { Annotation, AnnotationOutEvent, AnnotationOverEvent, VID } from '@inception-project/inception-js-api'
+import { type Annotation, AnnotationOutEvent, AnnotationOverEvent, type VID } from '@inception-project/inception-js-api'
 
 /**
  * Abstract Annotation Class.
  */
-export default abstract class AbstractAnnotation extends EventEmitter {
+export default abstract class AbstractAnnotation {
+  private eventEmitter: EventEmitter // Use delegation instead of inheritance
   vid: VID | null = null
   source: Annotation | null = null
   color?: string
@@ -17,30 +17,47 @@ export default abstract class AbstractAnnotation extends EventEmitter {
   hoverEventDisable = false
   selectedTime = null
   element: HTMLElement | null = null
-  // exportId: any
   type: 'span' | 'relation'
   classList: string[] = []
 
-  /**
-   * Constructor.
-   */
-  constructor () {
-    super()
+  constructor() {
+    this.eventEmitter = new EventEmitter() // Initialize the EventEmitter instance
     this.autoBind()
   }
 
   /**
    * Bind the `this` scope of instance methods to `this`.
    */
-  autoBind () {
+  autoBind() {
     Object.getOwnPropertyNames(this.constructor.prototype)
-      .filter(prop => typeof this[prop] === 'function')
-      .forEach(method => {
+      .filter((prop) => typeof this[prop] === 'function')
+      .forEach((method) => {
         this[method] = this[method].bind(this)
       })
   }
 
-  abstract setHoverEvent(): void;
+  /**
+   * Delegate `on` to the internal EventEmitter.
+   */
+  on(event: string, listener: (...args: any[]) => void): void {
+    this.eventEmitter.on(event, listener)
+  }
+
+  /**
+   * Delegate `off` to the internal EventEmitter.
+   */
+  off(event: string, listener: (...args: any[]) => void): void {
+    this.eventEmitter.off(event, listener)
+  }
+
+  /**
+   * Delegate `emit` to the internal EventEmitter.
+   */
+  emit(event: string, ...args: any[]): void {
+    this.eventEmitter.emit(event, ...args)
+  }
+
+  abstract setHoverEvent(): void
 
   /**
    * Render annotation(s).
@@ -61,7 +78,7 @@ export default abstract class AbstractAnnotation extends EventEmitter {
       return
     }
 
-    this.element = appendChild(base, this)
+    this.element = this.appendChild(base)
     if (!this.element) {
       return
     }
@@ -225,4 +242,6 @@ export default abstract class AbstractAnnotation extends EventEmitter {
    * Check the another annotation is equal to `this`.
    */
   abstract equalTo(anotherAnnotation: any): boolean;
+
+  abstract appendChild (base: HTMLElement): HTMLElement | null;
 }

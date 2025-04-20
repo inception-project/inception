@@ -20,7 +20,12 @@ import RunningExportsPanel from '../src/RunningExportsPanel.svelte'
 import { render } from '@testing-library/svelte'
 
 it('Shows the loading indicator', async () => {
-  const { getByText } = render(RunningExportsPanel)
+  const { getByText } = render(RunningExportsPanel, {
+    props: {
+      connected: false,
+      wsEndpointUrl: 'ws://localhost:8080',
+    }
+  })
 
   const loadIndicator = getByText('Connecting...')
 

@@ -17,14 +17,12 @@
      * limitations under the License.
      */
 
-    import { onMount, onDestroy, afterUpdate } from "svelte";
-    import { get_current_component } from "svelte/internal";
-    import { Client, Stomp, IFrame } from "@stomp/stompjs";
+    import { onMount, onDestroy } from "svelte";
+    import { Client, Stomp, type IFrame } from "@stomp/stompjs";
     import { marked } from "marked";
     import { factory } from "@inception-project/inception-diam";
     import DOMPurify from "dompurify";
-    import { speechSynthesisEnabled } from "./AssistantState";
-    import { Writable } from "svelte/store";
+    import { assistantState } from "./AssistantState.svelte";
 
     interface MPerformanceMetrics {
         duration: number;
@@ -52,12 +50,19 @@
         references?: MReference[];
     }
 
-    export let wsEndpointUrl: string; // should this be full ws://... url
-    export let topicChannel: string;
-    export let csrfToken: string;
-    export let ajaxEndpointUrl: string;
+    interface Props {
+        wsEndpointUrl: string; // should this be full ws://... url
+        topicChannel: string;
+        ajaxEndpointUrl?: string;
+        csrfToken: string;
+    }
 
-    let self = get_current_component();
+    let {
+        wsEndpointUrl,
+        topicChannel,
+        ajaxEndpointUrl,
+        csrfToken
+    }: Props = $props();
 
     let socket: WebSocket = null;
     let stompClient: Client = null;
@@ -69,9 +74,9 @@
     let chatContainer = null;
     let autoScroll = true;
 
-    let messages = [] as MTextMessage[];
+    let messages : MTextMessage[] = $state([]);
     let messageInput;
-    let waitingForResponse = false;
+    let waitingForResponse = $state(false);
 
     let speechAvailable = "speechSynthesis" in window;
     let utteranceBuffer = "";
@@ -100,36 +105,21 @@
     ajaxClient.loadPreferences(userPreferencesKey).then((p) => {
         preferences = Object.assign(preferences, defaultPreferences, p);
         console.log("Loaded preferences", preferences);
-        let preferencesDebounceTimeout: number | undefined = undefined;
 
-        function bindPreference(writable: Writable<any>, propertyName: string) {
-            writable.set(
-                preferences[propertyName] !== undefined
-                    ? preferences[propertyName]
-                    : defaultPreferences[propertyName],
-            );
-
-            writable.subscribe((value) => {
-                preferences[propertyName] = value;
-                if (preferencesDebounceTimeout) {
-                    window.clearTimeout(preferencesDebounceTimeout);
-                    preferencesDebounceTimeout = undefined;
-                }
-                preferencesDebounceTimeout = window.setTimeout(() => {
-                    console.log("Saved preferences");
-                    ajaxClient.savePreferences(userPreferencesKey, preferences);
-                }, 250);
-            });
-        }
-
-        bindPreference(speechSynthesisEnabled, "speechSynthesisEnabled");
+        assistantState.speechSynthesisEnabled = 
+            preferences.speechSynthesisEnabled ?? defaultPreferences.speechSynthesisEnabled;
     });
 
-    speechSynthesisEnabled.subscribe((value) => {
-        if (!value) {
+    $effect(() => { 
+        preferences.speechSynthesisEnabled = assistantState.speechSynthesisEnabled;
+        ajaxClient.savePreferences(userPreferencesKey, preferences);
+    });
+
+    $effect(() => {
+        if (!assistantState.speechSynthesisEnabled) {
             speechSynthesis.cancel;
         }
-    });
+    })    
 
     export function connect(): void {
         if (connected) return;
@@ -180,7 +170,7 @@
             console.debug(
                 "Element is not part of the DOM anymore. Disconnecting and suiciding.",
             );
-            self.$destroy();
+            disconnect();
             return;
         }
 
@@ -294,7 +284,7 @@
     }
 
     function enqueueUtterance(text: string) {
-        if (!$speechSynthesisEnabled) {
+        if (!assistantState.speechSynthesisEnabled) {
             return;
         }
 
@@ -325,7 +315,7 @@
     }
 
     function toggleSpeechSynthesis() {
-        speechSynthesisEnabled.update((value: boolean) => !value);
+        assistantState.speechSynthesisEnabled = !assistantState.speechSynthesisEnabled
     }
 
     function handleScroll() {
@@ -380,8 +370,9 @@
         disconnect();
     });
 
-    afterUpdate(() => {
-        if (autoScroll) {
+    $effect(() => {
+        messages; // Just to trigger the effect
+        if (autoScroll && chatContainer) {
             chatContainer.scrollTop = chatContainer.scrollHeight;
         }
     });
@@ -493,11 +484,11 @@
     <div
         class="scrolling flex-content px-3 py-1"
         bind:this={chatContainer}
-        on:scroll={handleScroll}
+        onscroll={handleScroll}
     >
         {#each messages as message}
-            <!-- svelte-ignore a11y-click-events-have-key-events -->
-            <!-- svelte-ignore a11y-no-noninteractive-tabindex -->
+            <!-- svelte-ignore a11y_click_events_have_key_events -->
+            <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
             <div
                 class="message"
                 data-role={message.role}
@@ -507,24 +498,25 @@
             >
                 <div
                     class="message-header text-body-secondary"
-                    on:click={message.internal ? toggleMessage : null}
+                    onclick={message.internal ? toggleMessage : null}
                     role={message.internal ? "button" : undefined}
                 >
                     {#if message.role === "assistant"}
                         <i
                             class="fas fa-robot me-1"
                             title="Assistant message"
-                        />
+                        ></i>
                     {:else if message.role === "user"}
-                        <i class="fas fa-user me-1" title="User message" />
+                        <i class="fas fa-user me-1" title="User message"></i>
                     {:else if message.role === "system"}
-                        <i class="fas fa-cog me-1" title="System message" />
+                        <i class="fas fa-cog me-1" title="System message"></i>
                     {/if}
                     {message.actor ? message.actor : message.role}
                     {#if !message.internal}
+                        <!-- svelte-ignore a11y_consider_explicit_label -->
                         <button
                             class="btn btn-sm btn-link text-body-secondary float-end fw-lighter p-0 copy-button"
-                            on:click={() => copyToClipboard(message)}
+                            onclick={() => copyToClipboard(message)}
                         >
                             <i class="far fa-copy" title="Copy message"></i>
                         </button>
@@ -533,26 +525,26 @@
                         <span
                             class="mx-2 text-body-secondary float-end fw-lighter"
                         >
-                            <i class="fas fa-info" title="Internal message" />
+                            <i class="fas fa-info" title="Internal message"></i>
                         </span>
                     {/if}
                 </div>
-                <!-- svelte-ignore a11y-no-static-element-interactions -->
+                <!-- svelte-ignore a11y_no_static_element_interactions -->
                 <div
                     class="message-body"
                     class:dots={!message.done}
-                    on:click={handleClick}
+                    onclick={handleClick}
                 >
                     {@html renderMessage(message)}
                 </div>
                 {#if message.performance}
                     <div class="message-footer fw-ligher">
                         <span
-                            ><i class="far fa-clock me-1" />{(message.performance
+                            ><i class="far fa-clock me-1"></i>{(message.performance
                                 .duration / 1000).toFixed(2)}s</span
                         >
                         <span
-                            ><i class="fas fa-stream ms-2 me-1" />{(
+                            ><i class="fas fa-stream ms-2 me-1"></i>{(
                                 message.performance.tokens /
                                 (message.performance.duration / 1000)
                             ).toFixed(2)}t/s</span
@@ -569,14 +561,15 @@
     </div>
     <div class="px-3 py-1">
         {#if speechAvailable}
+            <!-- svelte-ignore a11y_consider_explicit_label -->
             <button
                 class="float-end btn btn-sm btn-link text-body-secondary"
-                on:click={toggleSpeechSynthesis}
+                onclick={toggleSpeechSynthesis}
             >
                 <i
                     class="fas"
-                    class:fa-volume-up={$speechSynthesisEnabled}
-                    class:fa-volume-mute={!$speechSynthesisEnabled}
+                    class:fa-volume-up={assistantState.speechSynthesisEnabled}
+                    class:fa-volume-mute={!assistantState.speechSynthesisEnabled}
                 ></i>
             </button>
         {/if}
@@ -585,13 +578,13 @@
                 type="text"
                 placeholder="Type your message here..."
                 bind:this={messageInput}
-                on:keydown={handleKeyDown}
+                onkeydown={handleKeyDown}
             />
         </div>
     </div>
 </div>
 
-<!-- svelte-ignore css-unused-selector -->
+<!-- svelte-ignore css_unused_selector -->
 <style lang="scss">
     .chat {
         background-color: var(--bs-secondary-bg);

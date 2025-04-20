@@ -1,7 +1,9 @@
 import AbstractAnnotation from './AbstractAnnotation'
 import { getGlyphsInRange } from '../../../page/textLayer'
 import { Rectangle } from '../../../../vmodel/Rectangle'
-import { mergeRects } from '../render/renderSpan'
+import { mergeRects, renderSpan } from '../render/renderSpan'
+import { renderRelation } from '../render/renderRelation'
+import { transform } from '../UI/utils'
 
 let clickCount = 0
 let timer : number | null = null
@@ -167,5 +169,20 @@ export default class SpanAnnotation extends AbstractAnnotation {
       e.removeEventListener('contextmenu', this.handleRightClickEvent)
       e.removeEventListener('mousedown', this.preventFocusChange)
     })
+  }
+
+  appendChild (base: HTMLElement): HTMLElement | null {
+    let child: HTMLElement | null
+    child = renderSpan(this)
+
+    // If no type was provided for an annotation it will result in node being null.
+    // Skip appending/transforming if node doesn't exist.
+    if (child) {
+      const viewport = globalThis.PDFViewerApplication.pdfViewer.getPageView(0).viewport
+      const elm = transform(base, child, viewport)
+      base.append(elm)
+    }
+
+    return child
   }
 }

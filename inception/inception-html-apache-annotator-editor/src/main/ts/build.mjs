@@ -17,7 +17,7 @@
  */
 import esbuild from 'esbuild'
 import esbuildSvelte from 'esbuild-svelte'
-import sveltePreprocess from 'svelte-preprocess'
+import { sveltePreprocess } from 'svelte-preprocess'
 import yargs from 'yargs/yargs'
 import { hideBin } from 'yargs/helpers'
 import { sassPlugin } from 'esbuild-sass-plugin'
@@ -39,13 +39,17 @@ const defaults = {
   bundle: true,
   sourcemap: true,
   minify: !argv.live,
-  target: 'es2018',
+  target: 'es2019',
   loader: { '.ts': 'ts' },
   logLevel: 'info',
   plugins: [
     sassPlugin(),
     esbuildSvelte({
-      compilerOptions: { dev: argv.live },
+      compilerOptions: { 
+        dev: argv.live,
+        // See: https://github.com/sveltejs/svelte/issues/15799
+        // templatingMode: "functional"
+      },
       preprocess: sveltePreprocess(),
       filterWarnings: (warning) => {
         // Ignore warnings about unused CSS selectors in Svelte components which appear as we import
@@ -62,9 +66,44 @@ const defaults = {
 fs.mkdirsSync(`${outbase}`)
 fs.emptyDirSync(outbase)
 
+async function postProcessFile(filePath) {
+  console.log(`Post-processing ${filePath}...`);
+  try {
+    let content = await fs.readFile(filePath, 'utf8');
+    
+    // Find unclosed input tags and make them self-closing
+    content = content.replace(/<input([^>]*)>/g, '<input$1 />');
+    
+    // Handle <!> fragments - these should be comment nodes in Svelte
+    content = content.replace(/<!>/g, '<!---->');
+    
+    await fs.writeFile(filePath, content, 'utf8');
+    console.log('Post-processing complete');
+  } catch (error) {
+    console.error('Error during post-processing:', error);
+  }
+}
+
 if (argv.live) {
-  const context = await esbuild.context(defaults)
-  await context.watch()
+  const context = await esbuild.context({
+    ...defaults,
+    plugins: [
+      ...defaults.plugins,
+      {
+        name: 'post-processor',
+        setup(build) {
+          build.onEnd(async (result) => {
+            if (result.errors.length === 0) {
+              await postProcessFile(defaults.outfile);
+            }
+          });
+        },
+      },
+    ],
+  });  
+  await context.watch();
+  console.log(`Watching for changes to ${defaults.outfile}...`);
 } else {
-  esbuild.build(defaults)
+  await esbuild.build(defaults);
+  await postProcessFile(defaults.outfile);
 }

@@ -6,7 +6,7 @@
     },
     "1101853|pdfjs-dist": {
       "decision": "postpone",
-      "madeAt": 1742937935927
+      "madeAt": 1745157126811
     },
     "1102341|@sveltejs/vite-plugin-svelte>@sveltejs/vite-plugin-svelte-inspector>vite>esbuild": {
       "decision": "postpone",

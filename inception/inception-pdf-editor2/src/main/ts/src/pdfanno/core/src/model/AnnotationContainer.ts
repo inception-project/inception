@@ -1,6 +1,6 @@
-import { VID } from '@inception-project/inception-js-api'
-import { dispatchWindowEvent } from '../../../shared/util'
 import AbstractAnnotation from './AbstractAnnotation'
+import { type VID } from '@inception-project/inception-js-api'
+import { dispatchWindowEvent } from '../../../shared/util'
 
 /**
  * Annotation Container.

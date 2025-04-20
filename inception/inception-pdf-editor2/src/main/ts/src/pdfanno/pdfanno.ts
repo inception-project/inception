@@ -8,16 +8,18 @@ import AnnotationContainer from './core/src/model/AnnotationContainer'
 import AbstractAnnotation from './core/src/model/AbstractAnnotation'
 import { installSpanSelection } from './core/src/UI/span'
 import { installRelationSelection } from './core/src/UI/relation'
-import { unpackCompactAnnotatedTextV2, DiamAjax, Offsets, AnnotatedText, Span, Relation, TextMarker } from '@inception-project/inception-js-api'
-import { CompactAnnotatedText } from '@inception-project/inception-js-api/src/model/compact_v2'
-import { DiamLoadAnnotationsOptions } from '@inception-project/inception-js-api/src/diam/DiamAjax'
+import { unpackCompactAnnotatedTextV2, type DiamAjax, type Offsets, AnnotatedText, Span, Relation, TextMarker } from '@inception-project/inception-js-api'
+import { type CompactAnnotatedText } from '@inception-project/inception-js-api/src/model/compact_v2'
+import { type DiamLoadAnnotationsOptions } from '@inception-project/inception-js-api/src/diam/DiamAjax'
 import SpanAnnotation from './core/src/model/SpanAnnotation'
 import { getGlyphAtTextOffset, getGlyphsInRange } from './page/textLayer'
 import RelationAnnotation from './core/src/model/RelationAnnotation'
 import { createRect, mapToDocumentCoordinates, mergeRects } from './core/src/render/renderSpan'
-import { transform } from './core/src/render/appendChild'
 import { Rectangle } from '../vmodel/Rectangle'
-import AnnotationDetailPopOver from '@inception-project/inception-js-api/src/widget/AnnotationDetailPopOver.svelte'
+// import AnnotationDetailPopOver from '@inception-project/inception-js-api/src/widget/AnnotationDetailPopOver.svelte'
+import AnnotationDetailPopOver from '../AnnotationDetailPopOver.svelte'
+import { mount, unmount } from 'svelte' 
+import { transform } from './core/src/UI/utils'
 
 // TODO make it a global const.
 // const svgLayerId = 'annoLayer'
@@ -83,7 +85,7 @@ export async function initPdfAnno (ajax: DiamAjax): Promise<void> {
   installSpanSelection()
   installRelationSelection()
 
-  popover = new AnnotationDetailPopOver({
+  popover = mount(AnnotationDetailPopOver, {
     target: document.body,
     props: {
       root: document.body,
@@ -98,8 +100,8 @@ export async function initPdfAnno (ajax: DiamAjax): Promise<void> {
 }
 
 export function destroy() {
-  if (popover?.$destroy) {
-    popover.$destroy()
+  if (popover) {
+    unmount(popover)
   }
 }
 

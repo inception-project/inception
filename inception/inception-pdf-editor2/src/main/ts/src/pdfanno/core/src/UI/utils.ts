@@ -20,3 +20,15 @@ export function getClientXY (e: MouseEvent): { x: number, y: number } {
   const y = e.clientY - rect.top
   return { x, y }
 }
+
+  /**
+   * Transform the rotation and scale of a node using SVG's native transform attribute.
+   *
+   * @param node The node to be transformed
+   * @param viewport The page's viewport data
+   * @return {Node}
+   */
+  export function transform (base: HTMLElement, node: HTMLElement, viewport: any): HTMLElement {
+    node.style.transform = `scale(${viewport.scale})`
+    return node
+  }
