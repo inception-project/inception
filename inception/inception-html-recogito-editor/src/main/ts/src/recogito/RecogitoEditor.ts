@@ -17,18 +17,19 @@
  */
 import '@recogito/recogito-js/dist/recogito.min.css'
 import { Recogito } from '@recogito/recogito-js/src'
-import Connections from '@recogito/recogito-connections/src'
-import { AnnotatedText, AnnotationEditor, AnnotationOutEvent, AnnotationOverEvent, DiamAjax, VID, unpackCompactAnnotatedTextV2 } from '@inception-project/inception-js-api'
+import ConnectionsPlugin from '@recogito/recogito-connections/src'
+import { AnnotatedText, type AnnotationEditor, AnnotationOutEvent, AnnotationOverEvent, type DiamAjax, type VID, unpackCompactAnnotatedTextV2 } from '@inception-project/inception-js-api'
 import './RecogitoEditor.scss'
-import { DiamLoadAnnotationsOptions } from '@inception-project/inception-js-api/src/diam/DiamAjax'
+import { type DiamLoadAnnotationsOptions } from '@inception-project/inception-js-api/src/diam/DiamAjax'
 import { ViewportTracker } from '@inception-project/inception-js-api/src/util/ViewportTracker'
 import { offsetToRange } from '@inception-project/inception-js-api/src/util/OffsetUtils'
 import convert from 'color-convert'
-import { CompactAnnotatedText } from '@inception-project/inception-js-api/src/model/compact_v2'
-import { showLabels } from './RecogitoEditorState'
-import { Writable } from 'svelte/store'
+import { type CompactAnnotatedText } from '@inception-project/inception-js-api/src/model/compact_v2'
+import { annotatorState } from './RecogitoEditorState.svelte'
+import { mount, unmount } from 'svelte'
 import RecogitoEditorToolbar from './RecogitoEditorToolbar.svelte'
-import AnnotationDetailPopOver from '@inception-project/inception-js-api/src/widget/AnnotationDetailPopOver.svelte'
+// import AnnotationDetailPopOver from '@inception-project/inception-js-api/src/widget/AnnotationDetailPopOver.svelte'
+import AnnotationDetailPopOver from './AnnotationDetailPopOver.svelte'
 
 export const NO_LABEL = '◌'
 
@@ -61,19 +62,20 @@ export class RecogitoEditor implements AnnotationEditor {
   private alpha = '55'
   private ajax: DiamAjax
   private recogito: Recogito
-  private connections: any
+  private connections: ConnectionsPlugin
   private root: Element
   private annotations: WebAnnotation[]
   private tracker: ViewportTracker
   private data? : AnnotatedText
-  private showInlineLabels: boolean
   private toolbar: RecogitoEditorToolbar
   private popover: AnnotationDetailPopOver
   private laskMouseMoveEvent: MouseEvent | undefined
+  private userPreferencesKey: string
 
   public constructor (element: Element, ajax: DiamAjax, userPreferencesKey: string) {
     this.ajax = ajax
     this.root = element
+    this.userPreferencesKey = userPreferencesKey
 
     const defaultPreferences = {
       showLabels: false
@@ -83,29 +85,9 @@ export class RecogitoEditor implements AnnotationEditor {
     ajax.loadPreferences(userPreferencesKey).then((p) => {
       preferences = Object.assign(preferences, defaultPreferences, p)
       console.log('Loaded preferences', preferences)
-      let preferencesDebounceTimeout: number | undefined = undefined
 
-      function bindPreference(writable: Writable<any>, propertyName: string) {
-        writable.set(
-          preferences[propertyName] !== undefined
-            ? preferences[propertyName]
-            : defaultPreferences[propertyName]
-        )
-
-        writable.subscribe((value) => {
-          preferences[propertyName] = value
-          if (preferencesDebounceTimeout) {
-            window.clearTimeout(preferencesDebounceTimeout)
-            preferencesDebounceTimeout = undefined
-          }
-          preferencesDebounceTimeout = window.setTimeout(() => { 
-            console.log(`Saved preferences under [${userPreferencesKey}]`)
-            ajax.savePreferences(userPreferencesKey, preferences)
-          }, 250)
-        })
-      }
-
-      bindPreference(showLabels, "showLabels")
+      annotatorState.showLabels = 
+          preferences.showLabels ?? defaultPreferences.showLabels;
     }).then(() => {
       this.toolbar = this.createToolbar()
 
@@ -131,9 +113,10 @@ export class RecogitoEditor implements AnnotationEditor {
 
       this.installSpanRenderingPatch(this.recogito)
 
-      this.connections = Connections(this.recogito, { disableEditor: true, showLabels: true })
+      this.connections = ConnectionsPlugin(this.recogito, { disableEditor: true, showLabels: annotatorState.showLabels })
       this.connections.canvas.on('createConnection', annotation => this.createRelation(annotation))
       this.connections.canvas.on('selectConnection', annotation => this.selectAnnotation(annotation))
+      this.connections.canvas
       // this.recogito.on('updateConnection', annotation => this.createAnnotation(annotation))
       // this.recogito.on('deleteConnection', annotation => this.createAnnotation(annotation))
 
@@ -163,20 +146,13 @@ export class RecogitoEditor implements AnnotationEditor {
 
       this.tracker = new ViewportTracker(this.root, () => this.loadAnnotations(), { ignoreSelector: '.r6o-relations-layer' })
 
-      this.popover = new AnnotationDetailPopOver({
+      this.popover = mount(AnnotationDetailPopOver, {
         target: this.root.ownerDocument.body,
         props: {
           root: this.root,
           ajax: this.ajax
         }
       })
-
-      let initialized = false
-      showLabels.subscribe(enabled => {
-        this.showInlineLabels = enabled
-        if (initialized) this.loadAnnotations()
-      })
-      initialized = true;
     })
   }
 
@@ -211,7 +187,16 @@ export class RecogitoEditor implements AnnotationEditor {
     this.root.ownerDocument.body.insertBefore(toolbarContainer, this.root.ownerDocument.body.firstChild)
 
     // @ts-ignore - VSCode does not seem to understand the Svelte component
-    return new RecogitoEditorToolbar({ target: toolbarContainer, props: {} })
+    return mount(RecogitoEditorToolbar, { 
+      target: toolbarContainer, 
+      props: {
+        userPreferencesKey: this.userPreferencesKey,
+        ajax: this.ajax
+      },
+      events: {
+        'renderingPreferencesChanged': (e: Event) => { this.loadAnnotations() },
+      }
+    })
   }
 
     /**
@@ -374,6 +359,7 @@ export class RecogitoEditor implements AnnotationEditor {
       connection.remove()
     }
     this.connections.canvas.connections = []
+    this.connections.canvas.config.showLabels = annotatorState.showLabels
 
     this.recogito.setAnnotations(this.annotations)
   }
@@ -432,7 +418,7 @@ export class RecogitoEditor implements AnnotationEditor {
     // Add special CSS classes to the first and last highlight of each annotation
     for (const highlights of highlightsByVid.values()) {
       if (highlights.length) {
-        if (this.showInlineLabels) {
+        if (annotatorState.showLabels) {
           highlights.forEach(e => e.classList.add('iaa-inline-label'))
         }
         highlights[0].classList.add('iaa-first-highlight')
@@ -490,8 +476,8 @@ export class RecogitoEditor implements AnnotationEditor {
   }
 
   public destroy (): void {
-    if (this.popover?.$destroy) {
-      this.popover.$destroy()
+    if (this.popover) {
+      unmount(this.popover)
     }
     this.connections.destroy()
     this.recogito.destroy()

@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 import ActivitiesDashlet from './ActivitiesDashlet.svelte';
-import { mount } from 'svelte';
+import { mount, unmount } from 'svelte';
 
 export default class ActivitiesDashletFactory {
   static instance: any;
@@ -27,8 +27,8 @@ export default class ActivitiesDashletFactory {
 
   $destroy() {
     const i = ActivitiesDashletFactory.instance;
-    if (i && i.$destroy) {
-      i.$destroy();
+    if (i) {
+      unmount(i)
       ActivitiesDashletFactory.instance = null;
     }
   }

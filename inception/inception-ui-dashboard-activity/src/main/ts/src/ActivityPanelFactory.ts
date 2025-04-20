@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 import ActivityPanel from './ActivityPanel.svelte';
-import { mount } from 'svelte';
+import { mount, unmount } from 'svelte';
 
 export default class ActivityPanelFactory {
   static instance: any;
@@ -27,8 +27,8 @@ export default class ActivityPanelFactory {
 
   $destroy() {
     const i = ActivityPanelFactory.instance;
-    if (i && i.$destroy) {
-      i.$destroy();
+    if (i) {
+      unmount(i);
       ActivityPanelFactory.instance = null;
     }
   }

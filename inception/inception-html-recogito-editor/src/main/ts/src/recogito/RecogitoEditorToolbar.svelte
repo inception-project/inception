@@ -16,13 +16,40 @@
   limitations under the License.
 -->
 <script lang="ts">
-  import { showLabels } from './RecogitoEditorState'
+  import type { DiamAjax } from '@inception-project/inception-js-api';
+  import { annotatorState } from './RecogitoEditorState.svelte'
+  import { createEventDispatcher } from 'svelte'
+
+  interface Props {
+    ajax: DiamAjax;
+    userPreferencesKey: string;
+  }
+
+  let { ajax, userPreferencesKey }: Props = $props();
+
+  let dispatch = createEventDispatcher()
+
+  const defaultPreferences = {
+      showLabels: false
+    }
+
+    $effect(() => { 
+      annotatorState.showLabels;
+      savePreferences()
+      dispatch('renderingPreferencesChanged', {});
+    });
+
+    function savePreferences() {
+      ajax.savePreferences(userPreferencesKey, {
+        showLabels: annotatorState.showLabels
+      });
+    }
 </script>
 
 <div class="bootstrap card card-header border-0 border-bottom rounded-0 p-1" role="toolbar">
   <div class="d-flex">
     <div class="form-check form-switch mx-2">
-      <input class="form-check-input" type="checkbox" role="switch" id="inlineLabelsEnabled" bind:checked={$showLabels}>
+      <input class="form-check-input" type="checkbox" role="switch" id="inlineLabelsEnabled" bind:checked={annotatorState.showLabels}>
       <label class="form-check-label" for="inlineLabelsEnabled">Labels</label>
     </div>
   </div>

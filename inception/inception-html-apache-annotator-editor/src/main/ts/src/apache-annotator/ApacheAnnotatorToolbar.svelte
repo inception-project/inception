@@ -16,6 +16,7 @@
   limitations under the License.
 -->
 <script lang="ts">
+  import type { DiamAjax } from '@inception-project/inception-js-api';
   import { annotatorState } from './ApacheAnnotatorState.svelte'
   import { createEventDispatcher } from 'svelte'
 

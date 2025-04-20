@@ -7,6 +7,7 @@
     "moduleResolution": "bundler",  // Match how esbuild resolves modules
     "lib": [
       "DOM",
+      "DOM.Iterable",
       "ES2018"
     ]
   }

@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 import TaskMonitorPanel from './TaskMonitorPanel.svelte';
-import { mount } from 'svelte';
+import { mount, unmount } from 'svelte';
 
 export default class TaskMonitorPanelFactory {
   static instance: any;
@@ -27,8 +27,8 @@ export default class TaskMonitorPanelFactory {
 
   $destroy() {
     const i = TaskMonitorPanelFactory.instance;
-    if (i && i.$destroy) {
-      i.$destroy();
+    if (i) {
+      unmount(i);
       TaskMonitorPanelFactory.instance = null;
     }
   }
