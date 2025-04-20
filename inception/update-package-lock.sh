@@ -8,6 +8,7 @@ TS_MODULES="
 ./inception-js-api/src/main/ts
 ./inception-diam/src/main/ts
 ./inception-io-tei/src/main/ts
+./inception-io-xml/src/main/ts
 ./inception-brat-editor/src/main/ts
 ./inception-diam-editor/src/main/ts
 ./inception-external-editor/src/main/ts
@@ -23,8 +24,6 @@ TS_MODULES="
 ./inception-ui-scheduling/src/main/ts
 ./inception-assistant/src/main/ts
 "
-# ./inception-html-editor/src/main/ts
-
 
 for module in $TS_MODULES ; do
   pushd "$module"
