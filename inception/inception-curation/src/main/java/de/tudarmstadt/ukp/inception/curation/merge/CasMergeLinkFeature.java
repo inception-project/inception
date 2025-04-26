@@ -184,30 +184,30 @@ class CasMergeLinkFeature
         // If there is more than one candidate, we need to find the best fit
         // First we look at the other features of the annotation. If any of these are different, we
         // discard the candidate.
-        var filteredCandidateJpsts = candidateTargetLinkTargets.stream() //
-                .filter(candidate -> aAdapter.countNonEqualFeatures(candidate, aSourceFS,
-                        (fs, f) -> f.getLinkMode() == LinkMode.NONE) == 0) //
+        var filteredTargetCandidates = candidateTargetLinkTargets.stream() //
+                .filter(candidate -> sourceLinkTargetAdapter.countNonEqualFeatures(candidate,
+                        sourceLinkTarget, (fs, f) -> f.getLinkMode() == LinkMode.NONE) == 0) //
                 .toList();
 
         // If there are none, well... return nothing
-        if (filteredCandidateJpsts.isEmpty()) {
+        if (filteredTargetCandidates.isEmpty()) {
             return empty();
         }
 
         // If there is exactly one, return that.
-        if (filteredCandidateJpsts.size() == 1) {
-            return Optional.of(filteredCandidateJpsts.get(0));
+        if (filteredTargetCandidates.size() == 1) {
+            return Optional.of(filteredTargetCandidates.get(0));
         }
 
         // Still more than one, then we need to look at the slots...
         var matSourceLinks = getMaterializedLinks(aAdapter, aSourceFS);
 
-        var filterestCandidateTargets2 = filteredCandidateJpsts.stream() //
+        var sortedTargetCandidates = filteredTargetCandidates.stream() //
                 .sorted(comparing(candidateTarget -> countLinkDifference(aAdapter, aSourceFS,
                         aSlotFeature, aSourceLink, matSourceLinks, candidateTarget)))
                 .toList();
 
-        return filterestCandidateTargets2.stream().findFirst();
+        return sortedTargetCandidates.stream().findFirst();
     }
 
     private static Annotation findLinkHostInTargetCas(CAS aTargetCas, AnnotationFS aSourceFs,
