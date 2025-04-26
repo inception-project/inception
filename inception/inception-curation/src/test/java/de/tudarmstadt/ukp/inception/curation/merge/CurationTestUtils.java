@@ -275,9 +275,8 @@ public class CurationTestUtils
         var filler = new NamedEntity(aCas, aTargetBegin, aTargetEnd);
         filler.addToIndexes();
 
-        return buildFS(aCas.getCas(), LINK_TYPE) //
-                .withFeature(TARGET_FEATURE, filler) //
-                .buildAndAddToIndexes();
+        return linkTo(null, filler);
+
     }
 
     public static FeatureStructure makeLinkFS(JCas aCas, String aRole, int aTargetBegin,
@@ -286,9 +285,14 @@ public class CurationTestUtils
         var filler = new NamedEntity(aCas, aTargetBegin, aTargetEnd);
         filler.addToIndexes();
 
-        return buildFS(aCas.getCas(), LINK_TYPE) //
+        return linkTo(aRole, filler);
+    }
+
+    public static FeatureStructure linkTo(String aRole, Annotation aFiller)
+    {
+        return buildFS(aFiller.getJCas().getCas(), LINK_TYPE) //
                 .withFeature(ROLE_FEATURE, aRole) //
-                .withFeature(TARGET_FEATURE, filler) //
+                .withFeature(TARGET_FEATURE, aFiller) //
                 .buildAndAddToIndexes();
     }
 
