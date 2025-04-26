@@ -295,12 +295,4 @@ public class CurationTestUtils
                 .withFeature(TARGET_FEATURE, aFiller) //
                 .buildAndAddToIndexes();
     }
-
-    public static FeatureStructure linkTo(String aRole, Annotation aFiller)
-    {
-        return buildFS(aFiller.getJCas().getCas(), LINK_TYPE) //
-                .withFeature(ROLE_FEATURE, aRole) //
-                .withFeature(TARGET_FEATURE, aFiller) //
-                .buildAndAddToIndexes();
-    }
 }
