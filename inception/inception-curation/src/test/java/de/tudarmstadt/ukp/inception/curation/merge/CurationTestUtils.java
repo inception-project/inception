@@ -40,6 +40,7 @@ import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.jcas.JCas;
+import org.apache.uima.jcas.tcas.Annotation;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.uima.resource.metadata.impl.TypeSystemDescription_impl;
 import org.dkpro.core.io.conll.Conll2006Reader;
@@ -288,6 +289,14 @@ public class CurationTestUtils
         return buildFS(aCas.getCas(), LINK_TYPE) //
                 .withFeature(ROLE_FEATURE, aRole) //
                 .withFeature(TARGET_FEATURE, filler) //
+                .buildAndAddToIndexes();
+    }
+
+    public static FeatureStructure linkTo(String aRole, Annotation aFiller)
+    {
+        return buildFS(aFiller.getJCas().getCas(), LINK_TYPE) //
+                .withFeature(ROLE_FEATURE, aRole) //
+                .withFeature(TARGET_FEATURE, aFiller) //
                 .buildAndAddToIndexes();
     }
 }

@@ -26,6 +26,7 @@ import static de.tudarmstadt.ukp.inception.curation.merge.CurationTestUtils.ALT_
 import static de.tudarmstadt.ukp.inception.curation.merge.CurationTestUtils.HOST_TYPE;
 import static de.tudarmstadt.ukp.inception.curation.merge.CurationTestUtils.LINKS_FEATURE;
 import static de.tudarmstadt.ukp.inception.curation.merge.CurationTestUtils.TARGET_FEATURE;
+import static de.tudarmstadt.ukp.inception.curation.merge.CurationTestUtils.linkTo;
 import static de.tudarmstadt.ukp.inception.curation.merge.CurationTestUtils.makeLinkFS;
 import static de.tudarmstadt.ukp.inception.curation.merge.CurationTestUtils.makeLinkHostFS;
 import static de.tudarmstadt.ukp.inception.schema.api.feature.MaterializedLink.toMaterializedLinks;
@@ -195,7 +196,7 @@ public class CasMergeLinkTest
         slotFeature.setTraits(toJsonString(traits));
 
         // Set up source CAS
-        var sourceFs = buildAnnotation(sourceCas1.getCas(), HOST_TYPE) //
+        var sourceFs = buildAnnotation(sourceCas1, HOST_TYPE) //
                 .at(0, 0) //
                 .withFeature(LINKS_FEATURE, makeLinkFS(sourceCas1, null, 0, 0))
                 .buildAndAddToIndexes();
@@ -203,7 +204,7 @@ public class CasMergeLinkTest
         // Set up target CAS
         var targetLink = makeLinkFS(targetCas, null, 0, 0);
         var targetFiller = getFeature(targetLink, TARGET_FEATURE, Annotation.class);
-        var targetFs = buildAnnotation(targetCas.getCas(), HOST_TYPE) //
+        var targetFs = buildAnnotation(targetCas, HOST_TYPE) //
                 .at(sourceFs) //
                 .withFeature(LINKS_FEATURE, targetLink) //
                 .buildAndAddToIndexes();
@@ -225,7 +226,7 @@ public class CasMergeLinkTest
         throws Exception
     {
         // Set up source CAS
-        var sourceFs = buildAnnotation(sourceCas1.getCas(), HOST_TYPE) //
+        var sourceFs = buildAnnotation(sourceCas1, HOST_TYPE) //
                 .at(0, 0) //
                 .withFeature(LINKS_FEATURE, makeLinkFS(sourceCas1, "role1", 0, 0))
                 .buildAndAddToIndexes();
@@ -233,7 +234,7 @@ public class CasMergeLinkTest
         // Set up target CAS
         var targetLink = makeLinkFS(targetCas, "role2", 0, 0);
         var targetFiller = getFeature(targetLink, TARGET_FEATURE, Annotation.class);
-        var targetFs = buildAnnotation(targetCas.getCas(), HOST_TYPE) //
+        var targetFs = buildAnnotation(targetCas, HOST_TYPE) //
                 .at(sourceFs) //
                 .withFeature(LINKS_FEATURE, targetLink) //
                 .buildAndAddToIndexes();
@@ -256,7 +257,7 @@ public class CasMergeLinkTest
         throws Exception
     {
         // Set up source CAS
-        var sourceFs = buildAnnotation(sourceCas1.getCas(), HOST_TYPE) //
+        var sourceFs = buildAnnotation(sourceCas1, HOST_TYPE) //
                 .at(0, 0) //
                 .withFeature(LINKS_FEATURE, makeLinkFS(sourceCas1, "role1", 0, 0))
                 .buildAndAddToIndexes();
@@ -283,11 +284,75 @@ public class CasMergeLinkTest
     }
 
     @Test
+    public void thatLinkMergesToRightTargets() throws Exception
+    {
+        // Source
+        var sourceFiller1 = buildAnnotation(sourceCas1, NamedEntity.class) //
+                .at(1, 1) //
+                .withFeature(NamedEntity._FeatName_value, "foo") //
+                .buildAndAddToIndexes();
+
+        buildAnnotation(sourceCas1, NamedEntity.class) //
+                .at(1, 1) //
+                .withFeature(NamedEntity._FeatName_value, "bar") //
+                .buildAndAddToIndexes();
+
+        var sourceFs = buildAnnotation(sourceCas1, HOST_TYPE) //
+                .at(0, 0) //
+                .withFeature(LINKS_FEATURE, linkTo("role1", sourceFiller1)) //
+                .withFeature("f1", "fai") //
+                .buildAndAddToIndexes();
+
+        buildAnnotation(sourceCas1, HOST_TYPE) //
+                .at(0, 0) //
+                .withFeature("f1", "fum") //
+                .buildAndAddToIndexes();
+
+        // Target (link not merged yet)
+        buildAnnotation(targetCas, NamedEntity.class) //
+                .at(1, 1) //
+                .withFeature(NamedEntity._FeatName_value, "foo") //
+                .buildAndAddToIndexes();
+
+        buildAnnotation(targetCas, NamedEntity.class) //
+                .at(1, 1) //
+                .withFeature(NamedEntity._FeatName_value, "bar") //
+                .buildAndAddToIndexes();
+
+        var targetCandidateFs1 = buildAnnotation(targetCas, HOST_TYPE) //
+                .at(0, 0) //
+                .withFeature("f1", "fai") //
+                .buildAndAddToIndexes();
+
+        var targetCandidateFs2 = buildAnnotation(targetCas, HOST_TYPE) //
+                .at(0, 0) //
+                .withFeature("f1", "fum") //
+                .buildAndAddToIndexes();
+
+        // Perform merge
+        sut.mergeSlotFeature(document, DUMMY_USER, slotLayer, targetCas.getCas(), sourceFs,
+                LINKS_FEATURE, 0);
+
+        var adapter = schemaService.getAdapter(slotLayer);
+        var linksFeature = adapter.getFeature(LINKS_FEATURE).get();
+
+        List<LinkWithRoleModel> mergedLinks2 = adapter.getFeatureValue(linksFeature,
+                targetCandidateFs1);
+        assertThat(mergedLinks2) //
+                .as("Link has been merged to the second candidate").isNotEmpty();
+
+        List<LinkWithRoleModel> mergedLinks1 = adapter.getFeatureValue(linksFeature,
+                targetCandidateFs2);
+        assertThat(mergedLinks1) //
+                .as("Link has NOT been merged to the first candidate").isEmpty();
+    }
+
+    @Test
     public void thatLinkIsAttachedToCorrectStackedTargetWhenOtherLinkFeatureDiffers()
         throws Exception
     {
         // Set up source CAS
-        var sourceFs = buildAnnotation(sourceCas1.getCas(), HOST_TYPE) //
+        var sourceFs = buildAnnotation(sourceCas1, HOST_TYPE) //
                 .at(0, 0) //
                 .withFeature(LINKS_FEATURE, makeLinkFS(sourceCas1, "role1", 1, 1)) //
                 .withFeature(ALT_LINKS_FEATURE, makeLinkFS(sourceCas1, "role1", 2, 2)) //
@@ -295,11 +360,11 @@ public class CasMergeLinkTest
 
         // Set up target CAS
         new NamedEntity(targetCas, 2, 2).addToIndexes();
-        var targetCandidateFs1 = buildAnnotation(targetCas.getCas(), HOST_TYPE) //
+        var targetCandidateFs1 = buildAnnotation(targetCas, HOST_TYPE) //
                 .at(sourceFs) //
                 .withFeature(LINKS_FEATURE, makeLinkFS(targetCas, "role1", 3, 3)) //
                 .buildAndAddToIndexes();
-        var targetCandidateFs2 = buildAnnotation(targetCas.getCas(), HOST_TYPE) //
+        var targetCandidateFs2 = buildAnnotation(targetCas, HOST_TYPE) //
                 .at(sourceFs) //
                 .withFeature(LINKS_FEATURE, makeLinkFS(targetCas, "role1", 1, 1)) //
                 .buildAndAddToIndexes();
@@ -345,12 +410,12 @@ public class CasMergeLinkTest
         @Test
         public void thatStackedLinkHostsWithDifferentTargetsAreMerged() throws Exception
         {
-            buildAnnotation(sourceCas1.getCas(), HOST_TYPE) //
+            buildAnnotation(sourceCas1, HOST_TYPE) //
                     .at(0, 0) //
                     .withFeature(LINKS_FEATURE, makeLinkFS(sourceCas1, "role1", 1, 1))
                     .buildAndAddToIndexes();
 
-            buildAnnotation(sourceCas1.getCas(), HOST_TYPE) //
+            buildAnnotation(sourceCas1, HOST_TYPE) //
                     .at(0, 0) //
                     .withFeature(LINKS_FEATURE, makeLinkFS(sourceCas1, "role2", 1, 1))
                     .buildAndAddToIndexes();
@@ -374,7 +439,7 @@ public class CasMergeLinkTest
             slotHostDiffAdapter.addLinkFeature("links", "role", "target", MULTIPLE_TARGETS_ONE_ROLE,
                     INCLUDE);
 
-            buildAnnotation(sourceCas1.getCas(), HOST_TYPE) //
+            buildAnnotation(sourceCas1, HOST_TYPE) //
                     .at(0, 0) //
                     .withFeature(LINKS_FEATURE, //
                             makeLinkFS(sourceCas1, "role1", 1, 1), //
@@ -510,17 +575,17 @@ public class CasMergeLinkTest
         @Test
         public void thatMatchingStackedLinksAreMerged() throws Exception
         {
-            buildAnnotation(sourceCas1.getCas(), HOST_TYPE) //
+            buildAnnotation(sourceCas1, HOST_TYPE) //
                     .at(0, 0) //
                     .withFeature(LINKS_FEATURE, makeLinkFS(sourceCas1, "role1", 1, 1))
                     .buildAndAddToIndexes();
 
-            buildAnnotation(sourceCas1.getCas(), HOST_TYPE) //
+            buildAnnotation(sourceCas1, HOST_TYPE) //
                     .at(0, 0) //
                     .withFeature(LINKS_FEATURE, makeLinkFS(sourceCas1, "role2", 1, 1))
                     .buildAndAddToIndexes();
 
-            buildAnnotation(sourceCas2.getCas(), HOST_TYPE) //
+            buildAnnotation(sourceCas2, HOST_TYPE) //
                     .at(0, 0) //
                     .withFeature(LINKS_FEATURE, makeLinkFS(sourceCas2, "role1", 1, 1))
                     .buildAndAddToIndexes();
@@ -563,7 +628,7 @@ public class CasMergeLinkTest
                             makeLinkFS(sourceCas1, "role1", 3, 3))
                     .buildAndAddToIndexes();
 
-            buildAnnotation(sourceCas1.getCas(), HOST_TYPE) //
+            buildAnnotation(sourceCas1, HOST_TYPE) //
                     .at(0, 0) //
                     .withFeature(LINKS_FEATURE, //
                             makeLinkFS(sourceCas1, "role1", 1, 1), //
@@ -571,7 +636,7 @@ public class CasMergeLinkTest
                             makeLinkFS(sourceCas1, "role1", 3, 3))
                     .buildAndAddToIndexes();
 
-            buildAnnotation(sourceCas2.getCas(), HOST_TYPE) //
+            buildAnnotation(sourceCas2, HOST_TYPE) //
                     .at(0, 0) //
                     .withFeature(LINKS_FEATURE, //
                             makeLinkFS(sourceCas2, "role1", 2, 2), //
