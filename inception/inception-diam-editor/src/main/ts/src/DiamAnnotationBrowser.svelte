@@ -23,7 +23,7 @@
         unpackCompactAnnotatedTextV2,
     } from "@inception-project/inception-js-api";
     // import AnnotationDetailPopOver from '@inception-project/inception-js-api/src/widget/AnnotationDetailPopOver.svelte'
-    import AnnotationDetailPopOver from './annotator_ui/AnnotationDetailPopOver.svelte'
+    import AnnotationDetailPopOver from './AnnotationDetailPopOver.svelte'
     import { factory } from "@inception-project/inception-diam";
     import { stateStore } from "./AnnotationBrowserState.svelte";
     import AnnotationsByPositionList from "./AnnotationsByPositionList.svelte";
