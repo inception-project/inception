@@ -26,7 +26,7 @@ jobs:
 
     steps:
     - name: Harden Runner
-      uses: step-security/harden-runner@0080882f6c36860b6ba35c610c98ce87d4e2f26f # v2.10.2
+      uses: step-security/harden-runner@0634a2670c59f64b4a01f0f96f84700a4088b9f0 # v2.12.0
       with:
         # egress-policy: audit
         egress-policy: block
@@ -60,7 +60,7 @@ jobs:
         ref: ${{ github.head_ref || github.ref }}
 
     - name: Set up JDK ${{ matrix.jdk }}
-      uses: actions/setup-java@7a6d8a8234af8eb26422e24e3006232cccaa061b # v4.6.0
+      uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
       with:
         java-version: ${{ matrix.jdk }}
         distribution: 'temurin'
@@ -75,7 +75,7 @@ jobs:
         maven-version: 3.9.9
 
     - name: Cache Docker layers
-      uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57 # v4.2.0
+      uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
       with:
         path: /var/lib/docker
         key: docker-cache-${{ runner.os }}-${{ github.sha }}
@@ -83,7 +83,7 @@ jobs:
           docker-cache-${{ runner.os }}-
 
     - name: Cache DKPro Core Dataset Cache
-      uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57 # v4.2.0
+      uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
       with:
         path: cache
         key: dkpro-dataset-cache-${{ runner.os }}-${{ github.sha }}
@@ -91,7 +91,7 @@ jobs:
           dkpro-dataset-cache-${{ runner.os }}-
 
     - name: Cache Nodejs
-      uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57 # v4.2.0
+      uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
       with:
         path: nodejs
         key: nodejs-cache-${{ runner.os }}-${{ github.sha }}
@@ -111,14 +111,14 @@ jobs:
       run: mvn --show-version --batch-mode --errors --no-transfer-progress -DdeployAtEnd=true -DskipTests clean deploy
 
     - name: Publish Test Report
-      uses: mikepenz/action-junit-report@v5
+      uses: mikepenz/action-junit-report@cf701569b05ccdd861a76b8607a66d76f6fd4857 # v5.5.1
       if: success() || failure() # always run even if the previous step fails
       with:
         report_paths: '**/target/surefire-reports/TEST-*.xml'
 
     - name: Capture build artifacts
       if: matrix.os == 'ubuntu-latest'
-      uses: actions/upload-artifact@6f51ac03b9356f520e9adb1b1b7802705f340c2b # v4.5.0
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
       with:
         name: build-artifacts
         path: inception/inception-app-webapp/target/inception-app-webapp-*-standalone.jar

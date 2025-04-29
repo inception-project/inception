@@ -34,6 +34,10 @@ import de.tudarmstadt.ukp.inception.rendering.selection.Selection;
 public interface AnnotatorViewState
     extends Serializable
 {
+    // ---------------------------------------------------------------------------------------------
+    // Editor type
+    // ---------------------------------------------------------------------------------------------
+
     String getEditorFactoryId();
 
     void setEditorFactoryId(String aId);
@@ -149,13 +153,19 @@ public interface AnnotatorViewState
     }
 
     // ---------------------------------------------------------------------------------------------
-    // Auxiliary methods
+    // Navigation within the application
     // ---------------------------------------------------------------------------------------------
-    Selection getSelection();
-
     SourceDocument getDocument();
 
     Project getProject();
 
+    // ---------------------------------------------------------------------------------------------
+    // Selection
+    // ---------------------------------------------------------------------------------------------
+    Selection getSelection();
+
+    // ---------------------------------------------------------------------------------------------
+    // Preferences
+    // ---------------------------------------------------------------------------------------------
     AnnotationPreference getPreferences();
 }

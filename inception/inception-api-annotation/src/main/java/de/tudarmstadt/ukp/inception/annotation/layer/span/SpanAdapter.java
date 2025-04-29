@@ -116,7 +116,10 @@ public class SpanAdapter
             int aEnd)
         throws AnnotationException
     {
-        return handle(new CreateSpanAnnotationRequest(aDocument, aDataOwner, aCas, aBegin, aEnd));
+        return handle(CreateSpanAnnotationRequest.builder() //
+                .withDocument(aDocument, aDataOwner, aCas) //
+                .withRange(aBegin, aEnd) //
+                .build());
     }
 
     public AnnotationFS handle(CreateSpanAnnotationRequest aRequest) throws AnnotationException
@@ -141,33 +144,6 @@ public class SpanAdapter
                 finalRequest.getDocumentOwner(), getLayer(), newAnnotation));
 
         return newAnnotation;
-    }
-
-    /**
-     * Move a span annotation.
-     *
-     * @param aDocument
-     *            the document to which the CAS belongs
-     * @param aDocumentOwner
-     *            the user to which the CAS belongs
-     * @param aCas
-     *            the CAS.
-     * @param aAnnotation
-     *            the annotation to move.
-     * @param aBegin
-     *            the begin offset.
-     * @param aEnd
-     *            the end offset.
-     * @return the new annotation
-     * @throws AnnotationException
-     *             if the annotation cannot be created/updated.
-     */
-    public AnnotationFS move(SourceDocument aDocument, String aDocumentOwner, CAS aCas,
-            AnnotationFS aAnnotation, int aBegin, int aEnd)
-        throws AnnotationException
-    {
-        return handle(new MoveSpanAnnotationRequest(aDocument, aDocumentOwner, aCas, aAnnotation,
-                aBegin, aEnd));
     }
 
     public AnnotationFS handle(MoveSpanAnnotationRequest aRequest) throws AnnotationException

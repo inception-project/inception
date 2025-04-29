@@ -222,8 +222,10 @@ class SegmentationUnitAdapterTest
             var t2 = new Token(cas, 4, 7);
             asList(s1, t1, t2).forEach(cas::addFsToIndexes);
 
-            var req = new CreateSpanAnnotationRequest(null, null, cas.getCas(), 1, 1);
-            sut.handle(req);
+            sut.handle(CreateSpanAnnotationRequest.builder() //
+                    .withCas(cas.getCas())//
+                    .withRange(1, 1)//
+                    .build());
 
             assertThat(cas.select(Token.class).asList()) //
                     .extracting(Token::getCoveredText) //
@@ -240,8 +242,10 @@ class SegmentationUnitAdapterTest
             var t2 = new Token(cas, 4, 7);
             asList(s1, t1, t2).forEach(cas::addFsToIndexes);
 
-            var req = new CreateSpanAnnotationRequest(null, null, cas.getCas(), 2, 2);
-            sut.handle(req);
+            sut.handle(CreateSpanAnnotationRequest.builder() //
+                    .withCas(cas.getCas())//
+                    .withRange(2, 2)//
+                    .build());
 
             assertThat(cas.select(Token.class).asList()) //
                     .extracting(Token::getCoveredText) //
@@ -258,7 +262,10 @@ class SegmentationUnitAdapterTest
             var t2 = new Token(cas, 4, 7);
             asList(s1, t1, t2).forEach(cas::addFsToIndexes);
 
-            var req = new CreateSpanAnnotationRequest(null, null, cas.getCas(), 0, 0);
+            var req = CreateSpanAnnotationRequest.builder() //
+                    .withCas(cas.getCas()) //
+                    .withRange(0, 0) //
+                    .build();
 
             assertThatExceptionOfType(IllegalPlacementException.class) //
                     .isThrownBy(() -> sut.handle(req)) //
@@ -279,7 +286,10 @@ class SegmentationUnitAdapterTest
             var t2 = new Token(cas, 4, 7);
             asList(s1, t1, t2).forEach(cas::addFsToIndexes);
 
-            var req = new CreateSpanAnnotationRequest(null, null, cas.getCas(), 3, 3);
+            var req = CreateSpanAnnotationRequest.builder() //
+                    .withCas(cas.getCas()) //
+                    .withRange(3, 3) //
+                    .build();
 
             assertThatExceptionOfType(IllegalPlacementException.class) //
                     .isThrownBy(() -> sut.handle(req)) //
@@ -304,7 +314,10 @@ class SegmentationUnitAdapterTest
                     .extracting(Token::getCoveredText) //
                     .containsExactly("1 2", "3 4");
 
-            var req = new CreateSpanAnnotationRequest(null, null, cas.getCas(), 3, 3);
+            var req = CreateSpanAnnotationRequest.builder() //
+                    .withCas(cas.getCas()) //
+                    .withRange(3, 3) //
+                    .build();
 
             assertThatExceptionOfType(IllegalPlacementException.class) //
                     .isThrownBy(() -> sut.handle(req)) //
@@ -325,7 +338,10 @@ class SegmentationUnitAdapterTest
             var t2 = new Token(cas, 4, 7);
             asList(s1, t1, t2).forEach(cas::addFsToIndexes);
 
-            var req = new CreateSpanAnnotationRequest(null, null, cas.getCas(), 1, 2);
+            var req = CreateSpanAnnotationRequest.builder() //
+                    .withCas(cas.getCas()) //
+                    .withRange(1, 2) //
+                    .build();
 
             assertThatExceptionOfType(IllegalPlacementException.class) //
                     .isThrownBy(() -> sut.handle(req)) //
@@ -480,8 +496,10 @@ class SegmentationUnitAdapterTest
             var t4 = new Token(cas, 6, 7);
             asList(s1, t1, t2, t3, t4).forEach(cas::addFsToIndexes);
 
-            var req = new CreateSpanAnnotationRequest(null, null, cas.getCas(), 3, 3);
-            sut.handle(req);
+            sut.handle(CreateSpanAnnotationRequest.builder() //
+                    .withCas(cas.getCas()) //
+                    .withRange(3, 3) //
+                    .build());
 
             assertThat(cas.select(Sentence.class).asList()) //
                     .extracting(Sentence::getCoveredText) //
@@ -504,7 +522,10 @@ class SegmentationUnitAdapterTest
             var t4 = new Token(cas, 6, 7);
             asList(s1, t1, t2, t3, t4).forEach(cas::addFsToIndexes);
 
-            var req = new CreateSpanAnnotationRequest(null, null, cas.getCas(), 4, 4);
+            var req = CreateSpanAnnotationRequest.builder() //
+                    .withCas(cas.getCas()) //
+                    .withRange(4, 4) //
+                    .build();
             sut.handle(req);
 
             assertThat(cas.select(Sentence.class).asList()) //
@@ -527,7 +548,10 @@ class SegmentationUnitAdapterTest
             var t3 = new Token(cas, 6, 7);
             asList(s1, t1, t2, t3).forEach(cas::addFsToIndexes);
 
-            var req = new CreateSpanAnnotationRequest(null, null, cas.getCas(), 4, 4);
+            var req = CreateSpanAnnotationRequest.builder() //
+                    .withCas(cas.getCas()) //
+                    .withRange(4, 4) //
+                    .build();
 
             assertThatExceptionOfType(IllegalPlacementException.class) //
                     .isThrownBy(() -> sut.handle(req)) //
@@ -552,7 +576,10 @@ class SegmentationUnitAdapterTest
             var t2 = new Token(cas, 4, 7);
             asList(s1, t1, t2).forEach(cas::addFsToIndexes);
 
-            var req = new CreateSpanAnnotationRequest(null, null, cas.getCas(), 1, 2);
+            var req = CreateSpanAnnotationRequest.builder() //
+                    .withCas(cas.getCas()) //
+                    .withRange(1, 2) //
+                    .build();
 
             assertThatExceptionOfType(IllegalPlacementException.class) //
                     .isThrownBy(() -> sut.handle(req)) //

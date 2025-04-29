@@ -458,7 +458,7 @@ public abstract class AnnotationPageBase
      */
     protected void loadPreferences() throws IOException
     {
-        AnnotatorState state = getModelObject();
+        var state = getModelObject();
         userPreferenceService.loadPreferences(state, userRepository.getCurrentUsername());
     }
 

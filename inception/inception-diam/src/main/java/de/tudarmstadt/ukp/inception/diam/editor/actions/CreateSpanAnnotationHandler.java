@@ -92,8 +92,11 @@ public class CreateSpanAnnotationHandler
 
             var adapter = schemaService.getAdapter(layer);
 
-            var request = new CreateSpanAnnotationRequest(state.getDocument(),
-                    state.getUser().getUsername(), cas, range.getBegin(), range.getEnd());
+            var request = CreateSpanAnnotationRequest.builder() //
+                    .withDocument(state.getDocument(), state.getUser().getUsername(), cas) //
+                    .withRange(range.getBegin(), range.getEnd()) //
+                    .withAnchoringMode(state.getAnchoringMode()) //
+                    .build();
 
             Selection selection;
             AnnotationFS ann;

@@ -722,7 +722,7 @@ public abstract class AnnotationPageBase2
     @Override
     protected void loadPreferences() throws BeansException, IOException
     {
-        AnnotatorState state = getModelObject();
+        var state = getModelObject();
 
         if (state.isUserViewingOthersWork(userRepository.getCurrentUsername())
                 || CURATION_USER.equals(state.getUser().getUsername())) {
