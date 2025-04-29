@@ -94,13 +94,6 @@ public class ChainAdapter
         }
     }
 
-    public AnnotationFS addSpan(SourceDocument aDocument, String aUsername, CAS aCas, int aBegin,
-            int aEnd)
-        throws AnnotationException
-    {
-        return handle(new CreateSpanAnnotationRequest(aDocument, aUsername, aCas, aBegin, aEnd));
-    }
-
     public AnnotationFS handle(CreateSpanAnnotationRequest aRequest) throws AnnotationException
     {
         var request = aRequest;

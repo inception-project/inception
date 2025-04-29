@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.annotation.layer.span;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
 public class MoveSpanAnnotationRequest
@@ -27,17 +28,11 @@ public class MoveSpanAnnotationRequest
 {
     private final AnnotationFS annotation;
 
-    public MoveSpanAnnotationRequest(SourceDocument aDocument, String aDocumentOwner, CAS aCas,
-            AnnotationFS aAnnotation, int aBegin, int aEnd)
+    private MoveSpanAnnotationRequest(Builder builder)
     {
-        this(null, aDocument, aDocumentOwner, aCas, aAnnotation, aBegin, aEnd);
-    }
-
-    private MoveSpanAnnotationRequest(MoveSpanAnnotationRequest aOriginal, SourceDocument aDocument,
-            String aDocumentOwner, CAS aCas, AnnotationFS aAnnotation, int aBegin, int aEnd)
-    {
-        super(null, aDocument, aDocumentOwner, aCas, aBegin, aEnd);
-        annotation = aAnnotation;
+        super(builder.original, builder.document, builder.documentOwner, builder.cas, builder.begin,
+                builder.end, builder.anchoringMode);
+        annotation = builder.annotation;
     }
 
     public AnnotationFS getAnnotation()
@@ -46,9 +41,103 @@ public class MoveSpanAnnotationRequest
     }
 
     @Override
-    public MoveSpanAnnotationRequest changeSpan(int aBegin, int aEnd)
+    public MoveSpanAnnotationRequest changeSpan(int aBegin, int aEnd, AnchoringMode aAnchoringMode)
     {
-        return new MoveSpanAnnotationRequest(this, getDocument(), getDocumentOwner(), getCas(),
-                getAnnotation(), aBegin, aEnd);
+        return MoveSpanAnnotationRequest.builder() //
+                .withOriginal(this) //
+                .withDocument(getDocument(), getDocumentOwner(), getCas()) //
+                .withAnnotation(getAnnotation()) //
+                .withRange(aBegin, aEnd) //
+                .withAnchoringMode(aAnchoringMode) //
+                .build();
+    }
+
+    public static Builder builder()
+    {
+        return new Builder();
+    }
+
+    public static final class Builder
+    {
+        private MoveSpanAnnotationRequest original;
+        private SourceDocument document;
+        private String documentOwner;
+        private CAS cas;
+        private int begin;
+        private int end;
+        private AnnotationFS annotation;
+        private AnchoringMode anchoringMode;
+
+        private Builder()
+        {
+        }
+
+        public Builder withOriginal(MoveSpanAnnotationRequest aOriginal)
+        {
+            original = aOriginal;
+            return this;
+        }
+
+        public Builder withDocument(SourceDocument aDocument)
+        {
+            document = aDocument;
+            return this;
+        }
+
+        public Builder withDataOwner(String aDocumentOwner)
+        {
+            documentOwner = aDocumentOwner;
+            return this;
+        }
+
+        public Builder withCas(CAS aCas)
+        {
+            cas = aCas;
+            return this;
+        }
+
+        public Builder withBegin(int aBegin)
+        {
+            begin = aBegin;
+            return this;
+        }
+
+        public Builder withEnd(int aEnd)
+        {
+            end = aEnd;
+            return this;
+        }
+
+        public Builder withDocument(SourceDocument aDocument, String aDocumentOwner, CAS aCas)
+        {
+            document = aDocument;
+            documentOwner = aDocumentOwner;
+            cas = aCas;
+            return this;
+        }
+
+        public Builder withRange(int aBegin, int aEnd)
+        {
+            begin = aBegin;
+            end = aEnd;
+            return this;
+        }
+
+        public Builder withAnnotation(AnnotationFS aAnnotation)
+        {
+            annotation = aAnnotation;
+            return this;
+        }
+
+        public Builder withAnchoringMode(AnchoringMode aAnchoringMode)
+        {
+            anchoringMode = aAnchoringMode;
+            return this;
+        }
+
+        public MoveSpanAnnotationRequest build()
+        {
+            return new MoveSpanAnnotationRequest(this);
+        }
     }
 }

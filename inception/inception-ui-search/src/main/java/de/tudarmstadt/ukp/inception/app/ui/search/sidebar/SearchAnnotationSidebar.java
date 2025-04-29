@@ -91,6 +91,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase2;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.annotation.events.BulkAnnotationEvent;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.CreateSpanAnnotationRequest;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanAdapter;
 import de.tudarmstadt.ukp.inception.app.ui.search.sidebar.options.CreateAnnotationsOptions;
 import de.tudarmstadt.ukp.inception.app.ui.search.sidebar.options.DeleteAnnotationsOptions;
@@ -747,8 +748,11 @@ public class SearchAnnotationSidebar
 
         if (annoFS == null || (!match && !overrideExisting)) {
             try {
-                annoFS = aAdapter.add(aDocument, state.getUser().getUsername(), aCas,
-                        aSearchResult.getOffsetStart(), aSearchResult.getOffsetEnd());
+                annoFS = aAdapter.handle(CreateSpanAnnotationRequest.builder() //
+                        .withDocument(aDocument, state.getUser().getUsername(), aCas) //
+                        .withRange(aSearchResult.getOffsetStart(), aSearchResult.getOffsetEnd()) //
+                        .withAnchoringMode(state.getAnchoringMode()) //
+                        .build());
                 aBulkResult.created++;
             }
             catch (AnnotationException e) {

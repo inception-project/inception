@@ -16,23 +16,19 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<html xmlns:wicket="http://wicket.apache.org">
+<html xmlns:wicket="http://wicket.apache.org" xmlns="http://www.w3.org/1999/html" lang="">
 <body>
   <wicket:panel>
-    <!-- pb-1 compensates for the bottom padding of the  -->
-    <div class="card-body pb-1">
-      <div class="row" wicket:enclosure="defaultAnnotationLayer">
-        <label wicket:for="defaultAnnotationLayer" class="col-sm-3 col-form-label text-nowrap">
-          <wicket:label key="layer"/>
-        </label>
-        <div class="col-sm-9">
-          <select wicket:id="defaultAnnotationLayer" class="form-select"/>
-        </div>
-        <div class="col-sm-12 text-muted">
-          <small wicket:id="relationHint"></small>
-        </div>
+    <div class="input-group">
+      <div class="input-group-text">
+        <i class="fas fa-anchor"></i>
       </div>
-      <div wicket:id="anchoringMode" class="mt-2 mb-1" />
+      <wicket:container wicket:id="mode">
+        <button type="button" class="btn btn-outline-secondary flex-grow-1"
+          wicket:id="modeLink">
+          <wicket:container wicket:id="label" />
+        </button>
+      </wicket:container>
     </div>
   </wicket:panel>
 </body>

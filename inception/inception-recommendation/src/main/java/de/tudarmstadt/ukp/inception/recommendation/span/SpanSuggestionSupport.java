@@ -58,6 +58,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.CreateSpanAnnotationRequest;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanAdapter;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
@@ -163,7 +164,10 @@ public class SpanSuggestionSupport
                     && aFeature.getMultiValueMode() == NONE)) {
                 // ... if not or if stacking is allowed, then we create a new annotation - this also
                 // takes care of attaching to an annotation if necessary
-                annotation = aAdapter.add(aDocument, aDataOwner, aCas, aBegin, aEnd);
+                annotation = aAdapter.handle(CreateSpanAnnotationRequest.builder() //
+                        .withDocument(aDocument, aDataOwner, aCas) //
+                        .withRange(aBegin, aEnd) //
+                        .build());
                 annotationCreated = true;
             }
             else {

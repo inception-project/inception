@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.annotation.layer.span;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
 public class DeleteSpanAnnotationRequest
@@ -36,7 +37,8 @@ public class DeleteSpanAnnotationRequest
     private DeleteSpanAnnotationRequest(DeleteSpanAnnotationRequest aOriginal,
             SourceDocument aDocument, String aDocumentOwner, CAS aCas, AnnotationFS aAnnotation)
     {
-        super(null, aDocument, aDocumentOwner, aCas, aAnnotation.getBegin(), aAnnotation.getEnd());
+        super(null, aDocument, aDocumentOwner, aCas, aAnnotation.getBegin(), aAnnotation.getEnd(),
+                null);
         annotation = aAnnotation;
     }
 
@@ -46,7 +48,8 @@ public class DeleteSpanAnnotationRequest
     }
 
     @Override
-    public DeleteSpanAnnotationRequest changeSpan(int aBegin, int aEnd)
+    public DeleteSpanAnnotationRequest changeSpan(int aBegin, int aEnd,
+            AnchoringMode aAnchoringMode)
     {
         throw new UnsupportedOperationException("Cannot change span when deleting span annotation");
     }

@@ -33,6 +33,7 @@ import org.apache.uima.jcas.tcas.Annotation;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.CreateSpanAnnotationRequest;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanAdapter;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
@@ -62,8 +63,10 @@ class CasMergeSpan
         if (existingAnnos.isEmpty() || aAllowStacking) {
             // Create the annotation via the adapter - this also takes care of attaching to an
             // annotation if necessary
-            var mergedSpan = adapter.add(aDocument, aDataOwner, aTargetCas, aSourceFs.getBegin(),
-                    aSourceFs.getEnd());
+            var mergedSpan = adapter.handle(CreateSpanAnnotationRequest.builder() //
+                    .withDocument(aDocument, aDataOwner, aTargetCas) //
+                    .withRange(aSourceFs.getBegin(), aSourceFs.getEnd()) //
+                    .build());
 
             var mergedSpanAddr = -1;
             try {

@@ -84,69 +84,78 @@ public class SpanAnchoringModeBehavior
             return aRequest;
         }
 
+        var anchoringMode = aAdapter.getLayer().getAnchoringMode();
+        if (aRequest.getAnchoringMode() != null
+                && anchoringMode.allows(aRequest.getAnchoringMode())) {
+            anchoringMode = aRequest.getAnchoringMode();
+        }
+
         int[] originalRange = new int[] { aRequest.getBegin(), aRequest.getEnd() };
-        int[] adjustedRange = adjust(aRequest.getCas(), aAdapter.getLayer().getAnchoringMode(),
-                originalRange);
+        int[] adjustedRange = adjust(aRequest.getCas(), anchoringMode, originalRange);
 
         if (Arrays.equals(adjustedRange, originalRange)) {
             return aRequest;
         }
-        else {
-            return aRequest.changeSpan(adjustedRange[0], adjustedRange[1]);
-        }
 
+        return aRequest.changeSpan(adjustedRange[0], adjustedRange[1], anchoringMode);
     }
 
-    public static int[] adjust(CAS aCas, AnchoringMode aMode, int[] aRange)
-        throws AnnotationException
+    static int[] adjust(CAS aCas, AnchoringMode aMode, int[] aRange) throws AnnotationException
     {
-        switch (aMode) {
-        case CHARACTERS: {
-            return aRange;
+        return switch (aMode) {
+        case CHARACTERS -> aRange;
+        case SINGLE_TOKEN -> adjustToSingleToken(aCas, aRange);
+        case TOKENS -> adjustToTokens(aCas, aRange);
+        case SENTENCES -> adjustToSentences(aCas, aRange);
+        default -> throw new IllegalArgumentException(
+                "Unsupported anchoring mode: [" + aMode + "]");
+        };
+    }
+
+    static int[] adjustToSentences(CAS aCas, int[] aRange) throws IllegalPlacementException
+    {
+        var sentenceType = getType(aCas, Sentence.class);
+        var sentences = selectOverlapping(aCas, sentenceType, aRange[0], aRange[1]);
+
+        if (sentences.isEmpty()) {
+            throw new IllegalPlacementException(
+                    "No sentences found int range [" + aRange[0] + "-" + aRange[1] + "]");
         }
-        case SINGLE_TOKEN: {
-            var tokenType = getType(aCas, Token.class);
-            var tokens = selectOverlapping(aCas, tokenType, aRange[0], aRange[1]);
 
-            if (tokens.isEmpty()) {
-                throw new IllegalPlacementException(
-                        "No tokens found int range [" + aRange[0] + "-" + aRange[1] + "]");
-            }
+        // update the begin and ends (no sub token selection)
+        var begin = sentences.get(0).getBegin();
+        var end = sentences.get(sentences.size() - 1).getEnd();
 
-            return new int[] { tokens.get(0).getBegin(), tokens.get(0).getEnd() };
+        return new int[] { begin, end };
+    }
+
+    static int[] adjustToTokens(CAS aCas, int[] aRange) throws IllegalPlacementException
+    {
+        var tokenType = getType(aCas, Token.class);
+        var tokens = selectOverlapping(aCas, tokenType, aRange[0], aRange[1]);
+
+        if (tokens.isEmpty()) {
+            throw new IllegalPlacementException(
+                    "No tokens found int range [" + aRange[0] + "-" + aRange[1] + "]");
         }
-        case TOKENS: {
-            var tokenType = getType(aCas, Token.class);
-            var tokens = selectOverlapping(aCas, tokenType, aRange[0], aRange[1]);
 
-            if (tokens.isEmpty()) {
-                throw new IllegalPlacementException(
-                        "No tokens found int range [" + aRange[0] + "-" + aRange[1] + "]");
-            }
+        // update the begin and ends (no sub token selection)
+        int begin = tokens.get(0).getBegin();
+        int end = tokens.get(tokens.size() - 1).getEnd();
 
-            // update the begin and ends (no sub token selection)
-            int begin = tokens.get(0).getBegin();
-            int end = tokens.get(tokens.size() - 1).getEnd();
+        return new int[] { begin, end };
+    }
 
-            return new int[] { begin, end };
+    static int[] adjustToSingleToken(CAS aCas, int[] aRange) throws IllegalPlacementException
+    {
+        var tokenType = getType(aCas, Token.class);
+        var tokens = selectOverlapping(aCas, tokenType, aRange[0], aRange[1]);
+
+        if (tokens.isEmpty()) {
+            throw new IllegalPlacementException(
+                    "No tokens found int range [" + aRange[0] + "-" + aRange[1] + "]");
         }
-        case SENTENCES: {
-            var sentenceType = getType(aCas, Sentence.class);
-            var sentences = selectOverlapping(aCas, sentenceType, aRange[0], aRange[1]);
 
-            if (sentences.isEmpty()) {
-                throw new IllegalPlacementException(
-                        "No sentences found int range [" + aRange[0] + "-" + aRange[1] + "]");
-            }
-
-            // update the begin and ends (no sub token selection)
-            var begin = sentences.get(0).getBegin();
-            var end = sentences.get(sentences.size() - 1).getEnd();
-
-            return new int[] { begin, end };
-        }
-        default:
-            throw new IllegalArgumentException("Unsupported anchoring mode: [" + aMode + "]");
-        }
+        return new int[] { tokens.get(0).getBegin(), tokens.get(0).getEnd() };
     }
 }
