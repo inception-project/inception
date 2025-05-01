@@ -98,7 +98,7 @@ export class ViewportTracker {
     }
 
     return style.display === 'block' || style.display === 'flex' || style.display === 'grid' ||
-      style.display === 'table-row'
+      style.display === 'table-row' || style.display === 'list-item'
 
     // return !style.display.startsWith('inline') && !style.display.includes('math')
   }
