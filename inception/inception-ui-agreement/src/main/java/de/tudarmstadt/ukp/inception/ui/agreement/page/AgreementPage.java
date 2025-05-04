@@ -627,11 +627,23 @@ public class AgreementPage
 
     private List<Pair<AnnotationLayer, AnnotationFeature>> getEligibleFeatures()
     {
-        var groupedFeatures = annotationService.listEnabledFeatures(getProject()).stream()
-                .collect(groupingBy(AnnotationFeature::getLayer));
-
         var result = new ArrayList<Pair<AnnotationLayer, AnnotationFeature>>();
 
+        // Collect layers (even without features)
+        var layers = annotationService.listEnabledLayers(getProject());
+        for (var layer : layers) {
+            if (Token._TypeName.equals(layer.getName())
+                    || Sentence._TypeName.equals(layer.getName())
+                    || ChainLayerSupport.TYPE.equals(layer.getType())) {
+                continue;
+            }
+
+            result.add(Pair.of(layer, null));
+        }
+
+        // Now collect the features
+        var groupedFeatures = annotationService.listEnabledFeatures(getProject()).stream()
+                .collect(groupingBy(AnnotationFeature::getLayer));
         for (var entry : groupedFeatures.entrySet()) {
             var layer = entry.getKey();
             var features = entry.getValue();
@@ -641,8 +653,6 @@ public class AgreementPage
                     || ChainLayerSupport.TYPE.equals(layer.getType())) {
                 continue;
             }
-
-            result.add(Pair.of(layer, null));
 
             for (var feature : features) {
                 result.add(Pair.of(layer, feature));
