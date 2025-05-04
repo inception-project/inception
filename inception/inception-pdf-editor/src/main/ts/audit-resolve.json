@@ -11,6 +11,10 @@
     "1102341|@sveltejs/vite-plugin-svelte>@sveltejs/vite-plugin-svelte-inspector>vite>esbuild": {
       "decision": "postpone",
       "madeAt": 1742937929894
+    },
+    "1104044|pdfjs-dist": {
+      "decision": "postpone",
+      "madeAt": 1746377341176
     }
   },
   "rules": {},
