@@ -54,6 +54,7 @@
     "@types/events": "${types-events.version}",
     "@testing-library/svelte": "${testing-library-svelte.version}",
     "uuid": "${uuid.version}",
+    "vite": "${vite.version}",
     "vitest": "${vitest.version}",
     "yargs": "${yargs.version}"
   }

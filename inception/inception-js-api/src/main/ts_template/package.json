@@ -45,6 +45,7 @@
     "typescript": "${typescript.version}",
     "@typescript-eslint/eslint-plugin": "${typescript-eslint-eslint-plugin.version}",
     "@typescript-eslint/parser": "${typescript-eslint-parser.version}",
+    "vite": "${vite.version}",
     "vitest": "${vitest.version}",
     "uuid": "${uuid.version}",
     "yargs": "${yargs.version}"

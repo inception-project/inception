@@ -45,6 +45,7 @@
     "@typescript-eslint/parser": "${typescript-eslint-parser.version}",
     "@types/events": "${types-events.version}",
     "uuid": "${uuid.version}",
+    "vite": "${vite.version}",
     "vitest": "${vitest.version}",
     "yargs": "${yargs.version}"
   }
