@@ -97,7 +97,7 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-export</artifactId>
+      <artifactId>inception-schema</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
