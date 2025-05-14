@@ -618,9 +618,11 @@ public class SearchServiceImpl
         throws IOException, ExecutionException
     {
         var groupedResults = query(aUser, aProject, aQuery, aDocument, null, null, 0, MAX_VALUE);
+
         var resultsAsList = new ArrayList<SearchResult>();
         groupedResults.values().stream()
                 .forEach(resultsGroup -> resultsAsList.addAll(resultsGroup));
+
         return resultsAsList;
     }
 
@@ -631,12 +633,19 @@ public class SearchServiceImpl
             AnnotationFeature aAnnotationFeature, long offset, long count)
         throws IOException, ExecutionException
     {
-        LOG.trace("Query [{}] for user {} in project {}", aQuery, aUser, aProject);
-
         var prefs = preferencesService.loadDefaultTraitsForProject(KEY_SEARCH_STATE, aProject);
 
-        return query(new SearchQueryRequest(aProject, aUser, aQuery, aDocument, aAnnotationLayer,
-                aAnnotationFeature, offset, count, prefs));
+        return query(SearchQueryRequest.builder() //
+                .withProject(aProject) //
+                .withUser(aUser) //
+                .withQuery(aQuery) //
+                .withLimitedToDocument(aDocument) //
+                .withAnnotationLayer(aAnnotationLayer) //
+                .withAnnotationFeature(aAnnotationFeature) //
+                .withOffset(offset) //
+                .withLimit(count) //
+                .withOptions(prefs) //
+                .build());
     }
 
     // This is not public because it includes the preferences (case sensitivity) and these must be
@@ -645,6 +654,9 @@ public class SearchServiceImpl
     private Map<String, List<SearchResult>> query(SearchQueryRequest aRequest)
         throws ExecutionException, IOException
     {
+        LOG.trace("Query [{}] for user {} in project {}", aRequest.getQuery(), aRequest.getUser(),
+                aRequest.getProject());
+
         try (var pooledIndex = acquireIndex(aRequest.getProject().getId())) {
             var index = pooledIndex.get();
             ensureIndexIsCreatedAndValid(aRequest.getProject(), index);

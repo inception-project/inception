@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.app.ui.search.sidebar;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.AUTO_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateChangeFlag.EXPLICIT_ANNOTATOR_USER_ACTION;
+import static de.tudarmstadt.ukp.inception.rendering.vmodel.VMarker.MATCH;
 import static de.tudarmstadt.ukp.inception.rendering.vmodel.VMarker.MATCH_FOCUS;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.enabledWhen;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
@@ -29,6 +30,7 @@ import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.groupingBy;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.uima.cas.text.AnnotationPredicates.overlapping;
 import static org.apache.uima.fit.util.CasUtil.selectAt;
 
 import java.io.IOException;
@@ -39,6 +41,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
@@ -107,6 +110,7 @@ import de.tudarmstadt.ukp.inception.rendering.vmodel.VRange;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VTextMarker;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
+import de.tudarmstadt.ukp.inception.search.ExecutionException;
 import de.tudarmstadt.ukp.inception.search.ResultsGroup;
 import de.tudarmstadt.ukp.inception.search.SearchResult;
 import de.tudarmstadt.ukp.inception.search.SearchService;
@@ -165,20 +169,20 @@ public class SearchAnnotationSidebar
     private final WebMarkupContainer resultsTable;
     private final SearchResultsProviderWrapper resultsProvider;
 
-    private IModel<String> targetQuery = Model.of("");
-    private CompoundPropertyModel<SearchOptions> searchOptions = CompoundPropertyModel
+    private final IModel<String> targetQuery = Model.of("");
+    private final CompoundPropertyModel<SearchOptions> searchOptions = CompoundPropertyModel
             .of(new SearchOptions());
-    private IModel<SearchResultsPagesCache> groupedResults = Model
+    private final IModel<SearchResultsPagesCache> groupedResults = Model
             .of(new SearchResultsPagesCache());
-    private IModel<CreateAnnotationsOptions> createOptions = CompoundPropertyModel
+    private final IModel<CreateAnnotationsOptions> createOptions = CompoundPropertyModel
             .of(new CreateAnnotationsOptions());
-    private IModel<DeleteAnnotationsOptions> deleteOptions = CompoundPropertyModel
+    private final IModel<DeleteAnnotationsOptions> deleteOptions = CompoundPropertyModel
             .of(new DeleteAnnotationsOptions());
     private DataView<ResultsGroup> searchResultGroups;
 
     private DropDownChoice<AnnotationFeature> groupingFeature;
     private CheckBox lowLevelPagingCheckBox;
-    private Label numberOfResults;
+    private final Label numberOfResults;
 
     private SearchResult selectedResult;
 
@@ -505,9 +509,14 @@ public class SearchAnnotationSidebar
     {
         selectedResult = null;
         searchResultGroups.setItemsPerPage(searchOptions.getObject().getItemsPerPage());
+
         executeSearchResultsGroupedQuery(aTarget);
+
         aTarget.add(mainContainer);
         aTarget.addChildren(getPage(), IFeedback.class);
+
+        // Need to re-render because we want to highlight the match
+        getAnnotationPage().actionRefreshDocument(aTarget);
     }
 
     private IResourceStream exportSearchResults()
@@ -521,7 +530,7 @@ public class SearchAnnotationSidebar
             {
                 try {
                     var exporter = new SearchResultsExporter();
-                    return exporter.generateCsv(resultsProvider.getAllResults());
+                    return exporter.generateCsv(resultsProvider.getGroupedResults());
                 }
                 catch (Exception e) {
                     LOG.error("Unable to generate search results csv", e);
@@ -544,6 +553,9 @@ public class SearchAnnotationSidebar
         resultsProvider.emptyQuery();
         selectedResult = null;
         aTarget.add(mainContainer);
+
+        // Need to re-render because we want to highlight the match
+        getAnnotationPage().actionRefreshDocument(aTarget);
     }
 
     private void executeSearchResultsGroupedQuery(AjaxRequestTarget aTarget)
@@ -583,22 +595,49 @@ public class SearchAnnotationSidebar
             applicationEventPublisher.get().publishEvent(new SearchQueryEvent(this, project,
                     state.getUser().getUsername(), targetQuery.getObject(), limitToDocument));
             var opt = searchOptions.getObject();
+
             resultsProvider.initializeQuery(getModelObject().getUser(), project,
                     targetQuery.getObject(), limitToDocument, opt.getGroupingLayer(),
                     opt.getGroupingFeature());
-            return;
         }
         catch (Exception e) {
             error("Query error: " + e.getMessage());
             aTarget.addChildren(getPage(), IFeedback.class);
             resultsProvider.emptyQuery();
-            return;
         }
     }
 
     @OnEvent
     public void onRenderAnnotations(RenderAnnotationsEvent aEvent)
     {
+        if (targetQuery.map(StringUtils::isNotBlank).orElse(false).getObject()) {
+            try {
+                var state = getModelObject();
+                var results = searchService.query(state.getUser(), state.getProject(),
+                        targetQuery.getObject(), state.getDocument());
+                for (var result : results) {
+                    if (result.equals(selectedResult)) {
+                        // We render the selected result separately. Rendering it does not
+                        // require a query. So if the query fails, we can still highlight
+                        // the selected result.
+                        continue;
+                    }
+
+                    if (overlapping(aEvent.getVDocument().getWindowBegin(),
+                            aEvent.getVDocument().getWindowEnd(), result.getOffsetStart(),
+                            result.getOffsetEnd())) {
+                        var range = VRange.clippedRange(aEvent.getVDocument(),
+                                result.getOffsetStart(), result.getOffsetEnd());
+
+                        range.ifPresent(r -> aEvent.getVDocument().add(new VTextMarker(MATCH, r)));
+                    }
+                }
+            }
+            catch (IOException | ExecutionException e) {
+                LOG.error("Cannot render match highlights", e);
+            }
+        }
+
         if (selectedResult != null) {
             var range = VRange.clippedRange(aEvent.getVDocument(), selectedResult.getOffsetStart(),
                     selectedResult.getOffsetEnd());

@@ -89,10 +89,12 @@ public class SearchResultsProviderWrapper
     {
         var resultsGroupsSubList = new ArrayList<ResultsGroup>();
         int counter = 0;
+
         for (var resultsGroup : resultGroups) {
             if (counter - first + 1 > count) {
                 break;
             }
+
             var sublist = new ArrayList<SearchResult>();
             for (var result : resultsGroup.getResults()) {
                 if (counter < first) {
@@ -105,11 +107,13 @@ public class SearchResultsProviderWrapper
                 sublist.add(result);
                 counter++;
             }
+
             if (!(counter <= first)) {
                 var group = new ResultsGroup(resultsGroup.getGroupKey(), sublist);
                 resultsGroupsSubList.add(group);
             }
         }
+
         return resultsGroupsSubList;
     }
 
@@ -146,12 +150,12 @@ public class SearchResultsProviderWrapper
                 && searchResultsProvider.getAnnotationLayer() == null);
 
         if (!applyLowLevelPaging()) {
-            resultGroups = getAllResults();
+            resultGroups = getGroupedResults();
         }
 
     }
 
-    public List<ResultsGroup> getAllResults()
+    public List<ResultsGroup> getGroupedResults()
     {
         var resultsIterator = searchResultsProvider.iterator(0, Long.MAX_VALUE);
         var resultsList = new ArrayList<ResultsGroup>();

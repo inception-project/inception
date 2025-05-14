@@ -21,7 +21,6 @@ import static java.util.Collections.emptyIterator;
 
 import java.io.IOException;
 import java.util.Iterator;
-import java.util.List;
 import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.IteratorUtils;
@@ -84,13 +83,15 @@ public class SearchResultsProvider
         // Query if the results in the given range are not in the cache i.e. if we need to fetch
         // a new page
         try {
-            List<ResultsGroup> queryResults = searchService
+            var queryResults = searchService
                     .query(user, project, query, document, annotationLayer, annotationFeature,
-                            first, count)
-                    .entrySet().stream().map(e -> new ResultsGroup(e.getKey(), e.getValue()))
+                            first, count) //
+                    .entrySet().stream() //
+                    .map(e -> new ResultsGroup(e.getKey(), e.getValue())) //
                     .collect(Collectors.toList());
 
             pagesCacheModel.getObject().putPage(first, count, queryResults);
+
             return queryResults.iterator();
         }
         catch (ExecutionException e) {

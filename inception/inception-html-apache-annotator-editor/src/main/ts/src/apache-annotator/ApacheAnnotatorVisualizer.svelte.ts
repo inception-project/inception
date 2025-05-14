@@ -165,6 +165,11 @@ export class ApacheAnnotatorVisualizer {
 
     if (doc.textMarkers) {
       doc.textMarkers.forEach(marker => this.renderTextMarker(doc, marker))
+      this.getAllTextMarkers().forEach(e => {
+        if (!e.textContent) {
+          e.remove()
+        }
+      })
       this.renderVerticalSelectionMarker(doc)
     }
 
@@ -242,7 +247,7 @@ export class ApacheAnnotatorVisualizer {
   private removeSpuriousZeroWidthHighlights () {
     this.getAllHighlights().forEach(e => {
       if (!e.classList.contains('iaa-zero-width') && !e.textContent) {
-        // Removing the entire highlight element here should be find as it should not contain any
+        // Removing the entire highlight element here should be fine as it should not contain any
         // relevant DOM nodes, e.g. nodes relevant to text offsets.
         e.remove()
       }
@@ -286,6 +291,10 @@ export class ApacheAnnotatorVisualizer {
     return this.root.querySelectorAll('.iaa-highlighted')
   }
 
+  private getAllTextMarkers () {
+    return this.root.querySelectorAll('.iaa-text-marker')
+  }
+
   private renderSelectedRelationEndpointHighlights (doc: AnnotatedText) {
     const selectedAnnotationVids = doc.markedAnnotations.get('focus') || []
     for (const relation of doc.relations.values()) {
@@ -314,7 +323,7 @@ export class ApacheAnnotatorVisualizer {
     }
 
     const attributes = {
-      class: `iaa-marker-${marker[0]}`
+      class: `iaa-text-marker iaa-marker-${marker.type}`
     }
 
     this.toCleanUp.add(highlightText(range, 'mark', attributes))
@@ -488,7 +497,7 @@ export class ApacheAnnotatorVisualizer {
       // which would then take the new padding into account. We do this as long as the transient
       // markers are still there.
       var scrollIntoViewFunc = () => { 
-        finalScrollTarget.scrollIntoView({ behavior: 'auto', block: 'start', inline: 'nearest' })
+        finalScrollTarget.scrollIntoView({ behavior: 'auto', block: 'center', inline: 'nearest' })
         if (this.removeScrollMarkers.length > 0) {
           window.setTimeout(scrollIntoViewFunc, 100)
         }

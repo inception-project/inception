@@ -379,7 +379,7 @@ function renderSpan (doc: AnnotatedText, span: Span) {
   spanAnnotation.rectangles = rectangles
 
   const ms = doc.annotationMarkers.get(spanAnnotation.vid) || []
-  ms.forEach(m => spanAnnotation.classList.push(`marker-${m.type}`))
+  ms.forEach(m => spanAnnotation.classList.push(`i7n-marker-${m.type}`))
 
   spanAnnotation.save()
 }
@@ -402,7 +402,7 @@ function renderRelation (doc: AnnotatedText, relation: Relation) {
   relationAnnotation.text = relation.label || ''
 
   const ms = doc.annotationMarkers.get(relationAnnotation.vid) || []
-  ms.forEach(m => relationAnnotation.classList.push(`marker-${m.type}`))
+  ms.forEach(m => relationAnnotation.classList.push(`i7n-marker-${m.type}`))
 
   relationAnnotation.save()
 }
@@ -429,7 +429,7 @@ function makeTextMarker (doc: AnnotatedText, marker: TextMarker) {
   markerAnnotation.knob = false
   markerAnnotation.border = false
   markerAnnotation.rectangles = rectangles
-  markerAnnotation.classList = [`marker-$${marker.type}`]
+  markerAnnotation.classList = [`i7n-marker-${marker.type}`]
   markerAnnotation.save()
 }
 
