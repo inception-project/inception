@@ -482,9 +482,6 @@ $background_color_16: pink;
   .ui-icon-gripsmall-diagonal-se {
     margin: 0 -3px -3px 0;
   }
-  .ui-dialog {
-    position: fixed;
-  }
   .file {
     color: $color_6;
   }
@@ -496,13 +493,6 @@ $background_color_16: pink;
   }
   .centeralign {
     text-align: center;
-  }
-  .dialog {
-    .borderless {
-      outline: 0;
-      border: 0;
-      width: 100%;
-    }
   }
   .fullwidth {
     width: 100%;

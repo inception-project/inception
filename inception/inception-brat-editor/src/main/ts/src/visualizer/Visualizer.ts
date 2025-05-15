@@ -43,29 +43,29 @@ import { Measurements } from './Measurements'
 import { DocumentData } from './DocumentData'
 import { ENTITY, Entity, TRIGGER } from './Entity'
 import { EQUIV, EventDesc, RELATION } from './EventDesc'
-import { Chunk, Marker } from './Chunk'
+import { Chunk, type Marker } from './Chunk'
 import { Fragment } from './Fragment'
 import { Arc } from './Arc'
 import { Row } from './Row'
 import { RectBox } from './RectBox'
-import { AttributeType, ValType } from './AttributeType'
-import { CollectionLoadedResponse } from './CollectionLoadedResponse'
-import { RelationTypeDto, EntityTypeDto, EntityDto, CommentDto, SourceData, TriggerDto, AttributeDto, EquivDto, ColorCode, MarkerType, MarkerDto, RelationDto, EDITED, FOCUS, MATCH_FOCUS, MATCH, RoleDto, VID, WARN } from '../protocol/Protocol'
+import { AttributeType, type ValType } from './AttributeType'
+import { type CollectionLoadedResponse } from './CollectionLoadedResponse'
+import { type RelationTypeDto, type EntityTypeDto, type EntityDto, type CommentDto, type SourceData, type TriggerDto, type AttributeDto, type EquivDto, type ColorCode, type MarkerType,type MarkerDto, type RelationDto, EDITED, FOCUS, MATCH_FOCUS, MATCH,type  RoleDto, type VID, WARN } from '../protocol/Protocol'
 import type { Dispatcher, Message } from '../dispatcher/Dispatcher'
 import * as jsonpatch from 'fast-json-patch'
-import { Operation } from 'fast-json-patch'
+import { type Operation } from 'fast-json-patch'
 import { scrollbarWidth } from '../util/ScrollbarWidth'
 import '@svgdotjs/svg.filter.js'
-import { SVG, Element as SVGJSElement, Svg, Container, Text as SVGText, PathCommand, Rect, ArrayXY, SVGTypeMapping, Defs, G } from '@svgdotjs/svg.js'
+import { SVG, Element as SVGJSElement, Svg, Container, Text as SVGText, type PathCommand, Rect, type ArrayXY, type SVGTypeMapping, Defs, G } from '@svgdotjs/svg.js'
 import { INSTANCE as Configuration } from '../configuration/Configuration'
 import { INSTANCE as Util } from '../util/Util'
-import { AnnotationOutEvent, AnnotationOverEvent, Offsets, Relation, Span } from '@inception-project/inception-js-api'
+import { AnnotationOutEvent, AnnotationOverEvent, type Offsets, Relation, Span } from '@inception-project/inception-js-api'
 declare const $: JQueryStatic
 
 /**
  * [lastRow, textDesc[3], lastX - boxX, textDesc[4]]
  */
-type MarkedRow = [Row, unknown, number, unknown];
+type MarkedTextHighlight = [row: Row, xBegin: number, xEnd: number, type: string];
 
 type MarkedText = [begin: number, end: number, type: string];
 
@@ -1829,7 +1829,7 @@ export class Visualizer {
     })
   }
 
-  private renderChunks (docData: DocumentData, sourceData: SourceData, chunks: Chunk[], maxTextWidth: number): [Row[], number[], unknown[]] {
+  private renderChunks (docData: DocumentData, sourceData: SourceData, chunks: Chunk[], maxTextWidth: number): [Row[], number[], MarkedTextHighlight[]] {
     let currentX: number
     if (this.rtlmode) {
       currentX = this.canvasWidth - (Configuration.visual.margin.x + this.sentNumMargin + this.rowPadding)
@@ -1849,7 +1849,7 @@ export class Visualizer {
     row.backgroundIndex = sentenceToggle
     row.index = 0
 
-    const textMarkedRows: Array<MarkedRow> = []
+    const markedTextHighlights: Array<MarkedTextHighlight> = []
     let rowIndex = 0
 
     chunks.forEach((chunk: Chunk) => {
@@ -2198,13 +2198,13 @@ export class Visualizer {
       if (row.index !== lastRow.index) {
         $.each(openTextHighlights, (textId, textDesc) => {
           if (textDesc[3] !== lastX) {
-            let newDesc: MarkedRow
+            let newDesc: MarkedTextHighlight
             if (this.rtlmode) {
               newDesc = [lastRow, textDesc[3], lastX - boxX, textDesc[4]]
             } else {
               newDesc = [lastRow, textDesc[3], lastX + boxX, textDesc[4]]
             }
-            textMarkedRows.push(newDesc)
+            markedTextHighlights.push(newDesc)
           }
           textDesc[3] = currentX
         })
@@ -2221,7 +2221,7 @@ export class Visualizer {
         textDesc[3] += currentX + (this.rtlmode ? -boxX : boxX);
         const startDesc = openTextHighlights[textDesc[0]];
         delete openTextHighlights[textDesc[0]];
-        textMarkedRows.push([row, startDesc[3], textDesc[3], startDesc[4]]);
+        markedTextHighlights.push([row, startDesc[3], textDesc[3], startDesc[4]]);
       }
 
       // XXX check this - is it used? should it be lastRow?
@@ -2276,10 +2276,10 @@ export class Visualizer {
     row.arcs = this.svg.group().addTo(row.group).addClass('arcs')
     rows.push(row)
 
-    return [rows, fragmentHeights, textMarkedRows]
+    return [rows, fragmentHeights, markedTextHighlights]
   }
 
-  private renderChunksPass2 (docData: DocumentData, textGroup: SVGTypeMapping<SVGGElement>, textMarkedRows) {
+  private renderChunksPass2 (docData: DocumentData, textGroup: SVGTypeMapping<SVGGElement>, markedTextHighlights: MarkedTextHighlight[]) {
     // chunk index sort functions for overlapping fragment drawing
     // algorithm; first for left-to-right pass, sorting primarily
     // by start offset, second for right-to-left pass by end
@@ -2503,7 +2503,7 @@ export class Visualizer {
     }
 
     // draw the markedText
-    for (const textRowDesc of textMarkedRows) {
+    for (const textRowDesc of markedTextHighlights) {
       this.svg.rect(textRowDesc[2] - textRowDesc[1] + 4, docData.sizes.fragments.height + 4)
         .translate(textRowDesc[1] - 2, textRowDesc[0].textY - docData.sizes.fragments.height)
         .addClass(textRowDesc[3])
@@ -3479,7 +3479,7 @@ export class Visualizer {
 
       Util.profileStart('chunks')
       this.renderLayoutFloorsAndCurlies(this.data, this.data.spanDrawOrderPermutation)
-      const [rows, fragmentHeights, textMarkedRows] = this.renderChunks(this.data, this.sourceData, this.data.chunks, maxTextWidth)
+      const [rows, fragmentHeights, markedTextHighlights] = this.renderChunks(this.data, this.sourceData, this.data.chunks, maxTextWidth)
       Util.profileEnd('chunks')
 
       Util.profileStart('arcsPrep')
@@ -3502,7 +3502,7 @@ export class Visualizer {
       Util.profileEnd('rows')
 
       Util.profileStart('chunkFinish')
-      this.renderChunksPass2(this.data, textGroup, textMarkedRows)
+      this.renderChunksPass2(this.data, textGroup, markedTextHighlights)
       Util.profileEnd('chunkFinish')
 
       Util.profileStart('finish')

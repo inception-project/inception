@@ -188,7 +188,7 @@ public class SearchQueryRequest
             return this;
         }
 
-        public Builder withAnnoationLayer(AnnotationLayer aAnnoationLayer)
+        public Builder withAnnotationLayer(AnnotationLayer aAnnoationLayer)
         {
             this.annoationLayer = aAnnoationLayer;
             return this;

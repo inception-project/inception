@@ -959,7 +959,7 @@ public class MtasDocumentIndex
             SearchQueryRequest aRequest, MtasSpanQuery aQuery)
         throws IOException
     {
-        var results = new LinkedHashMap<String, List<SearchResult>>();
+        var resultsByDocument = new LinkedHashMap<String, List<SearchResult>>();
 
         var leafReaderContextIterator = sortLeaves(aSearcher.getIndexReader().leaves(), aSearcher,
                 aQuery).listIterator();
@@ -1145,12 +1145,12 @@ public class MtasDocumentIndex
                                 var featureValues = featureValuesAtMatch(tokens, matchStart,
                                         matchEnd, groupingLayer, groupingFeature);
                                 for (var featureValue : featureValues) {
-                                    addToResults(results, featureValue, result);
+                                    addToResults(resultsByDocument, featureValue, result);
                                 }
                             }
                             else {
                                 // if no annotation feature is specified group by document title
-                                addToResults(results, result.getDocumentTitle(), result);
+                                addToResults(resultsByDocument, result.getDocumentTitle(), result);
                             }
                         }
                     }
@@ -1161,13 +1161,13 @@ public class MtasDocumentIndex
             }
         }
 
-        var sortedResults = new LinkedHashMap<String, List<SearchResult>>();
-        var sortedKeys = results.keySet().stream().sorted().toList();
-        for (var key : sortedKeys) {
-            sortedResults.put(key, results.get(key));
+        var sortedResultsByDocument = new LinkedHashMap<String, List<SearchResult>>();
+        var sortedDocuments = resultsByDocument.keySet().stream().sorted().toList();
+        for (var document : sortedDocuments) {
+            sortedResultsByDocument.put(document, resultsByDocument.get(document));
         }
 
-        return sortedResults;
+        return sortedResultsByDocument;
     }
 
     private void addToResults(Map<String, List<SearchResult>> aResultsMap, String aKey,
