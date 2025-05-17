@@ -1177,7 +1177,7 @@ public class MtasDocumentIndex
             aResultsMap.get(aKey).add(aSearchResult);
         }
         else {
-            List<SearchResult> searchResultsForKey = new ArrayList<>();
+            var searchResultsForKey = new ArrayList<SearchResult>();
             searchResultsForKey.add(aSearchResult);
             aResultsMap.put(aKey, searchResultsForKey);
         }
