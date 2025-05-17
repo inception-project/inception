@@ -40,13 +40,11 @@ public class SearchResultsProviderWrapper
     private SearchResultsProvider searchResultsProvider;
     private List<ResultsGroup> resultGroups;
     private boolean groupingActivated;
-    private IModel<Boolean> lowLevelPaging;
+    private boolean lowLevelPaging;
 
-    public SearchResultsProviderWrapper(SearchResultsProvider aSearchResultsProvider,
-            IModel<Boolean> aLowLevelPaging)
+    public SearchResultsProviderWrapper(SearchResultsProvider aSearchResultsProvider)
     {
         searchResultsProvider = aSearchResultsProvider;
-        lowLevelPaging = aLowLevelPaging;
     }
 
     @Override
@@ -65,13 +63,13 @@ public class SearchResultsProviderWrapper
         }
 
         var subList = resultsGroupsSublist(first, count);
-        searchResultsProvider.getPagesCacheModel().getObject().putPage(first, count, subList);
+        searchResultsProvider.getCache().putPage(first, count, subList);
         return subList.iterator();
     }
 
     public boolean applyLowLevelPaging()
     {
-        return !groupingActivated && lowLevelPaging.getObject();
+        return !groupingActivated && lowLevelPaging;
     }
 
     /**
@@ -117,6 +115,11 @@ public class SearchResultsProviderWrapper
         return resultsGroupsSubList;
     }
 
+    public boolean isEmpty()
+    {
+        return size() == 0;
+    }
+
     @Override
     public long size()
     {
@@ -141,8 +144,10 @@ public class SearchResultsProviderWrapper
 
     public void initializeQuery(User aUser, Project aProject, String aQuery,
             SourceDocument aDocument, AnnotationLayer aAnnotationLayer,
-            AnnotationFeature aAnnotationFeature)
+            AnnotationFeature aAnnotationFeature, boolean aLowLevelPaging)
     {
+        lowLevelPaging = aLowLevelPaging;
+
         searchResultsProvider.initializeQuery(aUser, aProject, aQuery, aDocument, aAnnotationLayer,
                 aAnnotationFeature);
 

@@ -20,8 +20,6 @@ package de.tudarmstadt.ukp.inception.app.ui.search.sidebar;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.AUTO_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateChangeFlag.EXPLICIT_ANNOTATOR_USER_ACTION;
-import static de.tudarmstadt.ukp.inception.rendering.vmodel.VMarker.MATCH;
-import static de.tudarmstadt.ukp.inception.rendering.vmodel.VMarker.MATCH_FOCUS;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.enabledWhen;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhenNot;
@@ -30,7 +28,6 @@ import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.groupingBy;
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.apache.uima.cas.text.AnnotationPredicates.overlapping;
 import static org.apache.uima.fit.util.CasUtil.selectAt;
 
 import java.io.IOException;
@@ -41,18 +38,20 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.wicket.AttributeModifier;
+import org.apache.wicket.Component;
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
 import org.apache.wicket.ajax.markup.html.form.AjaxCheckBox;
+import org.apache.wicket.behavior.Behavior;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.head.CssHeaderItem;
 import org.apache.wicket.markup.head.IHeaderResponse;
+import org.apache.wicket.markup.head.OnDomReadyHeaderItem;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.CheckBox;
@@ -77,7 +76,6 @@ import org.apache.wicket.util.resource.ResourceStreamNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.access.AccessDeniedException;
-import org.wicketstuff.event.annotation.OnEvent;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.navigation.BootstrapPagingNavigator.Size;
 import de.agilecoders.wicket.core.markup.html.bootstrap.navigation.ajax.BootstrapAjaxPagingNavigator;
@@ -104,13 +102,9 @@ import de.tudarmstadt.ukp.inception.documents.api.DocumentAccess;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
-import de.tudarmstadt.ukp.inception.rendering.pipeline.RenderAnnotationsEvent;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
-import de.tudarmstadt.ukp.inception.rendering.vmodel.VRange;
-import de.tudarmstadt.ukp.inception.rendering.vmodel.VTextMarker;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
-import de.tudarmstadt.ukp.inception.search.ExecutionException;
 import de.tudarmstadt.ukp.inception.search.ResultsGroup;
 import de.tudarmstadt.ukp.inception.search.SearchResult;
 import de.tudarmstadt.ukp.inception.search.SearchService;
@@ -164,46 +158,45 @@ public class SearchAnnotationSidebar
     private @SpringBean SearchProperties searchProperties;
     private @SpringBean WorkloadManagementService workloadService;
 
-    private final WebMarkupContainer mainContainer;
-    private final WebMarkupContainer resultsGroupContainer;
-    private final WebMarkupContainer resultsTable;
-    private final SearchResultsProviderWrapper resultsProvider;
+    private WebMarkupContainer mainContainer;
+    private WebMarkupContainer resultsGroupContainer;
+    private WebMarkupContainer resultsTable;
 
-    private final IModel<String> targetQuery = Model.of("");
-    private final CompoundPropertyModel<SearchOptions> searchOptions = CompoundPropertyModel
-            .of(new SearchOptions());
-    private final IModel<SearchResultsPagesCache> groupedResults = Model
-            .of(new SearchResultsPagesCache());
-    private final IModel<CreateAnnotationsOptions> createOptions = CompoundPropertyModel
-            .of(new CreateAnnotationsOptions());
-    private final IModel<DeleteAnnotationsOptions> deleteOptions = CompoundPropertyModel
-            .of(new DeleteAnnotationsOptions());
-    private DataView<ResultsGroup> searchResultGroups;
+    private CompoundPropertyModel<SearchOptions> searchOptions;
+    private IModel<CreateAnnotationsOptions> createOptions;
+    private IModel<DeleteAnnotationsOptions> deleteOptions;
 
-    private DropDownChoice<AnnotationFeature> groupingFeature;
+    private DropDownChoice<AnnotationFeature> groupingFeatureChoice;
     private CheckBox lowLevelPagingCheckBox;
-    private final Label numberOfResults;
+    private Label resultCountLabel;
 
-    private SearchResult selectedResult;
+    private DataView<ResultsGroup> resultsView;
+    private SearchResultsProviderWrapper resultsProvider;
 
-    // UI elements for annotation changes
-    private final Form<CreateAnnotationsOptions> annotationOptionsForm;
-    private final LambdaAjaxLink createOptionsLink;
-    private final LambdaAjaxButton<Void> deleteButton;
-
-    private final Form<DeleteAnnotationsOptions> deleteOptionsForm;
-    private final LambdaAjaxButton<Void> annotateButton;
-    private final LambdaAjaxLink deleteOptionsLink;
-    private final Form<Void> annotationForm;
+    // UI elements for bulk annotation
+    private Form<Void> annotationForm;
+    private Form<CreateAnnotationsOptions> annotationOptionsForm;
+    private LambdaAjaxLink createOptionsLink;
+    private LambdaAjaxButton<Void> deleteButton;
+    private Form<DeleteAnnotationsOptions> deleteOptionsForm;
+    private LambdaAjaxButton<Void> annotateButton;
+    private LambdaAjaxLink deleteOptionsLink;
 
     public SearchAnnotationSidebar(String aId, AnnotationActionHandler aActionHandler,
             CasProvider aCasProvider, AnnotationPageBase2 aAnnotationPage)
     {
         super(aId, aActionHandler, aCasProvider, aAnnotationPage);
+    }
 
-        resultsProvider = new SearchResultsProviderWrapper(
-                new SearchResultsProvider(searchService, groupedResults),
-                searchOptions.bind("isLowLevelPaging"));
+    @Override
+    protected void onInitialize()
+    {
+        super.onInitialize();
+
+        resultsProvider = SearchResultsProviderMetaDataKey.get(getPage(), searchService);
+        searchOptions = SearchOptionsMetaDataKey.get(getPage());
+        createOptions = CreateAnnotationsOptionsMetaDataKey.get(getPage());
+        deleteOptions = DeleteAnnotationsOptionsMetaDataKey.get(getPage());
 
         mainContainer = new WebMarkupContainer(MID_MAIN_CONTAINER);
         mainContainer.setOutputMarkupId(true);
@@ -218,16 +211,15 @@ public class SearchAnnotationSidebar
                 .setUncheckedTitle(Model.of("Search in all documents"))
                 .setModel(searchOptions.bind(MID_LIMITED_TO_CURRENT_DOCUMENT))
                 .add(visibleWhen(() -> workloadService
-                        .getWorkloadManagerExtension(aAnnotationPage.getModelObject().getProject())
+                        .getWorkloadManagerExtension(
+                                getAnnotationPage().getModelObject().getProject())
                         .isDocumentRandomAccessAllowed(
-                                aAnnotationPage.getModelObject().getProject())))
+                                getAnnotationPage().getModelObject().getProject())))
                 .add(new LambdaAjaxFormComponentUpdatingBehavior()));
-
-        resultsProvider.emptyQuery();
 
         resultsTable = new WebMarkupContainer(MID_RESULTS_TABLE);
         resultsTable.setOutputMarkupPlaceholderTag(true);
-        resultsTable.add(visibleWhen(() -> searchResultGroups.getItemCount() > 0));
+        resultsTable.add(visibleWhen(() -> resultsView.getItemCount() > 0));
         queue(resultsTable);
 
         resultsGroupContainer = new WebMarkupContainer(MID_RESULTS_GROUP_CONTAINER);
@@ -236,11 +228,11 @@ public class SearchAnnotationSidebar
 
         var noDataNotice = new WebMarkupContainer("noDataNotice");
         noDataNotice.setOutputMarkupPlaceholderTag(true);
-        noDataNotice.add(visibleWhen(() -> searchResultGroups.getItemCount() == 0
-                && groupedResults.map(_gr -> !_gr.isEmpty()).orElse(true).getObject()));
+        noDataNotice.add(
+                visibleWhen(() -> resultsView.getItemCount() == 0 && resultsProvider.isEmpty()));
         queue(noDataNotice);
 
-        searchResultGroups = new DataView<ResultsGroup>(MID_SEARCH_RESULT_GROUPS, resultsProvider)
+        resultsView = new DataView<ResultsGroup>(MID_SEARCH_RESULT_GROUPS, resultsProvider)
         {
             private static final long serialVersionUID = -631500052426449048L;
 
@@ -257,10 +249,10 @@ public class SearchAnnotationSidebar
             }
         };
         searchOptions.getObject().setItemsPerPage(searchProperties.getPageSizes()[0]);
-        searchResultGroups.setItemsPerPage(searchOptions.getObject().getItemsPerPage());
-        queue(searchResultGroups);
+        resultsView.setItemsPerPage(searchOptions.getObject().getItemsPerPage());
+        queue(resultsView);
 
-        queue(numberOfResults = createNumberOfResults(MID_NUMBER_OF_RESULTS));
+        queue(resultCountLabel = createNumberOfResults(MID_NUMBER_OF_RESULTS));
         queue(createPagingNavigator(MID_PAGING_NAVIGATOR));
 
         // create annotate-button and options form
@@ -302,16 +294,16 @@ public class SearchAnnotationSidebar
 
         annotationForm = new Form<>(MID_ANNOTATE_FORM);
         annotationForm.setOutputMarkupPlaceholderTag(true);
-        annotationForm.add(visibleWhen(() -> searchResultGroups.getItemCount() > 0));
+        annotationForm.add(visibleWhen(() -> resultsView.getItemCount() > 0));
         annotationForm.setDefaultButton(annotateButton);
 
         var clearButton = new LambdaAjaxLink(MID_CLEAR_BUTTON, this::actionClearResults);
-        clearButton.add(visibleWhenNot(groupedResults.map(SearchResultsPagesCache::isEmpty)));
+        clearButton.add(visibleWhenNot(resultsProvider::isEmpty));
         queue(clearButton);
 
         var exportButton = new AjaxDownloadLink(MID_EXPORT, () -> "searchResults.csv",
                 this::exportSearchResults);
-        exportButton.add(visibleWhen(() -> searchResultGroups.getItemCount() > 0));
+        exportButton.add(visibleWhen(() -> resultsView.getItemCount() > 0));
         queue(exportButton);
 
         queue(annotationForm);
@@ -322,18 +314,18 @@ public class SearchAnnotationSidebar
         var label = new Label(aId);
         label.setOutputMarkupId(true);
         label.setDefaultModel(LoadableDetachableModel.of(() -> {
-            var first = searchResultGroups.getFirstItemOffset();
-            var total = searchResultGroups.getItemCount();
+            var first = resultsView.getFirstItemOffset();
+            var total = resultsView.getItemCount();
             return format("%d-%d / %d", first + 1,
-                    min(first + searchResultGroups.getItemsPerPage(), total), total);
+                    min(first + resultsView.getItemsPerPage(), total), total);
         }));
-        label.add(visibleWhen(() -> searchResultGroups.getItemCount() > 0));
+        label.add(visibleWhen(() -> resultsView.getItemCount() > 0));
         return label;
     }
 
     private BootstrapAjaxPagingNavigator createPagingNavigator(String aId)
     {
-        var pagingNavigator = new BootstrapAjaxPagingNavigator(aId, searchResultGroups)
+        var pagingNavigator = new BootstrapAjaxPagingNavigator(aId, resultsView)
         {
             private static final long serialVersionUID = 853561772299520056L;
 
@@ -341,24 +333,56 @@ public class SearchAnnotationSidebar
             protected void onAjaxEvent(AjaxRequestTarget aTarget)
             {
                 super.onAjaxEvent(aTarget);
-                aTarget.add(numberOfResults);
+                aTarget.add(resultCountLabel);
             }
         };
         pagingNavigator.setSize(Size.Small);
         pagingNavigator.add(LambdaBehavior
                 .onConfigure(() -> pagingNavigator.getPagingNavigation().setViewSize(1)));
-        pagingNavigator.add(visibleWhen(() -> searchResultGroups.getItemCount() > 0));
+        pagingNavigator.add(visibleWhen(() -> resultsView.getItemCount() > 0));
         return pagingNavigator;
     }
 
     private Form<Void> createSearchForm(String aId)
     {
         var searchForm = new Form<Void>(aId);
-        searchForm.add(new TextArea<>("queryInput", targetQuery));
 
         var searchButton = new LambdaAjaxButton<>("search", this::actionSearch);
+        searchButton.setOutputMarkupId(true);
         searchForm.add(searchButton);
         searchForm.setDefaultButton(searchButton);
+
+        var queryInput = new TextArea<>("queryInput", searchOptions.bind("query"));
+        queryInput.setOutputMarkupId(true);
+
+        searchForm.add(queryInput);
+
+        // Add JavaScript to handle Ctrl + Enter
+        searchForm.add(new Behavior()
+        {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public void renderHead(Component component, IHeaderResponse response)
+            {
+                super.renderHead(component, response);
+                // This will find the Wicket-generated Ajax callback
+                String js = String.format("""
+                        document.getElementById('%s').addEventListener('keydown', function(event) {
+                            if (event.ctrlKey && event.key === 'Enter') {
+                                var btn = Wicket.$('%s');
+                                console.log(btn);
+                                if (btn) {
+                                    btn.click();
+                                }
+                                event.preventDefault(); // Prevents default behavior
+                            }
+                        });
+                        """, queryInput.getMarkupId(), searchButton.getMarkupId());
+
+                response.render(OnDomReadyHeaderItem.forScript(js));
+            }
+        });
 
         return searchForm;
     }
@@ -369,11 +393,11 @@ public class SearchAnnotationSidebar
         searchOptionsForm.add(createLayerDropDownChoice("groupingLayer",
                 annotationService.listAnnotationLayer(getModelObject().getProject())));
 
-        groupingFeature = new DropDownChoice<>("groupingFeature", emptyList(),
+        groupingFeatureChoice = new DropDownChoice<>("groupingFeature", emptyList(),
                 new ChoiceRenderer<>("uiName"));
-        groupingFeature.setNullValid(true);
-        groupingFeature.add(new LambdaAjaxFormComponentUpdatingBehavior());
-        searchOptionsForm.add(groupingFeature);
+        groupingFeatureChoice.setNullValid(true);
+        groupingFeatureChoice.add(new LambdaAjaxFormComponentUpdatingBehavior());
+        searchOptionsForm.add(groupingFeatureChoice);
 
         searchOptionsForm.add(createResultsPerPageSelection("itemsPerPage"));
         searchOptionsForm.add(lowLevelPagingCheckBox = createLowLevelPagingCheckBox());
@@ -442,10 +466,10 @@ public class SearchAnnotationSidebar
             protected void onUpdate(AjaxRequestTarget aTarget)
             {
                 // update the choices for the feature selection dropdown
-                groupingFeature.setChoices(annotationService
+                groupingFeatureChoice.setChoices(annotationService
                         .listAnnotationFeature(searchOptions.getObject().getGroupingLayer()));
                 lowLevelPagingCheckBox.setModelObject(false);
-                aTarget.add(groupingFeature, lowLevelPagingCheckBox);
+                aTarget.add(groupingFeatureChoice, lowLevelPagingCheckBox);
             }
         });
         layerChoice.setNullValid(true);
@@ -473,7 +497,7 @@ public class SearchAnnotationSidebar
             @Override
             protected void onUpdate(AjaxRequestTarget target)
             {
-                for (var resultsGroup : groupedResults.getObject().allResultsGroups()) {
+                for (var resultsGroup : resultsProvider.getGroupedResults()) {
                     if (resultsGroup.getGroupKey().equals(aGroupKey)) {
                         resultsGroup.getResults().stream() //
                                 .filter(r -> !r.isReadOnly()) //
@@ -488,7 +512,7 @@ public class SearchAnnotationSidebar
             {
                 super.onConfigure();
 
-                var group = groupedResults.getObject().allResultsGroups().stream() //
+                var group = resultsProvider.getGroupedResults().stream() //
                         .filter(rg -> rg.getGroupKey().equals(aGroupKey)) //
                         .findFirst();
 
@@ -507,8 +531,8 @@ public class SearchAnnotationSidebar
 
     private void actionSearch(AjaxRequestTarget aTarget, Form<SearchOptions> aForm)
     {
-        selectedResult = null;
-        searchResultGroups.setItemsPerPage(searchOptions.getObject().getItemsPerPage());
+        searchOptions.getObject().setSelectedResult(null);
+        resultsView.setItemsPerPage(searchOptions.getObject().getItemsPerPage());
 
         executeSearchResultsGroupedQuery(aTarget);
 
@@ -549,9 +573,9 @@ public class SearchAnnotationSidebar
 
     private void actionClearResults(AjaxRequestTarget aTarget)
     {
-        targetQuery.setObject("");
+        searchOptions.getObject().setQuery("");
         resultsProvider.emptyQuery();
-        selectedResult = null;
+        searchOptions.getObject().setSelectedResult(null);
         aTarget.add(mainContainer);
 
         // Need to re-render because we want to highlight the match
@@ -560,7 +584,7 @@ public class SearchAnnotationSidebar
 
     private void executeSearchResultsGroupedQuery(AjaxRequestTarget aTarget)
     {
-        if (isBlank(targetQuery.getObject())) {
+        if (isBlank(searchOptions.getObject().getQuery())) {
             resultsProvider.emptyQuery();
             return;
         }
@@ -592,57 +616,19 @@ public class SearchAnnotationSidebar
                 limitToDocument = null;
             }
 
-            applicationEventPublisher.get().publishEvent(new SearchQueryEvent(this, project,
-                    state.getUser().getUsername(), targetQuery.getObject(), limitToDocument));
+            applicationEventPublisher.get()
+                    .publishEvent(new SearchQueryEvent(this, project, state.getUser().getUsername(),
+                            searchOptions.getObject().getQuery(), limitToDocument));
             var opt = searchOptions.getObject();
 
             resultsProvider.initializeQuery(getModelObject().getUser(), project,
-                    targetQuery.getObject(), limitToDocument, opt.getGroupingLayer(),
-                    opt.getGroupingFeature());
+                    searchOptions.getObject().getQuery(), limitToDocument, opt.getGroupingLayer(),
+                    opt.getGroupingFeature(), opt.isLowLevelPaging());
         }
         catch (Exception e) {
             error("Query error: " + e.getMessage());
             aTarget.addChildren(getPage(), IFeedback.class);
             resultsProvider.emptyQuery();
-        }
-    }
-
-    @OnEvent
-    public void onRenderAnnotations(RenderAnnotationsEvent aEvent)
-    {
-        if (targetQuery.map(StringUtils::isNotBlank).orElse(false).getObject()) {
-            try {
-                var state = getModelObject();
-                var results = searchService.query(state.getUser(), state.getProject(),
-                        targetQuery.getObject(), state.getDocument());
-                for (var result : results) {
-                    if (result.equals(selectedResult)) {
-                        // We render the selected result separately. Rendering it does not
-                        // require a query. So if the query fails, we can still highlight
-                        // the selected result.
-                        continue;
-                    }
-
-                    if (overlapping(aEvent.getVDocument().getWindowBegin(),
-                            aEvent.getVDocument().getWindowEnd(), result.getOffsetStart(),
-                            result.getOffsetEnd())) {
-                        var range = VRange.clippedRange(aEvent.getVDocument(),
-                                result.getOffsetStart(), result.getOffsetEnd());
-
-                        range.ifPresent(r -> aEvent.getVDocument().add(new VTextMarker(MATCH, r)));
-                    }
-                }
-            }
-            catch (IOException | ExecutionException e) {
-                LOG.error("Cannot render match highlights", e);
-            }
-        }
-
-        if (selectedResult != null) {
-            var range = VRange.clippedRange(aEvent.getVDocument(), selectedResult.getOffsetStart(),
-                    selectedResult.getOffsetEnd());
-
-            range.ifPresent(r -> aEvent.getVDocument().add(new VTextMarker(MATCH_FOCUS, r)));
         }
     }
 
@@ -663,7 +649,7 @@ public class SearchAnnotationSidebar
             adapter.silenceEvents();
 
             // Group the results by document such that we can process one CAS at a time
-            var resultsByDocument = groupedResults.getObject().allResultsGroups().stream()
+            var resultsByDocument = resultsProvider.getGroupedResults().stream()
                     // the grouping can be based on some other strategy than the document, so
                     // we re-group here
                     .flatMap(group -> group.getResults().stream())
@@ -958,7 +944,8 @@ public class SearchAnnotationSidebar
                         Project currentProject, AjaxRequestTarget t)
                     throws IOException
                 {
-                    selectedResult = aItem.getModelObject();
+                    var selectedResult = aItem.getModelObject();
+                    searchOptions.getObject().setSelectedResult(selectedResult);
                     actionShowSelectedDocument(t,
                             documentService.getSourceDocument(currentProject,
                                     selectedResult.getDocumentTitle()),
@@ -983,9 +970,9 @@ public class SearchAnnotationSidebar
 
     private class BulkOperationResult
     {
-        public int created = 0;
-        public int deleted = 0;
-        public int updated = 0;
-        public int conflict = 0;
+        int created = 0;
+        int deleted = 0;
+        int updated = 0;
+        int conflict = 0;
     }
 }
