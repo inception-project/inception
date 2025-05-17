@@ -32,6 +32,7 @@ import static org.apache.uima.cas.text.AnnotationPredicates.overlapping;
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Objects;
@@ -42,7 +43,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.inception.assistant.ChatContext;
 import de.tudarmstadt.ukp.inception.assistant.config.AssistantProperties;
 import de.tudarmstadt.ukp.inception.assistant.model.MReference;
 import de.tudarmstadt.ukp.inception.assistant.model.MTextMessage;
@@ -78,29 +78,58 @@ public class DocumentContextRetriever
     }
 
     @Override
-    public List<MTextMessage> retrieve(ChatContext aAssistant, MTextMessage aMessage)
+    public Collection<String> getSystemPrompts()
     {
-        var project = aAssistant.getProject();
-        var chunks = documentQueryService.query(project, aMessage.message(),
+        return asList(
+                """
+                        The source context retriever automatically provides you with relevant information from the
+                        documents the current project.
+                        Use the following sources from this project to respond.
+                        It is absolutely critital to mention the `{{ref::ref-id}}` after each individual information from a source.
+                        Here is an example:
+
+                        Input:
+                        {
+                          "id": "{{ref::917}}"
+                          "source": "The Eiffel Tower is located in Paris, France.",
+                        }
+                        {
+                          "id": "{{ref::735}}"
+                          "source": "It is one of the most famous landmarks in the world.",
+                        }
+                        {
+                          "id": "{{ref::582}}"
+                          "source": The Eiffel Tower was built from 1887 to 1889.",
+                        }
+
+                        Response:
+                        The Eiffel Tower is a famous landmark located in Paris, France {{ref::917}} {{ref::735}}.
+                        It was built from 1887 to 1889 {{ref::582}}.
+
+                        Now, use the same pattern to process the following sources:
+                        """);
+    }
+
+    public List<Chunk> retrieve(Project aProject, String aQuery)
+    {
+        var chunks = documentQueryService.query(aProject, aQuery,
                 properties.getDocumentIndex().getMaxChunks(),
                 properties.getDocumentIndex().getMinScore());
 
-        chunks = mergeOverlappingChunks(chunks);
+        return mergeOverlappingChunks(chunks);
+    }
+
+    @Override
+    public List<MTextMessage> retrieve(Project aProject, MTextMessage aMessage)
+    {
+        var chunks = retrieve(aProject, aMessage.message());
 
         var references = new LinkedHashMap<Chunk, MReference>();
         var body = new StringBuilder();
         for (var chunk : chunks) {
-            var reference = MReference.builder() //
-                    // .withId(String.valueOf(references.size() + 1)) //
-                    .withId(UUID.randomUUID().toString().substring(0, 8)) //
-                    .withDocumentId(chunk.documentId()) //
-                    .withDocumentName(chunk.documentName()) //
-                    .withBegin(chunk.begin()) //
-                    .withEnd(chunk.end()) //
-                    .withScore(chunk.score()) //
-                    .build();
-            references.put(chunk, reference);
-            renderChunkJson(body, chunk, reference);
+            var ref = renderReference(chunk);
+            references.put(chunk, ref);
+            renderChunkJson(body, chunk, ref);
         }
 
         if (body.isEmpty()) {
@@ -117,35 +146,54 @@ public class DocumentContextRetriever
                 .withRole(SYSTEM).internal().ephemeral() //
                 .withReferences(references.values());
 
-        var instruction = """
-                The source context retriever automatically provides you with relevant information from the documents the current project.
-                Use the following sources from this project to respond.
-                It is absolutely critital to mention the `{{ref::ref-id}}` after each individual information from a source.
-                Here is an example:
+        // var instruction = """
+        // The source context retriever automatically provides you with relevant information from
+        // the documents the current project.
+        // Use the following sources from this project to respond.
+        // It is absolutely critital to mention the `{{ref::ref-id}}` after each individual
+        // information from a source.
+        // Here is an example:
+        //
+        // Input:
+        // {
+        // "id": "{{ref::917}}"
+        // "source": "The Eiffel Tower is located in Paris, France.",
+        // }
+        // {
+        // "id": "{{ref::735}}"
+        // "source": "It is one of the most famous landmarks in the world.",
+        // }
+        // {
+        // "id": "{{ref::582}}"
+        // "source": The Eiffel Tower was built from 1887 to 1889.",
+        // }
+        //
+        // Response:
+        // The Eiffel Tower is a famous landmark located in Paris, France {{ref::917}} {{ref::735}}.
+        // It was built from 1887 to 1889 {{ref::582}}.
+        //
+        // Now, use the same pattern to process the following sources:
+        // """;
 
-                Input:
-                {
-                  "id": "{{ref::917}}"
-                  "source": "The Eiffel Tower is located in Paris, France.",
-                }
-                {
-                  "id": "{{ref::735}}"
-                  "source": "It is one of the most famous landmarks in the world.",
-                }
-                {
-                  "id": "{{ref::582}}"
-                  "source": The Eiffel Tower was built from 1887 to 1889.",
-                }
-
-                Response:
-                The Eiffel Tower is a famous landmark located in Paris, France {{ref::917}} {{ref::735}}.
-                It was built from 1887 to 1889 {{ref::582}}.
-
-                Now, use the same pattern to process the following sources:
-                """;
-        msg.withMessage(join("\n", asList(instruction, "", body.toString())));
+        msg.withMessage(join("\n", asList( //
+                // instruction, //
+                "", //
+                body.toString())));
 
         return asList(msg.build());
+    }
+
+    public MReference renderReference(Chunk chunk)
+    {
+        return MReference.builder() //
+                // .withId(String.valueOf(references.size() + 1)) //
+                .withId(UUID.randomUUID().toString().substring(0, 8)) //
+                .withDocumentId(chunk.documentId()) //
+                .withDocumentName(chunk.documentName()) //
+                .withBegin(chunk.begin()) //
+                .withEnd(chunk.end()) //
+                .withScore(chunk.score()) //
+                .build();
     }
 
     private List<Chunk> mergeOverlappingChunks(List<Chunk> aChunks)
@@ -197,11 +245,11 @@ public class DocumentContextRetriever
         return mergedChunks;
     }
 
-    private void renderChunkJson(StringBuilder body, Chunk chunk, MReference aReference)
+    public void renderChunkJson(StringBuilder body, Chunk chunk, MReference aReference)
     {
         try {
             var data = new LinkedHashMap<String, String>();
-            data.put("id", "{{ref::" + aReference.id() + "}}");
+            data.put("id", aReference.toString());
             data.put("source", chunk.text());
             data.entrySet().removeIf(e -> isBlank(e.getValue()));
             body.append(JSONUtil.toPrettyJsonString(data));

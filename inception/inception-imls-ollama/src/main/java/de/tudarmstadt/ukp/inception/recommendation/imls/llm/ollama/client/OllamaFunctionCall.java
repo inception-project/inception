@@ -17,18 +17,13 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client;
 
-import org.apache.commons.lang3.builder.ToStringBuilder;
-import org.apache.commons.lang3.builder.ToStringStyle;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
-
-@JsonIgnoreProperties(ignoreUnknown = true)
-public class OllamaModel
+public class OllamaFunctionCall
 {
-    private @JsonProperty("name") String name;
-    private @JsonProperty("modified_at") String modifiedAt;
-    private @JsonProperty("size") long size;
+    private String name;
+    private final Map<String, Object> arguments = new LinkedHashMap<>();
 
     public String getName()
     {
@@ -40,30 +35,35 @@ public class OllamaModel
         name = aName;
     }
 
-    public String getModifiedAt()
+    public void setArguments(Map<String, Object> aArguments)
     {
-        return modifiedAt;
+        arguments.clear();
+        if (aArguments != null) {
+            arguments.putAll(aArguments);
+        }
     }
 
-    public void setModifiedAt(String aModifiedAt)
+    public Map<String, Object> getArguments()
     {
-        modifiedAt = aModifiedAt;
-    }
-
-    public long getSize()
-    {
-        return size;
-    }
-
-    public void setSize(long aSize)
-    {
-        size = aSize;
+        return arguments;
     }
 
     @Override
     public String toString()
     {
-        return new ToStringBuilder(this, ToStringStyle.SIMPLE_STYLE).append("name", name)
-                .toString();
+        var builder = new StringBuilder();
+        builder.append(name).append("(");
+        var first = true;
+        for (var e : arguments.entrySet()) {
+            if (!first) {
+                builder.append(", ");
+            }
+            builder.append(e.getKey());
+            builder.append(": ");
+            builder.append(e.getValue());
+            first = false;
+        }
+        builder.append(")");
+        return builder.toString();
     }
 }

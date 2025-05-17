@@ -62,10 +62,11 @@ public final class CompoundKeySchema
         return keyNames.length;
     }
 
-    public int getIndex(String aName) {
+    public int getIndex(String aName)
+    {
         return ArrayUtils.indexOf(keyNames, aName);
     }
-    
+
     public String getName(int index)
     {
         return keyNames[index];

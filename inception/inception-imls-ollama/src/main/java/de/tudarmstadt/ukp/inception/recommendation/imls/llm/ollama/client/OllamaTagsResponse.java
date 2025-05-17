@@ -23,17 +23,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class OllamaTagsResponse
-{
-    private @JsonProperty("models") List<OllamaModel> models;
-
-    public List<OllamaModel> getModels()
-    {
-        return models;
-    }
-
-    public void setModels(List<OllamaModel> aModels)
-    {
-        models = aModels;
-    }
-}
+public record OllamaTagsResponse( //
+        @JsonProperty("models") List<OllamaTag> models)
+{}

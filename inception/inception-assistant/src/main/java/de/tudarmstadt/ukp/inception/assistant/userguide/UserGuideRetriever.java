@@ -27,9 +27,7 @@ import java.util.List;
 import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.inception.assistant.ChatContext;
 import de.tudarmstadt.ukp.inception.assistant.config.AssistantProperties;
-import de.tudarmstadt.ukp.inception.assistant.documents.DocumentContextRetriever;
 import de.tudarmstadt.ukp.inception.assistant.model.MTextMessage;
 import de.tudarmstadt.ukp.inception.assistant.retriever.Retriever;
 
@@ -50,7 +48,7 @@ public class UserGuideRetriever
     @Override
     public String getId()
     {
-        return DocumentContextRetriever.class.getSimpleName();
+        return UserGuideRetriever.class.getSimpleName();
     }
 
     @Override
@@ -60,7 +58,7 @@ public class UserGuideRetriever
     }
 
     @Override
-    public List<MTextMessage> retrieve(ChatContext aAssistant, MTextMessage aMessage)
+    public List<MTextMessage> retrieve(Project aProject, MTextMessage aMessage)
     {
         var messageBody = new StringBuilder();
         var passages = documentationIndexingService.query(aMessage.message(),

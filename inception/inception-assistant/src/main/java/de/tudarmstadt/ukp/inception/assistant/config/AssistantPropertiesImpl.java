@@ -17,6 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.assistant.config;
 
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
@@ -135,12 +139,31 @@ public class AssistantPropertiesImpl
         implements AssistantChatProperties
     {
         private String model = "llama3.2";
+        private final Set<String> capabilities = new HashSet<>();
         private String encoding = "cl100k_base";
-        private int contextLength = 4096;
+        private int contextLength = AUTO_DETECT;
         private double topP = 0.3;
         private int topK = 25;
         private double repeatPenalty = 1.1;
         private double temperature = 0.1;
+
+        {
+            capabilities.add(AUTO_DETECT_CAPABILITIES);
+        }
+
+        public void setCapabilities(Collection<String> aCapabilities)
+        {
+            capabilities.clear();
+            if (aCapabilities != null) {
+                capabilities.addAll(aCapabilities);
+            }
+        }
+
+        @Override
+        public Set<String> getCapabilities()
+        {
+            return capabilities;
+        }
 
         @Override
         public String getModel()

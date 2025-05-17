@@ -17,25 +17,59 @@
  */
 package de.tudarmstadt.ukp.inception.assistant.model;
 
+import java.util.List;
+import java.util.UUID;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 public sealed interface MChatMessage
     extends MMessage
     permits MTextMessage, MCallResponse
 {
+    UUID id();
+
     /**
      * @return the role of the message author
      */
     String role();
 
     /**
+     * @return the role of the message actor
+     */
+    String actor();
+
+    /**
      * @return if the message is part of the inner monolog, RAG or similarly not normally exposed to
-     *         the user
+     *         the user. Internal messages are recorded but only sent to the user in debug mode.
      */
     boolean internal();
 
     /**
      * @return if the message should disappear at once (i.e. it is not recorded)
      */
+    @JsonIgnore
     boolean ephemeral();
 
     MPerformanceMetrics performance();
+
+    UUID context();
+
+    List<MReference> references();
+
+    String textRepresentation();
+
+    default String toolName()
+    {
+        return null;
+    }
+
+    default String thinking()
+    {
+        return null;
+    }
+
+    default boolean done()
+    {
+        return true;
+    }
 }

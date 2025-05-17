@@ -15,22 +15,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.project;
+package de.tudarmstadt.ukp.inception.recommendation.imls.llm;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.security.AccessCheckingBean;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-public interface ProjectAccess
-    extends AccessCheckingBean
+@Target({ ElementType.PARAMETER })
+@Retention(RetentionPolicy.RUNTIME)
+public @interface ToolParam
 {
-    boolean canCreateProjects();
+    String value() default "";
 
-    boolean canManageProject(String aProjectId);
-
-    boolean canAccessProject(String aProjectId);
-
-    void assertCanManageProjectBoundUsers(User aSessionOwner, Project aProject);
-
-    boolean canManageProjectBoundUsers(String aSessionOwner, String aProjectId);
+    String description() default "";
 }

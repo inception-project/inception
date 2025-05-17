@@ -28,6 +28,7 @@ import static java.util.Comparator.comparing;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.normalizeSpace;
+import static org.apache.uima.fit.util.CasUtil.getType;
 
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
@@ -58,12 +59,15 @@ import com.github.victools.jsonschema.module.jackson.JacksonOption;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.prompt.PromptContext;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.traits.ChatMessage;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.traits.LlmRecommenderTraits;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.support.text.Trie;
+import de.tudarmstadt.ukp.inception.support.text.WhitespaceNormalizingSanitizer;
 
 public final class MentionsFromStructuredOutputExtractor
     implements ResponseExtractor
@@ -236,31 +240,39 @@ public final class MentionsFromStructuredOutputExtractor
             String aResponse)
         throws JsonProcessingException
     {
+        if (isBlank(aResponse)) {
+            LOG.debug("Empty response. No mentions to extract.");
+            return;
+        }
+
         var mapper = new ObjectMapper();
         var result = mapper.readValue(aResponse, MentionResult.class);
 
-        var text = aContext.getText();
+        var tokenType = getType(aCas, Token.class);
         var predictedType = aEngine.getPredictedType(aCas);
         var predictedFeature = aEngine.getPredictedFeature(aCas);
         var isPredictionFeature = aEngine.getIsPredictionFeature(aCas);
         var scoreExplanationFeature = aEngine.getScoreExplanationFeature(aCas);
 
+        var dict = new Trie<Mention>(WhitespaceNormalizingSanitizer.factory());
         for (var mention : result.getMentions()) {
-            var coveredText = mention.getCoveredText();
-            if (coveredText.isBlank()) {
-                LOG.debug("Blank mention ignored");
-                continue;
-            }
+            dict.put(mention.getCoveredText(), mention);
+        }
 
-            var label = mention.getLabel();
-            var justification = mention.getJustification();
-            var lastIndex = 0;
-            var index = text.indexOf(coveredText, lastIndex);
-            var hitCount = 0;
-            while (index >= 0) {
-                int begin = aContext.getRange().getBegin() + index;
-                var prediction = aCas.createAnnotation(predictedType, begin,
-                        begin + coveredText.length());
+        var contextRange = aContext.getRange();
+        var tokens = aCas.<Annotation> select(tokenType)
+                .coveredBy(contextRange.getBegin(), contextRange.getEnd()).asList();
+        var matchedMentions = new HashSet<String>();
+        for (var token : tokens) {
+            var match = dict.getNode(aCas.getDocumentText(), token.getBegin());
+            if (match != null) {
+                var begin = token.getBegin();
+                var end = begin + match.matchLength;
+                var text = match.node.value.getCoveredText();
+                var label = match.node.value.getLabel();
+                var justification = match.node.value.getJustification();
+                var prediction = aCas.createAnnotation(predictedType, begin, end);
+
                 prediction.setBooleanValue(isPredictionFeature, true);
                 if (isNotBlank(label)) {
                     prediction.setStringValue(predictedFeature, label);
@@ -268,22 +280,16 @@ public final class MentionsFromStructuredOutputExtractor
                 if (isNotBlank(justification)) {
                     prediction.setStringValue(scoreExplanationFeature, justification);
                 }
+
                 aCas.addFsToIndexes(prediction);
-                LOG.debug("Prediction generated [{}] -> [{}]", coveredText, label);
-                hitCount++;
-
-                lastIndex = index + coveredText.length();
-                index = text.indexOf(coveredText, lastIndex);
-
-                if (hitCount > text.length() / coveredText.length()) {
-                    LOG.error(
-                            "Mention detection seems to have entered into an endless loop - aborting");
-                    break;
-                }
+                LOG.debug("Prediction generated [{}] -> [{}]", text, label);
+                matchedMentions.add(text);
             }
+        }
 
-            if (hitCount == 0) {
-                LOG.debug("Mention [{}] not found", coveredText);
+        for (var mention : result.getMentions()) {
+            if (!matchedMentions.contains(mention.getCoveredText())) {
+                LOG.debug("Mention [{}] not found", mention.getCoveredText());
             }
         }
     }

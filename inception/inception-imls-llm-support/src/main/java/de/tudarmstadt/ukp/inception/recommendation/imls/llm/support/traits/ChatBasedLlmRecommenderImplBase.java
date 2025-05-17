@@ -129,7 +129,7 @@ public abstract class ChatBasedLlmRecommenderImplBase<T extends LlmRecommenderTr
                 catch (IOException e) {
                     aContext.log(LogMessage.warn(getRecommender().getName(),
                             "Remote failed to respond: %s", getRootCauseMessage(e)));
-                    LOG.error("Remote failed to respond: {}", getRootCauseMessage(e));
+                    LOG.error("Remote failed to respond: {}", getRootCauseMessage(e), e);
                 }
             }
         }

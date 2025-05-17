@@ -174,8 +174,7 @@ public class WebhookService
                     var hook = hookAndCount.getKey();
 
                     var effectiveTopic = topic;
-                    if (hook.getRoutes() != null
-                            && hook.getRoutes().containsKey(topic)) {
+                    if (hook.getRoutes() != null && hook.getRoutes().containsKey(topic)) {
                         effectiveTopic = hook.getRoutes().get(topic);
                     }
 
