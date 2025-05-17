@@ -18,7 +18,9 @@
 package de.tudarmstadt.ukp.inception.assistant;
 
 import static de.tudarmstadt.ukp.inception.assistant.model.MChatRoles.USER;
+import static de.tudarmstadt.ukp.inception.websocket.config.WebSocketConstants.PARAM_DOCUMENT;
 import static de.tudarmstadt.ukp.inception.websocket.config.WebSocketConstants.PARAM_PROJECT;
+import static de.tudarmstadt.ukp.inception.websocket.config.WebSocketConstants.PARAM_USER;
 
 import java.io.IOException;
 import java.security.Principal;
@@ -28,6 +30,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
+import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.MessageExceptionHandler;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
@@ -40,7 +43,9 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.inception.assistant.model.MChatMessage;
 import de.tudarmstadt.ukp.inception.assistant.model.MTextMessage;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import jakarta.servlet.ServletContext;
 
@@ -53,41 +58,49 @@ public class AssistantWebsocketControllerImpl
 {
     private final AssistantService assistantService;
     private final ProjectService projectService;
+    private final DocumentService documentService;
     private final UserDao userService;
 
     @Autowired
     public AssistantWebsocketControllerImpl(ServletContext aServletContext,
             SimpMessagingTemplate aMsgTemplate, AssistantService aAssistantService,
-            ProjectService aProjectService, UserDao aUserService)
+            ProjectService aProjectService, UserDao aUserService, DocumentService aDocumentService)
     {
         assistantService = aAssistantService;
         projectService = aProjectService;
         userService = aUserService;
+        documentService = aDocumentService;
     }
 
     @SubscribeMapping(PROJECT_ASSISTANT_TOPIC_TEMPLATE)
-    public List<MTextMessage> onSubscribeToAssistantMessages(
+    public List<MChatMessage> onSubscribeToAssistantMessages(
             SimpMessageHeaderAccessor aHeaderAccessor, Principal aPrincipal, //
             @DestinationVariable(PARAM_PROJECT) long aProjectId)
         throws IOException
     {
         var project = projectService.getProject(aProjectId);
-        return assistantService.getAllChatMessages(aPrincipal.getName(), project);
+        return assistantService.getUserChatHistory(aPrincipal.getName(), project);
     }
 
     @MessageMapping(PROJECT_ASSISTANT_TOPIC_TEMPLATE)
     public void onUserMessage(SimpMessageHeaderAccessor aHeaderAccessor, Principal aPrincipal, //
-            @DestinationVariable(PARAM_PROJECT) long aProjectId, @Payload String aMessage)
+            @DestinationVariable(PARAM_PROJECT) long aProjectId, //
+            @Header(PARAM_USER) String dataOwner, //
+            @Header(PARAM_DOCUMENT) long documentId, //
+            @Payload String aMessage)
         throws IOException
     {
         var project = projectService.getProject(aProjectId);
-        var user = userService.get(aPrincipal.getName());
+        var document = documentService.getSourceDocument(aProjectId, documentId);
+        var sessionOwner = userService.get(aPrincipal.getName());
         var message = MTextMessage.builder() //
-                .withActor(user.getUiName()) //
+                .withActor(sessionOwner.getUiName()) //
                 .withRole(USER) //
                 .withMessage(aMessage) //
                 .build();
-        assistantService.processUserMessage(aPrincipal.getName(), project, message);
+
+        assistantService.processUserMessage(aPrincipal.getName(), project, document, dataOwner,
+                message);
     }
 
     @SendTo(PROJECT_ASSISTANT_TOPIC_TEMPLATE)

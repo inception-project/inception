@@ -52,6 +52,16 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-recommendation-api</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-recommendation</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-scheduling</artifactId>
       <version>${project.version}</version>
     </dependency>
@@ -363,6 +373,12 @@
       <scope>test</scope>
     </dependency>
     <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-workload</artifactId>
+      <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>org.apache.uima</groupId>
       <artifactId>uimafit-core</artifactId>
       <scope>test</scope>
@@ -422,8 +438,7 @@
               <!-- Needed but the dependency plugin doesn't get it -->
               <ignoredDependency>jakarta.persistence:jakarta.persistence-api</ignoredDependency>
               <ignoredDependency>org.springframework.boot:spring-boot</ignoredDependency>
-              <ignoredDependency>
-                org.springframework.boot:spring-boot-test-autoconfigure</ignoredDependency>
+              <ignoredDependency>org.springframework.boot:spring-boot-test-autoconfigure</ignoredDependency>
               <ignoredDependency>org.springframework:spring-core</ignoredDependency>
               <ignoredDependency>org.springframework:spring-websocket</ignoredDependency>
             </ignoredDependencies>

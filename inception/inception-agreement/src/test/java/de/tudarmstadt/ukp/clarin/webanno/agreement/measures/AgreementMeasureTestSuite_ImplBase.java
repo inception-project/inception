@@ -129,8 +129,8 @@ public class AgreementMeasureTestSuite_ImplBase
     }
 
     public <R extends FullAgreementResult_ImplBase<S>, T extends DefaultAgreementTraits, S extends IAnnotationStudy> //
-    R multiLinkWithRoleLabelDifferenceTest(AgreementMeasureSupport<T, R, S> aSupport)
-        throws Exception
+            R multiLinkWithRoleLabelDifferenceTest(AgreementMeasureSupport<T, R, S> aSupport)
+                throws Exception
     {
         var layer = AnnotationLayer.builder() //
                 .withId(1l) //
@@ -175,7 +175,8 @@ public class AgreementMeasureTestSuite_ImplBase
     }
 
     public <R extends FullAgreementResult_ImplBase<S>, T extends DefaultAgreementTraits, S extends IAnnotationStudy> //
-    R multiValueStringPartialAgreement(AgreementMeasureSupport<T, R, S> aSupport) throws Exception
+            R multiValueStringPartialAgreement(AgreementMeasureSupport<T, R, S> aSupport)
+                throws Exception
     {
         var layer = new AnnotationLayer(MULTI_VALUE_SPAN_TYPE, MULTI_VALUE_SPAN_TYPE,
                 SpanLayerSupport.TYPE, project, false, SINGLE_TOKEN, NO_OVERLAP);
@@ -213,7 +214,7 @@ public class AgreementMeasureTestSuite_ImplBase
     }
 
     public <R extends FullAgreementResult_ImplBase<S>, T extends DefaultAgreementTraits, S extends IAnnotationStudy> //
-    R selfOverlappingAgreement(AgreementMeasureSupport<T, R, S> aSupport) throws Exception
+            R selfOverlappingAgreement(AgreementMeasureSupport<T, R, S> aSupport) throws Exception
     {
         var layer = new AnnotationLayer(MULTI_VALUE_SPAN_TYPE, MULTI_VALUE_SPAN_TYPE,
                 SpanLayerSupport.TYPE, project, false, SINGLE_TOKEN, NO_OVERLAP);
@@ -259,7 +260,7 @@ public class AgreementMeasureTestSuite_ImplBase
     }
 
     public <R extends FullAgreementResult_ImplBase<S>, T extends DefaultAgreementTraits, S extends IAnnotationStudy> //
-    R twoEmptyCasTest(AgreementMeasureSupport<T, R, S> aSupport) throws Exception
+            R twoEmptyCasTest(AgreementMeasureSupport<T, R, S> aSupport) throws Exception
     {
         var layer = new AnnotationLayer(Lemma.class.getName(), Lemma.class.getSimpleName(),
                 SpanLayerSupport.TYPE, project, false, SINGLE_TOKEN, NO_OVERLAP);
@@ -289,8 +290,8 @@ public class AgreementMeasureTestSuite_ImplBase
     }
 
     public <R extends FullAgreementResult_ImplBase<S>, T extends DefaultAgreementTraits, S extends IAnnotationStudy> //
-    R threeCasesWithAnnotationOnlyInThird(AgreementMeasureSupport<T, R, S> aSupport)
-        throws Exception
+            R threeCasesWithAnnotationOnlyInThird(AgreementMeasureSupport<T, R, S> aSupport)
+                throws Exception
     {
         var layer = new AnnotationLayer(POS.class.getName(), POS.class.getSimpleName(),
                 SpanLayerSupport.TYPE, project, false, SINGLE_TOKEN, NO_OVERLAP);
@@ -318,7 +319,8 @@ public class AgreementMeasureTestSuite_ImplBase
     }
 
     public <R extends FullAgreementResult_ImplBase<S>, T extends DefaultAgreementTraits, S extends IAnnotationStudy> //
-    R twoWithoutLabelTest(AgreementMeasureSupport<T, R, S> aSupport, T aTraits) throws Exception
+            R twoWithoutLabelTest(AgreementMeasureSupport<T, R, S> aSupport, T aTraits)
+                throws Exception
     {
         var layer = new AnnotationLayer(POS.class.getName(), POS.class.getSimpleName(),
                 SpanLayerSupport.TYPE, project, false, SINGLE_TOKEN, NO_OVERLAP);
@@ -356,8 +358,9 @@ public class AgreementMeasureTestSuite_ImplBase
     }
 
     public <R extends FullAgreementResult_ImplBase<S>, T extends DefaultAgreementTraits, S extends IAnnotationStudy> //
-    R fullSingleCategoryAgreementWithTagset(AgreementMeasureSupport<T, R, S> aSupport, T aTraits)
-        throws Exception
+            R fullSingleCategoryAgreementWithTagset(AgreementMeasureSupport<T, R, S> aSupport,
+                    T aTraits)
+                throws Exception
     {
         var tagset = new TagSet(project, "tagset");
 

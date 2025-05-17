@@ -23,7 +23,7 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.project.ProjectAccess;
+import de.tudarmstadt.ukp.inception.project.api.ProjectAccess;
 
 @Order(100)
 @Component

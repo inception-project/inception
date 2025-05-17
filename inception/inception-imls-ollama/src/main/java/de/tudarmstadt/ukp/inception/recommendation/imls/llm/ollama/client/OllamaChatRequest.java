@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client;
 
+import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY;
 import static java.util.Arrays.asList;
 
 import java.util.ArrayList;
@@ -24,6 +25,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -38,20 +40,24 @@ public class OllamaChatRequest
     private String model;
     private List<OllamaChatMessage> messages;
     private boolean stream;
+    private @JsonInclude(Include.NON_NULL) Boolean think;
     private @JsonInclude(Include.NON_NULL) JsonNode format;
     private @JsonInclude(Include.NON_DEFAULT) boolean raw;
     private @JsonInclude(Include.NON_EMPTY) Map<String, Object> options = new HashMap<>();
+    private final @JsonInclude(NON_EMPTY) List<OllamaTool> tools = new ArrayList<>();
 
     private OllamaChatRequest(Builder builder)
     {
         model = builder.model;
         messages = builder.messages;
         format = builder.format;
+        think = builder.think;
         stream = builder.stream;
         raw = builder.raw;
         for (var opt : builder.options.entrySet()) {
             options.put(opt.getKey().getName(), opt.getValue());
         }
+        tools.addAll(builder.tools);
     }
 
     public JsonNode getFormat()
@@ -84,6 +90,18 @@ public class OllamaChatRequest
         return options;
     }
 
+    public List<OllamaTool> getTools()
+    {
+        return tools;
+    }
+
+    public Optional<OllamaTool> getTool(OllamaToolCall aCall)
+    {
+        return getTools().stream() //
+                .filter(t -> t.getFunction().getName().equals(aCall.getFunction().getName())) //
+                .findFirst();
+    }
+
     public static Builder builder()
     {
         return new Builder();
@@ -93,6 +111,9 @@ public class OllamaChatRequest
     {
         private String model;
         private List<OllamaChatMessage> messages = new ArrayList<>();
+        private final List<OllamaTool> tools = new ArrayList<>();
+        private Boolean think = false;
+
         private JsonNode format;
         private boolean raw;
         private boolean stream;
@@ -165,6 +186,31 @@ public class OllamaChatRequest
                 }
             }
 
+            return this;
+        }
+
+        public <T> Builder withTools(OllamaTool... aTools)
+        {
+            tools.clear();
+            if (aTools != null) {
+                tools.addAll(asList(aTools));
+            }
+            return this;
+        }
+
+        public <T> Builder withTools(Collection<OllamaTool> aTools)
+        {
+            tools.clear();
+            if (aTools != null) {
+                tools.addAll(aTools);
+            }
+            return this;
+        }
+
+        // FIXME: ollama would also support low/medium/high for some models
+        public <T> Builder withThink(Boolean aThink)
+        {
+            think = aThink;
             return this;
         }
 

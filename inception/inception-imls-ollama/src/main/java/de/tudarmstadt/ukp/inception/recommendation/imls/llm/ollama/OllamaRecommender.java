@@ -69,6 +69,7 @@ public class OllamaRecommender
                 .withModel(traits.getModel()) //
                 .withMessages(messages) //
                 .withFormat(format) //
+                .withThink(false) //
                 .withStream(false);
 
         var options = traits.getOptions();

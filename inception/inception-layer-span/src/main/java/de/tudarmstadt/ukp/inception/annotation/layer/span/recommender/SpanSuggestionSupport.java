@@ -74,7 +74,6 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserA
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Offset;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.ExtractionContext;
@@ -461,52 +460,63 @@ public class SpanSuggestionSupport
     {
         var result = new ArrayList<AnnotationSuggestion>();
         for (var predictedFS : ctx.getPredictionCas().<Annotation> select(ctx.getPredictedType())) {
-            if (!predictedFS.getBooleanValue(ctx.getPredictionFeature())) {
-                continue;
-            }
-
-            var anchoringMode = ctx.getLayer().getAnchoringMode();
-            var targetOffsets = getOffsets(anchoringMode, ctx.getOriginalCas(), predictedFS);
-            if (targetOffsets.isEmpty()) {
-                LOG.debug("Prediction cannot be anchored to [{}]: {}", anchoringMode, predictedFS);
-                continue;
-            }
-
-            var labels = getPredictedLabels(predictedFS, ctx.getLabelFeature(),
-                    ctx.isMultiLabels());
-            if (isEmpty(labels)) {
-                continue;
-            }
-
-            var autoAcceptMode = getAutoAcceptMode(predictedFS, ctx.getModeFeature());
-            var correction = predictedFS.getBooleanValue(ctx.getCorrectionFeature());
-            var correctionExplanation = predictedFS
-                    .getStringValue(ctx.getCorrectionExplanationFeature());
-            var score = predictedFS.getDoubleValue(ctx.getScoreFeature());
-            var scoreExplanation = predictedFS.getStringValue(ctx.getScoreExplanationFeature());
-            var offsets = targetOffsets.get();
-            var coveredText = ctx.getDocumentText().substring(offsets.getBegin(), offsets.getEnd());
-
-            for (var label : labels) {
-                var suggestion = SpanSuggestion.builder() //
-                        .withId(RelationSuggestion.NEW_ID) //
-                        .withGeneration(ctx.getGeneration()) //
-                        .withRecommender(ctx.getRecommender()) //
-                        .withDocument(ctx.getDocument()) //
-                        .withPosition(offsets) //
-                        .withCoveredText(coveredText) //
-                        .withLabel(label) //
-                        .withUiLabel(label) //
-                        .withCorrection(correction) //
-                        .withCorrectionExplanation(correctionExplanation) //
-                        .withScore(score) //
-                        .withScoreExplanation(scoreExplanation) //
-                        .withAutoAcceptMode(autoAcceptMode) //
-                        .build();
-                result.add(suggestion);
-            }
+            extractSuggestion(ctx, result, predictedFS);
         }
         return result;
+    }
+
+    private void extractSuggestion(ExtractionContext ctx, ArrayList<AnnotationSuggestion> result,
+            Annotation predictedFS)
+    {
+        if (!predictedFS.getBooleanValue(ctx.getPredictionFeature())) {
+            return;
+        }
+
+        var anchoringMode = ctx.getLayer().getAnchoringMode();
+        var targetOffsets = getOffsets(anchoringMode, ctx.getOriginalCas(), predictedFS);
+        if (targetOffsets.isEmpty()) {
+            LOG.debug("Prediction cannot be anchored to [{}]: {}", anchoringMode, predictedFS);
+            return;
+        }
+
+        var labels = getPredictedLabels(predictedFS, ctx.getLabelFeature(), ctx.isMultiLabels());
+        if (isEmpty(labels)) {
+            return;
+        }
+
+        var offsets = targetOffsets.get();
+        var coveredText = ctx.getDocumentText().substring(offsets.getBegin(), offsets.getEnd());
+
+        if (!coveredText.equals(predictedFS.getCoveredText())) {
+            LOG.trace("Offsets were adjusted [{}] -> [{}]", predictedFS.getCoveredText(),
+                    coveredText);
+        }
+
+        var autoAcceptMode = getAutoAcceptMode(predictedFS, ctx.getModeFeature());
+        var correction = predictedFS.getBooleanValue(ctx.getCorrectionFeature());
+        var correctionExplanation = predictedFS
+                .getStringValue(ctx.getCorrectionExplanationFeature());
+        var score = predictedFS.getDoubleValue(ctx.getScoreFeature());
+        var scoreExplanation = predictedFS.getStringValue(ctx.getScoreExplanationFeature());
+
+        for (var label : labels) {
+            var suggestion = SpanSuggestion.builder() //
+                    .withId(SpanSuggestion.NEW_ID) //
+                    .withGeneration(ctx.getGeneration()) //
+                    .withRecommender(ctx.getRecommender()) //
+                    .withDocument(ctx.getDocument()) //
+                    .withPosition(offsets) //
+                    .withCoveredText(coveredText) //
+                    .withLabel(label) //
+                    .withUiLabel(label) //
+                    .withCorrection(correction) //
+                    .withCorrectionExplanation(correctionExplanation) //
+                    .withScore(score) //
+                    .withScoreExplanation(scoreExplanation) //
+                    .withAutoAcceptMode(autoAcceptMode) //
+                    .build();
+            result.add(suggestion);
+        }
     }
 
     /**

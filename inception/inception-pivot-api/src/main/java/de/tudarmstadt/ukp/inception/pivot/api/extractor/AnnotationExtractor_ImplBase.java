@@ -50,7 +50,7 @@ public abstract class AnnotationExtractor_ImplBase<T extends AnnotationFS, R ext
 
         return Optional.of(layer.getName());
     }
-    
+
     @Override
     public boolean isWeak()
     {

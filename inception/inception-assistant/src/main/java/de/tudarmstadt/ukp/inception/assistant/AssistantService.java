@@ -21,18 +21,20 @@ import java.io.IOException;
 import java.util.List;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.assistant.model.MCallResponse;
+import de.tudarmstadt.ukp.inception.assistant.model.MChatMessage;
 import de.tudarmstadt.ukp.inception.assistant.model.MMessage;
 import de.tudarmstadt.ukp.inception.assistant.model.MTextMessage;
 
 public interface AssistantService
 {
-    List<MTextMessage> getAllChatMessages(String aSessionOwner, Project aProject);
+    List<MChatMessage> getUserChatHistory(String aSessionOwner, Project aProject);
 
-    List<MTextMessage> getChatMessages(String aSessionOwner, Project aProject);
+    List<MChatMessage> getInternalChatHistory(String aSessionOwner, Project aProject);
 
-    void processUserMessage(String aSessionOwner, Project aProject, MTextMessage aMessage,
-            MTextMessage... aTransientMessage);
+    void processUserMessage(String aSessionOwner, Project aProject, SourceDocument aDocument,
+            String aDataOwner, MTextMessage aMessage, MTextMessage... aTransientMessage);
 
     void processAgentMessage(String aSessionOwner, Project aProject, MTextMessage aMessage,
             MTextMessage... aContextMessages);

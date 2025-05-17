@@ -19,14 +19,23 @@ package de.tudarmstadt.ukp.inception.assistant;
 
 import static com.github.victools.jsonschema.generator.OptionPreset.PLAIN_JSON;
 import static com.github.victools.jsonschema.generator.SchemaVersion.DRAFT_2020_12;
+import static de.tudarmstadt.ukp.inception.assistant.config.AssistantChatProperties.CAP_TOOLS;
 import static de.tudarmstadt.ukp.inception.assistant.model.MChatRoles.ASSISTANT;
 import static java.lang.System.currentTimeMillis;
+import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.BiConsumer;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.github.victools.jsonschema.generator.Option;
 import com.github.victools.jsonschema.generator.SchemaGenerator;
@@ -37,23 +46,31 @@ import com.github.victools.jsonschema.module.jackson.JacksonOption;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.assistant.config.AssistantProperties;
 import de.tudarmstadt.ukp.inception.assistant.model.MCallResponse;
+import de.tudarmstadt.ukp.inception.assistant.model.MChatMessage;
+import de.tudarmstadt.ukp.inception.assistant.model.MChatResponse;
 import de.tudarmstadt.ukp.inception.assistant.model.MPerformanceMetrics;
 import de.tudarmstadt.ukp.inception.assistant.model.MReference;
 import de.tudarmstadt.ukp.inception.assistant.model.MTextMessage;
 import de.tudarmstadt.ukp.inception.assistant.model.MTextMessage.Builder;
+import de.tudarmstadt.ukp.inception.assistant.model.MToolCall;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ToolLibrary;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaChatMessage;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaChatRequest;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaChatResponse;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaClient;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaOptions;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaTool;
 import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 
 public class ChatContext
 {
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
     private final AssistantProperties properties;
     private final OllamaClient ollamaClient;
     private final String sessionOwner;
     private final Project project;
+    private final List<ToolLibrary> tools = new ArrayList<>();
     private SchemaGenerator generator;
 
     public ChatContext(AssistantProperties aProperties, OllamaClient aOllamaClient,
@@ -69,6 +86,16 @@ public class ChatContext
                 .build());
     }
 
+    public void addToolLibrary(ToolLibrary aTool)
+    {
+        tools.add(aTool);
+    }
+
+    public List<ToolLibrary> getTools()
+    {
+        return tools;
+    }
+
     public Project getProject()
     {
         return project;
@@ -79,32 +106,52 @@ public class ChatContext
         return sessionOwner;
     }
 
-    public MTextMessage chat(List<MTextMessage> aMessasges) throws IOException
+    public MChatResponse chat(List<MTextMessage> aMessages) throws IOException
     {
-        return chat(aMessasges, null);
+        return chat(aMessages, null);
     }
 
-    public MTextMessage chat(List<MTextMessage> aMessasges,
+    public MChatResponse chat(List<? extends MChatMessage> aMessages,
             BiConsumer<UUID, MTextMessage> aCallback)
         throws IOException
     {
-        var responseId = UUID.randomUUID();
+        return chat(aMessages, aCallback, null);
+    }
+
+    public MChatResponse chat(List<? extends MChatMessage> aMessages,
+            BiConsumer<UUID, MTextMessage> aCallback, UUID aResponseId)
+        throws IOException
+    {
+        var responseId = aResponseId != null ? aResponseId : UUID.randomUUID();
         var chatProperties = properties.getChat();
-        var request = OllamaChatRequest.builder() //
+        var requestBuilder = OllamaChatRequest.builder() //
                 .withModel(chatProperties.getModel()) //
                 .withStream(true) //
-                .withMessages(aMessasges.stream() //
-                        .map(msg -> new OllamaChatMessage(msg.role(), msg.message())) //
+                .withMessages(aMessages.stream() //
+                        .map(msg -> new OllamaChatMessage(msg.role(), msg.textRepresentation(),
+                                msg.thinking(), msg.toolName())) //
                         .toList()) //
                 .withOption(OllamaOptions.NUM_CTX, chatProperties.getContextLength()) //
                 .withOption(OllamaOptions.TOP_P, chatProperties.getTopP()) //
                 .withOption(OllamaOptions.TOP_K, chatProperties.getTopK()) //
                 .withOption(OllamaOptions.REPEAT_PENALTY, chatProperties.getRepeatPenalty()) //
-                .withOption(OllamaOptions.TEMPERATURE, chatProperties.getTemperature()) //
-                .build();
+                .withOption(OllamaOptions.TEMPERATURE, chatProperties.getTemperature());
+
+        if (chatProperties.getCapabilities().contains(CAP_TOOLS) && !tools.isEmpty()) {
+            try {
+                var ollamaTools = tools.stream() //
+                        .flatMap(o -> OllamaTool.forService(o).stream()) //
+                        .toList();
+                requestBuilder.withTools(ollamaTools);
+
+            }
+            catch (Exception e) {
+                LOG.error("Unable to map tools", e);
+            }
+        }
 
         var references = new LinkedHashMap<String, MReference>();
-        aMessasges.stream() //
+        aMessages.stream() //
                 .flatMap(msg -> msg.references().stream()) //
                 .forEach(r -> references.put(r.id(), r));
 
@@ -119,51 +166,95 @@ public class ChatContext
 
         // Generate the actual response
         var startTime = currentTimeMillis();
-        var response = ollamaClient.chat(properties.getUrl(), request,
-                aCallback != null ? msg -> streamMessage(aCallback, responseId, msg) : null);
+        var firstTokenTime = new AtomicLong(0l);
+        var request = requestBuilder.build();
+        var response = ollamaClient.chat(properties.getUrl(), request, msg -> {
+            firstTokenTime.compareAndSet(0l, currentTimeMillis());
+            if (aCallback != null) {
+                streamMessage(aCallback, responseId, msg);
+            }
+        });
         var tokens = response.getEvalCount();
         var endTime = currentTimeMillis();
 
+        var toolCalls = new ArrayList<MToolCall>();
+        if (isNotEmpty(response.getMessage().toolCalls()) && isNotEmpty(request.getTools())) {
+            // var mapper = new ObjectMapper();
+
+            for (var call : response.getMessage().toolCalls()) {
+                var maybeTool = request.getTool(call);
+                if (maybeTool.isEmpty()) {
+                    continue;
+                }
+
+                // var args = new LinkedHashMap<String, Object>();
+                // for (var param : tool.get().getFunction().getImplementation().getParameters()) {
+                // var paramName = ToolUtils.getParameterName(param);
+                // var paramValue = call.getFunction().getArguments().get(paramName);
+                // if (paramValue instanceof JsonNode jsonValue) {
+                // paramValue = mapper.treeToValue(jsonValue, param.getType());
+                // }
+                //
+                // args.put(paramName, paramValue);
+                // }
+
+                var tool = maybeTool.get();
+                toolCalls.add(MToolCall.builder() //
+                        .withActor(tool.getFunction().getActor()) //
+                        .withInstance(tool.getFunction().getService()) //
+                        .withMethod(tool.getFunction().getImplementation()) //
+                        .withArguments(call.getFunction().getArguments()) //
+                        .withStop(tool.isStop()) //
+                        .build());
+            }
+        }
+
         // Send a final and complete message also including final metrics
-        return newMessage(responseId) //
-                .withMessage(response.getMessage().content()) //
-                .withPerformance(MPerformanceMetrics.builder() //
-                        .withDuration(endTime - startTime) //
-                        .withTokens(tokens) //
+        return MChatResponse.builder() //
+                .withMessage(newMessage(responseId) //
+                        .withMessage(response.getMessage().content()) //
+                        .withThinking(response.getMessage().thinking()) //
+                        .withPerformance(MPerformanceMetrics.builder() //
+                                .withDelay(firstTokenTime.get() - startTime) //
+                                .withDuration(endTime - firstTokenTime.get()) //
+                                .withTokens(tokens) //
+                                .build()) //
+                        // Include all references in the final message again just to be sure
+                        .withReferences(references.values()) //
                         .build()) //
-                // Include all refs in the final message again just to be sure
-                .withReferences(references.values()) //
+                .withToolCalls(toolCalls) //
                 .build();
     }
 
-    public <T> MCallResponse<T> call(Class<T> aResult, List<MTextMessage> aMessasges)
+    public <T> MCallResponse<T> call(Class<T> aResult, List<MTextMessage> aMessages)
         throws IOException
     {
         var schema = generator.generateSchema(aResult);
 
         var responseId = UUID.randomUUID();
         var chatProperties = properties.getChat();
-        var request = OllamaChatRequest.builder() //
+        var requestBuilder = OllamaChatRequest.builder() //
                 .withModel(chatProperties.getModel()) //
-                .withStream(true) //
-                .withMessages(aMessasges.stream() //
-                        .map(msg -> new OllamaChatMessage(msg.role(), msg.message())) //
+                .withStream(false) //
+                .withMessages(aMessages.stream() //
+                        .map(msg -> new OllamaChatMessage(msg.role(), msg.message(), msg.thinking(),
+                                msg.toolName())) //
                         .toList()) //
                 .withFormat(schema) //
                 .withOption(OllamaOptions.NUM_CTX, chatProperties.getContextLength()) //
                 .withOption(OllamaOptions.TOP_P, chatProperties.getTopP()) //
                 .withOption(OllamaOptions.TOP_K, chatProperties.getTopK()) //
                 .withOption(OllamaOptions.REPEAT_PENALTY, chatProperties.getRepeatPenalty()) //
-                .withOption(OllamaOptions.TEMPERATURE, chatProperties.getTemperature()) //
-                .build();
+                .withOption(OllamaOptions.TEMPERATURE, chatProperties.getTemperature());
 
         var references = new LinkedHashMap<String, MReference>();
-        aMessasges.stream() //
+        aMessages.stream() //
                 .flatMap(msg -> msg.references().stream()) //
                 .forEach(r -> references.put(r.id(), r));
 
         // Generate the actual response
         var startTime = currentTimeMillis();
+        var request = requestBuilder.build();
         var response = ollamaClient.chat(properties.getUrl(), request, null);
         var tokens = response.getEvalCount();
         var endTime = currentTimeMillis();
@@ -180,7 +271,7 @@ public class ChatContext
                         .withDuration(endTime - startTime) //
                         .withTokens(tokens) //
                         .build()) //
-                // Include all refs in the final message again just to be sure
+                // Include all references in the final message again just to be sure
                 .withReferences(references.values()) //
                 .build();
     }
@@ -188,8 +279,13 @@ public class ChatContext
     private void streamMessage(BiConsumer<UUID, MTextMessage> aCallback, UUID responseId,
             OllamaChatResponse msg)
     {
+        if (isEmpty(msg.getMessage().content()) && isEmpty(msg.getMessage().thinking())) {
+            return;
+        }
+
         var responseMessage = newMessage(responseId) //
                 .withMessage(msg.getMessage().content()) //
+                .withThinking(msg.getMessage().thinking()) //
                 .notDone();
 
         aCallback.accept(responseId, responseMessage.build());

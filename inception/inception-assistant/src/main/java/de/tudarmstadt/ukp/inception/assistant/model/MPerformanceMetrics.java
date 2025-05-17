@@ -24,11 +24,11 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
  *            time it took to produce the messages in milliseconds
  */
 @JsonSerialize
-public record MPerformanceMetrics(long duration, int tokens) {
+public record MPerformanceMetrics(long delay, long duration, int tokens) {
 
     private MPerformanceMetrics(Builder builder)
     {
-        this(builder.duration, builder.tokens);
+        this(builder.delay, builder.duration, builder.tokens);
     }
 
     public MPerformanceMetrics merge(MPerformanceMetrics aPerformance)
@@ -38,6 +38,7 @@ public record MPerformanceMetrics(long duration, int tokens) {
         }
 
         return MPerformanceMetrics.builder() //
+                .withDelay(Math.max(delay(), aPerformance.delay())) // )
                 .withDuration((duration() + aPerformance.duration())) //
                 .build();
     }
@@ -49,11 +50,18 @@ public record MPerformanceMetrics(long duration, int tokens) {
 
     public static final class Builder
     {
+        private long delay;
         private long duration;
         private int tokens;
 
         private Builder()
         {
+        }
+
+        public Builder withDelay(long aDelay)
+        {
+            delay = aDelay;
+            return this;
         }
 
         public Builder withDuration(long aDuration)

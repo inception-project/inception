@@ -24,6 +24,7 @@ import static java.util.Comparator.comparing;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.normalizeSpace;
+import static org.apache.uima.fit.util.CasUtil.getType;
 
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
@@ -48,12 +49,15 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.databind.node.TextNode;
 
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.prompt.PromptContext;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.traits.ChatMessage;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
+import de.tudarmstadt.ukp.inception.support.text.Trie;
+import de.tudarmstadt.ukp.inception.support.text.WhitespaceNormalizingSanitizer;
 
 public final class MentionsFromJsonExtractor
     implements ResponseExtractor
@@ -245,6 +249,9 @@ public final class MentionsFromJsonExtractor
                                 else if (item.get("label") instanceof TextNode tn) {
                                     label = tn.asText();
                                 }
+                                else if (item.get("category") instanceof TextNode tn) {
+                                    label = tn.asText();
+                                }
                                 if (isNotBlank(text) && isNotBlank(label)) {
                                     mentions.add(Pair.of(text, label));
                                 }
@@ -295,46 +302,43 @@ public final class MentionsFromJsonExtractor
     private void mentionsToPredictions(RecommendationEngine aEngine, CAS aCas,
             PromptContext aContext, List<Pair<String, String>> mentions)
     {
-        var text = aContext.getText();
+        var tokenType = getType(aCas, Token.class);
         var predictedType = aEngine.getPredictedType(aCas);
         var predictedFeature = aEngine.getPredictedFeature(aCas);
         var isPredictionFeature = aEngine.getIsPredictionFeature(aCas);
 
-        for (var entry : mentions) {
-            var mention = entry.getKey();
-            if (mention.isBlank()) {
-                LOG.debug("Blank mention ignored");
-                continue;
-            }
+        var dict = new Trie<Pair<String, String>>(WhitespaceNormalizingSanitizer.factory());
+        for (var mention : mentions) {
+            dict.put(mention.getKey(), mention);
+        }
 
-            var label = entry.getValue();
-            var lastIndex = 0;
-            var index = text.indexOf(mention, lastIndex);
-            var hitCount = 0;
-            while (index >= 0) {
-                int begin = aContext.getRange().getBegin() + index;
-                var prediction = aCas.createAnnotation(predictedType, begin,
-                        begin + mention.length());
+        var contextRange = aContext.getRange();
+        var tokens = aCas.<Annotation> select(tokenType)
+                .coveredBy(contextRange.getBegin(), contextRange.getEnd()).asList();
+        var matchedMentions = new HashSet<String>();
+        for (var token : tokens) {
+            var match = dict.getNode(aCas.getDocumentText(), token.getBegin());
+            if (match != null) {
+                var begin = token.getBegin();
+                var end = begin + match.matchLength;
+                var text = match.node.value.getKey();
+                var label = match.node.value.getValue();
+                var prediction = aCas.createAnnotation(predictedType, begin, end);
+
                 prediction.setBooleanValue(isPredictionFeature, true);
-                if (label != null) {
+                if (isNotBlank(label)) {
                     prediction.setStringValue(predictedFeature, label);
                 }
+
                 aCas.addFsToIndexes(prediction);
-                LOG.debug("Prediction generated [{}] -> [{}]", mention, label);
-                hitCount++;
-
-                lastIndex = index + mention.length();
-                index = text.indexOf(mention, lastIndex);
-
-                if (hitCount > text.length() / mention.length()) {
-                    LOG.error(
-                            "Mention detection seems to have entered into an endless loop - aborting");
-                    break;
-                }
+                LOG.debug("Prediction generated [{}] -> [{}]", text, label);
+                matchedMentions.add(text);
             }
+        }
 
-            if (hitCount == 0) {
-                LOG.debug("Mention [{}] not found", mention);
+        for (var mention : mentions) {
+            if (!matchedMentions.contains(mention.getKey())) {
+                LOG.debug("Mention [{}] not found", mention.getKey());
             }
         }
     }

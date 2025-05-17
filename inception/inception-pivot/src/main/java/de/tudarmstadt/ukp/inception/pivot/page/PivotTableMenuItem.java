@@ -69,7 +69,7 @@ public class PivotTableMenuItem
         if (schemaService.listEnabledLayers(aProject).isEmpty()) {
             return false;
         }
-        
+
         // Visible if the current user is a curator or project admin
         var user = userRepo.getCurrentUser();
         return projectService.hasRole(user, aProject, CURATOR, MANAGER);

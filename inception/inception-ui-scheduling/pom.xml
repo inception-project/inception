@@ -57,7 +57,7 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-project</artifactId>
+      <artifactId>inception-project-api</artifactId>
       <version>${project.version}</version>
     </dependency>
 

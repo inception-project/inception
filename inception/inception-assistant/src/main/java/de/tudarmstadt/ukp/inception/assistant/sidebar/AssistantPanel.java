@@ -84,9 +84,10 @@ public class AssistantPanel
         Map<String, Object> properties = Map.of( //
                 "ajaxEndpointUrl", diamBehavior.getCallbackUrl(), //
                 "wsEndpointUrl", constructEndpointUrl(), //
-                "documentId", state.getDocument().getId(), //
                 "csrfToken", getCsrfTokenFromSession(), //
-                "topicChannel", AssistantWebsocketController.getChannel(state.getProject()));
+                "topicChannel", AssistantWebsocketController.getChannel(state.getProject()), //
+                "dataOwner", state.getUser().getUsername(), //
+                "documentId", state.getDocument().getId());
 
         // model will be added as props to Svelte component
         setDefaultModel(Model.ofMap(properties));
