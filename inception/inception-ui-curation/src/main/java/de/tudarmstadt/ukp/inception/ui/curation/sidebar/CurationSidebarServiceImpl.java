@@ -153,11 +153,13 @@ public class CurationSidebarServiceImpl
 
     private CurationSession getSession(String aSessionOwner, long aProjectId)
     {
-        if (sessions.containsKey(new CurationSessionKey(aSessionOwner, aProjectId))) {
-            return sessions.get(new CurationSessionKey(aSessionOwner, aProjectId));
-        }
-        else {
-            return readSession(aSessionOwner, aProjectId);
+        synchronized (sessions) {
+            if (sessions.containsKey(new CurationSessionKey(aSessionOwner, aProjectId))) {
+                return sessions.get(new CurationSessionKey(aSessionOwner, aProjectId));
+            }
+            else {
+                return readSession(aSessionOwner, aProjectId);
+            }
         }
     }
 
