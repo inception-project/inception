@@ -24,11 +24,6 @@ import java.util.List;
 import org.apache.wicket.markup.repeater.data.IDataProvider;
 import org.apache.wicket.model.IModel;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.search.ResultsGroup;
 import de.tudarmstadt.ukp.inception.search.SearchResult;
 
@@ -142,14 +137,11 @@ public class SearchResultsProviderWrapper
         return -1;
     }
 
-    public void initializeQuery(User aUser, Project aProject, String aQuery,
-            SourceDocument aDocument, AnnotationLayer aAnnotationLayer,
-            AnnotationFeature aAnnotationFeature, boolean aLowLevelPaging)
+    public void initializeQuery(SearchRequest aRequest)
     {
-        lowLevelPaging = aLowLevelPaging;
+        lowLevelPaging = aRequest.lowLevelPaging();
 
-        searchResultsProvider.initializeQuery(aUser, aProject, aQuery, aDocument, aAnnotationLayer,
-                aAnnotationFeature);
+        searchResultsProvider.initializeQuery(aRequest);
 
         groupingActivated = !(searchResultsProvider.getAnnotationFeature() == null
                 && searchResultsProvider.getAnnotationLayer() == null);

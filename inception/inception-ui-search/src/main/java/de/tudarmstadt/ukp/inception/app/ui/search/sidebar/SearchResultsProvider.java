@@ -137,16 +137,14 @@ public class SearchResultsProvider
      * query.
      */
     @SuppressWarnings("javadoc")
-    public void initializeQuery(User aUser, Project aProject, String aQuery,
-            SourceDocument aDocument, AnnotationLayer aAnnotationLayer,
-            AnnotationFeature aAnnotationFeature)
+    public void initializeQuery(SearchRequest aRequest)
     {
-        user = aUser;
-        project = aProject;
-        query = aQuery;
-        document = aDocument;
-        annotationLayer = aAnnotationLayer;
-        annotationFeature = aAnnotationFeature;
+        user = aRequest.dataOwner();
+        project = aRequest.project();
+        query = aRequest.query();
+        document = aRequest.limitToDocument();
+        annotationLayer = aRequest.groupingLayer();
+        annotationFeature = aRequest.groupingFeature();
 
         totalResults = -1; // reset size cache
         cache.clear(); // reset page cache

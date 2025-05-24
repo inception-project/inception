@@ -33,6 +33,7 @@ import static org.apache.uima.fit.util.CasUtil.selectAt;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.invoke.MethodHandles;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -101,6 +102,7 @@ import de.tudarmstadt.ukp.inception.bootstrap.IconToggleBox;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentAccess;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
+import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
@@ -151,12 +153,13 @@ public class SearchAnnotationSidebar
 
     private @SpringBean DocumentService documentService;
     private @SpringBean DocumentAccess documentAccess;
-    private @SpringBean AnnotationSchemaService annotationService;
+    private @SpringBean AnnotationSchemaService schemaService;
     private @SpringBean SearchService searchService;
     private @SpringBean UserDao userRepository;
     private @SpringBean ApplicationEventPublisherHolder applicationEventPublisher;
     private @SpringBean SearchProperties searchProperties;
     private @SpringBean WorkloadManagementService workloadService;
+    private @SpringBean PreferencesService preferencesService;
 
     private WebMarkupContainer mainContainer;
     private WebMarkupContainer resultsGroupContainer;
@@ -165,12 +168,14 @@ public class SearchAnnotationSidebar
     private CompoundPropertyModel<SearchOptions> searchOptions;
     private IModel<CreateAnnotationsOptions> createOptions;
     private IModel<DeleteAnnotationsOptions> deleteOptions;
+    private IModel<List<SearchHistoryItem>> history;
 
     private DropDownChoice<AnnotationFeature> groupingFeatureChoice;
     private CheckBox lowLevelPagingCheckBox;
     private Label resultCountLabel;
 
     private DataView<ResultsGroup> resultsView;
+    private SearchHistoryPanel historyPanel;
     private SearchResultsProviderWrapper resultsProvider;
 
     // UI elements for bulk annotation
@@ -193,13 +198,24 @@ public class SearchAnnotationSidebar
     {
         super.onInitialize();
 
+        history = SearchHistoryMetaDataKey.get(getPage());
         resultsProvider = SearchResultsProviderMetaDataKey.get(getPage(), searchService);
         searchOptions = SearchOptionsMetaDataKey.get(getPage());
         createOptions = CreateAnnotationsOptionsMetaDataKey.get(getPage());
         deleteOptions = DeleteAnnotationsOptionsMetaDataKey.get(getPage());
 
+        var historyState = preferencesService.loadTraitsForUserAndProject(
+                SearchHistoryState.KEY_SEARCH_HISTORY, userRepository.getCurrentUser(),
+                getAnnotationPage().getProject());
+        history.setObject(historyState.getHistoryItems());
+
         mainContainer = new WebMarkupContainer(MID_MAIN_CONTAINER);
         mainContainer.setOutputMarkupId(true);
+        queue((historyPanel = new SearchHistoryPanel("history", history)) //
+                .onSelectAction(this::actionSelectHistoryItem) //
+                .onTogglePinAction(this::toggleHistoryItemPin) //
+                .onDeleteAction(this::actionDeleteHistoryItem) //
+                .setOutputMarkupId(true));
         queue(createSearchOptionsForm(MID_SEARCH_OPTIONS_FORM));
         queue(createSearchForm(MID_SEARCH_FORM));
         queue(mainContainer);
@@ -369,7 +385,7 @@ public class SearchAnnotationSidebar
                 // This will find the Wicket-generated Ajax callback
                 String js = String.format("""
                         document.getElementById('%s').addEventListener('keydown', function(event) {
-                            if (event.ctrlKey && event.key === 'Enter') {
+                            if (!event.shiftKey && event.key === 'Enter') {
                                 var btn = Wicket.$('%s');
                                 console.log(btn);
                                 if (btn) {
@@ -391,7 +407,7 @@ public class SearchAnnotationSidebar
     {
         var searchOptionsForm = new Form<>(aId, searchOptions);
         searchOptionsForm.add(createLayerDropDownChoice("groupingLayer",
-                annotationService.listAnnotationLayer(getModelObject().getProject())));
+                schemaService.listAnnotationLayer(getModelObject().getProject())));
 
         groupingFeatureChoice = new DropDownChoice<>("groupingFeature", emptyList(),
                 new ChoiceRenderer<>("uiName"));
@@ -466,7 +482,7 @@ public class SearchAnnotationSidebar
             protected void onUpdate(AjaxRequestTarget aTarget)
             {
                 // update the choices for the feature selection dropdown
-                groupingFeatureChoice.setChoices(annotationService
+                groupingFeatureChoice.setChoices(schemaService
                         .listAnnotationFeature(searchOptions.getObject().getGroupingLayer()));
                 lowLevelPagingCheckBox.setModelObject(false);
                 aTarget.add(groupingFeatureChoice, lowLevelPagingCheckBox);
@@ -529,18 +545,51 @@ public class SearchAnnotationSidebar
         };
     }
 
-    private void actionSearch(AjaxRequestTarget aTarget, Form<SearchOptions> aForm)
+    private void actionSearch(AjaxRequestTarget aTarget, Form<Void> aForm)
     {
-        searchOptions.getObject().setSelectedResult(null);
-        resultsView.setItemsPerPage(searchOptions.getObject().getItemsPerPage());
+        var opt = searchOptions.getObject();
 
-        executeSearchResultsGroupedQuery(aTarget);
+        if (isBlank(opt.getQuery())) {
+            resultsProvider.emptyQuery();
+            return;
+        }
 
-        aTarget.add(mainContainer);
-        aTarget.addChildren(getPage(), IFeedback.class);
+        var state = getModelObject();
+        var project = state.getProject();
 
-        // Need to re-render because we want to highlight the match
-        getAnnotationPage().actionRefreshDocument(aTarget);
+        var maybeProgress = searchService.getIndexProgress(project);
+        if (maybeProgress.isPresent()) {
+            var p = maybeProgress.get();
+            info("Indexing in progress... cannot perform query at this time. " + p.percent() + "% ("
+                    + p.progress() + "/" + p.maxProgress() + ")");
+            aTarget.addChildren(getPage(), IFeedback.class);
+            return;
+        }
+
+        // If a layer is selected but no feature show error
+        if (opt.getGroupingLayer() != null && opt.getGroupingFeature() == null) {
+            error("A feature has to be selected in order to group by feature values. If you want to group by document title, select none for both layer and feature.");
+            resultsProvider.emptyQuery();
+            return;
+        }
+
+        var limitToDocument = state.getDocument();
+        if (workloadService.getWorkloadManagerExtension(project)
+                .isDocumentRandomAccessAllowed(project) && !opt.isLimitedToCurrentDocument()) {
+            limitToDocument = null;
+        }
+
+        var request = SearchRequest.builder() //
+                .withDataOwner(getModelObject().getUser()) //
+                .withProject(project) //
+                .withQuery(opt.getQuery()) //
+                .withLimitToDocument(limitToDocument) //
+                .withGroupingLayer(opt.getGroupingLayer()) //
+                .withGroupingFeature(opt.getGroupingFeature()) //
+                .withLowLevelPaging(opt.isLowLevelPaging()) //
+                .build();
+
+        executeSearch(aTarget, request);
     }
 
     private IResourceStream exportSearchResults()
@@ -582,54 +631,80 @@ public class SearchAnnotationSidebar
         getAnnotationPage().actionRefreshDocument(aTarget);
     }
 
-    private void executeSearchResultsGroupedQuery(AjaxRequestTarget aTarget)
+    private void executeSearch(AjaxRequestTarget aTarget, SearchRequest aRequest)
     {
-        if (isBlank(searchOptions.getObject().getQuery())) {
-            resultsProvider.emptyQuery();
-            return;
-        }
-
-        var state = getModelObject();
-        var project = state.getProject();
-
-        var maybeProgress = searchService.getIndexProgress(project);
-        if (maybeProgress.isPresent()) {
-            var p = maybeProgress.get();
-            info("Indexing in progress... cannot perform query at this time. " + p.percent() + "% ("
-                    + p.progress() + "/" + p.maxProgress() + ")");
-            aTarget.addChildren(getPage(), IFeedback.class);
-            return;
-        }
-
-        // If a layer is selected but no feature show error
-        if (searchOptions.getObject().getGroupingLayer() != null
-                && searchOptions.getObject().getGroupingFeature() == null) {
-            error("A feature has to be selected in order to group by feature values. If you want to group by document title, select none for both layer and feature.");
-            resultsProvider.emptyQuery();
-            return;
-        }
-
         try {
-            var limitToDocument = state.getDocument();
-            if (workloadService.getWorkloadManagerExtension(project).isDocumentRandomAccessAllowed(
-                    project) && !searchOptions.getObject().isLimitedToCurrentDocument()) {
-                limitToDocument = null;
-            }
+            var opt = searchOptions.getObject();
+            opt.setSelectedResult(null);
+            resultsView.setItemsPerPage(opt.getItemsPerPage());
+
+            resultsProvider.initializeQuery(aRequest);
+
+            aTarget.add(mainContainer);
+            aTarget.addChildren(getPage(), IFeedback.class);
+
+            // Need to re-render because we want to highlight the match
+            getAnnotationPage().actionRefreshDocument(aTarget);
+
+            updateSearchHistory(aTarget, aRequest);
+
+            var sessionOwner = userRepository.getCurrentUser();
+            var historyState = new SearchHistoryState();
+            historyState.setHistoryItems(history.getObject());
+            preferencesService.saveTraitsForUserAndProject(SearchHistoryState.KEY_SEARCH_HISTORY,
+                    sessionOwner, aRequest.project(), historyState);
 
             applicationEventPublisher.get()
-                    .publishEvent(new SearchQueryEvent(this, project, state.getUser().getUsername(),
-                            searchOptions.getObject().getQuery(), limitToDocument));
-            var opt = searchOptions.getObject();
-
-            resultsProvider.initializeQuery(getModelObject().getUser(), project,
-                    searchOptions.getObject().getQuery(), limitToDocument, opt.getGroupingLayer(),
-                    opt.getGroupingFeature(), opt.isLowLevelPaging());
+                    .publishEvent(new SearchQueryEvent(this, aRequest.project(),
+                            aRequest.dataOwner().getUsername(), aRequest.query(),
+                            aRequest.limitToDocument()));
         }
         catch (Exception e) {
             error("Query error: " + e.getMessage());
             aTarget.addChildren(getPage(), IFeedback.class);
             resultsProvider.emptyQuery();
         }
+    }
+
+    private void updateSearchHistory(AjaxRequestTarget aTarget, SearchRequest aRequest)
+    {
+        var newItem = SearchHistoryItem.builder() //
+                .withQuery(aRequest.query()) //
+                .withLimitToDocument(aRequest.limitToDocument() != null) //
+                .withGroupingLayer(aRequest.groupingLayer()) //
+                .withGroupingFeature(aRequest.groupingFeature()) //
+                .withLowLevelPaging(aRequest.lowLevelPaging()) //
+                .build();
+
+        var source = new ArrayList<>(history.getObject());
+        var target = history.getObject();
+        target.clear();
+
+        // If the item already exists, we keep the existing item as it may be pinned
+        // and we do not want to lose the pinned state
+        var i = source.indexOf(newItem);
+        if (i >= 0) {
+            newItem = source.get(i);
+        }
+        target.add(newItem);
+
+        // Now preserve the rest
+        int nonPinned = 0;
+        for (var item : source) {
+            if (newItem.equals(item)) {
+                continue;
+            }
+
+            if (item.pinned()) {
+                target.add(item);
+            }
+            else if (nonPinned < 10) {
+                target.add(item);
+                nonPinned++;
+            }
+        }
+
+        aTarget.add(historyPanel);
     }
 
     public void actionApplyToSelectedResults(AjaxRequestTarget aTarget, Operation aConsumer)
@@ -645,7 +720,7 @@ public class SearchAnnotationSidebar
         var dataOwner = getAnnotationPage().getModelObject().getUser();
         var layer = getModelObject().getSelectedAnnotationLayer();
         try {
-            var adapter = (SpanAdapter) annotationService.getAdapter(layer);
+            var adapter = (SpanAdapter) schemaService.getAdapter(layer);
             adapter.silenceEvents();
 
             // Group the results by document such that we can process one CAS at a time
@@ -846,7 +921,7 @@ public class SearchAnnotationSidebar
 
     private boolean featureValuesMatchCurrentState(AnnotationFS aAnnotationFS)
     {
-        var aAdapter = (SpanAdapter) annotationService
+        var aAdapter = (SpanAdapter) schemaService
                 .getAdapter(getModelObject().getSelectedAnnotationLayer());
         for (var state : getModelObject().getFeatureStates()) {
             var featureValue = state.value;
@@ -863,6 +938,63 @@ public class SearchAnnotationSidebar
             }
         }
         return true;
+    }
+
+    private void toggleHistoryItemPin(AjaxRequestTarget aTarget, ListItem<SearchHistoryItem> aItem)
+    {
+        var item = aItem.getModelObject();
+        var index = history.getObject().indexOf(item);
+        if (index >= 0) {
+            var toggled = item.togglePin();
+            aItem.setModelObject(toggled);
+            history.getObject().set(index, toggled);
+            saveSearchHistory();
+        }
+        aTarget.add(aItem);
+    }
+
+    private void actionSelectHistoryItem(AjaxRequestTarget aTarget, SearchHistoryItem aItem)
+    {
+        var opt = searchOptions.getObject();
+        var project = getModelObject().getProject();
+
+        var layer = aItem.groupingLayer() != null
+                ? schemaService.findLayer(project, aItem.groupingLayer())
+                : null;
+        var feature = aItem.groupingFeature() != null
+                ? schemaService.getFeature(aItem.groupingFeature(), layer)
+                : null;
+
+        opt.setSelectedResult(null);
+        opt.setQuery(aItem.query());
+        opt.setGroupingLayer(layer);
+        opt.setGroupingFeature(feature);
+        opt.setLimitedToCurrentDocument(aItem.limitToDocument());
+        opt.setLowLevelPaging(aItem.lowLevelPaging());
+
+        resultsView.setItemsPerPage(opt.getItemsPerPage());
+
+        actionSearch(aTarget, null);
+    }
+
+    private void actionDeleteHistoryItem(AjaxRequestTarget aTarget, SearchHistoryItem aItem)
+    {
+        var index = history.getObject().indexOf(aItem);
+        if (index >= 0) {
+            history.getObject().remove(index);
+            saveSearchHistory();
+        }
+        aTarget.add(historyPanel);
+    }
+
+    private void saveSearchHistory()
+    {
+        var historyState = new SearchHistoryState();
+        historyState.setHistoryItems(history.getObject());
+        var sessionOwner = userRepository.getCurrentUser();
+        var project = getModelObject().getProject();
+        preferencesService.saveTraitsForUserAndProject(SearchHistoryState.KEY_SEARCH_HISTORY,
+                sessionOwner, project, historyState);
     }
 
     private class SearchResultGroup
