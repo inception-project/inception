@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-$(document).ready(function() {
+$( document ).ready(function() {
   function hideBusysign() {
     let spinner = document.getElementById('spinner')
     if (spinner) spinner.style.display = 'none';
@@ -26,28 +26,29 @@ $(document).ready(function() {
     if (spinner) spinner.style.display = 'inline';
   }
   
+  function initializeStickyDropdowns() {
+    // Prevent the sticky dropdowns from closing on every click inside the dropdown
+    document.querySelectorAll('.sticky-dropdown, .k-popup').forEach(element => {
+      element.addEventListener('hide.bs.dropdown', function(event) {
+        if (event.clickEvent && event.target.closest('.sticky-dropdown, .k-popup')) {
+          event.preventDefault();
+        }
+      });
+    });
+  }
+  
   hideBusysign();
+  initializeStickyDropdowns();
   if (typeof Wicket != 'undefined') {
     Wicket.Event.subscribe('/ajax/call/beforeSend', function(attributes, jqXHR, settings) {
-      showBusysign()
+      showBusysign();
     });
     Wicket.Event.subscribe('/ajax/call/complete', function(attributes, jqXHR, textStatus) {
-      hideBusysign()
+      hideBusysign();
+      initializeStickyDropdowns();
     });
   }
 });
-    
-$( document ).ready(function() { 
-  // Prevent the sticky dropdowns from closing on every click inside the dropdown
-  document.querySelectorAll('.sticky-dropdown, .k-popup').forEach(element => {
-    element.addEventListener('hide.bs.dropdown', function(event) {
-      if (event.clickEvent && event.target.closest('.sticky-dropdown, .k-popup')) {
-        event.preventDefault();
-      }
-    });
-  });
-});
-    
 
 //wrap given script in try-catch block
 function tryCatch(jsCall) {
