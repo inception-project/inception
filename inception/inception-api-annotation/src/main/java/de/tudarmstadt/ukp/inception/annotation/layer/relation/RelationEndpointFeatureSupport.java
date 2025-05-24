@@ -194,7 +194,7 @@ public class RelationEndpointFeatureSupport
     }
 
     @Override
-    public <V> V getDefaultFeatureValue(AnnotationFeature aFeature, FeatureStructure aFS)
+    public <V> V getNullFeatureValue(AnnotationFeature aFeature, FeatureStructure aFS)
     {
         throw new NotImplementedException(
                 "Relation endpoints do not support getDefaultFeatureValue");

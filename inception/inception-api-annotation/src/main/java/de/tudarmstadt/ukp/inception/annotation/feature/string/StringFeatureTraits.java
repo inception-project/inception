@@ -17,12 +17,16 @@
  */
 package de.tudarmstadt.ukp.inception.annotation.feature.string;
 
+import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_DEFAULT;
+import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonEnumDefaultValue;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.keybindings.KeyBinding;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.keybindings.KeyBindingTrait;
@@ -58,12 +62,13 @@ public class StringFeatureTraits
         }
     }
 
-    private boolean multipleRows = false;
-    private boolean dynamicSize = false;
+    private EditorType editorType = EditorType.AUTO;
     private int collapsedRows = 1;
     private int expandedRows = 1;
-    private EditorType editorType = EditorType.AUTO;
-    private List<KeyBinding> keyBindings = new ArrayList<>();
+    private @JsonInclude(NON_DEFAULT) boolean multipleRows = false;
+    private @JsonInclude(NON_DEFAULT) boolean dynamicSize = false;
+    private @JsonInclude(NON_EMPTY) List<KeyBinding> keyBindings = new ArrayList<>();
+    private @JsonInclude(NON_EMPTY) String defaultValue;
 
     public StringFeatureTraits()
     {
@@ -75,9 +80,9 @@ public class StringFeatureTraits
         return multipleRows;
     }
 
-    public void setMultipleRows(boolean multipleRows)
+    public void setMultipleRows(boolean aMultipleRows)
     {
-        this.multipleRows = multipleRows;
+        multipleRows = aMultipleRows;
     }
 
     public boolean isDynamicSize()
@@ -85,9 +90,9 @@ public class StringFeatureTraits
         return dynamicSize;
     }
 
-    public void setDynamicSize(boolean dynamicSize)
+    public void setDynamicSize(boolean aDynamicSize)
     {
-        this.dynamicSize = dynamicSize;
+        dynamicSize = aDynamicSize;
     }
 
     public int getCollapsedRows()
@@ -95,9 +100,9 @@ public class StringFeatureTraits
         return collapsedRows;
     }
 
-    public void setCollapsedRows(int collapsedRows)
+    public void setCollapsedRows(int aCollapsedRows)
     {
-        this.collapsedRows = collapsedRows;
+        collapsedRows = aCollapsedRows;
     }
 
     public int getExpandedRows()
@@ -105,9 +110,9 @@ public class StringFeatureTraits
         return expandedRows;
     }
 
-    public void setExpandedRows(int expandedRows)
+    public void setExpandedRows(int aExpandedRows)
     {
-        this.expandedRows = expandedRows;
+        expandedRows = aExpandedRows;
     }
 
     public EditorType getEditorType()
@@ -135,5 +140,15 @@ public class StringFeatureTraits
         else {
             keyBindings = aKeyBindings;
         }
+    }
+
+    public String getDefaultValue()
+    {
+        return defaultValue;
+    }
+
+    public void setDefaultValue(String aDefaultValue)
+    {
+        defaultValue = aDefaultValue;
     }
 }

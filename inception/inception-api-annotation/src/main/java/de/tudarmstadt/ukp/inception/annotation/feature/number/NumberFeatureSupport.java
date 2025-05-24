@@ -141,7 +141,7 @@ public class NumberFeatureSupport
 
     @SuppressWarnings("unchecked")
     @Override
-    public <V> V getDefaultFeatureValue(AnnotationFeature aFeature, FeatureStructure aFS)
+    public <V> V getNullFeatureValue(AnnotationFeature aFeature, FeatureStructure aFS)
     {
         return switch (aFeature.getType()) {
         case CAS.TYPE_NAME_INTEGER -> (V) (Object) 0;

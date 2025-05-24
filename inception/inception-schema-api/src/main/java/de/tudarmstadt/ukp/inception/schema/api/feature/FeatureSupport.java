@@ -328,7 +328,7 @@ public interface FeatureSupport<T>
         var f = aFS.getType().getFeatureByBaseName(aFeature.getName());
 
         if (f == null) {
-            value = getDefaultFeatureValue(aFeature, aFS);
+            value = getNullFeatureValue(aFeature, aFS);
         }
         else if (f.getRange().isPrimitive()) {
             value = FSUtil.getFeature(aFS, aFeature.getName(), Object.class);
@@ -343,7 +343,7 @@ public interface FeatureSupport<T>
         return (V) wrapFeatureValue(aFeature, aFS.getCAS(), value);
     }
 
-    <V> V getDefaultFeatureValue(AnnotationFeature aFeature, FeatureStructure aFS);
+    <V> V getNullFeatureValue(AnnotationFeature aFeature, FeatureStructure aFS);
 
     default boolean isFeatureValueEqual(AnnotationFeature aFeature, FeatureStructure aFS1,
             FeatureStructure aFS2)
@@ -391,6 +391,12 @@ public interface FeatureSupport<T>
      * @return feature editor representation of the value.
      */
     Serializable wrapFeatureValue(AnnotationFeature aFeature, CAS aCAS, Object aValue);
+
+    default void initializeAnnotation(AnnotationFeature aFeature, FeatureStructure aFS)
+        throws AnnotationException
+    {
+        // Nothing by default
+    }
 
     default IllegalArgumentException unsupportedFeatureTypeException(AnnotationFeature aFeature)
     {
