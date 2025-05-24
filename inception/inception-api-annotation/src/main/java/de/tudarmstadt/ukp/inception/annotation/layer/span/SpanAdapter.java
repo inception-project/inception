@@ -189,6 +189,13 @@ public class SpanAdapter
             TrimUtils.trim(aCas.getDocumentText(), newAnnotation);
         }
 
+        for (var feature : listFeatures()) {
+            var maybeSupport = getFeatureSupport(feature.getName());
+            if (maybeSupport.isPresent()) {
+                maybeSupport.get().initializeAnnotation(feature, newAnnotation);
+            }
+        }
+
         LOG.trace("Created span annotation {}-{} [{}]", newAnnotation.getBegin(),
                 newAnnotation.getEnd(), newAnnotation.getCoveredText());
 
