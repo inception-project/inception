@@ -29,6 +29,7 @@ import java.lang.invoke.MethodHandles;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.fit.util.FSUtil;
@@ -52,6 +53,7 @@ import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureEditor;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureType;
+import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
 
 /**
  * <p>
@@ -239,8 +241,19 @@ public class StringFeatureSupport
     }
 
     @Override
-    public <V> V getDefaultFeatureValue(AnnotationFeature aFeature, FeatureStructure aFS)
+    public <V> V getNullFeatureValue(AnnotationFeature aFeature, FeatureStructure aFS)
     {
         return null;
+    }
+
+    @Override
+    public void initializeAnnotation(AnnotationFeature aFeature, FeatureStructure aFS)
+        throws AnnotationException
+    {
+        var traits = readTraits(aFeature);
+        if (StringUtils.isNotBlank(traits.getDefaultValue())) {
+            setFeatureValue(aFS.getCAS(), aFeature, ICasUtil.getAddr(aFS),
+                    traits.getDefaultValue());
+        }
     }
 }

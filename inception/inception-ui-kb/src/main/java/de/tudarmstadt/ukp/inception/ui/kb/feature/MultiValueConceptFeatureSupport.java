@@ -221,7 +221,7 @@ public class MultiValueConceptFeatureSupport
 
     @SuppressWarnings("unchecked")
     @Override
-    public <V> V getDefaultFeatureValue(AnnotationFeature aFeature, FeatureStructure aFS)
+    public <V> V getNullFeatureValue(AnnotationFeature aFeature, FeatureStructure aFS)
     {
         return (V) Collections.emptyList();
     }
