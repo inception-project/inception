@@ -43,9 +43,12 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Serializable;
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
@@ -77,6 +80,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
@@ -90,6 +94,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -108,19 +113,26 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.exception.ObjectN
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.exception.RemoteApiException;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.exception.UnsupportedFormatException;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RAnnotation;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RBulkPredictionRequest;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RDocument;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RPermission;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RProject;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RResponse;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RTaskState;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.config.RemoteApiAutoConfiguration;
 import de.tudarmstadt.ukp.inception.curation.service.CurationDocumentService;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentStorageService;
+import de.tudarmstadt.ukp.inception.processing.recommender.BulkPredictionTask;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.project.export.ProjectExportService;
 import de.tudarmstadt.ukp.inception.project.export.ProjectImportExportUtils;
+import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
+import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.WebAnnoConst;
 import de.tudarmstadt.ukp.inception.support.io.ZipUtils;
+import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -149,6 +161,7 @@ public class AeroRemoteApiController
     private static final String EXPORT = "export.zip";
     private static final String STATE = "state";
     private static final String PERMISSIONS = "permissions";
+    private static final String TASKS = "tasks";
 
     private static final String PARAM_FILE = "file";
     private static final String PARAM_CONTENT = "content";
@@ -163,6 +176,7 @@ public class AeroRemoteApiController
     private static final String PARAM_CREATE_MISSING_USERS = "createMissingUsers";
     private static final String PARAM_IMPORT_PERMISSIONS = "importPermissions";
     private static final String PARAM_ROLES = "roles";
+    private static final String PARAM_TASK = "task";
 
     private static final String VAL_ORIGINAL = "ORIGINAL";
 
@@ -174,7 +188,7 @@ public class AeroRemoteApiController
 
     private static final String FORMAT_DEFAULT = "text";
 
-    private final Logger LOG = LoggerFactory.getLogger(getClass());
+    private final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private @Autowired DocumentService documentService;
     private @Autowired DocumentStorageService documentStorageService;
@@ -183,6 +197,9 @@ public class AeroRemoteApiController
     private @Autowired DocumentImportExportService importExportService;
     private @Autowired UserDao userRepository;
     private @Autowired ProjectExportService exportService;
+    private @Autowired SchedulingService schedulingService;
+    private @Autowired RecommendationService recommendationService;
+    private @Autowired AnnotationSchemaService schemaService;
 
     @ExceptionHandler(value = RemoteApiException.class)
     public ResponseEntity<RResponse<Void>> handleException(RemoteApiException aException)
@@ -210,13 +227,13 @@ public class AeroRemoteApiController
 
     private User getCurrentUser() throws ObjectNotFoundException
     {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        var username = SecurityContextHolder.getContext().getAuthentication().getName();
         return getUser(username);
     }
 
     private User getUser(String aUserId) throws ObjectNotFoundException
     {
-        User user = userRepository.get(aUserId);
+        var user = userRepository.get(aUserId);
         if (user == null) {
             throw new ObjectNotFoundException("User [" + aUserId + "] not found.");
         }
@@ -227,7 +244,7 @@ public class AeroRemoteApiController
         throws ObjectNotFoundException, AccessForbiddenException
     {
         // Get current user - this will throw an exception if the current user does not exit
-        User user = getCurrentUser();
+        var user = getCurrentUser();
 
         // Get project
         Project project;
@@ -292,14 +309,14 @@ public class AeroRemoteApiController
     public ResponseEntity<RResponse<List<RProject>>> projectList() throws Exception
     {
         // Get current user - this will throw an exception if the current user does not exit
-        User user = getCurrentUser();
+        var user = getCurrentUser();
 
         // Get projects with permission
-        List<Project> accessibleProjects = projectService.listAccessibleProjects(user);
+        var accessibleProjects = projectService.listAccessibleProjects(user);
 
         // Collect all the projects
-        List<RProject> projectList = new ArrayList<>();
-        for (Project project : accessibleProjects) {
+        var projectList = new ArrayList<RProject>();
+        for (var project : accessibleProjects) {
             projectList.add(new RProject(project));
         }
         return ResponseEntity.ok(new RResponse<>(projectList));
@@ -318,7 +335,7 @@ public class AeroRemoteApiController
         throws Exception
     {
         // Get current user - this will throw an exception if the current user does not exit
-        User user = getCurrentUser();
+        var user = getCurrentUser();
 
         // Check for the access
         assertPermission("User [" + user.getUsername() + "] is not allowed to create projects",
@@ -337,7 +354,7 @@ public class AeroRemoteApiController
                     "A project with URL slug [" + aSlug + "] already exists");
         }
 
-        String projectName = aName.orElse(aSlug);
+        var projectName = aName.orElse(aSlug);
         if (!Project.isValidProjectName(projectName)) {
             throw new IllegalNameException("Illegal project name [%s]", projectName);
         }
@@ -373,7 +390,7 @@ public class AeroRemoteApiController
         throws Exception
     {
         // Get project (this also ensures that it exists and that the current user can access it
-        Project project = getProject(aProjectId);
+        var project = getProject(aProjectId);
 
         return ResponseEntity.ok(new RResponse<>(new RProject(project)));
     }
@@ -386,7 +403,7 @@ public class AeroRemoteApiController
         throws Exception
     {
         // Get project (this also ensures that it exists and that the current user can access it
-        Project project = getProject(aProjectId);
+        var project = getProject(aProjectId);
 
         projectService.removeProject(project);
 
@@ -530,9 +547,9 @@ public class AeroRemoteApiController
         // Get project (this also ensures that it exists and that the current user can access it
         Project project = getProject(aProjectId);
 
-        List<SourceDocument> documents = documentService.listSourceDocuments(project);
+        var documents = documentService.listSourceDocuments(project);
 
-        List<RDocument> documentList = new ArrayList<>();
+        var documentList = new ArrayList<RDocument>();
         for (SourceDocument document : documents) {
             documentList.add(new RDocument(document));
         }
@@ -553,7 +570,7 @@ public class AeroRemoteApiController
         throws Exception
     {
         // Get project (this also ensures that it exists and that the current user can access it
-        Project project = getProject(aProjectId);
+        var project = getProject(aProjectId);
 
         // Check if the format is supported
         if (!importExportService.getReadableFormatById(aFormat).isPresent()) {
@@ -568,14 +585,14 @@ public class AeroRemoteApiController
         }
 
         // Meta data entry to the database
-        SourceDocument document = new SourceDocument();
+        var document = new SourceDocument();
         document.setProject(project);
         document.setName(aName);
         document.setFormat(aFormat);
 
         // Set state if one was provided
         if (aState.isPresent()) {
-            SourceDocumentState state = parseSourceDocumentState(aState.get());
+            var state = parseSourceDocumentState(aState.get());
             switch (state) {
             case NEW: // fallthrough
             case ANNOTATION_IN_PROGRESS: // fallthrough
@@ -596,7 +613,7 @@ public class AeroRemoteApiController
             documentService.uploadSourceDocument(is, document);
         }
 
-        RResponse<RDocument> rDocument = new RResponse<>(new RDocument(document));
+        var rDocument = new RResponse<>(new RDocument(document));
 
         if (aState.isPresent()) {
             rDocument.addMessage(INFO, "State of document [" + document.getId() + "] set to ["
@@ -672,7 +689,7 @@ public class AeroRemoteApiController
         try {
             // Load the converted file into memory
             exportedFile = importExportService.exportCasToFile(cas, doc, doc.getName(), format);
-            byte[] resource = FileUtils.readFileToByteArray(exportedFile);
+            var resource = FileUtils.readFileToByteArray(exportedFile);
 
             // Send it back to the client
             HttpHeaders httpHeaders = new HttpHeaders();
@@ -700,9 +717,9 @@ public class AeroRemoteApiController
         throws Exception
     {
         // Get project (this also ensures that it exists and that the current user can access it
-        Project project = getProject(aProjectId);
+        var project = getProject(aProjectId);
 
-        SourceDocument doc = getDocument(project, aDocumentId);
+        var doc = getDocument(project, aDocumentId);
         documentService.removeSourceDocument(doc);
 
         return ResponseEntity.ok(new RResponse<>(INFO,
@@ -722,12 +739,12 @@ public class AeroRemoteApiController
         // Get project (this also ensures that it exists and that the current user can access it
         Project project = getProject(aProjectId);
 
-        SourceDocument doc = getDocument(project, aDocumentId);
+        var doc = getDocument(project, aDocumentId);
 
-        List<AnnotationDocument> annotations = documentService.listAnnotationDocuments(doc);
+        var annotations = documentService.listAnnotationDocuments(doc);
 
-        List<RAnnotation> annotationList = new ArrayList<>();
-        for (AnnotationDocument annotation : annotations) {
+        var annotationList = new ArrayList<RAnnotation>();
+        for (var annotation : annotations) {
             annotationList.add(new RAnnotation(annotation));
         }
 
@@ -748,15 +765,15 @@ public class AeroRemoteApiController
             @RequestParam(name = PARAM_STATE) Optional<String> aState)
         throws Exception
     {
-        Project project = getProject(aProjectId);
-        SourceDocument document = getDocument(project, aDocumentId);
+        var project = getProject(aProjectId);
+        var document = getDocument(project, aDocumentId);
 
-        AnnotationDocument anno = getAnnotation(document, aAnnotatorId, false);
+        var anno = getAnnotation(document, aAnnotatorId, false);
         documentService.setAnnotationDocumentState(anno,
                 parseAnnotationDocumentState(aState.get()));
         documentService.createOrUpdateAnnotationDocument(anno);
 
-        RResponse<RAnnotation> response = new RResponse<>(new RAnnotation(anno));
+        var response = new RResponse<>(new RAnnotation(anno));
         response.addMessage(INFO,
                 "State of annotations of user [" + aAnnotatorId + "] on document ["
                         + document.getId() + "] set to ["
@@ -780,12 +797,12 @@ public class AeroRemoteApiController
             @RequestParam(PARAM_STATE) Optional<String> aState, UriComponentsBuilder aUcb)
         throws Exception
     {
-        User annotator = getUser(aAnnotatorId);
-        Project project = getProject(aProjectId);
-        SourceDocument document = getDocument(project, aDocumentId);
-        AnnotationDocument anno = getAnnotation(document, aAnnotatorId, true);
+        var annotator = getUser(aAnnotatorId);
+        var project = getProject(aProjectId);
+        var document = getDocument(project, aDocumentId);
+        var anno = getAnnotation(document, aAnnotatorId, true);
 
-        CAS annotationCas = createCompatibleCas(aProjectId, aDocumentId, aFile, aFormat);
+        var annotationCas = createCompatibleCas(aProjectId, aDocumentId, aFile, aFormat);
 
         // If they are compatible, then we can store the new annotations
         documentService.writeAnnotationCas(annotationCas, document, annotator);
@@ -796,7 +813,7 @@ public class AeroRemoteApiController
             documentService.createOrUpdateAnnotationDocument(anno);
         }
 
-        RResponse<RAnnotation> response = new RResponse<>(new RAnnotation(anno));
+        var response = new RResponse<>(new RAnnotation(anno));
 
         if (aState.isPresent()) {
             response.addMessage(INFO,
@@ -839,10 +856,10 @@ public class AeroRemoteApiController
         throws Exception
     {
         // Get project (this also ensures that it exists and that the current user can access it
-        Project project = getProject(aProjectId);
+        var project = getProject(aProjectId);
 
-        SourceDocument doc = getDocument(project, aDocumentId);
-        AnnotationDocument anno = getAnnotation(doc, aAnnotatorId, false);
+        var doc = getDocument(project, aDocumentId);
+        var anno = getAnnotation(doc, aAnnotatorId, false);
         documentService.removeAnnotationDocument(anno);
         documentService.deleteAnnotationCas(anno);
 
@@ -873,7 +890,7 @@ public class AeroRemoteApiController
         // If they are compatible, then we can store the new annotations
         curationService.writeCurationCas(annotationCas, document, false);
 
-        AnnotationDocumentState resultState = AnnotationDocumentState.IN_PROGRESS;
+        var resultState = AnnotationDocumentState.IN_PROGRESS;
         if (aState.isPresent()) {
             SourceDocumentState state = parseSourceDocumentState(aState.get());
             switch (state) {
@@ -900,7 +917,7 @@ public class AeroRemoteApiController
             documentService.createSourceDocument(document);
         }
 
-        RResponse<RAnnotation> response = new RResponse<>(
+        var response = new RResponse<>(
                 new RAnnotation(WebAnnoConst.CURATION_USER, resultState, new Date()));
         return ResponseEntity.created(
                 aUcb.path(API_BASE + "/" + PROJECTS + "/{pid}/" + DOCUMENTS + "/{did}/" + CURATION)
@@ -979,7 +996,7 @@ public class AeroRemoteApiController
         }
 
         // Determine the format
-        FormatSupport format = importExportService.getWritableFormatById(formatId)
+        var format = importExportService.getWritableFormatById(formatId)
                 .orElseThrow(() -> new UnsupportedFormatException(
                         "Format [%s] is not writable. Acceptable formats are %s.", formatId,
                         importExportService.getWritableFormats().stream() //
@@ -1252,9 +1269,9 @@ public class AeroRemoteApiController
         throws Exception
     {
         // Get project (this also ensures that it exists and that the current user can access it
-        Project project = getProject(aProjectId);
+        var project = getProject(aProjectId);
 
-        User user = getCurrentUser();
+        var user = getCurrentUser();
 
         // Check for the access
         assertPermission(
@@ -1262,7 +1279,7 @@ public class AeroRemoteApiController
                 projectService.hasRole(user, project, MANAGER)
                         || userRepository.isAdministrator(user));
 
-        var permissions = projectService.getProjectPermissions(project).stream()
+        var permissions = projectService.listProjectPermissions(project).stream() //
                 .map(RPermission::new) //
                 .collect(toList());
 
@@ -1280,9 +1297,9 @@ public class AeroRemoteApiController
         throws Exception
     {
         // Get project (this also ensures that it exists and that the current user can access it
-        Project project = getProject(aProjectId);
+        var project = getProject(aProjectId);
 
-        User user = getCurrentUser();
+        var user = getCurrentUser();
 
         // Check for the access
         assertPermission(
@@ -1290,7 +1307,7 @@ public class AeroRemoteApiController
                 projectService.hasRole(user, project, MANAGER)
                         || userRepository.isAdministrator(user));
 
-        User subjectUser = getUser(aSubjectUser);
+        var subjectUser = getUser(aSubjectUser);
 
         var permissions = projectService.listProjectPermissionLevel(subjectUser, project).stream()
                 .map(RPermission::new) //
@@ -1311,9 +1328,9 @@ public class AeroRemoteApiController
         throws Exception
     {
         // Get project (this also ensures that it exists and that the current user can access it
-        Project project = getProject(aProjectId);
+        var project = getProject(aProjectId);
 
-        User user = getCurrentUser();
+        var user = getCurrentUser();
 
         // Check for the access
         assertPermission(
@@ -1321,7 +1338,7 @@ public class AeroRemoteApiController
                 projectService.hasRole(user, project, MANAGER)
                         || userRepository.isAdministrator(user));
 
-        User subjectUser = getUser(aSubjectUser);
+        var subjectUser = getUser(aSubjectUser);
 
         var roles = aRoles.stream().map(PermissionLevel::valueOf).toArray(PermissionLevel[]::new);
 
@@ -1346,9 +1363,9 @@ public class AeroRemoteApiController
         throws Exception
     {
         // Get project (this also ensures that it exists and that the current user can access it
-        Project project = getProject(aProjectId);
+        var project = getProject(aProjectId);
 
-        User user = getCurrentUser();
+        var user = getCurrentUser();
 
         // Check for the access
         assertPermission(
@@ -1356,7 +1373,7 @@ public class AeroRemoteApiController
                 projectService.hasRole(user, project, MANAGER)
                         || userRepository.isAdministrator(user));
 
-        User subjectUser = getUser(aSubjectUser);
+        var subjectUser = getUser(aSubjectUser);
 
         var roles = aRoles.stream().map(PermissionLevel::valueOf).toArray(PermissionLevel[]::new);
 
@@ -1367,5 +1384,73 @@ public class AeroRemoteApiController
                 .collect(toList());
 
         return ResponseEntity.ok(new RResponse<>(permissions));
+    }
+
+    @Operation(summary = "Submit a task (non-AERO)")
+    @PostMapping( //
+            value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + TASKS, //
+            consumes = APPLICATION_JSON_VALUE, //
+            produces = APPLICATION_JSON_VALUE)
+    public ResponseEntity<RResponse<RTaskState>> taskSubmit(
+            @PathVariable(PARAM_PROJECT_ID) long aProjectId, //
+            @RequestParam(PARAM_TASK) String aTask, //
+            @RequestBody String aDetailsJson)
+        throws Exception
+    {
+        var project = getProject(aProjectId);
+
+        // Check if the user has permission to submit jobs
+        var user = getCurrentUser();
+        assertPermission("User [" + user.getUsername() + "] is not allowed to submit jobs",
+                projectService.hasRole(user, project, MANAGER)
+                        || userRepository.isAdministrator(user));
+
+        if (!aTask.equals("BULK_PREDICTION")) {
+            throw new IllegalArgumentException("Unknown task type [" + aTask + "]");
+        }
+
+        var request = JSONUtil.fromJsonString(RBulkPredictionRequest.class, aDetailsJson);
+
+        var recommender = recommendationService.getRecommender(project, request.recommender());
+        if (!recommender.isPresent()) {
+            throw new IllegalArgumentException("Recommender [" + request.recommender()
+                    + "] not found in project [" + aProjectId + "]");
+        }
+
+        var metadata = new HashMap<AnnotationFeature, Serializable>();
+        if (request.metadata() != null) {
+            for (var layerEntry : request.metadata().entrySet()) {
+                var layer = schemaService.findLayer(project, layerEntry.getKey());
+                if (layer == null) {
+                    throw new IllegalArgumentException("Layer [" + layerEntry.getKey()
+                            + "] not found in project [" + aProjectId + "]");
+                }
+
+                var featureValues = layerEntry.getValue();
+                for (var featureValueEntry : featureValues.entrySet()) {
+                    var feature = schemaService.getFeature(featureValueEntry.getKey(), layer);
+                    if (feature == null) {
+                        throw new IllegalArgumentException("Feature [" + featureValueEntry.getKey()
+                                + "] not found in layer [" + layerEntry.getKey() + "]");
+                    }
+
+                    metadata.put(feature, featureValueEntry.getValue());
+                }
+            }
+        }
+
+        var task = BulkPredictionTask.builder() //
+                .withSessionOwner(user) //
+                .withRecommender(recommender.get()) //
+                .withTrigger("Remote API") //
+                .withDataOwner(request.userId()) //
+                .withProcessingMetadata(metadata) //
+                .withStatesToProcess(request.statesToProcess()) //
+                .withFinishDocumentsWithoutRecommendations(
+                        request.finishDocumentsWithoutRecommendations()) //
+                .build();
+        schedulingService.enqueue(task);
+
+        return ResponseEntity.ok(new RResponse<>(new RTaskState(task)));
     }
 }
