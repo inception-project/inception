@@ -137,7 +137,8 @@ public class BulkPredictionTask
                             .setMaxProgress(annotatableDocuments.size()) //
                             .addMessage(LogMessage.info(this,
                                     "%d annotations generated from %d suggestions in %d documents",
-                                    annotationsCount, suggestionsCount, processedDocumentsCount)));
+                                    annotationsCount.get(), suggestionsCount.get(),
+                                    processedDocumentsCount.get())));
                     break;
                 }
 
@@ -188,7 +189,8 @@ public class BulkPredictionTask
                     .setMaxProgress(maxProgress.get()) //
                     .addMessage(LogMessage.info(this,
                             "%d annotations generated from %d suggestions in %d documents",
-                            annotationsCount, suggestionsCount, processedDocumentsCount)));
+                            annotationsCount.get(), suggestionsCount.get(),
+                            processedDocumentsCount.get())));
         }
     }
 
