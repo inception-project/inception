@@ -216,7 +216,7 @@
     <rollup.version>^4.40.0</rollup.version>
     <sass.version>^1.75.0</sass.version>
     <stomp-stompjs.version>^6.1.2</stomp-stompjs.version>
-    <svelte.version>^5.25.12</svelte.version>
+    <svelte.version>^5.33.3</svelte.version>
     <svelte-preprocess.version>^6.0.3</svelte-preprocess.version>
     <sveltejs-vite-plugin-svelte.version>^5.0.3</sveltejs-vite-plugin-svelte.version>
     <svgdotjs-svg-js.version>^3.2.4</svgdotjs-svg-js.version>
