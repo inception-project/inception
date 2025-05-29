@@ -550,15 +550,16 @@ public class DocumentImportExportServiceImpl
         return features;
     }
 
-    private void addOrUpdateDocumentMetadata(CAS aCas, SourceDocument aDocument, String aFileName)
+    static void addOrUpdateDocumentMetadata(CAS aCas, SourceDocument aDocument, String aFileName)
         throws MalformedURLException, CASException
     {
         var slug = aDocument.getProject().getSlug();
         var documentMetadata = DocumentMetaData.get(aCas.getJCas());
+        documentMetadata.setDocumentTitle(aDocument.getName());
+        documentMetadata.setCollectionId(slug);
+        documentMetadata.setDocumentId(aFileName);
         documentMetadata.setDocumentBaseUri(slug);
         documentMetadata.setDocumentUri(slug + "/" + aFileName);
-        documentMetadata.setCollectionId(slug + "/" + aFileName);
-        documentMetadata.setDocumentId(aFileName);
     }
 
     private void addLayerAndFeatureDefinitionAnnotations(CAS aCas, Project aProject,
