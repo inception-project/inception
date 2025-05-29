@@ -66,44 +66,15 @@ const defaults = {
 fs.mkdirsSync(`${outbase}`)
 fs.emptyDirSync(outbase)
 
-async function postProcessFile(filePath) {
-  console.log(`Post-processing ${filePath}...`);
-  try {
-    let content = await fs.readFile(filePath, 'utf8');
-    
-    // Find unclosed input tags and make them self-closing
-    content = content.replace(/<input([^>]*)>/g, '<input$1 />');
-    
-    // Handle <!> fragments - these should be comment nodes in Svelte
-    content = content.replace(/<!>/g, '<!---->');
-    
-    await fs.writeFile(filePath, content, 'utf8');
-    console.log('Post-processing complete');
-  } catch (error) {
-    console.error('Error during post-processing:', error);
-  }
-}
-
 if (argv.live) {
   const context = await esbuild.context({
     ...defaults,
     plugins: [
       ...defaults.plugins,
-      {
-        name: 'post-processor',
-        setup(build) {
-          build.onEnd(async (result) => {
-            if (result.errors.length === 0) {
-              await postProcessFile(defaults.outfile);
-            }
-          });
-        },
-      },
     ],
   });  
   await context.watch();
   console.log(`Watching for changes to ${defaults.outfile}...`);
 } else {
   await esbuild.build(defaults);
-  await postProcessFile(defaults.outfile);
 }
