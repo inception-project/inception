@@ -229,14 +229,14 @@
 
 <!-- svelte-ignore css_unused_selector -->
 <style lang="scss">
-    @import "bootstrap/scss/bootstrap.scss";
+//    @import "bootstrap/scss/bootstrap.scss";
     @import "@inception-project/inception-js-api/src/style/InceptionEditorIcons.scss";
     @import "@inception-project/inception-js-api/src/style/InceptionEditorColors.scss";
 
-    .bootstrap {
-        // Ensure that Bootstrap properly applies to the component
-        @extend body;
-    }
+    // .bootstrap {
+    //     // Ensure that Bootstrap properly applies to the component
+    //     @extend body;
+    // }
 
     .popover {
         width: var(--width);

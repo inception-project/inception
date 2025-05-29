@@ -44,14 +44,14 @@
 
     let groupedAnnotations: Record<string, Annotation[]> = $state()
     let groups: { label: string, collapsed: boolean }[] = $state()
-    let collapsedGroups = new Set<string>()
+    let collapsedGroups: string[] = $state([]);
     let filter = $state('');
 
     run(() => {
         const sortedLabels = [...pinnedGroups, ...uniqueLabels(data).filter(v => !pinnedGroups.includes(v))]
 
         groups = sortedLabels.map(label => {
-            return { label: label, collapsed: collapsedGroups.has(label) };
+            return { label: label, collapsed: collapsedGroups.includes(label) };
         });
 
         const relations = data?.relations.values() || []
@@ -62,7 +62,7 @@
         )
     })
 
-    run(() => {
+    $effect(() => {
             for (let [key, items] of Object.entries(groupedAnnotations)) {
             items = filterAnnotations(data, items, filter)
             items.sort((a, b) => {
@@ -125,25 +125,22 @@
     }
 
     function toggleCollapsed(group) {
-        if (!collapsedGroups.has(group.label)) {
-            collapsedGroups.add(group.label)
+        if (!collapsedGroups.includes(group.label)) {
+            collapsedGroups.push(group.label)
         }
         else {
-            collapsedGroups.delete(group.label)
+            collapsedGroups = collapsedGroups.filter(label => label !== group.label)
         }
-        data = data // Trigger reactive update
     }
 
     function collapseAll() {
         for (const group of groups) {
-            collapsedGroups.add(group.label)
+            collapsedGroups.push(group.label)
         }
-        data = data // Trigger reactive update
     }
 
     function expandAll() {
-        collapsedGroups.clear()
-        data = data // Trigger reactive update
+        collapsedGroups = []
     }
 
     const updateFilter = debounce(newFilter => { filter = newFilter }, 300);
@@ -273,6 +270,9 @@
 {/if}
 
 <style lang="scss">
+    @import "@inception-project/inception-js-api/src/style/InceptionEditorIcons.scss";
+    @import "@inception-project/inception-js-api/src/style/InceptionEditorColors.scss";
+
     .labels {
         background: linear-gradient(to right, transparent 0px, var(--bs-body-bg) 15px);
         padding-left: 20px;
