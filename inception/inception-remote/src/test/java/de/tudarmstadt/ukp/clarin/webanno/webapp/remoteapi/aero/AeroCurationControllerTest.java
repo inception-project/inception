@@ -19,7 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero;
 
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_ADMIN;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_REMOTE;
-import static org.hamcrest.Matchers.containsString;
+import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_USER;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -57,9 +57,8 @@ import de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeServiceImpl
         webEnvironment = WebEnvironment.MOCK, //
         properties = { //
                 "spring.main.banner-mode=off", //
-                "search.enabled=false", //
                 "remote-api.enabled=true", //
-                "repository.path=" + AeroRemoteApiController_Project_Test.TEST_OUTPUT_FOLDER })
+                "repository.path=" + AeroCurationControllerTest.TEST_OUTPUT_FOLDER })
 @EnableWebSecurity
 @EnableAutoConfiguration( //
         exclude = { //
@@ -71,9 +70,9 @@ import de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeServiceImpl
         "de.tudarmstadt.ukp.clarin.webanno" })
 @TestMethodOrder(MethodOrderer.MethodName.class)
 @DirtiesContext(classMode = ClassMode.BEFORE_EACH_TEST_METHOD)
-public class AeroRemoteApiController_Project_Test
+public class AeroCurationControllerTest
 {
-    static final String TEST_OUTPUT_FOLDER = "target/test-output/AeroRemoteApiController_Project_Test";
+    static final String TEST_OUTPUT_FOLDER = "target/test-output/AeroRemoteApiController_Curation_Test";
 
     private @Autowired WebApplicationContext context;
     private @Autowired UserDao userRepository;
@@ -81,49 +80,61 @@ public class AeroRemoteApiController_Project_Test
     private MockAeroClient adminActor;
 
     @BeforeAll
-    static void setupClass()
+    public static void setupClass()
     {
         FileSystemUtils.deleteRecursively(new File(TEST_OUTPUT_FOLDER));
     }
 
     @BeforeEach
-    void setup()
+    public void setup() throws Exception
     {
         adminActor = new MockAeroClient(context, "admin", "ADMIN", "REMOTE");
 
         userRepository.create(new User("admin", ROLE_ADMIN, ROLE_REMOTE));
+        userRepository.create(new User("user", ROLE_USER, ROLE_REMOTE));
+
+        adminActor.createProject("project1").andExpect(status().isCreated())
+                .andExpect(jsonPath("$.body.id").value("1"))
+                .andExpect(jsonPath("$.body.name").value("project1"));
+
+        adminActor.importTextDocument(1l, "test.txt", "This is a test.")
+                .andExpect(status().isCreated()).andExpect(jsonPath("$.body.id").value("1"));
     }
 
     @Test
-    void testCreateAndDelete() throws Exception
+    public void testCurationCreateDelete() throws Exception
     {
-        adminActor.listProjects() //
+        adminActor.listDocuments(1l) //
                 .andExpect(status().isOk()) //
-                .andExpect(content().contentType(APPLICATION_JSON_VALUE)) //
-                .andExpect(jsonPath("$.messages").isEmpty());
+                .andExpect(content().contentType(APPLICATION_JSON_VALUE))
+                .andExpect(jsonPath("$.body[0].id").value("1"))
+                .andExpect(jsonPath("$.body[0].name").value("test.txt"))
+                .andExpect(jsonPath("$.body[0].state").value("NEW"));
 
-        adminActor.createProject("project1") //
+        adminActor.importCurations(1, 1, "This is a test.", "CURATION-COMPLETE") //
                 .andExpect(status().isCreated()) //
-                .andExpect(content().contentType(APPLICATION_JSON_VALUE)) //
-                .andExpect(jsonPath("$.body.id").value("1")) //
-                .andExpect(jsonPath("$.body.name").value("project1"));
+                .andExpect(content().contentType(APPLICATION_JSON_VALUE))
+                .andExpect(jsonPath("$.body.user").value("CURATION_USER"))
+                .andExpect(jsonPath("$.body.state").value("COMPLETE"))
+                .andExpect(jsonPath("$.body.timestamp").exists());
 
-        adminActor.listProjects() //
+        adminActor.listDocuments(1l) //
                 .andExpect(status().isOk()) //
-                .andExpect(content().contentType(APPLICATION_JSON_VALUE)) //
-                .andExpect(jsonPath("$.body[0].id").value("1")) //
-                .andExpect(jsonPath("$.body[0].name").value("project1"));
+                .andExpect(content().contentType(APPLICATION_JSON_VALUE))
+                .andExpect(jsonPath("$.body[0].id").value("1"))
+                .andExpect(jsonPath("$.body[0].name").value("test.txt"))
+                .andExpect(jsonPath("$.body[0].state").value("CURATION-COMPLETE"));
 
-        adminActor.deleteProject(1l) //
+        adminActor.deleteCurations(1, 1) //
                 .andExpect(status().isOk()) //
-                .andExpect(content().contentType(APPLICATION_JSON_VALUE)) //
-                .andExpect(jsonPath("$.messages[0].level").value("INFO")) //
-                .andExpect(jsonPath("$.messages[0].message").value(containsString("deleted")));
+                .andExpect(content().contentType(APPLICATION_JSON_VALUE));
 
-        adminActor.listProjects() //
+        adminActor.listDocuments(1l) //
                 .andExpect(status().isOk()) //
-                .andExpect(content().contentType(APPLICATION_JSON_VALUE)) //
-                .andExpect(jsonPath("$.messages").isEmpty());
+                .andExpect(content().contentType(APPLICATION_JSON_VALUE))
+                .andExpect(jsonPath("$.body[0].id").value("1"))
+                .andExpect(jsonPath("$.body[0].name").value("test.txt"))
+                .andExpect(jsonPath("$.body[0].state").value("ANNOTATION-IN-PROGRESS"));
     }
 
     @SpringBootConfiguration

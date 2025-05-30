@@ -22,7 +22,7 @@ import java.util.Date;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.AeroRemoteApiController;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.AeroProjectController;
 
 public class RAnnotation
 {
@@ -33,7 +33,7 @@ public class RAnnotation
     public RAnnotation(AnnotationDocument aAnnotationDocument)
     {
         user = aAnnotationDocument.getUser();
-        state = AeroRemoteApiController
+        state = AeroProjectController
                 .annotationDocumentStateToString(aAnnotationDocument.getState());
         if (aAnnotationDocument.getTimestamp() != null) {
             timestamp = formatTimestamp(aAnnotationDocument.getTimestamp());
@@ -44,7 +44,7 @@ public class RAnnotation
     {
         super();
         user = aUser;
-        state = AeroRemoteApiController.annotationDocumentStateToString(aState);
+        state = AeroProjectController.annotationDocumentStateToString(aState);
         if (aTimestamp != null) {
             timestamp = formatTimestamp(aTimestamp);
         }

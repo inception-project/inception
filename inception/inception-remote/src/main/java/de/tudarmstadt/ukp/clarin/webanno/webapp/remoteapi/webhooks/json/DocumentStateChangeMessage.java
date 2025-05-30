@@ -20,7 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.json;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
-import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.AeroRemoteApiController;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.AeroProjectController;
 import de.tudarmstadt.ukp.inception.documents.event.DocumentStateChangedEvent;
 
 public class DocumentStateChangeMessage
@@ -51,8 +51,8 @@ public class DocumentStateChangeMessage
         documentId = aEvent.getDocument().getId();
         documentName = aEvent.getDocument().getName();
 
-        documentState = AeroRemoteApiController.sourceDocumentStateToString(aEvent.getNewState());
-        documentPreviousState = AeroRemoteApiController
+        documentState = AeroProjectController.sourceDocumentStateToString(aEvent.getNewState());
+        documentPreviousState = AeroProjectController
                 .sourceDocumentStateToString(aEvent.getPreviousState());
     }
 

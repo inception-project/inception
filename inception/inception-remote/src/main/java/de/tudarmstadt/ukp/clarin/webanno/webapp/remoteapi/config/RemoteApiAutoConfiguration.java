@@ -32,7 +32,13 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.LegacyRemoteApiController;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.AeroRemoteApiController;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.AeroAnnotationController;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.AeroController_ImplBase;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.AeroCurationController;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.AeroDocumentController;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.AeroPermissionController;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.AeroProjectController;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.AeroTaskController;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.menubar.SwaggerUiMenuBarItemSupport;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.WebhookService;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.WebhooksConfiguration;
@@ -49,9 +55,44 @@ public class RemoteApiAutoConfiguration
 
     @ConditionalOnExpression(REMOTE_API_ENABLED_CONDITION)
     @Bean
-    public AeroRemoteApiController aeroRemoteApiController()
+    public AeroProjectController aeroRemoteApiController()
     {
-        return new AeroRemoteApiController();
+        return new AeroProjectController();
+    }
+
+    @ConditionalOnExpression(REMOTE_API_ENABLED_CONDITION)
+    @Bean
+    public AeroPermissionController aeroPermissionController()
+    {
+        return new AeroPermissionController();
+    }
+
+    @ConditionalOnExpression(REMOTE_API_ENABLED_CONDITION)
+    @Bean
+    public AeroTaskController aeroTaskController()
+    {
+        return new AeroTaskController();
+    }
+
+    @ConditionalOnExpression(REMOTE_API_ENABLED_CONDITION)
+    @Bean
+    public AeroDocumentController aeroDocumentController()
+    {
+        return new AeroDocumentController();
+    }
+
+    @ConditionalOnExpression(REMOTE_API_ENABLED_CONDITION)
+    @Bean
+    public AeroAnnotationController aeroAnnotationController()
+    {
+        return new AeroAnnotationController();
+    }
+
+    @ConditionalOnExpression(REMOTE_API_ENABLED_CONDITION)
+    @Bean
+    public AeroCurationController aeroCurationController()
+    {
+        return new AeroCurationController();
     }
 
     @ConditionalOnExpression(REMOTE_API_ENABLED_CONDITION)
@@ -94,7 +135,7 @@ public class RemoteApiAutoConfiguration
     public GroupedOpenApi areoRemoteApiDocket()
     {
         return GroupedOpenApi.builder().group("aero-v1")
-                .pathsToMatch(AeroRemoteApiController.API_BASE + "/**")
+                .pathsToMatch(AeroController_ImplBase.API_BASE + "/**")
                 .addOpenApiCustomizer(openApi -> { //
                     openApi.info(new Info() //
                             .title("AERO") //

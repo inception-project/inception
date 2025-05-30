@@ -1,0 +1,492 @@
+/*
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero;
+
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
+import static de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RMessageLevel.ERROR;
+import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.forceOverwriteSofa;
+import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.selectSentences;
+import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.selectTokens;
+import static java.io.File.createTempFile;
+import static java.util.stream.Collectors.toList;
+import static org.apache.commons.io.FilenameUtils.getExtension;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
+import static org.springframework.http.HttpStatus.OK;
+import static org.springframework.http.MediaType.APPLICATION_JSON;
+
+import java.io.File;
+import java.io.IOException;
+import java.lang.invoke.MethodHandles;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.uima.UIMAException;
+import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.text.AnnotationFS;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.multipart.MultipartFile;
+
+import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
+import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.exception.AccessForbiddenException;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.exception.IllegalNameException;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.exception.IncompatibleDocumentException;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.exception.ObjectNotFoundException;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.exception.RemoteApiException;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.exception.UnsupportedFormatException;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RResponse;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
+import de.tudarmstadt.ukp.inception.project.api.ProjectService;
+import jakarta.persistence.NoResultException;
+
+public abstract class AeroController_ImplBase
+{
+    public static final String API_BASE = "/api/aero/v1";
+
+    static final String PROJECTS = "projects";
+    static final String DOCUMENTS = "documents";
+    static final String ANNOTATIONS = "annotations";
+    static final String CURATION = "curation";
+    static final String IMPORT = "import";
+    static final String EXPORT = "export.zip";
+    static final String STATE = "state";
+    static final String PERMISSIONS = "permissions";
+    static final String TASKS = "tasks";
+
+    static final String PARAM_FILE = "file";
+    static final String PARAM_CONTENT = "content";
+    static final String PARAM_NAME = "name";
+    static final String PARAM_TITLE = "title";
+    static final String PARAM_FORMAT = "format";
+    static final String PARAM_STATE = "state";
+    static final String PARAM_CREATOR = "creator";
+    static final String PARAM_PROJECT_ID = "projectId";
+    static final String PARAM_ANNOTATOR_ID = "userId";
+    static final String PARAM_DOCUMENT_ID = "documentId";
+    static final String PARAM_CREATE_MISSING_USERS = "createMissingUsers";
+    static final String PARAM_IMPORT_PERMISSIONS = "importPermissions";
+    static final String PARAM_ROLES = "roles";
+    static final String PARAM_TASK = "task";
+
+    static final String VAL_ORIGINAL = "ORIGINAL";
+
+    // private static final String PROP_ID = "id";
+    // private static final String PROP_NAME = "name";
+    // private static final String PROP_STATE = "state";
+    // private static final String PROP_USER = "user";
+    // private static final String PROP_TIMESTAMP = "user";
+
+    static final String FORMAT_DEFAULT = "text";
+
+    private final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
+    protected @Autowired DocumentService documentService;
+    protected @Autowired ProjectService projectService;
+    protected @Autowired UserDao userRepository;
+    protected @Autowired DocumentImportExportService importExportService;
+
+    @ExceptionHandler(value = RemoteApiException.class)
+    public ResponseEntity<RResponse<Void>> handleException(RemoteApiException aException)
+        throws IOException
+    {
+        if (LOG.isDebugEnabled()) {
+            LOG.error(aException.getMessage(), aException);
+        }
+        else {
+            LOG.error(aException.getMessage());
+        }
+
+        return ResponseEntity.status(aException.getStatus()).contentType(APPLICATION_JSON)
+                .body(new RResponse<>(ERROR, aException.getMessage()));
+    }
+
+    @ExceptionHandler
+    public ResponseEntity<RResponse<Void>> handleException(Exception aException) throws IOException
+    {
+        LOG.error(aException.getMessage(), aException);
+
+        return ResponseEntity.status(INTERNAL_SERVER_ERROR).contentType(APPLICATION_JSON)
+                .body(new RResponse<>(ERROR, "Internal server error: " + aException.getMessage()));
+    }
+
+    protected User getSessionOwner() throws ObjectNotFoundException
+    {
+        var username = SecurityContextHolder.getContext().getAuthentication().getName();
+        return getUser(username);
+    }
+
+    protected User getUser(String aUserId) throws ObjectNotFoundException
+    {
+        var user = userRepository.get(aUserId);
+        if (user == null) {
+            throw new ObjectNotFoundException("User [" + aUserId + "] not found.");
+        }
+        return user;
+    }
+
+    protected Project getProject(long aProjectId)
+        throws ObjectNotFoundException, AccessForbiddenException
+    {
+        // Get current user - this will throw an exception if the current user does not exit
+        var sessionOwner = getSessionOwner();
+
+        // Get project
+        Project project;
+        try {
+            project = projectService.getProject(aProjectId);
+        }
+        catch (NoResultException e) {
+            throw new ObjectNotFoundException("Project [" + aProjectId + "] not found.");
+        }
+
+        // Check for the access
+        assertPermission(
+                "User [" + sessionOwner.getUsername() + "] is not allowed to access project [" + aProjectId
+                        + "]",
+                projectService.hasRole(sessionOwner, project, MANAGER)
+                        || userRepository.isAdministrator(sessionOwner));
+
+        return project;
+    }
+
+    protected SourceDocument getDocument(Project aProject, long aDocumentId)
+        throws ObjectNotFoundException
+    {
+        try {
+            return documentService.getSourceDocument(aProject.getId(), aDocumentId);
+        }
+        catch (NoResultException e) {
+            throw new ObjectNotFoundException("Document [" + aDocumentId + "] in project ["
+                    + aProject.getId() + "] not found.");
+        }
+    }
+
+    protected AnnotationDocument getAnnotation(SourceDocument aDocument, String aUser,
+            boolean aCreateIfMissing)
+        throws ObjectNotFoundException
+    {
+        try {
+            if (aCreateIfMissing) {
+                return documentService.createOrGetAnnotationDocument(aDocument, getUser(aUser));
+            }
+            else {
+                return documentService.getAnnotationDocument(aDocument, getUser(aUser));
+            }
+        }
+        catch (NoResultException e) {
+            throw new ObjectNotFoundException(
+                    "Annotation for user [" + aUser + "] on document [" + aDocument.getId()
+                            + "] in project [" + aDocument.getProject().getId() + "] not found.");
+        }
+    }
+
+    protected void assertPermission(String aMessage, boolean aHasAccess)
+        throws AccessForbiddenException
+    {
+        if (!aHasAccess) {
+            throw new AccessForbiddenException(aMessage);
+        }
+    }
+
+    protected CAS createCompatibleCas(long aProjectId, long aDocumentId, MultipartFile aFile,
+            Optional<String> aFormatId)
+        throws RemoteApiException, ClassNotFoundException, IOException, UIMAException
+    {
+        var project = getProject(aProjectId);
+        var document = getDocument(project, aDocumentId);
+
+        // Check if the format is supported
+        var format = aFormatId.orElse(FORMAT_DEFAULT);
+        if (!importExportService.getReadableFormatById(format).isPresent()) {
+            throw new UnsupportedFormatException(
+                    "Format [%s] not supported. Acceptable formats are %s.", format,
+                    importExportService.getReadableFormats().stream().map(FormatSupport::getId)
+                            .sorted().collect(toList()));
+        }
+
+        var originalFilename = isNotBlank(aFile.getOriginalFilename()) //
+                ? aFile.getOriginalFilename()
+                : document.getName();
+        if (!documentService.isValidDocumentName(originalFilename)) {
+            throw new IllegalNameException("Illegal document name [%s]", originalFilename);
+        }
+
+        // Convert the uploaded annotation document into a CAS
+        File tmpFile = null;
+        CAS annotationCas;
+        try {
+            tmpFile = createTempFile("upload", "." + getExtension(originalFilename));
+            aFile.transferTo(tmpFile);
+            annotationCas = importExportService.importCasFromFile(tmpFile, document, format, null);
+        }
+        finally {
+            if (tmpFile != null) {
+                FileUtils.forceDelete(tmpFile);
+            }
+        }
+
+        // Check if the uploaded file is compatible with the source document. They are compatible
+        // if the text is the same and if all the token and sentence annotations have the same
+        // offsets.
+        var initialCas = documentService.createOrReadInitialCas(document);
+        var initialText = initialCas.getDocumentText();
+        var annotationText = annotationCas.getDocumentText();
+
+        // If any of the texts contains tailing line breaks, we ignore that. We assume at the moment
+        // that nobody will have created annotations over that trailing line breaks.
+        initialText = StringUtils.chomp(initialText);
+        annotationText = StringUtils.chomp(annotationText);
+
+        assertSameText(initialText, annotationText);
+
+        // Just in case we really had to chomp off a trailing line break from the annotation CAS,
+        // make sure we copy over the proper text from the initial CAS
+        // NOT AT HOME THIS YOU SHOULD TRY
+        // SETTING THE SOFA STRING FORCEFULLY FOLLOWING THE DARK SIDE IS!
+        forceOverwriteSofa(annotationCas, initialCas.getDocumentText());
+
+        var annotationSentences = selectSentences(annotationCas);
+        var initialSentences = selectSentences(initialCas);
+        if (annotationSentences.size() != initialSentences.size()) {
+            throw new IncompatibleDocumentException(
+                    "Expected [%d] sentences, but annotation document contains [%d] sentences.",
+                    initialSentences.size(), annotationSentences.size());
+        }
+        assertCompatibleOffsets(initialSentences, annotationSentences);
+
+        var annotationTokens = selectTokens(annotationCas);
+        var initialTokens = selectTokens(initialCas);
+        if (annotationTokens.size() != initialTokens.size()) {
+            throw new IncompatibleDocumentException(
+                    "Expected [%d] tokens, but annotation document contains [%d] tokens.",
+                    initialTokens.size(), annotationTokens.size());
+        }
+        assertCompatibleOffsets(initialTokens, annotationTokens);
+
+        return annotationCas;
+    }
+
+    protected ResponseEntity<byte[]> readAnnotation(long aProjectId, long aDocumentId,
+            String aAnnotatorId, Mode aMode, Optional<String> aFormat)
+        throws RemoteApiException, ClassNotFoundException, IOException, UIMAException
+    {
+        // Get project (this also ensures that it exists and that the current user can access it
+        var project = getProject(aProjectId);
+
+        var doc = getDocument(project, aDocumentId);
+
+        // Check format
+        String formatId;
+        if (aFormat.isPresent()) {
+            if (VAL_ORIGINAL.equals(aFormat.get())) {
+                formatId = doc.getFormat();
+            }
+            else {
+                formatId = aFormat.get();
+            }
+        }
+        else {
+            formatId = doc.getFormat();
+        }
+
+        // Determine the format
+        var format = importExportService.getWritableFormatById(formatId)
+                .orElseThrow(() -> new UnsupportedFormatException(
+                        "Format [%s] is not writable. Acceptable formats are %s.", formatId,
+                        importExportService.getWritableFormats().stream() //
+                                .map(FormatSupport::getId) //
+                                .sorted().collect(Collectors.toList())));
+
+        // In principle we don't need this call - but it makes sure that we check that the
+        // annotation document entry is actually properly set up in the database.
+        if (Mode.ANNOTATION.equals(aMode)) {
+            getAnnotation(doc, aAnnotatorId, false);
+        }
+
+        // Create a temporary export file from the annotations
+        File exportedAnnoFile = null;
+        byte[] resource;
+        try {
+            exportedAnnoFile = importExportService.exportAnnotationDocument(doc, aAnnotatorId,
+                    format, Mode.ANNOTATION);
+            resource = FileUtils.readFileToByteArray(exportedAnnoFile);
+
+            var filename = FilenameUtils.removeExtension(doc.getName());
+            filename += "-" + aAnnotatorId;
+            // Actually, exportedAnnoFile cannot be null here - the warning can be ignored.
+            filename += "." + FilenameUtils.getExtension(exportedAnnoFile.getName());
+
+            var httpHeaders = new HttpHeaders();
+            httpHeaders.setContentLength(resource.length);
+            httpHeaders.set("Content-Disposition", "attachment; filename=\"" + filename + "\"");
+
+            return new ResponseEntity<>(resource, httpHeaders, OK);
+        }
+        finally {
+            if (exportedAnnoFile != null) {
+                FileUtils.forceDelete(exportedAnnoFile);
+            }
+        }
+    }
+
+    private static <T extends AnnotationFS> void assertCompatibleOffsets(Collection<T> aExpected,
+            Collection<T> aActual)
+        throws IncompatibleDocumentException
+    {
+        int unitIndex = 0;
+        Iterator<T> asi = aExpected.iterator();
+        Iterator<T> isi = aActual.iterator();
+        // At this point we know that the number of sentences is the same, so it is ok to check only
+        // one of the iterators for hasNext()
+        while (asi.hasNext()) {
+            T as = asi.next();
+            T is = isi.next();
+            if (as.getBegin() != is.getBegin() || as.getEnd() != is.getEnd()) {
+                throw new IncompatibleDocumentException(
+                        "Expected %s [%d] to have range [%d-%d], but instead found range "
+                                + "[%d-%d] in annotation document.",
+                        is.getType().getShortName(), unitIndex, is.getBegin(), is.getEnd(),
+                        as.getBegin(), as.getEnd());
+            }
+            unitIndex++;
+        }
+    }
+
+    private static void assertSameText(String initialText, String annotationText)
+        throws IncompatibleDocumentException
+    {
+        if (ObjectUtils.notEqual(initialText, annotationText)) {
+            int diffIndex = StringUtils.indexOfDifference(initialText, annotationText);
+            String expected = initialText.substring(diffIndex,
+                    Math.min(initialText.length(), diffIndex + 20));
+            String actual = annotationText.substring(diffIndex,
+                    Math.min(annotationText.length(), diffIndex + 20));
+            throw new IncompatibleDocumentException(
+                    "Text of annotation document does not match text of source document at offset "
+                            + "[%d]. Expected [%s] but found [%s].",
+                    diffIndex, expected, actual);
+        }
+    }
+
+    public static SourceDocumentState parseSourceDocumentState(String aState)
+    {
+        if (aState == null) {
+            return null;
+        }
+
+        switch (aState) {
+        case "NEW":
+            return SourceDocumentState.NEW;
+        case "ANNOTATION-IN-PROGRESS":
+            return SourceDocumentState.ANNOTATION_IN_PROGRESS;
+        case "ANNOTATION-COMPLETE":
+            return SourceDocumentState.ANNOTATION_FINISHED;
+        case "CURATION-COMPLETE":
+            return SourceDocumentState.CURATION_FINISHED;
+        case "CURATION-IN-PROGRESS":
+            return SourceDocumentState.CURATION_IN_PROGRESS;
+        default:
+            throw new IllegalArgumentException("Unknown source document state [" + aState + "]");
+        }
+    }
+
+    public static String sourceDocumentStateToString(SourceDocumentState aState)
+    {
+        if (aState == null) {
+            return null;
+        }
+
+        switch (aState) {
+        case NEW:
+            return "NEW";
+        case ANNOTATION_IN_PROGRESS:
+            return "ANNOTATION-IN-PROGRESS";
+        case ANNOTATION_FINISHED:
+            return "ANNOTATION-COMPLETE";
+        case CURATION_FINISHED:
+            return "CURATION-COMPLETE";
+        case CURATION_IN_PROGRESS:
+            return "CURATION-IN-PROGRESS";
+        default:
+            throw new IllegalArgumentException("Unknown source document state [" + aState + "]");
+        }
+    }
+
+    public static AnnotationDocumentState parseAnnotationDocumentState(String aState)
+    {
+        if (aState == null) {
+            return null;
+        }
+
+        switch (aState) {
+        case "NEW":
+            return AnnotationDocumentState.NEW;
+        case "COMPLETE":
+            return AnnotationDocumentState.FINISHED;
+        case "LOCKED":
+            return AnnotationDocumentState.IGNORE;
+        case "IN-PROGRESS":
+            return AnnotationDocumentState.IN_PROGRESS;
+        default:
+            throw new IllegalArgumentException(
+                    "Unknown annotation document state [" + aState + "]");
+        }
+    }
+
+    public static String annotationDocumentStateToString(AnnotationDocumentState aState)
+    {
+        if (aState == null) {
+            return null;
+        }
+
+        switch (aState) {
+        case NEW:
+            return "NEW";
+        case FINISHED:
+            return "COMPLETE";
+        case IGNORE:
+            return "LOCKED";
+        case IN_PROGRESS:
+            return "IN-PROGRESS";
+        default:
+            throw new IllegalArgumentException(
+                    "Unknown annotation document state [" + aState + "]");
+        }
+    }
+}

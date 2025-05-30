@@ -19,7 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.AeroRemoteApiController;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.AeroProjectController;
 
 public class RDocument
 {
@@ -31,7 +31,7 @@ public class RDocument
     {
         id = aDocument.getId();
         name = aDocument.getName();
-        state = AeroRemoteApiController.sourceDocumentStateToString(aDocument.getState());
+        state = AeroProjectController.sourceDocumentStateToString(aDocument.getState());
     }
 
     public RDocument(long aId, String aName, SourceDocumentState aState)
@@ -39,6 +39,6 @@ public class RDocument
         super();
         id = aId;
         name = aName;
-        state = AeroRemoteApiController.sourceDocumentStateToString(aState);
+        state = AeroProjectController.sourceDocumentStateToString(aState);
     }
 }

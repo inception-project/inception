@@ -60,7 +60,7 @@ import de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeServiceImpl
                 "spring.main.banner-mode=off", //
                 "search.enabled=false", //
                 "remote-api.enabled=true", //
-                "repository.path=" + AeroRemoteApiController_Document_Test.TEST_OUTPUT_FOLDER })
+                "repository.path=" + AeroDocumentControllerTest.TEST_OUTPUT_FOLDER })
 @EnableWebSecurity
 @EnableAutoConfiguration( //
         exclude = { //
@@ -72,7 +72,7 @@ import de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeServiceImpl
         "de.tudarmstadt.ukp.clarin.webanno" })
 @TestMethodOrder(MethodOrderer.MethodName.class)
 @DirtiesContext(classMode = ClassMode.BEFORE_EACH_TEST_METHOD)
-public class AeroRemoteApiController_Document_Test
+public class AeroDocumentControllerTest
 {
     static final String TEST_OUTPUT_FOLDER = "target/test-output/AeroRemoteApiController_Document_Test";
 
