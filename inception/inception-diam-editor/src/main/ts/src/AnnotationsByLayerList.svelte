@@ -44,15 +44,15 @@
 
     let groupedRelations: Record<string, Relation[]> = $state();
     let groupedAnnotations: Record<string, Annotation[]> = $state();
-    let groups: { layer: Layer, collapsed: boolean }[] = $state()
-    let collapsedGroups = new Set<number>()
+    let groups: { layer: Layer, collapsed: boolean }[] = $state();
+    let collapsedGroups: number[] = $state([]);
     let filter = $state('');
 
-    run(() => {
+    $effect(() => {
         const sortedLayers = uniqueLayers(data)
 
         groups = sortedLayers.map(layer => {
-            return { layer: layer, collapsed: collapsedGroups.has(layer.id) };
+            return { layer: layer, collapsed: collapsedGroups.includes(layer.id) };
         });
 
         const relations = data?.relations.values() || []
@@ -65,7 +65,7 @@
         groupedRelations = groupRelationsBySource(data);
     })
 
-    run(() => {
+    $effect(() => {
             for (let [key, items] of Object.entries(groupedAnnotations)) {
             items = filterAnnotations(data, items, filter)
             items.sort((a, b) => {
@@ -124,25 +124,22 @@
     }
 
     function toggleCollapsed(group) {
-        if (!collapsedGroups.has(group.layer.id)) {
-            collapsedGroups.add(group.layer.id)
+        if (!collapsedGroups.includes(group.layer.id)) {
+            collapsedGroups.push(group.layer.id)
         }
         else {
-            collapsedGroups.delete(group.layer.id)
+            collapsedGroups = collapsedGroups.filter(id => id !== group.layer.id)
         }
-        data = data // Trigger reactive update
     }
 
     function collapseAll() {
         for (const group of groups) {
-            collapsedGroups.add(group.layer.id)
+            collapsedGroups.push(group.layer.id)
         }
-        data = data // Trigger reactive update
     }
 
     function expandAll() {
-        collapsedGroups.clear()
-        data = data // Trigger reactive update
+        collapsedGroups = []
     }
 
     const updateFilter = debounce(newFilter => { filter = newFilter }, 300);
@@ -330,6 +327,9 @@
 {/if}
 
 <style lang="scss">
+    @import "@inception-project/inception-js-api/src/style/InceptionEditorIcons.scss";
+    @import "@inception-project/inception-js-api/src/style/InceptionEditorColors.scss";
+
     .labels {
         background: linear-gradient(to right, transparent 0px, var(--bs-body-bg) 15px);
         padding-left: 20px;
