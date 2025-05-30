@@ -31,7 +31,6 @@ import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.LegacyRemoteApiController;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.AeroAnnotationController;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.AeroController_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.AeroCurationController;
@@ -39,6 +38,7 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.AeroDocumentContr
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.AeroPermissionController;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.AeroProjectController;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.AeroTaskController;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.legacy.LegacyRemoteApiController;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.menubar.SwaggerUiMenuBarItemSupport;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.WebhookService;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.WebhooksConfiguration;
