@@ -15,17 +15,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model;
+package de.tudarmstadt.ukp.inception.scheduling;
 
-import java.util.List;
-import java.util.Set;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.security.AccessCheckingBean;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
+public interface TaskAccess
+    extends AccessCheckingBean
+{
+    boolean canManageTasks(String aProjectId, String aUser);
 
-public record RBulkPredictionRequest( //
-        String recommender, //
-        String userId, //
-        List<RMetadataAnnotation> metadata, //
-        Set<AnnotationDocumentState> statesToProcess, //
-        boolean finishDocumentsWithoutRecommendations)
-{}
+    void assertCanManageTasks(User aSessionOwner, Project aProject);
+}

@@ -37,6 +37,7 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.AeroCurationContr
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.AeroDocumentController;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.AeroPermissionController;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.AeroProjectController;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.AeroTaskBulkPredictionController;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.AeroTaskController;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.legacy.LegacyRemoteApiController;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.menubar.SwaggerUiMenuBarItemSupport;
@@ -72,6 +73,13 @@ public class RemoteApiAutoConfiguration
     public AeroTaskController aeroTaskController()
     {
         return new AeroTaskController();
+    }
+
+    @ConditionalOnExpression(REMOTE_API_ENABLED_CONDITION)
+    @Bean
+    public AeroTaskBulkPredictionController aeroBulkPredictionSubmissionController()
+    {
+        return new AeroTaskBulkPredictionController();
     }
 
     @ConditionalOnExpression(REMOTE_API_ENABLED_CONDITION)

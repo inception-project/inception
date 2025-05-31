@@ -49,7 +49,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
  * {@link RemoteApiAutoConfiguration#aeroPermissionController}.
  * </p>
  */
-@Tag(name = "Permission Management", description = "Management of project-level user permissions.")
+@Tag(name = "Permission Management (non-AERO)", description = "Management of project-level user permissions.")
 @ConditionalOnExpression("false") // Auto-configured - avoid package scanning
 @Controller
 @RequestMapping(AeroPermissionController.API_BASE)
@@ -58,7 +58,7 @@ public class AeroPermissionController
 {
     private final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
-    @Operation(summary = "List all permissions in the given project (non-AERO)")
+    @Operation(summary = "List all permissions in the given project")
     @GetMapping( //
             value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + PERMISSIONS, //
             produces = { APPLICATION_JSON_VALUE })
@@ -85,7 +85,7 @@ public class AeroPermissionController
         return ResponseEntity.ok(new RResponse<>(permissions));
     }
 
-    @Operation(summary = "List permissions for a user in the given project (non-AERO)")
+    @Operation(summary = "List permissions for a user in the given project")
     @GetMapping( //
             value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + PERMISSIONS + "/{"
                     + PARAM_ANNOTATOR_ID + "}", //
@@ -152,7 +152,7 @@ public class AeroPermissionController
         return ResponseEntity.ok(new RResponse<>(permissions));
     }
 
-    @Operation(summary = "Revoke roles to a user in the given project (non-AERO)")
+    @Operation(summary = "Revoke roles to a user in the given project")
     @DeleteMapping( //
             value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + PERMISSIONS + "/{"
                     + PARAM_ANNOTATOR_ID + "}", //

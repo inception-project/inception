@@ -541,12 +541,15 @@ public class SchedulingServiceImpl
     }
 
     @Override
-    public synchronized void stopAllTasksMatching(Predicate<Task> aPredicate)
+    public synchronized int stopAllTasksMatching(Predicate<Task> aPredicate)
     {
+        AtomicInteger count = new AtomicInteger();
+
         enqueuedTasks.removeIf(task -> {
             if (aPredicate.test(task)) {
                 LOG.debug("Destroying queued task: {}", task);
                 task.destroy();
+                count.incrementAndGet();
                 return true;
             }
             return false;
@@ -557,6 +560,7 @@ public class SchedulingServiceImpl
             if (aPredicate.test(task)) {
                 LOG.debug("Destroying scheduled task: {}", task);
                 task.destroy();
+                count.incrementAndGet();
                 return true;
             }
             return false;
@@ -566,6 +570,7 @@ public class SchedulingServiceImpl
             if (aPredicate.test(task)) {
                 LOG.debug("Canceling running task: {}", task);
                 task.getMonitor().cancel();
+                count.incrementAndGet();
                 // The task will be destroyed if necessary by the afterExecute callback
             }
         });
@@ -575,10 +580,13 @@ public class SchedulingServiceImpl
             if (aPredicate.test(task)) {
                 LOG.debug("Destroying ack-pending task: {}", task);
                 task.destroy();
+                count.incrementAndGet();
                 return true;
             }
             return false;
         });
+
+        return count.get();
     }
 
     @Order(Ordered.HIGHEST_PRECEDENCE)

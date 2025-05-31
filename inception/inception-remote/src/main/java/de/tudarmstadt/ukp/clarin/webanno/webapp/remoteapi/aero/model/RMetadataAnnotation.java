@@ -17,15 +17,16 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model;
 
-import java.util.List;
-import java.util.Set;
+import java.util.Map;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
+import io.swagger.v3.oas.annotations.media.Schema;
 
-public record RBulkPredictionRequest( //
-        String recommender, //
-        String userId, //
-        List<RMetadataAnnotation> metadata, //
-        Set<AnnotationDocumentState> statesToProcess, //
-        boolean finishDocumentsWithoutRecommendations)
-{}
+@Schema(description = "Metadata annotation containing a type and a map of features")
+public record RMetadataAnnotation( //
+        @Schema(description = "The type of the annotation") //
+        String type, //
+        @Schema(description = "A map of features where keys represent feature names and values represent " //
+                + "their corresponding values") //
+        Map<String, String> features) {
+
+}

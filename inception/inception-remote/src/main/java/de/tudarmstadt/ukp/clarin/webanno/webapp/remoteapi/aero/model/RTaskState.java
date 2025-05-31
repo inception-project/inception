@@ -17,19 +17,83 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model;
 
-import de.tudarmstadt.ukp.inception.processing.recommender.BulkPredictionTask;
+import de.tudarmstadt.ukp.inception.scheduling.Task;
+import de.tudarmstadt.ukp.inception.scheduling.TaskState;
 
 public class RTaskState
 {
     private final int id;
+    private final String type;
+    private final String title;
+    private final TaskState state;
+    private final long createTime;
+    private final long endTime;
+    private final long duration;
+    private final int progress;
+    private final int maxProgress;
+    private final long startTime;
 
-    public RTaskState(BulkPredictionTask aTask)
+    public RTaskState(Task aTask)
     {
         id = aTask.getHandle().getId();
+        type = aTask.getMonitor().getType();
+        title = aTask.getMonitor().getTitle();
+        state = aTask.getMonitor().getState();
+        createTime = aTask.getMonitor().getCreateTime();
+        startTime = aTask.getMonitor().getStartTime();
+        endTime = aTask.getMonitor().getEndTime();
+        duration = aTask.getMonitor().getDuration();
+        progress = aTask.getMonitor().getProgress();
+        maxProgress = aTask.getMonitor().getMaxProgress();
     }
 
     public int getId()
     {
         return id;
+    }
+
+    public String getType()
+    {
+        return type;
+    }
+
+    public String getTitle()
+    {
+        return title;
+    }
+
+    public TaskState getState()
+    {
+        return state;
+    }
+
+    public long getCreateTime()
+    {
+        return createTime;
+    }
+
+    public long getDuration()
+    {
+        return duration;
+    }
+
+    public long getStartTime()
+    {
+        return startTime;
+    }
+
+    public long getEndTime()
+    {
+        return endTime;
+    }
+
+    public int getMaxProgress()
+    {
+        return maxProgress;
+    }
+
+    public int getProgress()
+    {
+        return progress;
     }
 }

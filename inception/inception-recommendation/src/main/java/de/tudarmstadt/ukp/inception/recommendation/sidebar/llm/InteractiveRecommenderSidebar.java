@@ -348,8 +348,7 @@ public class InteractiveRecommenderSidebar
 
     private List<Recommender> listInteractiveRecommenders()
     {
-        return recommendationService.listRecommenders(getModelObject().getProject()).stream() //
-                .filter(rec -> rec.isEnabled()) //
+        return recommendationService.listEnabledRecommenders(getModelObject().getProject()).stream() //
                 .filter(rec -> recommendationService.getRecommenderFactory(rec)
                         .map(factory -> factory.isInteractive(rec)).orElse(false)) //
                 .toList();
