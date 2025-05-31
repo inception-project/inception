@@ -17,32 +17,26 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero;
 
-import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
-import java.io.Serializable;
-import java.util.HashMap;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RBulkPredictionRequest;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RMessageLevel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RResponse;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RTaskState;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.config.RemoteApiAutoConfiguration;
-import de.tudarmstadt.ukp.inception.processing.recommender.BulkPredictionTask;
-import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
-import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
+import de.tudarmstadt.ukp.inception.scheduling.TaskAccess;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -52,82 +46,60 @@ import io.swagger.v3.oas.annotations.tags.Tag;
  * {@link RemoteApiAutoConfiguration#aeroTaskController}.
  * </p>
  */
-@Tag(name = "Task Management", description = "Management of long-runnig tasks.")
+@Tag(name = "Task Management (non-AERO)", description = "Management of long-runnig tasks.")
 @ConditionalOnExpression("false") // Auto-configured - avoid package scanning
 @Controller
 @RequestMapping(AeroTaskController.API_BASE)
 public class AeroTaskController
     extends AeroController_ImplBase
 {
-    private @Autowired RecommendationService recommendationService;
-    private @Autowired AnnotationSchemaService schemaService;
     private @Autowired SchedulingService schedulingService;
+    private @Autowired TaskAccess taskAccess;
 
-    @Operation(summary = "Submit a task (non-AERO)")
-    @PostMapping( //
+    @Operation(summary = "List tasks")
+    @GetMapping( //
             value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + TASKS, //
-            consumes = APPLICATION_JSON_VALUE, //
             produces = APPLICATION_JSON_VALUE)
-    public ResponseEntity<RResponse<RTaskState>> create(
-            @PathVariable(PARAM_PROJECT_ID) long aProjectId, //
-            @RequestParam(PARAM_TASK) String aTask, //
-            @RequestBody String aDetailsJson)
+    public ResponseEntity<RResponse<List<RTaskState>>> list(
+            @PathVariable(PARAM_PROJECT_ID) long aProjectId)
         throws Exception
     {
         var project = getProject(aProjectId);
-
-        // Check if the user has permission to submit jobs
         var sessionOwner = getSessionOwner();
-        assertPermission("User [" + sessionOwner.getUsername() + "] is not allowed to submit jobs",
-                projectService.hasRole(sessionOwner, project, MANAGER)
-                        || userRepository.isAdministrator(sessionOwner));
 
-        if (!aTask.equals("BULK_PREDICTION")) {
-            throw new IllegalArgumentException("Unknown task type [" + aTask + "]");
+        taskAccess.assertCanManageTasks(sessionOwner, project);
+
+        var tasks = schedulingService.getAllTasks().stream() //
+                .filter(task -> task.getSessionOwner().map(sessionOwner::equals).orElse(false)) //
+                .map(RTaskState::new) //
+                .toList();
+
+        return ResponseEntity.ok(new RResponse<>(tasks));
+    }
+
+    @Operation(summary = "Cancel task")
+    @DeleteMapping( //
+            value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + TASKS + "/{" + PARAM_TASK_ID
+                    + "}", //
+            produces = APPLICATION_JSON_VALUE)
+    public ResponseEntity<RResponse<Void>> cancel(@PathVariable(PARAM_PROJECT_ID) long aProjectId,
+            @PathVariable(PARAM_TASK_ID) long aTaskId)
+        throws Exception
+    {
+        var project = getProject(aProjectId);
+        var sessionOwner = getSessionOwner();
+
+        taskAccess.assertCanManageTasks(sessionOwner, project);
+
+        var count = schedulingService.stopAllTasksMatching(
+                task -> task.getSessionOwner().map(sessionOwner::equals).orElse(false)
+                        && task.getId() == aTaskId);
+
+        if (count == 0) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND) //
+                    .body(new RResponse<>(RMessageLevel.ERROR, "Task not found"));
         }
 
-        var request = JSONUtil.fromJsonString(RBulkPredictionRequest.class, aDetailsJson);
-
-        var recommender = recommendationService.getRecommender(project, request.recommender());
-        if (!recommender.isPresent()) {
-            throw new IllegalArgumentException("Recommender [" + request.recommender()
-                    + "] not found in project [" + aProjectId + "]");
-        }
-
-        var metadata = new HashMap<AnnotationFeature, Serializable>();
-        if (request.metadata() != null) {
-            for (var layerEntry : request.metadata().entrySet()) {
-                var layer = schemaService.findLayer(project, layerEntry.getKey());
-                if (layer == null) {
-                    throw new IllegalArgumentException("Layer [" + layerEntry.getKey()
-                            + "] not found in project [" + aProjectId + "]");
-                }
-
-                var featureValues = layerEntry.getValue();
-                for (var featureValueEntry : featureValues.entrySet()) {
-                    var feature = schemaService.getFeature(featureValueEntry.getKey(), layer);
-                    if (feature == null) {
-                        throw new IllegalArgumentException("Feature [" + featureValueEntry.getKey()
-                                + "] not found in layer [" + layerEntry.getKey() + "]");
-                    }
-
-                    metadata.put(feature, featureValueEntry.getValue());
-                }
-            }
-        }
-
-        var task = BulkPredictionTask.builder() //
-                .withSessionOwner(sessionOwner) //
-                .withRecommender(recommender.get()) //
-                .withTrigger("Remote API") //
-                .withDataOwner(request.userId()) //
-                .withProcessingMetadata(metadata) //
-                .withStatesToProcess(request.statesToProcess()) //
-                .withFinishDocumentsWithoutRecommendations(
-                        request.finishDocumentsWithoutRecommendations()) //
-                .build();
-        schedulingService.enqueue(task);
-
-        return ResponseEntity.ok(new RResponse<>(new RTaskState(task)));
+        return ResponseEntity.ok(new RResponse<>(RMessageLevel.INFO, "Task cancelled"));
     }
 }

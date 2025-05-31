@@ -49,7 +49,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.multipart.MultipartFile;
@@ -102,7 +104,7 @@ public abstract class AeroController_ImplBase
     static final String PARAM_CREATE_MISSING_USERS = "createMissingUsers";
     static final String PARAM_IMPORT_PERMISSIONS = "importPermissions";
     static final String PARAM_ROLES = "roles";
-    static final String PARAM_TASK = "task";
+    static final String PARAM_TASK_ID = "taskId";
 
     static final String VAL_ORIGINAL = "ORIGINAL";
 
@@ -132,7 +134,8 @@ public abstract class AeroController_ImplBase
             LOG.error(aException.getMessage());
         }
 
-        return ResponseEntity.status(aException.getStatus()).contentType(APPLICATION_JSON)
+        return ResponseEntity.status(aException.getStatus()) //
+                .contentType(APPLICATION_JSON) //
                 .body(new RResponse<>(ERROR, aException.getMessage()));
     }
 
@@ -141,8 +144,25 @@ public abstract class AeroController_ImplBase
     {
         LOG.error(aException.getMessage(), aException);
 
-        return ResponseEntity.status(INTERNAL_SERVER_ERROR).contentType(APPLICATION_JSON)
+        return ResponseEntity.status(INTERNAL_SERVER_ERROR) //
+                .contentType(APPLICATION_JSON) //
                 .body(new RResponse<>(ERROR, "Internal server error: " + aException.getMessage()));
+    }
+
+    @ExceptionHandler(value = AccessDeniedException.class)
+    public ResponseEntity<RResponse<Void>> handleException(AccessDeniedException aException)
+        throws IOException
+    {
+        if (LOG.isDebugEnabled()) {
+            LOG.error(aException.getMessage(), aException);
+        }
+        else {
+            LOG.error(aException.getMessage());
+        }
+
+        return ResponseEntity.status(HttpStatus.FORBIDDEN) //
+                .contentType(APPLICATION_JSON) //
+                .body(new RResponse<>(ERROR, aException.getMessage()));
     }
 
     protected User getSessionOwner() throws ObjectNotFoundException
@@ -177,8 +197,8 @@ public abstract class AeroController_ImplBase
 
         // Check for the access
         assertPermission(
-                "User [" + sessionOwner.getUsername() + "] is not allowed to access project [" + aProjectId
-                        + "]",
+                "User [" + sessionOwner.getUsername() + "] is not allowed to access project ["
+                        + aProjectId + "]",
                 projectService.hasRole(sessionOwner, project, MANAGER)
                         || userRepository.isAdministrator(sessionOwner));
 

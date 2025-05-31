@@ -141,7 +141,17 @@ public abstract class Task
         return monitor;
     }
 
+    /**
+     * @deprecated Use {@link #getSessionOwner()}
+     * @return user who started the task
+     */
+    @Deprecated
     public Optional<User> getUser()
+    {
+        return getSessionOwner();
+    }
+
+    public Optional<User> getSessionOwner()
     {
         return Optional.ofNullable(sessionOwner);
     }

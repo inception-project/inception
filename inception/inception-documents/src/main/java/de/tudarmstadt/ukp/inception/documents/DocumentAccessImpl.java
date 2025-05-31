@@ -24,6 +24,8 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATI
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
 import static org.apache.commons.collections4.CollectionUtils.containsAny;
 
+import java.lang.invoke.MethodHandles;
+
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,7 +51,7 @@ import jakarta.persistence.NoResultException;
 public class DocumentAccessImpl
     implements DocumentAccess
 {
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private final UserDao userService;
     private final ProjectService projectService;
@@ -74,7 +76,7 @@ public class DocumentAccessImpl
     public boolean canViewAnnotationDocument(String aSessionOwner, String aProjectId,
             long aDocumentId, String aAnnotator)
     {
-        log.trace(
+        LOG.trace(
                 "Permission check: canViewAnnotationDocument [aSessionOwner: {}] [project: {}] "
                         + "[document: {}] [annotator: {}]",
                 aSessionOwner, aProjectId, aDocumentId, aAnnotator);
@@ -87,20 +89,20 @@ public class DocumentAccessImpl
 
             // Does the user have the permission to access the project at all?
             if (permissionLevels.isEmpty()) {
-                log.trace("Access denied: User {} has no acccess to project {}", user, project);
+                LOG.trace("Access denied: User {} has no acccess to project {}", user, project);
                 return false;
             }
 
             // Managers and curators can see anything
             if (containsAny(permissionLevels, MANAGER, CURATOR)) {
-                log.trace("Access granted: User {} can view annotations [{}] as MANGER or CURATOR",
+                LOG.trace("Access granted: User {} can view annotations [{}] as MANGER or CURATOR",
                         user, aDocumentId);
                 return true;
             }
 
             // Annotators can only see their own documents
             if (!aSessionOwner.equals(aAnnotator)) {
-                log.trace(
+                LOG.trace(
                         "Access denied: User {} tries to see annotations from [{}] but can only see own annotations",
                         user, aAnnotator);
                 return false;
@@ -111,20 +113,20 @@ public class DocumentAccessImpl
             if (documentService.existsAnnotationDocument(doc, aAnnotator)) {
                 var aDoc = documentService.getAnnotationDocument(doc, aAnnotator);
                 if (aDoc.getState() == AnnotationDocumentState.IGNORE) {
-                    log.trace("Access denied: Document {} is locked (IGNORE) for user {}", aDoc,
+                    LOG.trace("Access denied: Document {} is locked (IGNORE) for user {}", aDoc,
                             aAnnotator);
                     return false;
                 }
             }
 
-            log.trace(
+            LOG.trace(
                     "Access granted: canViewAnnotationDocument [aSessionOwner: {}] [project: {}] "
                             + "[document: {}] [annotator: {}]",
                     aSessionOwner, aProjectId, aDocumentId, aAnnotator);
             return true;
         }
         catch (NoResultException | AccessDeniedException e) {
-            log.trace("Access denied: prerequisites not met", e);
+            LOG.trace("Access denied: prerequisites not met", e);
             // If any object does not exist, the user cannot view
             return false;
         }
@@ -134,7 +136,7 @@ public class DocumentAccessImpl
     public boolean canEditAnnotationDocument(String aSessionOwner, String aProjectId,
             long aDocumentId, String aAnnotator)
     {
-        log.trace(
+        LOG.trace(
                 "Permission check: canEditAnnotationDocument [aSessionOwner: {}] [project: {}] "
                         + "[document: {}] [annotator: {}]",
                 aSessionOwner, aProjectId, aDocumentId, aAnnotator);
@@ -236,7 +238,7 @@ public class DocumentAccessImpl
 
     private User getUser(String aUser)
     {
-        User user = userService.get(aUser);
+        var user = userService.get(aUser);
 
         // Does the user exist and is enabled?
         if (user == null || !user.isEnabled()) {

@@ -20,8 +20,10 @@ package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_ADMIN;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_REMOTE;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_USER;
+import static java.time.Duration.ofSeconds;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
-import static org.springframework.http.MediaType.TEXT_PLAIN_VALUE;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -47,9 +49,13 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.util.FileSystemUtils;
 import org.springframework.web.context.WebApplicationContext;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.log.config.EventLoggingAutoConfiguration;
+import de.tudarmstadt.ukp.inception.project.api.ProjectService;
+import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
+import de.tudarmstadt.ukp.inception.scheduling.Task;
 import de.tudarmstadt.ukp.inception.search.config.SearchServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeServiceImpl;
 
@@ -60,7 +66,7 @@ import de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeServiceImpl
                 "spring.main.banner-mode=off", //
                 "search.enabled=false", //
                 "remote-api.enabled=true", //
-                "repository.path=" + AeroDocumentControllerTest.TEST_OUTPUT_FOLDER })
+                "repository.path=" + AeroTaskControllerTest.TEST_OUTPUT_FOLDER })
 @EnableWebSecurity
 @EnableAutoConfiguration( //
         exclude = { //
@@ -72,15 +78,21 @@ import de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeServiceImpl
         "de.tudarmstadt.ukp.clarin.webanno" })
 @TestMethodOrder(MethodOrderer.MethodName.class)
 @DirtiesContext(classMode = ClassMode.BEFORE_EACH_TEST_METHOD)
-public class AeroDocumentControllerTest
+public class AeroTaskControllerTest
 {
-    static final String TEST_OUTPUT_FOLDER = "target/test-output/AeroRemoteApiController_Document_Test";
+    static final String TEST_OUTPUT_FOLDER = "target/test-output/AeroTaskControllerTest";
 
     private @Autowired WebApplicationContext context;
     private @Autowired UserDao userRepository;
+    private @Autowired ProjectService projectService;
+    private @Autowired SchedulingService schedulingService;
 
     private MockAeroClient adminActor;
     private MockAeroClient userActor;
+
+    private Project project;
+
+    private User adminUser;
 
     @BeforeAll
     static void setupClass()
@@ -94,78 +106,115 @@ public class AeroDocumentControllerTest
         adminActor = new MockAeroClient(context, "admin", "ADMIN", "REMOTE");
         userActor = new MockAeroClient(context, "user", "USER", "REMOTE");
 
-        userRepository.create(new User("admin", ROLE_ADMIN, ROLE_REMOTE));
+        adminUser = new User("admin", ROLE_ADMIN, ROLE_REMOTE);
+        userRepository.create(adminUser);
         userRepository.create(new User("user", ROLE_USER, ROLE_REMOTE));
 
-        adminActor.createProject("project1") //
-                .andExpect(status().isCreated()) //
-                .andExpect(jsonPath("$.body.id").value("1"));
+        project = Project.builder() //
+                .withName("Test Project") //
+                .build();
+        projectService.createProject(project);
     }
 
     @Test
-    void testCreateDeleteDocument() throws Exception
+    void testListTasksEmpty() throws Exception
     {
-        var documentName = "test.txt";
-
-        adminActor.listDocuments(1l) //
+        adminActor.listTasks(1l) //
                 .andExpect(status().isOk()) //
                 .andExpect(content().contentType(APPLICATION_JSON_VALUE)) //
-                .andExpect(jsonPath("$.messages").isEmpty());
-
-        adminActor.importTextDocument(1l, documentName, "This is a test.") //
-                .andExpect(status().isCreated()) //
-                .andExpect(content().contentType(APPLICATION_JSON_VALUE)) //
-                .andExpect(jsonPath("$.body.id").value("1")) //
-                .andExpect(jsonPath("$.body.name").value(documentName));
-
-        adminActor.listDocuments(1l) //
-                .andExpect(status().isOk()) //
-                .andExpect(content().contentType(APPLICATION_JSON_VALUE)) //
-                .andExpect(jsonPath("$.body[0].id").value("1")) //
-                .andExpect(jsonPath("$.body[0].name").value(documentName)) //
-                .andExpect(jsonPath("$.body[0].state").value("NEW"));
-
-        adminActor.deleteDocument(1l, 1l) //
-                .andExpect(status().isOk());
-
-        adminActor.listDocuments(1l) //
-                .andExpect(status().isOk()) //
-                .andExpect(content().contentType(APPLICATION_JSON_VALUE)) //
+                .andExpect(jsonPath("$.messages").isEmpty()) //
                 .andExpect(jsonPath("$.body").isEmpty());
     }
 
     @Test
-    void testImportExportDocument() throws Exception
+    void testListTasks() throws Exception
     {
-        var documentName = "test.txt";
-        var documentContent = "This is a test.";
+        var task = TestTask.builder() //
+                .withProject(project) //
+                .withSessionOwner(adminUser) //
+                .build();
+        schedulingService.enqueue(task);
 
-        adminActor.importTextDocument(1l, documentName, documentContent) //
-                .andExpect(status().isCreated()) //
-                .andExpect(content().contentType(APPLICATION_JSON_VALUE)) //
-                .andExpect(jsonPath("$.body.id").value("1")) //
-                .andExpect(jsonPath("$.body.name").value(documentName));
-
-        adminActor.exportTextDocument(1l, 1l) //
+        adminActor.listTasks(project.getId()) //
                 .andExpect(status().isOk()) //
-                .andExpect(content().contentType(TEXT_PLAIN_VALUE)) //
-                .andExpect(content().string(documentContent));
+                .andExpect(content().contentType(APPLICATION_JSON_VALUE)) //
+                .andExpect(jsonPath("$.messages").isEmpty()) //
+                .andExpect(jsonPath("$.body[0].type").value("TestTask"));
+
+        schedulingService.stopAllTasksForProject(project);
+
+        await().atMost(ofSeconds(3)).untilAsserted(() -> {
+            assertThat(schedulingService.getRunningTasks()).isEmpty();
+            assertThat(task.getMonitor().isDestroyed());
+        });
     }
 
     @Test
-    void thatNonManagerCannotImportDocuments() throws Exception
+    void testCancelNonExistingTask() throws Exception
     {
-        adminActor.grantProjectRole(1, "user", "ANNOTATOR", "CURATOR") //
-                .andExpect(status().isOk()); //
+        adminActor.cancelTask(project.getId(), 12345) //
+                .andExpect(status().isNotFound()) //
+                .andExpect(content().contentType(APPLICATION_JSON_VALUE)) //
+                .andExpect(jsonPath("$.messages").isNotEmpty());
+    }
 
-        userActor.importTextDocument(1l, "test.txt", "This is a test.") //
-                .andExpect(status().isForbidden());
+    @Test
+    void testCancelTask() throws Exception
+    {
+        var task = TestTask.builder() //
+                .withProject(project) //
+                .withSessionOwner(adminUser) //
+                .build();
+        schedulingService.enqueue(task);
 
-        adminActor.grantProjectRole(1, "user", "MANAGER") //
-                .andExpect(status().isOk()); //
+        adminActor.cancelTask(project.getId(), task.getId()) //
+                .andExpect(status().isOk()) //
+                .andExpect(content().contentType(APPLICATION_JSON_VALUE)) //
+                .andExpect(jsonPath("$.messages[0].message").value("Task cancelled"));
 
-        userActor.importTextDocument(1l, "test.txt", "This is a test.") //
-                .andExpect(status().isCreated());
+        await().atMost(ofSeconds(3)).untilAsserted(() -> {
+            assertThat(schedulingService.getRunningTasks()).isEmpty();
+            assertThat(task.getMonitor().isDestroyed());
+        });
+    }
+
+    static class TestTask
+        extends Task
+    {
+
+        protected TestTask(Builder<? extends Builder<?>> aBuilder)
+        {
+            super(aBuilder);
+        }
+
+        @Override
+        public void execute() throws Exception
+        {
+            while (!getMonitor().isCancelled()) {
+                Thread.sleep(100);
+            }
+        }
+
+        public static Builder<Builder<?>> builder()
+        {
+            return new Builder<>();
+        }
+
+        public static class Builder<T extends Builder<?>>
+            extends Task.Builder<T>
+        {
+            protected Builder()
+            {
+                withCancellable(true);
+                withType("TestTask");
+                withTrigger("Test");
+            }
+
+            public TestTask build()
+            {
+                return new TestTask(this);
+            }
+        }
     }
 
     @SpringBootConfiguration
