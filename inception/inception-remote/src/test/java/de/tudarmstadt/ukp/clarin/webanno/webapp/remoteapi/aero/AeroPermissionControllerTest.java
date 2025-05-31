@@ -21,7 +21,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_ADMIN;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_REMOTE;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_USER;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
-import static org.springframework.http.MediaType.TEXT_PLAIN_VALUE;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -58,9 +57,8 @@ import de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeServiceImpl
         webEnvironment = WebEnvironment.MOCK, //
         properties = { //
                 "spring.main.banner-mode=off", //
-                "search.enabled=false", //
                 "remote-api.enabled=true", //
-                "repository.path=" + AeroRemoteApiController_Document_Test.TEST_OUTPUT_FOLDER })
+                "repository.path=" + AeroPermissionControllerTest.TEST_OUTPUT_FOLDER })
 @EnableWebSecurity
 @EnableAutoConfiguration( //
         exclude = { //
@@ -72,9 +70,9 @@ import de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeServiceImpl
         "de.tudarmstadt.ukp.clarin.webanno" })
 @TestMethodOrder(MethodOrderer.MethodName.class)
 @DirtiesContext(classMode = ClassMode.BEFORE_EACH_TEST_METHOD)
-public class AeroRemoteApiController_Document_Test
+public class AeroPermissionControllerTest
 {
-    static final String TEST_OUTPUT_FOLDER = "target/test-output/AeroRemoteApiController_Document_Test";
+    static final String TEST_OUTPUT_FOLDER = "target/test-output/AeroRemoteApiController_Permissions_Test";
 
     private @Autowired WebApplicationContext context;
     private @Autowired UserDao userRepository;
@@ -83,13 +81,13 @@ public class AeroRemoteApiController_Document_Test
     private MockAeroClient userActor;
 
     @BeforeAll
-    static void setupClass()
+    public static void setupClass()
     {
         FileSystemUtils.deleteRecursively(new File(TEST_OUTPUT_FOLDER));
     }
 
     @BeforeEach
-    void setup() throws Exception
+    public void setup() throws Exception
     {
         adminActor = new MockAeroClient(context, "admin", "ADMIN", "REMOTE");
         userActor = new MockAeroClient(context, "user", "USER", "REMOTE");
@@ -97,75 +95,94 @@ public class AeroRemoteApiController_Document_Test
         userRepository.create(new User("admin", ROLE_ADMIN, ROLE_REMOTE));
         userRepository.create(new User("user", ROLE_USER, ROLE_REMOTE));
 
-        adminActor.createProject("project1") //
-                .andExpect(status().isCreated()) //
-                .andExpect(jsonPath("$.body.id").value("1"));
+        adminActor.createProject("project1").andExpect(status().isCreated())
+                .andExpect(content().contentType(APPLICATION_JSON_VALUE))
+                .andExpect(jsonPath("$.body.id").value("1"))
+                .andExpect(jsonPath("$.body.name").value("project1"));
     }
 
     @Test
-    void testCreateDeleteDocument() throws Exception
+    public void testGrantAndRevokePermissions() throws Exception
     {
-        String documentName = "test.txt";
-
-        adminActor.listDocuments(1l) //
+        adminActor.listPermissionsForUser(1, "user") //
                 .andExpect(status().isOk()) //
-                .andExpect(content().contentType(APPLICATION_JSON_VALUE)) //
-                .andExpect(jsonPath("$.messages").isEmpty());
+                .andExpect(content().contentType(APPLICATION_JSON_VALUE))
+                .andExpect(jsonPath("$.body").isEmpty());
 
-        adminActor.importTextDocument(1l, documentName, "This is a test.") //
-                .andExpect(status().isCreated()) //
-                .andExpect(content().contentType(APPLICATION_JSON_VALUE)) //
-                .andExpect(jsonPath("$.body.id").value("1")) //
-                .andExpect(jsonPath("$.body.name").value(documentName));
-
-        adminActor.listDocuments(1l) //
+        adminActor.grantProjectRole(1, "user", "ANNOTATOR", "CURATOR") //
                 .andExpect(status().isOk()) //
-                .andExpect(content().contentType(APPLICATION_JSON_VALUE)) //
-                .andExpect(jsonPath("$.body[0].id").value("1")) //
-                .andExpect(jsonPath("$.body[0].name").value(documentName)) //
-                .andExpect(jsonPath("$.body[0].state").value("NEW"));
+                .andExpect(content().contentType(APPLICATION_JSON_VALUE))
+                .andExpect(jsonPath("$.body[0].project").value("1"))
+                .andExpect(jsonPath("$.body[0].user").value("user"))
+                .andExpect(jsonPath("$.body[0].role").value("CURATOR"))
+                .andExpect(jsonPath("$.body[1].project").value("1"))
+                .andExpect(jsonPath("$.body[1].user").value("user"))
+                .andExpect(jsonPath("$.body[1].role").value("ANNOTATOR"));
 
-        adminActor.deleteDocument(1l, 1l) //
-                .andExpect(status().isOk());
-
-        adminActor.listDocuments(1l) //
+        adminActor.revokeProjectRole(1, "user", "CURATOR") //
                 .andExpect(status().isOk()) //
-                .andExpect(content().contentType(APPLICATION_JSON_VALUE)) //
+                .andExpect(content().contentType(APPLICATION_JSON_VALUE))
+                .andExpect(jsonPath("$.body[0].project").value("1"))
+                .andExpect(jsonPath("$.body[0].user").value("user"))
+                .andExpect(jsonPath("$.body[0].role").value("ANNOTATOR"));
+
+        adminActor.revokeProjectRole(1, "user", "ANNOTATOR") //
+                .andExpect(status().isOk()) //
+                .andExpect(content().contentType(APPLICATION_JSON_VALUE))
                 .andExpect(jsonPath("$.body").isEmpty());
     }
 
     @Test
-    void testImportExportDocument() throws Exception
+    public void testPermissionListAll() throws Exception
     {
-        String documentName = "test.txt";
-        String documentContent = "This is a test.";
+        adminActor.grantProjectRole(1, "user", "ANNOTATOR", "CURATOR") //
+                .andExpect(status().isOk());
 
-        adminActor.importTextDocument(1l, documentName, documentContent) //
-                .andExpect(status().isCreated()) //
-                .andExpect(content().contentType(APPLICATION_JSON_VALUE)) //
-                .andExpect(jsonPath("$.body.id").value("1")) //
-                .andExpect(jsonPath("$.body.name").value(documentName));
-
-        adminActor.exportTextDocument(1l, 1l) //
+        adminActor.listPermissionsForProject(1) //
                 .andExpect(status().isOk()) //
-                .andExpect(content().contentType(TEXT_PLAIN_VALUE)) //
-                .andExpect(content().string(documentContent));
+                .andExpect(content().contentType(APPLICATION_JSON_VALUE))
+                .andExpect(jsonPath("$.body[0].project").value("1"))
+                .andExpect(jsonPath("$.body[0].user").value("admin"))
+                .andExpect(jsonPath("$.body[0].role").value("MANAGER"))
+                .andExpect(jsonPath("$.body[1].project").value("1"))
+                .andExpect(jsonPath("$.body[1].user").value("admin"))
+                .andExpect(jsonPath("$.body[1].role").value("CURATOR"))
+                .andExpect(jsonPath("$.body[2].project").value("1"))
+                .andExpect(jsonPath("$.body[2].user").value("admin"))
+                .andExpect(jsonPath("$.body[2].role").value("ANNOTATOR"))
+                .andExpect(jsonPath("$.body[3].project").value("1"))
+                .andExpect(jsonPath("$.body[3].user").value("user"))
+                .andExpect(jsonPath("$.body[3].role").value("CURATOR"))
+                .andExpect(jsonPath("$.body[4].project").value("1"))
+                .andExpect(jsonPath("$.body[4].user").value("user"))
+                .andExpect(jsonPath("$.body[4].role").value("ANNOTATOR"));
     }
 
     @Test
-    void thatNonManagerCannotImportDocuments() throws Exception
+    public void thatNonAdminCannotChangePermissions() throws Exception
     {
-        adminActor.grantProjectRole(1, "user", "ANNOTATOR", "CURATOR") //
-                .andExpect(status().isOk()); //
-
-        userActor.importTextDocument(1l, "test.txt", "This is a test.") //
+        userActor.grantProjectRole(1, "user", "MANAGER") //
                 .andExpect(status().isForbidden());
 
+        userActor.revokeProjectRole(1, "user", "MANAGER") //
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    public void thatManagerCanChangePermissions() throws Exception
+    {
         adminActor.grantProjectRole(1, "user", "MANAGER") //
                 .andExpect(status().isOk()); //
 
-        userActor.importTextDocument(1l, "test.txt", "This is a test.") //
-                .andExpect(status().isCreated());
+        userActor.grantProjectRole(1, "user", "CURATOR") //
+                .andExpect(status().isOk()); //
+
+        adminActor.revokeProjectRole(1, "user", "MANAGER") //
+                .andExpect(status().isOk()); //
+
+        userActor.revokeProjectRole(1, "user", "CURATOR") //
+                .andExpect(status().isForbidden());
+
     }
 
     @SpringBootConfiguration

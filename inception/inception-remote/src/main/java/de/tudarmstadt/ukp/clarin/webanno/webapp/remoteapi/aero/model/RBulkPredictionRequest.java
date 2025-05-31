@@ -17,28 +17,15 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.AeroProjectController;
+import java.util.Map;
+import java.util.Set;
 
-public class RDocument
-{
-    public long id;
-    public String name;
-    public String state;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 
-    public RDocument(SourceDocument aDocument)
-    {
-        id = aDocument.getId();
-        name = aDocument.getName();
-        state = AeroProjectController.sourceDocumentStateToString(aDocument.getState());
-    }
-
-    public RDocument(long aId, String aName, SourceDocumentState aState)
-    {
-        super();
-        id = aId;
-        name = aName;
-        state = AeroProjectController.sourceDocumentStateToString(aState);
-    }
-}
+public record RBulkPredictionRequest( //
+        String recommender, //
+        String userId, //
+        Map<String, Map<String, String>> metadata, //
+        Set<AnnotationDocumentState> statesToProcess, //
+        boolean finishDocumentsWithoutRecommendations)
+{}

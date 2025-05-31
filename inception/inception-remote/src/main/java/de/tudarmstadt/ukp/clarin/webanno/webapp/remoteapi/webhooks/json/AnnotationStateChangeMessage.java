@@ -20,7 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.json;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
-import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.AeroRemoteApiController;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.AeroProjectController;
 import de.tudarmstadt.ukp.inception.documents.event.AnnotationStateChangeEvent;
 
 public class AnnotationStateChangeMessage
@@ -60,11 +60,11 @@ public class AnnotationStateChangeMessage
         annotationUser = aEvent.getAnnotationDocument().getUser();
         annotatorComment = aEvent.getAnnotationDocument().getAnnotatorComment();
 
-        annotationState = AeroRemoteApiController
+        annotationState = AeroProjectController
                 .annotationDocumentStateToString(aEvent.getNewState());
-        annotationPreviousState = AeroRemoteApiController
+        annotationPreviousState = AeroProjectController
                 .annotationDocumentStateToString(aEvent.getPreviousState());
-        annotatorAnnotationState = AeroRemoteApiController.annotationDocumentStateToString(
+        annotatorAnnotationState = AeroProjectController.annotationDocumentStateToString(
                 aEvent.getAnnotationDocument().getAnnotatorState());
     }
 

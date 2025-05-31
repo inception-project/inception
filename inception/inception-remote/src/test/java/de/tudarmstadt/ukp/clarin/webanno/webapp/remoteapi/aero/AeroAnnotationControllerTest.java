@@ -19,7 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero;
 
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_ADMIN;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_REMOTE;
-import static org.hamcrest.Matchers.containsString;
+import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_USER;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -57,9 +57,8 @@ import de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeServiceImpl
         webEnvironment = WebEnvironment.MOCK, //
         properties = { //
                 "spring.main.banner-mode=off", //
-                "search.enabled=false", //
                 "remote-api.enabled=true", //
-                "repository.path=" + AeroRemoteApiController_Project_Test.TEST_OUTPUT_FOLDER })
+                "repository.path=" + AeroAnnotationControllerTest.TEST_OUTPUT_FOLDER })
 @EnableWebSecurity
 @EnableAutoConfiguration( //
         exclude = { //
@@ -71,9 +70,9 @@ import de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeServiceImpl
         "de.tudarmstadt.ukp.clarin.webanno" })
 @TestMethodOrder(MethodOrderer.MethodName.class)
 @DirtiesContext(classMode = ClassMode.BEFORE_EACH_TEST_METHOD)
-public class AeroRemoteApiController_Project_Test
+public class AeroAnnotationControllerTest
 {
-    static final String TEST_OUTPUT_FOLDER = "target/test-output/AeroRemoteApiController_Project_Test";
+    static final String TEST_OUTPUT_FOLDER = "target/test-output/AeroRemoteApiController_Annotation_Test";
 
     private @Autowired WebApplicationContext context;
     private @Autowired UserDao userRepository;
@@ -87,47 +86,64 @@ public class AeroRemoteApiController_Project_Test
     }
 
     @BeforeEach
-    void setup()
+    void setup() throws Exception
     {
         adminActor = new MockAeroClient(context, "admin", "ADMIN", "REMOTE");
 
         userRepository.create(new User("admin", ROLE_ADMIN, ROLE_REMOTE));
+        userRepository.create(new User("user", ROLE_USER, ROLE_REMOTE));
+
+        adminActor.createProject("project1").andExpect(status().isCreated())
+                .andExpect(jsonPath("$.body.id").value("1"))
+                .andExpect(jsonPath("$.body.name").value("project1"));
+
+        adminActor.importTextDocument(1l, "test.txt", "This is a test.")
+                .andExpect(status().isCreated()).andExpect(jsonPath("$.body.id").value("1"));
     }
 
     @Test
-    void testCreateAndDelete() throws Exception
+    void testAnnotationCreate() throws Exception
     {
-        adminActor.listProjects() //
+        adminActor.listAnnotations(1, 1) //
                 .andExpect(status().isOk()) //
-                .andExpect(content().contentType(APPLICATION_JSON_VALUE)) //
+                .andExpect(content().contentType(APPLICATION_JSON_VALUE))
                 .andExpect(jsonPath("$.messages").isEmpty());
 
-        adminActor.createProject("project1") //
+        adminActor.createAnnotations(1, 1, "admin", "This is a test.", "IN-PROGRESS") //
                 .andExpect(status().isCreated()) //
-                .andExpect(content().contentType(APPLICATION_JSON_VALUE)) //
-                .andExpect(jsonPath("$.body.id").value("1")) //
-                .andExpect(jsonPath("$.body.name").value("project1"));
+                .andExpect(content().contentType(APPLICATION_JSON_VALUE))
+                .andExpect(jsonPath("$.body.user").value("admin"))
+                .andExpect(jsonPath("$.body.state").value("IN-PROGRESS"))
+                .andExpect(jsonPath("$.body.timestamp").doesNotExist());
 
-        adminActor.listProjects() //
+        adminActor.listAnnotations(1, 1) //
                 .andExpect(status().isOk()) //
-                .andExpect(content().contentType(APPLICATION_JSON_VALUE)) //
-                .andExpect(jsonPath("$.body[0].id").value("1")) //
-                .andExpect(jsonPath("$.body[0].name").value("project1"));
+                .andExpect(content().contentType(APPLICATION_JSON_VALUE))
+                .andExpect(jsonPath("$.body[0].user").value("admin"))
+                .andExpect(jsonPath("$.body[0].state").value("IN-PROGRESS"))
+                .andExpect(jsonPath("$.body[0].timestamp").doesNotExist());
+    }
 
-        adminActor.deleteProject(1l) //
-                .andExpect(status().isOk()) //
-                .andExpect(content().contentType(APPLICATION_JSON_VALUE)) //
-                .andExpect(jsonPath("$.messages[0].level").value("INFO")) //
-                .andExpect(jsonPath("$.messages[0].message").value(containsString("deleted")));
+    @Test
+    void testUpdatingTheAnnotationState() throws Exception
+    {
+        adminActor.createAnnotations(1, 1, "admin", "This is a test.") //
+                .andExpect(status().isCreated()) //
+                .andExpect(content().contentType(APPLICATION_JSON_VALUE))
+                .andExpect(jsonPath("$.body.user").value("admin"))
+                .andExpect(jsonPath("$.body.state").value("NEW"))
+                .andExpect(jsonPath("$.body.timestamp").doesNotExist());
 
-        adminActor.listProjects() //
+        adminActor.updateAnnotationState(1, 1, "admin", "LOCKED") //
                 .andExpect(status().isOk()) //
-                .andExpect(content().contentType(APPLICATION_JSON_VALUE)) //
-                .andExpect(jsonPath("$.messages").isEmpty());
+                .andExpect(content().contentType(APPLICATION_JSON_VALUE))
+                .andExpect(jsonPath("$.body.user").value("admin"))
+                .andExpect(jsonPath("$.body.state").value("LOCKED"))
+                .andExpect(jsonPath("$.body.timestamp").doesNotExist());
     }
 
     @SpringBootConfiguration
-    public static class TestContext
+    static class TestContext
     {
         // All handled by auto-config
     }

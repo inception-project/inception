@@ -343,21 +343,6 @@ public class RecommendationServiceImpl
     }
 
     @Override
-    @Transactional
-    public List<Recommender> listRecommenders(Project aProject)
-    {
-        var cb = entityManager.getCriteriaBuilder();
-        var query = cb.createQuery(Recommender.class);
-        var root = query.from(Recommender.class);
-
-        query.select(root) //
-                .where(cb.equal(root.get(Recommender_.project), aProject)) //
-                .orderBy(cb.asc(root.get(Recommender_.name)));
-
-        return entityManager.createQuery(query).getResultList();
-    }
-
-    @Override
     public List<AnnotationLayer> listLayersWithEnabledRecommenders(Project aProject)
     {
         var cb = entityManager.getCriteriaBuilder();
@@ -440,20 +425,17 @@ public class RecommendationServiceImpl
 
     @Override
     @Transactional
-    public List<Recommender> listEnabledRecommenders(AnnotationLayer aLayer)
+    public List<Recommender> listRecommenders(Project aProject)
     {
-        String query = String.join("\n", //
-                "FROM Recommender WHERE ", //
-                "project = :project AND", //
-                "layer = :layer AND", //
-                "enabled = :enabled", //
-                "ORDER BY name ASC");
+        var cb = entityManager.getCriteriaBuilder();
+        var query = cb.createQuery(Recommender.class);
+        var root = query.from(Recommender.class);
 
-        return entityManager.createQuery(query, Recommender.class) //
-                .setParameter("project", aLayer.getProject()) //
-                .setParameter("layer", aLayer) //
-                .setParameter("enabled", true) //
-                .getResultList();
+        query.select(root) //
+                .where(cb.equal(root.get(Recommender_.project), aProject)) //
+                .orderBy(cb.asc(root.get(Recommender_.name)));
+
+        return entityManager.createQuery(query).getResultList();
     }
 
     @Override
@@ -490,6 +472,24 @@ public class RecommendationServiceImpl
                 .stream() //
                 .filter(rec -> getRecommenderFactory(rec).isPresent()) //
                 .toList();
+    }
+
+    @Override
+    @Transactional
+    public List<Recommender> listEnabledRecommenders(AnnotationLayer aLayer)
+    {
+        String query = String.join("\n", //
+                "FROM Recommender WHERE ", //
+                "project = :project AND", //
+                "layer = :layer AND", //
+                "enabled = :enabled", //
+                "ORDER BY name ASC");
+
+        return entityManager.createQuery(query, Recommender.class) //
+                .setParameter("project", aLayer.getProject()) //
+                .setParameter("layer", aLayer) //
+                .setParameter("enabled", true) //
+                .getResultList();
     }
 
     @EventListener
@@ -677,7 +677,7 @@ public class RecommendationServiceImpl
             AutoAcceptMode aAutoAcceptMode, Predictions predictions, CAS cas)
     {
         var accepted = 0;
-        var recommenderCache = listRecommenders(aDocument.getProject()).stream()
+        var recommenderCache = listEnabledRecommenders(aDocument.getProject()).stream()
                 .collect(toMap(Recommender::getId, identity()));
         var suggestionSupportCache = new HashMap<Recommender, Optional<SuggestionSupport>>();
 
