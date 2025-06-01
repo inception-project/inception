@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.project.initializers.neannotation;
 
-import static de.tudarmstadt.ukp.inception.export.JsonImportUtil.importTagSetFromJson;
+import static de.tudarmstadt.ukp.inception.schema.exporters.TagsetImportExportUtils.importTagSetFromJson;
 
 import java.io.IOException;
 import java.util.Collections;

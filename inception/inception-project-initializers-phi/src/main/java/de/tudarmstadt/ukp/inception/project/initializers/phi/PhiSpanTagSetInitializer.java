@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.project.initializers.phi;
 
-import static de.tudarmstadt.ukp.inception.export.JsonImportUtil.importTagSetFromJson;
+import static de.tudarmstadt.ukp.inception.schema.exporters.TagsetImportExportUtils.importTagSetFromJson;
 import static java.util.Collections.emptyList;
 
 import java.io.IOException;
