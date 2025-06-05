@@ -161,6 +161,5 @@ public interface Renderer
         }
     }
 
-    List<Annotation> selectAnnotationsInWindow(RenderRequest aRequest, int aWindowBegin,
-            int aWindowEnd);
+    List<Annotation> selectAnnotationsInWindow(RenderRequest aRequest);
 }

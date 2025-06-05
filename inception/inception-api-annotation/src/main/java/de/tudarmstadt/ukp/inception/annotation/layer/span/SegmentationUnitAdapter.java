@@ -299,8 +299,7 @@ public class SegmentationUnitAdapter
     }
 
     public <T extends Annotation> AnnotationFS unSplit(SourceDocument aDocument,
-            String aDocumentOwner, CAS aCas, VID aResizedUnit, int aBegin, int aEnd,
-            VID aNewUnit)
+            String aDocumentOwner, CAS aCas, VID aResizedUnit, int aBegin, int aEnd, VID aNewUnit)
         throws AnnotationException
     {
         spanAdapter.delete(aDocument, aDocumentOwner, aCas, aNewUnit);

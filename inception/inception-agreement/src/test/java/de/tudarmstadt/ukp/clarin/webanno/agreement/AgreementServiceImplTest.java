@@ -35,7 +35,6 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.fit.factory.CasFactory;
 import org.junit.jupiter.api.Test;
 
-import de.tudarmstadt.ukp.clarin.webanno.agreement.AgreementServiceImpl;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.inception.support.uima.AnnotationBuilder;
 
