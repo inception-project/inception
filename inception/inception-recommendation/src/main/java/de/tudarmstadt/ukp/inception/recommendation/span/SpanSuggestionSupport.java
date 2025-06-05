@@ -23,6 +23,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.util.Arrays.asList;
 import static java.util.Comparator.comparingInt;
+import static org.apache.commons.lang3.ArrayUtils.isEmpty;
 import static org.apache.uima.cas.text.AnnotationPredicates.colocated;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
@@ -466,9 +467,13 @@ public class SpanSuggestionSupport
                 continue;
             }
 
-            var autoAcceptMode = getAutoAcceptMode(predictedFS, ctx.getModeFeature());
             var labels = getPredictedLabels(predictedFS, ctx.getLabelFeature(),
                     ctx.isMultiLabels());
+            if (isEmpty(labels)) {
+                continue;
+            }
+
+            var autoAcceptMode = getAutoAcceptMode(predictedFS, ctx.getModeFeature());
             var correction = predictedFS.getBooleanValue(ctx.getCorrectionFeature());
             var correctionExplanation = predictedFS
                     .getStringValue(ctx.getCorrectionExplanationFeature());
