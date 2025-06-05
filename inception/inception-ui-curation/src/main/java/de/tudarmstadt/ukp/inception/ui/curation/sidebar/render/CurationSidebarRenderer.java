@@ -339,7 +339,8 @@ public class CurationSidebarRenderer
             arc.setSource(resolveVisibleLinkHost(aTargetUser, aDiff, cfg, arc.getSource()));
         }
         else {
-            arc.setSource(resolveVisibleEndpoint(aTargetUser, aDiff, cfg, arc.getSource(), showAll));
+            arc.setSource(
+                    resolveVisibleEndpoint(aTargetUser, aDiff, cfg, arc.getSource(), showAll));
         }
 
         arc.setTarget(resolveVisibleEndpoint(aTargetUser, aDiff, cfg, arc.getTarget(), showAll));

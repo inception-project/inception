@@ -38,7 +38,8 @@ public class DirtySpot
     private final Range affectedRange;
     private final Map<Recommender, List<TrainingInstance>> incrementalTrainingData;
 
-    public DirtySpot(AnnotationEvent aEvent, Map<Recommender, List<TrainingInstance>> aIncrementalTrainingData)
+    public DirtySpot(AnnotationEvent aEvent,
+            Map<Recommender, List<TrainingInstance>> aIncrementalTrainingData)
     {
         document = aEvent.getDocument();
         user = aEvent.getDocumentOwner();

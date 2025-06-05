@@ -53,7 +53,8 @@ public class FeatureStructureBuilder<T extends FeatureStructure>
         return this;
     }
 
-    public FeatureStructureBuilder<T> withFeature(String aName, Object aValue, Object... aAdditionalValues)
+    public FeatureStructureBuilder<T> withFeature(String aName, Object aValue,
+            Object... aAdditionalValues)
     {
         var values = new ArrayList<Object>();
         values.add(aValue);
