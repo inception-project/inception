@@ -137,33 +137,35 @@ public class RelationRenderer
     }
 
     @Override
-    public List<Annotation> selectAnnotationsInWindow(RenderRequest aRequest, int aWindowBegin,
-            int aWindowEnd)
+    public List<Annotation> selectAnnotationsInWindow(RenderRequest aRequest)
     {
         var cas = aRequest.getCas();
+        var windowBegin = aRequest.getWindowBeginOffset();
+        var windowEnd = aRequest.getWindowEndOffset();
 
-        if (!aRequest.isLongArcs()) {
-            return cas.<Annotation> select(type) //
-                    .coveredBy(aWindowBegin, aWindowEnd) //
-                    .toList();
-        }
+        if (aRequest.isLongArcs()) {
+            var result = new ArrayList<Annotation>();
+            for (var rel : cas.<Annotation> select(type)) {
+                var sourceFs = getSourceFs(rel);
+                var targetFs = getTargetFs(rel);
 
-        var result = new ArrayList<Annotation>();
-        for (var rel : cas.<Annotation> select(type)) {
-            var sourceFs = getSourceFs(rel);
-            var targetFs = getTargetFs(rel);
+                if (sourceFs instanceof Annotation source
+                        && targetFs instanceof Annotation target) {
+                    var relBegin = min(source.getBegin(), target.getBegin());
+                    var relEnd = max(source.getEnd(), target.getEnd());
 
-            if (sourceFs instanceof Annotation source && targetFs instanceof Annotation target) {
-                var relBegin = min(source.getBegin(), target.getBegin());
-                var relEnd = max(source.getEnd(), target.getEnd());
-
-                if (overlapping(relBegin, relEnd, aWindowBegin, aWindowEnd)) {
-                    result.add(rel);
+                    if (overlapping(relBegin, relEnd, windowBegin, windowEnd)) {
+                        result.add(rel);
+                    }
                 }
             }
+
+            return result;
         }
 
-        return result;
+        return cas.<Annotation> select(type) //
+                .coveredBy(windowBegin, windowEnd) //
+                .toList();
     }
 
     @Override
@@ -179,8 +181,7 @@ public class RelationRenderer
         // Index mapping annotations to the corresponding rendered arcs
         var annoToArcIdx = new HashMap<AnnotationFS, VArc>();
 
-        var annotations = selectAnnotationsInWindow(aRequest, aResponse.getWindowBegin(),
-                aResponse.getWindowEnd());
+        var annotations = selectAnnotationsInWindow(aRequest);
 
         for (var fs : annotations) {
             for (var obj : render(aRequest, aFeatures, aResponse, fs)) {
