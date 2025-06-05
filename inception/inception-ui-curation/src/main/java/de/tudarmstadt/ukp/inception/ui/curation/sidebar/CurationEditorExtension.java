@@ -282,8 +282,8 @@ public class CurationEditorExtension
     }
 
     @Override
-    public List<VLazyDetailGroup> lookupLazyDetails(SourceDocument aDocument, User aDataOwner, CAS aCas,
-            VID aVid, AnnotationLayer aLayer)
+    public List<VLazyDetailGroup> lookupLazyDetails(SourceDocument aDocument, User aDataOwner,
+            CAS aCas, VID aVid, AnnotationLayer aLayer)
     {
         var detailGroups = new ArrayList<VLazyDetailGroup>();
 
@@ -314,8 +314,8 @@ public class CurationEditorExtension
             var nonCuratableFeatures = features.stream() //
                     .filter(f -> !f.isCuratable()) //
                     .toList();
-            lookupFeaturesAcrossAnnotators(aDocument, aDataOwner, aCas, aLayer, vid, srcUser, srcCas,
-                    nonCuratableFeatures).forEach(detailGroups::add);
+            lookupFeaturesAcrossAnnotators(aDocument, aDataOwner, aCas, aLayer, vid, srcUser,
+                    srcCas, nonCuratableFeatures).forEach(detailGroups::add);
         }
         catch (IOException e) {
             LOG.error("Unable to load lazy details", e);
@@ -328,8 +328,8 @@ public class CurationEditorExtension
     }
 
     private List<VLazyDetailGroup> lookupFeaturesAcrossAnnotators(SourceDocument aDocument,
-            User aDataOwner, CAS aCas, AnnotationLayer aLayer, VID vid, String aSrcUser, CAS aSrcCas,
-            List<AnnotationFeature> aNonCuratableFeatures)
+            User aDataOwner, CAS aCas, AnnotationLayer aLayer, VID vid, String aSrcUser,
+            CAS aSrcCas, List<AnnotationFeature> aNonCuratableFeatures)
     {
         var sessionOwner = userRepository.getCurrentUsername();
         var selectedUsers = curationSidebarService.listUsersReadyForCuration(sessionOwner,

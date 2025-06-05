@@ -96,20 +96,17 @@ public class SpanRenderer
     }
 
     @Override
-    public List<Annotation> selectAnnotationsInWindow(RenderRequest aRequest, int aWindowBegin,
-            int aWindowEnd)
+    public List<Annotation> selectAnnotationsInWindow(RenderRequest aRequest)
     {
         var cas = aRequest.getCas();
+        var windowBegin = aRequest.getWindowBeginOffset();
+        var windowEnd = aRequest.getWindowEndOffset();
 
-        if (!aRequest.isLongArcs()) {
-            return cas.<Annotation> select(type) //
-                    .coveredBy(0, aWindowEnd) //
-                    .includeAnnotationsWithEndBeyondBounds() //
-                    .filter(ann -> AnnotationPredicates.overlapping(ann, aWindowBegin, aWindowEnd))
-                    .toList();
-        }
-
-        return aRequest.getCas().<Annotation> select(type).toList();
+        return cas.<Annotation> select(type) //
+                .coveredBy(0, windowEnd) //
+                .includeAnnotationsWithEndBeyondBounds() //
+                .filter(ann -> AnnotationPredicates.overlapping(ann, windowBegin, windowEnd))
+                .toList();
     }
 
     @Override
@@ -155,8 +152,7 @@ public class SpanRenderer
         // Index mapping annotations to the corresponding rendered spans
         var annoToSpanIdx = new HashMap<AnnotationFS, VSpan>();
 
-        var annotations = selectAnnotationsInWindow(aRequest, aResponse.getWindowBegin(),
-                aResponse.getWindowEnd());
+        var annotations = selectAnnotationsInWindow(aRequest);
 
         for (var fs : annotations) {
             for (var vobj : render(aRequest, aFeatures, aResponse, fs)) {
