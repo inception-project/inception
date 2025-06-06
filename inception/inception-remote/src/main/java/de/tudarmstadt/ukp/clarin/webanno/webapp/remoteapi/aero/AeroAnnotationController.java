@@ -74,9 +74,17 @@ public class AeroAnnotationController
             value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + DOCUMENTS + "/{"
                     + PARAM_DOCUMENT_ID + "}/" + ANNOTATIONS, //
             produces = APPLICATION_JSON_VALUE)
-    public ResponseEntity<RResponse<List<RAnnotation>>> list(
-            @PathVariable(PARAM_PROJECT_ID) long aProjectId,
-            @PathVariable(PARAM_DOCUMENT_ID) long aDocumentId)
+    public ResponseEntity<RResponse<List<RAnnotation>>> list( //
+            @PathVariable(PARAM_PROJECT_ID) //
+            @Schema(description = """
+                    Project identifier.
+                    """) //
+            long aProjectId, //
+            @PathVariable(PARAM_DOCUMENT_ID) //
+            @Schema(description = """
+                    Document identifier.
+                    """) //
+            long aDocumentId)
         throws Exception
     {
         // Get project (this also ensures that it exists and that the current user can access it
@@ -101,11 +109,21 @@ public class AeroAnnotationController
                     + STATE, //
             consumes = ALL_VALUE, //
             produces = APPLICATION_JSON_VALUE)
-    public ResponseEntity<RResponse<RAnnotation>> updateState(
-            @PathVariable(PARAM_PROJECT_ID) long aProjectId,
-            @PathVariable(PARAM_DOCUMENT_ID) long aDocumentId,
-            @PathVariable(PARAM_ANNOTATOR_ID) String aAnnotatorId,
-            @RequestParam(name = PARAM_STATE) Optional<String> aState)
+    public ResponseEntity<RResponse<RAnnotation>> updateState( //
+            @PathVariable(PARAM_PROJECT_ID) //
+            @Schema(description = """
+                    Project identifier.
+                    """) //
+            long aProjectId, //
+            @PathVariable(PARAM_DOCUMENT_ID) //
+            @Schema(description = """
+                    Document identifier.
+                    """) //
+            long aDocumentId, //
+            @PathVariable(PARAM_ANNOTATOR_ID) //
+            String aAnnotatorId, //
+            @RequestParam(name = PARAM_STATE) //
+            Optional<String> aState)
         throws Exception
     {
         var project = getProject(aProjectId);
@@ -131,13 +149,44 @@ public class AeroAnnotationController
                     + PARAM_DOCUMENT_ID + "}/" + ANNOTATIONS + "/{" + PARAM_ANNOTATOR_ID + "}", //
             consumes = MULTIPART_FORM_DATA_VALUE, //
             produces = APPLICATION_JSON_VALUE)
-    public ResponseEntity<RResponse<RAnnotation>> create(
-            @PathVariable(PARAM_PROJECT_ID) long aProjectId,
-            @PathVariable(PARAM_DOCUMENT_ID) long aDocumentId,
-            @PathVariable(PARAM_ANNOTATOR_ID) String aAnnotatorId,
-            @RequestPart(PARAM_CONTENT) MultipartFile aFile,
-            @RequestParam(PARAM_FORMAT) Optional<String> aFormat,
-            @RequestParam(PARAM_STATE) Optional<String> aState, UriComponentsBuilder aUcb)
+    public ResponseEntity<RResponse<RAnnotation>> create( //
+            @PathVariable(PARAM_PROJECT_ID) //
+            @Schema(description = """
+                    Project identifier.
+                    """) //
+            long aProjectId, //
+            @PathVariable(PARAM_DOCUMENT_ID) //
+            @Schema(description = """
+                    Document identifier.
+                    """) //
+            long aDocumentId, //
+            @PathVariable(PARAM_ANNOTATOR_ID) //
+            @Schema(description = """
+                    Username of the annotator.
+                    """) //
+            String aAnnotatorId, //
+            @RequestParam(PARAM_FORMAT) //
+            @Schema(description = """
+                    The document format.
+                    Valid values typically include (unless disabled by the administrator):
+
+                    - `text`: Plain text format (UTF-8).
+                    - `xmi`: UIMA CAS XMI (XML 1.0) format.
+                    - `jsoncas`: UIMA CAS JSON 0.4.0 format.
+
+                    Additional format identifiers can be found in the format section of the user's guide.
+                    """) //
+            Optional<String> aFormat, //
+            @RequestParam(PARAM_STATE) //
+            @Schema(description = """
+                    The annotator-level state that should be set.
+                    """, //
+                    allowableValues = { ANNOTATION_STATE_NEW, ANNOTATION_STATE_IN_PROGRESS,
+                            ANNOTATION_STATE_LOCKED, ANNOTATION_STATE_COMPLETE }) //
+            Optional<String> aState, //
+            @RequestPart(PARAM_CONTENT) //
+            MultipartFile aFile, //
+            UriComponentsBuilder aUcb)
         throws Exception
     {
         var annotator = getUser(aAnnotatorId);
@@ -178,10 +227,34 @@ public class AeroAnnotationController
             value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + DOCUMENTS + "/{"
                     + PARAM_DOCUMENT_ID + "}/" + ANNOTATIONS + "/{" + PARAM_ANNOTATOR_ID + "}", //
             produces = { APPLICATION_OCTET_STREAM_VALUE, APPLICATION_JSON_VALUE })
-    public ResponseEntity<byte[]> read(@PathVariable(PARAM_PROJECT_ID) long aProjectId,
-            @PathVariable(PARAM_DOCUMENT_ID) long aDocumentId,
-            @PathVariable(PARAM_ANNOTATOR_ID) String aAnnotatorId,
-            @RequestParam(value = PARAM_FORMAT) Optional<String> aFormat)
+    public ResponseEntity<byte[]> read( //
+            @PathVariable(PARAM_PROJECT_ID) //
+            @Schema(description = """
+                    Project identifier.
+                    """) //
+            long aProjectId, //
+            @PathVariable(PARAM_DOCUMENT_ID) //
+            @Schema(description = """
+                    Document identifier.
+                    """) //
+            long aDocumentId, //
+            @PathVariable(PARAM_ANNOTATOR_ID) //
+            @Schema(description = """
+                    Username of the annotator.
+                    """) //
+            String aAnnotatorId, //
+            @RequestParam(PARAM_FORMAT) //
+            @Schema(description = """
+                    The document format.
+                    Valid values typically include (unless disabled by the administrator):
+
+                    - `text`: Plain text format (UTF-8).
+                    - `xmi`: UIMA CAS XMI (XML 1.0) format.
+                    - `jsoncas`: UIMA CAS JSON 0.4.0 format.
+
+                    Additional format identifiers can be found in the format section of the user's guide.
+                    """) //
+            Optional<String> aFormat)
         throws Exception
     {
         return readAnnotation(aProjectId, aDocumentId, aAnnotatorId, Mode.ANNOTATION, aFormat);
@@ -192,9 +265,22 @@ public class AeroAnnotationController
             value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + DOCUMENTS + "/{"
                     + PARAM_DOCUMENT_ID + "}/" + ANNOTATIONS + "/{" + PARAM_ANNOTATOR_ID + "}", //
             produces = APPLICATION_JSON_VALUE)
-    public ResponseEntity<RResponse<Void>> delete(@PathVariable(PARAM_PROJECT_ID) long aProjectId,
-            @PathVariable(PARAM_DOCUMENT_ID) long aDocumentId,
-            @PathVariable(PARAM_ANNOTATOR_ID) String aAnnotatorId)
+    public ResponseEntity<RResponse<Void>> delete( //
+            @PathVariable(PARAM_PROJECT_ID) //
+            @Schema(description = """
+                    Project identifier.
+                    """) //
+            long aProjectId, //
+            @PathVariable(PARAM_DOCUMENT_ID) //
+            @Schema(description = """
+                    Document identifier.
+                    """) //
+            long aDocumentId, //
+            @PathVariable(PARAM_ANNOTATOR_ID) //
+            @Schema(description = """
+                    Username of the annotator.
+                    """) //
+            String aAnnotatorId)
         throws Exception
     {
         // Get project (this also ensures that it exists and that the current user can access it

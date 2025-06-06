@@ -86,3 +86,7 @@ wicket:
         preserveLineBreaks: true
         compressJavaScript: false
         compressCss: false
+
+springdoc:
+  swagger-ui:
+    tagsSorter: alpha

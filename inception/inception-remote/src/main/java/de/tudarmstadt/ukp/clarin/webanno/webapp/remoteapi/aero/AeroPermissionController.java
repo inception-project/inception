@@ -41,6 +41,7 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RPermission
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RResponse;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.config.RemoteApiAutoConfiguration;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 /**
@@ -62,8 +63,12 @@ public class AeroPermissionController
     @GetMapping( //
             value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + PERMISSIONS, //
             produces = { APPLICATION_JSON_VALUE })
-    public ResponseEntity<RResponse<List<RPermission>>> read(
-            @PathVariable(PARAM_PROJECT_ID) long aProjectId)
+    public ResponseEntity<RResponse<List<RPermission>>> read( //
+            @PathVariable(PARAM_PROJECT_ID) //
+            @Schema(description = """
+                    Project identifier.
+                    """) //
+            long aProjectId)
         throws Exception
     {
         // Get project (this also ensures that it exists and that the current user can access it
@@ -90,9 +95,17 @@ public class AeroPermissionController
             value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + PERMISSIONS + "/{"
                     + PARAM_ANNOTATOR_ID + "}", //
             produces = { APPLICATION_JSON_VALUE })
-    public ResponseEntity<RResponse<List<RPermission>>> read(
-            @PathVariable(PARAM_PROJECT_ID) long aProjectId,
-            @PathVariable(PARAM_ANNOTATOR_ID) String aSubjectUser)
+    public ResponseEntity<RResponse<List<RPermission>>> read( //
+            @PathVariable(PARAM_PROJECT_ID) //
+            @Schema(description = """
+                    Project identifier.
+                    """) //
+            long aProjectId, //
+            @PathVariable(PARAM_ANNOTATOR_ID) //
+            @Schema(description = """
+                    User to list the permissions for.
+                    """) //
+            String aSubjectUser)
         throws Exception
     {
         // Get project (this also ensures that it exists and that the current user can access it
@@ -121,10 +134,23 @@ public class AeroPermissionController
             value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + PERMISSIONS + "/{"
                     + PARAM_ANNOTATOR_ID + "}", //
             produces = { APPLICATION_JSON_VALUE })
-    public ResponseEntity<RResponse<List<RPermission>>> create(
-            @PathVariable(PARAM_PROJECT_ID) long aProjectId,
-            @PathVariable(PARAM_ANNOTATOR_ID) String aSubjectUser,
-            @RequestParam(PARAM_ROLES) List<String> aRoles)
+    public ResponseEntity<RResponse<List<RPermission>>> create( //
+            @PathVariable(PARAM_PROJECT_ID) //
+            @Schema(description = """
+                    Project identifier.
+                    """) //
+            long aProjectId, //
+            @PathVariable(PARAM_ANNOTATOR_ID) //
+            @Schema(description = """
+                    User to assign the permissions to.
+                    """) //
+            String aSubjectUser, //
+            @RequestParam(PARAM_ROLES) //
+            @Schema(description = """
+                    Project roles to assign.
+                    """, //
+                    allowableValues = { "USER", "CURATOR", "ADMIN" }) //
+            List<String> aRoles)
         throws Exception
     {
         // Get project (this also ensures that it exists and that the current user can access it
@@ -157,10 +183,23 @@ public class AeroPermissionController
             value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + PERMISSIONS + "/{"
                     + PARAM_ANNOTATOR_ID + "}", //
             produces = { APPLICATION_JSON_VALUE })
-    public ResponseEntity<RResponse<List<RPermission>>> delete(
-            @PathVariable(PARAM_PROJECT_ID) long aProjectId,
-            @PathVariable(PARAM_ANNOTATOR_ID) String aSubjectUser,
-            @RequestParam(PARAM_ROLES) List<String> aRoles)
+    public ResponseEntity<RResponse<List<RPermission>>> delete( //
+            @PathVariable(PARAM_PROJECT_ID) //
+            @Schema(description = """
+                    Project identifier.
+                    """) //
+            long aProjectId, //
+            @PathVariable(PARAM_ANNOTATOR_ID) //
+            @Schema(description = """
+                    User to assign the permissions to.
+                    """) //
+            String aSubjectUser, //
+            @RequestParam(PARAM_ROLES) //
+            @Schema(description = """
+                    Project roles to revoke.
+                    """, //
+                    allowableValues = { "USER", "CURATOR", "ADMIN" }) //
+            List<String> aRoles)
         throws Exception
     {
         // Get project (this also ensures that it exists and that the current user can access it

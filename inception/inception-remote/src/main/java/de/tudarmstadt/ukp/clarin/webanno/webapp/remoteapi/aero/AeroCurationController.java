@@ -81,12 +81,42 @@ public class AeroCurationController
                     "/{" + PARAM_DOCUMENT_ID + "}/" + CURATION, //
             consumes = MULTIPART_FORM_DATA_VALUE, //
             produces = APPLICATION_JSON_VALUE)
-    public ResponseEntity<RResponse<RAnnotation>> create(
-            @PathVariable(PARAM_PROJECT_ID) long aProjectId,
-            @PathVariable(PARAM_DOCUMENT_ID) long aDocumentId,
-            @RequestPart(value = PARAM_CONTENT) MultipartFile aFile,
-            @RequestParam(PARAM_FORMAT) Optional<String> aFormat,
-            @RequestParam(PARAM_STATE) Optional<String> aState, UriComponentsBuilder aUcb)
+    public ResponseEntity<RResponse<RAnnotation>> create( //
+            @PathVariable(PARAM_PROJECT_ID) //
+            @Schema(description = """
+                    Project identifier.
+                    """) //
+            long aProjectId, //
+            @PathVariable(PARAM_DOCUMENT_ID) //
+            @Schema(description = """
+                    Document identifier.
+                    """) //
+            long aDocumentId, //
+            @RequestPart(value = PARAM_CONTENT) //
+            @Schema(description = """
+                    The file to upload.
+                    """) //
+            MultipartFile aFile, //
+            @RequestParam(PARAM_FORMAT) //
+            @Schema(description = """
+                    Format of the file being uploaded.
+
+                    Valid values typically include (unless disabled by the administrator):
+
+                    - `text`: Plain text format (UTF-8).
+                    - `xmi`: UIMA CAS XMI (XML 1.0) format.
+                    - `jsoncas`: UIMA CAS JSON 0.4.0 format.
+
+                    Additional format identifiers can be found in the format section of the user's guide.
+                    """) //
+            Optional<String> aFormat, //
+            @RequestParam(PARAM_STATE) //
+            @Schema(description = """
+                    The document-level state that should be set.
+                    """, //
+                    allowableValues = { "CURATION-COMPLETE", "CURATION-IN-PROGRESS" }) //
+            Optional<String> aState, //
+            UriComponentsBuilder aUcb)
         throws Exception
     {
         var project = getProject(aProjectId);
@@ -138,9 +168,29 @@ public class AeroCurationController
             value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + DOCUMENTS + "/{"
                     + PARAM_DOCUMENT_ID + "}/" + CURATION, //
             produces = { APPLICATION_OCTET_STREAM_VALUE, APPLICATION_JSON_VALUE })
-    public ResponseEntity<byte[]> read(@PathVariable(PARAM_PROJECT_ID) long aProjectId,
-            @PathVariable(PARAM_DOCUMENT_ID) long aDocumentId,
-            @RequestParam(value = PARAM_FORMAT) Optional<String> aFormat)
+    public ResponseEntity<byte[]> read( //
+            @PathVariable(PARAM_PROJECT_ID) //
+            @Schema(description = """
+                    Project identifier.
+                    """) //
+            long aProjectId, //
+            @PathVariable(PARAM_DOCUMENT_ID) //
+            @Schema(description = """
+                    Document identifier.
+                    """) //
+            long aDocumentId, //
+            @RequestParam(value = PARAM_FORMAT) //
+            @Schema(description = """
+                    The export format.
+                    Valid values typically include (unless disabled by the administrator):
+
+                    - `text`: Plain text format (UTF-8).
+                    - `xmi`: UIMA CAS XMI (XML 1.0) format.
+                    - `jsoncas`: UIMA CAS JSON 0.4.0 format.
+
+                    Additional format identifiers can be found in the format section of the user's guide.
+                    """) //
+            Optional<String> aFormat)
         throws Exception
     {
         return readAnnotation(aProjectId, aDocumentId, WebAnnoConst.CURATION_USER, Mode.CURATION,
@@ -152,8 +202,17 @@ public class AeroCurationController
             value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + DOCUMENTS + "/{"
                     + PARAM_DOCUMENT_ID + "}/" + CURATION, //
             produces = APPLICATION_JSON_VALUE)
-    public ResponseEntity<RResponse<Void>> delete(@PathVariable(PARAM_PROJECT_ID) long aProjectId,
-            @PathVariable(PARAM_DOCUMENT_ID) long aDocumentId)
+    public ResponseEntity<RResponse<Void>> delete( //
+            @PathVariable(PARAM_PROJECT_ID) //
+            @Schema(description = """
+                    Project identifier.
+                    """) //
+            long aProjectId, //
+            @PathVariable(PARAM_DOCUMENT_ID) //
+            @Schema(description = """
+                    Document identifier.
+                    """) //
+            long aDocumentId)
         throws Exception
     {
         // Get project (this also ensures that it exists and that the current user can access it

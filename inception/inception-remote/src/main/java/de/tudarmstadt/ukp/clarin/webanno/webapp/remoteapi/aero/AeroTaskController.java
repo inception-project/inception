@@ -38,6 +38,7 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.config.RemoteApiAutoCo
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.scheduling.TaskAccess;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 /**
@@ -56,12 +57,16 @@ public class AeroTaskController
     private @Autowired SchedulingService schedulingService;
     private @Autowired TaskAccess taskAccess;
 
-    @Operation(summary = "List tasks")
+    @Operation(summary = "List tasks and their respective states.")
     @GetMapping( //
             value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + TASKS, //
             produces = APPLICATION_JSON_VALUE)
-    public ResponseEntity<RResponse<List<RTaskState>>> list(
-            @PathVariable(PARAM_PROJECT_ID) long aProjectId)
+    public ResponseEntity<RResponse<List<RTaskState>>> list( //
+            @PathVariable(PARAM_PROJECT_ID) //
+            @Schema(description = """
+                    Project identifier.
+                    """) //
+            long aProjectId)
         throws Exception
     {
         var project = getProject(aProjectId);
@@ -77,13 +82,22 @@ public class AeroTaskController
         return ResponseEntity.ok(new RResponse<>(tasks));
     }
 
-    @Operation(summary = "Cancel task")
+    @Operation(summary = "Cancel task.")
     @DeleteMapping( //
             value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + TASKS + "/{" + PARAM_TASK_ID
                     + "}", //
             produces = APPLICATION_JSON_VALUE)
-    public ResponseEntity<RResponse<Void>> cancel(@PathVariable(PARAM_PROJECT_ID) long aProjectId,
-            @PathVariable(PARAM_TASK_ID) long aTaskId)
+    public ResponseEntity<RResponse<Void>> cancel( //
+            @PathVariable(PARAM_PROJECT_ID) //
+            @Schema(description = """
+                    Project identifier.
+                    """) //
+            long aProjectId, //
+            @PathVariable(PARAM_TASK_ID) //
+            @Schema(description = """
+                    Task identifier.
+                    """) //
+            long aTaskId)
         throws Exception
     {
         var project = getProject(aProjectId);

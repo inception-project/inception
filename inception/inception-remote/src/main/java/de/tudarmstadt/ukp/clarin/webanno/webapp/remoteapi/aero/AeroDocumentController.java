@@ -80,6 +80,12 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 public class AeroDocumentController
     extends AeroController_ImplBase
 {
+    private static final String DOCUMENT_STATE_NEW = "NEW";
+    private static final String DOCUMENT_STATE_ANNOTATION_IN_PROGRESS = "ANNOTATION-IN-PROGRESS";
+    private static final String DOCUMENT_STATE_ANNOTATION_COMPLETE = "ANNOTATION-COMPLETE";
+    private static final String DOCUMENT_STATE_CURATION_COMPLETE = "CURATION-COMPLETE";
+    private static final String DOCUMENT_STATE_CURATION_IN_PROGRESS = "CURATION-IN-PROGRESS";
+
     private final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private @Autowired DocumentStorageService documentStorageService;
@@ -87,8 +93,12 @@ public class AeroDocumentController
     @Operation(summary = "List documents in a project")
     @GetMapping(value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/"
             + DOCUMENTS, produces = APPLICATION_JSON_VALUE)
-    public ResponseEntity<RResponse<List<RDocument>>> list(
-            @PathVariable(PARAM_PROJECT_ID) long aProjectId)
+    public ResponseEntity<RResponse<List<RDocument>>> list( //
+            @PathVariable(PARAM_PROJECT_ID) //
+            @Schema(description = """
+                    Project identifier.
+                    """) //
+            long aProjectId)
         throws Exception
     {
         // Get project (this also ensures that it exists and that the current user can access it
@@ -109,11 +119,40 @@ public class AeroDocumentController
             value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + DOCUMENTS, //
             consumes = MULTIPART_FORM_DATA_VALUE, //
             produces = APPLICATION_JSON_VALUE)
-    public ResponseEntity<RResponse<RDocument>> create(
-            @PathVariable(PARAM_PROJECT_ID) long aProjectId,
-            @RequestParam(PARAM_CONTENT) MultipartFile aFile,
-            @RequestParam(PARAM_NAME) String aName, @RequestParam(PARAM_FORMAT) String aFormat,
-            @RequestParam(PARAM_STATE) Optional<String> aState, UriComponentsBuilder aUcb)
+    public ResponseEntity<RResponse<RDocument>> create( //
+            @PathVariable(PARAM_PROJECT_ID) //
+            @Schema(description = """
+                    Project identifier.
+                    """) //
+            long aProjectId, //
+            @RequestParam(PARAM_NAME) //
+            @Schema(description = """
+                    Document name.
+                    """) //
+            String aName, //
+            @RequestParam(PARAM_FORMAT) //
+            @Schema(description = """
+                    The document format.
+                    Valid values typically include (unless disabled by the administrator):
+
+                    - `text`: Plain text format (UTF-8).
+                    - `xmi`: UIMA CAS XMI (XML 1.0) format.
+                    - `jsoncas`: UIMA CAS JSON 0.4.0 format.
+
+                    Additional format identifiers can be found in the format section of the user's guide.
+                    """) //
+            String aFormat, //
+            @RequestParam(PARAM_STATE) //
+            @Schema(description = """
+                    The initial state for the imported document.
+                    """, //
+                    allowableValues = { DOCUMENT_STATE_NEW, DOCUMENT_STATE_ANNOTATION_IN_PROGRESS,
+                            DOCUMENT_STATE_ANNOTATION_COMPLETE, DOCUMENT_STATE_CURATION_COMPLETE,
+                            DOCUMENT_STATE_CURATION_IN_PROGRESS }) //
+            Optional<String> aState, //
+            @RequestParam(PARAM_CONTENT) //
+            MultipartFile aFile, //
+            UriComponentsBuilder aUcb)
         throws Exception
     {
         // Get project (this also ensures that it exists and that the current user can access it
@@ -179,9 +218,29 @@ public class AeroDocumentController
             value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + DOCUMENTS + "/{"
                     + PARAM_DOCUMENT_ID + "}", //
             produces = { APPLICATION_OCTET_STREAM_VALUE, APPLICATION_JSON_VALUE })
-    public ResponseEntity<?> read(@PathVariable(PARAM_PROJECT_ID) long aProjectId,
-            @PathVariable(PARAM_DOCUMENT_ID) long aDocumentId,
-            @RequestParam(value = PARAM_FORMAT) Optional<String> aFormat)
+    public ResponseEntity<?> read( //
+            @PathVariable(PARAM_PROJECT_ID) //
+            @Schema(description = """
+                    Project identifier.
+                    """) //
+            long aProjectId, //
+            @PathVariable(PARAM_DOCUMENT_ID) //
+            @Schema(description = """
+                    Document identifier.
+                    """) //
+            long aDocumentId, //
+            @RequestParam(value = PARAM_FORMAT) //
+            @Schema(description = """
+                    The export format.
+                    Valid values typically include (unless disabled by the administrator):
+
+                    - `text`: Plain text format (UTF-8).
+                    - `xmi`: UIMA CAS XMI (XML 1.0) format.
+                    - `jsoncas`: UIMA CAS JSON 0.4.0 format.
+
+                    Additional format identifiers can be found in the format section of the user's guide.
+                    """) //
+            Optional<String> aFormat)
         throws Exception
     {
         // Get project (this also ensures that it exists and that the current user can access it
@@ -258,8 +317,17 @@ public class AeroDocumentController
             value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + DOCUMENTS + "/{"
                     + PARAM_DOCUMENT_ID + "}", //
             produces = APPLICATION_JSON_VALUE)
-    public ResponseEntity<RResponse<Void>> delete(@PathVariable(PARAM_PROJECT_ID) long aProjectId,
-            @PathVariable(PARAM_DOCUMENT_ID) long aDocumentId)
+    public ResponseEntity<RResponse<Void>> delete( //
+            @PathVariable(PARAM_PROJECT_ID) //
+            @Schema(description = """
+                    Project identifier.
+                    """) //
+            long aProjectId, //
+            @PathVariable(PARAM_DOCUMENT_ID) //
+            @Schema(description = """
+                    Document identifier.
+                    """) //
+            long aDocumentId)
         throws Exception
     {
         // Get project (this also ensures that it exists and that the current user can access it
@@ -279,15 +347,15 @@ public class AeroDocumentController
         }
 
         switch (aState) {
-        case "NEW":
+        case DOCUMENT_STATE_NEW:
             return SourceDocumentState.NEW;
-        case "ANNOTATION-IN-PROGRESS":
+        case DOCUMENT_STATE_ANNOTATION_IN_PROGRESS:
             return SourceDocumentState.ANNOTATION_IN_PROGRESS;
-        case "ANNOTATION-COMPLETE":
+        case DOCUMENT_STATE_ANNOTATION_COMPLETE:
             return SourceDocumentState.ANNOTATION_FINISHED;
-        case "CURATION-COMPLETE":
+        case DOCUMENT_STATE_CURATION_COMPLETE:
             return SourceDocumentState.CURATION_FINISHED;
-        case "CURATION-IN-PROGRESS":
+        case DOCUMENT_STATE_CURATION_IN_PROGRESS:
             return SourceDocumentState.CURATION_IN_PROGRESS;
         default:
             throw new IllegalArgumentException("Unknown source document state [" + aState + "]");

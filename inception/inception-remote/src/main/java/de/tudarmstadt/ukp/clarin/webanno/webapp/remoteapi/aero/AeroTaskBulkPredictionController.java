@@ -45,6 +45,7 @@ import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.scheduling.TaskAccess;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 /**
@@ -70,8 +71,12 @@ public class AeroTaskBulkPredictionController
             value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + TASKS + "/predict", //
             consumes = APPLICATION_JSON_VALUE, //
             produces = APPLICATION_JSON_VALUE)
-    public ResponseEntity<RResponse<RTaskState>> create(
-            @PathVariable(PARAM_PROJECT_ID) long aProjectId, //
+    public ResponseEntity<RResponse<RTaskState>> create( //
+            @PathVariable(PARAM_PROJECT_ID) //
+            @Schema(description = """
+                    Project identifier.
+                    """) //
+            long aProjectId, //
             @RequestBody RBulkPredictionRequest aRequest)
         throws Exception
     {

@@ -81,6 +81,11 @@ public abstract class AeroController_ImplBase
 {
     public static final String API_BASE = "/api/aero/v1";
 
+    static final String ANNOTATION_STATE_NEW = "NEW";
+    static final String ANNOTATION_STATE_COMPLETE = "COMPLETE";
+    static final String ANNOTATION_STATE_LOCKED = "LOCKED";
+    static final String ANNOTATION_STATE_IN_PROGRESS = "IN-PROGRESS";
+
     static final String PROJECTS = "projects";
     static final String DOCUMENTS = "documents";
     static final String ANNOTATIONS = "annotations";
@@ -431,7 +436,7 @@ public abstract class AeroController_ImplBase
         }
 
         switch (aState) {
-        case "NEW":
+        case ANNOTATION_STATE_NEW:
             return SourceDocumentState.NEW;
         case "ANNOTATION-IN-PROGRESS":
             return SourceDocumentState.ANNOTATION_IN_PROGRESS;
@@ -454,7 +459,7 @@ public abstract class AeroController_ImplBase
 
         switch (aState) {
         case NEW:
-            return "NEW";
+            return ANNOTATION_STATE_NEW;
         case ANNOTATION_IN_PROGRESS:
             return "ANNOTATION-IN-PROGRESS";
         case ANNOTATION_FINISHED:
@@ -475,13 +480,13 @@ public abstract class AeroController_ImplBase
         }
 
         switch (aState) {
-        case "NEW":
+        case ANNOTATION_STATE_NEW:
             return AnnotationDocumentState.NEW;
-        case "COMPLETE":
+        case ANNOTATION_STATE_COMPLETE:
             return AnnotationDocumentState.FINISHED;
-        case "LOCKED":
+        case ANNOTATION_STATE_LOCKED:
             return AnnotationDocumentState.IGNORE;
-        case "IN-PROGRESS":
+        case ANNOTATION_STATE_IN_PROGRESS:
             return AnnotationDocumentState.IN_PROGRESS;
         default:
             throw new IllegalArgumentException(
@@ -497,13 +502,13 @@ public abstract class AeroController_ImplBase
 
         switch (aState) {
         case NEW:
-            return "NEW";
+            return ANNOTATION_STATE_NEW;
         case FINISHED:
-            return "COMPLETE";
+            return ANNOTATION_STATE_COMPLETE;
         case IGNORE:
-            return "LOCKED";
+            return ANNOTATION_STATE_LOCKED;
         case IN_PROGRESS:
-            return "IN-PROGRESS";
+            return ANNOTATION_STATE_IN_PROGRESS;
         default:
             throw new IllegalArgumentException(
                     "Unknown annotation document state [" + aState + "]");

@@ -77,6 +77,7 @@ import de.tudarmstadt.ukp.inception.project.export.ProjectExportService;
 import de.tudarmstadt.ukp.inception.project.export.ProjectImportExportUtils;
 import de.tudarmstadt.ukp.inception.support.io.ZipUtils;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 /**
@@ -120,9 +121,24 @@ public class AeroProjectController
             consumes = { ALL_VALUE, MULTIPART_FORM_DATA_VALUE }, //
             produces = APPLICATION_JSON_VALUE)
     public ResponseEntity<RResponse<RProject>> create( //
-            @RequestParam(PARAM_NAME) String aSlug, //
-            @RequestParam(PARAM_TITLE) Optional<String> aName, //
-            @RequestParam(PARAM_CREATOR) Optional<String> aCreator, //
+            @RequestParam(PARAM_NAME) //
+            @Schema(description = """
+                    URL slug of the project. This is used to create a URL for the project.
+                    """) //
+            String aSlug, //
+            @RequestParam(PARAM_TITLE) //
+            @Schema(description = """
+                    Name of the project. It not specified, the slug will be used as the name.
+                    """) //
+            Optional<String> aName, //
+            @RequestParam(PARAM_CREATOR) //
+            @Schema(description = """
+                    Username of the user on whose behalf the project is created.
+                    This user gets full initial permissions on the created project.
+                    If this parameter is not set, the authenticated user will be used as the creator.
+                    This option is only usable by instance administrators.
+                    """) //
+            Optional<String> aCreator, //
             UriComponentsBuilder aUcb)
         throws Exception
     {
@@ -192,7 +208,12 @@ public class AeroProjectController
     @Operation(summary = "Delete an existing project")
     @DeleteMapping(value = ("/" + PROJECTS + "/{" + PARAM_PROJECT_ID
             + "}"), produces = APPLICATION_JSON_VALUE)
-    public ResponseEntity<RResponse<Void>> delte(@PathVariable(PARAM_PROJECT_ID) long aProjectId)
+    public ResponseEntity<RResponse<Void>> delete( //
+            @PathVariable(PARAM_PROJECT_ID) //
+            @Schema(description = """
+                    Project identifier.
+                    """) //
+            long aProjectId)
         throws Exception
     {
         // Get project (this also ensures that it exists and that the current user can access it
@@ -209,9 +230,22 @@ public class AeroProjectController
             consumes = MULTIPART_FORM_DATA_VALUE, //
             produces = APPLICATION_JSON_VALUE)
     public ResponseEntity<RResponse<RProject>> upload(
-            @RequestParam(name = PARAM_CREATE_MISSING_USERS, defaultValue = "false") boolean aCreateMissingUsers, //
-            @RequestParam(name = PARAM_IMPORT_PERMISSIONS, defaultValue = "false") boolean aImportPermissions, //
-            @RequestPart(PARAM_FILE) MultipartFile aFile)
+            @RequestParam(name = PARAM_CREATE_MISSING_USERS, defaultValue = "false") //
+            @Schema(description = """
+                    Whether to create users present in the project but not present in the instance.
+                    Created users must be manually enabled and a password set before they can log in.
+                    This option is only available to instance administrators.
+                    """) //
+            boolean aCreateMissingUsers, //
+            @RequestParam(name = PARAM_IMPORT_PERMISSIONS, defaultValue = "false") //
+            @Schema(description = """
+                    Whether to import project permissions.
+                    If this option is not enabled, only the importing user will be set up as a project manager.
+                    If it is enabled, any projects present in the exported project will be restored.
+                    """) //
+            boolean aImportPermissions, //
+            @RequestPart(PARAM_FILE) //
+            MultipartFile aFile)
         throws Exception
     {
         // Get current user - this will throw an exception if the current user does not exit
@@ -285,9 +319,29 @@ public class AeroProjectController
     @Operation(summary = "Export a project to a ZIP file")
     @GetMapping(value = ("/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + EXPORT), produces = {
             "application/zip", APPLICATION_JSON_VALUE })
-    public ResponseEntity<InputStreamResource> download(
-            @PathVariable(PARAM_PROJECT_ID) long aProjectId,
-            @RequestParam(value = PARAM_FORMAT) Optional<String> aFormat)
+    public ResponseEntity<InputStreamResource> download( //
+            @PathVariable(PARAM_PROJECT_ID) //
+            @Schema(description = """
+                    Project identifier.
+                    """) //
+            long aProjectId, //
+            @RequestParam(value = PARAM_FORMAT) //
+            @Schema(description = """
+                    If this parameter is specified, the project export will include a second copy
+                    of the data in the specified format in addition to the internal format used
+                    by the application. Setting a secondary format can be useful
+                    for further processing of the data in external tools, e.g. for training
+                    machine learning models.
+
+                    Valid values typically include (unless disabled by the administrator):
+
+                    - `text`: Plain text format (UTF-8).
+                    - `xmi`: UIMA CAS XMI (XML 1.0) format.
+                    - `jsoncas`: UIMA CAS JSON 0.4.0 format.
+
+                    Additional format identifiers can be found in the format section of the user's guide.
+                    """) //
+            Optional<String> aFormat)
         throws Exception
     {
         // Get project (this also ensures that it exists and that the current user can access it
