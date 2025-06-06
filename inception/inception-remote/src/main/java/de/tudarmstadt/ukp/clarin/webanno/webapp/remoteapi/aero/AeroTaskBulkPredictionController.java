@@ -22,6 +22,9 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 import java.io.Serializable;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
@@ -29,12 +32,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RBulkPredictionRequest;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RMetadataAnnotation;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RResponse;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RTaskState;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.config.RemoteApiAutoConfiguration;
@@ -61,6 +64,10 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 public class AeroTaskBulkPredictionController
     extends AeroController_ImplBase
 {
+    private static final String PARAM_FINISH_DOCUMENTS_WITHOUT_RECOMMENDATIONS = "finishDocumentsWithoutRecommendations";
+    private static final String PARAM_METADATA = "metadata";
+    private static final String PARAM_STATES_TO_PROCESS = "statesToProcess";
+    private static final String PARAM_RECOMMENDER_NAME = "recommender";
     private @Autowired RecommendationService recommendationService;
     private @Autowired AnnotationSchemaService schemaService;
     private @Autowired SchedulingService schedulingService;
@@ -77,50 +84,88 @@ public class AeroTaskBulkPredictionController
                     Project identifier.
                     """) //
             long aProjectId, //
-            @RequestBody RBulkPredictionRequest aRequest)
+            @RequestParam(PARAM_RECOMMENDER_NAME) //
+            @Schema(description = """
+                    Recommender name.
+                    """) //
+            String aRecommender, //
+            @RequestParam(PARAM_ANNOTATOR_ID) //
+            @Schema(description = """
+                    Username under which the annotations are to be created.
+                    """) //
+            String aUserId, //
+            @RequestParam( //
+                    name = PARAM_STATES_TO_PROCESS, //
+                    defaultValue = "") //
+            @Schema(description = """
+                    Process any documents in the given annotation states.
+                    If not specified, all documents in the project.
+                    """, //
+                    allowableValues = { //
+                            ANNOTATION_STATE_NEW, //
+                            ANNOTATION_STATE_IN_PROGRESS, //
+                            ANNOTATION_STATE_COMPLETE, //
+                            ANNOTATION_STATE_LOCKED }) //
+            Set<String> aStatesToProcess, //
+            @RequestParam( //
+                    name = PARAM_METADATA, //
+                    defaultValue = "") //
+            @Schema(description = """
+                    Metadata annotations to be created in each document.
+                    """) //
+            List<RMetadataAnnotation> aMetadata, //
+            @RequestParam( //
+                    name = PARAM_FINISH_DOCUMENTS_WITHOUT_RECOMMENDATIONS, //
+                    defaultValue = "false") // )
+            @Schema(description = """
+                    Whether to mark annotations as finished even if no recommendations
+                    were generated for them.
+                    """) //
+            boolean aFinishDocumentsWithoutRecommendations)
         throws Exception
     {
         var project = getProject(aProjectId);
         var sessionOwner = getSessionOwner();
 
         taskAccess.assertCanManageTasks(sessionOwner, project);
+        var statesToProcess = aStatesToProcess.stream() //
+                .map(AeroController_ImplBase::parseAnnotationDocumentState) //
+                .collect(Collectors.toSet());
 
-        var recommender = recommendationService.getRecommender(project, aRequest.recommender())
-                .orElseThrow(() -> new IllegalArgumentException("Recommender ["
-                        + aRequest.recommender() + "] not found in project [" + aProjectId + "]"));
+        var recommender = recommendationService.getRecommender(project, aRecommender)
+                .orElseThrow(() -> new IllegalArgumentException("Recommender [" + aRecommender
+                        + "] not found in project [" + aProjectId + "]"));
 
-        assertRecommenderCanBeTriggered(aProjectId, aRequest, recommender);
+        assertRecommenderCanBeTriggered(aProjectId, recommender);
 
-        var metadata = convertMetadata(aProjectId, aRequest, project);
+        var metadata = convertMetadata(aProjectId, aMetadata, project);
 
         var task = BulkPredictionTask.builder() //
                 .withSessionOwner(sessionOwner) //
                 .withRecommender(recommender) //
                 .withTrigger("Remote API") //
-                .withDataOwner(aRequest.userId()) //
+                .withDataOwner(aUserId) //
                 .withProcessingMetadata(metadata) //
-                .withStatesToProcess(aRequest.statesToProcess()) //
-                .withFinishDocumentsWithoutRecommendations(
-                        aRequest.finishDocumentsWithoutRecommendations()) //
+                .withStatesToProcess(statesToProcess) //
+                .withFinishDocumentsWithoutRecommendations(aFinishDocumentsWithoutRecommendations) //
                 .build();
         schedulingService.enqueue(task);
 
         return ResponseEntity.ok(new RResponse<>(new RTaskState(task)));
     }
 
-    private void assertRecommenderCanBeTriggered(long aProjectId, RBulkPredictionRequest aRequest,
-            Recommender recommender)
+    private void assertRecommenderCanBeTriggered(long aProjectId, Recommender aRecommender)
     {
-        if (!recommender.isEnabled()) {
-            throw new IllegalArgumentException("Recommender [" + aRequest.recommender()
+        if (!aRecommender.isEnabled()) {
+            throw new IllegalArgumentException("Recommender [" + aRecommender.getName()
                     + "] in project [" + aProjectId + "] is not enabled.");
         }
 
-        var factory = recommendationService.getRecommenderFactory(recommender)
+        var factory = recommendationService.getRecommenderFactory(aRecommender)
                 .orElseThrow(() -> new IllegalArgumentException(
-                        "Recommender [" + aRequest.recommender() + "] is not supported"));
+                        "Recommender [" + aRecommender.getName() + "] is not supported"));
 
-        var engine = factory.build(recommender);
+        var engine = factory.build(aRecommender);
         if (engine.getTrainingCapability() == TRAINING_REQUIRED) {
             // If a recommender requires training, it would yield no results if the user has not yet
             // annotated any documents. So in this case, we do currently not offer it for
@@ -131,17 +176,17 @@ public class AeroTaskBulkPredictionController
             //
             // see
             // de.tudarmstadt.ukp.inception.processing.recommender.BulkRecommenderPanel.listRecommenders()
-            throw new IllegalArgumentException("Recommender [" + aRequest.recommender()
+            throw new IllegalArgumentException("Recommender [" + aRecommender.getName()
                     + "] requires training and cannot be triggered in this way");
         }
     }
 
     private HashMap<AnnotationFeature, Serializable> convertMetadata(long aProjectId,
-            RBulkPredictionRequest aRequest, Project project)
+            List<RMetadataAnnotation> aMetadata, Project project)
     {
         var metadata = new HashMap<AnnotationFeature, Serializable>();
-        if (aRequest.metadata() != null) {
-            for (var annotation : aRequest.metadata()) {
+        if (aMetadata != null) {
+            for (var annotation : aMetadata) {
                 var layer = schemaService.findLayer(project, annotation.type());
                 if (layer == null) {
                     throw new IllegalArgumentException("Layer [" + annotation.type()

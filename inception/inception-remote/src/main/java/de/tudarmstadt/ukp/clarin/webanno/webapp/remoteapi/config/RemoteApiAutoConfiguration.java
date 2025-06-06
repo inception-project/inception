@@ -68,14 +68,17 @@ public class RemoteApiAutoConfiguration
         return new AeroPermissionController();
     }
 
-    @ConditionalOnExpression(REMOTE_API_ENABLED_CONDITION)
+    @ConditionalOnExpression("(" + REMOTE_API_ENABLED_CONDITION + ")"
+            + "&& ${remote-api.tasks.enabled:false}")
     @Bean
     public AeroTaskController aeroTaskController()
     {
         return new AeroTaskController();
     }
 
-    @ConditionalOnExpression(REMOTE_API_ENABLED_CONDITION)
+    @ConditionalOnExpression("(" + REMOTE_API_ENABLED_CONDITION + ")"
+            + "&& ${remote-api.tasks.enabled:false}"
+            + "&& ${remote-api.tasks.bulk-prediction.enabled:false}")
     @Bean
     public AeroTaskBulkPredictionController aeroBulkPredictionSubmissionController()
     {

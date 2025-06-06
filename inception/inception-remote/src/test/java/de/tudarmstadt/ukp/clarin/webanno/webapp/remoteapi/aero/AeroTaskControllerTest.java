@@ -66,6 +66,7 @@ import de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeServiceImpl
                 "spring.main.banner-mode=off", //
                 "search.enabled=false", //
                 "remote-api.enabled=true", //
+                "remote-api.tasks.enabled=true", //
                 "repository.path=" + AeroTaskControllerTest.TEST_OUTPUT_FOLDER })
 @EnableWebSecurity
 @EnableAutoConfiguration( //

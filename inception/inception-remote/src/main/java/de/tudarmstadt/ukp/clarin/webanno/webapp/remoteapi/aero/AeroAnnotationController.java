@@ -121,17 +121,27 @@ public class AeroAnnotationController
                     """) //
             long aDocumentId, //
             @PathVariable(PARAM_ANNOTATOR_ID) //
+            @Schema(description = """
+                    Username of the annotator.
+                    """) //
             String aAnnotatorId, //
             @RequestParam(name = PARAM_STATE) //
-            Optional<String> aState)
+            @Schema(description = """
+                    New annotation state.
+                    """, //
+                    allowableValues = { //
+                            ANNOTATION_STATE_NEW, //
+                            ANNOTATION_STATE_IN_PROGRESS, //
+                            ANNOTATION_STATE_COMPLETE, //
+                            ANNOTATION_STATE_LOCKED }) //
+            String aState)
         throws Exception
     {
         var project = getProject(aProjectId);
         var document = getDocument(project, aDocumentId);
 
         var anno = getAnnotation(document, aAnnotatorId, false);
-        documentService.setAnnotationDocumentState(anno,
-                parseAnnotationDocumentState(aState.get()));
+        documentService.setAnnotationDocumentState(anno, parseAnnotationDocumentState(aState));
         documentService.createOrUpdateAnnotationDocument(anno);
 
         var response = new RResponse<>(new RAnnotation(anno));
@@ -181,8 +191,11 @@ public class AeroAnnotationController
             @Schema(description = """
                     The annotator-level state that should be set.
                     """, //
-                    allowableValues = { ANNOTATION_STATE_NEW, ANNOTATION_STATE_IN_PROGRESS,
-                            ANNOTATION_STATE_LOCKED, ANNOTATION_STATE_COMPLETE }) //
+                    allowableValues = { //
+                            ANNOTATION_STATE_NEW, //
+                            ANNOTATION_STATE_IN_PROGRESS, //
+                            ANNOTATION_STATE_COMPLETE, //
+                            ANNOTATION_STATE_LOCKED }) //
             Optional<String> aState, //
             @RequestPart(PARAM_CONTENT) //
             MultipartFile aFile, //
