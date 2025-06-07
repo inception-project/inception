@@ -18,13 +18,19 @@
 package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero;
 
 import static de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RMessageLevel.INFO;
+import static de.tudarmstadt.ukp.inception.remoteapi.SourceDocumentStateUtils.DOCUMENT_STATE_ANNOTATION_COMPLETE;
+import static de.tudarmstadt.ukp.inception.remoteapi.SourceDocumentStateUtils.DOCUMENT_STATE_ANNOTATION_IN_PROGRESS;
+import static de.tudarmstadt.ukp.inception.remoteapi.SourceDocumentStateUtils.DOCUMENT_STATE_CURATION_COMPLETE;
+import static de.tudarmstadt.ukp.inception.remoteapi.SourceDocumentStateUtils.DOCUMENT_STATE_CURATION_IN_PROGRESS;
+import static de.tudarmstadt.ukp.inception.remoteapi.SourceDocumentStateUtils.DOCUMENT_STATE_NEW;
+import static de.tudarmstadt.ukp.inception.remoteapi.SourceDocumentStateUtils.parseSourceDocumentState;
+import static de.tudarmstadt.ukp.inception.remoteapi.SourceDocumentStateUtils.sourceDocumentStateToString;
 import static org.springframework.http.HttpStatus.OK;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.http.MediaType.APPLICATION_OCTET_STREAM_VALUE;
 import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
 
 import java.io.File;
-import java.io.InputStream;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.List;
@@ -50,9 +56,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.exception.IllegalNameException;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.exception.IllegalObjectStateException;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.exception.UnsupportedFormatException;
@@ -60,6 +64,7 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RDocument;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RResponse;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.config.RemoteApiAutoConfiguration;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentStorageService;
+import de.tudarmstadt.ukp.inception.remoteapi.Controller_ImplBase;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -78,14 +83,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @Controller
 @RequestMapping(AeroDocumentController.API_BASE)
 public class AeroDocumentController
-    extends AeroController_ImplBase
+    extends Controller_ImplBase
 {
-    private static final String DOCUMENT_STATE_NEW = "NEW";
-    private static final String DOCUMENT_STATE_ANNOTATION_IN_PROGRESS = "ANNOTATION-IN-PROGRESS";
-    private static final String DOCUMENT_STATE_ANNOTATION_COMPLETE = "ANNOTATION-COMPLETE";
-    private static final String DOCUMENT_STATE_CURATION_COMPLETE = "CURATION-COMPLETE";
-    private static final String DOCUMENT_STATE_CURATION_IN_PROGRESS = "CURATION-IN-PROGRESS";
-
     private final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private @Autowired DocumentStorageService documentStorageService;
@@ -102,7 +101,7 @@ public class AeroDocumentController
         throws Exception
     {
         // Get project (this also ensures that it exists and that the current user can access it
-        Project project = getProject(aProjectId);
+        var project = getProject(aProjectId);
 
         var documents = documentService.listSourceDocuments(project);
 
@@ -190,12 +189,14 @@ public class AeroDocumentController
             case CURATION_FINISHED:
             default:
                 throw new IllegalObjectStateException(
-                        "State [%s] not valid when uploading a document.", aState.get());
+                        "State [%s] not valid when uploading a document. These states are "
+                                + "automatically determined by the system",
+                        aState.get());
             }
         }
 
         // Import source document to the project repository folder
-        try (InputStream is = aFile.getInputStream()) {
+        try (var is = aFile.getInputStream()) {
             documentService.uploadSourceDocument(is, document);
         }
 
@@ -338,27 +339,5 @@ public class AeroDocumentController
 
         return ResponseEntity.ok(new RResponse<>(INFO,
                 "Document [" + aDocumentId + "] deleted from project [" + aProjectId + "]."));
-    }
-
-    public static SourceDocumentState parseSourceDocumentState(String aState)
-    {
-        if (aState == null) {
-            return null;
-        }
-
-        switch (aState) {
-        case DOCUMENT_STATE_NEW:
-            return SourceDocumentState.NEW;
-        case DOCUMENT_STATE_ANNOTATION_IN_PROGRESS:
-            return SourceDocumentState.ANNOTATION_IN_PROGRESS;
-        case DOCUMENT_STATE_ANNOTATION_COMPLETE:
-            return SourceDocumentState.ANNOTATION_FINISHED;
-        case DOCUMENT_STATE_CURATION_COMPLETE:
-            return SourceDocumentState.CURATION_FINISHED;
-        case DOCUMENT_STATE_CURATION_IN_PROGRESS:
-            return SourceDocumentState.CURATION_IN_PROGRESS;
-        default:
-            throw new IllegalArgumentException("Unknown source document state [" + aState + "]");
-        }
     }
 }

@@ -32,17 +32,18 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.AeroAnnotationController;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.AeroController_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.AeroCurationController;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.AeroDocumentController;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.AeroPermissionController;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.AeroProjectController;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.AeroTaskBulkPredictionController;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.AeroTaskController;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.legacy.LegacyRemoteApiController;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.menubar.SwaggerUiMenuBarItemSupport;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.WebhookService;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.WebhooksConfiguration;
+import de.tudarmstadt.ukp.inception.remoteapi.Controller_ImplBase;
+import de.tudarmstadt.ukp.inception.remoteapi.next.AnnotationController;
+import de.tudarmstadt.ukp.inception.remoteapi.next.PermissionController;
+import de.tudarmstadt.ukp.inception.remoteapi.next.TaskBulkPredictionController;
+import de.tudarmstadt.ukp.inception.remoteapi.next.TaskController;
 import io.swagger.v3.oas.models.info.Info;
 
 @ConditionalOnWebApplication
@@ -63,26 +64,26 @@ public class RemoteApiAutoConfiguration
 
     @ConditionalOnExpression(REMOTE_API_ENABLED_CONDITION)
     @Bean
-    public AeroPermissionController aeroPermissionController()
+    public PermissionController aeroPermissionController()
     {
-        return new AeroPermissionController();
+        return new PermissionController();
     }
 
     @ConditionalOnExpression("(" + REMOTE_API_ENABLED_CONDITION + ")"
             + "&& ${remote-api.tasks.enabled:false}")
     @Bean
-    public AeroTaskController aeroTaskController()
+    public TaskController aeroTaskController()
     {
-        return new AeroTaskController();
+        return new TaskController();
     }
 
     @ConditionalOnExpression("(" + REMOTE_API_ENABLED_CONDITION + ")"
             + "&& ${remote-api.tasks.enabled:false}"
             + "&& ${remote-api.tasks.bulk-prediction.enabled:false}")
     @Bean
-    public AeroTaskBulkPredictionController aeroBulkPredictionSubmissionController()
+    public TaskBulkPredictionController aeroBulkPredictionSubmissionController()
     {
-        return new AeroTaskBulkPredictionController();
+        return new TaskBulkPredictionController();
     }
 
     @ConditionalOnExpression(REMOTE_API_ENABLED_CONDITION)
@@ -90,6 +91,13 @@ public class RemoteApiAutoConfiguration
     public AeroDocumentController aeroDocumentController()
     {
         return new AeroDocumentController();
+    }
+
+    @ConditionalOnExpression(REMOTE_API_ENABLED_CONDITION)
+    @Bean
+    public AnnotationController annotationController()
+    {
+        return new AnnotationController();
     }
 
     @ConditionalOnExpression(REMOTE_API_ENABLED_CONDITION)
@@ -146,7 +154,7 @@ public class RemoteApiAutoConfiguration
     public GroupedOpenApi areoRemoteApiDocket()
     {
         return GroupedOpenApi.builder().group("aero-v1")
-                .pathsToMatch(AeroController_ImplBase.API_BASE + "/**")
+                .pathsToMatch(Controller_ImplBase.API_BASE + "/**")
                 .addOpenApiCustomizer(openApi -> { //
                     openApi.info(new Info() //
                             .title("AERO") //

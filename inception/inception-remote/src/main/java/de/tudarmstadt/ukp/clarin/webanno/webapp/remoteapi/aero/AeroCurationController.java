@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero;
 
 import static de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RMessageLevel.INFO;
+import static de.tudarmstadt.ukp.inception.remoteapi.SourceDocumentStateUtils.parseSourceDocumentState;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.http.MediaType.APPLICATION_OCTET_STREAM_VALUE;
 import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
@@ -50,6 +51,7 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RAnnotation
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RResponse;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.config.RemoteApiAutoConfiguration;
 import de.tudarmstadt.ukp.inception.curation.service.CurationDocumentService;
+import de.tudarmstadt.ukp.inception.remoteapi.Controller_ImplBase;
 import de.tudarmstadt.ukp.inception.support.WebAnnoConst;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -69,7 +71,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @Controller
 @RequestMapping(AeroCurationController.API_BASE)
 public class AeroCurationController
-    extends AeroController_ImplBase
+    extends Controller_ImplBase
 {
     private final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
@@ -129,7 +131,7 @@ public class AeroCurationController
 
         var resultState = AnnotationDocumentState.IN_PROGRESS;
         if (aState.isPresent()) {
-            SourceDocumentState state = parseSourceDocumentState(aState.get());
+            var state = parseSourceDocumentState(aState.get());
             switch (state) {
             case CURATION_IN_PROGRESS:
                 resultState = AnnotationDocumentState.IN_PROGRESS;

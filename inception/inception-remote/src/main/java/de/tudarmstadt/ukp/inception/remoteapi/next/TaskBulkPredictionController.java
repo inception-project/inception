@@ -15,9 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero;
+package de.tudarmstadt.ukp.inception.remoteapi.next;
 
 import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapability.TRAINING_REQUIRED;
+import static de.tudarmstadt.ukp.inception.remoteapi.AnnotationDocumentStateUtils.ANNOTATION_STATE_COMPLETE;
+import static de.tudarmstadt.ukp.inception.remoteapi.AnnotationDocumentStateUtils.ANNOTATION_STATE_IN_PROGRESS;
+import static de.tudarmstadt.ukp.inception.remoteapi.AnnotationDocumentStateUtils.ANNOTATION_STATE_LOCKED;
+import static de.tudarmstadt.ukp.inception.remoteapi.AnnotationDocumentStateUtils.ANNOTATION_STATE_NEW;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 import java.io.Serializable;
@@ -37,13 +41,15 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RMetadataAnnotation;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RResponse;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RTaskState;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.config.RemoteApiAutoConfiguration;
 import de.tudarmstadt.ukp.inception.processing.recommender.BulkPredictionTask;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.remoteapi.AnnotationDocumentStateUtils;
+import de.tudarmstadt.ukp.inception.remoteapi.Controller_ImplBase;
+import de.tudarmstadt.ukp.inception.remoteapi.next.model.RMetadataAnnotation;
+import de.tudarmstadt.ukp.inception.remoteapi.next.model.RTaskState;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.scheduling.TaskAccess;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
@@ -57,17 +63,18 @@ import io.swagger.v3.oas.annotations.tags.Tag;
  * {@link RemoteApiAutoConfiguration#aeroTaskController}.
  * </p>
  */
-@Tag(name = "Task Management (non-AERO)", description = "Management of long-runnig tasks.")
+@Tag(name = "Task Management", description = "Management of long-runnig tasks.")
 @ConditionalOnExpression("false") // Auto-configured - avoid package scanning
 @Controller
-@RequestMapping(AeroTaskBulkPredictionController.API_BASE)
-public class AeroTaskBulkPredictionController
-    extends AeroController_ImplBase
+@RequestMapping(TaskBulkPredictionController.API_BASE)
+public class TaskBulkPredictionController
+    extends Controller_ImplBase
 {
     private static final String PARAM_FINISH_DOCUMENTS_WITHOUT_RECOMMENDATIONS = "finishDocumentsWithoutRecommendations";
     private static final String PARAM_METADATA = "metadata";
     private static final String PARAM_STATES_TO_PROCESS = "statesToProcess";
     private static final String PARAM_RECOMMENDER_NAME = "recommender";
+
     private @Autowired RecommendationService recommendationService;
     private @Autowired AnnotationSchemaService schemaService;
     private @Autowired SchedulingService schedulingService;
@@ -129,7 +136,7 @@ public class AeroTaskBulkPredictionController
 
         taskAccess.assertCanManageTasks(sessionOwner, project);
         var statesToProcess = aStatesToProcess.stream() //
-                .map(AeroController_ImplBase::parseAnnotationDocumentState) //
+                .map(AnnotationDocumentStateUtils::parseAnnotationDocumentState) //
                 .collect(Collectors.toSet());
 
         var recommender = recommendationService.getRecommender(project, aRecommender)

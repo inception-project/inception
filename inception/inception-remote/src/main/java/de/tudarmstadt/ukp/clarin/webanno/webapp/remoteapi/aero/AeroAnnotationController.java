@@ -18,7 +18,12 @@
 package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero;
 
 import static de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RMessageLevel.INFO;
-import static org.springframework.http.MediaType.ALL_VALUE;
+import static de.tudarmstadt.ukp.inception.remoteapi.AnnotationDocumentStateUtils.ANNOTATION_STATE_COMPLETE;
+import static de.tudarmstadt.ukp.inception.remoteapi.AnnotationDocumentStateUtils.ANNOTATION_STATE_IN_PROGRESS;
+import static de.tudarmstadt.ukp.inception.remoteapi.AnnotationDocumentStateUtils.ANNOTATION_STATE_LOCKED;
+import static de.tudarmstadt.ukp.inception.remoteapi.AnnotationDocumentStateUtils.ANNOTATION_STATE_NEW;
+import static de.tudarmstadt.ukp.inception.remoteapi.AnnotationDocumentStateUtils.annotationDocumentStateToString;
+import static de.tudarmstadt.ukp.inception.remoteapi.AnnotationDocumentStateUtils.parseAnnotationDocumentState;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.http.MediaType.APPLICATION_OCTET_STREAM_VALUE;
 import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
@@ -47,6 +52,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RAnnotation;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RResponse;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.config.RemoteApiAutoConfiguration;
+import de.tudarmstadt.ukp.inception.remoteapi.Controller_ImplBase;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -65,7 +71,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @Controller
 @RequestMapping(AeroAnnotationController.API_BASE)
 public class AeroAnnotationController
-    extends AeroController_ImplBase
+    extends Controller_ImplBase
 {
     private final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
@@ -100,57 +106,6 @@ public class AeroAnnotationController
         }
 
         return ResponseEntity.ok(new RResponse<>(annotationList));
-    }
-
-    @Operation(summary = "Update annotation state for a document in a project (non-AERO)")
-    @PostMapping( //
-            value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + DOCUMENTS + "/{" //
-                    + PARAM_DOCUMENT_ID + "}/" + ANNOTATIONS + "/{" + PARAM_ANNOTATOR_ID + "}/"
-                    + STATE, //
-            consumes = ALL_VALUE, //
-            produces = APPLICATION_JSON_VALUE)
-    public ResponseEntity<RResponse<RAnnotation>> updateState( //
-            @PathVariable(PARAM_PROJECT_ID) //
-            @Schema(description = """
-                    Project identifier.
-                    """) //
-            long aProjectId, //
-            @PathVariable(PARAM_DOCUMENT_ID) //
-            @Schema(description = """
-                    Document identifier.
-                    """) //
-            long aDocumentId, //
-            @PathVariable(PARAM_ANNOTATOR_ID) //
-            @Schema(description = """
-                    Username of the annotator.
-                    """) //
-            String aAnnotatorId, //
-            @RequestParam(name = PARAM_STATE) //
-            @Schema(description = """
-                    New annotation state.
-                    """, //
-                    allowableValues = { //
-                            ANNOTATION_STATE_NEW, //
-                            ANNOTATION_STATE_IN_PROGRESS, //
-                            ANNOTATION_STATE_COMPLETE, //
-                            ANNOTATION_STATE_LOCKED }) //
-            String aState)
-        throws Exception
-    {
-        var project = getProject(aProjectId);
-        var document = getDocument(project, aDocumentId);
-
-        var anno = getAnnotation(document, aAnnotatorId, false);
-        documentService.setAnnotationDocumentState(anno, parseAnnotationDocumentState(aState));
-        documentService.createOrUpdateAnnotationDocument(anno);
-
-        var response = new RResponse<>(new RAnnotation(anno));
-        response.addMessage(INFO,
-                "State of annotations of user [" + aAnnotatorId + "] on document ["
-                        + document.getId() + "] set to ["
-                        + annotationDocumentStateToString(anno.getState()) + "]");
-
-        return ResponseEntity.ok(response);
     }
 
     @Operation(summary = "Create or update annotations for a document in a project")

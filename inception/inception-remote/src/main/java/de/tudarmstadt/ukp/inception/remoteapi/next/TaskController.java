@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero;
+package de.tudarmstadt.ukp.inception.remoteapi.next;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
@@ -33,8 +33,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RMessageLevel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RResponse;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RTaskState;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.config.RemoteApiAutoConfiguration;
+import de.tudarmstadt.ukp.inception.remoteapi.Controller_ImplBase;
+import de.tudarmstadt.ukp.inception.remoteapi.next.model.RTaskState;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.scheduling.TaskAccess;
 import io.swagger.v3.oas.annotations.Operation;
@@ -50,9 +51,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @Tag(name = "Task Management (non-AERO)", description = "Management of long-runnig tasks.")
 @ConditionalOnExpression("false") // Auto-configured - avoid package scanning
 @Controller
-@RequestMapping(AeroTaskController.API_BASE)
-public class AeroTaskController
-    extends AeroController_ImplBase
+@RequestMapping(TaskController.API_BASE)
+public class TaskController
+    extends Controller_ImplBase
 {
     private @Autowired SchedulingService schedulingService;
     private @Autowired TaskAccess taskAccess;

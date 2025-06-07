@@ -15,18 +15,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model;
+package de.tudarmstadt.ukp.inception.remoteapi.next.model;
 
-import java.util.Map;
+import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
 
-import io.swagger.v3.oas.annotations.media.Schema;
+public class RPermission
+{
+    public long project;
+    public String user;
+    public String role;
 
-@Schema(description = "Metadata annotation containing a type and a map of features")
-public record RMetadataAnnotation( //
-        @Schema(description = "The type of the annotation") //
-        String type, //
-        @Schema(description = "A map of features where keys represent feature names and values represent " //
-                + "their corresponding values") //
-        Map<String, String> features) {
+    public RPermission(ProjectPermission aPermission)
+    {
+        project = aPermission.getProject().getId();
+        user = aPermission.getUser();
+        role = aPermission.getLevel().name();
+    }
 
+    public RPermission(long aProject, String aUser, String aRole)
+    {
+        project = aProject;
+        user = aUser;
+        role = aRole;
+    }
 }

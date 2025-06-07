@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero;
+package de.tudarmstadt.ukp.inception.remoteapi.next;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static java.util.stream.Collectors.toList;
@@ -37,9 +37,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RPermission;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RResponse;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.config.RemoteApiAutoConfiguration;
+import de.tudarmstadt.ukp.inception.remoteapi.Controller_ImplBase;
+import de.tudarmstadt.ukp.inception.remoteapi.next.model.RPermission;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -53,9 +54,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @Tag(name = "Permission Management (non-AERO)", description = "Management of project-level user permissions.")
 @ConditionalOnExpression("false") // Auto-configured - avoid package scanning
 @Controller
-@RequestMapping(AeroPermissionController.API_BASE)
-public class AeroPermissionController
-    extends AeroController_ImplBase
+@RequestMapping(PermissionController.API_BASE)
+public class PermissionController
+    extends Controller_ImplBase
 {
     private final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 

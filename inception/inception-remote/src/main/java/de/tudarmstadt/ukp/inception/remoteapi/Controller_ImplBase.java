@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero;
+package de.tudarmstadt.ukp.inception.remoteapi;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RMessageLevel.ERROR;
@@ -59,11 +59,9 @@ import org.springframework.web.multipart.MultipartFile;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.exception.AccessForbiddenException;
@@ -77,49 +75,38 @@ import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import jakarta.persistence.NoResultException;
 
-public abstract class AeroController_ImplBase
+public abstract class Controller_ImplBase
 {
     public static final String API_BASE = "/api/aero/v1";
 
-    static final String ANNOTATION_STATE_NEW = "NEW";
-    static final String ANNOTATION_STATE_COMPLETE = "COMPLETE";
-    static final String ANNOTATION_STATE_LOCKED = "LOCKED";
-    static final String ANNOTATION_STATE_IN_PROGRESS = "IN-PROGRESS";
+    public static final String PROJECTS = "projects";
+    public static final String DOCUMENTS = "documents";
+    public static final String ANNOTATIONS = "annotations";
+    public static final String CURATION = "curation";
+    public static final String IMPORT = "import";
+    public static final String EXPORT = "export.zip";
+    public static final String STATE = "state";
+    public static final String PERMISSIONS = "permissions";
+    public static final String TASKS = "tasks";
 
-    static final String PROJECTS = "projects";
-    static final String DOCUMENTS = "documents";
-    static final String ANNOTATIONS = "annotations";
-    static final String CURATION = "curation";
-    static final String IMPORT = "import";
-    static final String EXPORT = "export.zip";
-    static final String STATE = "state";
-    static final String PERMISSIONS = "permissions";
-    static final String TASKS = "tasks";
+    public static final String PARAM_FILE = "file";
+    public static final String PARAM_CONTENT = "content";
+    public static final String PARAM_NAME = "name";
+    public static final String PARAM_TITLE = "title";
+    public static final String PARAM_FORMAT = "format";
+    public static final String PARAM_STATE = "state";
+    public static final String PARAM_CREATOR = "creator";
+    public static final String PARAM_PROJECT_ID = "projectId";
+    public static final String PARAM_ANNOTATOR_ID = "userId";
+    public static final String PARAM_DOCUMENT_ID = "documentId";
+    public static final String PARAM_CREATE_MISSING_USERS = "createMissingUsers";
+    public static final String PARAM_IMPORT_PERMISSIONS = "importPermissions";
+    public static final String PARAM_ROLES = "roles";
+    public static final String PARAM_TASK_ID = "taskId";
 
-    static final String PARAM_FILE = "file";
-    static final String PARAM_CONTENT = "content";
-    static final String PARAM_NAME = "name";
-    static final String PARAM_TITLE = "title";
-    static final String PARAM_FORMAT = "format";
-    static final String PARAM_STATE = "state";
-    static final String PARAM_CREATOR = "creator";
-    static final String PARAM_PROJECT_ID = "projectId";
-    static final String PARAM_ANNOTATOR_ID = "userId";
-    static final String PARAM_DOCUMENT_ID = "documentId";
-    static final String PARAM_CREATE_MISSING_USERS = "createMissingUsers";
-    static final String PARAM_IMPORT_PERMISSIONS = "importPermissions";
-    static final String PARAM_ROLES = "roles";
-    static final String PARAM_TASK_ID = "taskId";
+    public static final String VAL_ORIGINAL = "ORIGINAL";
 
-    static final String VAL_ORIGINAL = "ORIGINAL";
-
-    // private static final String PROP_ID = "id";
-    // private static final String PROP_NAME = "name";
-    // private static final String PROP_STATE = "state";
-    // private static final String PROP_USER = "user";
-    // private static final String PROP_TIMESTAMP = "user";
-
-    static final String FORMAT_DEFAULT = "text";
+    public static final String FORMAT_DEFAULT = "text";
 
     private final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
@@ -426,92 +413,6 @@ public abstract class AeroController_ImplBase
                     "Text of annotation document does not match text of source document at offset "
                             + "[%d]. Expected [%s] but found [%s].",
                     diffIndex, expected, actual);
-        }
-    }
-
-    public static SourceDocumentState parseSourceDocumentState(String aState)
-    {
-        if (aState == null) {
-            return null;
-        }
-
-        switch (aState) {
-        case ANNOTATION_STATE_NEW:
-            return SourceDocumentState.NEW;
-        case "ANNOTATION-IN-PROGRESS":
-            return SourceDocumentState.ANNOTATION_IN_PROGRESS;
-        case "ANNOTATION-COMPLETE":
-            return SourceDocumentState.ANNOTATION_FINISHED;
-        case "CURATION-COMPLETE":
-            return SourceDocumentState.CURATION_FINISHED;
-        case "CURATION-IN-PROGRESS":
-            return SourceDocumentState.CURATION_IN_PROGRESS;
-        default:
-            throw new IllegalArgumentException("Unknown source document state [" + aState + "]");
-        }
-    }
-
-    public static String sourceDocumentStateToString(SourceDocumentState aState)
-    {
-        if (aState == null) {
-            return null;
-        }
-
-        switch (aState) {
-        case NEW:
-            return ANNOTATION_STATE_NEW;
-        case ANNOTATION_IN_PROGRESS:
-            return "ANNOTATION-IN-PROGRESS";
-        case ANNOTATION_FINISHED:
-            return "ANNOTATION-COMPLETE";
-        case CURATION_FINISHED:
-            return "CURATION-COMPLETE";
-        case CURATION_IN_PROGRESS:
-            return "CURATION-IN-PROGRESS";
-        default:
-            throw new IllegalArgumentException("Unknown source document state [" + aState + "]");
-        }
-    }
-
-    public static AnnotationDocumentState parseAnnotationDocumentState(String aState)
-    {
-        if (aState == null) {
-            return null;
-        }
-
-        switch (aState) {
-        case ANNOTATION_STATE_NEW:
-            return AnnotationDocumentState.NEW;
-        case ANNOTATION_STATE_COMPLETE:
-            return AnnotationDocumentState.FINISHED;
-        case ANNOTATION_STATE_LOCKED:
-            return AnnotationDocumentState.IGNORE;
-        case ANNOTATION_STATE_IN_PROGRESS:
-            return AnnotationDocumentState.IN_PROGRESS;
-        default:
-            throw new IllegalArgumentException(
-                    "Unknown annotation document state [" + aState + "]");
-        }
-    }
-
-    public static String annotationDocumentStateToString(AnnotationDocumentState aState)
-    {
-        if (aState == null) {
-            return null;
-        }
-
-        switch (aState) {
-        case NEW:
-            return ANNOTATION_STATE_NEW;
-        case FINISHED:
-            return ANNOTATION_STATE_COMPLETE;
-        case IGNORE:
-            return ANNOTATION_STATE_LOCKED;
-        case IN_PROGRESS:
-            return ANNOTATION_STATE_IN_PROGRESS;
-        default:
-            throw new IllegalArgumentException(
-                    "Unknown annotation document state [" + aState + "]");
         }
     }
 }
