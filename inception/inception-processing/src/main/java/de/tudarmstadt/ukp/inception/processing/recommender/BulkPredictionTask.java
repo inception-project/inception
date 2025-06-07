@@ -197,6 +197,11 @@ public class BulkPredictionTask
     private boolean isInProcessableState(SourceDocument aSourceDocument,
             AnnotationDocument aAnnotationDocument)
     {
+        if (statesToProcess.isEmpty()) {
+            // If no states are specified, then we process all documents
+            return true;
+        }
+
         var effectiveState = aAnnotationDocument == null //
                 ? AnnotationDocumentState.NEW //
                 : aAnnotationDocument.getState();

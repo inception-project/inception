@@ -90,15 +90,15 @@ public class TrainingTask
         schedulePredictionTask();
     }
 
-    private User getSessionOwner()
+    private User getMandatorySessionOwner()
     {
-        return getUser().orElseThrow();
+        return getSessionOwner().orElseThrow();
     }
 
     private void executeTraining()
     {
-        var activeRecommenders = recommenderService.getActiveRecommenders(getSessionOwner(),
-                getProject());
+        var activeRecommenders = recommenderService
+                .getActiveRecommenders(getMandatorySessionOwner(), getProject());
 
         if (activeRecommenders.isEmpty()) {
             logNoActiveRecommenders();
@@ -170,7 +170,7 @@ public class TrainingTask
         throws ConcurrentException, RecommendationException
     {
         var startTime = currentTimeMillis();
-        var sessionOwner = getSessionOwner();
+        var sessionOwner = getMandatorySessionOwner();
 
         var maybeFactory = recommenderService.getRecommenderFactory(aRecommender);
         if (maybeFactory.isEmpty()) {
@@ -234,7 +234,7 @@ public class TrainingTask
     private void schedulePredictionTask()
     {
         var predictionTask = PredictionTask.builder() //
-                .withSessionOwner(getSessionOwner()) //
+                .withSessionOwner(getMandatorySessionOwner()) //
                 .withTrigger(String.format("TrainingTask %s complete", getId())) //
                 .withCurrentDocument(currentDocument) //
                 .withDataOwner(dataOwner) //
@@ -262,41 +262,44 @@ public class TrainingTask
         warn("Recommender [%s] uses unsupported tool [%s] - skipping", aRecommender.getName(),
                 aRecommender.getTool());
         LOG.warn("[{}][{}]: No factory found - skipping recommender",
-                getSessionOwner().getUsername(), aRecommender.getName());
+                getMandatorySessionOwner().getUsername(), aRecommender.getName());
     }
 
     private void logTrainingNotSupported(Recommender aRecommender)
     {
         LOG.debug("[{}][{}][{}]: Engine does not support training", getId(),
-                getSessionOwner().getUsername(), aRecommender.getName());
+                getMandatorySessionOwner().getUsername(), aRecommender.getName());
     }
 
     private void logRecommenderDisabled(Recommender aRecommender)
     {
-        LOG.debug("[{}][{}][{}]: Recommender disabled - skipping", getSessionOwner().getUsername(),
-                getId(), aRecommender.getName());
+        LOG.debug("[{}][{}][{}]: Recommender disabled - skipping",
+                getMandatorySessionOwner().getUsername(), getId(), aRecommender.getName());
     }
 
     private void logLayerDisabled(Recommender aRecommender)
     {
         warn("Recommender [%s] uses disabled layer [%s] disabled - skipping recommender.",
                 aRecommender.getName(), aRecommender.getLayer().getUiName());
-        LOG.debug("[{}][{}][{}]: Layer disabled - skipping", getSessionOwner().getUsername(),
-                getId(), aRecommender.getLayer().getUiName());
+        LOG.debug("[{}][{}][{}]: Layer disabled - skipping",
+                getMandatorySessionOwner().getUsername(), getId(),
+                aRecommender.getLayer().getUiName());
     }
 
     private void logFeatureDisabled(Recommender aRecommender)
     {
         warn("Recommender [%s] uses disabled feature [%s] - skipping recommender.",
                 aRecommender.getName(), aRecommender.getFeature().getUiName());
-        LOG.debug("[{}][{}][{}]: Feature disabled - skipping", getSessionOwner().getUsername(),
-                getId(), aRecommender.getFeature().getUiName());
+        LOG.debug("[{}][{}][{}]: Feature disabled - skipping",
+                getMandatorySessionOwner().getUsername(), getId(),
+                aRecommender.getFeature().getUiName());
     }
 
     private void logRecommenderGone(EvaluatedRecommender evaluatedRecommender)
     {
         LOG.debug("[{}][{}][{}]: Recommender no longer available... skipping", getId(),
-                getSessionOwner().getUsername(), evaluatedRecommender.getRecommender().getName());
+                getMandatorySessionOwner().getUsername(),
+                evaluatedRecommender.getRecommender().getName());
     }
 
     private void logNothingWasTrained()
@@ -304,13 +307,13 @@ public class TrainingTask
         LOG.debug(
                 "[{}][{}]: No recommenders trained successfully and no non-training "
                         + "recommenders, skipping prediction.",
-                getId(), getSessionOwner().getUsername());
+                getId(), getMandatorySessionOwner().getUsername());
     }
 
     private void logNoActiveRecommenders()
     {
         LOG.trace("[{}][{}]: No active recommenders, skipping training.", getId(),
-                getSessionOwner().getUsername());
+                getMandatorySessionOwner().getUsername());
 
         info("No active recommenders, skipping training.");
     }
@@ -320,13 +323,13 @@ public class TrainingTask
         LOG.debug(
                 "[{}][{}][{}]: Recommender configured with invalid layer or "
                         + "feature - skipping recommender",
-                getId(), getSessionOwner().getUsername(), recommender.getName());
+                getId(), getMandatorySessionOwner().getUsername(), recommender.getName());
 
         error("Recommender [%s] configured with invalid layer or feature - skipping recommender.",
                 recommender.getName());
 
         appEventPublisher.publishEvent(RecommenderTaskNotificationEvent
-                .builder(this, getProject(), getSessionOwner().getUsername()) //
+                .builder(this, getProject(), getMandatorySessionOwner().getUsername()) //
                 .withMessage(LogMessage.error(this,
                         "Recommender [%s] configured with invalid layer or "
                                 + "feature - skipping training recommender.",
@@ -337,7 +340,7 @@ public class TrainingTask
     private void logNoDataAvailableForTraining(Recommender recommender)
     {
         LOG.debug("[{}][{}][{}]: There are no annotations available to train on", getId(),
-                getSessionOwner().getUsername(), recommender.getName());
+                getMandatorySessionOwner().getUsername(), recommender.getName());
 
         warn("There are no [%s] annotations available to train on.",
                 recommender.getLayer().getUiName());
@@ -350,8 +353,8 @@ public class TrainingTask
         int trainDocNum = aTrainCasses.size();
 
         LOG.debug("[{}][{}][{}]: Training on [{}] out of [{}] documents not successful ({} ms)",
-                getId(), getSessionOwner().getUsername(), recommender.getName(), trainDocNum,
-                docNum, duration);
+                getId(), getMandatorySessionOwner().getUsername(), recommender.getName(),
+                trainDocNum, docNum, duration);
 
         info("Training not successful (%d ms).", duration);
 
@@ -369,7 +372,7 @@ public class TrainingTask
         throws ConcurrentException
     {
         LOG.debug("[{}][{}][{}]: Training successful on [{}] out of [{}] documents ({} ms)",
-                getId(), getSessionOwner().getUsername(), recommender.getName(),
+                getId(), getMandatorySessionOwner().getUsername(), recommender.getName(),
                 cassesForTraining.size(), casses.size(), duration);
 
         log(LogMessage.info(recommender.getName(),
@@ -381,7 +384,8 @@ public class TrainingTask
     {
         LOG.debug(
                 "[{}][{}]: Starting training for project {} on data from [{}] triggered by [{}]...",
-                getId(), getSessionOwner().getUsername(), getProject(), dataOwner, getTrigger());
+                getId(), getMandatorySessionOwner().getUsername(), getProject(), dataOwner,
+                getTrigger());
         info("Starting training on data from [%s] triggered by [%s]...", dataOwner, getTrigger());
     }
 
@@ -393,8 +397,8 @@ public class TrainingTask
                 .update(up -> up.addMessage(LogMessage.info(this, "%s", recommender.getName())));
 
         LOG.debug("[{}][{}][{}]: Training model on [{}] out of [{}] documents ...", getId(),
-                getSessionOwner().getUsername(), recommender.getName(), cassesForTraining.size(),
-                aLoader.size());
+                getMandatorySessionOwner().getUsername(), recommender.getName(),
+                cassesForTraining.size(), aLoader.size());
 
         log(LogMessage.info(recommender.getName(),
                 "Training model for [%s] on [%d] out of [%d] documents ...",
@@ -403,13 +407,13 @@ public class TrainingTask
 
     private void handleError(Recommender recommender, Throwable e)
     {
-        LOG.error("[{}][{}][{}]: Training failed", getId(), getSessionOwner().getUsername(),
-                recommender.getName(), e);
+        LOG.error("[{}][{}][{}]: Training failed", getId(),
+                getMandatorySessionOwner().getUsername(), recommender.getName(), e);
 
         log(LogMessage.error(recommender.getName(), "Training failed: %s", getRootCauseMessage(e)));
 
         appEventPublisher.publishEvent(RecommenderTaskNotificationEvent
-                .builder(this, getProject(), getSessionOwner().getUsername()) //
+                .builder(this, getProject(), getMandatorySessionOwner().getUsername()) //
                 .withMessage(LogMessage.error(this, "Training failed with %s", e.getMessage()))
                 .build());
     }

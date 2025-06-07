@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.processing.recommender;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.NEW;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
+import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapability.TRAINING_REQUIRED;
 import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CHANGE_EVENT;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhenNot;
 import static java.util.Arrays.asList;
@@ -54,7 +55,6 @@ import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender_;
-import de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapability;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
@@ -156,15 +156,13 @@ public class BulkRecommenderPanel
         // We list all recommenders here - not only the enabled ones. Maybe we want to manually
         // run a recommender that is not auto-running (enabled).
         var recommenders = new ArrayList<Recommender>();
-        for (var recommender : recommendationService.listRecommenders(getModelObject())) {
+        for (var recommender : recommendationService.listEnabledRecommenders(getModelObject())) {
             var maybeFactory = recommendationService.getRecommenderFactory(recommender);
             if (maybeFactory.isEmpty()) {
                 continue;
             }
 
             var factory = maybeFactory.get();
-            var engine = factory.build(recommender);
-
             if (factory.isInteractive(recommender)) {
                 continue;
             }
@@ -175,7 +173,11 @@ public class BulkRecommenderPanel
             // It could be considered to also offer such recommenders for cases where there user has
             // already marked some documents as finished so that the remaining documents could be
             // annotated based on the training data from the finished documents...
-            if (engine.getTrainingCapability() == TrainingCapability.TRAINING_REQUIRED) {
+            //
+            // see
+            // de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.AeroTaskBulkPredictionController.create()
+            var engine = factory.build(recommender);
+            if (engine.getTrainingCapability() == TRAINING_REQUIRED) {
                 continue;
             }
 

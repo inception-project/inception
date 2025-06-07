@@ -19,8 +19,9 @@ package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero;
 
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_ADMIN;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_REMOTE;
-import static org.hamcrest.Matchers.containsString;
+import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_USER;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
+import static org.springframework.http.MediaType.TEXT_PLAIN_VALUE;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -59,7 +60,7 @@ import de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeServiceImpl
                 "spring.main.banner-mode=off", //
                 "search.enabled=false", //
                 "remote-api.enabled=true", //
-                "repository.path=" + AeroRemoteApiController_Project_Test.TEST_OUTPUT_FOLDER })
+                "repository.path=" + AeroDocumentControllerTest.TEST_OUTPUT_FOLDER })
 @EnableWebSecurity
 @EnableAutoConfiguration( //
         exclude = { //
@@ -71,14 +72,15 @@ import de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeServiceImpl
         "de.tudarmstadt.ukp.clarin.webanno" })
 @TestMethodOrder(MethodOrderer.MethodName.class)
 @DirtiesContext(classMode = ClassMode.BEFORE_EACH_TEST_METHOD)
-public class AeroRemoteApiController_Project_Test
+public class AeroDocumentControllerTest
 {
-    static final String TEST_OUTPUT_FOLDER = "target/test-output/AeroRemoteApiController_Project_Test";
+    static final String TEST_OUTPUT_FOLDER = "target/test-output/AeroRemoteApiController_Document_Test";
 
     private @Autowired WebApplicationContext context;
     private @Autowired UserDao userRepository;
 
     private MockAeroClient adminActor;
+    private MockAeroClient userActor;
 
     @BeforeAll
     static void setupClass()
@@ -87,43 +89,83 @@ public class AeroRemoteApiController_Project_Test
     }
 
     @BeforeEach
-    void setup()
+    void setup() throws Exception
     {
         adminActor = new MockAeroClient(context, "admin", "ADMIN", "REMOTE");
+        userActor = new MockAeroClient(context, "user", "USER", "REMOTE");
 
         userRepository.create(new User("admin", ROLE_ADMIN, ROLE_REMOTE));
-    }
-
-    @Test
-    void testCreateAndDelete() throws Exception
-    {
-        adminActor.listProjects() //
-                .andExpect(status().isOk()) //
-                .andExpect(content().contentType(APPLICATION_JSON_VALUE)) //
-                .andExpect(jsonPath("$.messages").isEmpty());
+        userRepository.create(new User("user", ROLE_USER, ROLE_REMOTE));
 
         adminActor.createProject("project1") //
                 .andExpect(status().isCreated()) //
-                .andExpect(content().contentType(APPLICATION_JSON_VALUE)) //
-                .andExpect(jsonPath("$.body.id").value("1")) //
-                .andExpect(jsonPath("$.body.name").value("project1"));
+                .andExpect(jsonPath("$.body.id").value("1"));
+    }
 
-        adminActor.listProjects() //
-                .andExpect(status().isOk()) //
-                .andExpect(content().contentType(APPLICATION_JSON_VALUE)) //
-                .andExpect(jsonPath("$.body[0].id").value("1")) //
-                .andExpect(jsonPath("$.body[0].name").value("project1"));
+    @Test
+    void testCreateDeleteDocument() throws Exception
+    {
+        var documentName = "test.txt";
 
-        adminActor.deleteProject(1l) //
-                .andExpect(status().isOk()) //
-                .andExpect(content().contentType(APPLICATION_JSON_VALUE)) //
-                .andExpect(jsonPath("$.messages[0].level").value("INFO")) //
-                .andExpect(jsonPath("$.messages[0].message").value(containsString("deleted")));
-
-        adminActor.listProjects() //
+        adminActor.listDocuments(1l) //
                 .andExpect(status().isOk()) //
                 .andExpect(content().contentType(APPLICATION_JSON_VALUE)) //
                 .andExpect(jsonPath("$.messages").isEmpty());
+
+        adminActor.importTextDocument(1l, documentName, "This is a test.") //
+                .andExpect(status().isCreated()) //
+                .andExpect(content().contentType(APPLICATION_JSON_VALUE)) //
+                .andExpect(jsonPath("$.body.id").value("1")) //
+                .andExpect(jsonPath("$.body.name").value(documentName));
+
+        adminActor.listDocuments(1l) //
+                .andExpect(status().isOk()) //
+                .andExpect(content().contentType(APPLICATION_JSON_VALUE)) //
+                .andExpect(jsonPath("$.body[0].id").value("1")) //
+                .andExpect(jsonPath("$.body[0].name").value(documentName)) //
+                .andExpect(jsonPath("$.body[0].state").value("NEW"));
+
+        adminActor.deleteDocument(1l, 1l) //
+                .andExpect(status().isOk());
+
+        adminActor.listDocuments(1l) //
+                .andExpect(status().isOk()) //
+                .andExpect(content().contentType(APPLICATION_JSON_VALUE)) //
+                .andExpect(jsonPath("$.body").isEmpty());
+    }
+
+    @Test
+    void testImportExportDocument() throws Exception
+    {
+        var documentName = "test.txt";
+        var documentContent = "This is a test.";
+
+        adminActor.importTextDocument(1l, documentName, documentContent) //
+                .andExpect(status().isCreated()) //
+                .andExpect(content().contentType(APPLICATION_JSON_VALUE)) //
+                .andExpect(jsonPath("$.body.id").value("1")) //
+                .andExpect(jsonPath("$.body.name").value(documentName));
+
+        adminActor.exportTextDocument(1l, 1l) //
+                .andExpect(status().isOk()) //
+                .andExpect(content().contentType(TEXT_PLAIN_VALUE)) //
+                .andExpect(content().string(documentContent));
+    }
+
+    @Test
+    void thatNonManagerCannotImportDocuments() throws Exception
+    {
+        adminActor.grantProjectRole(1, "user", "ANNOTATOR", "CURATOR") //
+                .andExpect(status().isOk()); //
+
+        userActor.importTextDocument(1l, "test.txt", "This is a test.") //
+                .andExpect(status().isForbidden());
+
+        adminActor.grantProjectRole(1, "user", "MANAGER") //
+                .andExpect(status().isOk()); //
+
+        userActor.importTextDocument(1l, "test.txt", "This is a test.") //
+                .andExpect(status().isCreated());
     }
 
     @SpringBootConfiguration

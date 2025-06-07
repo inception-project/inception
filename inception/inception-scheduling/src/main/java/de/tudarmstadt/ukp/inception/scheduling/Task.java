@@ -141,7 +141,17 @@ public abstract class Task
         return monitor;
     }
 
+    /**
+     * @deprecated Use {@link #getSessionOwner()}
+     * @return user who started the task
+     */
+    @Deprecated
     public Optional<User> getUser()
+    {
+        return getSessionOwner();
+    }
+
+    public Optional<User> getSessionOwner()
     {
         return Optional.ofNullable(sessionOwner);
     }
@@ -309,7 +319,7 @@ public abstract class Task
         @SuppressWarnings("unchecked")
         public T withSessionOwner(User aSessionOwner)
         {
-            this.sessionOwner = aSessionOwner;
+            sessionOwner = aSessionOwner;
             return (T) this;
         }
 
@@ -320,7 +330,7 @@ public abstract class Task
         @SuppressWarnings("unchecked")
         public T withProject(Project aProject)
         {
-            this.project = aProject;
+            project = aProject;
             return (T) this;
         }
 
@@ -331,21 +341,21 @@ public abstract class Task
         @SuppressWarnings("unchecked")
         public T withTrigger(String aTrigger)
         {
-            this.trigger = aTrigger;
+            trigger = aTrigger;
             return (T) this;
         }
 
         @SuppressWarnings("unchecked")
         public T withType(String aType)
         {
-            this.type = aType;
+            type = aType;
             return (T) this;
         }
 
         @SuppressWarnings("unchecked")
         public T withCancellable(boolean aCancellable)
         {
-            this.cancellable = aCancellable;
+            cancellable = aCancellable;
             return (T) this;
         }
 
@@ -356,7 +366,7 @@ public abstract class Task
         @SuppressWarnings("unchecked")
         public T withParentTask(Task aParentTask)
         {
-            this.parentTask = aParentTask;
+            parentTask = aParentTask;
             return (T) this;
         }
 
@@ -367,14 +377,14 @@ public abstract class Task
         @SuppressWarnings("unchecked")
         public T withMonitor(Function<Task, TaskMonitor> aMonitorFactory)
         {
-            this.monitor = aMonitorFactory;
+            monitor = aMonitorFactory;
             return (T) this;
         }
 
         @SuppressWarnings("unchecked")
         public T withScope(TaskScope aScope)
         {
-            this.scope = aScope;
+            scope = aScope;
             return (T) this;
         }
     }
