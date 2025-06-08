@@ -58,7 +58,7 @@ import de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeServiceImpl
         properties = { //
                 "spring.main.banner-mode=off", //
                 "remote-api.enabled=true", //
-                "repository.path=" + AeroRemoteApiController_Curation_Test.TEST_OUTPUT_FOLDER })
+                "repository.path=" + AeroPermissionControllerTest.TEST_OUTPUT_FOLDER })
 @EnableWebSecurity
 @EnableAutoConfiguration( //
         exclude = { //
@@ -70,14 +70,15 @@ import de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeServiceImpl
         "de.tudarmstadt.ukp.clarin.webanno" })
 @TestMethodOrder(MethodOrderer.MethodName.class)
 @DirtiesContext(classMode = ClassMode.BEFORE_EACH_TEST_METHOD)
-public class AeroRemoteApiController_Curation_Test
+public class AeroPermissionControllerTest
 {
-    static final String TEST_OUTPUT_FOLDER = "target/test-output/AeroRemoteApiController_Curation_Test";
+    static final String TEST_OUTPUT_FOLDER = "target/test-output/AeroRemoteApiController_Permissions_Test";
 
     private @Autowired WebApplicationContext context;
     private @Autowired UserDao userRepository;
 
     private MockAeroClient adminActor;
+    private MockAeroClient userActor;
 
     @BeforeAll
     public static void setupClass()
@@ -89,52 +90,99 @@ public class AeroRemoteApiController_Curation_Test
     public void setup() throws Exception
     {
         adminActor = new MockAeroClient(context, "admin", "ADMIN", "REMOTE");
+        userActor = new MockAeroClient(context, "user", "USER", "REMOTE");
 
         userRepository.create(new User("admin", ROLE_ADMIN, ROLE_REMOTE));
         userRepository.create(new User("user", ROLE_USER, ROLE_REMOTE));
 
         adminActor.createProject("project1").andExpect(status().isCreated())
+                .andExpect(content().contentType(APPLICATION_JSON_VALUE))
                 .andExpect(jsonPath("$.body.id").value("1"))
                 .andExpect(jsonPath("$.body.name").value("project1"));
-
-        adminActor.importTextDocument(1l, "test.txt", "This is a test.")
-                .andExpect(status().isCreated()).andExpect(jsonPath("$.body.id").value("1"));
     }
 
     @Test
-    public void testCurationCreateDelete() throws Exception
+    public void testGrantAndRevokePermissions() throws Exception
     {
-        adminActor.listDocuments(1l) //
+        adminActor.listPermissionsForUser(1, "user") //
                 .andExpect(status().isOk()) //
                 .andExpect(content().contentType(APPLICATION_JSON_VALUE))
-                .andExpect(jsonPath("$.body[0].id").value("1"))
-                .andExpect(jsonPath("$.body[0].name").value("test.txt"))
-                .andExpect(jsonPath("$.body[0].state").value("NEW"));
+                .andExpect(jsonPath("$.body").isEmpty());
 
-        adminActor.importCurations(1, 1, "This is a test.", "CURATION-COMPLETE") //
-                .andExpect(status().isCreated()) //
-                .andExpect(content().contentType(APPLICATION_JSON_VALUE))
-                .andExpect(jsonPath("$.body.user").value("CURATION_USER"))
-                .andExpect(jsonPath("$.body.state").value("COMPLETE"))
-                .andExpect(jsonPath("$.body.timestamp").exists());
-
-        adminActor.listDocuments(1l) //
+        adminActor.grantProjectRole(1, "user", "ANNOTATOR", "CURATOR") //
                 .andExpect(status().isOk()) //
                 .andExpect(content().contentType(APPLICATION_JSON_VALUE))
-                .andExpect(jsonPath("$.body[0].id").value("1"))
-                .andExpect(jsonPath("$.body[0].name").value("test.txt"))
-                .andExpect(jsonPath("$.body[0].state").value("CURATION-COMPLETE"));
+                .andExpect(jsonPath("$.body[0].project").value("1"))
+                .andExpect(jsonPath("$.body[0].user").value("user"))
+                .andExpect(jsonPath("$.body[0].role").value("CURATOR"))
+                .andExpect(jsonPath("$.body[1].project").value("1"))
+                .andExpect(jsonPath("$.body[1].user").value("user"))
+                .andExpect(jsonPath("$.body[1].role").value("ANNOTATOR"));
 
-        adminActor.deleteCurations(1, 1) //
-                .andExpect(status().isOk()) //
-                .andExpect(content().contentType(APPLICATION_JSON_VALUE));
-
-        adminActor.listDocuments(1l) //
+        adminActor.revokeProjectRole(1, "user", "CURATOR") //
                 .andExpect(status().isOk()) //
                 .andExpect(content().contentType(APPLICATION_JSON_VALUE))
-                .andExpect(jsonPath("$.body[0].id").value("1"))
-                .andExpect(jsonPath("$.body[0].name").value("test.txt"))
-                .andExpect(jsonPath("$.body[0].state").value("ANNOTATION-IN-PROGRESS"));
+                .andExpect(jsonPath("$.body[0].project").value("1"))
+                .andExpect(jsonPath("$.body[0].user").value("user"))
+                .andExpect(jsonPath("$.body[0].role").value("ANNOTATOR"));
+
+        adminActor.revokeProjectRole(1, "user", "ANNOTATOR") //
+                .andExpect(status().isOk()) //
+                .andExpect(content().contentType(APPLICATION_JSON_VALUE))
+                .andExpect(jsonPath("$.body").isEmpty());
+    }
+
+    @Test
+    public void testPermissionListAll() throws Exception
+    {
+        adminActor.grantProjectRole(1, "user", "ANNOTATOR", "CURATOR") //
+                .andExpect(status().isOk());
+
+        adminActor.listPermissionsForProject(1) //
+                .andExpect(status().isOk()) //
+                .andExpect(content().contentType(APPLICATION_JSON_VALUE))
+                .andExpect(jsonPath("$.body[0].project").value("1"))
+                .andExpect(jsonPath("$.body[0].user").value("admin"))
+                .andExpect(jsonPath("$.body[0].role").value("MANAGER"))
+                .andExpect(jsonPath("$.body[1].project").value("1"))
+                .andExpect(jsonPath("$.body[1].user").value("admin"))
+                .andExpect(jsonPath("$.body[1].role").value("CURATOR"))
+                .andExpect(jsonPath("$.body[2].project").value("1"))
+                .andExpect(jsonPath("$.body[2].user").value("admin"))
+                .andExpect(jsonPath("$.body[2].role").value("ANNOTATOR"))
+                .andExpect(jsonPath("$.body[3].project").value("1"))
+                .andExpect(jsonPath("$.body[3].user").value("user"))
+                .andExpect(jsonPath("$.body[3].role").value("CURATOR"))
+                .andExpect(jsonPath("$.body[4].project").value("1"))
+                .andExpect(jsonPath("$.body[4].user").value("user"))
+                .andExpect(jsonPath("$.body[4].role").value("ANNOTATOR"));
+    }
+
+    @Test
+    public void thatNonAdminCannotChangePermissions() throws Exception
+    {
+        userActor.grantProjectRole(1, "user", "MANAGER") //
+                .andExpect(status().isForbidden());
+
+        userActor.revokeProjectRole(1, "user", "MANAGER") //
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    public void thatManagerCanChangePermissions() throws Exception
+    {
+        adminActor.grantProjectRole(1, "user", "MANAGER") //
+                .andExpect(status().isOk()); //
+
+        userActor.grantProjectRole(1, "user", "CURATOR") //
+                .andExpect(status().isOk()); //
+
+        adminActor.revokeProjectRole(1, "user", "MANAGER") //
+                .andExpect(status().isOk()); //
+
+        userActor.revokeProjectRole(1, "user", "CURATOR") //
+                .andExpect(status().isForbidden());
+
     }
 
     @SpringBootConfiguration

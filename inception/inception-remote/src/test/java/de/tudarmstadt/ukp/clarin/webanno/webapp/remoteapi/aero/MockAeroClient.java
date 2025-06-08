@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero;
 
-import static de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.AeroRemoteApiController.API_BASE;
+import static de.tudarmstadt.ukp.inception.remoteapi.Controller_ImplBase.API_BASE;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -229,5 +229,19 @@ class MockAeroClient
                 .with(csrf().asHeader()) //
                 .with(user(username).roles(roles)) //
                 .param("roles", aRoles));
+    }
+
+    ResultActions listTasks(long aProjectId) throws Exception
+    {
+        return mvc.perform(get(API_BASE + "/projects/" + aProjectId + "/tasks") //
+                .with(csrf().asHeader()) //
+                .with(user(username).roles(roles)));
+    }
+
+    ResultActions cancelTask(long aProjectId, long aTaskId) throws Exception
+    {
+        return mvc.perform(delete(API_BASE + "/projects/" + aProjectId + "/tasks/" + aTaskId) //
+                .with(csrf().asHeader()) //
+                .with(user(username).roles(roles)));
     }
 }

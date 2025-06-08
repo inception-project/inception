@@ -15,7 +15,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/**
- * Remote API.
- */
-package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi;
+package de.tudarmstadt.ukp.inception.scheduling;
+
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.security.AccessCheckingBean;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+
+public interface TaskAccess
+    extends AccessCheckingBean
+{
+    boolean canManageTasks(String aProjectId, String aUser);
+
+    void assertCanManageTasks(User aSessionOwner, Project aProject);
+}

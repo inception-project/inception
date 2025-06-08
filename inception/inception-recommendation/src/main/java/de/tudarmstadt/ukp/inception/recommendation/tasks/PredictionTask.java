@@ -143,7 +143,7 @@ public class PredictionTask
     {
         try (var session = CasStorageSession.openNested()) {
             var project = getProject();
-            var sessionOwner = getSessionOwner();
+            var sessionOwner = getMandatorySessionOwner();
 
             var startTime = currentTimeMillis();
             predictions = generatePredictions();
@@ -168,9 +168,9 @@ public class PredictionTask
         return predictions;
     }
 
-    private User getSessionOwner()
+    private User getMandatorySessionOwner()
     {
-        return getUser().orElseThrow();
+        return getSessionOwner().orElseThrow();
     }
 
     private Predictions generatePredictions()
@@ -180,7 +180,7 @@ public class PredictionTask
 
         // Do we need to predict ALL documents (e.g. in active learning mode)
         if (!isolated && recommendationService
-                .isPredictForAllDocuments(getSessionOwner().getUsername(), project)) {
+                .isPredictForAllDocuments(getMandatorySessionOwner().getUsername(), project)) {
             try {
                 return generatePredictionsOnAllDocuments(docs);
             }
@@ -188,8 +188,8 @@ public class PredictionTask
                 // We reset this in case the state was not properly cleared, e.g. the AL session
                 // was started but then the browser closed. Places where it is set include
                 // - ActiveLearningSideBar::moveToNextRecommendation
-                recommendationService.setPredictForAllDocuments(getSessionOwner().getUsername(),
-                        project, false);
+                recommendationService.setPredictForAllDocuments(
+                        getMandatorySessionOwner().getUsername(), project, false);
             }
         }
 
@@ -208,7 +208,7 @@ public class PredictionTask
         logPredictionStartedForAllDocuments(aDocuments);
 
         var monitor = getMonitor();
-        var sessionOwner = getSessionOwner();
+        var sessionOwner = getMandatorySessionOwner();
         var project = getProject();
         var activePredictions = getPredecessorPredictions(sessionOwner, project);
         var incomingPredictions = activePredictions != null //
@@ -256,7 +256,7 @@ public class PredictionTask
     private Predictions generatePredictionsOnSingleDocument(SourceDocument aCurrentDocument,
             List<SourceDocument> aDocuments)
     {
-        var sessionOwner = getSessionOwner();
+        var sessionOwner = getMandatorySessionOwner();
         var project = getProject();
         var predecessorPredictions = getPredecessorPredictions(sessionOwner, project);
         var incomingPredictions = predecessorPredictions != null
@@ -402,7 +402,7 @@ public class PredictionTask
             return;
         }
 
-        var sessionOwner = getSessionOwner();
+        var sessionOwner = getMandatorySessionOwner();
         var context = isolated ? Optional.of(RecommenderContext.emptyContext())
                 : recommendationService.getContext(sessionOwner.getUsername(), aRecommender);
         if (!context.isPresent()) {
@@ -831,7 +831,7 @@ public class PredictionTask
             List<AnnotationSuggestion> suggestions)
     {
         LOG.debug("[{}]({}) for user [{}] on document {} in project {} inherited {} predictions",
-                "ALL", "--", getSessionOwner().getUsername(), aDocument, aProject,
+                "ALL", "--", getMandatorySessionOwner().getUsername(), aDocument, aProject,
                 suggestions.size());
     }
 
@@ -840,7 +840,7 @@ public class PredictionTask
     {
         aPredictions.log(LogMessage.error(aRecommender.getName(), "Failed: %s", e.getMessage()));
         LOG.error("Error applying recommender {} for user {} to document {} in project {} - " //
-                + "skipping recommender", aRecommender, getSessionOwner(), aDocument,
+                + "skipping recommender", aRecommender, getMandatorySessionOwner(), aDocument,
                 aDocument.getProject(), e);
     }
 
@@ -849,7 +849,7 @@ public class PredictionTask
     {
         aIncomingPredictions.log(LogMessage.info(aRecommender.getName(),
                 "Generating predictions for layer [%s]...", aRecommender.getLayer().getUiName()));
-        LOG.trace("{}[{}]: Generating predictions for layer [{}]", getSessionOwner(),
+        LOG.trace("{}[{}]: Generating predictions for layer [{}]", getMandatorySessionOwner(),
                 aRecommender.getName(), aRecommender.getLayer().getUiName());
     }
 
@@ -860,22 +860,22 @@ public class PredictionTask
         LOG.error(
                 "Cannot read annotation CAS for user {} of document "
                         + "[{}]({}) in project [{}]({}) - skipping document",
-                getSessionOwner(), aDocument.getName(), aDocument.getId(),
+                getMandatorySessionOwner(), aDocument.getName(), aDocument.getId(),
                 aDocument.getProject().getName(), aDocument.getProject().getId(), e);
     }
 
     private void logNoActiveRecommenders(Predictions aPredictions)
     {
         aPredictions.log(LogMessage.info(this, "No active recommenders"));
-        LOG.trace("[{}]: No active recommenders", getSessionOwner());
+        LOG.trace("[{}]: No active recommenders", getMandatorySessionOwner());
     }
 
     private void logInheritedPredictions(Predictions aPredictions, Recommender aRecommender,
             SourceDocument document, List<AnnotationSuggestion> suggestions)
     {
         LOG.debug("[{}][{}]: {} on document {} in project {} inherited {} predictions", getId(),
-                getSessionOwner().getUsername(), aRecommender, document, aRecommender.getProject(),
-                suggestions.size());
+                getMandatorySessionOwner().getUsername(), aRecommender, document,
+                aRecommender.getProject(), suggestions.size());
         aPredictions.log(LogMessage.info(aRecommender.getName(),
                 "Inherited [%d] predictions from previous run", suggestions.size()));
     }
@@ -884,8 +884,9 @@ public class PredictionTask
             SourceDocument document)
     {
         LOG.debug("[{}][{}]: {} on document {} in project {} there " //
-                + "are no inheritable predictions", getId(), getSessionOwner().getUsername(),
-                aRecommender, document, aRecommender.getProject());
+                + "are no inheritable predictions", getId(),
+                getMandatorySessionOwner().getUsername(), aRecommender, document,
+                aRecommender.getProject());
         aPredictions.log(LogMessage.info(aRecommender.getName(),
                 "No inheritable suggestions from previous run"));
     }
@@ -893,8 +894,8 @@ public class PredictionTask
     private void logPredictionComplete(Predictions aPredictions, long startTime)
     {
         var duration = currentTimeMillis() - startTime;
-        LOG.debug("[{}][{}]: Prediction complete ({} ms)", getId(), getSessionOwner().getUsername(),
-                duration);
+        LOG.debug("[{}][{}]: Prediction complete ({} ms)", getId(),
+                getMandatorySessionOwner().getUsername(), duration);
         aPredictions.log(LogMessage.info(this, "Prediction complete (%d ms).", duration));
     }
 
@@ -903,7 +904,7 @@ public class PredictionTask
         LOG.debug(
                 "[{}][{}]: Starting prediction for project [{}] on one document "
                         + "(inheriting [{}]) triggered by [{}]",
-                getId(), getSessionOwner().getUsername(), getProject(), inherit.size(),
+                getId(), getMandatorySessionOwner().getUsername(), getProject(), inherit.size(),
                 getTrigger());
         info("Starting prediction triggered by [%s]...", getTrigger());
     }
@@ -913,7 +914,7 @@ public class PredictionTask
         LOG.debug(
                 "[{}][{}]: Starting prediction for project [{}] on one document "
                         + "triggered by [{}]",
-                getId(), getSessionOwner().getUsername(), getProject(), getTrigger());
+                getId(), getMandatorySessionOwner().getUsername(), getProject(), getTrigger());
         info("Starting prediction triggered by [%s]...", getTrigger());
     }
 
@@ -921,7 +922,8 @@ public class PredictionTask
     {
         LOG.debug(
                 "[{}][{}]: Starting prediction for project [{}] on [{}] documents triggered by [{}]",
-                getId(), getSessionOwner().getUsername(), getProject(), docs.size(), getTrigger());
+                getId(), getMandatorySessionOwner().getUsername(), getProject(), docs.size(),
+                getTrigger());
         info("Starting prediction triggered by [%s]...", getTrigger());
     }
 
@@ -932,7 +934,7 @@ public class PredictionTask
     {
         LOG.debug(
                 "{} for user {} on document {} in project {} generated {} predictions within range {} (+{}/-{}/={}) ({} ms)",
-                aRecommender, getSessionOwner(), aDocument, aRecommender.getProject(),
+                aRecommender, getMandatorySessionOwner(), aDocument, aRecommender.getProject(),
                 generatedSuggestions.size(), predictedRange, reconciliationResult.added,
                 reconciliationResult.removed, reconciliationResult.aged, aDuration);
         aIncomingPredictions.log(LogMessage.info(aRecommender.getName(), //
@@ -947,7 +949,7 @@ public class PredictionTask
         aPredictions.log(LogMessage.info(aRecommender.getName(),
                 "Recommender context is not ready... skipping"));
         LOG.info("Recommender context {} for user {} in project {} is not ready for " //
-                + "prediction - skipping recommender", aRecommender, getSessionOwner(),
+                + "prediction - skipping recommender", aRecommender, getMandatorySessionOwner(),
                 aDocument.getProject());
     }
 
@@ -957,7 +959,7 @@ public class PredictionTask
         aPredictions.log(LogMessage.info(aRecommender.getName(),
                 "Recommender not requested for this run... skipping"));
         LOG.info("[{}][{}]: Recommender not requested for this run " + "- skipping recommender",
-                getSessionOwner().getUsername(), aRecommender.getName());
+                getMandatorySessionOwner().getUsername(), aRecommender.getName());
     }
 
     private void logSkippingInteractiveRecommenderNotExplicitlyRequested(Predictions aPredictions,
@@ -968,7 +970,7 @@ public class PredictionTask
         LOG.info(
                 "[{}][{}]: Interactive recommender not requested for this run "
                         + "- skipping recommender",
-                getSessionOwner().getUsername(), aRecommender.getName());
+                getMandatorySessionOwner().getUsername(), aRecommender.getName());
     }
 
     private void logSkippingSynchronous(Predictions aPredictions, Recommender aRecommender)
@@ -978,7 +980,7 @@ public class PredictionTask
         LOG.info(
                 "[{}][{}]: Synchronous recommenders disabled in this run "
                         + "- skipping recommender",
-                getSessionOwner().getUsername(), aRecommender.getName());
+                getMandatorySessionOwner().getUsername(), aRecommender.getName());
     }
 
     private void logSkippingAsynchronous(Predictions aPredictions, Recommender aRecommender)
@@ -988,7 +990,7 @@ public class PredictionTask
         LOG.info(
                 "[{}][{}]: Asynchronous recommenders disabled in this run "
                         + "- skipping recommender",
-                getSessionOwner().getUsername(), aRecommender.getName());
+                getMandatorySessionOwner().getUsername(), aRecommender.getName());
     }
 
     private void logInvalidRecommenderConfiguration(Predictions aPredictions,
@@ -999,13 +1001,13 @@ public class PredictionTask
         LOG.info(
                 "[{}][{}]: Recommender configured with invalid layer or feature "
                         + "- skipping recommender",
-                getSessionOwner().getUsername(), aRecommender.getName());
+                getMandatorySessionOwner().getUsername(), aRecommender.getName());
     }
 
     private void logNoRecommenderFactory(Recommender aRecommender)
     {
         LOG.warn("[{}][{}]: No factory found - skipping recommender",
-                getSessionOwner().getUsername(), aRecommender.getName());
+                getMandatorySessionOwner().getUsername(), aRecommender.getName());
     }
 
     private void logRecommenderHasNoContext(Predictions aPredictions, SourceDocument aDocument,
@@ -1014,22 +1016,23 @@ public class PredictionTask
         aPredictions.log(
                 LogMessage.info(aRecommender.getName(), "Recommender has no context... skipping"));
         LOG.info("No context available for recommender {} for user {} on document {} in " //
-                + "project {} - skipping recommender", aRecommender, getSessionOwner(), aDocument,
-                aDocument.getProject());
+                + "project {} - skipping recommender", aRecommender, getMandatorySessionOwner(),
+                aDocument, aDocument.getProject());
     }
 
     private void logRecommenderDisabled(Predictions aPredictions, Recommender aRecommender)
     {
         aPredictions
                 .log(LogMessage.info(aRecommender.getName(), "Recommender disabled... skipping"));
-        LOG.debug("{}[{}]: Disabled - skipping", getSessionOwner(), aRecommender.getName());
+        LOG.debug("{}[{}]: Disabled - skipping", getMandatorySessionOwner(),
+                aRecommender.getName());
     }
 
     private void logRecommenderNotAvailable(Predictions aPredictions, Recommender aRecommender)
     {
         aPredictions.log(LogMessage.info(aRecommender.getName(),
                 "Recommender no longer available... skipping"));
-        LOG.info("{}[{}]: Recommender no longer available... skipping", getSessionOwner(),
+        LOG.info("{}[{}]: Recommender no longer available... skipping", getMandatorySessionOwner(),
                 aRecommender.getName());
     }
 

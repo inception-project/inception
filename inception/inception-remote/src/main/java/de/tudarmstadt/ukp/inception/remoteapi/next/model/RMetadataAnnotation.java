@@ -15,31 +15,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model;
+package de.tudarmstadt.ukp.inception.remoteapi.next.model;
 
-import static de.tudarmstadt.ukp.inception.remoteapi.SourceDocumentStateUtils.sourceDocumentStateToString;
+import java.util.Map;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
+import io.swagger.v3.oas.annotations.media.Schema;
 
-public class RDocument
-{
-    public long id;
-    public String name;
-    public String state;
+@Schema(description = "Metadata annotation containing a type and a map of features")
+public record RMetadataAnnotation( //
+        @Schema(description = "The type of the annotation") //
+        String type, //
+        @Schema(description = "A map of features where keys represent feature names and values represent " //
+                + "their corresponding values") //
+        Map<String, String> features) {
 
-    public RDocument(SourceDocument aDocument)
-    {
-        id = aDocument.getId();
-        name = aDocument.getName();
-        state = sourceDocumentStateToString(aDocument.getState());
-    }
-
-    public RDocument(long aId, String aName, SourceDocumentState aState)
-    {
-        super();
-        id = aId;
-        name = aName;
-        state = sourceDocumentStateToString(aState);
-    }
 }

@@ -76,7 +76,7 @@ public interface SchedulingService
      */
     void stopAllTasksForUser(String aUserName);
 
-    void stopAllTasksMatching(Predicate<Task> aPredicate);
+    int stopAllTasksMatching(Predicate<Task> aPredicate);
 
     /**
      * Removes all task for the given project from the scheduler's queue.

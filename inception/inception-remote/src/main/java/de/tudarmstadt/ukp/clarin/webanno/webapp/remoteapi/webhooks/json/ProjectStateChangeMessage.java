@@ -17,11 +17,10 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.json;
 
-import static de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.AeroRemoteApiController.projectStateToString;
-
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.ProjectState;
 import de.tudarmstadt.ukp.inception.project.api.event.ProjectStateChangedEvent;
 
 public class ProjectStateChangeMessage
@@ -110,5 +109,27 @@ public class ProjectStateChangeMessage
                 .append("projectPreviousState", projectPreviousState) //
                 .append("projectState", projectState) //
                 .toString();
+    }
+
+    public static String projectStateToString(ProjectState aState)
+    {
+        if (aState == null) {
+            return null;
+        }
+
+        switch (aState) {
+        case NEW:
+            return "NEW";
+        case ANNOTATION_IN_PROGRESS:
+            return "ANNOTATION-IN-PROGRESS";
+        case ANNOTATION_FINISHED:
+            return "ANNOTATION-COMPLETE";
+        case CURATION_FINISHED:
+            return "CURATION-COMPLETE";
+        case CURATION_IN_PROGRESS:
+            return "CURATION-IN-PROGRESS";
+        default:
+            throw new IllegalArgumentException("Unknown project state [" + aState + "]");
+        }
     }
 }

@@ -23,8 +23,12 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.core.session.SessionRegistry;
 
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingServiceImpl;
+import de.tudarmstadt.ukp.inception.scheduling.TaskAccess;
+import de.tudarmstadt.ukp.inception.scheduling.TaskAccessImpl;
 
 @Configuration
 @EnableConfigurationProperties({ SchedulingProperties.class })
@@ -35,5 +39,11 @@ public class SchedulingServiceAutoConfiguration
             SchedulingProperties aConfig, SessionRegistry aSessionRegistry)
     {
         return new SchedulingServiceImpl(aApplicationContext, aConfig, aSessionRegistry);
+    }
+
+    @Bean
+    public TaskAccess taskAccess(ProjectService aProjectService, UserDao aUserService)
+    {
+        return new TaskAccessImpl(aProjectService, aUserService);
     }
 }
