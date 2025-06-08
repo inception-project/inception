@@ -137,7 +137,7 @@ include::{include-dir}settings_recommender.adoc[leveloffset=+1]
 include::{include-dir}settings_string_relation_recommender.adoc[leveloffset=+2]
 include::{include-dir}settings_recommendation_external.adoc[leveloffset=+2]
 
-include::{include-dir}settings_bulk_processing.adoc[leveloffset=+1]
+include::{include-dir}settings_bulk-processing.adoc[leveloffset=+1]
 
 include::{include-dir}settings_sharing.adoc[leveloffset=+1]
 
