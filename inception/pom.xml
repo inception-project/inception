@@ -300,6 +300,9 @@
     <module>inception-workload-ui</module>
     <!-- Application -->
     <module>inception-app-webapp</module>
+    <!-- Examples -->
+    <module>inception-example-imls-data-majority</module>
+    <!--<module>inception-imls-dl4j</module>-->
     <!-- Packaging -->
     <module>inception-docker</module>
     <!-- Versioning -->
