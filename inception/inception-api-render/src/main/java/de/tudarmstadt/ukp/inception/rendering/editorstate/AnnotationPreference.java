@@ -24,7 +24,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.inception.rendering.coloring.ColoringStrategyType;
 import de.tudarmstadt.ukp.inception.rendering.coloring.ReadonlyColoringStrategy;
 
@@ -68,6 +70,8 @@ public class AnnotationPreference
     // BEGIN: Settings specific to layer visibility and coloring
     private @Deprecated List<Long> annotationLayers;
     private Set<Long> hiddenAnnotationLayerIds = new HashSet<>();
+    private Set<Long> hiddenAnnotationFeatureIds = new HashSet<>();
+    private Map<Long, Set<String>> hiddenTags = new HashMap<>();
     private Map<Long, ColoringStrategyType> colorPerLayer = new HashMap<>();
     private ReadonlyColoringStrategy readonlyLayerColoringBehaviour = ReadonlyColoringStrategy.LEGACY;
     private @Deprecated boolean staticColor = true;
@@ -114,6 +118,59 @@ public class AnnotationPreference
     public void setHiddenAnnotationLayerIds(Set<Long> aAnnotationLayerIds)
     {
         hiddenAnnotationLayerIds = aAnnotationLayerIds;
+    }
+
+    public void setFeatureVisible(AnnotationFeature aFeature, boolean aVisible)
+    {
+        if (aVisible) {
+            hiddenAnnotationFeatureIds.remove(aFeature.getId());
+        }
+        else {
+            hiddenAnnotationFeatureIds.add(aFeature.getId());
+        }
+    }
+
+    public Set<Long> getHiddenAnnotationFeatureIds()
+    {
+        return hiddenAnnotationFeatureIds;
+    }
+
+    public void setHiddenAnnotationFeatureIds(Set<Long> aAnnotationFeatureIds)
+    {
+        hiddenAnnotationFeatureIds = aAnnotationFeatureIds;
+    }
+
+    public void setTagVisible(AnnotationFeature aFeature, Tag aTag, boolean aVisible)
+    {
+        var tags = hiddenTags.get(aFeature.getId());
+        if (tags == null) {
+            if (!aVisible) {
+                tags = new HashSet<String>();
+                tags.add(aTag.getName());
+                hiddenTags.put(aFeature.getId(), tags);
+            }
+        }
+        else {
+            if (!aVisible) {
+                tags.add(aTag.getName());
+            }
+            else {
+                tags.remove(aTag.getName());
+                if (tags.isEmpty()) {
+                    hiddenTags.remove(aFeature.getId());
+                }
+            }
+        }
+    }
+
+    public Map<Long, Set<String>> getHiddenTags()
+    {
+        return hiddenTags;
+    }
+
+    public void setHiddenTags(Map<Long, Set<String>> aTags)
+    {
+        hiddenTags = aTags;
     }
 
     /**

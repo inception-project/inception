@@ -257,31 +257,36 @@ public class RelationRenderer
             return emptyList();
         }
 
-        var labelFeatures = renderLabelFeatureValues(typeAdapter, aFS, aFeatures);
+        var labelFeatures = renderLabelFeatureValues(typeAdapter, aFS, aFeatures,
+                aRequest.getHiddenFeatureValues());
+
+        if (labelFeatures.isEmpty()) {
+            return emptyList();
+        }
 
         switch (traits.getRenderMode()) {
         case ALWAYS:
             return renderRelationAsArcs(aRequest, aVDocument, aFS, typeAdapter, sourceFs, targetFs,
-                    labelFeatures);
+                    labelFeatures.get());
         case WHEN_SELECTED:
             if (aRequest.getState() == null || isSelected(aRequest, aFS, sourceFs, targetFs)) {
                 // State == null is when we render for the annotation sidebar...
                 return renderRelationAsArcs(aRequest, aVDocument, aFS, typeAdapter, sourceFs,
-                        targetFs, labelFeatures);
+                        targetFs, labelFeatures.get());
             }
             return renderRelationOnLabel(aVDocument, typeAdapter, sourceFs, targetFs,
-                    labelFeatures);
+                    labelFeatures.get());
         case NEVER:
             if (aRequest.getState() == null) {
                 // State == null is when we render for the annotation sidebar...
                 return renderRelationAsArcs(aRequest, aVDocument, aFS, typeAdapter, sourceFs,
-                        targetFs, labelFeatures);
+                        targetFs, labelFeatures.get());
             }
             return renderRelationOnLabel(aVDocument, typeAdapter, sourceFs, targetFs,
-                    labelFeatures);
+                    labelFeatures.get());
         default:
             return renderRelationAsArcs(aRequest, aVDocument, aFS, typeAdapter, sourceFs, targetFs,
-                    labelFeatures);
+                    labelFeatures.get());
         }
     }
 
@@ -333,20 +338,20 @@ public class RelationRenderer
     }
 
     private List<VObject> renderRelationAsArcs(RenderRequest aRequest, VDocument aVDocument,
-            AnnotationFS aFS, RelationAdapter typeAdapter, FeatureStructure sourceFs,
-            FeatureStructure targetFs, Map<String, String> labelFeatures)
+            AnnotationFS aFS, RelationAdapter aTypeAdapter, FeatureStructure aSourceFs,
+            FeatureStructure aTargetFs, Map<String, String> aLabelFeatures)
     {
         var objects = new ArrayList<VObject>();
 
-        var source = createEndpoint(aRequest, aVDocument, (AnnotationFS) sourceFs, typeAdapter);
+        var source = createEndpoint(aRequest, aVDocument, (AnnotationFS) aSourceFs, aTypeAdapter);
 
-        var target = createEndpoint(aRequest, aVDocument, (AnnotationFS) targetFs, typeAdapter);
+        var target = createEndpoint(aRequest, aVDocument, (AnnotationFS) aTargetFs, aTypeAdapter);
 
         objects.add(VArc.builder().forAnnotation(aFS) //
-                .withLayer(typeAdapter.getLayer()) //
+                .withLayer(aTypeAdapter.getLayer()) //
                 .withSource(source) //
                 .withTarget(target) //
-                .withFeatures(labelFeatures) //
+                .withFeatures(aLabelFeatures) //
                 .build());
 
         return objects;

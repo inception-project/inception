@@ -18,12 +18,12 @@
 package de.tudarmstadt.ukp.inception.schema.api.feature;
 
 import static java.lang.Long.parseLong;
+import static org.apache.commons.lang3.StringUtils.defaultString;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
@@ -102,9 +102,9 @@ public final class TypeUtil
      */
     public static String getUiLabelText(Map<String, String> aFeatures)
     {
-        StringBuilder labelText = new StringBuilder();
+        var labelText = new StringBuilder();
         for (Entry<String, String> feature : aFeatures.entrySet()) {
-            String label = StringUtils.defaultString(feature.getValue());
+            var label = defaultString(feature.getValue());
 
             if (labelText.length() > 0 && label.length() > 0) {
                 labelText.append(TypeAdapter.FEATURE_SEPARATOR);
@@ -137,8 +137,7 @@ public final class TypeUtil
     {
         StringBuilder bratHoverText = new StringBuilder();
         if (aHoverFeatures.containsKey("__spantext__")) {
-            bratHoverText.append("\"")
-                    .append(StringUtils.defaultString(aHoverFeatures.get("__spantext__")))
+            bratHoverText.append("\"").append(defaultString(aHoverFeatures.get("__spantext__")))
                     .append("\" ");
         }
 
@@ -147,7 +146,7 @@ public final class TypeUtil
             if ("__spantext__".equals(feature.getKey())) {
                 continue;
             }
-            String text = StringUtils.defaultString(feature.getValue());
+            String text = defaultString(feature.getValue());
 
             if (bratHoverText.length() > 0 && featuresToShowAvailable && text.length() > 0) {
                 bratHoverText.append(TypeAdapter.FEATURE_SEPARATOR);
@@ -190,7 +189,7 @@ public final class TypeUtil
             }
 
             Feature labelFeature = aFs.getType().getFeatureByBaseName(feature.getName());
-            String label = StringUtils.defaultString(aFs.getFeatureValueAsString(labelFeature));
+            String label = defaultString(aFs.getFeatureValueAsString(labelFeature));
 
             if (bratLabelText.length() > 0 && label.length() > 0) {
                 bratLabelText.append(TypeAdapter.FEATURE_SEPARATOR);

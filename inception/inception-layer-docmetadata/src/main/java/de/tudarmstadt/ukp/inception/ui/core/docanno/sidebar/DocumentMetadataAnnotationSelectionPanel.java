@@ -474,40 +474,40 @@ public class DocumentMetadataAnnotationSelectionPanel
     }
 
     private void generateAnnotationItems(AnnotationLayer aLayer,
-            DocumentMetadataLayerSupport layerSupport, boolean singleton, CAS cas,
-            ArrayList<AnnotationListItem> items, List<AnnotationFeature> features)
+            DocumentMetadataLayerSupport aLayerSupport, boolean aSingleton, CAS aCas,
+            List<AnnotationListItem> aItems, List<AnnotationFeature> aFeatures)
     {
         var adapter = annotationService.getAdapter(aLayer);
-        var renderer = layerSupport.createRenderer(aLayer,
+        var renderer = aLayerSupport.createRenderer(aLayer,
                 () -> annotationService.listAnnotationFeature(aLayer));
 
-        var maybeType = adapter.getAnnotationType(cas);
+        var maybeType = adapter.getAnnotationType(aCas);
         if (!maybeType.isPresent()) {
             return;
         }
 
         var type = maybeType.get();
-        var annotations = cas.select(type).asList();
+        var annotations = aCas.select(type).asList();
         var hasOrderFeature = type.getFeatureByBaseName(FEATURE_NAME_ORDER) != null;
         if (hasOrderFeature) {
             annotations.sort(comparing(fs -> getFeature(fs, FEATURE_NAME_ORDER, Integer.class)));
         }
 
         for (var fs : annotations) {
-            var renderedFeatures = renderer.renderLabelFeatureValues(adapter, fs, features);
+            var renderedFeatures = renderer.renderLabelFeatureValues(adapter, fs, aFeatures);
             var labelText = TypeUtil.getUiLabelText(renderedFeatures);
             var order = hasOrderFeature ? getFeature(fs, FEATURE_NAME_ORDER, Integer.class) : 0;
-            items.add(
-                    new AnnotationListItem(VID.of(fs), labelText, aLayer, singleton, 0.0d, order));
+            aItems.add(
+                    new AnnotationListItem(VID.of(fs), labelText, aLayer, aSingleton, 0.0d, order));
         }
     }
 
     private void generateSuggestionItems(AnnotationLayer aLayer,
-            DocumentMetadataLayerSupport layerSupport, boolean singleton, CAS cas,
-            ArrayList<AnnotationListItem> items, List<AnnotationFeature> features)
+            DocumentMetadataLayerSupport aLayerSupport, boolean aSingleton, CAS aCas,
+            List<AnnotationListItem> aItems, List<AnnotationFeature> aFeatures)
     {
         var state = getModelObject();
-        var featuresIndex = features.stream()
+        var featuresIndex = aFeatures.stream()
                 .collect(toMap(AnnotationFeature::getName, identity()));
         var predictions = recommendationService.getPredictions(state.getUser(), state.getProject());
         if (predictions != null) {
@@ -518,7 +518,7 @@ public class DocumentMetadataAnnotationSelectionPanel
                     predictionsByDocument);
 
             recommendationService.calculateSuggestionVisibility(userService.getCurrentUsername(),
-                    state.getDocument(), cas, state.getUser().getUsername(), aLayer, group, -1, -1);
+                    state.getDocument(), aCas, state.getUser().getUsername(), aLayer, group, -1, -1);
 
             var pref = recommendationService.getPreferences(state.getUser(), state.getProject());
 
@@ -535,8 +535,8 @@ public class DocumentMetadataAnnotationSelectionPanel
                     var featureSupport = fsRegistry.findExtension(feature).orElseThrow();
                     var annotation = featureSupport.renderFeatureValue(feature,
                             suggestion.getLabel());
-                    items.add(new AnnotationListItem(suggestion.getVID(), annotation, aLayer, false,
-                            suggestion.getScore(), items.size()));
+                    aItems.add(new AnnotationListItem(suggestion.getVID(), annotation, aLayer, false,
+                            suggestion.getScore(), aItems.size()));
                 }
             }
         }

@@ -171,12 +171,15 @@ public class UserPreferencesServiceImpl
     {
         var maybeLayersState = preferencesService
                 .loadOptionalTraitsForUserAndProject(KEY_LAYERS_STATE, aSessionOwner, aProject);
+
         if (maybeLayersState.isPresent()) {
             var layersState = maybeLayersState.get();
             preferences.setColorPerLayer(layersState.getLayerColoringStrategy());
             preferences.setReadonlyLayerColoringBehaviour(
                     layersState.getReadonlyLayerColoringStrategy());
             preferences.setHiddenAnnotationLayerIds(layersState.getHiddenLayers());
+            preferences.setHiddenAnnotationFeatureIds(layersState.getHiddenFeatures());
+            preferences.setHiddenTags(layersState.getHiddenFeatureValues());
             return;
         }
 
@@ -192,6 +195,8 @@ public class UserPreferencesServiceImpl
         layersState
                 .setReadonlyLayerColoringStrategy(preferences.getReadonlyLayerColoringBehaviour());
         layersState.setHiddenLayers(preferences.getHiddenAnnotationLayerIds());
+        layersState.setHiddenFeatures(preferences.getHiddenAnnotationFeatureIds());
+        layersState.setHiddenFeatureValues(preferences.getHiddenTags());
         preferencesService.saveTraitsForUserAndProject(KEY_LAYERS_STATE, aSessionOwner, aProject,
                 layersState);
     }
@@ -262,15 +267,21 @@ public class UserPreferencesServiceImpl
     {
         Validate.notBlank(aSessionOwnerName, "Parameter [sessionOwner] must be specified");
 
+        var savedProperties = new HashSet<>(asList( //
+                "editor", "fontZoom", "windowSize", "scrollPage", "collapseArcs", "sidebarSizeLeft",
+                "sidebarSizeRight", "defaultLayer"));
         var wrapper = PropertyAccessorFactory.forBeanPropertyAccess(aPref);
         var props = new Properties();
         for (var value : wrapper.getPropertyDescriptors()) {
-            if (wrapper.getPropertyValue(value.getName()) == null) {
+            if (!savedProperties.contains(value.getName())
+                    || wrapper.getPropertyValue(value.getName()) == null) {
                 continue;
             }
+
             props.setProperty(aMode + "." + value.getName(),
                     wrapper.getPropertyValue(value.getName()).toString());
         }
+
         var propertiesPath = repositoryProperties.getPath().getAbsolutePath() + "/" + PROJECT_FOLDER
                 + "/" + aProject.getId() + "/" + SETTINGS_FOLDER + "/" + aSessionOwnerName;
         // append existing preferences for the other mode
@@ -344,6 +355,8 @@ public class UserPreferencesServiceImpl
         // no preference found
         catch (Exception e) {
             preference.setHiddenAnnotationLayerIds(new HashSet<>());
+            preference.setHiddenAnnotationFeatureIds(new HashSet<>());
+            preference.setHiddenTags(new HashMap<>());
             preference.setWindowSize(preferencesService
                     .loadDefaultTraitsForProject(KEY_BRAT_EDITOR_MANAGER_PREFS, aProject)
                     .getDefaultPageSize());

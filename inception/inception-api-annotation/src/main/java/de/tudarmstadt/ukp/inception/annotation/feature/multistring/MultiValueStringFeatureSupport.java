@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.annotation.feature.multistring;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.abbreviate;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -29,10 +30,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.StringArrayFS;
 import org.apache.uima.fit.util.FSUtil;
@@ -277,20 +276,20 @@ public class MultiValueStringFeatureSupport
     }
 
     @Override
-    public String renderFeatureValue(AnnotationFeature aFeature, FeatureStructure aFs)
+    public List<String> renderFeatureValues(AnnotationFeature aFeature, FeatureStructure aFs)
     {
-        Feature labelFeature = aFs.getType().getFeatureByBaseName(aFeature.getName());
+        var labelFeature = aFs.getType().getFeatureByBaseName(aFeature.getName());
 
         if (labelFeature == null) {
-            return null;
+            return emptyList();
         }
 
-        List<String> values = getFeatureValue(aFeature, aFs);
-        if (values == null || values.isEmpty()) {
-            return null;
+        List<String> value = getFeatureValue(aFeature, aFs);
+        if (value == null) {
+            return emptyList();
         }
 
-        return values.stream().collect(Collectors.joining(", "));
+        return value;
     }
 
     @Override
