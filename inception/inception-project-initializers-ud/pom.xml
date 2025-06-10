@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>37.0-beta-3</version>
+    <version>37.0-SNAPSHOT</version>
   </parent>
   <artifactId>inception-project-initializers-ud</artifactId>
   <name>INCEpTION - Core - Project initializers - Universal Dependencies</name>
